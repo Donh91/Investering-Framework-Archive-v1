@@ -69,6 +69,15 @@ The 2-3 week and 4-8 week compass lines are public navigation context but are no
 
 A typed long-cycle `action_posture` is a Cycle Navigator navigation proposal with `NONE_BY_ITSELF` action authority. When Official Compass consumes that projection, proactive `BUY` / `PREPARE_BUY` output remains bounded by the current Main-Framework action permission. Cycle Navigator may not self-ratify a stronger user-facing action merely because the typed projection is schema-valid.
 
+### Machine-readable status explanation
+
+New Cycle Navigator packages carry `status_reason_codes` alongside `status`.
+
+- `READY` requires an empty reason list.
+- `DEGRADED` or `BLOCKED` requires at least one controlled reason code.
+- Delivery pointers copy the same reason codes so a clean-room consumer can distinguish receipt health from forecast/data limitations without reverse-engineering prose.
+- Historical packages created before this contract are not rewritten. When their exact original non-ready cause was not prospectively structured, the mutable delivery pointer uses `LEGACY_NON_READY_CAUSE_UNAVAILABLE` rather than inventing a cause from narrative `uncertainties`.
+
 For current short-horizon website fields such as `NEXT DAYS`, prefer an existing autonomous canonical output. If none exists or it is stale/not public-safe, publish `NOT PUBLISHED`/`UNAVAILABLE`; do not synthesize a new signal in the presentation layer.
 
 ## What this folder should prove
