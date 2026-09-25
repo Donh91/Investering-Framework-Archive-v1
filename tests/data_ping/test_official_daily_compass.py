@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+from scripts.cycle_navigator.build_weekly_cycle_navigator import output_schema as cycle_navigator_output_schema
 from scripts.data_ping.native_handlekompas import (
     CAPITALIZATION_ORDER,
     HORIZON_ORDER,
@@ -109,6 +110,19 @@ class OfficialDailyCompassTest(unittest.TestCase):
             repo_root=Path(root),
             issued_at=issued_at or datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
             run_reason=run_reason,
+        )
+
+    def test_cycle_navigator_machine_projection_contract_is_required(self):
+        schema = cycle_navigator_output_schema()
+        self.assertIn("decision_projection", schema["required"])
+        projection = schema["properties"]["decision_projection"]
+        self.assertEqual(
+            set(projection["required"]),
+            {"contract", "next_1_3d", "next_5_7d", "weeks_4_8", "protection"},
+        )
+        self.assertEqual(
+            projection["properties"]["contract"]["const"],
+            "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
         )
 
     def test_deterministic_same_input_same_time(self):
