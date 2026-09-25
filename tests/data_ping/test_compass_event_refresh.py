@@ -50,20 +50,53 @@ def entry(*, temp="NORMAL", btc=1.0, eth=1.5, median=1.0):
     }
 
 
-def compass(*, source_sha="old-source", action="PREPARE", data_status="OK", issued_at=None, protection=None):
+def cn_package(*, risk="NORMAL", risk_class="UNKNOWN", distribution="NONE", direction="NO_EDGE"):
+    return {
+        "market_state": "Structured test context.",
+        "base_case_this_week": "Narrative context only.",
+        "base_case_2_3_weeks": "Narrative context only.",
+        "base_case_4_8_weeks": "Narrative context only.",
+        "decision_projection": {
+            "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+            "next_1_3d": {"direction": direction, "summary": "Structured test lane."},
+            "next_5_7d": {"direction": direction, "summary": "Structured test lane."},
+            "weeks_4_8": {
+                "state": "UNCLEAR",
+                "warning": "NONE",
+                "direction": "NO_EDGE",
+                "action_posture": "HOLD",
+                "summary": "Structured test lane.",
+                "through_date": None,
+                "horizon_days": None,
+                "eta": "UNKNOWN",
+                "confidence": "LOW",
+            },
+            "protection": {
+                "pullback_risk_state": risk,
+                "pullback_class": risk_class,
+                "distribution_risk": distribution,
+                "eta_window": "UNKNOWN",
+                "confidence_quality": "HIGH" if risk in {"HIGH", "CONFIRMED"} else "MEDIUM",
+                "drivers": ["Structured test protection state."],
+                "invalidation": "Later structured evidence must explicitly change this state.",
+            },
+        },
+    }
+
+def compass(*, source_sha="old-source", action="HOLD_WAIT", data_status="OK", issued_at=None, protection=None):
     out = {
         "issued_at_utc": issued_at or (NOW-timedelta(hours=6)).isoformat().replace("+00:00","Z"),
         "source_bindings": {"auto_market_state": {"packet_sha256": source_sha}},
         "data_status": data_status,
         "action_now": action,
-        "market_now": {"directional_state": "BULLISH", "regime": "PREPARE"},
+        "market_now": {"directional_state": "NEUTRAL", "regime": "HOLD_WAIT"},
         "capitalization_ladder": [
-            {"segment": "BTC", "status": "HOLD"},
-            {"segment": "ETH", "status": "PREPARE"},
-            {"segment": "LARGE_CAPS", "status": "PREPARE"},
-            {"segment": "MID_CAPS", "status": "WAIT"},
-            {"segment": "SMALL_CAPS", "status": "HARD_WAIT"},
-            {"segment": "MICROCAPS", "status": "HARD_WAIT"},
+            {"segment": "BTC", "status": "HOLD", "action": "HOLD"},
+            {"segment": "ETH", "status": "HOLD", "action": "HOLD"},
+            {"segment": "LARGE_CAPS", "status": "WAIT", "action": "WAIT"},
+            {"segment": "MID_CAPS", "status": "WAIT", "action": "WAIT"},
+            {"segment": "SMALL_CAPS", "status": "WAIT", "action": "WAIT"},
+            {"segment": "MICROCAPS", "status": "HARD_WAIT", "action": "HARD_WAIT"},
         ],
     }
     if protection is not None:
@@ -79,7 +112,7 @@ def decision(**kwargs):
         latest_compass=kwargs.pop("latest", compass()),
         entry_latest=kwargs.pop("entry_latest", entry()),
         prior_state=kwargs.pop("prior_state", {"last_heat_state": "NORMAL"}),
-        cn_package={"market_state": "consolidation", "base_case_this_week": "unresolved consolidation"},
+        cn_package=cn_package(),
         cn_binding={"status": "PASS"},
         now=NOW,
     )
@@ -102,9 +135,9 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertTrue(out["owner_freshness_reasons"])
 
     def test_action_change_dispatches(self):
-        out=decision(latest=compass(action="HOLD_WAIT"))
+        out=decision(latest=compass(action="PREPARE"))
         self.assertTrue(out["dispatch"])
-        self.assertIn("ACTION_STATE_CHANGED", out["cause_codes"])
+        self.assertIn("MARKET_STATE_CHANGED", out["cause_codes"])
 
     def test_hot_episode_enters_once(self):
         out=decision(entry_latest=entry(temp="HOT", btc=9), prior_state={"last_heat_state": "NORMAL"})
@@ -155,9 +188,11 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertIn("DATA_HEALTH_CHANGED", out["cause_codes"])
         self.assertEqual(out["current_data_status"], "DEGRADED")
 
-    def test_risk_on_change_inside_cooldown_is_suppressed(self):
+    def test_nonprotective_market_change_inside_cooldown_is_suppressed(self):
+        latest=compass(issued_at=(NOW-timedelta(minutes=30)).isoformat().replace("+00:00","Z"))
+        latest["market_now"]={"directional_state":"MIXED","regime":"HOLD_WAIT"}
         out=decision(
-            latest=compass(action="HOLD_WAIT", issued_at=(NOW-timedelta(minutes=30)).isoformat().replace("+00:00","Z")),
+            latest=latest,
             prior_state={
                 "last_heat_state": "NORMAL",
                 "last_requested_source_sha": "previous-request",
@@ -166,13 +201,13 @@ class CompassEventRefreshTests(unittest.TestCase):
         )
         self.assertFalse(out["dispatch"])
         self.assertEqual(out["reason"], "COOLDOWN_ACTIVE")
-        self.assertIn("ACTION_STATE_CHANGED", out["suppressed_cause_codes"])
+        self.assertIn("MARKET_STATE_CHANGED", out["suppressed_cause_codes"])
 
-    def test_defensive_change_bypasses_cooldown(self):
-        a=auto_state(breadth=0.20)
+    def test_data_health_degradation_bypasses_cooldown(self):
+        a=auto_state(validation="FAIL")
         out=decision(
             auto=a,
-            latest=compass(action="PREPARE", issued_at=(NOW-timedelta(minutes=30)).isoformat().replace("+00:00","Z")),
+            latest=compass(issued_at=(NOW-timedelta(minutes=30)).isoformat().replace("+00:00","Z")),
             prior_state={
                 "last_heat_state": "NORMAL",
                 "last_requested_source_sha": "previous-request",
@@ -181,7 +216,7 @@ class CompassEventRefreshTests(unittest.TestCase):
         )
         self.assertTrue(out["dispatch"])
         self.assertTrue(out["protective_bypass"])
-        self.assertIn("ACTION_STATE_CHANGED", out["cause_codes"])
+        self.assertIn("DATA_HEALTH_CHANGED", out["cause_codes"])
 
     def test_downside_heat_bypasses_cooldown(self):
         out=decision(
@@ -199,7 +234,7 @@ class CompassEventRefreshTests(unittest.TestCase):
 
     def test_request_in_flight_suppresses_duplicate_risk_on_dispatch(self):
         out=decision(
-            latest=compass(action="HOLD_WAIT"),
+            latest=(lambda x: (x.update({"market_now":{"directional_state":"MIXED","regime":"HOLD_WAIT"}}) or x))(compass()),
             prior_state={
                 "last_heat_state": "NORMAL",
                 "last_requested_source_sha": "new-source",
@@ -208,7 +243,7 @@ class CompassEventRefreshTests(unittest.TestCase):
         )
         self.assertFalse(out["dispatch"])
         self.assertEqual(out["reason"], "REQUEST_IN_FLIGHT")
-        self.assertIn("ACTION_STATE_CHANGED", out["suppressed_cause_codes"])
+        self.assertIn("MARKET_STATE_CHANGED", out["suppressed_cause_codes"])
 
     def test_nonprotective_event_defers_to_imminent_scheduled_slot(self):
         near=datetime(2026, 9, 18, 18, 0, tzinfo=timezone.utc)  # 20:00 CPH, 17m before fixed slot
@@ -216,10 +251,10 @@ class CompassEventRefreshTests(unittest.TestCase):
         out=evaluate(
             auto_state=a,
             auto_pointer={"packet_sha256": a["packet_sha256"]},
-            latest_compass=compass(action="HOLD_WAIT"),
+            latest_compass=(lambda x: (x.update({"market_now":{"directional_state":"MIXED","regime":"HOLD_WAIT"}}) or x))(compass()),
             entry_latest=entry(),
             prior_state={"last_heat_state": "NORMAL"},
-            cn_package={"market_state": "consolidation", "base_case_this_week": "unresolved consolidation"},
+            cn_package=cn_package(),
             cn_binding={"status": "PASS"},
             now=near,
         )
@@ -234,7 +269,7 @@ class CompassEventRefreshTests(unittest.TestCase):
         out=evaluate(
             auto_state=a,
             auto_pointer={"packet_sha256": a["packet_sha256"]},
-            latest_compass=compass(action="PREPARE"),
+            latest_compass=compass(),
             entry_latest=entry(),
             prior_state={"last_heat_state": "NORMAL"},
             cn_package={"market_state": "consolidation", "base_case_this_week": "unresolved consolidation"},
@@ -267,16 +302,7 @@ class CompassEventRefreshTests(unittest.TestCase):
                 "last_requested_source_sha": "previous-request",
                 "last_request_at_utc": (NOW-timedelta(hours=1)).isoformat().replace("+00:00","Z"),
             },
-            cn_package={
-                "market_state": "Distribution regime.",
-                "base_case_this_week": "Distribution is active.",
-                "base_case_2_3_weeks": "Risk remains defensive.",
-                "compass_4_8_weeks": {
-                    "state": "DISTRIBUTION",
-                    "warning": "DISTRIBUTION_WARNING",
-                    "summary": "Distribution is active.",
-                },
-            },
+            cn_package=cn_package(risk="HIGH", risk_class="DISTRIBUTION", distribution="CONFIRMED", direction="DOWN"),
             cn_binding={"status": "PASS"},
             now=NOW,
         )
@@ -285,7 +311,7 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertIn("PROTECTION_STATE_CHANGED", out["cause_codes"])
         self.assertEqual(out["current_protection_tracker"]["pullback_risk_state"], "HIGH")
 
-    def test_reentry_review_opening_is_material_but_not_automatic_execution(self):
+    def test_reentry_watch_persists_without_ungoverned_confirmation(self):
         a=auto_state()
         latest=compass(
             protection={
@@ -304,23 +330,17 @@ class CompassEventRefreshTests(unittest.TestCase):
             latest_compass=latest,
             entry_latest=entry(),
             prior_state={"last_heat_state": "NORMAL"},
-            cn_package={
-                "market_state": "Constructive transition.",
-                "base_case_this_week": "Constructive transition.",
-                "base_case_2_3_weeks": "Selective leadership may broaden.",
-            },
+            cn_package=cn_package(),
             cn_binding={"status": "PASS"},
             now=NOW,
         )
-        self.assertTrue(out["dispatch"])
-        self.assertIn("PROTECTION_STATE_CHANGED", out["cause_codes"])
-        self.assertIn("REENTRY_REVIEW_OPENED", out["cause_codes"])
-        self.assertEqual(out["current_protection_tracker"]["reentry_state"], "REVIEW")
+        self.assertFalse(out["dispatch"])
+        self.assertEqual(out["current_protection_tracker"]["reentry_state"], "WAIT_FOR_RECLAIM")
         self.assertFalse(out["current_protection_tracker"]["authority"]["portfolio_execution"])
 
     def test_unbound_request_retries_after_timeout(self):
         out=decision(
-            latest=compass(action="HOLD_WAIT"),
+            latest=(lambda x: (x.update({"market_now":{"directional_state":"MIXED","regime":"HOLD_WAIT"}}) or x))(compass()),
             prior_state={
                 "last_heat_state": "NORMAL",
                 "last_requested_source_sha": "new-source",
