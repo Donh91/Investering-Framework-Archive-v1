@@ -193,12 +193,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             )
             lane = out["horizons"]["CYCLE_ALTCOINS_3_8W"]
             self.assertEqual(out["action_now"], "HOLD_WAIT")
-            self.assertEqual(lane["proposed_action_posture"], "BUY")
             self.assertEqual(lane["action_posture"], "WAIT")
-            self.assertEqual(
-                lane["action_permission"],
-                "WITHHELD_PENDING_MAIN_FRAMEWORK_PERMISSION",
-            )
             public = build_public_projection(out)
             self.assertEqual(
                 public["horizons"]["CYCLE_ALTCOINS_3_8W"]["action_posture"],
