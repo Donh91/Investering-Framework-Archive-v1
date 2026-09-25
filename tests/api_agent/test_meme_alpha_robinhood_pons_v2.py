@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts.api_agent import meme_alpha_robinhood_pons_v2 as r
+from scripts.api_agent import meme_alpha_blockscout as bs
 
 
 ASKR = "0xa92768863a55d8a0591709f7f5e594a249d36ea3"
@@ -239,6 +240,125 @@ class RobinhoodPonsV2AdapterTests(unittest.TestCase):
         topic = r.padded_address_topic(ASKR)
         self.assertEqual(len(topic), 66)
         self.assertTrue(topic.endswith(ASKR[2:]))
+
+
+class RobinhoodBlockscoutEnrichmentTests(unittest.TestCase):
+    def test_blockscout_pro_is_preferred_without_persisting_secret(self) -> None:
+        seen: list[str] = []
+
+        def getter(url: str, *, timeout: int):
+            seen.append(url)
+            return 200, {"ok": True}
+
+        payload, health = bs.blockscout_get(
+            "/api/v2/stats",
+            api_key="proapi_TEST_SECRET",
+            getter=getter,
+        )
+        self.assertEqual(payload, {"ok": True})
+        self.assertEqual(health["transport"], "PRO_UNIFIED")
+        self.assertTrue(health["authenticated"])
+        self.assertIn("apikey=proapi_TEST_SECRET", seen[0])
+        self.assertNotIn("proapi_TEST_SECRET", str(health))
+
+    def test_blockscout_public_fallback_is_explicit_after_pro_failure(self) -> None:
+        def getter(url: str, *, timeout: int):
+            if url.startswith(bs.PRO_ROOT):
+                return 401, {"message": "bad key"}
+            return 200, {"items": []}
+
+        payload, health = bs.blockscout_get(
+            f"/api/v2/addresses/{ASKR}/transactions",
+            api_key="proapi_BAD",
+            getter=getter,
+        )
+        self.assertEqual(payload, {"items": []})
+        self.assertEqual(health["transport"], "PUBLIC_CHAIN_FALLBACK")
+        self.assertTrue(health["fallback_used"])
+        self.assertEqual(len(health["prior_failures"]), 1)
+        self.assertNotIn("proapi_BAD", str(health))
+
+    def test_blockscout_askr_exact_ca_launch_enrichment(self) -> None:
+        address_payload = {
+            "hash": ASKR,
+            "is_contract": True,
+            "is_verified": True,
+            "proxy_type": None,
+            "name": "PonsV2LauncherToken",
+            "creator_address_hash": {"hash": "0x3711ceA4feaDE896C913C68F01Eda97Cb06D1A42"},
+            "creation_transaction_hash": LAUNCH_TX,
+            "token": {
+                "address_hash": ASKR,
+                "name": "heyaskr",
+                "symbol": "ASKR",
+                "decimals": "18",
+                "total_supply": "1000000000000000000000000000",
+                "holders_count": "2552",
+                "exchange_rate": "0.00413856",
+                "volume_24h": "1401405.21",
+            },
+        }
+        tx_payload = {
+            "hash": LAUNCH_TX,
+            "block_number": LAUNCH_BLOCK,
+            "timestamp": "2026-09-18T18:35:17.000000Z",
+            "method": "launchAndBuy",
+            "from": {"hash": DEPLOYER},
+            "to": {"hash": "0xe33E9E479dF8802cb0866d5d05258bEc4cF62948"},
+            "decoded_input": {
+                "parameters": [
+                    {
+                        "name": "params",
+                        "value": [
+                            "heyaskr",
+                            "ASKR",
+                            "ipfs://fixture",
+                            "A free market for AI, funded by crypto.",
+                            ["https://x.com/heyaskr", "https://t.me/heyaskr", "", "", ""],
+                            DEPLOYER,
+                            "200",
+                            False,
+                            "0x" + "1" * 64,
+                            "0x" + "2" * 64,
+                        ],
+                    },
+                    {"name": "pairToken", "value": "0x0000000000000000000000000000000000000000"},
+                    {"name": "quoteIn", "value": "100000000000000000"},
+                    {"name": "recipient", "value": DEPLOYER},
+                    {"name": "snipeTaxExemptions", "value": []},
+                ]
+            },
+            "token_transfers": [
+                {
+                    "from": {"hash": CURVE},
+                    "to": {"hash": DEPLOYER},
+                    "token": {"address_hash": ASKR, "decimals": "18"},
+                    "total": {"value": "54586381541924592009003939", "decimals": "18"},
+                }
+            ],
+        }
+
+        def getter(url: str, *, timeout: int):
+            if f"/api/v2/addresses/{ASKR}" in url:
+                return 200, address_payload
+            if f"/api/v2/transactions/{LAUNCH_TX}" in url:
+                return 200, tx_payload
+            raise AssertionError(url)
+
+        row = bs.launch_origin_snapshot(ASKR, api_key="proapi_TEST", getter=getter)
+        self.assertEqual(row["token_ca"], ASKR)
+        self.assertTrue(row["address"]["is_contract"])
+        self.assertTrue(row["address"]["is_verified"])
+        self.assertEqual(row["token"]["symbol"], "ASKR")
+        self.assertEqual(row["token"]["total_supply"], 1_000_000_000)
+        self.assertEqual(row["launch"]["method"], "launchAndBuy")
+        self.assertAlmostEqual(row["launch"]["quote_in_native"], 0.1)
+        self.assertAlmostEqual(row["launch"]["initial_tokens_received"], 54_586_381.54192459, places=6)
+        self.assertAlmostEqual(row["launch"]["initial_buy_pct_supply"], 5.458638154192459, places=9)
+        self.assertEqual(row["launch"]["snipe_exemption_count"], 0)
+        self.assertIn("https://x.com/heyaskr", row["launch"]["embedded_project_socials"])
+        self.assertFalse(row["authority"]["project_ownership_proven"])
+        self.assertEqual(row["source_health"]["overall"], "PASS")
 
 
 if __name__ == "__main__":
