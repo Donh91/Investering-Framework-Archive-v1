@@ -59,6 +59,8 @@ The architecture decision is separate from active market-feed versioning. It doe
 
 ## DATA PING operational anchors
 
+> **CURRENT-ROUTING SUPERSESSION NOTICE (2026-09-14):** The DATA PING V6 "current active operational feed" wording below is a frozen record of the July DATA PING packet/runtime context. It is **not** the default current-production upstream for Master Monday, Cycle Navigator, Official Compass or public-site current-state tasks. For current production routing, first follow `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md` and `00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json`. The `02_DATA_PING/` pointers below remain authoritative only for explicit DATA PING packet, replay, correction, compatibility and historical-lineage tasks, or when a newer current pointer explicitly routes to them.
+
 Reconciled from the canonical runtime pointers on 2026-07-22:
 
 ```text
