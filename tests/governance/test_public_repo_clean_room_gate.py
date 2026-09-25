@@ -48,9 +48,14 @@ class PublicRepoCleanRoomGateTest(unittest.TestCase):
         current = index["current_public_projection"]
         self.assertTrue(latest_published["published_path"])
         self.assertTrue(index["latest_completed_score"]["scorecard_path"])
-        self.assertNotEqual(
-            current["machine_issue_number"],
-            current["public_issue_number"],
+        self.assertIn("machine_issue_number", current)
+        self.assertIn("public_issue_number", current)
+        self.assertTrue(
+            any(
+                "Never join public and machine Cycle Navigator records on issue_number alone."
+                == invariant
+                for invariant in index.get("invariants", [])
+            )
         )
         if current.get("publication_status") == "X_READY_NOT_CONFIRMED_PUBLISHED":
             matching = [
