@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 
 def canonical_bytes(value: Any) -> bytes:
