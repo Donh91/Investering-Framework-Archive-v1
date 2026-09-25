@@ -640,15 +640,42 @@ def _altcoin_cycle_lane(cn_package: Mapping[str, Any] | None, posture: str, issu
     horizon_days = structured.get("horizon_days")
     if isinstance(horizon_days, bool) or not isinstance(horizon_days, int) or horizon_days <= 0:
         horizon_days = None
-    action_posture = str(structured.get("action_posture") or "HOLD").upper()
-    if action_posture not in {"BUY", "PREPARE_BUY", "HOLD", "WAIT", "NO_EDGE", "UNAVAILABLE"}:
-        action_posture = "NO_EDGE"
+    proposed_action_posture = str(structured.get("action_posture") or "HOLD").upper()
+    if proposed_action_posture not in {"BUY", "PREPARE_BUY", "HOLD", "WAIT", "NO_EDGE", "UNAVAILABLE"}:
+        proposed_action_posture = "NO_EDGE"
+
+    # Cycle Navigator is navigation-only and has no independent action permission.
+    # Proactive long-cycle actions must stay at or below the current Main-Framework
+    # permission carried by the native action posture.
+    if proposed_action_posture == "BUY":
+        if posture == "GRADUATED_TOPUP_ACTIVE":
+            action_posture = "BUY"
+            action_permission = "MAIN_FRAMEWORK_DEPLOY_PERMISSION"
+        elif posture == "PREPARE":
+            action_posture = "PREPARE_BUY"
+            action_permission = "MAIN_FRAMEWORK_PREPARE_PERMISSION"
+        else:
+            action_posture = "WAIT"
+            action_permission = "WITHHELD_PENDING_MAIN_FRAMEWORK_PERMISSION"
+    elif proposed_action_posture == "PREPARE_BUY":
+        if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"}:
+            action_posture = "PREPARE_BUY"
+            action_permission = "MAIN_FRAMEWORK_PREPARE_PERMISSION"
+        else:
+            action_posture = "WAIT"
+            action_permission = "WITHHELD_PENDING_MAIN_FRAMEWORK_PERMISSION"
+    else:
+        action_posture = proposed_action_posture
+        action_permission = "NON_PROACTIVE_NAVIGATION"
+
     return {
         "expected_direction": direction,
         "label": state,
         "state": state,
         "expected_path": summary,
         "action_posture": action_posture,
+        "proposed_action_posture": proposed_action_posture,
+        "action_permission": action_permission,
         "warning": warning,
         "through_date": through,
         "horizon_days": horizon_days,
