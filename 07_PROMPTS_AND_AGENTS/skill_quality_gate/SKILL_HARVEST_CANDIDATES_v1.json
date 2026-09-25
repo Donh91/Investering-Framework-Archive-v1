@@ -1,0 +1,324 @@
+{
+  "contract": "OPEN_SOURCE_ANALYTICAL_SKILL_HARVEST_CANDIDATES_v1",
+  "status": "RESEARCH_CANDIDATES_NOT_ACTIVE_SKILLS",
+  "date_utc": "2026-09-25",
+  "authority": {
+    "automatic_skill_promotion": false,
+    "automatic_merge": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "automatic_trading": false
+  },
+  "baseline_owners": [
+    ".agents/skills/research-lab-red-team/SKILL.md",
+    ".agents/skills/prospective-evidence-ledger/SKILL.md",
+    ".agents/skills/developer-source-research/SKILL.md",
+    ".agents/skills/skill-quality-gate/SKILL.md",
+    ".agents/skills/meme-alpha-supervisor/SKILL.md"
+  ],
+  "candidates": [
+    {
+      "id": "HARVEST-FALSIFIER-001",
+      "mechanism": "CHEAPEST_DECISIVE_FALSIFIER",
+      "disposition": "ADOPT_CANDIDATE",
+      "sources": [
+        {
+          "repository": "ngtiendong/Academic-Research-Agent-Skill",
+          "revision": "41c611c2e36461596c0c072e7641f9ddba251be8",
+          "license": "MIT"
+        }
+      ],
+      "local_owner": [
+        ".agents/skills/research-lab-red-team/SKILL.md",
+        ".agents/skills/meme-alpha-supervisor/SKILL.md"
+      ],
+      "expected_edge": "Earlier termination of weak theses and fewer expensive deep dives without converting missing evidence into negative evidence.",
+      "test_design": {
+        "mode": "FROZEN_BASELINE_VS_CANDIDATE",
+        "cases": "Historical Alpha Lab and Research Lab cases containing both decisive blockers and genuine unknowns.",
+        "primary_metrics": [
+          "unnecessary_deep_dive_calls",
+          "correct_early_kills",
+          "false_kills",
+          "unknown_as_negative_incidents",
+          "decision_relevant_evidence_per_call"
+        ],
+        "hard_blockers": [
+          "false kill caused by unavailable evidence",
+          "authority regression",
+          "retrospective outcome leakage"
+        ]
+      }
+    },
+    {
+      "id": "HARVEST-INDEPENDENCE-002",
+      "mechanism": "SOURCE_INDEPENDENCE_GROUPS",
+      "disposition": "ADOPT_CANDIDATE",
+      "sources": [
+        {
+          "repository": "atchisonbrent/deep-research",
+          "revision": "c3397c84ab626ab1c96a4132b8c579703d87d8fc",
+          "license": "MIT"
+        },
+        {
+          "repository": "Silence-view/deep-research",
+          "revision": "b238ab74c0daaf4b2a46a3cf9fffa5201367f6bc",
+          "license": "MIT"
+        }
+      ],
+      "local_owner": [
+        ".agents/skills/developer-source-research/SKILL.md",
+        ".agents/skills/research-lab-red-team/SKILL.md"
+      ],
+      "expected_edge": "Reduce false corroboration when multiple URLs/models inherit one underlying evidence root.",
+      "test_design": {
+        "mode": "DETERMINISTIC_REPLAY_PLUS_STATIC_CASES",
+        "cases": "Press-release syndication, copied reporting, shared dataset analyses, multi-model summaries of one artifact, genuinely independent roots.",
+        "primary_metrics": [
+          "false_independence_rate",
+          "independent_root_recall",
+          "unsupported_corroboration_claims"
+        ],
+        "hard_blockers": [
+          "independent primary evidence incorrectly collapsed",
+          "domain-count substituted for evidence-root analysis"
+        ]
+      }
+    },
+    {
+      "id": "HARVEST-CLAIMGRAPH-003",
+      "mechanism": "ATOMIC_CLAIM_EVIDENCE_CONTRADICTION_GRAPH",
+      "disposition": "EXPERIMENT_SHADOW_ONLY",
+      "sources": [
+        {
+          "repository": "machachlouei/evidence-graph",
+          "revision": "67bcf9fee4b77174d69ecb9f96866c5873b1acc2",
+          "license": "MIT"
+        },
+        {
+          "repository": "atchisonbrent/deep-research",
+          "revision": "c3397c84ab626ab1c96a4132b8c579703d87d8fc",
+          "license": "MIT"
+        }
+      ],
+      "local_owner": [
+        "06_RESEARCH_LAB",
+        " .agents/skills/research-lab-red-team/SKILL.md"
+      ],
+      "expected_edge": "Make contradictions and weakly supported load-bearing claims explicit before synthesis.",
+      "test_design": {
+        "mode": "SHADOW_ABLATION",
+        "cases": "At least 10 cases with known conflicting evidence, including Alpha Lab provenance and market/source conflicts.",
+        "primary_metrics": [
+          "contradiction_recall",
+          "unsupported_claim_rate",
+          "time_to_material_conflict",
+          "action_divergence_with_explanation",
+          "extra_tool_calls"
+        ],
+        "hard_blockers": [
+          "parallel canonical truth engine created",
+          "graph confidence treated as alpha score",
+          "material contradiction hidden by synthesis"
+        ]
+      }
+    },
+    {
+      "id": "HARVEST-STOPGUARD-004",
+      "mechanism": "NO_PROGRESS_DUPLICATE_ACTION_BUDGET_GUARDS",
+      "disposition": "EXPERIMENT",
+      "sources": [
+        {
+          "repository": "Xrrr1111/deep-research-agent",
+          "revision": "1741dc85b6ee69058a8b748a94190d6b547b86f7",
+          "license": "MIT"
+        },
+        {
+          "repository": "24601/agent-deep-research",
+          "revision": "1b90f0df29b3053b9599ff0c9ffe1a3ababe321c",
+          "license": "MIT"
+        }
+      ],
+      "local_owner": [
+        ".agents/skills/meme-alpha-supervisor/SKILL.md",
+        "existing autonomous research runtimes"
+      ],
+      "expected_edge": "Lower token/API waste and stop repetitive research without hiding unresolved uncertainty.",
+      "test_design": {
+        "mode": "SHADOW_RUNTIME",
+        "cases": "Repeated-query, duplicate-URL, fetch-failure, no-new-evidence and genuine hard-case fixtures.",
+        "primary_metrics": [
+          "duplicate_query_rate",
+          "duplicate_fetch_rate",
+          "no_progress_turns",
+          "cost_per_decision_relevant_finding",
+          "premature_stop_rate"
+        ],
+        "hard_blockers": [
+          "premature stop on a material unresolved case",
+          "suppressed falsifier search",
+          "missing-data converted to completion"
+        ]
+      }
+    },
+    {
+      "id": "HARVEST-REPORTQA-005",
+      "mechanism": "RESEARCH_OUTPUT_CITATION_AND_FACTUALITY_EVAL",
+      "disposition": "EXPERIMENT",
+      "sources": [
+        {
+          "repository": "ByteDance-BandAI/ReportBench",
+          "revision": "ca3d65b9ff3136fd7e6107955eeb711b2a7fd894",
+          "license": "Apache-2.0"
+        }
+      ],
+      "local_owner": [
+        ".agents/skills/skill-quality-gate/SKILL.md",
+        "07_PROMPTS_AND_AGENTS/skill_quality_gate"
+      ],
+      "expected_edge": "Measure whether research outputs are actually more factual and citation-grounded, not merely workflow-green.",
+      "test_design": {
+        "mode": "FROZEN_REPORT_EVAL",
+        "cases": "Frozen internal research outputs with manually adjudicated claim/citation fixtures.",
+        "primary_metrics": [
+          "citation_coverage",
+          "claim_source_consistency",
+          "unsupported_factual_statement_rate",
+          "uncited_fact_verification_rate",
+          "independent_source_coverage"
+        ],
+        "hard_blockers": [
+          "LLM judge granted sole release authority",
+          "private/restricted source sent to external evaluator",
+          "metric gaming by deleting useful uncited context"
+        ]
+      }
+    },
+    {
+      "id": "HARVEST-EVOLUTION-006",
+      "mechanism": "VERSIONED_PROPOSE_ASSESS_COMMIT_ROLLBACK",
+      "disposition": "EXPERIMENT_ARCHITECTURE",
+      "sources": [
+        {
+          "repository": "SkyworkAI/DeepResearchAgent",
+          "revision": "5e3c95d14266f8c4aa6a5deae1fe165c7cd1b87b",
+          "license": "MIT"
+        }
+      ],
+      "local_owner": [
+        ".agents/skills/skill-quality-gate/SKILL.md",
+        "existing Compounding Learning Controller"
+      ],
+      "expected_edge": "Improve lineage and reversibility of skill/agent evolution while keeping current governance authority.",
+      "test_design": {
+        "mode": "STATIC_PLUS_DETERMINISTIC_LIFECYCLE_REPLAY",
+        "cases": "Candidate improvement accepted, rejected, regressed after merge, and rollback scenarios.",
+        "primary_metrics": [
+          "lineage_completeness",
+          "rollback_correctness",
+          "baseline_recovery",
+          "orphaned_version_incidents"
+        ],
+        "hard_blockers": [
+          "self-modification authority added",
+          "self-merge authority added",
+          "rollback bypasses evidence ledger"
+        ]
+      }
+    },
+    {
+      "id": "HARVEST-MULTIREVIEW-007",
+      "mechanism": "ORTHOGONAL_INDEPENDENT_REVIEW_PANELS",
+      "disposition": "EXPERIMENT",
+      "sources": [
+        {
+          "repository": "JinheonBaek/ResearchAgent",
+          "revision": "babb49b51ebfcebedc39ccde12c9785be7bef46c",
+          "license": "UNVERIFIED_CONCEPT_ONLY"
+        }
+      ],
+      "local_owner": [
+        ".agents/skills/research-lab-red-team/SKILL.md"
+      ],
+      "expected_edge": "Reduce single-pass blind spots by evaluating distinct failure dimensions separately.",
+      "test_design": {
+        "mode": "BLIND_AB_WHEN_HARNESS_AVAILABLE",
+        "cases": "Alpha Lab cases with identity, provenance, causality, sellability and novelty failures.",
+        "primary_metrics": [
+          "critical_failure_recall",
+          "false_block_rate",
+          "manual_corrections",
+          "incremental_tool_cost"
+        ],
+        "hard_blockers": [
+          "numeric average overrides failed hard gate",
+          "reviewers share hidden outcome information",
+          "license-dependent text copied"
+        ]
+      }
+    },
+    {
+      "id": "HARVEST-CITATIONCHASE-008",
+      "mechanism": "BOUNDED_SOURCE_OF_SOURCE_CHASING",
+      "disposition": "ADOPT_CANDIDATE",
+      "sources": [
+        {
+          "repository": "Silence-view/deep-research",
+          "revision": "b238ab74c0daaf4b2a46a3cf9fffa5201367f6bc",
+          "license": "MIT"
+        },
+        {
+          "repository": "atchisonbrent/deep-research",
+          "revision": "c3397c84ab626ab1c96a4132b8c579703d87d8fc",
+          "license": "MIT"
+        }
+      ],
+      "local_owner": [
+        ".agents/skills/developer-source-research/SKILL.md"
+      ],
+      "expected_edge": "Recover primary evidence behind load-bearing secondary claims while bounding search depth and cost.",
+      "test_design": {
+        "mode": "DETERMINISTIC_REPLAY_PLUS_LIVE_BOUNDED_CASES",
+        "cases": "Secondary reports with reachable primary sources, circular citations, dead links and genuine single-source claims.",
+        "primary_metrics": [
+          "primary_source_recovery_rate",
+          "circular_citation_detection",
+          "extra_calls_per_recovered_primary",
+          "false_primary_classification"
+        ],
+        "hard_blockers": [
+          "unbounded citation crawl",
+          "blocked source treated as disproof",
+          "secondary paraphrase mislabelled as primary"
+        ]
+      }
+    }
+  ],
+  "rejected_patterns": [
+    "fixed source-count verification without independence analysis",
+    "generic credibility score overriding claim evidence",
+    "aggregate Likert score overriding hard gates",
+    "graph confidence promoted to market or alpha confidence",
+    "bulk skill-library import",
+    "third-party trading thresholds or portfolio rules",
+    "automatic activation of public OSINT endpoints",
+    "third-party executable code execution by research admission"
+  ],
+  "recommended_wave_order": [
+    [
+      "HARVEST-FALSIFIER-001",
+      "HARVEST-INDEPENDENCE-002",
+      "HARVEST-CITATIONCHASE-008"
+    ],
+    [
+      "HARVEST-CLAIMGRAPH-003",
+      "HARVEST-STOPGUARD-004",
+      "HARVEST-REPORTQA-005"
+    ],
+    [
+      "HARVEST-EVOLUTION-006",
+      "HARVEST-MULTIREVIEW-007"
+    ]
+  ]
+}
