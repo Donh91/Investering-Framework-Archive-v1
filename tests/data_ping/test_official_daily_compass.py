@@ -71,7 +71,33 @@ class OfficialDailyCompassTest(unittest.TestCase):
             "market_state": "Unresolved, volatile consolidation with elevated pullback risk.",
             "base_case_this_week": "W38 remains an unresolved, volatile consolidation with elevated pullback risk rather than a confirmed breakdown or broad risk expansion.",
             "base_case_2_3_weeks": "Selective ETH leadership may emerge, but volatile consolidation persists until breadth improves.",
-            "altseason_countdown": [{"phase": "Broad altseason — PAUSED", "window": "No calendar ETA"}],
+            "base_case_4_8_weeks": "Consolidation remains the evidence-bounded long-cycle state.",
+            "altseason_countdown": [{"phase": "Broad altseason - PAUSED", "window": "No calendar ETA"}],
+            "decision_projection": {
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                "next_1_3d": {"direction": "SIDEWAYS", "summary": "Structured short-horizon consolidation."},
+                "next_5_7d": {"direction": "SIDEWAYS", "summary": "Structured weekly consolidation."},
+                "weeks_4_8": {
+                    "state": "CONSOLIDATION",
+                    "warning": "NONE",
+                    "direction": "SIDEWAYS",
+                    "action_posture": "HOLD",
+                    "summary": "Consolidation remains the evidence-bounded long-cycle state.",
+                    "through_date": "2026-10-14",
+                    "horizon_days": 28,
+                    "eta": "through 2026-10-14",
+                    "confidence": "MEDIUM",
+                },
+                "protection": {
+                    "pullback_risk_state": "ELEVATED",
+                    "pullback_class": "VOLATILE_CONSOLIDATION",
+                    "distribution_risk": "NONE",
+                    "eta_window": "UNKNOWN",
+                    "confidence_quality": "MEDIUM",
+                    "drivers": ["Structured Cycle Navigator protection state is elevated."],
+                    "invalidation": "Later structured evidence must clear the warning.",
+                },
+            },
         }
 
     def build(self, root, *, include_cn=True, issued_at=None, run_reason="SCHEDULED_DAILY", **kwargs):
@@ -150,7 +176,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
     def test_missing_deltas_never_create_bullish_confirmation(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, breadth=0.55, deltas={})
-            self.assertEqual(out["market_now"]["regime"], "PREPARE")
+            self.assertEqual(out["market_now"]["regime"], "HOLD_WAIT")
             self.assertEqual(out["market_now"]["directional_state"], "MIXED")
 
     def test_weekly_pullback_risk_projects_conservatively(self):
@@ -181,10 +207,31 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 "market_state": "Distribution regime.",
                 "base_case_this_week": "Distribution is active.",
                 "base_case_2_3_weeks": "Risk remains defensive.",
-                "compass_4_8_weeks": {
-                    "state": "DISTRIBUTION",
-                    "warning": "DISTRIBUTION_WARNING",
-                    "summary": "Distribution is active.",
+                "base_case_4_8_weeks": "Distribution remains active.",
+                "decision_projection": {
+                    "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                    "next_1_3d": {"direction": "DOWN", "summary": "Risk is defensive."},
+                    "next_5_7d": {"direction": "DOWN", "summary": "Distribution remains active."},
+                    "weeks_4_8": {
+                        "state": "DISTRIBUTION",
+                        "warning": "DISTRIBUTION_WARNING",
+                        "direction": "DOWN",
+                        "action_posture": "HOLD",
+                        "summary": "Distribution is active.",
+                        "through_date": "2026-10-14",
+                        "horizon_days": 28,
+                        "eta": "through 2026-10-14",
+                        "confidence": "HIGH",
+                    },
+                    "protection": {
+                        "pullback_risk_state": "HIGH",
+                        "pullback_class": "DISTRIBUTION",
+                        "distribution_risk": "CONFIRMED",
+                        "eta_window": "UNKNOWN",
+                        "confidence_quality": "HIGH",
+                        "drivers": ["Structured Cycle Navigator distribution state is confirmed."],
+                        "invalidation": "A later structured state must explicitly clear distribution.",
+                    },
                 },
             }
             out = build_official_compass(
@@ -218,6 +265,31 @@ class OfficialDailyCompassTest(unittest.TestCase):
             "market_state": "Constructive transition.",
             "base_case_this_week": "Constructive transition without an active pullback warning.",
             "base_case_2_3_weeks": "Selective leadership may broaden.",
+            "decision_projection": {
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                "next_1_3d": {"direction": "UP", "summary": "Constructive transition."},
+                "next_5_7d": {"direction": "UP", "summary": "Selective leadership may broaden."},
+                "weeks_4_8": {
+                    "state": "PRE_ROTATION",
+                    "warning": "NONE",
+                    "direction": "UP",
+                    "action_posture": "HOLD",
+                    "summary": "Pre-rotation remains under review.",
+                    "through_date": None,
+                    "horizon_days": None,
+                    "eta": "UNKNOWN",
+                    "confidence": "LOW",
+                },
+                "protection": {
+                    "pullback_risk_state": "NORMAL",
+                    "pullback_class": "UNKNOWN",
+                    "distribution_risk": "NONE",
+                    "eta_window": "UNKNOWN",
+                    "confidence_quality": "MEDIUM",
+                    "drivers": ["Structured protection state is normal."],
+                    "invalidation": "A later structured warning would invalidate the normal state.",
+                },
+            },
         }
         action = {"NOW": "PREPARE"}
         market = {"directional_state": "BULLISH", "regime": "PREPARE"}
@@ -238,6 +310,39 @@ class OfficialDailyCompassTest(unittest.TestCase):
         self.assertEqual(tracker["pullback_risk_state"], "NORMAL")
         self.assertEqual(tracker["reentry_state"], "REVIEW")
         self.assertIn("not an automatic buy", tracker["reentry_message"])
+
+    def test_prose_only_cycle_navigator_cannot_drive_machine_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            prose_only = {
+                "issue_number": 26,
+                "market_state": "Distribution and pullback risk confirmed with broad expansion.",
+                "base_case_this_week": "Not a breakdown, but distribution risk is high.",
+                "base_case_2_3_weeks": "Broad altseason rotation.",
+                "base_case_4_8_weeks": "Exit risk.",
+                "altseason_countdown": [{"phase": "Broad altseason", "window": "soon"}],
+            }
+            out = build_official_compass(
+                self.auto(),
+                packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
+                cn_package=prose_only,
+                cn_binding={"status": "PASS"},
+                repo_root=Path(tmp),
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                run_reason="ON_DEMAND",
+            )
+            self.assertEqual(out["horizons"]["NEXT_1_3D"]["expected_direction"], "NO_EDGE")
+            self.assertEqual(out["horizons"]["NEXT_5_7D"]["expected_direction"], "NO_EDGE")
+            self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["expected_direction"], "UNAVAILABLE")
+            self.assertEqual(out["protection_tracker"]["pullback_risk_state"], "UNAVAILABLE")
+            self.assertEqual(out["protection_tracker"]["distribution_risk"], "UNKNOWN")
+
+    def test_evidence_snapshot_carries_persistence_baseline_features(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp)
+            values = {row["feature_id"]: row["value"] for row in out["evidence_snapshot"]["selected_features"]}
+            self.assertAlmostEqual(values["btc_delta_since_prior_packet_pct"], -0.3)
+            self.assertAlmostEqual(values["eth_delta_since_prior_packet_pct"], -0.7)
+            self.assertAlmostEqual(values["ethbtc_delta_since_prior_packet_pct"], -0.4)
 
     def test_public_projection_does_not_leak_internal_bindings_or_threshold_contract(self):
         with tempfile.TemporaryDirectory() as tmp:
