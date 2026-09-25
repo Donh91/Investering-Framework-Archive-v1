@@ -23,6 +23,23 @@ class NativeMarketRecoveryTest(unittest.TestCase):
         self.assertIn("hourly-sequence-capture.yml",[row["workflow"] for row in decision["dispatches"]])
         self.assertFalse(decision["manual_market_data_required"])
 
+    def test_macro_risk_second_nonpass_dispatches_existing_live_anchor_owner(self):
+        now=datetime(2026,9,8,20,0,tzinfo=timezone.utc)
+        _,state1=decide(
+            self.auto({"macro_risk":{"status":"UNAVAILABLE","classification":"MACRO_OWNER_STALE"}}),
+            default_state(),
+            now,
+        )
+        decision,_=decide(
+            self.auto({"macro_risk":{"status":"UNAVAILABLE","classification":"MACRO_OWNER_STALE"}}),
+            state1,
+            datetime(2026,9,8,21,0,tzinfo=timezone.utc),
+        )
+        rows=[row for row in decision["dispatches"] if row["workflow"]=="daily-raw-owner-capture.yml"]
+        self.assertEqual(len(rows),1)
+        self.assertEqual(rows[0]["lanes"],["macro_risk"])
+        self.assertFalse(decision["authority"]["owner_switch"])
+
     def test_quota_suppresses_wasteful_retry(self):
         prior=default_state();prior["lanes"]["sentiment"]={"consecutive_nonpass":5,"last_dispatch_utc":None}
         decision,state=decide(self.auto({"sentiment":{"status":"DEGRADED","classification":"CFGI_HTTP_429_QUOTA_EXHAUSTED"}}),prior,datetime(2026,9,8,20,0,tzinfo=timezone.utc))
@@ -32,13 +49,13 @@ class NativeMarketRecoveryTest(unittest.TestCase):
 
     def test_live_anchor_related_lanes_deduplicate(self):
         prior=default_state()
-        for lane in ("live_anchor","breadth","sentiment"):
+        for lane in ("live_anchor","breadth","sentiment","macro_risk"):
             prior["lanes"][lane]={"consecutive_nonpass":1,"last_dispatch_utc":None}
-        health={lane:{"status":"DEGRADED","classification":"STALE"} for lane in ("live_anchor","breadth","sentiment")}
+        health={lane:{"status":"DEGRADED","classification":"STALE"} for lane in ("live_anchor","breadth","sentiment","macro_risk")}
         decision,_=decide(self.auto(health),prior,datetime(2026,9,8,20,0,tzinfo=timezone.utc))
         rows=[row for row in decision["dispatches"] if row["workflow"]=="daily-raw-owner-capture.yml"]
         self.assertEqual(len(rows),1)
-        self.assertEqual(set(rows[0]["lanes"]),{"live_anchor","breadth","sentiment"})
+        self.assertEqual(set(rows[0]["lanes"]),{"live_anchor","breadth","sentiment","macro_risk"})
 
     def test_durable_pointer_is_repo_relative(self):
         with tempfile.TemporaryDirectory() as tmp:
