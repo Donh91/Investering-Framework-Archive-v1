@@ -51,13 +51,26 @@ class NativeMarketRecoveryTest(unittest.TestCase):
 
     def test_live_anchor_related_lanes_deduplicate(self):
         prior=default_state()
-        for lane in ("live_anchor","breadth","sentiment","macro_risk"):
+        shared=("live_anchor","breadth","sentiment","altseason_context","macro_risk")
+        health={lane:{"status":"PASS","classification":"PASS"} for lane in POLICY}
+        for lane in shared:
             prior["lanes"][lane]={"consecutive_nonpass":1,"last_dispatch_utc":None}
-        health={lane:{"status":"DEGRADED","classification":"STALE"} for lane in ("live_anchor","breadth","sentiment","macro_risk")}
+            health[lane]={"status":"DEGRADED","classification":"STALE"}
         decision,_=decide(self.auto(health),prior,datetime(2026,9,8,20,0,tzinfo=timezone.utc))
         rows=[row for row in decision["dispatches"] if row["workflow"]=="daily-raw-owner-capture.yml"]
         self.assertEqual(len(rows),1)
-        self.assertEqual(set(rows[0]["lanes"]),{"live_anchor","breadth","sentiment","macro_risk"})
+        self.assertEqual(set(rows[0]["lanes"]),set(shared))
+
+    def test_hourly_market_and_derivatives_deduplicate(self):
+        prior=default_state()
+        health={lane:{"status":"PASS","classification":"PASS"} for lane in POLICY}
+        for lane in ("hourly_market","derivatives"):
+            prior["lanes"][lane]={"consecutive_nonpass":1,"last_dispatch_utc":None}
+            health[lane]={"status":"DEGRADED","classification":"STALE"}
+        decision,_=decide(self.auto(health),prior,datetime(2026,9,8,20,0,tzinfo=timezone.utc))
+        rows=[row for row in decision["dispatches"] if row["workflow"]=="hourly-sequence-capture.yml"]
+        self.assertEqual(len(rows),1)
+        self.assertEqual(set(rows[0]["lanes"]),{"hourly_market","derivatives"})
 
     def test_durable_pointer_is_repo_relative(self):
         with tempfile.TemporaryDirectory() as tmp:
