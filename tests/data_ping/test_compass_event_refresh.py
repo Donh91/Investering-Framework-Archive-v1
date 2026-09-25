@@ -137,7 +137,7 @@ class CompassEventRefreshTests(unittest.TestCase):
     def test_action_change_dispatches(self):
         out=decision(latest=compass(action="PREPARE"))
         self.assertTrue(out["dispatch"])
-        self.assertIn("MARKET_STATE_CHANGED", out["cause_codes"])
+        self.assertIn("ACTION_STATE_CHANGED", out["cause_codes"])
 
     def test_hot_episode_enters_once(self):
         out=decision(entry_latest=entry(temp="HOT", btc=9), prior_state={"last_heat_state": "NORMAL"})
@@ -260,19 +260,19 @@ class CompassEventRefreshTests(unittest.TestCase):
         )
         self.assertFalse(out["dispatch"])
         self.assertEqual(out["reason"], "SCHEDULED_SLOT_IMMINENT")
-        self.assertIn("ACTION_STATE_CHANGED", out["suppressed_cause_codes"])
+        self.assertIn("MARKET_STATE_CHANGED", out["suppressed_cause_codes"])
         self.assertLessEqual(out["seconds_to_next_scheduled_compass"], 30*60)
 
     def test_protective_event_does_not_wait_for_imminent_slot(self):
         near=datetime(2026, 9, 18, 18, 0, tzinfo=timezone.utc)
-        a=auto_state(breadth=0.20)
+        a=auto_state(validation="FAIL")
         out=evaluate(
             auto_state=a,
             auto_pointer={"packet_sha256": a["packet_sha256"]},
             latest_compass=compass(),
             entry_latest=entry(),
             prior_state={"last_heat_state": "NORMAL"},
-            cn_package={"market_state": "consolidation", "base_case_this_week": "unresolved consolidation"},
+            cn_package=cn_package(),
             cn_binding={"status": "PASS"},
             now=near,
         )
@@ -349,7 +349,7 @@ class CompassEventRefreshTests(unittest.TestCase):
         )
         self.assertTrue(out["dispatch"])
         self.assertIn("PRIOR_REQUEST_NOT_BOUND_RETRY", out["cause_codes"])
-        self.assertIn("ACTION_STATE_CHANGED", out["cause_codes"])
+        self.assertIn("MARKET_STATE_CHANGED", out["cause_codes"])
 
 
 if __name__ == "__main__":
