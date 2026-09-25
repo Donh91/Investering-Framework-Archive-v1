@@ -5,6 +5,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 TIMESTAMP_KEYS = ("captured_at_utc","retrieved_at_utc","created_at_utc","generated_at_utc","completed_at_utc","published_at_utc","freeze_utc","snapshot_utc","created_unix")
 STATUS_SCOPE = "ARCHITECTURE_EVIDENCE_ONLY_NOT_AGGREGATE_SYSTEM_HEALTH"
@@ -15,6 +16,25 @@ STATUS_SCOPE = "ARCHITECTURE_EVIDENCE_ONLY_NOT_AGGREGATE_SYSTEM_HEALTH"
 EVIDENCE_WINDOW_DAYS = 14
 EVIDENCE_CENSOR_RATE_AMBER = 0.60
 OUTCOME_CONTRACTS = {"MATURED_OUTCOME_v2","MATURED_OUTCOME_v3"}
+
+LIVE_ANCHOR_OWNER_IDS = {
+    "fred_macro",
+    "binance_spot",
+    "binance_microstructure",
+    "okx_swap",
+    "top100_breadth",
+    "cfgi_sentiment",
+}
+ALWAYS_ACTIVE_LIVE_ANCHOR_OWNERS = {
+    "binance_microstructure",
+    "okx_swap",
+    "top100_breadth",
+    "cfgi_sentiment",
+}
+SEQUENCE_OWNED_DISABLED_OWNER = "binance_spot"
+DAILY_MACRO_OWNER = "fred_macro"
+DAILY_MACRO_LOCAL_HOUR = 6
+COPENHAGEN = ZoneInfo("Europe/Copenhagen")
 
 
 def read_json(path: Path) -> dict[str, Any] | None:
@@ -85,12 +105,46 @@ def find_cfgi_remaining(owner):
         if isinstance(billing,dict) and isinstance(billing.get('credits_remaining'),int):return billing['credits_remaining']
     return None
 
-def owner_population_finding(capture_present: bool, owners: list[dict[str, Any]], pass_count: int) -> tuple[str, int] | None:
-    """Return the scoped owner-health finding without treating 0/0 as healthy."""
-    if capture_present and not owners:
+def expected_live_anchor_owner_statuses(capture: dict[str, Any]) -> dict[str, str]:
+    """Return the exact expected owner topology for one live-anchor capture.
+
+    The capture lane intentionally does not run the sequence-owned Binance spot
+    owner. FRED is intentionally disabled on non-macro scheduled captures, but
+    must run at the 06:13 Europe/Copenhagen macro slot and on manual dispatch.
+    Unknown/malformed timing fails closed by requiring FRED to be active.
+    """
+    expected = {owner_id: "PASS" for owner_id in ALWAYS_ACTIVE_LIVE_ANCHOR_OWNERS}
+    expected[SEQUENCE_OWNED_DISABLED_OWNER] = "DISABLED"
+
+    fred_expected = "PASS"
+    trigger = str(capture.get("trigger") or "")
+    captured_at = parse_dt(capture.get("captured_at_utc"))
+    if trigger == "schedule" and captured_at is not None:
+        local_hour = captured_at.astimezone(COPENHAGEN).hour
+        if local_hour != DAILY_MACRO_LOCAL_HOUR:
+            fred_expected = "DISABLED"
+    expected[DAILY_MACRO_OWNER] = fred_expected
+    return expected
+
+
+def owner_population_finding(capture: dict[str, Any] | None, owners: list[dict[str, Any]]) -> tuple[str, int] | None:
+    """Validate owner coverage against the capture lane's explicit topology."""
+    if capture is None:
+        return None
+    if not owners:
         return ('OWNER_POPULATION_EMPTY',1)
-    if owners and pass_count<max(1,len(owners)-1):
+
+    owner_ids = [str(row.get("owner_id") or "") for row in owners]
+    if len(owner_ids) != len(set(owner_ids)):
         return ('OWNER_COVERAGE_DEGRADED',1)
+    if set(owner_ids) != LIVE_ANCHOR_OWNER_IDS:
+        return ('OWNER_COVERAGE_DEGRADED',1)
+
+    expected = expected_live_anchor_owner_statuses(capture)
+    for row in owners:
+        owner_id = str(row.get("owner_id") or "")
+        if row.get("status") != expected.get(owner_id):
+            return ('OWNER_COVERAGE_DEGRADED',1)
     return None
 
 def experiment_receipt_sync_finding(sync: dict[str, Any] | None, age: float | None) -> tuple[str, int] | None:
@@ -165,7 +219,7 @@ def main():
     ages={'capture':age_hours(now,cap_ts),'daily_director':age_hours(now,daily_ts),'weekly_calibration':age_hours(now,weekly_ts),'etf_owner':age_hours(now,etf_ts),'experiment_registry':age_hours(now,experiment_ts),'experiment_receipt_sync':age_hours(now,sync_ts),'remediation_queue':age_hours(now,remediation_ts)}
     if cap is None:add('NO_DAILY_CAPTURE',2)
     elif ages['capture'] is None or ages['capture']>8:add('DAILY_CAPTURE_STALE',2)
-    owner_finding=owner_population_finding(cap is not None,owners,pass_count)
+    owner_finding=owner_population_finding(cap,owners)
     if owner_finding:add(*owner_finding)
     if daily is None:add('NO_DAILY_DIRECTOR_OUTPUT',1)
     elif ages['daily_director'] is None or ages['daily_director']>36:add('DAILY_DIRECTOR_STALE',1)
