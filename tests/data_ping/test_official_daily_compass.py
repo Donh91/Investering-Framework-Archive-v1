@@ -559,6 +559,37 @@ class OfficialDailyCompassTest(unittest.TestCase):
             pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
             self.assertEqual(pointer["source_packet_sha256"], "owner-packet-b")
 
+    def test_policy_migration_same_source_creates_new_immutable_freeze(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            current = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+            )
+            legacy = json.loads(json.dumps(current))
+            legacy["decision_policy_version"] = "LEGACY_POLICY"
+            legacy_identity = (
+                "same-owner-packet|2026-09-16|ON_DEMAND|"
+                "schema=2|policy=LEGACY_POLICY"
+            )
+            legacy["compass_id"] = "CMP-20260916-" + hashlib.sha256(legacy_identity.encode()).hexdigest()[:12]
+            legacy_payload = {k: v for k, v in legacy.items() if k != "compass_sha256"}
+            legacy["compass_sha256"] = hashlib.sha256(
+                (json.dumps(legacy_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n").encode()
+            ).hexdigest()
+
+            first = write_official_compass(legacy, root)
+            second = write_official_compass(current, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(second["status"], "WRITTEN")
+            self.assertNotEqual(first["compass_id"], second["compass_id"])
+            self.assertNotEqual(first["path"], second["path"])
+            self.assertTrue(Path(first["public_path"]).exists())
+            self.assertTrue(Path(second["public_path"]).exists())
+
     def test_schema_migration_same_source_creates_new_immutable_freeze(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "official"
