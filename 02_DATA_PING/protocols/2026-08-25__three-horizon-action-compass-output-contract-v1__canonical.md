@@ -170,6 +170,19 @@ The compass may translate a ratified framework state into plain action. It may n
 
 `DATA_MISSING` remains `UNKNOWN`, not bearish evidence. Missing or conflicting evidence may reduce confidence or force `AFVENT`, but may not be fabricated into a directional signal.
 
+### 8.1 Long-cycle action permission
+
+Cycle Navigator may publish a typed 3-8 week navigation proposal, including a proposed `BUY` or `PREPARE_BUY` posture, but Cycle Navigator has no independent Main-Framework action permission.
+
+Before the Official Compass exposes a proactive long-cycle action:
+
+- `BUY` requires an active Main-Framework deployment permission;
+- `PREPARE_BUY` requires at least an active Main-Framework prepare permission;
+- a stronger upstream proposal than the current Main-Framework permission must be capped to the strongest currently permitted action;
+- without proactive Main-Framework permission, the user-facing long-cycle action fails closed to `WAIT` while its direction, state and warning may remain visible as navigation context.
+
+This permission gate does not rewrite the frozen Cycle Navigator forecast. It only bounds the Main-Framework decision translation that is allowed to reach Official/Public Compass.
+
 ## 9. Mandatory human format
 
 Keep the block compact. Each lane should normally use no more than three short lines.
