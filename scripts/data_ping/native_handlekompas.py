@@ -20,8 +20,8 @@ from typing import Any, Mapping
 CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
-OFFICIAL_COMPASS_SCHEMA_VERSION = 2
-OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-25_DECISION_INTEGRITY_V2"
+OFFICIAL_COMPASS_SCHEMA_VERSION = 3
+OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-25_DECISION_INTEGRITY_V3"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
@@ -51,7 +51,7 @@ OFFICIAL_AUTHORITY = {
     "model_weight_change": False,
 }
 
-CAPITALIZATION_ORDER = ("BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS")
+CAPITALIZATION_ORDER = ("BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS", "MEMES")
 HORIZON_ORDER = ("NEXT_12H", "NEXT_1_3D", "NEXT_5_7D", "CYCLE_ALTCOINS_3_8W")
 SCORED_HORIZON_ORDER = ("NEXT_12H", "NEXT_1_3D", "NEXT_5_7D")
 ALTCOIN_STATES = {
@@ -905,13 +905,14 @@ def capitalization_ladder(
         "LARGE_CAPS": "First alt-risk tier eligible only after a registered canonical confirmation.",
         "MID_CAPS": "Requires durable large-cap transmission under a registered canonical confirmation.",
         "SMALL_CAPS": "Requires confirmed mid-cap participation before deployment.",
-        "MICROCAPS": "Highest-beta tier remains last in the rotation sequence.",
+        "MICROCAPS": "Highest-beta non-meme tier remains late in the rotation sequence.",
+        "MEMES": "Meme risk is a separate rung and requires a governed meme-specific decision owner.",
     }
     confirm = {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]}
     deteriorate = {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT", "HOLD_WAIT_DATA_DEGRADED"]}
     eta_by_state = {"HOLD": "now", "DEPLOY": "now", "PREPARE": "0-3d", "WAIT": "1-7d conditional", "HARD_WAIT": "no fixed ETA"}
     rows = []
-    for seg, state in zip(CAPITALIZATION_ORDER, states):
+    for seg, state in zip(CAPITALIZATION_ORDER[:-1], states):
         rows.append({
             "segment": seg,
             "status": state,
@@ -922,7 +923,54 @@ def capitalization_ladder(
             "upgrade_trigger": confirm,
             "deterioration_trigger": deteriorate,
         })
+    rows.append({
+        "segment": "MEMES",
+        "status": "UNAVAILABLE",
+        "action": "UNAVAILABLE",
+        "direction": "UNAVAILABLE",
+        "eta": None,
+        "reason": reasons["MEMES"] + " No such owner is currently bound, so MICROCAPS cannot be used as a proxy.",
+        "upgrade_trigger": {"type": "GOVERNED_MEME_DECISION_OWNER", "states": ["ELIGIBLE"]},
+        "deterioration_trigger": {"type": "GOVERNED_MEME_DECISION_OWNER", "states": ["UNAVAILABLE", "INELIGIBLE"]},
+    })
     return rows
+
+
+def sell_assessment(
+    auto_state: Mapping[str, Any],
+    protection: Mapping[str, Any],
+    *,
+    as_of: datetime | None = None,
+) -> dict[str, Any]:
+    """Expose SELL as a separate fail-closed decision surface.
+
+    Existing exit-calibration owners are descriptive/accountability-only and
+    cannot be promoted into a live sell rule. Protection or distribution risk
+    is context, never sell authority by itself.
+    """
+    healthy = _health_ok(auto_state, as_of)
+    reason = (
+        "Required current-state evidence is degraded."
+        if not healthy
+        else "No governed sell/trim decision owner is bound. Protection and distribution risk are not sell instructions."
+    )
+    return {
+        "contract": "COMPASS_SELL_ASSESSMENT_v1",
+        "state": "UNAVAILABLE",
+        "horizon": "UNKNOWN",
+        "eta": "UNKNOWN",
+        "reason": reason,
+        "protection_context": {
+            "pullback_risk_state": protection.get("pullback_risk_state"),
+            "distribution_risk": protection.get("distribution_risk"),
+        },
+        "authority": {
+            "portfolio_execution": False,
+            "new_sell_rule": False,
+            "automatic_action": False,
+            "protection_is_sell_authority": False,
+        },
+    }
 
 
 def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
@@ -957,6 +1005,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         "horizons": public_horizons,
         "capitalization_ladder": public_ladder,
         "protection_tracker": compass.get("protection_tracker"),
+        "sell_assessment": compass.get("sell_assessment"),
         "action_now": compass.get("action_now"),
         "next_meaningful_change_eta": compass.get("next_meaningful_change_eta"),
         "conclusion": compass.get("conclusion"),
@@ -987,6 +1036,7 @@ def build_official_compass(
     protection = protection_tracker(
         auto_state, action, market_now, eligible_cn, as_of=issued, prior_compass=prior_compass
     )
+    sell = sell_assessment(auto_state, protection, as_of=issued)
     evidence = evidence_snapshot(auto_state, packet_path)
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"
     decision_context = {
@@ -1039,6 +1089,7 @@ def build_official_compass(
         "horizons": horizons,
         "capitalization_ladder": ladder,
         "protection_tracker": protection,
+        "sell_assessment": sell,
         "action_now": action.get("NOW"),
         "native_action_contract": action,
         "next_meaningful_change_eta": next_eta,
@@ -1088,6 +1139,7 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
                             and latest_compass.get("decision_policy_version") == compass.get("decision_policy_version")
                             and latest_compass.get("decision_context_fingerprint") == current_context_fingerprint
                             and latest_compass.get("protection_tracker") is not None
+                            and latest_compass.get("sell_assessment") is not None
                         ):
                             path = latest_path
     scheduled_slot_reasons = {"SCHEDULED_MORNING", "SCHEDULED_EVENING"}
