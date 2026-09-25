@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 UTC = timezone.utc
 WRITER_GROUP = "framework-main-writer"
+PR_ISOLATED_WRITER_GROUP = "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
 GOOD_CONCLUSIONS = {"success", "neutral", "skipped"}
 LIFECYCLE_STATES = {"ACTIVE", "EXPECTED_BLOCK", "PENDING_FIRST_EXPECTED_RUN", "RETIRED"}
 SCHEDULE_LATENESS_TOLERANCE = timedelta(hours=6)
@@ -346,7 +347,8 @@ def workflow_static(path: Path) -> dict[str, Any]:
     risks: list[str] = []
     if lifecycle_state == "INVALID":
         risks.append("INVALID_LIFECYCLE_STATE")
-    if writes and writer_group != WRITER_GROUP:
+    writer_group_safe = writer_group in {WRITER_GROUP, PR_ISOLATED_WRITER_GROUP}
+    if writes and not writer_group_safe:
         risks.append("NON_GLOBAL_WRITER_LOCK")
     if writes and "git rebase --abort" not in text:
         risks.append("NO_REBASE_ABORT")

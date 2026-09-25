@@ -22,8 +22,9 @@ permissions:
   issues: write
 
 concurrency:
-  group: framework-main-writer
-  cancel-in-progress: false
+  # Read-only PR validation must not compete with serialized main writers.
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   provider-budget:
