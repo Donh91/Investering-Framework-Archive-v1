@@ -12,6 +12,7 @@ from scripts.data_ping.native_handlekompas import (
     OFFICIAL_AUTHORITY,
     build_official_compass,
     build_public_projection,
+    load_cn_context,
     protection_tracker,
     write_official_compass,
 )
@@ -138,6 +139,8 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(out["schema_version"], 2)
             self.assertEqual(tuple(out["horizons"].keys()), HORIZON_ORDER)
             self.assertEqual(tuple(row["segment"] for row in out["capitalization_ladder"]), CAPITALIZATION_ORDER)
+            self.assertTrue(all("action" in row for row in out["capitalization_ladder"]))
+            self.assertEqual(tuple(row["action"] for row in out["capitalization_ladder"]), ("HOLD", "HOLD", "WAIT", "WAIT", "WAIT", "HARD_WAIT"))
             self.assertEqual(out["authority"], OFFICIAL_AUTHORITY)
             self.assertFalse(out["authority"]["portfolio_execution"])
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["state"], "CONSOLIDATION")
@@ -158,6 +161,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             out = self.build(tmp, validation="FAIL", decision="DEGRADED", blockers=["hourly_market"])
             self.assertEqual(out["data_status"], "DEGRADED")
             self.assertTrue(all(row["status"] == "UNAVAILABLE" for row in out["capitalization_ladder"]))
+            self.assertTrue(all(row["action"] == "UNAVAILABLE" for row in out["capitalization_ladder"]))
             self.assertTrue(all(out["horizons"][key]["expected_direction"] == "UNAVAILABLE" for key in HORIZON_ORDER))
 
     def test_optional_degradation_remains_decision_eligible(self):
@@ -358,6 +362,64 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertAlmostEqual(values["eth_delta_since_prior_packet_pct"], -0.7)
             self.assertAlmostEqual(values["ethbtc_delta_since_prior_packet_pct"], -0.4)
 
+    def test_legacy_cn_projection_addendum_is_hash_bound_and_non_rewriting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            week_dir = root / "05_CYCLE_NAVIGATOR/weekly/2026/W39"
+            week_dir.mkdir(parents=True)
+            package = {"issue_number": 27, "market_state": "legacy narrative only"}
+            package_path = week_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+            package_path.write_text(json.dumps(package, sort_keys=True) + "\n")
+            package_sha = hashlib.sha256(package_path.read_bytes()).hexdigest()
+            pointer_path = root / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+            pointer_path.parent.mkdir(parents=True, exist_ok=True)
+            pointer_path.write_text(json.dumps({
+                "issue_number": 27,
+                "iso_week": 39,
+                "iso_year": 2026,
+                "week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W39",
+            }))
+            projection = {
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                "next_1_3d": {"direction": "NO_EDGE", "summary": "Compatibility only."},
+                "next_5_7d": {"direction": "NO_EDGE", "summary": "Compatibility only."},
+                "weeks_4_8": {
+                    "state": "UNCLEAR", "warning": "NONE", "direction": "UNAVAILABLE",
+                    "action_posture": "UNAVAILABLE", "summary": "Compatibility only.",
+                    "through_date": None, "horizon_days": None, "eta": "UNKNOWN", "confidence": "LOW",
+                },
+                "protection": {
+                    "pullback_risk_state": "UNAVAILABLE", "pullback_class": "UNKNOWN",
+                    "distribution_risk": "UNKNOWN", "eta_window": "UNKNOWN",
+                    "confidence_quality": "LOW", "drivers": [],
+                    "invalidation": "Prospective structured evidence required.",
+                },
+            }
+            addendum_path = week_dir / "DECISION_PROJECTION_ADDENDUM_v1.json"
+            addendum_path.write_text(json.dumps({
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_ADDENDUM_v1",
+                "base_machine_package_sha256": package_sha,
+                "forecast_rewrite": False,
+                "portfolio_execution": False,
+                "decision_projection": projection,
+            }))
+
+            loaded, binding = load_cn_context(
+                root, Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
+            )
+            self.assertEqual(loaded["decision_projection"], projection)
+            self.assertEqual(binding["decision_projection_source"], "HASH_BOUND_COMPATIBILITY_ADDENDUM")
+            self.assertNotIn("decision_projection", json.loads(package_path.read_text()))
+
+            bad = json.loads(addendum_path.read_text())
+            bad["base_machine_package_sha256"] = "0" * 64
+            addendum_path.write_text(json.dumps(bad))
+            loaded_bad, binding_bad = load_cn_context(
+                root, Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
+            )
+            self.assertNotIn("decision_projection", loaded_bad)
+            self.assertEqual(binding_bad["decision_projection_source"], "INVALID_COMPATIBILITY_ADDENDUM_IGNORED")
+
     def test_public_projection_does_not_leak_internal_bindings_or_threshold_contract(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp)
@@ -366,6 +428,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotIn("evidence_snapshot", public)
             self.assertNotIn("native_action_contract", public)
             self.assertEqual(public["protection_tracker"]["contract"], "COMPASS_PROTECTION_TRACKER_v1")
+            self.assertTrue(all("action" in row for row in public["capitalization_ladder"]))
             self.assertFalse(public["protection_tracker"]["authority"]["wallet_specific"])
             self.assertFalse(any(key in public["protection_tracker"] for key in ("wallet_address", "holdings", "positions", "portfolio_actions")))
             self.assertNotRegex(json.dumps(public["protection_tracker"]), r"0x[a-fA-F0-9]{8,}")
