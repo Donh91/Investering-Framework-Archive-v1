@@ -86,5 +86,18 @@
     "automatic_trading": false,
     "canonical_market_state_change": false,
     "automatic_merge": false
+  },
+  "enrichment": {
+    "role": "POST_DISCOVERY_EXACT_CA_ENRICHMENT",
+    "implementation": "scripts/api_agent/meme_alpha_blockscout.py",
+    "preferred_transport": "BLOCKSCOUT_PRO_UNIFIED_CHAIN_4663",
+    "credential_env": "BLOCKSCOUT_API_KEY",
+    "public_fallback": "https://robinhoodchain.blockscout.com/api/v2",
+    "discovery_owner_replaced": false,
+    "first_party_authentication_replaced": false,
+    "market_data_owner_replaced": false,
+    "enrichment_failure_may_drop_launch": false,
+    "mutable_fields_require_observation_timestamp": true,
+    "secret_may_be_persisted": false
   }
 }

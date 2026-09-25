@@ -1,0 +1,61 @@
+{
+  "contract": "BLOCKSCOUT_ALPHA_LAB_INTEGRATION_RECEIPT_v1",
+  "date_utc": "2026-09-25",
+  "status": "IMPLEMENTED_PENDING_PR_MERGE",
+  "source_repository": "Donh91/Investering-Framework-Archive-v1",
+  "task_branch": "agent/task-20260925-blockscout-alpha",
+  "pr_number": 1333,
+  "source_prechange_sha": "4212f603b0d538fb70702fb067fddb9ebaf7c996",
+  "internal_safepoint": "backup-safepoint/2026-09-25-blockscout-alpha-integration",
+  "live_proof": {
+    "path": "research/api_agent/mcp/BLOCKSCOUT_ROBINHOOD_PRO_SMOKE_LATEST.json",
+    "secret_present_at_runtime": true,
+    "robinhood_chain_id": 4663,
+    "askr_address_http_status": 200,
+    "askr_creation_tx_http_status": 200,
+    "decoded_launch_method": "launchAndBuy",
+    "credential_value_persisted": false
+  },
+  "implementation": {
+    "exact_ca_enricher": "scripts/api_agent/meme_alpha_blockscout.py",
+    "preferred_runtime_transport": "BLOCKSCOUT_PRO_UNIFIED_CHAIN_4663",
+    "credential_env": "BLOCKSCOUT_API_KEY",
+    "public_fallback": "https://robinhoodchain.blockscout.com/api/v2",
+    "chat_surface": "INSTALLED_BLOCKSCOUT_CONNECTOR",
+    "discovery_owner_replaced": false,
+    "first_party_authentication_replaced": false,
+    "market_data_owner_replaced": false,
+    "automatic_trading_authority_added": false
+  },
+  "alpha_lab_binding": [
+    ".agents/skills/meme-alpha-supervisor/SKILL.md",
+    "research/api_agent/meme_alpha/README.md",
+    "research/api_agent/meme_alpha/MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1.json",
+    "06_RESEARCH_LAB/alpha_lab/LAUNCH_RUNTIME_CONTRACT_V2.md",
+    "06_RESEARCH_LAB/alpha_lab/2026-09-25__blockscout-mcp-alpha-lab-admission-and-proof-v1.md",
+    "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-16__alpha-lab-tokens-moonshots-standing-mandate-v1__policy.md"
+  ],
+  "validation": {
+    "askr_regression_bound_to_existing_moonshot_gate": true,
+    "pro_preferred_tested": true,
+    "public_fallback_tested": true,
+    "secret_redaction_tested": true,
+    "raw_address_object_shape_supported": true
+  },
+  "governance_incident": {
+    "occurred": true,
+    "class": "TEMPORARY_SMOKE_WORKFLOW_WRITTEN_TO_DEFAULT_BRANCH_BEFORE_ARCHIVE_GOVERNANCE_RECHECK",
+    "temporary_workflow": ".github/workflows/blockscout-robinhood-pro-smoke.yml",
+    "remediation": "DELETE_TEMPORARY_WORKFLOW_ON_ISOLATED_TASK_BRANCH_AND_RETAIN_ONLY_CREDENTIAL_FREE_RECEIPT",
+    "direct_main_secret_value_persisted": false,
+    "write_governance_result": "PARTIAL_REMEDIATED",
+    "external_vault_fresh_full_snapshot_in_this_execution": false,
+    "note": "Existing Vault snapshot predates this integration. Internal safepoint was created before governed cleanup. No recovery safeguards were modified."
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "canonical_market_state_change": false,
+    "project_ownership_inference": false
+  }
+}
