@@ -131,7 +131,10 @@ class OfficialDailyCompassTest(unittest.TestCase):
         )
         self.assertIn("status_reason_codes", schema["required"])
         self.assertFalse(schema["additionalProperties"])
-        self.assertTrue(schema["properties"]["status_reason_codes"]["uniqueItems"])
+        self.assertIn(
+            "MATURING_CONTEXT",
+            schema["properties"]["status_reason_codes"]["items"]["enum"],
+        )
 
     def test_cycle_navigator_non_ready_status_requires_machine_reason(self):
         validate_status_reason_codes({"status": "READY", "status_reason_codes": []})
