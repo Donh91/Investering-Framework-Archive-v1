@@ -238,7 +238,6 @@ def output_schema() -> dict[str, Any]:
             "status_reason_codes": {
                 "type": "array",
                 "maxItems": 8,
-                "uniqueItems": True,
                 "items": {"type": "string", "enum": list(STATUS_REASON_CODES)},
             },
             "issue_number": {"type": "integer", "minimum": 1},
