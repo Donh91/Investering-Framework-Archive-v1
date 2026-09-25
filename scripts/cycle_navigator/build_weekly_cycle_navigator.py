@@ -199,7 +199,7 @@ def output_schema() -> dict[str, Any]:
         "required": [
             "status", "issue_number", "previous_issue_number", "market_state",
             "evaluation", "base_case_this_week", "base_case_2_3_weeks", "base_case_4_8_weeks",
-            "altseason_countdown", "rotation_ladder", "forecast_freeze",
+            "altseason_countdown", "rotation_ladder", "forecast_freeze", "decision_projection",
             "readable_markdown", "x_ready_markdown", "uncertainties"
         ],
         "properties": {
@@ -260,6 +260,57 @@ def output_schema() -> dict[str, Any]:
                     "intraday_map": intraday_schema
                 }
             },
+            "decision_projection": {
+                "type": "object", "additionalProperties": False,
+                "required": ["contract", "next_1_3d", "next_5_7d", "weeks_4_8", "protection"],
+                "properties": {
+                    "contract": {"type": "string", "const": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"},
+                    "next_1_3d": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["direction", "summary"],
+                        "properties": {
+                            "direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "summary": {"type": "string"}
+                        }
+                    },
+                    "next_5_7d": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["direction", "summary"],
+                        "properties": {
+                            "direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "summary": {"type": "string"}
+                        }
+                    },
+                    "weeks_4_8": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["state", "warning", "direction", "action_posture", "summary", "through_date", "horizon_days", "eta", "confidence"],
+                        "properties": {
+                            "state": {"type": "string", "enum": ["DEFENSIVE", "CONSOLIDATION", "PRE_ROTATION", "ROTATION", "BROAD_ALTSEASON", "PARABOLIC_ALTSEASON", "DISTRIBUTION", "EXIT_RISK", "UNCLEAR"]},
+                            "warning": {"type": "string", "enum": ["NONE", "PARABOLIC_ALTSEASON_WARNING", "DISTRIBUTION_WARNING", "EXIT_WARNING", "STRUCTURAL_BREAKDOWN_WARNING"]},
+                            "direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "action_posture": {"type": "string", "enum": ["BUY", "PREPARE_BUY", "HOLD", "WAIT", "NO_EDGE", "UNAVAILABLE"]},
+                            "summary": {"type": "string"},
+                            "through_date": {"type": ["string", "null"]},
+                            "horizon_days": {"type": ["integer", "null"], "minimum": 1, "maximum": 90},
+                            "eta": {"type": "string"},
+                            "confidence": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "UNKNOWN"]}
+                        }
+                    },
+                    "protection": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["pullback_risk_state", "pullback_class", "distribution_risk", "eta_window", "confidence_quality", "drivers", "invalidation"],
+                        "properties": {
+                            "pullback_risk_state": {"type": "string", "enum": ["NORMAL", "BUILDING", "ELEVATED", "HIGH", "CONFIRMED", "UNAVAILABLE"]},
+                            "pullback_class": {"type": "string"},
+                            "distribution_risk": {"type": "string", "enum": ["NONE", "WARNING", "CONFIRMED", "UNKNOWN"]},
+                            "eta_window": {"type": "string"},
+                            "confidence_quality": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH"]},
+                            "drivers": {"type": "array", "maxItems": 4, "items": {"type": "string"}},
+                            "invalidation": {"type": "string"}
+                        }
+                    }
+                }
+            },
             "readable_markdown": {"type": "string"},
             "x_ready_markdown": {"type": "string"},
             "uncertainties": {"type": "array", "items": {"type": "string"}}
@@ -300,6 +351,8 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
         "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
+        "Populate decision_projection as the sole machine-readable directional/protection projection. It must be semantically equivalent to the narrative but never inferred by downstream keyword parsing. "
+        "Use NO_EDGE or UNAVAILABLE rather than forcing direction. Protection fields must be evidence-bounded, and warnings must not be manufactured from wording alone. "
         "The readable output is for the owner and the X-ready output is public-facing. Keep X prose compact with cohesive sections, not excessive one-line spacing. "
         "Include one base case for this week, one base case for the next 2-3 weeks, one base case for 4-8 weeks, plus a clear altseason countdown table. "
         "This publication has no authority to change Master Monday, thresholds, model weights or portfolio execution."
