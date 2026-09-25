@@ -21,6 +21,7 @@ CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
 OFFICIAL_COMPASS_SCHEMA_VERSION = 2
+OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-25_DECISION_INTEGRITY_V2"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
@@ -990,7 +991,7 @@ def build_official_compass(
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"
     source_identity = (
         f"{auto_state.get('packet_sha256')}|{issued.date().isoformat()}|{run_reason}|"
-        f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}"
+        f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}|policy={OFFICIAL_COMPASS_DECISION_POLICY_VERSION}"
     )
     compass_id = f"CMP-{issued:%Y%m%d}-{digest(source_identity.encode())[:12]}"
     next_eta = horizons["NEXT_12H"].get("eta") if data_status == "OK" else None
@@ -1002,6 +1003,7 @@ def build_official_compass(
     packet = {
         "contract": OFFICIAL_COMPASS_CONTRACT,
         "schema_version": OFFICIAL_COMPASS_SCHEMA_VERSION,
+        "decision_policy_version": OFFICIAL_COMPASS_DECISION_POLICY_VERSION,
         "compass_id": compass_id,
         "issued_at_utc": issued_text,
         "run_reason": run_reason,
@@ -1073,6 +1075,7 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
                         latest_compass = read_json(latest_path)
                         if (
                             int(latest_compass.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                            and latest_compass.get("decision_policy_version") == compass.get("decision_policy_version")
                             and latest_compass.get("protection_tracker") is not None
                         ):
                             path = latest_path
@@ -1085,6 +1088,7 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
             if (
                 str(prior_candidate.get("run_reason") or "") == reason
                 and int(prior_candidate.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                and prior_candidate.get("decision_policy_version") == compass.get("decision_policy_version")
             ):
                 path = candidate
                 break
