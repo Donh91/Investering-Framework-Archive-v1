@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from scripts.data_ping.compass_event_refresh import evaluate, heat_state
+from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, evaluate, heat_state
 
 
 NOW = datetime(2026, 9, 18, 16, 0, tzinfo=timezone.utc)
@@ -119,6 +119,17 @@ def decision(**kwargs):
 
 
 class CompassEventRefreshTests(unittest.TestCase):
+    def test_schema_only_unavailable_rung_is_not_material(self):
+        previous = [
+            {"segment": "BTC", "status": "HOLD"},
+            {"segment": "ETH", "status": "HOLD"},
+            {"segment": "MICROCAPS", "status": "HARD_WAIT"},
+        ]
+        current = previous + [{"segment": "MEMES", "status": "UNAVAILABLE"}]
+        self.assertFalse(_ladder_materially_changed(previous, current))
+        promoted = previous + [{"segment": "MEMES", "status": "PREPARE"}]
+        self.assertTrue(_ladder_materially_changed(previous, promoted))
+
     def test_same_source_never_dispatches(self):
         a=auto_state(source_sha="same")
         out=decision(auto=a, latest=compass(source_sha="same"), entry_latest=entry(temp="HOT", btc=9))
