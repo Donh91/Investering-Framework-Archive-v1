@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/remediation/auto_verify_post_fix.py",
+    "tests/remediation/test_auto_verify_post_fix.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-998a9308f3ea8596",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "framework-expose-post-verification-coverage",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* framework: surface post-fix verification coverage * framework: test explicit post-fix verification debt",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/remediation/auto_verify_post_fix.py": "21e1b392d10e4a63daef77bebdbfce29264dde43",
+    "tests/remediation/test_auto_verify_post_fix.py": "9f35ec1b3fa09d1ade66ba582b975852d21635b2"
+  },
+  "source_commit_sha": "998a9308f3ea8596dfd17f2073aeb03fcecebdd6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T23:43:44+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "framework: expose post-fix verification coverage"
+}

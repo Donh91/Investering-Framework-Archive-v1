@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    "research/codex/post_fix_verification_specs_v1.json",
+    "scripts/governance/check_append_only_evidence.py",
+    "scripts/health/build_operations_dashboard.py",
+    "scripts/remediation/auto_verify_post_fix.py",
+    "tests/governance/test_append_only_evidence.py",
+    "tests/health/test_operations_dashboard.py",
+    "tests/remediation/test_auto_verify_post_fix.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-0c4da29ad2943311",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "framework-autonomous-verification-evidence-integrity",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* framework: fix positive convergence verification path * framework: regress positive convergence auto verification * governance: protect convergence receipts as append only * governance: test convergence receipt immutability * ops: make amber dashboard reason truthful * ops: test truthful amber dashboard reason * governance: execute collected critical tests * framework: add safe pointer-truth auto verification spec * framework: fix convergence regression syntax * framework: repair convergence regression context syntax",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "3b7993c37f8aaab8a4040ecd421582cf106e83e7",
+    "research/codex/post_fix_verification_specs_v1.json": "e40f072efd485e06dd4e1ca751f510686372caf4",
+    "scripts/governance/check_append_only_evidence.py": "1efafd542a74d089aab052edf2a932fafba3b83a",
+    "scripts/health/build_operations_dashboard.py": "49597373100330ea59c1dbdefef7a7b7e637fd6d",
+    "scripts/remediation/auto_verify_post_fix.py": "ab0cec37936c5e5e56d12678fa6c5ba7c902642e",
+    "tests/governance/test_append_only_evidence.py": "de9a3cfe6f9d289db5046307173868669cd7fb31",
+    "tests/health/test_operations_dashboard.py": "a8219822f5ee0166d55e3655c7af0b8c1c4ed743",
+    "tests/remediation/test_auto_verify_post_fix.py": "a1bccf798b6d1a726147a7c1589c5fb4a7d5a3fb"
+  },
+  "source_commit_sha": "0c4da29ad29433110b95f3ad91733914f1784c79",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T23:36:09+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "framework: harden autonomous verification and evidence integrity"
+}

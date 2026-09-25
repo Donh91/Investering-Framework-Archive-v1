@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/research/copper_gold_slow_cycle_event_study.py",
+    "tests/research/test_copper_gold_slow_cycle_event_study.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-82317ef25df76508",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "slow-cycle-helper-knowledge-time-compatibility",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: preserve slow-cycle helper time compatibility * test: cover slow-cycle helper knowledge-time fallback",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/research/copper_gold_slow_cycle_event_study.py": "209cecddf139f4607267a5d370ed30bffc3147ce",
+    "tests/research/test_copper_gold_slow_cycle_event_study.py": "59c26bd5f17aaae9c2b2e166d8a9b4b5fa91611f"
+  },
+  "source_commit_sha": "82317ef25df7650849d51cd83250db73b0fcfb8b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T17:00:49+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix: restore slow-cycle helper knowledge-time compatibility"
+}

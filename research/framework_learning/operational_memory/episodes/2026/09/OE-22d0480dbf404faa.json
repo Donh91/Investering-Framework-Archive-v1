@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    "tests/alpha_lab/test_alpha_prospective_edge_validator_v1.py",
+    "tests/api_agent/test_typesafe_jev_stress.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-22d0480dbf404faa",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* governance: prove global test collection truth * governance: expose global collection failures * test: bind alpha prospective validator to repo root * governance: install bounded collection dependency * test: collect JEV stress harness as pytest test",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "849879379258153f3197224c3085ed10acf6870e",
+    "tests/alpha_lab/test_alpha_prospective_edge_validator_v1.py": "38eb5a46f8da0389f33a5c70346cb7ef4345a921",
+    "tests/api_agent/test_typesafe_jev_stress.py": "6f8f474cd7c6ee032cbafcf0f24faa61cb703a26"
+  },
+  "source_commit_sha": "22d0480dbf404faabbd586a68665434ca8dfbf60",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T00:00:56+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "governance: make test collection truth repo-wide"
+}

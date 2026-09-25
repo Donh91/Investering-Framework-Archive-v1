@@ -1,0 +1,60 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    ".github/workflows/automation-production-health.yml",
+    ".github/workflows/operations-dashboard-gate.yml",
+    ".github/workflows/operations-dashboard.yml",
+    ".github/workflows/remediation-maturation.yml",
+    "research/codex/post_fix_verification_specs_v1.json",
+    "scripts/governance/check_append_only_evidence.py",
+    "scripts/governance/check_test_collection_truth.py",
+    "scripts/health/automation_health_resolution.py",
+    "scripts/remediation/auto_verify_post_fix.py",
+    "tests/governance/test_append_only_evidence.py",
+    "tests/governance/test_test_collection_truth.py",
+    "tests/health/test_automation_health_resolution.py",
+    "tests/remediation/test_auto_verify_post_fix.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-535c5c7a976e1fab",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* framework: add scripts/governance/check_append_only_evidence.py * framework: add scripts/governance/check_test_collection_truth.py * framework: add scripts/health/automation_health_resolution.py * framework: add scripts/remediation/auto_verify_post_fix.py * framework: add research/codex/post_fix_verification_specs_v1.json * framework: add tests/governance/test_append_only_evidence.py * framework: add tests/governance/test_test_collection_truth.py * framework: add tests/health/test_automation_health_resolution.py * framework: add tests/remediation/test_auto_verify_post_fix.py * framework: har",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "ae0864e0b40bd15c29d3732047bbe6b87c1bd4bf",
+    ".github/workflows/automation-production-health.yml": "366ed9ff3fa83c4e1f2b8e3f0081d9ea7ba9376f",
+    ".github/workflows/operations-dashboard-gate.yml": "7e5f8294860afd7fb243d7b4e03134211cdf009e",
+    ".github/workflows/operations-dashboard.yml": "78feab82b52311ff4ff2bd153a83cd08b034026b",
+    ".github/workflows/remediation-maturation.yml": "320eb61a8187af605a7a96873c77e937c7cd91f6",
+    "research/codex/post_fix_verification_specs_v1.json": "cb0fe4c710b04e8c319acf4505424f0dc3d59b3b",
+    "scripts/governance/check_append_only_evidence.py": "9c67ad8d77d7735eb4f5057256d7f302bb6bd044",
+    "scripts/governance/check_test_collection_truth.py": "dc74212d1cf05e473f110565fa097bf48339000e",
+    "scripts/health/automation_health_resolution.py": "c17519160e3471307bf003da2b3306d9f0ad0d3c",
+    "scripts/remediation/auto_verify_post_fix.py": "00c0a77a825d8dc02a54709a13e3e3194a1e7900",
+    "tests/governance/test_append_only_evidence.py": "61ef918e0feef789c29544ad8d56f74991bf182b",
+    "tests/governance/test_test_collection_truth.py": "415330f4f2eeb63313f80b25da6e960764965a9c",
+    "tests/health/test_automation_health_resolution.py": "7fe4bd37b0b5fcbca59eb365c5b942425776c4e1",
+    "tests/remediation/test_auto_verify_post_fix.py": "f3545d8b40920e41da06d72d36f99e42dcb59e3c"
+  },
+  "source_commit_sha": "535c5c7a976e1fab9b8a5073c0dd144722bda424",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T23:06:22+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "framework: autonomous verification and evidence integrity v1"
+}

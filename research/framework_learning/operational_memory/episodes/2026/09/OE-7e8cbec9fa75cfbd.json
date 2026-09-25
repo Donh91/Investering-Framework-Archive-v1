@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health.yml",
+    "research/codex/post_fix_verification_specs_v1.json",
+    "scripts/health/automation_health_resolution.py",
+    "scripts/remediation/auto_verify_post_fix.py",
+    "tests/health/test_automation_health_resolution.py",
+    "tests/remediation/test_auto_verify_post_fix.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-7e8cbec9fa75cfbd",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "remediation-make-health-post-gates-machine-verifiable-1317",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Bind automation-health verification to immutable distinct-run receipts and post-fix evidence floors. No market semantics, thresholds, portfolio authority, cadence, or API-budget changes.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health.yml": "327fffe45e3deabe4d82e024a86d55e7a06252ac",
+    "research/codex/post_fix_verification_specs_v1.json": "1cbda4df041a73a3a0c5b5b44cd45d8af0ea51d6",
+    "scripts/health/automation_health_resolution.py": "1f307ccb98d401664aab5413e7b4e0057bd22232",
+    "scripts/remediation/auto_verify_post_fix.py": "8641196cf73dcd06fd48fa52c7127251d65eafd1",
+    "tests/health/test_automation_health_resolution.py": "7201991e7cb3dff2c62d6095f3024970dd2ef949",
+    "tests/remediation/test_auto_verify_post_fix.py": "32bdbea7a45206129a5a5ee83bf6a74214e9f312"
+  },
+  "source_commit_sha": "7e8cbec9fa75cfbd7f2fec00168c406be6cdef16",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T00:46:23+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "remediation: make health post-fix gates machine-verifiable (#1317)"
+}

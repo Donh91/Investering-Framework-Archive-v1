@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_lifecycle.py",
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py",
+    "tests/experiments/test_experiment_lifecycle.py",
+    "tests/experiments/test_scientific_admission_lifecycle.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-ccb2cd53009e996c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "experiments-cross-month-candidate-recreation-1316",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* experiments: prevent cross-month candidate recreation * experiments: share candidate identity idempotence with admission writer * test: reject cross-month candidate recreation * test: lock admission writer cross-month idempotence",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_lifecycle.py": "7a0e32380cd5fc724a37fe14f592c62a0c1a9d8a",
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py": "bdd28f7a3b9a7bc7edc1b9ce60fdd4d84ba85a66",
+    "tests/experiments/test_experiment_lifecycle.py": "72640eba859d6e437776e0badd902094714af0c9",
+    "tests/experiments/test_scientific_admission_lifecycle.py": "3466a223326f6184e92f77416cd10f8f3713e148"
+  },
+  "source_commit_sha": "ccb2cd53009e996c837504e0ae1ac6919c379fb2",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T00:10:19+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "experiments: prevent cross-month candidate recreation (#1316)"
+}

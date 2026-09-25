@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health.yml",
+    ".github/workflows/remediation-maturation.yml",
+    "scripts/governance/check_append_only_evidence.py",
+    "tests/governance/test_append_only_evidence.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-2e133d41f6ccfeed",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* governance: enforce append-only integrity on staged writer changes * governance: test staged and direct-writer append-only enforcement * governance: guard direct main writer evidence mutations * governance: guard direct main writer evidence mutations",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health.yml": "6a21150e81088e0a34e897a2eee103f8f68f349d",
+    ".github/workflows/remediation-maturation.yml": "cfdfe2d1f7555eb503bcbce9154d44b3b4a840e4",
+    "scripts/governance/check_append_only_evidence.py": "8bc4186ae8416c9b5a055979729a7d616cc86552",
+    "tests/governance/test_append_only_evidence.py": "e46b1dd1c2faeaf01169571f0b056290ab823d8b"
+  },
+  "source_commit_sha": "2e133d41f6ccfeedd691e46b6bb756b7081a810c",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T23:41:20+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "governance: enforce append-only evidence for direct main writers"
+}

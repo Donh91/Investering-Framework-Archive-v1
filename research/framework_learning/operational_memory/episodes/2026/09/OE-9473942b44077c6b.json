@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/post_fix_verification_specs_v1.json",
+    "scripts/remediation/auto_verify_post_fix.py",
+    "tests/remediation/test_auto_verify_post_fix.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-9473942b44077c6b",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "framework-anchor-post-evidence-after-follow-up-repairs",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* framework: add post-fix evidence floor * test: enforce post-fix evidence floor lineage * framework: reset pointer-truth evidence after repair",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/post_fix_verification_specs_v1.json": "53fe089fbb43b0269414b32a99c94fa80dccddd0",
+    "scripts/remediation/auto_verify_post_fix.py": "34738e7fb6fbfffddf05b828b18ae2c41c008336",
+    "tests/remediation/test_auto_verify_post_fix.py": "80114d26e10c94d15a93d48f3b53672a228d5ace"
+  },
+  "source_commit_sha": "9473942b44077c6b076810f5b461b26594c47b8d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T23:48:57+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "framework: anchor post-fix evidence after follow-up repairs"
+}
