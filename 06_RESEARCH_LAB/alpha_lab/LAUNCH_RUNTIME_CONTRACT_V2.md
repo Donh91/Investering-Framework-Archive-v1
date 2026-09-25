@@ -74,7 +74,7 @@ Any bounded collector must use:
 - source health and requested/returned coverage;
 - redundant transport comparison where available.
 
-Transport/query failure, implausible empty result, or unproven coverage is UNKNOWN/DEGRADED, never numeric zero or negative evidence.
+Transport/query failure, implausible empty result, or unproven coverage is UNKNOWN/DEGRADED, never numeric zero or negative evidence.\n\nAfter an exact Robinhood Chain CA is resolved, bounded Blockscout enrichment is the preferred deterministic verification layer for contract state, creation transaction, decoded launch calldata and timestamped holder/token metadata. Repository/runtime use is through `scripts/api_agent/meme_alpha_blockscout.py`: authenticated PRO transport via runtime-only `BLOCKSCOUT_API_KEY` is preferred, public Robinhood Blockscout is fallback, and canonical Pons/RPC discovery remains independent. Blockscout enrichment failure may not erase a valid discovery event or authenticate project ownership.
 
 The terminal SHADOW-04 result from 2026-09-19 remains FAIL because its preregistered provider-consistency gate failed. This v2 contract must not reinterpret or retry that frozen result.
 
