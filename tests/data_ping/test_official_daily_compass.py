@@ -5,7 +5,10 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.cycle_navigator.build_weekly_cycle_navigator import output_schema as cycle_navigator_output_schema
+from scripts.cycle_navigator.build_weekly_cycle_navigator import (
+    output_schema as cycle_navigator_output_schema,
+    validate_status_reason_codes,
+)
 from scripts.data_ping.native_handlekompas import (
     CAPITALIZATION_ORDER,
     HORIZON_ORDER,
@@ -126,6 +129,23 @@ class OfficialDailyCompassTest(unittest.TestCase):
             projection["properties"]["contract"]["const"],
             "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
         )
+        self.assertIn("status_reason_codes", schema["required"])
+        self.assertFalse(schema["additionalProperties"])
+        self.assertTrue(schema["properties"]["status_reason_codes"]["uniqueItems"])
+
+    def test_cycle_navigator_non_ready_status_requires_machine_reason(self):
+        validate_status_reason_codes({"status": "READY", "status_reason_codes": []})
+        validate_status_reason_codes({
+            "status": "DEGRADED",
+            "status_reason_codes": ["MATURING_CONTEXT"],
+        })
+        with self.assertRaisesRegex(ValueError, "non_ready_status_requires_reason_code"):
+            validate_status_reason_codes({"status": "DEGRADED", "status_reason_codes": []})
+        with self.assertRaisesRegex(ValueError, "ready_status_reason_codes_must_be_empty"):
+            validate_status_reason_codes({
+                "status": "READY",
+                "status_reason_codes": ["DATA_QUALITY_DEGRADED"],
+            })
 
     def test_deterministic_same_input_same_time(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -152,6 +172,35 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["state"], "CONSOLIDATION")
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["through_date"], "2026-10-14")
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["warning"], "NONE")
+
+    def test_long_cycle_buy_cannot_exceed_main_framework_permission(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cn = self.cn()
+            cn["decision_projection"]["weeks_4_8"]["state"] = "ROTATION"
+            cn["decision_projection"]["weeks_4_8"]["direction"] = "UP"
+            cn["decision_projection"]["weeks_4_8"]["action_posture"] = "BUY"
+            out = build_official_compass(
+                self.auto(),
+                packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
+                cn_package=cn,
+                cn_binding={"status": "PASS"},
+                repo_root=Path(tmp),
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                run_reason="ON_DEMAND",
+            )
+            lane = out["horizons"]["CYCLE_ALTCOINS_3_8W"]
+            self.assertEqual(out["action_now"], "HOLD_WAIT")
+            self.assertEqual(lane["proposed_action_posture"], "BUY")
+            self.assertEqual(lane["action_posture"], "WAIT")
+            self.assertEqual(
+                lane["action_permission"],
+                "WITHHELD_PENDING_MAIN_FRAMEWORK_PERMISSION",
+            )
+            public = build_public_projection(out)
+            self.assertEqual(
+                public["horizons"]["CYCLE_ALTCOINS_3_8W"]["action_posture"],
+                "WAIT",
+            )
 
     def test_sell_is_separate_and_fail_closed_without_governed_owner(self):
         with tempfile.TemporaryDirectory() as tmp:
