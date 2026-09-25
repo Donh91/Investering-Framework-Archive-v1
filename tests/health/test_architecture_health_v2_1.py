@@ -86,21 +86,75 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
         owner = {'files': [{'summary': {'billing': {'credits_remaining': 98765}}}]}
         self.assertEqual(module.find_cfgi_remaining(owner), 98765)
 
+    def owner_rows(self, *, fred='DISABLED', binance_spot='DISABLED', micro='PASS', okx='PASS', breadth='PASS', cfgi='PASS'):
+        return [
+            {'owner_id': 'fred_macro', 'status': fred},
+            {'owner_id': 'binance_spot', 'status': binance_spot},
+            {'owner_id': 'binance_microstructure', 'status': micro},
+            {'owner_id': 'okx_swap', 'status': okx},
+            {'owner_id': 'top100_breadth', 'status': breadth},
+            {'owner_id': 'cfgi_sentiment', 'status': cfgi},
+        ]
+
     def test_empty_owner_population_cannot_support_green_when_capture_exists(self):
         self.assertEqual(
-            module.owner_population_finding(True, [], 0),
+            module.owner_population_finding({'trigger': 'schedule'}, []),
             ('OWNER_POPULATION_EMPTY', 1),
         )
 
     def test_missing_capture_does_not_duplicate_empty_owner_finding(self):
-        self.assertIsNone(module.owner_population_finding(False, [], 0))
+        self.assertIsNone(module.owner_population_finding(None, []))
 
-    def test_healthy_owner_population_has_no_owner_finding(self):
-        owners = [
-            {'owner_id': 'a', 'status': 'PASS'},
-            {'owner_id': 'b', 'status': 'PASS'},
-        ]
-        self.assertIsNone(module.owner_population_finding(True, owners, 2))
+    def test_non_macro_schedule_accepts_only_intentional_disabled_owners(self):
+        capture = {'trigger': 'schedule', 'captured_at_utc': '2026-09-24T20:13:00Z'}
+        self.assertIsNone(module.owner_population_finding(capture, self.owner_rows()))
+
+    def test_macro_schedule_requires_fred_pass(self):
+        capture = {'trigger': 'schedule', 'captured_at_utc': '2026-09-25T04:13:00Z'}
+        self.assertEqual(
+            module.owner_population_finding(capture, self.owner_rows()),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
+        self.assertIsNone(
+            module.owner_population_finding(capture, self.owner_rows(fred='PASS'))
+        )
+
+    def test_manual_dispatch_requires_fred_pass(self):
+        capture = {'trigger': 'workflow_dispatch', 'captured_at_utc': '2026-09-25T00:00:00Z'}
+        self.assertEqual(
+            module.owner_population_finding(capture, self.owner_rows()),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
+        self.assertIsNone(
+            module.owner_population_finding(capture, self.owner_rows(fred='PASS'))
+        )
+
+    def test_sequence_owned_binance_spot_must_stay_disabled_in_anchor_lane(self):
+        capture = {'trigger': 'schedule', 'captured_at_utc': '2026-09-24T20:13:00Z'}
+        self.assertEqual(
+            module.owner_population_finding(capture, self.owner_rows(binance_spot='PASS')),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
+
+    def test_unexpected_disabled_active_owner_is_degraded(self):
+        capture = {'trigger': 'schedule', 'captured_at_utc': '2026-09-24T20:13:00Z'}
+        self.assertEqual(
+            module.owner_population_finding(capture, self.owner_rows(cfgi='DISABLED')),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
+
+    def test_missing_or_duplicate_expected_owner_is_degraded(self):
+        capture = {'trigger': 'schedule', 'captured_at_utc': '2026-09-24T20:13:00Z'}
+        rows = self.owner_rows()
+        self.assertEqual(
+            module.owner_population_finding(capture, rows[:-1]),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
+        duplicate = rows + [dict(rows[-1])]
+        self.assertEqual(
+            module.owner_population_finding(capture, duplicate),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
 
     def test_missing_experiment_receipt_sync_is_amber_finding(self):
         self.assertEqual(
