@@ -1,0 +1,43 @@
+{
+  "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_ADDENDUM_v1",
+  "status": "COMPATIBILITY_ONLY_NO_FORECAST_REWRITE",
+  "issue_number": 27,
+  "iso_year": 2026,
+  "iso_week": 39,
+  "base_machine_package_sha256": "422984472e1fc9a17c5e89d9673e503108be64c5382eb5875e8203acf93d3b1c",
+  "forecast_rewrite": false,
+  "portfolio_execution": false,
+  "canonical_market_state_change": false,
+  "purpose": "Typed fail-closed compatibility projection for a pre-schema weekly freeze. This sidecar does not add a directional forecast or protection claim.",
+  "decision_projection": {
+    "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+    "next_1_3d": {
+      "direction": "NO_EDGE",
+      "summary": "W39 was frozen before the typed decision projection existed. This compatibility addendum authorizes no machine direction for 1-3 days."
+    },
+    "next_5_7d": {
+      "direction": "NO_EDGE",
+      "summary": "W39 was frozen before the typed decision projection existed. This compatibility addendum authorizes no machine direction for 5-7 days."
+    },
+    "weeks_4_8": {
+      "state": "UNCLEAR",
+      "warning": "NONE",
+      "direction": "UNAVAILABLE",
+      "action_posture": "UNAVAILABLE",
+      "summary": "The original W39 freeze explicitly states that 4-8 week cycle direction and action posture are unavailable while the 56-day rotation window is maturing.",
+      "through_date": null,
+      "horizon_days": null,
+      "eta": "UNKNOWN",
+      "confidence": "LOW"
+    },
+    "protection": {
+      "pullback_risk_state": "UNAVAILABLE",
+      "pullback_class": "UNKNOWN",
+      "distribution_risk": "UNKNOWN",
+      "eta_window": "UNKNOWN",
+      "confidence_quality": "LOW",
+      "drivers": [],
+      "invalidation": "A prospectively frozen structured protection projection is required before this lane can become machine authority."
+    }
+  }
+}

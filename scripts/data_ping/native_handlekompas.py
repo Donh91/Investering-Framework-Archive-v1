@@ -26,6 +26,7 @@ PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
 DEFAULT_AUTO_STATE_POINTER = Path("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
 DEFAULT_CN_POINTER = Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
+CN_DECISION_PROJECTION_ADDENDUM = "DECISION_PROJECTION_ADDENDUM_v1.json"
 DEFAULT_ROOT = Path("04_MARKET_LEARNING/handlekompas")
 DEFAULT_OFFICIAL_ROOT = DEFAULT_ROOT / "official"
 
@@ -161,14 +162,45 @@ def load_cn_context(repo_root: Path, pointer_path: Path = DEFAULT_CN_POINTER) ->
     package = read_json(abs_package)
     if pointer.get("issue_number") != package.get("issue_number"):
         return None, {"status": "DEGRADED", "reason": "CN_POINTER_PACKAGE_ISSUE_MISMATCH"}
-    return package, {
+
+    binding: dict[str, Any] = {
         "status": "PASS",
         "pointer": file_binding(repo_root, pointer_path),
         "machine_package": file_binding(repo_root, package_path),
         "issue_number": package.get("issue_number"),
         "iso_week": pointer.get("iso_week"),
         "iso_year": pointer.get("iso_year"),
+        "decision_projection_source": "MACHINE_PACKAGE",
     }
+
+    # Transitional compatibility is append-only. A legacy weekly freeze is
+    # never rewritten. A sidecar may only supply the typed projection when it
+    # is hash-bound to the exact frozen machine package and explicitly declares
+    # zero forecast-rewrite authority.
+    if not _cn_decision_projection(package):
+        addendum_path = Path(week_dir) / CN_DECISION_PROJECTION_ADDENDUM
+        abs_addendum = repo_root / addendum_path
+        if abs_addendum.exists():
+            addendum = read_json(abs_addendum)
+            package_sha = digest(abs_package.read_bytes())
+            valid = (
+                isinstance(addendum, Mapping)
+                and addendum.get("contract") == "CYCLE_NAVIGATOR_DECISION_PROJECTION_ADDENDUM_v1"
+                and addendum.get("base_machine_package_sha256") == package_sha
+                and addendum.get("forecast_rewrite") is False
+                and addendum.get("portfolio_execution") is False
+                and isinstance(addendum.get("decision_projection"), Mapping)
+                and str(nested(addendum, "decision_projection", "contract") or "")
+                == "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"
+            )
+            binding["decision_projection_addendum"] = file_binding(repo_root, addendum_path)
+            if valid:
+                package = dict(package)
+                package["decision_projection"] = addendum["decision_projection"]
+                binding["decision_projection_source"] = "HASH_BOUND_COMPATIBILITY_ADDENDUM"
+            else:
+                binding["decision_projection_source"] = "INVALID_COMPATIBILITY_ADDENDUM_IGNORED"
+    return package, binding
 
 
 def classify_provider_health(auto_state: Mapping[str, Any]) -> dict[str, Any]:
@@ -706,14 +738,13 @@ def protection_tracker(
     elif prior_risk in {"HIGH", "CONFIRMED"} and risk not in {"UNAVAILABLE"}:
         reentry = "WAIT_FOR_RECLAIM"
         reentry_message = "Risk has eased, but re-entry stays blocked until a governed constructive confirmation is restored."
-    elif (
-        prior_reentry == "WAIT_FOR_RECLAIM"
-        and risk in {"NORMAL", "BUILDING"}
-        and posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"}
-        and direction == "BULLISH"
-    ):
-        reentry = "REVIEW"
-        reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+    elif prior_reentry == "WAIT_FOR_RECLAIM" and risk in {"NORMAL", "BUILDING"}:
+        if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and direction == "BULLISH":
+            reentry = "REVIEW"
+            reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+        else:
+            reentry = "WAIT_FOR_RECLAIM"
+            reentry_message = "Risk has eased, but re-entry watch remains active until governed constructive confirmation arrives."
     elif prior_reentry == "REVIEW" and risk in {"NORMAL", "BUILDING"}:
         reentry = "REVIEW"
         reentry_message = "Re-entry review remains open while governed constructive confirmation persists."
@@ -851,7 +882,7 @@ def capitalization_ladder(
 ) -> list[dict[str, Any]]:
     if not _health_ok(auto_state, as_of):
         return [
-            {"segment": seg, "status": "UNAVAILABLE", "direction": "UNAVAILABLE", "eta": None,
+            {"segment": seg, "status": "UNAVAILABLE", "action": "UNAVAILABLE", "direction": "UNAVAILABLE", "eta": None,
              "reason": "Required current-state evidence is degraded.",
              "upgrade_trigger": {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]},
              "deterioration_trigger": {"type": "ACTION_STATE", "states": ["HOLD_WAIT_DATA_DEGRADED"]}}
@@ -883,6 +914,7 @@ def capitalization_ladder(
         rows.append({
             "segment": seg,
             "status": state,
+            "action": state,
             "direction": direction if seg in {"BTC", "ETH"} else ("MIXED" if state in {"WAIT", "HARD_WAIT"} else direction),
             "eta": eta_by_state[state],
             "reason": reasons[seg],
@@ -898,6 +930,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         public_ladder.append({
             "segment": row.get("segment"),
             "status": row.get("status"),
+            "action": row.get("action"),
             "direction": row.get("direction"),
             "eta": row.get("eta"),
             "reason": row.get("reason"),

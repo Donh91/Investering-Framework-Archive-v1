@@ -1,4 +1,4 @@
-"""Decision Economics Ledger v1.1 regression tests."""
+"""Decision Economics Ledger v1.2 regression tests."""
 from __future__ import annotations
 
 import csv
@@ -22,7 +22,8 @@ def write_returns(path: Path, start: date, days: int, fn) -> None:
             ])
 
 
-def compass(compass_id: str, issued: str, statuses) -> dict:
+def compass(compass_id: str, issued: str, statuses, actions=None) -> dict:
+    actions = statuses if actions is None else actions
     return {
         "contract": "OFFICIAL_DAILY_COMPASS_v1",
         "compass_id": compass_id,
@@ -30,8 +31,8 @@ def compass(compass_id: str, issued: str, statuses) -> dict:
         "issued_at_utc": issued,
         "data_status": "OK",
         "capitalization_ladder": [
-            {"segment": segment, "status": status}
-            for segment, status in zip(del_.SEGMENTS, statuses)
+            {"segment": segment, "status": status, "action": action}
+            for segment, status, action in zip(del_.SEGMENTS, statuses, actions)
         ],
     }
 
@@ -75,9 +76,9 @@ class DecisionEconomicsLedgerTest(unittest.TestCase):
             and row["horizon_days"] == 7
         ]
         self.assertEqual([row["compass_exposure"] for row in btc], [1.0, 1.0])
-        # Initialization is deliberately cost-neutral; persistent HOLD must not
-        # be charged again on the second freeze.
-        self.assertEqual([row["compass_turnover"] for row in btc], [0.0, 0.0])
+        # Fresh capital explicitly starts in cash, so the first DEPLOY is a
+        # real transition. Persistent HOLD must not be charged again.
+        self.assertEqual([row["compass_turnover"] for row in btc], [1.0, 0.0])
 
     def test_turnover_cost_only_applies_on_actual_exit_transition(self):
         enter = compass("A", "2026-09-07T06:00:00Z", ("DEPLOY", "HOLD", "WAIT", "WAIT", "WAIT", "WAIT"))
@@ -102,7 +103,7 @@ class DecisionEconomicsLedgerTest(unittest.TestCase):
             self.as_of,
         )
         current_states = {"HOLD", "PREPARE", "WAIT", "HARD_WAIT"}
-        incumbent = [row for row in rows if row["interpretation"] == "INCUMBENT_HOLDER" and row["ladder_state"] in current_states]
+        incumbent = [row for row in rows if row["interpretation"] == "INCUMBENT_HOLDER" and row["compass_action"] in current_states]
         self.assertTrue(incumbent)
         self.assertTrue(all(row["compass_exposure"] == 1.0 for row in incumbent))
 
@@ -166,12 +167,44 @@ class DecisionEconomicsLedgerTest(unittest.TestCase):
 
     def test_unavailable_action_fails_closed_without_guessing(self):
         rows = del_.score_compasses(
-            [compass("A", "2026-09-07T06:00:00Z", ("UNAVAILABLE", "HOLD", "WAIT", "WAIT", "WAIT", "WAIT"))],
+            [compass("A", "2026-09-07T06:00:00Z", ("CORE", "CORE", "WATCH", "WATCH", "WATCH", "WATCH"), actions=("UNAVAILABLE", "HOLD", "WAIT", "WAIT", "WAIT", "WAIT"))],
             self.returns,
             self.as_of,
         )
         btc = [row for row in rows if row["segment"] == "BTC"]
         self.assertTrue(all(row["status"] == "COMPASS_ACTION_UNSCORABLE" for row in btc))
+
+    def test_status_is_never_used_as_action_when_action_is_missing(self):
+        value = compass("A", "2026-09-07T06:00:00Z", ("DEPLOY",) * 6)
+        for row in value["capitalization_ladder"]:
+            row.pop("action")
+        rows = del_.score_compasses([value], self.returns, self.as_of)
+        self.assertTrue(rows)
+        self.assertTrue(all(row["status"] == "COMPASS_ACTION_UNSCORABLE" for row in rows))
+        self.assertTrue(all(row["compass_action"] is None for row in rows))
+
+    def test_known_initial_exposure_charges_challenger_transition(self):
+        rows = del_.score_compasses(
+            [compass("A", "2026-09-07T06:00:00Z", ("HOLD",) * 6)],
+            self.returns,
+            self.as_of,
+        )
+        fresh_buy_hold = next(
+            row for row in rows
+            if row["segment"] == "BTC"
+            and row["interpretation"] == "FRESH_CAPITAL"
+            and row["challenger"] == "BUY_HOLD"
+            and row["horizon_days"] == 7
+        )
+        incumbent_cash = next(
+            row for row in rows
+            if row["segment"] == "BTC"
+            and row["interpretation"] == "INCUMBENT_HOLDER"
+            and row["challenger"] == "CASH"
+            and row["horizon_days"] == 7
+        )
+        self.assertEqual(fresh_buy_hold["challenger_turnover"], 1.0)
+        self.assertEqual(incumbent_cash["challenger_turnover"], 1.0)
 
 
 if __name__ == "__main__":
