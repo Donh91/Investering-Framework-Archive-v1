@@ -738,14 +738,13 @@ def protection_tracker(
     elif prior_risk in {"HIGH", "CONFIRMED"} and risk not in {"UNAVAILABLE"}:
         reentry = "WAIT_FOR_RECLAIM"
         reentry_message = "Risk has eased, but re-entry stays blocked until a governed constructive confirmation is restored."
-    elif (
-        prior_reentry == "WAIT_FOR_RECLAIM"
-        and risk in {"NORMAL", "BUILDING"}
-        and posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"}
-        and direction == "BULLISH"
-    ):
-        reentry = "REVIEW"
-        reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+    elif prior_reentry == "WAIT_FOR_RECLAIM" and risk in {"NORMAL", "BUILDING"}:
+        if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and direction == "BULLISH":
+            reentry = "REVIEW"
+            reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+        else:
+            reentry = "WAIT_FOR_RECLAIM"
+            reentry_message = "Risk has eased, but re-entry watch remains active until governed constructive confirmation arrives."
     elif prior_reentry == "REVIEW" and risk in {"NORMAL", "BUILDING"}:
         reentry = "REVIEW"
         reentry_message = "Re-entry review remains open while governed constructive confirmation persists."
