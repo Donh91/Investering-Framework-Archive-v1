@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.health.native_market_recovery import decide, default_state, write
+from scripts.health.native_market_recovery import POLICY, decide, default_state, write
 
 
 class NativeMarketRecoveryTest(unittest.TestCase):
@@ -25,13 +25,15 @@ class NativeMarketRecoveryTest(unittest.TestCase):
 
     def test_macro_risk_second_nonpass_dispatches_existing_live_anchor_owner(self):
         now=datetime(2026,9,8,20,0,tzinfo=timezone.utc)
+        health={lane:{"status":"PASS","classification":"PASS"} for lane in POLICY}
+        health["macro_risk"]={"status":"UNAVAILABLE","classification":"MACRO_OWNER_STALE"}
         _,state1=decide(
-            self.auto({"macro_risk":{"status":"UNAVAILABLE","classification":"MACRO_OWNER_STALE"}}),
+            self.auto(health),
             default_state(),
             now,
         )
         decision,_=decide(
-            self.auto({"macro_risk":{"status":"UNAVAILABLE","classification":"MACRO_OWNER_STALE"}}),
+            self.auto(health),
             state1,
             datetime(2026,9,8,21,0,tzinfo=timezone.utc),
         )
