@@ -21,6 +21,7 @@ POLICY = {
     "breadth": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
     "stablecoin_liquidity": {"workflow": "daily-stablecoin-liquidity.yml", "streak": 2, "cooldown_hours": 12},
     "sentiment": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
+    "macro_risk": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
 }
 SUPPRESS_RETRY_TOKENS = (
     "QUOTA", "RATE_LIMIT", "USAGE_LIMIT", "TOKEN", "CREDIT", "BUDGET", "INSUFFICIENT_FUNDS",
@@ -104,7 +105,7 @@ def decide(auto: Mapping[str, Any], prior: Mapping[str, Any], now: datetime) -> 
             "retry_suppressed_provider_limit": limited,
         }
 
-    # One live-anchor run repairs live_anchor+breadth+sentiment; never dispatch it three times.
+    # One live-anchor run repairs live_anchor+breadth+sentiment+macro_risk; never dispatch it repeatedly.
     unique: dict[str, dict[str, Any]] = {}
     for action in actions:
         workflow = action["workflow"]
