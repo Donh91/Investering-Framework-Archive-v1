@@ -49,7 +49,17 @@
           "authority regression",
           "retrospective outcome leakage"
         ]
-      }
+      },
+      "execution_status": "CANDIDATES_MATERIALIZED_STATIC_PASS_RUNTIME_AB_PENDING",
+      "candidate_paths": [
+        "07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/2026-09-25-wave-a/research-lab-red-team__cheapest-decisive-falsifier/SKILL.md",
+        "07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/2026-09-25-wave-a/meme-alpha-supervisor__cheapest-decisive-falsifier/SKILL.md"
+      ],
+      "baseline_ref": "5e1bc63858f2cc6a7a4895845633f412d0f67616",
+      "eval_case_ids": [
+        "redteam-cheapest-falsifier-004",
+        "memealpha-cheapest-falsifier-001"
+      ]
     },
     {
       "id": "HARVEST-INDEPENDENCE-002",
@@ -84,7 +94,15 @@
           "independent primary evidence incorrectly collapsed",
           "domain-count substituted for evidence-root analysis"
         ]
-      }
+      },
+      "execution_status": "CANDIDATE_MATERIALIZED_STATIC_PASS_RUNTIME_AB_PENDING",
+      "candidate_paths": [
+        "07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/2026-09-25-wave-a/developer-source-research__source-independence-groups/SKILL.md"
+      ],
+      "baseline_ref": "5e1bc63858f2cc6a7a4895845633f412d0f67616",
+      "eval_case_ids": [
+        "devsource-independence-004"
+      ]
     },
     {
       "id": "HARVEST-CLAIMGRAPH-003",
@@ -292,7 +310,15 @@
           "blocked source treated as disproof",
           "secondary paraphrase mislabelled as primary"
         ]
-      }
+      },
+      "execution_status": "CANDIDATE_MATERIALIZED_STATIC_PASS_RUNTIME_AB_PENDING",
+      "candidate_paths": [
+        "07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/2026-09-25-wave-a/developer-source-research__bounded-source-chasing/SKILL.md"
+      ],
+      "baseline_ref": "5e1bc63858f2cc6a7a4895845633f412d0f67616",
+      "eval_case_ids": [
+        "devsource-sourcechain-005"
+      ]
     }
   ],
   "rejected_patterns": [
@@ -320,5 +346,15 @@
       "HARVEST-EVOLUTION-006",
       "HARVEST-MULTIREVIEW-007"
     ]
-  ]
+  ],
+  "wave_a_execution": {
+    "status": "STATIC_GATE_PASS_RUNTIME_AB_PENDING",
+    "branch": "agent/task-20260925-skill-harvest-wave-a",
+    "active_skill_files_changed": false,
+    "candidate_count": 4,
+    "case_count": 4,
+    "behavioral_superiority_claimed": false,
+    "activation_allowed": false,
+    "next_evidence_action": "Run blind baseline-vs-candidate runtime A/B on the four frozen cases using the existing skill-quality harness and a separately authorized trusted live adapter."
+  }
 }
