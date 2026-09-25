@@ -1,0 +1,58 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    ".github/workflows/daily-compass.yml",
+    ".github/workflows/native-handlekompas.yml",
+    "06_RESEARCH_LAB/audit_summaries/2026-09-25__compass-decision-integrity-and-del-audit-v1__repair-candidate.md",
+    "research/decision_economics/DEL_PREREGISTRATION_v1_1.json",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "scripts/learning/decision_economics_ledger.py",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py",
+    "tests/data_ping/test_native_handlekompas.py",
+    "tests/data_ping/test_official_daily_compass.py",
+    "tests/learning/test_compass_outcomes.py",
+    "tests/learning/test_decision_economics_ledger.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-534bb8d4a7f21f32",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Remove retired breadth/ETHBTC action authority, require typed Cycle Navigator decision projections, enforce issuance-time freshness, restore persistence baseline inputs, and add a shadow-only preregistered Decision Economics Ledger v1.1.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "f1bf0c354918c330d54f58dbe7231e8643a2740a",
+    ".github/workflows/daily-compass.yml": "d953dbbbdc7bf13cb5b9cf8820fec4bca221a432",
+    ".github/workflows/native-handlekompas.yml": "1426afdda1b7a54169480027b940dd395799724f",
+    "06_RESEARCH_LAB/audit_summaries/2026-09-25__compass-decision-integrity-and-del-audit-v1__repair-candidate.md": "c9a99ecfea041e4ec05e13fac63dbc268ec57227",
+    "research/decision_economics/DEL_PREREGISTRATION_v1_1.json": "ebde35ad95df20a98d3c4f6fd3bf0ec742732c81",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "301364205cb413f2cf67221b2072388bb76d8b65",
+    "scripts/data_ping/native_handlekompas.py": "e385896b9876d69c9e2d12ce09520d878ca0a63d",
+    "scripts/learning/decision_economics_ledger.py": "d22eb83ddaaf2bf5a3283983892812b99004e79f",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py": "90fa352753b8743000b4ccffd4cface7fb61892f",
+    "tests/data_ping/test_native_handlekompas.py": "c058f1262010c3b4d4726c5b338f78fa7ebf4b0b",
+    "tests/data_ping/test_official_daily_compass.py": "aa3e20197b2d862e335d1ddd5b0971422c8224a2",
+    "tests/learning/test_compass_outcomes.py": "b92f8861ee2d34b5c62e4679678e5b4a9d37890c",
+    "tests/learning/test_decision_economics_ledger.py": "5fa3bddd86c6a89e2b8a11ae65846435545e7c27"
+  },
+  "source_commit_sha": "534bb8d4a7f21f32316742680fec53243be8eee1",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T09:17:28+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Compass: enforce decision integrity and add DEL v1.1 shadow accountability"
+}

@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/architecture/build_latest_handoff.py",
+    "scripts/health/build_operations_dashboard.py",
+    "tests/health/test_operations_dashboard.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-59cebf63bf6bdc44",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* ops: require trusted Daily Director handoff evidence * ops: preserve Daily Director semantic degradation * test: lock pointer truth integrity regressions * ops: preserve expected Daily Director owner skip * test: preserve expected owner skip semantics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/architecture/build_latest_handoff.py": "994b25b21af206c4214f52c7c00ddd3c5c132a56",
+    "scripts/health/build_operations_dashboard.py": "810357c3ebe9f72f2341d9ff591dab2fd7e02687",
+    "tests/health/test_operations_dashboard.py": "8303f9b62af31cdf216b63cfe339613ded2e7e9c"
+  },
+  "source_commit_sha": "59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T23:46:34+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "ops: close pointer-truth integrity gaps"
+}

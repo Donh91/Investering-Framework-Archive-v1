@@ -45,6 +45,8 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
       - name: Build privacy-safe public bundle
         run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+      - name: Validate Compass bundle contract
+        run: node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
       - name: Bind canonical weekly scorecard
         run: node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
       - name: Add bounded live observation

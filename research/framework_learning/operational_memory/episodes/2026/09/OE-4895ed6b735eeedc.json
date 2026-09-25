@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/hourly-sequence-capture.yml",
+    "scripts/data_ping/native_handlekompas.py",
+    "tests/data_ping/test_official_daily_compass.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-4895ed6b735eeedc",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Automation: bridge on-demand Hourly recovery to Entry Signal * Compass: bind immutable freeze identity to decision policy version * Tests: prevent immutable Compass collision across policy versions * Compass: bind freeze identity to full decision context * Tests: refresh Compass when Cycle Navigator decision context changes",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/hourly-sequence-capture.yml": "c93c745f6232386c1578db58a5d37615ccef1787",
+    "scripts/data_ping/native_handlekompas.py": "fc95981f05c5865c048359dcd5517d91c58b442f",
+    "tests/data_ping/test_official_daily_compass.py": "22c0e3753677a1ecf38b4859cdd8f002e8d82bc3"
+  },
+  "source_commit_sha": "4895ed6b735eeedc5da5d7640a78e2d5cbafe481",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T09:37:15+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Automation/Compass recovery continuity"
+}

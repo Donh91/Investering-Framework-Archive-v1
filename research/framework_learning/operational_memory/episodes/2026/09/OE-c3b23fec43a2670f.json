@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/automation_health_resolution.py",
+    "tests/health/test_automation_health_resolution.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-c3b23fec43a2670f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* health: require distinct recovered production runs * test: require distinct recovery run ids",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/automation_health_resolution.py": "b760f3af5de5f48588f3604645e85aa6c2e489b3",
+    "tests/health/test_automation_health_resolution.py": "ffbb640da07b328471270879b05242ff74ce4164"
+  },
+  "source_commit_sha": "c3b23fec43a2670f6e55667440a5f27a0788d5ef",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T23:55:34+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "health: require distinct runs before incident resolution"
+}

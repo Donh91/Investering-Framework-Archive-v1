@@ -20,12 +20,14 @@ from typing import Any, Mapping
 CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
-OFFICIAL_COMPASS_SCHEMA_VERSION = 2
+OFFICIAL_COMPASS_SCHEMA_VERSION = 3
+OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-25_DECISION_INTEGRITY_V3_1"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
 DEFAULT_AUTO_STATE_POINTER = Path("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
 DEFAULT_CN_POINTER = Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
+CN_DECISION_PROJECTION_ADDENDUM = "DECISION_PROJECTION_ADDENDUM_v1.json"
 DEFAULT_ROOT = Path("04_MARKET_LEARNING/handlekompas")
 DEFAULT_OFFICIAL_ROOT = DEFAULT_ROOT / "official"
 
@@ -49,7 +51,7 @@ OFFICIAL_AUTHORITY = {
     "model_weight_change": False,
 }
 
-CAPITALIZATION_ORDER = ("BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS")
+CAPITALIZATION_ORDER = ("BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS", "MEMES")
 HORIZON_ORDER = ("NEXT_12H", "NEXT_1_3D", "NEXT_5_7D", "CYCLE_ALTCOINS_3_8W")
 SCORED_HORIZON_ORDER = ("NEXT_12H", "NEXT_1_3D", "NEXT_5_7D")
 ALTCOIN_STATES = {
@@ -161,14 +163,45 @@ def load_cn_context(repo_root: Path, pointer_path: Path = DEFAULT_CN_POINTER) ->
     package = read_json(abs_package)
     if pointer.get("issue_number") != package.get("issue_number"):
         return None, {"status": "DEGRADED", "reason": "CN_POINTER_PACKAGE_ISSUE_MISMATCH"}
-    return package, {
+
+    binding: dict[str, Any] = {
         "status": "PASS",
         "pointer": file_binding(repo_root, pointer_path),
         "machine_package": file_binding(repo_root, package_path),
         "issue_number": package.get("issue_number"),
         "iso_week": pointer.get("iso_week"),
         "iso_year": pointer.get("iso_year"),
+        "decision_projection_source": "MACHINE_PACKAGE",
     }
+
+    # Transitional compatibility is append-only. A legacy weekly freeze is
+    # never rewritten. A sidecar may only supply the typed projection when it
+    # is hash-bound to the exact frozen machine package and explicitly declares
+    # zero forecast-rewrite authority.
+    if not _cn_decision_projection(package):
+        addendum_path = Path(week_dir) / CN_DECISION_PROJECTION_ADDENDUM
+        abs_addendum = repo_root / addendum_path
+        if abs_addendum.exists():
+            addendum = read_json(abs_addendum)
+            package_sha = digest(abs_package.read_bytes())
+            valid = (
+                isinstance(addendum, Mapping)
+                and addendum.get("contract") == "CYCLE_NAVIGATOR_DECISION_PROJECTION_ADDENDUM_v1"
+                and addendum.get("base_machine_package_sha256") == package_sha
+                and addendum.get("forecast_rewrite") is False
+                and addendum.get("portfolio_execution") is False
+                and isinstance(addendum.get("decision_projection"), Mapping)
+                and str(nested(addendum, "decision_projection", "contract") or "")
+                == "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"
+            )
+            binding["decision_projection_addendum"] = file_binding(repo_root, addendum_path)
+            if valid:
+                package = dict(package)
+                package["decision_projection"] = addendum["decision_projection"]
+                binding["decision_projection_source"] = "HASH_BOUND_COMPATIBILITY_ADDENDUM"
+            else:
+                binding["decision_projection_source"] = "INVALID_COMPATIBILITY_ADDENDUM_IGNORED"
+    return package, binding
 
 
 def classify_provider_health(auto_state: Mapping[str, Any]) -> dict[str, Any]:
@@ -253,6 +286,11 @@ def budget_health(auto_state: Mapping[str, Any], external_budget: Mapping[str, A
 
 
 def action_context(auto_state: Mapping[str, Any], *, as_of: datetime | None = None) -> dict[str, Any]:
+    """Translate current canonical owner state without reviving retired proxy gates.
+
+    The 12 July governance retirement gives Top-100 breadth and ETHBTC > 0.03
+    zero action weight. They remain visible as descriptive context only.
+    """
     ns = auto_state.get("normalized_state") or {}
     live = ns.get("live_market") or {}
     breadth = nested(ns, "breadth", "aggregate") or {}
@@ -264,40 +302,50 @@ def action_context(auto_state: Mapping[str, Any], *, as_of: datetime | None = No
     decision_health = str(auto_state.get("decision_context_status") or "UNKNOWN")
     entry_state = entry.get("state") if isinstance(entry, Mapping) else None
 
-    healthy = validation != "FAIL" and decision_health == "PASS" and not blockers and _health_ok(auto_state, as_of)
-    if healthy and entry_state == "GRADUATED_ALTCOIN_TOPUP_ACTIVE":
-        now = "GRADUATED_TOPUP_ACTIVE"
-    elif advance is not None and advance < 0.40:
-        now = "HOLD_DEFENSIVE_WAIT"
-    elif not healthy:
-        now = "HOLD_WAIT_DATA_DEGRADED"
-    elif ratio is not None and ratio > 0.03 and advance is not None and advance >= 0.50:
-        now = "PREPARE"
-    else:
-        now = "HOLD_WAIT"
+    healthy = (
+        validation != "FAIL"
+        and decision_health == "PASS"
+        and not blockers
+        and _health_ok(auto_state, as_of)
+    )
+
+    # IMPORTANT: legacy GRADUATED_ALTCOIN_TOPUP_ACTIVE observations are
+    # FORWARD_ONLY_NOT_PROMOTION_READY. A later canonical promotion must
+    # deliberately update this implementation; an observer label cannot grant
+    # action authority by itself.
+    now = "HOLD_WAIT" if healthy else "HOLD_WAIT_DATA_DEGRADED"
 
     why: list[str] = []
     if ratio is not None:
-        why.append(f"ETHBTC={ratio:.6f}")
+        why.append(f"DESCRIPTIVE_ETHBTC={ratio:.6f}")
     if advance is not None:
-        why.append(f"TOP100_BREADTH={advance:.2f}")
+        why.append(f"DESCRIPTIVE_TOP100_BREADTH={advance:.2f}")
     if entry_state:
-        why.append(f"ENTRY_SIGNAL={entry_state}")
+        why.append(f"ENTRY_SIGNAL_OBSERVER={entry_state}")
+    why.append("BREADTH_ACTION_AUTHORITY=RETIRED_ZERO_WEIGHT")
     if blockers:
         why.append("BLOCKERS=" + ",".join(blockers))
 
     return {
         "NOW": now,
-        "PREPARE": "ETHBTC_STRENGTH_PLUS_BREADTH_GTE_0_50_PLUS_HEALTHY_NATIVE_STATE",
-        "TOPUP_GATE": "ONLY_EXISTING_ENTRY_SIGNAL_OR_REGISTERED_CANONICAL_CONFIRMATION_CAN_ACTIVATE_TOPUP; PROXY_BREADTH_NEVER_SELF_PROMOTES",
-        "RISK_DOWN": "BREADTH_LT_0_40_OR_ETHBTC_WEAKENS_OR_NATIVE_HEALTH_DEGRADES_MATERIALLY",
+        "PREPARE": "ONLY_EXPLICIT_CANONICAL_PROMOTION_OR_REGISTERED_DECISION_OWNER_CAN_SET_PREPARE",
+        "TOPUP_GATE": "RETIRED_BREADTH_ETHBTC_PROXY_HAS_ZERO_ACTION_WEIGHT; FUTURE_PROMOTION_REQUIRES_DELIBERATE_CANONICAL_IMPLEMENTATION_CHANGE",
+        "RISK_DOWN": "ONLY_CANONICAL_PROTECTION_OR_DECISION_OWNER_CAN_ESCALATE_RISK; RETIRED_BREADTH_ETHBTC_PROXIES_ARE_DESCRIPTIVE_ONLY",
         "WHY": why,
+        "proxy_authority": {
+            "top100_breadth_action_weight": 0,
+            "ethbtc_0_03_gate_action_weight": 0,
+            "legacy_entry_observer_action_authority": False,
+        },
     }
 
 
 def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] | None = None, now: datetime | None = None) -> dict[str, Any]:
     generated = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     provider = classify_provider_health(auto_state)
+    freshness = owner_freshness(auto_state, generated)
+    source_validation = str(auto_state.get("validation_status") or "UNKNOWN")
+    effective_data_status = source_validation if freshness.get("status") == "PASS" else "DEGRADED"
     packet = {
         "contract": CONTRACT,
         "generated_at_utc": generated.isoformat().replace("+00:00", "Z"),
@@ -309,12 +357,14 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
             "validation_status": auto_state.get("validation_status"),
             "decision_context_status": auto_state.get("decision_context_status"),
         },
-        "action": action_context(auto_state),
+        "action": action_context(auto_state, as_of=generated),
         "DATA_HEALTH": {
-            "status": auto_state.get("validation_status"),
+            "status": effective_data_status,
+            "source_validation_status": auto_state.get("validation_status"),
             "decision_context_status": auto_state.get("decision_context_status"),
             "blockers": list(auto_state.get("blockers") or []),
             "optional_degraded_lanes": list(auto_state.get("optional_degraded_lanes") or []),
+            "owner_freshness": freshness,
             "provider_health": provider,
         },
         "BUDGET_HEALTH": budget_health(auto_state, external_budget),
@@ -391,6 +441,9 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
         _feature("sentiment_state", sentiment.get("classification") if isinstance(sentiment, Mapping) else None, None, packet_path.as_posix(), observed, nested(source_health, "sentiment", "status")),
         _feature("altseason_score_90d", finite(nested(altseason, "blockchaincenter_altcoin_season", "horizons", "90", "published_score")), "index", packet_path.as_posix(), observed, nested(source_health, "altseason_context", "status")),
         _feature("entry_signal_state", nested(ns, "entry_signal_reference", "state"), None, packet_path.as_posix(), observed, nested(source_health, "entry_signal_reference", "status")),
+        _feature("btc_delta_since_prior_packet_pct", _delta_pct(auto_state, "btc_usdt"), "pct", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
+        _feature("eth_delta_since_prior_packet_pct", _delta_pct(auto_state, "eth_usdt"), "pct", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
+        _feature("ethbtc_delta_since_prior_packet_pct", _delta_pct(auto_state, "ethbtc"), "pct", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
     ]
     available = sum(row["value"] is not None for row in rows)
     return {
@@ -506,24 +559,39 @@ def derive_market_now(auto_state: Mapping[str, Any], action: Mapping[str, Any], 
         direction = "NEUTRAL" if btc is not None and eth is not None and btc * eth >= 0 else "MIXED"
     summary_map = {
         "BULLISH": "Market state is constructive, but deployment still depends on the existing confirmation gate.",
-        "BEARISH": "Market pressure is negative and breadth/relative-strength conditions favor capital protection.",
+        "BEARISH": "Canonical protection evidence is negative and favors capital preservation.",
         "NEUTRAL": "Market is balanced enough that waiting for confirmation has more edge than forcing direction.",
         "MIXED": "Market signals conflict; near-term navigation stays selective and confirmation-driven.",
     }
     return {"directional_state": direction, "regime": posture, "summary": summary_map[direction]}
 
 
-def _weekly_direction(cn_package: Mapping[str, Any] | None) -> str:
+def _cn_decision_projection(cn_package: Mapping[str, Any] | None) -> Mapping[str, Any]:
     if not isinstance(cn_package, Mapping):
+        return {}
+    projection = cn_package.get("decision_projection")
+    if not isinstance(projection, Mapping):
+        return {}
+    if str(projection.get("contract") or "") != "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1":
+        return {}
+    return projection
+
+
+def _cn_direction(cn_package: Mapping[str, Any] | None, lane: str) -> str:
+    projection = _cn_decision_projection(cn_package)
+    row = projection.get(lane)
+    if not isinstance(row, Mapping):
         return "NO_EDGE"
-    text = " ".join(str(cn_package.get(k) or "") for k in ("market_state", "base_case_this_week")).lower()
-    if "consolidation" in text or "unresolved" in text:
-        return "SIDEWAYS"
-    if "confirmed breakdown" in text and "no confirmed breakdown" not in text and "rather than a confirmed breakdown" not in text:
-        return "DOWN"
-    if "broad expansion" in text and "not" not in text:
-        return "UP"
-    return "NO_EDGE"
+    direction = str(row.get("direction") or "NO_EDGE").upper()
+    return direction if direction in {"UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"} else "NO_EDGE"
+
+
+def _weekly_direction(cn_package: Mapping[str, Any] | None) -> str:
+    """Backward-compatible helper, now structured-only.
+
+    Free-form Cycle Navigator prose is context, never a machine decision field.
+    """
+    return _cn_direction(cn_package, "next_5_7d")
 
 
 def _unavailable_horizon(reason: str) -> dict[str, Any]:
@@ -540,55 +608,41 @@ def _unavailable_horizon(reason: str) -> dict[str, Any]:
 
 
 def _altcoin_cycle_lane(cn_package: Mapping[str, Any] | None, posture: str, issued: datetime) -> dict[str, Any]:
-    if not isinstance(cn_package, Mapping):
-        return {
-            **_unavailable_horizon("Current Cycle Navigator context is unavailable; the long-cycle lane fails closed."),
-            "state": "UNCLEAR", "warning": "NONE", "through_date": None, "horizon_days": None,
-        }
-    structured = cn_package.get("compass_4_8_weeks")
+    projection = _cn_decision_projection(cn_package)
+    structured = projection.get("weeks_4_8") if isinstance(projection, Mapping) else None
     if not isinstance(structured, Mapping):
-        structured = {}
-    text = " ".join(str(cn_package.get(key) or "") for key in (
-        "market_state", "base_case_this_week", "base_case_2_3_weeks", "base_case_4_8_weeks",
-    )).lower()
-    countdown = cn_package.get("altseason_countdown")
-    countdown_text = " ".join(
-        f"{row.get('phase', '')} {row.get('window', '')}"
-        for row in countdown if isinstance(row, Mapping)
-    ).lower() if isinstance(countdown, list) else ""
-    explicit_state = str(structured.get("state") or "").upper()
-    if explicit_state in ALTCOIN_STATES:
-        state = explicit_state
-    elif "exit risk" in text:
-        state = "EXIT_RISK"
-    elif "distribution" in text:
-        state = "DISTRIBUTION"
-    elif "parabolic altseason" in text:
-        state = "PARABOLIC_ALTSEASON"
-    elif "broad altseason" in countdown_text and "paused" not in countdown_text and "inactive" not in countdown_text:
-        state = "BROAD_ALTSEASON"
-    elif "volatile consolidation" in text or "consolidation persists" in text:
-        state = "CONSOLIDATION"
-    elif "pre_rotation" in text or "pre-rotation" in text or "selective eth" in text:
-        state = "PRE_ROTATION"
-    elif "rotation" in text:
-        state = "ROTATION"
-    else:
+        return {
+            **_unavailable_horizon(
+                "Structured Cycle Navigator 4-8 week decision projection is unavailable; free-form prose is context only."
+            ),
+            "state": "UNCLEAR",
+            "warning": "NONE",
+            "through_date": None,
+            "horizon_days": None,
+        }
+
+    state = str(structured.get("state") or "UNCLEAR").upper()
+    if state not in ALTCOIN_STATES:
         state = "UNCLEAR"
     warning = str(structured.get("warning") or "NONE").upper()
     if warning not in ALTCOIN_WARNINGS:
         warning = "NONE"
-    direction = {
-        "PRE_ROTATION": "UP", "ROTATION": "UP", "BROAD_ALTSEASON": "UP", "PARABOLIC_ALTSEASON": "UP",
-        "CONSOLIDATION": "SIDEWAYS", "DEFENSIVE": "DOWN", "DISTRIBUTION": "DOWN", "EXIT_RISK": "DOWN",
-    }.get(state, "NO_EDGE")
-    action_posture = "BUY" if posture == "GRADUATED_TOPUP_ACTIVE" else "PREPARE_BUY" if posture == "PREPARE" else "HOLD"
-    through = issued.date() + timedelta(days=28)
+    direction = str(structured.get("direction") or "NO_EDGE").upper()
+    if direction not in {"UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"}:
+        direction = "NO_EDGE"
     summary = str(
-        structured.get("summary") or cn_package.get("base_case_4_8_weeks")
-        or cn_package.get("base_case_2_3_weeks") or cn_package.get("base_case_this_week")
-        or "No eligible long-cycle summary is published."
+        structured.get("summary")
+        or (cn_package or {}).get("base_case_4_8_weeks")
+        or "No eligible structured long-cycle summary is published."
     )
+    through_raw = structured.get("through_date")
+    through = str(through_raw) if isinstance(through_raw, str) and through_raw else None
+    horizon_days = structured.get("horizon_days")
+    if isinstance(horizon_days, bool) or not isinstance(horizon_days, int) or horizon_days <= 0:
+        horizon_days = None
+    action_posture = str(structured.get("action_posture") or "HOLD").upper()
+    if action_posture not in {"BUY", "PREPARE_BUY", "HOLD", "WAIT", "NO_EDGE", "UNAVAILABLE"}:
+        action_posture = "NO_EDGE"
     return {
         "expected_direction": direction,
         "label": state,
@@ -596,12 +650,12 @@ def _altcoin_cycle_lane(cn_package: Mapping[str, Any] | None, posture: str, issu
         "expected_path": summary,
         "action_posture": action_posture,
         "warning": warning,
-        "through_date": through.isoformat(),
-        "horizon_days": 28,
-        "confirmation_trigger": {"type": "CURRENT_CN_STATE", "states": ["ROTATION", "BROAD_ALTSEASON"]},
-        "invalidation_trigger": {"type": "CURRENT_CN_STATE", "states": ["DEFENSIVE", "DISTRIBUTION", "EXIT_RISK"]},
-        "eta": f"through {through.isoformat()}",
-        "confidence": None,
+        "through_date": through,
+        "horizon_days": horizon_days,
+        "confirmation_trigger": {"type": "STRUCTURED_CN_STATE", "states": ["ROTATION", "BROAD_ALTSEASON"]},
+        "invalidation_trigger": {"type": "STRUCTURED_CN_STATE", "states": ["DEFENSIVE", "DISTRIBUTION", "EXIT_RISK"]},
+        "eta": str(structured.get("eta") or "UNKNOWN"),
+        "confidence": structured.get("confidence"),
     }
 
 
@@ -614,13 +668,10 @@ def protection_tracker(
     as_of: datetime | None = None,
     prior_compass: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Privacy-safe pullback/distribution + re-entry projection.
+    """Project protection and re-entry from structured canonical decision fields only.
 
-    This is a bounded translation of already-canonical Compass/Cycle states.
-    It is deliberately NOT a new pullback classifier and does not consume the
-    research-only pullback-learning lane as authority. Storm/Tsunami-style
-    labels remain UNKNOWN unless a future canonical owner explicitly publishes
-    them.
+    Cycle Navigator prose remains explanatory context. It must never be parsed
+    into an alert, distribution state, re-entry gate, or event-driven refresh.
     """
     issued = (as_of or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     issued_text = issued.isoformat().replace("+00:00", "Z")
@@ -638,99 +689,69 @@ def protection_tracker(
             "data_quality": "DEGRADED",
             "reentry_state": "UNAVAILABLE",
             "reentry_message": "Re-entry review is unavailable until canonical evidence is healthy.",
-            "authority": {
-                "portfolio_execution": False,
-                "wallet_specific": False,
-                "new_market_classifier": False,
-            },
+            "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
         }
 
-    posture = str(action.get("NOW") or "HOLD_WAIT")
-    direction = str(market_now.get("directional_state") or "MIXED")
-    structured = cn_package.get("compass_4_8_weeks")
-    structured = structured if isinstance(structured, Mapping) else {}
-    alt = _altcoin_cycle_lane(cn_package, posture, issued)
-    alt_state = str(alt.get("state") or alt.get("label") or "UNCLEAR").upper()
-    alt_warning = str(alt.get("warning") or "NONE").upper()
-    text = " ".join(str(cn_package.get(k) or "") for k in (
-        "market_state", "base_case_this_week", "base_case_2_3_weeks", "base_case_4_8_weeks",
-    )).lower()
-    explicit_pullback = any(token in text for token in (
-        "elevated pullback risk", "pullback risk", "pullback phase",
-    ))
+    projection = _cn_decision_projection(cn_package)
+    structured = projection.get("protection") if isinstance(projection, Mapping) else None
+    if not isinstance(structured, Mapping):
+        return {
+            "contract": "COMPASS_PROTECTION_TRACKER_v1",
+            "pullback_risk_state": "UNAVAILABLE",
+            "pullback_class": "UNKNOWN",
+            "distribution_risk": "UNKNOWN",
+            "eta_window": "UNKNOWN",
+            "confidence_quality": "LOW",
+            "decisive_public_drivers": [],
+            "invalidation": "A structured Cycle Navigator protection projection is required; prose is not machine authority.",
+            "last_material_change_at": issued_text,
+            "data_quality": "STRUCTURED_PROTECTION_PROJECTION_UNAVAILABLE",
+            "reentry_state": "UNAVAILABLE",
+            "reentry_message": "Re-entry review is unavailable until structured canonical protection evidence exists.",
+            "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
+        }
 
-    distribution = "NONE"
-    risk = "NORMAL"
-    risk_class = "UNKNOWN"
-    quality = "MEDIUM"
-    drivers: list[str] = []
-
-    if alt_state == "EXIT_RISK" or alt_warning in {"EXIT_WARNING", "STRUCTURAL_BREAKDOWN_WARNING"}:
-        risk = "CONFIRMED"
-        risk_class = "EXIT_RISK" if alt_state == "EXIT_RISK" or alt_warning == "EXIT_WARNING" else "STRUCTURAL_BREAKDOWN"
-        distribution = "CONFIRMED"
-        quality = "HIGH"
-        drivers.append("Canonical cycle state carries an exit/structural-break warning.")
-    elif alt_state == "DISTRIBUTION":
-        risk = "HIGH"
-        risk_class = "DISTRIBUTION"
-        distribution = "CONFIRMED"
-        quality = "HIGH"
-        drivers.append("Canonical cycle state is distribution.")
-    elif alt_warning == "DISTRIBUTION_WARNING":
-        risk = "HIGH"
-        risk_class = "DISTRIBUTION"
-        distribution = "WARNING"
-        quality = "HIGH"
-        drivers.append("Canonical cycle state carries a distribution warning.")
-    elif posture == "HOLD_DEFENSIVE_WAIT" and direction == "BEARISH":
-        risk = "HIGH" if explicit_pullback else "ELEVATED"
-        risk_class = "DEFENSIVE_PULLBACK"
-        quality = "MEDIUM"
-        drivers.append("Live Compass is defensive while current direction is bearish.")
-        if explicit_pullback:
-            drivers.append("Weekly Cycle Navigator explicitly flags pullback risk.")
-    elif explicit_pullback:
-        risk = "ELEVATED"
-        risk_class = "VOLATILE_CONSOLIDATION"
-        quality = "MEDIUM"
-        drivers.append("Weekly Cycle Navigator explicitly flags elevated pullback/consolidation risk.")
-        if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and direction == "BULLISH":
-            drivers.append("Live Compass is constructive, so the weekly risk has not escalated to a confirmed break.")
-    elif posture == "HOLD_DEFENSIVE_WAIT" or direction == "BEARISH":
-        risk = "BUILDING"
-        risk_class = "DEFENSIVE_TRANSITION"
-        quality = "MEDIUM"
-        drivers.append("Live Compass has moved into a defensive or bearish state.")
-
-    eta_candidate = structured.get("pullback_eta_window") or structured.get("distribution_eta_window")
-    eta_window = str(eta_candidate) if isinstance(eta_candidate, str) and eta_candidate.strip() else "UNKNOWN"
+    risk = str(structured.get("pullback_risk_state") or "UNAVAILABLE").upper()
+    if risk not in PROTECTION_RISK_STATES:
+        risk = "UNAVAILABLE"
+    risk_class = str(structured.get("pullback_class") or "UNKNOWN").upper()
+    distribution = str(structured.get("distribution_risk") or "UNKNOWN").upper()
+    if distribution not in DISTRIBUTION_RISK_STATES:
+        distribution = "UNKNOWN"
+    quality = str(structured.get("confidence_quality") or "LOW").upper()
+    if quality not in {"LOW", "MEDIUM", "HIGH"}:
+        quality = "LOW"
+    eta_raw = structured.get("eta_window")
+    eta_window = str(eta_raw) if isinstance(eta_raw, str) and eta_raw.strip() else "UNKNOWN"
+    drivers_raw = structured.get("drivers")
+    drivers = [str(x) for x in drivers_raw[:4]] if isinstance(drivers_raw, list) else []
 
     prior_tracker = (prior_compass or {}).get("protection_tracker") if isinstance(prior_compass, Mapping) else None
     prior_tracker = prior_tracker if isinstance(prior_tracker, Mapping) else {}
     prior_risk = str(prior_tracker.get("pullback_risk_state") or "NORMAL")
     prior_reentry = str(prior_tracker.get("reentry_state") or "INACTIVE")
+    posture = str(action.get("NOW") or "HOLD_WAIT")
+    direction = str(market_now.get("directional_state") or "MIXED")
 
     if risk in {"HIGH", "CONFIRMED"}:
         reentry = "WAIT_FOR_FLUSH"
         reentry_message = "Protection phase. Do not treat stabilization alone as a re-entry signal."
-    elif prior_risk in {"HIGH", "CONFIRMED"}:
+    elif prior_risk in {"HIGH", "CONFIRMED"} and risk not in {"UNAVAILABLE"}:
         reentry = "WAIT_FOR_RECLAIM"
-        reentry_message = "Risk has eased, but re-entry stays blocked until the existing Compass confirmation gate is restored."
-    elif (
-        prior_reentry == "WAIT_FOR_RECLAIM"
-        and risk in {"NORMAL", "BUILDING"}
-        and posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"}
-        and direction == "BULLISH"
-    ):
-        reentry = "REVIEW"
-        reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+        reentry_message = "Risk has eased, but re-entry stays blocked until a governed constructive confirmation is restored."
+    elif prior_reentry == "WAIT_FOR_RECLAIM" and risk in {"NORMAL", "BUILDING"}:
+        if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and direction == "BULLISH":
+            reentry = "REVIEW"
+            reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+        else:
+            reentry = "WAIT_FOR_RECLAIM"
+            reentry_message = "Risk has eased, but re-entry watch remains active until governed constructive confirmation arrives."
     elif prior_reentry == "REVIEW" and risk in {"NORMAL", "BUILDING"}:
         reentry = "REVIEW"
-        reentry_message = "Re-entry review remains open while constructive confirmation persists."
+        reentry_message = "Re-entry review remains open while governed constructive confirmation persists."
     else:
-        reentry = "INACTIVE"
-        reentry_message = "No re-entry review is active."
+        reentry = "INACTIVE" if risk != "UNAVAILABLE" else "UNAVAILABLE"
+        reentry_message = "No re-entry review is active." if reentry == "INACTIVE" else "Re-entry review is unavailable."
 
     material = (risk, risk_class, distribution, eta_window, quality, reentry)
     prior_material = (
@@ -745,12 +766,9 @@ def protection_tracker(
     if not last_change:
         last_change = issued_text
 
-    if risk == "NORMAL":
-        invalidation = "No active warning. A material canonical risk escalation is required before this lane becomes prominent."
-    elif risk in {"BUILDING", "ELEVATED"}:
-        invalidation = "Risk downgrades only when later canonical Compass/Cycle evidence removes the warning and live state stays non-defensive."
-    else:
-        invalidation = "Risk downgrades only after canonical distribution/exit evidence clears and recovery confirmation survives reassessment."
+    invalidation = str(structured.get("invalidation") or "")
+    if not invalidation:
+        invalidation = "Later structured canonical protection evidence must explicitly downgrade or clear this state."
 
     return {
         "contract": "COMPASS_PROTECTION_TRACKER_v1",
@@ -759,17 +777,13 @@ def protection_tracker(
         "distribution_risk": distribution,
         "eta_window": eta_window,
         "confidence_quality": quality,
-        "decisive_public_drivers": drivers[:4],
+        "decisive_public_drivers": drivers,
         "invalidation": invalidation,
         "last_material_change_at": last_change,
-        "data_quality": "OK",
+        "data_quality": "OK" if risk != "UNAVAILABLE" else "DEGRADED",
         "reentry_state": reentry,
         "reentry_message": reentry_message,
-        "authority": {
-            "portfolio_execution": False,
-            "wallet_specific": False,
-            "new_market_classifier": False,
-        },
+        "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
     }
 
 
@@ -792,7 +806,8 @@ def horizon_map(
 
     posture = str(action.get("NOW") or "HOLD_WAIT")
     current = derive_market_now(auto_state, action, as_of=as_of)["directional_state"]
-    weekly = _weekly_direction(cn_package)
+    d13_source = _cn_direction(cn_package, "next_1_3d")
+    d57_source = _cn_direction(cn_package, "next_5_7d")
 
     if posture == "GRADUATED_TOPUP_ACTIVE":
         d12, a12 = "UP", "DEPLOY"
@@ -819,19 +834,24 @@ def horizon_map(
             "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(None, posture, as_of or datetime.now(timezone.utc)),
         }
 
-    if posture in {"GRADUATED_TOPUP_ACTIVE", "PREPARE"} and weekly in {"UP", "SIDEWAYS"}:
+    if posture in {"GRADUATED_TOPUP_ACTIVE", "PREPARE"} and d13_source in {"UP", "SIDEWAYS"}:
         d13, a13 = "UP", "PREPARE"
     elif posture == "HOLD_DEFENSIVE_WAIT":
-        d13, a13 = ("DOWN" if weekly == "DOWN" else "MIXED"), "WAIT"
+        d13, a13 = ("DOWN" if d13_source == "DOWN" else "MIXED"), "WAIT"
     else:
-        d13, a13 = weekly if weekly != "NO_EDGE" else "SIDEWAYS", "WAIT"
+        d13, a13 = d13_source, "WAIT"
 
-    d57 = weekly
-    if d57 == "NO_EDGE":
-        d57 = "SIDEWAYS" if posture in {"HOLD_WAIT", "HOLD_DEFENSIVE_WAIT"} else "MIXED"
-    a57 = "PREPARE" if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and d57 != "DOWN" else "WAIT"
+    d57 = d57_source
+    a57 = "PREPARE" if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and d57 not in {"DOWN", "NO_EDGE", "UNAVAILABLE"} else "WAIT"
 
-    label = lambda d: "BULLISH" if d == "UP" else "BEARISH" if d == "DOWN" else "NEUTRAL" if d == "SIDEWAYS" else "MIXED"
+    label = lambda d: (
+        "BULLISH" if d == "UP" else
+        "BEARISH" if d == "DOWN" else
+        "NEUTRAL" if d == "SIDEWAYS" else
+        "NO_EDGE" if d == "NO_EDGE" else
+        "UNAVAILABLE" if d == "UNAVAILABLE" else
+        "MIXED"
+    )
     confirm = {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]}
     invalidate = {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT", "HOLD_WAIT_DATA_DEGRADED"]}
     return {
@@ -862,13 +882,24 @@ def capitalization_ladder(
     *, as_of: datetime | None = None,
 ) -> list[dict[str, Any]]:
     if not _health_ok(auto_state, as_of):
-        return [
-            {"segment": seg, "status": "UNAVAILABLE", "direction": "UNAVAILABLE", "eta": None,
+        rows = [
+            {"segment": seg, "status": "UNAVAILABLE", "action": "UNAVAILABLE", "direction": "UNAVAILABLE", "eta": None,
              "reason": "Required current-state evidence is degraded.",
              "upgrade_trigger": {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]},
              "deterioration_trigger": {"type": "ACTION_STATE", "states": ["HOLD_WAIT_DATA_DEGRADED"]}}
-            for seg in CAPITALIZATION_ORDER
+            for seg in CAPITALIZATION_ORDER[:-1]
         ]
+        rows.append({
+            "segment": "MEMES",
+            "status": "UNAVAILABLE",
+            "action": "UNAVAILABLE",
+            "direction": "UNAVAILABLE",
+            "eta": None,
+            "reason": "Required current-state evidence is degraded, and meme risk still requires a governed meme-specific decision owner.",
+            "upgrade_trigger": {"type": "GOVERNED_MEME_DECISION_OWNER", "states": ["ELIGIBLE"]},
+            "deterioration_trigger": {"type": "GOVERNED_MEME_DECISION_OWNER", "states": ["UNAVAILABLE", "INELIGIBLE"]},
+        })
+        return rows
     posture = str(action.get("NOW") or "HOLD_WAIT")
     direction = str(market_now.get("directional_state") or "MIXED")
     if posture == "GRADUATED_TOPUP_ACTIVE":
@@ -882,26 +913,75 @@ def capitalization_ladder(
     reasons = {
         "BTC": "Liquidity anchor; preserve core while the short-horizon gate resolves.",
         "ETH": "Relative-strength leadership must hold before broader rotation is trusted.",
-        "LARGE_CAPS": "First alt-risk tier eligible after ETH/breadth confirmation.",
-        "MID_CAPS": "Requires durable large-cap transmission and stronger breadth.",
+        "LARGE_CAPS": "First alt-risk tier eligible only after a registered canonical confirmation.",
+        "MID_CAPS": "Requires durable large-cap transmission under a registered canonical confirmation.",
         "SMALL_CAPS": "Requires confirmed mid-cap participation before deployment.",
-        "MICROCAPS": "Highest-beta tier remains last in the rotation sequence.",
+        "MICROCAPS": "Highest-beta non-meme tier remains late in the rotation sequence.",
+        "MEMES": "Meme risk is a separate rung and requires a governed meme-specific decision owner.",
     }
     confirm = {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]}
     deteriorate = {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT", "HOLD_WAIT_DATA_DEGRADED"]}
     eta_by_state = {"HOLD": "now", "DEPLOY": "now", "PREPARE": "0-3d", "WAIT": "1-7d conditional", "HARD_WAIT": "no fixed ETA"}
     rows = []
-    for seg, state in zip(CAPITALIZATION_ORDER, states):
+    for seg, state in zip(CAPITALIZATION_ORDER[:-1], states):
         rows.append({
             "segment": seg,
             "status": state,
+            "action": state,
             "direction": direction if seg in {"BTC", "ETH"} else ("MIXED" if state in {"WAIT", "HARD_WAIT"} else direction),
             "eta": eta_by_state[state],
             "reason": reasons[seg],
             "upgrade_trigger": confirm,
             "deterioration_trigger": deteriorate,
         })
+    rows.append({
+        "segment": "MEMES",
+        "status": "UNAVAILABLE",
+        "action": "UNAVAILABLE",
+        "direction": "UNAVAILABLE",
+        "eta": None,
+        "reason": reasons["MEMES"] + " No such owner is currently bound, so MICROCAPS cannot be used as a proxy.",
+        "upgrade_trigger": {"type": "GOVERNED_MEME_DECISION_OWNER", "states": ["ELIGIBLE"]},
+        "deterioration_trigger": {"type": "GOVERNED_MEME_DECISION_OWNER", "states": ["UNAVAILABLE", "INELIGIBLE"]},
+    })
     return rows
+
+
+def sell_assessment(
+    auto_state: Mapping[str, Any],
+    protection: Mapping[str, Any],
+    *,
+    as_of: datetime | None = None,
+) -> dict[str, Any]:
+    """Expose SELL as a separate fail-closed decision surface.
+
+    Existing exit-calibration owners are descriptive/accountability-only and
+    cannot be promoted into a live sell rule. Protection or distribution risk
+    is context, never sell authority by itself.
+    """
+    healthy = _health_ok(auto_state, as_of)
+    reason = (
+        "Required current-state evidence is degraded."
+        if not healthy
+        else "No governed sell/trim decision owner is bound. Protection and distribution risk are not sell instructions."
+    )
+    return {
+        "contract": "COMPASS_SELL_ASSESSMENT_v1",
+        "state": "UNAVAILABLE",
+        "horizon": "UNKNOWN",
+        "eta": "UNKNOWN",
+        "reason": reason,
+        "protection_context": {
+            "pullback_risk_state": protection.get("pullback_risk_state"),
+            "distribution_risk": protection.get("distribution_risk"),
+        },
+        "authority": {
+            "portfolio_execution": False,
+            "new_sell_rule": False,
+            "automatic_action": False,
+            "protection_is_sell_authority": False,
+        },
+    }
 
 
 def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
@@ -910,6 +990,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         public_ladder.append({
             "segment": row.get("segment"),
             "status": row.get("status"),
+            "action": row.get("action"),
             "direction": row.get("direction"),
             "eta": row.get("eta"),
             "reason": row.get("reason"),
@@ -935,6 +1016,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         "horizons": public_horizons,
         "capitalization_ladder": public_ladder,
         "protection_tracker": compass.get("protection_tracker"),
+        "sell_assessment": compass.get("sell_assessment"),
         "action_now": compass.get("action_now"),
         "next_meaningful_change_eta": compass.get("next_meaningful_change_eta"),
         "conclusion": compass.get("conclusion"),
@@ -965,11 +1047,20 @@ def build_official_compass(
     protection = protection_tracker(
         auto_state, action, market_now, eligible_cn, as_of=issued, prior_compass=prior_compass
     )
+    sell = sell_assessment(auto_state, protection, as_of=issued)
     evidence = evidence_snapshot(auto_state, packet_path)
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"
+    decision_context = {
+        "auto_market_state_packet_sha256": auto_state.get("packet_sha256"),
+        "cycle_navigator_machine_sha256": nested(cn_binding, "machine_package", "content_sha256"),
+        "cycle_navigator_projection_addendum_sha256": nested(cn_binding, "decision_projection_addendum", "content_sha256"),
+        "cycle_navigator_projection_source": nested(cn_binding, "decision_projection_source"),
+        "cycle_navigator_issue_number": nested(cn_binding, "issue_number"),
+    }
+    decision_context_fingerprint = digest(canon(decision_context))
     source_identity = (
-        f"{auto_state.get('packet_sha256')}|{issued.date().isoformat()}|{run_reason}|"
-        f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}"
+        f"{decision_context_fingerprint}|{issued.date().isoformat()}|{run_reason}|"
+        f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}|policy={OFFICIAL_COMPASS_DECISION_POLICY_VERSION}"
     )
     compass_id = f"CMP-{issued:%Y%m%d}-{digest(source_identity.encode())[:12]}"
     next_eta = horizons["NEXT_12H"].get("eta") if data_status == "OK" else None
@@ -981,6 +1072,8 @@ def build_official_compass(
     packet = {
         "contract": OFFICIAL_COMPASS_CONTRACT,
         "schema_version": OFFICIAL_COMPASS_SCHEMA_VERSION,
+        "decision_policy_version": OFFICIAL_COMPASS_DECISION_POLICY_VERSION,
+        "decision_context_fingerprint": decision_context_fingerprint,
         "compass_id": compass_id,
         "issued_at_utc": issued_text,
         "run_reason": run_reason,
@@ -1007,6 +1100,7 @@ def build_official_compass(
         "horizons": horizons,
         "capitalization_ladder": ladder,
         "protection_tracker": protection,
+        "sell_assessment": sell,
         "action_now": action.get("NOW"),
         "native_action_contract": action,
         "next_meaningful_change_eta": next_eta,
@@ -1044,6 +1138,7 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
         if latest_pointer_path.exists():
             latest_pointer = read_json(latest_pointer_path)
             current_source_sha = nested(compass, "source_bindings", "auto_market_state", "packet_sha256")
+            current_context_fingerprint = compass.get("decision_context_fingerprint")
             if latest_pointer.get("source_packet_sha256") == current_source_sha:
                 latest_path_raw = latest_pointer.get("compass_path")
                 if isinstance(latest_path_raw, str) and latest_path_raw:
@@ -1052,7 +1147,10 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
                         latest_compass = read_json(latest_path)
                         if (
                             int(latest_compass.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                            and latest_compass.get("decision_policy_version") == compass.get("decision_policy_version")
+                            and latest_compass.get("decision_context_fingerprint") == current_context_fingerprint
                             and latest_compass.get("protection_tracker") is not None
+                            and latest_compass.get("sell_assessment") is not None
                         ):
                             path = latest_path
     scheduled_slot_reasons = {"SCHEDULED_MORNING", "SCHEDULED_EVENING"}
@@ -1064,14 +1162,23 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
             if (
                 str(prior_candidate.get("run_reason") or "") == reason
                 and int(prior_candidate.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                and prior_candidate.get("decision_policy_version") == compass.get("decision_policy_version")
             ):
                 path = candidate
                 break
     elif reason == "SCHEDULED_DAILY" and day_dir.exists():
-        # Legacy compatibility for historical single-daily freezes.
-        existing = sorted(day_dir.glob("CMP-*.json"))
-        if existing:
-            path = existing[0]
+        # Legacy compatibility for historical single-daily freezes. Policy
+        # migrations must still create a new immutable artifact rather than
+        # reusing bytes produced under different decision semantics.
+        for candidate in sorted(day_dir.glob("CMP-*.json")):
+            prior_candidate = read_json(candidate)
+            if (
+                str(prior_candidate.get("run_reason") or "") == reason
+                and int(prior_candidate.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                and prior_candidate.get("decision_policy_version") == compass.get("decision_policy_version")
+            ):
+                path = candidate
+                break
     if path.exists():
         prior = read_json(path)
         expected_id = path.stem
@@ -1101,6 +1208,8 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
         "public_projection_sha256": public.get("projection_sha256"),
         "public_projection_content_sha256": public_content_sha256,
         "source_packet_sha256": nested(selected, "source_bindings", "auto_market_state", "packet_sha256"),
+        "decision_policy_version": selected.get("decision_policy_version"),
+        "decision_context_fingerprint": selected.get("decision_context_fingerprint"),
         "authority": OFFICIAL_AUTHORITY,
     }
     output_root.mkdir(parents=True, exist_ok=True)

@@ -5,12 +5,14 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+from scripts.cycle_navigator.build_weekly_cycle_navigator import output_schema as cycle_navigator_output_schema
 from scripts.data_ping.native_handlekompas import (
     CAPITALIZATION_ORDER,
     HORIZON_ORDER,
     OFFICIAL_AUTHORITY,
     build_official_compass,
     build_public_projection,
+    load_cn_context,
     protection_tracker,
     write_official_compass,
 )
@@ -71,18 +73,58 @@ class OfficialDailyCompassTest(unittest.TestCase):
             "market_state": "Unresolved, volatile consolidation with elevated pullback risk.",
             "base_case_this_week": "W38 remains an unresolved, volatile consolidation with elevated pullback risk rather than a confirmed breakdown or broad risk expansion.",
             "base_case_2_3_weeks": "Selective ETH leadership may emerge, but volatile consolidation persists until breadth improves.",
-            "altseason_countdown": [{"phase": "Broad altseason — PAUSED", "window": "No calendar ETA"}],
+            "base_case_4_8_weeks": "Consolidation remains the evidence-bounded long-cycle state.",
+            "altseason_countdown": [{"phase": "Broad altseason - PAUSED", "window": "No calendar ETA"}],
+            "decision_projection": {
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                "next_1_3d": {"direction": "SIDEWAYS", "summary": "Structured short-horizon consolidation."},
+                "next_5_7d": {"direction": "SIDEWAYS", "summary": "Structured weekly consolidation."},
+                "weeks_4_8": {
+                    "state": "CONSOLIDATION",
+                    "warning": "NONE",
+                    "direction": "SIDEWAYS",
+                    "action_posture": "HOLD",
+                    "summary": "Consolidation remains the evidence-bounded long-cycle state.",
+                    "through_date": "2026-10-14",
+                    "horizon_days": 28,
+                    "eta": "through 2026-10-14",
+                    "confidence": "MEDIUM",
+                },
+                "protection": {
+                    "pullback_risk_state": "ELEVATED",
+                    "pullback_class": "VOLATILE_CONSOLIDATION",
+                    "distribution_risk": "NONE",
+                    "eta_window": "UNKNOWN",
+                    "confidence_quality": "MEDIUM",
+                    "drivers": ["Structured Cycle Navigator protection state is elevated."],
+                    "invalidation": "Later structured evidence must clear the warning.",
+                },
+            },
         }
 
-    def build(self, root, *, include_cn=True, issued_at=None, run_reason="SCHEDULED_DAILY", **kwargs):
+    def build(self, root, *, include_cn=True, issued_at=None, run_reason="SCHEDULED_DAILY", cn_binding_override=None, **kwargs):
+        binding = cn_binding_override if cn_binding_override is not None else ({"status": "PASS"} if include_cn else {"status": "UNAVAILABLE"})
         return build_official_compass(
             self.auto(**kwargs),
             packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
             cn_package=self.cn() if include_cn else None,
-            cn_binding={"status": "PASS"} if include_cn else {"status": "UNAVAILABLE"},
+            cn_binding=binding,
             repo_root=Path(root),
             issued_at=issued_at or datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
             run_reason=run_reason,
+        )
+
+    def test_cycle_navigator_machine_projection_contract_is_required(self):
+        schema = cycle_navigator_output_schema()
+        self.assertIn("decision_projection", schema["required"])
+        projection = schema["properties"]["decision_projection"]
+        self.assertEqual(
+            set(projection["required"]),
+            {"contract", "next_1_3d", "next_5_7d", "weeks_4_8", "protection"},
+        )
+        self.assertEqual(
+            projection["properties"]["contract"]["const"],
+            "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
         )
 
     def test_deterministic_same_input_same_time(self):
@@ -95,14 +137,36 @@ class OfficialDailyCompassTest(unittest.TestCase):
     def test_required_horizons_and_ladder_order(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp)
-            self.assertEqual(out["schema_version"], 2)
+            self.assertEqual(out["schema_version"], 3)
             self.assertEqual(tuple(out["horizons"].keys()), HORIZON_ORDER)
             self.assertEqual(tuple(row["segment"] for row in out["capitalization_ladder"]), CAPITALIZATION_ORDER)
+            self.assertTrue(all("action" in row for row in out["capitalization_ladder"]))
+            self.assertEqual(tuple(row["action"] for row in out["capitalization_ladder"]), ("HOLD", "HOLD", "WAIT", "WAIT", "WAIT", "HARD_WAIT", "UNAVAILABLE"))
+            memes = out["capitalization_ladder"][-1]
+            self.assertEqual(memes["segment"], "MEMES")
+            self.assertEqual(memes["status"], "UNAVAILABLE")
+            self.assertEqual(memes["direction"], "UNAVAILABLE")
+            self.assertIn("MICROCAPS cannot be used as a proxy", memes["reason"])
             self.assertEqual(out["authority"], OFFICIAL_AUTHORITY)
             self.assertFalse(out["authority"]["portfolio_execution"])
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["state"], "CONSOLIDATION")
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["through_date"], "2026-10-14")
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["warning"], "NONE")
+
+    def test_sell_is_separate_and_fail_closed_without_governed_owner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp)
+            sell = out["sell_assessment"]
+            self.assertEqual(sell["contract"], "COMPASS_SELL_ASSESSMENT_v1")
+            self.assertEqual(sell["state"], "UNAVAILABLE")
+            self.assertEqual(sell["horizon"], "UNKNOWN")
+            self.assertFalse(sell["authority"]["portfolio_execution"])
+            self.assertFalse(sell["authority"]["new_sell_rule"])
+            self.assertFalse(sell["authority"]["protection_is_sell_authority"])
+            self.assertIn("not sell instructions", sell["reason"])
+
+            public = build_public_projection(out)
+            self.assertEqual(public["sell_assessment"], sell)
 
     def test_missing_values_remain_null_not_zero(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -118,6 +182,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             out = self.build(tmp, validation="FAIL", decision="DEGRADED", blockers=["hourly_market"])
             self.assertEqual(out["data_status"], "DEGRADED")
             self.assertTrue(all(row["status"] == "UNAVAILABLE" for row in out["capitalization_ladder"]))
+            self.assertTrue(all(row["action"] == "UNAVAILABLE" for row in out["capitalization_ladder"]))
             self.assertTrue(all(out["horizons"][key]["expected_direction"] == "UNAVAILABLE" for key in HORIZON_ORDER))
 
     def test_optional_degradation_remains_decision_eligible(self):
@@ -150,7 +215,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
     def test_missing_deltas_never_create_bullish_confirmation(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, breadth=0.55, deltas={})
-            self.assertEqual(out["market_now"]["regime"], "PREPARE")
+            self.assertEqual(out["market_now"]["regime"], "HOLD_WAIT")
             self.assertEqual(out["market_now"]["directional_state"], "MIXED")
 
     def test_weekly_pullback_risk_projects_conservatively(self):
@@ -181,10 +246,31 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 "market_state": "Distribution regime.",
                 "base_case_this_week": "Distribution is active.",
                 "base_case_2_3_weeks": "Risk remains defensive.",
-                "compass_4_8_weeks": {
-                    "state": "DISTRIBUTION",
-                    "warning": "DISTRIBUTION_WARNING",
-                    "summary": "Distribution is active.",
+                "base_case_4_8_weeks": "Distribution remains active.",
+                "decision_projection": {
+                    "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                    "next_1_3d": {"direction": "DOWN", "summary": "Risk is defensive."},
+                    "next_5_7d": {"direction": "DOWN", "summary": "Distribution remains active."},
+                    "weeks_4_8": {
+                        "state": "DISTRIBUTION",
+                        "warning": "DISTRIBUTION_WARNING",
+                        "direction": "DOWN",
+                        "action_posture": "HOLD",
+                        "summary": "Distribution is active.",
+                        "through_date": "2026-10-14",
+                        "horizon_days": 28,
+                        "eta": "through 2026-10-14",
+                        "confidence": "HIGH",
+                    },
+                    "protection": {
+                        "pullback_risk_state": "HIGH",
+                        "pullback_class": "DISTRIBUTION",
+                        "distribution_risk": "CONFIRMED",
+                        "eta_window": "UNKNOWN",
+                        "confidence_quality": "HIGH",
+                        "drivers": ["Structured Cycle Navigator distribution state is confirmed."],
+                        "invalidation": "A later structured state must explicitly clear distribution.",
+                    },
                 },
             }
             out = build_official_compass(
@@ -218,6 +304,31 @@ class OfficialDailyCompassTest(unittest.TestCase):
             "market_state": "Constructive transition.",
             "base_case_this_week": "Constructive transition without an active pullback warning.",
             "base_case_2_3_weeks": "Selective leadership may broaden.",
+            "decision_projection": {
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                "next_1_3d": {"direction": "UP", "summary": "Constructive transition."},
+                "next_5_7d": {"direction": "UP", "summary": "Selective leadership may broaden."},
+                "weeks_4_8": {
+                    "state": "PRE_ROTATION",
+                    "warning": "NONE",
+                    "direction": "UP",
+                    "action_posture": "HOLD",
+                    "summary": "Pre-rotation remains under review.",
+                    "through_date": None,
+                    "horizon_days": None,
+                    "eta": "UNKNOWN",
+                    "confidence": "LOW",
+                },
+                "protection": {
+                    "pullback_risk_state": "NORMAL",
+                    "pullback_class": "UNKNOWN",
+                    "distribution_risk": "NONE",
+                    "eta_window": "UNKNOWN",
+                    "confidence_quality": "MEDIUM",
+                    "drivers": ["Structured protection state is normal."],
+                    "invalidation": "A later structured warning would invalidate the normal state.",
+                },
+            },
         }
         action = {"NOW": "PREPARE"}
         market = {"directional_state": "BULLISH", "regime": "PREPARE"}
@@ -239,6 +350,97 @@ class OfficialDailyCompassTest(unittest.TestCase):
         self.assertEqual(tracker["reentry_state"], "REVIEW")
         self.assertIn("not an automatic buy", tracker["reentry_message"])
 
+    def test_prose_only_cycle_navigator_cannot_drive_machine_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            prose_only = {
+                "issue_number": 26,
+                "market_state": "Distribution and pullback risk confirmed with broad expansion.",
+                "base_case_this_week": "Not a breakdown, but distribution risk is high.",
+                "base_case_2_3_weeks": "Broad altseason rotation.",
+                "base_case_4_8_weeks": "Exit risk.",
+                "altseason_countdown": [{"phase": "Broad altseason", "window": "soon"}],
+            }
+            out = build_official_compass(
+                self.auto(),
+                packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
+                cn_package=prose_only,
+                cn_binding={"status": "PASS"},
+                repo_root=Path(tmp),
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                run_reason="ON_DEMAND",
+            )
+            self.assertEqual(out["horizons"]["NEXT_1_3D"]["expected_direction"], "NO_EDGE")
+            self.assertEqual(out["horizons"]["NEXT_5_7D"]["expected_direction"], "NO_EDGE")
+            self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["expected_direction"], "UNAVAILABLE")
+            self.assertEqual(out["protection_tracker"]["pullback_risk_state"], "UNAVAILABLE")
+            self.assertEqual(out["protection_tracker"]["distribution_risk"], "UNKNOWN")
+
+    def test_evidence_snapshot_carries_persistence_baseline_features(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp)
+            values = {row["feature_id"]: row["value"] for row in out["evidence_snapshot"]["selected_features"]}
+            self.assertAlmostEqual(values["btc_delta_since_prior_packet_pct"], -0.3)
+            self.assertAlmostEqual(values["eth_delta_since_prior_packet_pct"], -0.7)
+            self.assertAlmostEqual(values["ethbtc_delta_since_prior_packet_pct"], -0.4)
+
+    def test_legacy_cn_projection_addendum_is_hash_bound_and_non_rewriting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            week_dir = root / "05_CYCLE_NAVIGATOR/weekly/2026/W39"
+            week_dir.mkdir(parents=True)
+            package = {"issue_number": 27, "market_state": "legacy narrative only"}
+            package_path = week_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+            package_path.write_text(json.dumps(package, sort_keys=True) + "\n")
+            package_sha = hashlib.sha256(package_path.read_bytes()).hexdigest()
+            pointer_path = root / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+            pointer_path.parent.mkdir(parents=True, exist_ok=True)
+            pointer_path.write_text(json.dumps({
+                "issue_number": 27,
+                "iso_week": 39,
+                "iso_year": 2026,
+                "week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W39",
+            }))
+            projection = {
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                "next_1_3d": {"direction": "NO_EDGE", "summary": "Compatibility only."},
+                "next_5_7d": {"direction": "NO_EDGE", "summary": "Compatibility only."},
+                "weeks_4_8": {
+                    "state": "UNCLEAR", "warning": "NONE", "direction": "UNAVAILABLE",
+                    "action_posture": "UNAVAILABLE", "summary": "Compatibility only.",
+                    "through_date": None, "horizon_days": None, "eta": "UNKNOWN", "confidence": "LOW",
+                },
+                "protection": {
+                    "pullback_risk_state": "UNAVAILABLE", "pullback_class": "UNKNOWN",
+                    "distribution_risk": "UNKNOWN", "eta_window": "UNKNOWN",
+                    "confidence_quality": "LOW", "drivers": [],
+                    "invalidation": "Prospective structured evidence required.",
+                },
+            }
+            addendum_path = week_dir / "DECISION_PROJECTION_ADDENDUM_v1.json"
+            addendum_path.write_text(json.dumps({
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_ADDENDUM_v1",
+                "base_machine_package_sha256": package_sha,
+                "forecast_rewrite": False,
+                "portfolio_execution": False,
+                "decision_projection": projection,
+            }))
+
+            loaded, binding = load_cn_context(
+                root, Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
+            )
+            self.assertEqual(loaded["decision_projection"], projection)
+            self.assertEqual(binding["decision_projection_source"], "HASH_BOUND_COMPATIBILITY_ADDENDUM")
+            self.assertNotIn("decision_projection", json.loads(package_path.read_text()))
+
+            bad = json.loads(addendum_path.read_text())
+            bad["base_machine_package_sha256"] = "0" * 64
+            addendum_path.write_text(json.dumps(bad))
+            loaded_bad, binding_bad = load_cn_context(
+                root, Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
+            )
+            self.assertNotIn("decision_projection", loaded_bad)
+            self.assertEqual(binding_bad["decision_projection_source"], "INVALID_COMPATIBILITY_ADDENDUM_IGNORED")
+
     def test_public_projection_does_not_leak_internal_bindings_or_threshold_contract(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp)
@@ -247,6 +449,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotIn("evidence_snapshot", public)
             self.assertNotIn("native_action_contract", public)
             self.assertEqual(public["protection_tracker"]["contract"], "COMPASS_PROTECTION_TRACKER_v1")
+            self.assertTrue(all("action" in row for row in public["capitalization_ladder"]))
             self.assertFalse(public["protection_tracker"]["authority"]["wallet_specific"])
             self.assertFalse(any(key in public["protection_tracker"] for key in ("wallet_address", "holdings", "positions", "portfolio_actions")))
             self.assertNotRegex(json.dumps(public["protection_tracker"]), r"0x[a-fA-F0-9]{8,}")
@@ -353,6 +556,45 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(second["compass_id"], first["compass_id"])
             self.assertEqual(second["path"], first["path"])
 
+    def test_on_demand_writes_when_cycle_navigator_context_changed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            first_compass = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 7, 5, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+                cn_binding_override={
+                    "status": "PASS",
+                    "issue_number": 26,
+                    "machine_package": {"content_sha256": "cn-a"},
+                    "decision_projection_source": "MACHINE_PACKAGE",
+                },
+            )
+            second_compass = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 7, 6, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+                cn_binding_override={
+                    "status": "PASS",
+                    "issue_number": 27,
+                    "machine_package": {"content_sha256": "cn-b"},
+                    "decision_projection_source": "MACHINE_PACKAGE",
+                },
+            )
+            self.assertNotEqual(first_compass["decision_context_fingerprint"], second_compass["decision_context_fingerprint"])
+            self.assertNotEqual(first_compass["compass_id"], second_compass["compass_id"])
+
+            first = write_official_compass(first_compass, root)
+            second = write_official_compass(second_compass, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(second["status"], "WRITTEN")
+            self.assertNotEqual(first["path"], second["path"])
+            pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
+            self.assertEqual(pointer["decision_context_fingerprint"], second_compass["decision_context_fingerprint"])
+
     def test_on_demand_writes_when_owner_packet_changed(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "official"
@@ -376,6 +618,37 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotEqual(second["compass_id"], first["compass_id"])
             pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
             self.assertEqual(pointer["source_packet_sha256"], "owner-packet-b")
+
+    def test_policy_migration_same_source_creates_new_immutable_freeze(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            current = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+            )
+            legacy = json.loads(json.dumps(current))
+            legacy["decision_policy_version"] = "LEGACY_POLICY"
+            legacy_identity = (
+                "same-owner-packet|2026-09-16|ON_DEMAND|"
+                "schema=2|policy=LEGACY_POLICY"
+            )
+            legacy["compass_id"] = "CMP-20260916-" + hashlib.sha256(legacy_identity.encode()).hexdigest()[:12]
+            legacy_payload = {k: v for k, v in legacy.items() if k != "compass_sha256"}
+            legacy["compass_sha256"] = hashlib.sha256(
+                (json.dumps(legacy_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n").encode()
+            ).hexdigest()
+
+            first = write_official_compass(legacy, root)
+            second = write_official_compass(current, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(second["status"], "WRITTEN")
+            self.assertNotEqual(first["compass_id"], second["compass_id"])
+            self.assertNotEqual(first["path"], second["path"])
+            self.assertTrue(Path(first["public_path"]).exists())
+            self.assertTrue(Path(second["public_path"]).exists())
 
     def test_schema_migration_same_source_creates_new_immutable_freeze(self):
         with tempfile.TemporaryDirectory() as tmp:

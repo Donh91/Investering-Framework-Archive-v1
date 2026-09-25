@@ -5,6 +5,8 @@ import json
 import re
 from pathlib import Path
 
+PR_ISOLATED_WRITER_GROUP = "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
+
 
 def has_job_main_guard(text: str) -> bool:
     return re.search(r"(?m)^\s{4}if:\s*.*github\.ref\s*==\s*['\"]refs/heads/main['\"]", text) is not None
@@ -26,7 +28,9 @@ def inspect(path: Path) -> list[str]:
     manual_trigger = re.search(r"(?m)^  workflow_dispatch:\s*$", text) is not None
     main_guard = has_job_main_guard(text)
     pinned = checkout_has_main_pin(text)
-    writer_group = re.search(r"(?m)^\s+group:\s*framework-main-writer\s*$", text) is not None
+    group_match = re.search(r"(?m)^\s+group:\s*([^\n#]+)", text)
+    group_value = group_match.group(1).strip().strip("'\"") if group_match else None
+    writer_group = group_value in {"framework-main-writer", PR_ISOLATED_WRITER_GROUP}
 
     if push_trigger:
         findings.append("PUSH_TRIGGERED_MAIN_WRITER")

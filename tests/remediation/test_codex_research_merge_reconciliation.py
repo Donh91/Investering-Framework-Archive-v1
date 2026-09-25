@@ -380,6 +380,73 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
                 completion.write_completion_receipt(path, contradiction)
             self.assertEqual(path.read_bytes(), original)
 
+    def test_hash_valid_partial_completion_receipt_is_not_frozen(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task, _transition = self.write_fixture(root)
+            (root / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({
+                "tasks": [dict(task, state="POST_FIX_OBSERVATION")]
+            }) + "\n")
+            replacement = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["fresh verified evidence"],
+                verified_at_utc="2026-09-25T00:20:00Z",
+            )
+            partial = {
+                key: value for key, value in replacement.items()
+                if key not in {
+                    "execution_quality",
+                    "receipt_sha256",
+                    "verification_evidence",
+                    "verified_at_utc",
+                }
+            }
+            partial["receipt_sha256"] = completion.canonical_hash(partial)
+            path = root / "research/codex/completions/test-merge-reconciliation.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(partial, indent=2, sort_keys=True) + "\n")
+            original = path.read_bytes()
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "EXISTING_COMPLETION_RECEIPT_INVALID",
+            ):
+                completion.write_completion_receipt(path, replacement)
+            self.assertEqual(path.read_bytes(), original)
+
+    def test_legacy_completion_without_execution_quality_remains_idempotent(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task, _transition = self.write_fixture(root)
+            (root / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({
+                "tasks": [dict(task, state="POST_FIX_OBSERVATION")]
+            }) + "\n")
+            receipt = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["legacy verified evidence"],
+                verified_at_utc="2026-08-20T00:00:00Z",
+            )
+            legacy = dict(receipt)
+            legacy.pop("execution_quality")
+            legacy["receipt_sha256"] = completion.canonical_hash({
+                key: value for key, value in legacy.items() if key != "receipt_sha256"
+            })
+            path = root / "research/codex/completions/test-merge-reconciliation.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(legacy, indent=2, sort_keys=True) + "\n")
+            original = path.read_bytes()
+
+            stored, created = completion.write_completion_receipt(path, receipt)
+            self.assertFalse(created)
+            self.assertEqual(stored, legacy)
+            self.assertEqual(path.read_bytes(), original)
+
     def test_workflow_reconciles_between_two_owner_materializations(self):
         text = WORKFLOW_PATH.read_text()
         materialize = "python scripts/remediation/merge_codex_research_intake_converged.py"

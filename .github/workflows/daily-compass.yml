@@ -6,9 +6,14 @@ on:
       - '.github/workflows/daily-compass.yml'
       - '.github/workflows/compass-outcomes.yml'
       - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/cycle_navigator/build_weekly_cycle_navigator.py'
       - 'scripts/learning/compass_outcomes.py'
+      - 'scripts/learning/decision_economics_ledger.py'
+      - 'research/decision_economics/**'
       - 'tests/data_ping/test_official_daily_compass.py'
+      - 'tests/cycle_navigator/test_weekly_publication_resilience.py'
       - 'tests/learning/test_compass_outcomes.py'
+      - 'tests/learning/test_decision_economics_ledger.py'
       - '04_MARKET_LEARNING/handlekompas/**'
       - '05_CYCLE_NAVIGATOR/site/**'
       - 'AGENTS.md'
@@ -43,8 +48,9 @@ permissions:
   issues: write
 
 concurrency:
-  group: framework-main-writer
-  cancel-in-progress: false
+  # Read-only PR validation must not compete with serialized main writers.
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
@@ -58,10 +64,15 @@ jobs:
           python-version: '3.12'
       - name: Compile and run focused Compass tests
         run: |
-          python -m py_compile scripts/data_ping/native_handlekompas.py scripts/learning/compass_outcomes.py
+          python -m py_compile scripts/data_ping/native_handlekompas.py scripts/cycle_navigator/build_weekly_cycle_navigator.py scripts/learning/compass_outcomes.py scripts/learning/decision_economics_ledger.py
           python -m unittest tests.data_ping.test_native_handlekompas -v
           python -m unittest tests.data_ping.test_official_daily_compass -v
           python -m unittest tests.learning.test_compass_outcomes -v
+          python -m unittest tests.learning.test_decision_economics_ledger -v
+      - name: Build and validate public Compass bundle
+        run: |
+          node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
       - name: Deterministic current-state dry run
         run: |
           python scripts/data_ping/native_handlekompas.py --official-daily-compass --run-reason PR_VALIDATION --no-write > /tmp/compass.json
@@ -69,14 +80,16 @@ jobs:
           import json
           d=json.load(open('/tmp/compass.json'))
           assert d['contract']=='OFFICIAL_DAILY_COMPASS_v1'
-          assert d['schema_version']==2
+          assert d['schema_version']==3
           assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','CYCLE_ALTCOINS_3_8W'}
           alt=d['horizons']['CYCLE_ALTCOINS_3_8W']
           if alt['expected_direction']=='UNAVAILABLE':
               assert alt.get('warning') is None
           else:
               assert alt['warning'] in {'NONE','PARABOLIC_ALTSEASON_WARNING','DISTRIBUTION_WARNING','EXIT_WARNING','STRUCTURAL_BREAKDOWN_WARNING'}
-          assert [r['segment'] for r in d['capitalization_ladder']]==['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS']
+          assert [r['segment'] for r in d['capitalization_ladder']]==['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES']
+          meme=d['capitalization_ladder'][-1]
+          assert meme['status']=='UNAVAILABLE' and meme['action']=='UNAVAILABLE' and meme['direction']=='UNAVAILABLE'
           p=d['protection_tracker']
           assert p['contract']=='COMPASS_PROTECTION_TRACKER_v1'
           assert p['pullback_risk_state'] in {'NORMAL','BUILDING','ELEVATED','HIGH','CONFIRMED','UNAVAILABLE'}
@@ -84,6 +97,12 @@ jobs:
           assert p['reentry_state'] in {'INACTIVE','WAIT_FOR_FLUSH','WAIT_FOR_RECLAIM','REVIEW','UNAVAILABLE'}
           assert p['authority']['portfolio_execution'] is False
           assert p['authority']['wallet_specific'] is False
+          sell=d['sell_assessment']
+          assert sell['contract']=='COMPASS_SELL_ASSESSMENT_v1'
+          assert sell['state']=='UNAVAILABLE'
+          assert sell['authority']['portfolio_execution'] is False
+          assert sell['authority']['new_sell_rule'] is False
+          assert sell['authority']['protection_is_sell_authority'] is False
           assert d['authority']['portfolio_execution'] is False
           assert d['authority']['post_hoc_rewrite'] is False
           assert d['market_reference'].get('btc_usdt') != 0 or d['market_reference'].get('btc_usdt') is None
@@ -163,6 +182,11 @@ jobs:
           assert p['protection_tracker']['contract']=='COMPASS_PROTECTION_TRACKER_v1'
           assert p['protection_tracker']['authority']['portfolio_execution'] is False
           assert p['protection_tracker']['authority']['wallet_specific'] is False
+          assert p['sell_assessment']['contract']=='COMPASS_SELL_ASSESSMENT_v1'
+          assert p['sell_assessment']['authority']['portfolio_execution'] is False
+          assert p['sell_assessment']['authority']['protection_is_sell_authority'] is False
+          assert p['capitalization_ladder'][-1]['segment']=='MEMES'
+          assert p['capitalization_ladder'][-1]['status']=='UNAVAILABLE'
           protection_text=json.dumps(p['protection_tracker']).lower()
           assert not any(k in p['protection_tracker'] for k in ('wallet_address','holdings','positions','portfolio_actions'))
           assert not __import__('re').search(r'0x[a-f0-9]{8,}', protection_text)

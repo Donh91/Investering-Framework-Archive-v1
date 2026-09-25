@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_lifecycle.py",
+    "tests/experiments/test_experiment_lifecycle.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-a615f0761b900f8e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* experiments: enforce unique current candidate IDs * test: lock experiment registry candidate uniqueness",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_lifecycle.py": "f079d99627ddc230518b96ba586a07a27a6e6f40",
+    "tests/experiments/test_experiment_lifecycle.py": "c52875cb8cecd86dfbbe715ed7e7fdad2cede1f1"
+  },
+  "source_commit_sha": "a615f0761b900f8eb047c29eebb660d3ddbf07c9",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T00:03:38+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "experiments: enforce unique candidate IDs in current registry"
+}

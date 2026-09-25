@@ -137,6 +137,22 @@ def _ladder_more_defensive(previous: Any, current: Any) -> bool:
     return False
 
 
+def _ladder_materially_changed(previous: Any, current: Any) -> bool:
+    """Ignore schema-only fail-closed rung additions while preserving real changes."""
+    prev = dict(_ladder_status(previous))
+    cur = dict(_ladder_status(current))
+    for segment in prev.keys() & cur.keys():
+        if prev[segment] != cur[segment]:
+            return True
+    for segment in cur.keys() - prev.keys():
+        if cur[segment] != "UNAVAILABLE":
+            return True
+    for segment in prev.keys() - cur.keys():
+        if prev[segment] != "UNAVAILABLE":
+            return True
+    return False
+
+
 def _seconds_to_next_scheduled_compass(now: datetime) -> float:
     cph = ZoneInfo("Europe/Copenhagen")
     local = now.astimezone(cph)
@@ -274,7 +290,7 @@ def evaluate(
     ):
         causes.append("MARKET_STATE_CHANGED")
 
-    if _ladder_status(latest_compass.get("capitalization_ladder")) != _ladder_status(ladder):
+    if _ladder_materially_changed(latest_compass.get("capitalization_ladder"), ladder):
         causes.append("CAPITALIZATION_LADDER_CHANGED")
 
     previous_protection = latest_compass.get("protection_tracker")

@@ -146,6 +146,18 @@ def test_intraday_validation_does_not_shadow_structured_output_mapping():
     assert 'value = str(intraday.get(bucket)' not in source
 
 
+def test_decision_projection_is_required_and_typed():
+    schema = mod.output_schema()
+    assert "decision_projection" in schema["required"]
+    projection = schema["properties"]["decision_projection"]
+    assert projection["additionalProperties"] is False
+    assert set(projection["required"]) == {"contract", "next_1_3d", "next_5_7d", "weeks_4_8", "protection"}
+    assert projection["properties"]["contract"]["const"] == "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"
+    protection = projection["properties"]["protection"]
+    assert "pullback_risk_state" in protection["required"]
+    assert "distribution_risk" in protection["required"]
+
+
 def test_publication_workflow_does_not_mask_builder_failure():
     workflow = (ROOT / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     build = workflow.split("- name: Build Cycle Navigator from final Master Monday", 1)[1]
