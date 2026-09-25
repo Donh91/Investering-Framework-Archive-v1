@@ -674,8 +674,6 @@ def _altcoin_cycle_lane(cn_package: Mapping[str, Any] | None, posture: str, issu
         "state": state,
         "expected_path": summary,
         "action_posture": action_posture,
-        "proposed_action_posture": proposed_action_posture,
-        "action_permission": action_permission,
         "warning": warning,
         "through_date": through,
         "horizon_days": horizon_days,
