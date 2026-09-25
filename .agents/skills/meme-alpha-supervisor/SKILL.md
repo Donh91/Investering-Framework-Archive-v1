@@ -58,6 +58,7 @@ Use the two surfaces according to execution context:
 
 - ChatGPT interactive research: use the installed Blockscout connector when available for bounded address, transaction, ABI/source and transfer forensics.
 - Repository/runtime research: use `scripts/api_agent/meme_alpha_blockscout.py`. It reads `BLOCKSCOUT_API_KEY` from runtime environment when available, prefers the authenticated unified PRO endpoint for chain 4663, and falls back to the Robinhood chain public Blockscout endpoint when permitted.
+- Cross-repository credential routing: GitHub Actions secrets are repository-scoped. The autonomous restricted runtime executes in `Donh91/secrets`, so `BLOCKSCOUT_API_KEY` must exist in that repository's Actions secret scope as well as anywhere it is used in the public control plane. A working secret in the public repository does not authenticate the restricted runtime.
 
 Required order for a candidate is:
 
