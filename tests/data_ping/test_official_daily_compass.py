@@ -102,12 +102,13 @@ class OfficialDailyCompassTest(unittest.TestCase):
             },
         }
 
-    def build(self, root, *, include_cn=True, issued_at=None, run_reason="SCHEDULED_DAILY", **kwargs):
+    def build(self, root, *, include_cn=True, issued_at=None, run_reason="SCHEDULED_DAILY", cn_binding_override=None, **kwargs):
+        binding = cn_binding_override if cn_binding_override is not None else ({"status": "PASS"} if include_cn else {"status": "UNAVAILABLE"})
         return build_official_compass(
             self.auto(**kwargs),
             packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
             cn_package=self.cn() if include_cn else None,
-            cn_binding={"status": "PASS"} if include_cn else {"status": "UNAVAILABLE"},
+            cn_binding=binding,
             repo_root=Path(root),
             issued_at=issued_at or datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
             run_reason=run_reason,
@@ -535,6 +536,45 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(second["compass_id"], first["compass_id"])
             self.assertEqual(second["path"], first["path"])
 
+    def test_on_demand_writes_when_cycle_navigator_context_changed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            first_compass = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 7, 5, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+                cn_binding_override={
+                    "status": "PASS",
+                    "issue_number": 26,
+                    "machine_package": {"content_sha256": "cn-a"},
+                    "decision_projection_source": "MACHINE_PACKAGE",
+                },
+            )
+            second_compass = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 7, 6, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+                cn_binding_override={
+                    "status": "PASS",
+                    "issue_number": 27,
+                    "machine_package": {"content_sha256": "cn-b"},
+                    "decision_projection_source": "MACHINE_PACKAGE",
+                },
+            )
+            self.assertNotEqual(first_compass["decision_context_fingerprint"], second_compass["decision_context_fingerprint"])
+            self.assertNotEqual(first_compass["compass_id"], second_compass["compass_id"])
+
+            first = write_official_compass(first_compass, root)
+            second = write_official_compass(second_compass, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(second["status"], "WRITTEN")
+            self.assertNotEqual(first["path"], second["path"])
+            pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
+            self.assertEqual(pointer["decision_context_fingerprint"], second_compass["decision_context_fingerprint"])
+
     def test_on_demand_writes_when_owner_packet_changed(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "official"
@@ -558,6 +598,37 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotEqual(second["compass_id"], first["compass_id"])
             pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
             self.assertEqual(pointer["source_packet_sha256"], "owner-packet-b")
+
+    def test_policy_migration_same_source_creates_new_immutable_freeze(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            current = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+            )
+            legacy = json.loads(json.dumps(current))
+            legacy["decision_policy_version"] = "LEGACY_POLICY"
+            legacy_identity = (
+                "same-owner-packet|2026-09-16|ON_DEMAND|"
+                "schema=2|policy=LEGACY_POLICY"
+            )
+            legacy["compass_id"] = "CMP-20260916-" + hashlib.sha256(legacy_identity.encode()).hexdigest()[:12]
+            legacy_payload = {k: v for k, v in legacy.items() if k != "compass_sha256"}
+            legacy["compass_sha256"] = hashlib.sha256(
+                (json.dumps(legacy_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n").encode()
+            ).hexdigest()
+
+            first = write_official_compass(legacy, root)
+            second = write_official_compass(current, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(second["status"], "WRITTEN")
+            self.assertNotEqual(first["compass_id"], second["compass_id"])
+            self.assertNotEqual(first["path"], second["path"])
+            self.assertTrue(Path(first["public_path"]).exists())
+            self.assertTrue(Path(second["public_path"]).exists())
 
     def test_schema_migration_same_source_creates_new_immutable_freeze(self):
         with tempfile.TemporaryDirectory() as tmp:

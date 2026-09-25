@@ -21,6 +21,7 @@ CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
 OFFICIAL_COMPASS_SCHEMA_VERSION = 2
+OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-25_DECISION_INTEGRITY_V2"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
@@ -988,9 +989,17 @@ def build_official_compass(
     )
     evidence = evidence_snapshot(auto_state, packet_path)
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"
+    decision_context = {
+        "auto_market_state_packet_sha256": auto_state.get("packet_sha256"),
+        "cycle_navigator_machine_sha256": nested(cn_binding, "machine_package", "content_sha256"),
+        "cycle_navigator_projection_addendum_sha256": nested(cn_binding, "decision_projection_addendum", "content_sha256"),
+        "cycle_navigator_projection_source": nested(cn_binding, "decision_projection_source"),
+        "cycle_navigator_issue_number": nested(cn_binding, "issue_number"),
+    }
+    decision_context_fingerprint = digest(canon(decision_context))
     source_identity = (
-        f"{auto_state.get('packet_sha256')}|{issued.date().isoformat()}|{run_reason}|"
-        f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}"
+        f"{decision_context_fingerprint}|{issued.date().isoformat()}|{run_reason}|"
+        f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}|policy={OFFICIAL_COMPASS_DECISION_POLICY_VERSION}"
     )
     compass_id = f"CMP-{issued:%Y%m%d}-{digest(source_identity.encode())[:12]}"
     next_eta = horizons["NEXT_12H"].get("eta") if data_status == "OK" else None
@@ -1002,6 +1011,8 @@ def build_official_compass(
     packet = {
         "contract": OFFICIAL_COMPASS_CONTRACT,
         "schema_version": OFFICIAL_COMPASS_SCHEMA_VERSION,
+        "decision_policy_version": OFFICIAL_COMPASS_DECISION_POLICY_VERSION,
+        "decision_context_fingerprint": decision_context_fingerprint,
         "compass_id": compass_id,
         "issued_at_utc": issued_text,
         "run_reason": run_reason,
@@ -1065,6 +1076,7 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
         if latest_pointer_path.exists():
             latest_pointer = read_json(latest_pointer_path)
             current_source_sha = nested(compass, "source_bindings", "auto_market_state", "packet_sha256")
+            current_context_fingerprint = compass.get("decision_context_fingerprint")
             if latest_pointer.get("source_packet_sha256") == current_source_sha:
                 latest_path_raw = latest_pointer.get("compass_path")
                 if isinstance(latest_path_raw, str) and latest_path_raw:
@@ -1073,6 +1085,8 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
                         latest_compass = read_json(latest_path)
                         if (
                             int(latest_compass.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                            and latest_compass.get("decision_policy_version") == compass.get("decision_policy_version")
+                            and latest_compass.get("decision_context_fingerprint") == current_context_fingerprint
                             and latest_compass.get("protection_tracker") is not None
                         ):
                             path = latest_path
@@ -1085,14 +1099,23 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
             if (
                 str(prior_candidate.get("run_reason") or "") == reason
                 and int(prior_candidate.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                and prior_candidate.get("decision_policy_version") == compass.get("decision_policy_version")
             ):
                 path = candidate
                 break
     elif reason == "SCHEDULED_DAILY" and day_dir.exists():
-        # Legacy compatibility for historical single-daily freezes.
-        existing = sorted(day_dir.glob("CMP-*.json"))
-        if existing:
-            path = existing[0]
+        # Legacy compatibility for historical single-daily freezes. Policy
+        # migrations must still create a new immutable artifact rather than
+        # reusing bytes produced under different decision semantics.
+        for candidate in sorted(day_dir.glob("CMP-*.json")):
+            prior_candidate = read_json(candidate)
+            if (
+                str(prior_candidate.get("run_reason") or "") == reason
+                and int(prior_candidate.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                and prior_candidate.get("decision_policy_version") == compass.get("decision_policy_version")
+            ):
+                path = candidate
+                break
     if path.exists():
         prior = read_json(path)
         expected_id = path.stem
@@ -1122,6 +1145,8 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
         "public_projection_sha256": public.get("projection_sha256"),
         "public_projection_content_sha256": public_content_sha256,
         "source_packet_sha256": nested(selected, "source_bindings", "auto_market_state", "packet_sha256"),
+        "decision_policy_version": selected.get("decision_policy_version"),
+        "decision_context_fingerprint": selected.get("decision_context_fingerprint"),
         "authority": OFFICIAL_AUTHORITY,
     }
     output_root.mkdir(parents=True, exist_ok=True)
