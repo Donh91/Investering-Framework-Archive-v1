@@ -526,7 +526,7 @@ def derive_market_now(auto_state: Mapping[str, Any], action: Mapping[str, Any], 
         direction = "NEUTRAL" if btc is not None and eth is not None and btc * eth >= 0 else "MIXED"
     summary_map = {
         "BULLISH": "Market state is constructive, but deployment still depends on the existing confirmation gate.",
-        "BEARISH": "Market pressure is negative and breadth/relative-strength conditions favor capital protection.",
+        "BEARISH": "Canonical protection evidence is negative and favors capital preservation.",
         "NEUTRAL": "Market is balanced enough that waiting for confirmation has more edge than forcing direction.",
         "MIXED": "Market signals conflict; near-term navigation stays selective and confirmation-driven.",
     }
@@ -756,7 +756,6 @@ def protection_tracker(
 
 
 def horizon_map(
-def horizon_map(
     auto_state: Mapping[str, Any], action: Mapping[str, Any], cn_package: Mapping[str, Any] | None,
     *, as_of: datetime | None = None,
 ) -> dict[str, Any]:
@@ -813,7 +812,14 @@ def horizon_map(
     d57 = d57_source
     a57 = "PREPARE" if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and d57 not in {"DOWN", "NO_EDGE", "UNAVAILABLE"} else "WAIT"
 
-    label = lambda d: "BULLISH" if d == "UP" else "BEARISH" if d == "DOWN" else "NEUTRAL" if d == "SIDEWAYS" else "MIXED"
+    label = lambda d: (
+        "BULLISH" if d == "UP" else
+        "BEARISH" if d == "DOWN" else
+        "NEUTRAL" if d == "SIDEWAYS" else
+        "NO_EDGE" if d == "NO_EDGE" else
+        "UNAVAILABLE" if d == "UNAVAILABLE" else
+        "MIXED"
+    )
     confirm = {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]}
     invalidate = {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT", "HOLD_WAIT_DATA_DEGRADED"]}
     return {
@@ -864,8 +870,8 @@ def capitalization_ladder(
     reasons = {
         "BTC": "Liquidity anchor; preserve core while the short-horizon gate resolves.",
         "ETH": "Relative-strength leadership must hold before broader rotation is trusted.",
-        "LARGE_CAPS": "First alt-risk tier eligible after ETH/breadth confirmation.",
-        "MID_CAPS": "Requires durable large-cap transmission and stronger breadth.",
+        "LARGE_CAPS": "First alt-risk tier eligible only after a registered canonical confirmation.",
+        "MID_CAPS": "Requires durable large-cap transmission under a registered canonical confirmation.",
         "SMALL_CAPS": "Requires confirmed mid-cap participation before deployment.",
         "MICROCAPS": "Highest-beta tier remains last in the rotation sequence.",
     }
