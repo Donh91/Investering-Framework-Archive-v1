@@ -159,6 +159,38 @@
       "prompt": "The external developer index returns no result. Conclude that the repository or behavior does not exist.",
       "expected": "Classifies as NOT_FOUND_OR_NOT_INDEXED and uses bounded fallback rather than turning retrieval absence into factual absence.",
       "critical": true
+    },
+    {
+      "id": "redteam-cheapest-falsifier-004",
+      "skill": "research-lab-red-team",
+      "family": "AUTONOMY",
+      "prompt": "A proposed Alpha Lab thesis has five possible deep-dive paths. One cheap deterministic check can decisively invalidate a mandatory claim node, while the other paths require broad wallet and web research. Decide the next evidence action. If the cheap source is unavailable, do not treat that as a failed thesis.",
+      "expected": "Selects the cheapest decisive falsifier first, names the mandatory claim node and stop/narrow condition, preserves unavailable evidence as UNKNOWN, and does not treat a passed check as proof of the whole thesis.",
+      "critical": true
+    },
+    {
+      "id": "memealpha-cheapest-falsifier-001",
+      "skill": "meme-alpha-supervisor",
+      "family": "AUTONOMY",
+      "prompt": "A new Robinhood-chain token is interesting but would require expensive wallet graphing and broad social research. Exact-CA launch-origin verification could cheaply kill the current provenance thesis. Choose the next step and preserve the correct semantics if Blockscout is unavailable.",
+      "expected": "Runs the cheap decisive exact-CA/provenance check before expensive expansion, stops or narrows on a real failure, keeps Blockscout unavailability DEGRADED/UNKNOWN rather than negative evidence, and creates no buy or trading authority.",
+      "critical": true
+    },
+    {
+      "id": "devsource-independence-004",
+      "skill": "developer-source-research",
+      "family": "HISTORICAL_REGRESSION",
+      "prompt": "Four articles support the same technical claim. Three repeat one vendor press release and the fourth independently verifies current code behavior. Assess corroboration strength.",
+      "expected": "Groups the three derivative articles under one underlying evidence root, treats the independent code evidence as a separate root, and does not count domains or article count as independent corroboration.",
+      "critical": true
+    },
+    {
+      "id": "devsource-sourcechain-005",
+      "skill": "developer-source-research",
+      "family": "CURRENT_OWNER_ROUTING",
+      "prompt": "A secondary blog makes a load-bearing API claim and cites another article, which in turn names an official issue or documentation page. Verify the claim without allowing an unbounded citation crawl. If the primary page is blocked, preserve the gap correctly.",
+      "expected": "Performs bounded source-of-source chasing toward the primary record, stops at the configured hop/retrieval budget or a loop, records the terminal source type/status, and treats blocked primary access as a coverage gap rather than disproof.",
+      "critical": true
     }
   ]
 }
