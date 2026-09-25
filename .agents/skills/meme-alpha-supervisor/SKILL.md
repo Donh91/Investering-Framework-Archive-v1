@@ -50,6 +50,25 @@ Prefer, in order:
 5. Sol only for material conflict, high-value forensics or failed lower-cost adjudication;
 6. Astra only by separate explicit policy/mission, never as the default heartbeat model.
 
+### Blockscout exact-CA enrichment
+
+For EVM / Robinhood Chain work, Blockscout is a first-class deterministic enrichment and verification source after discovery or exact candidate identification.
+
+Use the two surfaces according to execution context:
+
+- ChatGPT interactive research: use the installed Blockscout connector when available for bounded address, transaction, ABI/source and transfer forensics.
+- Repository/runtime research: use `scripts/api_agent/meme_alpha_blockscout.py`. It reads `BLOCKSCOUT_API_KEY` from runtime environment when available, prefers the authenticated unified PRO endpoint for chain 4663, and falls back to the Robinhood chain public Blockscout endpoint when permitted.
+
+Required order for a candidate is:
+
+`DISCOVERY -> EXACT_CA -> BLOCKSCOUT_ENRICHMENT -> FIRST_PARTY_CROSS_BIND -> MARKET/SELLABILITY -> OUTCOME`.
+
+Blockscout does not replace the Pons/RPC launch-discovery owner, first-party authentication, market-price/liquidity sources, sellability evidence or the prospective evidence ledger. It is enrichment, not a second scanner.
+
+Persist immutable launch/origin facts once where appropriate. Time-stamp mutable fields such as holder count, exchange rate and volume. Missing/quota/transport failure is `DEGRADED/UNAVAILABLE`, never negative chain evidence. Never persist, print or place `BLOCKSCOUT_API_KEY` in URLs, receipts, issues, prompts or repository files.
+
+The exact-CA enricher is intentionally fail-open toward the existing discovery row: enrichment failure must never erase a valid chain/factory launch event. Project ownership remains unproven until the existing source-authentication gate passes.
+
 Do not claim that a ChatGPT app plugin is callable from GitHub Actions unless a real API/MCP/runtime binding exists. App-local availability and unattended runtime availability are different capabilities.
 
 ## Queue contract
