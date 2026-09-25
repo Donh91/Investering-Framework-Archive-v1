@@ -137,16 +137,36 @@ class OfficialDailyCompassTest(unittest.TestCase):
     def test_required_horizons_and_ladder_order(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp)
-            self.assertEqual(out["schema_version"], 2)
+            self.assertEqual(out["schema_version"], 3)
             self.assertEqual(tuple(out["horizons"].keys()), HORIZON_ORDER)
             self.assertEqual(tuple(row["segment"] for row in out["capitalization_ladder"]), CAPITALIZATION_ORDER)
             self.assertTrue(all("action" in row for row in out["capitalization_ladder"]))
-            self.assertEqual(tuple(row["action"] for row in out["capitalization_ladder"]), ("HOLD", "HOLD", "WAIT", "WAIT", "WAIT", "HARD_WAIT"))
+            self.assertEqual(tuple(row["action"] for row in out["capitalization_ladder"]), ("HOLD", "HOLD", "WAIT", "WAIT", "WAIT", "HARD_WAIT", "UNAVAILABLE"))
+            memes = out["capitalization_ladder"][-1]
+            self.assertEqual(memes["segment"], "MEMES")
+            self.assertEqual(memes["status"], "UNAVAILABLE")
+            self.assertEqual(memes["direction"], "UNAVAILABLE")
+            self.assertIn("MICROCAPS cannot be used as a proxy", memes["reason"])
             self.assertEqual(out["authority"], OFFICIAL_AUTHORITY)
             self.assertFalse(out["authority"]["portfolio_execution"])
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["state"], "CONSOLIDATION")
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["through_date"], "2026-10-14")
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["warning"], "NONE")
+
+    def test_sell_is_separate_and_fail_closed_without_governed_owner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp)
+            sell = out["sell_assessment"]
+            self.assertEqual(sell["contract"], "COMPASS_SELL_ASSESSMENT_v1")
+            self.assertEqual(sell["state"], "UNAVAILABLE")
+            self.assertEqual(sell["horizon"], "UNKNOWN")
+            self.assertFalse(sell["authority"]["portfolio_execution"])
+            self.assertFalse(sell["authority"]["new_sell_rule"])
+            self.assertFalse(sell["authority"]["protection_is_sell_authority"])
+            self.assertIn("not sell instructions", sell["reason"])
+
+            public = build_public_projection(out)
+            self.assertEqual(public["sell_assessment"], sell)
 
     def test_missing_values_remain_null_not_zero(self):
         with tempfile.TemporaryDirectory() as tmp:
