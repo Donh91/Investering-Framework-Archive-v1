@@ -1,12 +1,6 @@
 name: Daily Live Anchor Capture
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/daily-raw-owner-capture.yml'
-      - 'scripts/daily_capture/slow_macro_recovery.py'
   schedule:
     # Normal tactical cadence: every 4 hours, Europe/Copenhagen.
     # Kept as distinct schedule entries so the 06:13 daily macro/cold-lane identity remains explicit.
