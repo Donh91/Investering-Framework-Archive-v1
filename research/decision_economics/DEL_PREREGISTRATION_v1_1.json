@@ -1,0 +1,71 @@
+{
+  "contract": "DECISION_ECONOMICS_LEDGER_PREREGISTRATION_v1_1",
+  "status": "FROZEN_SHADOW_DATA_BLOCKED_PENDING_GOVERNED_SEGMENT_RETURN_OWNER",
+  "frozen_at_utc": "2026-09-25T00:00:00Z",
+  "ratification_basis": "Owner approved the Nightshift Omega recommendation and the corrected DEL v1.1 implementation on 2026-09-25.",
+  "authority": {
+    "shadow_only": true,
+    "compass_change": false,
+    "portfolio_action": false,
+    "threshold_change": false,
+    "canonical_state_change": false,
+    "automatic_promotion": false
+  },
+  "question": "Do published Compass actions create economically useful decisions per asset segment after costs when compared point-in-time with simple frozen alternatives?",
+  "unit_of_evidence": "First official Compass freeze with data_status OK per ISO week is the primary inference unit. Other freezes are descriptive.",
+  "horizons_days": [1, 3, 7, 28],
+  "primary_horizon_days": 7,
+  "segments": ["BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS"],
+  "interpretations": {
+    "INCUMBENT_HOLDER": "Starts invested. HOLD, PREPARE, WAIT and HARD_WAIT are no-trade states. Exposure changes only on an explicit DEPLOY/BUY or EXIT/SELL action.",
+    "FRESH_CAPITAL": "Starts in cash. HOLD, PREPARE, WAIT and HARD_WAIT are no-trade states. Enters only on explicit DEPLOY/BUY and exits only on explicit EXIT/SELL."
+  },
+  "challengers": {
+    "BUY_HOLD": "Exposure 1.",
+    "CASH": "Exposure 0.",
+    "CORE_STATE_BTC100_5PCT": "BTC cumulative index versus 100-day simple moving average. Enter above MA*1.05 and exit below MA*0.95. Uses returns dated strictly before the decision day. Shadow challenger only."
+  },
+  "costs_one_way": {
+    "BTC": 0.0015,
+    "ETH": 0.0015,
+    "LARGE_CAPS": 0.0015,
+    "MID_CAPS": 0.0025,
+    "SMALL_CAPS": 0.004,
+    "MICROCAPS": 0.007
+  },
+  "cost_semantics": "Charge cost only on absolute exposure change from the preceding observed policy state. The first observed state is initialization and has zero synthetic turnover cost.",
+  "segment_return_owner": {
+    "required_contract": "GOVERNED_SEGMENT_RETURN_SERIES_v1",
+    "required_status": "GOVERNED",
+    "current_status": "MISSING",
+    "rule": "DEL must fail closed rather than use the Cowork proxy segment series as canonical evidence."
+  },
+  "primary_metrics": [
+    "weekly-block mean paired_delta by segment at 7d",
+    "share of weekly blocks where Compass is economically better than each challenger",
+    "time in market by interpretation",
+    "turnover and cost drag"
+  ],
+  "secondary_descriptive_metrics": [
+    "1d, 3d and 28d paired deltas",
+    "daily/on-demand freeze rows",
+    "CORE_STATE_BTC100_5PCT challenger comparisons"
+  ],
+  "decision_rules": {
+    "ACTION_VALUE_REVIEW": "After at least 12 independent weekly blocks with adequate regime coverage, route an owner review for any segment whose Compass decision path is not economically distinguishable from simpler alternatives or whose opportunity/protection trade-off is persistently dominated. Review only, never automatic.",
+    "CORE_STATE_REVIEW": "No promotion claim is allowed from DEL v1.1 row means alone. A later preregistered path-metrics extension must first implement max drawdown, matched-exposure comparison and upside capture, then require at least 26 weekly blocks and at least one prospective BTC drawdown of 20% or more.",
+    "KILL_CORE_STATE": "If a later prospective path-metrics extension shows the challenger does not improve drawdown versus buy-and-hold or does not beat static matched exposure on risk-adjusted terms, kill it as a challenger candidate."
+  },
+  "multiple_testing": "All segment, interpretation, challenger and non-primary-horizon combinations are descriptive. No new challenger may be added to this frozen experiment. New challengers require a new preregistration.",
+  "leakage_controls": [
+    "challenger state uses returns dated strictly before decision day",
+    "unmatured horizons are PENDING_MATURITY",
+    "missing returns are DATA_MISSING and never zero",
+    "prose is not converted into action semantics",
+    "row identity includes interpretation",
+    "row_sha256 prevents silent reinterpretation",
+    "historical replay may falsify but never authorize promotion"
+  ],
+  "historical_evidence_status": "Nightshift Omega 2026-09-25 is prior research context, not promotion evidence.",
+  "activation_gate": "Do not schedule DEL until a governed segment-return owner exists and the focused DEL tests are green."
+}

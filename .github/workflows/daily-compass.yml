@@ -6,9 +6,14 @@ on:
       - '.github/workflows/daily-compass.yml'
       - '.github/workflows/compass-outcomes.yml'
       - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/cycle_navigator/build_weekly_cycle_navigator.py'
       - 'scripts/learning/compass_outcomes.py'
+      - 'scripts/learning/decision_economics_ledger.py'
+      - 'research/decision_economics/**'
       - 'tests/data_ping/test_official_daily_compass.py'
+      - 'tests/cycle_navigator/test_weekly_publication_resilience.py'
       - 'tests/learning/test_compass_outcomes.py'
+      - 'tests/learning/test_decision_economics_ledger.py'
       - '04_MARKET_LEARNING/handlekompas/**'
       - '05_CYCLE_NAVIGATOR/site/**'
       - 'AGENTS.md'
@@ -58,10 +63,11 @@ jobs:
           python-version: '3.12'
       - name: Compile and run focused Compass tests
         run: |
-          python -m py_compile scripts/data_ping/native_handlekompas.py scripts/learning/compass_outcomes.py
+          python -m py_compile scripts/data_ping/native_handlekompas.py scripts/cycle_navigator/build_weekly_cycle_navigator.py scripts/learning/compass_outcomes.py scripts/learning/decision_economics_ledger.py
           python -m unittest tests.data_ping.test_native_handlekompas -v
           python -m unittest tests.data_ping.test_official_daily_compass -v
           python -m unittest tests.learning.test_compass_outcomes -v
+          python -m unittest tests.learning.test_decision_economics_ledger -v
       - name: Deterministic current-state dry run
         run: |
           python scripts/data_ping/native_handlekompas.py --official-daily-compass --run-reason PR_VALIDATION --no-write > /tmp/compass.json

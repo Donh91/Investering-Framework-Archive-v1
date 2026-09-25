@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.learning.compass_outcomes import action_quality, mature_one
+from scripts.learning.compass_outcomes import action_quality, mature_one, persistence_baseline
 
 
 class CompassOutcomeTest(unittest.TestCase):
@@ -68,6 +68,16 @@ class CompassOutcomeTest(unittest.TestCase):
     def test_action_quality_is_horizon_action_not_hardwired_to_12h(self):
         self.assertEqual(action_quality("WAIT", -2.0, -3.0)["action"], "WAIT")
         self.assertEqual(action_quality("PREPARE", 2.0, -1.0)["action"], "PREPARE")
+
+    def test_persistence_baseline_is_reachable_from_frozen_evidence(self):
+        freeze = self.freeze()
+        freeze["evidence_snapshot"]["selected_features"] = [
+            {"feature_id": "btc_delta_since_prior_packet_pct", "value": -1.25}
+        ]
+        scored = persistence_baseline(freeze, -2.0)
+        self.assertEqual(scored["status"], "SCORED")
+        self.assertEqual(scored["prediction"], "DOWN")
+        self.assertTrue(scored["correct"])
 
     def test_missing_target_observation_stays_pending_and_writes_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -25,27 +25,50 @@ class NativeHandlekompasTest(unittest.TestCase):
             },
             "source_health": {
                 "sentiment": {"status": sentiment_status, "classification": sentiment_class},
-                "hourly_market": {"status": "PASS", "classification": "OK"},
+                "hourly_market": {
+                    "status": "PASS",
+                    "classification": "OK",
+                    "freshness": {
+                        "status": "PASS",
+                        "pointer_freshness": {"status": "PASS", "timestamp": "2026-09-08T20:00:00Z", "max_age_seconds": 10800},
+                        "retrieval_freshness": {"status": "PASS", "timestamp": "2026-09-08T20:00:00Z", "max_age_seconds": 10800},
+                        "session_coverage_freshness": {"status": "PASS", "timestamp": "2026-09-08T20:00:00Z", "max_age_seconds": 10800},
+                        "source_observation_freshness": {"status": "PASS", "timestamp": "2026-09-08T20:00:00Z", "max_age_seconds": 10800},
+                    },
+                },
             },
         }
 
-    def test_prepare_requires_healthy_state_and_supportive_breadth(self):
+    def test_retired_breadth_and_ethbtc_cannot_create_prepare(self):
         out = build(self.packet(), now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
-        self.assertEqual(out["action"]["NOW"], "PREPARE")
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT")
+        self.assertEqual(out["action"]["proxy_authority"]["top100_breadth_action_weight"], 0)
+        self.assertEqual(out["action"]["proxy_authority"]["ethbtc_0_03_gate_action_weight"], 0)
         self.assertFalse(out["authority"]["portfolio_execution"])
         self.assertFalse(out["manual_market_data_required"])
 
-    def test_existing_entry_signal_can_surface_graduated_topup(self):
-        out = build(self.packet(entry_state="GRADUATED_ALTCOIN_TOPUP_ACTIVE"))
-        self.assertEqual(out["action"]["NOW"], "GRADUATED_TOPUP_ACTIVE")
-        self.assertIn("ONLY_EXISTING_ENTRY_SIGNAL", out["action"]["TOPUP_GATE"])
+    def test_legacy_entry_observer_cannot_reactivate_graduated_topup(self):
+        out = build(
+            self.packet(entry_state="GRADUATED_ALTCOIN_TOPUP_ACTIVE"),
+            now=datetime(2026,9,8,20,0,tzinfo=timezone.utc),
+        )
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT")
+        self.assertFalse(out["action"]["proxy_authority"]["legacy_entry_observer_action_authority"])
+        self.assertIn("RETIRED_BREADTH_ETHBTC_PROXY", out["action"]["TOPUP_GATE"])
 
-    def test_weak_breadth_is_defensive_wait(self):
-        out = build(self.packet(breadth=0.29))
-        self.assertEqual(out["action"]["NOW"], "HOLD_DEFENSIVE_WAIT")
+    def test_weak_breadth_is_descriptive_not_defensive_action(self):
+        out = build(self.packet(breadth=0.29), now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT")
+        self.assertIn("DESCRIPTIVE_TOP100_BREADTH=0.29", out["action"]["WHY"])
+
+    def test_stale_owner_fails_native_action_closed(self):
+        out = build(self.packet(), now=datetime(2026,9,9,4,0,tzinfo=timezone.utc))
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT_DATA_DEGRADED")
+        self.assertEqual(out["DATA_HEALTH"]["status"], "DEGRADED")
+        self.assertEqual(out["DATA_HEALTH"]["owner_freshness"]["status"], "STALE_OR_UNAVAILABLE")
 
     def test_degraded_state_cannot_be_prepare(self):
-        out = build(self.packet(decision="DEGRADED", blockers=["hourly_market"]))
+        out = build(self.packet(decision="DEGRADED", blockers=["hourly_market"]), now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
         self.assertEqual(out["action"]["NOW"], "HOLD_WAIT_DATA_DEGRADED")
 
     def test_cfgi_quota_is_visible_and_budget_degraded(self):
