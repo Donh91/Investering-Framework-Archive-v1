@@ -8,8 +8,15 @@ on:
     - cron: '5 * * * *'
       timezone: 'UTC'
   workflow_dispatch:
+    inputs:
+      chain_entry_signal:
+        description: 'Explicitly dispatch Entry Signal after an on-demand Hourly recovery'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
+  actions: write
   contents: write
   issues: write
 
@@ -65,6 +72,21 @@ jobs:
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
           echo "source_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Bridge on-demand recovery to Entry Signal
+        if: github.event_name == 'workflow_dispatch' && inputs.chain_entry_signal == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          active=$(gh run list --workflow entry-signal-ledger.yml --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending")] | length')
+          if [ "$active" -gt 0 ]; then
+            echo "ENTRY_SIGNAL_RECOVERY_ALREADY_ACTIVE count=$active"
+          else
+            gh workflow run entry-signal-ledger.yml --ref main
+            echo "ENTRY_SIGNAL_RECOVERY_DISPATCHED source_hourly_run=${GITHUB_RUN_ID}"
+          fi
+
 
   intraday:
     # This dependency remains inside the SAME workflow-level main-writer lock.
