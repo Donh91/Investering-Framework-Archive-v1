@@ -562,7 +562,6 @@ def _weekly_direction(cn_package: Mapping[str, Any] | None) -> str:
 
 
 def _unavailable_horizon(reason: str) -> dict[str, Any]:
-def _unavailable_horizon(reason: str) -> dict[str, Any]:
     return {
         "expected_direction": "UNAVAILABLE",
         "label": "UNAVAILABLE",
