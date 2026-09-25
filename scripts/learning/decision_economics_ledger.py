@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
-"""Decision Economics Ledger v1.1.
+"""Decision Economics Ledger v1.2.
 
 Shadow-only, point-in-time economic accountability for published Compass actions.
 
-The ledger deliberately does not translate HOLD/PREPARE/WAIT into arbitrary absolute
-portfolio weights. Instead it replays two explicit synthetic reader states:
+DEL scores the explicit per-segment action frozen by Compass. It never treats the
+market status field as an action and never reconstructs action from prose. Historical
+freezes that predate the action field remain unscorable rather than being guessed.
 
-* INCUMBENT_HOLDER starts invested and keeps the current exposure until an explicit
-  DEPLOY/EXIT-style action changes it.
-* FRESH_CAPITAL starts in cash and only enters on an explicit DEPLOY action.
+Two explicit synthetic reader states are replayed:
 
-Current HOLD, PREPARE, WAIT and HARD_WAIT are no-trade states for both interpretations.
-This makes the current absence of a de-risk action economically visible instead of
-pretending that WAIT means SELL or PREPARE means BUY.
+* INCUMBENT_HOLDER starts invested and keeps exposure until an explicit BUY/DEPLOY or
+  SELL/EXIT action changes it.
+* FRESH_CAPITAL starts in cash and only enters on an explicit BUY/DEPLOY action.
 
-Transaction costs are charged only on exposure changes, never once per freeze. The
-first observed policy state is initialization and carries zero synthetic turnover cost.
-No output has portfolio, threshold, model-weight or canonical-market authority.
+HOLD, PREPARE, WAIT and HARD_WAIT are no-trade actions for both interpretations.
+
+Transaction costs are charged only on actual exposure changes. Because each
+interpretation defines its starting exposure, an explicit first BUY/DEPLOY or SELL/EXIT
+transition is chargeable from that known starting state. A first no-trade observation
+has zero turnover. No output has portfolio, threshold, model-weight or
+canonical-market authority.
 """
 from __future__ import annotations
 
@@ -29,8 +32,8 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-ROW_CONTRACT = "DECISION_ECONOMICS_LEDGER_ROW_v1_1"
-RUN_CONTRACT = "DECISION_ECONOMICS_LEDGER_RUN_v1_1"
+ROW_CONTRACT = "DECISION_ECONOMICS_LEDGER_ROW_v1_2"
+RUN_CONTRACT = "DECISION_ECONOMICS_LEDGER_RUN_v1_2"
 SEGMENT_OWNER_CONTRACT = "GOVERNED_SEGMENT_RETURN_SERIES_v1"
 SEGMENTS = ("BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS")
 HORIZON_DAYS = (1, 3, 7, 28)
@@ -148,24 +151,30 @@ def challenger_target(name: str, returns: Mapping[str, Mapping[date, float]], de
     raise LedgerInputError(f"unregistered challenger: {name}")
 
 
-def compass_ladder(compass: Mapping[str, Any]) -> dict[str, str]:
+def compass_ladder(compass: Mapping[str, Any]) -> dict[str, dict[str, str | None]]:
     ladder = compass.get("capitalization_ladder")
     if not isinstance(ladder, list):
         raise LedgerInputError("capitalization_ladder missing")
-    out: dict[str, str] = {}
+    out: dict[str, dict[str, str | None]] = {}
     for row in ladder:
         if not isinstance(row, Mapping):
             continue
         segment = str(row.get("segment") or "")
         if segment in SEGMENTS:
-            out[segment] = str(row.get("status") or "").upper()
+            action_raw = row.get("action")
+            out[segment] = {
+                "status": str(row.get("status") or "").upper(),
+                "action": str(action_raw).upper() if isinstance(action_raw, str) and action_raw else None,
+            }
     if set(out) != set(SEGMENTS):
         raise LedgerInputError("capitalization_ladder incomplete")
     return out
 
 
-def next_compass_exposure(previous: float, ladder_state: str) -> float | None:
-    state = str(ladder_state or "").upper()
+def next_compass_exposure(previous: float, compass_action: str | None) -> float | None:
+    if compass_action is None:
+        return None
+    state = str(compass_action or "").upper()
     if state in NO_TRADE_STATES:
         return previous
     if state in ENTER_STATES:
@@ -174,8 +183,7 @@ def next_compass_exposure(previous: float, ladder_state: str) -> float | None:
         return 0.0
     if state in UNSCORABLE_STATES:
         return None
-    raise LedgerInputError(f"unmapped ladder state: {state}")
-
+    raise LedgerInputError(f"unmapped ladder action: {state}")
 
 def realised_return(
     returns: Mapping[str, Mapping[date, float]],
@@ -225,8 +233,6 @@ def score_compasses(
 
     compass_exposure: dict[tuple[str, str], float] = {}
     challenger_exposure: dict[tuple[str, str, str], float] = {}
-    initialized_policy: set[tuple[str, str]] = set()
-    initialized_challenger: set[tuple[str, str, str]] = set()
     rows: list[dict[str, Any]] = []
 
     for compass in ordered:
@@ -244,15 +250,14 @@ def score_compasses(
             for segment in SEGMENTS:
                 key = (interpretation, segment)
                 previous = compass_exposure.get(key, initial)
-                current = next_compass_exposure(previous, ladder[segment])
+                current = next_compass_exposure(previous, ladder[segment]["action"])
                 current_compass[key] = current
                 if current is None:
                     compass_turnover[key] = None
                     continue
-                turnover = 0.0 if key not in initialized_policy else abs(current - previous)
+                turnover = abs(current - previous)
                 compass_turnover[key] = turnover
                 compass_exposure[key] = current
-                initialized_policy.add(key)
 
         current_challenger: dict[tuple[str, str, str], float | None] = {}
         challenger_turnover: dict[tuple[str, str, str], float | None] = {}
@@ -265,11 +270,11 @@ def score_compasses(
                     if target is None:
                         challenger_turnover[key] = None
                         continue
-                    previous = challenger_exposure.get(key, target)
-                    turnover = 0.0 if key not in initialized_challenger else abs(target - previous)
+                    initial = 1.0 if interpretation == "INCUMBENT_HOLDER" else 0.0
+                    previous = challenger_exposure.get(key, initial)
+                    turnover = abs(target - previous)
                     challenger_turnover[key] = turnover
                     challenger_exposure[key] = target
-                    initialized_challenger.add(key)
 
         for horizon_days in HORIZON_DAYS:
             matures_at = datetime.combine(
@@ -308,7 +313,8 @@ def score_compasses(
                             "horizon_days": horizon_days,
                             "interpretation": interpretation,
                             "challenger": challenger,
-                            "ladder_state": ladder[segment],
+                            "ladder_status": ladder[segment]["status"],
+                            "compass_action": ladder[segment]["action"],
                             "compass_exposure": c_exp,
                             "challenger_exposure": x_exp,
                             "compass_turnover": c_turn,
@@ -382,7 +388,7 @@ def load_compasses(root: Path) -> list[Mapping[str, Any]]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Decision Economics Ledger v1.1, shadow only.")
+    parser = argparse.ArgumentParser(description="Decision Economics Ledger v1.2, shadow only.")
     parser.add_argument("--compass-root", type=Path, default=Path("04_MARKET_LEARNING/handlekompas/official/daily"))
     parser.add_argument("--segment-returns", type=Path, required=True)
     parser.add_argument("--segment-return-metadata", type=Path, required=True)
