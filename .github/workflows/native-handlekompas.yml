@@ -6,8 +6,15 @@ on:
       - '.github/workflows/native-handlekompas.yml'
       - '.github/workflows/provider-budget-readback.yml'
       - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/cycle_navigator/build_weekly_cycle_navigator.py'
+      - 'scripts/learning/compass_outcomes.py'
+      - 'scripts/learning/decision_economics_ledger.py'
       - 'scripts/health/provider_budget_status.py'
       - 'tests/data_ping/test_native_handlekompas.py'
+      - 'tests/data_ping/test_official_daily_compass.py'
+      - 'tests/learning/test_compass_outcomes.py'
+      - 'tests/learning/test_decision_economics_ledger.py'
+      - 'research/decision_economics/**'
       - 'tests/health/test_provider_budget_status.py'
       - '03_WEEKLY_OPERATIONS/provider_budget/**'
       - '04_MARKET_LEARNING/handlekompas/**'
@@ -45,8 +52,11 @@ jobs:
           python-version: '3.12'
       - name: Compile and test Handlekompas
         run: |
-          python -m py_compile scripts/data_ping/native_handlekompas.py scripts/health/provider_budget_status.py
+          python -m py_compile scripts/data_ping/native_handlekompas.py scripts/cycle_navigator/build_weekly_cycle_navigator.py scripts/learning/compass_outcomes.py scripts/learning/decision_economics_ledger.py scripts/health/provider_budget_status.py
           python -m unittest tests.data_ping.test_native_handlekompas -v
+          python -m unittest tests.data_ping.test_official_daily_compass -v
+          python -m unittest tests.learning.test_compass_outcomes -v
+          python -m unittest tests.learning.test_decision_economics_ledger -v
           python -m unittest tests.health.test_provider_budget_status -v
       - name: Validate repository state readback when available
         shell: bash
