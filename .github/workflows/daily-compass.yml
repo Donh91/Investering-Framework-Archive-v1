@@ -48,8 +48,9 @@ permissions:
   issues: write
 
 concurrency:
-  group: framework-main-writer
-  cancel-in-progress: false
+  # Read-only PR validation must not compete with serialized main writers.
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
@@ -68,6 +69,10 @@ jobs:
           python -m unittest tests.data_ping.test_official_daily_compass -v
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_decision_economics_ledger -v
+      - name: Build and validate public Compass bundle
+        run: |
+          node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
       - name: Deterministic current-state dry run
         run: |
           python scripts/data_ping/native_handlekompas.py --official-daily-compass --run-reason PR_VALIDATION --no-write > /tmp/compass.json

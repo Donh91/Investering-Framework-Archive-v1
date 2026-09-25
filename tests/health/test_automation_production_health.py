@@ -59,6 +59,61 @@ def test_writer_without_global_lock_is_red(tmp_path: Path) -> None:
     assert "NO_MAIN_READBACK" in findings
 
 
+def test_pr_isolated_writer_group_is_safe(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Test
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    steps:
+      - run: echo read-only
+  writer:
+    if: github.event_name != 'pull_request'
+    steps:
+      - run: |
+          git add out
+          if git diff --cached --quiet; then exit 0; fi
+          git rebase --abort || true
+          git push origin HEAD:main
+          git merge-base --is-ancestor HEAD origin/main
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["writer_group"] == module.PR_ISOLATED_WRITER_GROUP
+    assert "NON_GLOBAL_WRITER_LOCK" not in row["static_risks"]
+
+
+def test_unrecognized_dynamic_writer_group_remains_red(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Test
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+jobs:
+  writer:
+    steps:
+      - run: |
+          git push origin HEAD:main
+""",
+    )
+    row = module.workflow_static(path)
+    assert "NON_GLOBAL_WRITER_LOCK" in row["static_risks"]
+
+
 def test_healthy_writer_is_green(tmp_path: Path) -> None:
     row = healthy_writer(tmp_path)
     row["live"] = {

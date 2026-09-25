@@ -882,13 +882,24 @@ def capitalization_ladder(
     *, as_of: datetime | None = None,
 ) -> list[dict[str, Any]]:
     if not _health_ok(auto_state, as_of):
-        return [
+        rows = [
             {"segment": seg, "status": "UNAVAILABLE", "action": "UNAVAILABLE", "direction": "UNAVAILABLE", "eta": None,
              "reason": "Required current-state evidence is degraded.",
              "upgrade_trigger": {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]},
              "deterioration_trigger": {"type": "ACTION_STATE", "states": ["HOLD_WAIT_DATA_DEGRADED"]}}
-            for seg in CAPITALIZATION_ORDER
+            for seg in CAPITALIZATION_ORDER[:-1]
         ]
+        rows.append({
+            "segment": "MEMES",
+            "status": "UNAVAILABLE",
+            "action": "UNAVAILABLE",
+            "direction": "UNAVAILABLE",
+            "eta": None,
+            "reason": "Required current-state evidence is degraded, and meme risk still requires a governed meme-specific decision owner.",
+            "upgrade_trigger": {"type": "GOVERNED_MEME_DECISION_OWNER", "states": ["ELIGIBLE"]},
+            "deterioration_trigger": {"type": "GOVERNED_MEME_DECISION_OWNER", "states": ["UNAVAILABLE", "INELIGIBLE"]},
+        })
+        return rows
     posture = str(action.get("NOW") or "HOLD_WAIT")
     direction = str(market_now.get("directional_state") or "MIXED")
     if posture == "GRADUATED_TOPUP_ACTIVE":

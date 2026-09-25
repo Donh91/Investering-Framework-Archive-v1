@@ -75,6 +75,21 @@ class CompassDecisionAuthorityGuardTest(unittest.TestCase):
         self.assertEqual(ladder[-1]["direction"], "UNAVAILABLE")
         self.assertIn("MICROCAPS cannot be used as a proxy", ladder[-1]["reason"])
 
+    def test_degraded_meme_rung_keeps_owner_specific_trigger(self):
+        state = packet(breadth=0.10, ethbtc=0.02, entry_state="WAIT")
+        state["validation_status"] = "FAIL"
+        ladder = capitalization_ladder(
+            state,
+            {"NOW": "HOLD_WAIT_DATA_DEGRADED"},
+            {"directional_state": "UNAVAILABLE"},
+            as_of=NOW,
+        )
+        meme = ladder[-1]
+        self.assertEqual(meme["segment"], "MEMES")
+        self.assertEqual(meme["status"], "UNAVAILABLE")
+        self.assertEqual(meme["upgrade_trigger"]["type"], "GOVERNED_MEME_DECISION_OWNER")
+        self.assertNotEqual(meme["upgrade_trigger"]["type"], "ACTION_STATE")
+
     def test_protection_risk_cannot_silently_become_sell_authority(self):
         state = packet(breadth=0.10, ethbtc=0.02, entry_state="WAIT")
         protection = {
