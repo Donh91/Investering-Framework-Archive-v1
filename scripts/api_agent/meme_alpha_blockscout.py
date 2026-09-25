@@ -33,6 +33,12 @@ def normalize_address(value: Any) -> str | None:
     return value
 
 
+def address_of(value: Any) -> str | None:
+    if isinstance(value, dict):
+        value = value.get("hash") or value.get("address") or value.get("address_hash")
+    return normalize_address(value)
+
+
 def _safe_endpoint(endpoint_path: str) -> str:
     if not isinstance(endpoint_path, str) or not endpoint_path.startswith("/api/v2/"):
         raise ValueError("BLOCKSCOUT_ENDPOINT_MUST_START_/api/v2/")
@@ -147,7 +153,7 @@ def _initial_tokens_received(tx: dict[str, Any], token_ca: str, recipient: str |
             continue
         token = row.get("token") if isinstance(row.get("token"), dict) else {}
         address = normalize_address(token.get("address_hash") or token.get("address"))
-        to = normalize_address(row.get("to"))
+        to = address_of(row.get("to"))
         if address != token_ca or to != recipient:
             continue
         value = row.get("total") if isinstance(row.get("total"), dict) else {}
@@ -231,7 +237,7 @@ def launch_origin_snapshot(
             "is_verified": address_payload.get("is_verified") if isinstance(address_payload, dict) else None,
             "proxy_type": address_payload.get("proxy_type") if isinstance(address_payload, dict) else None,
             "contract_name": address_payload.get("name") if isinstance(address_payload, dict) else None,
-            "creator_address": normalize_address(address_payload.get("creator_address_hash")) if isinstance(address_payload, dict) else None,
+            "creator_address": address_of(address_payload.get("creator_address_hash")) if isinstance(address_payload, dict) else None,
             "creation_transaction_hash": creation_tx,
         },
         "token": {
@@ -248,8 +254,8 @@ def launch_origin_snapshot(
             "block_number": tx_payload.get("block_number") if tx_payload else None,
             "timestamp": tx_payload.get("timestamp") if tx_payload else None,
             "method": tx_payload.get("method") if tx_payload else None,
-            "from": normalize_address(tx_payload.get("from")) if tx_payload else None,
-            "to": normalize_address(tx_payload.get("to")) if tx_payload else None,
+            "from": address_of(tx_payload.get("from")) if tx_payload else None,
+            "to": address_of(tx_payload.get("to")) if tx_payload else None,
             "recipient": recipient,
             "pair_token": normalize_address(params.get("pairToken")),
             "quote_in_native": quote_in_native,
