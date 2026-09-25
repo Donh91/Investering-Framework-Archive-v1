@@ -10,7 +10,7 @@ This folder is the public control-plane owner for the research-only Meme Alpha b
 - Fresh-launch research/alert layer: `MOONSHOT_SENTINEL_CONTRACT_v1.json`
 - Cross-stage token memory: `ALPHA_LAB_LIFECYCLE_ENGINE_v1.json`
 - Secondary-expansion/reclaim research: `PHOENIX_RECLAIM_EXPERIMENT_v1.json`
-- Deterministic lifecycle classifier: `scripts/api_agent/meme_alpha_lifecycle_v1.py`
+- Deterministic lifecycle classifier: `scripts/api_agent/meme_alpha_lifecycle_v1.py`\n- Blockscout exact-CA enricher: `scripts/api_agent/meme_alpha_blockscout.py`
 - Skill: `.agents/skills/meme-alpha-supervisor/SKILL.md`
 - Private workspace: `Donh91/secrets/private_research/memes_alpha/`
 - Private runtime branch: `agent/task-20260913-meme-alpha-live`
@@ -43,3 +43,4 @@ A real community/CTO thesis is evaluated separately and does not inherit first-p
 Revoked provenance must propagate into descendant research tasks. PONSCUPINE is retained privately as an adversarial provenance-spoof benchmark so future archaeology is regression-tested against the exact failure mode.
 
 Unchanged inputs are idempotent. Empty queue means no model call. Repeated unchanged failures are dead-lettered after the policy limit. Development findings are candidates only and do not require Codex for ordinary research.
+\n## Blockscout exact-CA transport\n\nFor Robinhood Chain exact-CA enrichment, the repository runtime uses `scripts/api_agent/meme_alpha_blockscout.py`. The transport preference is authenticated Blockscout PRO through `BLOCKSCOUT_API_KEY`, then the chain-specific public explorer as a bounded fallback. The credential is runtime-only and must never be persisted.\n\nThe module is downstream of discovery and upstream of first-party cross-binding and market/sellability checks. It can freeze contract state, creation transaction, verified-source status, token metadata and decoded launch-origin fields. It is not a scanner, price oracle or project-ownership oracle.\n
