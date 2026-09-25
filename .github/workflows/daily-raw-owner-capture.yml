@@ -1,6 +1,12 @@
 name: Daily Live Anchor Capture
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/daily-raw-owner-capture.yml'
+      - 'scripts/daily_capture/slow_macro_recovery.py'
   schedule:
     # Normal tactical cadence: every 4 hours, Europe/Copenhagen.
     # Kept as distinct schedule entries so the 06:13 daily macro/cold-lane identity remains explicit.
@@ -44,8 +50,43 @@ jobs:
           python-version: '3.12'
       - name: Initialize source status
         run: echo '{}' > collector-status.json
+      - name: Decide bounded slow-macro recovery
+        id: slow_macro
+        shell: bash
+        run: |
+          set -euo pipefail
+          due=true
+          reason=RECOVERY_DECISION_ERROR_FAILS_TOWARD_CAPTURE
+          if python scripts/daily_capture/slow_macro_recovery.py \
+              --capture-root 03_DAILY_CAPTURE_LOGS/captures \
+              --threshold-hours 24 > /tmp/slow-macro-recovery.json; then
+            cat /tmp/slow-macro-recovery.json
+            due=$(python - <<'PY'
+          import json
+          d=json.load(open('/tmp/slow-macro-recovery.json'))
+          print(str(bool(d['run_slow_lane'])).lower())
+          PY
+            )
+            reason=$(python - <<'PY'
+          import json
+          print(json.load(open('/tmp/slow-macro-recovery.json'))['reason'])
+          PY
+            )
+          fi
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            due=true
+            reason=MANUAL_DISPATCH_FORCES_SLOW_LANE
+          elif [ "${SCHEDULE_ID}" = "13 6 * * *" ]; then
+            due=true
+            reason=NORMAL_DAILY_SLOW_LANE
+          fi
+          echo "run=${due}" >> "${GITHUB_OUTPUT}"
+          echo "reason=${reason}" >> "${GITHUB_OUTPUT}"
+          echo "SLOW_MACRO_RECOVERY run=${due} reason=${reason}"
       - name: Run point-in-time owners fail-closed but independently
         shell: bash
+        env:
+          RUN_SLOW_LANE: ${{ steps.slow_macro.outputs.run }}
         run: |
           set +e
           record_code() {
@@ -60,8 +101,10 @@ jobs:
           # Spot candles and historical derivatives are owned by the separate hourly sequence lane.
           record_code binance_spot 78
 
-          # Slow daily macro context is collected once per day, or on manual dispatch.
-          if [ "${SCHEDULE_ID}" = "13 6 * * *" ] || [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+          # Slow macro context runs on the normal daily slot and self-heals on
+          # the next successful tactical anchor if the last valid macro capture
+          # has crossed the bounded 24h recovery threshold.
+          if [ "${RUN_SLOW_LANE}" = "true" ]; then
             run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py --series DGS2,DGS10,DTWEXBGS,VIXCLS --output-dir fred-owner-output
           else
             record_code fred_macro 78
@@ -75,13 +118,13 @@ jobs:
           # CFGI is a permanent shadow sentiment owner. It is collected on the 4H tactical cadence when the API secret is valid.
           CFGI_FIELDS="score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders"
           run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH --timeframe 4h --fields "${CFGI_FIELDS}" --limit 1
-          if [ "${SCHEDULE_ID}" = "13 6 * * *" ] || [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+          if [ "${RUN_SLOW_LANE}" = "true" ]; then
             python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-1d-owner-output --symbols MARKET,BTC,ETH --timeframe 1d --fields score --limit 1
             record_code cfgi_sentiment_1d "$?"
           fi
       - name: Persist one bounded daily cold-lane checkpoint
         id: cold
-        if: env.SCHEDULE_ID == '13 6 * * *' || github.event_name == 'workflow_dispatch'
+        if: steps.slow_macro.outputs.run == 'true'
         continue-on-error: true
         run: |
           python scripts/daily_capture/persist_raw_payloads.py \
