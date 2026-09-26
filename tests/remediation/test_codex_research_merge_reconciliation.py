@@ -7,6 +7,7 @@ from pathlib import Path
 REPO = Path(__file__).parents[2]
 OWNER_PATH = REPO / "scripts" / "remediation" / "merge_codex_research_intake.py"
 RECONCILE_PATH = REPO / "scripts" / "remediation" / "reconcile_codex_research_merges.py"
+COMPLETION_PATH = REPO / "scripts" / "remediation" / "write_codex_research_completion_receipt.py"
 WORKFLOW_PATH = REPO / ".github" / "workflows" / "remediation-maturation.yml"
 
 
@@ -20,6 +21,7 @@ def load_module(name: str, path: Path):
 
 owner = load_module("merge_codex_research_intake_test", OWNER_PATH)
 reconcile = load_module("reconcile_codex_research_merges_test", RECONCILE_PATH)
+completion = load_module("write_codex_research_completion_receipt_test", COMPLETION_PATH)
 
 
 class CodexResearchMergeReconciliationTests(unittest.TestCase):
@@ -295,6 +297,155 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
                                              fetch_one=fetch, verified_at="2026-09-13T10:11:00Z")
                 self.assertEqual(replay["reconciled"][0]["status"], "ALREADY_PRESENT")
                 self.assertEqual(good_path.read_bytes(), good_bytes)
+
+    def test_non_in_remediation_transition_receipt_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task, transition = self.write_fixture(root)
+            transition["state"] = "POST_FIX_OBSERVATION"
+            transition["receipt_sha256"] = owner.canonical_hash({
+                k: v for k, v in transition.items() if k != "receipt_sha256"
+            })
+            transition_path = root / task["transition_receipt_path"]
+            transition_path.write_text(json.dumps(transition, indent=2, sort_keys=True) + "\n")
+            (root / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({
+                "tasks": [dict(task, state="IN_REMEDIATION")]
+            }) + "\n")
+
+            called = False
+
+            def fetch(_repo, _number):
+                nonlocal called
+                called = True
+                raise AssertionError("GitHub lookup must not run for an invalid transition state")
+
+            result = reconcile.reconcile(
+                root,
+                "Donh91/Investering-Framework-Archive-v1",
+                fetch_one=fetch,
+                verified_at="2026-09-25T00:10:00Z",
+            )
+            self.assertFalse(called)
+            self.assertEqual(result["reconciled"], [])
+            self.assertEqual(
+                result["pending"],
+                [{"candidate_id": task["candidate_id"], "reason": "VALID_TRANSITION_REQUIRED"}],
+            )
+            self.assertFalse(
+                (root / "research/codex/merges/test-merge-reconciliation.json").exists()
+            )
+
+    def test_existing_completion_receipt_is_idempotent_and_cannot_be_overwritten(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task, _transition = self.write_fixture(root)
+            (root / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({
+                "tasks": [dict(task, state="POST_FIX_OBSERVATION")]
+            }) + "\n")
+            receipt = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["first verified evidence"],
+                verified_at_utc="2026-09-25T00:10:00Z",
+            )
+            path = root / "research/codex/completions/test-merge-reconciliation.json"
+            stored, created = completion.write_completion_receipt(path, receipt)
+            self.assertTrue(created)
+            self.assertEqual(stored["receipt_sha256"], receipt["receipt_sha256"])
+            original = path.read_bytes()
+
+            replay = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["newer evidence must not rewrite immutable bytes"],
+                verified_at_utc="2026-09-25T00:20:00Z",
+            )
+            stored_again, created_again = completion.write_completion_receipt(path, replay)
+            self.assertFalse(created_again)
+            self.assertEqual(path.read_bytes(), original)
+            self.assertEqual(stored_again["receipt_sha256"], receipt["receipt_sha256"])
+
+            contradiction = dict(replay, merge_commit_sha="b" * 40)
+            contradiction["receipt_sha256"] = completion.canonical_hash({
+                k: v for k, v in contradiction.items() if k != "receipt_sha256"
+            })
+            with self.assertRaisesRegex(
+                ValueError,
+                "EXISTING_COMPLETION_RECEIPT_CONTRADICTION:merge_commit_sha",
+            ):
+                completion.write_completion_receipt(path, contradiction)
+            self.assertEqual(path.read_bytes(), original)
+
+    def test_hash_valid_partial_completion_receipt_is_not_frozen(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task, _transition = self.write_fixture(root)
+            (root / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({
+                "tasks": [dict(task, state="POST_FIX_OBSERVATION")]
+            }) + "\n")
+            replacement = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["fresh verified evidence"],
+                verified_at_utc="2026-09-25T00:20:00Z",
+            )
+            partial = {
+                key: value for key, value in replacement.items()
+                if key not in {
+                    "execution_quality",
+                    "receipt_sha256",
+                    "verification_evidence",
+                    "verified_at_utc",
+                }
+            }
+            partial["receipt_sha256"] = completion.canonical_hash(partial)
+            path = root / "research/codex/completions/test-merge-reconciliation.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(partial, indent=2, sort_keys=True) + "\n")
+            original = path.read_bytes()
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "EXISTING_COMPLETION_RECEIPT_INVALID",
+            ):
+                completion.write_completion_receipt(path, replacement)
+            self.assertEqual(path.read_bytes(), original)
+
+    def test_legacy_completion_without_execution_quality_remains_idempotent(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task, _transition = self.write_fixture(root)
+            (root / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({
+                "tasks": [dict(task, state="POST_FIX_OBSERVATION")]
+            }) + "\n")
+            receipt = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["legacy verified evidence"],
+                verified_at_utc="2026-08-20T00:00:00Z",
+            )
+            legacy = dict(receipt)
+            legacy.pop("execution_quality")
+            legacy["receipt_sha256"] = completion.canonical_hash({
+                key: value for key, value in legacy.items() if key != "receipt_sha256"
+            })
+            path = root / "research/codex/completions/test-merge-reconciliation.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(legacy, indent=2, sort_keys=True) + "\n")
+            original = path.read_bytes()
+
+            stored, created = completion.write_completion_receipt(path, receipt)
+            self.assertFalse(created)
+            self.assertEqual(stored, legacy)
+            self.assertEqual(path.read_bytes(), original)
 
     def test_workflow_reconciles_between_two_owner_materializations(self):
         text = WORKFLOW_PATH.read_text()

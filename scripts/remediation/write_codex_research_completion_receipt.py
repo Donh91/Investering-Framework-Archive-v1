@@ -192,6 +192,109 @@ def build_completion_receipt(
     return receipt
 
 
+def valid_stored_completion_receipt(receipt: Any) -> bool:
+    """Validate stored completion evidence before treating it as immutable.
+
+    Legacy receipts may predate execution-quality telemetry, but they still need
+    the complete evidence shape used by the canonical completion consumer.
+    """
+    if not isinstance(receipt, dict):
+        return False
+    if receipt.get("contract") != "CODEX_RESEARCH_COMPLETION_RECEIPT_v1":
+        return False
+    if receipt.get("status") != "VERIFIED":
+        return False
+    required_strings = (
+        "candidate_id",
+        "signature",
+        "candidate_sha256",
+        "task_contract_sha256",
+        "merge_commit_sha",
+        "verified_at_utc",
+    )
+    if any(not isinstance(receipt.get(key), str) or not receipt[key].strip() for key in required_strings):
+        return False
+    pr_number = receipt.get("pr_number")
+    if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
+        return False
+    evidence = receipt.get("verification_evidence")
+    if not isinstance(evidence, list) or not evidence:
+        return False
+    if any(not isinstance(item, str) or not item.strip() for item in evidence):
+        return False
+
+    quality = receipt.get("execution_quality")
+    if quality is None:
+        return True
+    if not isinstance(quality, dict):
+        return False
+    if quality.get("contract") != QUALITY_CONTRACT:
+        return False
+    if quality.get("telemetry_status") not in TELEMETRY_STATUSES:
+        return False
+    quality_evidence = quality.get("evidence")
+    metrics = quality.get("metrics")
+    attribution = quality.get("failure_attribution")
+    if not isinstance(quality_evidence, list) or any(
+        not isinstance(item, str) or not item.strip() for item in quality_evidence
+    ):
+        return False
+    if not isinstance(metrics, dict) or not isinstance(attribution, list):
+        return False
+    if any(
+        not isinstance(item, dict) or set(item) != {"dimension", "evidence_ref"}
+        for item in attribution
+    ):
+        return False
+    status = quality.get("telemetry_status")
+    if status in {"CAPTURED", "PARTIAL"} and (
+        not quality_evidence or (not metrics and not attribution)
+    ):
+        return False
+    if status == "UNAVAILABLE" and (metrics or attribution):
+        return False
+    return True
+
+
+def write_completion_receipt(path: Path, receipt: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    """Create one immutable completion receipt or preserve an identical binding.
+
+    Existing valid receipts are append-only evidence. A repeat invocation for the
+    same task/PR/merge is an idempotent no-op even if the caller supplies newer
+    observation text or timestamps. Contradictory or invalid existing bytes fail
+    closed instead of being overwritten.
+    """
+    if path.exists():
+        existing = read_json(path)
+        if not isinstance(existing, dict):
+            raise ValueError("EXISTING_COMPLETION_RECEIPT_INVALID")
+        declared = str(existing.get("receipt_sha256") or "")
+        actual = canonical_hash({k: v for k, v in existing.items() if k != "receipt_sha256"})
+        if not declared or declared != actual:
+            raise ValueError("EXISTING_COMPLETION_RECEIPT_HASH_INVALID")
+        if not valid_stored_completion_receipt(existing):
+            raise ValueError("EXISTING_COMPLETION_RECEIPT_INVALID")
+        immutable_keys = (
+            "contract",
+            "status",
+            "candidate_id",
+            "signature",
+            "candidate_sha256",
+            "task_contract_sha256",
+            "pr_number",
+            "merge_commit_sha",
+            "post_fix_gate",
+        )
+        for key in immutable_keys:
+            if existing.get(key) != receipt.get(key):
+                raise ValueError(f"EXISTING_COMPLETION_RECEIPT_CONTRADICTION:{key}")
+        return existing, False
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return receipt, True
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--repo-root", type=Path, default=Path("."))
@@ -218,9 +321,13 @@ def main() -> None:
         telemetry_path=telemetry_path,
     )
     out = args.repo_root / "research/codex/completions" / f"{args.candidate_id}.json"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"status": "VERIFIED", "path": str(out), "receipt_sha256": receipt["receipt_sha256"]}, sort_keys=True))
+    stored, created = write_completion_receipt(out, receipt)
+    print(json.dumps({
+        "status": "VERIFIED",
+        "write_status": "CREATED" if created else "ALREADY_PRESENT",
+        "path": str(out),
+        "receipt_sha256": stored["receipt_sha256"],
+    }, sort_keys=True))
 
 
 if __name__ == "__main__":
