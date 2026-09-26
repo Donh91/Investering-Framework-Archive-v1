@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-raw-owner-capture.yml",
+    "scripts/daily_capture/slow_macro_recovery.py",
+    "scripts/health/native_market_recovery.py",
+    "tests/governance/test_slow_macro_recovery_guard.py",
+    "tests/health/test_native_market_recovery.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-41e685e32bf09c59",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Keep the required 36h macro fail-closed boundary, add a 24h capture-recovery threshold inside existing live-anchor runs, and route repeated macro_risk degradation through the existing Native Market Recovery dispatcher. No source substitution, forward fill, market threshold change, or portfolio authority.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-raw-owner-capture.yml": "9dff122fc05f34add399e688d4c7d9e905e179bb",
+    "scripts/daily_capture/slow_macro_recovery.py": "105a5cdc5b0d3f60b2fc59ccf00aa92483a86987",
+    "scripts/health/native_market_recovery.py": "006973423d9f9752c15e98c8c4eb7b27accb7107",
+    "tests/governance/test_slow_macro_recovery_guard.py": "88403fe99fdc285dd859398b96fb27ecd40ad512",
+    "tests/health/test_native_market_recovery.py": "e986c22ce4abc0f4196590b3f1644281b972dd91"
+  },
+  "source_commit_sha": "41e685e32bf09c59d68d59f54e4bee80e35995e9",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T10:39:38+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Macro owner: self-heal cancelled daily slow-lane slots"
+}

@@ -1,0 +1,60 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/compass-event-refresh.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    ".github/workflows/daily-compass.yml",
+    ".github/workflows/native-handlekompas.yml",
+    ".github/workflows/provider-budget-readback.yml",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs",
+    "05_CYCLE_NAVIGATOR/site/compass-product-v5.js",
+    "05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs",
+    "scripts/data_ping/native_handlekompas.py",
+    "scripts/health/build_automation_health.py",
+    "scripts/health/check_writer_trigger_safety.py",
+    "tests/governance/test_compass_decision_authority_guard.py",
+    "tests/health/test_automation_production_health.py",
+    "tests/health/test_writer_trigger_safety_v2.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-48e8ac3ce405f52f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Repair post-merge Compass v3 contract drift, preserve meme-owner authority when degraded, validate the full BTC-to-MEMES and fail-closed SELL public bundle, and isolate read-only PR checks from the serialized main writer lock while keeping both writer-safety auditors strict.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/compass-event-refresh.yml": "de2cd13225ef14cff332caff3bc5d5cc96d5c0e0",
+    ".github/workflows/cycle-navigator-pages.yml": "e25561ff930ab046815b343ec5b3d9c60ae00624",
+    ".github/workflows/daily-compass.yml": "c13ec73f7b2760fa0b8aee86135d130e9a9f6cb1",
+    ".github/workflows/native-handlekompas.yml": "c44ae34de616e47889e635f586fd3ba796d93632",
+    ".github/workflows/provider-budget-readback.yml": "891f73ca69065f393d15fab02b0c17b07e8a6ee3",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs": "4167eb8e80f674df1699c1c7246c257b55303ab5",
+    "05_CYCLE_NAVIGATOR/site/compass-product-v5.js": "8478626327879344e54931369e9af3fc90554252",
+    "05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs": "4621e2c79f8f940a5d2d8d027dda7a5db20d8cf9",
+    "scripts/data_ping/native_handlekompas.py": "5a948257cf6baeaa5d9f2233258f64a0fb3fb344",
+    "scripts/health/build_automation_health.py": "2376aead10cb375480b94e831e748811be59ca9a",
+    "scripts/health/check_writer_trigger_safety.py": "f78d4a179800bc18c1ecf86bd8c0245fe6565168",
+    "tests/governance/test_compass_decision_authority_guard.py": "257ff6acd92a5fa6dcab0777b46a295ea16fef72",
+    "tests/health/test_automation_production_health.py": "0be8a9c9eec31a5a60ef3ec8e4f0aacbe55e199e",
+    "tests/health/test_writer_trigger_safety_v2.py": "e626d96da7a86251f2910c1b404e26b30a288642"
+  },
+  "source_commit_sha": "48e8ac3ce405f52f680406e96fa5502f0bcf5bb8",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T10:42:36+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Compass v3: post-merge self-healing and CI isolation"
+}

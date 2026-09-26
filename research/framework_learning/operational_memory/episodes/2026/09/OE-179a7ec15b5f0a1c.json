@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/native_market_recovery.py",
+    "tests/governance/test_native_recovery_coverage_guard.py",
+    "tests/health/test_native_market_recovery.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-179a7ec15b5f0a1c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Map every canonical decision-context-required unattended lane to an existing dispatchable owner, deduplicate shared repairs, and add a governance guard that fails CI if future required lanes lack recovery coverage. No market semantics or portfolio authority changes.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/native_market_recovery.py": "844b02301bbd560d8cd7756aeaeb423043b7d6f6",
+    "tests/governance/test_native_recovery_coverage_guard.py": "add266247d2d7c0b0536679b98a5066759f17d61",
+    "tests/health/test_native_market_recovery.py": "0d32fd6eb35abb50d41201dcd319894286800467"
+  },
+  "source_commit_sha": "179a7ec15b5f0a1cae729d93e4b4ca52b5758c10",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T10:48:08+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "Native recovery: cover every required unattended market lane"
+}

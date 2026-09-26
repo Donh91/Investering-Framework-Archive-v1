@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-compass.yml",
+    "scripts/data_ping/compass_event_refresh.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "tests/data_ping/test_compass_event_refresh.py",
+    "tests/data_ping/test_official_daily_compass.py",
+    "tests/governance/test_compass_decision_authority_guard.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-00158f07f1d128d0",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Add fail-closed MEMES and SELL decision surfaces, prevent schema-only ladder additions from triggering event refresh, and lock retired proxy/protection authority boundaries with governance regression tests.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-compass.yml": "9cc1397efcdd2e91a5f0624b1368c7168e37815c",
+    "scripts/data_ping/compass_event_refresh.py": "705f67ba48e4338326a384f87b78cb917246fb39",
+    "scripts/data_ping/native_handlekompas.py": "a024e65f3de8d106534038c4e05b82198bf5fab9",
+    "tests/data_ping/test_compass_event_refresh.py": "ba85e6c82dfc2aa5121692d099236c2cdde9299f",
+    "tests/data_ping/test_official_daily_compass.py": "6b9a692c97a9f6885c7460ad42aea5f9f24aca58",
+    "tests/governance/test_compass_decision_authority_guard.py": "649ab255c6c15e348ee242f6fe36e195b7aa1850"
+  },
+  "source_commit_sha": "00158f07f1d128d0db72bf7e2f38b4bfe537df99",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-25T10:25:55+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Compass: smart authority guards for memes and sell"
+}
