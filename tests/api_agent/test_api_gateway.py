@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, output_schema, validate_output
+from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, output_schema, output_token_plan, validate_output
 from scripts.api_agent.advance_deep_research_queue import build_task_packet, retained_providers, select_next
 from scripts.api_agent.advance_mcp_connection_scorecard import apply_evaluation
 from scripts.api_agent.evaluate_mcp_connection_receipt import classify, score_receipt
@@ -141,6 +141,21 @@ class ApiGatewayTests(unittest.TestCase):
         cfg['governed_instruction']=[]
         with self.assertRaisesRegex(ValueError,'invalid_governed_task_instruction'):
             build_request('SENIOR_REPAIR_AUDIT',cfg,'x',{})
+
+    def test_senior_audit_uses_expanded_bounded_output_plan(self):
+        data=load_registry(REGISTRY)
+        self.assertEqual(output_token_plan(data['tasks']['SENIOR_REPAIR_AUDIT']),[12000,16000])
+
+    def test_default_retry_plan_remains_bounded_for_existing_tasks(self):
+        data=load_registry(REGISTRY)
+        self.assertEqual(output_token_plan(data['tasks']['DAILY_DIRECTOR_SHADOW']),[2000,4000])
+
+    def test_invalid_retry_output_budget_fails_closed(self):
+        data=load_registry(REGISTRY)
+        cfg=dict(data['tasks']['SENIOR_REPAIR_AUDIT'])
+        cfg['retry_max_output_tokens']=25000
+        with self.assertRaisesRegex(ValueError,'invalid_retry_max_output_tokens'):
+            output_token_plan(cfg)
 
     def test_strict_schema_discriminates_existing_target_modes(self):
         branches=output_schema()['properties']['forecast_candidates']['items']['anyOf']
