@@ -152,7 +152,27 @@ def validate_result(output_dir: Path) -> dict[str, Any]:
     return {"receipt": receipt, "output": output}
 
 
-def report_markdown(output_dir: Path, comment_id: str, persisted_path: str) -> str:
+def completion_pointer(output_dir: Path, receipt_path: str) -> dict[str, Any]:
+    result = validate_result(output_dir)
+    receipt_path_local = output_dir / "output" / "receipt.json"
+    output_path_local = output_dir / "output" / "output.json"
+    manifest_path = output_dir / "context_manifest.json"
+    return {
+        "contract": "SENIOR_REPAIR_AUDIT_COMPLETION_v1",
+        "status": "VERIFIED",
+        "api_receipt_path": receipt_path,
+        "api_receipt_sha256": sha256_bytes(receipt_path_local.read_bytes()),
+        "output_sha256": sha256_bytes(output_path_local.read_bytes()),
+        "context_manifest_sha256": sha256_bytes(manifest_path.read_bytes()),
+        "model": result["receipt"]["model"],
+        "input_tokens": result["receipt"]["input_tokens"],
+        "output_tokens": result["receipt"]["output_tokens"],
+        "estimated_cost_usd": result["receipt"]["estimated_cost_usd"],
+        "authority": "ADVISORY_READ_ONLY",
+    }
+
+
+def report_markdown(output_dir: Path, comment_id: str, persisted_path: str, receipt_path: str) -> str:
     result = validate_result(output_dir)
     receipt, output = result["receipt"], result["output"]
     findings = [row for row in output.get("evidence_against", []) if isinstance(row, str) and row.startswith(("P0|", "P1|", "P2|", "P3|"))]
@@ -170,7 +190,11 @@ def report_markdown(output_dir: Path, comment_id: str, persisted_path: str) -> s
         "Actionable findings: " + str(len(findings)),
     ]
     body.extend(["- " + row for row in findings[:8]] or ["- none"])
-    body.extend(["", "Full immutable output and receipt: " + persisted_path + "."])
+    body.extend([
+        "",
+        "Immutable audit output: " + persisted_path + ".",
+        "Cost-bearing API receipt: " + receipt_path + ".",
+    ])
     return "\n".join(body) + "\n"
 
 
@@ -184,10 +208,15 @@ def main() -> None:
     build.add_argument("--comment-id", required=True)
     validate = sub.add_parser("validate")
     validate.add_argument("--output-dir", type=Path, required=True)
+    completion = sub.add_parser("completion")
+    completion.add_argument("--output-dir", type=Path, required=True)
+    completion.add_argument("--receipt-path", required=True)
+    completion.add_argument("--output", type=Path, required=True)
     report = sub.add_parser("report")
     report.add_argument("--output-dir", type=Path, required=True)
     report.add_argument("--comment-id", required=True)
     report.add_argument("--persisted-path", required=True)
+    report.add_argument("--receipt-path", required=True)
     report.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.cmd == "build":
@@ -202,8 +231,13 @@ def main() -> None:
             "output_tokens": result["receipt"]["output_tokens"],
             "estimated_cost_usd": result["receipt"]["estimated_cost_usd"],
         }, sort_keys=True))
+    elif args.cmd == "completion":
+        value = completion_pointer(args.output_dir, args.receipt_path)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+        print(json.dumps({"status": "PASS", "output": str(args.output)}, sort_keys=True))
     else:
-        body = report_markdown(args.output_dir, args.comment_id, args.persisted_path)
+        body = report_markdown(args.output_dir, args.comment_id, args.persisted_path, args.receipt_path)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(body)
         print(json.dumps({"status": "PASS", "output": str(args.output)}, sort_keys=True))
