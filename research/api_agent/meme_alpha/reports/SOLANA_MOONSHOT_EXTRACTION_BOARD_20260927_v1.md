@@ -195,3 +195,223 @@ improve existing `meme-alpha-supervisor` behavior, not install overlapping tradi
 7. test historical Solana graduation datasets for features whose definitions transfer to Pons;
 8. keep all cross-chain thresholds in shadow until Pons-local prospective validation.
 
+
+
+# Wave 2 — behavioral traces, entity-adjusted concentration and collector integrity
+
+## New P0 source: git-disl/MELT
+
+Public paper/repository:
+- 41k+ Solana memecoin launches;
+- 200M+ parsed transactions;
+- typed swaps, transfers, wash trades and mints;
+- bundle traces and same-entity clustering;
+- 122 behavioral features;
+- chronological train/test split in the public dataset loader;
+- source license: CC BY-NC 4.0, so production code must NOT be copied into a commercial system without permission. Methodology and independently reimplemented measurements may be researched.
+
+### E13 — raw-holder concentration is not economic concentration
+
+The public feature generator computes both address-level and cluster-adjusted concentration.
+
+High-value primitives reproduced from source:
+- holder Gini;
+- raw top1/top5/top10/top20/top50/top100 supply share;
+- first-buyer cohorts at top1/top5/top10/top20;
+- current holding / initial holding ratios for early buyers;
+- sniper windows at 0s / 1s / 5s / 10s;
+- dev initial holding / current holding / hold ratio;
+- wash ratio;
+- transfer ratio;
+- buy/sell user counts;
+- buy/sell volume and sell-pressure;
+- realized and unrealized PnL for early-buyer cohorts.
+
+The strongest primitive is a cluster-adjusted second view:
+- bundle-linked accounts are grouped;
+- accounts sharing signer evidence are grouped;
+- overlapping cluster evidence is unioned with Union-Find;
+- holdings are recomputed per economic cluster;
+- raw top-N concentration is compared with clustered top-N concentration.
+
+Robinhood translation:
+`address_top10_pct` must never be the only concentration field.
+Add shadow fields:
+- `entity_top1_pct`
+- `entity_top5_pct`
+- `entity_top10_pct`
+- `cluster_total_pct`
+- `largest_cluster_pct`
+- `raw_vs_entity_top10_delta`
+- `early_buyer_retention_ratio`
+- `dev_retention_ratio`.
+
+This is particularly relevant to Pons launch exemptions and ASKR-style first-block topology.
+
+### E14 — early-buyer retention is more informative than early-buyer presence alone
+
+MELT tracks how much the earliest buyer cohorts still hold relative to their initial allocation.
+
+Translation:
+For Pons, freeze first buyer/exempt cohorts at T0 and observe:
+- initial token share;
+- share remaining at +1m/+5m/+10m/+20m;
+- realized distribution into later independent buyers;
+- whether early buyers add, hold, or unload.
+
+This separates:
+`early informed accumulation`
+from
+`privileged launch inventory distributed into followers`.
+
+### E15 — bundle cleanliness is adversarial
+
+Public Solana bundler repositories explicitly advertise launch + multi-wallet buys in one atomic bundle and techniques intended to make wallets appear independent to common analytics surfaces.
+
+Defensive conclusion only:
+- a clean Bubblemap-style graph is not proof of independence;
+- same-block / same-transaction-family co-firing matters;
+- first funding source matters;
+- repeated co-firing across launches matters;
+- later gather/sell convergence matters;
+- address lookup / bundle traces, when observable, are valuable evidence.
+
+Do NOT import, reproduce or operationalize evasion/bundling instructions.
+
+## New P0 research: persistent coordinated cohorts
+
+Recent open research on Pump.fun persistent early-buyer cohorts uses:
+- first-buyer-window extraction;
+- cross-launch co-occurrence graphs;
+- Union-Find / connected-component style cohort formation;
+- repeated co-firing across independent launches.
+
+Critical negative result:
+raw association between a cohort and later activity can be massively contaminated by the cohort's own purchases. After removing cohort wallets from the measured outcome and matching launches on quality covariates, the apparent effect shrinks sharply.
+
+Alpha Lab translation:
+`COHORT_PRESENT` is topology evidence, not alpha.
+
+Every cohort test must:
+1. remove the cohort's own volume/buyer count from the outcome;
+2. compare against age/stage/launch-quality matched controls;
+3. freeze cohort membership before outcome;
+4. distinguish repeated co-firing from one-off co-entry;
+5. treat common funding as evidence of dependence;
+6. measure lead over public/social propagation;
+7. test realizable entry after the cohort is observable.
+
+This strengthens the existing rule that wallet convergence is a conditional G3 confirmation layer only.
+
+## New P0 research: collector integrity is part of alpha integrity
+
+Recent Solana research comparing independently configured Pump.fun collectors found very low overlap between collector outputs in some windows. Separate research also shows that off-chain collector terminal labels can fail temporal holdout and may not equal platform-side graduation outcomes.
+
+Translation to Alpha Lab:
+a scanner can be statistically sophisticated and still learn the wrong population if its collector misses a class of launches.
+
+Add runtime research health fields:
+- `launches_expected_or_reference_count`
+- `launches_observed_count`
+- `collector_coverage_estimate`
+- `cross_collector_jaccard`
+- `cursor_head_lag`
+- `open_gap_count`
+- `oldest_open_gap_age`
+- `raw_event_to_canonical_row_rate`
+- `unknown_terminal_label_rate`.
+
+Do not convert TIMEOUT / missing observation directly into "failed launch".
+
+## E16 — exact ingestion invariants verified from solana-realtime-indexer source
+
+The implementation confirms the architectural claims:
+
+1. **Atomic progress**  
+   Writer commits events, trades and checkpoint inside one database transaction. Cursor cannot truthfully advance beyond committed evidence.
+
+2. **Bounded hot path**  
+   Parsed rows enter a bounded queue; a dedicated writer performs batched persistence. This keeps event decoding separate from disk latency.
+
+3. **Independent gap evidence**  
+   A slot watermark and datasource disconnect records produce explicit gaps instead of silently reconnecting.
+
+4. **Overlap recovery**  
+   Recovery expands each missing range with overlap slots and deduplicates through the existing persistence path.
+
+5. **One decode path**  
+   Backfill invokes the same `run_pipeline` used by live ingestion, reducing live/backfill parser drift.
+
+6. **Independent completeness test**  
+   `verify-range` reconstructs the expected event identity set for a slot range and compares missing/extra events against persisted rows.
+
+7. **Dead letters instead of disappearance**  
+   Failed/timed-out database batches are parked as dead letters with error context.
+
+Pons acceptance should copy these invariants conceptually, not the Solana/Rust implementation.
+
+## E17 — wallet graph discovery is useful; global wallet scoring remains suspect
+
+New source: `0x1nfra/echo-wallet-tracking`.
+
+Useful public primitives:
+- graph traversal from successful token -> early buyers -> candidate wallets -> subsequent convergence;
+- realized + unrealized PnL separation;
+- profit factor;
+- median hold duration;
+- max drawdown;
+- entry speed;
+- early-entry frequency;
+- exit discipline;
+- 7/30/90d windows.
+
+Weak / unvalidated parts:
+- hard-coded "smart money" category thresholds;
+- global 0-100 score;
+- FIFO accounting may diverge from economic intent for complex multi-entry flows;
+- validation described against only a small known-wallet set;
+- no economic-entity independence in the basic architecture.
+
+Translation:
+use graph traversal as a **research lead generator** and preserve metrics separately. Do not collapse them into one canonical wallet score.
+
+## E18 — first-five-minute behavioral risk deserves a Pons challenger
+
+Recent Solana research over millions of tokens reports useful rug discrimination using only the first minutes of trading, with behavioral rather than contract-code features.
+
+Candidate Pons shadow feature families:
+- entity-adjusted concentration trajectory;
+- early-buyer retention/distribution;
+- dev inventory trajectory;
+- independent buyer growth;
+- wash/self-flow ratio;
+- sell pressure;
+- liquidity trajectory;
+- repeated cohort participation;
+- funding-source diversity;
+- first-distribution survival.
+
+Keep the target separate from moonshot upside:
+`RISK_PROBABILITY != UPSIDE_PROBABILITY`.
+
+## Wave 2 priority changes
+
+| Source / primitive | New priority | Action |
+|---|---:|---|
+| MELT behavioral trace methodology | P0 | Reimplement compatible measurements, do not copy CC BY-NC source into production |
+| solana-realtime-indexer exact ingress invariants | P0 | Route directly into #1017 acceptance |
+| persistent coordinated cohort research | P0 | Add decontaminated cohort challenger to existing G3 research |
+| collector-overlap / label-integrity research | P0 | Add collector completeness metrics to runtime health |
+| Echo wallet graph traversal | P1 | Extract graph discovery and metric decomposition, reject global score |
+| public stealth-bundler behavior | P1 defensive | Use only as adversarial threat model for clustering |
+| first-5m Solana rug models | P1 | Feature-family challenger, temporal Pons validation required |
+
+## Updated next queue
+
+1. make #1017 Pons ingress acceptance explicitly prove atomic cursor+row persistence, gap capture, overlap recovery and independent range verification;
+2. add entity-adjusted concentration and early-buyer-retention fields to the existing shadow feature contract;
+3. freeze and replay Pons exemption cohorts using repeated-cofire + funder + distribution evidence;
+4. measure collector coverage separately from model quality;
+5. build a matched negative denominator before judging any caller/wallet cohort;
+6. continue searching open-source caller ledgers, funder graphs and launch-risk datasets;
+7. use natural prospective Pons launches to decide which extracted primitives survive.
