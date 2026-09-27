@@ -228,6 +228,33 @@ def test_success_after_failures_is_amber_recovering(tmp_path: Path) -> None:
     assert status == "AMBER"
     assert "RECOVERING_AFTER_RECENT_FAILURES" in findings
 
+def test_three_successes_close_recovery_amber_even_with_older_failures(tmp_path: Path) -> None:
+    row = healthy_writer(tmp_path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T06:00:00Z"},
+        "recent_failure_count": 3,
+        "success_streak": module.RECOVERY_SUCCESS_STREAK_REQUIRED,
+        "failure_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "GREEN"
+    assert "RECOVERING_AFTER_RECENT_FAILURES" not in findings
+
+
+def test_two_successes_still_report_recovery_amber(tmp_path: Path) -> None:
+    row = healthy_writer(tmp_path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T06:00:00Z"},
+        "recent_failure_count": 2,
+        "success_streak": module.RECOVERY_SUCCESS_STREAK_REQUIRED - 1,
+        "failure_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "RECOVERING_AFTER_RECENT_FAILURES" in findings
+
 
 def test_scheduled_workflow_without_timezone_is_amber(tmp_path: Path) -> None:
     path = write_workflow(tmp_path, "name: Test\non:\n  schedule:\n    - cron: '0 1 * * *'\njobs:\n  x:\n    steps:\n      - run: echo ok\n")
