@@ -212,6 +212,8 @@ def valid_transition(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
     d = read_json(path, {})
     if not d or d.get("contract") != "CODEX_RESEARCH_TRANSITION_RECEIPT_v1":
         return None
+    if d.get("state") != "IN_REMEDIATION":
+        return None
     if d.get("signature") != task["signature"] or d.get("candidate_id") != task["candidate_id"]:
         return None
     if d.get("candidate_sha256") != task["candidate_sha256"]:
