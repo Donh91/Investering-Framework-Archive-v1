@@ -37,7 +37,13 @@
     "PRIVILEGED_SUPPLY_PCT_T0_T5M",
     "PRIVILEGED_NET_BUY_PCT_T0_T5M",
     "PRIVILEGED_FREE_TRANSFER_PCT_PRE_PUBLIC",
-    "PUBLIC_EXECUTION_TAX_DISADVANTAGE_T0_T5S"
+    "PUBLIC_EXECUTION_TAX_DISADVANTAGE_T0_T5S",
+    "DEPLOYER_PRIOR_LAUNCHES_1H",
+    "DEPLOYER_PRIOR_LAUNCHES_24H",
+    "DEPLOYER_PRIOR_LAUNCHES_7D",
+    "DEPLOYER_INTERLAUNCH_MEDIAN_SECONDS_ASOF",
+    "LAUNCH_TOOLING_TEMPLATE_HASH_ASOF",
+    "TEMPLATE_PRIOR_LAUNCH_COUNT_ASOF"
   ],
   "post_t0_fields": [
     "PRIVILEGED_SELLTHROUGH_PCT_T0_T60M",
@@ -56,7 +62,15 @@
     "NO_SOCIAL_SCAM_LABEL_AS_OUTCOME",
     "NO_RETRO_ALPHA_CREDIT",
     "NO_TRADE_AUTHORITY",
-    "CODE_WRITES_REQUIRE_CANONICAL_CODEX_ROUTE"
+    "CODE_WRITES_REQUIRE_CANONICAL_CODEX_ROUTE",
+    "DEPLOYER_HISTORY_STRICTLY_ASOF_T0",
+    "NO_FUTURE_LAUNCHES_IN_DEPLOYER_PRIOR",
+    "GRADUATION_PREDICTION_NOT_EQUAL_PROFITABILITY",
+    "TOOLING_TEMPLATE_RECURRENCE_NOT_INTENT_PROOF",
+    "CHECKPOINT_ACTUAL_AGE_AND_DRIFT_REQUIRED"
   ],
-  "next_gate": "DETERMINISTIC_HISTORICAL_PONS_V2_ORIGIN_EXTRACTOR_OVER_OUTCOME_BLIND_FACTORY_SAMPLE"
+  "next_gate": "DETERMINISTIC_HISTORICAL_PONS_V2_ORIGIN_EXTRACTOR_OVER_OUTCOME_BLIND_FACTORY_SAMPLE",
+  "external_method_learning": {
+    "2026-09-27_wave3": "Solana launch measurement studies showed causal prior-deployer frequency and launch-tooling fingerprints can separate lifecycle outcomes, while still failing to produce profitable delayed entries after execution costs. These fields are admitted only as outcome-blind Pons challengers and must be evaluated against executable return separately from graduation/survival."
+  }
 }
