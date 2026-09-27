@@ -135,13 +135,13 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertEqual(plan["status"], "READY")
         self.assertEqual(plan["units"][0]["model"], "gpt-6-luna")
 
-    def test_synthesis_routes_to_terra_not_sol(self):
+    def test_synthesis_routes_to_lowest_total_cost_qualified_model(self):
         plan = build_execution_plan(
             self.policy,
             runtime("gpt-6-luna", "gpt-5.6-terra", "gpt-6-sol"),
             profile(complexity="SYNTHESIS", capabilities=["synthesis"], effort="medium"),
         )
-        self.assertEqual(plan["units"][0]["model"], "gpt-5.6-terra")
+        self.assertEqual(plan["units"][0]["model"], "gpt-6-sol")
 
     def test_difficult_reasoning_routes_to_sol_when_astra_not_required(self):
         plan = build_execution_plan(
@@ -216,7 +216,7 @@ class CapabilityRouterTests(unittest.TestCase):
 
     def test_cost_snapshot_uses_current_luna_rate_below_long_context_threshold(self):
         luna = self.policy["models"]["gpt-6-luna"]
-        self.assertEqual(estimate_model_cost(self.policy, luna, 100_000, 100_000), 0.14)
+        self.assertEqual(estimate_model_cost(self.policy, luna, 100_000, 100_000), 0.06)
 
     def test_long_context_cost_multiplier_is_applied(self):
         astra = self.policy["models"]["gpt-6-astra"]
