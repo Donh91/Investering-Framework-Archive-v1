@@ -129,16 +129,16 @@ class CapabilityRouterTests(unittest.TestCase):
     def test_routine_uses_cheapest_available_model_for_shadow_recommendation(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol"),
+            runtime("gpt-6-luna", "gpt-5.6-terra", "gpt-6-sol"),
             profile(capabilities=["structured_output"]),
         )
         self.assertEqual(plan["status"], "READY")
-        self.assertEqual(plan["units"][0]["model"], "gpt-5.6-luna")
+        self.assertEqual(plan["units"][0]["model"], "gpt-6-luna")
 
     def test_synthesis_routes_to_terra_not_sol(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol"),
+            runtime("gpt-6-luna", "gpt-5.6-terra", "gpt-6-sol"),
             profile(complexity="SYNTHESIS", capabilities=["synthesis"], effort="medium"),
         )
         self.assertEqual(plan["units"][0]["model"], "gpt-5.6-terra")
@@ -146,15 +146,15 @@ class CapabilityRouterTests(unittest.TestCase):
     def test_difficult_reasoning_routes_to_sol_when_astra_not_required(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-sol", "gpt-6-astra"),
+            runtime("gpt-6-sol", "gpt-6-astra"),
             profile(complexity="DIFFICULT", capabilities=["difficult_reasoning"], effort="high"),
         )
-        self.assertEqual(plan["units"][0]["model"], "gpt-5.6-sol")
+        self.assertEqual(plan["units"][0]["model"], "gpt-6-sol")
 
     def test_required_astra_fails_closed_when_runtime_does_not_have_it(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-sol"),
+            runtime("gpt-6-sol"),
             profile(complexity="ARCHITECTURE", capabilities=["architecture"], effort="high", requires_astra=True),
         )
         self.assertEqual(plan["status"], "WAITING_FOR_CAPABILITY")
@@ -163,7 +163,7 @@ class CapabilityRouterTests(unittest.TestCase):
     def test_required_astra_routes_only_when_runtime_confirms_it(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-sol", "gpt-6-astra"),
+            runtime("gpt-6-sol", "gpt-6-astra"),
             profile(complexity="ARCHITECTURE", capabilities=["architecture"], effort="xhigh", requires_astra=True),
         )
         self.assertEqual(plan["status"], "READY")
@@ -189,33 +189,33 @@ class CapabilityRouterTests(unittest.TestCase):
     def test_model_unit_cannot_request_repository_write(self):
         p = profile(write=True, scope=["x"])
         with self.assertRaisesRegex(ValueError, "write_requires_code_executor"):
-            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+            build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
     def test_model_unit_cannot_carry_requested_write_scope_without_code_executor(self):
         p = profile(scope=["x"])
         with self.assertRaisesRegex(ValueError, "write_scope_requires_code_executor"):
-            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+            build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
     def test_independent_review_uses_different_model_when_available(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-sol", "gpt-6-astra"),
+            runtime("gpt-6-sol", "gpt-6-astra"),
             profile(complexity="DIFFICULT", capabilities=["difficult_reasoning"], effort="high", review=True),
         )
         route = plan["units"][0]
-        self.assertEqual(route["model"], "gpt-5.6-sol")
+        self.assertEqual(route["model"], "gpt-6-sol")
         self.assertEqual(route["review"]["model"], "gpt-6-astra")
         self.assertTrue(route["review"]["read_only"])
         self.assertFalse(route["review"]["repository_write_authority"])
 
     def test_plan_never_grants_framework_or_merge_authority(self):
-        plan = build_execution_plan(self.policy, runtime("gpt-5.6-luna"), profile())
+        plan = build_execution_plan(self.policy, runtime("gpt-6-luna"), profile())
         self.assertFalse(plan["automatic_merge"])
         self.assertFalse(plan["router_grants_write_authority"])
         self.assertTrue(all(value is False for value in plan["authority"].values()))
 
     def test_cost_snapshot_uses_current_luna_rate_below_long_context_threshold(self):
-        luna = self.policy["models"]["gpt-5.6-luna"]
+        luna = self.policy["models"]["gpt-6-luna"]
         self.assertEqual(estimate_model_cost(self.policy, luna, 100_000, 100_000), 0.14)
 
     def test_long_context_cost_multiplier_is_applied(self):
@@ -223,7 +223,7 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertEqual(estimate_model_cost(self.policy, astra, 300_000, 10_000), 6.75)
 
     def test_legacy_profile_remains_shadow_compatible_but_marked_unhardened(self):
-        plan = build_execution_plan(self.policy, runtime("gpt-5.6-luna"), profile())
+        plan = build_execution_plan(self.policy, runtime("gpt-6-luna"), profile())
         self.assertEqual(plan["status"], "READY")
         self.assertEqual(plan["delegation_contract_status"], "LEGACY_UNHARDENED")
         self.assertEqual(plan["units"][0]["delegation_contract_status"], "LEGACY_UNHARDENED")
@@ -231,7 +231,7 @@ class CapabilityRouterTests(unittest.TestCase):
     def test_hardened_plan_emits_explicit_responsibility_and_lineage_hash(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-luna"),
+            runtime("gpt-6-luna"),
             profile(hardened=True, capabilities=["structured_output"]),
         )
         route = plan["units"][0]
@@ -247,7 +247,7 @@ class CapabilityRouterTests(unittest.TestCase):
         p = profile(hardened=True)
         del p["units"][0]["verification_method"]
         with self.assertRaisesRegex(ValueError, "verification_method_required"):
-            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+            build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
     def test_hardened_profile_rejects_duplicate_responsibility_scope(self):
         p = profile(hardened=True)
@@ -255,28 +255,28 @@ class CapabilityRouterTests(unittest.TestCase):
         second["unit_id"] = "u2"
         p["units"].append(second)
         with self.assertRaisesRegex(ValueError, "duplicate_responsibility_scope"):
-            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+            build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
     def test_hardened_profile_rejects_unbounded_context(self):
         p = profile(hardened=True, context_refs=["*"])
         with self.assertRaisesRegex(ValueError, "unbounded_context_forbidden"):
-            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+            build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
     def test_hardened_profile_rejects_unbounded_tool_scope(self):
         p = profile(hardened=True, allowed_tools=["OPENAI_RESPONSES_API", "ALL_TOOLS"])
         with self.assertRaisesRegex(ValueError, "unbounded_tool_scope_forbidden"):
-            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+            build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
     def test_hardened_profile_rejects_depth_above_policy_limit(self):
         p = profile(hardened=True, delegation_depth=3, parent_task_id="PARENT")
         with self.assertRaisesRegex(ValueError, "invalid_delegation_depth"):
-            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+            build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
     def test_redelegation_is_one_hop_and_cannot_start_at_depth_ceiling(self):
         escalation = {"mode": "REDELEGATE_ONCE", "target": "CAPABILITY_ROUTER", "max_redelegations": 1}
         ready = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-luna"),
+            runtime("gpt-6-luna"),
             profile(
                 hardened=True,
                 delegation_depth=1,
@@ -294,12 +294,12 @@ class CapabilityRouterTests(unittest.TestCase):
             escalation_rule=escalation,
         )
         with self.assertRaisesRegex(ValueError, "redelegation_depth_exhausted"):
-            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+            build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
     def test_hardened_route_blocks_when_estimated_model_cost_exceeds_unit_budget(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-5.6-sol"),
+            runtime("gpt-6-sol"),
             profile(
                 hardened=True,
                 complexity="DIFFICULT",
@@ -318,11 +318,11 @@ class CapabilityRouterTests(unittest.TestCase):
             task=task,
             task_cfg=registry["tasks"][task],
             policy=self.policy,
-            runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
+            runtime=runtime("gpt-6-luna", "gpt-5.6-terra", qualified=["gpt-6-luna"]),
             profile=profile(task=task, capabilities=["structured_output"], effort="low"),
             activate_routing=False,
         )
-        self.assertEqual(receipt["recommended"]["model"], "gpt-5.6-luna")
+        self.assertEqual(receipt["recommended"]["model"], "gpt-6-luna")
         self.assertEqual(effective["model"], "gpt-5.6-terra")
         self.assertEqual(receipt["mode"], "SHADOW_RECOMMENDATION")
         self.assertEqual(receipt["selection_pool"], "AVAILABLE_MODELS_SHADOW")
@@ -336,7 +336,7 @@ class CapabilityRouterTests(unittest.TestCase):
                 task=task,
                 task_cfg=registry["tasks"][task],
                 policy=self.policy,
-                runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
+                runtime=runtime("gpt-6-luna", "gpt-5.6-terra", qualified=["gpt-6-luna"]),
                 profile=profile(task=task, capabilities=["structured_output"], effort="low"),
                 activate_routing=True,
             )
@@ -351,7 +351,7 @@ class CapabilityRouterTests(unittest.TestCase):
                 task=task,
                 task_cfg=registry["tasks"][task],
                 policy=qualified_policy,
-                runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
+                runtime=runtime("gpt-6-luna", "gpt-5.6-terra", qualified=["gpt-6-luna"]),
                 profile=profile(task=task, capabilities=["structured_output"], effort="low"),
                 activate_routing=True,
             )
@@ -367,7 +367,7 @@ class CapabilityRouterTests(unittest.TestCase):
                 task=task,
                 task_cfg=registry["tasks"][task],
                 policy=qualified_policy,
-                runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra"),
+                runtime=runtime("gpt-6-luna", "gpt-5.6-terra"),
                 profile=p,
                 activate_routing=True,
             )
@@ -375,11 +375,11 @@ class CapabilityRouterTests(unittest.TestCase):
             task=task,
             task_cfg=registry["tasks"][task],
             policy=qualified_policy,
-            runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
+            runtime=runtime("gpt-6-luna", "gpt-5.6-terra", qualified=["gpt-6-luna"]),
             profile=p,
             activate_routing=True,
         )
-        self.assertEqual(effective["model"], "gpt-5.6-luna")
+        self.assertEqual(effective["model"], "gpt-6-luna")
         self.assertEqual(receipt["mode"], "QUALIFIED_OVERRIDE")
         self.assertEqual(receipt["selection_pool"], "QUALIFIED_MODELS_ONLY")
         self.assertEqual(receipt["delegation_contract_status"], "HARDENED_V1_1")
@@ -394,7 +394,7 @@ class CapabilityRouterTests(unittest.TestCase):
             task=task,
             task_cfg=registry["tasks"][task],
             policy=qualified_policy,
-            runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-terra"]),
+            runtime=runtime("gpt-6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-terra"]),
             profile=profile(task=task, complexity="SYNTHESIS", capabilities=["synthesis"], effort="medium", hardened=True),
             activate_routing=True,
         )
@@ -416,7 +416,7 @@ class CapabilityRouterTests(unittest.TestCase):
                 run_gateway_with_effective_registry(
                     task=task,
                     registry=registry,
-                    effective={"model": "gpt-5.6-luna", "reasoning_effort": "low"},
+                    effective={"model": "gpt-6-luna", "reasoning_effort": "low"},
                     policy=self.policy,
                     prompt_file=prompt_file,
                     context_file=context_file,
@@ -439,7 +439,7 @@ class CapabilityRouterTests(unittest.TestCase):
             binding = run_gateway_with_effective_registry(
                 task=task,
                 registry=registry,
-                effective={"model": "gpt-5.6-luna", "reasoning_effort": "low"},
+                effective={"model": "gpt-6-luna", "reasoning_effort": "low"},
                 policy=self.policy,
                 prompt_file=prompt_file,
                 context_file=context_file,
@@ -458,7 +458,7 @@ class CapabilityRouterTests(unittest.TestCase):
             task=task,
             task_cfg=registry["tasks"][task],
             policy=self.policy,
-            runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra"),
+            runtime=runtime("gpt-6-luna", "gpt-5.6-terra"),
             profile=profile(task=task, capabilities=["structured_output"], effort="low", hardened=True),
             activate_routing=False,
         )
@@ -491,12 +491,12 @@ class CapabilityRouterTests(unittest.TestCase):
             output_dir = root / "out"
             prompt_file.write_text("test")
             context_file.write_text("{}")
-            original_price = dict(api_gateway.PRICES_PER_MILLION["gpt-5.6-luna"])
+            original_price = dict(api_gateway.PRICES_PER_MILLION["gpt-6-luna"])
             original_estimator = api_gateway.estimate_cost
             run_gateway_with_effective_registry(
                 task=task,
                 registry=registry,
-                effective={"model": "gpt-5.6-luna", "reasoning_effort": "low"},
+                effective={"model": "gpt-6-luna", "reasoning_effort": "low"},
                 policy=self.policy,
                 prompt_file=prompt_file,
                 context_file=context_file,
@@ -506,8 +506,8 @@ class CapabilityRouterTests(unittest.TestCase):
             )
             receipt = json.loads((output_dir / "receipt.json").read_text())
             self.assertEqual(receipt["contract"], "API_AGENT_RECEIPT_v3")
-            self.assertEqual(receipt["model"], "gpt-5.6-luna")
-            self.assertEqual(api_gateway.PRICES_PER_MILLION["gpt-5.6-luna"], original_price)
+            self.assertEqual(receipt["model"], "gpt-6-luna")
+            self.assertEqual(api_gateway.PRICES_PER_MILLION["gpt-6-luna"], original_price)
             self.assertIs(api_gateway.estimate_cost, original_estimator)
             self.assertFalse((output_dir / ".capability_routed_registry.tmp.json").exists())
 
