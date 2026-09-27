@@ -17,11 +17,12 @@ This skill does not own trading, portfolio actions, market rules or canonical pr
 2. Read `AGENTS.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `CROSS_REPO_AGENT_CONTEXT_MAP.json`.
 3. Read `research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json`.
 4. Read `research/api_agent/meme_alpha/MEME_ALPHA_PROSPECTIVE_HARDENING_v1.json` for prospective Easter-egg/cohort work.
-5. If restricted Meme Alpha material is needed, read `Donh91/secrets/AGENTS.md`, `README.md`, the Meme Alpha runtime contract and only the exact relevant files.
-6. For prospective wallet or event evidence, compose with `prospective-evidence-ledger`.
-7. For claims of edge, first-party provenance or promotion, compose with `research-lab-red-team`.
-8. For bounded code defects, use `codex-intake` only after deterministic evidence exists.
-9. Use `archive-governance` before any repository write.
+5. When adapting external launch, wallet or moonshot tooling, read `06_RESEARCH_LAB/alpha_lab/2026-09-27__solana-moonshot-intelligence-extraction-mission-v1__shadow.md` and the current `SOLANA_MOONSHOT_EXTRACTION_BOARD` before proposing a new primitive.
+6. If restricted Meme Alpha material is needed, read `Donh91/secrets/AGENTS.md`, `README.md`, the Meme Alpha runtime contract and only the exact relevant files.
+7. For prospective wallet or event evidence, compose with `prospective-evidence-ledger`.
+8. For claims of edge, first-party provenance or promotion, compose with `research-lab-red-team`.
+9. For bounded code defects, use `codex-intake` only after deterministic evidence exists.
+10. Use `archive-governance` before any repository write.
 
 ## Runtime principles
 
@@ -33,6 +34,9 @@ POINT-IN-TIME BEFORE HINDSIGHT
 SELF-INITIATED TRADE BEFORE ATTRIBUTION
 NEGATIVE CASES BEFORE PERFORMANCE CLAIMS
 FALSE NEGATIVES COUNT TOO
+COLLECTOR COVERAGE BEFORE MODEL QUALITY
+INTEGRITY_PASS IS NOT ALPHA_PASS
+PROJECT_QUALITY IS NOT TOKEN_VALUE_CAPTURE
 ADVERSARIAL SOURCE CHECK BEFORE FIRST-PARTY CLAIM
 ONE BOUNDED TASK PER RUN
 NO CODE AUTHORITY FROM RESEARCH
@@ -217,6 +221,10 @@ UNKNOWN
 
 Track separately:
 
+- raw-address concentration vs economic-entity-adjusted concentration;
+- first-buyer initial share vs retained/distributed share over time;
+- cohort-owned flow vs demand from wallets outside the cohort;
+- repeated cross-launch co-firing vs one-off co-entry;
 - first buy vs repeat accumulation;
 - funding source and wallet age;
 - distinct-wallet count vs repeated transactions;
@@ -226,7 +234,7 @@ Track separately:
 - current vs historical wallet conviction;
 - caller/social propagation vs on-chain causality.
 
-A wallet is `PROVISIONAL` until its history is independently supported. Later wallet quality may not be retroactively applied to earlier alerts.
+A wallet is `PROVISIONAL` until its history is independently supported. Later wallet quality may not be retroactively applied to earlier alerts. A recurring wallet cohort is topology evidence, not alpha: when testing whether it predicts demand, remove the cohort's own trades from the measured outcome and compare against stage/quality-matched controls.
 
 ## Research output
 
