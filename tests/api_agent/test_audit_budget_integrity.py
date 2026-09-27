@@ -78,6 +78,26 @@ def test_legacy_token_receipts_are_repriced_without_mutating_receipt(tmp_path, k
 
 
 @pytest.mark.parametrize('kind', ['lane', 'monthly'])
+def test_failed_api_output_receipt_still_counts_real_token_cost(tmp_path, kind):
+    v = receipt(
+        task=TASK,
+        model='gpt-6-sol',
+        input_tokens=295916,
+        output_tokens=10000,
+        estimated_cost_usd=0.691832,
+        status='API_OUTPUT_INVALID',
+        response_id='failed-sol-audit',
+        parse_errors=['response_incomplete:max_output_tokens'],
+    )
+    (tmp_path / 'failed.json').write_text(json.dumps(v))
+    proc, result = run_guard(tmp_path, kind)
+    assert proc.returncode == 0
+    assert result['status'] == 'PASS'
+    assert result['receipts'] == 1
+    assert result['spent_usd'] == 0.691832
+
+
+@pytest.mark.parametrize('kind', ['lane', 'monthly'])
 def test_conflicting_duplicate_costs_cannot_be_hidden_by_file_order(tmp_path, kind):
     for a, b in [(.1, 1.), (1., .1)]:
         (tmp_path / 'a.json').write_text(json.dumps(receipt(estimated_cost_usd=a)))
