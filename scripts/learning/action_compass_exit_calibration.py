@@ -59,7 +59,8 @@ def safe_repo_path(repo_root: Path, relative: Any) -> Path | None:
 def eligible_typed_protection(freeze: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
     if freeze.get("contract") != FREEZE_CONTRACT:
         return None, "FREEZE_CONTRACT_INVALID"
-    if int(freeze.get("schema_version") or 0) < 3:
+    schema = freeze.get("schema_version")
+    if isinstance(schema, bool) or not isinstance(schema, (int, float)) or int(schema) < 3:
         return None, "PRE_DECISION_INTEGRITY_SCHEMA"
     policy = str(freeze.get("decision_policy_version") or "")
     if not policy.startswith(ELIGIBLE_DECISION_POLICY_PREFIX):
