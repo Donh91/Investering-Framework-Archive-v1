@@ -419,6 +419,16 @@ def leading_streak(conclusions: list[str | None], good: bool) -> int:
     return count
 
 
+def strict_success_streak(conclusions: list[str | None]) -> int:
+    """Count only consecutive actual successes, never skipped/neutral outcomes."""
+    count = 0
+    for conclusion in conclusions:
+        if conclusion != "success":
+            break
+        count += 1
+    return count
+
+
 def live_workflows(
     repo: str,
     token: str,
@@ -444,14 +454,21 @@ def live_workflows(
         runs = api_json(f"{base}/actions/workflows/{wid}/runs?per_page=10", token).get("workflow_runs", [])
         latest = runs[0] if runs else None
         latest_scheduled = next((run for run in runs if run.get("event") == "schedule"), None)
+        scheduled_runs: list[dict[str, Any]] = []
         if scheduled_workflows is not None and workflow_name in scheduled_workflows:
             scheduled_runs = api_json(
-                f"{base}/actions/workflows/{wid}/runs?event=schedule&per_page=1", token
+                f"{base}/actions/workflows/{wid}/runs?event=schedule&per_page=10", token
             ).get("workflow_runs", [])
             latest_scheduled = scheduled_runs[0] if scheduled_runs else None
         recent_completed = [r for r in runs if r.get("status") == "completed"]
         conclusions = [r.get("conclusion") for r in recent_completed]
         recent_failures = [r for r in recent_completed if r.get("conclusion") not in GOOD_CONCLUSIONS]
+        expected_completed = (
+            [r for r in scheduled_runs if r.get("status") == "completed"]
+            if scheduled_workflows is not None and workflow_name in scheduled_workflows
+            else recent_completed
+        )
+        expected_conclusions = [r.get("conclusion") for r in expected_completed]
         result[workflow_name] = {
             "workflow_id": wid,
             "name": workflow.get("name"),
@@ -483,6 +500,7 @@ def live_workflows(
             "recent_failure_count": len(recent_failures),
             "recent_conclusions": conclusions[:5],
             "success_streak": leading_streak(conclusions, True),
+            "expected_success_streak": strict_success_streak(expected_conclusions),
             "failure_streak": leading_streak(conclusions, False),
         }
     return result
@@ -549,7 +567,7 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
             latest
             and latest.get("conclusion") in GOOD_CONCLUSIONS
             and live.get("recent_failure_count", 0) >= 2
-            and live.get("success_streak", 0) < RECOVERY_SUCCESS_STREAK_REQUIRED
+            and live.get("expected_success_streak", 0) < RECOVERY_SUCCESS_STREAK_REQUIRED
         ):
             findings.append("RECOVERING_AFTER_RECENT_FAILURES")
 
