@@ -145,7 +145,6 @@ def cohort_return(
         "prior_market_cap_min_usd": min(market_caps) if market_caps else None,
         "prior_market_cap_median_usd": statistics.median(market_caps) if market_caps else None,
         "prior_market_cap_max_usd": max(market_caps) if market_caps else None,
-        "prior_membership_hash": ((None if not isinstance(prior_rows, dict) else None)),
         "matched_asset_ids": matched_assets,
     }
 
