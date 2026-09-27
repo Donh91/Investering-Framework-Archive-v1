@@ -256,6 +256,51 @@ def valid_stored_completion_receipt(receipt: Any) -> bool:
     return True
 
 
+def existing_completion_for_request(
+    repo_root: Path,
+    path: Path,
+    candidate_id: str,
+    pr_number: int,
+    merge_commit_sha: str,
+) -> dict[str, Any] | None:
+    """Return a valid immutable existing receipt even after task resolution."""
+    if not path.exists():
+        return None
+    existing = read_json(path)
+    if not isinstance(existing, dict):
+        raise ValueError("EXISTING_COMPLETION_RECEIPT_INVALID")
+    declared = str(existing.get("receipt_sha256") or "")
+    actual = canonical_hash({k: v for k, v in existing.items() if k != "receipt_sha256"})
+    if not declared or declared != actual:
+        raise ValueError("EXISTING_COMPLETION_RECEIPT_HASH_INVALID")
+    if not valid_stored_completion_receipt(existing):
+        raise ValueError("EXISTING_COMPLETION_RECEIPT_INVALID")
+
+    state = read_json(repo_root / "LATEST_CODEX_EXECUTION_STATE.json")
+    matches = [
+        t for t in state.get("tasks", [])
+        if isinstance(t, dict)
+        and t.get("candidate_id") == candidate_id
+        and t.get("source_type") == "RESEARCH_INTAKE"
+    ]
+    if len(matches) != 1:
+        raise ValueError("RESEARCH_TASK_NOT_UNIQUE_OR_MISSING")
+    task = matches[0]
+    expected = {
+        "candidate_id": candidate_id,
+        "signature": task.get("signature"),
+        "candidate_sha256": task.get("candidate_sha256"),
+        "task_contract_sha256": task.get("task_contract_sha256"),
+        "pr_number": pr_number,
+        "merge_commit_sha": merge_commit_sha,
+        "post_fix_gate": task.get("post_fix_gate"),
+    }
+    for key, value in expected.items():
+        if existing.get(key) != value:
+            raise ValueError(f"EXISTING_COMPLETION_RECEIPT_CONTRADICTION:{key}")
+    return existing
+
+
 def write_completion_receipt(path: Path, receipt: dict[str, Any]) -> tuple[dict[str, Any], bool]:
     """Create one immutable completion receipt or preserve an identical binding.
 
@@ -312,6 +357,23 @@ def main() -> None:
     telemetry_path = args.execution_telemetry_json
     if telemetry_path is not None and not telemetry_path.is_absolute():
         telemetry_path = args.repo_root / telemetry_path
+    out = args.repo_root / "research/codex/completions" / f"{args.candidate_id}.json"
+    existing = existing_completion_for_request(
+        args.repo_root,
+        out,
+        args.candidate_id,
+        args.pr_number,
+        args.merge_commit_sha,
+    )
+    if existing is not None:
+        print(json.dumps({
+            "status": "VERIFIED",
+            "write_status": "ALREADY_PRESENT",
+            "path": str(out),
+            "receipt_sha256": existing["receipt_sha256"],
+        }, sort_keys=True))
+        return
+
     receipt = build_completion_receipt(
         args.repo_root,
         args.candidate_id,
@@ -320,7 +382,6 @@ def main() -> None:
         args.evidence,
         telemetry_path=telemetry_path,
     )
-    out = args.repo_root / "research/codex/completions" / f"{args.candidate_id}.json"
     stored, created = write_completion_receipt(out, receipt)
     print(json.dumps({
         "status": "VERIFIED",
