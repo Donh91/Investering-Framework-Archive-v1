@@ -1,0 +1,190 @@
+{
+  "contract": "OPERATOR_RISK_ADVERSARIAL_ALPHA_SHADOW_CONTRACT_v1",
+  "status": "SHADOW_ONLY",
+  "owner_issue": 1087,
+  "parent_owners": [
+    "MOONSHOT_SENTINEL_CONTRACT_v1",
+    "ALPHA_LAB_LIFECYCLE_ENGINE_v1",
+    "MEME_ALPHA_RUNTIME_POLICY_v1",
+    "shared Meme Alpha wallet-quality ledger"
+  ],
+  "purpose": "Extend existing Alpha Lab enrichment with persistent operator-lineage, extraction-risk, realizable adversarial-alpha and execution-toxicity evidence without creating a parallel scanner, scorer, ledger, scheduler or trading engine.",
+  "identity": {
+    "token_primary_key": "chain + exact token contract address",
+    "economic_entity_key": "internal cluster id derived from evidence, never human identity",
+    "address_is_entity": false,
+    "infrastructure_is_operator_evidence": false
+  },
+  "axes": {
+    "operator_extraction_risk": {
+      "states": [
+        "UNKNOWN",
+        "LOW_EVIDENCE",
+        "ELEVATED",
+        "HIGH",
+        "EXTREME"
+      ],
+      "positive_evidence": [
+        "direct prior-proceeds -> future launch-key funding",
+        "same non-infrastructure signer/caller across launches",
+        "same collector/proceeds hub across launches",
+        "repeat privileged wallet cohort with economic activity",
+        "funding ancestry overlap",
+        "proceeds convergence",
+        "coordinated sell-through",
+        "relaunch family with verified economic continuity"
+      ],
+      "forbidden_shortcuts": [
+        "same launchpad",
+        "same factory",
+        "same router",
+        "same bridge",
+        "same token implementation",
+        "same ticker/theme alone",
+        "external social label alone"
+      ]
+    },
+    "realizable_adversarial_alpha": {
+      "states": [
+        "UNKNOWN",
+        "CLOSED",
+        "OBSERVE",
+        "SHADOW_WINDOW_CANDIDATE",
+        "INVALIDATED"
+      ],
+      "required_families": [
+        "first public executable timestamp",
+        "independent buyer breadth excluding linked operator entities",
+        "liquidity and sellability",
+        "bounded-notional slippage",
+        "operator inventory / sell-through",
+        "time to first coordinated distribution",
+        "de-manipulated net demand"
+      ],
+      "outcome_fields": [
+        "realizable_MFE_after_slippage",
+        "MAE",
+        "time_to_sellable_2x",
+        "time_to_sellable_5x",
+        "time_to_sellable_10x",
+        "window_open_seconds",
+        "window_close_reason"
+      ],
+      "ath_only_credit": false
+    },
+    "execution_toxicity": {
+      "states": [
+        "UNKNOWN",
+        "NORMAL_EVIDENCE",
+        "ELEVATED",
+        "HIGH",
+        "BLOCKING_SHADOW"
+      ],
+      "evidence": [
+        "persistent attacker entity near target pool/route",
+        "sandwich structure reproducibly observed",
+        "route/provider victim concentration",
+        "rotating key cluster with persistent entity anchors",
+        "abnormal execution shortfall versus control route",
+        "cross-block/wide sandwich evidence"
+      ],
+      "authority": "NEGATIVE_ONLY",
+      "may_create_positive_alpha": false
+    }
+  },
+  "graph": {
+    "node_types": [
+      "ADDRESS",
+      "CONTRACT",
+      "TOKEN",
+      "POOL",
+      "LAUNCH",
+      "PROJECT",
+      "OPERATOR_CLUSTER",
+      "COLLECTOR",
+      "ROUTER",
+      "PROTOCOL_INFRASTRUCTURE",
+      "SOCIAL_ID"
+    ],
+    "edge_types": [
+      "DIRECT_FUNDS_BEFORE_LAUNCH",
+      "PROCEEDS_FUNDS_NEXT_LAUNCH",
+      "CREATED_CONTRACT",
+      "LAUNCHED_TOKEN",
+      "SAME_SIGNER",
+      "WALLET_COHORT_OVERLAP",
+      "EXEMPTION_COHORT_OVERLAP",
+      "SAME_COLLECTOR",
+      "PROCEEDS_CONVERGENCE",
+      "SAME_BATCH_PATTERN",
+      "ROUTE_USAGE",
+      "RELAUNCH_FAMILY",
+      "INFRASTRUCTURE_ONLY"
+    ],
+    "evidence_states": [
+      "EXTERNAL_LEAD",
+      "OBSERVED",
+      "REPRODUCED",
+      "STRONG_LINK",
+      "DIRECT_LINK",
+      "CONFLICTED",
+      "STALE"
+    ],
+    "every_edge_requires": [
+      "observed_at_utc",
+      "source",
+      "evidence_ref",
+      "confidence_state",
+      "protocol_shared_flag"
+    ]
+  },
+  "point_in_time": {
+    "freeze_offsets": [
+      "T-60m",
+      "T-5m",
+      "T0",
+      "T+30s",
+      "T+2m",
+      "T+5m",
+      "T+15m",
+      "T+60m"
+    ],
+    "no_retroactive_wallet_quality": true,
+    "external_dynamic_labels_expire": true,
+    "unknown_is_zero": false
+  },
+  "integration": {
+    "discovery_owner": "existing Moonshot/Pons owners",
+    "enrichment_order": [
+      "EXACT_CA",
+      "BLOCKSCOUT_LAUNCH_ORIGIN",
+      "OPERATOR_LINEAGE",
+      "WALLET_ENTITY_MEMORY",
+      "MARKET_SELLABILITY",
+      "EXECUTION_TOXICITY",
+      "SHADOW_DUAL_AXIS_CLASSIFICATION",
+      "OUTCOME_MATURATION"
+    ],
+    "fast_identity_path_must_not_wait_for_deep_enrichment": true,
+    "parallel_runtime_forbidden": true
+  },
+  "promotion": {
+    "historical_showcase_can_promote": false,
+    "prospective_required": true,
+    "minimum_matured_rows_before_any_threshold_review": 50,
+    "minimum_distinct_days": 14,
+    "matched_controls_required": true,
+    "missed_winner_audit_required": true,
+    "sellability_required": true,
+    "false_positive_cost_required": true,
+    "mev_route_controls_required": true
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "automatic_execution": false,
+    "market_state_change": false,
+    "code_self_modification": false,
+    "auto_merge": false
+  }
+}
