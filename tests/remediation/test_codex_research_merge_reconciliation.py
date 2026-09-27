@@ -447,6 +447,38 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
             self.assertEqual(stored, legacy)
             self.assertEqual(path.read_bytes(), original)
 
+    def test_resolved_task_can_replay_existing_completion_receipt(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task, _transition = self.write_fixture(root)
+            state_path = root / "LATEST_CODEX_EXECUTION_STATE.json"
+            state_path.write_text(json.dumps({
+                "tasks": [dict(task, state="POST_FIX_OBSERVATION")]
+            }) + "\n")
+            receipt = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["verified evidence"],
+                verified_at_utc="2026-09-27T18:20:00Z",
+            )
+            path = root / "research/codex/completions/test-merge-reconciliation.json"
+            stored, created = completion.write_completion_receipt(path, receipt)
+            self.assertTrue(created)
+
+            state_path.write_text(json.dumps({
+                "tasks": [dict(task, state="RESOLVED")]
+            }) + "\n")
+            replay = completion.existing_completion_for_request(
+                root,
+                path,
+                task["candidate_id"],
+                123,
+                "a" * 40,
+            )
+            self.assertEqual(replay, stored)
+
     def test_workflow_reconciles_between_two_owner_materializations(self):
         text = WORKFLOW_PATH.read_text()
         materialize = "python scripts/remediation/merge_codex_research_intake_converged.py"
