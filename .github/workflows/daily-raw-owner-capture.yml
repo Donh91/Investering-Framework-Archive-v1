@@ -131,7 +131,15 @@ jobs:
         if: steps.cold.outcome == 'failure'
         run: echo '::warning::Bounded permanent cold-lane checkpoint failed. Compact anchor and 14-day Actions evidence will still be preserved.'
       - name: Build compact permanent live-anchor index
-        run: python scripts/daily_capture/build_capture_index.py --status-file collector-status.json --output-root 03_DAILY_CAPTURE_LOGS/captures --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --trigger "${GITHUB_EVENT_NAME}"
+        run: |
+          python scripts/daily_capture/build_capture_index.py \
+            --status-file collector-status.json \
+            --output-root 03_DAILY_CAPTURE_LOGS/captures \
+            --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --trigger "${GITHUB_EVENT_NAME}" \
+            --schedule-id "${SCHEDULE_ID}" \
+            --slow-macro-planned "${{ steps.slow_macro.outputs.run }}" \
+            --slow-macro-reason "${{ steps.slow_macro.outputs.reason }}"
 
       - name: Commit live anchor before downstream research
         shell: bash

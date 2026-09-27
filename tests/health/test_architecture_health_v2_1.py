@@ -86,21 +86,84 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
         owner = {'files': [{'summary': {'billing': {'credits_remaining': 98765}}}]}
         self.assertEqual(module.find_cfgi_remaining(owner), 98765)
 
+    def owner_rows(self, fred='DISABLED', binance_spot='DISABLED', micro='PASS', okx='PASS', breadth='PASS', cfgi='PASS'):
+        return [
+            {'owner_id': 'fred_macro', 'status': fred},
+            {'owner_id': 'binance_spot', 'status': binance_spot},
+            {'owner_id': 'binance_microstructure', 'status': micro},
+            {'owner_id': 'okx_swap', 'status': okx},
+            {'owner_id': 'top100_breadth', 'status': breadth},
+            {'owner_id': 'cfgi_sentiment', 'status': cfgi},
+        ]
+
+    def capture(self, *, slow_macro=False, captured_at='2026-09-27T05:19:49Z'):
+        return {
+            'captured_at_utc': captured_at,
+            'execution_plan': {
+                'contract': module.LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT,
+                'trigger': 'schedule',
+                'schedule_id': '13 6 * * *' if slow_macro else '13 10 * * *',
+                'slow_macro_planned': slow_macro,
+                'slow_macro_reason': 'TEST',
+                'expected_owner_statuses': {
+                    'fred_macro': 'PASS' if slow_macro else 'DISABLED',
+                    'binance_spot': 'DISABLED',
+                    'binance_microstructure': 'PASS',
+                    'okx_swap': 'PASS',
+                    'top100_breadth': 'PASS',
+                    'cfgi_sentiment': 'PASS',
+                },
+            },
+        }
+
     def test_empty_owner_population_cannot_support_green_when_capture_exists(self):
         self.assertEqual(
-            module.owner_population_finding(True, [], 0),
+            module.owner_population_finding(self.capture(), []),
             ('OWNER_POPULATION_EMPTY', 1),
         )
 
     def test_missing_capture_does_not_duplicate_empty_owner_finding(self):
-        self.assertIsNone(module.owner_population_finding(False, [], 0))
+        self.assertIsNone(module.owner_population_finding(None, []))
 
-    def test_healthy_owner_population_has_no_owner_finding(self):
-        owners = [
-            {'owner_id': 'a', 'status': 'PASS'},
-            {'owner_id': 'b', 'status': 'PASS'},
-        ]
-        self.assertIsNone(module.owner_population_finding(True, owners, 2))
+    def test_intentionally_disabled_owners_are_healthy_when_plan_binds_them(self):
+        self.assertIsNone(module.owner_population_finding(self.capture(), self.owner_rows()))
+
+    def test_slow_macro_plan_requires_fred_pass(self):
+        self.assertIsNone(
+            module.owner_population_finding(self.capture(slow_macro=True), self.owner_rows(fred='PASS'))
+        )
+        self.assertEqual(
+            module.owner_population_finding(self.capture(slow_macro=True), self.owner_rows()),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
+
+    def test_completion_time_cannot_change_owner_topology(self):
+        before = self.capture(captured_at='2026-09-27T04:58:00Z')
+        delayed = self.capture(captured_at='2026-09-27T07:05:00Z')
+        self.assertIsNone(module.owner_population_finding(before, self.owner_rows()))
+        self.assertIsNone(module.owner_population_finding(delayed, self.owner_rows()))
+
+    def test_missing_execution_plan_fails_closed_without_guessing(self):
+        capture = {'captured_at_utc': '2026-09-27T05:19:49Z'}
+        self.assertEqual(
+            module.owner_population_finding(capture, self.owner_rows()),
+            ('OWNER_TOPOLOGY_UNBOUND', 1),
+        )
+
+    def test_missing_duplicate_or_mismatched_owner_is_degraded(self):
+        rows = self.owner_rows()
+        self.assertEqual(
+            module.owner_population_finding(self.capture(), rows[:-1]),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
+        self.assertEqual(
+            module.owner_population_finding(self.capture(), rows + [dict(rows[-1])]),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
+        self.assertEqual(
+            module.owner_population_finding(self.capture(), self.owner_rows(cfgi='FAIL')),
+            ('OWNER_COVERAGE_DEGRADED', 1),
+        )
 
     def test_missing_experiment_receipt_sync_is_amber_finding(self):
         self.assertEqual(

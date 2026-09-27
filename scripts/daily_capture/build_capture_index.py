@@ -360,6 +360,9 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--trigger", required=True)
+    parser.add_argument("--schedule-id", default="")
+    parser.add_argument("--slow-macro-planned", choices=("true", "false"), default="false")
+    parser.add_argument("--slow-macro-reason", default="UNSPECIFIED")
     args = parser.parse_args()
 
     exit_codes = json.loads(args.status_file.read_text())
@@ -369,6 +372,23 @@ def main() -> None:
     anchor_passed = sum(owner["status"] == "PASS" for owner in anchor_core)
     context_passed = sum(owner["status"] == "PASS" for owner in owners if owner["owner_id"] in DAILY_CONTEXT_OWNER_IDS)
     overall = "COMPLETE" if anchor_passed == len(anchor_core) else "PARTIAL" if anchor_passed else "FAILED"
+    slow_macro_planned = args.slow_macro_planned == "true"
+    expected_owner_statuses = {
+        "fred_macro": "PASS" if slow_macro_planned else "DISABLED",
+        "binance_spot": "DISABLED",
+        "binance_microstructure": "PASS",
+        "okx_swap": "PASS",
+        "top100_breadth": "PASS",
+        "cfgi_sentiment": "PASS",
+    }
+    execution_plan = {
+        "contract": "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v1",
+        "trigger": args.trigger,
+        "schedule_id": args.schedule_id or None,
+        "slow_macro_planned": slow_macro_planned,
+        "slow_macro_reason": args.slow_macro_reason,
+        "expected_owner_statuses": expected_owner_statuses,
+    }
 
     packet = {
         "contract": "DAILY_LIVE_ANCHOR_INDEX_v3",
@@ -377,6 +397,7 @@ def main() -> None:
         "run_id": args.run_id,
         "captured_at_utc": captured_at.isoformat().replace("+00:00", "Z"),
         "trigger": args.trigger,
+        "execution_plan": execution_plan,
         "status": overall,
         "owners_passed": sum(owner["status"] == "PASS" for owner in owners),
         "owners_planned": len(owners),

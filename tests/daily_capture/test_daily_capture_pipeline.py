@@ -39,13 +39,22 @@ class DailyCapturePipelineTests(unittest.TestCase):
                 "--status-file", str(status),
                 "--output-root", str(output),
                 "--run-id", "test-run",
-                "--trigger", "test",
+                "--trigger", "schedule",
+                "--schedule-id", "13 10 * * *",
+                "--slow-macro-planned", "false",
+                "--slow-macro-reason", "NORMAL_TACTICAL_SLOT",
             )
             packets = [p for p in output.rglob("*.json") if p.name != "LATEST.json"]
             self.assertEqual(len(packets), 1)
             packet = json.loads(packets[0].read_text())
             self.assertEqual(packet["contract"], "DAILY_LIVE_ANCHOR_INDEX_v3")
             self.assertEqual(packet["capture_lane"], "LIVE_POINT_IN_TIME_ANCHOR")
+            self.assertEqual(packet["execution_plan"]["contract"], "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v1")
+            self.assertEqual(packet["execution_plan"]["schedule_id"], "13 10 * * *")
+            self.assertFalse(packet["execution_plan"]["slow_macro_planned"])
+            self.assertEqual(packet["execution_plan"]["expected_owner_statuses"]["fred_macro"], "DISABLED")
+            self.assertEqual(packet["execution_plan"]["expected_owner_statuses"]["binance_spot"], "DISABLED")
+            self.assertEqual(packet["execution_plan"]["expected_owner_statuses"]["cfgi_sentiment"], "PASS")
             self.assertEqual(packet["status"], "PARTIAL")
             self.assertEqual(packet["anchor_core_passed"], 2)
             self.assertEqual(packet["anchor_core_planned"], 3)
