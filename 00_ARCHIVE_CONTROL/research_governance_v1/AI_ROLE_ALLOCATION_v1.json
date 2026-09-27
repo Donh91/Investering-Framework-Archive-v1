@@ -1,6 +1,6 @@
 {
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "audited_at_utc": "2026-08-22T21:50:00Z",
+  "audited_at_utc": "2026-09-27T18:23:00Z",
   "canonical_firewall": {
     "canonical_promotion": false,
     "market_rule_change": false,
@@ -37,27 +37,27 @@
     },
     "DAILY_DIRECTOR_SHADOW": {
       "authority": "ADVISORY_SHADOW_ONLY",
-      "model": "gpt-5.6-luna",
+      "model": "gpt-6-luna",
       "reasoning_effort": "low",
       "role": "multi-horizon shadow interpretation and bounded forecast candidates"
     },
     "DEEP_RESEARCH_MANUAL": {
       "authority": "ADVISORY_SHADOW_ONLY",
       "manual_only": true,
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "role": "manual bounded deep research"
     },
     "MASTER_MONDAY_PREP_SHADOW": {
       "authority": "ADVISORY_SHADOW_ONLY",
       "manual_only": true,
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "role": "manual bounded Master Monday preparation"
     },
     "WEEKLY_ADVERSARIAL_REVIEW": {
       "authority": "ADVISORY_SHADOW_ONLY",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "role": "falsification/red-team of frozen weekly evidence"
     },
@@ -102,7 +102,7 @@
       "codex_runtime_required": false,
       "openai_api_required": false,
       "optional_model_role": "Secondary bounded falsification of high-value frozen evidence after deterministic trigger; output is advisory evidence only.",
-      "preferred_optional_model": "gpt-5.6-sol",
+      "preferred_optional_model": "gpt-6-sol",
       "primary_engine": "DETERMINISTIC_PYTHON_GITHUB_ACTIONS",
       "reuse_existing_lane_first": "WEEKLY_ADVERSARIAL_REVIEW"
     },
@@ -127,9 +127,21 @@
     "creates_truth": false,
     "framework_state_change": false,
     "model_weight_change": false,
-    "monthly_hard_stop_usd": 20.0,
+    "monthly_hard_stop_usd": 20,
     "portfolio_action": false,
     "self_merge": false,
     "single_run_hard_stop_usd": 1.5
+  },
+  "model_version_policy": {
+    "verified_at_utc_date": "2026-09-27",
+    "source": "OPENAI_OFFICIAL_API_PRICING_AND_MODEL_CATALOG",
+    "latest_verified_ids": {
+      "luna": "gpt-6-luna",
+      "terra": "gpt-5.6-terra",
+      "sol": "gpt-6-sol",
+      "astra": "gpt-6-astra"
+    },
+    "rule": "USE_ONLY_OFFICIALLY_VERIFIED_MODEL_IDS;_RUNTIME_QUALIFICATION_REMAINS_REQUIRED",
+    "terra_note": "KEEP_GPT_5_6_TERRA_UNTIL_AN_OFFICIAL_NEWER_TERRA_ID_IS_VERIFIED"
   }
 }
