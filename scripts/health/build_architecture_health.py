@@ -15,6 +15,12 @@ STATUS_SCOPE = "ARCHITECTURE_EVIDENCE_ONLY_NOT_AGGREGATE_SYSTEM_HEALTH"
 EVIDENCE_WINDOW_DAYS = 14
 EVIDENCE_CENSOR_RATE_AMBER = 0.60
 OUTCOME_CONTRACTS = {"MATURED_OUTCOME_v2","MATURED_OUTCOME_v3"}
+LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT = "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v1"
+LIVE_ANCHOR_OWNER_IDS = {
+    "fred_macro", "binance_spot", "binance_microstructure",
+    "okx_swap", "top100_breadth", "cfgi_sentiment",
+}
+ALLOWED_PLANNED_OWNER_STATUSES = {"PASS", "DISABLED"}
 
 
 def read_json(path: Path) -> dict[str, Any] | None:
@@ -85,11 +91,32 @@ def find_cfgi_remaining(owner):
         if isinstance(billing,dict) and isinstance(billing.get('credits_remaining'),int):return billing['credits_remaining']
     return None
 
-def owner_population_finding(capture_present: bool, owners: list[dict[str, Any]], pass_count: int) -> tuple[str, int] | None:
-    """Return the scoped owner-health finding without treating 0/0 as healthy."""
-    if capture_present and not owners:
+def owner_population_finding(capture: dict[str, Any] | None, owners: list[dict[str, Any]]) -> tuple[str, int] | None:
+    """Validate actual owner results against the producer-frozen execution plan.
+
+    Intentional DISABLED owners are healthy only when the same capture froze that
+    intent before health interpretation. Missing or malformed plan identity fails
+    closed instead of guessing topology from completion time.
+    """
+    if capture is None:
+        return None
+    if not owners:
         return ('OWNER_POPULATION_EMPTY',1)
-    if owners and pass_count<max(1,len(owners)-1):
+
+    plan=capture.get('execution_plan')
+    if not isinstance(plan,dict) or plan.get('contract')!=LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT:
+        return ('OWNER_TOPOLOGY_UNBOUND',1)
+    expected=plan.get('expected_owner_statuses')
+    if not isinstance(expected,dict) or set(expected)!=LIVE_ANCHOR_OWNER_IDS:
+        return ('OWNER_TOPOLOGY_UNBOUND',1)
+    if any(status not in ALLOWED_PLANNED_OWNER_STATUSES for status in expected.values()):
+        return ('OWNER_TOPOLOGY_UNBOUND',1)
+
+    owner_ids=[str(row.get('owner_id') or '') for row in owners]
+    if len(owner_ids)!=len(set(owner_ids)) or set(owner_ids)!=LIVE_ANCHOR_OWNER_IDS:
+        return ('OWNER_COVERAGE_DEGRADED',1)
+    actual={str(row.get('owner_id')):row.get('status','UNKNOWN') for row in owners}
+    if any(actual.get(owner_id)!=expected_status for owner_id,expected_status in expected.items()):
         return ('OWNER_COVERAGE_DEGRADED',1)
     return None
 
@@ -165,7 +192,7 @@ def main():
     ages={'capture':age_hours(now,cap_ts),'daily_director':age_hours(now,daily_ts),'weekly_calibration':age_hours(now,weekly_ts),'etf_owner':age_hours(now,etf_ts),'experiment_registry':age_hours(now,experiment_ts),'experiment_receipt_sync':age_hours(now,sync_ts),'remediation_queue':age_hours(now,remediation_ts)}
     if cap is None:add('NO_DAILY_CAPTURE',2)
     elif ages['capture'] is None or ages['capture']>8:add('DAILY_CAPTURE_STALE',2)
-    owner_finding=owner_population_finding(cap is not None,owners,pass_count)
+    owner_finding=owner_population_finding(cap,owners)
     if owner_finding:add(*owner_finding)
     if daily is None:add('NO_DAILY_DIRECTOR_OUTPUT',1)
     elif ages['daily_director'] is None or ages['daily_director']>36:add('DAILY_DIRECTOR_STALE',1)
