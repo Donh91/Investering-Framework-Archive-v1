@@ -154,7 +154,8 @@ jobs:
           # sets sys.path to tests/learning and breaks imports from scripts/.
           python -m unittest tests.learning.test_action_compass_exit_calibration -q
           python scripts/learning/action_compass_exit_calibration.py \
-            --outcome-root research/framework_memory/action_compass_outcomes \
+            --repo-root . \
+            --outcome-root 04_MARKET_LEARNING/handlekompas/official/outcomes \
             --output research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json
       - name: Refresh experiment registry after receipt sync and maturation
         run: |
