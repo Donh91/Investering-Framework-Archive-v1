@@ -102,6 +102,29 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         new = {'family_status': 'SUPPORTED_NEEDS_INCREMENTAL_VALUE', 'matured_outcome_count': 3}
         self.assertEqual(mod.classify_delta(old, new), 'STRENGTHENED')
 
+    def test_senior_repair_issue_dispatch_is_strictly_owner_gated(self):
+        text = Path('.github/workflows/framework-learning-supervisor.yml').read_text()
+        self.assertIn('issue_comment:', text)
+        self.assertIn("github.event.issue.number == 1156", text)
+        self.assertIn("github.event.comment.author_association == 'OWNER'", text)
+        self.assertIn("contains(github.event.comment.body, '[SENIOR_REPAIR_AUDIT]')", text)
+        self.assertIn('--task SENIOR_REPAIR_AUDIT', text)
+        self.assertIn('--cap-usd 10.0', text)
+        self.assertIn('--hard-stop-usd 40', text)
+        self.assertIn('--reserve-usd 4.0', text)
+        self.assertIn('comment-${COMMENT_ID}', text)
+        self.assertIn('senior_repair_audit_dispatch.py validate', text)
+        self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", text)
+        self.assertNotIn("if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'", text)
+
+    def test_senior_dispatch_helper_preserves_read_only_audit_boundary(self):
+        text = Path('scripts/api_agent/senior_repair_audit_dispatch.py').read_text()
+        self.assertIn('ADVISORY_READ_ONLY', text)
+        self.assertIn('forecast_candidates MUST be empty', text)
+        self.assertIn('NO_CODE_WRITE_PERFORMED', text)
+        self.assertIn('NO_AUTHORITY_CHANGE', text)
+        self.assertIn('private_data_included', text)
+        self.assertIn('gpt-6-sol', text)
     def test_architecture_forbids_authority_escalation(self):
         text = Path('00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md').read_text()
         self.assertIn('Canonical market authority: NONE', text)
