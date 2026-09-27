@@ -157,6 +157,13 @@ jobs:
             --repo-root . \
             --outcome-root 04_MARKET_LEARNING/handlekompas/official/outcomes \
             --output research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json
+      - name: Build DEL segment-return research foundation
+        run: |
+          python -m unittest tests.learning.test_segment_return_foundation -q
+          python scripts/learning/segment_return_foundation.py \
+            --snapshot-root 03_DAILY_CAPTURE_LOGS/breadth_rich \
+            --output-json research/decision_economics/LATEST_SEGMENT_RETURN_FOUNDATION.json \
+            --output-csv research/decision_economics/SEGMENT_RETURN_RANK_PROXY_RESEARCH.csv
       - name: Refresh experiment registry after receipt sync and maturation
         run: |
           mkdir -p research/experiment_lifecycle/{candidates,observations,receipts}
@@ -203,7 +210,7 @@ jobs:
         run: |
           git config user.name 'framework-operations-bot'
           git config user.email 'framework-operations-bot@users.noreply.github.com'
-          git add research/data_ping_bridge research/etf_owner research/framework_memory research/experiment_lifecycle research/architecture_health research/framework_handoffs
+          git add research/data_ping_bridge research/etf_owner research/framework_memory research/experiment_lifecycle research/architecture_health research/framework_handoffs research/decision_economics
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "ops: update integrated learning and experiment receipts ${GITHUB_RUN_ID}"
           pushed=false
