@@ -187,8 +187,8 @@ jobs:
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
             --pending-ledger-root runtime/api-cost-ledger \
-            --hard-stop-usd 20 \
-            --reserve-usd 2.0
+            --hard-stop-usd 40 \
+            --reserve-usd 4.0
       - name: Run Terra calibration
         id: api
         if: steps.eligibility.outputs.eligible == 'true'
