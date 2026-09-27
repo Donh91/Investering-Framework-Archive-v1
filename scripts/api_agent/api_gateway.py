@@ -212,6 +212,26 @@ def build_request(task: str, task_cfg: dict[str, Any], prompt: str, context: dic
     }
 
 
+def output_token_plan(task_cfg: dict[str, Any]) -> list[int]:
+    base = task_cfg.get("max_output_tokens")
+    if isinstance(base, bool) or not isinstance(base, int) or not 1 <= base <= 20000:
+        raise ValueError("invalid_max_output_tokens")
+    attempts = task_cfg.get("max_attempts", 2)
+    if isinstance(attempts, bool) or not isinstance(attempts, int) or not 1 <= attempts <= 2:
+        raise ValueError("invalid_max_attempts")
+    plan = [base]
+    if attempts == 2:
+        configured = task_cfg.get("retry_max_output_tokens")
+        if configured is None:
+            retry = min(max(base * 2, 2400), 5000)
+        else:
+            if isinstance(configured, bool) or not isinstance(configured, int) or not 1 <= configured <= 20000:
+                raise ValueError("invalid_retry_max_output_tokens")
+            retry = configured
+        plan.append(retry)
+    return plan
+
+
 def call_api(api_key: str, payload: dict[str, Any]) -> dict[str, Any]:
     request = urllib.request.Request("https://api.openai.com/v1/responses", data=canonical_bytes(payload), headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST")
     try:
@@ -276,10 +296,9 @@ def main() -> None:
     else:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: raise SystemExit("OPENAI_API_KEY_missing")
-        for attempt in range(2):
+        for attempt, output_budget in enumerate(output_token_plan(task_cfg)):
             payload = dict(request_payload)
-            if attempt == 1:
-                payload["max_output_tokens"] = min(max(int(task_cfg["max_output_tokens"]) * 2, 2400), 5000)
+            payload["max_output_tokens"] = output_budget
             response = call_api(api_key, payload)
             responses.append(response)
             try:
@@ -291,12 +310,17 @@ def main() -> None:
     for response in responses:
         i, o = usage_of(response);input_tokens += i;output_tokens += o
     cost = estimate_cost(task_cfg["model"], input_tokens, output_tokens)
-    if cost > float(registry["single_run_hard_stop_usd"]): raise SystemExit(f"single_run_cost_exceeded:{cost}")
+    cost_exceeded = cost > float(registry["single_run_hard_stop_usd"])
     accepted = output is not None
     if output is None:
         output = blocked_output("API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY")
     output_bytes = canonical_bytes(output)
-    receipt = {"contract": "API_AGENT_RECEIPT_v3", "task": args.task, "model": task_cfg["model"], "reasoning_effort": task_cfg["reasoning_effort"], "request_hash": request_hash, "context_hash": sha256_bytes(canonical_bytes(context)), "prompt_hash": sha256_bytes(prompt.encode()), "output_hash": sha256_bytes(output_bytes), "response_id": responses[-1].get("id") if responses else None, "response_ids": [r.get("id") for r in responses], "attempt_count": len(responses), "input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost_usd": cost, "created_unix": int(time.time()), "status": "PASS" if accepted else "API_OUTPUT_INVALID", "parse_errors": errors, "allowed_write_prefix": allowed_prefix, "intended_write_prefix": args.intended_write_prefix, "forecast_candidate_count": len(output.get("forecast_candidates", [])), "untrusted_input_envelope": True, "authority": registry["authority"]}
-    (args.output_dir / "output.json").write_bytes(output_bytes);(args.output_dir / "receipt.json").write_bytes(canonical_bytes(receipt));print(json.dumps(receipt, sort_keys=True))
+    receipt_status = "SINGLE_RUN_COST_EXCEEDED" if cost_exceeded else ("PASS" if accepted else "API_OUTPUT_INVALID")
+    receipt = {"contract": "API_AGENT_RECEIPT_v3", "task": args.task, "model": task_cfg["model"], "reasoning_effort": task_cfg["reasoning_effort"], "request_hash": request_hash, "context_hash": sha256_bytes(canonical_bytes(context)), "prompt_hash": sha256_bytes(prompt.encode()), "output_hash": sha256_bytes(output_bytes), "response_id": responses[-1].get("id") if responses else None, "response_ids": [r.get("id") for r in responses], "attempt_count": len(responses), "input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost_usd": cost, "created_unix": int(time.time()), "status": receipt_status, "parse_errors": errors, "allowed_write_prefix": allowed_prefix, "intended_write_prefix": args.intended_write_prefix, "forecast_candidate_count": len(output.get("forecast_candidates", [])), "untrusted_input_envelope": True, "authority": registry["authority"]}
+    (args.output_dir / "output.json").write_bytes(output_bytes)
+    (args.output_dir / "receipt.json").write_bytes(canonical_bytes(receipt))
+    print(json.dumps(receipt, sort_keys=True))
+    if cost_exceeded:
+        raise SystemExit(f"single_run_cost_exceeded:{cost}")
 
 if __name__ == "__main__": main()
