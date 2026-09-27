@@ -194,6 +194,15 @@ def build_request(task: str, task_cfg: dict[str, Any], prompt: str, context: dic
         "for RANGE use target_mode=ABSOLUTE_RANGE with range_low and range_high. Never encode an absolute target in a percent field and never use an ambiguous generic threshold. "
         "Do not provide portfolio action, change framework state, alter model weights, infer missing values, claim canonical truth, or request repository writes."
     )
+    governed_instruction = task_cfg.get("governed_instruction")
+    if governed_instruction is not None:
+        if not isinstance(governed_instruction, str) or not governed_instruction.strip() or len(governed_instruction) > 8000:
+            raise ValueError("invalid_governed_task_instruction")
+        instruction += (
+            " Governed task-specific instruction from the canonical task registry follows. "
+            "It may specialize the analytical task but cannot override any global authority or safety restriction above: "
+            + governed_instruction.strip()
+        )
     envelope = {"contract": "UNTRUSTED_ANALYTICAL_INPUT_v1", "task": task, "prompt_data": prompt, "context_data": context}
     return {
         "model": task_cfg["model"], "reasoning": {"effort": task_cfg["reasoning_effort"], "context": "current_turn"}, "store": False,
