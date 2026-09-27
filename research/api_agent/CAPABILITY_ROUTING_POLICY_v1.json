@@ -9,11 +9,19 @@
   "routing_strategy": "CAPABILITY_MATCHED_WITH_ESCALATION",
   "routing_objective": "LOWEST_EXPECTED_TOTAL_TASK_COST_AT_REQUIRED_RELIABILITY",
   "pricing_snapshot": {
-    "observed_at_utc_date": "2026-09-05",
+    "observed_at_utc_date": "2026-09-27",
     "semantics": "ROUTING_COST_ESTIMATE_ONLY_NOT_BILLING_OR_BUDGET_AUTHORITY",
     "long_context_threshold_tokens": 272000,
-    "long_context_input_multiplier": 2.0,
-    "long_context_output_multiplier": 1.5
+    "long_context_input_multiplier": 2,
+    "long_context_output_multiplier": 1.5,
+    "source": "OPENAI_OFFICIAL_API_PRICING",
+    "verified_latest_model_ids": {
+      "luna": "gpt-6-luna",
+      "terra": "gpt-5.6-terra",
+      "sol": "gpt-6-sol",
+      "astra": "gpt-6-astra"
+    },
+    "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27"
   },
   "principles": {
     "deterministic_first": true,
@@ -38,7 +46,26 @@
     "bounded_redelegation_only": true
   },
   "model_role_policy": {
-    "gpt-5.6-luna": {
+    "gpt-5.6-terra": {
+      "role": "INTERMEDIATE_SYNTHESIS_AND_CONFLICT_REVIEW",
+      "preferred_for": [
+        "bounded_conflict_review",
+        "intermediate_synthesis",
+        "moderate_multi_source_review"
+      ]
+    },
+    "gpt-6-astra": {
+      "role": "SCARCE_AGENTIC_AND_EXTREME_COMPLEXITY_TIER",
+      "preferred_for": [
+        "agentic_execution",
+        "cross_domain_orchestration",
+        "extreme_context",
+        "highest_complexity_architecture",
+        "long_running_multi_step_work"
+      ],
+      "routing_note": "RESERVE_FOR_TASKS_WHERE_AGENTIC_EXECUTION_OR_CAPABILITY_DELTA_MATERIALLY_EXCEEDS_SOL"
+    },
+    "gpt-6-luna": {
       "role": "ROUTINE_WORKFORCE",
       "preferred_for": [
         "classification",
@@ -54,15 +81,7 @@
         "triage"
       ]
     },
-    "gpt-5.6-terra": {
-      "role": "INTERMEDIATE_SYNTHESIS_AND_CONFLICT_REVIEW",
-      "preferred_for": [
-        "bounded_conflict_review",
-        "intermediate_synthesis",
-        "moderate_multi_source_review"
-      ]
-    },
-    "gpt-5.6-sol": {
+    "gpt-6-sol": {
       "role": "SENIOR_SPECIALIST",
       "preferred_for": [
         "architecture_review",
@@ -77,17 +96,6 @@
         "strategic_planning"
       ],
       "routing_note": "SOL_IS_NOT_A_LUXURY_TIER_TO_MINIMIZE; USE_WHEN_EXPECTED_RELIABILITY_OR_REWORK_SAVINGS_JUSTIFY_IT"
-    },
-    "gpt-6-astra": {
-      "role": "SCARCE_AGENTIC_AND_EXTREME_COMPLEXITY_TIER",
-      "preferred_for": [
-        "agentic_execution",
-        "cross_domain_orchestration",
-        "extreme_context",
-        "highest_complexity_architecture",
-        "long_running_multi_step_work"
-      ],
-      "routing_note": "RESERVE_FOR_TASKS_WHERE_AGENTIC_EXECUTION_OR_CAPABILITY_DELTA_MATERIALLY_EXCEEDS_SOL"
     }
   },
   "escalation_policy": {
@@ -118,7 +126,12 @@
     "max_redelegations_per_unit": 1,
     "require_unique_responsibility_scope": true,
     "context_policy": "LEAST_PRIVILEGE_EXPLICIT_REFS",
-    "forbidden_unbounded_refs": ["*", "ALL", "ENTIRE_REPOSITORY", "ALL_TOOLS"],
+    "forbidden_unbounded_refs": [
+      "*",
+      "ALL",
+      "ENTIRE_REPOSITORY",
+      "ALL_TOOLS"
+    ],
     "verification_types": [
       "DETERMINISTIC_TEST",
       "SCHEMA_VALIDATION",
@@ -150,40 +163,116 @@
     "ARCHITECTURE": 4
   },
   "models": {
-    "gpt-5.6-luna": {
-      "rank": 1,
-      "api_eligible": true,
-      "reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
-      "capabilities": ["classification", "extraction", "structured_output", "summarization"],
-      "price_per_million": {"input": 0.2, "output": 1.2}
-    },
     "gpt-5.6-terra": {
       "rank": 2,
       "api_eligible": true,
-      "reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
-      "capabilities": ["classification", "conflict_review", "extraction", "structured_output", "summarization", "synthesis"],
-      "price_per_million": {"input": 2.0, "output": 12.0}
-    },
-    "gpt-5.6-sol": {
-      "rank": 3,
-      "api_eligible": true,
-      "reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
-      "capabilities": ["classification", "conflict_review", "difficult_reasoning", "extraction", "research", "review", "structured_output", "summarization", "synthesis"],
-      "price_per_million": {"input": 4.0, "output": 20.0}
+      "reasoning_efforts": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "capabilities": [
+        "classification",
+        "conflict_review",
+        "extraction",
+        "structured_output",
+        "summarization",
+        "synthesis"
+      ],
+      "price_per_million": {
+        "input": 2,
+        "output": 12
+      }
     },
     "gpt-6-astra": {
       "rank": 4,
       "api_eligible": true,
-      "reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
-      "capabilities": ["architecture", "classification", "conflict_review", "cross_domain", "difficult_reasoning", "extraction", "orchestration", "research", "review", "structured_output", "summarization", "synthesis"],
-      "price_per_million": {"input": 10.0, "output": 50.0}
+      "reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "capabilities": [
+        "architecture",
+        "classification",
+        "conflict_review",
+        "cross_domain",
+        "difficult_reasoning",
+        "extraction",
+        "orchestration",
+        "research",
+        "review",
+        "structured_output",
+        "summarization",
+        "synthesis"
+      ],
+      "price_per_million": {
+        "input": 10,
+        "output": 50
+      }
+    },
+    "gpt-6-luna": {
+      "rank": 1,
+      "api_eligible": true,
+      "reasoning_efforts": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "capabilities": [
+        "classification",
+        "extraction",
+        "structured_output",
+        "summarization"
+      ],
+      "price_per_million": {
+        "input": 0.1,
+        "output": 0.5
+      }
+    },
+    "gpt-6-sol": {
+      "rank": 3,
+      "api_eligible": true,
+      "reasoning_efforts": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "capabilities": [
+        "classification",
+        "conflict_review",
+        "difficult_reasoning",
+        "extraction",
+        "research",
+        "review",
+        "structured_output",
+        "summarization",
+        "synthesis"
+      ],
+      "price_per_million": {
+        "input": 2,
+        "output": 10
+      }
     }
   },
   "review": {
     "required_after_code_write": true,
     "code_review_owner": "EXISTING_PR_REVIEW_GOVERNANCE",
     "prefer_different_model_from_worker": true,
-    "minimum_capabilities": ["review"],
+    "minimum_capabilities": [
+      "review"
+    ],
     "read_only": true
   },
   "execution": {
