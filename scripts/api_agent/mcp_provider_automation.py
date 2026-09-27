@@ -136,7 +136,7 @@ def ai_red_team(api_key: str, program: dict[str, Any], evaluation: dict[str, Any
         },
     }
     payload = {
-        "model": "gpt-5.6-luna",
+        "model": "gpt-6-luna",
         "reasoning": {"effort": "medium", "context": "current_turn"},
         "store": False,
         "max_output_tokens": 900,
