@@ -5,11 +5,25 @@
   "objective": "Create the first Alpha Lab buyer graph where every current-token wallet observation, prior-wallet quality statistic and entity adjustment is knowable at the frozen candidate cutoff.",
   "scope": {
     "phase_1": "Solana/pump.fun current regime",
-    "later_replication": ["Robinhood Chain", "BNB Chain", "Base", "Monad"],
+    "later_replication": [
+      "Robinhood Chain",
+      "BNB Chain",
+      "Base",
+      "Monad"
+    ],
     "cross_chain_threshold_inheritance": false
   },
-  "candidate_cutoffs": ["1m", "5m", "15m", "30m"],
-  "identity_key": ["chain", "exact_token_mint", "origin_event_identity"],
+  "candidate_cutoffs": [
+    "1m",
+    "5m",
+    "15m",
+    "30m"
+  ],
+  "identity_key": [
+    "chain",
+    "exact_token_mint",
+    "origin_event_identity"
+  ],
   "current_token_buyer_event_required_fields": [
     "event_identity",
     "slot_or_chain_ordering_context",
@@ -26,8 +40,19 @@
     "source_schema_version"
   ],
   "self_initiated_trade_gate": {
-    "positive_evidence": ["native buy event attributed to wallet", "transaction path consistent with a user-initiated swap/bonding-curve buy"],
-    "exclude_or_unknown": ["pool address", "router/program address", "transfer-only receipt", "dust/airdrop", "seeded balance without buy", "creator distribution transfer", "unresolved delegated/aggregator attribution"]
+    "positive_evidence": [
+      "native buy event attributed to wallet",
+      "transaction path consistent with a user-initiated swap/bonding-curve buy"
+    ],
+    "exclude_or_unknown": [
+      "pool address",
+      "router/program address",
+      "transfer-only receipt",
+      "dust/airdrop",
+      "seeded balance without buy",
+      "creator distribution transfer",
+      "unresolved delegated/aggregator attribution"
+    ]
   },
   "wallet_quality_asof": {
     "ledger_rule": "Only prior candidate outcomes whose maturity timestamp is <= current candidate cutoff may update wallet quality.",
@@ -46,7 +71,12 @@
       "prior_exit_quality_if_observable",
       "last_quality_update_effective_at_utc"
     ],
-    "no_backfill": ["future PnL", "future wallet labels", "future token survival", "later-discovered creator/funder relationship"]
+    "no_backfill": [
+      "future PnL",
+      "future wallet labels",
+      "future token survival",
+      "later-discovered creator/funder relationship"
+    ]
   },
   "entity_adjustment": {
     "levels": [
@@ -62,11 +92,29 @@
       "effective_entity_count",
       "largest_linked_entity_size",
       "same_funder_fraction",
-      "entity_resolution_confidence"
-    ]
+      "entity_resolution_confidence",
+      "raw_top10_holder_pct",
+      "entity_adjusted_top10_holder_pct",
+      "raw_vs_entity_top10_delta",
+      "largest_cluster_supply_pct",
+      "launch_cohort_initial_supply_pct",
+      "launch_cohort_retained_supply_pct",
+      "launch_cohort_retention_ratio"
+    ],
+    "cohort_outcome_decontamination_rule": "A recurring cohort may be used as topology/confirmation evidence only after the cohort's own buys, sells and volume are removed from the measured downstream-demand outcome. Compare the remaining outcome against stage/launch-quality matched controls.",
+    "cross_launch_rule": "Repeated co-firing across launches is stronger dependence evidence than one-off co-entry. Preserve first-observed timestamps and never retroactively apply later cohort membership to an earlier signal.",
+    "external_method_note": "Wave-2 Solana research supplied these measurement ideas. Reimplement from first principles for Robinhood/Pons; do not copy CC BY-NC source code into production."
   },
   "wallet_specialism": {
-    "roles": ["EARLY_LAUNCH", "CURVE_OR_MIGRATION", "MOMENTUM_RUNNER", "TAIL_HOLDER", "EXIT_DISCIPLINE", "PHOENIX_REENTRY", "LORE_NATIVE"],
+    "roles": [
+      "EARLY_LAUNCH",
+      "CURVE_OR_MIGRATION",
+      "MOMENTUM_RUNNER",
+      "TAIL_HOLDER",
+      "EXIT_DISCIPLINE",
+      "PHOENIX_REENTRY",
+      "LORE_NATIVE"
+    ],
     "rule": "A wallet may be strong in one role/venue and weak in another. No global smart score receives direct authority."
   },
   "G3_features": [
@@ -80,7 +128,10 @@
     "same_funder_fraction",
     "largest_linked_entity_size",
     "wallet_to_public_CA_lead_minutes",
-    "fresh_reentry_fraction_if_phoenix"
+    "fresh_reentry_fraction_if_phoenix",
+    "repeated_cross_launch_cofire_asof",
+    "cohort_own_flow_removed_net_demand",
+    "funder_diversity_asof"
   ],
   "paired_G2_features": [
     "net_real_capital_velocity",
@@ -89,9 +140,21 @@
     "buy_sell_imbalance",
     "early_sell_pressure",
     "entity_adjusted_concentration",
-    "liquidity_and_slippage_state"
+    "liquidity_and_slippage_state",
+    "raw_vs_entity_concentration_delta",
+    "early_buyer_retention_ratio",
+    "dev_retention_ratio",
+    "wash_or_self_flow_ratio",
+    "cohort_excluded_buy_sell_imbalance"
   ],
-  "outcome_maturation": ["1H", "4H", "24H", "72H", "7D", "14D"],
+  "outcome_maturation": [
+    "1H",
+    "4H",
+    "24H",
+    "72H",
+    "7D",
+    "14D"
+  ],
   "primary_outcomes": [
     "sellability_survival",
     "liquidity_survival",
@@ -102,7 +165,11 @@
     "MAE",
     "round_trip_ratio"
   ],
-  "sparse_tail_casebook": ["25x", "50x", "100x"],
+  "sparse_tail_casebook": [
+    "25x",
+    "50x",
+    "100x"
+  ],
   "ablation_arms": [
     "G2_ONLY",
     "RAW_WALLET_COUNT",
