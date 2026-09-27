@@ -6,7 +6,6 @@ import csv
 import json
 import math
 import statistics
-from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -20,6 +19,13 @@ RANK_BUCKETS = {
     "RANK_26_50": (26, 50),
     "RANK_51_100": (51, 100),
 }
+
+# Mirror the repository's existing 4h settled-interval convention (3.5-4.5h)
+# proportionally for a 24h research interval: 24h +/- 12.5% = 21-27h.
+DAILY_INTERVAL_TARGET_HOURS = 24.0
+DAILY_INTERVAL_TOLERANCE_HOURS = 3.0
+DAILY_INTERVAL_MIN_HOURS = DAILY_INTERVAL_TARGET_HOURS - DAILY_INTERVAL_TOLERANCE_HOURS
+DAILY_INTERVAL_MAX_HOURS = DAILY_INTERVAL_TARGET_HOURS + DAILY_INTERVAL_TOLERANCE_HOURS
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -106,6 +112,42 @@ def constituent_map(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return rows
 
 
+def raw_price_map(owner_snapshot_path: Path) -> dict[str, float]:
+    """Read the already archived CoinGecko raw Top150 payload beside the owner snapshot."""
+    raw_path = owner_snapshot_path.with_name("raw_source_payload.json")
+    if not raw_path.exists():
+        return {}
+    try:
+        value = json.loads(raw_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if not isinstance(value, list):
+        return {}
+    prices: dict[str, float] = {}
+    for row in value:
+        if not isinstance(row, dict):
+            continue
+        asset_id = str(row.get("id") or "").strip()
+        price = finite_positive(row.get("current_price"))
+        if asset_id and price is not None:
+            prices[asset_id] = price
+    return prices
+
+
+def current_price_map(owner_snapshot_path: Path, snapshot: dict[str, Any]) -> tuple[dict[str, float], set[str]]:
+    """Prefer normalized owner prices and use raw Top150 only as a dropout-price fallback."""
+    normalized = constituent_map(snapshot)
+    prices = {
+        asset_id: float(row["price_usd"])
+        for asset_id, row in normalized.items()
+        if finite_positive(row.get("price_usd")) is not None
+    }
+    normalized_ids = set(prices)
+    for asset_id, price in raw_price_map(owner_snapshot_path).items():
+        prices.setdefault(asset_id, price)
+    return prices, normalized_ids
+
+
 def simple_return(previous_price: float | None, current_price: float | None) -> float | None:
     if previous_price is None or current_price is None or previous_price <= 0:
         return None
@@ -114,7 +156,8 @@ def simple_return(previous_price: float | None, current_price: float | None) -> 
 
 def cohort_return(
     prior_rows: dict[str, dict[str, Any]],
-    current_rows: dict[str, dict[str, Any]],
+    current_prices: dict[str, float],
+    current_normalized_ids: set[str],
     low: int,
     high: int,
 ) -> dict[str, Any]:
@@ -125,28 +168,43 @@ def cohort_return(
     returns: list[float] = []
     market_caps: list[float] = []
     matched_assets: list[str] = []
+    missing_assets: list[str] = []
+    raw_fallback_assets: list[str] = []
+
     for row in cohort:
-        current = current_rows.get(row["asset_id"])
-        value = simple_return(
-            finite_positive(row.get("price_usd")),
-            finite_positive(current.get("price_usd")) if current else None,
-        )
-        if value is not None:
+        asset_id = row["asset_id"]
+        current_price = finite_positive(current_prices.get(asset_id))
+        value = simple_return(finite_positive(row.get("price_usd")), current_price)
+        if value is None:
+            missing_assets.append(asset_id)
+        else:
             returns.append(value)
-            matched_assets.append(row["asset_id"])
+            matched_assets.append(asset_id)
+            if asset_id not in current_normalized_ids:
+                raw_fallback_assets.append(asset_id)
         cap = finite_positive(row.get("market_cap_usd"))
         if cap is not None:
             market_caps.append(cap)
+
+    complete = bool(cohort) and len(returns) == len(cohort)
     return {
-        "return": (sum(returns) / len(returns)) if returns else None,
+        # Never publish a survivor-only cohort average. Full frozen membership coverage is required.
+        "return": (sum(returns) / len(returns)) if complete else None,
         "cohort_count": len(cohort),
         "matched_count": len(returns),
         "matched_fraction": (len(returns) / len(cohort)) if cohort else None,
+        "complete_price_coverage": complete,
+        "missing_asset_ids": missing_assets,
+        "raw_top150_fallback_asset_ids": raw_fallback_assets,
         "prior_market_cap_min_usd": min(market_caps) if market_caps else None,
         "prior_market_cap_median_usd": statistics.median(market_caps) if market_caps else None,
         "prior_market_cap_max_usd": max(market_caps) if market_caps else None,
         "matched_asset_ids": matched_assets,
     }
+
+
+def eligible_daily_interval(interval_hours: float) -> bool:
+    return DAILY_INTERVAL_MIN_HOURS <= interval_hours <= DAILY_INTERVAL_MAX_HOURS
 
 
 def build_rows(snapshot_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -158,33 +216,44 @@ def build_rows(snapshot_root: Path) -> tuple[list[dict[str, Any]], list[dict[str
         prior_ts, prior_path, prior = snapshots[index - 1]
         current_ts, current_path, current = snapshots[index]
         prior_rows = constituent_map(prior)
-        current_rows = constituent_map(current)
-        gap_days = (current_ts.date() - prior_ts.date()).days
+        current_prices, current_normalized_ids = current_price_map(current_path, current)
+        interval_hours = (current_ts - prior_ts).total_seconds() / 3600.0
+        interval_ok = eligible_daily_interval(interval_hours)
 
-        btc = simple_return(
+        btc_raw = simple_return(
             finite_positive((prior_rows.get("bitcoin") or {}).get("price_usd")),
-            finite_positive((current_rows.get("bitcoin") or {}).get("price_usd")),
+            finite_positive(current_prices.get("bitcoin")),
         )
-        eth = simple_return(
+        eth_raw = simple_return(
             finite_positive((prior_rows.get("ethereum") or {}).get("price_usd")),
-            finite_positive((current_rows.get("ethereum") or {}).get("price_usd")),
+            finite_positive(current_prices.get("ethereum")),
         )
         buckets = {
-            name: cohort_return(prior_rows, current_rows, low, high)
+            name: cohort_return(prior_rows, current_prices, current_normalized_ids, low, high)
             for name, (low, high) in RANK_BUCKETS.items()
+        }
+        raw_returns = {
+            "BTC": btc_raw,
+            "ETH": eth_raw,
+            "RANK_3_25": buckets["RANK_3_25"]["return"],
+            "RANK_26_50": buckets["RANK_26_50"]["return"],
+            "RANK_51_100": buckets["RANK_51_100"]["return"],
+            "MICROCAPS": None,
         }
 
         row = {
             "date": current_ts.date().isoformat(),
             "prior_date": prior_ts.date().isoformat(),
-            "gap_days": gap_days,
-            "consecutive_calendar_day": gap_days == 1,
-            "BTC": btc,
-            "ETH": eth,
-            "RANK_3_25": buckets["RANK_3_25"]["return"],
-            "RANK_26_50": buckets["RANK_26_50"]["return"],
-            "RANK_51_100": buckets["RANK_51_100"]["return"],
+            "interval_hours": round(interval_hours, 6),
+            "daily_interval_eligible": interval_ok,
+            "interval_status": "ELIGIBLE_24H_RESEARCH_WINDOW" if interval_ok else "IRREGULAR_INTERVAL_EXCLUDED_FROM_DAILY_SERIES",
+            "BTC": btc_raw if interval_ok else None,
+            "ETH": eth_raw if interval_ok else None,
+            "RANK_3_25": raw_returns["RANK_3_25"] if interval_ok else None,
+            "RANK_26_50": raw_returns["RANK_26_50"] if interval_ok else None,
+            "RANK_51_100": raw_returns["RANK_51_100"] if interval_ok else None,
             "MICROCAPS": None,
+            "raw_point_to_point_returns": raw_returns,
             "bucket_diagnostics": buckets,
         }
         output_rows.append(row)
@@ -192,8 +261,11 @@ def build_rows(snapshot_root: Path) -> tuple[list[dict[str, Any]], list[dict[str
             "date": row["date"],
             "prior_snapshot": prior_path.as_posix(),
             "current_snapshot": current_path.as_posix(),
+            "current_raw_price_fallback_path": current_path.with_name("raw_source_payload.json").as_posix(),
             "prior_retrieval_timestamp": prior_ts.isoformat().replace("+00:00", "Z"),
             "current_retrieval_timestamp": current_ts.isoformat().replace("+00:00", "Z"),
+            "interval_hours": row["interval_hours"],
+            "daily_interval_eligible": interval_ok,
             "prior_membership_hash": ((prior.get("universe") or {}).get("membership_hash")),
             "current_membership_hash": ((current.get("universe") or {}).get("membership_hash")),
         })
@@ -202,7 +274,10 @@ def build_rows(snapshot_root: Path) -> tuple[list[dict[str, Any]], list[dict[str
 
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fields = ["date", "BTC", "ETH", "RANK_3_25", "RANK_26_50", "RANK_51_100", "MICROCAPS"]
+    fields = [
+        "date", "prior_date", "interval_hours", "daily_interval_eligible",
+        "BTC", "ETH", "RANK_3_25", "RANK_26_50", "RANK_51_100", "MICROCAPS",
+    ]
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
@@ -218,17 +293,38 @@ def build_report(snapshot_root: Path, csv_path: Path, generated_at_utc: str | No
         else datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     )
     write_csv(csv_path, rows)
+    eligible_rows = sum(1 for row in rows if row["daily_interval_eligible"])
+    complete_bucket_rows = sum(
+        1
+        for row in rows
+        if row["daily_interval_eligible"]
+        and all(
+            row["bucket_diagnostics"][bucket]["complete_price_coverage"]
+            for bucket in RANK_BUCKETS
+        )
+    )
     return {
         "contract": CONTRACT,
         "status": "RESEARCH_ONLY_NOT_DEL_OWNER",
         "generated_at_utc": generated,
         "source_contract": SOURCE_CONTRACT,
-        "return_method": "PRIOR_SNAPSHOT_FROZEN_RANK_COHORT_EQUAL_WEIGHT_PRICE_RETURN",
+        "return_method": "PRIOR_SNAPSHOT_FROZEN_RANK_COHORT_EQUAL_WEIGHT_PRICE_RETURN_WITH_FULL_MEMBERSHIP_PRICE_COVERAGE",
         "point_in_time": True,
         "lookahead_membership": False,
+        "survivor_only_bucket_average_allowed": False,
+        "raw_top150_dropout_price_fallback": True,
         "forward_fill": False,
         "interpolation": False,
         "row_count": len(rows),
+        "eligible_daily_interval_row_count": eligible_rows,
+        "complete_bucket_daily_row_count": complete_bucket_rows,
+        "daily_interval_policy": {
+            "target_hours": DAILY_INTERVAL_TARGET_HOURS,
+            "minimum_hours": DAILY_INTERVAL_MIN_HOURS,
+            "maximum_hours": DAILY_INTERVAL_MAX_HOURS,
+            "basis": "SCALED_FROM_EXISTING_4H_3_5_TO_4_5_HOUR_SETTLED_INTERVAL_CONVENTION",
+            "irregular_rows_retained_for_LINEAGE_but_returns_excluded_from_daily_series": True,
+        },
         "csv_path": csv_path.as_posix(),
         "rows": rows,
         "lineage": lineage,
@@ -273,6 +369,8 @@ def main() -> None:
     print(json.dumps({
         "status": report["status"],
         "row_count": report["row_count"],
+        "eligible_daily_interval_row_count": report["eligible_daily_interval_row_count"],
+        "complete_bucket_daily_row_count": report["complete_bucket_daily_row_count"],
         "satisfies_del": report["del_activation"]["satisfies_required_owner_contract"],
     }, sort_keys=True))
 
