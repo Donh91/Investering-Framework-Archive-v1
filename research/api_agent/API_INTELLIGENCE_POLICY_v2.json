@@ -1,14 +1,15 @@
 {
   "contract": "API_INTELLIGENCE_POLICY_v2",
   "status": "ACTIVE_SHADOW_ONLY",
-  "monthly_hard_stop_usd": 20.0,
-  "global_reserve_usd": 2.0,
+  "monthly_hard_stop_usd": 40,
+  "global_reserve_usd": 4,
   "lane_caps_usd": {
-    "DAILY_DIRECTOR_SHADOW": 4.0,
-    "DAILY_CONFLICT_REVIEW": 3.0,
+    "DAILY_DIRECTOR_SHADOW": 4,
+    "DAILY_CONFLICT_REVIEW": 3,
     "WEEKLY_CALIBRATION_SHADOW": 2.5,
-    "WEEKLY_ADVERSARIAL_REVIEW": 2.5,
-    "RESEARCH_AUTOMATION": 6.0
+    "WEEKLY_ADVERSARIAL_REVIEW": 4,
+    "RESEARCH_AUTOMATION": 10,
+    "SENIOR_REPAIR_AUDIT": 10
   },
   "director_schedule": {
     "maximum_runs_per_day": 4,
@@ -40,5 +41,22 @@
     "weight_change": false,
     "portfolio_action": false,
     "canonical_promotion": false
+  },
+  "senior_repair_audit": {
+    "enabled": true,
+    "task": "SENIOR_REPAIR_AUDIT",
+    "invocation_mode": "EVENT_DRIVEN_OWNER_GATED_ONLY",
+    "maximum_runs_per_week": 4,
+    "periodic_schedule": false,
+    "requires_existing_owner": true,
+    "allowed_triggers": [
+      "DIFFICULT_OR_ARCHITECTURE_REPAIR",
+      "POST_MERGE_HIGH_CONSEQUENCE_AUDIT",
+      "ROOT_CAUSE_OR_FALSIFICATION_REQUIRED",
+      "LOWER_TIER_ATTEMPT_FAILED_OR_CIRCLED"
+    ],
+    "canonical_market_state": false,
+    "automatic_code_write": false,
+    "automatic_merge": false
   }
 }
