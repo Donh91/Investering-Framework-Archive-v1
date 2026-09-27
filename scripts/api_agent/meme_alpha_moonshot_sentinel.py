@@ -354,7 +354,7 @@ def extract_output_text(response: dict[str, Any]) -> str:
     return "".join(parts)
 
 
-def assess(candidate: dict[str, Any], research: dict[str, Any], *, model: str = "gpt-5.6-luna", dry_run: bool = False) -> dict[str, Any]:
+def assess(candidate: dict[str, Any], research: dict[str, Any], *, model: str = "gpt-6-luna", dry_run: bool = False) -> dict[str, Any]:
     if dry_run:
         return {
             "archetype": "UNCLASSIFIED",
@@ -506,7 +506,7 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     p_scan = sub.add_parser("scan-gecko"); p_scan.add_argument("--network", default="eth"); p_scan.add_argument("--pages", type=int, default=2); p_scan.add_argument("--output", type=Path, required=True)
     p_triage = sub.add_parser("triage"); p_triage.add_argument("--events", type=Path, required=True); p_triage.add_argument("--config", type=Path, required=True); p_triage.add_argument("--output", type=Path, required=True)
-    p_assess = sub.add_parser("assess"); p_assess.add_argument("--candidate", type=Path, required=True); p_assess.add_argument("--research", type=Path, required=True); p_assess.add_argument("--output", type=Path, required=True); p_assess.add_argument("--model", default="gpt-5.6-luna"); p_assess.add_argument("--dry-run", action="store_true")
+    p_assess = sub.add_parser("assess"); p_assess.add_argument("--candidate", type=Path, required=True); p_assess.add_argument("--research", type=Path, required=True); p_assess.add_argument("--output", type=Path, required=True); p_assess.add_argument("--model", default="gpt-6-luna"); p_assess.add_argument("--dry-run", action="store_true")
     p_alert = sub.add_parser("alert"); p_alert.add_argument("--triage", type=Path, required=True); p_alert.add_argument("--assessment", type=Path, required=True); p_alert.add_argument("--config", type=Path, required=True); p_alert.add_argument("--alerts-last-24h", type=int, default=0); p_alert.add_argument("--output", type=Path, required=True)
     p_prop = sub.add_parser("propose-challenger"); p_prop.add_argument("--champion", type=Path, required=True); p_prop.add_argument("--error-ledger", type=Path, required=True); p_prop.add_argument("--output", type=Path, required=True)
     p_promote = sub.add_parser("promotion-decision"); p_promote.add_argument("--champion", type=Path, required=True); p_promote.add_argument("--challenger", type=Path, required=True); p_promote.add_argument("--evaluation", type=Path, required=True); p_promote.add_argument("--contract", type=Path, required=True); p_promote.add_argument("--output", type=Path, required=True)
