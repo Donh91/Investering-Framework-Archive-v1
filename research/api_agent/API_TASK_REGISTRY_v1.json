@@ -1,8 +1,8 @@
 {
   "contract": "API_TASK_REGISTRY_v1",
   "status": "ACTIVE_SHADOW_ONLY",
-  "monthly_hard_stop_usd": 20,
-  "single_run_hard_stop_usd": 1.5,
+  "monthly_hard_stop_usd": 40,
+  "single_run_hard_stop_usd": 3,
   "default_store": false,
   "tasks": {
     "DAILY_DIRECTOR_SHADOW": {
@@ -76,6 +76,18 @@
       "manual_only": true,
       "outcome_access": false,
       "allowed_write_prefix": "research/api_agent/outputs/research/"
+    },
+    "SENIOR_REPAIR_AUDIT": {
+      "model": "gpt-6-sol",
+      "reasoning_effort": "high",
+      "max_output_tokens": 5000,
+      "manual_only": false,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/senior_repair_audit/",
+      "invocation_mode": "EVENT_DRIVEN_OWNER_GATED_ONLY",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false
     }
   },
   "authority": {
