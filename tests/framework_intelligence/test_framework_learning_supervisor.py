@@ -83,6 +83,20 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertEqual(item['state'], 'DELEGATE_DETERMINISTIC')
         self.assertEqual(item['specialist'], 'RANGE_LAB_ANALYST')
 
+    def test_method_audit_proposes_gpt6_sol_senior_lane(self):
+        queue = mod.build_queue([], [], [{
+            'method': 'MASTER_MONDAY_INFORMATION_BINDING',
+            'status': 'METHOD_AUDIT_DUE',
+            'trigger': 'high-value binding defect',
+            'automatic_change_allowed': False,
+        }])
+        self.assertEqual(len(queue), 1)
+        item = queue[0]
+        self.assertEqual(item['state'], 'REQUEST_METHOD_AUDIT')
+        self.assertEqual(item['compute_tier'], 'GPT6_SOL_SENIOR_IF_DETERMINISTIC_REVIEW_INSUFFICIENT')
+        self.assertEqual(item['api_task'], 'SENIOR_REPAIR_AUDIT')
+        self.assertEqual(item['authority'], 'PROPOSAL_ONLY')
+
     def test_delta_support_is_learning_not_proof(self):
         old = {'family_status': 'WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE', 'matured_outcome_count': 1}
         new = {'family_status': 'SUPPORTED_NEEDS_INCREMENTAL_VALUE', 'matured_outcome_count': 3}
