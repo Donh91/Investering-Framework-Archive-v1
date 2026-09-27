@@ -92,7 +92,7 @@ class ApiIntelligenceV2Tests(unittest.TestCase):
         registry = json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
         self.assertEqual(policy['monthly_hard_stop_usd'], 20.0)
         self.assertTrue(all(value is False for value in policy['authority'].values()))
-        self.assertEqual(registry['tasks']['WEEKLY_ADVERSARIAL_REVIEW']['model'], 'gpt-5.6-sol')
+        self.assertEqual(registry['tasks']['WEEKLY_ADVERSARIAL_REVIEW']['model'], 'gpt-6-sol')
         self.assertFalse(registry['tasks']['WEEKLY_ADVERSARIAL_REVIEW']['manual_only'])
         self.assertFalse(registry['authority']['portfolio_action'])
         self.assertFalse(registry['authority']['framework_state_change'])
