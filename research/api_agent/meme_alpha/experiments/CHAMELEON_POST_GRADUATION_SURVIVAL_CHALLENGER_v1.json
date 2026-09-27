@@ -1,0 +1,173 @@
+{
+  "id": "CHAMELEON_POST_GRADUATION_SURVIVAL_CHALLENGER_v1",
+  "date_utc": "2026-09-27",
+  "owner_issue": 1087,
+  "authority": "SHADOW_RESEARCH_ONLY",
+  "status": "ACTIVE_PROSPECTIVE_CHALLENGER",
+  "source_benchmark": {
+    "name": "Chameleon Scope",
+    "site": "https://chameleonscope.com",
+    "verified_public_claims": [
+      "live launch monitoring for Pump.fun and Pons",
+      "integrity filters include dev share, bundles, snipers, insiders, honeypots, wash trading, mint rights and freeze rights",
+      "no curve call; post-graduation call approximately 20 minutes after bonding if the token remains above its graduation cap, has real money flow and passes checks",
+      "known/KOL/top-wallet overlays with approximately 30-day historical records",
+      "2x/5x/10x milestone tracking and rug warnings"
+    ],
+    "not_accepted_as_truth": [
+      "opaque STRONG/WATCH/CAUTION labels",
+      "fixed 20-minute threshold",
+      "raw GMGN smart-wallet labels",
+      "single winner screenshots",
+      "unverified call-performance claims"
+    ]
+  },
+  "purpose": "Test whether a post-graduation survival stage improves Robinhood/Pons moonshot precision and executable asymmetry without importing Chameleon thresholds or creating a parallel scanner.",
+  "baseline": "existing Meme Alpha G0/G1 integrity -> G2 capital-path/microstructure -> conditional G3 wallet/caller confirmation",
+  "unit_of_observation": "natural prospective Pons V2 graduation",
+  "cohort_policy": {
+    "consecutive_eligible_events": true,
+    "no_hand_picked_tokens": true,
+    "include_failures": true,
+    "include_rugs": true,
+    "manual_user_submissions_may_be_audited_but_receive_zero_prospective_credit": true,
+    "historical_cases_are_regression_only": true
+  },
+  "checkpoints_minutes_after_graduation": [0, 5, 10, 20, 30],
+  "frozen_features_at_each_checkpoint": [
+    "price_vs_graduation_price",
+    "market_cap",
+    "liquidity_usd",
+    "liquidity_survival_ratio",
+    "unique_buyers",
+    "unique_sellers",
+    "independent_economic_buyer_count",
+    "buy_volume_usd",
+    "sell_volume_usd",
+    "net_buy_volume_usd",
+    "buy_sell_count_ratio",
+    "top1_buyer_share",
+    "top3_buyer_share",
+    "top10_holder_share",
+    "dev_balance_delta",
+    "deployer_sell_fraction",
+    "sniper_or_exemption_cluster_share",
+    "bundle_cluster_share",
+    "repeat_buyer_rate",
+    "dust_buy_rate",
+    "wallet_cycling_flag",
+    "wash_or_self_flow_flag",
+    "first_distribution_survival",
+    "independent_wallet_reentry_count",
+    "known_caller_quality_at_signal_time",
+    "qualified_wallet_count_at_signal_time",
+    "project_ca_binding_state",
+    "product_or_catalyst_signal_state",
+    "sellability_state",
+    "detector_latency_seconds",
+    "qualification_latency_seconds"
+  ],
+  "hard_integrity_gate": {
+    "must_pass_before_economic_promotion": true,
+    "fail_closed_fields": [
+      "sellability",
+      "exact_token_identity",
+      "project_ca_identity_when_project_thesis_is_used",
+      "mint_or_transfer_control_risk",
+      "liquidity_exit_feasibility",
+      "obvious_honeypot_or_transfer_block",
+      "known_manipulation_cluster_evidence"
+    ],
+    "missing_evidence_state": "UNKNOWN_NOT_CLEAN"
+  },
+  "real_money_gate": {
+    "purpose": "Replace raw volume with economically independent demand.",
+    "do_not_use_raw_volume_as_standalone_signal": true,
+    "candidate_components": [
+      "entity-adjusted unique buyers",
+      "new external capital",
+      "net buy flow after linked-wallet removal",
+      "liquidity retained after first distribution",
+      "repeat organic buyers",
+      "wallet-to-public-propagation lead",
+      "buying that survives dev/insider selling"
+    ]
+  },
+  "caller_snapshot": {
+    "freeze_at_signal_time": true,
+    "no_retroactive_rescore": true,
+    "fields": [
+      "prior_calls_n",
+      "prior_resolved_calls_n",
+      "prior_2x_rate",
+      "prior_5x_rate",
+      "prior_rug_rate",
+      "median_prior_mfe",
+      "median_prior_mae",
+      "realized_pnl_if_reconstructable",
+      "median_entry_latency",
+      "economic_entity_id"
+    ],
+    "seeded_dust_service_flows_do_not_count": true
+  },
+  "outcomes": {
+    "primary": [
+      "executable_return_30m",
+      "executable_return_2h",
+      "mfe_30m",
+      "mae_30m",
+      "mfe_2h",
+      "mae_2h",
+      "rug_or_liquidity_failure",
+      "time_to_first_2x"
+    ],
+    "secondary_ui_milestones": ["2x", "5x", "10x"],
+    "slippage_and_capacity_required": true,
+    "ath_only_success_forbidden": true
+  },
+  "latency_tuple": [
+    "T_launch",
+    "T_graduation",
+    "T_detect",
+    "T_integrity_pass",
+    "T_economic_qualify",
+    "T_alert_shadow",
+    "T_first_executable"
+  ],
+  "evaluation": {
+    "compare_each_checkpoint_against_baseline": true,
+    "metrics": [
+      "precision_for_2x",
+      "false_positive_rate",
+      "rug_rate",
+      "median_executable_return",
+      "median_mfe",
+      "median_mae",
+      "coverage",
+      "missed_winner_rate",
+      "latency_cost_vs_earlier_checkpoint"
+    ],
+    "minimum_before_any_promotion_review": {
+      "consecutive_graduations": 100,
+      "resolved_positive_outcomes": 20
+    },
+    "promotion_requires_prospective_evidence": true,
+    "no_threshold_change_from_historical_fit_alone": true
+  },
+  "acceptance_logic": {
+    "keep_challenger_if": "one or more survival checkpoints materially reduce rugs/false positives while preserving useful coverage and improving executable return after latency",
+    "kill_challenger_if": "delay mainly destroys entry quality without measurable risk-adjusted precision gain",
+    "do_not_assume_20m_is_optimal": true
+  },
+  "integration_rules": {
+    "no_new_scanner": true,
+    "no_new_scheduler": true,
+    "no_new_canonical_wallet_score": true,
+    "reuse_existing_pons_v2_adapter": true,
+    "reuse_existing_moonshot_sentinel": true,
+    "reuse_existing_prospective_ledger": true,
+    "reuse_existing_project_ca_and_source_auth": true,
+    "user_alert_authority": false,
+    "automatic_trading_authority": false
+  }
+}
