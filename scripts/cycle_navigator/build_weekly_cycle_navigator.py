@@ -460,7 +460,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", type=Path, default=Path("."))
     ap.add_argument("--master-monday-pointer", type=Path, required=True)
-    ap.add_argument("--model", default="gpt-5.6-sol")
+    ap.add_argument("--model", default="gpt-6-sol")
     ap.add_argument("--max-output-tokens", type=int, default=12000)
     args = ap.parse_args()
     repo = args.repo_root.resolve()

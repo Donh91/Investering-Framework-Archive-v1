@@ -45,7 +45,7 @@ jobs:
               assert p[key] is False
           tasks=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())['tasks']
           for name in ('MONTHLY_LEARNING_ANALYST','MONTHLY_LEARNING_ADVERSARIAL'):
-              assert tasks[name]['model']=='gpt-5.6-sol'
+              assert tasks[name]['model']=='gpt-6-sol'
               assert tasks[name]['reasoning_effort']=='high'
               assert tasks[name]['outcome_access'] is True
               assert tasks[name]['allowed_write_prefix']=='research/api_agent/outputs/monthly_learning_council/'

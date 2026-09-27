@@ -12,9 +12,9 @@ from pathlib import Path
 from typing import Any
 
 OPENAI_URL = "https://api.openai.com/v1/responses"
-MODEL = "gpt-5.6-luna"
-OPENAI_INPUT_PER_MILLION = 1.0
-OPENAI_OUTPUT_PER_MILLION = 6.0
+MODEL = "gpt-6-luna"
+OPENAI_INPUT_PER_MILLION = 0.1
+OPENAI_OUTPUT_PER_MILLION = 0.5
 MAX_OPENAI_COST_USD = 0.25
 
 
