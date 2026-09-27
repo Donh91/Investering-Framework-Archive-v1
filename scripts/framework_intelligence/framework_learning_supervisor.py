@@ -113,7 +113,7 @@ def build_queue(families, unconsumed, staleness):
         queue.append({"priority": 1 if item["severity"] == "HIGH" else 3, "state": "DELEGATE_DETERMINISTIC", "specialist": "INFORMATION_UTILIZATION_ANALYST", "compute_tier": "DETERMINISTIC_FIRST", "semantic_identity": None, "reason": item["reason"], "source": item["source"]})
     for item in staleness:
         if item["status"] == "METHOD_AUDIT_DUE":
-            queue.append({"priority": 1, "state": "REQUEST_METHOD_AUDIT", "specialist": "METHODOLOGY_AUDITOR", "compute_tier": "SOL_OR_TERRA_IF_DETERMINISTIC_REVIEW_INSUFFICIENT", "semantic_identity": None, "reason": item["trigger"]})
+            queue.append({"priority": 1, "state": "REQUEST_METHOD_AUDIT", "specialist": "METHODOLOGY_AUDITOR", "compute_tier": "GPT6_SOL_SENIOR_IF_DETERMINISTIC_REVIEW_INSUFFICIENT", "api_task": "SENIOR_REPAIR_AUDIT", "authority": "PROPOSAL_ONLY", "semantic_identity": None, "reason": item["trigger"]})
     queue.sort(key=lambda x: (x["priority"], x["specialist"], x.get("semantic_identity") or ""))
     return queue[:25]
 
@@ -211,7 +211,7 @@ def main():
         "semantic_family_owner": "COMPOUNDING_LEARNING_CONTROLLER_STATE_v1", "family_count": len(memory_rows), "material_delta_count": len(deltas),
         "unconsumed_information_count": len(unconsumed), "method_audit_due_count": sum(1 for x in staleness if x["status"] == "METHOD_AUDIT_DUE"), "delegation_queue_count": len(queue),
         "next_best_existing_experiment": src["next_best"], "compounding_learning_backlog_reference": "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/LEARNING_BACKLOG.json",
-        "compute_policy": "DETERMINISTIC_FIRST_CHEAPEST_SUFFICIENT_ESCALATION", "canonical_effect": False, "portfolio_execution": False, "master_monday_live_influence": False,
+        "compute_policy": "DETERMINISTIC_FIRST_SOL_FOR_DIFFICULT_OR_ARCHITECTURE", "canonical_effect": False, "portfolio_execution": False, "master_monday_live_influence": False,
     }
     docs = {
         "LATEST_LEARNING_MEMORY.json": memory,
