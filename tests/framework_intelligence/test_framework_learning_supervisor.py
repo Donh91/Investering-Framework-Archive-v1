@@ -113,7 +113,13 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertIn('--hard-stop-usd 40', text)
         self.assertIn('--reserve-usd 4.0', text)
         self.assertIn('comment-${COMMENT_ID}', text)
+        self.assertIn('if [ -f "$dest/SENIOR_REPAIR_AUDIT.json" ]', text)
+        self.assertIn("if: always() && steps.dedupe.outputs.run_audit == 'true'", text)
+        self.assertIn('attempts/comment-${COMMENT_ID}/run-${GITHUB_RUN_ID}', text)
         self.assertIn('senior_repair_audit_dispatch.py validate', text)
+        self.assertIn('senior_repair_audit_dispatch.py completion', text)
+        self.assertIn('receipt_pointer.json', text)
+        self.assertIn('--receipt-path "$receipt_path"', text)
         self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", text)
         self.assertNotIn("if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'", text)
 
