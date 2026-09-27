@@ -26,6 +26,8 @@ on:
     - cron: '35 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+  issue_comment:
+    types: [created]
 
 concurrency:
   group: framework-main-writer
@@ -46,6 +48,7 @@ jobs:
       - name: Compile learning stack
         run: |
           python -m py_compile \
+            scripts/api_agent/senior_repair_audit_dispatch.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
@@ -115,8 +118,147 @@ jobs:
           assert audit['authority']['canonical_effect'] is False
           PY
 
+  senior-repair-audit:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1156 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[SENIOR_REPAIR_AUDIT]')
+    permissions:
+      contents: write
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate bounded senior audit machinery
+        run: |
+          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py scripts/api_agent/senior_repair_audit_dispatch.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          policy=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
+          task=registry['tasks']['SENIOR_REPAIR_AUDIT']
+          assert task['model']=='gpt-6-sol'
+          assert task['reasoning_effort']=='high'
+          assert task['invocation_mode']=='EVENT_DRIVEN_OWNER_GATED_ONLY'
+          assert task['advisory_only'] is True
+          assert task['automatic_code_write'] is False
+          assert task['automatic_merge'] is False
+          assert registry['single_run_hard_stop_usd']==3.0
+          assert policy['monthly_hard_stop_usd']==40.0
+          assert policy['lane_caps_usd']['SENIOR_REPAIR_AUDIT']==10.0
+          assert policy['senior_repair_audit']['periodic_schedule'] is False
+          PY
+      - name: Deduplicate exact issue-comment trigger
+        id: dedupe
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          dest="research/api_agent/outputs/senior_repair_audit/issue-1156/comment-${COMMENT_ID}"
+          if [ -f "$dest/receipt.json" ]; then
+            echo "run_audit=false" >> "$GITHUB_OUTPUT"
+            echo "dest=$dest" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_audit=true" >> "$GITHUB_OUTPUT"
+            echo "dest=$dest" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Enforce senior lane and global API budgets
+        if: steps.dedupe.outputs.run_audit == 'true'
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task SENIOR_REPAIR_AUDIT \
+            --cap-usd 10.0 \
+            --reserve-usd 0.50
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 40 \
+            --reserve-usd 4.0
+      - name: Build bounded fresh-main audit packet
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          rm -rf runtime/senior-repair-audit
+          python scripts/api_agent/senior_repair_audit_dispatch.py build \
+            --repo-root . \
+            --output-dir runtime/senior-repair-audit \
+            --issue-number "$ISSUE_NUMBER" \
+            --comment-id "$COMMENT_ID"
+      - name: Run one GPT-6 Sol senior audit
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task SENIOR_REPAIR_AUDIT \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/senior-repair-audit/prompt.txt \
+            --context-file runtime/senior-repair-audit/context.json \
+            --output-dir runtime/senior-repair-audit/output \
+            --intended-write-prefix research/api_agent/outputs/senior_repair_audit/
+      - name: Validate senior audit receipt and output
+        if: steps.dedupe.outputs.run_audit == 'true'
+        run: python scripts/api_agent/senior_repair_audit_dispatch.py validate --output-dir runtime/senior-repair-audit
+      - name: Persist immutable senior audit evidence
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          set -euo pipefail
+          dest="research/api_agent/outputs/senior_repair_audit/issue-1156/comment-${COMMENT_ID}"
+          mkdir -p "$dest"
+          cp runtime/senior-repair-audit/output/output.json "$dest/SENIOR_REPAIR_AUDIT.json"
+          cp runtime/senior-repair-audit/output/receipt.json "$dest/receipt.json"
+          cp runtime/senior-repair-audit/context_manifest.json "$dest/context_manifest.json"
+          git config user.name 'framework-learning-supervisor[bot]'
+          git config user.email 'framework-learning-supervisor@users.noreply.github.com'
+          git add "$dest"
+          git commit -m "audit: GPT-6 Sol senior repair review issue-1156 comment-${COMMENT_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          for rel in SENIOR_REPAIR_AUDIT.json receipt.json context_manifest.json; do
+            git show "origin/main:$dest/$rel" > "/tmp/$rel"
+            cmp -s "$dest/$rel" "/tmp/$rel" || { echo "senior_audit_main_readback_mismatch:$rel"; exit 1; }
+          done
+      - name: Report senior audit result to reliability owner
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          path="research/api_agent/outputs/senior_repair_audit/issue-1156/comment-${COMMENT_ID}"
+          python scripts/api_agent/senior_repair_audit_dispatch.py report \
+            --output-dir runtime/senior-repair-audit \
+            --comment-id "$COMMENT_ID" \
+            --persisted-path "$path" \
+            --output runtime/senior-repair-audit/report.md
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body-file runtime/senior-repair-audit/report.md
+      - name: Report duplicate trigger as NOOP
+        if: steps.dedupe.outputs.run_audit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "SENIOR_REPAIR_AUDIT duplicate trigger $COMMENT_ID: NOOP, immutable receipt already exists."
   operate:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     permissions:
       contents: write
       issues: write
