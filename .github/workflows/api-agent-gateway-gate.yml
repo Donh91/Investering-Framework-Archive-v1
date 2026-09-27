@@ -89,6 +89,31 @@ jobs:
             --output-dir api-agent-output \
             --intended-write-prefix research/api_agent/outputs/daily/ \
             --dry-run
+      - name: Dry-run GPT-6 Sol senior repair audit lane
+        if: github.event_name == 'pull_request' || inputs.mode == 'dry-run'
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task SENIOR_REPAIR_AUDIT \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file api-agent-input/prompt.txt \
+            --context-file api-agent-input/context.json \
+            --output-dir senior-repair-audit-output \
+            --intended-write-prefix research/api_agent/outputs/senior_repair_audit/ \
+            --dry-run
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('senior-repair-audit-output/receipt.json').read_text())
+          assert r['model']=='gpt-6-sol'
+          assert r['reasoning_effort']=='high'
+          assert r['allowed_write_prefix']=='research/api_agent/outputs/senior_repair_audit/'
+          assert r['intended_write_prefix']==r['allowed_write_prefix']
+          assert r['authority']['framework_state_change'] is False
+          assert r['authority']['model_weight_change'] is False
+          assert r['authority']['portfolio_action'] is False
+          assert r['authority']['self_merge'] is False
+          PY
+
       - name: Controlled live smoke call
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live-smoke'
         env:
@@ -110,12 +135,12 @@ jobs:
           assert r['authority']['portfolio_action'] is False
           assert r['authority']['framework_state_change'] is False
           assert r['authority']['model_weight_change'] is False
-          assert r['estimated_cost_usd'] <= 1.5
+          assert r['estimated_cost_usd'] <= 3.0
           assert r['allowed_write_prefix']=='research/api_agent/outputs/daily/'
           assert r['intended_write_prefix']==r['allowed_write_prefix']
           assert r['untrusted_input_envelope'] is True
           p=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
-          assert p['monthly_hard_stop_usd']==20.0
+          assert p['monthly_hard_stop_usd']==40.0
           assert p['director_schedule']['maximum_runs_per_day']==4
           assert all(v is False for v in p['authority'].values())
           print('API_AGENT_GATEWAY_PASS')

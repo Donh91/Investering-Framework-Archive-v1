@@ -61,8 +61,8 @@ jobs:
             --reserve-usd 0.15
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
-            --hard-stop-usd 20 \
-            --reserve-usd 2.0
+            --hard-stop-usd 40 \
+            --reserve-usd 4.0
 
       - name: Run primary Sol learning analyst
         id: analyst
@@ -97,7 +97,7 @@ jobs:
             --reserve-usd 0.15
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
-            --hard-stop-usd 20 \
+            --hard-stop-usd 40 \
             --reserve-usd 1.0
 
       - name: Run independent Sol adversarial scientist

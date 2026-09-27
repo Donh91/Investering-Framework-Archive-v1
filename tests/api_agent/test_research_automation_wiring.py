@@ -95,9 +95,10 @@ def test_workflow_uses_single_writer_lock_budget_guard_and_one_lane_selector():
     assert "cancel-in-progress: false" in text
     assert "research_execution_coordinator.py" in text
     assert "check_monthly_cost_guard.py" in text
-    assert "--hard-stop-usd 20" in text
+    assert "--hard-stop-usd 40" in text
+    assert "--cap-usd 10.0" in text
     assert "--reserve-usd 0.25" in text
-    assert "--reserve-usd 2.0" in text
+    assert "--reserve-usd 4.0" in text
     assert "run_deep_research_task.py" in text
     assert "mcp_provider_automation.py" in text
     assert "pull_request:" not in text

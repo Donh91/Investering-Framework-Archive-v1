@@ -14,8 +14,8 @@
     "shared_external_or_ai_heavy_slot_required": true,
     "max_openai_attempts_per_stage": 2,
     "single_executor_cost_ceiling_usd": 0.75,
-    "repository_single_run_hard_stop_usd_unchanged": 1.5,
-    "repository_monthly_hard_stop_usd_unchanged": 20.0,
+    "repository_single_run_hard_stop_usd_unchanged": 3,
+    "repository_monthly_hard_stop_usd_unchanged": 40,
     "store": false,
     "automatic_subscription_or_payment": false,
     "automatic_framework_integration": false,
@@ -31,7 +31,10 @@
     "Binance": "research/api_agent/mcp/BINANCE_AGENT_NATIVE_RESEARCH_v1.json"
   },
   "transport_normalization": {
-    "accepted_fields": ["server_url", "endpoint"],
+    "accepted_fields": [
+      "server_url",
+      "endpoint"
+    ],
     "if_both_present": "MUST_MATCH_EXACTLY",
     "scheme_required": "https",
     "runtime_normalization_only": true,

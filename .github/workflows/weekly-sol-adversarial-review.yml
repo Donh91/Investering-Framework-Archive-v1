@@ -90,12 +90,12 @@ jobs:
           python scripts/api_agent/check_api_lane_budget.py \
             --receipt-root research/api_agent/outputs \
             --task WEEKLY_ADVERSARIAL_REVIEW \
-            --cap-usd 2.5 \
+            --cap-usd 4.0 \
             --reserve-usd 0.20
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
-            --hard-stop-usd 20 \
-            --reserve-usd 2.0
+            --hard-stop-usd 40 \
+            --reserve-usd 4.0
 
       - name: Run Sol adversarial review
         if: steps.context.outputs.run_review == 'true'
