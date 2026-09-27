@@ -378,7 +378,10 @@ def _select_api_model(
         candidates.append((cost, int(cfg["rank"]), model_id, cfg))
     if not candidates:
         return None
-    cost, _, model_id, cfg = sorted(candidates, key=lambda x: (x[0], x[1], x[2]))[0]
+    # Preserve capability tiers first: choose the lowest sufficient rank, then
+    # minimize expected cost within that tier. A cheaper senior model must not
+    # erase an intentionally intermediate role such as Terra synthesis.
+    cost, _, model_id, cfg = sorted(candidates, key=lambda x: (x[1], x[0], x[2]))[0]
     return {
         "executor": policy["execution"]["api_executor_name"],
         "model": model_id,
