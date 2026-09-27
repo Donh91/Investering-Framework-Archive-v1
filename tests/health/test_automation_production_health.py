@@ -235,6 +235,7 @@ def test_three_successes_close_recovery_amber_even_with_older_failures(tmp_path:
         "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T06:00:00Z"},
         "recent_failure_count": 3,
         "success_streak": module.RECOVERY_SUCCESS_STREAK_REQUIRED,
+        "expected_success_streak": module.RECOVERY_SUCCESS_STREAK_REQUIRED,
         "failure_streak": 0,
     }
     status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
@@ -249,9 +250,42 @@ def test_two_successes_still_report_recovery_amber(tmp_path: Path) -> None:
         "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T06:00:00Z"},
         "recent_failure_count": 2,
         "success_streak": module.RECOVERY_SUCCESS_STREAK_REQUIRED - 1,
+        "expected_success_streak": module.RECOVERY_SUCCESS_STREAK_REQUIRED - 1,
         "failure_streak": 0,
     }
     status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "RECOVERING_AFTER_RECENT_FAILURES" in findings
+
+def test_skipped_or_neutral_runs_do_not_clear_recovery_amber(tmp_path: Path) -> None:
+    row = healthy_writer(tmp_path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {"status": "completed", "conclusion": "skipped", "created_at": "2026-08-03T06:00:00Z"},
+        "recent_failure_count": 2,
+        "success_streak": 3,
+        "expected_success_streak": 0,
+        "failure_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "RECOVERING_AFTER_RECENT_FAILURES" in findings
+
+
+def test_manual_successes_do_not_clear_scheduled_recovery_amber(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 * * * *"], "2026-08-28T05:00:00Z", "UTC")
+    row["live"].update({
+        "latest_run": {
+            "event": "workflow_dispatch",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-08-28T09:00:00Z",
+        },
+        "recent_failure_count": 2,
+        "success_streak": 3,
+        "expected_success_streak": 0,
+    })
+    status, findings = module.classify(row, datetime(2026, 8, 28, 10, tzinfo=timezone.utc))
     assert status == "AMBER"
     assert "RECOVERING_AFTER_RECENT_FAILURES" in findings
 
@@ -623,7 +657,21 @@ def test_live_workflows_fetches_scheduled_history_separately_from_manual_runs(mo
                         "status": "completed",
                         "conclusion": "success",
                         "created_at": "2026-08-24T06:20:00Z",
-                    }
+                    },
+                    {
+                        "id": 9,
+                        "event": "schedule",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "created_at": "2026-08-17T06:20:00Z",
+                    },
+                    {
+                        "id": 8,
+                        "event": "schedule",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "created_at": "2026-08-10T06:20:00Z",
+                    },
                 ]
             }
         return {
@@ -642,6 +690,7 @@ def test_live_workflows_fetches_scheduled_history_separately_from_manual_runs(mo
     live = module.live_workflows("Donh91/test", "token", {"weekly.yml"})
     assert live["weekly.yml"]["latest_run"]["id"] == 11
     assert live["weekly.yml"]["latest_scheduled_run"]["id"] == 10
+    assert live["weekly.yml"]["expected_success_streak"] == 2
 
 
 def test_live_workflows_does_not_return_partial_registry_after_later_page_failure(monkeypatch) -> None:
