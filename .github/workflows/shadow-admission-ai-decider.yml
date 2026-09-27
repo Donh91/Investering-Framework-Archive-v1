@@ -69,7 +69,7 @@ jobs:
           python scripts/api_agent/check_monthly_cost_guard.py
           --receipt-root research/api_agent/outputs
           --pending-ledger-root runtime/api-cost-ledger
-          --hard-stop-usd 20
+          --hard-stop-usd 40
           --reserve-usd 1.0
       - name: Run authoritative Sol lifecycle decision
         env:
