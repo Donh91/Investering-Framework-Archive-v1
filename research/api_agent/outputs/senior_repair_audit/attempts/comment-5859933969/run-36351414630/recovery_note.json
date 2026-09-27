@@ -1,0 +1,24 @@
+{
+  "contract": "SENIOR_REPAIR_AUDIT_FAILED_ATTEMPT_RECOVERY_v1",
+  "status": "RECOVERED_COST_EVIDENCE_ONLY",
+  "source": "GITHUB_ACTIONS_JOB_LOG",
+  "workflow_run_id": 36351414630,
+  "job_id": 108710684145,
+  "issue_number": 1156,
+  "issue_comment_id": "5859933969",
+  "source_head_sha": "a630eac9b00015fec68d9a30b961e15bc07f3607",
+  "model": "gpt-6-sol",
+  "reasoning_effort": "high",
+  "input_tokens": 295916,
+  "output_tokens": 10000,
+  "estimated_cost_usd": 0.691832,
+  "accepted_audit_output": false,
+  "failure_class": "API_OUTPUT_INVALID_MAX_OUTPUT_TOKENS",
+  "canonical_audit_created": false,
+  "authority_change": false,
+  "notes": [
+    "Both bounded API attempts completed but returned status=incomplete with reason=max_output_tokens.",
+    "The deterministic validator rejected the result before canonical audit persistence.",
+    "This recovery object does not represent a second charge. The sibling API_AGENT_RECEIPT_v3 is the sole cost-bearing receipt for this run."
+  ]
+}
