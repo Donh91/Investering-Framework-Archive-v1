@@ -164,7 +164,7 @@ jobs:
           COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           dest="research/api_agent/outputs/senior_repair_audit/issue-1156/comment-${COMMENT_ID}"
-          if [ -f "$dest/receipt.json" ]; then
+          if [ -f "$dest/SENIOR_REPAIR_AUDIT.json" ]; then
             echo "run_audit=false" >> "$GITHUB_OUTPUT"
             echo "dest=$dest" >> "$GITHUB_OUTPUT"
           else
@@ -196,7 +196,9 @@ jobs:
             --issue-number "$ISSUE_NUMBER" \
             --comment-id "$COMMENT_ID"
       - name: Run one GPT-6 Sol senior audit
+        id: senior_api_call
         if: steps.dedupe.outputs.run_audit == 'true'
+        continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
@@ -207,6 +209,35 @@ jobs:
             --context-file runtime/senior-repair-audit/context.json \
             --output-dir runtime/senior-repair-audit/output \
             --intended-write-prefix research/api_agent/outputs/senior_repair_audit/
+      - name: Persist API attempt cost evidence
+        if: always() && steps.dedupe.outputs.run_audit == 'true'
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          set -euo pipefail
+          test -f runtime/senior-repair-audit/output/receipt.json
+          test -f runtime/senior-repair-audit/output/output.json
+          attempt="research/api_agent/outputs/senior_repair_audit/attempts/comment-${COMMENT_ID}/run-${GITHUB_RUN_ID}"
+          mkdir -p "$attempt"
+          cp runtime/senior-repair-audit/output/receipt.json "$attempt/receipt.json"
+          cp runtime/senior-repair-audit/output/output.json "$attempt/output.json"
+          cp runtime/senior-repair-audit/context_manifest.json "$attempt/context_manifest.json"
+          git config user.name 'framework-learning-supervisor[bot]'
+          git config user.email 'framework-learning-supervisor@users.noreply.github.com'
+          git add "$attempt"
+          git commit -m "audit: account GPT-6 Sol attempt issue-1156 comment-${COMMENT_ID} run-${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt_no in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt_no * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          for rel in receipt.json output.json context_manifest.json; do
+            git show "origin/main:$attempt/$rel" > "/tmp/attempt-$rel"
+            cmp -s "$attempt/$rel" "/tmp/attempt-$rel" || { echo "senior_audit_attempt_readback_mismatch:$rel"; exit 1; }
+          done
       - name: Validate senior audit receipt and output
         if: steps.dedupe.outputs.run_audit == 'true'
         run: python scripts/api_agent/senior_repair_audit_dispatch.py validate --output-dir runtime/senior-repair-audit
@@ -217,24 +248,28 @@ jobs:
         run: |
           set -euo pipefail
           dest="research/api_agent/outputs/senior_repair_audit/issue-1156/comment-${COMMENT_ID}"
+          receipt_path="research/api_agent/outputs/senior_repair_audit/attempts/comment-${COMMENT_ID}/run-${GITHUB_RUN_ID}/receipt.json"
           mkdir -p "$dest"
           cp runtime/senior-repair-audit/output/output.json "$dest/SENIOR_REPAIR_AUDIT.json"
-          cp runtime/senior-repair-audit/output/receipt.json "$dest/receipt.json"
           cp runtime/senior-repair-audit/context_manifest.json "$dest/context_manifest.json"
+          python scripts/api_agent/senior_repair_audit_dispatch.py completion \
+            --output-dir runtime/senior-repair-audit \
+            --receipt-path "$receipt_path" \
+            --output "$dest/receipt_pointer.json"
           git config user.name 'framework-learning-supervisor[bot]'
           git config user.email 'framework-learning-supervisor@users.noreply.github.com'
           git add "$dest"
           git commit -m "audit: GPT-6 Sol senior repair review issue-1156 comment-${COMMENT_ID}"
           pushed=false
-          for attempt in 1 2 3; do
+          for attempt_no in 1 2 3; do
             git rebase --abort 2>/dev/null || true
             if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
-            sleep $((attempt * 5))
+            sleep $((attempt_no * 5))
           done
           [ "$pushed" = true ]
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
-          for rel in SENIOR_REPAIR_AUDIT.json receipt.json context_manifest.json; do
+          for rel in SENIOR_REPAIR_AUDIT.json receipt_pointer.json context_manifest.json; do
             git show "origin/main:$dest/$rel" > "/tmp/$rel"
             cmp -s "$dest/$rel" "/tmp/$rel" || { echo "senior_audit_main_readback_mismatch:$rel"; exit 1; }
           done
@@ -245,10 +280,12 @@ jobs:
           COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           path="research/api_agent/outputs/senior_repair_audit/issue-1156/comment-${COMMENT_ID}"
+          receipt_path="research/api_agent/outputs/senior_repair_audit/attempts/comment-${COMMENT_ID}/run-${GITHUB_RUN_ID}/receipt.json"
           python scripts/api_agent/senior_repair_audit_dispatch.py report \
             --output-dir runtime/senior-repair-audit \
             --comment-id "$COMMENT_ID" \
             --persisted-path "$path" \
+            --receipt-path "$receipt_path" \
             --output runtime/senior-repair-audit/report.md
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body-file runtime/senior-repair-audit/report.md
       - name: Report duplicate trigger as NOOP
