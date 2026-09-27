@@ -1,0 +1,91 @@
+{
+  "registry": "ROBINHOOD_ADVERSARY_SEED_REGISTRY_20260927_v1",
+  "status": "EXTERNAL_RESEARCH_SEEDS_POINT_IN_TIME_ONLY",
+  "observed_at_utc": "2026-09-27T00:00:00Z",
+  "production_authority": "NONE",
+  "sources": [
+    "https://x.com/atarashi/status/2103913524757983682",
+    "https://x.com/outputlayer/status/2103923311310991726"
+  ],
+  "rules": [
+    "External address labels are research leads, not truth.",
+    "Protocol infrastructure addresses must never identify an operator by themselves.",
+    "Rotating-key labels are point-in-time and must expire/supersede.",
+    "No seed may create a BUY/SELL or positive-alpha signal."
+  ],
+  "entities": [
+    {
+      "external_label": "ATARASHI_SET",
+      "addresses": [
+        "0x44c0ba0b734d4b7705fcd07ddae9fbbc078d74dd",
+        "0x38b3f8125bbbd45b56d0c3a535b90181d7dd3880",
+        "0x2a23c6d2522f07d230abf9c7a96d703520fd222b",
+        "0x18e0efe5be1cbb4e060c26f7f16f276be4dbc38c",
+        "0x9d61ad5c82586ae118af38e1cc68c8d1ad50771a"
+      ],
+      "state": "EXTERNAL_LEAD",
+      "claim": "subset reported as persistent Robinhood sandwich bots with Relay victims over a six-day search window",
+      "expiry_semantics": "POINT_IN_TIME_ONLY"
+    },
+    {
+      "external_label": "OUTPUTLAYER_OPERATOR_1",
+      "receiving_contract": "0x68a04a63fd1d8eabf167ef48ed0a0ef06c2374d9",
+      "keys": [
+        "0x44c0ba0b734d4b7705fcd07ddae9fbbc078d74dd",
+        "0xb49deec1a52eea46f3a6a158f8f9b155809b8c44",
+        "0xd75991e647560e9ea6344b847d4102d34253cd65"
+      ],
+      "state": "PARTIALLY_REPRODUCED",
+      "reproduced_edge": "Blockscout confirms 0x44c0... created receiving contract 0x68a0... on Robinhood Chain.",
+      "sandwich_behavior_state": "NOT_INDEPENDENTLY_REPRODUCED"
+    },
+    {
+      "external_label": "OUTPUTLAYER_OPERATOR_2",
+      "infrastructure_router": "0x8876789976decbfcbbbe364623c63652db8c0904",
+      "selector": "0x3593564c",
+      "state": "EXTERNAL_LEAD",
+      "infrastructure_note": "Official Uniswap deployment identifies this address as Robinhood Chain Universal Router. Router use is not operator identity.",
+      "claimed_key_rotation_hours": "12-20",
+      "first_wave_keys": [
+        "0x05c35a31429c9af3a53c727ec0c263bee273f641",
+        "0x0dd93d4c0a1f3f7dfbbb3501cbc542444bcbfa0e",
+        "0x269de4bc8b193636401257eb294b99362228a3dd",
+        "0x2738200a633e851e25375f888d6a2a8b1c909184",
+        "0x38b3f8125bbbd45b56d0c3a535b90181d7dd3880",
+        "0x46d237dc20ea4d95566f5312fbd071dbeadbc117",
+        "0x609b257871ab812650a5ad0bf73a8bff6bb8ed8c",
+        "0x8223750b85675fd7d31a44d79e8033e056abdf00",
+        "0x8d2d10f2aae3da0c817c8c13dbde9ded11fcbe66",
+        "0x9595a35d2e3c907ad04e7a92c58b5f33a615db69",
+        "0x9605b91fe63048c7b38c81edba78ee3c66f9612b",
+        "0xd0fc78660c49dc9a632e0fcb1687eae8003b1430",
+        "0xdfb2d348990f95a03a7480b0b6cc8752866d8362",
+        "0xf631dc1b02fc1756cf175972a72902794fdd5188",
+        "0xe1217bdfd9b972f5d133a3c9b28bcc7a12e86afb",
+        "0x93d8bf821734879768061303f9360bff0eb25d29",
+        "0x45e39771e075a7266892c70c7facc92c9fac7fbd"
+      ],
+      "second_wave_keys": [
+        "0x9d61ad5c82586ae118af38e1cc68c8d1ad50771a",
+        "0x93a27eaa9c9a2ab5da9411c98e494098894dcb0e",
+        "0x2a23c6d2522f07d230abf9c7a96d703520fd222b",
+        "0x96254eb6c5b3614f7fd713b2850070ab7a16d7c5",
+        "0x8a097e535c483221f0ee274e388fa72c2f2f9c8e",
+        "0x65805e29052a38c112eb0217f071442b61ed9270",
+        "0x57d2cefa974b9df34d929ff0297419d90f5a89b9",
+        "0xb9147045f69cdd0f035e4150ec2449612a96d99d",
+        "0x33c351c835ecc89f9d17e96ab3a06663c979a7f8",
+        "0x5e4381c222a78a066a5e8693d17737830291abe0"
+      ]
+    },
+    {
+      "external_label": "OUTPUTLAYER_OPERATOR_3",
+      "contract": "0x2da9222a2b26dac27213cb8d27e92ae6c580a463",
+      "key": "0x18e0efe5be1cbb4e060c26f7f16f276be4dbc38c",
+      "selector": "0xdc474ae0",
+      "state": "EXTERNAL_LEAD",
+      "contract_existence": "INDEPENDENTLY_CONFIRMED",
+      "key_association": "NOT_INDEPENDENTLY_REPRODUCED"
+    }
+  ]
+}
