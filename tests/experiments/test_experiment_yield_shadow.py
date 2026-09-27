@@ -22,6 +22,102 @@ class ExperimentYieldShadowTests(unittest.TestCase):
         self.assertFalse(result["promotion_policy"]["automatic_retirement_allowed"])
         self.assertFalse(result["authority"]["production_suppression"])
 
+    def test_current_registry_candidates_are_not_silently_dropped(self):
+        registry = {
+            "candidate_count": 4,
+            "duplicate_candidate_file_count": 3,
+            "candidates": [
+                {
+                    "candidate_id": "EC-1",
+                    "state": "INCUBATING",
+                    "observation_count": 10,
+                    "matured_outcome_count": 0,
+                    "created_at_utc": "2026-09-01T00:00:00Z",
+                },
+                {
+                    "candidate_id": "EC-2",
+                    "state": "WAITING_FOR_MAPPING",
+                    "observation_count": 1,
+                    "matured_outcome_count": 0,
+                    "created_at_utc": "2026-09-02T00:00:00Z",
+                },
+                {
+                    "candidate_id": "EC-3",
+                    "state": "MATURED_SUPPORTED",
+                    "observation_count": 12,
+                    "matured_outcome_count": 4,
+                    "created_at_utc": "2026-09-03T00:00:00Z",
+                },
+                {
+                    "candidate_id": "EC-4",
+                    "state": "MATURED_INCONCLUSIVE",
+                    "observation_count": 0,
+                    "matured_outcome_count": 1,
+                    "created_at_utc": "2026-09-04T00:00:00Z",
+                },
+            ],
+        }
+        result = build_shadow(registry, {"rows": []})
+        self.assertEqual(result["summary"]["row_count"], 4)
+        self.assertEqual(result["summary"]["registry_consistency"], "PASS")
+        self.assertEqual(
+            result["summary"]["state_counts"],
+            {
+                "INCUBATING": 1,
+                "MATURED_INCONCLUSIVE": 1,
+                "MATURED_SUPPORTED": 1,
+                "WAITING_FOR_MAPPING": 1,
+            },
+        )
+        self.assertEqual(result["summary"]["incubating_count"], 1)
+        self.assertEqual(result["summary"]["waiting_count"], 1)
+        self.assertEqual(result["summary"]["matured_count"], 2)
+        self.assertEqual(result["summary"]["zero_observation_count"], 1)
+        self.assertEqual(result["summary"]["with_matured_outcomes_count"], 2)
+        self.assertEqual(result["summary"]["incubating_zero_matured_outcome_count"], 1)
+        self.assertEqual(result["summary"]["duplicate_candidate_file_count"], 3)
+        self.assertEqual(result["summary"]["oldest_candidate_created_at_utc"], "2026-09-01T00:00:00Z")
+        self.assertEqual(result["summary"]["newest_candidate_created_at_utc"], "2026-09-04T00:00:00Z")
+        self.assertFalse(result["research_debt_semantics"]["candidate_state_change"])
+        self.assertFalse(result["research_debt_semantics"]["automatic_retirement"])
+
+    def test_candidate_observability_never_changes_state_or_suppresses_production(self):
+        candidate = {
+            "candidate_id": "EC-wait",
+            "state": "WAITING_FOR_DATA",
+            "observation_count": 2,
+            "matured_outcome_count": 0,
+            "created_at_utc": "2026-09-01T00:00:00Z",
+        }
+        result = build_shadow({"candidate_count": 1, "candidates": [candidate]}, {"rows": []})
+        row = result["rows"][0]
+        self.assertEqual(row["experiment_id"], "EC-wait")
+        self.assertEqual(row["shadow_state"], "OBSERVE")
+        self.assertIn("BLOCKED_OR_WAITING", row["reasons"])
+        self.assertFalse(row["production_suppression"])
+        self.assertEqual(candidate["state"], "WAITING_FOR_DATA")
+        self.assertFalse(result["promotion_policy"]["automatic_retirement_allowed"])
+        self.assertFalse(result["promotion_policy"]["automatic_suppression_allowed"])
+
+    def test_registry_count_mismatch_is_visible_not_repaired(self):
+        result = build_shadow(
+            {
+                "candidate_count": 99,
+                "candidates": [
+                    {
+                        "candidate_id": "EC-1",
+                        "state": "INCUBATING",
+                        "observation_count": 1,
+                        "matured_outcome_count": 0,
+                    }
+                ],
+            },
+            {"rows": []},
+        )
+        self.assertEqual(result["summary"]["row_count"], 1)
+        self.assertEqual(result["summary"]["registry_declared_candidate_count"], 99)
+        self.assertEqual(result["summary"]["registry_consistency"], "UNVERIFIED_OR_MISMATCH")
+
 
 if __name__ == "__main__":
     unittest.main()
