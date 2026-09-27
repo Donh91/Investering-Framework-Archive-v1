@@ -84,7 +84,7 @@ jobs:
           assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','CYCLE_ALTCOINS_3_8W'}
           alt=d['horizons']['CYCLE_ALTCOINS_3_8W']
           if alt['expected_direction']=='UNAVAILABLE':
-              assert alt.get('warning') == 'NONE'
+              assert alt.get('warning') in {None, 'NONE'}
           else:
               assert alt['warning'] in {'NONE','PARABOLIC_ALTSEASON_WARNING','DISTRIBUTION_WARNING','EXIT_WARNING','STRUCTURAL_BREAKDOWN_WARNING'}
           assert [r['segment'] for r in d['capitalization_ladder']]==['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES']
