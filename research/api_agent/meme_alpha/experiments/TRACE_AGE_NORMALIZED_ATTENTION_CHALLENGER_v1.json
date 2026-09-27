@@ -1,0 +1,140 @@
+{
+  "id": "TRACE_AGE_NORMALIZED_ATTENTION_CHALLENGER_v1",
+  "date_utc": "2026-09-27",
+  "owner_issue": 1087,
+  "external_strategy_owner_issue": 937,
+  "authority": "SHADOW_RESEARCH_ONLY",
+  "status": "PREREGISTERED_SOURCE_AGNOSTIC_CHALLENGER",
+  "source_benchmark": {
+    "repository": "marlowxbt/trace",
+    "commit": "247257c4dc436808f096da0d9de9724ddf145376",
+    "license": "MIT",
+    "chain": "Robinhood Chain 4663",
+    "venue": "Pons V2",
+    "verified_load_bearing_ideas": [
+      "factory launch scan plus traction-filtered attention watchlist",
+      "age-conditioned social attention baseline for young tokens",
+      "complete-window counting with missing distinct from observed zero",
+      "exact-CA or ticker-plus-chain attribution with other-CA veto",
+      "pre-launch social posts excluded from token attention",
+      "caller/repeat-account overlay reported separately from detector verdict",
+      "provider abstraction and hard budget stop rather than stream thinning",
+      "replayable deterministic detector windows"
+    ]
+  },
+  "purpose": "Test whether age-normalized, exact-identity social attention adds incremental early information above current Alpha Lab on-chain G2, Project->CA and public-visibility features on Robinhood/Pons.",
+  "not_imported": [
+    "TRACE fixed watchlist thresholds",
+    "TRACE 5-minute window as authority",
+    "TRACE 1.5x/3.0x attention multipliers",
+    "TRACE five-post floor",
+    "TRACE 30-minute cooldown",
+    "TRACE one-day cohort baseline values",
+    "any paid X provider commitment"
+  ],
+  "source_policy": {
+    "paid_social_feed_required_for_preregistration": false,
+    "first_use_existing_or_free_archived_social_evidence": true,
+    "new_paid_api_requires_incremental_value_case": true,
+    "missing_window_is_never_zero": true,
+    "source_thinning_is_not_allowed_to_masquerade_as_quiet_attention": true
+  },
+  "identity_attribution": {
+    "strong": [
+      "exact CA present in post",
+      "authenticated project-controlled post bound to exact CA"
+    ],
+    "conditional": [
+      "exact cashtag plus Robinhood/chain-4663 context with no conflicting CA"
+    ],
+    "reject": [
+      "ticker only",
+      "post naming a different CA",
+      "post timestamp before token launch when claim is token-specific",
+      "ambiguous listed-equity or cross-chain ticker collision"
+    ],
+    "preserve_rejected_posts_with_reason_when_source_data_is_retained": true
+  },
+  "age_conditioning": {
+    "principle": "Compare a young token with tokens at the same age/stage before using its own mature history as the baseline.",
+    "candidate_age_buckets_minutes": [[0,5],[5,10],[10,20],[20,40],[40,80],[80,160],[160,999999]],
+    "minimum_observations_per_bucket_before_numeric_baseline": 30,
+    "bucket_boundaries_are_shadow_candidates_not_authority": true,
+    "recalibrate_by_regime": true
+  },
+  "frozen_features": [
+    "social_posts_count",
+    "distinct_authors",
+    "exact_ca_post_count",
+    "cashtag_chain_bound_post_count",
+    "rejected_conflicting_ca_count",
+    "rejected_prelaunch_count",
+    "attention_rate_per_complete_window",
+    "age_cohort_expected_attention",
+    "age_normalized_attention_ratio",
+    "attention_acceleration",
+    "repeat_caller_count",
+    "first_credible_post_age_minutes",
+    "wallet_to_social_lead_minutes",
+    "project_to_social_lead_minutes",
+    "onchain_demand_to_social_lead_minutes",
+    "social_source_coverage_state"
+  ],
+  "ablation_arms": [
+    "CURRENT_ALPHA_BASELINE",
+    "ATTENTION_ONLY_SHADOW",
+    "BASELINE_PLUS_AGE_NORMALIZED_ATTENTION",
+    "BASELINE_PLUS_RAW_SOCIAL_COUNT",
+    "BASELINE_PLUS_EXACT_CA_ATTENTION",
+    "BASELINE_PLUS_ATTENTION_PLUS_CONDITIONAL_CALLER_OVERLAY"
+  ],
+  "primary_questions": [
+    "Does age-normalized attention add signal beyond raw social count?",
+    "Does exact-CA attribution reduce false attention versus ticker-only matching?",
+    "Does attention lead on-chain acceleration often enough to matter after collection latency?",
+    "Does social acceleration improve 2x precision or mainly arrive after price discovery?",
+    "Do repeat callers add incremental value after token age, market state and entity-adjusted on-chain demand are conditioned?"
+  ],
+  "outcomes": [
+    "sellable_2x_1h",
+    "sellable_2x_6h",
+    "realizable_MFE_1h",
+    "realizable_MFE_6h",
+    "MAE_1h",
+    "rug_or_liquidity_failure",
+    "time_to_first_distribution",
+    "time_to_public_saturation"
+  ],
+  "latency": [
+    "T_launch",
+    "T_watch_eligible",
+    "T_social_window_complete",
+    "T_social_observed",
+    "T_feature_available",
+    "T_shadow_qualify",
+    "T_first_executable"
+  ],
+  "caller_rule": {
+    "caller_presence_never_changes_attention_state_by_itself": true,
+    "caller_history_frozen_at_signal_time": true,
+    "future_performance_cannot_retroactively_upgrade_old_signal": true,
+    "repeat_presence_is_context_not_identity_proof": true
+  },
+  "acceptance": {
+    "requires_consecutive_prospective_cohort": true,
+    "requires_matched_failures": true,
+    "requires_latency_adjusted_incremental_value": true,
+    "requires_comparison_to_raw_social_count": true,
+    "requires_missingness_report": true,
+    "no_promotion_from_one_day_or_one_winner": true
+  },
+  "integration": {
+    "reuse_public_visibility_event_graph": true,
+    "reuse_existing_project_ca_binding": true,
+    "reuse_existing_prospective_ledger": true,
+    "no_new_scanner": true,
+    "no_new_scheduler": true,
+    "no_user_alert_authority": true,
+    "no_trading_authority": true
+  }
+}
