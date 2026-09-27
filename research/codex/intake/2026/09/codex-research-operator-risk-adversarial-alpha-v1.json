@@ -1,0 +1,88 @@
+{
+  "candidate_id": "codex-research-operator-risk-adversarial-alpha-v1",
+  "status": "SUBMITTED",
+  "authority": "CODE_REMEDIATION_ONLY",
+  "owner_issue": 1087,
+  "title": "Alpha Lab operator-lineage + extraction-risk + adversarial-alpha + execution-toxicity shadow enrichment",
+  "objective": "Implement the minimum deterministic SHADOW-ONLY enrichment needed to attach role-aware operator lineage, extraction risk evidence, realizable alpha-window evidence and execution-toxicity evidence to existing exact-CA Alpha Lab rows. Reuse existing Moonshot/Pons discovery, wallet ledger, lifecycle, Blockscout and outcome owners. Do not create a parallel scanner, score, scheduler, trading engine or automatic execution path.",
+  "canonical_inputs": [
+    "06_RESEARCH_LAB/alpha_lab/2026-09-27__wazz-robinhood-serial-extraction-operator-fingerprint-audit-v1.md",
+    "06_RESEARCH_LAB/alpha_lab/2026-09-27__wazz-wallet-intel-atarashi-mev-expanded-audit-v1.md",
+    "research/api_agent/meme_alpha/experiments/OPERATOR_RISK_ADVERSARIAL_ALPHA_SHADOW_CONTRACT_v1.json",
+    "research/api_agent/meme_alpha/experiments/ROBINHOOD_ADVERSARY_SEED_REGISTRY_20260927_v1.json",
+    "06_RESEARCH_LAB/alpha_lab/LAUNCH_RUNTIME_CONTRACT_V2.md",
+    "research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CONTRACT_v1.json",
+    "research/api_agent/meme_alpha/ALPHA_LAB_LIFECYCLE_ENGINE_v1.json",
+    "scripts/api_agent/meme_alpha_robinhood_pons_v2.py",
+    "scripts/api_agent/meme_alpha_blockscout.py"
+  ],
+  "allowed_scope": [
+    "scripts/api_agent/meme_alpha/**",
+    "scripts/api_agent/meme_alpha_*.py",
+    "tests/api_agent/**",
+    "research/api_agent/meme_alpha/**",
+    "06_RESEARCH_LAB/alpha_lab/**"
+  ],
+  "required_behavior": [
+    "Add a bounded operator-lineage enrichment invoked only after exact CA / launch identity exists. It must not discover the chain independently.",
+    "Represent addresses, contracts, launches, collectors and protocol infrastructure as typed nodes and timestamped evidence edges.",
+    "Require protocol_shared_flag on every edge touching known shared infrastructure and exclude infrastructure-only paths from operator identity.",
+    "Persist external label seeds as EXTERNAL_LEAD or POINT_IN_TIME_ONLY until independently reproduced.",
+    "Support rotating-key supersession / expiry without deleting historical observations.",
+    "Produce independent shadow fields for operator_extraction_risk_state, realizable_adversarial_alpha_state and execution_toxicity_state. Never collapse them into one score.",
+    "Operator risk must be explainable through evidence refs, not an opaque model weight.",
+    "Alpha-window evidence must exclude operator-linked wallets from independent buyer breadth and must require sellability/liquidity/slippage evidence.",
+    "Execution toxicity is negative-only: it may downgrade/close a window but may never create a positive-alpha state.",
+    "Preserve first-public-executable timestamp and point-in-time snapshots at configured offsets where data exists.",
+    "Attach outcomes only through existing lifecycle/outcome owner; no ATH-only alpha credit.",
+    "Keep Wazz/Atarashi/Outputlayer claims source-attributed and separate from reproduced chain facts.",
+    "Emit UNKNOWN rather than zero on missing graph, market, route or MEV evidence.",
+    "No user-facing BUY/SELL/ENTRY_CANDIDATE output from this implementation."
+  ],
+  "first_regressions": [
+    "Pons factory / launcher infrastructure shared across unrelated launches must not create an operator link.",
+    "Uniswap Universal Router 0x8876789976decbfcbbbe364623c63652db8c0904 must be typed PROTOCOL_INFRASTRUCTURE and cannot identify Outputlayer Operator 2 alone.",
+    "Operator-1 receiving contract 0x68a04a63fd1d8eabf167ef48ed0a0ef06c2374d9 must reproduce CREATED_CONTRACT edge from 0x44c0ba0b734d4b7705fcd07ddae9fbbc078d74dd when fixture evidence is supplied.",
+    "CRUMBS/DRAFT/DEED same Pons contract creator must not be interpreted as common scam operator.",
+    "A stale rotating-key label may remain historical but cannot stay active without refreshed evidence.",
+    "High extraction-risk and SHADOW_WINDOW_CANDIDATE may coexist if independent demand/sellability evidence supports it.",
+    "HIGH/BLOCKING execution toxicity closes/downgrades the alpha window without changing operator-risk state.",
+    "Missing MEV evidence remains UNKNOWN, not NORMAL.",
+    "Wallet quality learned after signal time cannot be backfilled into the signal snapshot."
+  ],
+  "prospective_test": {
+    "champion": "existing Alpha Lab / Moonshot + current wallet/deployer and sellability evidence",
+    "challenger": "champion + operator-lineage + execution-toxicity + dual-axis shadow fields",
+    "minimum_matured_rows": 50,
+    "minimum_distinct_days": 14,
+    "endpoints": [
+      "severe adverse outcome rate",
+      "extraction/proceeds convergence",
+      "time to coordinated distribution",
+      "realizable MFE after slippage",
+      "MAE",
+      "sellable 2x/5x/10x milestones",
+      "false avoidance of legitimate winners",
+      "missed-winner recall",
+      "execution shortfall / sandwich burden"
+    ],
+    "no_historical_promotion": true
+  },
+  "forbidden": [
+    "PARALLEL_SCANNER",
+    "PARALLEL_LEDGER",
+    "PARALLEL_SCHEDULER",
+    "OPAQUE_RUG_SCORE",
+    "AUTO_BUY",
+    "AUTO_SELL",
+    "MEV_FRONT_RUN",
+    "SANDWICH_EXECUTION",
+    "USER_FACING_ENTRY_SIGNAL",
+    "OUTCOME_LEAKAGE",
+    "ATH_ONLY_ALPHA_CREDIT",
+    "EXTERNAL_LABEL_AS_TRUTH",
+    "PROTOCOL_ROUTER_AS_OPERATOR_IDENTITY",
+    "AUTOMATIC_MERGE"
+  ],
+  "post_fix_gate": "UNIT_TESTS_PLUS_FALSE_POSITIVE_INFRASTRUCTURE_REGRESSIONS_PLUS_WAZZ_OPERATOR1_EDGE_FIXTURE_PLUS_POINT_IN_TIME_LABEL_EXPIRY_TEST_PLUS_DUAL_AXIS_INDEPENDENCE_TEST_PLUS_FRESH_MAIN_READBACK_PLUS_INDEPENDENT_SOL_REVIEW"
+}
