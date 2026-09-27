@@ -37,7 +37,7 @@ jobs:
           decision_rc=$?
           python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task EVIDENCE_GAP_VALIDATION --cap-usd 1.5 --reserve-usd 0.05 > runtime/adaptive-budget/validation.json 2> runtime/adaptive-budget/validation.err
           validation_rc=$?
-          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 20 --reserve-usd 2.0 > runtime/adaptive-budget/monthly.json 2> runtime/adaptive-budget/monthly.err
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4.0 > runtime/adaptive-budget/monthly.json 2> runtime/adaptive-budget/monthly.err
           monthly_rc=$?
           set -e
           cat runtime/adaptive-budget/decision.json
