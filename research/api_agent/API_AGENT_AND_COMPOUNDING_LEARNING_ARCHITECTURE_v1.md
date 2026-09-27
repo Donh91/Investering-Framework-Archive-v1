@@ -76,6 +76,9 @@ All API calls pass through API Gateway v1 and produce an immutable receipt conta
 - WEEKLY_ADVERSARIAL_REVIEW: Sol, high reasoning.
 - MASTER_MONDAY_PREP_SHADOW: Sol, high reasoning, manual only.
 - DEEP_RESEARCH_MANUAL: Sol, high reasoning, manual only.
+- SENIOR_REPAIR_AUDIT: GPT-6 Sol, high reasoning, event-driven owner-gated, advisory/read-only. Use for difficult or architecture repairs, root-cause/falsification and post-merge high-consequence audits. It has no periodic schedule, code-write authority, merge authority, market authority or portfolio authority.
+
+Sol-first does not mean Sol-everywhere. Routine extraction/monitoring remains Luna, bounded intermediate synthesis remains Terra, and Astra is reserved for verified agentic/extreme-complexity needs. The senior audit lane exists to avoid repeated low-tier retries when a difficult task has high expected rework cost.
 
 Runtime task settings are owned by `research/api_agent/API_TASK_REGISTRY_v1.json`. Model routing and current routing-cost estimates are owned by `research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json`. Budget authority remains `research/api_agent/API_INTELLIGENCE_POLICY_v2.json`.
 
