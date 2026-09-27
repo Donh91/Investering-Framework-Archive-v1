@@ -79,7 +79,7 @@ jobs:
           python scripts/cycle_navigator/build_weekly_cycle_navigator.py \
             --repo-root . \
             --master-monday-pointer research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json \
-            --model gpt-5.6-sol \
+            --model gpt-6-sol \
             --max-output-tokens 12000 | tee runtime_cycle_navigator_pointer.json
 
       - name: Bind Cycle Navigator to fresh Master Monday consumption receipt

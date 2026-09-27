@@ -1,12 +1,12 @@
 {
   "contract": "API_TASK_REGISTRY_v1",
   "status": "ACTIVE_SHADOW_ONLY",
-  "monthly_hard_stop_usd": 20.0,
+  "monthly_hard_stop_usd": 20,
   "single_run_hard_stop_usd": 1.5,
   "default_store": false,
   "tasks": {
     "DAILY_DIRECTOR_SHADOW": {
-      "model": "gpt-5.6-luna",
+      "model": "gpt-6-luna",
       "reasoning_effort": "medium",
       "max_output_tokens": 2000,
       "manual_only": false,
@@ -30,7 +30,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/weekly/"
     },
     "WEEKLY_ADVERSARIAL_REVIEW": {
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 3500,
       "manual_only": false,
@@ -38,7 +38,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/weekly_red_team/"
     },
     "MONTHLY_LEARNING_ANALYST": {
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 2800,
       "manual_only": false,
@@ -46,7 +46,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/monthly_learning_council/"
     },
     "MONTHLY_LEARNING_ADVERSARIAL": {
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 2800,
       "manual_only": false,
@@ -54,7 +54,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/monthly_learning_council/"
     },
     "CYCLE_NAVIGATOR_WEEKLY_PUBLICATION": {
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 5000,
       "manual_only": false,
@@ -62,7 +62,7 @@
       "allowed_write_prefix": "05_CYCLE_NAVIGATOR/weekly/"
     },
     "MASTER_MONDAY_PREP_SHADOW": {
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 4500,
       "manual_only": true,
@@ -70,7 +70,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/master_monday/"
     },
     "DEEP_RESEARCH_MANUAL": {
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 6000,
       "manual_only": true,
@@ -84,5 +84,16 @@
     "model_weight_change": false,
     "portfolio_action": false,
     "self_merge": false
+  },
+  "model_refresh": {
+    "verified_at_utc_date": "2026-09-27",
+    "source": "OPENAI_OFFICIAL_API_PRICING_AND_MODEL_CATALOG",
+    "latest_verified_ids": {
+      "luna": "gpt-6-luna",
+      "terra": "gpt-5.6-terra",
+      "sol": "gpt-6-sol",
+      "astra": "gpt-6-astra"
+    },
+    "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27"
   }
 }

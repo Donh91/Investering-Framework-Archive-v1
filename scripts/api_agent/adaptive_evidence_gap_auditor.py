@@ -10,9 +10,9 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-MODEL = "gpt-5.6-luna"
-PRICE_INPUT_PER_M = 1.0
-PRICE_OUTPUT_PER_M = 6.0
+MODEL = "gpt-6-luna"
+PRICE_INPUT_PER_M = 0.1
+PRICE_OUTPUT_PER_M = 0.5
 ALLOWED_HINTS = [
     "HOURLY_SEQUENCE",
     "LIVE_BREADTH",

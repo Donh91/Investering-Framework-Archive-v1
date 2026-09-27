@@ -413,7 +413,7 @@ def execute(
     try:
         result, synth_cost, synth_attempts = call_structured_with_one_retry(
             openai_key,
-            structured_payload("gpt-5.6-luna", "deep_research_result_v1", research_schema(), synthesis_instructions, synthesis_input, 2600),
+            structured_payload("gpt-6-luna", "deep_research_result_v1", research_schema(), synthesis_instructions, synthesis_input, 2600),
         )
     except Exception as exc:
         completion = {
@@ -443,7 +443,7 @@ def execute(
     )
     red_team, red_cost, red_attempts = call_structured_with_one_retry(
         openai_key,
-        structured_payload("gpt-5.6-luna", "deep_research_red_team_v1", red_team_schema(), red_team_instructions, red_team_input, 1800),
+        structured_payload("gpt-6-luna", "deep_research_red_team_v1", red_team_schema(), red_team_instructions, red_team_input, 1800),
     )
     total_cost = round(total_cost + red_cost, 8)
     if total_cost > MAX_EXECUTOR_COST_USD:

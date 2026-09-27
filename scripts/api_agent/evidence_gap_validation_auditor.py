@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-MODEL="gpt-5.6-luna"; PRICE_INPUT_PER_M=1.0; PRICE_OUTPUT_PER_M=6.0
+MODEL="gpt-6-luna"; PRICE_INPUT_PER_M=0.1; PRICE_OUTPUT_PER_M=0.5
 STATES=["COLLECTING","INCONCLUSIVE_KEEP_COLLECTING","USEFUL_RESEARCH_EVIDENCE","REJECTED_NO_INCREMENTAL_VALUE","REJECTED_UNRELIABLE_SOURCE"]
 
 def cb(v:Any)->bytes:return (json.dumps(v,sort_keys=True,separators=(",",":"))+"\n").encode()
