@@ -17,6 +17,7 @@ PR_ISOLATED_WRITER_GROUP = "${{ github.event_name == 'pull_request' && format('{
 GOOD_CONCLUSIONS = {"success", "neutral", "skipped"}
 LIFECYCLE_STATES = {"ACTIVE", "EXPECTED_BLOCK", "PENDING_FIRST_EXPECTED_RUN", "RETIRED"}
 SCHEDULE_LATENESS_TOLERANCE = timedelta(hours=6)
+RECOVERY_SUCCESS_STREAK_REQUIRED = 3
 
 
 def utc_now() -> datetime:
@@ -544,7 +545,12 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
                     findings.append("RUN_STUCK_OR_DELAYED")
         if live.get("failure_streak", 0) >= 2:
             findings.append("REPEATED_CONSECUTIVE_FAILURES")
-        elif latest and latest.get("conclusion") in GOOD_CONCLUSIONS and live.get("recent_failure_count", 0) >= 2:
+        elif (
+            latest
+            and latest.get("conclusion") in GOOD_CONCLUSIONS
+            and live.get("recent_failure_count", 0) >= 2
+            and live.get("success_streak", 0) < RECOVERY_SUCCESS_STREAK_REQUIRED
+        ):
             findings.append("RECOVERING_AFTER_RECENT_FAILURES")
 
     critical = {
