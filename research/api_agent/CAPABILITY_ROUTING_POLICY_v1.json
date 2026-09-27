@@ -7,7 +7,7 @@
   "default_mode": "SHADOW_RECOMMEND_ONLY",
   "production_activation": "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION",
   "routing_strategy": "CAPABILITY_MATCHED_WITH_ESCALATION",
-  "routing_objective": "LOWEST_EXPECTED_TOTAL_TASK_COST_AT_REQUIRED_RELIABILITY",
+  "routing_objective": "LOWEST_SUFFICIENT_CAPABILITY_TIER_THEN_LOWEST_EXPECTED_TOTAL_TASK_COST",
   "pricing_snapshot": {
     "observed_at_utc_date": "2026-09-27",
     "semantics": "ROUTING_COST_ESTIMATE_ONLY_NOT_BILLING_OR_BUDGET_AUTHORITY",
@@ -43,7 +43,8 @@
     "responsibility_before_capability": true,
     "least_privilege_context": true,
     "delegation_lineage_required_for_hardened_profiles": true,
-    "bounded_redelegation_only": true
+    "bounded_redelegation_only": true,
+    "preserve_role_tiers_when_senior_model_is_cheaper": true
   },
   "model_role_policy": {
     "gpt-5.6-terra": {
