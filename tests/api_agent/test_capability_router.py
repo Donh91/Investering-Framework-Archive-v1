@@ -135,13 +135,13 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertEqual(plan["status"], "READY")
         self.assertEqual(plan["units"][0]["model"], "gpt-6-luna")
 
-    def test_synthesis_routes_to_lowest_total_cost_qualified_model(self):
+    def test_synthesis_routes_to_terra_not_sol(self):
         plan = build_execution_plan(
             self.policy,
             runtime("gpt-6-luna", "gpt-5.6-terra", "gpt-6-sol"),
             profile(complexity="SYNTHESIS", capabilities=["synthesis"], effort="medium"),
         )
-        self.assertEqual(plan["units"][0]["model"], "gpt-6-sol")
+        self.assertEqual(plan["units"][0]["model"], "gpt-5.6-terra")
 
     def test_difficult_reasoning_routes_to_sol_when_astra_not_required(self):
         plan = build_execution_plan(
