@@ -30,7 +30,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1087/comments?per_page=100" --jq '.[].body' | grep -q '^ALPHA_PROOF_TERMINAL:'; then
+          comments_file="$(mktemp)"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1087/comments?per_page=100" --jq '.[].body' > "$comments_file"
+          if grep -q '^ALPHA_PROOF_TERMINAL:' "$comments_file"; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "SHADOW04_ALREADY_TERMINAL"
             exit 0
