@@ -38,7 +38,7 @@ def classify(row: dict[str, Any], consumer_rows: dict[str, dict[str, Any]]) -> t
 
 
 def build_shadow(registry: dict[str, Any], consumer_index: dict[str, Any]) -> dict[str, Any]:
-    rows = registry.get("rows") or registry.get("experiments") or registry.get("items") or []
+    rows = registry.get("candidates") or registry.get("rows") or registry.get("experiments") or registry.get("items") or []
     if not isinstance(rows, list):
         rows = []
     consumer_rows = {
@@ -58,6 +58,34 @@ def build_shadow(registry: dict[str, Any], consumer_index: dict[str, Any]) -> di
             "reasons": reasons,
             "production_suppression": False,
         })
+    state_counts: dict[str, int] = {}
+    zero_observation_count = 0
+    with_matured_outcomes_count = 0
+    incubating_zero_matured_outcome_count = 0
+    created_at_values: list[str] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        state = str(row.get("state") or row.get("status") or "UNKNOWN")
+        state_counts[state] = state_counts.get(state, 0) + 1
+        observations = row.get("observation_count")
+        matured = row.get("matured_outcome_count")
+        if observations == 0:
+            zero_observation_count += 1
+        if isinstance(matured, int) and matured > 0:
+            with_matured_outcomes_count += 1
+        if state == "INCUBATING" and (not isinstance(matured, int) or matured == 0):
+            incubating_zero_matured_outcome_count += 1
+        created = row.get("created_at_utc")
+        if isinstance(created, str) and created:
+            created_at_values.append(created)
+
+    registry_declared = registry.get("candidate_count")
+    registry_consistency = (
+        "PASS"
+        if isinstance(registry_declared, int) and registry_declared == len(rows)
+        else "UNVERIFIED_OR_MISMATCH"
+    )
     return {
         "contract": CONTRACT,
         "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -67,6 +95,25 @@ def build_shadow(registry: dict[str, Any], consumer_index: dict[str, Any]) -> di
             "row_count": len(classified),
             "observe_count": sum(r["shadow_state"] == "OBSERVE" for r in classified),
             "baseline_count": sum(r["shadow_state"] == "SHADOW_BASELINE" for r in classified),
+            "state_counts": dict(sorted(state_counts.items())),
+            "incubating_count": state_counts.get("INCUBATING", 0),
+            "waiting_count": sum(count for state, count in state_counts.items() if state.startswith("WAITING_")),
+            "matured_count": sum(count for state, count in state_counts.items() if state.startswith("MATURED_")),
+            "zero_observation_count": zero_observation_count,
+            "with_matured_outcomes_count": with_matured_outcomes_count,
+            "incubating_zero_matured_outcome_count": incubating_zero_matured_outcome_count,
+            "duplicate_candidate_file_count": registry.get("duplicate_candidate_file_count"),
+            "oldest_candidate_created_at_utc": min(created_at_values) if created_at_values else None,
+            "newest_candidate_created_at_utc": max(created_at_values) if created_at_values else None,
+            "registry_declared_candidate_count": registry_declared,
+            "registry_consistency": registry_consistency,
+        },
+        "research_debt_semantics": {
+            "descriptive_only": True,
+            "candidate_state_change": False,
+            "automatic_age_expiry": False,
+            "automatic_retirement": False,
+            "note": "Backlog metrics describe lifecycle load only. They do not retire, suppress, rank, or promote experiments.",
         },
         "promotion_policy": {
             "natural_observation_window_required": True,
