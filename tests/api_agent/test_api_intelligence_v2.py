@@ -90,11 +90,18 @@ class ApiIntelligenceV2Tests(unittest.TestCase):
     def test_policy_and_registry_keep_zero_authority(self) -> None:
         policy = json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
         registry = json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
-        self.assertEqual(policy['monthly_hard_stop_usd'], 20.0)
+        self.assertEqual(policy['monthly_hard_stop_usd'], 40.0)
         self.assertTrue(all(value is False for value in policy['authority'].values()))
         self.assertEqual(registry['tasks']['DAILY_DIRECTOR_SHADOW']['model'], 'gpt-6-luna')
         self.assertEqual(registry['tasks']['DAILY_CONFLICT_REVIEW']['model'], 'gpt-5.6-terra')
         self.assertEqual(registry['tasks']['WEEKLY_ADVERSARIAL_REVIEW']['model'], 'gpt-6-sol')
+        self.assertEqual(registry['monthly_hard_stop_usd'], 40.0)
+        self.assertEqual(registry['single_run_hard_stop_usd'], 3.0)
+        self.assertEqual(registry['tasks']['SENIOR_REPAIR_AUDIT']['model'], 'gpt-6-sol')
+        self.assertFalse(registry['tasks']['SENIOR_REPAIR_AUDIT']['manual_only'])
+        self.assertTrue(registry['tasks']['SENIOR_REPAIR_AUDIT']['advisory_only'])
+        self.assertEqual(policy['lane_caps_usd']['SENIOR_REPAIR_AUDIT'], 10.0)
+        self.assertFalse(policy['senior_repair_audit']['periodic_schedule'])
         routing = json.loads(Path('research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json').read_text())
         self.assertEqual(
             set(routing['models']),
