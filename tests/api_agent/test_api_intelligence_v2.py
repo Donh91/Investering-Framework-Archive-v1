@@ -92,7 +92,16 @@ class ApiIntelligenceV2Tests(unittest.TestCase):
         registry = json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
         self.assertEqual(policy['monthly_hard_stop_usd'], 20.0)
         self.assertTrue(all(value is False for value in policy['authority'].values()))
+        self.assertEqual(registry['tasks']['DAILY_DIRECTOR_SHADOW']['model'], 'gpt-6-luna')
+        self.assertEqual(registry['tasks']['DAILY_CONFLICT_REVIEW']['model'], 'gpt-5.6-terra')
         self.assertEqual(registry['tasks']['WEEKLY_ADVERSARIAL_REVIEW']['model'], 'gpt-6-sol')
+        routing = json.loads(Path('research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json').read_text())
+        self.assertEqual(
+            set(routing['models']),
+            {'gpt-6-luna', 'gpt-5.6-terra', 'gpt-6-sol', 'gpt-6-astra'},
+        )
+        self.assertEqual(routing['models']['gpt-6-luna']['price_per_million'], {'input': 0.1, 'output': 0.5})
+        self.assertEqual(routing['models']['gpt-6-sol']['price_per_million'], {'input': 2.0, 'output': 10.0})
         self.assertFalse(registry['tasks']['WEEKLY_ADVERSARIAL_REVIEW']['manual_only'])
         self.assertFalse(registry['authority']['portfolio_action'])
         self.assertFalse(registry['authority']['framework_state_change'])
