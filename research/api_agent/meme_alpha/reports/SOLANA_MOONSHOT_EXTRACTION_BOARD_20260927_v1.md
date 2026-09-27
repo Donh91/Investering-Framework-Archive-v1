@@ -415,3 +415,209 @@ Keep the target separate from moonshot upside:
 5. build a matched negative denominator before judging any caller/wallet cohort;
 6. continue searching open-source caller ledgers, funder graphs and launch-risk datasets;
 7. use natural prospective Pons launches to decide which extracted primitives survive.
+
+
+# Wave 3 — negative evidence, creator factories and lifecycle instrumentation
+
+## P0 negative benchmark: Chrisymcsoup/solana-launch-study
+
+This source is unusually valuable because it started as a sniper-bot project and published a negative result instead of a winner story.
+
+Public measurement:
+- ~8.6k Pump.fun launches over ~8 hours;
+- ~90% dead on arrival under the author's frozen outcome definition;
+- creator's causal prior-launch count and metadata host strongly separated graduation probability;
+- nevertheless 48 tested exit-rule combinations on the selected post-30s population were negative after fees/slippage assumptions.
+
+### E19 — prediction target separation
+
+The key lesson is not a Solana threshold:
+
+`P(GRADUATION) != P(PROFITABLE_ENTRY | INFORMATION_AVAILABLE_AT_T)`.
+
+A feature can be excellent at predicting migration and still be economically useless after entry latency and costs.
+
+Robinhood/Pons translation:
+Every new feature/challenger should report at least two outcome families separately:
+1. lifecycle prediction, e.g. graduation/survival;
+2. executable economic outcome, e.g. realizable return/MFE/MAE after T_first_executable.
+
+Never promote from graduation AUC alone.
+
+### E20 — deployer industrial-frequency prior
+
+The public study computes creator prior-launch frequency causally, using only launches strictly before the current launch. Higher recent launch frequency was associated with much worse graduation rates in its sample.
+
+Pons shadow fields:
+- `deployer_prior_launches_1h`
+- `deployer_prior_launches_24h`
+- `deployer_prior_launches_7d`
+- `deployer_interlaunch_median_seconds`
+- `deployer_distinct_launch_config_count`
+- `deployer_repeated_template_count`.
+
+Guardrail:
+this is a risk/context feature, not a monotonic alpha score. A prolific deployer can also operate a legitimate factory/launch service.
+
+### E21 — creation-time metadata origin may reveal launch tooling
+
+Solana metadata-host identity was predictive in the study because different launch automation stacks used different upload hosts.
+
+Do not transplant `ipfs.io` or `j7tracker` to Pons.
+
+Robinhood analogue to research:
+- launch config id;
+- pair token;
+- exemption topology;
+- calldata shape/version;
+- metadata/social URI/control root;
+- repeated launch parameter/template hash;
+- deployer/funder family.
+
+The transferable primitive is **tooling fingerprint**, not host name.
+
+### E22 — causal counting is mandatory
+
+The source explicitly documents that naive creator-launch frequency was lookahead contaminated and the effect roughly halved after causal recomputation.
+
+Rule:
+creator/deployer history at candidate T may include only events observed strictly before T. Future launches never improve or worsen an old candidate's feature row.
+
+### E23 — scheduled checkpoints need actual-drift fields
+
+The source found that backfilling old events could cause nominal "30-second" readings to execute hours late.
+
+Every scheduled Alpha Lab checkpoint should preserve:
+- intended age;
+- actual observed age;
+- checkpoint drift seconds;
+- source/replay mode.
+
+A stale backfill row must never masquerade as a live early observation.
+
+### E24 — backtests must model price impact/cost, not price ratio
+
+The study's simulator explicitly models bonding-curve price impact, per-side fees and fixed execution costs, and warns about survivorship when only tokens with both checkpoints are retained.
+
+Translation:
+for Pons, any entry study that uses market-cap ratio alone is insufficient. Require:
+- notional;
+- curve/pool depth;
+- slippage;
+- fee/tax;
+- gas;
+- sellability;
+- missing-path inclusion/reporting.
+
+## P1 benchmark: cinder-security/pumpwatch
+
+Public immutable snapshot:
+- 42,562 launches;
+- 12,926 creator addresses;
+- 89.24h observation window;
+- very small creator subsets account for a large share of launches;
+- repeated initial-state templates occur across many creator addresses.
+
+### E25 — creator factory / template recurrence
+
+The informative object may be a deployment **factory pattern**, not a single wallet.
+
+Pons translation:
+hash a bounded launch template from point-in-time fields such as:
+- launch config id;
+- pair token;
+- initial creator allocation bucket;
+- exemption count/topology signature;
+- social metadata shape;
+- repeated funder/controller evidence.
+
+Then track:
+- template launch frequency;
+- distinct deployers using the template;
+- historical failure/survival conditional on template, frozen as-of.
+
+No intent label follows from recurrence alone.
+
+### E26 — age-adaptive outcome sampling
+
+Pumpwatch samples young launches much more frequently and slows cadence with age.
+
+This is useful as a data-efficiency principle:
+high temporal resolution should be concentrated where state changes fastest.
+
+Do not copy its exact cadence. For Pons, checkpoint density should be learned from event half-life and API/GitHub Actions budget.
+
+## P1 dataset idea: willho/fingerprinter-dataset
+
+Public dataset contains ~39k launch trajectories with event-triggered snapshots:
+- discovery;
+- 2x/5x/10x/50x/100x;
+- drawdown 15%/25%/40%;
+- deathbed rotation;
+- creator reputation copied at snapshot time;
+- wallet positions and entry/exit information.
+
+### E27 — event-triggered snapshots complement fixed horizons
+
+Fixed horizons are necessary for comparable forward tests, but event-triggered snapshots preserve path structure more efficiently.
+
+Pons shadow event triggers worth testing:
+- first graduation;
+- first 2x;
+- first distribution drawdown;
+- first -20% from local peak;
+- liquidity -25% from post-grad peak;
+- first independent-wallet re-entry;
+- first social-attention spike;
+- dev/exemption cohort first material sell.
+
+Event-triggered rows are secondary evidence and may not replace fixed-horizon outcome rows.
+
+### E28 — cycle-aware outcome language
+
+A token can have multiple pump/dump/reclaim cycles. Avoid one terminal winner/loser label when studying re-entry/Phoenix behavior.
+
+Preserve:
+- cycle id;
+- cycle start;
+- local peak;
+- drawdown;
+- reclaim;
+- new-wallet re-entry.
+
+## P1 graph research: featureless-coordination-gnn
+
+Public research over ~65.5M Solana transactions uses:
+- wallet-token trade edges;
+- temporally decayed co-trade edges;
+- same-transaction wallet links;
+- chronological weekly train/validation/test.
+
+A reported ablation found same-transaction edges especially informative in its classification task.
+
+### E29 — topology can be signal before wallet reputation
+
+Defensive Robinhood translation:
+same-tx/same-block/co-fire relationships may reveal coordination even when every address is "new" and has no historical reputation.
+
+Use topology as manipulation/entity evidence, not as a direct moonshot score.
+
+## Wave 3 keep/kill summary
+
+KEEP / TEST:
+- lifecycle probability vs economic profitability as separate targets;
+- causal deployer-frequency prior;
+- launch-tooling/template fingerprints;
+- checkpoint drift;
+- price-impact-aware outcome reconstruction;
+- creator-factory recurrence;
+- event-triggered path snapshots;
+- topology evidence from same-tx/same-block/co-fire.
+
+KILL / DO NOT IMPORT:
+- Solana metadata-host categories as Pons thresholds;
+- graduation probability as buy authority;
+- fixed exit rules from another venue;
+- outcome rows that exclude missing/dead paths without reporting survivorship;
+- creator/deployer frequency as a moral/intent label;
+- graph-model probability as direct alpha.
