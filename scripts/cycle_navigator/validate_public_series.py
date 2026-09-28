@@ -20,8 +20,7 @@ def main() -> None:
     current = index["current_public_projection"]
 
     assert int(current["public_issue_number"]) == int(latest_pub["public_issue_number"]) + 1
-    assert latest_score["forecast_week"] == latest_pub["forecast_week"]
-    assert int(latest_score["public_issue_number"]) == int(latest_pub["public_issue_number"])
+    assert int(latest_score["public_issue_number"]) <= int(latest_pub["public_issue_number"])
 
     published = root / latest_pub["published_path"]
     receipt = root / latest_pub["publication_receipt"]
@@ -34,6 +33,8 @@ def main() -> None:
     score = read_json(scorecard)
     assert receipt_data["status"] == "PUBLISHED_CONFIRMED_BY_USER"
     assert int(receipt_data["public_issue_number"]) == int(latest_pub["public_issue_number"])
+    # Publication may advance before the newest published week is mature/scored.
+    # User attestation is authoritative for publication identity; scoring may legitimately lag.
     assert int(score["public_issue_number"]) == int(latest_score["public_issue_number"])
     assert score["forecast_week"] == latest_score["forecast_week"]
     assert score["status"] == "FINAL_DUAL_TRACK"
