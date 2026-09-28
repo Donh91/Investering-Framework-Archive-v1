@@ -192,3 +192,15 @@ The final preregistered confirmatory test remains the only owner of the study ve
 Any future agent auditing experiments, learning, calibration, forecast skill or automatic improvement should read this architecture plus the controller `POLICY.json`, `STATE.json` and `NEXT_BEST_EXPERIMENT.json` before proposing a new learning engine.
 
 A more capable future agent may improve this controller only by proposing a versioned methodology or a new child test. It must not use its increased capability to retroactively rewrite frozen parents, re-score old evidence under newly invented rules, weaken the confirmatory firewall or bypass the existing Research Governance Stack.
+
+---
+
+## CN Precision Learning Supervisor binding — 2026-09-28
+
+Cycle Navigator internal precision now has a multi-week specialist layer at `05_CYCLE_NAVIGATOR/internal_learning/STATE.json`.
+
+It consumes only settled append-only CN internal precision evidence. Weekly trend monitoring is deterministic. Every four new successful settlements, a deeper checkpoint tests for persistent family weakness and cross-family blind spots. Terra medium is the normal bounded review lane; severe repeated zero-score evidence may use Sol high adversarial review.
+
+The deterministic supervisor, not the API model, owns escalation. A qualified weakness may expose `RESEARCH_NEW_HYPOTHESIS` as source `CN_PRECISION_META_LEARNING`, which then enters the existing Research Governance Stack. The specialist has no canonical, market, threshold, model-weight, public-score or portfolio authority.
+
+The established SITE/X precision presentation is outside this learning loop and remains continuity-locked.
