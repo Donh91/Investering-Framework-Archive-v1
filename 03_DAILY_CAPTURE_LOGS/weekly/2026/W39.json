@@ -56,24 +56,24 @@
       },
       "DAY5_7": {
         "btc": {
-          "close": 84688.07,
+          "close": 84472.0,
           "high": 85255.0,
           "low": 83183.0,
           "open": 84410.24
         },
         "eth": {
-          "close": 2684.44,
+          "close": 2688.65,
           "high": 2743.0,
           "low": 2664.79,
           "open": 2688.06
         },
         "ethbtc": {
-          "close": 0.0317,
+          "close": 0.03182,
           "high": 0.03219,
-          "low": 0.03168,
+          "low": 0.03166,
           "open": 0.03185
         },
-        "observed_hours": 70,
+        "observed_hours": 72,
         "window_end_utc": "2026-09-28T00:00:00Z",
         "window_start_utc": "2026-09-25T00:00:00Z"
       }
@@ -83,7 +83,7 @@
   "enriched_hourly_path": "weekly/2026/W39/WEEKLY_HOURLY_ENRICHED.csv",
   "forecast_evaluation_performed": false,
   "framework_state_change": false,
-  "generated_at_utc": "2026-09-27T23:58:16Z",
+  "generated_at_utc": "2026-09-28T05:38:18Z",
   "handoff_targets": [
     "RAW_WEEKLY_CALIBRATION",
     "FORECAST_LEDGER_EVALUATION",
@@ -94,103 +94,100 @@
   ],
   "hourly_gap_diagnostics": {
     "expected_hours": 168,
-    "max_contiguous_gap_hours": 2,
-    "missing_hour_count": 2,
-    "missing_hours_utc": [
-      "2026-09-27T22:00:00Z",
-      "2026-09-27T23:00:00Z"
-    ],
-    "observed_hours": 166,
+    "max_contiguous_gap_hours": 0,
+    "missing_hour_count": 0,
+    "missing_hours_utc": [],
+    "observed_hours": 168,
     "per_field_completeness": {
       "btc_close": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_long_short_ratio": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_open_interest": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_quote_volume": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_taker_buy_quote_share": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_trade_count": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_close": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_long_short_ratio": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_open_interest": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_quote_volume": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_taker_buy_quote_share": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_trade_count": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "ethbtc_close": {
-        "complete_hours": 166,
-        "coverage_pct": 98.81
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       }
     }
   },
   "hourly_ingestion_diagnostics": [],
   "hourly_sequence": {
     "btc": {
-      "down_hours": 77,
+      "down_hours": 78,
       "max_abs_return_1h_pct": 2.49631638567,
       "max_range_1h_pct": 3.00305922663,
       "price_oi_state_counts": {
-        "PRICE_DOWN_OI_DOWN": 40,
+        "PRICE_DOWN_OI_DOWN": 41,
         "PRICE_DOWN_OI_UP": 37,
         "PRICE_UP_OI_DOWN": 43,
-        "PRICE_UP_OI_UP": 46
+        "PRICE_UP_OI_UP": 47
       },
-      "up_hours": 89,
+      "up_hours": 90,
       "week_range": {
-        "close": 84688.07,
+        "close": 84472.0,
         "high": 87395.67,
         "low": 80850.22,
         "open": 81178.01
       }
     },
     "contract": "WEEKLY_HOURLY_SEQUENCE_EVIDENCE_v2",
-    "derivatives_oi_complete_hours": 166,
+    "derivatives_oi_complete_hours": 168,
     "eth": {
-      "down_hours": 86,
+      "down_hours": 87,
       "max_abs_return_1h_pct": 1.6626279199,
       "max_range_1h_pct": 2.86705996994,
       "price_oi_state_counts": {
         "PRICE_DOWN_OI_DOWN": 31,
-        "PRICE_DOWN_OI_UP": 55,
-        "PRICE_UP_OI_DOWN": 40,
+        "PRICE_DOWN_OI_UP": 56,
+        "PRICE_UP_OI_DOWN": 41,
         "PRICE_UP_OI_UP": 40
       },
-      "up_hours": 80,
+      "up_hours": 81,
       "week_range": {
-        "close": 2684.44,
+        "close": 2688.65,
         "high": 2807.34,
         "low": 2600.15,
         "open": 2645.21
@@ -198,9 +195,9 @@
     },
     "ethbtc": {
       "down_hours": 82,
-      "up_hours": 67,
+      "up_hours": 69,
       "week_range": {
-        "close": 0.0317,
+        "close": 0.03182,
         "high": 0.03307,
         "low": 0.03142,
         "open": 0.03258
@@ -208,14 +205,14 @@
     },
     "expected_hourly_rows": 168,
     "first_hour_utc": "2026-09-21T00:00:00Z",
-    "hourly_coverage_pct": 98.81,
-    "last_hour_utc": "2026-09-27T21:00:00Z",
-    "long_short_complete_hours": 166,
+    "hourly_coverage_pct": 100.0,
+    "last_hour_utc": "2026-09-27T23:00:00Z",
+    "long_short_complete_hours": 168,
     "market_interpretation": false,
-    "observed_hourly_rows": 166,
+    "observed_hourly_rows": 168,
     "sequence_evidence_only": true,
-    "spot_complete_hours": 166,
-    "spot_flow_complete_hours": 166
+    "spot_complete_hours": 168,
+    "spot_flow_complete_hours": 168
   },
   "iso_week": 39,
   "iso_year": 2026,
