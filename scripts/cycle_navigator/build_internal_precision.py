@@ -96,6 +96,17 @@ def family_for(parameter_id: str, prior_freeze: dict[str, Any]) -> tuple[str, st
     calls = prior_freeze.get("structural_calls") or []
     idx = int(m.group(1)) - 1
     text = normalize_text(str(calls[idx])) if 0 <= idx < len(calls) else ""
+    if text.startswith("regime:"):
+        return "regime", None
+    if text.startswith("leadership:"):
+        alias = "ethbtc_condition" if nonempty(prior_freeze.get("ethbtc_condition")) else None
+        return "ethbtc", alias
+    if text.startswith("first_handoff:"):
+        return "first_handoff", None
+    if text.startswith("deeper_transmission:"):
+        return "deeper_transmission", None
+    if text.startswith("breadth_persistence:"):
+        return "breadth_persistence", None
     if "eth/btc" in text or "ethbtc" in text:
         alias = "ethbtc_condition" if nonempty(prior_freeze.get("ethbtc_condition")) else None
         return "ethbtc", alias
