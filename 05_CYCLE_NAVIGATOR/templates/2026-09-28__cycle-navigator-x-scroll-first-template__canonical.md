@@ -37,7 +37,9 @@ This is the most detailed section.
 
 Show:
 - **MARKET / STRUCTURE** as its own block, with the just-completed issue score and the prior published issue score for week-over-week continuity.
-- One short sentence on the principal market/structure hit or miss.
+- Show the exact frozen market/structure calls from the prior week as **Forecast -> Actual**, each scored on the stable rubric **HIT=100 / MIXED=50 / MISS=0**.
+- The Market / Structure score is the equal-weight average of those frozen calls. Never publish a naked market score without the underlying forecast/outcome mapping.
+- After the completed-week review, publish and freeze the same fixed number of market/structure calls for the coming week so the next issue can score them on the identical rubric.
 - **PRICE RANGES** as a separate block, with the just-completed combined range score and the prior published issue's combined range score.
 - BTC price precision with prior-week comparison.
 - ETH price precision with prior-week comparison.
@@ -107,7 +109,15 @@ Use the structure, not the example values:
 CN #[prior]: **[x]%**
 Prior CN #[prior-1]: **[x]%**
 
-[One compact market/structure comment.]
+Forecast -> Actual:
+
+1. [Frozen market call] -> [Actual] -> [HIT/MIXED/MISS]
+2. [Frozen market call] -> [Actual] -> [HIT/MIXED/MISS]
+3. [Frozen market call] -> [Actual] -> [HIT/MIXED/MISS]
+4. [Frozen market call] -> [Actual] -> [HIT/MIXED/MISS]
+5. [Frozen market call] -> [Actual] -> [HIT/MIXED/MISS]
+
+Score = equal-weight average of the five call scores.
 
 **PRICE RANGES**
 
@@ -142,6 +152,18 @@ BTC [forecast] -> [actual]
 ETH [forecast] -> [actual]
 
 Then summarize the main structural hit/miss in 1-2 compact sentences.
+
+
+## Repeatable market/structure scoring loop
+
+The public X post must contain both halves of the loop:
+
+1. **Completed week:** prior frozen market/structure calls -> actual outcomes -> HIT/MIXED/MISS -> aggregate Market / Structure score.
+2. **Coming week:** exactly five concise, falsifiable market/structure calls frozen prospectively for next week's evaluation.
+
+The five calls should cover the same public concepts over time where evidence supports them: market regime/breakdown state, ETH/BTC direction, rotation confirmation, market-cap transmission and broad-altseason confirmation. Wording may adapt to the current state, but scoring semantics must not drift retrospectively.
+
+Price-range precision remains a separate score family and must never be blended into Market / Structure.
 
 ## Continuity rule
 
