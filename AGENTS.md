@@ -28,9 +28,11 @@ SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED
 
 ## 0. Cross-repository preflight
 
+**Visibility invariant (effective 2026-09-28): both `Donh91/Investering-Framework-Archive-v1` and `Donh91/secrets` are private.** Privacy does not merge their roles. Cross-repository reads must use explicitly authorized credentials or fail closed. Never assume anonymous/public GitHub access or that one repository's `GITHUB_TOKEN` can read the other private repository.
+
 The repository estate has three separate planes:
 
-- `Donh91/Investering-Framework-Archive-v1` is the public control plane.
+- `Donh91/Investering-Framework-Archive-v1` is the private control plane.
 - `Donh91/secrets` is the restricted data plane for raw/restricted payloads, private normalized market data, immutable capture receipts and restricted source health.
 - GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity is the credential plane. Credentials never belong in ordinary files in either repository.
 
@@ -41,7 +43,7 @@ Before work that may touch source data, Round 3, provenance, automation, researc
 3. the current control-plane domain contract/status.
 4. if restricted evidence is required and access is authorized, `Donh91/secrets/AGENTS.md`, its two boundary files and the exact immutable binding/health receipt.
 
-Private evidence must be bound by private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness. Never copy raw or normalized private values into this public repository, logs, issues, PRs or prompts. If private authority is required but unavailable, stop with `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` rather than infer, proxy or search the public repository.
+Private evidence must be bound by private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness. Never copy raw or normalized private values into this private control-plane repository, logs, issues, PRs or prompts. If private authority is required but unavailable, stop with `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` rather than infer, proxy or search the private control-plane repository.
 
 Round 3 remains `PROSPECTIVE_COLLECTION_ONLY`; hypothesis testing and outcome scoring remain `OFF`. Round 1 and Round 2 are closed evidence. Historical findings can reach at most `FORWARD_TEST`. The legacy standalone Cycle Navigator repository identifier is historical only and must not be used as a current route.
 
@@ -95,7 +97,7 @@ DATA_PING IN A FILENAME/PATH -> DOES NOT MAKE IT CURRENT AUTHORITY.
 
 Historical `data_ping_derived_*` files, old Custom GPT collector references, and `03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json` must not be promoted to current production authority unless a current operational surface explicitly routes to them.
 
-For website fields such as `NEXT DAYS`, consume an existing current autonomous canonical output only when fresh, eligible and public-safe. If none exists, fail closed rather than creating a parallel forecast engine.
+For website fields such as `NEXT DAYS`, consume an existing current autonomous canonical output only when fresh, eligible and safe for the intended output surface. If none exists, fail closed rather than creating a parallel forecast engine.
 
 ### 0.2 Research to Codex fast intake
 
@@ -185,7 +187,7 @@ Do not rely on conversation memory when repository sources are available.
 - Master Monday is the weekly official synthesis after ratification and consumes the current autonomous evidence chain.
 - Cycle Navigator is public output and pre-registered accountability and does not require manual DATA PING submission.
 - GitHub is versioned memory and the governance control plane.
-- The public repository is the control plane; `Donh91/secrets` is the restricted data plane and has no independent market-rule authority.
+- The private repository is the control plane; `Donh91/secrets` is the restricted data plane and has no independent market-rule authority.
 
 ### 3.1 DATA PING supplemental capture - explicit/legacy packet contexts only
 
