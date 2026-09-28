@@ -228,32 +228,14 @@ def valid_stored_completion_receipt(receipt: Any) -> bool:
         return True
     if not isinstance(quality, dict):
         return False
-    if quality.get("contract") != QUALITY_CONTRACT:
+    try:
+        normalized = normalize_execution_quality(quality)
+    except (TypeError, ValueError):
         return False
-    if quality.get("telemetry_status") not in TELEMETRY_STATUSES:
-        return False
-    quality_evidence = quality.get("evidence")
-    metrics = quality.get("metrics")
-    attribution = quality.get("failure_attribution")
-    if not isinstance(quality_evidence, list) or any(
-        not isinstance(item, str) or not item.strip() for item in quality_evidence
-    ):
-        return False
-    if not isinstance(metrics, dict) or not isinstance(attribution, list):
-        return False
-    if any(
-        not isinstance(item, dict) or set(item) != {"dimension", "evidence_ref"}
-        for item in attribution
-    ):
-        return False
-    status = quality.get("telemetry_status")
-    if status in {"CAPTURED", "PARTIAL"} and (
-        not quality_evidence or (not metrics and not attribution)
-    ):
-        return False
-    if status == "UNAVAILABLE" and (metrics or attribution):
-        return False
-    return True
+    # Stored immutable telemetry must already be in canonical normalized form.
+    # Re-normalization may validate legacy absence, but must not silently coerce
+    # a malformed stored object into a different one.
+    return normalized == quality
 
 
 def existing_completion_for_request(
