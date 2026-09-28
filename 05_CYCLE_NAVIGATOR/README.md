@@ -49,13 +49,19 @@ Historical CN issues may legitimately contain DATA PING-derived lineage for thei
 
 For all future Cycle Navigator issues, use:
 
-`protocols/2026-09-14__weekly-cycle-navigator-publication-contract-v1-2.md`
+`protocols/2026-09-28__weekly-cycle-navigator-publication-contract-v1-3.md`
 
 ### Binding X-publication continuity
 
 Cycle Navigator on X is one continuing public series. When the user asks for `Cycle Navigator til X`, `CN til X`, `CN til publicering`, or equivalent, always resolve the latest **actually published and archived** CN post first and use it as the style/structure/tone/numbering/narrative baseline. Then update that continuing format with the current canonical CN evidence.
 
 `CYCLE_NAVIGATOR_X_READY.md` is current evidence/content input, not publication-style authority when a prior published post exists. Never restart the X format from scratch merely because a new weekly X-ready artifact exists. This rule applies across chats and Kompas/Handlekompas threads.
+
+From 2026-09-28, public X rendering also follows the binding scroll-first style standard:
+
+`templates/2026-09-28__cycle-navigator-x-scroll-first-template__canonical.md`
+
+The precision section is intentionally the most detailed part and should show supported **Forecast -> Actual** comparisons. All other sections should be materially more compact and mobile-scroll friendly. New internal metrics, shadow dimensions or research terminology remain internal by default and must not appear publicly merely because the framework has expanded.
 
 The contract also preserves the late-section analytical sequence when evidence is available:
 
