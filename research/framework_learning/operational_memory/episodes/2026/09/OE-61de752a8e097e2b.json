@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-raw-owner-capture.yml",
+    "scripts/daily_capture/build_capture_index.py",
+    "scripts/health/build_architecture_health.py",
+    "tests/daily_capture/test_daily_capture_pipeline.py",
+    "tests/health/test_architecture_health_v2_1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-61de752a8e097e2b",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* health: freeze live-anchor execution plan * health: bind capture to execution plan * health: compare owner results to frozen plan * test: bind architecture health to owner plan * test: freeze live-anchor execution plan",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-raw-owner-capture.yml": "fb4fc451707f6e4425bf8defb24dc754142a3d9f",
+    "scripts/daily_capture/build_capture_index.py": "8eef12460ce47b3704a0d17e0207658699bfe4ba",
+    "scripts/health/build_architecture_health.py": "2b95ed91c529631312966e308c692da30420deb6",
+    "tests/daily_capture/test_daily_capture_pipeline.py": "e458aaa867d028a824fd8669c360fa03dda70e63",
+    "tests/health/test_architecture_health_v2_1.py": "ee0af6452fee5493bf5dd8dd5d0b041c46f1cc6f"
+  },
+  "source_commit_sha": "61de752a8e097e2b5f4d1d93d8781c85ab0bd021",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-27T19:35:47+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Health: bind owner coverage to frozen execution plan (#1348)"
+}

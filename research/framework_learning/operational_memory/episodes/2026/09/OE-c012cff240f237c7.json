@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/framework-learning-supervisor.yml",
+    "research/api_agent/API_TASK_REGISTRY_v1.json",
+    "research/api_agent/outputs/senior_repair_audit/recovered/run-36351414630/receipt.json",
+    "research/repository_safety/2026-09-28__senior-audit-retry-hardening-safepoint-receipt.json",
+    "scripts/api_agent/api_gateway.py",
+    "scripts/api_agent/senior_repair_audit_dispatch.py",
+    "tests/api_agent/test_api_gateway.py",
+    "tests/framework_intelligence/test_framework_learning_supervisor.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-c012cff240f237c7",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "supervisor-gpt-sol-senior-retry-cost-accounting-1358",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* api: give senior audit bounded reasoning headroom * api: persist receipts before hard-stop exit * api: compact and bound senior audit context * supervisor: persist failed Sol audit cost receipts * api: report fail-closed senior audit attempts * test: cover senior audit retry headroom * test: persist failed senior audit costs before validation * api: recover failed Sol audit cost receipt * safety: record senior audit retry safepoint",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/framework-learning-supervisor.yml": "01cefba81f90f6d8de45367f9072163d499c903d",
+    "research/api_agent/API_TASK_REGISTRY_v1.json": "6c74fe88240706e40ee311b2e58e9e8e53cafa58",
+    "research/api_agent/outputs/senior_repair_audit/recovered/run-36351414630/receipt.json": "5c304200ac75b125a00e0986811a29bd17ca4d76",
+    "research/repository_safety/2026-09-28__senior-audit-retry-hardening-safepoint-receipt.json": "c3ee9314abfe1340553a25a8274dccb8981ef568",
+    "scripts/api_agent/api_gateway.py": "9ecc2e206412c89bbcf8fd3ad2efc40099df4ebc",
+    "scripts/api_agent/senior_repair_audit_dispatch.py": "67d126f3c5ff879164ee090530a3fb7c699c3140",
+    "tests/api_agent/test_api_gateway.py": "98ce8c106c6b411ee20b668ab4d1a898ee0ea9dd",
+    "tests/framework_intelligence/test_framework_learning_supervisor.py": "08cf85e66eb374d899ff34adbceb2a4c98a5397c"
+  },
+  "source_commit_sha": "c012cff240f237c7ba2015376cd71c32eaf35f77",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-28T07:46:25+02:00",
+  "task_class": "FRAMEWORK_LEARNING",
+  "task_summary": "Supervisor: harden GPT-6 Sol senior audit retry and cost accounting (#1358)"
+}

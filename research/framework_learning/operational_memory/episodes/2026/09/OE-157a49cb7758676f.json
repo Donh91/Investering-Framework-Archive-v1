@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/build_automation_health.py",
+    "tests/health/test_automation_production_health.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-157a49cb7758676f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* health: end recovery amber after verified success streak * test: recovery amber converges after three successes * health: count only expected successful runs for recovery * test: recovery requires expected successful production runs",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/build_automation_health.py": "814f5fc5506c3185f0d6f9c3b8fdc439c779591f",
+    "tests/health/test_automation_production_health.py": "466b6978fbdfcce14a4dea841181f9ee0fc669c8"
+  },
+  "source_commit_sha": "157a49cb7758676f6449fbdf53fdde8904a7b16d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-27T19:46:47+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "Health: converge recovery AMBER after expected successes (#1349)"
+}
