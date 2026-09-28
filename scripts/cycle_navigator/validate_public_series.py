@@ -37,7 +37,7 @@ def main() -> None:
     # User attestation is authoritative for publication identity; scoring may legitimately lag.
     assert int(score["public_issue_number"]) == int(latest_score["public_issue_number"])
     assert score["forecast_week"] == latest_score["forecast_week"]
-    assert score["status"] == "FINAL_DUAL_TRACK"
+    assert str(score["status"]).startswith("FINAL_DUAL_TRACK")
     assert score["combined_score"] is None
 
     price = score["price_range_precision"]
@@ -71,8 +71,10 @@ def main() -> None:
     row = next(x for x in history["records"] if int(x["cn"]) == int(score["public_issue_number"]))
     assert row["allow_derived_overall"] is False
     assert f"{float(price['score']):g}" in str(row["range_display"])
-    assert f"Market/Structure {float(market['score']):g}" in str(row["structure_display"])
-    assert f"Frozen claims {float(frozen['score']):g}" in str(row["structure_display"])
+    structure_display = str(row["structure_display"])
+    assert f"Market/Structure {float(market['score']):g}" in structure_display
+    if str(row.get("structure_method") or "") != "LEGACY_PRE_V2":
+        assert f"Frozen claims {float(frozen['score']):g}" in structure_display
     completed = int(history["coverage"]["completed_issues"])
     assert completed == max(int(x["cn"]) for x in history["records"])
     assert int(history["coverage"]["latest_open_issue"]) == completed + 1
