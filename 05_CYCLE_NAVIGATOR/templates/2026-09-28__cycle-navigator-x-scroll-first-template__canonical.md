@@ -149,4 +149,4 @@ The latest actually published Cycle Navigator remains the narrative-continuity r
 
 If a prior public post is more verbose, preserve its concepts and sequence while compressing them into this scroll-first form.
 
-Public issue numbering must still follow the confirmed public-series identity contract. An approved draft does not become a confirmed published issue until platform publication is confirmed.
+Public issue numbering must still follow the confirmed public-series identity contract. The user is authoritative on publication status: do not independently verify X. An approved draft becomes `PUBLISHED_CONFIRMED_BY_USER` when the user states that the exact version was published; until then it remains approved/pre-publication.
