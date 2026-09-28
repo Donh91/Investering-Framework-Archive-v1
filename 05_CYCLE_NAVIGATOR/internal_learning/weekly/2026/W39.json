@@ -1,17 +1,11 @@
 {
-  "api_review_status": "NOT_REQUIRED",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "automatic_promotion": false,
-  "automatic_threshold_change": false,
-  "automatic_weight_change": false,
   "canonical_effect": false,
-  "checkpoint_sequence": 0,
-  "contract": "CN_PRECISION_LEARNING_STATE_v1",
-  "deep_research_authorized": false,
-  "evidence_fingerprint": "5d5168428738cc3169136e588346f10fb164d188a54dc1cf94cd452d6dd776b0",
-  "external_provider_calls_authorized": false,
-  "family": "",
-  "family_states": {
+  "checkpoint_due": false,
+  "completed_iso_week": 39,
+  "completed_iso_year": 2026,
+  "contract": "CN_PRECISION_WEEKLY_TREND_v1",
+  "family_trends": {
     "altseason": {
       "change_vs_previous_4w_pp": null,
       "family": "altseason",
@@ -222,15 +216,14 @@
       "zero_weeks_4w": 0
     }
   },
-  "last_checkpoint_settled_count": 0,
-  "last_settled_score_key": "Y2026-W39-CN27",
-  "latest_checkpoint": null,
-  "latest_weekly_snapshot": "05_CYCLE_NAVIGATOR/internal_learning/weekly/2026/W39.json",
-  "paid_data_authorized": false,
+  "persistent_families": [
+    "rotation"
+  ],
   "portfolio_execution": false,
-  "primary_action": "WAIT_FOR_MORE_EVIDENCE",
   "public_surface_effect": false,
-  "reason": "Persistent weakness is visible in rotation but the next four-settlement checkpoint has not matured. Continue observing without research escalation.",
+  "score_key": "Y2026-W39-CN27",
   "settled_week_count": 3,
-  "target": ""
+  "watch_families": [
+    "breadth"
+  ]
 }
