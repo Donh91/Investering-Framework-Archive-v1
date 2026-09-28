@@ -42,6 +42,17 @@ Each issue must freeze the exact forward claims needed for next Monday's evaluat
 
 The public continuity score must be stored separately from scientific evidence claims. A communication score cannot be treated as validated model edge. Missing historical artifacts remain `UNAVAILABLE`; they must never be silently reconstructed.
 
+### Public precision continuity lock
+
+The established public Cycle Navigator precision presentation on X and the public site is a continuity surface and MUST remain simple and historically comparable.
+
+- Internal precision may add new families, horizons, diagnostics and calibration scores without changing public presentation.
+- Internal-only dimensions MUST NOT automatically appear as new public headline scores.
+- Existing public score semantics, naming and historical presentation MUST NOT be replaced, expanded, recomputed or removed because the internal scoring system becomes richer.
+- Published historical scores remain exactly as published under their original methodology.
+- Any change to the public precision model requires a separate explicit owner-approved, versioned public migration. An internal schema or validator change is never sufficient authority.
+- Public simplicity and longitudinal credibility take priority over exposing every internal diagnostic.
+
 ## User-facing retrieval semantics
 
 When a DATA PING/main analysis thread receives:
