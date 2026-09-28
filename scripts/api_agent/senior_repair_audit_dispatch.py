@@ -18,6 +18,7 @@ PACKAGE_COMMITS = [
     ("#1354", "78e951c189ea7e3cad7d0ce8f0aa3de1ce848d7f"),
     ("#1355", "793cbff9b792a50527ca7d09c29ebb83843f2cf3"),
     ("#1356", "735eaef61a81ad28619ee880f4bb8be7c10072b3"),
+    ("#1357", "a630eac9b00015fec68d9a30b961e15bc07f3607"),
 ]
 
 CURRENT_FILES = [
@@ -72,6 +73,12 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+MAX_CONTEXT_BYTES = 360_000
+PATCH_CLIP_CHARS = 8_000
+STAT_CLIP_CHARS = 3_000
+FILE_CLIP_CHARS = 8_000
+
+
 def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_id: str) -> dict[str, Any]:
     head = run_git("rev-parse", "HEAD").strip()
     package = []
@@ -79,7 +86,7 @@ def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_
         try:
             stat = run_git("show", "--no-ext-diff", "--format=fuller", "--stat", sha)
             patch = run_git("show", "--no-ext-diff", "--format=", "--unified=12", sha)
-            package.append({"label": label, "sha": sha, "stat": clip(stat, 12000), "patch": clip(patch, 45000)})
+            package.append({"label": label, "sha": sha, "stat": clip(stat, STAT_CLIP_CHARS), "patch": clip(patch, PATCH_CLIP_CHARS)})
         except subprocess.CalledProcessError as exc:
             package.append({"label": label, "sha": sha, "error": clip(exc.output, 4000)})
 
@@ -90,7 +97,7 @@ def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_
             files.append({"path": rel, "status": "MISSING"})
             continue
         raw = path.read_bytes()
-        files.append({"path": rel, "sha256": sha256_bytes(raw), "content": clip(raw.decode(errors="replace"), 28000)})
+        files.append({"path": rel, "sha256": sha256_bytes(raw), "content": clip(raw.decode(errors="replace"), FILE_CLIP_CHARS)})
 
     context = {
         "contract": "SENIOR_REPAIR_AUDIT_CONTEXT_v1",
@@ -112,7 +119,10 @@ def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_
     }
     output_dir.mkdir(parents=True, exist_ok=True)
     context_path = output_dir / "context.json"
-    context_path.write_text(json.dumps(context, sort_keys=True, separators=(",", ":")) + "\n")
+    context_bytes = (json.dumps(context, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    if len(context_bytes) > MAX_CONTEXT_BYTES:
+        raise ValueError(f"senior_audit_context_too_large:{len(context_bytes)}>{MAX_CONTEXT_BYTES}")
+    context_path.write_bytes(context_bytes)
     (output_dir / "prompt.txt").write_text(PROMPT)
     manifest = {
         "contract": "SENIOR_REPAIR_AUDIT_CONTEXT_MANIFEST_v1",
@@ -120,6 +130,8 @@ def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_
         "issue_number": issue_number,
         "comment_id": comment_id,
         "context_sha256": sha256_bytes(context_path.read_bytes()),
+        "context_bytes": len(context_path.read_bytes()),
+        "context_byte_limit": MAX_CONTEXT_BYTES,
         "package_commits": [{"label": label, "sha": sha} for label, sha in PACKAGE_COMMITS],
         "paths": [row["path"] for row in files],
         "private_data_included": False,
