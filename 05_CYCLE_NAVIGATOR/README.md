@@ -63,6 +63,8 @@ From 2026-09-28, public X rendering also follows the binding scroll-first style 
 
 The precision section is intentionally the most detailed part and should show supported **Forecast -> Actual** comparisons. All other sections should be materially more compact and mobile-scroll friendly. New internal metrics, shadow dimensions or research terminology remain internal by default and must not appear publicly merely because the framework has expanded.
 
+**Publication status is user-attested.** Do not independently verify X. When the user says a specific version is published, archive that exact version as `PUBLISHED_CONFIRMED_BY_USER`. If the user says it is not yet published, keep it as an approved draft.
+
 The contract also preserves the late-section analytical sequence when evidence is available:
 
 1. coming-week price ranges;
