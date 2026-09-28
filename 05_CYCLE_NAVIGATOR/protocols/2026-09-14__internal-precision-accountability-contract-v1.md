@@ -133,6 +133,18 @@ one concise self-critique
 
 The detailed evidence remains in the machine scorecard and append-only parameter ledger.
 
+## Multi-week precision learning
+
+The settled internal precision ledgers feed `CN_PRECISION_LEARNING_SUPERVISOR_v1`.
+
+- Weekly settlement remains the atomic accountability layer.
+- A deterministic trend monitor analyzes every successful settlement.
+- A deep checkpoint occurs after every four new successful settled CN weeks, not by calendar modulo.
+- The checkpoint compares the recent four settlements with the preceding four and preserved history.
+- Persistent family weakness may create a research-only hypothesis proposal through the existing Research Governance Stack.
+- AI may analyze causes only after a deterministic trigger; AI cannot create its own escalation.
+- This learning layer is additive-only and has zero authority over public SITE/X precision values.
+
 ## Generic forecast stack boundary
 
 Generic `research/api_agent` forecast candidates are supplementary only. Candidate existence is not a frozen prediction and cannot enter internal hit-rate accounting until the generic stack has passed its own ratification, freeze, maturity, lineage and settlement gates.
