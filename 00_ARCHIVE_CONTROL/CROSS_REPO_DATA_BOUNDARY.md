@@ -1,15 +1,28 @@
 # Cross-repository data boundary
 
 Status: `CANONICAL_CROSS_REPO_ROUTING_AUTHORITY`  
-Effective: `2026-08-23`  
+Effective: `2026-09-28`  
 Scope: agent context, source provenance, restricted market data, credentials, Round 3 collection and cross-repository automation  
 Machine map: `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
 
 ## Authority and precedence
 
-This file is the public routing authority for the three-plane architecture. It overrides older statements that assume all framework data is held in one repository, that a private destination is still absent, or that `Donh91/Cycle-navigator-` is a current repository route.
+This file is the private-estate routing authority for the three-plane architecture. It overrides older statements that assume all framework data is held in one repository, that a private destination is still absent, or that `Donh91/Cycle-navigator-` is a current repository route.
 
 It does not change any market rule, source contract, threshold, weight, portfolio rule, Master Monday semantic, Cycle Navigator semantic or frozen Round 3 research commitment. Historical receipts remain historical evidence and are not rewritten.
+
+## Private-estate visibility invariant
+
+Every repository in the active framework estate must be private. Agents and workflows must verify current GitHub visibility rather than infer it from documentation. A repository that reads back public is a blocking privacy defect and must not be used as evidence that anonymous cross-repository access is supported. Cross-repository automation must use an explicitly authorized least-privilege credential from the credential plane; a repository-scoped `GITHUB_TOKEN` is never assumed to read another private repository.
+
+Current estate registry:
+
+- `Donh91/Investering-Framework-Archive-v1`
+- `Donh91/secrets`
+- `Donh91/Investering-Framework-Vault`
+- `Donh91/Eksperimenter-framework-`
+- `Donh91/Meme-Alpha-Lab`
+- `Donh91/Investering-AI-Audit-Bridge`
 
 ## Three-plane architecture
 
@@ -28,16 +41,16 @@ Any new ChatGPT Work thread, Claude/Cowork session, Codex task, agent, skill, re
 1. read `Donh91/Investering-Framework-Archive-v1/AGENTS.md`;
 2. read the control-plane canonical index, addendum registry, archive map and this file;
 3. read `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json` and the current domain contract/status pointer;
-4. determine whether the requested evidence class is public metadata or restricted provider data;
+4. determine whether the requested evidence class is control-plane-safe metadata or restricted provider data;
 5. if restricted data is required and access is authorized, read `Donh91/secrets/AGENTS.md`, `README.md`, `GOVERNANCE/CROSS_REPO_DATA_BOUNDARY.md`, `GOVERNANCE/PRIVATE_DATA_BOUNDARY.md` and the exact private binding/health record;
 6. bind all conclusions to immutable commits and exact paths, never merely to either repository's moving `main`;
 7. stop with `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` when restricted evidence is necessary but cannot be read.
 
-Public-only work may stop after step 4. Lack of access to the restricted plane is not permission to infer values, search for them in the public repository or substitute public proxies.
+Control-plane-only work may stop after step 4. Lack of access to the restricted plane is not permission to infer values, search for them in the control-plane repository or substitute public proxies.
 
 ## Data classification and movement
 
-Allowed from restricted to public:
+Allowed from restricted to the private control plane:
 
 - private repository name;
 - immutable private commit SHA;
@@ -48,7 +61,7 @@ Allowed from restricted to public:
 - row or object counts, timestamp ranges, gap counts, completeness class and provider-value-free source health;
 - public research decisions made only after the relevant analysis gate is opened.
 
-Forbidden from restricted to public:
+Forbidden from restricted to the private control plane:
 
 - raw payload bodies;
 - order-book levels, prices, sizes, funding values, open interest, volatility values or other provider-derived market values;
@@ -56,7 +69,7 @@ Forbidden from restricted to public:
 - object-store credentials, signed URLs, access tokens or sensitive storage coordinates;
 - unredacted logs or exception text that contains provider values or credentials.
 
-Movement from public to restricted may include contracts, schemas, collector code and immutable control-plane commit identifiers. It does not transfer canonical decision authority to the restricted repository.
+Movement from the private control plane to the restricted plane may include contracts, schemas, collector code and immutable control-plane commit identifiers. It does not transfer canonical decision authority to the restricted repository.
 
 ## Required private dataset binding
 
@@ -80,7 +93,7 @@ gap_count and missingness/completeness status
 validation_status
 ```
 
-When the raw payload is stored in private object/blob storage, the exact object key, immutable object version, storage checksum and retention state live in the private manifest. The public receipt binds to the private commit and exact manifest path, plus its bytes and SHA-256. Public pointers must remain provider-value-free.
+When the raw payload is stored in private object/blob storage, the exact object key, immutable object version, storage checksum and retention state live in the private manifest. The control-plane receipt binds to the private commit and exact manifest path, plus its bytes and SHA-256. Control-plane pointers must remain provider-value-free.
 
 Mutable branch names, workflow artifact URLs and latest-file names alone are not provenance.
 
@@ -107,7 +120,7 @@ The following commitments were verified as ancestors of their repository's `main
 |---|---|---|
 | V2 durable commitment | control-plane commit `3aad2a9da12992949665e0e30ef8986136e1dfca` | reachable |
 | Private data-plane binding | control-plane commit `be9f6f447ddf9e9370e42718b799ace11c1dcde2` | reachable |
-| Private collection activation public receipt | control-plane commit `c1be6e87e9462e078065b87448717f8900326380` | reachable |
+| Private collection activation control-plane receipt | control-plane commit `c1be6e87e9462e078065b87448717f8900326380` | reachable |
 | Private source canary | workflow run `32633097190` | `PASS` |
 | SC01 OKX ETH OI | `Donh91/secrets` | private prospective collection active |
 | SC03 OKX realized funding | `Donh91/secrets` | private prospective collection active |
@@ -160,7 +173,7 @@ A cross-repository task is complete only when:
 
 1. required repositories and canonical files were read in order;
 2. all private evidence has immutable commit/path/bytes/SHA-256/source-contract/time/schema/completeness bindings;
-3. no restricted values or credentials entered public files, logs or responses;
+3. no restricted values or credentials entered control-plane files, logs or responses;
 4. the Round 3 firewall was preserved;
 5. the exact branch, PR, CI and post-merge readback state is reported for each changed repository;
 6. unresolved access, infrastructure, retention and paid-service decisions are named as blockers.
