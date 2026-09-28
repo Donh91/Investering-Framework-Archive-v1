@@ -82,6 +82,16 @@ CoinGecko public simple-price endpoint for BTC and ETH spot USD prices and 24-ho
 
 The live context layer is explicitly non-authoritative for Cycle Navigator state.
 
+## Public precision continuity
+
+The public website follows the established Cycle Navigator public precision presentation. Internal precision expansion is not a reason to expand or redesign the public score surface.
+
+- Keep the existing public score semantics and historical presentation stable.
+- Do not expose every internal precision family merely because it exists internally.
+- Do not replace a long-running public score with a newer internal component score.
+- Do not silently recompute historical public scores under newer internal methodology.
+- A public precision-model change requires explicit owner approval and a versioned migration separate from internal calibration work.
+
 ## Public experience
 
 The public release exposes:
