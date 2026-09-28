@@ -69,10 +69,12 @@ def main() -> None:
     history = read_json(root / "05_CYCLE_NAVIGATOR/site/history-scoreboard.json")
     row = next(x for x in history["records"] if int(x["cn"]) == int(score["public_issue_number"]))
     assert row["allow_derived_overall"] is False
-    assert "71.51" in str(row["range_display"])
-    assert "Market/Structure 80" in str(row["structure_display"])
-    assert "Frozen claims 78.57" in str(row["structure_display"])
-    assert "Market/Structure 80" in str(row["structure_display"])
+    assert f"{float(price['score']):g}" in str(row["range_display"])
+    assert f"Market/Structure {float(market['score']):g}" in str(row["structure_display"])
+    assert f"Frozen claims {float(frozen['score']):g}" in str(row["structure_display"])
+    completed = int(history["coverage"]["completed_issues"])
+    assert completed == max(int(x["cn"]) for x in history["records"])
+    assert int(history["coverage"]["latest_open_issue"]) == completed + 1
 
     print(json.dumps({
         "status": "PASS",

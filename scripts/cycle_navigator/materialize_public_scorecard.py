@@ -48,6 +48,27 @@ def main() -> None:
     machine_issue = int(binding["machine_issue_number"])
     forecast_week = str(binding["forecast_week"])
 
+    # Public Proof is publication accountability, not merely machine calibration.
+    # Never advance the public score pointer/history from an X-ready draft.
+    index_path = root / "05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json"
+    index = read_json(index_path)
+    latest_pub = index.get("latest_published") or {}
+    if (
+        int(latest_pub.get("public_issue_number", -1)) != public_issue
+        or str(latest_pub.get("forecast_week", "")) != forecast_week
+    ):
+        print(json.dumps({
+            "status": "NOOP",
+            "reason": "PUBLICATION_NOT_CONFIRMED_FOR_COMPLETED_WEEK",
+            "public_issue_number": public_issue,
+            "forecast_week": forecast_week,
+        }, sort_keys=True))
+        return
+    for field in ("published_path", "publication_receipt"):
+        rel = str(latest_pub.get(field) or "")
+        if not rel or ".." in rel or not (root / rel).is_file():
+            raise SystemExit(f"latest_published_{field}_missing_or_invalid")
+
     machine_score = read_json(current_week_dir / "CYCLE_NAVIGATOR_SCORECARD.json")
     if int(machine_score.get("issue_scored") or -1) != machine_issue:
         raise SystemExit("public_binding_machine_score_mismatch")
@@ -177,8 +198,6 @@ def main() -> None:
     }
     write_json(root / "05_CYCLE_NAVIGATOR/LATEST_PUBLIC_SCORECARD.json", latest)
 
-    index_path = root / "05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json"
-    index = read_json(index_path)
     index["latest_completed_score"] = dict(latest)
     index["latest_completed_score"].pop("contract", None)
     write_json(index_path, index)
@@ -186,23 +205,30 @@ def main() -> None:
     history_path = root / "05_CYCLE_NAVIGATOR/site/history-scoreboard.json"
     if history_path.exists():
         history = read_json(history_path)
-        for row in history.get("records", []):
-            if int(row.get("cn", -1)) == public_issue:
-                row["era"] = "DUAL_TRACK_CANONICAL"
-                row["overall"] = None
-                row["range_display"] = f"Combined {price_score:g} · BTC {asset_scores['BTC']:g} · ETH {asset_scores['ETH']:g}"
-                row["intraday_display"] = (
-                    f"D1–2 {window_scores['day_1_2']:g} · "
-                    f"D3–4 {window_scores['day_3_4']:g} · "
-                    f"D5–7 {window_scores['day_5_7']:g}"
-                )
-                row["structure_display"] = (
-                    f"Frozen claims {float(frozen_claim_score):g} · "
-                    f"Market/Structure {float(market_score):g}"
-                )
-                row["provenance"] = f"PUBLIC_CN{public_issue}_{forecast_week}_DUAL_TRACK_SCORECARD"
-                row["allow_derived_overall"] = False
-                break
+        records = history.setdefault("records", [])
+        row = next((r for r in records if int(r.get("cn", -1)) == public_issue), None)
+        if row is None:
+            row = {"cn": public_issue, "evaluated_in": public_issue + 1}
+            records.append(row)
+        row["era"] = "DUAL_TRACK_CANONICAL"
+        row["overall"] = None
+        row["range_display"] = f"Combined {price_score:g} · BTC {asset_scores['BTC']:g} · ETH {asset_scores['ETH']:g}"
+        row["intraday_display"] = (
+            f"D1–2 {window_scores['day_1_2']:g} · "
+            f"D3–4 {window_scores['day_3_4']:g} · "
+            f"D5–7 {window_scores['day_5_7']:g}"
+        )
+        row["structure_display"] = (
+            f"Frozen claims {float(frozen_claim_score):g} · "
+            f"Market/Structure {float(market_score):g}"
+        )
+        row["provenance"] = f"PUBLIC_CN{public_issue}_{forecast_week}_DUAL_TRACK_SCORECARD"
+        row["allow_derived_overall"] = False
+        records.sort(key=lambda r: int(r.get("cn", 0)))
+        coverage = history.setdefault("coverage", {})
+        coverage["completed_issues"] = max(int(r.get("cn", 0)) for r in records)
+        coverage["rows_with_published_or_canonical_score_evidence"] = len(records)
+        coverage["latest_open_issue"] = coverage["completed_issues"] + 1
         history["provenance_note"] = (
             "Recent dual-track records are resolved by public forecast week plus immutable publication lineage. "
             "Machine issue numbers are not public-series join keys during the September migration offset."

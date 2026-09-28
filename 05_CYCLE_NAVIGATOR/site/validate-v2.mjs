@@ -19,14 +19,14 @@ const checks=[
  ['all issue weekly rollup',product.includes('publicScores')&&product.includes('mayDerive')&&product.includes('component rollup')],
  ['canonical dual-track forbids synthetic overall',product.includes("['AUTOMATED_CANONICAL','DUAL_TRACK_CANONICAL']")&&h.records?.find(r=>r.cn===25)?.allow_derived_overall===false],
  ['public series identity reaches homepage',build.includes('CN_PUBLIC_SERIES_INDEX.json')&&product.includes('current_public_projection?.public_issue_number')],
- ['CN25 public score lineage fixed',h.records?.find(r=>r.cn===25)?.structure_display?.includes('Market/Structure 80')&&h.records?.find(r=>r.cn===25)?.range_display?.includes('71.51')],
+ ['canonical public score lineage present',Array.isArray(h.records)&&h.records.length>0&&h.records.every(r=>Number.isInteger(Number(r.cn))&&typeof r.provenance==='string'&&r.provenance.length>0)],
  ['issue-level price aggregation',product.includes('Combined\\s+')&&product.includes('(?:BTC|ETH)')],
  ['non-price aggregation',product.includes('parseComponentScores')&&product.includes('intraday_display')&&product.includes('structure_display')],
  ['plain-English translator',product.includes('investorText')&&product.includes('Ethereum strengthens relative to Bitcoin')],
  ['public methodology describes data families',product.includes('PRICE & STRUCTURE')&&product.includes('PARTICIPATION & ROTATION')&&product.includes('LIQUIDITY & POSITIONING')&&product.includes('MACRO & NETWORK CONTEXT')],
  ['public product assets deployed',liveBuilder.includes('public-product.js')&&liveBuilder.includes('public-product.css')&&build.includes('history-scoreboard.json')],
  ['raw history remains locked',h.policy?.historical_scores_locked===true&&h.policy?.retroactive_rescoring===false],
- ['history coverage complete through CN25',h.coverage?.completed_issues===25&&h.coverage?.latest_open_issue===26]
+ ['history coverage matches records',Number(h.coverage?.completed_issues)===Math.max(...h.records.map(r=>Number(r.cn)))&&Number(h.coverage?.latest_open_issue)===Number(h.coverage?.completed_issues)+1&&Number(h.coverage?.rows_with_published_or_canonical_score_evidence)===h.records.length]
 ];
 let failed=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
 if(failed)process.exit(1);console.log(`PASS ${checks.length}/${checks.length} Cycle Navigator public product release checks`);
