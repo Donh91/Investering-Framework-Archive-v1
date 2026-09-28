@@ -14,7 +14,8 @@ From W36 onward, the migration-era machine counter is one issue ahead of the act
 | 2026-W36 | #23 | #24 |
 | 2026-W37 | #24 | #25 |
 | 2026-W38 | #25 | #26 |
-| 2026-W39 | #26 current projection | #27 |
+| 2026-W39 | #26 published / completed | #27 |
+| 2026-W40 | #27 current projection | #28 |
 
 This offset created the recurring false conclusion that a public issue had no frozen ranges. The data was present in the immutable published post and range ledger, while the same-number machine freeze referred to a different forecast week.
 
@@ -32,30 +33,36 @@ For **"Cycle Navigator precision", "score from last week", "today's CN score", "
 
 ## Current completed public score
 
-**CN #25, forecast week 2026-W38**
+**CN #26, forecast week 2026-W39**
 
-- MARKET / STRUCTURE: **80%**
-- PRICE RANGE aggregate: **71.51%**
-- BTC ranges: **67.48%**
-- ETH ranges: **75.53%**
-- Intraday D1-2: **58.87%**
-- Intraday D3-4: **67.56%**
-- Intraday D5-7: **88.09%**
+- MARKET / STRUCTURE: **60%** - legacy pre-v2 method, closed and retained for audit
+- PRICE RANGE aggregate: **81.85%**
+- BTC ranges: **78.66%**
+- ETH ranges: **85.05%**
+- Intraday D1-2: **83.19%**
+- Intraday D3-4: **86.35%**
+- Intraday D5-7: **76.02%**
 - Overall combined: **UNDEFINED**, deliberately not synthesized
 
 Canonical scorecard:
 
-`public_scorecards/2026/W38/CN25_PUBLIC_SCORECARD.json`
+`public_scorecards/2026/W39/CN26_PUBLIC_SCORECARD.json`
 
 Immutable public forecast:
 
-`published/2026/CYCLE_NAVIGATOR_25_X_PUBLISHED_2026-09-14.md`
+`published/2026/CYCLE_NAVIGATOR_26_X_PUBLISHED_2026-09-21.md`
 
 ## Current public issue
 
-The current W39 public projection is **CN #26**.
+The current W40 public projection is **CN #27**.
 
-Its underlying migration-era machine package is W39 / machine issue #27. That internal number must not leak into the public series identity.
+Its underlying migration-era machine package is W40 / machine issue #28. CN #27 is currently approved but not yet user-confirmed as published.
+
+CN #27 starts **Market / Structure v2** with five fixed, non-duplicative dimensions:
+
+`REGIME | LEADERSHIP | FIRST_HANDOFF | DEEPER_TRANSMISSION | BREADTH_PERSISTENCE`
+
+CN #26's 60% remains a legacy score and must not be treated as a like-for-like v2 baseline. The first comparable v2 outcome score is produced after W40 completes.
 
 ## Frozen-score versus outcome-score vocabulary
 
