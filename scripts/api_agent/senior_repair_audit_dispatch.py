@@ -164,6 +164,31 @@ def validate_result(output_dir: Path) -> dict[str, Any]:
     return {"receipt": receipt, "output": output}
 
 
+def failure_report_markdown(output_dir: Path, comment_id: str) -> str:
+    receipt_path = output_dir / "output" / "receipt.json"
+    if not receipt_path.exists():
+        return (
+            "## SENIOR_REPAIR_AUDIT failed before a paid receipt was persisted\n\n"
+            "Trigger comment: " + comment_id + "\n"
+            "No API receipt exists in the runtime output directory. The failure occurred before a durable paid-call receipt was available.\n"
+        )
+    receipt = json.loads(receipt_path.read_text())
+    errors = receipt.get("parse_errors") if isinstance(receipt.get("parse_errors"), list) else []
+    return "\n".join([
+        "## SENIOR_REPAIR_AUDIT attempt failed closed",
+        "",
+        "Trigger comment: " + comment_id,
+        "Model: " + str(receipt.get("model")),
+        "Receipt status: " + str(receipt.get("status")),
+        "Tokens: input=" + str(receipt.get("input_tokens")) + ", output=" + str(receipt.get("output_tokens")),
+        "Estimated API cost: " + f"{float(receipt.get('estimated_cost_usd') or 0.0):.6f}" + " USD",
+        "Attempts: " + str(receipt.get("attempt_count")),
+        "Parse/incomplete evidence: " + json.dumps(errors, sort_keys=True),
+        "",
+        "The receipt and blocked output were persisted for budget/accounting evidence. No audit conclusion was accepted.",
+    ]) + "\n"
+
+
 def report_markdown(output_dir: Path, comment_id: str, persisted_path: str) -> str:
     result = validate_result(output_dir)
     receipt, output = result["receipt"], result["output"]
@@ -201,6 +226,10 @@ def main() -> None:
     report.add_argument("--comment-id", required=True)
     report.add_argument("--persisted-path", required=True)
     report.add_argument("--output", type=Path, required=True)
+    failure_report = sub.add_parser("failure-report")
+    failure_report.add_argument("--output-dir", type=Path, required=True)
+    failure_report.add_argument("--comment-id", required=True)
+    failure_report.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.cmd == "build":
         result = build_context(args.repo_root, args.output_dir, args.issue_number, args.comment_id)
@@ -214,8 +243,13 @@ def main() -> None:
             "output_tokens": result["receipt"]["output_tokens"],
             "estimated_cost_usd": result["receipt"]["estimated_cost_usd"],
         }, sort_keys=True))
-    else:
+    elif args.cmd == "report":
         body = report_markdown(args.output_dir, args.comment_id, args.persisted_path)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(body)
+        print(json.dumps({"status": "PASS", "output": str(args.output)}, sort_keys=True))
+    else:
+        body = failure_report_markdown(args.output_dir, args.comment_id)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(body)
         print(json.dumps({"status": "PASS", "output": str(args.output)}, sort_keys=True))
