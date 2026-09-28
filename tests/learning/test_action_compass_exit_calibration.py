@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import tempfile
 import unittest
@@ -34,7 +35,7 @@ class ProtectionCalibrationTests(unittest.TestCase):
             "schema_version": 3,
             "decision_policy_version": policy,
             "compass_id": "CMP-test",
-            "compass_sha256": "a" * 64,
+            "compass_sha256": "",
             "source_bindings": {
                 "cycle_navigator": {"decision_projection_source": projection_source}
             },
@@ -51,6 +52,9 @@ class ProtectionCalibrationTests(unittest.TestCase):
                 "reentry_state": "WAIT_FOR_FLUSH",
             },
         }
+        freeze["compass_sha256"] = hashlib.sha256(
+            MODULE.canonical_bytes({k: v for k, v in freeze.items() if k != "compass_sha256"})
+        ).hexdigest()
         freeze_path.write_text(json.dumps(freeze), encoding="utf-8")
 
         outcome_root = root / "04_MARKET_LEARNING/handlekompas/official/outcomes"
@@ -58,10 +62,15 @@ class ProtectionCalibrationTests(unittest.TestCase):
         outcome_path.parent.mkdir(parents=True, exist_ok=True)
         outcome = {
             "contract": "OFFICIAL_DAILY_COMPASS_OUTCOME_v1",
+            "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v1",
             "compass_id": "CMP-test",
-            "compass_sha256": "a" * 64,
+            "compass_sha256": freeze["compass_sha256"],
             "forecast_path": freeze_rel.as_posix(),
+            "issued_at_utc": "2026-09-27T00:00:00Z",
             "horizon": "72h",
+            "target_at_utc": "2026-09-30T00:00:00Z",
+            "matured_at_utc": "2026-09-30T00:10:00Z",
+            "authority": {"purpose": "POST_MATURITY_ACCOUNTABILITY_ONLY"},
             "realized": {
                 "btc_return_pct": -8.0,
                 "btc_mfe_pct": 3.0,
@@ -71,6 +80,9 @@ class ProtectionCalibrationTests(unittest.TestCase):
                 "eth_mae_pct": -5.0,
             },
         }
+        outcome["outcome_sha256"] = hashlib.sha256(
+            MODULE.canonical_bytes({k: v for k, v in outcome.items() if k != "outcome_sha256"})
+        ).hexdigest()
         outcome_path.write_text(json.dumps(outcome), encoding="utf-8")
         return outcome_root
 
@@ -96,6 +108,29 @@ class ProtectionCalibrationTests(unittest.TestCase):
             self.assertEqual(btc["median_full_exit_terminal_upside_foregone_reference_pct"], 0.0)
             self.assertFalse(report["promotion_readiness"]["automatic_promotion"])
             self.assertTrue(report["interpretation_boundary"]["descriptive_only"])
+
+    def test_tampered_freeze_or_outcome_hash_is_excluded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outcome_root = self.write_case(root)
+            freeze_path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/27/CMP-test.json"
+            freeze = json.loads(freeze_path.read_text())
+            freeze["protection_tracker"]["distribution_risk"] = "NONE"
+            freeze_path.write_text(json.dumps(freeze))
+            report = MODULE.build_report(root, outcome_root, "2026-09-30T00:00:00Z")
+            self.assertEqual(report["eligible_series_row_count"], 0)
+            self.assertEqual(report["excluded_outcome_counts"]["FORECAST_SELF_HASH_INVALID"], 1)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outcome_root = self.write_case(root)
+            outcome_path = next(outcome_root.rglob("*.json"))
+            outcome = json.loads(outcome_path.read_text())
+            outcome["realized"]["btc_return_pct"] = 99.0
+            outcome_path.write_text(json.dumps(outcome))
+            report = MODULE.build_report(root, outcome_root, "2026-09-30T00:00:00Z")
+            self.assertEqual(report["eligible_series_row_count"], 0)
+            self.assertEqual(report["excluded_outcome_counts"]["OUTCOME_SELF_HASH_INVALID"], 1)
 
     def test_compatibility_addendum_is_not_learned_as_prospective_machine_projection(self):
         with tempfile.TemporaryDirectory() as tmp:
