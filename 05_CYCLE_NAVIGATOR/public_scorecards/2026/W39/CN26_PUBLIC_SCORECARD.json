@@ -1,0 +1,41 @@
+{
+  "contract": "CN_PUBLIC_WEEKLY_SCORECARD_v1",
+  "authority": "PUBLIC_FORECAST_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY",
+  "public_issue_number": 26,
+  "forecast_week": "2026-W39",
+  "outcome_week": "2026-W39",
+  "status": "FINAL_DUAL_TRACK_LEGACY_STRUCTURE",
+  "price_range_precision": {
+    "score": 81.85,
+    "btc_score": 78.66,
+    "eth_score": 85.05,
+    "intraday_window_scores": {
+      "day_1_2": 83.19,
+      "day_3_4": 86.35,
+      "day_5_7": 76.02
+    },
+    "formula": "70pct_containment_plus_30pct_jaccard",
+    "actuals": "03_DAILY_CAPTURE_LOGS/weekly/2026/W39.json",
+    "actuals_hourly_coverage": 168,
+    "source_publication": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_26_X_PUBLISHED_2026-09-21.md"
+  },
+  "frozen_claim_precision": {
+    "score": 58.33,
+    "method": "legacy_canonical_public_continuity_score",
+    "note": "Retained for audit only; not part of Market / Structure v2."
+  },
+  "market_structure_precision": {
+    "score": 60,
+    "method": "LEGACY_PRE_V2_FIVE_STRUCTURAL_CALLS",
+    "migration_status": "CLOSED_LEGACY_BASELINE_NOT_COMPARABLE_TO_V2",
+    "note": "CN26 closes the old structure method. CN27/W40 starts the fixed five-dimension v2 model."
+  },
+  "combined_score": null,
+  "combined_score_status": "NOT_DEFINED",
+  "combined_score_reason": "Market / Structure and Price Ranges are separate score families.",
+  "lineage": {
+    "public_series_key": "PUBLIC_CN26__2026-W39",
+    "machine_issue_number": 27,
+    "publication_status": "PUBLISHED_CONFIRMED_BY_USER"
+  }
+}
