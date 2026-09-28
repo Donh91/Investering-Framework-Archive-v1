@@ -78,6 +78,21 @@ When evidence exists, show:
 
 Public precision must continue using the established public scoring family. Internal precision expansion must not replace, rename, delete or silently alter the public score presentation.
 
+### Repeatable Market / Structure score
+
+The public Market / Structure score must be auditable and repeatable:
+
+- exactly five concise, falsifiable market/structure calls are prospectively frozen for the coming week;
+- in the following issue, show each prior call as **Forecast -> Actual**;
+- score each call **HIT=100 / MIXED=50 / MISS=0**;
+- publish the equal-weight mean as the Market / Structure precision score;
+- immediately freeze the next five calls in the same public post for evaluation one week later;
+- keep the concepts stable enough for week-over-week comparison and never rewrite prior calls after outcomes are known.
+
+The public concepts should normally cover market regime/breakdown state, ETH/BTC direction, rotation confirmation, market-cap transmission and broad-altseason confirmation, adapting wording only where the current evidence requires it.
+
+**Market / Structure and Price Ranges are separate score families. Do not blend them into one overall precision percentage.**
+
 ### All other sections
 
 Keep them materially shorter than the precision section.
