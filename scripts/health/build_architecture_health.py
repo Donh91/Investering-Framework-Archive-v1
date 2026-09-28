@@ -6,6 +6,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from scripts.daily_capture.freeze_capture_execution_plan import validate_plan
+
 TIMESTAMP_KEYS = ("captured_at_utc","retrieved_at_utc","created_at_utc","generated_at_utc","completed_at_utc","published_at_utc","freeze_utc","snapshot_utc","created_unix")
 STATUS_SCOPE = "ARCHITECTURE_EVIDENCE_ONLY_NOT_AGGREGATE_SYSTEM_HEALTH"
 
@@ -15,7 +17,8 @@ STATUS_SCOPE = "ARCHITECTURE_EVIDENCE_ONLY_NOT_AGGREGATE_SYSTEM_HEALTH"
 EVIDENCE_WINDOW_DAYS = 14
 EVIDENCE_CENSOR_RATE_AMBER = 0.60
 OUTCOME_CONTRACTS = {"MATURED_OUTCOME_v2","MATURED_OUTCOME_v3"}
-LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT = "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v1"
+LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT = "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v2"
+LEGACY_LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT = "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v1"
 LIVE_ANCHOR_OWNER_IDS = {
     "fred_macro", "binance_spot", "binance_microstructure",
     "okx_swap", "top100_breadth", "cfgi_sentiment",
@@ -104,8 +107,19 @@ def owner_population_finding(capture: dict[str, Any] | None, owners: list[dict[s
         return ('OWNER_POPULATION_EMPTY',1)
 
     plan=capture.get('execution_plan')
-    if not isinstance(plan,dict) or plan.get('contract')!=LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT:
+    if isinstance(plan,dict) and plan.get('contract')==LEGACY_LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT:
+        return ('OWNER_TOPOLOGY_LEGACY_UNBOUND',1)
+    try:
+        plan=validate_plan(plan)
+    except (TypeError, ValueError):
         return ('OWNER_TOPOLOGY_UNBOUND',1)
+    if plan.get('run_id')!=capture.get('run_id'):
+        return ('OWNER_TOPOLOGY_UNBOUND',1)
+    planned_at=parse_dt(plan.get('planned_at_utc'))
+    captured_at=parse_dt(capture.get('captured_at_utc'))
+    if planned_at is None or captured_at is None or planned_at>captured_at:
+        return ('OWNER_TOPOLOGY_UNBOUND',1)
+
     expected=plan.get('expected_owner_statuses')
     if not isinstance(expected,dict) or set(expected)!=LIVE_ANCHOR_OWNER_IDS:
         return ('OWNER_TOPOLOGY_UNBOUND',1)
@@ -115,9 +129,28 @@ def owner_population_finding(capture: dict[str, Any] | None, owners: list[dict[s
     owner_ids=[str(row.get('owner_id') or '') for row in owners]
     if len(owner_ids)!=len(set(owner_ids)) or set(owner_ids)!=LIVE_ANCHOR_OWNER_IDS:
         return ('OWNER_COVERAGE_DEGRADED',1)
-    actual={str(row.get('owner_id')):row.get('status','UNKNOWN') for row in owners}
-    if any(actual.get(owner_id)!=expected_status for owner_id,expected_status in expected.items()):
-        return ('OWNER_COVERAGE_DEGRADED',1)
+    by_id={str(row.get('owner_id')):row for row in owners}
+    for owner_id,expected_status in expected.items():
+        row=by_id[owner_id]
+        if row.get('status','UNKNOWN')!=expected_status:
+            return ('OWNER_COVERAGE_DEGRADED',1)
+        code=row.get('collector_exit_code')
+        if expected_status=='DISABLED':
+            if code!=78:
+                return ('OWNER_ARTIFACT_EVIDENCE_INVALID',1)
+            continue
+        files=row.get('files')
+        count=row.get('file_count')
+        if code!=0 or not isinstance(files,list) or not isinstance(count,int) or count<=0 or len(files)!=count:
+            return ('OWNER_ARTIFACT_EVIDENCE_INVALID',1)
+        for item in files:
+            if not isinstance(item,dict):
+                return ('OWNER_ARTIFACT_EVIDENCE_INVALID',1)
+            path=item.get('path');digest=item.get('sha256');size=item.get('bytes')
+            if not isinstance(path,str) or not path or not isinstance(digest,str) or len(digest)!=64:
+                return ('OWNER_ARTIFACT_EVIDENCE_INVALID',1)
+            if isinstance(size,bool) or not isinstance(size,int) or size<0:
+                return ('OWNER_ARTIFACT_EVIDENCE_INVALID',1)
     return None
 
 def experiment_receipt_sync_finding(sync: dict[str, Any] | None, age: float | None) -> tuple[str, int] | None:
