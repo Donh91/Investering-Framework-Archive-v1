@@ -1,6 +1,13 @@
 name: Cycle Navigator Precision Learning Supervisor
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cycle-navigator-precision-learning-supervisor.yml'
+      - 'scripts/cycle_navigator/cn_precision_learning_supervisor.py'
+      - 'scripts/cycle_navigator/validate_precision_learning_supervisor.py'
+      - '05_CYCLE_NAVIGATOR/internal_learning/POLICY.json'
   workflow_run:
     workflows: ["Cycle Navigator Internal Precision"]
     types: [completed]
