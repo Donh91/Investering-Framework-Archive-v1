@@ -63,6 +63,7 @@ await rm(outputDir,{recursive:true,force:true}); await mkdir(dataDir,{recursive:
 const pointer=await readJson(POINTER_PATH); if(!pointer.week_dir) throw new Error("Canonical pointer has no week_dir");
 const packagePath=resolve(repoRoot,pointer.week_dir,"CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"); const pkg=await readJson(packagePath);
 if(Number(pointer.issue_number)!==Number(pkg.issue_number)) throw new Error("Pointer/package issue mismatch");
+const standaloneFreeze=await readJson(resolve(repoRoot,pointer.week_dir,"CYCLE_NAVIGATOR_FORECAST_FREEZE.json")).catch(()=>null);
 const rangeScore=await readJson(RANGE_SCORE_PATH).catch(()=>null);
 const prospectiveRange=await readJson(PROSPECTIVE_RANGE_PATH).catch(()=>null);
 const publicSeriesRaw=await readJson(PUBLIC_SERIES_INDEX_PATH).catch(()=>null);
@@ -78,7 +79,7 @@ const publicSeries=publicSeriesRaw?{
   latest_completed_score:pick(publicSeriesRaw.latest_completed_score||{},["public_issue_number","forecast_week","market_structure_score","price_range_score","combined_score","status"]),
   current_public_projection:pick(publicSeriesRaw.current_public_projection||{},["public_issue_number","forecast_week","publication_status"])
 }:null;
-const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange};
+const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure:standaloneFreeze?.market_structure_v2||null};
 const compass=await buildCompassSnapshot();
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
