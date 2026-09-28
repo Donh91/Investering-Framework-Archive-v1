@@ -128,7 +128,7 @@ jobs:
                 forbidden=true
                 ;;
             esac
-          done < <(git status --porcelain | sed 's/^...//')
+          done < <(git status --porcelain --untracked-files=all | sed 's/^...//')
           [ "$forbidden" = false ]
 
       - name: Commit internal precision learning only
