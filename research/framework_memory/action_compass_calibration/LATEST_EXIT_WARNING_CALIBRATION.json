@@ -1,19 +1,40 @@
 {
   "cohorts": [],
-  "contract": "ACTION_COMPASS_EXIT_WARNING_CALIBRATION_v1",
-  "generated_at_utc": "2026-09-27T06:39:59Z",
+  "contract": "ACTION_COMPASS_PROTECTION_CALIBRATION_v2",
+  "eligible_series_row_count": 0,
+  "evidence_state": "COLLECTING_PROSPECTIVE_TYPED_ROWS",
+  "excluded_outcome_counts": {
+    "PRE_DECISION_INTEGRITY_SCHEMA": 122,
+    "PROJECTION_NOT_PROSPECTIVE_MACHINE_PACKAGE": 15
+  },
+  "generated_at_utc": "2026-09-28T06:47:00Z",
   "interpretation_boundary": {
     "automatic_promotion": false,
     "descriptive_only": true,
     "hit_miss_labels": false,
     "market_rule_change": false,
     "new_thresholds": false,
-    "note": "Measures post-signal upside, drawdown and full-exit reference opportunity cost without defining when to reduce or exit.",
+    "note": "Measures post-protection-state upside, drawdown and full-exit reference opportunity cost from Official Daily Compass outcomes without defining when to reduce, exit or re-enter.",
     "portfolio_action": false
   },
-  "matured_series_row_count": 0,
-  "source_contract": "ACTION_COMPASS_OUTCOME_SIDECAR_v1_1",
-  "source_sidecar_count": 0,
-  "status": "NO_MATURED_ROWS",
+  "promotion_readiness": {
+    "automatic_promotion": false,
+    "blockers": [
+      "NO_ELIGIBLE_PROSPECTIVE_TYPED_PROTECTION_OUTCOMES"
+    ],
+    "minimum_sample_threshold_invented": false,
+    "note": "This report makes typed protection states prospectively outcome-accountable. It cannot define or promote pullback, distribution, exit, re-entry or ETA rules.",
+    "status": "NOT_PROMOTION_AUTHORITY"
+  },
+  "prospective_source_gate": {
+    "decision_policy_prefix": "2026-09-25_DECISION_INTEGRITY_",
+    "historical_prose_backfill": false,
+    "minimum_compass_schema_version": 3,
+    "required_decision_projection_source": "MACHINE_PACKAGE",
+    "required_protection_contract": "COMPASS_PROTECTION_TRACKER_v1"
+  },
+  "source_contract": "OFFICIAL_DAILY_COMPASS_OUTCOME_v1",
+  "source_outcome_count": 137,
+  "status": "NO_ELIGIBLE_MATURED_ROWS",
   "warning_series_row_count": 0
 }
