@@ -6,20 +6,10 @@ September 28 - October 4, 2026
 
 🎯 **LAST WEEK — CN #26**
 
-**MARKET / STRUCTURE: 60% ⚠️**  
-Prior CN #25: **90%**
+**MARKET / STRUCTURE — LEGACY: 60% ⚠️**
 
-Forecast → Actual:
-
-1. Volatile consolidation, no confirmed breakdown → **HIT ✅**
-2. ETH/BTC flat-to-positive → **MISS ❌** 0.03258 → 0.03182
-3. Broader rotation still unconfirmed → **HIT ✅**
-4. No full mid → small → micro transmission → **MIXED ⚠️**
-5. Broad altseason remains unconfirmed → **MIXED ⚠️**
-
-**Score: (100 + 0 + 100 + 50 + 50) / 5 = 60%**
-
-Price recovered better than structure: ETH/BTC weakened and transmission did not fully confirm.
+Regime was right, ETH/BTC was wrong, and rotation/transmission was mixed.  
+**60% closes the old structure method. CN #27 starts the improved model.**
 
 **PRICE RANGES: 81.85% ✅**  
 Prior CN #25: **71.51%**
@@ -46,17 +36,17 @@ Day 5-7: **76.02%**
 BTC $79.2K-$88.7K → $83.18K-$85.26K ✅  
 ETH $2.520K-$2.947K → $2.665K-$2.743K ✅
 
-**MARKET / STRUCTURE FORECAST — THIS WEEK**
+**MARKET / STRUCTURE v2 — THIS WEEK**
 
-Frozen now for next week's score:
+Frozen for next week's score:
 
-1. **Volatile consolidation**, not a confirmed breakdown.
-2. BTC or ETH trades below last week's close at least once: **BTC $84.47K / ETH $2.689K**.
-3. ETH/BTC closes **at or below its weekly open**.
-4. Broader rotation remains **unconfirmed**.
-5. Short-horizon strength does **not** become confirmed broad altseason.
+1. **REGIME:** Volatile consolidation/retest, no confirmed breakdown.
+2. **LEADERSHIP:** ETH/BTC closes at or below its weekly open.
+3. **FIRST HANDOFF:** Large-cap transmission remains selective/incomplete.
+4. **DEEPER TRANSMISSION:** No sustained mid → small → micro transmission.
+5. **BREADTH + PERSISTENCE:** No confirmed broad altseason.
 
-Next week: each call = **HIT 100 / MIXED 50 / MISS 0** → new Market / Structure score.
+Next week each dimension = **HIT 100 / MIXED 50 / MISS 0**. Equal-weight average = Market / Structure v2 score.
 —
 
 🧭 **WHAT MATTERS NOW**
