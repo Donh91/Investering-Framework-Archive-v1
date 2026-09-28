@@ -36,8 +36,8 @@ Date range
 This is the most detailed section.
 
 Show:
-- **MARKET / STRUCTURE** as its own block, with the just-completed issue score and the prior published issue score for week-over-week continuity.
-- Show the exact frozen market/structure calls from the prior week as **Forecast -> Actual**, each scored on the stable rubric **HIT=100 / MIXED=50 / MISS=0**.
+- **MARKET / STRUCTURE** as its own block. From CN #27 onward, use the v2 method below. Do not compare a v2 score directly with CN #26's legacy 60% as if the methods were identical.
+- For a completed v2 issue, show the exact five frozen dimensions from the prior week as **Forecast -> Actual**, each scored on the stable rubric **HIT=100 / MIXED=50 / MISS=0**.
 - The Market / Structure score is the equal-weight average of those frozen calls. Never publish a naked market score without the underlying forecast/outcome mapping.
 - After the completed-week review, publish and freeze the same fixed number of market/structure calls for the coming week so the next issue can score them on the identical rubric.
 - **PRICE RANGES** as a separate block, with the just-completed combined range score and the prior published issue's combined range score.
@@ -161,7 +161,9 @@ The public X post must contain both halves of the loop:
 1. **Completed week:** prior frozen market/structure calls -> actual outcomes -> HIT/MIXED/MISS -> aggregate Market / Structure score.
 2. **Coming week:** exactly five concise, falsifiable market/structure calls frozen prospectively for next week's evaluation.
 
-The five calls should cover the same public concepts over time where evidence supports them: market regime/breakdown state, ETH/BTC direction, rotation confirmation, market-cap transmission and broad-altseason confirmation. Wording may adapt to the current state, but scoring semantics must not drift retrospectively.
+The five fixed dimensions from CN #27 onward are, in order: **REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE**. Wording may adapt prospectively to current evidence, but the dimension identity, equal weighting and scoring semantics must not drift retrospectively.
+
+Migration rule: CN #26's 60% closes the legacy structure method. In CN #27, summarize that legacy score briefly rather than expanding it into a pseudo-v2 breakdown. CN #27/W40 is the first v2 prospective freeze; its first comparable score appears in the following issue.
 
 Price-range precision remains a separate score family and must never be blended into Market / Structure.
 
