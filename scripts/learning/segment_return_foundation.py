@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
 import statistics
@@ -101,7 +102,7 @@ def constituent_map(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
         price = finite_positive(row.get("price_usd"))
         rank = row.get("filtered_rank")
         market_cap = finite_positive(row.get("market_cap_usd"))
-        if not asset_id or price is None or isinstance(rank, bool) or not isinstance(rank, int):
+        if not asset_id or isinstance(rank, bool) or not isinstance(rank, int):
             continue
         rows[asset_id] = {
             "asset_id": asset_id,
@@ -112,17 +113,36 @@ def constituent_map(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return rows
 
 
-def raw_price_map(owner_snapshot_path: Path) -> dict[str, float]:
-    """Read the already archived CoinGecko raw Top150 payload beside the owner snapshot."""
+def raw_price_map(owner_snapshot_path: Path, snapshot: dict[str, Any]) -> tuple[dict[str, float], bool]:
+    """Use raw Top150 only when it is hash- and run-bound to this owner snapshot."""
     raw_path = owner_snapshot_path.with_name("raw_source_payload.json")
-    if not raw_path.exists():
-        return {}
+    receipt_path = owner_snapshot_path.with_name("receipt.json")
+    manifest_path = owner_snapshot_path.with_name("artifact_manifest.json")
+    if not raw_path.exists() or not receipt_path.exists() or not manifest_path.exists():
+        return {}, False
     try:
-        value = json.loads(raw_path.read_text(encoding="utf-8"))
+        raw_bytes = raw_path.read_bytes()
+        value = json.loads(raw_bytes)
+        receipt = load_json(receipt_path)
+        manifest = load_json(manifest_path)
     except Exception:
-        return {}
+        return {}, False
+    run_id = snapshot.get("run_id")
+    if not isinstance(run_id, str) or not run_id:
+        return {}, False
+    raw_sha = hashlib.sha256(raw_bytes).hexdigest()
+    if receipt.get("run_id") != run_id or receipt.get("raw_sha256") != raw_sha:
+        return {}, False
+    if manifest.get("contract") != "C5E_ARTIFACT_MANIFEST_v1" or manifest.get("run_id") != run_id:
+        return {}, False
+    members = manifest.get("members")
+    if not isinstance(members, list):
+        return {}, False
+    member = next((x for x in members if isinstance(x, dict) and x.get("path") == "raw_source_payload.json"), None)
+    if not isinstance(member, dict) or member.get("sha256") != raw_sha or member.get("bytes") != len(raw_bytes):
+        return {}, False
     if not isinstance(value, list):
-        return {}
+        return {}, False
     prices: dict[str, float] = {}
     for row in value:
         if not isinstance(row, dict):
@@ -131,11 +151,10 @@ def raw_price_map(owner_snapshot_path: Path) -> dict[str, float]:
         price = finite_positive(row.get("current_price"))
         if asset_id and price is not None:
             prices[asset_id] = price
-    return prices
+    return prices, True
 
-
-def current_price_map(owner_snapshot_path: Path, snapshot: dict[str, Any]) -> tuple[dict[str, float], set[str]]:
-    """Prefer normalized owner prices and use raw Top150 only as a dropout-price fallback."""
+def current_price_map(owner_snapshot_path: Path, snapshot: dict[str, Any]) -> tuple[dict[str, float], set[str], bool]:
+    """Prefer normalized owner prices and use only hash-bound raw Top150 dropout prices."""
     normalized = constituent_map(snapshot)
     prices = {
         asset_id: float(row["price_usd"])
@@ -143,9 +162,10 @@ def current_price_map(owner_snapshot_path: Path, snapshot: dict[str, Any]) -> tu
         if finite_positive(row.get("price_usd")) is not None
     }
     normalized_ids = set(prices)
-    for asset_id, price in raw_price_map(owner_snapshot_path).items():
+    raw_prices, raw_binding_valid = raw_price_map(owner_snapshot_path, snapshot)
+    for asset_id, price in raw_prices.items():
         prices.setdefault(asset_id, price)
-    return prices, normalized_ids
+    return prices, normalized_ids, raw_binding_valid
 
 
 def simple_return(previous_price: float | None, current_price: float | None) -> float | None:
@@ -169,14 +189,21 @@ def cohort_return(
     market_caps: list[float] = []
     matched_assets: list[str] = []
     missing_assets: list[str] = []
+    missing_prior_price_assets: list[str] = []
+    missing_current_price_assets: list[str] = []
     raw_fallback_assets: list[str] = []
 
     for row in cohort:
         asset_id = row["asset_id"]
+        prior_price = finite_positive(row.get("price_usd"))
         current_price = finite_positive(current_prices.get(asset_id))
-        value = simple_return(finite_positive(row.get("price_usd")), current_price)
+        value = simple_return(prior_price, current_price)
         if value is None:
             missing_assets.append(asset_id)
+            if prior_price is None:
+                missing_prior_price_assets.append(asset_id)
+            if current_price is None:
+                missing_current_price_assets.append(asset_id)
         else:
             returns.append(value)
             matched_assets.append(asset_id)
@@ -195,6 +222,8 @@ def cohort_return(
         "matched_fraction": (len(returns) / len(cohort)) if cohort else None,
         "complete_price_coverage": complete,
         "missing_asset_ids": missing_assets,
+        "missing_prior_price_asset_ids": missing_prior_price_assets,
+        "missing_current_price_asset_ids": missing_current_price_assets,
         "raw_top150_fallback_asset_ids": raw_fallback_assets,
         "prior_market_cap_min_usd": min(market_caps) if market_caps else None,
         "prior_market_cap_median_usd": statistics.median(market_caps) if market_caps else None,
@@ -216,7 +245,7 @@ def build_rows(snapshot_root: Path) -> tuple[list[dict[str, Any]], list[dict[str
         prior_ts, prior_path, prior = snapshots[index - 1]
         current_ts, current_path, current = snapshots[index]
         prior_rows = constituent_map(prior)
-        current_prices, current_normalized_ids = current_price_map(current_path, current)
+        current_prices, current_normalized_ids, raw_binding_valid = current_price_map(current_path, current)
         interval_hours = (current_ts - prior_ts).total_seconds() / 3600.0
         interval_ok = eligible_daily_interval(interval_hours)
 
@@ -255,6 +284,7 @@ def build_rows(snapshot_root: Path) -> tuple[list[dict[str, Any]], list[dict[str
             "MICROCAPS": None,
             "raw_point_to_point_returns": raw_returns,
             "bucket_diagnostics": buckets,
+            "current_raw_top150_binding_valid": raw_binding_valid,
         }
         output_rows.append(row)
         lineage.append({
@@ -262,6 +292,7 @@ def build_rows(snapshot_root: Path) -> tuple[list[dict[str, Any]], list[dict[str
             "prior_snapshot": prior_path.as_posix(),
             "current_snapshot": current_path.as_posix(),
             "current_raw_price_fallback_path": current_path.with_name("raw_source_payload.json").as_posix(),
+            "current_raw_top150_binding_valid": raw_binding_valid,
             "prior_retrieval_timestamp": prior_ts.isoformat().replace("+00:00", "Z"),
             "current_retrieval_timestamp": current_ts.isoformat().replace("+00:00", "Z"),
             "interval_hours": row["interval_hours"],
