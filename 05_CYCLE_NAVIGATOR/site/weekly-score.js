@@ -45,31 +45,22 @@
       numeric(windows.day_3_4) ? `D3–4 ${fmt(windows.day_3_4)}` : null,
       numeric(windows.day_5_7) ? `D5–7 ${fmt(windows.day_5_7)}` : null
     ].filter(Boolean).join(' · ') || 'N/A';
+    const legacy = String(card?.status || '').includes('LEGACY_STRUCTURE');
     return `
       <article class="cal-summary-card">
-        <span class="cal-summary-label">Frozen-claim precision</span>
-        <strong class="cal-summary-value">${fmt(card?.frozen_claim_precision?.score)}</strong>
-        <small class="cal-summary-note">Official reproducible score across the frozen weekly claim set</small>
-      </article>
-      <article class="cal-summary-card">
-        <span class="cal-summary-label">Market / structure</span>
+        <span class="cal-summary-label">Market / Structure${legacy ? ' · legacy' : ''}</span>
         <strong class="cal-summary-value">${fmt(market.score)}</strong>
-        <small class="cal-summary-note">Family-level market/structure precision</small>
+        <small class="cal-summary-note">${legacy ? 'CN #26 closes the pre-v2 method' : 'Five-dimension v2 structural precision'}</small>
       </article>
       <article class="cal-summary-card">
-        <span class="cal-summary-label">Price ranges</span>
+        <span class="cal-summary-label">Price Ranges</span>
         <strong class="cal-summary-value">${fmt(price.score)}</strong>
         <small class="cal-summary-note">BTC ${fmt(price.btc_score)} · ETH ${fmt(price.eth_score)}</small>
       </article>
       <article class="cal-summary-card">
-        <span class="cal-summary-label">Intraday ranges</span>
+        <span class="cal-summary-label">Intraday · Price</span>
         <strong class="cal-summary-value" style="font-size:1rem">${esc(intraday)}</strong>
-        <small class="cal-summary-note">Prospectively published ranges vs completed actuals</small>
-      </article>
-      <article class="cal-summary-card">
-        <span class="cal-summary-label">Overall</span>
-        <strong class="cal-summary-value">N/A</strong>
-        <small class="cal-summary-note">Not synthesized without a stable aggregation contract</small>
+        <small class="cal-summary-note">Forecast ranges vs completed actuals</small>
       </article>`;
   }
 
