@@ -284,14 +284,48 @@ def output_schema() -> dict[str, Any]:
             },
             "forecast_freeze": {
                 "type": "object", "additionalProperties": False,
-                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "forecast_horizon_days", "intraday_map"],
+                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_v2", "forecast_horizon_days", "intraday_map"],
                 "properties": {
                     "scoring_contract": {"type": "string", "const": "CN_PUBLIC_CONTINUITY_v1"},
                     "btc_range_low": nullable_num, "btc_range_high": nullable_num,
                     "eth_range_low": nullable_num, "eth_range_high": nullable_num,
                     "ethbtc_condition": {"type": "string"},
                     "breadth_condition": {"type": "string"},
-                    "structural_calls": {"type": "array", "items": {"type": "string"}},
+                    "structural_calls": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "string"}},
+                    "market_structure_v2": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["contract", "status", "effective_from_public_issue", "public_issue_number", "forecast_week", "scoring_rubric", "aggregate", "dimensions", "invariants"],
+                        "properties": {
+                            "contract": {"type": "string", "const": "CN_PUBLIC_MARKET_STRUCTURE_V2"},
+                            "status": {"type": "string", "const": "FROZEN_PROSPECTIVE"},
+                            "effective_from_public_issue": {"type": "integer", "minimum": 27},
+                            "public_issue_number": {"type": "integer", "minimum": 27},
+                            "forecast_week": {"type": "string"},
+                            "scoring_rubric": {
+                                "type": "object", "additionalProperties": False,
+                                "required": ["HIT", "MIXED", "MISS"],
+                                "properties": {
+                                    "HIT": {"type": "integer", "const": 100},
+                                    "MIXED": {"type": "integer", "const": 50},
+                                    "MISS": {"type": "integer", "const": 0}
+                                }
+                            },
+                            "aggregate": {"type": "string", "const": "EQUAL_WEIGHT_MEAN_OF_FIVE_DIMENSIONS"},
+                            "dimensions": {
+                                "type": "array", "minItems": 5, "maxItems": 5,
+                                "items": {
+                                    "type": "object", "additionalProperties": False,
+                                    "required": ["id", "label", "forecast"],
+                                    "properties": {
+                                        "id": {"type": "string", "enum": ["REGIME", "LEADERSHIP", "FIRST_HANDOFF", "DEEPER_TRANSMISSION", "BREADTH_PERSISTENCE"]},
+                                        "label": {"type": "string"},
+                                        "forecast": {"type": "string"}
+                                    }
+                                }
+                            },
+                            "invariants": {"type": "array", "items": {"type": "string"}}
+                        }
+                    },
                     "forecast_horizon_days": {"type": "integer", "minimum": 5, "maximum": 10},
                     "intraday_map": intraday_schema
                 }
@@ -384,7 +418,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Score the prior issue honestly. Price-range misses must reduce price-range score even when structural anticipation was strong. "
         "For every id in previous_score_parameter_ids, emit exactly one parameter_scores row in the same order. Use SUPPORTED=100, MIXED=50, CONTRADICTED=0, NOT_EVALUABLE=null. Never silently omit a frozen parameter. "
         "For legacy prior issues without a machine freeze, score only what the exact archived publication and completed-week evidence support and mark LEGACY_BOUNDED. "
-        "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. "
+        "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. From public CN #27 onward, Market / Structure v2 is mandatory: exactly five non-duplicative structural calls in this fixed order: REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE. Populate market_structure_v2 with the same five forecasts and IDs. One dimension equals one vote; do not split one rotation thesis across multiple slots. "
         "Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
         "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
@@ -487,6 +521,13 @@ def main() -> None:
         raise SystemExit("final_master_monday_missing:" + ",".join(missing))
 
     prev_issue, prev_text, prev_machine = latest_previous_cn(repo)
+    if prev_machine is not None and existing_pointer_path.exists():
+        prior_pointer = read_json(existing_pointer_path)
+        prior_week_dir = repo / str(prior_pointer.get("week_dir", ""))
+        prior_standalone_freeze = prior_week_dir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        if prior_standalone_freeze.exists():
+            prev_machine = dict(prev_machine)
+            prev_machine["forecast_freeze"] = read_json(prior_standalone_freeze)
     issue = prev_issue + 1
     latest_public_issue = latest_published_public_issue(repo)
     public_issue = latest_public_issue + 1
@@ -519,7 +560,7 @@ def main() -> None:
         "Then freeze the new week's explicit forecasts. The X-ready version must include a precision section, an honest what-went-well/what-went-wrong section, "
         "a concise public track-record section that only uses archived/reproducible values, a current-state section, weekly BTC/ETH ranges or UNAVAILABLE, "
         "an intraday map with Day 1-2, Day 3-4 and Day 5-7, one base case for this week, one base case for 2-3 weeks, one 4-8 week cycle direction/action posture, "
-        "and an easy-to-read altseason countdown. Every unsupported intraday bucket must be exactly UNAVAILABLE. Use cohesive paragraphs and tables where useful."
+        "and an easy-to-read altseason countdown. The public precision section must keep Market / Structure and Price Ranges separate. For the coming week it must publish the five v2 Market / Structure dimensions so they can be scored in the next issue. Every unsupported intraday bucket must be exactly UNAVAILABLE. Use cohesive paragraphs and tables where useful."
     )
     value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)
     try:
@@ -581,6 +622,19 @@ def main() -> None:
     freeze = value["forecast_freeze"]
     if freeze.get("scoring_contract") != "CN_PUBLIC_CONTINUITY_v1":
         raise SystemExit("scoring_contract_mismatch")
+    calls = freeze.get("structural_calls")
+    if not isinstance(calls, list) or len(calls) != 5 or any(not str(x or "").strip() for x in calls):
+        raise SystemExit("market_structure_v2_requires_exactly_five_structural_calls")
+    ms2 = freeze.get("market_structure_v2")
+    if not isinstance(ms2, dict) or ms2.get("contract") != "CN_PUBLIC_MARKET_STRUCTURE_V2":
+        raise SystemExit("market_structure_v2_missing")
+    dims = ms2.get("dimensions")
+    expected_dim_ids = ["REGIME", "LEADERSHIP", "FIRST_HANDOFF", "DEEPER_TRANSMISSION", "BREADTH_PERSISTENCE"]
+    actual_dim_ids = [str(x.get("id")) for x in dims] if isinstance(dims, list) else []
+    if actual_dim_ids != expected_dim_ids:
+        raise SystemExit("market_structure_v2_dimension_order_mismatch")
+    if [str(x.get("forecast")) for x in dims] != [str(x) for x in calls]:
+        raise SystemExit("market_structure_v2_forecast_mismatch")
     # Preserve bounds invariants when ranges are present.
     for asset in ("btc", "eth"):
         lo, hi = freeze.get(f"{asset}_range_low"), freeze.get(f"{asset}_range_high")
