@@ -11,7 +11,7 @@ Build a small, verified context packet from the repository's current authority s
 
 ## Cross-repository preflight
 
-Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`. The public repository is the control plane; `Donh91/secrets` is the restricted data plane; credentials remain outside repo files. When a route requires restricted evidence, resolve the authorized private commit/path/hash binding or return `PRIVATE_DATA_AUTHORITY_UNAVAILABLE`. Never search the control plane for missing private values or use `Donh91/Cycle-navigator-` as a current route.
+Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`. The private repository is the control plane; `Donh91/secrets` is the restricted data plane; credentials remain outside repo files. When a route requires restricted evidence, resolve the authorized private commit/path/hash binding or return `PRIVATE_DATA_AUTHORITY_UNAVAILABLE`. Never search the control plane for missing private values or use `Donh91/Cycle-navigator-` as a current route.
 
 ## Mandatory read order
 
@@ -64,7 +64,7 @@ Manual DATA PING submission is not a prerequisite for this route.
 
 A file or path containing `DATA_PING`, `data_ping_derived`, `latest`, or an old version identifier is not current merely because of its name. Require an explicit current operational pointer to route to it.
 
-For `NEXT DAYS` or another short-horizon public field, use an existing current autonomous canonical output only when fresh, eligible and public-safe. If no such output exists, the correct result is unavailable/not published. Do not create a parallel website forecast engine.
+For `NEXT DAYS` or another short-horizon public field, use an existing current autonomous canonical output only when fresh, eligible and safe for the intended output surface. If no such output exists, the correct result is unavailable/not published. Do not create a parallel website forecast engine.
 
 ### Global Action Compass route - all Investering threads
 
