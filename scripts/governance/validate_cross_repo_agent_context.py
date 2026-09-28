@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate public cross-repository agent-context invariants."""
+"""Validate private-estate cross-repository agent-context invariants."""
 
 from __future__ import annotations
 
@@ -88,8 +88,29 @@ def main() -> int:
 
     if CONTEXT_MAP.is_file():
         data = load_json(CONTEXT_MAP, errors)
-        if data.get("contract") != "CROSS_REPO_AGENT_CONTEXT_MAP_v1":
+        if data.get("contract") != "CROSS_REPO_AGENT_CONTEXT_MAP_v2":
             fail("unexpected context-map contract", errors)
+        visibility = data.get("repository_visibility", {})
+        expected_repositories = {
+            "Donh91/Investering-Framework-Archive-v1",
+            "Donh91/secrets",
+            "Donh91/Investering-Framework-Vault",
+            "Donh91/Eksperimenter-framework-",
+            "Donh91/Meme-Alpha-Lab",
+            "Donh91/Investering-AI-Audit-Bridge",
+        }
+        if visibility.get("policy") != "PRIVATE_ESTATE_FAIL_CLOSED":
+            fail("private-estate visibility policy is not fail-closed", errors)
+        if set(visibility.get("repositories", [])) != expected_repositories:
+            fail("private-estate repository registry is incomplete or unexpected", errors)
+        if visibility.get("cross_repo_authentication") != "EXPLICIT_LEAST_PRIVILEGE_CREDENTIAL_REQUIRED":
+            fail("cross-repository authentication is not explicit and least-privilege", errors)
+        if visibility.get("repository_github_token_cross_repo_assumption") != "FORBIDDEN":
+            fail("repository GITHUB_TOKEN cross-repo assumption is not forbidden", errors)
+        if data.get("canonical_boundary") != "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md":
+            fail("canonical private-estate boundary is missing", errors)
+        if "canonical_public_boundary" in data:
+            fail("legacy canonical_public_boundary key remains", errors)
         if data.get("round3_firewall", {}).get("hypothesis_testing") != "OFF":
             fail("Round 3 hypothesis firewall is not OFF", errors)
         if data.get("round3_firewall", {}).get("outcome_scoring") != "OFF":
