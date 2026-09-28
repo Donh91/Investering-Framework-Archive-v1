@@ -11,7 +11,7 @@ const checks=[
  ['large-to-micro action rail',product.includes('Bitcoin → microcaps')&&product.includes('capitalRail')&&product.includes('rotation_ladder')],
  ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')],
  ['conditional path rail with ETA',product.includes('CONDITIONAL MARKET PATH')&&product.includes('YOU ARE HERE')&&product.includes('ETA ·')],
- ['proof rollups',product.includes('HISTORICAL WEEKLY AVERAGE')&&product.includes('PRICE RANGE ACCURACY')&&product.includes('MARKET & CYCLE UNDERSTANDING')],
+ ['proof rollups',product.includes('HISTORICAL WEEKLY AVERAGE')&&product.includes('PRICE RANGE ACCURACY')&&product.includes('MARKET / STRUCTURE')],
  ['live score fail-closed',product.includes('Waiting for evidence')&&product.includes('No percentage is shown until at least one call is genuinely scoreable.')&&liveWidget.includes("live.provisional_score !== null")],
  ['latest completed precision uses public forecast lineage',weeklyWidget.includes('Latest completed public precision')&&weeklyWidget.includes('public_scorecard')&&weeklyWidget.includes('migration-era machine issue number alone')],
  ['dual precision remains separate',weeklyWidget.includes('Market / structure')&&weeklyWidget.includes('Price ranges')&&weeklyWidget.includes('Not synthesized without a stable aggregation contract')],
@@ -25,6 +25,8 @@ const checks=[
  ['plain-English translator',product.includes('investorText')&&product.includes('Ethereum strengthens relative to Bitcoin')],
  ['public methodology describes data families',product.includes('PRICE & STRUCTURE')&&product.includes('PARTICIPATION & ROTATION')&&product.includes('LIQUIDITY & POSITIONING')&&product.includes('MACRO & NETWORK CONTEXT')],
  ['public product assets deployed',liveBuilder.includes('public-product.js')&&liveBuilder.includes('public-product.css')&&build.includes('history-scoreboard.json')],
+ ['Market Structure v2 current freeze reaches site',build.includes('public_market_structure')&&product.includes('MARKET / STRUCTURE v2')&&product.includes('5 frozen dimensions')&&product.includes('FIRST_HANDOFF')===false],
+ ['CN26 transition keeps price and structure separate',h.records?.find(r=>r.cn===26)?.structure_method==='LEGACY_PRE_V2'&&product.includes("['LEGACY_PRE_V2','MARKET_STRUCTURE_V2']")],
  ['raw history remains locked',h.policy?.historical_scores_locked===true&&h.policy?.retroactive_rescoring===false],
  ['history coverage matches records',Number(h.coverage?.completed_issues)===Math.max(...h.records.map(r=>Number(r.cn)))&&Number(h.coverage?.latest_open_issue)===Number(h.coverage?.completed_issues)+1&&Number(h.coverage?.rows_with_published_or_canonical_score_evidence)===h.records.length]
 ];
