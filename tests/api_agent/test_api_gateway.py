@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, output_schema, validate_output
+from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, output_schema, retry_output_token_limit, validate_output
 from scripts.api_agent.advance_deep_research_queue import build_task_packet, retained_providers, select_next
 from scripts.api_agent.advance_mcp_connection_scorecard import apply_evaluation
 from scripts.api_agent.evaluate_mcp_connection_receipt import classify, score_receipt
@@ -123,6 +123,26 @@ class ApiGatewayTests(unittest.TestCase):
     def test_forbidden_authority_rejected(self):
         value=valid_output();value['portfolio_action']='BUY'
         with self.assertRaises(ValueError):validate_output(value)
+    def test_senior_audit_has_bounded_extra_output_headroom(self):
+        data=load_registry(REGISTRY)
+        cfg=data['tasks']['SENIOR_REPAIR_AUDIT']
+        self.assertEqual(cfg['max_output_tokens'],9000)
+        self.assertEqual(cfg['retry_max_output_tokens'],18000)
+        self.assertEqual(retry_output_token_limit(cfg),18000)
+
+    def test_routine_task_retry_cap_remains_legacy_bounded(self):
+        data=load_registry(REGISTRY)
+        cfg=data['tasks']['DAILY_DIRECTOR_SHADOW']
+        self.assertNotIn('retry_max_output_tokens',cfg)
+        self.assertLessEqual(retry_output_token_limit(cfg),5000)
+
+    def test_invalid_retry_output_limit_fails_closed(self):
+        data=load_registry(REGISTRY)
+        cfg=dict(data['tasks']['SENIOR_REPAIR_AUDIT'])
+        cfg['retry_max_output_tokens']=20001
+        with self.assertRaisesRegex(ValueError,'retry_max_output_tokens_out_of_bounds'):
+            retry_output_token_limit(cfg)
+
     def test_request_is_store_false_and_current_turn(self):
         data=load_registry(REGISTRY);cfg=data['tasks']['DAILY_DIRECTOR_SHADOW'];request=build_request('DAILY_DIRECTOR_SHADOW',cfg,'test',{'a':1});self.assertFalse(request['store']);self.assertEqual(request['reasoning']['context'],'current_turn');self.assertEqual(request['reasoning']['effort'],'medium');self.assertEqual(request['model'],'gpt-6-luna');item=request['text']['format']['schema']['properties']['forecast_candidates']['items'];self.assertEqual(len(item['anyOf']),3);self.assertTrue(all('target_mode' in branch['properties'] for branch in item['anyOf']));self.assertTrue(all('threshold' not in branch['properties'] for branch in item['anyOf']));self.assertIn('Never encode an absolute target in a percent field',request['instructions'])
     def test_governed_task_instruction_is_trusted_but_prompt_remains_untrusted(self):
