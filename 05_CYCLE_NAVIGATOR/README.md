@@ -61,6 +61,12 @@ From 2026-09-28, public X rendering also follows the binding scroll-first style 
 
 `templates/2026-09-28__cycle-navigator-x-scroll-first-template__canonical.md`
 
+Public Market / Structure scoring from CN #27 onward is governed by:
+
+`protocols/2026-09-28__public-market-structure-v2__canonical.md`
+
+CN #26's 60% remains a legacy pre-v2 score. CN #27/W40 is the first five-dimension v2 freeze; do not retroactively convert older issues into v2.
+
 The precision section is intentionally the most detailed part and should show supported **Forecast -> Actual** comparisons. All other sections should be materially more compact and mobile-scroll friendly. New internal metrics, shadow dimensions or research terminology remain internal by default and must not appear publicly merely because the framework has expanded.
 
 **Publication status is user-attested.** Do not independently verify X. When the user says a specific version is published, archive that exact version as `PUBLISHED_CONFIRMED_BY_USER`. If the user says it is not yet published, keep it as an approved draft.
