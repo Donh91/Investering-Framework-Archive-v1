@@ -7,6 +7,8 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+from scripts.daily_capture.freeze_capture_execution_plan import build_plan
+
 MODULE_PATH = Path('scripts/health/build_architecture_health.py')
 spec = importlib.util.spec_from_file_location('architecture_health', MODULE_PATH)
 module = importlib.util.module_from_spec(spec)
@@ -87,33 +89,37 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
         self.assertEqual(module.find_cfgi_remaining(owner), 98765)
 
     def owner_rows(self, fred='DISABLED', binance_spot='DISABLED', micro='PASS', okx='PASS', breadth='PASS', cfgi='PASS'):
+        def row(owner_id, status):
+            if status == 'DISABLED':
+                return {'owner_id': owner_id, 'status': status, 'collector_exit_code': 78, 'file_count': 0, 'files': []}
+            if status == 'PASS':
+                return {
+                    'owner_id': owner_id, 'status': status, 'collector_exit_code': 0,
+                    'file_count': 1, 'files': [{'path': 'receipt.json', 'bytes': 12, 'sha256': 'a' * 64}],
+                }
+            return {'owner_id': owner_id, 'status': status, 'collector_exit_code': 1, 'file_count': 0, 'files': []}
         return [
-            {'owner_id': 'fred_macro', 'status': fred},
-            {'owner_id': 'binance_spot', 'status': binance_spot},
-            {'owner_id': 'binance_microstructure', 'status': micro},
-            {'owner_id': 'okx_swap', 'status': okx},
-            {'owner_id': 'top100_breadth', 'status': breadth},
-            {'owner_id': 'cfgi_sentiment', 'status': cfgi},
+            row('fred_macro', fred),
+            row('binance_spot', binance_spot),
+            row('binance_microstructure', micro),
+            row('okx_swap', okx),
+            row('top100_breadth', breadth),
+            row('cfgi_sentiment', cfgi),
         ]
 
     def capture(self, *, slow_macro=False, captured_at='2026-09-27T05:19:49Z'):
+        run_id = 'gh-test-1'
         return {
+            'run_id': run_id,
             'captured_at_utc': captured_at,
-            'execution_plan': {
-                'contract': module.LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT,
-                'trigger': 'schedule',
-                'schedule_id': '13 6 * * *' if slow_macro else '13 10 * * *',
-                'slow_macro_planned': slow_macro,
-                'slow_macro_reason': 'TEST',
-                'expected_owner_statuses': {
-                    'fred_macro': 'PASS' if slow_macro else 'DISABLED',
-                    'binance_spot': 'DISABLED',
-                    'binance_microstructure': 'PASS',
-                    'okx_swap': 'PASS',
-                    'top100_breadth': 'PASS',
-                    'cfgi_sentiment': 'PASS',
-                },
-            },
+            'execution_plan': build_plan(
+                run_id=run_id,
+                trigger='schedule',
+                schedule_id='13 6 * * *' if slow_macro else '13 10 * * *',
+                slow_macro_planned=slow_macro,
+                slow_macro_reason='TEST',
+                planned_at_utc='2026-09-27T05:00:00Z',
+            ),
         }
 
     def test_empty_owner_population_cannot_support_green_when_capture_exists(self):
@@ -142,6 +148,47 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
         delayed = self.capture(captured_at='2026-09-27T07:05:00Z')
         self.assertIsNone(module.owner_population_finding(before, self.owner_rows()))
         self.assertIsNone(module.owner_population_finding(delayed, self.owner_rows()))
+
+    def test_matching_statuses_without_artifact_evidence_fail_closed(self):
+        rows = self.owner_rows()
+        micro = next(row for row in rows if row['owner_id'] == 'binance_microstructure')
+        micro['files'] = []
+        micro['file_count'] = 0
+        self.assertEqual(
+            module.owner_population_finding(self.capture(), rows),
+            ('OWNER_ARTIFACT_EVIDENCE_INVALID', 1),
+        )
+
+    def test_tampered_execution_plan_hash_fails_closed(self):
+        capture = self.capture()
+        capture['execution_plan']['slow_macro_reason'] = 'TAMPERED_AFTER_FREEZE'
+        self.assertEqual(
+            module.owner_population_finding(capture, self.owner_rows()),
+            ('OWNER_TOPOLOGY_UNBOUND', 1),
+        )
+
+    def test_plan_created_after_capture_fails_closed(self):
+        capture = self.capture(captured_at='2026-09-27T05:19:49Z')
+        capture['execution_plan'] = build_plan(
+            run_id='gh-test-1', trigger='schedule', schedule_id='13 10 * * *',
+            slow_macro_planned=False, slow_macro_reason='TEST',
+            planned_at_utc='2026-09-27T05:20:00Z',
+        )
+        self.assertEqual(
+            module.owner_population_finding(capture, self.owner_rows()),
+            ('OWNER_TOPOLOGY_UNBOUND', 1),
+        )
+
+    def test_legacy_posthoc_plan_is_not_accepted_as_bound_topology(self):
+        capture = self.capture()
+        capture['execution_plan'] = {
+            'contract': module.LEGACY_LIVE_ANCHOR_EXECUTION_PLAN_CONTRACT,
+            'expected_owner_statuses': {row['owner_id']: row['status'] for row in self.owner_rows()},
+        }
+        self.assertEqual(
+            module.owner_population_finding(capture, self.owner_rows()),
+            ('OWNER_TOPOLOGY_LEGACY_UNBOUND', 1),
+        )
 
     def test_missing_execution_plan_fails_closed_without_guessing(self):
         capture = {'captured_at_utc': '2026-09-27T05:19:49Z'}
