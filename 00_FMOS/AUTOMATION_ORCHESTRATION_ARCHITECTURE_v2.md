@@ -10,7 +10,7 @@ This document defines the current execution, observability, remediation and agen
 
 ## Repository roles
 
-- `Investering-Framework-Archive-v1` is the public execution, governance, provenance and health control plane.
+- `Investering-Framework-Archive-v1` is the private execution, governance, provenance and health control plane.
 - `Donh91/secrets` is the restricted data plane for raw/restricted provider payloads, private normalized values, immutable captures and restricted source health. It has no independent framework-rule or portfolio authority.
 - GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity is the credential plane. Credentials never belong in repository files.
 - `Eksperimenter-framework-` is a bounded experiment workspace and may not promote rules or canonical state into the main framework without explicit ratification and a governed handoff.
