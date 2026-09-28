@@ -62,7 +62,7 @@ jobs:
           print(f"tier={tier}")
           if c.get('api_review_required'):
               task='CN_PRECISION_ADVERSARIAL_REVIEW' if tier=='SOL_HIGH' else 'CN_PRECISION_4W_REVIEW'
-              out=f"research/api_agent/outputs/cn_precision_learning/{c['completed_iso_year']}/W{int(c['completed_iso_week']):02d}/\${{ github.run_id }}"
+              out=f"research/api_agent/outputs/cn_precision_learning/{c['completed_iso_year']}/W{int(c['completed_iso_week']):02d}/${{ github.run_id }}"
               print(f"task={task}")
               print(f"output_dir={out}")
           else:
@@ -85,23 +85,23 @@ jobs:
       - name: Run bounded four-settlement API review
         if: steps.route.outputs.required == 'true' && steps.budget.outcome == 'success'
         env:
-          OPENAI_API_KEY: \${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           set -euo pipefail
           python scripts/api_agent/api_gateway.py \
-            --task "\${{ steps.route.outputs.task }}" \
+            --task "${{ steps.route.outputs.task }}" \
             --registry research/api_agent/API_TASK_REGISTRY_v1.json \
             --prompt-file runtime/cn_precision_learning/prompt.txt \
             --context-file runtime/cn_precision_learning/context.json \
-            --output-dir "\${{ steps.route.outputs.output_dir }}" \
+            --output-dir "${{ steps.route.outputs.output_dir }}" \
             --intended-write-prefix "research/api_agent/outputs/cn_precision_learning/"
 
       - name: Finalize checkpoint with bounded review
         run: |
           set -euo pipefail
           API_OUTPUT=""
-          if [ "\${{ steps.route.outputs.required }}" = "true" ] && [ "\${{ steps.budget.outcome }}" = "success" ]; then
-            API_OUTPUT="\${{ steps.route.outputs.output_dir }}/output.json"
+          if [ "${{ steps.route.outputs.required }}" = "true" ] && [ "${{ steps.budget.outcome }}" = "success" ]; then
+            API_OUTPUT="${{ steps.route.outputs.output_dir }}/output.json"
           fi
           if [ -n "$API_OUTPUT" ] && [ -f "$API_OUTPUT" ]; then
             python scripts/cycle_navigator/cn_precision_learning_supervisor.py \
@@ -178,7 +178,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cn-precision-learning-\${{ github.run_id }}
+          name: cn-precision-learning-${{ github.run_id }}
           path: |
             runtime_cn_precision_learning_*.json
             runtime/cn_precision_learning/
