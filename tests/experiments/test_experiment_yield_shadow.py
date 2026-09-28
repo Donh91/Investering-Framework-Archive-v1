@@ -81,6 +81,36 @@ class ExperimentYieldShadowTests(unittest.TestCase):
         self.assertFalse(result["research_debt_semantics"]["candidate_state_change"])
         self.assertFalse(result["research_debt_semantics"]["automatic_retirement"])
 
+    def test_malformed_canonical_candidate_breaks_consistency_instead_of_being_silently_skipped(self):
+        result = build_shadow(
+            {
+                "candidate_count": 2,
+                "candidates": [
+                    {"candidate_id": "EC-1", "state": "INCUBATING"},
+                    None,
+                ],
+            },
+            {"rows": []},
+        )
+        self.assertEqual(result["summary"]["row_count"], 1)
+        self.assertEqual(result["summary"]["registry_raw_row_count"], 2)
+        self.assertEqual(result["summary"]["registry_malformed_row_count"], 1)
+        self.assertEqual(result["summary"]["registry_consistency"], "UNVERIFIED_OR_MISMATCH")
+
+    def test_empty_canonical_candidates_do_not_fall_through_to_legacy_rows(self):
+        result = build_shadow(
+            {
+                "candidate_count": 0,
+                "candidates": [],
+                "rows": [{"experiment_id": "LEGACY", "state": "MATURED_SUPPORTED"}],
+            },
+            {"rows": []},
+        )
+        self.assertEqual(result["summary"]["registry_source_field"], "candidates")
+        self.assertEqual(result["summary"]["registry_raw_row_count"], 0)
+        self.assertEqual(result["summary"]["row_count"], 0)
+        self.assertEqual(result["summary"]["registry_consistency"], "PASS")
+
     def test_candidate_observability_never_changes_state_or_suppresses_production(self):
         candidate = {
             "candidate_id": "EC-wait",
