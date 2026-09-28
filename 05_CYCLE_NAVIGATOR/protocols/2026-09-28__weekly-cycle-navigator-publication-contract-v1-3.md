@@ -35,10 +35,11 @@ Under `05_CYCLE_NAVIGATOR/weekly/YYYY/Www/`:
 - `CYCLE_NAVIGATOR_SOURCE_MANIFEST.json`
 - `CYCLE_NAVIGATOR_DELIVERY_POINTER.json`
 
-Confirmed published X copies remain immutable under `05_CYCLE_NAVIGATOR/published/YYYY/`.
-Approved-but-not-platform-confirmed X copies may also be archived there only when their filename and receipt explicitly say `APPROVED`, never `PUBLISHED`.
+Confirmed published X copies remain immutable under `05_CYCLE_NAVIGATOR/published/YYYY/`. The user is the authority on publication status; no independent X verification is required.
 
-`X_READY` and `X_APPROVED` must never be silently relabelled as `X_PUBLISHED`.
+Approved pre-publication copies may also be archived with `APPROVED` status. They become `PUBLISHED_CONFIRMED_BY_USER` only when the user states that the exact version was published.
+
+`X_READY` and `X_APPROVED` must never be silently relabelled as `X_PUBLISHED` without that user confirmation.
 
 ## Binding X-series continuity rule
 
@@ -53,7 +54,7 @@ For any request equivalent to `Cycle Navigator til X`, `CN til X`, `CN til publi
 5. Build the new public post forward from the established public narrative; do not restart the format or introduce internal framework novelty without public need.
 6. Current canonical evidence always overrides stale prose.
 7. Historical public scores may only be repeated when supported under the current public scoring rules.
-8. After the user confirms actual X publication, archive the exact platform text immutably as `X_PUBLISHED` and update the public-series identity through the existing publication-accountability path.
+8. The user's publication statement is authoritative. Do not require independent X confirmation. When the user says the exact version was published, archive that version immutably as `X_PUBLISHED`, record `PUBLISHED_CONFIRMED_BY_USER`, and advance the public-series identity.
 
 Fallback: when no confirmed prior published X artifact exists, use the closest approved/published historical public post for narrative continuity while public issue identity remains governed by confirmed publication state.
 
