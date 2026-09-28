@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ from scripts.learning import segment_return_foundation as foundation
 def snapshot(ts: str, rows: list[dict]) -> dict:
     return {
         "contract": foundation.SOURCE_CONTRACT,
+        "run_id": "RUN-" + ts.replace("-", "").replace(":", ""),
         "retrieval_timestamp": ts,
         "freeze_timestamp": ts,
         "universe": {
@@ -46,7 +48,23 @@ class SegmentReturnFoundationTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(value), encoding="utf-8")
         if raw_rows is not None:
-            path.with_name("raw_source_payload.json").write_text(json.dumps(raw_rows), encoding="utf-8")
+            raw_path = path.with_name("raw_source_payload.json")
+            raw_bytes = json.dumps(raw_rows).encode()
+            raw_path.write_bytes(raw_bytes)
+            raw_sha = hashlib.sha256(raw_bytes).hexdigest()
+            path.with_name("receipt.json").write_text(json.dumps({
+                "run_id": value["run_id"],
+                "raw_sha256": raw_sha,
+            }))
+            path.with_name("artifact_manifest.json").write_text(json.dumps({
+                "contract": "C5E_ARTIFACT_MANIFEST_v1",
+                "run_id": value["run_id"],
+                "members": [{
+                    "path": "raw_source_payload.json",
+                    "bytes": len(raw_bytes),
+                    "sha256": raw_sha,
+                }],
+            }))
 
     def test_freezes_prior_rank_membership_before_measuring_next_price(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -95,6 +113,42 @@ class SegmentReturnFoundationTests(unittest.TestCase):
             self.assertTrue(value["bucket_diagnostics"]["RANK_3_25"]["complete_price_coverage"])
             self.assertEqual(len(lineage), 1)
 
+    def test_missing_prior_price_stays_in_frozen_cohort_and_withholds_return(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "breadth"
+            self.write_snapshot(
+                root,
+                "2026-09-26",
+                snapshot(
+                    "2026-09-26T10:00:00Z",
+                    [
+                        row("bitcoin", 1, 100.0, 1000.0),
+                        row("ethereum", 2, 50.0, 500.0),
+                        row("alpha", 3, 10.0, 100.0),
+                        row("delta", 4, None, 90.0),
+                    ],
+                ),
+            )
+            self.write_snapshot(
+                root,
+                "2026-09-27",
+                snapshot(
+                    "2026-09-27T10:00:00Z",
+                    [
+                        row("bitcoin", 1, 101.0, 1010.0),
+                        row("ethereum", 2, 51.0, 510.0),
+                        row("alpha", 3, 11.0, 110.0),
+                        row("delta", 4, 6.0, 95.0),
+                    ],
+                ),
+            )
+            rows, _ = foundation.build_rows(root)
+            diag = rows[0]["bucket_diagnostics"]["RANK_3_25"]
+            self.assertEqual(diag["cohort_count"], 2)
+            self.assertFalse(diag["complete_price_coverage"])
+            self.assertEqual(diag["missing_prior_price_asset_ids"], ["delta"])
+            self.assertIsNone(rows[0]["RANK_3_25"])
+
     def test_raw_top150_fallback_preserves_frozen_member_that_leaves_owner_top100(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "breadth"
@@ -138,6 +192,39 @@ class SegmentReturnFoundationTests(unittest.TestCase):
             self.assertEqual(diag["raw_top150_fallback_asset_ids"], ["delta"])
             self.assertEqual(diag["missing_asset_ids"], [])
             self.assertAlmostEqual(rows[0]["RANK_3_25"], -0.05)
+
+    def test_unbound_or_tampered_raw_top150_is_not_used_as_dropout_price(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "breadth"
+            self.write_snapshot(
+                root, "2026-09-26",
+                snapshot("2026-09-26T10:00:00Z", [
+                    row("bitcoin", 1, 100.0, 1000.0),
+                    row("ethereum", 2, 50.0, 500.0),
+                    row("alpha", 3, 10.0, 100.0),
+                    row("delta", 4, 5.0, 90.0),
+                ]),
+            )
+            self.write_snapshot(
+                root, "2026-09-27",
+                snapshot("2026-09-27T10:00:00Z", [
+                    row("bitcoin", 1, 101.0, 1010.0),
+                    row("ethereum", 2, 51.0, 510.0),
+                    row("alpha", 3, 11.0, 110.0),
+                ]),
+                raw_rows=[
+                    raw_row("bitcoin", 101.0), raw_row("ethereum", 51.0),
+                    raw_row("alpha", 11.0), raw_row("delta", 4.0),
+                ],
+            )
+            raw_path = root / "2026-09-27" / "raw_source_payload.json"
+            raw_path.write_text(json.dumps([raw_row("delta", 400.0)]))
+            rows, _ = foundation.build_rows(root)
+            diag = rows[0]["bucket_diagnostics"]["RANK_3_25"]
+            self.assertFalse(rows[0]["current_raw_top150_binding_valid"])
+            self.assertFalse(diag["complete_price_coverage"])
+            self.assertEqual(diag["missing_current_price_asset_ids"], ["delta"])
+            self.assertIsNone(rows[0]["RANK_3_25"])
 
     def test_missing_even_from_raw_payload_makes_bucket_unavailable_not_survivor_average(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
