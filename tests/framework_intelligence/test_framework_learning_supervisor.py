@@ -117,6 +117,15 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", text)
         self.assertNotIn("if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'", text)
 
+    def test_failed_senior_audit_cost_receipt_is_persisted_before_validation(self):
+        text = Path('.github/workflows/framework-learning-supervisor.yml').read_text()
+        persist = text.index('Persist immutable senior audit evidence and cost receipt')
+        validate = text.index('Validate senior audit receipt and output')
+        self.assertLess(persist, validate)
+        self.assertIn("if: always() && steps.dedupe.outputs.run_audit == 'true'", text)
+        self.assertIn('failure-report', text)
+        self.assertIn('senior_audit_no_receipt_to_persist', text)
+
     def test_senior_dispatch_helper_preserves_read_only_audit_boundary(self):
         text = Path('scripts/api_agent/senior_repair_audit_dispatch.py').read_text()
         self.assertIn('ADVISORY_READ_ONLY', text)
