@@ -1,1 +1,68 @@
-{"breadth_condition":"At the W40 close, 90d and 365d shadow rotation source states are expected to remain BETWEEN_PUBLISHED_THRESHOLDS. The 30d ALTCOIN_SEASON label may persist or reverse; it is not, by itself, confirmation of full midcap-to-microcap transmission.","btc_range_high":89000,"btc_range_low":79500,"eth_range_high":2880,"eth_range_low":2480,"ethbtc_condition":"ETH/BTC closes W40 at or below its W40 open. A higher weekly close contradicts this directional condition; the W39 close was 0.03182.","forecast_horizon_days":7,"intraday_map":{"day_1_2":"BTC $81,700\u2013$86,500; ETH $2,560\u2013$2,750. Stabilization or a continuation attempt is possible, but weak ETH-relative performance and microstructure leave rejection risk.","day_3_4":"BTC $80,400\u2013$87,700; ETH $2,510\u2013$2,810. Retest watch becomes more prominent; a breach of these bands would be a forecast miss, not an automatic breakdown signal.","day_5_7":"BTC $79,500\u2013$89,000; ETH $2,480\u2013$2,880. Wider prospective envelope for either a deeper retest or recovery; no late-week volatility expansion is asserted."},"scoring_contract":"CN_PUBLIC_CONTINUITY_v1","structural_calls":["W40 remains an unresolved, volatile consolidation rather than a confirmed market breakdown.","BTC or ETH trades below its completed W39 close\u2014$84,472 or $2,688.65, respectively\u2014at least once during W40.","ETH/BTC closes W40 at or below its weekly open.","The 90d and 365d shadow rotation source states remain BETWEEN_PUBLISHED_THRESHOLDS at the W40 close.","A 30d ALTCOIN_SEASON label alone does not become confirmed broad, multi-horizon altseason by the W40 close."]}
+{
+  "breadth_condition": "At the W40 close, 90d and 365d shadow rotation source states are expected to remain BETWEEN_PUBLISHED_THRESHOLDS. The 30d ALTCOIN_SEASON label may persist or reverse; it is not, by itself, confirmation of full midcap-to-microcap transmission.",
+  "btc_range_high": 89000,
+  "btc_range_low": 79500,
+  "eth_range_high": 2880,
+  "eth_range_low": 2480,
+  "ethbtc_condition": "ETH/BTC closes W40 at or below its W40 open. A higher weekly close contradicts this directional condition; the W39 close was 0.03182.",
+  "forecast_horizon_days": 7,
+  "intraday_map": {
+    "day_1_2": "BTC $81,700–$86,500; ETH $2,560–$2,750. Stabilization or a continuation attempt is possible, but weak ETH-relative performance and microstructure leave rejection risk.",
+    "day_3_4": "BTC $80,400–$87,700; ETH $2,510–$2,810. Retest watch becomes more prominent; a breach of these bands would be a forecast miss, not an automatic breakdown signal.",
+    "day_5_7": "BTC $79,500–$89,000; ETH $2,480–$2,880. Wider prospective envelope for either a deeper retest or recovery; no late-week volatility expansion is asserted."
+  },
+  "scoring_contract": "CN_PUBLIC_CONTINUITY_v1",
+  "structural_calls": [
+    "REGIME: W40 remains a volatile consolidation/retest regime and does not end in a confirmed market breakdown.",
+    "LEADERSHIP: ETH/BTC closes W40 at or below its weekly open.",
+    "FIRST_HANDOFF: Large-cap transmission remains selective or incomplete rather than becoming broad and persistent by the W40 close.",
+    "DEEPER_TRANSMISSION: Sustained transmission through midcaps into small caps and microcaps is not confirmed by the W40 close.",
+    "BREADTH_PERSISTENCE: Participation does not become confirmed broad altseason with persistent breadth by the W40 close."
+  ],
+  "market_structure_v2": {
+    "contract": "CN_PUBLIC_MARKET_STRUCTURE_V2",
+    "status": "FROZEN_PROSPECTIVE",
+    "effective_from_public_issue": 27,
+    "public_issue_number": 27,
+    "forecast_week": "2026-W40",
+    "scoring_rubric": {
+      "HIT": 100,
+      "MIXED": 50,
+      "MISS": 0
+    },
+    "aggregate": "EQUAL_WEIGHT_MEAN_OF_FIVE_DIMENSIONS",
+    "dimensions": [
+      {
+        "id": "REGIME",
+        "label": "Market regime",
+        "forecast": "REGIME: W40 remains a volatile consolidation/retest regime and does not end in a confirmed market breakdown."
+      },
+      {
+        "id": "LEADERSHIP",
+        "label": "ETH/BTC leadership",
+        "forecast": "LEADERSHIP: ETH/BTC closes W40 at or below its weekly open."
+      },
+      {
+        "id": "FIRST_HANDOFF",
+        "label": "ETH to large-cap handoff",
+        "forecast": "FIRST_HANDOFF: Large-cap transmission remains selective or incomplete rather than becoming broad and persistent by the W40 close."
+      },
+      {
+        "id": "DEEPER_TRANSMISSION",
+        "label": "Mid/small/micro transmission",
+        "forecast": "DEEPER_TRANSMISSION: Sustained transmission through midcaps into small caps and microcaps is not confirmed by the W40 close."
+      },
+      {
+        "id": "BREADTH_PERSISTENCE",
+        "label": "Breadth and persistence",
+        "forecast": "BREADTH_PERSISTENCE: Participation does not become confirmed broad altseason with persistent breadth by the W40 close."
+      }
+    ],
+    "invariants": [
+      "Five dimensions only.",
+      "One dimension, one vote; do not duplicate the same thesis across slots.",
+      "Score prospectively frozen wording only; no hindsight rewrite.",
+      "Market/Structure remains separate from Price Ranges."
+    ]
+  }
+}
