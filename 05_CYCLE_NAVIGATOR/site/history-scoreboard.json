@@ -2,9 +2,9 @@
   "contract": "CN_PUBLIC_HISTORY_SCOREBOARD_V2",
   "authority": false,
   "coverage": {
-    "completed_issues": 25,
-    "rows_with_published_or_canonical_score_evidence": 25,
-    "latest_open_issue": 26,
+    "completed_issues": 26,
+    "rows_with_published_or_canonical_score_evidence": 26,
+    "latest_open_issue": 27,
     "note": "Component availability varies by scoring era. A recovered row does not imply that every score family was published."
   },
   "policy": {
@@ -265,7 +265,19 @@
       "structure_display": "Frozen claims 78.57 · Market/Structure 80 · Cycle 100 · ETH/BTC 100 · Breadth 50 · Rotation 50 · Altseason 100",
       "provenance": "PUBLIC_CN25_W38_DUAL_TRACK_SCORECARD",
       "allow_derived_overall": false
+    },
+    {
+      "cn": 26,
+      "evaluated_in": 27,
+      "era": "LEGACY_STRUCTURE_TRANSITION",
+      "overall": null,
+      "range_display": "Combined 81.85 · BTC 78.66 · ETH 85.05",
+      "intraday_display": "D1–2 83.19 · D3–4 86.35 · D5–7 76.02",
+      "structure_display": "Legacy Market/Structure 60",
+      "provenance": "PUBLIC_CN26_W39_USER_CONFIRMED_PLUS_CANONICAL_ACTUALS",
+      "allow_derived_overall": false,
+      "structure_method": "LEGACY_PRE_V2"
     }
   ],
-  "provenance_note": "Scores are publication records or canonical scorecard records. CN25/W38 is resolved by public forecast week and immutable publication lineage: Market/Structure 80 plus final range precision 71.51. Machine issue numbers are not used as public-series join keys during the September migration offset."
+  "provenance_note": "Historical scores remain locked. CN26/W39 closes the legacy Market/Structure method at 60% with Price Ranges 81.85%. CN27/W40 starts Market/Structure v2; its five-dimensional score is prospective and not yet evaluated."
 }
