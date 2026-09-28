@@ -1,0 +1,53 @@
+{
+  "contract": "CN_PRECISION_LEARNING_POLICY_v1",
+  "status": "ACTIVE_INTERNAL_ONLY",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "internal_additive_only": true,
+  "public_surface_locked": true,
+  "checkpoint": {
+    "settled_weeks": 4,
+    "basis": "SUCCESSFUL_SETTLED_INTERNAL_CN_WEEKS_NOT_CALENDAR"
+  },
+  "thresholds": {
+    "low_score_max": 50,
+    "persistent_mean_max": 60,
+    "watch_decline_pp": 15,
+    "recovery_score_min": 75,
+    "min_valid_observations_4w": 3
+  },
+  "states": [
+    "NORMAL",
+    "WATCH",
+    "PERSISTENT_WEAKNESS",
+    "DEEP_REVIEW"
+  ],
+  "escalation": {
+    "watch": "2_OF_4_AT_OR_BELOW_LOW_SCORE_OR_15PP_DECLINE_VS_PREVIOUS_4W",
+    "persistent": "3_OF_4_AT_OR_BELOW_LOW_SCORE_OR_4W_MEAN_BELOW_60_WITH_MIN_3_VALID",
+    "deep_review": "2_ZERO_SCORES_IN_RECENT_4_SCOREABLE_OBSERVATIONS",
+    "hysteresis": "PERSISTENT_OR_DEEP_REVIEW_DOES_NOT_CLEAR_TO_NORMAL_UNTIL_TWO_LATEST_VALID_SCORES_ARE_AT_LEAST_75"
+  },
+  "api_review": {
+    "routine_checkpoint": "gpt-5.6-terra medium",
+    "deep_review": "gpt-6-sol high",
+    "deterministic_trigger_only": true,
+    "may_propose_shadow_hypotheses": true,
+    "may_change_thresholds": false,
+    "may_change_weights": false,
+    "may_change_public_precision": false,
+    "may_change_portfolio": false
+  },
+  "public_firewall": {
+    "forbidden_write_prefixes": [
+      "05_CYCLE_NAVIGATOR/site/",
+      "05_CYCLE_NAVIGATOR/published/",
+      "05_CYCLE_NAVIGATOR/public_scorecards/",
+      "05_CYCLE_NAVIGATOR/public_series/"
+    ],
+    "forbidden_files": [
+      "CYCLE_NAVIGATOR_X_READY.md",
+      "CYCLE_NAVIGATOR_SCORECARD.json"
+    ],
+    "rule": "Internal learning may never remove, replace, recompute or expand the established SITE/X public precision values without a separate explicit owner-approved versioned public migration."
+  }
+}
