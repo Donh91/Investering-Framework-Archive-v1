@@ -207,24 +207,33 @@ jobs:
             --context-file runtime/senior-repair-audit/context.json \
             --output-dir runtime/senior-repair-audit/output \
             --intended-write-prefix research/api_agent/outputs/senior_repair_audit/
-      - name: Validate senior audit receipt and output
-        if: steps.dedupe.outputs.run_audit == 'true'
-        run: python scripts/api_agent/senior_repair_audit_dispatch.py validate --output-dir runtime/senior-repair-audit
-      - name: Persist immutable senior audit evidence
-        if: steps.dedupe.outputs.run_audit == 'true'
+      - name: Persist immutable senior audit evidence and cost receipt
+        if: always() && steps.dedupe.outputs.run_audit == 'true'
         env:
           COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           set -euo pipefail
+          receipt="runtime/senior-repair-audit/output/receipt.json"
+          output="runtime/senior-repair-audit/output/output.json"
+          manifest="runtime/senior-repair-audit/context_manifest.json"
+          if [ ! -f "$receipt" ]; then
+            echo "senior_audit_no_receipt_to_persist"
+            exit 0
+          fi
+          [ -f "$output" ]
+          [ -f "$manifest" ]
           dest="research/api_agent/outputs/senior_repair_audit/issue-1156/comment-${COMMENT_ID}"
           mkdir -p "$dest"
-          cp runtime/senior-repair-audit/output/output.json "$dest/SENIOR_REPAIR_AUDIT.json"
-          cp runtime/senior-repair-audit/output/receipt.json "$dest/receipt.json"
-          cp runtime/senior-repair-audit/context_manifest.json "$dest/context_manifest.json"
+          cp "$output" "$dest/SENIOR_REPAIR_AUDIT.json"
+          cp "$receipt" "$dest/receipt.json"
+          cp "$manifest" "$dest/context_manifest.json"
           git config user.name 'framework-learning-supervisor[bot]'
           git config user.email 'framework-learning-supervisor@users.noreply.github.com'
           git add "$dest"
-          git commit -m "audit: GPT-6 Sol senior repair review issue-1156 comment-${COMMENT_ID}"
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "audit: GPT-6 Sol senior repair evidence issue-1156 comment-${COMMENT_ID}"
           pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true
@@ -238,8 +247,22 @@ jobs:
             git show "origin/main:$dest/$rel" > "/tmp/$rel"
             cmp -s "$dest/$rel" "/tmp/$rel" || { echo "senior_audit_main_readback_mismatch:$rel"; exit 1; }
           done
-      - name: Report senior audit result to reliability owner
+      - name: Validate senior audit receipt and output
         if: steps.dedupe.outputs.run_audit == 'true'
+        run: python scripts/api_agent/senior_repair_audit_dispatch.py validate --output-dir runtime/senior-repair-audit
+      - name: Report failed senior audit attempt to reliability owner
+        if: failure() && steps.dedupe.outputs.run_audit == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          python scripts/api_agent/senior_repair_audit_dispatch.py failure-report \
+            --output-dir runtime/senior-repair-audit \
+            --comment-id "$COMMENT_ID" \
+            --output runtime/senior-repair-audit/failure-report.md
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body-file runtime/senior-repair-audit/failure-report.md
+      - name: Report senior audit result to reliability owner
+        if: success() && steps.dedupe.outputs.run_audit == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           COMMENT_ID: ${{ github.event.comment.id }}

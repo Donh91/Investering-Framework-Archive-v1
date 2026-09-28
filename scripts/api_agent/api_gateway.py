@@ -212,6 +212,18 @@ def build_request(task: str, task_cfg: dict[str, Any], prompt: str, context: dic
     }
 
 
+def retry_output_token_limit(task_cfg: dict[str, Any]) -> int:
+    first = int(task_cfg["max_output_tokens"])
+    configured = task_cfg.get("retry_max_output_tokens")
+    if configured is None:
+        return min(max(first * 2, 2400), 5000)
+    if isinstance(configured, bool) or not isinstance(configured, int):
+        raise ValueError("invalid_retry_max_output_tokens")
+    if configured < first or configured > 20000:
+        raise ValueError("retry_max_output_tokens_out_of_bounds")
+    return configured
+
+
 def call_api(api_key: str, payload: dict[str, Any]) -> dict[str, Any]:
     request = urllib.request.Request("https://api.openai.com/v1/responses", data=canonical_bytes(payload), headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST")
     try:
@@ -279,7 +291,7 @@ def main() -> None:
         for attempt in range(2):
             payload = dict(request_payload)
             if attempt == 1:
-                payload["max_output_tokens"] = min(max(int(task_cfg["max_output_tokens"]) * 2, 2400), 5000)
+                payload["max_output_tokens"] = retry_output_token_limit(task_cfg)
             response = call_api(api_key, payload)
             responses.append(response)
             try:
@@ -291,12 +303,18 @@ def main() -> None:
     for response in responses:
         i, o = usage_of(response);input_tokens += i;output_tokens += o
     cost = estimate_cost(task_cfg["model"], input_tokens, output_tokens)
-    if cost > float(registry["single_run_hard_stop_usd"]): raise SystemExit(f"single_run_cost_exceeded:{cost}")
-    accepted = output is not None
-    if output is None:
+    hard_stop = float(registry["single_run_hard_stop_usd"])
+    cost_exceeded = cost > hard_stop
+    accepted = output is not None and not cost_exceeded
+    if cost_exceeded:
+        output = blocked_output("SINGLE_RUN_COST_EXCEEDED")
+    elif output is None:
         output = blocked_output("API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY")
     output_bytes = canonical_bytes(output)
-    receipt = {"contract": "API_AGENT_RECEIPT_v3", "task": args.task, "model": task_cfg["model"], "reasoning_effort": task_cfg["reasoning_effort"], "request_hash": request_hash, "context_hash": sha256_bytes(canonical_bytes(context)), "prompt_hash": sha256_bytes(prompt.encode()), "output_hash": sha256_bytes(output_bytes), "response_id": responses[-1].get("id") if responses else None, "response_ids": [r.get("id") for r in responses], "attempt_count": len(responses), "input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost_usd": cost, "created_unix": int(time.time()), "status": "PASS" if accepted else "API_OUTPUT_INVALID", "parse_errors": errors, "allowed_write_prefix": allowed_prefix, "intended_write_prefix": args.intended_write_prefix, "forecast_candidate_count": len(output.get("forecast_candidates", [])), "untrusted_input_envelope": True, "authority": registry["authority"]}
+    status = "COST_EXCEEDED" if cost_exceeded else ("PASS" if accepted else "API_OUTPUT_INVALID")
+    receipt = {"contract": "API_AGENT_RECEIPT_v3", "task": args.task, "model": task_cfg["model"], "reasoning_effort": task_cfg["reasoning_effort"], "request_hash": request_hash, "context_hash": sha256_bytes(canonical_bytes(context)), "prompt_hash": sha256_bytes(prompt.encode()), "output_hash": sha256_bytes(output_bytes), "response_id": responses[-1].get("id") if responses else None, "response_ids": [r.get("id") for r in responses], "attempt_count": len(responses), "input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost_usd": cost, "created_unix": int(time.time()), "status": status, "parse_errors": errors, "allowed_write_prefix": allowed_prefix, "intended_write_prefix": args.intended_write_prefix, "forecast_candidate_count": len(output.get("forecast_candidates", [])), "untrusted_input_envelope": True, "authority": registry["authority"]}
     (args.output_dir / "output.json").write_bytes(output_bytes);(args.output_dir / "receipt.json").write_bytes(canonical_bytes(receipt));print(json.dumps(receipt, sort_keys=True))
+    if cost_exceeded:
+        raise SystemExit(f"single_run_cost_exceeded:{cost}")
 
 if __name__ == "__main__": main()

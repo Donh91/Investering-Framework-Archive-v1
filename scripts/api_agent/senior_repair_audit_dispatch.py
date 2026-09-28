@@ -18,6 +18,7 @@ PACKAGE_COMMITS = [
     ("#1354", "78e951c189ea7e3cad7d0ce8f0aa3de1ce848d7f"),
     ("#1355", "793cbff9b792a50527ca7d09c29ebb83843f2cf3"),
     ("#1356", "735eaef61a81ad28619ee880f4bb8be7c10072b3"),
+    ("#1357", "a630eac9b00015fec68d9a30b961e15bc07f3607"),
 ]
 
 CURRENT_FILES = [
@@ -72,6 +73,12 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+MAX_CONTEXT_BYTES = 360_000
+PATCH_CLIP_CHARS = 8_000
+STAT_CLIP_CHARS = 3_000
+FILE_CLIP_CHARS = 8_000
+
+
 def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_id: str) -> dict[str, Any]:
     head = run_git("rev-parse", "HEAD").strip()
     package = []
@@ -79,7 +86,7 @@ def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_
         try:
             stat = run_git("show", "--no-ext-diff", "--format=fuller", "--stat", sha)
             patch = run_git("show", "--no-ext-diff", "--format=", "--unified=12", sha)
-            package.append({"label": label, "sha": sha, "stat": clip(stat, 12000), "patch": clip(patch, 45000)})
+            package.append({"label": label, "sha": sha, "stat": clip(stat, STAT_CLIP_CHARS), "patch": clip(patch, PATCH_CLIP_CHARS)})
         except subprocess.CalledProcessError as exc:
             package.append({"label": label, "sha": sha, "error": clip(exc.output, 4000)})
 
@@ -90,7 +97,7 @@ def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_
             files.append({"path": rel, "status": "MISSING"})
             continue
         raw = path.read_bytes()
-        files.append({"path": rel, "sha256": sha256_bytes(raw), "content": clip(raw.decode(errors="replace"), 28000)})
+        files.append({"path": rel, "sha256": sha256_bytes(raw), "content": clip(raw.decode(errors="replace"), FILE_CLIP_CHARS)})
 
     context = {
         "contract": "SENIOR_REPAIR_AUDIT_CONTEXT_v1",
@@ -112,7 +119,10 @@ def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_
     }
     output_dir.mkdir(parents=True, exist_ok=True)
     context_path = output_dir / "context.json"
-    context_path.write_text(json.dumps(context, sort_keys=True, separators=(",", ":")) + "\n")
+    context_bytes = (json.dumps(context, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    if len(context_bytes) > MAX_CONTEXT_BYTES:
+        raise ValueError(f"senior_audit_context_too_large:{len(context_bytes)}>{MAX_CONTEXT_BYTES}")
+    context_path.write_bytes(context_bytes)
     (output_dir / "prompt.txt").write_text(PROMPT)
     manifest = {
         "contract": "SENIOR_REPAIR_AUDIT_CONTEXT_MANIFEST_v1",
@@ -120,6 +130,8 @@ def build_context(repo_root: Path, output_dir: Path, issue_number: int, comment_
         "issue_number": issue_number,
         "comment_id": comment_id,
         "context_sha256": sha256_bytes(context_path.read_bytes()),
+        "context_bytes": len(context_path.read_bytes()),
+        "context_byte_limit": MAX_CONTEXT_BYTES,
         "package_commits": [{"label": label, "sha": sha} for label, sha in PACKAGE_COMMITS],
         "paths": [row["path"] for row in files],
         "private_data_included": False,
@@ -150,6 +162,31 @@ def validate_result(output_dir: Path) -> dict[str, Any]:
     if not isinstance(authority, dict) or any(value is not False for value in authority.values()):
         raise ValueError("senior_audit_authority_not_zero")
     return {"receipt": receipt, "output": output}
+
+
+def failure_report_markdown(output_dir: Path, comment_id: str) -> str:
+    receipt_path = output_dir / "output" / "receipt.json"
+    if not receipt_path.exists():
+        return (
+            "## SENIOR_REPAIR_AUDIT failed before a paid receipt was persisted\n\n"
+            "Trigger comment: " + comment_id + "\n"
+            "No API receipt exists in the runtime output directory. The failure occurred before a durable paid-call receipt was available.\n"
+        )
+    receipt = json.loads(receipt_path.read_text())
+    errors = receipt.get("parse_errors") if isinstance(receipt.get("parse_errors"), list) else []
+    return "\n".join([
+        "## SENIOR_REPAIR_AUDIT attempt failed closed",
+        "",
+        "Trigger comment: " + comment_id,
+        "Model: " + str(receipt.get("model")),
+        "Receipt status: " + str(receipt.get("status")),
+        "Tokens: input=" + str(receipt.get("input_tokens")) + ", output=" + str(receipt.get("output_tokens")),
+        "Estimated API cost: " + f"{float(receipt.get('estimated_cost_usd') or 0.0):.6f}" + " USD",
+        "Attempts: " + str(receipt.get("attempt_count")),
+        "Parse/incomplete evidence: " + json.dumps(errors, sort_keys=True),
+        "",
+        "The receipt and blocked output were persisted for budget/accounting evidence. No audit conclusion was accepted.",
+    ]) + "\n"
 
 
 def report_markdown(output_dir: Path, comment_id: str, persisted_path: str) -> str:
@@ -189,6 +226,10 @@ def main() -> None:
     report.add_argument("--comment-id", required=True)
     report.add_argument("--persisted-path", required=True)
     report.add_argument("--output", type=Path, required=True)
+    failure_report = sub.add_parser("failure-report")
+    failure_report.add_argument("--output-dir", type=Path, required=True)
+    failure_report.add_argument("--comment-id", required=True)
+    failure_report.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.cmd == "build":
         result = build_context(args.repo_root, args.output_dir, args.issue_number, args.comment_id)
@@ -202,8 +243,13 @@ def main() -> None:
             "output_tokens": result["receipt"]["output_tokens"],
             "estimated_cost_usd": result["receipt"]["estimated_cost_usd"],
         }, sort_keys=True))
-    else:
+    elif args.cmd == "report":
         body = report_markdown(args.output_dir, args.comment_id, args.persisted_path)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(body)
+        print(json.dumps({"status": "PASS", "output": str(args.output)}, sort_keys=True))
+    else:
+        body = failure_report_markdown(args.output_dir, args.comment_id)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(body)
         print(json.dumps({"status": "PASS", "output": str(args.output)}, sort_keys=True))
