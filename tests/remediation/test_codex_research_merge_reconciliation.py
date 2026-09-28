@@ -417,6 +417,46 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
                 completion.write_completion_receipt(path, replacement)
             self.assertEqual(path.read_bytes(), original)
 
+    def test_hash_valid_receipt_with_invalid_execution_quality_metrics_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task, _transition = self.write_fixture(root)
+            (root / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({
+                "tasks": [dict(task, state="POST_FIX_OBSERVATION")]
+            }) + "\n")
+            receipt = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["verified evidence"],
+                verified_at_utc="2026-09-28T06:00:00Z",
+            )
+            receipt["execution_quality"] = {
+                "contract": completion.QUALITY_CONTRACT,
+                "telemetry_status": "CAPTURED",
+                "evidence": ["model telemetry"],
+                "metrics": {"input_tokens": -1},
+                "failure_attribution": [],
+            }
+            receipt["receipt_sha256"] = completion.canonical_hash({
+                key: value for key, value in receipt.items() if key != "receipt_sha256"
+            })
+            self.assertFalse(completion.valid_stored_completion_receipt(receipt))
+            path = root / "research/codex/completions/test-merge-reconciliation.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n")
+            valid_replacement = completion.build_completion_receipt(
+                root,
+                task["candidate_id"],
+                "a" * 40,
+                123,
+                ["replacement evidence"],
+                verified_at_utc="2026-09-28T06:01:00Z",
+            )
+            with self.assertRaisesRegex(ValueError, "EXISTING_COMPLETION_RECEIPT_INVALID"):
+                completion.write_completion_receipt(path, valid_replacement)
+
     def test_legacy_completion_without_execution_quality_remains_idempotent(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
