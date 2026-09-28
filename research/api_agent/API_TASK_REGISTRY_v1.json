@@ -90,6 +90,24 @@
       "automatic_merge": false,
       "governed_instruction": "Perform an independent adversarial architecture and repair audit of the supplied evidence package. Try to falsify the repairs and authority boundaries rather than restate them. Use only supplied evidence and preserve missingness. forecast_candidates MUST be empty. Be concise: summary <= 900 characters; each evidence/uncertainty/hypothesis list <= 8 items; each item <= 600 characters. The summary MUST begin with PASS, PASS_WITH_FINDINGS, or FAIL and contain MODEL_USED=gpt-6-sol, NO_CODE_WRITE_PERFORMED, and NO_AUTHORITY_CHANGE. Put actionable findings in evidence_against as P0|..., P1|..., P2|..., or P3|... with affected path or commit and deterministic reproduction. Put verified defenses in evidence_for, unresolved proof gaps in uncertainties, and proposal-only owner routing in hypotheses. Never request or imply a repository write, merge, market-rule change, threshold/weight change, canonical promotion, or portfolio action.",
       "retry_max_output_tokens": 18000
+    },
+    "CN_PRECISION_4W_REVIEW": {
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "max_output_tokens": 2600,
+      "manual_only": false,
+      "outcome_access": true,
+      "allowed_write_prefix": "research/api_agent/outputs/cn_precision_learning/",
+      "governed_instruction": "Perform a research-only four-settlement Cycle Navigator internal precision review. Use only supplied settled internal evidence. Search for recurring error classes, cross-family blind spots, regime dependence, timing bias, range-shape problems, and overly rigid frozen claims that a single weekly review could miss. Try to falsify an apparent weakness before accepting it. forecast_candidates MUST be empty. Hypotheses must be bounded, falsifiable, and suitable only for later shadow/scientific admission. Never recommend or imply changes to SITE/X public precision semantics, historical public scores, canonical thresholds, model weights, market state, forecast authority, portfolio actions, or repository writes."
+    },
+    "CN_PRECISION_ADVERSARIAL_REVIEW": {
+      "model": "gpt-6-sol",
+      "reasoning_effort": "high",
+      "max_output_tokens": 3200,
+      "manual_only": false,
+      "outcome_access": true,
+      "allowed_write_prefix": "research/api_agent/outputs/cn_precision_learning/",
+      "governed_instruction": "Perform an adversarial research-only review of a severe repeated Cycle Navigator internal precision weakness. Attempt to disprove the apparent pattern, identify shared causes across score families, distinguish model weakness from claim-design or data-regime effects, and propose only bounded falsifiable shadow hypotheses. forecast_candidates MUST be empty. No public score changes, no historical rewrite, no threshold or weight changes, no canonical promotion, no portfolio action, and no repository-write requests are allowed."
     }
   },
   "authority": {
