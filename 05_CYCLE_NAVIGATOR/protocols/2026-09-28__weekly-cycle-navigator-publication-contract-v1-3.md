@@ -14,6 +14,10 @@ Binding public style template:
 
 `../templates/2026-09-28__cycle-navigator-x-scroll-first-template__canonical.md`
 
+Binding Market / Structure methodology from public CN #27:
+
+`2026-09-28__public-market-structure-v2__canonical.md`
+
 ## Required Monday order
 
 1. Final completed ISO-week evidence freeze.
@@ -89,7 +93,9 @@ The public Market / Structure score must be auditable and repeatable:
 - immediately freeze the next five calls in the same public post for evaluation one week later;
 - keep the concepts stable enough for week-over-week comparison and never rewrite prior calls after outcomes are known.
 
-The public concepts should normally cover market regime/breakdown state, ETH/BTC direction, rotation confirmation, market-cap transmission and broad-altseason confirmation, adapting wording only where the current evidence requires it.
+From CN #27 onward the five fixed dimensions are, in order: **REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE**. Each dimension gets one equal-weight vote. Do not duplicate a single rotation thesis across multiple slots.
+
+CN #26's 60% is retained as a legacy pre-v2 structure score. It closes the old method and is not a like-for-like baseline for v2. CN #27/W40 is the first prospective v2 freeze.
 
 **Market / Structure and Price Ranges are separate score families. Do not blend them into one overall precision percentage.**
 
