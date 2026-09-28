@@ -77,6 +77,15 @@ jobs:
           echo "run=${due}" >> "${GITHUB_OUTPUT}"
           echo "reason=${reason}" >> "${GITHUB_OUTPUT}"
           echo "SLOW_MACRO_RECOVERY run=${due} reason=${reason}"
+      - name: Freeze owner execution intent before collectors
+        run: |
+          python scripts/daily_capture/freeze_capture_execution_plan.py \
+            --output capture-execution-plan.json \
+            --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --trigger "${GITHUB_EVENT_NAME}" \
+            --schedule-id "${SCHEDULE_ID}" \
+            --slow-macro-planned "${{ steps.slow_macro.outputs.run }}" \
+            --slow-macro-reason "${{ steps.slow_macro.outputs.reason }}"
       - name: Run point-in-time owners fail-closed but independently
         shell: bash
         env:
@@ -138,8 +147,7 @@ jobs:
             --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --trigger "${GITHUB_EVENT_NAME}" \
             --schedule-id "${SCHEDULE_ID}" \
-            --slow-macro-planned "${{ steps.slow_macro.outputs.run }}" \
-            --slow-macro-reason "${{ steps.slow_macro.outputs.reason }}"
+            --execution-plan-file capture-execution-plan.json
 
       - name: Commit live anchor before downstream research
         shell: bash
