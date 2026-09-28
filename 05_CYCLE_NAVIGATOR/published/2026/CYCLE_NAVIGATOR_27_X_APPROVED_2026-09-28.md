@@ -11,22 +11,15 @@ Prior CN #25: **90%**
 
 Forecast → Actual:
 
-1. **Volatile consolidation, no confirmed breakdown**  
-→ **HIT ✅** BTC and ETH finished the week higher.
+1. Volatile consolidation, no confirmed breakdown → **HIT ✅**
+2. ETH/BTC flat-to-positive → **MISS ❌** 0.03258 → 0.03182
+3. Broader rotation still unconfirmed → **HIT ✅**
+4. No full mid → small → micro transmission → **MIXED ⚠️**
+5. Broad altseason remains unconfirmed → **MIXED ⚠️**
 
-2. **ETH/BTC flat-to-positive**  
-→ **MISS ❌** 0.03258 → 0.03182.
+**Score: (100 + 0 + 100 + 50 + 50) / 5 = 60%**
 
-3. **Broader rotation still unconfirmed**  
-→ **HIT ✅** Longer-horizon confirmation remained absent.
-
-4. **No full mid → small → micro transmission**  
-→ **MIXED ⚠️** Participation broadened, but full transmission was not confirmed.
-
-5. **Broad altseason remains unconfirmed**  
-→ **MIXED ⚠️** Short-horizon participation strengthened sharply, but broad confirmation did not follow.
-
-Score: **100 + 0 + 100 + 50 + 50 = 60%**
+Price recovered better than structure: ETH/BTC weakened and transmission did not fully confirm.
 
 **PRICE RANGES: 81.85% ✅**  
 Prior CN #25: **71.51%**
@@ -36,33 +29,34 @@ ETH: **85.05%** *(prior 75.53%)*
 
 **Weekly Forecast → Actual**
 
-BTC  
-Forecast: **$79.2K-$88.7K**  
-Actual: **$80.85K-$87.40K ✅**
+BTC: **$79.2K-$88.7K → $80.85K-$87.40K ✅**  
+ETH: **$2.520K-$2.947K → $2.600K-$2.807K ✅**
 
-ETH  
-Forecast: **$2.520K-$2.947K**  
-Actual: **$2.600K-$2.807K ✅**
-
-**Intraday**
+**Intraday Forecast → Actual**
 
 Day 1-2: **83.19%**  
-Day 3-4: **86.35% ✅**  
-Day 5-7: **76.02%**
+BTC $81.3K-$86.1K → $80.85K-$87.40K ⚠️  
+ETH $2.606K-$2.819K → $2.644K-$2.807K ✅
 
-Price precision improved. Market structure weakened.
+Day 3-4: **86.35% ✅**  
+BTC $79.8K-$87.2K → $82.87K-$87.28K  
+ETH $2.542K-$2.883K → $2.600K-$2.789K ✅
+
+Day 5-7: **76.02%**  
+BTC $79.2K-$88.7K → $83.18K-$85.26K ✅  
+ETH $2.520K-$2.947K → $2.665K-$2.743K ✅
 
 **MARKET / STRUCTURE FORECAST — THIS WEEK**
 
-These 5 calls are frozen for next week's score:
+Frozen now for next week's score:
 
-1. W40 remains **volatile consolidation**, not a confirmed breakdown.
+1. **Volatile consolidation**, not a confirmed breakdown.
 2. BTC or ETH trades below last week's close at least once: **BTC $84.47K / ETH $2.689K**.
 3. ETH/BTC closes **at or below its weekly open**.
 4. Broader rotation remains **unconfirmed**.
 5. Short-horizon strength does **not** become confirmed broad altseason.
 
-Next week each call scores **HIT 100 / MIXED 50 / MISS 0**, then averages into the new Market / Structure precision score.
+Next week: each call = **HIT 100 / MIXED 50 / MISS 0** → new Market / Structure score.
 —
 
 🧭 **WHAT MATTERS NOW**
