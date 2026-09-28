@@ -38,9 +38,21 @@ def classify(row: dict[str, Any], consumer_rows: dict[str, dict[str, Any]]) -> t
 
 
 def build_shadow(registry: dict[str, Any], consumer_index: dict[str, Any]) -> dict[str, Any]:
-    rows = registry.get("candidates") or registry.get("rows") or registry.get("experiments") or registry.get("items") or []
-    if not isinstance(rows, list):
-        rows = []
+    source_field = next((key for key in ("candidates", "rows", "experiments", "items") if key in registry), None)
+    raw_rows = registry.get(source_field) if source_field is not None else []
+    if not isinstance(raw_rows, list):
+        raw_rows = []
+    malformed_row_count = 0
+    rows: list[dict[str, Any]] = []
+    for row in raw_rows:
+        if not isinstance(row, dict):
+            malformed_row_count += 1
+            continue
+        experiment_id = row.get("experiment_id") or row.get("candidate_id") or row.get("id")
+        if not isinstance(experiment_id, str) or not experiment_id.strip():
+            malformed_row_count += 1
+            continue
+        rows.append(row)
     consumer_rows = {
         str(row.get("artifact")): row
         for row in consumer_index.get("rows", [])
@@ -83,7 +95,11 @@ def build_shadow(registry: dict[str, Any], consumer_index: dict[str, Any]) -> di
     registry_declared = registry.get("candidate_count")
     registry_consistency = (
         "PASS"
-        if isinstance(registry_declared, int) and registry_declared == len(rows)
+        if source_field == "candidates"
+        and isinstance(registry_declared, int)
+        and not isinstance(registry_declared, bool)
+        and registry_declared == len(raw_rows)
+        and malformed_row_count == 0
         else "UNVERIFIED_OR_MISMATCH"
     )
     return {
@@ -105,6 +121,9 @@ def build_shadow(registry: dict[str, Any], consumer_index: dict[str, Any]) -> di
             "duplicate_candidate_file_count": registry.get("duplicate_candidate_file_count"),
             "oldest_candidate_created_at_utc": min(created_at_values) if created_at_values else None,
             "newest_candidate_created_at_utc": max(created_at_values) if created_at_values else None,
+            "registry_source_field": source_field,
+            "registry_raw_row_count": len(raw_rows),
+            "registry_malformed_row_count": malformed_row_count,
             "registry_declared_candidate_count": registry_declared,
             "registry_consistency": registry_consistency,
         },
