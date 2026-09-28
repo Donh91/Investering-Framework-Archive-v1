@@ -14,7 +14,7 @@ The public post must evolve slowly from the prior public series. Internal resear
 ## Binding style rules
 
 1. **Scroll-first.** The post should feel like an X post, not a report.
-2. **Precision gets more space.** Prior-week precision is the one section allowed to be more explicit because it documents forecast accountability.
+2. **Precision gets more space.** Prior-week precision is the one section allowed to be more explicit because it documents forecast accountability. It must be split into two clearly separate public tracks: **MARKET / STRUCTURE** and **PRICE RANGES**.
 3. **Forecast -> Actual is mandatory when supported.** Show weekly BTC/ETH forecast ranges beside realized ranges, plus concise intraday precision and forecast/actual comparisons when available.
 4. **Everything else stays compressed.** Prefer short paragraphs, compact action rows and concise timeline lines. Avoid long chains of one-sentence paragraphs.
 5. **No novelty for novelty's sake.** Do not introduce new internal terminology, research dimensions, shadow metrics, scoring families or time-window diagnostics merely because the framework now has them.
@@ -36,9 +36,11 @@ Date range
 This is the most detailed section.
 
 Show:
-- Cycle / market structure precision.
-- BTC price precision.
-- ETH price precision.
+- **MARKET / STRUCTURE** as its own block, with the just-completed issue score and the prior published issue score for week-over-week continuity.
+- One short sentence on the principal market/structure hit or miss.
+- **PRICE RANGES** as a separate block, with the just-completed combined range score and the prior published issue's combined range score.
+- BTC price precision with prior-week comparison.
+- ETH price precision with prior-week comparison.
 - Combined price precision only if supported by the established public price-range method.
 - Weekly Forecast -> Actual for BTC and ETH.
 - Intraday precision for Day 1-2, Day 3-4 and Day 5-7.
@@ -100,10 +102,20 @@ Outside the precision section:
 
 Use the structure, not the example values:
 
-Cycle structure: **[x]%**
-BTC price precision: **[x]%**
-ETH price precision: **[x]%**
-Combined: **[x]%**
+**MARKET / STRUCTURE**
+
+CN #[prior]: **[x]%**
+Prior CN #[prior-1]: **[x]%**
+
+[One compact market/structure comment.]
+
+**PRICE RANGES**
+
+CN #[prior]: **[x]%**
+Prior CN #[prior-1]: **[x]%**
+
+BTC: **[x]%** *(prior [x]%)*
+ETH: **[x]%** *(prior [x]%)*
 
 **Weekly Forecast -> Actual**
 
