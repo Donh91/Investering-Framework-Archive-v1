@@ -63,7 +63,11 @@ NEVER HOLD BOTH DESTRUCTIVE KEYS.
 
 No autonomous or semi-autonomous principal may simultaneously hold source-destructive and recovery-destructive authority. No future "golden key", benchmark score or model identity overrides that rule.
 
-## Mandatory cross-repository boundary
+## Repository visibility and mandatory cross-repository boundary
+
+As of 2026-09-28, both framework repositories are private. Visibility does not collapse their authority or data boundaries. The control plane remains governance/code/interpretation authority, `Donh91/secrets` remains the restricted data/runtime plane, and credentials remain outside repository files.
+
+Cross-repository automation must authenticate explicitly. Repository-scoped `GITHUB_TOKEN` must never be assumed to read a different private repository.
 
 ```text
 CONTROL PLANE: Donh91/Investering-Framework-Archive-v1
@@ -71,7 +75,7 @@ RESTRICTED DATA PLANE: Donh91/secrets
 CREDENTIAL PLANE: GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity
 ```
 
-`Donh91/secrets` stores restricted data and receipts, not passwords as repository files. Raw/private values never return to this public repository. If private authority is required but unavailable, report that state. Do not infer the missing values.
+`Donh91/secrets` stores restricted data and receipts, not passwords as repository files. Raw/private values never return to this private control-plane repository. If private authority is required but unavailable, report that state. Do not infer the missing values.
 
 ## Repository structure
 
