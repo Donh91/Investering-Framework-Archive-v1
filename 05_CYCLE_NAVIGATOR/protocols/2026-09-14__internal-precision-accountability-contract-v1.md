@@ -31,6 +31,22 @@ final completed-week evidence
 - Internal precision does not rewrite public historical scores.
 - Internal precision may expose more dimensions and horizons than the public surface.
 - Public and internal scores must never be silently averaged together.
+- The established public precision presentation is continuity-locked: adding internal precision dimensions does not add, remove, rename or replace public headline scores.
+- Public X/site precision semantics change only through a separate explicit owner-approved public migration.
+
+## Precision permanence — additive-only internal evolution
+
+The internal precision system is **monotonic and additive**.
+
+- Existing score families, settled historical scores, append-only ledger rows and established internal precision dimensions MUST NOT be deleted, silently removed, collapsed, renamed into a different meaning, or replaced merely to simplify the system.
+- New precision dimensions MAY be added when they are prospectively frozen, objectively evaluable and source-bound under this contract.
+- New dimensions extend the internal accountability surface; they do not overwrite or retroactively redefine older score semantics.
+- If an internal metric becomes obsolete, it must be retained with explicit `DEPRECATED`, `N/A` or equivalent versioned status and preserved lineage. Deprecation is allowed; erasure is not.
+- A validator or migration that causes an established internal precision family to disappear MUST fail closed unless a separate explicit owner-approved, versioned migration preserves the old history and semantics.
+- Historical rows remain immutable. New methodology versions apply prospectively unless a separately documented reproducible migration is explicitly authorized.
+- Internal expansion MUST NOT by itself change the public precision presentation on X or the public site.
+
+This rule exists so the internal layer can become richer over time without losing calibration history or moving the scoring goalposts.
 
 ## Scoreable families
 
