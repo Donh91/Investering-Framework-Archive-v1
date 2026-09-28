@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from scripts.daily_capture.freeze_capture_execution_plan import validate_plan
+
 OWNER_DIRS = {
     "fred_macro": "fred-owner-output",
     "binance_spot": "binance-spot-owner-output",
@@ -361,34 +363,24 @@ def main() -> None:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--trigger", required=True)
     parser.add_argument("--schedule-id", default="")
-    parser.add_argument("--slow-macro-planned", choices=("true", "false"), default="false")
-    parser.add_argument("--slow-macro-reason", default="UNSPECIFIED")
+    parser.add_argument("--execution-plan-file", type=Path, required=True)
     args = parser.parse_args()
 
     exit_codes = json.loads(args.status_file.read_text())
+    execution_plan = validate_plan(json.loads(args.execution_plan_file.read_text()))
+    if execution_plan.get("run_id") != args.run_id:
+        raise ValueError("execution_plan_run_id_mismatch")
+    if execution_plan.get("trigger") != args.trigger:
+        raise ValueError("execution_plan_trigger_mismatch")
+    if execution_plan.get("schedule_id") != (args.schedule_id or None):
+        raise ValueError("execution_plan_schedule_id_mismatch")
+
     captured_at = datetime.now(timezone.utc).replace(microsecond=0)
     owners = [owner_record(args.root, key, value, exit_codes) for key, value in OWNER_DIRS.items()]
     anchor_core = [owner for owner in owners if owner["owner_id"] in ANCHOR_CORE_OWNER_IDS]
     anchor_passed = sum(owner["status"] == "PASS" for owner in anchor_core)
     context_passed = sum(owner["status"] == "PASS" for owner in owners if owner["owner_id"] in DAILY_CONTEXT_OWNER_IDS)
     overall = "COMPLETE" if anchor_passed == len(anchor_core) else "PARTIAL" if anchor_passed else "FAILED"
-    slow_macro_planned = args.slow_macro_planned == "true"
-    expected_owner_statuses = {
-        "fred_macro": "PASS" if slow_macro_planned else "DISABLED",
-        "binance_spot": "DISABLED",
-        "binance_microstructure": "PASS",
-        "okx_swap": "PASS",
-        "top100_breadth": "PASS",
-        "cfgi_sentiment": "PASS",
-    }
-    execution_plan = {
-        "contract": "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v1",
-        "trigger": args.trigger,
-        "schedule_id": args.schedule_id or None,
-        "slow_macro_planned": slow_macro_planned,
-        "slow_macro_reason": args.slow_macro_reason,
-        "expected_owner_statuses": expected_owner_statuses,
-    }
 
     packet = {
         "contract": "DAILY_LIVE_ANCHOR_INDEX_v3",
