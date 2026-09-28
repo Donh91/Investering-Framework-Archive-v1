@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import statistics
@@ -10,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 OUTCOME_CONTRACT = "OFFICIAL_DAILY_COMPASS_OUTCOME_v1"
+OUTCOME_SCORING_CONTRACT = "OFFICIAL_DAILY_COMPASS_SCORING_v1"
 FREEZE_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
 PROTECTION_CONTRACT = "COMPASS_PROTECTION_TRACKER_v1"
 REPORT_CONTRACT = "ACTION_COMPASS_PROTECTION_CALIBRATION_v2"
@@ -22,6 +24,18 @@ def read_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"object_required:{path}")
     return value
+
+
+def canonical_bytes(value: Any) -> bytes:
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+
+def self_hash_valid(value: dict[str, Any], field: str) -> bool:
+    declared = value.get(field)
+    if not isinstance(declared, str) or len(declared) != 64:
+        return False
+    body = {k: v for k, v in value.items() if k != field}
+    return hashlib.sha256(canonical_bytes(body)).hexdigest() == declared
 
 
 def finite_number(value: Any) -> float | None:
@@ -113,6 +127,22 @@ def collect_rows(repo_root: Path, outcome_root: Path) -> tuple[list[dict[str, An
             freeze = read_json(freeze_path)
         except Exception:
             excluded["FORECAST_INVALID_JSON"] += 1
+            continue
+        if not self_hash_valid(freeze, "compass_sha256"):
+            excluded["FORECAST_SELF_HASH_INVALID"] += 1
+            continue
+        if not self_hash_valid(outcome, "outcome_sha256"):
+            excluded["OUTCOME_SELF_HASH_INVALID"] += 1
+            continue
+        if outcome.get("scoring_contract") != OUTCOME_SCORING_CONTRACT:
+            excluded["OUTCOME_SCORING_CONTRACT_INVALID"] += 1
+            continue
+        if not all(isinstance(outcome.get(key), str) and outcome.get(key) for key in ("issued_at_utc", "target_at_utc", "matured_at_utc")):
+            excluded["OUTCOME_MATURITY_BINDING_INVALID"] += 1
+            continue
+        authority = outcome.get("authority")
+        if not isinstance(authority, dict) or authority.get("purpose") != "POST_MATURITY_ACCOUNTABILITY_ONLY":
+            excluded["OUTCOME_AUTHORITY_INVALID"] += 1
             continue
         if freeze.get("compass_id") != outcome.get("compass_id") or freeze.get("compass_sha256") != outcome.get("compass_sha256"):
             excluded["FORECAST_BINDING_MISMATCH"] += 1
