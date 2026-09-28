@@ -1,0 +1,178 @@
+name: Cycle Navigator Precision Learning Supervisor
+
+on:
+  workflow_run:
+    workflows: ["Cycle Navigator Internal Precision"]
+    types: [completed]
+  schedule:
+    - cron: '45 10 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  precision-learning:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build deterministic weekly trend and four-settlement checkpoint
+        run: |
+          set -euo pipefail
+          python scripts/cycle_navigator/cn_precision_learning_supervisor.py \
+            --repo-root . --phase build \
+            | tee runtime_cn_precision_learning_build.json
+          python scripts/cycle_navigator/validate_precision_learning_supervisor.py \
+            --repo-root . \
+            | tee runtime_cn_precision_learning_validation_pre.json
+
+      - name: Resolve checkpoint review route
+        id: route
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          c=json.loads(Path('runtime/cn_precision_learning/control.json').read_text())
+          print(f"required={'true' if c.get('api_review_required') else 'false'}")
+          tier=c.get('api_review_tier') or ''
+          print(f"tier={tier}")
+          if c.get('api_review_required'):
+              task='CN_PRECISION_ADVERSARIAL_REVIEW' if tier=='SOL_HIGH' else 'CN_PRECISION_4W_REVIEW'
+              out=f"research/api_agent/outputs/cn_precision_learning/{c['completed_iso_year']}/W{int(c['completed_iso_week']):02d}/\${{ github.run_id }}"
+              print(f"task={task}")
+              print(f"output_dir={out}")
+          else:
+              print("task=")
+              print("output_dir=")
+          PY
+
+      - name: Check API monthly budget
+        if: steps.route.outputs.required == 'true'
+        id: budget
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 40 \
+            --reserve-usd 0.50 \
+            | tee runtime_cn_precision_learning_budget.json
+
+      - name: Run bounded four-settlement API review
+        if: steps.route.outputs.required == 'true' && steps.budget.outcome == 'success'
+        env:
+          OPENAI_API_KEY: \${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          python scripts/api_agent/api_gateway.py \
+            --task "\${{ steps.route.outputs.task }}" \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/cn_precision_learning/prompt.txt \
+            --context-file runtime/cn_precision_learning/context.json \
+            --output-dir "\${{ steps.route.outputs.output_dir }}" \
+            --intended-write-prefix "research/api_agent/outputs/cn_precision_learning/"
+
+      - name: Finalize checkpoint with bounded review
+        run: |
+          set -euo pipefail
+          API_OUTPUT=""
+          if [ "\${{ steps.route.outputs.required }}" = "true" ] && [ "\${{ steps.budget.outcome }}" = "success" ]; then
+            API_OUTPUT="\${{ steps.route.outputs.output_dir }}/output.json"
+          fi
+          if [ -n "$API_OUTPUT" ] && [ -f "$API_OUTPUT" ]; then
+            python scripts/cycle_navigator/cn_precision_learning_supervisor.py \
+              --repo-root . --phase finalize --api-output "$API_OUTPUT"
+          else
+            python scripts/cycle_navigator/cn_precision_learning_supervisor.py \
+              --repo-root . --phase finalize
+          fi
+          python scripts/cycle_navigator/validate_precision_learning_supervisor.py \
+            --repo-root . \
+            | tee runtime_cn_precision_learning_validation_post.json
+
+      - name: Enforce internal-only public firewall
+        run: |
+          set -euo pipefail
+          forbidden=false
+          while IFS= read -r path; do
+            [ -z "$path" ] && continue
+            case "$path" in
+              05_CYCLE_NAVIGATOR/internal_learning/*|research/api_agent/outputs/cn_precision_learning/*)
+                ;;
+              *)
+                echo "FORBIDDEN_PRECISION_LEARNING_WRITE:$path"
+                forbidden=true
+                ;;
+            esac
+          done < <(git status --porcelain | sed 's/^...//')
+          [ "$forbidden" = false ]
+
+      - name: Commit internal precision learning only
+        run: |
+          set -euo pipefail
+          git config user.name framework-cycle-navigator-bot
+          git config user.email framework-cycle-navigator-bot@users.noreply.github.com
+          git add 05_CYCLE_NAVIGATOR/internal_learning
+          if [ -d research/api_agent/outputs/cn_precision_learning ]; then
+            git add research/api_agent/outputs/cn_precision_learning
+          fi
+          if git diff --cached --quiet; then
+            echo 'NO_CN_PRECISION_LEARNING_DIFF'
+            exit 0
+          fi
+          git commit -m "cycle-navigator: advance internal precision learning"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              pushed=true
+              break
+            fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - name: Durable readback
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:05_CYCLE_NAVIGATOR/internal_learning/STATE.json > /tmp/cn_precision_learning_state.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('/tmp/cn_precision_learning_state.json').read_text())
+          assert s['contract']=='CN_PRECISION_LEARNING_STATE_v1'
+          assert s['authority']=='RESEARCH_ONLY_NON_CANONICAL'
+          assert s['public_surface_effect'] is False
+          assert s['canonical_effect'] is False
+          assert s['portfolio_execution'] is False
+          print('CN_PRECISION_LEARNING_DURABLE_READBACK_PASS',s['last_settled_score_key'],s['primary_action'])
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cn-precision-learning-\${{ github.run_id }}
+          path: |
+            runtime_cn_precision_learning_*.json
+            runtime/cn_precision_learning/
+          retention-days: 30
