@@ -300,7 +300,7 @@ def output_schema() -> dict[str, Any]:
                             "status": {"type": "string", "const": "FROZEN_WEEK_AHEAD_ANALYSIS"},
                             "public_issue_number": {"type": "integer", "minimum": 27},
                             "forecast_week": {"type": "string"},
-                            "scoring_authority": {"type": "boolean", "const": false},
+                            "scoring_authority": {"type": "boolean", "const": False},
                             "dimensions": {
                                 "type": "array", "minItems": 5, "maxItems": 5,
                                 "items": {
