@@ -19,7 +19,11 @@ def main() -> None:
     latest_score = index["latest_completed_score"]
     current = index["current_public_projection"]
 
-    assert int(current["public_issue_number"]) == int(latest_pub["public_issue_number"]) + 1
+    if str(current.get("publication_status")) == "PUBLISHED_CONFIRMED_BY_USER":
+        assert int(current["public_issue_number"]) == int(latest_pub["public_issue_number"])
+        assert str(current["forecast_week"]) == str(latest_pub["forecast_week"])
+    else:
+        assert int(current["public_issue_number"]) == int(latest_pub["public_issue_number"]) + 1
     assert int(latest_score["public_issue_number"]) <= int(latest_pub["public_issue_number"])
 
     published = root / latest_pub["published_path"]
