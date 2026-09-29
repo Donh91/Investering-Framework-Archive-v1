@@ -67,20 +67,19 @@ Both finished fully inside the final forecast windows.
 
 —
 
-🎯 **MARKET / STRUCTURE v2 - THIS WEEK**
+🎯 **MARKET / STRUCTURE v2.1 - THIS WEEK**
 
-Frozen for next week's score:
+Frozen for CN #28:
 
-1. **REGIME:** Volatile consolidation/retest, no confirmed breakdown.
-2. **LEADERSHIP:** ETH/BTC closes at or below its weekly open.
-3. **FIRST HANDOFF:** Large-cap transmission remains selective/incomplete.
-4. **DEEPER TRANSMISSION:** No sustained mid → small → micro transmission.
-5. **BREADTH + PERSISTENCE:** No confirmed broad altseason.
+1. **REGIME & RESILIENCE:** Volatile consolidation/retest; recovery structure survives without a confirmed breakdown.
+2. **LEADERSHIP:** ETH relative leadership remains unstable rather than establishing a durable weekly advance versus BTC.
+3. **ROTATION / TRANSMISSION:** Rotation stays concentrated in ETH/large caps; no sustained handoff into mid, small and micro caps.
+4. **BREADTH & PERSISTENCE:** Participation may broaden intermittently, but persistent broad-altseason breadth is not confirmed.
+5. **FLOW QUALITY / FRAGILITY:** Price recovery remains stronger than underlying confirmation; breadth and spot/microstructure lag while positive flow evidence provides counter-support.
 
-Next week each dimension = **HIT 100 / MIXED 50 / MISS 0**.
+CN #28 scores the same five slots: **HIT 100 / MIXED 50 / MISS 0**.
 
-Equal-weight average = **Market / Structure v2 score**.
-
+A headline score requires **5/5 evaluable dimensions**. Market / Structure stays separate from Price Ranges.
 —
 
 🧭 **CYCLE OUTLOOK**
