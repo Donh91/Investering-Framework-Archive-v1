@@ -14,17 +14,17 @@ Market / Structure answers a different question from Price Ranges:
 
 The public score must represent CN's forward-looking structural edge, not facts a reader can obtain from a single price chart.
 
-CN #26 closes the legacy structure method. Historical scores are never retroactively rewritten. CN #27/W40 is the first five-slot baseline; its already-published calls remain immutable.
+CN #26 closes the legacy structure method. Historical scores are never retroactively rewritten. CN #27/W40 is the first five-slot baseline under the final permanent slot design. Its final user-approved public copy is the scoring source for CN #28.
 
 ## Five permanent public slots
 
 Every weekly CN uses the same five slots, in the same order:
 
-1. **REGIME** - integrity and direction of the market regime.
-2. **LEADERSHIP** - quality and persistence of relative leadership, not one ratio in isolation.
-3. **FIRST HANDOFF** - whether leadership transmits into large caps / first broader risk layer.
-4. **DEEPER TRANSMISSION** - how far rotation reaches through mid, small and micro caps.
-5. **BREADTH + PERSISTENCE** - whether participation is broad, durable and internally confirmed rather than a narrow or short-lived move.
+1. **REGIME & RESILIENCE** - market phase and whether the structure survives volatility/retests.
+2. **LEADERSHIP** - quality and persistence of relative leadership, not one ratio close in isolation.
+3. **ROTATION / TRANSMISSION** - whether capital actually hands off from leadership into the next market-cap layers.
+4. **BREADTH & PERSISTENCE** - whether participation is broad and durable rather than narrow or short-lived.
+5. **FLOW QUALITY / FRAGILITY** - whether price action is internally supported or fragile, synthesizing canonical flow, spot/microstructure, breadth, sentiment, relative-strength and counterevidence when available.
 
 These are five different questions. One thesis may provide evidence to more than one slot, but it may never create more than one vote in the same slot or be duplicated as separate headline calls.
 
@@ -72,7 +72,7 @@ Each slot receives exactly one outcome:
 
 The public Market / Structure score is:
 
-`(REGIME + LEADERSHIP + FIRST_HANDOFF + DEEPER_TRANSMISSION + BREADTH_PERSISTENCE) / 5`
+`(REGIME_RESILIENCE + LEADERSHIP + ROTATION_TRANSMISSION + BREADTH_PERSISTENCE + FLOW_QUALITY_FRAGILITY) / 5`
 
 but only when **all 5/5 dimensions are evaluable**.
 
@@ -104,11 +104,11 @@ The public review must use the same compact point format every week:
 
 **MARKET / STRUCTURE: XX%**
 
-1. **REGIME** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+1. **REGIME & RESILIENCE** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
 2. **LEADERSHIP** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
-3. **FIRST HANDOFF** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
-4. **DEEPER TRANSMISSION** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
-5. **BREADTH + PERSISTENCE** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+3. **ROTATION / TRANSMISSION** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+4. **BREADTH & PERSISTENCE** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+5. **FLOW QUALITY / FRAGILITY** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
 
 Then immediately freeze the next week's same five slots.
 
@@ -130,5 +130,5 @@ The benchmark is diagnostic and does not alter the weekly public score.
 ## Migration
 
 - CN #26/W39: legacy 60%, retained only for history.
-- CN #27/W40: first immutable five-slot baseline, published before the v2.1 criteria extension; score its exact published calls conservatively.
-- Next newly generated issue onward: full v2.1 STATE + CHANGE + frozen resolution criteria.
+- CN #27/W40: first permanent five-slot baseline under the final design; score its exact user-approved final calls in CN #28.
+- CN #28 onward: continue the identical five slot names/order with full v2.1 STATE + CHANGE + frozen resolution criteria.
