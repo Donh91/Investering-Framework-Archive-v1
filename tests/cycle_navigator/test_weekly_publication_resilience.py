@@ -151,7 +151,7 @@ def test_decision_projection_is_required_and_typed():
     assert "decision_projection" in schema["required"]
     projection = schema["properties"]["decision_projection"]
     assert projection["additionalProperties"] is False
-    assert set(projection["required"]) == {"contract", "next_1_3d", "next_5_7d", "weeks_4_8", "protection"}
+    assert set(projection["required"]) == {"contract", "next_1_3d", "next_5_7d", "next_2_3w", "weeks_4_8", "protection"}
     assert projection["properties"]["contract"]["const"] == "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"
     protection = projection["properties"]["protection"]
     assert "pullback_risk_state" in protection["required"]
