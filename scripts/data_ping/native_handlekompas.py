@@ -20,9 +20,9 @@ from typing import Any, Mapping
 CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
-OFFICIAL_COMPASS_SCHEMA_VERSION = 3
+OFFICIAL_COMPASS_SCHEMA_VERSION = 4
 # V3_2 adds the explicit Main-Framework permission ceiling for proactive long-cycle actions.
-OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-25_DECISION_INTEGRITY_V3_2"
+OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-29_BULL_BEAR_DISPLAY_V3_3"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
@@ -53,7 +53,7 @@ OFFICIAL_AUTHORITY = {
 }
 
 CAPITALIZATION_ORDER = ("BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS", "MEMES")
-HORIZON_ORDER = ("NEXT_12H", "NEXT_1_3D", "NEXT_5_7D", "CYCLE_ALTCOINS_3_8W")
+HORIZON_ORDER = ("NEXT_12H", "NEXT_1_3D", "NEXT_5_7D", "NEXT_2_3W", "CYCLE_ALTCOINS_3_8W")
 SCORED_HORIZON_ORDER = ("NEXT_12H", "NEXT_1_3D", "NEXT_5_7D")
 ALTCOIN_STATES = {
     "DEFENSIVE", "CONSOLIDATION", "PRE_ROTATION", "ROTATION", "BROAD_ALTSEASON",
@@ -587,6 +587,15 @@ def _cn_direction(cn_package: Mapping[str, Any] | None, lane: str) -> str:
     return direction if direction in {"UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"} else "NO_EDGE"
 
 
+def _cn_projection_summary(cn_package: Mapping[str, Any] | None, lane: str) -> str | None:
+    projection = _cn_decision_projection(cn_package)
+    row = projection.get(lane)
+    if not isinstance(row, Mapping):
+        return None
+    summary = row.get("summary")
+    return str(summary).strip() if isinstance(summary, str) and summary.strip() else None
+
+
 def _weekly_direction(cn_package: Mapping[str, Any] | None) -> str:
     """Backward-compatible helper, now structured-only.
 
@@ -813,6 +822,103 @@ def protection_tracker(
     }
 
 
+def _bull_bear_bias(bull: int, bear: int) -> str:
+    delta = bull - bear
+    if delta >= 4:
+        return "BULLISH"
+    if delta >= 2:
+        return "LEAN_BULLISH"
+    if delta <= -4:
+        return "BEARISH"
+    if delta <= -2:
+        return "LEAN_BEARISH"
+    return "NEUTRAL"
+
+
+def _bull_bear_row(direction: str, summary: str, *, bear_overlay: int = 0) -> dict[str, Any]:
+    direction = str(direction or "UNAVAILABLE").upper()
+    if direction in {"NO_EDGE", "UNAVAILABLE"}:
+        return {
+            "status": "UNAVAILABLE",
+            "bull": None,
+            "bear": None,
+            "bias": "UNAVAILABLE",
+            "summary": summary,
+        }
+    if direction == "UP":
+        bull, bear = 7, 3
+    elif direction == "DOWN":
+        bull, bear = 3, 7
+    else:
+        bull, bear = 5, 5
+
+    if bear_overlay:
+        shift = max(0, min(int(bear_overlay), bull))
+        bull -= shift
+        bear += shift
+
+    return {
+        "status": "OK",
+        "bull": bull,
+        "bear": bear,
+        "bias": _bull_bear_bias(bull, bear),
+        "summary": summary,
+    }
+
+
+def bull_bear_scale(horizons: Mapping[str, Any], protection: Mapping[str, Any]) -> dict[str, Any]:
+    """Display-only evidence balance derived from Official Compass states.
+
+    This is not a new market classifier and not a probability model. It encodes
+    the existing governed Compass directional lanes into a stable 0-10 public
+    display. Only the 5-7d lane receives the existing protection-risk overlay.
+    """
+    risk = str(protection.get("pullback_risk_state") or "UNAVAILABLE").upper()
+    risk_overlay = {
+        "NORMAL": 0,
+        "BUILDING": 1,
+        "ELEVATED": 2,
+        "HIGH": 3,
+        "CONFIRMED": 3,
+        "UNAVAILABLE": 0,
+    }.get(risk, 0)
+
+    h13 = horizons.get("NEXT_1_3D") if isinstance(horizons, Mapping) else None
+    h57 = horizons.get("NEXT_5_7D") if isinstance(horizons, Mapping) else None
+    h23 = horizons.get("NEXT_2_3W") if isinstance(horizons, Mapping) else None
+    h13 = h13 if isinstance(h13, Mapping) else {}
+    h57 = h57 if isinstance(h57, Mapping) else {}
+    h23 = h23 if isinstance(h23, Mapping) else {}
+
+    return {
+        "contract": "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1",
+        "semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY",
+        "owner": "OFFICIAL_COMPASS",
+        "mapping_version": "DIRECTION_PLUS_5_7D_PROTECTION_OVERLAY_v1",
+        "horizons": {
+            "1_3d": _bull_bear_row(
+                str(h13.get("expected_direction") or "UNAVAILABLE"),
+                str(h13.get("expected_path") or "No governed 1-3d Compass path is available."),
+            ),
+            "5_7d": _bull_bear_row(
+                str(h57.get("expected_direction") or "UNAVAILABLE"),
+                str(h57.get("expected_path") or "No governed 5-7d Compass path is available."),
+                bear_overlay=risk_overlay if str(h57.get("expected_direction") or "").upper() in {"MIXED", "SIDEWAYS"} else 0,
+            ),
+            "2_3w": _bull_bear_row(
+                str(h23.get("expected_direction") or "UNAVAILABLE"),
+                str(h23.get("expected_path") or "Awaiting a governed 2-3 week Compass horizon."),
+            ),
+        },
+        "authority": {
+            "new_market_classifier": False,
+            "probability_model": False,
+            "portfolio_execution": False,
+            "site_synthesis_allowed": False,
+        },
+    }
+
+
 def horizon_map(
     auto_state: Mapping[str, Any], action: Mapping[str, Any], cn_package: Mapping[str, Any] | None,
     *, as_of: datetime | None = None,
@@ -834,6 +940,8 @@ def horizon_map(
     current = derive_market_now(auto_state, action, as_of=as_of)["directional_state"]
     d13_source = _cn_direction(cn_package, "next_1_3d")
     d57_source = _cn_direction(cn_package, "next_5_7d")
+    d23_source = _cn_direction(cn_package, "next_2_3w")
+    s23_source = _cn_projection_summary(cn_package, "next_2_3w")
 
     if posture == "GRADUATED_TOPUP_ACTIVE":
         d12, a12 = "UP", "DEPLOY"
@@ -857,6 +965,7 @@ def horizon_map(
             },
             "NEXT_1_3D": dict(forward_unavailable),
             "NEXT_5_7D": dict(forward_unavailable),
+            "NEXT_2_3W": dict(forward_unavailable),
             "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(None, posture, as_of or datetime.now(timezone.utc)),
         }
 
@@ -899,6 +1008,20 @@ def horizon_map(
             "action_posture": a57, "confirmation_trigger": confirm, "invalidation_trigger": invalidate,
             "eta": "120-168h", "confidence": None,
         },
+        "NEXT_2_3W": (
+            {
+                "expected_direction": d23_source,
+                "label": label(d23_source),
+                "expected_path": s23_source or "No eligible structured 2-3 week path is published.",
+                "action_posture": "PREPARE" if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and d23_source == "UP" else "WAIT",
+                "confirmation_trigger": confirm,
+                "invalidation_trigger": invalidate,
+                "eta": "14-21d",
+                "confidence": None,
+            }
+            if d23_source not in {"NO_EDGE", "UNAVAILABLE"}
+            else _unavailable_horizon("Structured Cycle Navigator 2-3 week decision projection is unavailable.")
+        ),
         "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(cn_package, posture, as_of or datetime.now(timezone.utc)),
     }
 
@@ -1040,6 +1163,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         "data_status": compass.get("data_status"),
         "market_now": compass.get("market_now"),
         "horizons": public_horizons,
+        "bull_bear_scale": compass.get("bull_bear_scale"),
         "capitalization_ladder": public_ladder,
         "protection_tracker": compass.get("protection_tracker"),
         "sell_assessment": compass.get("sell_assessment"),
@@ -1073,6 +1197,7 @@ def build_official_compass(
     protection = protection_tracker(
         auto_state, action, market_now, eligible_cn, as_of=issued, prior_compass=prior_compass
     )
+    bull_bear = bull_bear_scale(horizons, protection)
     sell = sell_assessment(auto_state, protection, as_of=issued)
     evidence = evidence_snapshot(auto_state, packet_path)
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"
@@ -1124,6 +1249,7 @@ def build_official_compass(
         },
         "market_now": market_now,
         "horizons": horizons,
+        "bull_bear_scale": bull_bear,
         "capitalization_ladder": ladder,
         "protection_tracker": protection,
         "sell_assessment": sell,
