@@ -28,3 +28,27 @@
 .protection-foot small{display:block;margin-top:6px;color:#7b8798;font-size:10px;line-height:1.4}
 @media(max-width:760px){.protection-grid{grid-template-columns:1fr 1fr}.protection-grid>div:last-child{grid-column:1/3}.protection-tab small{width:100%;margin-left:0}}
 
+
+
+/* Compact fixed Market Weather strip. Values are rendered only from Official Compass. */
+.market-weather{margin:14px 0 8px;padding:13px 14px;border:1px solid #dfe7f1;border-radius:18px;background:#fbfcfe;box-shadow:0 6px 20px rgba(15,31,56,.035)}
+.weather-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:10px}
+.weather-head>div>span{display:block;font-size:8px;font-weight:900;letter-spacing:.11em;color:#667085}
+.weather-head>div>strong{display:block;margin-top:3px;font-size:14px;letter-spacing:-.02em;color:#172033}
+.weather-head>small{color:#8a97a9;font-size:8px;font-weight:750;letter-spacing:.04em}
+.weather-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.weather-row{min-width:0;padding:10px;border:1px solid #e6ebf2;border-radius:13px;background:#fff}
+.weather-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.weather-meta span{font-size:8px;font-weight:900;letter-spacing:.08em;color:#667085}
+.weather-meta strong{font-size:9px;color:#344054}
+.weather-scale{position:relative;height:24px;margin-top:7px;border-radius:999px;background:linear-gradient(90deg,#f7dddd 0%,#f2f4f7 50%,#dff2e8 100%);overflow:hidden}
+.weather-scale:after{content:"";position:absolute;left:50%;top:4px;bottom:4px;width:1px;background:rgba(71,84,103,.18)}
+.weather-scale i{position:absolute;left:var(--bull-position);top:50%;width:8px;height:8px;border:2px solid #fff;border-radius:50%;background:#172033;box-shadow:0 1px 5px rgba(16,24,40,.24);transform:translate(-50%,-50%);z-index:2}
+.weather-scale span{position:absolute;top:50%;transform:translateY(-50%);font-size:7px;font-weight:900;letter-spacing:.035em;color:#475467;z-index:1}
+.weather-bear{left:8px}.weather-bull{right:8px}
+.weather-row>small{display:block;margin-top:6px;color:#8a97a9;font-size:8px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.weather-row.unavailable{background:#fcfcfd}
+.weather-row.unavailable .weather-meta strong{color:#98a2b3}
+.weather-unavailable{margin-top:7px;padding:6px 8px;border-radius:999px;background:#f2f4f7;color:#98a2b3;font-size:7px;font-weight:850;letter-spacing:.035em;text-align:center}
+@media(max-width:760px){.weather-grid{grid-template-columns:1fr}.market-weather{padding:12px}.weather-row{display:grid;grid-template-columns:minmax(92px,.34fr) minmax(0,.66fr);column-gap:10px;align-items:center}.weather-meta{display:block}.weather-meta strong{display:block;margin-top:3px}.weather-scale,.weather-unavailable{margin-top:0}.weather-row>small{grid-column:2;margin-top:4px}.weather-head{align-items:flex-start}.weather-head>small{text-align:right;max-width:125px}}
+@media(max-width:430px){.market-weather{margin-top:11px;border-radius:15px}.weather-head>div>strong{font-size:13px}.weather-row{padding:9px}.weather-scale{height:22px}.weather-scale span{font-size:6.5px}}
