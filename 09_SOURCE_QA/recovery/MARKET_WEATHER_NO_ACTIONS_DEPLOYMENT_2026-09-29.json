@@ -1,0 +1,40 @@
+{
+  "contract": "MARKET_WEATHER_NO_ACTIONS_DEPLOYMENT_RECEIPT_v1",
+  "status": "LIVE_BRIDGE_VERIFIED",
+  "created_at_utc": "2026-09-29T16:25:00Z",
+  "canonical_main_sha_at_receipt": "c8381ccd4a9d4a6a1fe53ff580fb98df4264313c",
+  "delivery": {
+    "provider": "AppDeploy",
+    "app_id": "cycle-navigator-ud4z7i",
+    "public_url": "https://cycle-navigator-ud4z7i.v2.appdeploy.ai/",
+    "role": "TEMPORARY_PUBLIC_DELIVERY_BRIDGE",
+    "canonical_authority": false,
+    "market_logic_authority": false,
+    "replaces_github_pages": false
+  },
+  "reason": "GitHub Actions included minutes exhausted at 3000/3000 with Actions budget $0 and Stop usage enabled. Direct static delivery used to make the current public product available without changing market semantics.",
+  "verified_live_invariants": {
+    "public_issue_number": 27,
+    "latest_completed_public_score_issue": 26,
+    "price_range_precision_pct": 81.85,
+    "legacy_market_structure_pct": 60,
+    "market_structure_cutover": "CN27_PLUS_ANALYSIS_ONLY_NO_NEW_PUBLIC_PERCENTAGE",
+    "market_weather_present": true,
+    "market_weather_horizons": [
+      "1_3d",
+      "5_7d",
+      "2_3w"
+    ],
+    "market_weather_semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY",
+    "market_weather_current_state": "AWAITING_COMPASS",
+    "site_synthesis": false,
+    "compass_refresh_display": "TEMPORARILY_PAUSED",
+    "frontend_errors": 0,
+    "network_errors": 0,
+    "mobile_qa": "PASS",
+    "live_http_readback": "PASS"
+  },
+  "fail_closed_reason": "Current canonical Official Compass artifact is schema v3 and predates the v4 Bull/Bear display contract. The bridge intentionally shows AWAITING COMPASS rather than synthesizing 0-10 values.",
+  "remaining_canonical_delivery_gap": "The original GitHub Pages deployment remains blocked until GitHub Actions execution is restored. This bridge does not claim to update or replace that canonical Pages deployment.",
+  "user_action_required": false
+}
