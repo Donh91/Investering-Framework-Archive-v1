@@ -76,10 +76,10 @@ if(publicSeriesRaw?.latest_completed_score?.scorecard_path){
 const publicSeries=publicSeriesRaw?{
   contract:publicSeriesRaw.contract,
   latest_published:pick(publicSeriesRaw.latest_published||{},["public_issue_number","forecast_week"]),
-  latest_completed_score:pick(publicSeriesRaw.latest_completed_score||{},["public_issue_number","forecast_week","market_structure_score","price_range_score","combined_score","status"]),
+  latest_completed_score:pick(publicSeriesRaw.latest_completed_score||{},["public_issue_number","forecast_week","price_range_score","market_structure_status","status"]),
   current_public_projection:pick(publicSeriesRaw.current_public_projection||{},["public_issue_number","forecast_week","publication_status"])
 }:null;
-const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure:standaloneFreeze?.market_structure_v2||null};
+const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure_analysis:standaloneFreeze?.market_structure_analysis||null,public_bull_bear_scale:standaloneFreeze?.bull_bear_scale||null};
 const compass=await buildCompassSnapshot();
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
