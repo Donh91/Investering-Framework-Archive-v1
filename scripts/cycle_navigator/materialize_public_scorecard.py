@@ -225,7 +225,13 @@ def main() -> None:
         raise SystemExit("public_frozen_claim_precision_missing")
 
     market_analysis = prior_freeze.get("market_structure_analysis")
-    market_analysis_status = "ANALYSIS_ONLY_NOT_SCORED" if isinstance(market_analysis, dict) else "LEGACY_OR_UNAVAILABLE"
+    # Public scoring cutover is governed by public-series issue identity, not by
+    # whether an already-frozen migration-week file contains the newer analysis block.
+    market_analysis_status = (
+        "ANALYSIS_ONLY_NOT_SCORED"
+        if public_issue >= 27
+        else ("ANALYSIS_ONLY_NOT_SCORED" if isinstance(market_analysis, dict) else "LEGACY_OR_UNAVAILABLE")
+    )
 
     out = {
         "contract": "CN_PUBLIC_WEEKLY_SCORECARD_v1",
