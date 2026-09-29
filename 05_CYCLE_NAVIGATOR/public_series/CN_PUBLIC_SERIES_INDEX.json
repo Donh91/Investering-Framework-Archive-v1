@@ -16,9 +16,9 @@
     "For public precision, resolve forecast_week and immutable published source first.",
     "For the latest completed public score, use latest_completed_score.scorecard_path.",
     "Machine CYCLE_NAVIGATOR_SCORECARD.json is not automatically the public-series scorecard during the migration-offset window.",
-    "Price-range and market/structure precision remain separate unless a stable combined-score contract exists.",
     "Every new weekly machine package must materialize CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json and append its numeric ranges to CN_FORWARD_RANGE_LEDGER_v2.jsonl at freeze time.",
-    "X publication status is user-attested: never require independent or external X verification; when the user says an exact version is published, archive it as PUBLISHED_CONFIRMED_BY_USER."
+    "X publication status is user-attested: never require independent or external X verification; when the user says an exact version is published, archive it as PUBLISHED_CONFIRMED_BY_USER.",
+    "Market/Structure public scoring ends with CN26. For CN27 and later, market_structure_score must remain null/absent; historical Market/Structure scores remain immutable and visible. Price Range precision continues unchanged; Bull/Bear is not a probability or accuracy score."
   ],
   "latest_completed_score": {
     "public_issue_number": 26,
