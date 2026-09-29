@@ -12,6 +12,21 @@ if(event.contract!=='PUBLIC_COMPASS_EVENT_STATUS_v1') throw Error('wrong Compass
 if(!['IDLE','REASSESSMENT_REQUESTED'].includes(event.status)) throw Error('wrong Compass event status');
 if(compass.data_status==='OK'){
   for(const h of ['NEXT_12H','NEXT_1_3D','NEXT_5_7D','CYCLE_ALTCOINS_3_8W']) if(!compass.horizons?.[h]) throw Error(`missing ${h}`);
+  if(compass.horizons?.NEXT_2_3W===undefined && compass.bull_bear_scale?.horizons?.['2_3w']?.status==='OK') throw Error('2-3w Bull Bear cannot exist without governed Compass horizon');
+  if(compass.bull_bear_scale){
+    const scale=compass.bull_bear_scale;
+    if(scale.contract!=='OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1') throw Error('wrong Bull Bear display contract');
+    if(scale.semantics!=='EVIDENCE_BALANCE_NOT_PROBABILITY') throw Error('wrong Bull Bear semantics');
+    if(scale.owner!=='OFFICIAL_COMPASS') throw Error('wrong Bull Bear owner');
+    if(scale?.authority?.site_synthesis_allowed!==false||scale?.authority?.new_market_classifier!==false||scale?.authority?.portfolio_execution!==false) throw Error('Bull Bear authority leak');
+    for(const key of ['1_3d','5_7d','2_3w']){
+      const row=scale.horizons?.[key];
+      if(!row) throw Error(`missing Bull Bear ${key}`);
+      if(row.status==='OK'){
+        if(!Number.isInteger(row.bull)||!Number.isInteger(row.bear)||row.bull<0||row.bull>10||row.bear<0||row.bear>10||row.bull+row.bear!==10) throw Error(`invalid Bull Bear ${key}`);
+      }else if(row.bull!==null||row.bear!==null) throw Error(`unavailable Bull Bear ${key} must remain null`);
+    }
+  }
   const protection=compass.protection_tracker;
   if(protection?.contract!=='COMPASS_PROTECTION_TRACKER_v1') throw Error('missing protection tracker');
   if(!['NORMAL','BUILDING','ELEVATED','HIGH','CONFIRMED','UNAVAILABLE'].includes(protection.pullback_risk_state)) throw Error('wrong pullback risk state');
@@ -29,7 +44,7 @@ if(compass.data_status==='OK'){
   if(!meme||meme.status!=='UNAVAILABLE'||meme.action!=='UNAVAILABLE'||meme.direction!=='UNAVAILABLE') throw Error('meme rung must fail closed');
 }
 if(!index.includes('./compass-product-v5.js')) throw Error('Compass renderer not activated');
-for(const token of ['MARKET COMPASS','NEXT 12 HOURS','NEXT 1–3 DAYS','NEXT 5–7 DAYS','ALTCOIN ACTION · OFFICIAL COMPASS','Bitcoin → memes','CURRENT POSITION','NEXT IF CONFIRMED','NEXT WINDOW','Time horizon: now → 5–7 days.','ROTATION POSITION','EXPECTED WINDOW','08:17 / 20:17 CPH','nextCompassAt','MARKET MOVE DETECTED','Compass reassessment in progress','NEXT SCHEDULED COMPASS','event refresh can publish earlier','PROTECTION & RE-ENTRY','PULLBACK RISK','RE-ENTRY','portfolio actions stay private']) if(!renderer.includes(token)) throw Error(`renderer missing ${token}`);
+for(const token of ['MARKET COMPASS','NEXT 12 HOURS','NEXT 1–3 DAYS','NEXT 5–7 DAYS','ALTCOIN ACTION · OFFICIAL COMPASS','Bitcoin → memes','CURRENT POSITION','NEXT IF CONFIRMED','NEXT WINDOW','Time horizon: now → 5–7 days.','ROTATION POSITION','EXPECTED WINDOW','08:17 / 20:17 CPH','nextCompassAt','MARKET MOVE DETECTED','Compass reassessment in progress','NEXT SCHEDULED COMPASS','event refresh can publish earlier','PROTECTION & RE-ENTRY','PULLBACK RISK','RE-ENTRY','portfolio actions stay private','MARKET WEATHER · LIVE COMPASS','Directional pressure','1–3 DAYS','5–7 DAYS','2–3 WEEKS','Evidence balance · not probability','AWAITING COMPASS']) if(!renderer.includes(token)) throw Error(`renderer missing ${token}`);
 if(/HANDLEKOMPAS|MASTER MONDAY/.test(renderer)) throw Error('internal product language leaked');
 if(/source_bindings|evidence_snapshot/.test(JSON.stringify(compass))) throw Error('private Compass evidence leaked');
 const protectionText=JSON.stringify(compass.protection_tracker||{});
@@ -38,4 +53,6 @@ if(/0x[a-f0-9]{8,}/i.test(protectionText)) throw Error('wallet address leaked in
 if(compass.protection_tracker?.authority?.portfolio_execution!==false) throw Error('protection tracker execution authority leak');
 if(compass.sell_assessment?.authority?.portfolio_execution!==false) throw Error('sell assessment execution authority leak');
 if(/source_packet_sha256|heat_detail|market_snapshot/.test(JSON.stringify(event))) throw Error('private event evidence leaked');
+if(!renderer.includes("c?.bull_bear_scale")||!renderer.includes("OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1")) throw Error('Market Weather must read Official Compass Bull Bear payload');
+if(/expected_direction[^\n]{0,160}(bull|bear)/i.test(renderer)) throw Error('client-side Bull Bear signal synthesis detected');
 console.log(JSON.stringify({status:'PASS',compass_id:compass.compass_id,data_status:compass.data_status,altcoin_action:compass.horizons?.CYCLE_ALTCOINS_3_8W?.action_posture||null,pullback_risk:compass.protection_tracker?.pullback_risk_state||null,reentry_state:compass.protection_tracker?.reentry_state||null,rotation_position_ui:true}));
