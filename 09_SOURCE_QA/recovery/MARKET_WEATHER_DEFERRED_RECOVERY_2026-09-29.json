@@ -1,0 +1,78 @@
+{
+  "contract": "MARKET_WEATHER_DEFERRED_RECOVERY_v1",
+  "status": "WAITING_FOR_GITHUB_ACTIONS_QUOTA_RESET",
+  "created_utc": "2026-09-29T16:05:00Z",
+  "root_cause": {
+    "class": "GITHUB_ACTIONS_INCLUDED_MINUTES_EXHAUSTED_WITH_ZERO_BUDGET_HARD_STOP",
+    "evidence": {
+      "included_minutes": 3000,
+      "used_minutes": 3000,
+      "used_pct": 100,
+      "actions_budget_usd": 0,
+      "stop_usage": true,
+      "screenshot_reset_notice": "October 01, 2026",
+      "user_reported_reset_date": "2026-10-02"
+    },
+    "interpretation": "Jobs are expected to fail before runner start while quota is hard-stopped. Do not treat this as a Market Weather code defect."
+  },
+  "owners": {
+    "reliability_issue": 1156,
+    "child_audit_issue": 1366,
+    "live_market_weather_owner": "OFFICIAL_COMPASS",
+    "weekly_baseline_owner": "CYCLE_NAVIGATOR",
+    "site_role": "PRESENTATION_ONLY"
+  },
+  "source_of_truth": {
+    "contract": "05_CYCLE_NAVIGATOR/protocols/2026-09-29__market-weather-source-of-truth-v1__canonical.md",
+    "invariants": [
+      "Official Compass is the sole live Market Weather owner.",
+      "Site synthesis is forbidden.",
+      "CN weekly Bull/Bear may be archived as baseline but must not compete as live site signal.",
+      "2-3w remains fail-closed until a structured governed horizon exists.",
+      "Historical Market/Structure scores through CN26 remain unchanged and visible.",
+      "CN27+ Market Structure has no public percentage.",
+      "Price Range scoring remains unchanged."
+    ]
+  },
+  "predeploy_source_shas": {
+    "05_CYCLE_NAVIGATOR/protocols/2026-09-29__market-weather-source-of-truth-v1__canonical.md": "fdcd56fcf0191a016fa7026c93a50e0f2630bd12",
+    "scripts/data_ping/native_handlekompas.py": "9b652d81e6baa31e73af9daf83401a442056f8a6",
+    "05_CYCLE_NAVIGATOR/site/compass-product-v5.js": "8a8245470127fcc149873eef6d38fdb39cb6ed8f",
+    "05_CYCLE_NAVIGATOR/site/compass-product-v5.css": "bdca855a48dec0cdd5231c7aed6ab0a0a3a78482",
+    "05_CYCLE_NAVIGATOR/site/weekly-score.js": "c526d68d503810ca17e992daebe7f77fb4959b6a",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs": "a63234676bb0fa5934acae574d78a0f605f0500d",
+    ".github/workflows/daily-compass.yml": "4f4cf56a830bb2a46e8c01fc70086e286b605648",
+    ".github/workflows/cycle-navigator-pages.yml": "09e3e424513c4a38aa1c3e6e1814c417ce932f2a",
+    "05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs": "921ea26ad8c7008d3eb738dc35e878b1c320bff0",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "0fa1a1f694e1c76727a50d2c6d94a93b4d11b15c"
+  },
+  "resume_condition": {
+    "required": "A fresh GitHub-hosted Actions job receives executable steps/runner assignment or succeeds after the quota reset.",
+    "retry_policy": "One targeted recovery attempt after restored capacity; no blind retries while jobs fail pre-runner."
+  },
+  "autonomous_recovery_sequence": [
+    "Fresh-read main and verify source-of-truth invariants.",
+    "Run existing Official Daily Compass path and require schema v4 / OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1.",
+    "Verify 1-3d and 5-7d values; 2-3w is either governed or explicitly UNAVAILABLE.",
+    "Run existing Cycle Navigator Pages deploy path.",
+    "Fresh live-site readback.",
+    "Verify compact Market Weather is visible in Compass area and sourced from Official Compass.",
+    "Verify weekly precision panel remains price-only.",
+    "Verify historical Market/Structure scores are unchanged.",
+    "Verify CN27+ Market Structure has no public score.",
+    "Verify Price Range scoring is unchanged.",
+    "Run final bounded audit: GPT-6 Sol/high if high-consequence review is useful; GPT-5.6 Sol for smaller readbacks.",
+    "Close issue 1366 only after live end-to-end GREEN and update issue 1156 with run IDs and evidence."
+  ],
+  "exit_state": {
+    "green_requires": [
+      "Actions-capable execution restored",
+      "Official Compass v4 artifact generated",
+      "Pages deploy successful",
+      "Live site serves Market Weather",
+      "Source-of-truth and cutover invariants pass"
+    ],
+    "otherwise": "DEGRADED_WITH_CONCRETE_BLOCKER"
+  },
+  "user_action_required": false
+}
