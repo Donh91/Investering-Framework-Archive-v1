@@ -1,5 +1,9 @@
 # Cycle Navigator Public Market / Structure v2.1
 
+> **DEPRECATED_PUBLIC_SCORE — 2026-09-29**
+>
+> Market / Structure is no longer a public accuracy score. Preserve this document only as migration history. The five structural dimensions continue under the qualitative analysis contract `2026-09-29__public-market-structure-analysis-v1__canonical.md`. Price Ranges remain the public precision score family; Bull/Bear evidence balance is the short-horizon directional forecast layer.
+
 Status: ACTIVE_LONG_TERM_FROM_PUBLIC_CN27
 Effective forecast week: 2026-W40
 Full v2.1 freeze semantics effective: next newly generated public issue after CN27
