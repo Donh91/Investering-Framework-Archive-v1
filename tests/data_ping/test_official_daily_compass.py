@@ -82,6 +82,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
                 "next_1_3d": {"direction": "SIDEWAYS", "summary": "Structured short-horizon consolidation."},
                 "next_5_7d": {"direction": "SIDEWAYS", "summary": "Structured weekly consolidation."},
+                "next_2_3w": {"direction": "SIDEWAYS", "summary": "Structured 2-3 week consolidation."},
                 "weeks_4_8": {
                     "state": "CONSOLIDATION",
                     "warning": "NONE",
@@ -123,7 +124,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
         projection = schema["properties"]["decision_projection"]
         self.assertEqual(
             set(projection["required"]),
-            {"contract", "next_1_3d", "next_5_7d", "weeks_4_8", "protection"},
+            {"contract", "next_1_3d", "next_5_7d", "next_2_3w", "weeks_4_8", "protection"},
         )
         self.assertEqual(
             projection["properties"]["contract"]["const"],
@@ -160,7 +161,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
     def test_required_horizons_and_ladder_order(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp)
-            self.assertEqual(out["schema_version"], 3)
+            self.assertEqual(out["schema_version"], 4)
             self.assertEqual(tuple(out["horizons"].keys()), HORIZON_ORDER)
             self.assertEqual(tuple(row["segment"] for row in out["capitalization_ladder"]), CAPITALIZATION_ORDER)
             self.assertTrue(all("action" in row for row in out["capitalization_ladder"]))
@@ -175,6 +176,41 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["state"], "CONSOLIDATION")
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["through_date"], "2026-10-14")
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["warning"], "NONE")
+
+            self.assertEqual(out["horizons"]["NEXT_2_3W"]["expected_direction"], "SIDEWAYS")
+
+    def test_bull_bear_display_is_compass_owned_and_not_probability(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp)
+            scale = out["bull_bear_scale"]
+            self.assertEqual(scale["contract"], "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1")
+            self.assertEqual(scale["semantics"], "EVIDENCE_BALANCE_NOT_PROBABILITY")
+            self.assertEqual(scale["owner"], "OFFICIAL_COMPASS")
+            self.assertFalse(scale["authority"]["new_market_classifier"])
+            self.assertFalse(scale["authority"]["probability_model"])
+            self.assertFalse(scale["authority"]["portfolio_execution"])
+            self.assertFalse(scale["authority"]["site_synthesis_allowed"])
+
+            self.assertEqual((scale["horizons"]["1_3d"]["bull"], scale["horizons"]["1_3d"]["bear"]), (5, 5))
+            self.assertEqual((scale["horizons"]["5_7d"]["bull"], scale["horizons"]["5_7d"]["bear"]), (3, 7))
+            self.assertEqual((scale["horizons"]["2_3w"]["bull"], scale["horizons"]["2_3w"]["bear"]), (5, 5))
+
+            for key in ("1_3d", "5_7d", "2_3w"):
+                row = scale["horizons"][key]
+                self.assertEqual(row["bull"] + row["bear"], 10)
+
+            public = build_public_projection(out)
+            self.assertEqual(public["bull_bear_scale"], scale)
+
+    def test_bull_bear_display_fails_closed_when_forward_compass_is_unavailable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp, include_cn=False)
+            scale = out["bull_bear_scale"]
+            for key in ("1_3d", "5_7d", "2_3w"):
+                row = scale["horizons"][key]
+                self.assertEqual(row["status"], "UNAVAILABLE")
+                self.assertIsNone(row["bull"])
+                self.assertIsNone(row["bear"])
 
     def test_long_cycle_buy_cannot_exceed_main_framework_permission(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -256,7 +292,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             out = self.build(tmp, include_cn=False)
             self.assertEqual(out["data_status"], "DEGRADED")
             self.assertNotEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "UNAVAILABLE")
-            for key in ("NEXT_1_3D", "NEXT_5_7D", "CYCLE_ALTCOINS_3_8W"):
+            for key in ("NEXT_1_3D", "NEXT_5_7D", "NEXT_2_3W", "CYCLE_ALTCOINS_3_8W"):
                 self.assertEqual(out["horizons"][key]["expected_direction"], "UNAVAILABLE")
 
     def test_missing_deltas_never_create_bullish_confirmation(self):
@@ -496,6 +532,8 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotIn("evidence_snapshot", public)
             self.assertNotIn("native_action_contract", public)
             self.assertEqual(public["protection_tracker"]["contract"], "COMPASS_PROTECTION_TRACKER_v1")
+            self.assertEqual(public["bull_bear_scale"]["contract"], "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1")
+            self.assertFalse(public["bull_bear_scale"]["authority"]["site_synthesis_allowed"])
             self.assertTrue(all("action" in row for row in public["capitalization_ladder"]))
             self.assertFalse(public["protection_tracker"]["authority"]["wallet_specific"])
             self.assertFalse(any(key in public["protection_tracker"] for key in ("wallet_address", "holdings", "positions", "portfolio_actions")))
