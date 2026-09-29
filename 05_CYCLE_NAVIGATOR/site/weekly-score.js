@@ -113,7 +113,8 @@
   }
 
   function parameterRows(bundle) {
-    const rows = Array.isArray(bundle.parameter_scores) ? bundle.parameter_scores : [];
+    const rows = (Array.isArray(bundle.parameter_scores) ? bundle.parameter_scores : [])
+      .filter((row) => /^(btc_range|eth_range|intraday_)/.test(String(row?.parameter_id || '')));
     if (!rows.length) return '';
     return `
       <div class="score-history" style="margin-top:1rem">
