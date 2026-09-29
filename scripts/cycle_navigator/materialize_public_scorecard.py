@@ -86,9 +86,12 @@ def score_market_structure_v2(prior_freeze: dict[str, Any], machine_score: dict[
             "dimension_id": dimension["id"],
             "label": dimension.get("label"),
             "forecast": dimension.get("forecast"),
+            "expected_state": dimension.get("expected_state"),
+            "expected_change": dimension.get("expected_change"),
             "parameter_id": pid,
             "status": public_status,
             "score": expected_score,
+            "actual": row.get("evidence"),
             "evidence": row.get("evidence"),
         })
 
