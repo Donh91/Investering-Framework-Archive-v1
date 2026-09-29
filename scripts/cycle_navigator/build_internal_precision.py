@@ -96,6 +96,17 @@ def family_for(parameter_id: str, prior_freeze: dict[str, Any]) -> tuple[str, st
     calls = prior_freeze.get("structural_calls") or []
     idx = int(m.group(1)) - 1
     text = normalize_text(str(calls[idx])) if 0 <= idx < len(calls) else ""
+    ms2 = prior_freeze.get("market_structure_v2") if isinstance(prior_freeze.get("market_structure_v2"), dict) else {}
+    if ms2.get("logic_version") == "2.1":
+        v21 = {
+            0: "regime",
+            1: "leadership_quality",
+            2: "first_handoff",
+            3: "deeper_transmission",
+            4: "breadth_persistence",
+        }
+        if idx in v21:
+            return v21[idx], None
     if text.startswith("regime:"):
         return "regime", None
     if text.startswith("leadership:"):
