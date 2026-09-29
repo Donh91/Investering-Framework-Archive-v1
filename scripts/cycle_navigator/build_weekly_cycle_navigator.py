@@ -294,13 +294,15 @@ def output_schema() -> dict[str, Any]:
                     "structural_calls": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "string"}},
                     "market_structure_v2": {
                         "type": "object", "additionalProperties": False,
-                        "required": ["contract", "status", "effective_from_public_issue", "public_issue_number", "forecast_week", "scoring_rubric", "aggregate", "dimensions", "invariants"],
+                        "required": ["contract", "status", "effective_from_public_issue", "public_issue_number", "forecast_week", "logic_version", "headline_requires_full_coverage", "scoring_rubric", "aggregate", "dimensions", "invariants"],
                         "properties": {
                             "contract": {"type": "string", "const": "CN_PUBLIC_MARKET_STRUCTURE_V2"},
                             "status": {"type": "string", "const": "FROZEN_PROSPECTIVE"},
                             "effective_from_public_issue": {"type": "integer", "minimum": 27},
                             "public_issue_number": {"type": "integer", "minimum": 27},
                             "forecast_week": {"type": "string"},
+                            "logic_version": {"type": "string", "const": "2.1"},
+                            "headline_requires_full_coverage": {"type": "boolean", "const": true},
                             "scoring_rubric": {
                                 "type": "object", "additionalProperties": False,
                                 "required": ["HIT", "MIXED", "MISS"],
@@ -315,11 +317,15 @@ def output_schema() -> dict[str, Any]:
                                 "type": "array", "minItems": 5, "maxItems": 5,
                                 "items": {
                                     "type": "object", "additionalProperties": False,
-                                    "required": ["id", "label", "forecast"],
+                                    "required": ["id", "label", "forecast", "hit_if", "mixed_if", "miss_if", "evidence_required"],
                                     "properties": {
                                         "id": {"type": "string", "enum": ["REGIME", "LEADERSHIP", "FIRST_HANDOFF", "DEEPER_TRANSMISSION", "BREADTH_PERSISTENCE"]},
                                         "label": {"type": "string"},
-                                        "forecast": {"type": "string"}
+                                        "forecast": {"type": "string"},
+                                        "hit_if": {"type": "string"},
+                                        "mixed_if": {"type": "string"},
+                                        "miss_if": {"type": "string"},
+                                        "evidence_required": {"type": "array", "minItems": 1, "maxItems": 4, "items": {"type": "string"}}
                                     }
                                 }
                             },
@@ -418,7 +424,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Score the prior issue honestly. Price-range misses must reduce price-range score even when structural anticipation was strong. "
         "For every id in previous_score_parameter_ids, emit exactly one parameter_scores row in the same order. Use SUPPORTED=100, MIXED=50, CONTRADICTED=0, NOT_EVALUABLE=null. Never silently omit a frozen parameter. "
         "For legacy prior issues without a machine freeze, score only what the exact archived publication and completed-week evidence support and mark LEGACY_BOUNDED. "
-        "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. From public CN #27 onward, Market / Structure v2 is mandatory: exactly five non-duplicative structural calls in this fixed order: REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE. Populate market_structure_v2 with the same five forecasts and IDs. One dimension equals one vote; do not split one rotation thesis across multiple slots. "
+        "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. From public CN #27 onward, Market / Structure v2 is mandatory: exactly five non-duplicative structural calls in this fixed order: REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE. Populate market_structure_v2 with the same five forecasts and IDs. One dimension equals one vote; do not split one rotation thesis across multiple slots. For every NEW Market / Structure v2 dimension, prospectively freeze mutually distinct hit_if, mixed_if, miss_if resolution criteria plus evidence_required. The public headline score requires all five dimensions evaluable; missing evidence produces no headline percentage, never a smaller denominator. When scoring a PRIOR v2 freeze that contains these criteria, follow them exactly and do not reinterpret them after observing outcomes. For the already-frozen CN27/W40 baseline, which predates criteria fields, score only the immutable forecast wording conservatively. "
         "Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
         "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
@@ -635,6 +641,18 @@ def main() -> None:
         raise SystemExit("market_structure_v2_dimension_order_mismatch")
     if [str(x.get("forecast")) for x in dims] != [str(x) for x in calls]:
         raise SystemExit("market_structure_v2_forecast_mismatch")
+    if ms2.get("logic_version") != "2.1" or ms2.get("headline_requires_full_coverage") is not True:
+        raise SystemExit("market_structure_v2_scoring_logic_mismatch")
+    for dim in dims:
+        for field in ("hit_if", "mixed_if", "miss_if"):
+            if not str(dim.get(field) or "").strip():
+                raise SystemExit(f"market_structure_v2_{field}_missing:{dim.get('id')}")
+        evidence_required = dim.get("evidence_required")
+        if not isinstance(evidence_required, list) or not evidence_required or any(not str(x or "").strip() for x in evidence_required):
+            raise SystemExit(f"market_structure_v2_evidence_required_missing:{dim.get('id')}")
+        criteria = {str(dim.get("hit_if")).strip().lower(), str(dim.get("mixed_if")).strip().lower(), str(dim.get("miss_if")).strip().lower()}
+        if len(criteria) != 3:
+            raise SystemExit(f"market_structure_v2_resolution_criteria_not_distinct:{dim.get('id')}")
     # Preserve bounds invariants when ranges are present.
     for asset in ("btc", "eth"):
         lo, hi = freeze.get(f"{asset}_range_low"), freeze.get(f"{asset}_range_high")
