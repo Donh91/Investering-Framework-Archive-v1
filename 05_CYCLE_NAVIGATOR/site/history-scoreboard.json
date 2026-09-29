@@ -12,7 +12,13 @@
     "retroactive_rescoring": false,
     "cross_era_aggregate": false,
     "missing_component": "UNAVAILABLE",
-    "open_issue_excluded": true
+    "open_issue_excluded": true,
+    "market_structure_score_cutover": {
+      "last_scored_public_issue": 26,
+      "first_analysis_only_public_issue": 27,
+      "historical_rows_preserved": true,
+      "new_market_structure_scores": false
+    }
   },
   "records": [
     {
@@ -279,5 +285,5 @@
       "structure_method": "LEGACY_PRE_V2"
     }
   ],
-  "provenance_note": "Historical scores remain locked. CN26/W39 closes the legacy Market/Structure method at 60% with Price Ranges 81.85%. CN27/W40 starts Market/Structure v2; its five-dimensional score is prospective and not yet evaluated."
+  "provenance_note": "Historical scores remain locked and unchanged. CN26/W39 is the last public Market/Structure score at 60% with Price Ranges 81.85%. From CN27/W40 onward, Market Structure is qualitative analysis only and is omitted from new CN scoring; Price Range precision remains scored, while Bull/Bear is a forward evidence-balance view rather than an accuracy score."
 }
