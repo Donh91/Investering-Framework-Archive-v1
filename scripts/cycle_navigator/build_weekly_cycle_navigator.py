@@ -326,7 +326,7 @@ def output_schema() -> dict[str, Any]:
                             "semantics": {"type": "string", "const": "EVIDENCE_BALANCE_NOT_PROBABILITY"},
                             "horizons": {
                                 "type": "object", "additionalProperties": False,
-                                "required": ["1_3d", "5_7d"],
+                                "required": ["1_3d", "5_7d", "2_3w"],
                                 "properties": {
                                     "1_3d": {"type": "object", "additionalProperties": False, "required": ["bull", "bear", "bias", "summary"], "properties": {
                                         "bull": {"type": "integer", "minimum": 0, "maximum": 10},
@@ -335,6 +335,12 @@ def output_schema() -> dict[str, Any]:
                                         "summary": {"type": "string"}
                                     }},
                                     "5_7d": {"type": "object", "additionalProperties": False, "required": ["bull", "bear", "bias", "summary"], "properties": {
+                                        "bull": {"type": "integer", "minimum": 0, "maximum": 10},
+                                        "bear": {"type": "integer", "minimum": 0, "maximum": 10},
+                                        "bias": {"type": "string", "enum": ["BULLISH", "LEAN_BULLISH", "NEUTRAL", "LEAN_BEARISH", "BEARISH"]},
+                                        "summary": {"type": "string"}
+                                    }},
+                                    "2_3w": {"type": "object", "additionalProperties": False, "required": ["bull", "bear", "bias", "summary"], "properties": {
                                         "bull": {"type": "integer", "minimum": 0, "maximum": 10},
                                         "bear": {"type": "integer", "minimum": 0, "maximum": 10},
                                         "bias": {"type": "string", "enum": ["BULLISH", "LEAN_BULLISH", "NEUTRAL", "LEAN_BEARISH", "BEARISH"]},
@@ -351,7 +357,7 @@ def output_schema() -> dict[str, Any]:
             },
             "decision_projection": {
                 "type": "object", "additionalProperties": False,
-                "required": ["contract", "next_1_3d", "next_5_7d", "weeks_4_8", "protection"],
+                "required": ["contract", "next_1_3d", "next_5_7d", "next_2_3w", "weeks_4_8", "protection"],
                 "properties": {
                     "contract": {"type": "string", "const": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"},
                     "next_1_3d": {
@@ -363,6 +369,14 @@ def output_schema() -> dict[str, Any]:
                         }
                     },
                     "next_5_7d": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["direction", "summary"],
+                        "properties": {
+                            "direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "summary": {"type": "string"}
+                        }
+                    },
+                    "next_2_3w": {
                         "type": "object", "additionalProperties": False,
                         "required": ["direction", "summary"],
                         "properties": {
@@ -437,10 +451,10 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Score the prior issue honestly. Price-range misses must reduce price-range score even when structural anticipation was strong. "
         "For every id in previous_score_parameter_ids, emit exactly one parameter_scores row in the same order. Use SUPPORTED=100, MIXED=50, CONTRADICTED=0, NOT_EVALUABLE=null. Never silently omit a frozen parameter. "
         "For legacy prior issues without a machine freeze, score only what the exact archived publication and completed-week evidence support and mark LEGACY_BOUNDED. "
-        "Never invent historical track-record values. Price Ranges remain the public precision-score family and their scoring semantics must not change. Market / Structure is analysis-only from public CN #27 onward: use exactly five fixed analytical headings in this order: REGIME_RESILIENCE, LEADERSHIP, ROTATION_TRANSMISSION, BREADTH_PERSISTENCE, FLOW_QUALITY_FRAGILITY. Populate forecast_freeze.market_structure_analysis with those five analyses and never emit or imply a public Market / Structure accuracy percentage. FLOW_QUALITY_FRAGILITY must synthesize internal confirmation quality such as spot/microstructure, settled flows, breadth, sentiment, relative strength and counterevidence when available rather than restating a chart. Also populate forecast_freeze.bull_bear_scale for 1-3d and 5-7d. For each horizon bull and bear are integers 0-10 that sum to 10; they represent evidence balance, not probability. The Bull/Bear scale must synthesize multi-factor Cycle Navigator evidence and be semantically consistent with decision_projection. Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
+        "Never invent historical track-record values. Price Ranges remain the public precision-score family and their scoring semantics must not change. Market / Structure is analysis-only from public CN #27 onward: use exactly five fixed analytical headings in this order: REGIME_RESILIENCE, LEADERSHIP, ROTATION_TRANSMISSION, BREADTH_PERSISTENCE, FLOW_QUALITY_FRAGILITY. Populate forecast_freeze.market_structure_analysis with those five analyses and never emit or imply a public Market / Structure accuracy percentage. FLOW_QUALITY_FRAGILITY must synthesize internal confirmation quality such as spot/microstructure, settled flows, breadth, sentiment, relative strength and counterevidence when available rather than restating a chart. Also populate forecast_freeze.bull_bear_scale for 1-3d, 5-7d and 2-3w. For each horizon bull and bear are integers 0-10 that sum to 10; they represent evidence balance, not probability. The 2-3w Bull/Bear horizon must be semantically equivalent to decision_projection.next_2_3w and base_case_2_3_weeks; use the same evidence synthesis rather than extrapolating from 5-7d. The Bull/Bear scale must synthesize multi-factor Cycle Navigator evidence and be semantically consistent with decision_projection. Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
         "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
-        "Populate decision_projection as the sole machine-readable directional/protection projection. It must be semantically equivalent to the narrative but never inferred by downstream keyword parsing. "
+        "Populate decision_projection as the sole machine-readable directional/protection projection, including next_1_3d, next_5_7d, next_2_3w, weeks_4_8 and protection. It must be semantically equivalent to the narrative but never inferred by downstream keyword parsing. "
         "Use NO_EDGE or UNAVAILABLE rather than forcing direction. Protection fields must be evidence-bounded, and warnings must not be manufactured from wording alone. "
         "The readable output is for the owner and the X-ready output is public-facing. Keep X prose compact with cohesive sections, not excessive one-line spacing. "
         "Include one base case for this week, one base case for the next 2-3 weeks, one base case for 4-8 weeks, plus a clear altseason countdown table. "
@@ -664,7 +678,7 @@ def main() -> None:
     horizons = bb.get("horizons")
     if not isinstance(horizons, dict):
         raise SystemExit("bull_bear_scale_horizons_missing")
-    for horizon in ("1_3d", "5_7d"):
+    for horizon in ("1_3d", "5_7d", "2_3w"):
         row = horizons.get(horizon)
         if not isinstance(row, dict):
             raise SystemExit(f"bull_bear_scale_{horizon}_missing")
