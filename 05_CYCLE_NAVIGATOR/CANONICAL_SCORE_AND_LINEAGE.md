@@ -54,9 +54,9 @@ Immutable public forecast:
 
 ## Current public issue
 
-The current W40 public projection is **CN #27**.
+The current W40 public issue is **CN #27**, user-confirmed as published on 2026-09-29.
 
-Its underlying migration-era machine package is W40 / machine issue #28. CN #27 is currently approved but not yet user-confirmed as published.
+Its underlying migration-era machine package is W40 / machine issue #28. Publication identity is bound to the immutable CN #27 X archive and user-attested receipt.
 
 CN #27 starts **Market / Structure v2** with five fixed, non-duplicative dimensions:
 
