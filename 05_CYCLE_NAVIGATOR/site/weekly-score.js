@@ -50,7 +50,7 @@
       <article class="cal-summary-card">
         <span class="cal-summary-label">Market / Structure${legacy ? ' · legacy' : ''}</span>
         <strong class="cal-summary-value">${fmt(market.score)}</strong>
-        <small class="cal-summary-note">${legacy ? 'CN #26 closes the pre-v2 method' : 'Five-dimension v2 structural precision'}</small>
+        <small class="cal-summary-note">${legacy ? 'CN #26 closes the pre-v2 method' : (market.score_status === 'INCOMPLETE_EVIDENCE' ? `v2 evidence coverage ${esc(market.coverage_count ?? 0)}/5 · no headline score` : 'Five-dimension v2 structural precision · 5/5')}</small>
       </article>
       <article class="cal-summary-card">
         <span class="cal-summary-label">Price Ranges</span>
@@ -62,6 +62,30 @@
         <strong class="cal-summary-value" style="font-size:1rem">${esc(intraday)}</strong>
         <small class="cal-summary-note">Forecast ranges vs completed actuals</small>
       </article>`;
+  }
+
+  function marketStructureRows(card) {
+    const market = card?.market_structure_precision || {};
+    const rows = Array.isArray(market.dimensions) ? market.dimensions : [];
+    if (!rows.length) return '';
+    return `
+      <div class="score-history" style="margin-top:1rem">
+        ${rows.map((row, index) => {
+          const valid = numeric(row.score);
+          const score = valid ? Math.max(0, Math.min(100, Number(row.score))) : null;
+          const status = String(row.status || 'NOT_EVALUABLE');
+          const label = String(row.label || row.dimension_id || `Dimension ${index + 1}`);
+          const actual = String(row.actual || row.evidence || 'Evidence unavailable');
+          return `<div class="score-row ${valid ? '' : 'na'}">
+            <div class="score-row-meta" style="max-width:none">
+              <strong>${index + 1}. ${esc(label)}</strong>
+              <small>Forecast: ${esc(row.forecast || '—')}<br>Actual: ${esc(actual)}<br>${esc(status)}</small>
+            </div>
+            <div class="score-track" aria-label="${valid ? `Score ${score}%` : 'Not evaluable'}">${valid ? `<div class="score-fill" style="--score-width:${score}%"></div>` : ''}</div>
+            <div class="score-row-value">${valid ? fmt(score) : 'N/A'}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
   }
 
   function rangeScoreCards(range) {
@@ -152,6 +176,7 @@
             <span class="cal-method-badge">${esc(publicCard.status || 'FINAL')}</span>
           </div>
           <div class="cal-summary-grid">${publicScoreCards(publicCard)}</div>
+          ${marketStructureRows(publicCard)}
         </div>`;
     } else {
       const canonicalPanel = bundle ? `
