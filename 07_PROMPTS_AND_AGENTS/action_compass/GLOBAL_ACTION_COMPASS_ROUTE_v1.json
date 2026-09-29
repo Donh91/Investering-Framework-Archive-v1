@@ -42,6 +42,7 @@
     "required_horizons": [
       "NOW_0_3D",
       "NEXT_WINDOW_5_7D",
+      "MIDTERM_2_3W",
       "CYCLE_ALTCOINS_3_8W"
     ],
     "eta_required_when_actionable": true,
@@ -78,20 +79,15 @@
     },
     "bull_bear_display": {
       "contract": "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1",
-      "owner": "OFFICIAL_COMPASS",
       "horizons": [
         "NEXT_1_3D",
         "NEXT_5_7D",
         "NEXT_2_3W"
       ],
       "semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY",
-      "role": "PUBLIC_DISPLAY_ENCODING_OF_EXISTING_GOVERNED_COMPASS_DIRECTION",
-      "site_policy": "READ_ONLY_NO_CLIENT_SIDE_SIGNAL_SYNTHESIS",
-      "cn_relationship": "CN supplies frozen weekly baseline/context; Official Compass owns current/live display after new evidence.",
-      "missing_horizon": "UNAVAILABLE_NOT_INFERRED",
-      "new_market_classifier": false,
-      "new_signal": false,
-      "portfolio_execution": false
+      "owner": "OFFICIAL_COMPASS",
+      "site_must_not_synthesize": true,
+      "unavailable_policy": "SHOW_UNAVAILABLE_NOT_NEUTRAL"
     }
   },
   "visible_output_forbidden": [
