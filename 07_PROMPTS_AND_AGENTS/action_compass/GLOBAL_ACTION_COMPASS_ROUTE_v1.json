@@ -79,13 +79,18 @@
     },
     "bull_bear_display": {
       "contract": "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1",
+      "source_of_truth_contract": "MARKET_WEATHER_SOURCE_OF_TRUTH_v1",
       "horizons": [
         "NEXT_1_3D",
         "NEXT_5_7D",
         "NEXT_2_3W"
       ],
       "semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY",
+      "resolution": "COARSE_CATEGORICAL_DIRECTION",
+      "mapping": "UP=7/3; DOWN=3/7; MIXED_OR_SIDEWAYS=5/5; NO_EDGE_OR_UNAVAILABLE=NULL",
       "owner": "OFFICIAL_COMPASS",
+      "protection_overlay": false,
+      "protection_lane_separate": true,
       "site_must_not_synthesize": true,
       "unavailable_policy": "SHOW_UNAVAILABLE_NOT_NEUTRAL"
     }
@@ -122,5 +127,6 @@
   "new_market_engine_created": false,
   "new_forecast_engine_created": false,
   "new_signal_created": false,
-  "new_threshold_created": false
+  "new_threshold_created": false,
+  "market_weather_source_of_truth": "05_CYCLE_NAVIGATOR/protocols/2026-09-29__market-weather-source-of-truth-v1__canonical.md"
 }

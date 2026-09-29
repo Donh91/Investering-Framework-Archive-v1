@@ -186,13 +186,16 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(scale["contract"], "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1")
             self.assertEqual(scale["semantics"], "EVIDENCE_BALANCE_NOT_PROBABILITY")
             self.assertEqual(scale["owner"], "OFFICIAL_COMPASS")
+            self.assertEqual(scale["source_of_truth_contract"], "MARKET_WEATHER_SOURCE_OF_TRUTH_v1")
+            self.assertEqual(scale["mapping_version"], "DIRECTION_ONLY_COARSE_v1")
+            self.assertEqual(scale["resolution"], "COARSE_CATEGORICAL_DIRECTION")
             self.assertFalse(scale["authority"]["new_market_classifier"])
             self.assertFalse(scale["authority"]["probability_model"])
             self.assertFalse(scale["authority"]["portfolio_execution"])
             self.assertFalse(scale["authority"]["site_synthesis_allowed"])
 
             self.assertEqual((scale["horizons"]["1_3d"]["bull"], scale["horizons"]["1_3d"]["bear"]), (5, 5))
-            self.assertEqual((scale["horizons"]["5_7d"]["bull"], scale["horizons"]["5_7d"]["bear"]), (3, 7))
+            self.assertEqual((scale["horizons"]["5_7d"]["bull"], scale["horizons"]["5_7d"]["bear"]), (5, 5))
             self.assertEqual((scale["horizons"]["2_3w"]["bull"], scale["horizons"]["2_3w"]["bear"]), (5, 5))
 
             for key in ("1_3d", "5_7d", "2_3w"):

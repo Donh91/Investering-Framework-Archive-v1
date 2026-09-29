@@ -18,6 +18,8 @@ if(compass.data_status==='OK'){
     if(scale.contract!=='OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1') throw Error('wrong Bull Bear display contract');
     if(scale.semantics!=='EVIDENCE_BALANCE_NOT_PROBABILITY') throw Error('wrong Bull Bear semantics');
     if(scale.owner!=='OFFICIAL_COMPASS') throw Error('wrong Bull Bear owner');
+    if(scale.source_of_truth_contract!=='MARKET_WEATHER_SOURCE_OF_TRUTH_v1') throw Error('wrong Market Weather source-of-truth contract');
+    if(scale.mapping_version!=='DIRECTION_ONLY_COARSE_v1'||scale.resolution!=='COARSE_CATEGORICAL_DIRECTION') throw Error('wrong Market Weather mapping semantics');
     if(scale?.authority?.site_synthesis_allowed!==false||scale?.authority?.new_market_classifier!==false||scale?.authority?.portfolio_execution!==false) throw Error('Bull Bear authority leak');
     for(const key of ['1_3d','5_7d','2_3w']){
       const row=scale.horizons?.[key];

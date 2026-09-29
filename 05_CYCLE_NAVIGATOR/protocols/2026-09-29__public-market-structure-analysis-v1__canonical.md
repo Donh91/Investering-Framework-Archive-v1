@@ -10,7 +10,7 @@ Cycle Navigator has three separate public layers:
 
 1. **PRICE RANGES** — unchanged prospective BTC/ETH range forecasts and the only public precision-score family.
 2. **MARKET STRUCTURE** — qualitative CN-edge analysis for the completed week and coming week. No percentage, HIT/MISS score or synthetic accuracy number.
-3. **BULL / BEAR SCALE** — short-horizon evidence balance for 1-3 days and 5-7 days.
+3. **BULL / BEAR BASELINE** — prospectively archived weekly evidence-balance context. The public site's live Market Weather is owned by Official Compass under `MARKET_WEATHER_SOURCE_OF_TRUTH_v1`, not by the CN scorecard.
 
 Never blend these layers into one score.
 
@@ -29,28 +29,29 @@ For **WEEK AHEAD**, state what CN currently expects / watches in the same five h
 
 These are analytical conclusions, not scoreable public predictions. Internal learning may audit them, but no public Market Structure percentage is produced.
 
-## Bull / Bear scale
+## Bull / Bear baseline and live Market Weather
 
-Always publish both horizons:
+Canonical ownership is defined by:
+`05_CYCLE_NAVIGATOR/protocols/2026-09-29__market-weather-source-of-truth-v1__canonical.md`.
 
+Cycle Navigator may archive the weekly baseline for:
 - **1-3 DAYS**
 - **5-7 DAYS**
+- **2-3 WEEKS** when a governed structured horizon exists.
 
-Each horizon contains:
-- `bull`: integer 0-10
-- `bear`: integer 0-10
-- bull + bear = 10
-- `bias`: BULLISH / LEAN_BULLISH / NEUTRAL / LEAN_BEARISH / BEARISH
-- one compact evidence-based explanation
+The weekly baseline is not an accuracy score and is not the site's live owner.
 
-The numbers are an **evidence balance, not probabilities**.
+**Official Compass** owns the current/live Market Weather display. The site reads that payload verbatim and never infers Bull/Bear from price, prose, CN fields, or protection state.
 
-Suggested labels:
-- 8-10 vs 0-2: strong directional evidence
-- 6-7 vs 3-4: directional lean
-- 5 vs 5: balanced / neutral
+If a governed horizon is missing, display **UNAVAILABLE** rather than inventing 5/5.
 
-The scale must synthesize the same evidence available to Cycle Navigator and must not be derived mechanically from one chart or one asset.
+The public 0-10 display is a coarse categorical encoding of governed Compass direction:
+- UP -> Bull 7 / Bear 3
+- DOWN -> Bull 3 / Bear 7
+- MIXED or SIDEWAYS -> Bull 5 / Bear 5
+- NO_EDGE or UNAVAILABLE -> no numeric value
+
+Protection / re-entry is a separate lane and must not be added as a hidden Bull/Bear overlay.
 
 ## Accountability
 

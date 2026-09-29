@@ -866,23 +866,14 @@ def _bull_bear_row(direction: str, summary: str, *, bear_overlay: int = 0) -> di
     }
 
 
-def bull_bear_scale(horizons: Mapping[str, Any], protection: Mapping[str, Any]) -> dict[str, Any]:
-    """Display-only evidence balance derived from Official Compass states.
+def bull_bear_scale(horizons: Mapping[str, Any]) -> dict[str, Any]:
+    """Display-only evidence balance derived from Official Compass directions.
 
-    This is not a new market classifier and not a probability model. It encodes
-    the existing governed Compass directional lanes into a stable 0-10 public
-    display. Only the 5-7d lane receives the existing protection-risk overlay.
+    This is not a new market classifier and not a probability model. It is a
+    deliberately coarse visual encoding of already-governed Compass direction.
+    Protection / re-entry remains a separate governed lane and is never
+    double-counted into Market Weather.
     """
-    risk = str(protection.get("pullback_risk_state") or "UNAVAILABLE").upper()
-    risk_overlay = {
-        "NORMAL": 0,
-        "BUILDING": 1,
-        "ELEVATED": 2,
-        "HIGH": 3,
-        "CONFIRMED": 3,
-        "UNAVAILABLE": 0,
-    }.get(risk, 0)
-
     h13 = horizons.get("NEXT_1_3D") if isinstance(horizons, Mapping) else None
     h57 = horizons.get("NEXT_5_7D") if isinstance(horizons, Mapping) else None
     h23 = horizons.get("NEXT_2_3W") if isinstance(horizons, Mapping) else None
@@ -894,7 +885,9 @@ def bull_bear_scale(horizons: Mapping[str, Any], protection: Mapping[str, Any]) 
         "contract": "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1",
         "semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY",
         "owner": "OFFICIAL_COMPASS",
-        "mapping_version": "DIRECTION_PLUS_5_7D_PROTECTION_OVERLAY_v1",
+        "source_of_truth_contract": "MARKET_WEATHER_SOURCE_OF_TRUTH_v1",
+        "mapping_version": "DIRECTION_ONLY_COARSE_v1",
+        "resolution": "COARSE_CATEGORICAL_DIRECTION",
         "horizons": {
             "1_3d": _bull_bear_row(
                 str(h13.get("expected_direction") or "UNAVAILABLE"),
@@ -903,7 +896,6 @@ def bull_bear_scale(horizons: Mapping[str, Any], protection: Mapping[str, Any]) 
             "5_7d": _bull_bear_row(
                 str(h57.get("expected_direction") or "UNAVAILABLE"),
                 str(h57.get("expected_path") or "No governed 5-7d Compass path is available."),
-                bear_overlay=risk_overlay if str(h57.get("expected_direction") or "").upper() in {"MIXED", "SIDEWAYS"} else 0,
             ),
             "2_3w": _bull_bear_row(
                 str(h23.get("expected_direction") or "UNAVAILABLE"),
@@ -1197,7 +1189,7 @@ def build_official_compass(
     protection = protection_tracker(
         auto_state, action, market_now, eligible_cn, as_of=issued, prior_compass=prior_compass
     )
-    bull_bear = bull_bear_scale(horizons, protection)
+    bull_bear = bull_bear_scale(horizons)
     sell = sell_assessment(auto_state, protection, as_of=issued)
     evidence = evidence_snapshot(auto_state, packet_path)
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"

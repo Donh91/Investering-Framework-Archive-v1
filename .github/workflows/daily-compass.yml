@@ -93,6 +93,8 @@ jobs:
           bb=d['bull_bear_scale']
           assert bb['contract']=='OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1'
           assert bb['semantics']=='EVIDENCE_BALANCE_NOT_PROBABILITY'
+          assert bb['source_of_truth_contract']=='MARKET_WEATHER_SOURCE_OF_TRUTH_v1'
+          assert bb['mapping_version']=='DIRECTION_ONLY_COARSE_v1'
           assert bb['authority']['new_market_classifier'] is False
           assert bb['authority']['site_synthesis_allowed'] is False
           assert set(bb['horizons'])=={'1_3d','5_7d','2_3w'}
@@ -192,6 +194,9 @@ jobs:
           assert scale and scale['contract']=='OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1'
           assert scale['semantics']=='EVIDENCE_BALANCE_NOT_PROBABILITY'
           assert scale['owner']=='OFFICIAL_COMPASS'
+          assert scale['source_of_truth_contract']=='MARKET_WEATHER_SOURCE_OF_TRUTH_v1'
+          assert scale['mapping_version']=='DIRECTION_ONLY_COARSE_v1'
+          assert scale['resolution']=='COARSE_CATEGORICAL_DIRECTION'
           assert scale['authority']['site_synthesis_allowed'] is False
           assert scale['authority']['new_market_classifier'] is False
           assert scale['authority']['portfolio_execution'] is False
