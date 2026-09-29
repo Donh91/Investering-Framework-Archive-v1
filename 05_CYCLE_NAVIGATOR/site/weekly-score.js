@@ -57,21 +57,6 @@
       </article>`;
   }
 
-  function bullBearCards(snapshot) {
-    const scale = snapshot?.public_bull_bear_scale;
-    const horizons = scale?.horizons || {};
-    const card = (key, label) => {
-      const row = horizons[key] || {};
-      if (!numeric(row.bull) || !numeric(row.bear)) return '';
-      return `
-        <article class="cal-summary-card">
-          <span class="cal-summary-label">${esc(label)} · BULL / BEAR</span>
-          <strong class="cal-summary-value" style="font-size:1.15rem">BULL ${esc(row.bull)}/10 · BEAR ${esc(row.bear)}/10</strong>
-          <small class="cal-summary-note">${esc(String(row.bias || '').replaceAll('_',' '))} · evidence balance, not probability</small>
-        </article>`;
-    };
-    return card('1_3d','1–3 DAYS') + card('5_7d','5–7 DAYS');
-  }
 
   function rangeScoreCards(range) {
     const windows = range?.intraday_window_scores || {};
@@ -140,7 +125,7 @@
     const section = document.createElement('section');
     section.id = 'weeklyCanonicalScorecard';
     section.className = 'section-block';
-    section.setAttribute('aria-label', 'Cycle Navigator price precision and Bull Bear outlook');
+    section.setAttribute('aria-label', 'Cycle Navigator price precision');
 
     if (publicCard) {
       const publicIssue = publicCard.public_issue_number ?? '—';
@@ -155,7 +140,7 @@
             </div>
             <span class="cal-method-badge">${esc(publicCard.status || 'FINAL')}</span>
           </div>
-          <div class="cal-summary-grid">${publicScoreCards(publicCard)}${bullBearCards(snapshot)}</div>
+          <div class="cal-summary-grid">${publicScoreCards(publicCard)}</div>
         </div>`;
     } else {
       const canonicalPanel = bundle ? `
