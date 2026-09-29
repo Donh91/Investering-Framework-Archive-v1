@@ -27,11 +27,11 @@ def interval_score(fl: float, fh: float, al: float, ah: float) -> float:
     return round(100.0 * (0.7 * containment + 0.3 * jaccard), 2)
 
 MARKET_STRUCTURE_V2_IDS = [
-    "REGIME",
+    "REGIME_RESILIENCE",
     "LEADERSHIP",
-    "FIRST_HANDOFF",
-    "DEEPER_TRANSMISSION",
+    "ROTATION_TRANSMISSION",
     "BREADTH_PERSISTENCE",
+    "FLOW_QUALITY_FRAGILITY",
 ]
 MARKET_STRUCTURE_STATUS_MAP = {
     "SUPPORTED": ("HIT", 100.0),
