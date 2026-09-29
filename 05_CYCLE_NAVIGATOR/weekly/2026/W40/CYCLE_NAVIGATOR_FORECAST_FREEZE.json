@@ -13,76 +13,56 @@
   },
   "scoring_contract": "CN_PUBLIC_CONTINUITY_v1",
   "structural_calls": [
-    "REGIME & RESILIENCE: W40 remains a volatile consolidation/retest regime; recovery structure survives without a confirmed market breakdown.",
-    "LEADERSHIP: ETH relative leadership remains unstable rather than establishing a durable weekly leadership advance versus BTC.",
-    "ROTATION / TRANSMISSION: Rotation remains concentrated in ETH/large caps; no sustained handoff into mid, small and micro caps is confirmed.",
-    "BREADTH & PERSISTENCE: Participation may broaden intermittently, but persistent broad-altseason breadth is not confirmed.",
-    "FLOW QUALITY / FRAGILITY: Price recovery remains stronger than underlying confirmation; breadth and spot/microstructure lag, while positive flow evidence provides counter-support."
+    "REGIME: W40 remains a volatile consolidation/retest regime and does not end in a confirmed market breakdown.",
+    "LEADERSHIP: ETH/BTC closes W40 at or below its weekly open.",
+    "FIRST_HANDOFF: Large-cap transmission remains selective or incomplete rather than becoming broad and persistent by the W40 close.",
+    "DEEPER_TRANSMISSION: Sustained transmission through midcaps into small caps and microcaps is not confirmed by the W40 close.",
+    "BREADTH_PERSISTENCE: Participation does not become confirmed broad altseason with persistent breadth by the W40 close."
   ],
-  "market_structure_analysis": {
-    "contract": "CN_PUBLIC_MARKET_STRUCTURE_ANALYSIS_v1",
-    "status": "FROZEN_WEEK_AHEAD_ANALYSIS",
+  "market_structure_v2": {
+    "contract": "CN_PUBLIC_MARKET_STRUCTURE_V2",
+    "status": "FROZEN_PROSPECTIVE",
+    "effective_from_public_issue": 27,
     "public_issue_number": 27,
     "forecast_week": "2026-W40",
-    "scoring_authority": false,
+    "scoring_rubric": {
+      "HIT": 100,
+      "MIXED": 50,
+      "MISS": 0
+    },
+    "aggregate": "EQUAL_WEIGHT_MEAN_OF_FIVE_DIMENSIONS",
     "dimensions": [
       {
-        "id": "REGIME_RESILIENCE",
-        "label": "Regime & resilience",
-        "analysis": "Volatile consolidation/retest; recovery structure remains intact unless a confirmed breakdown develops."
+        "id": "REGIME",
+        "label": "Market regime",
+        "forecast": "REGIME: W40 remains a volatile consolidation/retest regime and does not end in a confirmed market breakdown."
       },
       {
         "id": "LEADERSHIP",
-        "label": "Leadership",
-        "analysis": "ETH relative leadership is unstable; durable ETH-over-BTC leadership is not yet established."
+        "label": "ETH/BTC leadership",
+        "forecast": "LEADERSHIP: ETH/BTC closes W40 at or below its weekly open."
       },
       {
-        "id": "ROTATION_TRANSMISSION",
-        "label": "Rotation / transmission",
-        "analysis": "Rotation remains selective and concentrated higher in the capitalization ladder; sustained lower-cap transmission is not confirmed."
+        "id": "FIRST_HANDOFF",
+        "label": "ETH to large-cap handoff",
+        "forecast": "FIRST_HANDOFF: Large-cap transmission remains selective or incomplete rather than becoming broad and persistent by the W40 close."
+      },
+      {
+        "id": "DEEPER_TRANSMISSION",
+        "label": "Mid/small/micro transmission",
+        "forecast": "DEEPER_TRANSMISSION: Sustained transmission through midcaps into small caps and microcaps is not confirmed by the W40 close."
       },
       {
         "id": "BREADTH_PERSISTENCE",
-        "label": "Breadth & persistence",
-        "analysis": "Participation can broaden intermittently, but persistent broad-altseason breadth is not confirmed."
-      },
-      {
-        "id": "FLOW_QUALITY_FRAGILITY",
-        "label": "Flow quality / fragility",
-        "analysis": "Price recovery is stronger than underlying confirmation: breadth and spot/microstructure lag while positive settled flow evidence provides counter-support."
+        "label": "Breadth and persistence",
+        "forecast": "BREADTH_PERSISTENCE: Participation does not become confirmed broad altseason with persistent breadth by the W40 close."
       }
     ],
     "invariants": [
-      "Qualitative public analysis only; never publish a Market Structure accuracy percentage.",
-      "Use the same five headings for week-gone review and week-ahead analysis.",
-      "Synthesize canonical evidence rather than restating a single chart.",
-      "Price Range precision remains separate and unchanged."
-    ]
-  },
-  "bull_bear_scale": {
-    "contract": "CN_PUBLIC_BULL_BEAR_SCALE_v1",
-    "public_issue_number": 27,
-    "forecast_week": "2026-W40",
-    "semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY",
-    "horizons": {
-      "1_3d": {
-        "bull": 5,
-        "bear": 5,
-        "bias": "NEUTRAL",
-        "summary": "Balanced near-term evidence: stabilization/continuation remains plausible, but weak ETH-relative performance and spot microstructure leave reversal risk."
-      },
-      "5_7d": {
-        "bull": 4,
-        "bear": 6,
-        "bias": "LEAN_BEARISH",
-        "summary": "Retest risk builds later in the week; positive settled ETF/flow evidence and improving short-horizon rotation context prevent a stronger bearish reading."
-      }
-    },
-    "invariants": [
-      "Bull and bear are integers from 0 to 10 and sum to 10 for each horizon.",
-      "The scale is not a probability forecast.",
-      "Evidence must be multi-factor and may not be inferred from one chart alone.",
-      "Archive each weekly reading prospectively for learning."
+      "Five dimensions only.",
+      "One dimension, one vote; do not duplicate the same thesis across slots.",
+      "Score prospectively frozen wording only; no hindsight rewrite.",
+      "Market/Structure remains separate from Price Ranges."
     ]
   }
 }
