@@ -45,15 +45,18 @@ def main() -> None:
     assert score["combined_score"] is None
 
     price = score["price_range_precision"]
-    market = score["market_structure_precision"]
+    market = score.get("market_structure_precision")
     frozen = score["frozen_claim_precision"]
+    public_issue = int(score["public_issue_number"])
     assert abs(float(price["score"]) - float(latest_score["price_range_score"])) < 1e-9
-    if market.get("score") is None or latest_score.get("market_structure_score") is None:
-        assert market.get("score") is None
+    if public_issue >= 27:
+        assert market is None
+        assert score.get("market_structure_status") == "ANALYSIS_ONLY_NOT_SCORED"
         assert latest_score.get("market_structure_score") is None
-        assert market.get("score_status") == "INCOMPLETE_EVIDENCE"
-        assert int(market.get("coverage_count", 0)) < 5
+        assert latest_score.get("market_structure_status") == "ANALYSIS_ONLY_NOT_SCORED"
     else:
+        assert isinstance(market, dict)
+        assert market.get("score") is not None
         assert abs(float(market["score"]) - float(latest_score["market_structure_score"])) < 1e-9
     assert abs(float(frozen["score"]) - float(latest_score["frozen_claim_score"])) < 1e-9
 
@@ -81,15 +84,15 @@ def main() -> None:
     row = next(x for x in history["records"] if int(x["cn"]) == int(score["public_issue_number"]))
     assert row["allow_derived_overall"] is False
     assert f"{float(price['score']):g}" in str(row["range_display"])
-    structure_display = str(row["structure_display"])
     structure_method = str(row.get("structure_method") or "")
-    if market.get("score") is None:
-        assert "Market/Structure N/A" in structure_display
-        assert structure_method == "MARKET_STRUCTURE_V2"
+    if public_issue >= 27:
+        assert structure_method == "ANALYSIS_ONLY_NOT_SCORED"
+        assert row.get("structure_display") in (None, "")
+        assert row.get("allow_derived_overall") is False
     else:
-        assert f"Market/Structure {float(market['score']):g}" in structure_display
-    if structure_method not in {"LEGACY_PRE_V2", "MARKET_STRUCTURE_V2"}:
-        assert f"Frozen claims {float(frozen['score']):g}" in structure_display
+        structure_display = str(row.get("structure_display") or "")
+        assert isinstance(market, dict)
+        assert f"Market/Structure {float(market['score']):g}" in structure_display or structure_method == "LEGACY_PRE_V2"
     completed = int(history["coverage"]["completed_issues"])
     assert completed == max(int(x["cn"]) for x in history["records"])
     assert int(history["coverage"]["latest_open_issue"]) == completed + 1
@@ -99,7 +102,7 @@ def main() -> None:
         "latest_completed_public_issue": score["public_issue_number"],
         "forecast_week": score["forecast_week"],
         "frozen_claim_score": frozen["score"],
-        "market_structure_score": market["score"],
+        "market_structure_score": None if market is None else market.get("score"),
         "price_range_score": price["score"],
         "current_public_issue": current["public_issue_number"],
         "current_machine_issue": current["machine_issue_number"],
