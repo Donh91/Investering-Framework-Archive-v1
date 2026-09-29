@@ -284,7 +284,7 @@ def output_schema() -> dict[str, Any]:
             },
             "forecast_freeze": {
                 "type": "object", "additionalProperties": False,
-                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_v2", "forecast_horizon_days", "intraday_map"],
+                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_analysis", "bull_bear_scale", "forecast_horizon_days", "intraday_map"],
                 "properties": {
                     "scoring_contract": {"type": "string", "const": "CN_PUBLIC_CONTINUITY_v1"},
                     "btc_range_low": nullable_num, "btc_range_high": nullable_num,
@@ -292,43 +292,54 @@ def output_schema() -> dict[str, Any]:
                     "ethbtc_condition": {"type": "string"},
                     "breadth_condition": {"type": "string"},
                     "structural_calls": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "string"}},
-                    "market_structure_v2": {
+                    "market_structure_analysis": {
                         "type": "object", "additionalProperties": False,
-                        "required": ["contract", "status", "effective_from_public_issue", "public_issue_number", "forecast_week", "logic_version", "headline_requires_full_coverage", "scoring_rubric", "aggregate", "dimensions", "invariants"],
+                        "required": ["contract", "status", "public_issue_number", "forecast_week", "scoring_authority", "dimensions", "invariants"],
                         "properties": {
-                            "contract": {"type": "string", "const": "CN_PUBLIC_MARKET_STRUCTURE_V2"},
-                            "status": {"type": "string", "const": "FROZEN_PROSPECTIVE"},
-                            "effective_from_public_issue": {"type": "integer", "minimum": 27},
+                            "contract": {"type": "string", "const": "CN_PUBLIC_MARKET_STRUCTURE_ANALYSIS_v1"},
+                            "status": {"type": "string", "const": "FROZEN_WEEK_AHEAD_ANALYSIS"},
                             "public_issue_number": {"type": "integer", "minimum": 27},
                             "forecast_week": {"type": "string"},
-                            "logic_version": {"type": "string", "const": "2.1"},
-                            "headline_requires_full_coverage": {"type": "boolean", "const": true},
-                            "scoring_rubric": {
-                                "type": "object", "additionalProperties": False,
-                                "required": ["HIT", "MIXED", "MISS"],
-                                "properties": {
-                                    "HIT": {"type": "integer", "const": 100},
-                                    "MIXED": {"type": "integer", "const": 50},
-                                    "MISS": {"type": "integer", "const": 0}
-                                }
-                            },
-                            "aggregate": {"type": "string", "const": "EQUAL_WEIGHT_MEAN_OF_FIVE_DIMENSIONS"},
+                            "scoring_authority": {"type": "boolean", "const": false},
                             "dimensions": {
                                 "type": "array", "minItems": 5, "maxItems": 5,
                                 "items": {
                                     "type": "object", "additionalProperties": False,
-                                    "required": ["id", "label", "forecast", "expected_state", "expected_change", "hit_if", "mixed_if", "miss_if", "evidence_required"],
+                                    "required": ["id", "label", "analysis"],
                                     "properties": {
                                         "id": {"type": "string", "enum": ["REGIME_RESILIENCE", "LEADERSHIP", "ROTATION_TRANSMISSION", "BREADTH_PERSISTENCE", "FLOW_QUALITY_FRAGILITY"]},
                                         "label": {"type": "string"},
-                                        "forecast": {"type": "string"},
-                                        "expected_state": {"type": "string"},
-                                        "expected_change": {"type": "string", "enum": ["IMPROVE", "STABLE", "DETERIORATE", "NO_EDGE"]},
-                                        "hit_if": {"type": "string"},
-                                        "mixed_if": {"type": "string"},
-                                        "miss_if": {"type": "string"},
-                                        "evidence_required": {"type": "array", "minItems": 1, "maxItems": 4, "items": {"type": "string"}}
+                                        "analysis": {"type": "string"}
                                     }
+                                }
+                            },
+                            "invariants": {"type": "array", "items": {"type": "string"}}
+                        }
+                    },
+                    "bull_bear_scale": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["contract", "public_issue_number", "forecast_week", "semantics", "horizons", "invariants"],
+                        "properties": {
+                            "contract": {"type": "string", "const": "CN_PUBLIC_BULL_BEAR_SCALE_v1"},
+                            "public_issue_number": {"type": "integer", "minimum": 27},
+                            "forecast_week": {"type": "string"},
+                            "semantics": {"type": "string", "const": "EVIDENCE_BALANCE_NOT_PROBABILITY"},
+                            "horizons": {
+                                "type": "object", "additionalProperties": False,
+                                "required": ["1_3d", "5_7d"],
+                                "properties": {
+                                    "1_3d": {"type": "object", "additionalProperties": False, "required": ["bull", "bear", "bias", "summary"], "properties": {
+                                        "bull": {"type": "integer", "minimum": 0, "maximum": 10},
+                                        "bear": {"type": "integer", "minimum": 0, "maximum": 10},
+                                        "bias": {"type": "string", "enum": ["BULLISH", "LEAN_BULLISH", "NEUTRAL", "LEAN_BEARISH", "BEARISH"]},
+                                        "summary": {"type": "string"}
+                                    }},
+                                    "5_7d": {"type": "object", "additionalProperties": False, "required": ["bull", "bear", "bias", "summary"], "properties": {
+                                        "bull": {"type": "integer", "minimum": 0, "maximum": 10},
+                                        "bear": {"type": "integer", "minimum": 0, "maximum": 10},
+                                        "bias": {"type": "string", "enum": ["BULLISH", "LEAN_BULLISH", "NEUTRAL", "LEAN_BEARISH", "BEARISH"]},
+                                        "summary": {"type": "string"}
+                                    }}
                                 }
                             },
                             "invariants": {"type": "array", "items": {"type": "string"}}
@@ -426,8 +437,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Score the prior issue honestly. Price-range misses must reduce price-range score even when structural anticipation was strong. "
         "For every id in previous_score_parameter_ids, emit exactly one parameter_scores row in the same order. Use SUPPORTED=100, MIXED=50, CONTRADICTED=0, NOT_EVALUABLE=null. Never silently omit a frozen parameter. "
         "For legacy prior issues without a machine freeze, score only what the exact archived publication and completed-week evidence support and mark LEGACY_BOUNDED. "
-        "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. From public CN #27 onward, Market / Structure v2 is mandatory: exactly five non-duplicative structural calls in this fixed order: REGIME_RESILIENCE, LEADERSHIP, ROTATION_TRANSMISSION, BREADTH_PERSISTENCE, FLOW_QUALITY_FRAGILITY. Populate market_structure_v2 with the same five forecasts and IDs. One dimension equals one vote; do not split one rotation thesis across multiple slots. FLOW_QUALITY_FRAGILITY must synthesize internal confirmation quality such as spot/microstructure, settled flows, breadth, sentiment and counterevidence when available, rather than restating a price chart. For every NEW Market / Structure v2 dimension, prospectively freeze expected_state plus expected_change (IMPROVE/STABLE/DETERIORATE/NO_EDGE), mutually distinct hit_if, mixed_if, miss_if resolution criteria, and evidence_required. Structural calls must synthesize framework evidence rather than merely restate one public chart; a visible ratio can be evidence but should not normally be the entire structural thesis. The public headline score requires all five dimensions evaluable; missing evidence produces no headline percentage, never a smaller denominator. When scoring a PRIOR v2 freeze that contains these criteria, follow them exactly and do not reinterpret them after observing outcomes. For the already-frozen CN27/W40 baseline, which predates criteria fields, score only the immutable forecast wording conservatively. "
-        "Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
+        "Never invent historical track-record values. Price Ranges remain the public precision-score family and their scoring semantics must not change. Market / Structure is analysis-only from public CN #27 onward: use exactly five fixed analytical headings in this order: REGIME_RESILIENCE, LEADERSHIP, ROTATION_TRANSMISSION, BREADTH_PERSISTENCE, FLOW_QUALITY_FRAGILITY. Populate forecast_freeze.market_structure_analysis with those five analyses and never emit or imply a public Market / Structure accuracy percentage. FLOW_QUALITY_FRAGILITY must synthesize internal confirmation quality such as spot/microstructure, settled flows, breadth, sentiment, relative strength and counterevidence when available rather than restating a chart. Also populate forecast_freeze.bull_bear_scale for 1-3d and 5-7d. For each horizon bull and bear are integers 0-10 that sum to 10; they represent evidence balance, not probability. The Bull/Bear scale must synthesize multi-factor Cycle Navigator evidence and be semantically consistent with decision_projection. Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
         "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
         "Populate decision_projection as the sole machine-readable directional/protection projection. It must be semantically equivalent to the narrative but never inferred by downstream keyword parsing. "
@@ -633,32 +643,38 @@ def main() -> None:
     calls = freeze.get("structural_calls")
     if not isinstance(calls, list) or len(calls) != 5 or any(not str(x or "").strip() for x in calls):
         raise SystemExit("market_structure_v2_requires_exactly_five_structural_calls")
-    ms2 = freeze.get("market_structure_v2")
-    if not isinstance(ms2, dict) or ms2.get("contract") != "CN_PUBLIC_MARKET_STRUCTURE_V2":
-        raise SystemExit("market_structure_v2_missing")
-    dims = ms2.get("dimensions")
+    msa = freeze.get("market_structure_analysis")
+    if not isinstance(msa, dict) or msa.get("contract") != "CN_PUBLIC_MARKET_STRUCTURE_ANALYSIS_v1":
+        raise SystemExit("market_structure_analysis_missing")
+    if msa.get("scoring_authority") is not False:
+        raise SystemExit("market_structure_analysis_must_not_score")
+    dims = msa.get("dimensions")
     expected_dim_ids = ["REGIME_RESILIENCE", "LEADERSHIP", "ROTATION_TRANSMISSION", "BREADTH_PERSISTENCE", "FLOW_QUALITY_FRAGILITY"]
     actual_dim_ids = [str(x.get("id")) for x in dims] if isinstance(dims, list) else []
     if actual_dim_ids != expected_dim_ids:
-        raise SystemExit("market_structure_v2_dimension_order_mismatch")
-    if [str(x.get("forecast")) for x in dims] != [str(x) for x in calls]:
-        raise SystemExit("market_structure_v2_forecast_mismatch")
-    if ms2.get("logic_version") != "2.1" or ms2.get("headline_requires_full_coverage") is not True:
-        raise SystemExit("market_structure_v2_scoring_logic_mismatch")
-    for dim in dims:
-        if not str(dim.get("expected_state") or "").strip():
-            raise SystemExit(f"market_structure_v2_expected_state_missing:{dim.get('id')}")
-        if dim.get("expected_change") not in {"IMPROVE", "STABLE", "DETERIORATE", "NO_EDGE"}:
-            raise SystemExit(f"market_structure_v2_expected_change_invalid:{dim.get('id')}")
-        for field in ("hit_if", "mixed_if", "miss_if"):
-            if not str(dim.get(field) or "").strip():
-                raise SystemExit(f"market_structure_v2_{field}_missing:{dim.get('id')}")
-        evidence_required = dim.get("evidence_required")
-        if not isinstance(evidence_required, list) or not evidence_required or any(not str(x or "").strip() for x in evidence_required):
-            raise SystemExit(f"market_structure_v2_evidence_required_missing:{dim.get('id')}")
-        criteria = {str(dim.get("hit_if")).strip().lower(), str(dim.get("mixed_if")).strip().lower(), str(dim.get("miss_if")).strip().lower()}
-        if len(criteria) != 3:
-            raise SystemExit(f"market_structure_v2_resolution_criteria_not_distinct:{dim.get('id')}")
+        raise SystemExit("market_structure_analysis_dimension_order_mismatch")
+    if not all(str(x.get("analysis") or "").strip() for x in dims):
+        raise SystemExit("market_structure_analysis_empty")
+
+    bb = freeze.get("bull_bear_scale")
+    if not isinstance(bb, dict) or bb.get("contract") != "CN_PUBLIC_BULL_BEAR_SCALE_v1":
+        raise SystemExit("bull_bear_scale_missing")
+    if bb.get("semantics") != "EVIDENCE_BALANCE_NOT_PROBABILITY":
+        raise SystemExit("bull_bear_scale_semantics_mismatch")
+    horizons = bb.get("horizons")
+    if not isinstance(horizons, dict):
+        raise SystemExit("bull_bear_scale_horizons_missing")
+    for horizon in ("1_3d", "5_7d"):
+        row = horizons.get(horizon)
+        if not isinstance(row, dict):
+            raise SystemExit(f"bull_bear_scale_{horizon}_missing")
+        bull, bear = row.get("bull"), row.get("bear")
+        if not isinstance(bull, int) or not isinstance(bear, int) or not (0 <= bull <= 10 and 0 <= bear <= 10):
+            raise SystemExit(f"bull_bear_scale_{horizon}_bounds")
+        if bull + bear != 10:
+            raise SystemExit(f"bull_bear_scale_{horizon}_must_sum_10")
+        if not str(row.get("summary") or "").strip():
+            raise SystemExit(f"bull_bear_scale_{horizon}_summary_missing")
     # Preserve bounds invariants when ranges are present.
     for asset in ("btc", "eth"):
         lo, hi = freeze.get(f"{asset}_range_low"), freeze.get(f"{asset}_range_high")
