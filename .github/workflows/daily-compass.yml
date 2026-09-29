@@ -80,8 +80,8 @@ jobs:
           import json
           d=json.load(open('/tmp/compass.json'))
           assert d['contract']=='OFFICIAL_DAILY_COMPASS_v1'
-          assert d['schema_version']==3
-          assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','CYCLE_ALTCOINS_3_8W'}
+          assert d['schema_version']==4
+          assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','NEXT_2_3W','CYCLE_ALTCOINS_3_8W'}
           alt=d['horizons']['CYCLE_ALTCOINS_3_8W']
           if alt['expected_direction']=='UNAVAILABLE':
               assert alt.get('warning') in {None, 'NONE'}
@@ -90,6 +90,12 @@ jobs:
           assert [r['segment'] for r in d['capitalization_ladder']]==['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES']
           meme=d['capitalization_ladder'][-1]
           assert meme['status']=='UNAVAILABLE' and meme['action']=='UNAVAILABLE' and meme['direction']=='UNAVAILABLE'
+          bb=d['bull_bear_scale']
+          assert bb['contract']=='OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1'
+          assert bb['semantics']=='EVIDENCE_BALANCE_NOT_PROBABILITY'
+          assert bb['authority']['new_market_classifier'] is False
+          assert bb['authority']['site_synthesis_allowed'] is False
+          assert set(bb['horizons'])=={'1_3d','5_7d','2_3w'}
           p=d['protection_tracker']
           assert p['contract']=='COMPASS_PROTECTION_TRACKER_v1'
           assert p['pullback_risk_state'] in {'NORMAL','BUILDING','ELEVATED','HIGH','CONFIRMED','UNAVAILABLE'}
@@ -182,6 +188,21 @@ jobs:
           assert p['protection_tracker']['contract']=='COMPASS_PROTECTION_TRACKER_v1'
           assert p['protection_tracker']['authority']['portfolio_execution'] is False
           assert p['protection_tracker']['authority']['wallet_specific'] is False
+          scale=p.get('bull_bear_scale')
+          assert scale and scale['contract']=='OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1'
+          assert scale['semantics']=='EVIDENCE_BALANCE_NOT_PROBABILITY'
+          assert scale['owner']=='OFFICIAL_COMPASS'
+          assert scale['authority']['site_synthesis_allowed'] is False
+          assert scale['authority']['new_market_classifier'] is False
+          assert scale['authority']['portfolio_execution'] is False
+          for key in ('1_3d','5_7d','2_3w'):
+              row=scale['horizons'][key]
+              if row['status']=='OK':
+                  assert isinstance(row['bull'], int) and isinstance(row['bear'], int)
+                  assert 0 <= row['bull'] <= 10 and 0 <= row['bear'] <= 10
+                  assert row['bull'] + row['bear'] == 10
+              else:
+                  assert row['bull'] is None and row['bear'] is None
           assert p['sell_assessment']['contract']=='COMPASS_SELL_ASSESSMENT_v1'
           assert p['sell_assessment']['authority']['portfolio_execution'] is False
           assert p['sell_assessment']['authority']['protection_is_sell_authority'] is False
