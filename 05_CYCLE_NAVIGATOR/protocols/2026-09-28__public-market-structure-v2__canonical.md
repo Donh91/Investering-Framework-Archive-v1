@@ -1,53 +1,134 @@
-# Cycle Navigator Public Market / Structure v2
+# Cycle Navigator Public Market / Structure v2.1
 
-Status: ACTIVE_FROM_PUBLIC_CN27
+Status: ACTIVE_LONG_TERM_FROM_PUBLIC_CN27
 Effective forecast week: 2026-W40
+Full v2.1 freeze semantics effective: next newly generated public issue after CN27
 Authority: PUBLIC_FORECAST_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY
 
 ## Purpose
 
-Market / Structure measures *how the market develops structurally* and remains separate from Price Range precision.
+Market / Structure answers a different question from Price Ranges:
 
-CN #26 closes the legacy structure method. Historical scores are not rewritten. The first fully comparable v2 outcome score is CN #27 after W40 completes.
+- **Price Ranges:** where did BTC/ETH trade?
+- **Market / Structure:** what market state, leadership quality, capital transmission, rotation depth and confirmation quality actually developed?
 
-## Five permanent dimensions
+The public score must represent CN's forward-looking structural edge, not facts a reader can obtain from a single price chart.
 
-Every weekly public issue freezes exactly one forecast in each slot:
+CN #26 closes the legacy structure method. Historical scores are never retroactively rewritten. CN #27/W40 is the first five-slot baseline; its already-published calls remain immutable.
 
-1. **REGIME** - market regime / breakdown state.
-2. **LEADERSHIP** - ETH/BTC relative leadership.
-3. **FIRST_HANDOFF** - transmission from ETH/leadership into large caps.
-4. **DEEPER_TRANSMISSION** - transmission into midcaps, small caps and microcaps.
-5. **BREADTH_PERSISTENCE** - breadth persistence / broad-altseason confirmation.
+## Five permanent public slots
 
-The slots are intentionally distinct. Do not duplicate one rotation thesis across multiple dimensions.
+Every weekly CN uses the same five slots, in the same order:
+
+1. **REGIME** - integrity and direction of the market regime.
+2. **LEADERSHIP** - quality and persistence of relative leadership, not one ratio in isolation.
+3. **FIRST HANDOFF** - whether leadership transmits into large caps / first broader risk layer.
+4. **DEEPER TRANSMISSION** - how far rotation reaches through mid, small and micro caps.
+5. **BREADTH + PERSISTENCE** - whether participation is broad, durable and internally confirmed rather than a narrow or short-lived move.
+
+These are five different questions. One thesis may provide evidence to more than one slot, but it may never create more than one vote in the same slot or be duplicated as separate headline calls.
+
+## CN edge requirement
+
+A public structural call should be the output of evidence synthesis, not a restatement of one visible chart.
+
+Depending on availability and authority, evidence can include:
+- BTC/ETH price structure and volatility;
+- ETH/BTC relative strength and persistence;
+- breadth / participation proxies;
+- market-cap cohort transmission;
+- spot microstructure;
+- settled ETF / flow evidence;
+- sentiment and short-horizon return deterioration or improvement;
+- rotation-engine context and persistence;
+- other canonical Master Monday evidence.
+
+Internal inputs may remain internal. The public post shows the conclusion, forecast, actual and score - not every proprietary/internal signal.
+
+No single public chart or metric is automatically sufficient to score a dimension HIT unless that dimension's frozen resolution rule explicitly makes it sufficient.
+
+## Prospective freeze: STATE + CHANGE
+
+From the first newly generated issue after CN27, every dimension must prospectively freeze:
+
+- `forecast` - concise public-facing call;
+- `expected_state` - the state expected by weekly close;
+- `expected_change` - IMPROVE / STABLE / DETERIORATE / NO_EDGE versus the freeze-time state;
+- `hit_if` - exact conditions for 100;
+- `mixed_if` - exact conditions for 50;
+- `miss_if` - exact conditions for 0;
+- `evidence_required` - evidence families required for adjudication.
+
+This prevents an easy persistence forecast from scoring highly merely because a condition such as "no altseason yet" remained true.
 
 ## Scoring
 
-At the next weekly issue, each frozen dimension is evaluated against completed-week canonical evidence:
+Each slot receives exactly one outcome:
 
-- HIT = 100
-- MIXED = 50
-- MISS = 0
+- **HIT = 100**
+- **MIXED = 50**
+- **MISS = 0**
+- **NOT_EVALUABLE = null**
 
-Market / Structure v2 score = equal-weight mean of the five dimensions.
+The public Market / Structure score is:
 
-If evidence is genuinely insufficient, do not manufacture a score. Mark the dimension NOT_EVALUABLE and disclose coverage; do not silently turn missing evidence into HIT or MISS.
+`(REGIME + LEADERSHIP + FIRST_HANDOFF + DEEPER_TRANSMISSION + BREADTH_PERSISTENCE) / 5`
 
-## Public presentation
+but only when **all 5/5 dimensions are evaluable**.
 
-Completed week:
-- show Market / Structure v2 score;
-- show each dimension as Forecast -> Actual -> HIT/MIXED/MISS;
-- keep commentary compact.
+If coverage is below 5/5:
+- no headline percentage is published;
+- show coverage, e.g. `4/5 evaluable`;
+- do not shrink the denominator;
+- do not convert missing evidence into HIT, MIXED or MISS.
 
-Coming week:
-- show and prospectively freeze the five dimension forecasts again.
+No weighting changes are allowed week to week.
 
-Price Ranges are scored and displayed separately. No synthetic overall percentage combines Market / Structure with Price Ranges.
+## Score authority
+
+From CN #27 onward, only the five frozen Market / Structure dimensions are public headline score authority.
+
+The following may support evidence but do not become extra votes:
+- legacy machine `structural_score`;
+- `public_continuity_score`;
+- separate `ethbtc_condition`;
+- separate `breadth_condition`;
+- price-range scores;
+- internal shadow/research claims.
+
+Price Ranges and Market / Structure remain separate score families. No synthetic overall accuracy percentage is created.
+
+## Fixed weekly public format
+
+The public review must use the same compact point format every week:
+
+**MARKET / STRUCTURE: XX%**
+
+1. **REGIME** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+2. **LEADERSHIP** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+3. **FIRST HANDOFF** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+4. **DEEPER TRANSMISSION** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+5. **BREADTH + PERSISTENCE** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · score**
+
+Then immediately freeze the next week's same five slots.
+
+The section may be shortened for X, but slot identity, order and score semantics must remain unchanged.
+
+## Edge benchmark
+
+Because market structure is persistent, raw hit rate alone can overstate skill.
+
+Therefore v2.1 also freezes `expected_change`. This enables a future shadow benchmark against a naive persistence model that always predicts **STABLE / same state as last week**.
+
+After at least 8 fully evaluable v2.1 weeks:
+- compare CN structural score with persistence-baseline score;
+- measure directional-change hit rate separately;
+- do not claim structural edge from raw accuracy alone if CN does not beat persistence.
+
+The benchmark is diagnostic and does not alter the weekly public score.
 
 ## Migration
 
-CN #26/W39 structural score 60% is retained as a LEGACY score only. It is not used as a like-for-like v2 baseline.
-
-CN #27/W40 is the v2 baseline freeze. Its score will be first evaluated in the next public issue.
+- CN #26/W39: legacy 60%, retained only for history.
+- CN #27/W40: first immutable five-slot baseline, published before the v2.1 criteria extension; score its exact published calls conservatively.
+- Next newly generated issue onward: full v2.1 STATE + CHANGE + frozen resolution criteria.
