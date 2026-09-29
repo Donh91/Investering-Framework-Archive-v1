@@ -13,11 +13,11 @@
   },
   "scoring_contract": "CN_PUBLIC_CONTINUITY_v1",
   "structural_calls": [
-    "REGIME: W40 remains a volatile consolidation/retest regime and does not end in a confirmed market breakdown.",
-    "LEADERSHIP: ETH/BTC closes W40 at or below its weekly open.",
-    "FIRST_HANDOFF: Large-cap transmission remains selective or incomplete rather than becoming broad and persistent by the W40 close.",
-    "DEEPER_TRANSMISSION: Sustained transmission through midcaps into small caps and microcaps is not confirmed by the W40 close.",
-    "BREADTH_PERSISTENCE: Participation does not become confirmed broad altseason with persistent breadth by the W40 close."
+    "REGIME & RESILIENCE: W40 remains a volatile consolidation/retest regime; recovery structure survives without a confirmed market breakdown.",
+    "LEADERSHIP: ETH relative leadership remains unstable rather than establishing a durable weekly leadership advance versus BTC.",
+    "ROTATION / TRANSMISSION: Rotation remains concentrated in ETH/large caps; no sustained handoff into mid, small and micro caps is confirmed.",
+    "BREADTH & PERSISTENCE: Participation may broaden intermittently, but persistent broad-altseason breadth is not confirmed.",
+    "FLOW QUALITY / FRAGILITY: Price recovery remains stronger than underlying confirmation; breadth and spot/microstructure lag, while positive flow evidence provides counter-support."
   ],
   "market_structure_v2": {
     "contract": "CN_PUBLIC_MARKET_STRUCTURE_V2",
@@ -25,44 +25,99 @@
     "effective_from_public_issue": 27,
     "public_issue_number": 27,
     "forecast_week": "2026-W40",
+    "logic_version": "2.1",
+    "headline_requires_full_coverage": true,
     "scoring_rubric": {
       "HIT": 100,
       "MIXED": 50,
-      "MISS": 0
+      "MISS": 0,
+      "NOT_EVALUABLE": null
     },
-    "aggregate": "EQUAL_WEIGHT_MEAN_OF_FIVE_DIMENSIONS",
+    "aggregate": "EQUAL_WEIGHT_MEAN_REQUIRES_5_OF_5_EVALUABLE",
     "dimensions": [
       {
-        "id": "REGIME",
-        "label": "Market regime",
-        "forecast": "REGIME: W40 remains a volatile consolidation/retest regime and does not end in a confirmed market breakdown."
+        "id": "REGIME_RESILIENCE",
+        "label": "Regime & resilience",
+        "forecast": "W40 remains a volatile consolidation/retest regime; recovery structure survives without a confirmed market breakdown.",
+        "expected_state": "RECOVERY_CONSOLIDATION_INTACT",
+        "expected_change": "STABLE",
+        "hit_if": "Weekly evidence supports consolidation/retest with recovery structure intact and no confirmed breakdown.",
+        "mixed_if": "Recovery structure survives but regime evidence is materially conflicted or a deeper breakdown scare occurs without confirmed weekly breakdown.",
+        "miss_if": "The week resolves into a confirmed breakdown or a materially different regime than recovery/consolidation.",
+        "evidence_required": [
+          "BTC/ETH weekly structure",
+          "volatility/retest behavior",
+          "canonical regime evidence"
+        ]
       },
       {
         "id": "LEADERSHIP",
-        "label": "ETH/BTC leadership",
-        "forecast": "LEADERSHIP: ETH/BTC closes W40 at or below its weekly open."
+        "label": "Leadership",
+        "forecast": "ETH relative leadership remains unstable rather than establishing a durable weekly leadership advance versus BTC.",
+        "expected_state": "ETH_LEADERSHIP_UNSTABLE",
+        "expected_change": "STABLE",
+        "hit_if": "ETH/BTC and corroborating relative-strength evidence fail to establish durable ETH leadership through the week.",
+        "mixed_if": "ETH leadership improves materially but is not persistent/confirmed across the week.",
+        "miss_if": "ETH establishes durable, persistent relative leadership versus BTC with corroborating evidence.",
+        "evidence_required": [
+          "ETH/BTC weekly path",
+          "relative-strength persistence"
+        ]
       },
       {
-        "id": "FIRST_HANDOFF",
-        "label": "ETH to large-cap handoff",
-        "forecast": "FIRST_HANDOFF: Large-cap transmission remains selective or incomplete rather than becoming broad and persistent by the W40 close."
-      },
-      {
-        "id": "DEEPER_TRANSMISSION",
-        "label": "Mid/small/micro transmission",
-        "forecast": "DEEPER_TRANSMISSION: Sustained transmission through midcaps into small caps and microcaps is not confirmed by the W40 close."
+        "id": "ROTATION_TRANSMISSION",
+        "label": "Rotation / transmission",
+        "forecast": "Rotation remains concentrated in ETH/large caps; no sustained handoff into mid, small and micro caps is confirmed.",
+        "expected_state": "SELECTIVE_ROTATION",
+        "expected_change": "STABLE",
+        "hit_if": "Any rotation remains selective/large-cap concentrated and no durable handoff into lower market-cap cohorts is confirmed.",
+        "mixed_if": "Transmission reaches another cohort but is partial, short-lived or internally inconsistent.",
+        "miss_if": "A sustained multi-layer handoff into mid/small/micro cohorts is confirmed.",
+        "evidence_required": [
+          "market-cap cohort transmission",
+          "rotation-engine context",
+          "relative cohort participation"
+        ]
       },
       {
         "id": "BREADTH_PERSISTENCE",
-        "label": "Breadth and persistence",
-        "forecast": "BREADTH_PERSISTENCE: Participation does not become confirmed broad altseason with persistent breadth by the W40 close."
+        "label": "Breadth & persistence",
+        "forecast": "Participation may broaden intermittently, but persistent broad-altseason breadth is not confirmed.",
+        "expected_state": "SELECTIVE_BREADTH",
+        "expected_change": "STABLE",
+        "hit_if": "Breadth remains selective/intermittent and does not persist broadly enough for altseason confirmation.",
+        "mixed_if": "Breadth broadens materially but persistence or confirmation remains incomplete.",
+        "miss_if": "Broad participation becomes persistent and confirms broad altseason conditions.",
+        "evidence_required": [
+          "breadth/participation proxies",
+          "persistence across the week",
+          "altseason confirmation evidence"
+        ]
+      },
+      {
+        "id": "FLOW_QUALITY_FRAGILITY",
+        "label": "Flow quality / fragility",
+        "forecast": "Price recovery remains stronger than underlying confirmation; breadth and spot/microstructure lag, while positive flow evidence provides counter-support.",
+        "expected_state": "RECOVERY_FRAGILE_BUT_SUPPORTED",
+        "expected_change": "STABLE",
+        "hit_if": "Price/recovery holds better than internal breadth and spot/microstructure confirmation, with positive flow/counterevidence preventing a clean bearish structural break.",
+        "mixed_if": "Internal confirmation improves or deteriorates enough to weaken the fragile-recovery thesis, but evidence remains two-sided.",
+        "miss_if": "Underlying confirmation becomes decisively strong and broad, or flow/microstructure deteriorates into a confirmed bearish structural break.",
+        "evidence_required": [
+          "spot/microstructure",
+          "settled ETF/flow evidence",
+          "breadth",
+          "sentiment/short-horizon counterevidence"
+        ]
       }
     ],
     "invariants": [
-      "Five dimensions only.",
-      "One dimension, one vote; do not duplicate the same thesis across slots.",
-      "Score prospectively frozen wording only; no hindsight rewrite.",
-      "Market/Structure remains separate from Price Ranges."
+      "Five permanent dimensions only and always in the same order.",
+      "One dimension, one vote; correlated evidence never creates extra votes.",
+      "Resolution criteria are frozen before scoring and cannot move after outcomes are known.",
+      "Headline percentage requires 5/5 evaluable dimensions.",
+      "Market/Structure remains separate from Price Ranges.",
+      "Public calls synthesize canonical evidence; they are not single-chart observations."
     ]
   }
 }
