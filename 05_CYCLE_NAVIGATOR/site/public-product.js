@@ -95,7 +95,8 @@ function publicScores(record){
   const marketValues=separatedMarket?parseComponentScores(record.structure_display):[...parseComponentScores(record.intraday_display),...parseComponentScores(record.structure_display)];
   const market=mean(marketValues);
   const archived=Number.isFinite(record.overall)?Number(record.overall):null;
-  const mayDerive = record?.allow_derived_overall === true || !['AUTOMATED_CANONICAL','DUAL_TRACK_CANONICAL'].includes(String(record?.era||''));
+  const explicitDerive = record?.allow_derived_overall;
+  const mayDerive = explicitDerive === true || (explicitDerive == null && !['AUTOMATED_CANONICAL','DUAL_TRACK_CANONICAL','PRICE_PRECISION_PLUS_STRUCTURE_ANALYSIS'].includes(String(record?.era||'')));
   const weekly=archived??(mayDerive?mean([price,market].filter(Number.isFinite)):null);
   return{weekly,price,market,archived,derived:archived==null&&Number.isFinite(weekly)};
 }
