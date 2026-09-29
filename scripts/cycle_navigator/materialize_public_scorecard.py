@@ -224,27 +224,8 @@ def main() -> None:
     if frozen_claim_score is None:
         raise SystemExit("public_frozen_claim_precision_missing")
 
-    market_v2 = score_market_structure_v2(prior_freeze, machine_score)
-    if market_v2 is None:
-        market_score = machine_score.get("structural_score")
-        if market_score is None:
-            raise SystemExit("public_market_structure_score_missing")
-        components = [
-            row for row in (machine_score.get("parameter_scores") or [])
-            if str(row.get("parameter_id", "")).startswith("structural_call_")
-        ]
-        market_precision = {
-            "score": float(market_score),
-            "score_status": "FINAL_LEGACY",
-            "aggregation": "legacy_canonical_machine_structural_score_bound_to_public_series_binding",
-            "components": components,
-            "evidence_source": str((current_week_dir / "CYCLE_NAVIGATOR_SCORECARD.json").relative_to(root)),
-        }
-    else:
-        market_score = market_v2["score"]
-        market_precision = market_v2
-        market_precision["evidence_source_file"] = str((current_week_dir / "CYCLE_NAVIGATOR_SCORECARD.json").relative_to(root))
-        market_precision["forecast_freeze"] = str(prior_freeze_path.relative_to(root))
+    market_analysis = prior_freeze.get("market_structure_analysis")
+    market_analysis_status = "ANALYSIS_ONLY_NOT_SCORED" if isinstance(market_analysis, dict) else "LEGACY_OR_UNAVAILABLE"
 
     out = {
         "contract": "CN_PUBLIC_WEEKLY_SCORECARD_v1",
@@ -273,10 +254,11 @@ def main() -> None:
             "source": str((current_week_dir / "CYCLE_NAVIGATOR_SCORECARD.json").relative_to(root)),
             "note": "Official reproducible score across the frozen weekly claim set. It is not blended with price-range precision.",
         },
-        "market_structure_precision": market_precision,
+        "market_structure_precision": None,
+        "market_structure_status": market_analysis_status,
         "combined_score": None,
         "combined_score_status": "NOT_DEFINED",
-        "combined_score_reason": "Price-range and market/structure tracks remain separate unless a stable prospective aggregation contract exists.",
+        "combined_score_reason": "Price Range precision is the public score family. Market Structure is analysis-only; Bull/Bear is an evidence-balance forecast, not a precision score.",
         "lineage": {
             "public_series_key": f"PUBLIC_CN{public_issue}__{forecast_week}",
             "machine_issue_number": machine_issue,
@@ -293,7 +275,8 @@ def main() -> None:
         "forecast_week": forecast_week,
         "scorecard_path": str(target.relative_to(root)),
         "frozen_claim_score": float(frozen_claim_score),
-        "market_structure_score": float(market_score) if market_score is not None else None,
+        "market_structure_score": None,
+        "market_structure_status": market_analysis_status,
         "price_range_score": price_score,
         "combined_score": None,
         "status": "FINAL_DUAL_TRACK",
@@ -312,7 +295,7 @@ def main() -> None:
         if row is None:
             row = {"cn": public_issue, "evaluated_in": public_issue + 1}
             records.append(row)
-        row["era"] = "DUAL_TRACK_MARKET_STRUCTURE_V2" if market_v2 is not None else "DUAL_TRACK_CANONICAL"
+        row["era"] = "PRICE_PRECISION_PLUS_STRUCTURE_ANALYSIS"
         row["overall"] = None
         row["range_display"] = f"Combined {price_score:g} · BTC {asset_scores['BTC']:g} · ETH {asset_scores['ETH']:g}"
         row["intraday_display"] = (
@@ -320,17 +303,8 @@ def main() -> None:
             f"D3–4 {window_scores['day_3_4']:g} · "
             f"D5–7 {window_scores['day_5_7']:g}"
         )
-        if market_v2 is not None:
-            row["structure_method"] = "MARKET_STRUCTURE_V2"
-            if market_score is None:
-                row["structure_display"] = f"Market/Structure N/A · v2 · Coverage {market_v2['coverage_count']}/5"
-            else:
-                row["structure_display"] = f"Market/Structure {float(market_score):g} · v2 · Coverage 5/5"
-        else:
-            row["structure_display"] = (
-                f"Frozen claims {float(frozen_claim_score):g} · "
-                f"Market/Structure {float(market_score):g}"
-            )
+        row["structure_method"] = "ANALYSIS_ONLY_NOT_SCORED"
+        row["structure_display"] = "Analysis only · no public accuracy score"
         row["provenance"] = f"PUBLIC_CN{public_issue}_{forecast_week}_DUAL_TRACK_SCORECARD"
         row["allow_derived_overall"] = False
         records.sort(key=lambda r: int(r.get("cn", 0)))
@@ -341,7 +315,7 @@ def main() -> None:
         history["provenance_note"] = (
             "Recent dual-track records are resolved by public forecast week plus immutable publication lineage. "
             "Machine issue numbers are not public-series join keys during the September migration offset. "
-            "From CN27 onward Market/Structure is derived only from the five frozen v2 structural dimensions, with 5/5 evaluable coverage required for a headline score."
+            "From CN27 onward Market Structure is qualitative analysis only and carries no public accuracy score. Price Range precision remains the scored public forecast family."
         )
         write_json(history_path, history)
 
