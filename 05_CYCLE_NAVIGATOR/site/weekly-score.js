@@ -38,20 +38,13 @@
 
   function publicScoreCards(card) {
     const price = card?.price_range_precision || {};
-    const market = card?.market_structure_precision || {};
     const windows = price?.intraday_window_scores || {};
     const intraday = [
       numeric(windows.day_1_2) ? `D1–2 ${fmt(windows.day_1_2)}` : null,
       numeric(windows.day_3_4) ? `D3–4 ${fmt(windows.day_3_4)}` : null,
       numeric(windows.day_5_7) ? `D5–7 ${fmt(windows.day_5_7)}` : null
     ].filter(Boolean).join(' · ') || 'N/A';
-    const legacy = String(card?.status || '').includes('LEGACY_STRUCTURE');
     return `
-      <article class="cal-summary-card">
-        <span class="cal-summary-label">Market / Structure${legacy ? ' · legacy' : ''}</span>
-        <strong class="cal-summary-value">${fmt(market.score)}</strong>
-        <small class="cal-summary-note">${legacy ? 'CN #26 closes the pre-v2 method' : (market.score_status === 'INCOMPLETE_EVIDENCE' ? `v2 evidence coverage ${esc(market.coverage_count ?? 0)}/5 · no headline score` : 'Five-dimension v2 structural precision · 5/5')}</small>
-      </article>
       <article class="cal-summary-card">
         <span class="cal-summary-label">Price Ranges</span>
         <strong class="cal-summary-value">${fmt(price.score)}</strong>
@@ -64,28 +57,20 @@
       </article>`;
   }
 
-  function marketStructureRows(card) {
-    const market = card?.market_structure_precision || {};
-    const rows = Array.isArray(market.dimensions) ? market.dimensions : [];
-    if (!rows.length) return '';
-    return `
-      <div class="score-history" style="margin-top:1rem">
-        ${rows.map((row, index) => {
-          const valid = numeric(row.score);
-          const score = valid ? Math.max(0, Math.min(100, Number(row.score))) : null;
-          const status = String(row.status || 'NOT_EVALUABLE');
-          const label = String(row.label || row.dimension_id || `Dimension ${index + 1}`);
-          const actual = String(row.actual || row.evidence || 'Evidence unavailable');
-          return `<div class="score-row ${valid ? '' : 'na'}">
-            <div class="score-row-meta" style="max-width:none">
-              <strong>${index + 1}. ${esc(label)}</strong>
-              <small>Forecast: ${esc(row.forecast || '—')}<br>Actual: ${esc(actual)}<br>${esc(status)}</small>
-            </div>
-            <div class="score-track" aria-label="${valid ? `Score ${score}%` : 'Not evaluable'}">${valid ? `<div class="score-fill" style="--score-width:${score}%"></div>` : ''}</div>
-            <div class="score-row-value">${valid ? fmt(score) : 'N/A'}</div>
-          </div>`;
-        }).join('')}
-      </div>`;
+  function bullBearCards(snapshot) {
+    const scale = snapshot?.public_bull_bear_scale;
+    const horizons = scale?.horizons || {};
+    const card = (key, label) => {
+      const row = horizons[key] || {};
+      if (!numeric(row.bull) || !numeric(row.bear)) return '';
+      return `
+        <article class="cal-summary-card">
+          <span class="cal-summary-label">${esc(label)} · BULL / BEAR</span>
+          <strong class="cal-summary-value" style="font-size:1.15rem">BULL ${esc(row.bull)}/10 · BEAR ${esc(row.bear)}/10</strong>
+          <small class="cal-summary-note">${esc(String(row.bias || '').replaceAll('_',' '))} · evidence balance, not probability</small>
+        </article>`;
+    };
+    return card('1_3d','1–3 DAYS') + card('5_7d','5–7 DAYS');
   }
 
   function rangeScoreCards(range) {
@@ -119,18 +104,12 @@
   }
 
   function scoreCards(bundle) {
-    const rows = [
-      ['Structural', bundle.structural_score],
-      ['Price ranges', bundle.price_range_score],
-      ['Decision utility', bundle.decision_utility_score],
-      ['Public continuity', bundle.public_continuity_score]
-    ];
-    return rows.map(([label, value]) => `
+    return `
       <article class="cal-summary-card">
-        <span class="cal-summary-label">${esc(label)}</span>
-        <strong class="cal-summary-value">${fmt(value)}</strong>
-        <small class="cal-summary-note">${numeric(value) ? 'Verified weekly score' : 'Not scored / unavailable'}</small>
-      </article>`).join('');
+        <span class="cal-summary-label">Price ranges</span>
+        <strong class="cal-summary-value">${fmt(bundle?.price_range_score)}</strong>
+        <small class="cal-summary-note">${numeric(bundle?.price_range_score) ? 'Verified weekly price score' : 'Not scored / unavailable'}</small>
+      </article>`;
   }
 
   function parameterRows(bundle) {
@@ -160,7 +139,7 @@
     const section = document.createElement('section');
     section.id = 'weeklyCanonicalScorecard';
     section.className = 'section-block';
-    section.setAttribute('aria-label', 'Weekly verified Cycle Navigator scorecard');
+    section.setAttribute('aria-label', 'Cycle Navigator price precision and Bull Bear outlook');
 
     if (publicCard) {
       const publicIssue = publicCard.public_issue_number ?? '—';
@@ -175,8 +154,7 @@
             </div>
             <span class="cal-method-badge">${esc(publicCard.status || 'FINAL')}</span>
           </div>
-          <div class="cal-summary-grid">${publicScoreCards(publicCard)}</div>
-          ${marketStructureRows(publicCard)}
+          <div class="cal-summary-grid">${publicScoreCards(publicCard)}${bullBearCards(snapshot)}</div>
         </div>`;
     } else {
       const canonicalPanel = bundle ? `
