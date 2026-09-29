@@ -304,7 +304,7 @@ def main() -> None:
             f"D5–7 {window_scores['day_5_7']:g}"
         )
         row["structure_method"] = "ANALYSIS_ONLY_NOT_SCORED"
-        row["structure_display"] = "Analysis only · no public accuracy score"
+        row["structure_display"] = None
         row["provenance"] = f"PUBLIC_CN{public_issue}_{forecast_week}_DUAL_TRACK_SCORECARD"
         row["allow_derived_overall"] = False
         records.sort(key=lambda r: int(r.get("cn", 0)))
