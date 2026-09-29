@@ -84,20 +84,33 @@ Public precision must continue using the established public scoring family. Inte
 
 ### Repeatable Market / Structure score
 
-The public Market / Structure score must be auditable and repeatable:
+Binding method: `2026-09-28__public-market-structure-v2__canonical.md`.
 
-- exactly five concise, falsifiable market/structure calls are prospectively frozen for the coming week;
-- in the following issue, show each prior call as **Forecast -> Actual**;
-- score each call **HIT=100 / MIXED=50 / MISS=0**;
-- publish the equal-weight mean as the Market / Structure precision score;
-- immediately freeze the next five calls in the same public post for evaluation one week later;
-- keep the concepts stable enough for week-over-week comparison and never rewrite prior calls after outcomes are known.
+Use exactly five fixed, equal-weight dimensions in the same order every week:
 
-From CN #27 onward the five fixed dimensions are, in order: **REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE**. Each dimension gets one equal-weight vote. Do not duplicate a single rotation thesis across multiple slots.
+`REGIME | LEADERSHIP | FIRST_HANDOFF | DEEPER_TRANSMISSION | BREADTH_PERSISTENCE`
 
-CN #26's 60% is retained as a legacy pre-v2 structure score. It closes the old method and is not a like-for-like baseline for v2. CN #27/W40 is the first prospective v2 freeze.
+For the completed week, show each dimension as **Forecast -> Actual -> HIT/MIXED/MISS -> score**.
 
-**Market / Structure and Price Ranges are separate score families. Do not blend them into one overall precision percentage.**
+Scoring:
+- HIT = 100
+- MIXED = 50
+- MISS = 0
+- NOT_EVALUABLE = null
+
+A headline percentage requires **5/5 evaluable dimensions**. Missing evidence never reduces the denominator and never becomes a synthetic score.
+
+From the first newly generated issue after CN27, every dimension must prospectively freeze:
+- expected state;
+- expected change versus current state;
+- HIT / MIXED / MISS criteria;
+- required evidence families.
+
+The five public slots are synthesis outputs. Single-chart observations may be evidence but must not automatically replace the broader structural judgment.
+
+CN #26's 60% remains legacy. CN #27/W40 remains immutable as the first five-slot baseline and is scored from its exact published wording.
+
+**Market / Structure and Price Ranges remain separate score families. No synthetic overall precision percentage is allowed.**
 
 ### All other sections
 
