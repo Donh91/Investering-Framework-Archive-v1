@@ -15,7 +15,7 @@ const checks=[
  ['live score fail-closed',product.includes('Waiting for evidence')&&product.includes('No percentage is shown until at least one call is genuinely scoreable.')&&liveWidget.includes("live.provisional_score !== null")],
  ['latest completed precision uses public forecast lineage',weeklyWidget.includes('Latest completed public precision')&&weeklyWidget.includes('public_scorecard')&&weeklyWidget.includes('migration-era machine issue number alone')],
  ['new scoring is price only',weeklyWidget.includes('Price Ranges')&&!weeklyWidget.includes('cal-summary-label">Market / Structure')],
- ['Bull Bear horizons reach score widget',build.includes('public_bull_bear_scale')&&weeklyWidget.includes('1–3 DAYS')&&weeklyWidget.includes('5–7 DAYS')&&weeklyWidget.includes('BULL / BEAR')],
+ ['weekly precision stays price-only',build.includes('public_bull_bear_scale')&&weeklyWidget.includes('Price Ranges')&&!weeklyWidget.includes('BULL / BEAR')],
  ['prospective range bridge reaches homepage',app.includes('snapshot?.prospective_range')&&app.includes('website_consume')&&app.includes('prospective continuity baseline')],
  ['all issue weekly rollup',product.includes('publicScores')&&product.includes('mayDerive')&&product.includes('component rollup')],
  ['explicit no-derived-overall respected',product.includes('explicitDerive')&&h.records?.find(r=>r.cn===25)?.allow_derived_overall===false],
