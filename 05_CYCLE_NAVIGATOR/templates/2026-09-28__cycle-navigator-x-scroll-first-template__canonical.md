@@ -156,14 +156,40 @@ Then summarize the main structural hit/miss in 1-2 compact sentences.
 
 ## Repeatable market/structure scoring loop
 
-The public X post must contain both halves of the loop:
+The public X post must contain both halves of the same five-slot loop:
 
-1. **Completed week:** prior frozen market/structure calls -> actual outcomes -> HIT/MIXED/MISS -> aggregate Market / Structure score.
-2. **Coming week:** exactly five concise, falsifiable market/structure calls frozen prospectively for next week's evaluation.
+1. **Completed week:** show each frozen dimension as **Forecast -> Actual -> HIT/MIXED/MISS -> score**.
+2. **Coming week:** freeze the same five dimensions again for next week's evaluation.
 
-The five fixed dimensions from CN #27 onward are, in order: **REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE**. Wording may adapt prospectively to current evidence, but the dimension identity, equal weighting and scoring semantics must not drift retrospectively.
+The permanent order is:
 
-Migration rule: CN #26's 60% closes the legacy structure method. In CN #27, summarize that legacy score briefly rather than expanding it into a pseudo-v2 breakdown. CN #27/W40 is the first v2 prospective freeze; its first comparable score appears in the following issue.
+1. **REGIME**
+2. **LEADERSHIP**
+3. **FIRST HANDOFF**
+4. **DEEPER TRANSMISSION**
+5. **BREADTH + PERSISTENCE**
+
+Each dimension is one equal-weight vote and must answer a different structural question.
+
+From the first newly generated issue after CN27, each dimension also freezes:
+- expected state;
+- expected change versus the freeze-time state: IMPROVE / STABLE / DETERIORATE / NO_EDGE;
+- prospective HIT / MIXED / MISS criteria;
+- required evidence families.
+
+A headline Market / Structure percentage requires **5/5 evaluable dimensions**. If evidence coverage is below 5/5, publish coverage and no percentage. Never shrink the denominator.
+
+The structural call should synthesize canonical framework evidence. A visible price chart or single ratio may support a call, but must not automatically become the whole thesis when broader evidence exists.
+
+Use this fixed public review format:
+
+1. **REGIME** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · [score]**
+2. **LEADERSHIP** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · [score]**
+3. **FIRST HANDOFF** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · [score]**
+4. **DEEPER TRANSMISSION** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · [score]**
+5. **BREADTH + PERSISTENCE** - Forecast: [call] -> Actual: [outcome] -> **HIT/MIXED/MISS · [score]**
+
+Migration rule: CN #26's 60% closes the legacy structure method. CN #27/W40 remains the immutable first five-slot baseline and is scored from its exact published wording. Full v2.1 STATE + CHANGE freeze semantics apply to the first newly generated issue after CN27 and thereafter.
 
 Price-range precision remains a separate score family and must never be blended into Market / Structure.
 
