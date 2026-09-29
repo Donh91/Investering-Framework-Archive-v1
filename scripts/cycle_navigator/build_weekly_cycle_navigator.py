@@ -317,11 +317,13 @@ def output_schema() -> dict[str, Any]:
                                 "type": "array", "minItems": 5, "maxItems": 5,
                                 "items": {
                                     "type": "object", "additionalProperties": False,
-                                    "required": ["id", "label", "forecast", "hit_if", "mixed_if", "miss_if", "evidence_required"],
+                                    "required": ["id", "label", "forecast", "expected_state", "expected_change", "hit_if", "mixed_if", "miss_if", "evidence_required"],
                                     "properties": {
                                         "id": {"type": "string", "enum": ["REGIME", "LEADERSHIP", "FIRST_HANDOFF", "DEEPER_TRANSMISSION", "BREADTH_PERSISTENCE"]},
                                         "label": {"type": "string"},
                                         "forecast": {"type": "string"},
+                                        "expected_state": {"type": "string"},
+                                        "expected_change": {"type": "string", "enum": ["IMPROVE", "STABLE", "DETERIORATE", "NO_EDGE"]},
                                         "hit_if": {"type": "string"},
                                         "mixed_if": {"type": "string"},
                                         "miss_if": {"type": "string"},
@@ -424,7 +426,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Score the prior issue honestly. Price-range misses must reduce price-range score even when structural anticipation was strong. "
         "For every id in previous_score_parameter_ids, emit exactly one parameter_scores row in the same order. Use SUPPORTED=100, MIXED=50, CONTRADICTED=0, NOT_EVALUABLE=null. Never silently omit a frozen parameter. "
         "For legacy prior issues without a machine freeze, score only what the exact archived publication and completed-week evidence support and mark LEGACY_BOUNDED. "
-        "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. From public CN #27 onward, Market / Structure v2 is mandatory: exactly five non-duplicative structural calls in this fixed order: REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE. Populate market_structure_v2 with the same five forecasts and IDs. One dimension equals one vote; do not split one rotation thesis across multiple slots. For every NEW Market / Structure v2 dimension, prospectively freeze mutually distinct hit_if, mixed_if, miss_if resolution criteria plus evidence_required. The public headline score requires all five dimensions evaluable; missing evidence produces no headline percentage, never a smaller denominator. When scoring a PRIOR v2 freeze that contains these criteria, follow them exactly and do not reinterpret them after observing outcomes. For the already-frozen CN27/W40 baseline, which predates criteria fields, score only the immutable forecast wording conservatively. "
+        "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. From public CN #27 onward, Market / Structure v2 is mandatory: exactly five non-duplicative structural calls in this fixed order: REGIME, LEADERSHIP, FIRST_HANDOFF, DEEPER_TRANSMISSION, BREADTH_PERSISTENCE. Populate market_structure_v2 with the same five forecasts and IDs. One dimension equals one vote; do not split one rotation thesis across multiple slots. For every NEW Market / Structure v2 dimension, prospectively freeze expected_state plus expected_change (IMPROVE/STABLE/DETERIORATE/NO_EDGE), mutually distinct hit_if, mixed_if, miss_if resolution criteria, and evidence_required. Structural calls must synthesize framework evidence rather than merely restate one public chart; a visible ratio can be evidence but should not normally be the entire structural thesis. The public headline score requires all five dimensions evaluable; missing evidence produces no headline percentage, never a smaller denominator. When scoring a PRIOR v2 freeze that contains these criteria, follow them exactly and do not reinterpret them after observing outcomes. For the already-frozen CN27/W40 baseline, which predates criteria fields, score only the immutable forecast wording conservatively. "
         "Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
         "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
@@ -644,6 +646,10 @@ def main() -> None:
     if ms2.get("logic_version") != "2.1" or ms2.get("headline_requires_full_coverage") is not True:
         raise SystemExit("market_structure_v2_scoring_logic_mismatch")
     for dim in dims:
+        if not str(dim.get("expected_state") or "").strip():
+            raise SystemExit(f"market_structure_v2_expected_state_missing:{dim.get('id')}")
+        if dim.get("expected_change") not in {"IMPROVE", "STABLE", "DETERIORATE", "NO_EDGE"}:
+            raise SystemExit(f"market_structure_v2_expected_change_invalid:{dim.get('id')}")
         for field in ("hit_if", "mixed_if", "miss_if"):
             if not str(dim.get(field) or "").strip():
                 raise SystemExit(f"market_structure_v2_{field}_missing:{dim.get('id')}")
