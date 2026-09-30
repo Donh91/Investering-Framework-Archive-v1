@@ -1360,7 +1360,7 @@ def build_official_compass(
         "next_meaningful_change_eta": next_eta,
         "conclusion": conclusion,
         "outcome_maturity": {"12h": "PENDING_MATURITY", "72h": "PENDING_MATURITY", "168h": "PENDING_MATURITY"},
-        "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v1",
+        "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v2",
         "authority": OFFICIAL_AUTHORITY,
     }
     packet["compass_sha256"] = digest(canon({k: v for k, v in packet.items() if k != "compass_sha256"}))
