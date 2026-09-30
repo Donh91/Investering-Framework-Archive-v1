@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    ".github/workflows/automation-production-health.yml",
+    "research/architecture_health/GITHUB_ACTIONS_USAGE_SNAPSHOT.json",
+    "scripts/health/build_actions_budget_guard.py",
+    "tests/health/test_actions_budget_guard.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-6faf128094b8b10d",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* health: carry Actions budget guard build_actions_budget_guard.py * health: carry Actions budget guard test_actions_budget_guard.py * health: carry Actions budget guard GITHUB_ACTIONS_USAGE_SNAPSHOT.json * health: integrate Actions budget guard in automation-production-health.yml * health: integrate Actions budget guard in automation-production-health-gate.yml",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "a081927cae6daaaccaad793a3b33d24053c65bdd",
+    ".github/workflows/automation-production-health.yml": "51ee6a7c9fe4dbdbfbe831e2bfd4f78701a1a3f7",
+    "research/architecture_health/GITHUB_ACTIONS_USAGE_SNAPSHOT.json": "c7e7c9031b8172e5b980a1fcf298cea09b54af12",
+    "scripts/health/build_actions_budget_guard.py": "ae85f4786801b91a5933b711ca88c8e12a3bc459",
+    "tests/health/test_actions_budget_guard.py": "cd9f36d8858714d836c7d613f2166ecab3361a8f"
+  },
+  "source_commit_sha": "6faf128094b8b10dd340b2ac62f1f4c7e9cc7baa",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-30T15:46:20+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Health: add fail-safe GitHub Actions budget guard (fresh main) (#1385)"
+}

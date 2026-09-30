@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-compass.yml",
+    "scripts/data_ping/auto_market_state.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "tests/data_ping/test_auto_market_state_integrity.py",
+    "tests/data_ping/test_official_daily_compass.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-5d8a8b89b87db3d0",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Packet A: preserve derivative timing and select freshest breadth context * Packet A: fix Compass evidence mappings, timestamps and missingness integrity * Packet A tests: assert evidence mappings, timestamps and fail-closed missingness * Packet A tests: freshest breadth and source-timing normalization * Packet A CI: validate Auto Market State integrity with Compass",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-compass.yml": "dbe15400501740dcc9d28e70daa811b2372affdb",
+    "scripts/data_ping/auto_market_state.py": "0fb5b96a801ad948b1819d0038b0249ad8eef16a",
+    "scripts/data_ping/native_handlekompas.py": "5b5366867b0df49ec32c662bf2b1b7bd0508c168",
+    "tests/data_ping/test_auto_market_state_integrity.py": "774c6b4f6f081aaaf2e5e464be3e62af27fb4377",
+    "tests/data_ping/test_official_daily_compass.py": "dee3b7f317157164b1f3888872093b740b93a0bc"
+  },
+  "source_commit_sha": "5d8a8b89b87db3d050ac31f2a08054b5be302d00",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-30T21:58:12+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Compass v2 Packet A: data integrity and freshness"
+}
