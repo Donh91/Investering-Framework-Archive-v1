@@ -457,6 +457,28 @@ def record_superseded(root, previous, incoming):
         path.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n")
 
 
+def record_displaced(root, previous, incoming):
+    digest = lambda obj: hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    receipt = {
+        "contract": "SITUATION_ROOM_DISPLACED_RECORD_v1",
+        "observation_date_utc": incoming["observation_date_utc"],
+        "displaced_run_id": previous.get("run_id"),
+        "replacement_run_id": incoming.get("run_id"),
+        "displaced_sha256": digest(previous),
+        "replacement_sha256": digest(incoming),
+        "replacement_static_owner": is_static_dated_owner(incoming),
+        "reason": (
+            "AUTHORITATIVE_STATIC_OWNER_SUPERSEDED_GENERIC"
+            if is_static_dated_owner(incoming) and not is_static_dated_owner(previous)
+            else "LATER_AUTHORITATIVE_RECORD_SUPERSEDED_PRIOR"
+        ),
+    }
+    path = root / "superseded" / (digest(receipt) + ".json")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n")
+
+
 def write_outputs(root: Path, result: dict) -> dict:
     date_utc = result["observation_date_utc"]
     year, month, _ = date_utc.split("-")
@@ -473,6 +495,8 @@ def write_outputs(root: Path, result: dict) -> dict:
                 "rejected_run_id": result.get("run_id"),
                 "authoritative_static_owner": is_static_dated_owner(previous),
             }  # Neither pointer nor event ledger may consume the rejected attempt.
+        if previous != result:
+            record_displaced(root, previous, result)
     dated.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n")
     root.mkdir(parents=True, exist_ok=True)
     latest = {
