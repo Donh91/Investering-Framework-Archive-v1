@@ -5,6 +5,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from scripts.learning.shadow_compass_v2 import (
+    MODEL_DEFAULT,
+    TASK_ID,
+    build_cost_receipt,
+    governed_task_config,
     FORECAST_CONTRACT,
     INPUT_CONTRACT,
     MODEL_OUTPUT_CONTRACT,
@@ -141,6 +145,44 @@ class ShadowCompassV2Tests(unittest.TestCase):
         broken["horizons"]["12h"]["falsification_conditions"] = []
         with self.assertRaisesRegex(ValueError, "falsification_missing"):
             validate_model_output(broken)
+
+    def test_shadow_task_is_registered_and_model_is_hard_pinned(self):
+        cfg = governed_task_config(Path("research/api_agent/API_TASK_REGISTRY_v1.json"))
+        self.assertEqual(TASK_ID, "SHADOW_COMPASS_V2")
+        self.assertEqual(MODEL_DEFAULT, "gpt-6.1-sol")
+        self.assertEqual(cfg["model"], MODEL_DEFAULT)
+        self.assertEqual(cfg["reasoning_effort"], "high")
+        self.assertEqual(cfg["max_output_tokens"], 4500)
+        self.assertEqual(
+            cfg["allowed_write_prefix"],
+            "research/api_agent/outputs/shadow_compass_v2/",
+        )
+
+    def test_standard_cost_receipt_is_budget_accountable_and_zero_authority(self):
+        input_value = self.input_value()
+        model_output = self.model_output()
+        raw = {
+            "id": "resp-test",
+            "usage": {"input_tokens": 10000, "output_tokens": 1000, "total_tokens": 11000},
+        }
+        forecast = build_forecast(input_value, model_output, raw, model=MODEL_DEFAULT)
+        cfg = governed_task_config(Path("research/api_agent/API_TASK_REGISTRY_v1.json"))
+        receipt = build_cost_receipt(
+            input_value,
+            forecast,
+            raw,
+            model=MODEL_DEFAULT,
+            task_cfg=cfg,
+        )
+        self.assertEqual(receipt["contract"], "API_AGENT_RECEIPT_v3")
+        self.assertEqual(receipt["task"], "SHADOW_COMPASS_V2")
+        self.assertEqual(receipt["model"], "gpt-6.1-sol")
+        self.assertEqual(receipt["input_tokens"], 10000)
+        self.assertEqual(receipt["output_tokens"], 1000)
+        self.assertAlmostEqual(receipt["estimated_cost_usd"], 0.03)
+        self.assertFalse(receipt["authority"]["portfolio_action"])
+        self.assertFalse(receipt["authority"]["official_compass_override"])
+        self.assertFalse(receipt["authority"]["automatic_promotion"])
 
     def test_forecast_remains_shadow_only_with_zero_execution_authority(self):
         input_value = self.input_value()
