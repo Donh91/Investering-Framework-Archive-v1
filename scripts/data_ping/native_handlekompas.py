@@ -347,6 +347,8 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
     freshness = owner_freshness(auto_state, generated)
     source_validation = str(auto_state.get("validation_status") or "UNKNOWN")
     effective_data_status = source_validation if freshness.get("status") == "PASS" else "DEGRADED"
+    native_action = action_context(auto_state, as_of=generated)
+    market_direction = derive_market_now(auto_state, native_action, as_of=generated)
     packet = {
         "contract": CONTRACT,
         "generated_at_utc": generated.isoformat().replace("+00:00", "Z"),
@@ -358,7 +360,8 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
             "validation_status": auto_state.get("validation_status"),
             "decision_context_status": auto_state.get("decision_context_status"),
         },
-        "action": action_context(auto_state, as_of=generated),
+        "action": native_action,
+        "market_direction": market_direction,
         "DATA_HEALTH": {
             "status": effective_data_status,
             "source_validation_status": auto_state.get("validation_status"),
@@ -607,27 +610,65 @@ def _health_ok(auto_state: Mapping[str, Any], as_of: datetime | None = None) -> 
 
 
 def derive_market_now(auto_state: Mapping[str, Any], action: Mapping[str, Any], *, as_of: datetime | None = None) -> dict[str, Any]:
-    if not _health_ok(auto_state, as_of):
-        return {"directional_state": "UNAVAILABLE", "regime": "DATA_DEGRADED", "summary": "Current market direction is unavailable because required state is degraded."}
+    """Describe current market direction independently from action permission.
+
+    Direction answers what the observed market is doing. Action permission answers
+    what the governed portfolio layer is allowed to do. A bearish market may still
+    map to HOLD; a bullish market may still map to WAIT/HOLD.
+    """
     posture = str(action.get("NOW") or "HOLD_WAIT")
+    if not _health_ok(auto_state, as_of):
+        return {
+            "directional_state": "UNAVAILABLE",
+            "regime": posture,
+            "action_permission": posture,
+            "btc_delta_pct": _delta_pct(auto_state, "btc_usdt"),
+            "eth_delta_pct": _delta_pct(auto_state, "eth_usdt"),
+            "ethbtc_delta_pct": _delta_pct(auto_state, "ethbtc"),
+            "eth_relative_state": "UNAVAILABLE",
+            "summary": "Current market direction is unavailable because required state is degraded.",
+        }
+
     btc = _delta_pct(auto_state, "btc_usdt")
     eth = _delta_pct(auto_state, "eth_usdt")
     ethbtc = _delta_pct(auto_state, "ethbtc")
-    if posture == "GRADUATED_TOPUP_ACTIVE":
+
+    if btc is None or eth is None:
+        direction = "MIXED"
+    elif btc > 0 and eth > 0:
         direction = "BULLISH"
-    elif posture == "PREPARE":
-        direction = "BULLISH" if btc is not None and ethbtc is not None and btc >= 0 and ethbtc >= 0 else "MIXED"
-    elif posture == "HOLD_DEFENSIVE_WAIT":
-        direction = "BEARISH" if btc is not None and eth is not None and btc < 0 and eth < 0 else "MIXED"
+    elif btc < 0 and eth < 0:
+        direction = "BEARISH"
+    elif btc == 0 and eth == 0:
+        direction = "NEUTRAL"
     else:
-        direction = "NEUTRAL" if btc is not None and eth is not None and btc * eth >= 0 else "MIXED"
+        direction = "MIXED"
+
+    if ethbtc is None:
+        relative = "UNAVAILABLE"
+    elif ethbtc > 0:
+        relative = "STRENGTHENING"
+    elif ethbtc < 0:
+        relative = "WEAKENING"
+    else:
+        relative = "FLAT"
+
     summary_map = {
-        "BULLISH": "Market state is constructive, but deployment still depends on the existing confirmation gate.",
-        "BEARISH": "Canonical protection evidence is negative and favors capital preservation.",
-        "NEUTRAL": "Market is balanced enough that waiting for confirmation has more edge than forcing direction.",
-        "MIXED": "Market signals conflict; near-term navigation stays selective and confirmation-driven.",
+        "BULLISH": "BTC and ETH are both advancing over the latest governed comparison interval; action authority remains separate.",
+        "BEARISH": "BTC and ETH are both declining over the latest governed comparison interval; this does not create sell authority.",
+        "NEUTRAL": "BTC and ETH are unchanged over the latest governed comparison interval.",
+        "MIXED": "BTC/ETH direction is conflicting or incomplete; action authority remains separate.",
     }
-    return {"directional_state": direction, "regime": posture, "summary": summary_map[direction]}
+    return {
+        "directional_state": direction,
+        "regime": posture,
+        "action_permission": posture,
+        "btc_delta_pct": btc,
+        "eth_delta_pct": eth,
+        "ethbtc_delta_pct": ethbtc,
+        "eth_relative_state": relative,
+        "summary": summary_map[direction],
+    }
 
 
 def _cn_decision_projection(cn_package: Mapping[str, Any] | None) -> Mapping[str, Any]:
@@ -998,21 +1039,27 @@ def horizon_map(
     d23_source = _cn_direction(cn_package, "next_2_3w")
     s23_source = _cn_projection_summary(cn_package, "next_2_3w")
 
+    direction_map = {
+        "BULLISH": "UP",
+        "BEARISH": "DOWN",
+        "NEUTRAL": "SIDEWAYS",
+        "MIXED": "MIXED",
+        "UNAVAILABLE": "UNAVAILABLE",
+    }
+    d12 = direction_map.get(current, "MIXED")
     if posture == "GRADUATED_TOPUP_ACTIVE":
-        d12, a12 = "UP", "DEPLOY"
+        a12 = "DEPLOY"
     elif posture == "PREPARE":
-        d12, a12 = ("UP" if current == "BULLISH" else "MIXED"), "PREPARE"
-    elif posture == "HOLD_DEFENSIVE_WAIT":
-        d12, a12 = ("DOWN" if current == "BEARISH" else "MIXED"), "HOLD"
+        a12 = "PREPARE"
     else:
-        d12, a12 = "SIDEWAYS", "HOLD"
+        a12 = "HOLD"
 
     if not isinstance(cn_package, Mapping):
         forward_unavailable = _unavailable_horizon("Current Cycle Navigator context is unavailable; this forward lane fails closed.")
         return {
             "NEXT_12H": {
                 "expected_direction": d12, "label": "BULLISH" if d12 == "UP" else "BEARISH" if d12 == "DOWN" else "NEUTRAL" if d12 == "SIDEWAYS" else "MIXED",
-                "expected_path": "Current-state continuation unless the native confirmation or deterioration gate changes state.",
+                "expected_path": "Current directional state is descriptive and independent of action permission; continuation is reassessed when governed market evidence changes.",
                 "action_posture": a12,
                 "confirmation_trigger": {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]},
                 "invalidation_trigger": {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT", "HOLD_WAIT_DATA_DEGRADED"]},

@@ -342,6 +342,52 @@ class OfficialDailyCompassTest(unittest.TestCase):
             for key in ("NEXT_1_3D", "NEXT_5_7D", "NEXT_2_3W", "CYCLE_ALTCOINS_3_8W"):
                 self.assertEqual(out["horizons"][key]["expected_direction"], "UNAVAILABLE")
 
+    def test_negative_market_direction_is_bearish_while_action_stays_hold(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                deltas={
+                    "btc_usdt": {"pct": -1.2},
+                    "eth_usdt": {"pct": -2.0},
+                    "ethbtc": {"pct": -0.8},
+                },
+            )
+            self.assertEqual(out["market_now"]["directional_state"], "BEARISH")
+            self.assertEqual(out["market_now"]["action_permission"], "HOLD_WAIT")
+            self.assertEqual(out["action_now"], "HOLD_WAIT")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "DOWN")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+
+    def test_positive_market_direction_is_bullish_without_granting_deploy_permission(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                deltas={
+                    "btc_usdt": {"pct": 1.2},
+                    "eth_usdt": {"pct": 2.0},
+                    "ethbtc": {"pct": 0.7},
+                },
+            )
+            self.assertEqual(out["market_now"]["directional_state"], "BULLISH")
+            self.assertEqual(out["market_now"]["action_permission"], "HOLD_WAIT")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "UP")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+            self.assertFalse(out["authority"]["portfolio_execution"])
+
+    def test_mixed_market_direction_remains_mixed_independent_of_action(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                deltas={
+                    "btc_usdt": {"pct": 1.0},
+                    "eth_usdt": {"pct": -1.0},
+                    "ethbtc": {"pct": -1.5},
+                },
+            )
+            self.assertEqual(out["market_now"]["directional_state"], "MIXED")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "MIXED")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+
     def test_missing_deltas_never_create_bullish_confirmation(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, breadth=0.55, deltas={})

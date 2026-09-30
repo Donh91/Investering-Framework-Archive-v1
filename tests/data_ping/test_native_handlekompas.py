@@ -119,6 +119,19 @@ class NativeHandlekompasTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"POINTER_HASH_MISMATCH"):
                 load_auto_state(root,Path("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json"))
 
+    def test_native_packet_exposes_direction_separately_from_action(self):
+        packet = self.packet()
+        packet["deltas_since_prior_auto_packet"] = {
+            "btc_usdt": {"pct": -1.0},
+            "eth_usdt": {"pct": -2.0},
+            "ethbtc": {"pct": -1.0},
+        }
+        out = build(packet, now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT")
+        self.assertEqual(out["market_direction"]["directional_state"], "BEARISH")
+        self.assertEqual(out["market_direction"]["action_permission"], "HOLD_WAIT")
+        self.assertFalse(out["authority"]["portfolio_execution"])
+
     def test_write_pointer_is_non_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
             cwd=Path.cwd()
