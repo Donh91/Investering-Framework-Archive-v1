@@ -228,7 +228,7 @@ jobs:
           if not range_path.exists(): raise SystemExit('deterministic_range_baseline_missing')
           rv=json.loads(range_path.read_text())
           if rv.get('contract')!='CN_DETERMINISTIC_RANGE_BASELINE_v1': raise SystemExit('deterministic_range_baseline_contract_invalid')
-          if rv.get('target_iso_year')!=ptr.get('iso_year') or rv.get('target_iso_week')!=ptr.get('iso_week'):
+          if int(rv.get('target_iso_year',-1))!=int(ptr.get('iso_year',-2)) or int(rv.get('target_iso_week',-1))!=int(ptr.get('iso_week',-2)):
               raise SystemExit('deterministic_range_baseline_target_mismatch')
           independence=rv.get('independence') or {}
           if independence.get('llm_forecast_input') is not False or independence.get('generated_without_cycle_navigator_model_output') is not True:
@@ -292,9 +292,12 @@ jobs:
           paths.append(Path(strategic_pointer['anchor_path']))
           range_forecast=Path('05_CYCLE_NAVIGATOR/range_baselines/forecasts')/str(value['iso_year'])/f"W{int(value['iso_week']):02d}.json"
           paths.append(range_forecast)
-          completed_week=int(value['iso_week'])-1
-          if completed_week >= 1:
-              prior_score=Path('05_CYCLE_NAVIGATOR/range_baselines/scores')/str(value['iso_year'])/f"W{completed_week:02d}.json"
+          range_value=json.loads(range_forecast.read_text())
+          source_weeks=range_value.get('source_weeks') or []
+          if source_weeks:
+              prior=str(source_weeks[-1])
+              y,w=prior.split('-W')
+              prior_score=Path('05_CYCLE_NAVIGATOR/range_baselines/scores')/y/f"W{int(w):02d}.json"
               if prior_score.exists():
                   paths.append(prior_score)
           rows=[]
