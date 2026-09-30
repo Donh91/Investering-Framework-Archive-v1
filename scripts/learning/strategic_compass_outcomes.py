@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import io
 import json
 from datetime import datetime, timedelta, timezone
@@ -138,9 +139,10 @@ def mature(repo: Path, anchor_path: Path, lane: str, label: str, days: int, now:
         },
         "authority": {"portfolio_execution": False, "forecast_rewrite": False, "purpose": "POST_MATURITY_ACCOUNTABILITY_ONLY"},
     }
+    value["outcome_sha256"] = hashlib.sha256(canon(value)).hexdigest()
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(canon(value))
-    return {"status": "MATURED", "path": str(out.relative_to(repo)), "anchor_id": anchor.get("anchor_id"), "checkpoint": label}
+    return {"status": "MATURED", "path": str(out.relative_to(repo)), "anchor_id": anchor.get("anchor_id"), "checkpoint": label, "outcome_sha256": value["outcome_sha256"]}
 
 
 def main() -> None:
