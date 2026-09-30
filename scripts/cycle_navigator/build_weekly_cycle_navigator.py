@@ -5,7 +5,6 @@ import hashlib
 import json
 import os
 import re
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -13,8 +12,6 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Mapping
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.learning.strategic_compass import materialize as materialize_strategic_compass
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -824,8 +821,7 @@ def main() -> None:
     usage = raw.get("usage") if isinstance(raw.get("usage"), dict) else {}
     receipt = {"contract": "CYCLE_NAVIGATOR_API_RECEIPT_v1", "response_id": raw.get("id"), "model": args.model, "input_tokens": int(usage.get("input_tokens", 0) or 0), "output_tokens": int(usage.get("output_tokens", 0) or 0), "output_sha256": sha256_bytes(canonical_bytes(value)), "issue_number": issue, "authority": "PUBLICATION_ONLY_NO_CANONICAL_OR_PORTFOLIO_AUTHORITY"}
     (target_dir / "CYCLE_NAVIGATOR_API_RECEIPT.json").write_bytes(canonical_bytes(receipt))
-    strategic_result = materialize_strategic_compass(repo)
-    print(json.dumps({"cycle_navigator": pointer, "strategic_compass": strategic_result}, sort_keys=True))
+    print(json.dumps(pointer, sort_keys=True))
 
 
 if __name__ == "__main__":
