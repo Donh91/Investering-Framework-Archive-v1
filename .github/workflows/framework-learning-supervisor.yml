@@ -5,6 +5,11 @@ on:
     paths:
       - '.github/workflows/framework-learning-supervisor.yml'
       - 'scripts/api_agent/senior_repair_audit_dispatch.py'
+      - 'scripts/api_agent/api_gateway.py'
+      - 'scripts/framework_intelligence/automation_orchestration_v1.py'
+      - 'research/api_agent/API_TASK_REGISTRY_v1.json'
+      - 'research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json'
+      - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
       - 'scripts/framework_intelligence/weekly_forensics_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_replay_v1.py'
@@ -13,6 +18,9 @@ on:
       - 'scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
+      - 'tests/framework_intelligence/test_automation_orchestration_v1.py'
+      - 'tests/api_agent/test_api_gateway.py'
+      - 'tests/api_agent/test_capability_router.py'
       - 'tests/framework_intelligence/test_weekly_forensics_v1.py'
       - 'tests/framework_intelligence/test_weekly_forensics_replay_v1.py'
       - 'tests/framework_intelligence/test_operational_memory_v1.py'
@@ -21,12 +29,16 @@ on:
       - '00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md'
       - '00_FMOS/WEEKLY_FORENSICS_META_HEALTH_v1.md'
       - '00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md'
+      - '00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md'
   schedule:
     - cron: '35 4 * * *'
       timezone: 'Europe/Copenhagen'
     - cron: '35 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Automation Production Health']
+    types: [completed]
   issue_comment:
     types: [created]
 
@@ -50,6 +62,8 @@ jobs:
         run: |
           python -m py_compile \
             scripts/api_agent/senior_repair_audit_dispatch.py \
+            scripts/api_agent/api_gateway.py \
+            scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
@@ -61,6 +75,12 @@ jobs:
         run: |
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_automation_orchestration_v1 \
+            tests.api_agent.test_api_gateway \
+            tests.api_agent.test_capability_router \
+            tests.framework_intelligence.test_automation_orchestration_v1 \
+            tests.api_agent.test_api_gateway \
+            tests.api_agent.test_capability_router \
             tests.framework_intelligence.test_weekly_forensics_v1 \
             tests.framework_intelligence.test_weekly_forensics_replay_v1 \
             tests.framework_intelligence.test_operational_memory_v1 \
@@ -282,7 +302,9 @@ jobs:
         run: |
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "SENIOR_REPAIR_AUDIT duplicate trigger $COMMENT_ID: NOOP, immutable receipt already exists."
   operate:
-    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    if: >-
+      ((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     permissions:
       contents: write
       issues: write
@@ -300,6 +322,8 @@ jobs:
       - name: Validate learning and operational-memory firewalls
         run: |
           python -m py_compile \
+            scripts/api_agent/api_gateway.py \
+            scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
@@ -321,6 +345,9 @@ jobs:
               --output-root research/framework_learning/weekly_forensics \
               --mode FINAL
           fi
+          python scripts/framework_intelligence/automation_orchestration_v1.py build \
+            --repo-root . \
+            --output-root research/framework_learning/automation_orchestration
           python scripts/framework_intelligence/framework_learning_supervisor.py \
             --repo-root . \
             --output-root research/framework_learning
