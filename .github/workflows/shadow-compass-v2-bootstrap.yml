@@ -1,0 +1,28 @@
+name: Shadow Compass v2 Bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/shadow-compass-v2.yml'
+      - '.github/workflows/shadow-compass-v2-bootstrap.yml'
+      - 'scripts/learning/shadow_compass_v2.py'
+      - 'scripts/data_ping/auto_market_state.py'
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: shadow-compass-v2-bootstrap
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch Shadow Compass v2 on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run shadow-compass-v2.yml --repo "${GITHUB_REPOSITORY}" --ref main
