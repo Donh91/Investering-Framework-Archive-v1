@@ -151,6 +151,15 @@ class CapabilityRouterTests(unittest.TestCase):
         )
         self.assertEqual(plan["units"][0]["model"], "gpt-6-sol")
 
+    def test_difficult_reasoning_prefers_gpt_6_1_sol_when_both_sol_versions_are_available(self):
+        plan = build_execution_plan(
+            self.policy,
+            runtime("gpt-6.1-sol", "gpt-6-sol", "gpt-6-astra"),
+            profile(complexity="DIFFICULT", capabilities=["difficult_reasoning"], effort="high"),
+        )
+        self.assertEqual(plan["status"], "READY")
+        self.assertEqual(plan["units"][0]["model"], "gpt-6.1-sol")
+
     def test_required_astra_fails_closed_when_runtime_does_not_have_it(self):
         plan = build_execution_plan(
             self.policy,
