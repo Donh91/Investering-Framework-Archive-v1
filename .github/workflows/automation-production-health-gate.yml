@@ -79,6 +79,23 @@ jobs:
             tests.data_ping.test_compass_event_refresh \
             tests.learning.test_compass_outcomes \
             tests.learning.test_decision_economics_ledger -v
+      - name: Validate current Actions budget snapshot fail-safe state
+        run: |
+          python scripts/health/build_actions_budget_guard.py \
+            --snapshot research/architecture_health/GITHUB_ACTIONS_USAGE_SNAPSHOT.json \
+            --json-output /tmp/actions-budget.json \
+            --md-output /tmp/actions-budget.md \
+            --now 2026-09-30T12:00:00Z
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/actions-budget.json'))
+          assert data['contract']=='GITHUB_ACTIONS_BUDGET_STATE_v1'
+          assert data['state']=='CRITICAL'
+          assert data['protected_a_blocked'] is True
+          assert data['usage_snapshot']['used_minutes']==3000
+          assert data['usage_snapshot']['included_minutes']==3000
+          print('ACTIONS_BUDGET_GUARD_FIXTURE_PASS')
+          PY
       - name: Validate main writer configuration
         run: python scripts/health/check_writer_trigger_safety.py --workflow-root .github/workflows --output /tmp/writer-trigger-safety.json
       - name: Run health and Codex intake unit tests
