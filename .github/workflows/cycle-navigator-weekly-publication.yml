@@ -53,6 +53,24 @@ jobs:
           if latest.exists():
               prior=json.loads(latest.read_text())
               skip=prior.get('master_monday_pointer_sha256')==digest
+              # A completed CN week is not idempotently complete until the strategic
+              # anchor is bound to the exact final CN machine package bytes.
+              if skip:
+                  strategic=Path('04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json')
+                  machine=Path(str(prior.get('week_dir','')))/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'
+                  if not strategic.exists() or not machine.exists():
+                      skip=False
+                  else:
+                      sp=json.loads(strategic.read_text())
+                      anchor=Path(str(sp.get('anchor_path','')))
+                      if not anchor.exists():
+                          skip=False
+                      else:
+                          av=json.loads(anchor.read_text())
+                          bound=((av.get('source_bindings') or {}).get('cycle_navigator') or {}).get('sha256')
+                          current=hashlib.sha256(machine.read_bytes()).hexdigest()
+                          if bound != current:
+                              skip=False
           print(f"skip={'true' if skip else 'false'}")
           print(f"mm_sha256={digest}")
           print(f"completed_week={int(value['iso_week'])}")
@@ -150,6 +168,13 @@ jobs:
               path.write_bytes(canonical(value))
           PY
 
+      - name: Freeze Strategic Compass from final bound CN package
+        if: steps.precheck.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/learning/strategic_compass.py --repo-root . | tee runtime_strategic_compass.json
+
       - name: Validate publication contract
         if: steps.precheck.outputs.skip != 'true'
         run: |
@@ -186,6 +211,18 @@ jobs:
           if freeze.get('scoring_contract')!='CN_PUBLIC_CONTINUITY_v1': raise SystemExit('forecast_scoring_contract_invalid')
           if not (root/'CYCLE_NAVIGATOR_READABLE.md').read_text().strip(): raise SystemExit('readable_empty')
           if not (root/'CYCLE_NAVIGATOR_X_READY.md').read_text().strip(): raise SystemExit('x_ready_empty')
+          strategic_ptr=Path('04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json')
+          if not strategic_ptr.exists(): raise SystemExit('strategic_compass_pointer_missing')
+          sp=json.loads(strategic_ptr.read_text())
+          anchor=Path(sp['anchor_path'])
+          if not anchor.exists(): raise SystemExit('strategic_compass_anchor_missing')
+          av=json.loads(anchor.read_text())
+          machine_sha=hashlib.sha256((root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_bytes()).hexdigest()
+          if ((av.get('source_bindings') or {}).get('cycle_navigator') or {}).get('sha256') != machine_sha:
+              raise SystemExit('strategic_compass_cn_lineage_mismatch')
+          if av.get('scoring_contract')!='STRATEGIC_COMPASS_SCORING_v1': raise SystemExit('strategic_compass_contract_invalid')
+          if av['strategic_21_30d'].get('derived_from_2_3w') is not False: raise SystemExit('strategic_month_must_not_stretch_2_3w')
+          if av['authority'].get('portfolio_execution') is not False: raise SystemExit('strategic_compass_authority_violation')
           PY
 
       - name: Commit complete weekly Cycle Navigator archive
@@ -199,7 +236,8 @@ jobs:
                   05_CYCLE_NAVIGATOR/track_record \
                   05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl \
                   05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json \
-                  05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json
+                  05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json \
+                  04_MARKET_LEARNING/handlekompas/strategic
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "cycle-navigator: publish weekly package after final Master Monday"
           pushed=false
@@ -234,7 +272,10 @@ jobs:
             Path('05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl'),
             Path('05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl'),
             Path('05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json'),
+            Path('04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json'),
           ]
+          strategic_pointer=json.loads(Path('04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json').read_text())
+          paths.append(Path(strategic_pointer['anchor_path']))
           rows=[]
           for p in paths:
               path=str(p)
@@ -254,5 +295,6 @@ jobs:
           path: |
             runtime_cn_*.json
             runtime_cn_precheck.txt
+            runtime_strategic_compass.json
             runtime/consumer-receipts/CYCLE_NAVIGATOR_HANDOFF.json
           retention-days: 14
