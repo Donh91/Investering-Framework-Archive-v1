@@ -1,3 +1,4 @@
+# CI audit trigger: compile current weekly CN strategic projection schema.
 from __future__ import annotations
 
 import argparse
