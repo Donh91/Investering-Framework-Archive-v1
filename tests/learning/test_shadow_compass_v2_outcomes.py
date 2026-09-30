@@ -23,7 +23,7 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             "contract": "AUTO_MARKET_STATE_PACKET_v1",
             "packet_sha256": "auto-sha",
             "normalized_state": {
-                "live_market": {"btc_usdt": 100.0, "eth_usdt": 50.0, "ethbtc": 0.5},
+                "live_market": {"btc_usdt": 100.0, "eth_usdt": 50.0, "ethbtc": 0.5, "observation_open_utc": "2026-08-31T23:00:00Z"},
             },
             "deltas_since_prior_auto_packet": {"btc_usdt": {"pct": 1.0}},
         })
@@ -86,7 +86,10 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             self.assertEqual(out["status"], "MATURED")
             value = json.loads((root / out["path"]).read_text())
             self.assertEqual(value["contract"], "SHADOW_COMPASS_V2_OUTCOME_v1")
-            self.assertEqual(value["scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v1")
+            self.assertEqual(value["scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v2")
+            self.assertEqual(value["time_basis"]["effective_window_hours"], 12.0)
+            self.assertEqual(value["time_basis"]["start_reference_age_hours"], 0.0)
+            self.assertEqual(value["target_observation_at_utc"], "2026-09-01T12:00:00Z")
             self.assertTrue(value["direction_accuracy"]["btc"]["correct"])
             self.assertTrue(value["direction_accuracy"]["eth"]["correct"])
             self.assertEqual(value["comparison_metadata"]["sideways_tolerance_pct"], 1.5)
@@ -100,8 +103,8 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             # overwrite endpoint with +1%, within 12h ±1.5% tolerance
             day = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-01.csv"
             rows = list(csv.DictReader(day.open()))
-            rows[12]["btc_close"] = "101.0"
-            rows[12]["eth_close"] = "50.5"
+            rows[11]["btc_close"] = "101.0"
+            rows[11]["eth_close"] = "50.5"
             with day.open("w", newline="") as fh:
                 writer = csv.DictWriter(fh, fieldnames=rows[0].keys())
                 writer.writeheader()
