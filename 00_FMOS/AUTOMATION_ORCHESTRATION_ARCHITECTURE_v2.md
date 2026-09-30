@@ -195,6 +195,47 @@ Research in any repository or thread that wants Codex remediation must hand the 
 
 SC06 Binance depth requires a persistent continuous runtime and private object/blob storage. GitHub Actions may deploy, validate and publish receipts, but must not be treated as the primary long-running websocket runtime or used to weaken the frozen sequence-continuity and snapshot-coverage requirements.
 
+## Intelligent orchestration extension - 2026-09-30
+
+The framework does not add another remediation queue or another scheduled owner. The existing Framework Learning Supervisor now acts as a bounded intelligent orchestration layer on top of Automation Production Health and the existing Remediation Maturation Controller.
+
+Execution order:
+
+```text
+Automation Production Health
+-> deterministic orchestration plan
+-> deduplicate against existing remediation/Codex state
+-> cluster correlated failures by evidence such as shared failing head SHA
+-> Luna batch triage for routine changed failures
+-> GPT-6.1 Sol senior diagnosis for repeated/correlated failures
+-> existing Remediation Maturation Controller remains sole CODEX_READY authority
+-> Codex remains the only code-write executor
+```
+
+Model allocation is capability-based and budget-bounded:
+
+- deterministic checks first;
+- GPT-6 Luna, medium reasoning, is the cheap first-line analyst for changed single-failure triage;
+- GPT-6.1 Sol, high reasoning, is the senior specialist for repeated failures, shared-head clusters and cross-workflow root-cause analysis;
+- legacy GPT-6 Sol is a staged compatibility fallback where older task-specific gates are still pinned;
+- Astra is not a periodic operations tier and is reserved for separately qualified agentic/extreme-complexity work.
+
+The orchestration plan fingerprints the substantive failure state. Regenerating the same health state does not justify another paid model call. Each supervisor run may make at most one Luna batch call and one GPT-6.1 Sol batch call, and both remain subject to the unchanged monthly API hard stop.
+
+Current OpenAI multi-agent behavior is treated carefully: native Responses multi-agent subagents share the request model and tool set, so mixed-tier Luna-to-Sol routing is performed by the framework capability router as separate bounded calls. A future Agents SDK/Agents API qualification may coordinate per-agent model selection, but it must not replace repository authority, remediation ownership or receipts.
+
+Model output is diagnostic evidence only. It cannot:
+
+- set CODEX_READY;
+- create a duplicate remediation task;
+- write repository code;
+- merge;
+- change market/framework rules;
+- change API budgets;
+- create portfolio actions.
+
+If an API call fails, is unavailable or is blocked by budget, the deterministic orchestration plan remains usable and no authority is lost.
+
 ## Acceptance
 
 Automation architecture is current only when:
