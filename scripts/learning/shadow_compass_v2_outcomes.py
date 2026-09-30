@@ -123,15 +123,6 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     if out.exists():
         return {"status": "ALREADY_MATURED", "path": rel.as_posix()}
 
-    auto_state, auto_binding = _source_auto_state(repo, forecast)
-    if auto_state is None:
-        return {
-            "status": "PENDING_SOURCE_EVIDENCE" if auto_binding.get("status") == "UNAVAILABLE" else "SOURCE_INTEGRITY_FAIL",
-            "forecast_id": forecast.get("forecast_id"),
-            "horizon": horizon,
-            "source_binding": auto_binding,
-        }
-
     rows = load_hourly(repo, start_reference, target + TARGET_TOLERANCE)
     endpoint = closest_target(rows, target)
     if endpoint is None:
