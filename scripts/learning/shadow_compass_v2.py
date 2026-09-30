@@ -31,6 +31,7 @@ from scripts.data_ping.native_handlekompas import (
 AUTO_POINTER = Path("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
 OUTPUT_ROOT = Path("04_MARKET_LEARNING/handlekompas/shadow_v2")
 MODEL_DEFAULT = "gpt-6.1-sol"
+REASONER_VERSION = "SHADOW_COMPASS_V2_2026-09-30_A"
 INPUT_CONTRACT = "SHADOW_COMPASS_V2_INPUT_v1"
 MODEL_OUTPUT_CONTRACT = "SHADOW_COMPASS_V2_MODEL_OUTPUT_v1"
 FORECAST_CONTRACT = "SHADOW_COMPASS_V2_FORECAST_v1"
@@ -158,6 +159,7 @@ def build_input(
     input_value = {
         "contract": INPUT_CONTRACT,
         "issued_at_utc": issued_at.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "reasoner_version": REASONER_VERSION,
         "source_bindings": {
             "auto_market_state": {
                 "packet_path": auto_packet_path.as_posix(),
@@ -359,6 +361,7 @@ def build_forecast(
         "auto_market_state": nested(input_value, "source_bindings", "auto_market_state", "packet_sha256"),
         "cycle_navigator": nested(input_value, "source_bindings", "cycle_navigator", "machine_package_sha256"),
         "model": model,
+        "reasoner_version": REASONER_VERSION,
     }))
     stamp = issued.replace("-", "").replace(":", "").replace("T", "-").replace("Z", "")
     forecast_id = f"SCV2-{stamp}-{source_fingerprint[:12]}"
@@ -368,6 +371,7 @@ def build_forecast(
         "forecast_id": forecast_id,
         "issued_at_utc": issued,
         "model_id": model,
+        "reasoner_version": REASONER_VERSION,
         "source_fingerprint": source_fingerprint,
         "input_sha256": input_value.get("input_sha256"),
         "source_bindings": input_value.get("source_bindings"),
