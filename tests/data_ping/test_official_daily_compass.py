@@ -83,6 +83,20 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 "next_1_3d": {"direction": "SIDEWAYS", "summary": "Structured short-horizon consolidation."},
                 "next_5_7d": {"direction": "SIDEWAYS", "summary": "Structured weekly consolidation."},
                 "next_2_3w": {"direction": "SIDEWAYS", "summary": "Structured 2-3 week consolidation."},
+                "next_21_30d": {
+                    "direction": "SIDEWAYS",
+                    "summary": "Structured month-ahead consolidation.",
+                    "regime_destination": "CONSOLIDATION",
+                    "expected_path": "consolidation -> reassessment",
+                    "action_posture": "HOLD",
+                    "falsification": ["Confirmed structural breakdown or expansion invalidates the consolidation thesis."],
+                    "confidence": "MEDIUM",
+                    "scenarios": [
+                        {"label": "BASE", "probability_pct": 60, "thesis": "Consolidation persists."},
+                        {"label": "BULL", "probability_pct": 20, "thesis": "Expansion develops."},
+                        {"label": "BEAR", "probability_pct": 20, "thesis": "Breakdown develops."},
+                    ],
+                },
                 "weeks_4_8": {
                     "state": "CONSOLIDATION",
                     "warning": "NONE",
@@ -124,7 +138,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
         projection = schema["properties"]["decision_projection"]
         self.assertEqual(
             set(projection["required"]),
-            {"contract", "next_1_3d", "next_5_7d", "next_2_3w", "weeks_4_8", "protection"},
+            {"contract", "next_1_3d", "next_5_7d", "next_2_3w", "next_21_30d", "weeks_4_8", "protection"},
         )
         self.assertEqual(
             projection["properties"]["contract"]["const"],
