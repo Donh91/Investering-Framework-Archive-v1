@@ -537,6 +537,12 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     health["derivatives"]["hourly_status"] = "PASS" if row and row.get("btc_open_interest") and row.get("eth_open_interest") else "UNAVAILABLE"
     scalar_values = {"btc_usdt": nested(live_market, "btc_usdt"), "eth_usdt": nested(live_market, "eth_usdt"), "ethbtc": nested(live_market, "ethbtc"), "btc_dominance_pct": nested(dominance, "value_pct"), "breadth_advance_ratio": nested(breadth, "aggregate", "advance_ratio"), "stablecoin_total_usd": nested(stable_state, "total_usd"), "btc_etf_musd": nested(etf_value, "btc_reported_total_musd"), "eth_etf_musd": nested(etf_value, "eth_reported_total_musd")}
     prior, predecessor_status = prior_packet(snapshot)
+    if isinstance(predecessor_status, dict) and predecessor_status.get("status") == "AVAILABLE":
+        predecessor_status = {
+            **predecessor_status,
+            "packet_generated_at_utc": nested(prior, "packet_generated_at_utc"),
+            "market_observation_open_utc": nested(prior, "normalized_state", "live_market", "observation_open_utc"),
+        }
     prior_values = nested(prior, "normalized_state", "scalar_values") or {}
     deltas = {key: delta(value, prior_values.get(key)) for key, value in scalar_values.items()}
     derived_ethbtc = None if not live_market or not live_market.get("btc_usdt") or not live_market.get("eth_usdt") else live_market["eth_usdt"] / live_market["btc_usdt"]
