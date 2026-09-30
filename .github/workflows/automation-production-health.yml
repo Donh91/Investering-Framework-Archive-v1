@@ -30,6 +30,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Build GitHub Actions budget guard
+        id: actions_budget
+        run: |
+          python scripts/health/build_actions_budget_guard.py \
+            --snapshot research/architecture_health/GITHUB_ACTIONS_USAGE_SNAPSHOT.json \
+            --json-output research/architecture_health/LATEST_ACTIONS_BUDGET.json \
+            --md-output research/architecture_health/LATEST_ACTIONS_BUDGET.md
+          state="$(python -c "import json; print(json.load(open('research/architecture_health/LATEST_ACTIONS_BUDGET.json'))['state'])")"
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+      - name: Surface non-normal Actions budget state
+        if: steps.actions_budget.outputs.state != 'NORMAL'
+        run: cat research/architecture_health/LATEST_ACTIONS_BUDGET.md >> "$GITHUB_STEP_SUMMARY"
       - name: Build complete production health report
         id: health
         shell: bash
@@ -121,6 +133,8 @@ jobs:
           path: |
             research/architecture_health/LATEST_AUTOMATION_HEALTH.json
             research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+            research/architecture_health/LATEST_ACTIONS_BUDGET.json
+            research/architecture_health/LATEST_ACTIONS_BUDGET.md
             research/architecture_health/history/
           retention-days: 14
           if-no-files-found: error
