@@ -322,6 +322,85 @@ def select_current_breadth(rich_breadth: Any, live_anchor_breadth: Any) -> dict[
     }
 
 
+def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
+    """Measure rank-bucket participation without pretending Top-100 is a full cap universe.
+
+    These are descriptive proxy buckets only. They have zero execution weight and
+    cannot be promoted into canonical Large/Mid/Small/Micro action states without
+    a separate governed admission/scoring contract.
+    """
+    rows = breadth.get("constituents") if isinstance(breadth, Mapping) else None
+    rows = rows if isinstance(rows, list) else []
+    valid = [row for row in rows if isinstance(row, Mapping) and num(row.get("filtered_rank")) is not None and num(row.get("change_24h_pct")) is not None]
+    btc = next((num(row.get("change_24h_pct")) for row in valid if row.get("asset_id") == "bitcoin"), None)
+    eth = next((num(row.get("change_24h_pct")) for row in valid if row.get("asset_id") == "ethereum"), None)
+
+    definitions = {
+        "LARGE_ALT_PROXY": (3, 20, "TOP100_FULL_RANK_WINDOW"),
+        "MID_ALT_PROXY": (21, 50, "TOP100_FULL_RANK_WINDOW"),
+        "SMALL_ALT_PROXY": (51, 100, "TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE"),
+    }
+    buckets: dict[str, Any] = {}
+    for name, (lo, hi, coverage) in definitions.items():
+        selected = [
+            row for row in valid
+            if lo <= int(float(row["filtered_rank"])) <= hi
+        ]
+        changes = [float(row["change_24h_pct"]) for row in selected]
+        if not changes:
+            buckets[name] = {
+                "status": "UNAVAILABLE",
+                "rank_window": [lo, hi],
+                "coverage": coverage,
+                "constituent_count": 0,
+            }
+            continue
+        adv = sum(v > 0 for v in changes)
+        buckets[name] = {
+            "status": "OBSERVED_PROXY",
+            "rank_window": [lo, hi],
+            "coverage": coverage,
+            "constituent_count": len(changes),
+            "advance_ratio_24h": round(adv / len(changes), 6),
+            "median_return_24h_pct": round(float(__import__("statistics").median(changes)), 6),
+            "equal_weight_return_24h_pct": round(sum(changes) / len(changes), 6),
+            "outperforming_btc_share_24h": None if btc is None else round(sum(v > btc for v in changes) / len(changes), 6),
+            "outperforming_eth_share_24h": None if eth is None else round(sum(v > eth for v in changes) / len(changes), 6),
+            "membership": [
+                {
+                    "asset_id": row.get("asset_id"),
+                    "symbol": row.get("symbol"),
+                    "filtered_rank": int(float(row["filtered_rank"])),
+                    "market_cap_usd": num(row.get("market_cap_usd")),
+                    "return_24h_pct": num(row.get("change_24h_pct")),
+                }
+                for row in selected
+            ],
+        }
+    buckets["MICROCAP_PROXY"] = {
+        "status": "UNAVAILABLE",
+        "coverage": "BELOW_TOP100_SOURCE_UNIVERSE_NOT_OBSERVED",
+        "reason": "Current Rich Breadth owner cannot represent the framework microcap universe.",
+    }
+    return {
+        "contract": "CAPITALIZATION_TRANSMISSION_PROXY_v1",
+        "source_universe": nested(breadth, "universe", "identifier"),
+        "source_membership_hash": nested(breadth, "universe", "membership_hash") or nested(breadth, "aggregate", "membership_hash"),
+        "source_retrieved_at_utc": breadth.get("retrieved_at_utc") if isinstance(breadth, Mapping) else None,
+        "bucket_semantics": "FILTERED_TOP100_RANK_WINDOWS_PROXY_NOT_CANONICAL_CAP_CLASSIFICATION",
+        "btc_return_24h_pct": btc,
+        "eth_return_24h_pct": eth,
+        "buckets": buckets,
+        "authority": {
+            "binding": False,
+            "canonical_rotation": False,
+            "portfolio_action": False,
+            "market_threshold_change": False,
+            "execution_weight": 0,
+        },
+    }
+
+
 def latest_macro(repo_root: Path, sha: str, now: datetime, *, max_age: timedelta = timedelta(hours=36)) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     prefix = "03_DAILY_CAPTURE_LOGS/captures"
     try:
@@ -412,6 +491,7 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     breadth_raw, breadth_read_health = read_json(snapshot, BREADTH_OWNER)
     breadth, breadth_normalization_health = normalize_breadth(breadth_raw, now_utc=now)
     current_breadth = select_current_breadth(breadth, live_breadth_reference)
+    cap_transmission = capitalization_transmission_proxy(breadth or {})
     health["breadth"] = {
         **breadth_read_health,
         "normalization": breadth_normalization_health,
@@ -532,6 +612,7 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
             "derivatives": {"live_anchor": derivatives, "hourly": hourly_derivatives},
             "breadth": breadth,
             "current_breadth": current_breadth,
+            "capitalization_transmission_proxy": cap_transmission,
             "live_anchor_breadth_reference": live_breadth_reference or None,
             "settled_etf": etf_value,
             "stablecoin_liquidity": stable_state,
