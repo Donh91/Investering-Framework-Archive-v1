@@ -101,6 +101,7 @@ class ApiGatewayTests(unittest.TestCase):
     def test_cost_estimate(self):
         self.assertEqual(estimate_cost('gpt-6-luna',1000000,1000000),0.6)
         self.assertEqual(estimate_cost('gpt-5.6-terra',1000000,1000000),14.0)
+        self.assertEqual(estimate_cost('gpt-6.1-sol',1000000,1000000),12.0)
         self.assertEqual(estimate_cost('gpt-6-sol',1000000,1000000),12.0)
         self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),1.4)
         self.assertEqual(estimate_cost('gpt-5.6-sol',1000000,1000000),24.0)
