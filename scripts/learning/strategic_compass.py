@@ -213,24 +213,15 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
     return result
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--repo-root", type=Path, default=Path.cwd())
-    ap.add_argument("--now-utc")
-    args = ap.parse_args()
-    repo = args.repo_root.resolve()
-    now = datetime.fromisoformat(args.now_utc.replace("Z", "+00:00")) if args.now_utc else datetime.now(timezone.utc).replace(microsecond=0)
-    if now.utcoffset() is None:
-        now = now.replace(tzinfo=timezone.utc)
-    now = now.astimezone(timezone.utc)
-
+def materialize(repo: Path, now: datetime | None = None) -> dict[str, Any]:
+    repo = repo.resolve()
+    now = (now or datetime.now(timezone.utc).replace(microsecond=0)).astimezone(timezone.utc)
     anchor = build_anchor(repo, now)
     latest_path = repo / ROOT / "LATEST_STRATEGIC_COMPASS.json"
     if latest_path.exists():
         latest = read_json(latest_path)
         if latest.get("source_fingerprint") == anchor["source_fingerprint"]:
-            print(json.dumps({"status": "NOOP_SAME_SOURCES", "anchor_id": latest.get("anchor_id"), "source_fingerprint": anchor["source_fingerprint"]}, sort_keys=True))
-            return
+            return {"status": "NOOP_SAME_SOURCES", "anchor_id": latest.get("anchor_id"), "source_fingerprint": anchor["source_fingerprint"]}
 
     out = repo / ROOT / "anchors" / now.strftime("%Y/%m/%d") / f"{anchor['anchor_id']}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -248,7 +239,18 @@ def main() -> None:
         "cycle_4_8w_direction": anchor["cycle_4_8w"]["direction"],
     }
     latest_path.write_bytes(canon(pointer))
-    print(json.dumps({"status": "CREATED", **pointer}, sort_keys=True))
+    return {"status": "CREATED", **pointer}
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--repo-root", type=Path, default=Path.cwd())
+    ap.add_argument("--now-utc")
+    args = ap.parse_args()
+    now = datetime.fromisoformat(args.now_utc.replace("Z", "+00:00")) if args.now_utc else None
+    if now is not None and now.utcoffset() is None:
+        now = now.replace(tzinfo=timezone.utc)
+    print(json.dumps(materialize(args.repo_root, now), sort_keys=True))
 
 
 if __name__ == "__main__":
