@@ -89,7 +89,7 @@ def compass(*, source_sha="old-source", action="HOLD_WAIT", data_status="OK", is
         "source_bindings": {"auto_market_state": {"packet_sha256": source_sha}},
         "data_status": data_status,
         "action_now": action,
-        "market_now": {"directional_state": "NEUTRAL", "regime": "HOLD_WAIT"},
+        "market_now": {"directional_state": "BULLISH", "regime": "HOLD_WAIT"},
         "capitalization_ladder": [
             {"segment": "BTC", "status": "HOLD", "action": "HOLD"},
             {"segment": "ETH", "status": "HOLD", "action": "HOLD"},
