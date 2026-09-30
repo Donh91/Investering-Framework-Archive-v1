@@ -1185,6 +1185,8 @@ def capitalization_ladder(
         return rows
     posture = str(action.get("NOW") or "HOLD_WAIT")
     direction = str(market_now.get("directional_state") or "MIXED")
+    if direction == "UNCHANGED_NO_NEW_OBSERVATION":
+        direction = "UNAVAILABLE"
     if posture == "GRADUATED_TOPUP_ACTIVE":
         states = ("HOLD", "DEPLOY", "PREPARE", "WAIT", "HARD_WAIT", "HARD_WAIT")
     elif posture == "PREPARE":
