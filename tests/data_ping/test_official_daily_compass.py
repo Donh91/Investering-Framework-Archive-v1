@@ -39,13 +39,43 @@ class OfficialDailyCompassTest(unittest.TestCase):
             },
             "normalized_state": {
                 "live_market": {"btc_usdt": btc, "eth_usdt": eth, "ethbtc": ethbtc, "observation_open_utc": "2026-09-16T18:00:00Z"},
-                "breadth": {"aggregate": {"advance_ratio": breadth, "advancers": 19, "decliners": 78, "equal_weight_mean_return_24h_pct": -2.59}},
-                "entry_signal_reference": {"state": "WAIT"},
-                "btc_dominance": {"value_pct": 58.4},
-                "settled_etf": {"btc_reported_total_musd": -100.0, "eth_reported_total_musd": 50.0},
-                "stablecoin_liquidity": {"total_usd": 300_000_000_000.0},
-                "derivatives": {},
-                "sentiment": {"classification": "NEUTRAL"},
+                "breadth": {
+                    "retrieved_at_utc": "2026-09-16T17:00:00Z",
+                    "aggregate": {"advance_ratio": breadth, "advancers": 19, "decliners": 78, "equal_weight_mean_return_24h_pct": -2.59},
+                },
+                "current_breadth": {
+                    "source": "LIVE_ANCHOR_BREADTH_REFERENCE",
+                    "observed_at_utc": "2026-09-16T18:05:00Z",
+                    "advance_ratio": breadth,
+                    "advancers": 19,
+                    "decliners": 78,
+                    "selection_semantics": "FRESHEST_SAME_FAMILY_POINT_ONLY_NO_DOUBLE_VOTE",
+                },
+                "entry_signal_reference": {"state": "WAIT", "generated_at_utc": "2026-09-16T18:05:00Z"},
+                "btc_dominance": {"value_pct": 58.4, "source_timestamp": "2026-09-15T00:00:00Z", "source_verified_timestamp": "2026-09-16T18:00:00Z"},
+                "settled_etf": {"btc_reported_total_musd": -100.0, "eth_reported_total_musd": 50.0, "session_date": "2026-09-15", "retrieved_at_utc": "2026-09-16T12:00:00Z"},
+                "stablecoin_liquidity": {"total_usd": 300_000_000_000.0, "source_timestamp": "2026-09-16T00:00:00Z", "retrieved_at_utc": "2026-09-16T12:00:00Z"},
+                "derivatives": {
+                    "hourly": {
+                        "btc_open_interest": 2_750_000.0,
+                        "eth_open_interest": 5_500_000.0,
+                        "observation_open_utc": "2026-09-16T18:00:00Z",
+                    },
+                    "live_anchor": {
+                        "BTC-USDT-SWAP": {"funding": {"funding_rate": 0.00002, "funding_time": 1790000000000}},
+                        "ETH-USDT-SWAP": {"funding": {"funding_rate": 0.00003, "funding_time": 1790000000000}},
+                    },
+                },
+                "sentiment": {
+                    "cfgi": {
+                        "retrieved_at_utc": "2026-09-16T18:05:00Z",
+                        "symbols": {
+                            "BTC": {"classification": "Neutral", "score": 48.0, "timestamp": "2026-09-16T18:00:00Z"},
+                            "ETH": {"classification": "Neutral", "score": 52.0, "timestamp": "2026-09-16T18:00:00Z"},
+                            "MARKET": {"classification": "Neutral", "score": 50.0, "timestamp": "2026-09-16T18:00:00Z"},
+                        },
+                    }
+                },
                 "altseason_context": {"blockchaincenter_altcoin_season": {"horizons": {"90": {"published_score": 27}}}},
             },
             "source_health": {
@@ -474,6 +504,45 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["expected_direction"], "UNAVAILABLE")
             self.assertEqual(out["protection_tracker"]["pullback_risk_state"], "UNAVAILABLE")
             self.assertEqual(out["protection_tracker"]["distribution_risk"], "UNKNOWN")
+
+    def test_evidence_snapshot_maps_derivatives_sentiment_and_source_times(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp)
+            rows = {row["feature_id"]: row for row in out["evidence_snapshot"]["selected_features"]}
+            self.assertEqual(out["evidence_snapshot"]["mapping_integrity_status"], "PASS")
+            self.assertEqual(out["evidence_snapshot"]["pass_lane_missing_feature_ids"], [])
+            self.assertEqual(rows["btc_open_interest"]["value"], 2_750_000.0)
+            self.assertEqual(rows["eth_open_interest"]["value"], 5_500_000.0)
+            self.assertAlmostEqual(rows["btc_funding"]["value"], 0.00002)
+            self.assertAlmostEqual(rows["eth_funding"]["value"], 0.00003)
+            self.assertEqual(rows["sentiment_state"]["value"], "Neutral")
+            self.assertEqual(rows["sentiment_market_score"]["value"], 50.0)
+            self.assertEqual(rows["sentiment_btc_score"]["value"], 48.0)
+            self.assertEqual(rows["sentiment_eth_score"]["value"], 52.0)
+            self.assertEqual(rows["btc_usdt"]["observed_at"], "2026-09-16T18:00:00Z")
+            self.assertEqual(rows["btc_dominance_pct"]["observed_at"], "2026-09-15T00:00:00Z")
+            self.assertEqual(rows["btc_etf_musd"]["observed_at"], "2026-09-15")
+            self.assertEqual(rows["stablecoin_total_usd"]["observed_at"], "2026-09-16T00:00:00Z")
+            self.assertTrue(all(row["eligibility"] != "ELIGIBLE" for row in rows.values()))
+            self.assertEqual(rows["btc_open_interest"]["eligibility"], "ELIGIBLE_PRESENT")
+
+    def test_pass_lane_missing_value_degrades_compact_mapping_integrity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            auto = self.auto()
+            auto["normalized_state"]["derivatives"] = {"hourly": {}, "live_anchor": {}}
+            out = build_official_compass(
+                auto,
+                packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
+                cn_package=self.cn(),
+                cn_binding={"status": "PASS"},
+                repo_root=Path(tmp),
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                run_reason="ON_DEMAND",
+            )
+            self.assertEqual(out["evidence_snapshot"]["mapping_integrity_status"], "FAIL_PASS_LANE_MISSING_VALUE")
+            self.assertIn("btc_open_interest", out["evidence_snapshot"]["pass_lane_missing_feature_ids"])
+            self.assertIn("btc_funding", out["evidence_snapshot"]["pass_lane_missing_feature_ids"])
+            self.assertEqual(out["data_status"], "DEGRADED")
 
     def test_evidence_snapshot_carries_persistence_baseline_features(self):
         with tempfile.TemporaryDirectory() as tmp:
