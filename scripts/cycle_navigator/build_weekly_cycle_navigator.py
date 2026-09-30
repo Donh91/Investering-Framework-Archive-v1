@@ -357,7 +357,7 @@ def output_schema() -> dict[str, Any]:
             },
             "decision_projection": {
                 "type": "object", "additionalProperties": False,
-                "required": ["contract", "next_1_3d", "next_5_7d", "next_2_3w", "weeks_4_8", "protection"],
+                "required": ["contract", "next_1_3d", "next_5_7d", "next_2_3w", "next_21_30d", "weeks_4_8", "protection"],
                 "properties": {
                     "contract": {"type": "string", "const": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"},
                     "next_1_3d": {
@@ -382,6 +382,31 @@ def output_schema() -> dict[str, Any]:
                         "properties": {
                             "direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
                             "summary": {"type": "string"}
+                        }
+                    },
+                    "next_21_30d": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["direction", "summary", "regime_destination", "expected_path", "action_posture", "falsification", "confidence", "scenarios"],
+                        "properties": {
+                            "direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "summary": {"type": "string"},
+                            "regime_destination": {"type": "string", "enum": ["EXPANSION", "CONSOLIDATION", "DISTRIBUTION", "CONTRACTION", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "expected_path": {"type": "string"},
+                            "action_posture": {"type": "string", "enum": ["BUY", "PREPARE_BUY", "HOLD", "WAIT", "NO_EDGE", "UNAVAILABLE"]},
+                            "falsification": {"type": "array", "maxItems": 4, "items": {"type": "string"}},
+                            "confidence": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "UNKNOWN"]},
+                            "scenarios": {
+                                "type": "array", "minItems": 3, "maxItems": 3,
+                                "items": {
+                                    "type": "object", "additionalProperties": False,
+                                    "required": ["label", "probability_pct", "thesis"],
+                                    "properties": {
+                                        "label": {"type": "string", "enum": ["BASE", "BULL", "BEAR"]},
+                                        "probability_pct": {"type": "integer", "minimum": 0, "maximum": 100},
+                                        "thesis": {"type": "string"}
+                                    }
+                                }
+                            }
                         }
                     },
                     "weeks_4_8": {
@@ -591,7 +616,7 @@ def main() -> None:
         f"Generate internal Cycle Navigator machine issue #{issue} for ISO week W{target_week:02d}, but the continuing public series number for this forecast week is CN #{public_issue}. Use CN #{public_issue} in readable_markdown and x_ready_markdown headings/current-issue references. First evaluate the prior frozen machine issue #{prev_issue} against completed W{completed_week:02d}. "
         "Then freeze the new week's explicit forecasts. The X-ready version must include a precision section, an honest what-went-well/what-went-wrong section, "
         "a concise public track-record section that only uses archived/reproducible values, a current-state section, weekly BTC/ETH ranges or UNAVAILABLE, "
-        "an intraday map with Day 1-2, Day 3-4 and Day 5-7, one base case for this week, one base case for 2-3 weeks, one 4-8 week cycle direction/action posture, "
+        "an intraday map with Day 1-2, Day 3-4 and Day 5-7, one base case for this week, one base case for 2-3 weeks, an explicit 21-30 day strategic projection with BASE/BULL/BEAR probabilities summing to 100, regime destination, ordered path, action posture and falsification conditions, one 4-8 week cycle direction/action posture, "
         "and an easy-to-read altseason countdown. The public precision section must keep Market / Structure and Price Ranges separate. For the coming week it must publish the five v2 Market / Structure dimensions so they can be scored in the next issue. Every unsupported intraday bucket must be exactly UNAVAILABLE. Use cohesive paragraphs and tables where useful."
     )
     value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)
@@ -689,6 +714,20 @@ def main() -> None:
             raise SystemExit(f"bull_bear_scale_{horizon}_must_sum_10")
         if not str(row.get("summary") or "").strip():
             raise SystemExit(f"bull_bear_scale_{horizon}_summary_missing")
+    month = (value.get("decision_projection") or {}).get("next_21_30d")
+    if not isinstance(month, dict):
+        raise SystemExit("next_21_30d_missing")
+    scenarios = month.get("scenarios")
+    if not isinstance(scenarios, list) or [row.get("label") for row in scenarios if isinstance(row, dict)] != ["BASE", "BULL", "BEAR"]:
+        raise SystemExit("next_21_30d_scenario_order_mismatch")
+    if sum(int(row.get("probability_pct", -1)) for row in scenarios) != 100:
+        raise SystemExit("next_21_30d_scenario_probabilities_must_sum_100")
+    if month.get("direction") == "UNAVAILABLE":
+        if month.get("action_posture") not in {"NO_EDGE", "UNAVAILABLE"}:
+            raise SystemExit("next_21_30d_unavailable_must_fail_closed")
+    if not str(month.get("expected_path") or "").strip() or not str(month.get("summary") or "").strip():
+        raise SystemExit("next_21_30d_required_text_missing")
+
     # Preserve bounds invariants when ranges are present.
     for asset in ("btc", "eth"):
         lo, hi = freeze.get(f"{asset}_range_low"), freeze.get(f"{asset}_range_high")
