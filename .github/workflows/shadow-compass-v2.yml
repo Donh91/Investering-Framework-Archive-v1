@@ -7,12 +7,6 @@ on:
       - 'scripts/learning/shadow_compass_v2.py'
       - 'scripts/data_ping/auto_market_state.py'
       - 'tests/learning/test_shadow_compass_v2.py'
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/shadow-compass-v2.yml'
-      - 'scripts/learning/shadow_compass_v2.py'
-      - 'scripts/data_ping/auto_market_state.py'
   schedule:
     - cron: '25 6 * * *'
       timezone: 'UTC'
@@ -61,7 +55,7 @@ jobs:
           PY
 
   shadow:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
