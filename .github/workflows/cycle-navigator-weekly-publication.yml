@@ -223,6 +223,19 @@ jobs:
           if av.get('scoring_contract')!='STRATEGIC_COMPASS_SCORING_v1_1': raise SystemExit('strategic_compass_contract_invalid')
           if av['strategic_21_30d'].get('derived_from_2_3w') is not False: raise SystemExit('strategic_month_must_not_stretch_2_3w')
           if av['authority'].get('portfolio_execution') is not False: raise SystemExit('strategic_compass_authority_violation')
+
+          range_path=Path('05_CYCLE_NAVIGATOR/range_baselines/forecasts')/str(ptr['iso_year'])/f"W{int(ptr['iso_week']):02d}.json"
+          if not range_path.exists(): raise SystemExit('deterministic_range_baseline_missing')
+          rv=json.loads(range_path.read_text())
+          if rv.get('contract')!='CN_DETERMINISTIC_RANGE_BASELINE_v1': raise SystemExit('deterministic_range_baseline_contract_invalid')
+          if int(rv.get('target_iso_year',-1))!=int(ptr.get('iso_year',-2)) or int(rv.get('target_iso_week',-1))!=int(ptr.get('iso_week',-2)):
+              raise SystemExit('deterministic_range_baseline_target_mismatch')
+          independence=rv.get('independence') or {}
+          if independence.get('llm_forecast_input') is not False or independence.get('generated_without_cycle_navigator_model_output') is not True:
+              raise SystemExit('deterministic_range_baseline_independence_violation')
+          authority=rv.get('authority') or {}
+          if authority.get('portfolio_execution') is not False or authority.get('official_range_override') is not False:
+              raise SystemExit('deterministic_range_baseline_authority_violation')
           PY
 
       - name: Commit complete weekly Cycle Navigator archive
@@ -234,6 +247,7 @@ jobs:
           git config user.email framework-cycle-navigator-bot@users.noreply.github.com
           git add 05_CYCLE_NAVIGATOR/weekly \
                   05_CYCLE_NAVIGATOR/track_record \
+                  05_CYCLE_NAVIGATOR/range_baselines \
                   05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl \
                   05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json \
                   05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json \
@@ -276,6 +290,16 @@ jobs:
           ]
           strategic_pointer=json.loads(Path('04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json').read_text())
           paths.append(Path(strategic_pointer['anchor_path']))
+          range_forecast=Path('05_CYCLE_NAVIGATOR/range_baselines/forecasts')/str(value['iso_year'])/f"W{int(value['iso_week']):02d}.json"
+          paths.append(range_forecast)
+          range_value=json.loads(range_forecast.read_text())
+          source_weeks=range_value.get('source_weeks') or []
+          if source_weeks:
+              prior=str(source_weeks[-1])
+              y,w=prior.split('-W')
+              prior_score=Path('05_CYCLE_NAVIGATOR/range_baselines/scores')/y/f"W{int(w):02d}.json"
+              if prior_score.exists():
+                  paths.append(prior_score)
           rows=[]
           for p in paths:
               path=str(p)

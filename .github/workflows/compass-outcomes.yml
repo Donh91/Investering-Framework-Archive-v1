@@ -47,10 +47,13 @@ jobs:
           python -m unittest tests.learning.test_strategic_compass_outcomes -v
           python -m unittest tests.learning.test_shadow_compass_v2_outcomes -v
           python scripts/learning/compass_outcomes.py --dry-run > /tmp/compass-maturity.json
+          python scripts/learning/shadow_compass_v2_outcomes.py --now-utc 1970-01-01T00:00:00Z > /tmp/shadow-direct-exec.json
           python - <<'PY'
           import json
           d=json.load(open('/tmp/compass-maturity.json'))
           assert d['contract']=='OFFICIAL_DAILY_COMPASS_MATURITY_RUN_v1'
+          s=json.load(open('/tmp/shadow-direct-exec.json'))
+          assert s['contract']=='SHADOW_COMPASS_V2_MATURITY_RUN_v1'
           PY
 
   mature:
