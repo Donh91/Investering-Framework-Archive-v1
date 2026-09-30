@@ -620,7 +620,7 @@ def derive_market_now(auto_state: Mapping[str, Any], action: Mapping[str, Any], 
     if not _health_ok(auto_state, as_of):
         return {
             "directional_state": "UNAVAILABLE",
-            "regime": posture,
+            "regime": "DATA_DEGRADED",
             "action_permission": posture,
             "btc_delta_pct": _delta_pct(auto_state, "btc_usdt"),
             "eth_delta_pct": _delta_pct(auto_state, "eth_usdt"),
