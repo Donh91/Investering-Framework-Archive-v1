@@ -439,8 +439,9 @@ class OfficialDailyCompassTest(unittest.TestCase):
     def test_missing_deltas_never_create_bullish_confirmation(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, breadth=0.55, deltas={})
-            self.assertEqual(out["market_now"]["regime"], "HOLD_WAIT")
+            self.assertEqual(out["market_now"]["regime"], "MIXED")
             self.assertEqual(out["market_now"]["directional_state"], "MIXED")
+            self.assertEqual(out["market_now"]["action_permission"], "HOLD_WAIT")
 
     def test_weekly_pullback_risk_projects_conservatively(self):
         with tempfile.TemporaryDirectory() as tmp:
