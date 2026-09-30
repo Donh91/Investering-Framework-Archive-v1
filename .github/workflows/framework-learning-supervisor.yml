@@ -396,6 +396,65 @@ jobs:
             assert key in handoff['agent_read_order']['CODEX_OPERATIONAL_PREFLIGHT'], key
             assert key in handoff['agent_read_order']['ASTRA_RESEARCH_ROUTING'], key
           PY
+      - name: Run bounded intelligent automation orchestration
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -u
+          plan="research/framework_learning/automation_orchestration/LATEST_PLAN.json"
+          outroot="research/api_agent/outputs/automation_orchestration/run-${GITHUB_RUN_ID}"
+          luna_required="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/framework_learning/automation_orchestration/LATEST_PLAN.json').read_text())
+          print('true' if p['agent_calls']['luna_required'] else 'false')
+          PY
+          )"
+          sol_required="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/framework_learning/automation_orchestration/LATEST_PLAN.json').read_text())
+          print('true' if p['agent_calls']['sol_6_1_required'] else 'false')
+          PY
+          )"
+
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "OPENAI_API_KEY unavailable; orchestration remains deterministic-only for this run."
+            luna_required=false
+            sol_required=false
+          fi
+
+          if [ "$luna_required" = "true" ]; then
+            if python scripts/api_agent/check_api_lane_budget.py                 --receipt-root research/api_agent/outputs                 --task AUTOMATION_ORCHESTRATOR_TRIAGE                 --cap-usd 2.0                 --reserve-usd 0.10               && python scripts/api_agent/check_monthly_cost_guard.py                 --receipt-root research/api_agent/outputs                 --hard-stop-usd 40                 --reserve-usd 4.0; then
+              mkdir -p "$outroot/luna"
+              if ! python scripts/api_agent/api_gateway.py                   --task AUTOMATION_ORCHESTRATOR_TRIAGE                   --registry research/api_agent/API_TASK_REGISTRY_v1.json                   --prompt-file research/framework_learning/automation_orchestration/LUNA_PROMPT.txt                   --context-file research/framework_learning/automation_orchestration/LUNA_CONTEXT.json                   --output-dir "$outroot/luna"                   --intended-write-prefix research/api_agent/outputs/automation_orchestration/; then
+                echo "Luna triage failed closed; deterministic plan remains authoritative."
+              fi
+            else
+              echo "Luna triage skipped by API budget guard."
+            fi
+          fi
+
+          if [ "$sol_required" = "true" ]; then
+            if python scripts/api_agent/check_api_lane_budget.py                 --receipt-root research/api_agent/outputs                 --task AUTOMATION_ORCHESTRATOR_ESCALATION                 --cap-usd 4.0                 --reserve-usd 0.25               && python scripts/api_agent/check_monthly_cost_guard.py                 --receipt-root research/api_agent/outputs                 --hard-stop-usd 40                 --reserve-usd 4.0; then
+              mkdir -p "$outroot/sol"
+              if ! python scripts/api_agent/api_gateway.py                   --task AUTOMATION_ORCHESTRATOR_ESCALATION                   --registry research/api_agent/API_TASK_REGISTRY_v1.json                   --prompt-file research/framework_learning/automation_orchestration/SOL_PROMPT.txt                   --context-file research/framework_learning/automation_orchestration/SOL_CONTEXT.json                   --output-dir "$outroot/sol"                   --intended-write-prefix research/api_agent/outputs/automation_orchestration/; then
+                echo "GPT-6.1 Sol escalation failed closed; deterministic plan remains authoritative."
+              fi
+            else
+              echo "GPT-6.1 Sol escalation skipped by API budget guard."
+            fi
+          fi
+
+          finalize=(python scripts/framework_intelligence/automation_orchestration_v1.py finalize
+            --output-root research/framework_learning/automation_orchestration)
+          if [ -f "$outroot/luna/output.json" ]; then
+            finalize+=(--luna-output "$outroot/luna/output.json")
+          fi
+          if [ -f "$outroot/sol/output.json" ]; then
+            finalize+=(--sol-output "$outroot/sol/output.json")
+          fi
+          "${finalize[@]}"
       - name: Manage Operational Memory audit escalation
         if: always()
         env:
