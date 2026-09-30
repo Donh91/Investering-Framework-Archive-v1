@@ -151,6 +151,11 @@ jobs:
             sleep $((attempt * 5))
           done
           [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          local_sha=$(sha256sum 04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json | awk '{print $1}')
+          remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json | sha256sum | awk '{print $1}')
+          [ "$local_sha" = "$remote_sha" ]
       - uses: actions/upload-artifact@v4
         if: always() && steps.slot.outputs.active == 'true'
         with:
