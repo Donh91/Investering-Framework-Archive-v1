@@ -136,6 +136,10 @@ def unavailable_summary(
     now: datetime,
     previous: dict[str, Any] | None,
     error_class: str,
+    source_repository: str | None = None,
+    source_path: str | None = None,
+    source_ref: str | None = None,
+    source_transport: str | None = None,
 ) -> dict[str, Any]:
     return {
         "contract": CONTRACT,
@@ -156,9 +160,9 @@ def unavailable_summary(
         "last_successful_sync_utc": prior_success_utc(previous),
         "failure_class": error_class,
         "credential_requirement": "CROSS_REPO_READ_TOKEN_REQUIRED" if error_class == PRIVATE_SOURCE_AUTH_REQUIRED else None,
-        "source_repository": args.github_repo,
-        "source_path": args.github_path if args.github_repo else None,
-        "source_ref": args.github_ref if args.github_repo else None,
+        "source_repository": source_repository,
+        "source_path": source_path,
+        "source_ref": source_ref,
         "source_transport": source_transport,
         "authority": "AUDIT_SYNC_ONLY",
     }
@@ -239,22 +243,30 @@ def main() -> None:
             receipt_fetcher = fetch
             source_transport = "DIRECT_URL"
     except PrivateSourceAuthRequired as exc:
-        summary = unavailable_summary(now=now, previous=previous, error_class=PRIVATE_SOURCE_AUTH_REQUIRED)
-        summary["source_repository"] = args.github_repo
-        summary["source_path"] = args.github_path
-        summary["source_ref"] = args.github_ref
-        summary["source_transport"] = "GITHUB_CONTENTS_API_AUTHENTICATED"
+        summary = unavailable_summary(
+            now=now,
+            previous=previous,
+            error_class=PRIVATE_SOURCE_AUTH_REQUIRED,
+            source_repository=args.github_repo,
+            source_path=args.github_path,
+            source_ref=args.github_ref,
+            source_transport="GITHUB_CONTENTS_API_AUTHENTICATED",
+        )
         write_summary(args.sync_output, summary)
         print(json.dumps(summary, sort_keys=True))
         if args.allow_unavailable:
             return
         raise SystemExit(2)
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError, OSError, ValueError) as exc:
-        summary = unavailable_summary(now=now, previous=previous, error_class=type(exc).__name__)
-        summary["source_repository"] = args.github_repo
-        summary["source_path"] = args.github_path if args.github_repo else None
-        summary["source_ref"] = args.github_ref if args.github_repo else None
-        summary["source_transport"] = "GITHUB_CONTENTS_API_AUTHENTICATED" if args.github_repo else "DIRECT_URL"
+        summary = unavailable_summary(
+            now=now,
+            previous=previous,
+            error_class=type(exc).__name__,
+            source_repository=args.github_repo,
+            source_path=args.github_path if args.github_repo else None,
+            source_ref=args.github_ref if args.github_repo else None,
+            source_transport="GITHUB_CONTENTS_API_AUTHENTICATED" if args.github_repo else "DIRECT_URL",
+        )
         write_summary(args.sync_output, summary)
         print(json.dumps(summary, sort_keys=True))
         if args.allow_unavailable:
@@ -274,7 +286,15 @@ def main() -> None:
     )
     if not manifest_valid:
         summary = {
-            **unavailable_summary(now=now, previous=previous, error_class="INVALID_RECEIPT_MANIFEST"),
+            **unavailable_summary(
+                now=now,
+                previous=previous,
+                error_class="INVALID_RECEIPT_MANIFEST",
+                source_repository=args.github_repo,
+                source_path=args.github_path if args.github_repo else None,
+                source_ref=args.github_ref if args.github_repo else None,
+                source_transport=source_transport,
+            ),
             "sync_state": "FAILED",
             "status": "FAIL",
             "source_reachable": True,
@@ -290,7 +310,15 @@ def main() -> None:
         source_generated = parse_utc(generated_raw)
     except (TypeError, ValueError):
         summary = {
-            **unavailable_summary(now=now, previous=previous, error_class="INVALID_MANIFEST_TIMESTAMP"),
+            **unavailable_summary(
+                now=now,
+                previous=previous,
+                error_class="INVALID_MANIFEST_TIMESTAMP",
+                source_repository=args.github_repo,
+                source_path=args.github_path if args.github_repo else None,
+                source_ref=args.github_ref if args.github_repo else None,
+                source_transport=source_transport,
+            ),
             "sync_state": "FAILED",
             "status": "FAIL",
             "source_reachable": True,
@@ -334,6 +362,10 @@ def main() -> None:
         "fetch_failures": fetch_failures,
         "last_successful_sync_utc": iso(now) if sync_state in HEALTHY_STATES else prior_success_utc(previous),
         "max_source_age_hours": args.max_source_age_hours,
+        "source_repository": args.github_repo,
+        "source_path": args.github_path if args.github_repo else None,
+        "source_ref": args.github_ref if args.github_repo else None,
+        "source_transport": source_transport,
         "authority": "AUDIT_SYNC_ONLY",
     }
     write_summary(args.sync_output, summary)
