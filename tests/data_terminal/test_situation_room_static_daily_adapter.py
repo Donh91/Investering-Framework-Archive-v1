@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from scripts.data_terminal import situation_room_static_daily_adapter as adapter
@@ -112,6 +113,46 @@ class SituationRoomStaticDailyAdapterTests(unittest.TestCase):
         adapter.apply_situation_room_retrieval_fail_closed(result)
         self.assertEqual(result["daily_result"], "NO_NEW_MATERIAL_CATALYST")
         self.assertEqual(result["run_status"], "PASS")
+
+    def test_run_persists_retrieval_provenance_before_single_write(self):
+        candidate = {
+            "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+            "authority": "RESEARCH_ONLY_NON_CANONICAL",
+            "run_id": "SRDO_test",
+            "observation_date_utc": "2026-08-27",
+            "detection_time_utc": "2026-08-27T08:00:00Z",
+            "run_status": "PASS",
+            "daily_result": "NO_NEW_MATERIAL_CATALYST",
+            "source_coverage": {
+                "primary_pass": 5,
+                "primary_total": 5,
+                "receipts": [{"source_id": "SITUATION_ROOM", "role": "DISCOVERY_ONLY", "status": "PASS"}],
+            },
+            "events": [],
+            "unverified_discoveries": [],
+            "current_unverified_discoveries": [],
+            "unresolved_candidates": [],
+            "market_reaction_observations": [],
+            "market_reaction_separate_from_event": True,
+            "shared_row_tournament_eligible": False,
+            "retroactive_candidate_eligibility": False,
+            "canonical_effect": False,
+            "market_state_effect": False,
+            "portfolio_effect": False,
+            "situation_room_role": "DISCOVERY_ONLY",
+        }
+        with patch.object(adapter.owner, "run", return_value=candidate), \
+             patch.object(adapter.owner, "write_outputs") as writer:
+            out = adapter.run(Path("/tmp/situation-room-test"), "2026-08-27", timeout=1)
+        self.assertEqual(out["retrieval"]["strategy"], "DETERMINISTIC_STATIC_DAILY_BRIEFING")
+        self.assertTrue(out["retrieval"]["dynamic_archive_shell_not_required"])
+        self.assertEqual(
+            out["retrieval"]["situation_room_daily_url"],
+            "https://situationroom.space/briefing/2026-08-27",
+        )
+        writer.assert_called_once()
+        persisted = writer.call_args.args[1]
+        self.assertEqual(persisted["retrieval"], out["retrieval"])
 
     def test_primary_source_insufficiency_remains_unknown_and_degraded(self):
         result = {

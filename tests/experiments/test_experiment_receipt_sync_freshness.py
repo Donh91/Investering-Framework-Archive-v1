@@ -7,7 +7,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from scripts.experiments.sync_experiment_receipts import (
+    PRIVATE_SOURCE_AUTH_REQUIRED,
+    PrivateSourceAuthRequired,
+    authenticated_receipt_fetcher,
     classify_sync_state,
+    github_contents_api_url,
+    raw_github_location,
     prior_success_utc,
     sha256,
     sync_receipts,
@@ -89,6 +94,45 @@ class ExperimentReceiptSyncFreshnessTests(unittest.TestCase):
             )
             self.assertEqual((imported, mismatches, failures, verified), (1, 0, 0, 0))
             self.assertEqual(json.loads((root / "XR-NEW.json").read_text()), receipt)
+
+    def test_private_github_transport_requires_explicit_cross_repo_token(self):
+        fetcher = authenticated_receipt_fetcher(None)
+        with self.assertRaises(PrivateSourceAuthRequired):
+            fetcher("https://raw.githubusercontent.com/Donh91/Eksperimenter-framework-/main/experiment_bridge/receipts/XR-1.json")
+
+    def test_private_raw_url_maps_to_authenticated_contents_route(self):
+        location = raw_github_location(
+            "https://raw.githubusercontent.com/Donh91/Eksperimenter-framework-/main/experiment_bridge/receipts/XR-1.json"
+        )
+        self.assertEqual(
+            location,
+            ("Donh91/Eksperimenter-framework-", "experiment_bridge/receipts/XR-1.json", "main"),
+        )
+        self.assertEqual(
+            github_contents_api_url(
+                "Donh91/Eksperimenter-framework-",
+                "experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+                "main",
+            ),
+            "https://api.github.com/repos/Donh91/Eksperimenter-framework-/contents/experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json?ref=main",
+        )
+
+    def test_unavailable_private_source_names_real_credential_wall(self):
+        now = datetime(2026, 9, 30, 20, 0, tzinfo=timezone.utc)
+        summary = unavailable_summary(
+            now=now,
+            previous=None,
+            error_class=PRIVATE_SOURCE_AUTH_REQUIRED,
+            source_repository="Donh91/Eksperimenter-framework-",
+            source_path="experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+            source_ref="main",
+            source_transport="GITHUB_CONTENTS_API_AUTHENTICATED",
+        )
+        self.assertEqual(summary["failure_class"], PRIVATE_SOURCE_AUTH_REQUIRED)
+        self.assertEqual(summary["credential_requirement"], "CROSS_REPO_READ_TOKEN_REQUIRED")
+        self.assertEqual(summary["source_repository"], "Donh91/Eksperimenter-framework-")
+        self.assertEqual(summary["status"], "DEGRADED")
+        self.assertEqual(summary["sync_state"], "UNAVAILABLE")
 
     def test_prior_success_prefers_explicit_last_success(self):
         previous = {
