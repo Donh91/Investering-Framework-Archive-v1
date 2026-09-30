@@ -5,12 +5,16 @@ import hashlib
 import json
 import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.request
 from datetime import date
 from pathlib import Path
 from typing import Any, Mapping
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
 
 
@@ -595,6 +599,28 @@ def main() -> None:
     public_issue = latest_public_issue + 1
     target_dir = repo / "05_CYCLE_NAVIGATOR/weekly" / str(year) / f"W{target_week:02d}"
     target_dir.mkdir(parents=True, exist_ok=True)
+
+    # Publish an independent deterministic range benchmark before the LLM call.
+    # It is deliberately NOT added to the model context, preserving benchmark independence.
+    range_root = repo / "05_CYCLE_NAVIGATOR/range_baselines"
+    range_forecast_path = range_root / "forecasts" / str(year) / f"W{target_week:02d}.json"
+    range_forecast = build_baseline(repo, target_year=year, target_week=target_week)
+    range_forecast_path.parent.mkdir(parents=True, exist_ok=True)
+    range_payload = range_canonical(range_forecast)
+    if range_forecast_path.exists() and range_forecast_path.read_bytes() != range_payload:
+        raise SystemExit("deterministic_range_baseline_rewrite_blocked")
+    range_forecast_path.write_bytes(range_payload)
+
+    prior_range_forecast_path = range_root / "forecasts" / str(year) / f"W{completed_week:02d}.json"
+    prior_range_score_path = range_root / "scores" / str(year) / f"W{completed_week:02d}.json"
+    if prior_range_forecast_path.exists() and isinstance(weekly_capture, dict):
+        prior_range = read_json(prior_range_forecast_path)
+        prior_score = score_baseline(prior_range, weekly_capture)
+        prior_range_score_path.parent.mkdir(parents=True, exist_ok=True)
+        prior_score_payload = range_canonical(prior_score)
+        if prior_range_score_path.exists() and prior_range_score_path.read_bytes() != prior_score_payload:
+            raise SystemExit("deterministic_range_baseline_score_rewrite_blocked")
+        prior_range_score_path.write_bytes(prior_score_payload)
 
     context = {
         "contract": "CYCLE_NAVIGATOR_WEEKLY_INPUT_v1",
