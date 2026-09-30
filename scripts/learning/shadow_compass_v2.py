@@ -455,6 +455,7 @@ def main() -> None:
         "auto_market_state": nested(input_value, "source_bindings", "auto_market_state", "packet_sha256"),
         "cycle_navigator": nested(input_value, "source_bindings", "cycle_navigator", "machine_package_sha256"),
         "model": args.model,
+        "reasoner_version": REASONER_VERSION,
     }))
     latest_path = repo / OUTPUT_ROOT / "LATEST.json"
     if latest_path.exists() and not args.force:
