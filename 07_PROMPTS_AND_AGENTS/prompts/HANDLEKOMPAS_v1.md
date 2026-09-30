@@ -46,7 +46,7 @@ If a required input is unavailable, state the specific limitation and reduce con
 - For BTC use concrete USD ranges when supported.
 - For generic microcaps use percentage move ranges from the forecast reference level. If a specific coin is being analyzed, use its price or market-cap range when supported.
 - Every range is a forecast interval, not a canonical threshold.
-- Every horizon must include: direction, expected path/order of moves, expected range, pullback expectation, action and confidence.
+- For tactical horizons through 2–3 weeks include direction, expected path/order of moves, expected range, pullback expectation, action and confidence. Strategic 21–30D and 4–8W layers follow their dedicated fields below and must not fabricate numeric ranges.
 - Forecast ordering matters. Examples: `↘ → ↗`, `↗ → ↘`, `↗ → ↗`, `↘ → ↘`, `→ → ↗`.
 - When evidence is insufficient for a responsible numeric range, write `RANGE: NOT RELIABLY ESTIMABLE` rather than fabricating precision.
 
@@ -105,6 +105,34 @@ For user-requested on-demand KOMPAS in ChatGPT, the preferred presentation is a 
 **Handling:** **<one clear action>**
 **Confidence:** <0–100%>
 
+### 21–30 DAGE — STRATEGIC COMPASS
+**Marked:** <↑ | → | ↓>
+**Strategisk tese:** <one concise regime/path statement>
+**Forløb:** <ordered path>
+**Regime-destination:** <EXPANSION | CONSOLIDATION | DISTRIBUTION | CONTRACTION | MIXED/NO_EDGE>
+**Rotation:** <expected BTC -> ETH -> large -> mid -> small/micro transmission, or NOT CONFIRMED>
+**Pullback / distribution:** <expected class + timing where supportable>
+**Handling:** **<one clear action within existing authority>**
+**Thesis state:** <ON_TRACK | ACCELERATING | WEAKENING | INVALIDATED | DATA_DEGRADED>
+**Falsifikation:** <short explicit condition(s)>
+**Confidence:** <0–100%>
+
+### 4–8 UGER — CYCLE OVERLAY
+**Cycle-retning:** <concise direction from current eligible Cycle Navigator projection>
+**Regime-destination:** <expected cycle/regime state>
+**Rotation / breadth:** <high-level expected stage>
+**Pullback / distribution:** <high-level posture>
+**Handling:** **<high-level action within existing authority>**
+**Thesis state:** <ON_TRACK | ACCELERATING | WEAKENING | INVALIDATED | DATA_DEGRADED>
+**Falsifikation:** <short explicit condition(s)>
+**Confidence:** <0–100%>
+**Lineage:** <current eligible Cycle Navigator source identity; never synthesize a parallel 4–8W engine>
+
+### CROSS-HORIZON ALIGNMENT
+**12h / 72h / 7d / 21–30d / 4–8W:** <compact directional alignment>
+**Class:** <FULL_BULL_ALIGNMENT | TACTICAL_PULLBACK_STRUCTURAL_BULL | TRANSITION_WARNING | DISTRIBUTION_ALIGNMENT | MIXED_OR_NO_EDGE>
+**Meaning:** <one sentence; preserve legitimate horizon disagreement>
+
 ### 🎯 MICROCAP ACTION
 **<BUY | BUY DIP | HOLD | SWING-REDUCE | SELL / CASH>**
 
@@ -121,7 +149,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the preferred presentation is a 
 
 ## Forecast accountability
 
-Price/range, pullback and timing forecasts should be preservable for later scoring against realized outcomes. Where the framework supports it, record:
+Price/range, pullback and timing forecasts should be preservable for later scoring against realized outcomes. Strategic 21–30D and 4–8W forecasts follow `04_MARKET_LEARNING/handlekompas/STRATEGIC_COMPASS_SCORING_CONTRACT_v1.md`; their immutable anchors, checkpoints and thesis-state readbacks must remain separate from the existing 12h/72h/168h scoring contract. Where the framework supports it, record:
 - forecast reference timestamp;
 - reference BTC price;
 - horizon;
