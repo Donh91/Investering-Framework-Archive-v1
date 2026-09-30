@@ -632,8 +632,24 @@ def derive_market_now(auto_state: Mapping[str, Any], action: Mapping[str, Any], 
     btc = _delta_pct(auto_state, "btc_usdt")
     eth = _delta_pct(auto_state, "eth_usdt")
     ethbtc = _delta_pct(auto_state, "ethbtc")
+    current_observation = nested(auto_state, "normalized_state", "live_market", "observation_open_utc")
+    prior_observation = nested(auto_state, "predecessor", "market_observation_open_utc")
+    same_price_observation = bool(
+        isinstance(current_observation, str)
+        and current_observation
+        and isinstance(prior_observation, str)
+        and current_observation == prior_observation
+    )
+    no_new_price_observation = bool(
+        same_price_observation
+        and btc == 0
+        and eth == 0
+        and (ethbtc == 0 or ethbtc is None)
+    )
 
-    if btc is None or eth is None:
+    if no_new_price_observation:
+        direction = "UNCHANGED_NO_NEW_OBSERVATION"
+    elif btc is None or eth is None:
         direction = "MIXED"
     elif btc > 0 and eth > 0:
         direction = "BULLISH"
@@ -644,7 +660,9 @@ def derive_market_now(auto_state: Mapping[str, Any], action: Mapping[str, Any], 
     else:
         direction = "MIXED"
 
-    if ethbtc is None:
+    if no_new_price_observation:
+        relative = "NO_NEW_OBSERVATION"
+    elif ethbtc is None:
         relative = "UNAVAILABLE"
     elif ethbtc > 0:
         relative = "STRENGTHENING"
@@ -656,17 +674,28 @@ def derive_market_now(auto_state: Mapping[str, Any], action: Mapping[str, Any], 
     summary_map = {
         "BULLISH": "BTC and ETH are both advancing over the latest governed comparison interval; action authority remains separate.",
         "BEARISH": "BTC and ETH are both declining over the latest governed comparison interval; this does not create sell authority.",
-        "NEUTRAL": "BTC and ETH are unchanged over the latest governed comparison interval.",
+        "NEUTRAL": "BTC and ETH are unchanged across two distinct governed market observations.",
         "MIXED": "BTC/ETH direction is conflicting or incomplete; action authority remains separate.",
+        "UNCHANGED_NO_NEW_OBSERVATION": "The price owner repeated the same completed hourly observation; no fresh directional market claim is made.",
+    }
+    regime_map = {
+        "BULLISH": "BULLISH",
+        "BEARISH": "BEARISH",
+        "NEUTRAL": "NEUTRAL",
+        "MIXED": "MIXED",
+        "UNCHANGED_NO_NEW_OBSERVATION": "NO_NEW_OBSERVATION",
     }
     return {
         "directional_state": direction,
-        "regime": posture,
+        "regime": regime_map[direction],
         "action_permission": posture,
         "btc_delta_pct": btc,
         "eth_delta_pct": eth,
         "ethbtc_delta_pct": ethbtc,
         "eth_relative_state": relative,
+        "market_observation_open_utc": current_observation,
+        "predecessor_market_observation_open_utc": prior_observation,
+        "new_price_observation": not no_new_price_observation,
         "summary": summary_map[direction],
     }
 
@@ -871,6 +900,8 @@ def protection_tracker(
     prior_reentry = str(prior_tracker.get("reentry_state") or "INACTIVE")
     posture = str(action.get("NOW") or "HOLD_WAIT")
     direction = str(market_now.get("directional_state") or "MIXED")
+    if direction == "UNCHANGED_NO_NEW_OBSERVATION":
+        direction = "UNAVAILABLE"
 
     if risk in {"HIGH", "CONFIRMED"}:
         reentry = "WAIT_FOR_FLUSH"
@@ -1045,6 +1076,7 @@ def horizon_map(
         "NEUTRAL": "SIDEWAYS",
         "MIXED": "MIXED",
         "UNAVAILABLE": "UNAVAILABLE",
+        "UNCHANGED_NO_NEW_OBSERVATION": "UNAVAILABLE",
     }
     d12 = direction_map.get(current, "MIXED")
     if posture == "GRADUATED_TOPUP_ACTIVE":
