@@ -1,3 +1,4 @@
+# CI audit trigger: validates current Strategic Compass runtime on main-equivalent code.
 from __future__ import annotations
 
 import json
