@@ -9,6 +9,7 @@ on:
       - 'scripts/learning/strategic_compass_outcomes.py'
       - 'tests/learning/test_compass_outcomes.py'
       - 'tests/learning/test_strategic_compass.py'
+      - 'tests/learning/test_strategic_compass_outcomes.py'
       - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v1.md'
       - '04_MARKET_LEARNING/handlekompas/STRATEGIC_COMPASS_SCORING_CONTRACT_v1.md'
   schedule:
@@ -40,6 +41,7 @@ jobs:
           python -m py_compile scripts/learning/compass_outcomes.py scripts/learning/strategic_compass.py scripts/learning/strategic_compass_outcomes.py
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_strategic_compass -v
+          python -m unittest tests.learning.test_strategic_compass_outcomes -v
           python scripts/learning/compass_outcomes.py --dry-run > /tmp/compass-maturity.json
           python - <<'PY'
           import json
@@ -62,6 +64,7 @@ jobs:
       - name: Mature eligible outcomes only
         run: |
           python -m unittest tests.learning.test_compass_outcomes -v
+          python -m unittest tests.learning.test_strategic_compass_outcomes -v
           python scripts/learning/compass_outcomes.py | tee /tmp/compass-outcomes.json
           python scripts/learning/strategic_compass_outcomes.py | tee /tmp/strategic-compass-outcomes.json
       - name: Verify forecasts were not rewritten
