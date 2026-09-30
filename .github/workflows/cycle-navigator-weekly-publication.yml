@@ -220,7 +220,7 @@ jobs:
           machine_sha=hashlib.sha256((root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_bytes()).hexdigest()
           if ((av.get('source_bindings') or {}).get('cycle_navigator') or {}).get('sha256') != machine_sha:
               raise SystemExit('strategic_compass_cn_lineage_mismatch')
-          if av.get('scoring_contract')!='STRATEGIC_COMPASS_SCORING_v1': raise SystemExit('strategic_compass_contract_invalid')
+          if av.get('scoring_contract')!='STRATEGIC_COMPASS_SCORING_v1_1': raise SystemExit('strategic_compass_contract_invalid')
           if av['strategic_21_30d'].get('derived_from_2_3w') is not False: raise SystemExit('strategic_month_must_not_stretch_2_3w')
           if av['authority'].get('portfolio_execution') is not False: raise SystemExit('strategic_compass_authority_violation')
           PY
