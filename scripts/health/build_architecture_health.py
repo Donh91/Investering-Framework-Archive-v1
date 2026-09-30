@@ -128,6 +128,8 @@ def experiment_receipt_sync_finding(sync: dict[str, Any] | None, age: float | No
     if state=='FAILED' or sync.get('status')=='FAIL':
         return ('EXPERIMENT_RECEIPT_SYNC_FAILED',2)
     if state=='UNAVAILABLE':
+        if sync.get('failure_class')=='PRIVATE_SOURCE_AUTH_REQUIRED':
+            return ('EXPERIMENT_RECEIPT_SYNC_PRIVATE_AUTH_REQUIRED',1)
         return ('EXPERIMENT_RECEIPT_SYNC_UNAVAILABLE',1)
     if state=='STALE':
         return ('EXPERIMENT_RECEIPT_SOURCE_STALE',1)
