@@ -22,6 +22,9 @@ from scripts.learning.compass_outcomes import (
     excursion,
     load_hourly,
     parse_utc,
+    reference_close_time,
+    row_close_time,
+    TARGET_TOLERANCE,
     pct_change,
     read_json,
 )
@@ -29,7 +32,7 @@ from scripts.learning.compass_outcomes import (
 FORECAST_ROOT = Path("04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts")
 OUTPUT_ROOT = Path("04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes")
 CONTRACT = "SHADOW_COMPASS_V2_OUTCOME_v1"
-SCORING_CONTRACT = "SHADOW_COMPASS_V2_SCORING_v1"
+SCORING_CONTRACT = "SHADOW_COMPASS_V2_SCORING_v2"
 
 
 def _source_auto_state(repo: Path, forecast: Mapping[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any]]:
@@ -92,7 +95,26 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     issued = parse_utc(forecast.get("issued_at_utc"))
     if issued is None:
         return None
-    target = issued + timedelta(hours=HORIZONS[horizon])
+
+    auto_state, auto_binding = _source_auto_state(repo, forecast)
+    if auto_state is None:
+        return {
+            "status": "SOURCE_INTEGRITY_FAIL" if auto_binding.get("status") == "FAIL" else "PENDING_SOURCE_EVIDENCE",
+            "forecast_id": forecast.get("forecast_id"),
+            "horizon": horizon,
+            "reason": auto_binding.get("reason"),
+        }
+    live_reference = ((auto_state.get("normalized_state") or {}).get("live_market") or {})
+    start_reference = reference_close_time(live_reference)
+    if start_reference is None:
+        return {
+            "status": "PENDING_REFERENCE_TIME",
+            "forecast_id": forecast.get("forecast_id"),
+            "horizon": horizon,
+            "reason": "BOUND_AUTO_STATE_OBSERVATION_TIME_MISSING",
+        }
+
+    target = start_reference + timedelta(hours=HORIZONS[horizon])
     if now < target:
         return None
 
@@ -110,7 +132,7 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
             "source_binding": auto_binding,
         }
 
-    rows = load_hourly(repo, issued, target + timedelta(hours=2))
+    rows = load_hourly(repo, start_reference, target + TARGET_TOLERANCE)
     endpoint = closest_target(rows, target)
     if endpoint is None:
         return {
@@ -124,9 +146,22 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     btc_return = pct_change(start["btc"], endpoint.get("btc"))
     eth_return = pct_change(start["eth"], endpoint.get("eth"))
     ratio_return = pct_change(start["ethbtc"], endpoint.get("ethbtc"))
-    interval = [r for r in rows if issued <= r["timestamp_utc"] <= target]
+    interval = [r for r in rows if (row_close_time(r) is not None and start_reference <= row_close_time(r) <= target)]
     btc_exc = excursion(start["btc"], [r["btc"] for r in interval if isinstance(r.get("btc"), (int, float))])
     eth_exc = excursion(start["eth"], [r["eth"] for r in interval if isinstance(r.get("eth"), (int, float))])
+
+    endpoint_close = row_close_time(endpoint)
+    effective_window_hours = ((endpoint_close - start_reference).total_seconds() / 3600.0) if endpoint_close else None
+    window_deviation_hours = abs(effective_window_hours - HORIZONS[horizon]) if effective_window_hours is not None else None
+    if window_deviation_hours is None or window_deviation_hours > 1.0:
+        return {
+            "status": "PENDING_TARGET_EVIDENCE",
+            "forecast_id": forecast.get("forecast_id"),
+            "horizon": horizon,
+            "target_at_utc": target.isoformat().replace("+00:00", "Z"),
+            "reason": "WINDOW_OUT_OF_TOLERANCE",
+            "effective_window_hours": effective_window_hours,
+        }
 
     row = (((forecast.get("model_output") or {}).get("horizons") or {}).get(horizon) or {})
     predicted = row.get("direction")
@@ -141,7 +176,17 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
         "horizon": horizon,
         "issued_at_utc": issued.isoformat().replace("+00:00", "Z"),
         "target_at_utc": target.isoformat().replace("+00:00", "Z"),
-        "target_observation_at_utc": endpoint["timestamp_utc"].isoformat().replace("+00:00", "Z"),
+        "target_observation_at_utc": endpoint_close.isoformat().replace("+00:00", "Z") if endpoint_close else None,
+        "target_observation_open_at_utc": endpoint["timestamp_utc"].isoformat().replace("+00:00", "Z"),
+        "time_basis": {
+            "status": "PASS",
+            "nominal_horizon_hours": HORIZONS[horizon],
+            "start_reference_at_utc": start_reference.isoformat().replace("+00:00", "Z"),
+            "start_reference_age_hours": round((issued - start_reference).total_seconds() / 3600.0, 6),
+            "effective_window_hours": round(effective_window_hours, 6),
+            "window_deviation_hours": round(window_deviation_hours, 6),
+            "endpoint_semantics": "HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON",
+        },
         "frozen_forecast": {
             "direction": predicted,
             "confidence": row.get("confidence"),
