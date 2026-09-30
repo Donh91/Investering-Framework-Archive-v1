@@ -21,7 +21,7 @@ Owners:
 
 The materializer is `scripts/learning/strategic_compass.py`.
 The maturity writer is `scripts/learning/strategic_compass_outcomes.py`.
-The scoring/governance contract is `../STRATEGIC_COMPASS_SCORING_CONTRACT_v1.md`.
+The scoring/governance contract is `../STRATEGIC_COMPASS_SCORING_CONTRACT_v1_1.md`.
 
 ## Fail-closed rules
 

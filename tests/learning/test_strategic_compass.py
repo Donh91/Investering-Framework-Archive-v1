@@ -37,13 +37,14 @@ def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
     }
     if month:
         projection["next_21_30d"] = {
-            "direction": "UP", "summary": "recovery then expansion", "regime_destination": "EXPANSION",
+            "direction": "UP", "btc_direction": "UP", "eth_direction": "UP", "ethbtc_direction": "UP", "summary": "recovery then expansion", "regime_destination": "EXPANSION",
             "expected_path": "retest -> absorption -> expansion", "action_posture": "HOLD",
             "falsification": ["breadth fails"], "confidence": "MEDIUM",
+            "scenario_semantics": "UNCALIBRATED_SCENARIO_WEIGHT_NOT_PROBABILITY",
             "scenarios": [
-                {"label": "BASE", "probability_pct": 55, "thesis": "expansion"},
-                {"label": "BULL", "probability_pct": 20, "thesis": "fast expansion"},
-                {"label": "BEAR", "probability_pct": 25, "thesis": "breakdown"},
+                {"label": "BASE", "weight_pct": 55, "thesis": "expansion"},
+                {"label": "BULL", "weight_pct": 20, "thesis": "fast expansion"},
+                {"label": "BEAR", "weight_pct": 25, "thesis": "breakdown"},
             ],
         }
     cn_rel = "05_CYCLE_NAVIGATOR/weekly/2026/W40"
@@ -68,6 +69,10 @@ class StrategicCompassTests(unittest.TestCase):
             self.assertEqual(result["status"], "CREATED")
             anchor = json.loads((repo / result["anchor_path"]).read_text())
             self.assertEqual(anchor["strategic_21_30d"]["direction"], "UP")
+            self.assertEqual(anchor["strategic_21_30d"]["btc_direction"], "UP")
+            self.assertEqual(anchor["strategic_21_30d"]["eth_direction"], "UP")
+            self.assertEqual(anchor["strategic_21_30d"]["ethbtc_direction"], "UP")
+            self.assertEqual(anchor["strategic_21_30d"]["scenario_semantics"], "UNCALIBRATED_SCENARIO_WEIGHT_NOT_PROBABILITY")
             self.assertEqual(anchor["cycle_4_8w"]["direction"], "UP")
             self.assertEqual(anchor["cross_horizon_alignment"]["class"], "TACTICAL_PULLBACK_STRUCTURAL_BULL")
             self.assertFalse(anchor["authority"]["portfolio_execution"])

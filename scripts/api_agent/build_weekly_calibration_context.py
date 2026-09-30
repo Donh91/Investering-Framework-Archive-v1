@@ -627,8 +627,10 @@ def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> di
     """Load already-matured Compass evidence for weekly calibration without rescoring it."""
     tactical_root = repo_root / "04_MARKET_LEARNING/handlekompas/official/outcomes"
     strategic_root = repo_root / "04_MARKET_LEARNING/handlekompas/strategic/outcomes"
+    shadow_root = repo_root / "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes"
     tactical: list[dict[str, Any]] = []
     strategic: list[dict[str, Any]] = []
+    shadow: list[dict[str, Any]] = []
     diagnostics: list[dict[str, str]] = []
 
     def in_window(value: dict[str, Any]) -> bool:
@@ -680,6 +682,29 @@ def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> di
                 "source_path": str(path.relative_to(repo_root)),
             })
 
+    if shadow_root.exists():
+        for path in sorted(shadow_root.rglob("*.json")):
+            try:
+                value = load_json(path)
+            except Exception:
+                diagnostics.append({"path": str(path), "reason": "SHADOW_COMPASS_OUTCOME_UNREADABLE"})
+                continue
+            if value.get("contract") != "SHADOW_COMPASS_V2_OUTCOME_v1" or not in_window(value):
+                continue
+            shadow.append({
+                "forecast_id": value.get("forecast_id"),
+                "model_id": value.get("model_id"),
+                "reasoner_version": value.get("reasoner_version"),
+                "horizon": value.get("horizon"),
+                "target_at_utc": value.get("target_at_utc"),
+                "realized": value.get("realized"),
+                "direction_accuracy": value.get("direction_accuracy"),
+                "baselines": value.get("baselines"),
+                "frozen_forecast": value.get("frozen_forecast"),
+                "comparison_metadata": value.get("comparison_metadata"),
+                "source_path": str(path.relative_to(repo_root)),
+            })
+
     latest_strategic_path = repo_root / "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
     latest_strategic = load_json(latest_strategic_path) if latest_strategic_path.exists() else {"status": "UNAVAILABLE"}
     return {
@@ -689,8 +714,10 @@ def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> di
         "window_end_utc": end.isoformat().replace("+00:00", "Z"),
         "tactical_outcomes": tactical,
         "strategic_outcomes": strategic,
+        "shadow_v2_outcomes": shadow,
         "tactical_outcome_count": len(tactical),
         "strategic_outcome_count": len(strategic),
+        "shadow_v2_outcome_count": len(shadow),
         "latest_strategic_pointer": latest_strategic,
         "diagnostics": diagnostics,
         "rules": [
@@ -699,6 +726,8 @@ def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> di
             "Inspect path/magnitude separately where the outcome contract exposes them.",
             "Treat stabilization-to-continuation upgrades, false negatives, rotation timing and pullback underestimation as explicit calibration questions.",
             "Strategic unscored dimensions remain unavailable until their governed outcome series/scorers exist.",
+            "Shadow Compass v2 is challenger evidence only. Compare it with Official Compass and simple baselines without automatic promotion.",
+            "Do not declare a head-to-head winner from mismatched issue times/source packets or overlapping horizons.",
         ],
     }
 
@@ -778,6 +807,7 @@ def main() -> None:
         "new_matured_experiment_outcomes": len(context["experiment_learning"]["new_matured_outcomes"]) if isinstance(context["experiment_learning"].get("new_matured_outcomes"), list) else None,
         "matured_compass_outcomes": context["compass_learning"]["tactical_outcome_count"],
         "matured_strategic_compass_outcomes": context["compass_learning"]["strategic_outcome_count"],
+        "matured_shadow_compass_v2_outcomes": context["compass_learning"]["shadow_v2_outcome_count"],
         "context_hash": context["context_hash"],
     }, sort_keys=True))
 

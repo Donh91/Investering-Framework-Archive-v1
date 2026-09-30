@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 CONTRACT = "STRATEGIC_COMPASS_ANCHOR_v1"
-SCORING_CONTRACT = "STRATEGIC_COMPASS_SCORING_v1"
+SCORING_CONTRACT = "STRATEGIC_COMPASS_SCORING_v1_1"
 ROOT = Path("04_MARKET_LEARNING/handlekompas/strategic")
 OFFICIAL_PTR = Path("04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json")
 CN_PTR = Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
@@ -159,6 +159,9 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
         "strategic_21_30d": {
             **month,
             "direction": month_direction,
+            "btc_direction": clean_direction(month.get("btc_direction")),
+            "eth_direction": clean_direction(month.get("eth_direction")),
+            "ethbtc_direction": clean_direction(month.get("ethbtc_direction")),
             "thesis_state": thesis_state(month_direction, str(cn.get("status") or "UNKNOWN")),
             "source_owner": "CYCLE_NAVIGATOR_DECISION_PROJECTION",
             "derived_from_2_3w": False,

@@ -54,6 +54,17 @@ class ShadowCompassV2Tests(unittest.TestCase):
                 },
                 "current_breadth": {"advance_ratio": 0.35, "advancers": 35, "decliners": 63, "observed_at_utc": "2026-09-30T19:05:00Z"},
                 "breadth": {"aggregate": {"equal_weight_mean_return_24h_pct": -1.0, "median_return_24h_pct": -0.8}},
+                "capitalization_transmission_proxy": {
+                    "contract": "CAPITALIZATION_TRANSMISSION_PROXY_v1",
+                    "bucket_semantics": "FILTERED_TOP100_RANK_WINDOWS_PROXY_NOT_CANONICAL_CAP_CLASSIFICATION",
+                    "buckets": {
+                        "LARGE_ALT_PROXY": {"status": "OBSERVED_PROXY", "advance_ratio_24h": 0.45},
+                        "MID_ALT_PROXY": {"status": "OBSERVED_PROXY", "advance_ratio_24h": 0.30},
+                        "SMALL_ALT_PROXY": {"status": "OBSERVED_PROXY", "advance_ratio_24h": 0.20},
+                        "MICROCAP_PROXY": {"status": "UNAVAILABLE", "coverage": "BELOW_TOP100_SOURCE_UNIVERSE_NOT_OBSERVED"},
+                    },
+                    "authority": {"binding": False, "canonical_rotation": False, "portfolio_action": False, "execution_weight": 0},
+                },
                 "btc_dominance": {"value_pct": 58.6},
                 "settled_etf": {"btc_reported_total_musd": 60.0, "eth_reported_total_musd": -5.0},
                 "stablecoin_liquidity": {"total_usd": 300_000_000_000.0, "change_7d_pct": 1.0},
@@ -117,6 +128,8 @@ class ShadowCompassV2Tests(unittest.TestCase):
         self.assertEqual(value["contract"], INPUT_CONTRACT)
         self.assertEqual(value["market"]["spot_hourly"]["BTCUSDT"]["return_1h_pct"], -0.4)
         self.assertEqual(value["market"]["microstructure"]["symbols"]["ETHUSDT"]["taker_quote_imbalance"], -0.3)
+        self.assertEqual(value["market"]["capitalization_transmission_proxy"]["buckets"]["MICROCAP_PROXY"]["status"], "UNAVAILABLE")
+        self.assertEqual(value["market"]["capitalization_transmission_proxy"]["authority"]["execution_weight"], 0)
         self.assertEqual(value["structural_prior"]["authority"], "CYCLE_NAVIGATOR_CONTEXT_NOT_ANSWER_KEY")
         self.assertNotIn("official_compass", value)
         self.assertEqual(value["source_bindings"]["auto_market_state"]["packet_sha256"], "auto-sha")

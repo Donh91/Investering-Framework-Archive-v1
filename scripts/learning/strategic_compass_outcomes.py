@@ -87,6 +87,22 @@ def direction_score(predicted: str, realized: float | None) -> dict[str, Any]:
 
 
 
+def asset_direction_scores(
+    forecast: dict[str, Any], lane: str, btc_return: float | None, eth_return: float | None, ethbtc_return: float | None
+) -> dict[str, Any]:
+    if lane == "21_30d":
+        return {
+            "btc": direction_score(str(forecast.get("btc_direction") or "UNAVAILABLE"), btc_return),
+            "eth": direction_score(str(forecast.get("eth_direction") or "UNAVAILABLE"), eth_return),
+            "ethbtc": direction_score(str(forecast.get("ethbtc_direction") or "UNAVAILABLE"), ethbtc_return),
+        }
+    return {
+        "btc": {"result": "UNAVAILABLE_NO_ASSET_SPECIFIC_FORECAST", "correct": None, "predicted": None, "realized_pct": btc_return},
+        "eth": {"result": "UNAVAILABLE_NO_ASSET_SPECIFIC_FORECAST", "correct": None, "predicted": None, "realized_pct": eth_return},
+        "ethbtc": {"result": "UNAVAILABLE_NO_ASSET_SPECIFIC_FORECAST", "correct": None, "predicted": None, "realized_pct": ethbtc_return},
+    }
+
+
 def checkpoint_role(lane: str, label: str) -> str:
     if (lane, label) in {("21_30d", "30d"), ("4_8w", "56d")}:
         return "FINAL_MATURITY"
@@ -119,7 +135,8 @@ def mature(repo: Path, anchor_path: Path, lane: str, label: str, days: int, now:
     btc_mfe, btc_mae = excursion(btc0, [r["btc"] for r in interval if isinstance(r.get("btc"), (int, float))])
     eth_mfe, eth_mae = excursion(eth0, [r["eth"] for r in interval if isinstance(r.get("eth"), (int, float))])
     forecast = anchor["strategic_21_30d"] if lane == "21_30d" else anchor["cycle_4_8w"]
-    predicted = str(forecast.get("direction") or "UNAVAILABLE")
+    structural_direction = str(forecast.get("direction") or "UNAVAILABLE")
+    direction_accuracy = asset_direction_scores(forecast, lane, btc_r, eth_r, ratio_r)
 
     value = {
         "contract": "STRATEGIC_COMPASS_OUTCOME_v1",
@@ -136,10 +153,13 @@ def mature(repo: Path, anchor_path: Path, lane: str, label: str, days: int, now:
             "btc_mfe_pct": btc_mfe, "btc_mae_pct": btc_mae,
             "eth_mfe_pct": eth_mfe, "eth_mae_pct": eth_mae,
         },
-        "direction_accuracy": {
-            "btc": direction_score(predicted, btc_r),
-            "eth": direction_score(predicted, eth_r),
+        "frozen_direction_fields": {
+            "structural_direction": structural_direction,
+            "btc_direction": forecast.get("btc_direction") if lane == "21_30d" else None,
+            "eth_direction": forecast.get("eth_direction") if lane == "21_30d" else None,
+            "ethbtc_direction": forecast.get("ethbtc_direction") if lane == "21_30d" else None,
         },
+        "direction_accuracy": direction_accuracy,
         "unscored_dimensions": {
             "path_sequence": "PENDING_GOVERNED_PATH_SCORER",
             "regime_destination": "PENDING_GOVERNED_REGIME_OUTCOME_SERIES",
