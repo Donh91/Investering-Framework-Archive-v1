@@ -12,11 +12,15 @@ import hashlib
 import json
 import math
 import os
+import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
+
+# Support both module import and direct `python scripts/learning/...py` execution in CI/runtime.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.data_ping.native_handlekompas import (
     DEFAULT_CN_POINTER,
