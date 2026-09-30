@@ -119,7 +119,22 @@ def mature(repo: Path, anchor_path: Path, lane: str, label: str, days: int, now:
     btc_mfe, btc_mae = excursion(btc0, [r["btc"] for r in interval if isinstance(r.get("btc"), (int, float))])
     eth_mfe, eth_mae = excursion(eth0, [r["eth"] for r in interval if isinstance(r.get("eth"), (int, float))])
     forecast = anchor["strategic_21_30d"] if lane == "21_30d" else anchor["cycle_4_8w"]
-    predicted = str(forecast.get("direction") or "UNAVAILABLE")
+    structural_direction = str(forecast.get("direction") or "UNAVAILABLE")
+    if lane == "21_30d":
+        btc_predicted = str(forecast.get("btc_direction") or "UNAVAILABLE")
+        eth_predicted = str(forecast.get("eth_direction") or "UNAVAILABLE")
+        ethbtc_predicted = str(forecast.get("ethbtc_direction") or "UNAVAILABLE")
+        direction_accuracy = {
+            "btc": direction_score(btc_predicted, btc_r),
+            "eth": direction_score(eth_predicted, eth_r),
+            "ethbtc": direction_score(ethbtc_predicted, ratio_r),
+        }
+    else:
+        direction_accuracy = {
+            "btc": {"result": "UNAVAILABLE_NO_ASSET_SPECIFIC_FORECAST", "correct": None, "predicted": None, "realized_pct": btc_r},
+            "eth": {"result": "UNAVAILABLE_NO_ASSET_SPECIFIC_FORECAST", "correct": None, "predicted": None, "realized_pct": eth_r},
+            "ethbtc": {"result": "UNAVAILABLE_NO_ASSET_SPECIFIC_FORECAST", "correct": None, "predicted": None, "realized_pct": ratio_r},
+        }
 
     value = {
         "contract": "STRATEGIC_COMPASS_OUTCOME_v1",
@@ -136,10 +151,13 @@ def mature(repo: Path, anchor_path: Path, lane: str, label: str, days: int, now:
             "btc_mfe_pct": btc_mfe, "btc_mae_pct": btc_mae,
             "eth_mfe_pct": eth_mfe, "eth_mae_pct": eth_mae,
         },
-        "direction_accuracy": {
-            "btc": direction_score(predicted, btc_r),
-            "eth": direction_score(predicted, eth_r),
+        "frozen_direction_fields": {
+            "structural_direction": structural_direction,
+            "btc_direction": forecast.get("btc_direction") if lane == "21_30d" else None,
+            "eth_direction": forecast.get("eth_direction") if lane == "21_30d" else None,
+            "ethbtc_direction": forecast.get("ethbtc_direction") if lane == "21_30d" else None,
         },
+        "direction_accuracy": direction_accuracy,
         "unscored_dimensions": {
             "path_sequence": "PENDING_GOVERNED_PATH_SCORER",
             "regime_destination": "PENDING_GOVERNED_REGIME_OUTCOME_SERIES",
