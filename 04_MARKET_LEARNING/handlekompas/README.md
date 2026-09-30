@@ -13,7 +13,9 @@ Provider quota/rate-limit/token/budget/auth failures are operational health, nev
 
 Market direction and action permission are separate surfaces.
 
-- `market_direction.directional_state` is descriptive and may be `BULLISH`, `BEARISH`, `NEUTRAL`, `MIXED` or `UNAVAILABLE`.
+- `market_direction.directional_state` is descriptive and may be `BULLISH`, `BEARISH`, `NEUTRAL`, `MIXED`, `UNCHANGED_NO_NEW_OBSERVATION` or `UNAVAILABLE`.
+- `UNCHANGED_NO_NEW_OBSERVATION` means the owner repeated the same completed price observation; it is a data-time state, not evidence that the market itself is neutral.
+- `market_direction.regime` remains descriptive market state; it never mirrors `action.NOW`.
 - `action.NOW` remains governed independently and does not inherit direction as execution authority.
 - A bearish direction may still map to `HOLD_WAIT`; a bullish direction may still map to `HOLD_WAIT`.
 - `NEXT_12H.expected_direction` is derived from descriptive market direction, while `NEXT_12H.action_posture` remains constrained by the governed action layer.

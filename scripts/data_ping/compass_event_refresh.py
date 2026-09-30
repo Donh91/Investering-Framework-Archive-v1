@@ -284,9 +284,11 @@ def evaluate(
         causes.append("ACTION_STATE_CHANGED")
 
     prior_market = latest_compass.get("market_now") if isinstance(latest_compass.get("market_now"), Mapping) else {}
+    current_direction = str(market.get("directional_state") or "")
+    prior_direction = str(prior_market.get("directional_state") or "")
     if (
-        str(prior_market.get("directional_state") or "") != str(market.get("directional_state") or "")
-        or str(prior_market.get("regime") or "") != str(market.get("regime") or "")
+        current_direction != "UNCHANGED_NO_NEW_OBSERVATION"
+        and current_direction != prior_direction
     ):
         causes.append("MARKET_STATE_CHANGED")
 
