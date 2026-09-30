@@ -86,6 +86,15 @@ def direction_score(predicted: str, realized: float | None) -> dict[str, Any]:
     return {"result": "CORRECT" if correct else "INCORRECT", "correct": correct, "predicted": predicted, "realized_pct": realized}
 
 
+
+def checkpoint_role(lane: str, label: str) -> str:
+    if (lane, label) in {("21_30d", "30d"), ("4_8w", "56d")}:
+        return "FINAL_MATURITY"
+    if (lane, label) in {("21_30d", "21d"), ("4_8w", "42d")}:
+        return "STRATEGIC_CHECKPOINT"
+    return "MONITOR_ONLY"
+
+
 def mature(repo: Path, anchor_path: Path, lane: str, label: str, days: int, now: datetime) -> dict[str, Any] | None:
     anchor = json.loads(anchor_path.read_text())
     issued = parse_time(anchor.get("issued_at_utc"))
@@ -119,6 +128,7 @@ def mature(repo: Path, anchor_path: Path, lane: str, label: str, days: int, now:
         "forecast_path": str(anchor_path.relative_to(repo)),
         "lane": lane,
         "checkpoint": label,
+        "checkpoint_role": checkpoint_role(lane, label),
         "target_at_utc": target.isoformat().replace("+00:00", "Z"),
         "target_observation_at_utc": endpoint["t"].isoformat().replace("+00:00", "Z"),
         "realized": {
