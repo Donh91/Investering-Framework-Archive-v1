@@ -622,6 +622,87 @@ def load_weekly_owned_context(weekly_pointer_path: Path, capture_root: Path, pre
     }
 
 
+
+def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> dict[str, Any]:
+    """Load already-matured Compass evidence for weekly calibration without rescoring it."""
+    tactical_root = repo_root / "04_MARKET_LEARNING/handlekompas/official/outcomes"
+    strategic_root = repo_root / "04_MARKET_LEARNING/handlekompas/strategic/outcomes"
+    tactical: list[dict[str, Any]] = []
+    strategic: list[dict[str, Any]] = []
+    diagnostics: list[dict[str, str]] = []
+
+    def in_window(value: dict[str, Any]) -> bool:
+        stamp = value.get("target_observation_at_utc") or value.get("matured_at_utc") or value.get("target_at_utc")
+        try:
+            dt = ts(stamp)
+        except Exception:
+            return False
+        return start <= dt <= end
+
+    if tactical_root.exists():
+        for path in sorted(tactical_root.rglob("*.json")):
+            try:
+                value = load_json(path)
+            except Exception:
+                diagnostics.append({"path": str(path), "reason": "TACTICAL_OUTCOME_UNREADABLE"})
+                continue
+            if value.get("contract") != "OFFICIAL_DAILY_COMPASS_OUTCOME_v1" or not in_window(value):
+                continue
+            tactical.append({
+                "compass_id": value.get("compass_id"),
+                "horizon": value.get("horizon"),
+                "target_at_utc": value.get("target_at_utc"),
+                "realized": value.get("realized"),
+                "direction_accuracy": value.get("direction_accuracy"),
+                "triggers": value.get("triggers"),
+                "action_utility": value.get("action_utility"),
+                "baselines": value.get("baselines"),
+                "source_path": str(path.relative_to(repo_root)),
+            })
+
+    if strategic_root.exists():
+        for path in sorted(strategic_root.rglob("*.json")):
+            try:
+                value = load_json(path)
+            except Exception:
+                diagnostics.append({"path": str(path), "reason": "STRATEGIC_OUTCOME_UNREADABLE"})
+                continue
+            if value.get("contract") != "STRATEGIC_COMPASS_OUTCOME_v1" or not in_window(value):
+                continue
+            strategic.append({
+                "anchor_id": value.get("anchor_id"),
+                "lane": value.get("lane"),
+                "checkpoint": value.get("checkpoint"),
+                "target_at_utc": value.get("target_at_utc"),
+                "realized": value.get("realized"),
+                "direction_accuracy": value.get("direction_accuracy"),
+                "unscored_dimensions": value.get("unscored_dimensions"),
+                "source_path": str(path.relative_to(repo_root)),
+            })
+
+    latest_strategic_path = repo_root / "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
+    latest_strategic = load_json(latest_strategic_path) if latest_strategic_path.exists() else {"status": "UNAVAILABLE"}
+    return {
+        "contract": "MASTER_MONDAY_COMPASS_LEARNING_INPUT_v1",
+        "authority": "CALIBRATION_EVIDENCE_ONLY",
+        "window_start_utc": start.isoformat().replace("+00:00", "Z"),
+        "window_end_utc": end.isoformat().replace("+00:00", "Z"),
+        "tactical_outcomes": tactical,
+        "strategic_outcomes": strategic,
+        "tactical_outcome_count": len(tactical),
+        "strategic_outcome_count": len(strategic),
+        "latest_strategic_pointer": latest_strategic,
+        "diagnostics": diagnostics,
+        "rules": [
+            "Outcomes are immutable post-maturity evidence; never rewrite the originating forecast.",
+            "Do not infer edge from overlapping rows without baseline and serial-correlation caution.",
+            "Inspect path/magnitude separately where the outcome contract exposes them.",
+            "Treat stabilization-to-continuation upgrades, false negatives, rotation timing and pullback underestimation as explicit calibration questions.",
+            "Strategic unscored dimensions remain unavailable until their governed outcome series/scorers exist.",
+        ],
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weekly-pointer", type=Path, required=True)
@@ -660,6 +741,7 @@ def main() -> None:
             repo_root=args.repo_root, forecast_root=args.experiment_forecast_root),
         "cycle_navigator_range_score": load_json(args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json") if (args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json").exists() else {"status": "UNAVAILABLE"},
         "cycle_navigator_prospective_range": load_json(args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json") if (args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json").exists() else {"status": "UNAVAILABLE"},
+        "compass_learning": load_compass_learning(args.repo_root, start, end),
         "selection_rule": "latest eligible row per Europe/Copenhagen local date within frozen local week, deduplicated by timestamp and output hash",
         "handoff_targets": ["RAW_WEEKLY_CALIBRATION", "FORECAST_LEDGER", "MASTER_MONDAY_PREP", "SPECIALIST_REVIEW", "EXPERIMENT_GOVERNANCE_REVIEW"],
         "rules": [
@@ -673,6 +755,7 @@ def main() -> None:
             "Evaluate analysis and operational translation separately.",
             "Legacy research is a hypothesis prior only and cannot count as prospective evidence.",
             "Experiment learning may report evidence and review candidates but cannot promote rules automatically.",
+            "Compass learning is immutable post-maturity calibration evidence. Use it to test recurring forecast errors, not to rewrite prior forecasts or auto-promote thresholds.",
             "Latent or strange hypotheses remain retained without affecting weekly conclusions unless new mature evidence exists.",
             "daily_director_rows remains latest-per-local-day for compatibility; daily_director_intraday_sequence is the compact ex-ante calibration timeline.",
             "The intraday Director sequence is shadow calibration context only and carries no framework-state, model-weight or portfolio authority.",
@@ -693,6 +776,8 @@ def main() -> None:
         "legacy_hypotheses": len(context["legacy_research_context"]["hypotheses"]),
         "experiment_candidates": context["experiment_learning"]["candidate_count"],
         "new_matured_experiment_outcomes": len(context["experiment_learning"]["new_matured_outcomes"]) if isinstance(context["experiment_learning"].get("new_matured_outcomes"), list) else None,
+        "matured_compass_outcomes": context["compass_learning"]["tactical_outcome_count"],
+        "matured_strategic_compass_outcomes": context["compass_learning"]["strategic_outcome_count"],
         "context_hash": context["context_hash"],
     }, sort_keys=True))
 
