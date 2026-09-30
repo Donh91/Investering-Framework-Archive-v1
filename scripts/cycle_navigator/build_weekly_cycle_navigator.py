@@ -387,23 +387,27 @@ def output_schema() -> dict[str, Any]:
                     },
                     "next_21_30d": {
                         "type": "object", "additionalProperties": False,
-                        "required": ["direction", "summary", "regime_destination", "expected_path", "action_posture", "falsification", "confidence", "scenarios"],
+                        "required": ["direction", "btc_direction", "eth_direction", "ethbtc_direction", "summary", "regime_destination", "expected_path", "action_posture", "falsification", "confidence", "scenario_semantics", "scenarios"],
                         "properties": {
                             "direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "btc_direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "eth_direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
+                            "ethbtc_direction": {"type": "string", "enum": ["UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
                             "summary": {"type": "string"},
                             "regime_destination": {"type": "string", "enum": ["EXPANSION", "CONSOLIDATION", "DISTRIBUTION", "CONTRACTION", "MIXED", "NO_EDGE", "UNAVAILABLE"]},
                             "expected_path": {"type": "string"},
                             "action_posture": {"type": "string", "enum": ["BUY", "PREPARE_BUY", "HOLD", "WAIT", "NO_EDGE", "UNAVAILABLE"]},
                             "falsification": {"type": "array", "maxItems": 4, "items": {"type": "string"}},
                             "confidence": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "UNKNOWN"]},
+                            "scenario_semantics": {"type": "string", "const": "UNCALIBRATED_SCENARIO_WEIGHT_NOT_PROBABILITY"},
                             "scenarios": {
                                 "type": "array", "minItems": 3, "maxItems": 3,
                                 "items": {
                                     "type": "object", "additionalProperties": False,
-                                    "required": ["label", "probability_pct", "thesis"],
+                                    "required": ["label", "weight_pct", "thesis"],
                                     "properties": {
                                         "label": {"type": "string", "enum": ["BASE", "BULL", "BEAR"]},
-                                        "probability_pct": {"type": "integer", "minimum": 0, "maximum": 100},
+                                        "weight_pct": {"type": "integer", "minimum": 0, "maximum": 100},
                                         "thesis": {"type": "string"}
                                     }
                                 }
@@ -617,7 +621,7 @@ def main() -> None:
         f"Generate internal Cycle Navigator machine issue #{issue} for ISO week W{target_week:02d}, but the continuing public series number for this forecast week is CN #{public_issue}. Use CN #{public_issue} in readable_markdown and x_ready_markdown headings/current-issue references. First evaluate the prior frozen machine issue #{prev_issue} against completed W{completed_week:02d}. "
         "Then freeze the new week's explicit forecasts. The X-ready version must include a precision section, an honest what-went-well/what-went-wrong section, "
         "a concise public track-record section that only uses archived/reproducible values, a current-state section, weekly BTC/ETH ranges or UNAVAILABLE, "
-        "an intraday map with Day 1-2, Day 3-4 and Day 5-7, one base case for this week, one base case for 2-3 weeks, an explicit 21-30 day strategic projection with BASE/BULL/BEAR probabilities summing to 100, regime destination, ordered path, action posture and falsification conditions, one 4-8 week cycle direction/action posture, "
+        "an intraday map with Day 1-2, Day 3-4 and Day 5-7, one base case for this week, one base case for 2-3 weeks, an explicit 21-30 day strategic projection with overall direction plus separate BTC, ETH and ETH/BTC directions; BASE/BULL/BEAR uncalibrated scenario weights summing to 100; regime destination, ordered path, action posture and falsification conditions, one 4-8 week cycle direction/action posture, "
         "and an easy-to-read altseason countdown. The public precision section must keep Market / Structure and Price Ranges separate. For the coming week it must publish the five v2 Market / Structure dimensions so they can be scored in the next issue. Every unsupported intraday bucket must be exactly UNAVAILABLE. Use cohesive paragraphs and tables where useful."
     )
     value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)
@@ -721,8 +725,13 @@ def main() -> None:
     scenarios = month.get("scenarios")
     if not isinstance(scenarios, list) or [row.get("label") for row in scenarios if isinstance(row, dict)] != ["BASE", "BULL", "BEAR"]:
         raise SystemExit("next_21_30d_scenario_order_mismatch")
-    if sum(int(row.get("probability_pct", -1)) for row in scenarios) != 100:
-        raise SystemExit("next_21_30d_scenario_probabilities_must_sum_100")
+    if month.get("scenario_semantics") != "UNCALIBRATED_SCENARIO_WEIGHT_NOT_PROBABILITY":
+        raise SystemExit("next_21_30d_scenario_semantics_mismatch")
+    if sum(int(row.get("weight_pct", -1)) for row in scenarios) != 100:
+        raise SystemExit("next_21_30d_scenario_weights_must_sum_100")
+    for key in ("btc_direction", "eth_direction", "ethbtc_direction"):
+        if month.get(key) not in {"UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"}:
+            raise SystemExit(f"next_21_30d_{key}_invalid")
     if month.get("direction") == "UNAVAILABLE":
         if month.get("action_posture") not in {"NO_EDGE", "UNAVAILABLE"}:
             raise SystemExit("next_21_30d_unavailable_must_fail_closed")
