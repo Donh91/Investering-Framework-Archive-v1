@@ -1,20 +1,20 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-09-30T09:54:49.520626Z`
+Generated: `2026-09-30T10:22:26.622234Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 4.349 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 9.196 |
-| `weekly_output` | **GREEN** | FRESH | 52.068 |
-| `automation_health` | **RED** | RED | 0.05 |
-| `architecture_health` | **AMBER** | AMBER | 0.008 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 3.097 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 3.098 |
-| `remediation_maturation` | **GREEN** | FRESH | 13.698 |
+| `daily_capture` | **GREEN** | FRESH | 4.81 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 9.656 |
+| `weekly_output` | **GREEN** | FRESH | 52.528 |
+| `automation_health` | **RED** | RED | 0.51 |
+| `architecture_health` | **AMBER** | AMBER | 0.469 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 3.557 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 3.558 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.354 |
 
 ## AI and learning activity
 
@@ -23,8 +23,8 @@ Generated: `2026-09-30T09:54:49.520626Z`
 - Pending forecast candidates: **215**
 - Experiment candidates: **429**
 - Experiment dispatch requests: **15099**
-- Codex-ready remediation tasks: **15**
-- Needs-more-evidence items: **45**
+- Codex-ready remediation tasks: **7**
+- Needs-more-evidence items: **42**
 
 ## Incidents
 
@@ -36,4 +36,4 @@ Open incident references: **25**
 - **P1** `architecture_health` - ['EXPERIMENT_RECEIPT_SYNC_UNAVAILABLE']
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `9d630cffe3854b170cdf9d0c663453e9dbe63adef169fece80579db8d85dee12`
+Dashboard SHA-256: `4c759d4cb0b5b656aefe0211dbb65a8dc7a9cd87359ee5cfd82dddd265945eba`
