@@ -8,14 +8,6 @@ on:
       - 'scripts/data_terminal/situation_room_static_daily_adapter.py'
       - 'tests/data_terminal/test_situation_room_daily_owner.py'
       - 'tests/data_terminal/test_situation_room_static_daily_adapter.py'
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/situation-room-daily-static.yml'
-      - 'scripts/data_terminal/situation_room_daily_owner.py'
-      - 'scripts/data_terminal/situation_room_static_daily_adapter.py'
-      - 'tests/data_terminal/test_situation_room_daily_owner.py'
-      - 'tests/data_terminal/test_situation_room_static_daily_adapter.py'
   schedule:
     # Situation Room daily briefing is normally generated around 06:00 UTC.
     # 08:20 Europe/Copenhagen is safely after that during both CET and CEST.
