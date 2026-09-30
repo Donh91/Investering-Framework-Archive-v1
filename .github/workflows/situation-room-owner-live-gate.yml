@@ -63,6 +63,7 @@ jobs:
           assert result['contract']=='SITUATION_ROOM_DAILY_OWNER_v1', result
           assert result['authority']=='RESEARCH_ONLY_NON_CANONICAL', result
           assert result['situation_room_role']=='DISCOVERY_ONLY', result
+          assert result['collection_route']=='SITUATION_ROOM_STATIC_DATED_OWNER_v1', result
           assert result['market_reaction_separate_from_event'] is True, result
           assert result['shared_row_tournament_eligible'] is False, result
           assert result['retroactive_candidate_eligibility'] is False, result

@@ -90,6 +90,7 @@ jobs:
           assert row['contract']=='SITUATION_ROOM_DAILY_OWNER_v1', row
           assert row['authority']=='RESEARCH_ONLY_NON_CANONICAL', row
           assert row['situation_room_role']=='DISCOVERY_ONLY', row
+          assert row['collection_route']=='SITUATION_ROOM_STATIC_DATED_OWNER_v1', row
           assert row['market_reaction_separate_from_event'] is True, row
           assert row['canonical_effect'] is False, row
           assert row['market_state_effect'] is False, row

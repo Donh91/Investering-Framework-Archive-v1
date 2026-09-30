@@ -116,6 +116,72 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertEqual(event["catalyst_subtype"], "REGULATORY_CATALYST")
             self.assertEqual(event["causal_authority"], "NONE")
 
+
+    def persisted_row(self, run_id, detection, status, daily_result, *, static=False):
+        row = {
+            "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+            "authority": "RESEARCH_ONLY_NON_CANONICAL",
+            "observation_date_utc": "2026-08-27",
+            "detection_time_utc": detection,
+            "daily_result": daily_result,
+            "run_status": status,
+            "run_id": run_id,
+            "events": [],
+            "situation_room_role": "DISCOVERY_ONLY",
+        }
+        if static:
+            row["collection_route"] = "SITUATION_ROOM_STATIC_DATED_OWNER_v1"
+            row["retrieval"] = {
+                "strategy": "DETERMINISTIC_STATIC_DAILY_BRIEFING",
+                "dynamic_archive_shell_not_required": True,
+                "situation_room_daily_url": "https://situationroom.space/briefing/2026-08-27",
+            }
+        return row
+
+    def test_authoritative_static_degraded_supersedes_generic_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            generic = self.persisted_row(
+                "GENERIC", "2026-08-27T09:00:00Z", "PASS", "NO_NEW_MATERIAL_CATALYST"
+            )
+            strict = self.persisted_row(
+                "STATIC", "2026-08-27T08:00:00Z", "DEGRADED",
+                "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY", static=True
+            )
+            owner.write_outputs(root, generic)
+            result = owner.write_outputs(root, strict)
+            durable = json.loads((root / "2026/08/2026-08-27.json").read_text())
+            latest = json.loads((root / "LATEST.json").read_text())
+            self.assertEqual(result["status"], "WROTE_INCOMING_RECORD")
+            self.assertEqual(durable["run_id"], "STATIC")
+            self.assertEqual(durable["daily_result"], "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY")
+            self.assertEqual(durable["retrieval"]["strategy"], "DETERMINISTIC_STATIC_DAILY_BRIEFING")
+            self.assertEqual(latest["run_id"], "STATIC")
+            displaced = list((root / "superseded").glob("*.json"))
+            self.assertTrue(displaced)
+            receipt = json.loads(displaced[0].read_text())
+            self.assertEqual(receipt["contract"], "SITUATION_ROOM_DISPLACED_RECORD_v1")
+            self.assertEqual(receipt["displaced_run_id"], "GENERIC")
+            self.assertEqual(receipt["replacement_run_id"], "STATIC")
+
+    def test_generic_pass_cannot_overwrite_authoritative_static_record(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            strict = self.persisted_row(
+                "STATIC", "2026-08-27T08:00:00Z", "DEGRADED",
+                "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY", static=True
+            )
+            generic = self.persisted_row(
+                "GENERIC", "2026-08-27T10:00:00Z", "PASS", "NO_NEW_MATERIAL_CATALYST"
+            )
+            owner.write_outputs(root, strict)
+            result = owner.write_outputs(root, generic)
+            durable = json.loads((root / "2026/08/2026-08-27.json").read_text())
+            self.assertEqual(result["status"], "RETAINED_PRIOR_RECORD")
+            self.assertEqual(result["authoritative_run_id"], "STATIC")
+            self.assertEqual(durable["run_id"], "STATIC")
+            self.assertTrue(owner.is_static_dated_owner(durable))
+
     def test_event_ledger_is_append_only_and_deduplicated(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
