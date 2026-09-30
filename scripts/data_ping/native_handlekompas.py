@@ -347,6 +347,8 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
     freshness = owner_freshness(auto_state, generated)
     source_validation = str(auto_state.get("validation_status") or "UNKNOWN")
     effective_data_status = source_validation if freshness.get("status") == "PASS" else "DEGRADED"
+    native_action = action_context(auto_state, as_of=generated)
+    market_direction = derive_market_now(auto_state, native_action, as_of=generated)
     packet = {
         "contract": CONTRACT,
         "generated_at_utc": generated.isoformat().replace("+00:00", "Z"),
@@ -358,8 +360,8 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
             "validation_status": auto_state.get("validation_status"),
             "decision_context_status": auto_state.get("decision_context_status"),
         },
-        "action": action_context(auto_state, as_of=generated),
-        "market_direction": derive_market_now(auto_state, action_context(auto_state, as_of=generated), as_of=generated),
+        "action": native_action,
+        "market_direction": market_direction,
         "DATA_HEALTH": {
             "status": effective_data_status,
             "source_validation_status": auto_state.get("validation_status"),
