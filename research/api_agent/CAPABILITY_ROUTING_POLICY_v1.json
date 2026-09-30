@@ -9,7 +9,7 @@
   "routing_strategy": "CAPABILITY_MATCHED_WITH_ESCALATION",
   "routing_objective": "LOWEST_SUFFICIENT_CAPABILITY_TIER_THEN_LOWEST_EXPECTED_TOTAL_TASK_COST",
   "pricing_snapshot": {
-    "observed_at_utc_date": "2026-09-27",
+    "observed_at_utc_date": "2026-09-30",
     "semantics": "ROUTING_COST_ESTIMATE_ONLY_NOT_BILLING_OR_BUDGET_AUTHORITY",
     "long_context_threshold_tokens": 272000,
     "long_context_input_multiplier": 2,
@@ -18,10 +18,12 @@
     "verified_latest_model_ids": {
       "luna": "gpt-6-luna",
       "terra": "gpt-5.6-terra",
-      "sol": "gpt-6-sol",
-      "astra": "gpt-6-astra"
+      "sol": "gpt-6.1-sol",
+      "astra": "gpt-6-astra",
+      "legacy_sol": "gpt-6-sol"
     },
-    "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27"
+    "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27",
+    "sol_6_1_note": "GPT-6.1 Sol is the preferred current senior specialist when runtime-qualified; GPT-6 Sol remains a compatibility fallback during staged migration."
   },
   "principles": {
     "deterministic_first": true,
@@ -44,7 +46,8 @@
     "least_privilege_context": true,
     "delegation_lineage_required_for_hardened_profiles": true,
     "bounded_redelegation_only": true,
-    "preserve_role_tiers_when_senior_model_is_cheaper": true
+    "preserve_role_tiers_when_senior_model_is_cheaper": true,
+    "prefer_current_model_within_same_capability_tier": true
   },
   "model_role_policy": {
     "gpt-5.6-terra": {
@@ -83,7 +86,7 @@
       ]
     },
     "gpt-6-sol": {
-      "role": "SENIOR_SPECIALIST",
+      "role": "LEGACY_SOL_FALLBACK",
       "preferred_for": [
         "architecture_review",
         "complex_code_review",
@@ -96,7 +99,23 @@
         "scientific_falsification",
         "strategic_planning"
       ],
-      "routing_note": "SOL_IS_NOT_A_LUXURY_TIER_TO_MINIMIZE; USE_WHEN_EXPECTED_RELIABILITY_OR_REWORK_SAVINGS_JUSTIFY_IT"
+      "routing_note": "COMPATIBILITY_FALLBACK_DURING_STAGED_GPT_6_1_SOL_MIGRATION"
+    },
+    "gpt-6.1-sol": {
+      "role": "SENIOR_SPECIALIST_CURRENT",
+      "preferred_for": [
+        "architecture_review",
+        "complex_code_review",
+        "complex_research_synthesis",
+        "conflicting_evidence",
+        "difficult_reasoning",
+        "framework_wide_consequence_analysis",
+        "high_rework_cost_tasks",
+        "root_cause_analysis",
+        "scientific_falsification",
+        "strategic_planning"
+      ],
+      "routing_note": "PREFERRED_CURRENT_SOL_FOR_DIFFICULT_WORK_WHEN_RUNTIME_QUALIFIED; NEAR_ASTRA_CLASS_WORK_SHOULD_TRY_SOL_6_1_BEFORE_ASTRA_UNLESS_AGENTIC_OR_EXTREME_CONTEXT_IS_REQUIRED"
     }
   },
   "escalation_policy": {
@@ -264,7 +283,36 @@
       "price_per_million": {
         "input": 2,
         "output": 10
-      }
+      },
+      "selection_priority": 10
+    },
+    "gpt-6.1-sol": {
+      "rank": 3,
+      "api_eligible": true,
+      "reasoning_efforts": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "capabilities": [
+        "classification",
+        "conflict_review",
+        "difficult_reasoning",
+        "extraction",
+        "research",
+        "review",
+        "structured_output",
+        "summarization",
+        "synthesis"
+      ],
+      "price_per_million": {
+        "input": 2,
+        "output": 10
+      },
+      "selection_priority": 20
     }
   },
   "review": {
