@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.data_ping.auto_market_state import etf, select_current_breadth, stablecoin
+from scripts.data_ping.auto_market_state import capitalization_transmission_proxy, etf, select_current_breadth, stablecoin
 
 
 class AutoMarketStateIntegrityTests(unittest.TestCase):
@@ -47,6 +47,61 @@ class AutoMarketStateIntegrityTests(unittest.TestCase):
         out = select_current_breadth(rich, live)
         self.assertEqual(out["source"], "RICH_BREADTH_OWNER")
         self.assertAlmostEqual(out["advance_ratio"], 0.42)
+
+    def test_capitalization_transmission_proxy_is_measured_but_zero_authority(self):
+        constituents = []
+        for rank in range(1, 101):
+            constituents.append({
+                "asset_id": "bitcoin" if rank == 1 else "ethereum" if rank == 2 else f"asset-{rank}",
+                "symbol": "btc" if rank == 1 else "eth" if rank == 2 else f"a{rank}",
+                "filtered_rank": rank,
+                "market_cap_usd": float(101-rank) * 1_000_000,
+                "change_24h_pct": float(rank - 50) / 10.0,
+            })
+        breadth = {
+            "retrieved_at_utc": "2026-09-30T18:00:00Z",
+            "universe": {"identifier": "TEST_TOP100", "membership_hash": "membership"},
+            "aggregate": {"membership_hash": "membership"},
+            "constituents": constituents,
+        }
+        out = capitalization_transmission_proxy(breadth)
+        self.assertEqual(out["contract"], "CAPITALIZATION_TRANSMISSION_PROXY_v1")
+        self.assertEqual(out["bucket_semantics"], "FILTERED_TOP100_RANK_WINDOWS_PROXY_NOT_CANONICAL_CAP_CLASSIFICATION")
+        self.assertFalse(out["authority"]["binding"])
+        self.assertFalse(out["authority"]["canonical_rotation"])
+        self.assertEqual(out["authority"]["execution_weight"], 0)
+
+        large = out["buckets"]["LARGE_ALT_PROXY"]
+        mid = out["buckets"]["MID_ALT_PROXY"]
+        small = out["buckets"]["SMALL_ALT_PROXY"]
+        micro = out["buckets"]["MICROCAP_PROXY"]
+        self.assertEqual(large["constituent_count"], 18)
+        self.assertEqual(mid["constituent_count"], 30)
+        self.assertEqual(small["constituent_count"], 50)
+        self.assertEqual(large["membership"][0]["filtered_rank"], 3)
+        self.assertEqual(large["membership"][-1]["filtered_rank"], 20)
+        self.assertEqual(mid["membership"][0]["filtered_rank"], 21)
+        self.assertEqual(small["membership"][-1]["filtered_rank"], 100)
+        self.assertEqual(micro["status"], "UNAVAILABLE")
+        self.assertEqual(micro["coverage"], "BELOW_TOP100_SOURCE_UNIVERSE_NOT_OBSERVED")
+        self.assertGreaterEqual(large["advance_ratio_24h"], 0.0)
+        self.assertLessEqual(large["advance_ratio_24h"], 1.0)
+
+    def test_capitalization_proxy_does_not_smuggle_btc_eth_into_alt_bucket(self):
+        breadth = {
+            "constituents": [
+                {"asset_id": "bitcoin", "symbol": "btc", "filtered_rank": 1, "market_cap_usd": 10.0, "change_24h_pct": 5.0},
+                {"asset_id": "ethereum", "symbol": "eth", "filtered_rank": 2, "market_cap_usd": 9.0, "change_24h_pct": 4.0},
+                {"asset_id": "alt-3", "symbol": "a3", "filtered_rank": 3, "market_cap_usd": 8.0, "change_24h_pct": 3.0},
+            ],
+            "universe": {"identifier": "TEST", "membership_hash": "m"},
+        }
+        out = capitalization_transmission_proxy(breadth)
+        large = out["buckets"]["LARGE_ALT_PROXY"]
+        self.assertEqual(large["constituent_count"], 1)
+        self.assertEqual([row["asset_id"] for row in large["membership"]], ["alt-3"])
+        self.assertEqual(out["btc_return_24h_pct"], 5.0)
+        self.assertEqual(out["eth_return_24h_pct"], 4.0)
 
     def test_stablecoin_normalization_preserves_source_and_retrieval_time(self):
         out, health = stablecoin({
