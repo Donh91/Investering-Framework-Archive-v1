@@ -105,6 +105,17 @@ class ApiGatewayTests(unittest.TestCase):
         self.assertEqual(estimate_cost('gpt-6-sol',1000000,1000000),12.0)
         self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),1.4)
         self.assertEqual(estimate_cost('gpt-5.6-sol',1000000,1000000),24.0)
+    def test_automation_orchestration_tasks_use_luna_then_gpt_6_1_sol(self):
+        data=load_registry(REGISTRY)
+        triage=data['tasks']['AUTOMATION_ORCHESTRATOR_TRIAGE']
+        senior=data['tasks']['AUTOMATION_ORCHESTRATOR_ESCALATION']
+        self.assertEqual(triage['model'],'gpt-6-luna')
+        self.assertEqual(triage['reasoning_effort'],'medium')
+        self.assertEqual(senior['model'],'gpt-6.1-sol')
+        self.assertEqual(senior['reasoning_effort'],'high')
+        self.assertEqual(triage['allowed_write_prefix'],'research/api_agent/outputs/automation_orchestration/')
+        self.assertEqual(senior['allowed_write_prefix'],triage['allowed_write_prefix'])
+
     def test_valid_output(self):validate_output(valid_output())
     def test_valid_forecast_candidate_pct_move(self):
         value=valid_output();value['forecast_candidates']=[directional_pct()];validate_output(value)
