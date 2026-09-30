@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -12,6 +13,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Mapping
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.learning.strategic_compass import materialize as materialize_strategic_compass
 
 
