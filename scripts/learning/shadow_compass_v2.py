@@ -15,6 +15,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
@@ -22,6 +23,7 @@ from typing import Any, Mapping
 # Support both module import and direct `python scripts/learning/...py` execution in CI/runtime.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from scripts.api_agent.api_gateway import estimate_cost
 from scripts.data_ping.native_handlekompas import (
     DEFAULT_CN_POINTER,
     load_auto_state_bundle,
@@ -36,6 +38,9 @@ INPUT_CONTRACT = "SHADOW_COMPASS_V2_INPUT_v1"
 MODEL_OUTPUT_CONTRACT = "SHADOW_COMPASS_V2_MODEL_OUTPUT_v1"
 FORECAST_CONTRACT = "SHADOW_COMPASS_V2_FORECAST_v1"
 POINTER_CONTRACT = "SHADOW_COMPASS_V2_LATEST_POINTER_v1"
+TASK_ID = "SHADOW_COMPASS_V2"
+DEFAULT_REGISTRY = Path("research/api_agent/API_TASK_REGISTRY_v1.json")
+RECEIPT_ROOT = Path("research/api_agent/outputs/shadow_compass_v2")
 
 
 def canonical(value: Any) -> bytes:
@@ -279,6 +284,98 @@ def _response_text(raw: Mapping[str, Any]) -> str:
     return "".join(parts)
 
 
+def governed_task_config(registry_path: Path) -> dict[str, Any]:
+    registry = json.loads(registry_path.read_text())
+    if registry.get("status") != "ACTIVE_SHADOW_ONLY":
+        raise ValueError("shadow_registry_not_active_shadow_only")
+    task = (registry.get("tasks") or {}).get(TASK_ID)
+    if not isinstance(task, Mapping):
+        raise ValueError("shadow_compass_task_not_registered")
+    if task.get("model") != MODEL_DEFAULT:
+        raise ValueError("shadow_compass_model_registry_drift")
+    if task.get("reasoning_effort") != "high":
+        raise ValueError("shadow_compass_reasoning_registry_drift")
+    limit = task.get("max_output_tokens")
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 20000:
+        raise ValueError("shadow_compass_output_limit_invalid")
+    return dict(task)
+
+
+def build_cost_receipt(
+    input_value: Mapping[str, Any],
+    forecast: Mapping[str, Any],
+    raw_response: Mapping[str, Any],
+    *,
+    model: str,
+    task_cfg: Mapping[str, Any],
+) -> dict[str, Any]:
+    if model != MODEL_DEFAULT or task_cfg.get("model") != MODEL_DEFAULT:
+        raise ValueError("shadow_compass_unapproved_model")
+    usage = raw_response.get("usage") if isinstance(raw_response.get("usage"), Mapping) else {}
+    input_tokens = int(usage.get("input_tokens", 0) or 0)
+    output_tokens = int(usage.get("output_tokens", 0) or 0)
+    if input_tokens < 0 or output_tokens < 0:
+        raise ValueError("shadow_compass_invalid_usage")
+    model_output = forecast.get("model_output") or {}
+    return {
+        "contract": "API_AGENT_RECEIPT_v3",
+        "task": TASK_ID,
+        "model": model,
+        "reasoning_effort": task_cfg.get("reasoning_effort"),
+        "request_hash": sha256(canonical({
+            "input_sha256": input_value.get("input_sha256"),
+            "reasoner_version": REASONER_VERSION,
+            "model": model,
+            "max_output_tokens": task_cfg.get("max_output_tokens"),
+        })),
+        "context_hash": input_value.get("input_sha256"),
+        "prompt_hash": sha256(
+            (
+                "SHADOW_COMPASS_V2_SPECIALIZED_SCHEMA|"
+                + REASONER_VERSION
+            ).encode()
+        ),
+        "output_hash": sha256(canonical(model_output)),
+        "response_id": raw_response.get("id"),
+        "response_ids": [raw_response.get("id")] if raw_response.get("id") else [],
+        "attempt_count": 1,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "estimated_cost_usd": estimate_cost(model, input_tokens, output_tokens),
+        "created_unix": int(time.time()),
+        "status": "PASS",
+        "allowed_write_prefix": task_cfg.get("allowed_write_prefix"),
+        "intended_write_prefix": task_cfg.get("allowed_write_prefix"),
+        "forecast_candidate_count": 0,
+        "untrusted_input_envelope": False,
+        "specialized_structured_schema": MODEL_OUTPUT_CONTRACT,
+        "forecast_id": forecast.get("forecast_id"),
+        "forecast_sha256": forecast.get("forecast_sha256"),
+        "authority": {
+            "creates_truth": False,
+            "framework_state_change": False,
+            "model_weight_change": False,
+            "portfolio_action": False,
+            "self_merge": False,
+            "official_compass_override": False,
+            "automatic_promotion": False,
+        },
+    }
+
+
+def write_cost_receipt(repo: Path, receipt: Mapping[str, Any], issued_at_utc: str) -> Path:
+    issued = datetime.fromisoformat(issued_at_utc.replace("Z", "+00:00")).astimezone(timezone.utc)
+    forecast_id = str(receipt.get("forecast_id") or "UNKNOWN")
+    rel = RECEIPT_ROOT / issued.strftime("%Y/%m/%d") / f"{forecast_id}_API_AGENT_RECEIPT.json"
+    path = repo / rel
+    payload = canonical(receipt)
+    if path.exists() and path.read_bytes() != payload:
+        raise ValueError(f"IMMUTABLE_SHADOW_COST_RECEIPT_REWRITE_BLOCKED:{rel.as_posix()}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(payload)
+    return rel
+
+
 def call_model(input_value: Mapping[str, Any], *, model: str, max_output_tokens: int = 4500) -> tuple[dict[str, Any], dict[str, Any]]:
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -426,6 +523,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", type=Path, default=Path.cwd())
     ap.add_argument("--model", default=MODEL_DEFAULT)
+    ap.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
     ap.add_argument("--call-api", action="store_true")
     ap.add_argument("--input-only", action="store_true")
     ap.add_argument("--force", action="store_true")
@@ -433,6 +531,10 @@ def main() -> None:
     args = ap.parse_args()
 
     repo = args.repo_root.resolve()
+    registry_path = args.registry if args.registry.is_absolute() else repo / args.registry
+    task_cfg = governed_task_config(registry_path)
+    if args.model != MODEL_DEFAULT:
+        raise SystemExit("shadow_compass_model_not_allowed")
     issued = datetime.fromisoformat(args.now_utc.replace("Z", "+00:00")) if args.now_utc else datetime.now(timezone.utc)
     if issued.utcoffset() is None:
         issued = issued.replace(tzinfo=timezone.utc)
@@ -466,9 +568,26 @@ def main() -> None:
             print(json.dumps({"status": "NOOP_SAME_SOURCES", "forecast_id": latest.get("forecast_id"), "source_fingerprint": fingerprint}, sort_keys=True))
             return
 
-    model_output, raw = call_model(input_value, model=args.model)
-    forecast = build_forecast(input_value, model_output, raw, model=args.model)
-    print(json.dumps(write_forecast(repo, forecast), sort_keys=True))
+    model_output, raw = call_model(
+        input_value,
+        model=MODEL_DEFAULT,
+        max_output_tokens=int(task_cfg["max_output_tokens"]),
+    )
+    forecast = build_forecast(input_value, model_output, raw, model=MODEL_DEFAULT)
+    forecast_status = write_forecast(repo, forecast)
+    receipt = build_cost_receipt(
+        input_value,
+        forecast,
+        raw,
+        model=MODEL_DEFAULT,
+        task_cfg=task_cfg,
+    )
+    receipt_path = write_cost_receipt(repo, receipt, str(forecast["issued_at_utc"]))
+    print(json.dumps({
+        **forecast_status,
+        "api_cost_receipt_path": receipt_path.as_posix(),
+        "estimated_cost_usd": receipt["estimated_cost_usd"],
+    }, sort_keys=True))
 
 
 if __name__ == "__main__":
