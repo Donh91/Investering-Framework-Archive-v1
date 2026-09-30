@@ -81,7 +81,7 @@ def eligible_weekly_packs(repo: Path, *, before: tuple[int, int] | None = None) 
             continue
         if _asset_week_range(value, "BTC") is None or _asset_week_range(value, "ETH") is None:
             continue
-        rows.append((key, path, value))
+        rows.append((key, path.relative_to(repo), value))
     rows.sort(key=lambda x: x[0])
     return rows
 
