@@ -14,8 +14,8 @@ from typing import Any
 ROOT = Path("04_MARKET_LEARNING/handlekompas/strategic")
 HOURLY = Path("03_DAILY_CAPTURE_LOGS/hourly")
 CHECKPOINTS = {
-    "21_30d": {"21d": 21, "30d": 30},
-    "4_8w": {"42d": 42, "56d": 56},
+    "21_30d": {"7d": 7, "14d": 14, "21d": 21, "30d": 30},
+    "4_8w": {"14d": 14, "28d": 28, "42d": 42, "56d": 56},
 }
 
 
