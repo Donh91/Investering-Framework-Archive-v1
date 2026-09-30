@@ -115,16 +115,20 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 "next_2_3w": {"direction": "SIDEWAYS", "summary": "Structured 2-3 week consolidation."},
                 "next_21_30d": {
                     "direction": "SIDEWAYS",
+                    "btc_direction": "SIDEWAYS",
+                    "eth_direction": "SIDEWAYS",
+                    "ethbtc_direction": "SIDEWAYS",
                     "summary": "Structured month-ahead consolidation.",
                     "regime_destination": "CONSOLIDATION",
                     "expected_path": "consolidation -> reassessment",
                     "action_posture": "HOLD",
                     "falsification": ["Confirmed structural breakdown or expansion invalidates the consolidation thesis."],
                     "confidence": "MEDIUM",
+                    "scenario_semantics": "UNCALIBRATED_SCENARIO_WEIGHT_NOT_PROBABILITY",
                     "scenarios": [
-                        {"label": "BASE", "probability_pct": 60, "thesis": "Consolidation persists."},
-                        {"label": "BULL", "probability_pct": 20, "thesis": "Expansion develops."},
-                        {"label": "BEAR", "probability_pct": 20, "thesis": "Breakdown develops."},
+                        {"label": "BASE", "weight_pct": 60, "thesis": "Consolidation persists."},
+                        {"label": "BULL", "weight_pct": 20, "thesis": "Expansion develops."},
+                        {"label": "BEAR", "weight_pct": 20, "thesis": "Breakdown develops."},
                     ],
                 },
                 "weeks_4_8": {
