@@ -1,0 +1,35 @@
+name: Automation Health Bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/automation-health-bootstrap.yml'
+      - '.github/workflows/automation-production-health.yml'
+      - 'scripts/health/build_automation_health.py'
+      - 'scripts/health/build_automation_health_runtime.py'
+      - 'scripts/health/build_architecture_health.py'
+      - 'scripts/health/automation_health_resolution.py'
+      - 'tests/health/**'
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: automation-health-bootstrap
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch canonical production health observer on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run automation-production-health.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref main
