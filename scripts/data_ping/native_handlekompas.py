@@ -22,7 +22,7 @@ POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
 OFFICIAL_COMPASS_SCHEMA_VERSION = 4
 # V3_2 adds the explicit Main-Framework permission ceiling for proactive long-cycle actions.
-OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-29_BULL_BEAR_DISPLAY_V3_3"
+OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
@@ -620,7 +620,7 @@ def derive_market_now(auto_state: Mapping[str, Any], action: Mapping[str, Any], 
     if not _health_ok(auto_state, as_of):
         return {
             "directional_state": "UNAVAILABLE",
-            "regime": posture,
+            "regime": "DATA_DEGRADED",
             "action_permission": posture,
             "btc_delta_pct": _delta_pct(auto_state, "btc_usdt"),
             "eth_delta_pct": _delta_pct(auto_state, "eth_usdt"),

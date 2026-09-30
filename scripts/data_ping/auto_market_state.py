@@ -402,6 +402,7 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     health["hourly_market"] = {**hourly_health, "row": row_health, "status": "PASS" if hourly_health.get("status") == "PASS" and row_health.get("status") == "PASS" else hourly_health.get("status")}
     market_metrics = nested(live, "target", "market_metrics") or {}
     derivatives = market_metrics.get("derivatives") or {}
+    microstructure = market_metrics.get("microstructure") or {}
     live_breadth_reference = market_metrics.get("breadth") or {}
     sentiment = market_metrics.get("sentiment") or {}
     altseason = market_metrics.get("altseason_context") or market_metrics.get("rotation_context") or {}
@@ -468,6 +469,41 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     any_nonpass = any(health.get(lane, {}).get("status") != "PASS" for lane in LANES)
     validation_status = "FAIL" if critical_fail else "DEGRADED" if any_nonpass else "PASS"
     decision_context_status = "PASS" if not blockers else "DEGRADED"
+    spot_hourly = {
+        "observation_open_utc": row.get("timestamp_utc") if row else None,
+        "BTCUSDT": {
+            "open": float(row["btc_open"]) if row and row.get("btc_open") else None,
+            "high": float(row["btc_high"]) if row and row.get("btc_high") else None,
+            "low": float(row["btc_low"]) if row and row.get("btc_low") else None,
+            "close": float(row["btc_close"]) if row and row.get("btc_close") else None,
+            "volume": float(row["btc_volume"]) if row and row.get("btc_volume") else None,
+            "quote_volume": float(row["btc_quote_volume"]) if row and row.get("btc_quote_volume") else None,
+            "trade_count": int(float(row["btc_trade_count"])) if row and row.get("btc_trade_count") else None,
+            "taker_buy_quote_share": float(row["btc_taker_buy_quote_share"]) if row and row.get("btc_taker_buy_quote_share") else None,
+            "return_1h_pct": float(row["btc_return_1h_pct"]) if row and row.get("btc_return_1h_pct") else None,
+            "range_1h_pct": float(row["btc_range_1h_pct"]) if row and row.get("btc_range_1h_pct") else None,
+        },
+        "ETHUSDT": {
+            "open": float(row["eth_open"]) if row and row.get("eth_open") else None,
+            "high": float(row["eth_high"]) if row and row.get("eth_high") else None,
+            "low": float(row["eth_low"]) if row and row.get("eth_low") else None,
+            "close": float(row["eth_close"]) if row and row.get("eth_close") else None,
+            "volume": float(row["eth_volume"]) if row and row.get("eth_volume") else None,
+            "quote_volume": float(row["eth_quote_volume"]) if row and row.get("eth_quote_volume") else None,
+            "trade_count": int(float(row["eth_trade_count"])) if row and row.get("eth_trade_count") else None,
+            "taker_buy_quote_share": float(row["eth_taker_buy_quote_share"]) if row and row.get("eth_taker_buy_quote_share") else None,
+            "return_1h_pct": float(row["eth_return_1h_pct"]) if row and row.get("eth_return_1h_pct") else None,
+            "range_1h_pct": float(row["eth_range_1h_pct"]) if row and row.get("eth_range_1h_pct") else None,
+        },
+        "ETHBTC": {
+            "open": float(row["ethbtc_open"]) if row and row.get("ethbtc_open") else None,
+            "high": float(row["ethbtc_high"]) if row and row.get("ethbtc_high") else None,
+            "low": float(row["ethbtc_low"]) if row and row.get("ethbtc_low") else None,
+            "close": float(row["ethbtc_close"]) if row and row.get("ethbtc_close") else None,
+            "return_1h_pct": float(row["ethbtc_return_1h_pct"]) if row and row.get("ethbtc_return_1h_pct") else None,
+            "range_1h_pct": float(row["ethbtc_range_1h_pct"]) if row and row.get("ethbtc_range_1h_pct") else None,
+        },
+    }
     hourly_derivatives = {
         "btc_open_interest": float(row["btc_open_interest"]) if row and row.get("btc_open_interest") else None,
         "eth_open_interest": float(row["eth_open_interest"]) if row and row.get("eth_open_interest") else None,
@@ -490,6 +526,8 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
         "source_health": health,
         "normalized_state": {
             "live_market": live_market,
+            "spot_hourly": spot_hourly,
+            "microstructure": microstructure or None,
             "btc_dominance": dominance,
             "derivatives": {"live_anchor": derivatives, "hourly": hourly_derivatives},
             "breadth": breadth,
