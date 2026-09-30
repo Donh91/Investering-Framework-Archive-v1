@@ -1,6 +1,6 @@
 {
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "audited_at_utc": "2026-09-27T20:55:00Z",
+  "audited_at_utc": "2026-09-30T00:00:00Z",
   "canonical_firewall": {
     "canonical_promotion": false,
     "market_rule_change": false,
@@ -75,6 +75,22 @@
       "automatic_code_write": false,
       "automatic_merge": false,
       "invocation_owner": "EXISTING_SUPERVISOR_OR_REMEDIATION_OWNER"
+    },
+    "AUTOMATION_ORCHESTRATOR_TRIAGE": {
+      "authority": "ADVISORY_SHADOW_ONLY",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "role": "batched low-cost triage of changed automation-health failures after deterministic deduplication",
+      "automatic_code_write": false,
+      "automatic_merge": false
+    },
+    "AUTOMATION_ORCHESTRATOR_ESCALATION": {
+      "authority": "ADVISORY_READ_ONLY",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "role": "cross-workflow root-cause and shared-failure deduplication for repeated or correlated automation failures",
+      "automatic_code_write": false,
+      "automatic_merge": false
     }
   },
   "design_principle": "Deterministic control plane; probabilistic models are bounded advisors and research specialists, never final runtime authority.",
@@ -143,15 +159,17 @@
     "single_run_hard_stop_usd": 3
   },
   "model_version_policy": {
-    "verified_at_utc_date": "2026-09-27",
+    "verified_at_utc_date": "2026-09-30",
     "source": "OPENAI_OFFICIAL_API_PRICING_AND_MODEL_CATALOG",
     "latest_verified_ids": {
       "luna": "gpt-6-luna",
       "terra": "gpt-5.6-terra",
-      "sol": "gpt-6-sol",
-      "astra": "gpt-6-astra"
+      "sol": "gpt-6.1-sol",
+      "astra": "gpt-6-astra",
+      "legacy_sol": "gpt-6-sol"
     },
     "rule": "USE_ONLY_OFFICIALLY_VERIFIED_MODEL_IDS;_RUNTIME_QUALIFICATION_REMAINS_REQUIRED",
-    "terra_note": "KEEP_GPT_5_6_TERRA_UNTIL_AN_OFFICIAL_NEWER_TERRA_ID_IS_VERIFIED"
+    "terra_note": "KEEP_GPT_5_6_TERRA_UNTIL_AN_OFFICIAL_NEWER_TERRA_ID_IS_VERIFIED",
+    "sol_note": "Prefer GPT-6.1 Sol for newly qualified senior-specialist lanes; retain GPT-6 Sol only where existing task-specific gates remain pinned during staged migration."
   }
 }
