@@ -398,67 +398,130 @@ def write(packet: Mapping[str, Any], output_root: Path) -> dict[str, Any]:
     return {"path": path.as_posix(), "pointer": (output_root / "LATEST.json").as_posix(), "sha256": packet["handlekompas_sha256"]}
 
 
-def _feature(feature_id: str, value: Any, unit: str | None, source: str, observed_at: Any, health: Any) -> dict[str, Any]:
+def _feature(
+    feature_id: str,
+    value: Any,
+    unit: str | None,
+    source: str,
+    observed_at: Any,
+    health: Any,
+    *,
+    source_owner: str | None = None,
+    retrieved_at: Any = None,
+) -> dict[str, Any]:
+    normalized = value if value is None or isinstance(value, (str, int, float, bool)) else None
+    if normalized is None:
+        eligibility = "MISSING"
+    elif health == "PASS":
+        eligibility = "ELIGIBLE_PRESENT"
+    else:
+        eligibility = "CONTEXT_ONLY_OR_DEGRADED"
     return {
         "feature_id": feature_id,
-        "value": value if value is None or isinstance(value, (str, int, float, bool)) else None,
+        "value": normalized,
         "unit": unit,
         "source_path": source,
+        "source_owner": source_owner,
         "observed_at": observed_at,
+        "retrieved_at": retrieved_at,
         "freshness_state": health or "UNKNOWN",
-        "eligibility": "ELIGIBLE" if health == "PASS" else "CONTEXT_ONLY_OR_DEGRADED",
+        "eligibility": eligibility,
     }
 
 
 def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[str, Any]:
     ns = auto_state.get("normalized_state") or {}
     live = ns.get("live_market") or {}
-    breadth = nested(ns, "breadth", "aggregate") or {}
+    rich_breadth = ns.get("breadth") or {}
+    current_breadth = ns.get("current_breadth") or {}
+    breadth_aggregate = rich_breadth.get("aggregate") or {}
     derivatives = ns.get("derivatives") or {}
+    derivative_hourly = derivatives.get("hourly") or {}
+    derivative_live = derivatives.get("live_anchor") or {}
     dominance = ns.get("btc_dominance") or {}
     etf = ns.get("settled_etf") or {}
     stable = ns.get("stablecoin_liquidity") or {}
     sentiment = ns.get("sentiment") or {}
+    cfgi = nested(sentiment, "cfgi") or {}
+    cfgi_symbols = cfgi.get("symbols") if isinstance(cfgi, Mapping) else {}
+    cfgi_symbols = cfgi_symbols if isinstance(cfgi_symbols, Mapping) else {}
+    btc_sentiment = cfgi_symbols.get("BTC") if isinstance(cfgi_symbols.get("BTC"), Mapping) else {}
+    eth_sentiment = cfgi_symbols.get("ETH") if isinstance(cfgi_symbols.get("ETH"), Mapping) else {}
+    market_sentiment = cfgi_symbols.get("MARKET") if isinstance(cfgi_symbols.get("MARKET"), Mapping) else {}
     altseason = ns.get("altseason_context") or {}
     source_health = auto_state.get("source_health") or {}
-    observed = auto_state.get("packet_generated_at_utc")
+    packet_observed = auto_state.get("packet_generated_at_utc")
+    packet_source = packet_path.as_posix()
+
+    hourly_health = nested(source_health, "hourly_market", "status")
+    breadth_health = nested(source_health, "breadth", "status")
+    derivatives_health = nested(source_health, "derivatives", "status")
+    sentiment_health = nested(source_health, "sentiment", "status")
+
+    breadth_ratio = finite(current_breadth.get("advance_ratio"))
+    if breadth_ratio is None:
+        breadth_ratio = finite(breadth_aggregate.get("advance_ratio"))
+    breadth_advancers = finite(current_breadth.get("advancers"))
+    if breadth_advancers is None:
+        breadth_advancers = finite(breadth_aggregate.get("advancers"))
+    breadth_decliners = finite(current_breadth.get("decliners"))
+    if breadth_decliners is None:
+        breadth_decliners = finite(breadth_aggregate.get("decliners"))
+    breadth_observed = current_breadth.get("observed_at_utc") or rich_breadth.get("retrieved_at_utc")
+
+    btc_oi = finite(derivative_hourly.get("btc_open_interest"))
+    eth_oi = finite(derivative_hourly.get("eth_open_interest"))
+    btc_funding = finite(nested(derivative_live, "BTC-USDT-SWAP", "funding", "funding_rate"))
+    eth_funding = finite(nested(derivative_live, "ETH-USDT-SWAP", "funding", "funding_rate"))
+    derivative_hourly_observed = derivative_hourly.get("observation_open_utc") or live.get("observation_open_utc")
 
     rows = [
-        _feature("btc_usdt", finite(live.get("btc_usdt")), "USD", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
-        _feature("eth_usdt", finite(live.get("eth_usdt")), "USD", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
-        _feature("ethbtc", finite(live.get("ethbtc")), "ratio", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
-        _feature("breadth_advance_ratio", finite(breadth.get("advance_ratio")), "ratio", packet_path.as_posix(), observed, nested(source_health, "breadth", "status")),
-        _feature("breadth_advancers", finite(breadth.get("advancers")), "count", packet_path.as_posix(), observed, nested(source_health, "breadth", "status")),
-        _feature("breadth_decliners", finite(breadth.get("decliners")), "count", packet_path.as_posix(), observed, nested(source_health, "breadth", "status")),
-        _feature("breadth_equal_weight_24h", finite(breadth.get("equal_weight_mean_return_24h_pct")), "pct", packet_path.as_posix(), observed, nested(source_health, "breadth", "status")),
-        _feature("btc_dominance_pct", finite(dominance.get("value_pct")), "pct", packet_path.as_posix(), observed, nested(source_health, "btc_dominance", "status")),
-        _feature("btc_etf_musd", finite(etf.get("btc_reported_total_musd")), "MUSD", packet_path.as_posix(), observed, nested(source_health, "settled_etf", "status")),
-        _feature("eth_etf_musd", finite(etf.get("eth_reported_total_musd")), "MUSD", packet_path.as_posix(), observed, nested(source_health, "settled_etf", "status")),
-        _feature("stablecoin_total_usd", finite(stable.get("total_usd")), "USD", packet_path.as_posix(), observed, nested(source_health, "stablecoin_liquidity", "status")),
-        _feature("btc_open_interest", finite(nested(derivatives, "BTC-USDT-SWAP", "open_interest", "open_interest")), "contracts", packet_path.as_posix(), observed, nested(source_health, "derivatives", "status")),
-        _feature("eth_open_interest", finite(nested(derivatives, "ETH-USDT-SWAP", "open_interest", "open_interest")), "contracts", packet_path.as_posix(), observed, nested(source_health, "derivatives", "status")),
-        _feature("btc_funding", finite(nested(derivatives, "BTC-USDT-SWAP", "funding", "funding_rate")), "rate", packet_path.as_posix(), observed, nested(source_health, "derivatives", "status")),
-        _feature("eth_funding", finite(nested(derivatives, "ETH-USDT-SWAP", "funding", "funding_rate")), "rate", packet_path.as_posix(), observed, nested(source_health, "derivatives", "status")),
-        _feature("sentiment_state", sentiment.get("classification") if isinstance(sentiment, Mapping) else None, None, packet_path.as_posix(), observed, nested(source_health, "sentiment", "status")),
-        _feature("altseason_score_90d", finite(nested(altseason, "blockchaincenter_altcoin_season", "horizons", "90", "published_score")), "index", packet_path.as_posix(), observed, nested(source_health, "altseason_context", "status")),
-        _feature("entry_signal_state", nested(ns, "entry_signal_reference", "state"), None, packet_path.as_posix(), observed, nested(source_health, "entry_signal_reference", "status")),
-        _feature("btc_delta_since_prior_packet_pct", _delta_pct(auto_state, "btc_usdt"), "pct", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
-        _feature("eth_delta_since_prior_packet_pct", _delta_pct(auto_state, "eth_usdt"), "pct", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
-        _feature("ethbtc_delta_since_prior_packet_pct", _delta_pct(auto_state, "ethbtc"), "pct", packet_path.as_posix(), observed, nested(source_health, "hourly_market", "status")),
+        _feature("btc_usdt", finite(live.get("btc_usdt")), "USD", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="HOURLY_SEQUENCE"),
+        _feature("eth_usdt", finite(live.get("eth_usdt")), "USD", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="HOURLY_SEQUENCE"),
+        _feature("ethbtc", finite(live.get("ethbtc")), "ratio", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="HOURLY_SEQUENCE"),
+        _feature("breadth_advance_ratio", breadth_ratio, "ratio", packet_source, breadth_observed, breadth_health, source_owner=str(current_breadth.get("source") or "RICH_BREADTH_OWNER")),
+        _feature("breadth_advancers", breadth_advancers, "count", packet_source, breadth_observed, breadth_health, source_owner=str(current_breadth.get("source") or "RICH_BREADTH_OWNER")),
+        _feature("breadth_decliners", breadth_decliners, "count", packet_source, breadth_observed, breadth_health, source_owner=str(current_breadth.get("source") or "RICH_BREADTH_OWNER")),
+        _feature("breadth_equal_weight_24h", finite(breadth_aggregate.get("equal_weight_mean_return_24h_pct")), "pct", packet_source, rich_breadth.get("retrieved_at_utc"), breadth_health, source_owner="RICH_BREADTH_OWNER"),
+        _feature("btc_dominance_pct", finite(dominance.get("value_pct")), "pct", packet_source, dominance.get("source_timestamp"), nested(source_health, "btc_dominance", "status"), source_owner="COINMARKETCAP_BTC_D", retrieved_at=dominance.get("source_verified_timestamp")),
+        _feature("btc_etf_musd", finite(etf.get("btc_reported_total_musd")), "MUSD", packet_source, etf.get("session_date"), nested(source_health, "settled_etf", "status"), source_owner="FARSIDE_SETTLED_ETF", retrieved_at=etf.get("retrieved_at_utc")),
+        _feature("eth_etf_musd", finite(etf.get("eth_reported_total_musd")), "MUSD", packet_source, etf.get("session_date"), nested(source_health, "settled_etf", "status"), source_owner="FARSIDE_SETTLED_ETF", retrieved_at=etf.get("retrieved_at_utc")),
+        _feature("stablecoin_total_usd", finite(stable.get("total_usd")), "USD", packet_source, stable.get("source_timestamp"), nested(source_health, "stablecoin_liquidity", "status"), source_owner="DEFILLAMA_STABLECOINS", retrieved_at=stable.get("retrieved_at_utc")),
+        _feature("btc_open_interest", btc_oi, "contracts", packet_source, derivative_hourly_observed, derivatives_health, source_owner="OKX_HOURLY_DERIVATIVES"),
+        _feature("eth_open_interest", eth_oi, "contracts", packet_source, derivative_hourly_observed, derivatives_health, source_owner="OKX_HOURLY_DERIVATIVES"),
+        _feature("btc_funding", btc_funding, "rate", packet_source, nested(derivative_live, "BTC-USDT-SWAP", "funding", "funding_time"), derivatives_health, source_owner="OKX_LIVE_SWAP"),
+        _feature("eth_funding", eth_funding, "rate", packet_source, nested(derivative_live, "ETH-USDT-SWAP", "funding", "funding_time"), derivatives_health, source_owner="OKX_LIVE_SWAP"),
+        _feature("sentiment_state", market_sentiment.get("classification"), None, packet_source, market_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
+        _feature("sentiment_market_score", finite(market_sentiment.get("score")), "index", packet_source, market_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
+        _feature("sentiment_btc_score", finite(btc_sentiment.get("score")), "index", packet_source, btc_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
+        _feature("sentiment_eth_score", finite(eth_sentiment.get("score")), "index", packet_source, eth_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
+        _feature("altseason_score_90d", finite(nested(altseason, "blockchaincenter_altcoin_season", "horizons", "90", "published_score")), "index", packet_source, nested(altseason, "blockchaincenter_altcoin_season", "observation_date_utc"), nested(source_health, "altseason_context", "status"), source_owner="BLOCKCHAINCENTER", retrieved_at=nested(altseason, "blockchaincenter_altcoin_season", "retrieved_at_utc")),
+        _feature("entry_signal_state", nested(ns, "entry_signal_reference", "state"), None, packet_source, nested(ns, "entry_signal_reference", "generated_at_utc"), nested(source_health, "entry_signal_reference", "status"), source_owner="ENTRY_SIGNAL_LEDGER"),
+        _feature("btc_delta_since_prior_packet_pct", _delta_pct(auto_state, "btc_usdt"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
+        _feature("eth_delta_since_prior_packet_pct", _delta_pct(auto_state, "eth_usdt"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
+        _feature("ethbtc_delta_since_prior_packet_pct", _delta_pct(auto_state, "ethbtc"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
     ]
     available = sum(row["value"] is not None for row in rows)
+    missing = [row["feature_id"] for row in rows if row["value"] is None]
+    pass_lane_missing = [
+        row["feature_id"] for row in rows
+        if row["value"] is None and row["freshness_state"] == "PASS"
+    ]
     return {
         "selected_features": rows,
         "available_features": available,
         "expected_selected_features": len(rows),
+        "missing_feature_ids": missing,
+        "pass_lane_missing_feature_ids": pass_lane_missing,
+        "mapping_integrity_status": "PASS" if not pass_lane_missing else "FAIL_PASS_LANE_MISSING_VALUE",
+        "breadth_temporal_selection": current_breadth or None,
         "full_feature_universe_reference": {
             "contract": auto_state.get("contract"),
-            "packet_path": packet_path.as_posix(),
+            "packet_path": packet_source,
             "packet_sha256": auto_state.get("packet_sha256"),
             "note": "Full immutable upstream packet is the backtest feature universe; selected_features is a compact index, not a forced 100-field schema.",
         },
     }
-
 
 def _delta_pct(auto_state: Mapping[str, Any], key: str) -> float | None:
     return finite(nested(auto_state, "deltas_since_prior_auto_packet", key, "pct"))
@@ -1192,7 +1255,7 @@ def build_official_compass(
     bull_bear = bull_bear_scale(horizons)
     sell = sell_assessment(auto_state, protection, as_of=issued)
     evidence = evidence_snapshot(auto_state, packet_path)
-    data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"
+    data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible and evidence.get("mapping_integrity_status") == "PASS" else "DEGRADED"
     decision_context = {
         "auto_market_state_packet_sha256": auto_state.get("packet_sha256"),
         "cycle_navigator_machine_sha256": nested(cn_binding, "machine_package", "content_sha256"),
