@@ -623,6 +623,55 @@ def load_weekly_owned_context(weekly_pointer_path: Path, capture_root: Path, pre
 
 
 
+def load_deterministic_range_learning(repo_root: Path, iso_year: int, iso_week: int, limit: int = 12) -> dict[str, Any]:
+    """Load only matured deterministic range benchmark scores up to the completed week."""
+    root = repo_root / "05_CYCLE_NAVIGATOR/range_baselines/scores"
+    rows: list[dict[str, Any]] = []
+    diagnostics: list[dict[str, str]] = []
+    if root.exists():
+        for path in sorted(root.glob("*/*.json")):
+            try:
+                value = load_json(path)
+            except Exception:
+                diagnostics.append({"path": str(path), "reason": "DETERMINISTIC_RANGE_SCORE_UNREADABLE"})
+                continue
+            if value.get("contract") != "CN_DETERMINISTIC_RANGE_BASELINE_SCORE_v1":
+                continue
+            year = value.get("target_iso_year")
+            week = value.get("target_iso_week")
+            if not isinstance(year, int) or not isinstance(week, int):
+                diagnostics.append({"path": str(path), "reason": "DETERMINISTIC_RANGE_SCORE_TARGET_INVALID"})
+                continue
+            if (year, week) > (int(iso_year), int(iso_week)):
+                continue
+            rows.append({
+                "target_iso_year": year,
+                "target_iso_week": week,
+                "baseline_sha256": value.get("baseline_sha256"),
+                "assets": value.get("assets"),
+                "source_path": str(path.relative_to(repo_root)),
+                "forecast_path": f"05_CYCLE_NAVIGATOR/range_baselines/forecasts/{year}/W{week:02d}.json",
+            })
+    rows.sort(key=lambda row: (row["target_iso_year"], row["target_iso_week"]))
+    if limit > 0:
+        rows = rows[-limit:]
+    current = next((row for row in reversed(rows) if (row["target_iso_year"], row["target_iso_week"]) == (int(iso_year), int(iso_week))), None)
+    return {
+        "contract": "MASTER_MONDAY_DETERMINISTIC_RANGE_LEARNING_v1",
+        "authority": "CALIBRATION_EVIDENCE_ONLY",
+        "current_completed_week_score": current or {"status": "UNAVAILABLE"},
+        "recent_scores": rows,
+        "score_count": len(rows),
+        "diagnostics": diagnostics,
+        "rules": [
+            "This benchmark is independent of the Cycle Navigator LLM forecast for the target week.",
+            "Compare containment together with interval width and midpoint error; wide intervals are not automatically better.",
+            "Do not auto-promote the deterministic method or replace Official Cycle Navigator ranges from these rows.",
+            "No score row exists until the target week is complete.",
+        ],
+    }
+
+
 def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> dict[str, Any]:
     """Load already-matured Compass evidence for weekly calibration without rescoring it."""
     tactical_root = repo_root / "04_MARKET_LEARNING/handlekompas/official/outcomes"
@@ -770,12 +819,14 @@ def main() -> None:
             repo_root=args.repo_root, forecast_root=args.experiment_forecast_root),
         "cycle_navigator_range_score": load_json(args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json") if (args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json").exists() else {"status": "UNAVAILABLE"},
         "cycle_navigator_prospective_range": load_json(args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json") if (args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json").exists() else {"status": "UNAVAILABLE"},
+        "deterministic_range_baseline_learning": load_deterministic_range_learning(args.repo_root, int(freeze["iso_year"]), int(freeze["iso_week"])),
         "compass_learning": load_compass_learning(args.repo_root, start, end),
         "selection_rule": "latest eligible row per Europe/Copenhagen local date within frozen local week, deduplicated by timestamp and output hash",
         "handoff_targets": ["RAW_WEEKLY_CALIBRATION", "FORECAST_LEDGER", "MASTER_MONDAY_PREP", "SPECIALIST_REVIEW", "EXPERIMENT_GOVERNANCE_REVIEW"],
         "rules": [
             "Do not rewrite frozen forecasts.",
             "Consume cycle_navigator_range_score as the append-only correction for previously published prospective ranges and cycle_navigator_prospective_range as the current prospective range bridge when available.",
+            "Use deterministic_range_baseline_learning only as a simple independent benchmark for completed-week range calibration; never as an automatic replacement for official ranges.",
             "Separate data quality from market evidence.",
             "The preflight settled_week object is the authoritative completed-week price-path source when final_168h_market_close_available=true.",
             "A pre-v2.2 enriched-hourly gap must not be misreported as missing final price-path evidence when the final 168h market close is complete.",
@@ -808,6 +859,7 @@ def main() -> None:
         "matured_compass_outcomes": context["compass_learning"]["tactical_outcome_count"],
         "matured_strategic_compass_outcomes": context["compass_learning"]["strategic_outcome_count"],
         "matured_shadow_compass_v2_outcomes": context["compass_learning"]["shadow_v2_outcome_count"],
+        "deterministic_range_baseline_scores": context["deterministic_range_baseline_learning"]["score_count"],
         "context_hash": context["context_hash"],
     }, sort_keys=True))
 
