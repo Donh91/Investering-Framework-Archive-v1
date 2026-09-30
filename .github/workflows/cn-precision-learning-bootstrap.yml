@@ -1,0 +1,33 @@
+name: Cycle Navigator Precision Learning Bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cycle-navigator-precision-learning-supervisor.yml'
+      - '.github/workflows/cn-precision-learning-bootstrap.yml'
+      - 'scripts/cycle_navigator/cn_precision_learning_supervisor.py'
+      - 'scripts/cycle_navigator/validate_precision_learning_supervisor.py'
+      - 'tests/cycle_navigator/**precision*'
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: cn-precision-learning-bootstrap
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch first/current precision-learning proof on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run cycle-navigator-precision-learning-supervisor.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref main
