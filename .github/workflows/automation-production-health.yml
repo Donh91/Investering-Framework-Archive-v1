@@ -37,7 +37,7 @@ jobs:
             --snapshot research/architecture_health/GITHUB_ACTIONS_USAGE_SNAPSHOT.json \
             --json-output research/architecture_health/LATEST_ACTIONS_BUDGET.json \
             --md-output research/architecture_health/LATEST_ACTIONS_BUDGET.md
-          state="$(python -c "import json; print(json.load(open('research/architecture_health/LATEST_ACTIONS_BUDGET.json'))['state'])")"
+          state="$(python -c 'import json; print(json.load(open("research/architecture_health/LATEST_ACTIONS_BUDGET.json"))["state"])')"
           echo "state=$state" >> "$GITHUB_OUTPUT"
       - name: Surface non-normal Actions budget state
         if: steps.actions_budget.outputs.state != 'NORMAL'
