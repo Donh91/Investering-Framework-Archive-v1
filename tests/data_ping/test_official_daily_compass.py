@@ -22,7 +22,7 @@ from scripts.data_ping.native_handlekompas import (
 
 
 class OfficialDailyCompassTest(unittest.TestCase):
-    def auto(self, *, breadth=0.19, validation="PASS", decision="PASS", blockers=None, btc=75654.0, eth=2396.86, ethbtc=0.03168, deltas=None, packet_sha="packet-sha", optional_degraded_lanes=None):
+    def auto(self, *, breadth=0.19, validation="PASS", decision="PASS", blockers=None, btc=75654.0, eth=2396.86, ethbtc=0.03168, deltas=None, packet_sha="packet-sha", optional_degraded_lanes=None, observation_open="2026-09-16T18:00:00Z", predecessor_observation=None):
         return {
             "contract": "AUTO_MARKET_STATE_PACKET_v1",
             "packet_generated_at_utc": "2026-09-16T18:09:48Z",
@@ -32,13 +32,17 @@ class OfficialDailyCompassTest(unittest.TestCase):
             "decision_context_status": decision,
             "blockers": blockers or [],
             "optional_degraded_lanes": optional_degraded_lanes or [],
+            "predecessor": {
+                "status": "AVAILABLE" if predecessor_observation else "NOT_AVAILABLE_FIRST_PACKET",
+                "market_observation_open_utc": predecessor_observation,
+            },
             "deltas_since_prior_auto_packet": deltas if deltas is not None else {
                 "btc_usdt": {"pct": -0.3},
                 "eth_usdt": {"pct": -0.7},
                 "ethbtc": {"pct": -0.4},
             },
             "normalized_state": {
-                "live_market": {"btc_usdt": btc, "eth_usdt": eth, "ethbtc": ethbtc, "observation_open_utc": "2026-09-16T18:00:00Z"},
+                "live_market": {"btc_usdt": btc, "eth_usdt": eth, "ethbtc": ethbtc, "observation_open_utc": observation_open},
                 "breadth": {
                     "retrieved_at_utc": "2026-09-16T17:00:00Z",
                     "aggregate": {"advance_ratio": breadth, "advancers": 19, "decliners": 78, "equal_weight_mean_return_24h_pct": -2.59},
@@ -357,10 +361,50 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 },
             )
             self.assertEqual(out["market_now"]["directional_state"], "BEARISH")
+            self.assertEqual(out["market_now"]["regime"], "BEARISH")
             self.assertEqual(out["market_now"]["action_permission"], "HOLD_WAIT")
             self.assertEqual(out["action_now"], "HOLD_WAIT")
             self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "DOWN")
             self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+
+    def test_repeated_same_hourly_observation_is_not_market_neutrality(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                observation_open="2026-09-16T18:00:00Z",
+                predecessor_observation="2026-09-16T18:00:00Z",
+                deltas={
+                    "btc_usdt": {"pct": 0.0},
+                    "eth_usdt": {"pct": 0.0},
+                    "ethbtc": {"pct": 0.0},
+                },
+            )
+            now = out["market_now"]
+            self.assertEqual(now["directional_state"], "UNCHANGED_NO_NEW_OBSERVATION")
+            self.assertEqual(now["regime"], "NO_NEW_OBSERVATION")
+            self.assertFalse(now["new_price_observation"])
+            self.assertEqual(now["action_permission"], "HOLD_WAIT")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "UNAVAILABLE")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+            self.assertEqual(out["capitalization_ladder"][0]["direction"], "UNAVAILABLE")
+            self.assertFalse(out["authority"]["portfolio_execution"])
+
+    def test_zero_move_across_distinct_observations_remains_genuine_neutral(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                observation_open="2026-09-16T18:00:00Z",
+                predecessor_observation="2026-09-16T17:00:00Z",
+                deltas={
+                    "btc_usdt": {"pct": 0.0},
+                    "eth_usdt": {"pct": 0.0},
+                    "ethbtc": {"pct": 0.0},
+                },
+            )
+            self.assertEqual(out["market_now"]["directional_state"], "NEUTRAL")
+            self.assertEqual(out["market_now"]["regime"], "NEUTRAL")
+            self.assertTrue(out["market_now"]["new_price_observation"])
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "SIDEWAYS")
 
     def test_positive_market_direction_is_bullish_without_granting_deploy_permission(self):
         with tempfile.TemporaryDirectory() as tmp:
