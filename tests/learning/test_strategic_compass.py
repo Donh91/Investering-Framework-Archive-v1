@@ -37,13 +37,14 @@ def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
     }
     if month:
         projection["next_21_30d"] = {
-            "direction": "UP", "summary": "recovery then expansion", "regime_destination": "EXPANSION",
+            "direction": "UP", "btc_direction": "UP", "eth_direction": "UP", "ethbtc_direction": "UP", "summary": "recovery then expansion", "regime_destination": "EXPANSION",
             "expected_path": "retest -> absorption -> expansion", "action_posture": "HOLD",
             "falsification": ["breadth fails"], "confidence": "MEDIUM",
+            "scenario_semantics": "UNCALIBRATED_SCENARIO_WEIGHT_NOT_PROBABILITY",
             "scenarios": [
-                {"label": "BASE", "probability_pct": 55, "thesis": "expansion"},
-                {"label": "BULL", "probability_pct": 20, "thesis": "fast expansion"},
-                {"label": "BEAR", "probability_pct": 25, "thesis": "breakdown"},
+                {"label": "BASE", "weight_pct": 55, "thesis": "expansion"},
+                {"label": "BULL", "weight_pct": 20, "thesis": "fast expansion"},
+                {"label": "BEAR", "weight_pct": 25, "thesis": "breakdown"},
             ],
         }
     cn_rel = "05_CYCLE_NAVIGATOR/weekly/2026/W40"
