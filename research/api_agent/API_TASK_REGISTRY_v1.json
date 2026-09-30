@@ -126,6 +126,19 @@
       "outcome_access": false,
       "allowed_write_prefix": "research/api_agent/outputs/automation_orchestration/",
       "governed_instruction": "Perform a senior cross-workflow root-cause and deduplication review of the supplied automation-health failures. Prioritize shared-head clusters, repeated failures, upstream/downstream dependency interactions and existing remediation state. Try to falsify the assumption that each failure is independent. Produce bounded diagnostic next steps only. Do not create CODEX_READY authority, request code writes, alter canonical state, change market rules, change budgets, merge code or create portfolio actions. forecast_candidates MUST be empty."
+    },
+    "SHADOW_COMPASS_V2": {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "max_output_tokens": 4500,
+      "manual_only": false,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/shadow_compass_v2/",
+      "invocation_mode": "PROSPECTIVE_DEDUPED_SOURCE_BOUND_SHADOW_ONLY",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false,
+      "governed_instruction": "Produce only the specialized prospective Shadow Compass v2 12h/72h/168h research forecast from the supplied hash-bound evidence. Preserve missingness and falsification, keep Cycle Navigator as a structural prior rather than an answer key, and never grant portfolio execution, Official Compass override, threshold/model-weight change, or automatic promotion."
     }
   },
   "authority": {
