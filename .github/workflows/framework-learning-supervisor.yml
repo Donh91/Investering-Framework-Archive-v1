@@ -598,7 +598,10 @@ jobs:
           set -euo pipefail
           git config user.name 'framework-learning-supervisor[bot]'
           git config user.email 'framework-learning-supervisor@users.noreply.github.com'
-          git add research/framework_learning research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json research/api_agent/outputs/automation_orchestration
+          git add research/framework_learning research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
+          if [ -d research/api_agent/outputs/automation_orchestration ]; then
+            git add research/api_agent/outputs/automation_orchestration
+          fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "research: refresh framework learning supervisor ${GITHUB_RUN_ID}"
           pushed=false
