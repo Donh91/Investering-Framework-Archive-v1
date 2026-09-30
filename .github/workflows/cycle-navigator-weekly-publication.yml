@@ -179,7 +179,7 @@ jobs:
         if: steps.precheck.outputs.skip != 'true'
         run: |
           python - <<'PY'
-          import json
+          import hashlib,json
           from pathlib import Path
           ptr=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
           root=Path(ptr['week_dir'])
