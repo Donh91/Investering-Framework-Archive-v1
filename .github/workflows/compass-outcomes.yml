@@ -5,8 +5,12 @@ on:
     paths:
       - '.github/workflows/compass-outcomes.yml'
       - 'scripts/learning/compass_outcomes.py'
+      - 'scripts/learning/strategic_compass.py'
+      - 'scripts/learning/strategic_compass_outcomes.py'
       - 'tests/learning/test_compass_outcomes.py'
+      - 'tests/learning/test_strategic_compass.py'
       - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v1.md'
+      - '04_MARKET_LEARNING/handlekompas/STRATEGIC_COMPASS_SCORING_CONTRACT_v1.md'
   schedule:
     # Mature eligible 12h/72h/168h outcomes after the hourly owner sequence settles.
     - cron: '27 * * * *'
@@ -33,8 +37,9 @@ jobs:
           python-version: '3.12'
       - name: Test maturity guardrails
         run: |
-          python -m py_compile scripts/learning/compass_outcomes.py
+          python -m py_compile scripts/learning/compass_outcomes.py scripts/learning/strategic_compass.py scripts/learning/strategic_compass_outcomes.py
           python -m unittest tests.learning.test_compass_outcomes -v
+          python -m unittest tests.learning.test_strategic_compass -v
           python scripts/learning/compass_outcomes.py --dry-run > /tmp/compass-maturity.json
           python - <<'PY'
           import json
@@ -58,10 +63,11 @@ jobs:
         run: |
           python -m unittest tests.learning.test_compass_outcomes -v
           python scripts/learning/compass_outcomes.py | tee /tmp/compass-outcomes.json
+          python scripts/learning/strategic_compass_outcomes.py | tee /tmp/strategic-compass-outcomes.json
       - name: Verify forecasts were not rewritten
         shell: bash
         run: |
-          git diff --exit-code -- 04_MARKET_LEARNING/handlekompas/official/daily || {
+          git diff --exit-code -- 04_MARKET_LEARNING/handlekompas/official/daily 04_MARKET_LEARNING/handlekompas/strategic/anchors || {
             echo 'Forecast freeze changed during scoring'; exit 1;
           }
           python - <<'PY'
@@ -80,6 +86,9 @@ jobs:
           if [ -d 04_MARKET_LEARNING/handlekompas/official/outcomes ]; then
             git add 04_MARKET_LEARNING/handlekompas/official/outcomes
           fi
+          if [ -d 04_MARKET_LEARNING/handlekompas/strategic/outcomes ]; then
+            git add 04_MARKET_LEARNING/handlekompas/strategic/outcomes
+          fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "learning: mature Compass outcomes ${GITHUB_RUN_ID}"
           pushed=false
@@ -95,7 +104,9 @@ jobs:
         if: always()
         with:
           name: official-compass-outcomes-${{ github.run_id }}-${{ github.run_attempt }}
-          path: /tmp/compass-outcomes.json
+          path: |
+            /tmp/compass-outcomes.json
+            /tmp/strategic-compass-outcomes.json
           retention-days: 30
           if-no-files-found: warn
 
