@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=1/2 sampled_runs=36553768722:failure,36485610885:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=1/2 sampled_runs=36624697658:success,36553768722:failure",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": false
         },
@@ -19,9 +19,9 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=1/2 sampled_runs=36624240567:success,36556063051:failure",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=36699096708:success,36626468967:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
-          "pass": false
+          "pass": true
         },
         {
           "evidence": "LATEST_OPERATIONS_DASHBOARD.json:consumer_receipt.status='PASS'",
@@ -37,6 +37,11 @@
           "evidence": "LATEST_OPERATIONS_DASHBOARD.json:source_status.automation_health='PASS'",
           "kind": "JSON_PATH_EQUALS",
           "pass": true
+        },
+        {
+          "evidence": "MISSION_CONVERGENCE_REQUIRED",
+          "kind": "MISSION_CONVERGENCE",
+          "pass": false
         }
       ]
     },
@@ -44,7 +49,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=36623804516,36485153136 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=36698781972,36623804516 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -59,7 +64,7 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=36623804516,36485153136 checks=PASS",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=36698781972,36623804516 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
