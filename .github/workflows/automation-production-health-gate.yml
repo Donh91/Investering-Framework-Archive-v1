@@ -16,6 +16,7 @@ on:
       - 'tests/governance/**'
       - 'tests/lib/**'
       - '09_SOURCE_QA/incidents/**'
+      - 'research/architecture_health/GITHUB_ACTIONS_USAGE_SNAPSHOT.json'
   workflow_dispatch:
 
 permissions:
@@ -39,6 +40,7 @@ jobs:
           python -m py_compile \
             scripts/health/build_automation_health.py \
             scripts/health/build_automation_health_runtime.py \
+            scripts/health/build_actions_budget_guard.py \
             scripts/health/build_architecture_health.py \
             scripts/health/build_operations_dashboard.py \
             scripts/health/check_writer_trigger_safety.py \
@@ -82,6 +84,7 @@ jobs:
       - name: Run health and Codex intake unit tests
         run: |
           python -m pytest -q \
+            tests/health/test_actions_budget_guard.py \
             tests/health/test_automation_production_health.py \
             tests/health/test_automation_health_production_scope.py \
             tests/health/test_architecture_health_v2_1.py \
