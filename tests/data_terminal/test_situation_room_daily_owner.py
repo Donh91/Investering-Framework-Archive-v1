@@ -157,6 +157,12 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertEqual(durable["daily_result"], "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY")
             self.assertEqual(durable["retrieval"]["strategy"], "DETERMINISTIC_STATIC_DAILY_BRIEFING")
             self.assertEqual(latest["run_id"], "STATIC")
+            displaced = list((root / "superseded").glob("*.json"))
+            self.assertTrue(displaced)
+            receipt = json.loads(displaced[0].read_text())
+            self.assertEqual(receipt["contract"], "SITUATION_ROOM_DISPLACED_RECORD_v1")
+            self.assertEqual(receipt["displaced_run_id"], "GENERIC")
+            self.assertEqual(receipt["replacement_run_id"], "STATIC")
 
     def test_generic_pass_cannot_overwrite_authoritative_static_record(self):
         with tempfile.TemporaryDirectory() as tmp:
