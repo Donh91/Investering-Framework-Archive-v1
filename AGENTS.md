@@ -142,7 +142,7 @@ This is not an instruction to reactivate manual DATA PING. A plain compass invoc
 
 User-facing compass output is **TEXT_ONLY** by default. APIs, connectors, repository tools and web retrieval may be used internally when needed, but do not intentionally render widgets, market cards, interactive charts, API/connector result cards, raw JSON, raw tool output or provider diagnostics in the compass response. Keep the authored output compact, phone-first and action-oriented.
 
-The compass must preserve the three horizons and controlled action vocabulary from the active Three-Horizon Action Compass owner, add ETA where actionable, fail stale/unsupported lanes closed, keep warnings separate from actions, and avoid repeated rotation sections.
+The tactical compass must preserve the existing short-horizon owner semantics and controlled action vocabulary, add ETA where actionable, fail stale/unsupported lanes closed, keep warnings separate from actions, and avoid repeated rotation sections. For explicit month-ahead / 21-30D / 4-8W requests, also resolve `04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json` when present and hash-bound. The 21-30D lane may only come from the governed weekly strategic projection, and 4-8W remains Cycle Navigator-owned; never stretch 2-3W into a month forecast or create a parallel long-cycle engine.
 
 When present and eligible, `04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json` is the pointer-first machine owner for a current Compass render. Read and hash-verify its immutable target before bounded live context. Never replace a missing, stale or mismatched official pointer with inherited chat prose. The pointer render itself creates no new freeze or prospective receipt.
 
