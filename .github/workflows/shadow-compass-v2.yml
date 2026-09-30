@@ -7,6 +7,10 @@ on:
       - 'scripts/learning/shadow_compass_v2.py'
       - 'scripts/data_ping/auto_market_state.py'
       - 'tests/learning/test_shadow_compass_v2.py'
+      - 'research/api_agent/API_TASK_REGISTRY_v1.json'
+      - 'scripts/api_agent/check_api_lane_budget.py'
+      - 'scripts/api_agent/check_monthly_cost_guard.py'
+      - 'scripts/api_agent/api_gateway.py'
   schedule:
     - cron: '25 6 * * *'
       timezone: 'UTC'
@@ -17,12 +21,6 @@ on:
     - cron: '25 19 * * *'
       timezone: 'UTC'
   workflow_dispatch:
-    inputs:
-      model:
-        description: 'Shadow reasoning model'
-        required: false
-        default: 'gpt-6.1-sol'
-        type: string
 
 permissions:
   contents: write
@@ -43,7 +41,7 @@ jobs:
           python-version: '3.12'
       - name: Compile and test Shadow Compass v2
         run: |
-          python -m py_compile scripts/learning/shadow_compass_v2.py scripts/data_ping/auto_market_state.py
+          python -m py_compile scripts/learning/shadow_compass_v2.py scripts/data_ping/auto_market_state.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py
           python -m unittest tests.learning.test_shadow_compass_v2 -v
           python scripts/learning/shadow_compass_v2.py --input-only > /tmp/shadow-input.json
           python - <<'PY'
@@ -94,13 +92,30 @@ jobs:
           esac
           echo "active=$active" >> "$GITHUB_OUTPUT"
           echo "reason=$reason" >> "$GITHUB_OUTPUT"
+      - name: Enforce Shadow Compass lane and global API budgets
+        if: steps.slot.outputs.active == 'true'
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task SHADOW_COMPASS_V2 \
+            --cap-usd 8.0 \
+            --reserve-usd 0.20
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --pending-ledger-root runtime/api-cost-ledger \
+            --hard-stop-usd 40 \
+            --reserve-usd 4.0
+
       - name: Produce GPT-6.1 Sol prospective shadow forecast
         if: steps.slot.outputs.active == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          model='${{ inputs.model || 'gpt-6.1-sol' }}'
-          python scripts/learning/shadow_compass_v2.py --call-api --model "$model" | tee /tmp/shadow-compass-v2-status.json
+          python scripts/learning/shadow_compass_v2.py \
+            --call-api \
+            --model gpt-6.1-sol \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            | tee /tmp/shadow-compass-v2-status.json
       - name: Validate shadow authority and binding
         if: steps.slot.outputs.active == 'true'
         shell: bash
@@ -126,7 +141,16 @@ jobs:
           assert f['authority']['automatic_promotion'] is False
           assert f['model_output']['contract']=='SHADOW_COMPASS_V2_MODEL_OUTPUT_v1'
           assert set(f['model_output']['horizons'])=={'12h','72h','168h'}
-          print('SHADOW_COMPASS_V2_VALID', f['forecast_id'], f['usage'])
+          receipt_path=Path(status['api_cost_receipt_path'])
+          assert receipt_path.exists(), status
+          r=json.loads(receipt_path.read_text())
+          assert r['contract']=='API_AGENT_RECEIPT_v3', r
+          assert r['task']=='SHADOW_COMPASS_V2', r
+          assert r['model']=='gpt-6.1-sol', r
+          assert r['forecast_id']==f['forecast_id'], (r,f)
+          assert r['authority']['portfolio_action'] is False
+          assert r['authority']['official_compass_override'] is False
+          print('SHADOW_COMPASS_V2_VALID', f['forecast_id'], f['usage'], r['estimated_cost_usd'])
           PY
       - name: Commit forward-only shadow evidence
         if: steps.slot.outputs.active == 'true'
@@ -135,7 +159,7 @@ jobs:
           set -euo pipefail
           git config user.name framework-data-bot
           git config user.email framework-data-bot@users.noreply.github.com
-          git add 04_MARKET_LEARNING/handlekompas/shadow_v2
+          git add 04_MARKET_LEARNING/handlekompas/shadow_v2 research/api_agent/outputs/shadow_compass_v2
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "learning: Shadow Compass v2 ${GITHUB_RUN_ID}"
           pushed=false
@@ -157,5 +181,6 @@ jobs:
           path: |
             /tmp/shadow-compass-v2-status.json
             04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json
+            research/api_agent/outputs/shadow_compass_v2/
           retention-days: 30
           if-no-files-found: warn
