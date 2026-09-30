@@ -1,3 +1,4 @@
+# CI audit trigger: strategic v2 validation.
 from __future__ import annotations
 
 import argparse
