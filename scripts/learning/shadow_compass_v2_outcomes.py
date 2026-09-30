@@ -5,9 +5,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping
+
+# Support direct workflow execution via `python scripts/learning/shadow_compass_v2_outcomes.py`.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.learning.compass_outcomes import (
     HORIZONS,
