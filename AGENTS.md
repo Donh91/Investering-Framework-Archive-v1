@@ -28,11 +28,11 @@ SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED
 
 ## 0. Cross-repository preflight
 
-**Visibility invariant (effective 2026-09-28): both `Donh91/Investering-Framework-Archive-v1` and `Donh91/secrets` are private.** Privacy does not merge their roles. Cross-repository reads must use explicitly authorized credentials or fail closed. Never assume anonymous/public GitHub access or that one repository's `GITHUB_TOKEN` can read the other private repository.
+**Visibility invariant (effective 2026-09-29): `Donh91/Investering-Framework-Archive-v1` is the PUBLIC canonical/control plane and `Donh91/secrets` remains the PRIVATE restricted data plane.** Visibility does not merge their roles. Public control-plane reads may use anonymous/public GitHub access. Restricted-plane reads require explicitly authorized access and must fail closed when unavailable. Never assume a repository-scoped `GITHUB_TOKEN` from the public control plane can read the private restricted repository.
 
 The repository estate has three separate planes:
 
-- `Donh91/Investering-Framework-Archive-v1` is the private control plane.
+- `Donh91/Investering-Framework-Archive-v1` is the public canonical/control plane.
 - `Donh91/secrets` is the restricted data plane for raw/restricted payloads, private normalized market data, immutable capture receipts and restricted source health.
 - GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity is the credential plane. Credentials never belong in ordinary files in either repository.
 
@@ -43,7 +43,7 @@ Before work that may touch source data, Round 3, provenance, automation, researc
 3. the current control-plane domain contract/status.
 4. if restricted evidence is required and access is authorized, `Donh91/secrets/AGENTS.md`, its two boundary files and the exact immutable binding/health receipt.
 
-Private evidence must be bound by private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness. Never copy raw or normalized private values into this private control-plane repository, logs, issues, PRs or prompts. If private authority is required but unavailable, stop with `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` rather than infer, proxy or search the private control-plane repository.
+Private evidence must be bound by private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness. Never copy raw or normalized private values into this public control-plane repository, logs, issues, PRs or prompts. If private authority is required but unavailable, stop with `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` rather than infer, proxy or search the public control-plane repository.
 
 Round 3 remains `PROSPECTIVE_COLLECTION_ONLY`; hypothesis testing and outcome scoring remain `OFF`. Round 1 and Round 2 are closed evidence. Historical findings can reach at most `FORWARD_TEST`. The legacy standalone Cycle Navigator repository identifier is historical only and must not be used as a current route.
 
@@ -187,7 +187,7 @@ Do not rely on conversation memory when repository sources are available.
 - Master Monday is the weekly official synthesis after ratification and consumes the current autonomous evidence chain.
 - Cycle Navigator is public output and pre-registered accountability and does not require manual DATA PING submission.
 - GitHub is versioned memory and the governance control plane.
-- The private repository is the control plane; `Donh91/secrets` is the restricted data plane and has no independent market-rule authority.
+- The public `Donh91/Investering-Framework-Archive-v1` repository is the control plane; `Donh91/secrets` is the private restricted data plane and has no independent market-rule authority.
 
 ### 3.1 DATA PING supplemental capture - explicit/legacy packet contexts only
 
