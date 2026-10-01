@@ -6,8 +6,8 @@
   "candidate_path": "research/codex/intake/2026/10/codex-research-adversarial-operator-counting-executor-v1.json",
   "candidate_sha256": "1cf9fc4ac067ddaf070a6facbf5521769b1545ba559873b8f0a84924d6b0a7a9",
   "branch": "agent/task-20261001-adversarial-counting-executor",
-  "pr_number": null,
-  "recorded_at_utc": "2026-10-01T16:08:44Z",
+  "pr_number": 1418,
+  "recorded_at_utc": "2026-10-01T16:15:16Z",
   "objective": "Implement the smallest deterministic SHADOW-ONLY counting executor for the already-frozen ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1 counting gate. Reuse existing Robinhood/Pons launch-event evidence, raw RPC transaction calldata and existing Blockscout/RPC bindings. Stage A must be cheap and broad, decode launch-time privileged/exemption surface without outcome lookup where possible, and never claim operator identity. Stage B may run only on Stage-A qualified rows and may add funding ancestry / money-lineage evidence after explicit benign-infrastructure exclusions. Emit denominator counts and machine-readable evidence only. Do not create a new scheduler, scanner, score, threshold, alert rule, trading engine, API budget or portfolio authority.",
   "allowed_change_scope": [
     "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
@@ -37,5 +37,5 @@
   ],
   "post_fix_gate": "FROZEN_STAGE_A_STAGE_B_COUNTS_REPRODUCIBLE_PLUS_SEED_REGRESSION_PASS_PLUS_BENIGN_INFRA_FALSE_POSITIVE_PASS_PLUS_ONE_BOUNDED_OUTCOME_BLIND_INTERVAL_RECEIPT_PLUS_ZERO_NEW_RUNTIME",
   "task_contract_sha256": "1bd7aea3ffd5e8ce4d8ad6d5f67169d34eb8ed00f223285115ac9c056e17e671",
-  "receipt_sha256": "aefd9b33a6eeaee9643c7b3f1dc7a2f0e6a348c2dbaba50be1717a8082d6694a"
+  "receipt_sha256": "d588753e1116827dc5b2a8cb562631f3516fc136023d2266ab7fcec3aeb2a5e3"
 }
