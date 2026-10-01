@@ -99,6 +99,17 @@ class AdversarialOperatorCountingTests(unittest.TestCase):
         self.assertEqual(len(out["input_sha256"]), 64)
         self.assertEqual(len(out["output_sha256"]), 64)
 
+    def test_native_meme_alpha_event_aliases_are_preserved(self) -> None:
+        row = m.classify_event({
+            "token_address": "0x" + "88" * 20,
+            "block_timestamp_utc": "2026-09-08T03:35:17Z",
+            "tx_hash": "0x" + "99" * 32,
+        })
+        self.assertEqual(row["token_ca"], "0x" + "88" * 20)
+        self.assertEqual(row["launch_t0"], "2026-09-08T03:35:17Z")
+        self.assertEqual(row["transaction_hash"], "0x" + "99" * 32)
+        self.assertEqual(row["classification"], "UNKNOWN")
+
     def test_decoded_input_is_supported_without_raw_calldata(self) -> None:
         event = base_event()
         event.pop("raw_tx_input")
