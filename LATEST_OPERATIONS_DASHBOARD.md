@@ -1,39 +1,38 @@
 # Operations Dashboard
 
-Overall: **RED**
-Generated: `2026-09-30T20:34:34.976070Z`
+Overall: **AMBER**
+Generated: `2026-10-01T10:00:09.902591Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.587 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 2.0 |
-| `weekly_output` | **GREEN** | FRESH | 62.731 |
-| `automation_health` | **RED** | RED | 0.398 |
-| `architecture_health` | **AMBER** | AMBER | 0.352 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 2.0 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 13.76 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.276 |
+| `daily_capture` | **GREEN** | FRESH | 4.077 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 9.223 |
+| `weekly_output` | **GREEN** | FRESH | 76.157 |
+| `automation_health` | **AMBER** | AMBER | 0.051 |
+| `architecture_health` | **GREEN** | GREEN | 0.008 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 2.777 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 2.778 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.303 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **216**
-- OpenAI cost this month: **$14.349592**
-- Pending forecast candidates: **215**
-- Experiment candidates: **435**
-- Experiment dispatch requests: **15670**
-- Codex-ready remediation tasks: **7**
-- Needs-more-evidence items: **33**
+- OpenAI receipts this month: **5**
+- OpenAI cost this month: **$0.164565**
+- Pending forecast candidates: **217**
+- Experiment candidates: **437**
+- Experiment dispatch requests: **15863**
+- Codex-ready remediation tasks: **3**
+- Needs-more-evidence items: **14**
 
 ## Incidents
 
-Open incident references: **26**
+Open incident references: **21**
 
 ## Required actions
 
-- **P0** `automation_health` - ['cycle-navigator-public-contract-gate.yml:REPEATED_CONSECUTIVE_FAILURES', 'situation-room-daily-static.yml:LATEST_RUN_FAILED', 'situation-room-daily-static.yml:REPEATED_CONSECUTIVE_FAILURES']
-- **P1** `architecture_health` - ['EXPERIMENT_RECEIPT_SYNC_UNAVAILABLE']
+- **P1** `automation_health` - SEMANTIC_STATUS_AMBER
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `bcf2f6a26e9f3c5bc6933d1f15eb5c4be010a9381568e9aa1607b1aa8fdb041d`
+Dashboard SHA-256: `d948e1f8f2932b1a618ef781fae689e64d1204e4e8d76e0341524e2e89485322`
