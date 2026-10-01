@@ -1,6 +1,6 @@
 # Automation Production Health
 Status: **AMBER**
-Generated: `2026-10-01T09:57:05.577320Z`
+Generated: `2026-10-01T10:19:22.482611Z`
 Workflows: 185 local / 209 registered
 Scheduled: 56
 Writers: 60
@@ -27,7 +27,7 @@ GREEN / AMBER / RED: 170 / 15 / 0
 | `auto-trading-e2-reproducibility.yml` | `ACTIVE` | no | no | success | 2026-09-13T22:46:04Z | **GREEN** | None |
 | `automation-health-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-10-01T09:55:27Z | **GREEN** | None |
 | `automation-production-health-gate.yml` | `ACTIVE` | no | no | success | 2026-10-01T09:54:32Z | **GREEN** | None |
-| `automation-production-health.yml` | `ACTIVE` | yes | yes | in_progress | 2026-10-01T09:55:33Z | **AMBER** | SCHEDULE_STALE |
+| `automation-production-health.yml` | `ACTIVE` | yes | yes | in_progress | 2026-10-01T10:19:04Z | **GREEN** | None |
 | `autonomous-research-governance-gate.yml` | `ACTIVE` | no | no | success | 2026-09-30T16:14:20Z | **GREEN** | None |
 | `autonomous-research-governance-loop.yml` | `ACTIVE` | yes | yes | success | 2026-09-30T11:14:51Z | **GREEN** | None |
 | `backtest-engine-foundation.yml` | `ACTIVE` | no | no | success | 2026-09-23T20:30:50Z | **GREEN** | None |
@@ -83,7 +83,7 @@ GREEN / AMBER / RED: 170 / 15 / 0
 | `ethbtc-persistence-lifecycle.yml` | `ACTIVE` | no | yes | success | 2026-10-01T00:47:23Z | **GREEN** | None |
 | `evidence-closure-gate.yml` | `ACTIVE` | no | no | success | 2026-10-01T06:50:26Z | **GREEN** | None |
 | `evidence-lifecycle-observability-gate.yml` | `ACTIVE` | no | no | success | 2026-09-19T09:41:34Z | **GREEN** | None |
-| `evidence-lifecycle-store-health.yml` | `ACTIVE` | yes | no | success | 2026-09-30T09:44:19Z | **AMBER** | SCHEDULE_STALE |
+| `evidence-lifecycle-store-health.yml` | `ACTIVE` | yes | no | success | 2026-10-01T10:10:37Z | **GREEN** | None |
 | `experiment-lifecycle-gate.yml` | `ACTIVE` | no | no | success | 2026-10-01T06:21:30Z | **GREEN** | None |
 | `experiment-receipt-sync-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-10-01T05:56:46Z | **GREEN** | None |
 | `external-alpha-registry-gate.yml` | `ACTIVE` | yes | no | success | 2026-09-28T13:50:38Z | **GREEN** | None |
@@ -137,13 +137,13 @@ GREEN / AMBER / RED: 170 / 15 / 0
 | `meme-alpha-trenches-point-in-time.yml` | `ACTIVE` | no | no | success | 2026-09-15T20:06:36Z | **GREEN** | None |
 | `monthly-ai-learning-council-bootstrap-once.yml` | `ACTIVE` | no | no | success | 2026-09-03T06:03:59Z | **GREEN** | None |
 | `monthly-ai-learning-council-gate.yml` | `ACTIVE` | no | no | success | 2026-09-30T22:21:01Z | **GREEN** | None |
-| `monthly-ai-learning-council.yml` | `ACTIVE` | yes | yes | success | 2026-09-30T10:30:16Z | **GREEN** | None |
+| `monthly-ai-learning-council.yml` | `ACTIVE` | yes | yes | success | 2026-09-30T10:30:16Z | **AMBER** | SCHEDULE_STALE |
 | `native-handlekompas.yml` | `ACTIVE` | yes | yes | cancelled | 2026-10-01T09:27:06Z | **AMBER** | LATEST_RUN_CANCELLED |
 | `native-market-recovery.yml` | `ACTIVE` | yes | yes | success | 2026-10-01T09:17:26Z | **GREEN** | None |
 | `native-ota-research-readback.yml` | `ACTIVE` | yes | yes | success | 2026-10-01T06:34:42Z | **GREEN** | None |
 | `okx-swap-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-07-31T20:51:59Z | **GREEN** | None |
 | `operations-dashboard-gate.yml` | `ACTIVE` | no | no | success | 2026-10-01T09:54:33Z | **GREEN** | None |
-| `operations-dashboard.yml` | `ACTIVE` | yes | yes | success | 2026-09-30T20:34:19Z | **GREEN** | None |
+| `operations-dashboard.yml` | `ACTIVE` | yes | yes | success | 2026-10-01T09:59:46Z | **AMBER** | SCHEDULE_STALE |
 | `operations-recovery-launch-once.yml` | `ACTIVE` | no | no | success | 2026-08-31T16:26:39Z | **GREEN** | None |
 | `owner-bound-daily-director-manual.yml` | `ACTIVE` | no | no | success | 2026-10-01T09:42:28Z | **GREEN** | None |
 | `pdf-inspector-ingestion.yml` | `ACTIVE` | no | no | success | 2026-08-02T18:16:02Z | **GREEN** | None |
@@ -226,12 +226,12 @@ GREEN / AMBER / RED: 170 / 15 / 0
 - adaptive-decision-miss-validation.yml:RECOVERING_AFTER_RECENT_FAILURES
 - adaptive-evidence-gap.yml:LATEST_RUN_CANCELLED
 - adaptive-evidence-gap.yml:REPEATED_CONSECUTIVE_CANCELLATIONS
-- automation-production-health.yml:SCHEDULE_STALE
 - cfgi-recovery-launch-trigger.yml:LATEST_RUN_CANCELLED
 - cycle-navigator-precision-learning-supervisor.yml:NO_RUN_HISTORY
 - daily-settled-etf-calibration.yml:RECOVERING_AFTER_RECENT_FAILURES
-- evidence-lifecycle-store-health.yml:SCHEDULE_STALE
+- monthly-ai-learning-council.yml:SCHEDULE_STALE
 - native-handlekompas.yml:LATEST_RUN_CANCELLED
+- operations-dashboard.yml:SCHEDULE_STALE
 - pdlt-bootstrap-once.yml:EXPECTED_BLOCK
 - pdlt-daily-census.yml:EXPECTED_BLOCK
 - pdlt-discovery-once.yml:EXPECTED_BLOCK
