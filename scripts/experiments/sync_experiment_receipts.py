@@ -22,6 +22,12 @@ class PrivateSourceAuthRequired(RuntimeError):
     pass
 
 
+def raw_github_url(repository: str, path: str, ref: str = "main") -> str:
+    owner, name = repository.split("/", 1)
+    encoded = quote(path.lstrip("/"), safe="/")
+    return f"https://raw.githubusercontent.com/{owner}/{name}/{quote(ref, safe='')}/{encoded}"
+
+
 def github_contents_api_url(repository: str, path: str, ref: str = "main") -> str:
     owner, name = repository.split("/", 1)
     encoded = quote(path.lstrip("/"), safe="/")
@@ -55,6 +61,29 @@ def fetch_github_json(repository: str, path: str, ref: str, token: str | None) -
     )
     with urllib.request.urlopen(request, timeout=60) as response:
         return json.loads(response.read())
+
+
+def github_json_public_first(repository: str, path: str, ref: str, token: str | None) -> tuple[dict[str, Any], str]:
+    public_url = raw_github_url(repository, path, ref)
+    try:
+        return fetch(public_url), "GITHUB_RAW_PUBLIC"
+    except urllib.error.HTTPError as exc:
+        if exc.code not in {401, 403, 404}:
+            raise
+    if token:
+        return fetch_github_json(repository, path, ref, token), "GITHUB_CONTENTS_API_AUTHENTICATED_FALLBACK"
+    raise PrivateSourceAuthRequired(PRIVATE_SOURCE_AUTH_REQUIRED)
+
+
+def public_first_receipt_fetcher(token: str | None) -> Callable[[str], dict[str, Any]]:
+    def _fetch(url: str) -> dict[str, Any]:
+        location = raw_github_location(url)
+        if location is None:
+            return fetch(url)
+        repository, path, ref = location
+        value, _ = github_json_public_first(repository, path, ref, token)
+        return value
+    return _fetch
 
 
 def authenticated_receipt_fetcher(token: str | None) -> Callable[[str], dict[str, Any]]:
@@ -235,9 +264,10 @@ def main() -> None:
     token = os.environ.get("EXPERIMENT_BRIDGE_TOKEN")
     try:
         if args.github_repo:
-            manifest = fetch_github_json(args.github_repo, args.github_path, args.github_ref, token)
-            receipt_fetcher = authenticated_receipt_fetcher(token)
-            source_transport = "GITHUB_CONTENTS_API_AUTHENTICATED"
+            manifest, source_transport = github_json_public_first(
+                args.github_repo, args.github_path, args.github_ref, token
+            )
+            receipt_fetcher = public_first_receipt_fetcher(token)
         else:
             manifest = fetch(args.manifest_url)
             receipt_fetcher = fetch
@@ -250,7 +280,7 @@ def main() -> None:
             source_repository=args.github_repo,
             source_path=args.github_path,
             source_ref=args.github_ref,
-            source_transport="GITHUB_CONTENTS_API_AUTHENTICATED",
+            source_transport="GITHUB_PUBLIC_FIRST_WITH_AUTH_FALLBACK",
         )
         write_summary(args.sync_output, summary)
         print(json.dumps(summary, sort_keys=True))
@@ -265,7 +295,7 @@ def main() -> None:
             source_repository=args.github_repo,
             source_path=args.github_path if args.github_repo else None,
             source_ref=args.github_ref if args.github_repo else None,
-            source_transport="GITHUB_CONTENTS_API_AUTHENTICATED" if args.github_repo else "DIRECT_URL",
+            source_transport="GITHUB_PUBLIC_FIRST_WITH_AUTH_FALLBACK" if args.github_repo else "DIRECT_URL",
         )
         write_summary(args.sync_output, summary)
         print(json.dumps(summary, sort_keys=True))
