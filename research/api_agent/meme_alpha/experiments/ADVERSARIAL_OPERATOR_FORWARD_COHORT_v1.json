@@ -1,0 +1,113 @@
+{
+  "contract": "ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1",
+  "status": "SHADOW_ONLY",
+  "owner_issue": 1087,
+  "frozen_at_utc": "2026-10-01T07:25:00Z",
+  "purpose": "Prospectively preserve adversarial operator/prelaunch-cohort observations after the 2026-10-01 operational overlay, without hindsight or trading authority.",
+  "parents": [
+    "research/api_agent/meme_alpha/experiments/OPERATOR_RISK_ADVERSARIAL_ALPHA_SHADOW_CONTRACT_v1.json",
+    "07_PROMPTS_AND_AGENTS/memes_alpha/2026-10-01__adversarial-ca-intake-and-on-demand-launch-scan-v1__operational-addendum.md",
+    "06_RESEARCH_LAB/alpha_lab/2026-10-01__adversarial-operator-claude-bitquery-counting-gate-v1.md"
+  ],
+  "population": {
+    "chain": "Robinhood Chain",
+    "venue_focus": [
+      "Pons",
+      "Pons V2"
+    ],
+    "inclusion": "All exact-CA launch candidates encountered by existing Alpha Lab discovery/intake owners after frozen_at_utc where launch T0 can be resolved. Preserve qualified hits, no-hits, benign-infra false positives and insufficient-evidence rows.",
+    "exclusions": [
+      "ticker-only identity",
+      "post-outcome selected case without prospective row"
+    ]
+  },
+  "evidence_states": [
+    "UNKNOWN",
+    "NO_MATERIAL_MATCH",
+    "WATCH",
+    "STRONG_MATCH",
+    "DIRECT_LINEAGE"
+  ],
+  "candidate_classes": [
+    "DIRECT_OPERATOR_LINEAGE",
+    "COORDINATED_PRELAUNCH_WAKEUP",
+    "PRIVILEGED_LAUNCH_SURFACE",
+    "SERIAL_DEPLOYER_CREATOR_WATCH",
+    "FALSE_POSITIVE_INFRA",
+    "NO_QUALIFIED_CASE"
+  ],
+  "weak_features_not_sufficient": [
+    "same_launchpad",
+    "same_ticker_or_name",
+    "relaunch_retry",
+    "common_quote_asset",
+    "high_tx_count",
+    "fresh_wallet_count_without_economic_linkage"
+  ],
+  "high_information_features": [
+    "prior_operator_proceeds_to_new_launch_funding_key",
+    "non_benign_common_funder_pre_t0",
+    "funded_wallet_matches_snipe_tax_exemption",
+    "synchronized_next_block_or_bundle_inventory",
+    "prelaunch_residual_balance_similarity",
+    "descendant_inventory_handoff_and_sellthrough",
+    "non_benign_recurring_collector"
+  ],
+  "counting_gate": {
+    "stage1": {
+      "t_minus_minutes": 60,
+      "requires_exact_t0": true,
+      "requires_benign_infra_exclusion": true,
+      "qualification": [
+        "DIRECT_OPERATOR_LINEAGE",
+        "COMMON_FUNDING_PLUS_PRIVILEGED_BUNDLE",
+        "COMMON_FUNDING_PLUS_SYNCHRONIZED_INVENTORY_PLUS_RESIDUAL_SIMILARITY"
+      ],
+      "measure": [
+        "raw_fires_per_day",
+        "qualified_fires_per_day",
+        "benign_infra_share",
+        "seed_overlap",
+        "ordinary_control_overlap"
+      ]
+    },
+    "review_budget": {
+      "qualified_per_day_max": 10,
+      "benign_infra_raw_share_max": 0.5,
+      "semantics": "Operational review-budget gate only; not a universal scientific kill criterion."
+    },
+    "stage2_if_stage1_over_budget": {
+      "qualification": [
+        "DIRECT_OPERATOR_LINEAGE",
+        "PRIVILEGED_BUNDLE_PLUS_COMMON_FUNDING_PLUS_SYNCHRONIZED_INVENTORY"
+      ],
+      "pre_outcome_freeze_required": true,
+      "kill_for_autonomous_time_sensitive_review_if_still_over_budget": true
+    }
+  },
+  "outcome_fields": [
+    "first_public_executable_at",
+    "liquidity_at_review",
+    "bounded_sellability",
+    "independent_buyer_breadth",
+    "operator_inventory_share",
+    "first_operator_distribution_at",
+    "mfe_after_public_eligibility",
+    "mae_after_public_eligibility",
+    "realizable_return_after_costs"
+  ],
+  "invariants": [
+    "operator_extraction_risk_is_separate_from_realizable_public_alpha_window",
+    "no_ath_only_credit",
+    "benign_infrastructure_must_not_count_as_entity_lineage",
+    "no_hindsight_rewrite",
+    "no_auto_buy_or_sell"
+  ],
+  "authority": {
+    "automatic_trading": false,
+    "portfolio_action": false,
+    "signal_promotion": false,
+    "new_scanner": false,
+    "automatic_merge": false
+  }
+}
