@@ -11,7 +11,7 @@ Build a small, verified context packet from the repository's current authority s
 
 ## Cross-repository preflight
 
-Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`. The private repository is the control plane; `Donh91/secrets` is the restricted data plane; credentials remain outside repo files. When a route requires restricted evidence, resolve the authorized private commit/path/hash binding or return `PRIVATE_DATA_AUTHORITY_UNAVAILABLE`. Never search the control plane for missing private values or use `Donh91/Cycle-navigator-` as a current route.
+Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`. This public repository is the control plane; `Donh91/secrets` is the restricted data plane; credentials remain outside repo files. When a route requires restricted evidence, resolve the authorized private commit/path/hash binding or return `PRIVATE_DATA_AUTHORITY_UNAVAILABLE`. Never search the control plane for missing private values or use `Donh91/Cycle-navigator-` as a current route.
 
 ## Mandatory read order
 
@@ -103,6 +103,25 @@ This explicit packet rule does not restore DATA PING as the normal upstream prod
 
 The router itself does not make the portfolio decision. It guarantees that the downstream Main Framework receives the applicable decision-translation contract for the explicit packet task.
 
+### Selective Shared Experience Layer route
+
+After current authority is resolved, evaluate the `SHARED_EXPERIENCE_MEMORY` route in `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json` and its immutable public binding `00_ARCHIVE_CONTROL/SEL_SELECTIVE_OPERATIONAL_BINDING_v1.json`.
+
+Use SEL only when the task materially matches a repeated failure/failed approach, non-local environment constraint, reusable implementation procedure, bounded handover or historically expensive rediscovery. A lexical match alone is insufficient.
+
+Do not route current market forecasts/state, portfolio buy/sell/position actions, simple source-local tasks, credentials or unverified investment hypotheses through SEL. Global auto-retrieval remains `HOLD`.
+
+If SEL is eligible and accessible:
+
+```text
+current authority
+-> smallest task-specific SEL search
+-> verify lineage, invalidators, expiry and supersession
+-> task execution
+```
+
+If SEL is unavailable after current authority is already resolved, return `SEL_OPTIONAL_CONTEXT_UNAVAILABLE` for the memory lane and continue source-first. SEL must never become a task-availability dependency.
+
 ## Authority resolution
 
 Apply this order unless a newer canonical file explicitly changes it:
@@ -152,6 +171,7 @@ current_state_required: YES | NO
 historical_context_required: YES | NO
 explicit_data_ping_or_raw_packet_input: YES | NO
 global_compass_invocation: YES | NO
+shared_experience_route: USE_SEL | DO_NOT_USE_SEL | UNAVAILABLE_OPTIONAL
 ```
 
 ### 2. Discover authority
@@ -166,7 +186,8 @@ Find:
 - registry-discoverable addenda for the domain;
 - open ledger or forward-test state when applicable;
 - any explicit supersession or overrule;
-- required source material.
+- required source material;
+- selective Shared Experience route after current authority resolution, when materially eligible.
 
 For every registry-discoverable addendum, verify the path and its declared owner before using it.
 
@@ -225,6 +246,7 @@ Explicit overrules:
 Historical context allowed:
 Missing or unresolved:
 Write-safety requirement:
+Shared Experience route: USE_SEL | DO_NOT_USE_SEL | UNAVAILABLE_OPTIONAL
 Next skill or workflow:
 ```
 
@@ -250,6 +272,9 @@ Keep the packet concise. Reference paths rather than copying whole documents.
 - Do not route the retired E0-E7 Exit Ladder as current decision vocabulary or map Action Compass warnings into it.
 - Do not treat a replay, duplicate or `NOT_PERSISTED` interpretation as a new prospective receipt row.
 - Do not create a short-horizon or market-state engine in the public website to compensate for a missing current autonomous field.
+- Do not auto-inject SEL on every task or use it for current market/portfolio authority.
+- Do not block an otherwise executable task solely because optional SEL access is unavailable.
+- Do not bulk-load the private memory store; recall only the smallest relevant set after current authority is resolved.
 
 ## Validation loop
 
@@ -264,7 +289,8 @@ Before completing:
 7. Verify all unresolved conflicts are explicit.
 8. For a global compass invocation, verify the Global Action Compass canonical contract, machine route and active Three-Horizon decision vocabulary owner are all present, and verify the downstream visible-output policy is `TEXT_ONLY` with no render-only receipt.
 9. For explicit DATA PING / RAW Main-Framework interpretation, verify `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` or its explicit canonical successor is included in `Required files`, and record whether the input is fresh or replayed for receipt routing.
-10. Re-read the request and confirm the packet contains only task-relevant context.
+10. If SEL is materially eligible, verify the public binding, route decision and private access state; if unavailable, mark `UNAVAILABLE_OPTIONAL` and continue without memory.
+11. Re-read the request and confirm the packet contains only task-relevant context.
 
 If any check fails, correct the packet and re-run all checks.
 
