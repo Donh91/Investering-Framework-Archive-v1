@@ -156,7 +156,8 @@ jobs:
           assert 'situation_room_static_daily_adapter' in situation_static
           assert "cron: '20 8 * * *'" in situation_static
           assert "timezone: 'Europe/Copenhagen'" in situation_static
-          assert 'group: framework-main-writer' in situation_static
+          assert "github.event_name == 'pull_request'" in situation_static
+          assert "|| 'framework-main-writer'" in situation_static
           assert 'DETERMINISTIC_STATIC_DAILY_BRIEFING' in situation_static
           assert 'RESEARCH_ONLY_NON_CANONICAL' in situation
           assert 'DISCOVERY_ONLY' in situation
