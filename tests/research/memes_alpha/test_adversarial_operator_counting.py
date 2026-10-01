@@ -110,6 +110,23 @@ class AdversarialOperatorCountingTests(unittest.TestCase):
         self.assertEqual(row["transaction_hash"], "0x" + "99" * 32)
         self.assertEqual(row["classification"], "UNKNOWN")
 
+    def test_missing_qualification_evidence_never_returns_review_budget_pass(self) -> None:
+        out = m.count_manifest({
+            "contract": m.MANIFEST_CONTRACT,
+            "interval_start_utc": "2026-10-01T00:00:00Z",
+            "interval_end_utc": "2026-10-02T00:00:00Z",
+            "events": [
+                {
+                    "token_address": "0x" + "aa" * 20,
+                    "block_timestamp_utc": "2026-10-01T01:00:00Z",
+                    "tx_hash": "0x" + "bb" * 32,
+                }
+            ],
+        })
+        self.assertEqual(out["rates_per_day"]["qualified_fires_per_day"], 0)
+        self.assertEqual(out["gates"]["stage1"], "INCOMPLETE_SOURCE_EVIDENCE")
+        self.assertEqual(out["counts"]["qualification_unknown_rows"], 1)
+
     def test_decoded_input_is_supported_without_raw_calldata(self) -> None:
         event = base_event()
         event.pop("raw_tx_input")
