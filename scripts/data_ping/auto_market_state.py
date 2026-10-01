@@ -322,18 +322,54 @@ def select_current_breadth(rich_breadth: Any, live_anchor_breadth: Any) -> dict[
     }
 
 
-def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
-    """Measure rank-bucket participation without pretending Top-100 is a full cap universe.
+NON_BETA_PROXY_EXCLUSIONS: dict[str, str] = {
+    # Explicit point-in-time transmission exclusions only. These assets remain
+    # untouched in the Rich Breadth owner/universe so membership continuity is preserved.
+    "figure-heloc": "TOKENIZED_CREDIT_RWA",
+    "tether-gold": "TOKENIZED_COMMODITY",
+    "hashnote-usyc": "TOKENIZED_TREASURY_OR_CASH_EQUIVALENT",
+    "ondo-us-dollar-yield": "TOKENIZED_TREASURY_OR_CASH_EQUIVALENT",
+    "blackrock-usd-institutional-digital-liquidity-fund": "TOKENIZED_MONEY_MARKET",
+    "pax-gold": "TOKENIZED_COMMODITY",
+    "spiko-amundi-overnight-swap-fund-eur": "TOKENIZED_MONEY_MARKET",
+    "united-stables": "STABLE_VALUE_ASSET",
+    "falcon-finance": "STABLE_VALUE_ASSET",
+    "bfusd": "STABLE_VALUE_ASSET",
+    "usdgo": "STABLE_VALUE_ASSET",
+    "blockchain-capital": "TOKENIZED_FUND",
+    "superstate-short-duration-us-government-securities-fund-ustb": "TOKENIZED_TREASURY",
+    "eutbl": "TOKENIZED_TREASURY",
+    "janus-henderson-anemoy-aaa-clo-fund": "TOKENIZED_CREDIT_RWA",
+    "kinesis-gold": "TOKENIZED_COMMODITY",
+}
 
-    These are descriptive proxy buckets only. They have zero execution weight and
-    cannot be promoted into canonical Large/Mid/Small/Micro action states without
-    a separate governed admission/scoring contract.
+
+def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
+    """Measure crypto-beta rank-bucket participation without changing the owner universe.
+
+    Rich Breadth intentionally preserves its point-in-time Top-100 membership.
+    This downstream proxy excludes only an explicit reviewed list of obvious
+    tokenized commodities, stable-value/cash-equivalent instruments and tokenized
+    funds/credit so those assets do not masquerade as alt-beta transmission.
+    These remain descriptive proxy buckets only, with zero execution authority.
     """
     rows = breadth.get("constituents") if isinstance(breadth, Mapping) else None
     rows = rows if isinstance(rows, list) else []
     valid = [row for row in rows if isinstance(row, Mapping) and num(row.get("filtered_rank")) is not None and num(row.get("change_24h_pct")) is not None]
     btc = next((num(row.get("change_24h_pct")) for row in valid if row.get("asset_id") == "bitcoin"), None)
     eth = next((num(row.get("change_24h_pct")) for row in valid if row.get("asset_id") == "ethereum"), None)
+    excluded_non_beta_assets = [
+        {
+            "asset_id": str(row.get("asset_id") or ""),
+            "symbol": row.get("symbol"),
+            "filtered_rank": int(float(row["filtered_rank"])),
+            "market_cap_usd": num(row.get("market_cap_usd")),
+            "return_24h_pct": num(row.get("change_24h_pct")),
+            "exclusion_class": NON_BETA_PROXY_EXCLUSIONS[str(row.get("asset_id"))],
+        }
+        for row in valid
+        if str(row.get("asset_id")) in NON_BETA_PROXY_EXCLUSIONS
+    ]
 
     definitions = {
         "LARGE_ALT_PROXY": (3, 20, "TOP100_FULL_RANK_WINDOW"),
@@ -342,9 +378,17 @@ def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
     }
     buckets: dict[str, Any] = {}
     for name, (lo, hi, coverage) in definitions.items():
-        selected = [
+        raw_selected = [
             row for row in valid
             if lo <= int(float(row["filtered_rank"])) <= hi
+        ]
+        excluded_in_bucket = [
+            row for row in raw_selected
+            if str(row.get("asset_id")) in NON_BETA_PROXY_EXCLUSIONS
+        ]
+        selected = [
+            row for row in raw_selected
+            if str(row.get("asset_id")) not in NON_BETA_PROXY_EXCLUSIONS
         ]
         changes = [float(row["change_24h_pct"]) for row in selected]
         if not changes:
@@ -352,6 +396,8 @@ def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
                 "status": "UNAVAILABLE",
                 "rank_window": [lo, hi],
                 "coverage": coverage,
+                "raw_rank_window_constituent_count": len(raw_selected),
+                "excluded_non_beta_count": len(excluded_in_bucket),
                 "constituent_count": 0,
             }
             continue
@@ -360,6 +406,8 @@ def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
             "status": "OBSERVED_PROXY",
             "rank_window": [lo, hi],
             "coverage": coverage,
+            "raw_rank_window_constituent_count": len(raw_selected),
+            "excluded_non_beta_count": len(excluded_in_bucket),
             "constituent_count": len(changes),
             "advance_ratio_24h": round(adv / len(changes), 6),
             "median_return_24h_pct": round(float(__import__("statistics").median(changes)), 6),
@@ -383,11 +431,19 @@ def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
         "reason": "Current Rich Breadth owner cannot represent the framework microcap universe.",
     }
     return {
-        "contract": "CAPITALIZATION_TRANSMISSION_PROXY_v1",
+        "contract": "CAPITALIZATION_TRANSMISSION_PROXY_v2",
         "source_universe": nested(breadth, "universe", "identifier"),
         "source_membership_hash": nested(breadth, "universe", "membership_hash") or nested(breadth, "aggregate", "membership_hash"),
         "source_retrieved_at_utc": breadth.get("retrieved_at_utc") if isinstance(breadth, Mapping) else None,
-        "bucket_semantics": "FILTERED_TOP100_RANK_WINDOWS_PROXY_NOT_CANONICAL_CAP_CLASSIFICATION",
+        "bucket_semantics": "FILTERED_TOP100_RANK_WINDOWS_EXPLICIT_NON_BETA_EXCLUSIONS_PROXY_ONLY",
+        "non_beta_exclusion_policy": {
+            "policy_id": "CAP_TRANSMISSION_NON_BETA_EXCLUSIONS_2026_10_01_A",
+            "scope": "DOWNSTREAM_PROXY_ONLY_OWNER_UNIVERSE_UNCHANGED",
+            "match_semantics": "EXACT_ASSET_ID_ONLY_NO_HEURISTIC_INFERENCE",
+            "excluded_asset_ids": sorted(NON_BETA_PROXY_EXCLUSIONS),
+        },
+        "excluded_non_beta_assets": excluded_non_beta_assets,
+        "excluded_non_beta_count": len(excluded_non_beta_assets),
         "btc_return_24h_pct": btc,
         "eth_return_24h_pct": eth,
         "buckets": buckets,
