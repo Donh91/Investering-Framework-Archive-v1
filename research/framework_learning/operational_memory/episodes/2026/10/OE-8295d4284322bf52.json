@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/build_automation_health_runtime.py",
+    "tests/health/test_automation_health_production_scope.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-8295d4284322bf52",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "health-f6-separate-manual-retired-history-production-status",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Health F6: demote retired and manual-only history to observations * Test F6 manual and retired history observations",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/build_automation_health_runtime.py": "3c5fd853f48d48c2a0b895836279a6a53ff979e1",
+    "tests/health/test_automation_health_production_scope.py": "0a5c0a1bc2792dae7140121fcaedec09c27c5878"
+  },
+  "source_commit_sha": "8295d4284322bf52e42ec92ca7899b08edda44c7",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T11:52:31+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "Health F6: separate manual and retired history from production status (#1414)"
+}

@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/build_automation_health_runtime.py",
+    "tests/health/test_automation_health_production_scope.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-3680fa95fde56204",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Health F6: repair scheduled recovery and separate CI observations * Test F6 production-health observation semantics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/build_automation_health_runtime.py": "e6edd39e834b0ee210226c0f74e386bf632e31bd",
+    "tests/health/test_automation_health_production_scope.py": "c5221aa7e3b29c816abcd9b04eefcd99a9d86558"
+  },
+  "source_commit_sha": "3680fa95fde5620400093d86f13462eb5bd7623c",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T11:33:09+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "Health F6: normalize production observability truth (#1410)"
+}

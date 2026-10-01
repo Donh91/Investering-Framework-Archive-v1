@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health.yml",
+    ".github/workflows/operations-dashboard-gate.yml",
+    ".github/workflows/operations-dashboard.yml"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-508c53d845b72652",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Ops: make Health the canonical dashboard refresh owner * Ops: remove duplicate workflow-run dashboard trigger * Gate canonical Health to Operations Dashboard wiring",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health.yml": "9997075b911733e7fb96f9f0d318e5686e3eaff3",
+    ".github/workflows/operations-dashboard-gate.yml": "16605ea212798b379ee25bd1e07723b0a612cdd0",
+    ".github/workflows/operations-dashboard.yml": "5f63f2db71537d87e8f3e1243633b5937f3223bc"
+  },
+  "source_commit_sha": "508c53d845b726522027b0dfd3dcb9ab89183d0d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T11:55:24+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Ops: make Health the canonical Operations Dashboard refresh owner (#1415)"
+}

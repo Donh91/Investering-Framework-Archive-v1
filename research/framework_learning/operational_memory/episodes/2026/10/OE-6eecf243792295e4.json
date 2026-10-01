@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/api_agent/evidence_gap_validation_auditor.py",
+    "tests/api_agent/test_evidence_gap_validation_token_budget.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-6eecf243792295e4",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* API: bound evidence-gap validation context before model call * Test bounded evidence-gap validation context",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/api_agent/evidence_gap_validation_auditor.py": "addec3b9e42ccc814a9fad133a51786bf4600bb6",
+    "tests/api_agent/test_evidence_gap_validation_token_budget.py": "a605c5a139fa2fc9d77089ebc61de66c7375767e"
+  },
+  "source_commit_sha": "6eecf243792295e46d31d1c314ceb826423f8b9e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T11:43:06+02:00",
+  "task_class": "API_AGENT",
+  "task_summary": "API: bound Evidence Gap Validation below model TPM (#1412)"
+}
