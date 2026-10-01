@@ -63,7 +63,7 @@ def test_scheduled_health_ignores_task_branch_push_failures(monkeypatch) -> None
     assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
 
 
-def test_non_scheduled_pr_gate_rejections_are_amber_not_production_red(monkeypatch) -> None:
+def test_non_scheduled_pr_gate_rejections_are_observations_not_production_amber(monkeypatch) -> None:
     def fake_api(url: str, token: str) -> dict:
         if url.endswith("/Investering-Framework-Archive-v1"):
             return {"default_branch": "main"}
@@ -85,9 +85,10 @@ def test_non_scheduled_pr_gate_rejections_are_amber_not_production_red(monkeypat
 
     row = _scheduled_row(); row["workflow"] = "gate.yml"; row["scheduled"] = False; row["cron_expressions"] = []; row["live"] = live
     status, findings = module.classify(row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc))
-    assert status == "AMBER"
-    assert "PR_GATE_REJECTION" in findings
-    assert "REPEATED_PR_GATE_REJECTIONS" in findings
+    assert status == "GREEN"
+    assert "PR_GATE_REJECTION" not in findings
+    assert "REPEATED_PR_GATE_REJECTIONS" not in findings
+    assert row["observations"] == ["PR_GATE_REJECTION", "REPEATED_PR_GATE_REJECTIONS"]
     assert "LATEST_RUN_FAILED" not in findings
     assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
 
@@ -268,6 +269,79 @@ def test_in_progress_rerun_preserves_previous_failure_in_streak(monkeypatch) -> 
     assert status == "RED"
     assert "REPEATED_CONSECUTIVE_FAILURES" in findings
 
+
+
+def test_scheduled_success_streak_clears_historical_recovery(monkeypatch) -> None:
+    scheduled = [
+        {"id": 703, "event": "schedule", "head_branch": "main", "status": "completed", "conclusion": "success", "created_at": "2026-08-29T03:00:00Z", "updated_at": "2026-08-29T03:01:00Z", "run_attempt": 1},
+        {"id": 702, "event": "schedule", "head_branch": "main", "status": "completed", "conclusion": "success", "created_at": "2026-08-29T02:00:00Z", "updated_at": "2026-08-29T02:01:00Z", "run_attempt": 1},
+        {"id": 701, "event": "schedule", "head_branch": "main", "status": "completed", "conclusion": "success", "created_at": "2026-08-29T01:00:00Z", "updated_at": "2026-08-29T01:01:00Z", "run_attempt": 1},
+        {"id": 700, "event": "schedule", "head_branch": "main", "status": "completed", "conclusion": "failure", "created_at": "2026-08-29T00:00:00Z", "updated_at": "2026-08-29T00:01:00Z", "run_attempt": 1},
+    ]
+
+    def fake_api(url: str, token: str) -> dict:
+        if url.endswith("/Investering-Framework-Archive-v1"):
+            return {"default_branch": "main"}
+        if "/actions/workflows?" in url:
+            return {"workflows": [{"id": 48, "path": ".github/workflows/scheduled.yml", "name": "Scheduled", "state": "active", "html_url": "https://example.invalid/scheduled"}]}
+        if "event=schedule" in url:
+            assert "per_page=10" in url
+            return {"workflow_runs": scheduled}
+        if "branch=main" in url:
+            return {"workflow_runs": scheduled}
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.base, "api_json", fake_api)
+    live = module.live_workflows(
+        "Donh91/Investering-Framework-Archive-v1", "token", {"scheduled.yml"}
+    )["scheduled.yml"]
+    assert live["recent_failure_count"] == 1
+    assert live["expected_success_streak"] == module.base.RECOVERY_SUCCESS_STREAK_REQUIRED
+
+    row = _scheduled_row()
+    row["live"] = live
+    status, findings = module.classify(
+        row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc)
+    )
+    assert status == "GREEN"
+    assert "RECOVERING_AFTER_RECENT_FAILURES" not in findings
+
+
+def test_retired_unscheduled_workflow_is_inventory_observation_not_amber() -> None:
+    row = _scheduled_row()
+    row.update({
+        "workflow": "retired.yml",
+        "scheduled": False,
+        "cron_expressions": [],
+        "lifecycle_state": "RETIRED",
+        "lifecycle_reason": "SUPERSEDED",
+        "lifecycle_since": "2026-08-20T00:00:00Z",
+        "live": {
+            "state": "active",
+            "latest_run": {
+                "event": "workflow_dispatch",
+                "status": "completed",
+                "conclusion": "failure",
+                "created_at": "2026-08-19T00:00:00Z",
+            },
+            "recent_failure_count": 4,
+            "success_streak": 0,
+            "expected_success_streak": 0,
+            "failure_streak": 4,
+            "recent_cancellation_count": 0,
+            "recent_pr_gate_rejection_count": 0,
+            "cancellation_streak": 0,
+            "pr_gate_rejection_streak": 0,
+        },
+    })
+    status, findings = module.classify(
+        row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc)
+    )
+    assert status == "GREEN"
+    assert "RETIRED_WORKFLOW_LOCAL_FILE_PRESENT" not in findings
+    assert row["observations"] == ["RETIRED_WORKFLOW_LOCAL_FILE_PRESENT"]
+    assert "LATEST_RUN_FAILED" not in findings
+    assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
 
 def test_empty_registry_is_one_global_degradation(monkeypatch) -> None:
     def fake_api(url: str, token: str) -> dict:

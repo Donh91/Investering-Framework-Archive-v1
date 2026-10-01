@@ -16,9 +16,11 @@ runtime-observability semantics:
    closed instead of being assumed safe;
 4. cancelled runs are interruption/availability evidence, not execution
    failures: they remain visible as AMBER without masquerading as failed jobs;
-5. pull-request gate rejections remain visible as CI evidence but do not make
-   Automation Production Health RED unless an independent production/static
-   failure also exists.
+5. pull-request gate rejections remain visible as CI observations but do not
+   degrade production health unless an independent production/static failure
+   also exists;
+6. scheduled recovery uses the scheduled-run success streak, so successful
+   owner cadence can actually clear historical recovery AMBER.
 """
 
 import importlib.util
@@ -335,6 +337,7 @@ def live_workflows(
         workflow_name = Path(workflow["path"]).name
         is_scheduled = workflow_name in scheduled_set
 
+        scheduled_runs: list[dict[str, Any]] = []
         if is_scheduled:
             runs = base.api_json(
                 f"{api_base}/actions/workflows/{wid}/runs?branch={branch_q}&per_page=20",
@@ -347,7 +350,7 @@ def live_workflows(
                 and run.get("event") in PRODUCTION_EVENTS
             ]
             scheduled_runs = base.api_json(
-                f"{api_base}/actions/workflows/{wid}/runs?event=schedule&branch={branch_q}&per_page=1",
+                f"{api_base}/actions/workflows/{wid}/runs?event=schedule&branch={branch_q}&per_page=10",
                 token,
             ).get("workflow_runs", [])
             latest_scheduled = scheduled_runs[0] if scheduled_runs else None
@@ -373,7 +376,17 @@ def live_workflows(
             token,
             production_runs,
         )
+        expected_completed = (
+            _completed_runs_with_latest_attempt_history(
+                api_base,
+                token,
+                scheduled_runs,
+            )
+            if is_scheduled
+            else recent_completed
+        )
         conclusions = [run.get("conclusion") for run in recent_completed]
+        expected_conclusions = [run.get("conclusion") for run in expected_completed]
         execution_failures = [run for run in recent_completed if _is_execution_failure(run)]
         cancellations = [run for run in recent_completed if _is_cancelled(run)]
         pr_gate_rejections = [run for run in recent_completed if _is_pr_gate_rejection(run)]
@@ -397,6 +410,7 @@ def live_workflows(
             "recent_pr_gate_rejection_count": len(pr_gate_rejections),
             "recent_conclusions": conclusions[:5],
             "success_streak": base.leading_streak(conclusions, True),
+            "expected_success_streak": base.strict_success_streak(expected_conclusions),
             "failure_streak": _leading_run_streak(recent_completed, _is_execution_failure),
             "cancellation_streak": _leading_run_streak(recent_completed, _is_cancelled),
             "pr_gate_rejection_streak": _leading_run_streak(recent_completed, _is_pr_gate_rejection),
@@ -447,6 +461,7 @@ def classify(row: dict[str, Any], now: Any) -> tuple[str, list[str]]:
     latest = live.get("latest_run") if isinstance(live, dict) else None
     latest_scheduled = live.get("latest_scheduled_run") if isinstance(live, dict) else None
     semantic_warning = False
+    observations = set(row.get("observations") or [])
 
     if isinstance(latest, dict) and latest.get("conclusion") == CANCELLED_CONCLUSION:
         findings_set.add("LATEST_RUN_CANCELLED")
@@ -464,11 +479,20 @@ def classify(row: dict[str, Any], now: Any) -> tuple[str, list[str]]:
         semantic_warning = True
 
     if isinstance(latest, dict) and _is_pr_gate_rejection(latest):
-        findings_set.add("PR_GATE_REJECTION")
-        semantic_warning = True
+        observations.add("PR_GATE_REJECTION")
     if int(live.get("pr_gate_rejection_streak", 0) or 0) >= 2:
-        findings_set.add("REPEATED_PR_GATE_REJECTIONS")
-        semantic_warning = True
+        observations.add("REPEATED_PR_GATE_REJECTIONS")
+
+    retired_inventory_only = (
+        row.get("lifecycle_state") == "RETIRED"
+        and not row.get("scheduled")
+        and "RETIRED_WORKFLOW_LOCAL_FILE_PRESENT" in findings_set
+    )
+    if retired_inventory_only:
+        findings_set.discard("RETIRED_WORKFLOW_LOCAL_FILE_PRESENT")
+        observations.add("RETIRED_WORKFLOW_LOCAL_FILE_PRESENT")
+        if status == "AMBER" and not findings_set:
+            status = "GREEN"
 
     if row.get("write_target_class") == "DYNAMIC_TARGET_UNKNOWN":
         findings_set.add("WRITE_TARGET_UNKNOWN")
@@ -476,6 +500,7 @@ def classify(row: dict[str, Any], now: Any) -> tuple[str, list[str]]:
     elif semantic_warning and status == "GREEN":
         status = "AMBER"
 
+    row["observations"] = sorted(observations)
     return status, sorted(findings_set)
 
 
