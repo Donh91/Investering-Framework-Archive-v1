@@ -1,0 +1,32 @@
+name: Experiment Receipt Sync Bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/experiment-receipt-sync-bootstrap.yml'
+      - '.github/workflows/framework-learning-operations.yml'
+      - 'scripts/experiments/sync_experiment_receipts.py'
+      - 'tests/experiments/test_experiment_receipt_sync_freshness.py'
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: experiment-receipt-sync-bootstrap
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch canonical Framework Learning run on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run framework-learning-operations.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref main
