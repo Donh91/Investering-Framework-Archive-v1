@@ -5,32 +5,35 @@
     "portfolio_action": false,
     "workflow_disable": false
   },
-  "burn_risk": "CRITICAL",
+  "burn_risk": "HIGH",
   "contract": "GITHUB_ACTIONS_BUDGET_STATE_v1",
   "deferred_class_c": null,
-  "generated_at_utc": "2026-09-30T21:14:02.017526Z",
-  "projected_cycle_minutes": 3138.913,
-  "projected_cycle_pct": 104.63,
-  "protected_a_blocked": true,
+  "generated_at_utc": "2026-10-01T09:33:37.426804Z",
+  "projected_cycle_minutes": null,
+  "projected_cycle_pct": null,
+  "protected_a_blocked": null,
   "recommended_behavior": [
-    "Reserve remaining capacity for protected Class A duties.",
-    "Block/defer Class C work and run Class B only when materially necessary.",
-    "Do not blind-rerun deterministic failures.",
-    "Escalate if protected duties are blocked by the account hard stop."
+    "Do not invent billing usage.",
+    "Refresh the external/manual GitHub Actions usage snapshot.",
+    "Preserve protected Class A duties and avoid blind reruns until capacity is known."
   ],
-  "reset_eta_days": 1,
-  "snapshot_age_hours": 29.098,
-  "snapshot_status": "FRESH",
-  "state": "CRITICAL",
-  "usage_pct": 100.0,
+  "reset_eta_days": null,
+  "snapshot_status": "SNAPSHOT_PRE_RESET",
+  "state": "UNKNOWN",
+  "usage_pct": null,
   "usage_snapshot": {
+    "account_budget_usd": 0,
+    "contract": "GITHUB_ACTIONS_USAGE_SNAPSHOT_v1",
     "cycle_start_date_utc": "2026-09-01",
-    "included_minutes": 3000.0,
+    "freshness_max_hours": 72,
+    "included_minutes": 3000,
+    "note": "Exact billing values were supplied by the repository owner and recorded in issue #1156. Do not extrapolate this snapshot into a new billing cycle.",
     "observed_at_utc": "2026-09-29T16:08:11Z",
+    "practical_reset_expectation_date": "2026-10-02",
     "reset_date_utc": "2026-10-01",
     "source_ref": "issue-1156/comment-5894007588",
     "source_type": "USER_SUPPLIED_GITHUB_BILLING_SCREENSHOT",
     "stop_usage": true,
-    "used_minutes": 3000.0
+    "used_minutes": 3000
   }
 }

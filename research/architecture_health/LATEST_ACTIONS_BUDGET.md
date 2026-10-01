@@ -1,15 +1,14 @@
 # GitHub Actions Budget Guard
 
-- ACTIONS_BUDGET: **CRITICAL**
+- ACTIONS_BUDGET: **UNKNOWN**
 - USAGE_SNAPSHOT: 3000/3000
-- SNAPSHOT_STATUS: FRESH
-- RESET_ETA_DAYS: 1
-- BURN_RISK: CRITICAL
+- SNAPSHOT_STATUS: SNAPSHOT_PRE_RESET
+- RESET_ETA_DAYS: UNKNOWN
+- BURN_RISK: HIGH
 - DEFERRED_CLASS_C: UNKNOWN
-- PROTECTED_A_BLOCKED: YES
+- PROTECTED_A_BLOCKED: UNKNOWN
 
 ## Required behavior
-- Reserve remaining capacity for protected Class A duties.
-- Block/defer Class C work and run Class B only when materially necessary.
-- Do not blind-rerun deterministic failures.
-- Escalate if protected duties are blocked by the account hard stop.
+- Do not invent billing usage.
+- Refresh the external/manual GitHub Actions usage snapshot.
+- Preserve protected Class A duties and avoid blind reruns until capacity is known.
