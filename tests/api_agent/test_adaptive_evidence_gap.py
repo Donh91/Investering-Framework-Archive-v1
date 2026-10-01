@@ -180,3 +180,29 @@ def test_auditor_schema_forbids_market_semantic_fields():
     assert "buy" not in props
     assert "sell" not in props
     assert candidate["additionalProperties"] is False
+
+
+def adaptive_workflow_text() -> str:
+    return (ROOT / ".github/workflows/adaptive-evidence-gap.yml").read_text()
+
+
+def writer_queue_contract(text: str) -> bool:
+    required = [
+        "concurrency:\n",
+        "  group: framework-main-writer\n",
+        "  queue: max\n",
+        "  cancel-in-progress: false\n",
+    ]
+    return all(token in text for token in required)
+
+
+def test_adaptive_evidence_gap_queues_instead_of_replacing_pending_writer_run():
+    assert writer_queue_contract(adaptive_workflow_text())
+
+
+def test_legacy_single_pending_writer_contract_is_rejected():
+    legacy = """concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+"""
+    assert writer_queue_contract(legacy) is False
