@@ -81,6 +81,8 @@ The contract also preserves the late-section analytical sequence when evidence i
 
 The 2-3 week and 4-8 week compass lines are public navigation context but are not part of the normal weekly precision score unless a separate prospective scoring protocol is defined in advance.
 
+As of 2026-09-30, the separate prospective internal scoring protocol exists at `../04_MARKET_LEARNING/handlekompas/STRATEGIC_COMPASS_SCORING_CONTRACT_v1.md`. This does **not** alter the public weekly precision score. It permits the internal Strategic Compass to bind the prospectively frozen CN 4-8W projection as a typed overlay, preserve immutable lineage, track thesis state, and score it only under that separate contract after maturity. Cycle Navigator remains the structural owner; no parallel 4-8W engine may be created.
+
 A typed long-cycle `action_posture` is a Cycle Navigator navigation proposal with `NONE_BY_ITSELF` action authority. When Official Compass consumes that projection, proactive `BUY` / `PREPARE_BUY` output remains bounded by the current Main-Framework action permission. Cycle Navigator may not self-ratify a stronger user-facing action merely because the typed projection is schema-valid.
 
 ### Machine-readable status explanation

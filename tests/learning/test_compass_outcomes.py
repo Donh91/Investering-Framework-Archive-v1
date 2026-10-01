@@ -15,7 +15,7 @@ class CompassOutcomeTest(unittest.TestCase):
             "compass_id": "CMP-20260916-test",
             "compass_sha256": "frozen-sha",
             "issued_at_utc": "2026-09-16T12:00:00Z",
-            "market_reference": {"btc_usdt": 100.0, "eth_usdt": 50.0, "ethbtc": 0.5},
+            "market_reference": {"btc_usdt": 100.0, "eth_usdt": 50.0, "ethbtc": 0.5, "observation_open_utc": "2026-09-16T11:00:00Z"},
             "horizons": {
                 "NEXT_12H": {
                     "expected_direction": "DOWN",
@@ -31,12 +31,12 @@ class CompassOutcomeTest(unittest.TestCase):
         }
 
     def write_hourly(self, root: Path):
-        path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-17.csv"
+        path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-16.csv"
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=["timestamp_utc", "btc_close", "eth_close", "ethbtc_close"])
             writer.writeheader()
-            writer.writerow({"timestamp_utc": "2026-09-17T00:00:00Z", "btc_close": "95", "eth_close": "47", "ethbtc_close": "0.4947"})
+            writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z", "btc_close": "95", "eth_close": "47", "ethbtc_close": "0.4947"})
 
     def test_cannot_score_before_maturity(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -63,6 +63,10 @@ class CompassOutcomeTest(unittest.TestCase):
             outcome = json.loads(outcome_path.read_text())
             self.assertEqual(outcome["direction_accuracy"]["btc"]["result"], "CORRECT")
             self.assertEqual(outcome["action_utility"]["action"], "HOLD")
+            self.assertEqual(outcome["scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v2")
+            self.assertEqual(outcome["time_basis"]["effective_window_hours"], 12.0)
+            self.assertEqual(outcome["time_basis"]["start_reference_age_hours"], 0.0)
+            self.assertEqual(outcome["target_observation_at_utc"], "2026-09-17T00:00:00Z")
             self.assertEqual(original, freeze_path.read_bytes())
 
     def test_action_quality_is_horizon_action_not_hardwired_to_12h(self):
@@ -95,13 +99,13 @@ class CompassOutcomeTest(unittest.TestCase):
             freeze_path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
             freeze_path.parent.mkdir(parents=True, exist_ok=True)
             freeze_path.write_text(json.dumps(self.freeze()))
-            path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-17.csv"
+            path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-16.csv"
             path.parent.mkdir(parents=True, exist_ok=True)
             with path.open("w", newline="") as handle:
                 writer = csv.DictWriter(handle, fieldnames=["timestamp_utc", "btc_close", "eth_close", "ethbtc_close"])
                 writer.writeheader()
-                writer.writerow({"timestamp_utc": "2026-09-17T00:00:00Z", "btc_close": "95", "eth_close": "47", "ethbtc_close": "0.4947"})
-                writer.writerow({"timestamp_utc": "2026-09-17T01:00:00Z", "btc_close": "150", "eth_close": "75", "ethbtc_close": "0.5"})
+                writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z", "btc_close": "95", "eth_close": "47", "ethbtc_close": "0.4947"})
+                writer.writerow({"timestamp_utc": "2026-09-17T00:00:00Z", "btc_close": "150", "eth_close": "75", "ethbtc_close": "0.5"})
             result = mature_one(root, freeze_path, "12h", datetime(2026, 9, 17, 2, 0, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
             outcome = json.loads((root / result["path"]).read_text())
             self.assertAlmostEqual(outcome["realized"]["btc_mfe_pct"], -5.0)

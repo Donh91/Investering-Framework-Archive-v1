@@ -12,13 +12,15 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 CONTRACT = "OFFICIAL_DAILY_COMPASS_OUTCOME_v1"
-SCORING_CONTRACT = "OFFICIAL_DAILY_COMPASS_SCORING_v1"
+SCORING_CONTRACT = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
 DEFAULT_ROOT = Path("04_MARKET_LEARNING/handlekompas/official")
 HANDLEKOMPAS_RUNS = Path("04_MARKET_LEARNING/handlekompas/runs")
 HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
 HORIZONS = {"12h": 12, "72h": 72, "168h": 168}
 DIRECTION_KEY = {"12h": "NEXT_12H", "72h": "NEXT_1_3D", "168h": "NEXT_5_7D"}
 SIDEWAYS_TOLERANCE_PCT = {"12h": 1.5, "72h": 3.0, "168h": 5.0}
+TARGET_TOLERANCE = timedelta(hours=1)
+HOURLY_CLOSE_OFFSET = timedelta(hours=1)
 
 
 def canon(value: Any) -> bytes:
@@ -61,6 +63,22 @@ def hourly_paths(start: datetime, end: datetime) -> Iterable[Path]:
         day += timedelta(days=1)
 
 
+def reference_close_time(reference: Mapping[str, Any]) -> datetime | None:
+    explicit = parse_utc(reference.get("source_window_end_utc"))
+    if explicit is not None:
+        return explicit
+    opened = parse_utc(reference.get("observation_open_utc"))
+    return opened + HOURLY_CLOSE_OFFSET if opened is not None else None
+
+
+def row_close_time(row: Mapping[str, Any]) -> datetime | None:
+    close = row.get("observation_close_utc")
+    if isinstance(close, datetime):
+        return close
+    stamp = row.get("timestamp_utc")
+    return stamp + HOURLY_CLOSE_OFFSET if isinstance(stamp, datetime) else None
+
+
 def load_hourly(repo_root: Path, start: datetime, end: datetime) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for rel in hourly_paths(start, end):
@@ -71,7 +89,10 @@ def load_hourly(repo_root: Path, start: datetime, end: datetime) -> list[dict[st
             raw = path.read_text(encoding="utf-8-sig")
             for row in csv.DictReader(io.StringIO(raw)):
                 stamp = parse_utc(row.get("timestamp_utc"))
-                if stamp is None or stamp < start - timedelta(hours=2) or stamp > end + timedelta(hours=2):
+                if stamp is None:
+                    continue
+                close_stamp = parse_utc(row.get("source_window_end_utc")) or (stamp + HOURLY_CLOSE_OFFSET)
+                if close_stamp < start - TARGET_TOLERANCE or close_stamp > end + TARGET_TOLERANCE:
                     continue
                 def f(key: str) -> float | None:
                     try:
@@ -80,6 +101,7 @@ def load_hourly(repo_root: Path, start: datetime, end: datetime) -> list[dict[st
                         return None
                 rows.append({
                     "timestamp_utc": stamp,
+                    "observation_close_utc": close_stamp,
                     "btc": f("btc_close"),
                     "eth": f("eth_close"),
                     "ethbtc": f("ethbtc_close"),
@@ -89,12 +111,16 @@ def load_hourly(repo_root: Path, start: datetime, end: datetime) -> list[dict[st
     return sorted(rows, key=lambda row: row["timestamp_utc"])
 
 
-def closest_target(rows: list[dict[str, Any]], target: datetime, tolerance: timedelta = timedelta(hours=2)) -> dict[str, Any] | None:
-    eligible = [row for row in rows if target <= row["timestamp_utc"] <= target + tolerance]
-    if eligible:
-        return min(eligible, key=lambda row: row["timestamp_utc"])
-    eligible = [row for row in rows if target - tolerance <= row["timestamp_utc"] < target]
-    return max(eligible, key=lambda row: row["timestamp_utc"]) if eligible else None
+def closest_target(rows: list[dict[str, Any]], target: datetime, tolerance: timedelta = TARGET_TOLERANCE) -> dict[str, Any] | None:
+    eligible: list[tuple[float, bool, datetime, dict[str, Any]]] = []
+    for row in rows:
+        close = row_close_time(row)
+        if close is None:
+            continue
+        distance = abs((close - target).total_seconds())
+        if distance <= tolerance.total_seconds():
+            eligible.append((distance, close > target, close, row))
+    return min(eligible, key=lambda item: (item[0], item[1], item[2]))[3] if eligible else None
 
 
 def excursion(start_value: float | None, values: list[float]) -> dict[str, float | None]:
@@ -194,7 +220,16 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     if issued is None:
         return None
     hours = HORIZONS[horizon]
-    target = issued + timedelta(hours=hours)
+    ref = freeze.get("market_reference") or {}
+    start_reference = reference_close_time(ref)
+    if start_reference is None:
+        return {
+            "status": "PENDING_REFERENCE_TIME",
+            "horizon": horizon,
+            "compass_id": freeze.get("compass_id"),
+            "reason": "MARKET_REFERENCE_OBSERVATION_TIME_MISSING",
+        }
+    target = start_reference + timedelta(hours=hours)
     if now < target:
         return None
 
@@ -203,7 +238,7 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     if outcome_path.exists():
         return {"status": "ALREADY_MATURED", "path": outcome_rel.as_posix()}
 
-    rows = load_hourly(repo_root, issued, target + timedelta(hours=2))
+    rows = load_hourly(repo_root, start_reference, target + TARGET_TOLERANCE)
     target_row = closest_target(rows, target)
     if target_row is None:
         return {
@@ -214,7 +249,6 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
             "target_at_utc": target.isoformat().replace("+00:00", "Z"),
             "reason": "NO_ELIGIBLE_TARGET_OBSERVATION_WITHIN_TOLERANCE",
         }
-    ref = freeze.get("market_reference") or {}
     btc_start = ref.get("btc_usdt") if isinstance(ref.get("btc_usdt"), (int, float)) else None
     eth_start = ref.get("eth_usdt") if isinstance(ref.get("eth_usdt"), (int, float)) else None
     ethbtc_start = ref.get("ethbtc") if isinstance(ref.get("ethbtc"), (int, float)) else None
@@ -225,7 +259,7 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     eth_return = pct_change(eth_start, eth_end)
     ethbtc_return = pct_change(ethbtc_start, ethbtc_end)
 
-    interval = [row for row in rows if issued <= row["timestamp_utc"] <= target]
+    interval = [row for row in rows if (row_close_time(row) is not None and start_reference <= row_close_time(row) <= target)]
     btc_exc = excursion(btc_start, [row["btc"] for row in interval if isinstance(row.get("btc"), (int, float))])
     eth_exc = excursion(eth_start, [row["eth"] for row in interval if isinstance(row.get("eth"), (int, float))])
 
@@ -238,6 +272,20 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     confirmation_event = first_action_event(action_rows, confirm_states) if confirm_states else {"fired": None, "reason": "NO_MACHINE_TRIGGER"}
     deterioration_event = first_action_event(action_rows, deteriorate_states) if deteriorate_states else {"fired": None, "reason": "NO_MACHINE_TRIGGER"}
 
+    target_close = row_close_time(target_row)
+    effective_window_hours = ((target_close - start_reference).total_seconds() / 3600.0) if target_close else None
+    window_deviation_hours = abs(effective_window_hours - hours) if effective_window_hours is not None else None
+    if window_deviation_hours is None or window_deviation_hours > 1.0:
+        return {
+            "status": "PENDING_TARGET_EVIDENCE",
+            "path": outcome_rel.as_posix(),
+            "horizon": horizon,
+            "compass_id": freeze.get("compass_id"),
+            "target_at_utc": target.isoformat().replace("+00:00", "Z"),
+            "reason": "WINDOW_OUT_OF_TOLERANCE",
+            "effective_window_hours": effective_window_hours,
+        }
+
     outcome = {
         "contract": CONTRACT,
         "scoring_contract": SCORING_CONTRACT,
@@ -248,7 +296,17 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
         "horizon": horizon,
         "target_at_utc": target.isoformat().replace("+00:00", "Z"),
         "matured_at_utc": now.isoformat().replace("+00:00", "Z"),
-        "target_observation_at_utc": target_row["timestamp_utc"].isoformat().replace("+00:00", "Z") if target_row else None,
+        "target_observation_at_utc": target_close.isoformat().replace("+00:00", "Z") if target_close else None,
+        "target_observation_open_at_utc": target_row["timestamp_utc"].isoformat().replace("+00:00", "Z") if target_row else None,
+        "time_basis": {
+            "status": "PASS",
+            "nominal_horizon_hours": hours,
+            "start_reference_at_utc": start_reference.isoformat().replace("+00:00", "Z"),
+            "start_reference_age_hours": round((issued - start_reference).total_seconds() / 3600.0, 6),
+            "effective_window_hours": round(effective_window_hours, 6),
+            "window_deviation_hours": round(window_deviation_hours, 6),
+            "endpoint_semantics": "HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON",
+        },
         "realized": {
             "btc_return_pct": btc_return,
             "eth_return_pct": eth_return,
@@ -325,7 +383,9 @@ def main() -> None:
             if args.dry_run:
                 freeze = read_json(freeze_path)
                 issued = parse_utc(freeze.get("issued_at_utc"))
-                target = issued + timedelta(hours=HORIZONS[horizon]) if issued else None
+                ref = freeze.get("market_reference") or {}
+                start_reference = reference_close_time(ref) if issued else None
+                target = start_reference + timedelta(hours=HORIZONS[horizon]) if start_reference else None
                 results.append({
                     "compass_id": freeze.get("compass_id"),
                     "horizon": horizon,

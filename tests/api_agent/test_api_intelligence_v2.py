@@ -105,10 +105,14 @@ class ApiIntelligenceV2Tests(unittest.TestCase):
         routing = json.loads(Path('research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json').read_text())
         self.assertEqual(
             set(routing['models']),
-            {'gpt-6-luna', 'gpt-5.6-terra', 'gpt-6-sol', 'gpt-6-astra'},
+            {'gpt-6-luna', 'gpt-5.6-terra', 'gpt-6.1-sol', 'gpt-6-sol', 'gpt-6-astra'},
         )
         self.assertEqual(routing['models']['gpt-6-luna']['price_per_million'], {'input': 0.1, 'output': 0.5})
+        self.assertEqual(routing['models']['gpt-6.1-sol']['price_per_million'], {'input': 2.0, 'output': 10.0})
         self.assertEqual(routing['models']['gpt-6-sol']['price_per_million'], {'input': 2.0, 'output': 10.0})
+        self.assertEqual(routing['pricing_snapshot']['verified_latest_model_ids']['sol'], 'gpt-6.1-sol')
+        self.assertEqual(registry['tasks']['AUTOMATION_ORCHESTRATOR_TRIAGE']['model'], 'gpt-6-luna')
+        self.assertEqual(registry['tasks']['AUTOMATION_ORCHESTRATOR_ESCALATION']['model'], 'gpt-6.1-sol')
         self.assertFalse(registry['tasks']['WEEKLY_ADVERSARIAL_REVIEW']['manual_only'])
         self.assertFalse(registry['authority']['portfolio_action'])
         self.assertFalse(registry['authority']['framework_state_change'])

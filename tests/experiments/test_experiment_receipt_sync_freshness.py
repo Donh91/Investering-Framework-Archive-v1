@@ -2,12 +2,22 @@ from __future__ import annotations
 
 import json
 import tempfile
+import urllib.error
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.experiments.sync_experiment_receipts import (
+    PRIVATE_SOURCE_AUTH_REQUIRED,
+    PrivateSourceAuthRequired,
+    authenticated_receipt_fetcher,
     classify_sync_state,
+    github_contents_api_url,
+    github_json_public_first,
+    public_first_receipt_fetcher,
+    raw_github_url,
+    raw_github_location,
     prior_success_utc,
     sha256,
     sync_receipts,
@@ -89,6 +99,96 @@ class ExperimentReceiptSyncFreshnessTests(unittest.TestCase):
             )
             self.assertEqual((imported, mismatches, failures, verified), (1, 0, 0, 0))
             self.assertEqual(json.loads((root / "XR-NEW.json").read_text()), receipt)
+
+    def test_public_github_transport_does_not_require_token(self):
+        payload = {"contract": "EXPERIMENT_EXECUTION_RECEIPT_MANIFEST_v1", "receipts": []}
+        with patch("scripts.experiments.sync_experiment_receipts.fetch", return_value=payload) as public_fetch, \
+             patch("scripts.experiments.sync_experiment_receipts.fetch_github_json") as auth_fetch:
+            value, transport = github_json_public_first(
+                "Donh91/Eksperimenter-framework-",
+                "experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+                "main",
+                None,
+            )
+        self.assertEqual(value, payload)
+        self.assertEqual(transport, "GITHUB_RAW_PUBLIC")
+        public_fetch.assert_called_once()
+        auth_fetch.assert_not_called()
+
+    def test_public_404_falls_back_to_auth_only_when_token_exists(self):
+        payload = {"contract": "EXPERIMENT_EXECUTION_RECEIPT_MANIFEST_v1", "receipts": []}
+        err = urllib.error.HTTPError("https://example.invalid", 404, "Not Found", {}, None)
+        with patch("scripts.experiments.sync_experiment_receipts.fetch", side_effect=err), \
+             patch("scripts.experiments.sync_experiment_receipts.fetch_github_json", return_value=payload) as auth_fetch:
+            value, transport = github_json_public_first(
+                "Donh91/Eksperimenter-framework-",
+                "experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+                "main",
+                "token",
+            )
+        self.assertEqual(value, payload)
+        self.assertEqual(transport, "GITHUB_CONTENTS_API_AUTHENTICATED_FALLBACK")
+        auth_fetch.assert_called_once()
+
+    def test_public_404_without_token_reports_auth_requirement(self):
+        err = urllib.error.HTTPError("https://example.invalid", 404, "Not Found", {}, None)
+        with patch("scripts.experiments.sync_experiment_receipts.fetch", side_effect=err):
+            with self.assertRaises(PrivateSourceAuthRequired):
+                github_json_public_first(
+                    "Donh91/Eksperimenter-framework-",
+                    "experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+                    "main",
+                    None,
+                )
+
+    def test_raw_github_url_is_public_transport_target(self):
+        self.assertEqual(
+            raw_github_url(
+                "Donh91/Eksperimenter-framework-",
+                "experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+                "main",
+            ),
+            "https://raw.githubusercontent.com/Donh91/Eksperimenter-framework-/main/experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+        )
+
+    def test_private_github_transport_requires_explicit_cross_repo_token(self):
+        fetcher = authenticated_receipt_fetcher(None)
+        with self.assertRaises(PrivateSourceAuthRequired):
+            fetcher("https://raw.githubusercontent.com/Donh91/Eksperimenter-framework-/main/experiment_bridge/receipts/XR-1.json")
+
+    def test_private_raw_url_maps_to_authenticated_contents_route(self):
+        location = raw_github_location(
+            "https://raw.githubusercontent.com/Donh91/Eksperimenter-framework-/main/experiment_bridge/receipts/XR-1.json"
+        )
+        self.assertEqual(
+            location,
+            ("Donh91/Eksperimenter-framework-", "experiment_bridge/receipts/XR-1.json", "main"),
+        )
+        self.assertEqual(
+            github_contents_api_url(
+                "Donh91/Eksperimenter-framework-",
+                "experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+                "main",
+            ),
+            "https://api.github.com/repos/Donh91/Eksperimenter-framework-/contents/experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json?ref=main",
+        )
+
+    def test_unavailable_private_source_names_real_credential_wall(self):
+        now = datetime(2026, 9, 30, 20, 0, tzinfo=timezone.utc)
+        summary = unavailable_summary(
+            now=now,
+            previous=None,
+            error_class=PRIVATE_SOURCE_AUTH_REQUIRED,
+            source_repository="Donh91/Eksperimenter-framework-",
+            source_path="experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json",
+            source_ref="main",
+            source_transport="GITHUB_CONTENTS_API_AUTHENTICATED",
+        )
+        self.assertEqual(summary["failure_class"], PRIVATE_SOURCE_AUTH_REQUIRED)
+        self.assertEqual(summary["credential_requirement"], "CROSS_REPO_READ_TOKEN_REQUIRED")
+        self.assertEqual(summary["source_repository"], "Donh91/Eksperimenter-framework-")
+        self.assertEqual(summary["status"], "DEGRADED")
+        self.assertEqual(summary["sync_state"], "UNAVAILABLE")
 
     def test_prior_success_prefers_explicit_last_success(self):
         previous = {

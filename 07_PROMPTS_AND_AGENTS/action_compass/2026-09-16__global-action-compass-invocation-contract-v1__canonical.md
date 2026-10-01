@@ -62,6 +62,14 @@ fails closed and must never fall back to old chat prose.
 
 The official machine record preserves `NEXT_12H`, `NEXT_1_3D`, `NEXT_5_7D`, the governed
 `CYCLE_ALTCOINS_3_8W` lane, and the canonical BTC → ETH → large → mid → small → micro ladder.
+
+For an explicit month-ahead / 21-30D / 4-8W request, also resolve
+`04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json` and hash-verify its
+immutable anchor when present. The 21-30D lane is valid only when it was prospectively frozen by
+the governed weekly Cycle Navigator decision projection. The 4-8W lane remains Cycle Navigator-owned.
+Never stretch `NEXT_2_3W` into a month forecast and never create a parallel long-cycle engine.
+If the strategic pointer/anchor is absent because the new forward-only system has not yet produced
+its first anchor, state that limitation rather than reconstructing one with hindsight.
 Every Compass invocation performs a freshness evaluation before rendering. If the canonical
 Auto Market State owner has a newer packet SHA than the latest official Compass source binding,
 the route may dispatch the existing Official Compass workflow with `run_reason=ON_DEMAND` and
@@ -237,6 +245,7 @@ CURRENT_DATA_ROUTE_USED: YES/NO
 ON_DEMAND_FRESHNESS_EVALUATED: YES/NO
 NO_STALE_DATA_PING_PROMOTED: YES/NO
 THREE_HORIZONS_PRESENT: YES/NO
+REQUESTED_STRATEGIC_HORIZON_RESOLVED_OR_FAILED_CLOSED: YES/NO
 CONTROLLED_ACTIONS_USED: YES/NO
 ETA_PRESENT_WHERE_ACTIONABLE: YES/NO
 WARNING_SEPARATE_FROM_ACTION: YES/NO

@@ -1,0 +1,32 @@
+name: Situation Room Static Bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/situation-room-daily-static.yml'
+      - '.github/workflows/situation-room-static-bootstrap.yml'
+      - 'scripts/data_terminal/situation_room_daily_owner.py'
+      - 'scripts/data_terminal/situation_room_static_daily_adapter.py'
+      - 'tests/data_terminal/test_situation_room_daily_owner.py'
+      - 'tests/data_terminal/test_situation_room_static_daily_adapter.py'
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: situation-room-static-bootstrap
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch production-shaped Situation Room validation on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run situation-room-daily-static.yml --repo "${GITHUB_REPOSITORY}" --ref main

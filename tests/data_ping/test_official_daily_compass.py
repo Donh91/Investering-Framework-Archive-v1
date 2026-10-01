@@ -22,7 +22,7 @@ from scripts.data_ping.native_handlekompas import (
 
 
 class OfficialDailyCompassTest(unittest.TestCase):
-    def auto(self, *, breadth=0.19, validation="PASS", decision="PASS", blockers=None, btc=75654.0, eth=2396.86, ethbtc=0.03168, deltas=None, packet_sha="packet-sha", optional_degraded_lanes=None):
+    def auto(self, *, breadth=0.19, validation="PASS", decision="PASS", blockers=None, btc=75654.0, eth=2396.86, ethbtc=0.03168, deltas=None, packet_sha="packet-sha", optional_degraded_lanes=None, observation_open="2026-09-16T18:00:00Z", predecessor_observation=None):
         return {
             "contract": "AUTO_MARKET_STATE_PACKET_v1",
             "packet_generated_at_utc": "2026-09-16T18:09:48Z",
@@ -32,20 +32,54 @@ class OfficialDailyCompassTest(unittest.TestCase):
             "decision_context_status": decision,
             "blockers": blockers or [],
             "optional_degraded_lanes": optional_degraded_lanes or [],
+            "predecessor": {
+                "status": "AVAILABLE" if predecessor_observation else "NOT_AVAILABLE_FIRST_PACKET",
+                "market_observation_open_utc": predecessor_observation,
+            },
             "deltas_since_prior_auto_packet": deltas if deltas is not None else {
                 "btc_usdt": {"pct": -0.3},
                 "eth_usdt": {"pct": -0.7},
                 "ethbtc": {"pct": -0.4},
             },
             "normalized_state": {
-                "live_market": {"btc_usdt": btc, "eth_usdt": eth, "ethbtc": ethbtc, "observation_open_utc": "2026-09-16T18:00:00Z"},
-                "breadth": {"aggregate": {"advance_ratio": breadth, "advancers": 19, "decliners": 78, "equal_weight_mean_return_24h_pct": -2.59}},
-                "entry_signal_reference": {"state": "WAIT"},
-                "btc_dominance": {"value_pct": 58.4},
-                "settled_etf": {"btc_reported_total_musd": -100.0, "eth_reported_total_musd": 50.0},
-                "stablecoin_liquidity": {"total_usd": 300_000_000_000.0},
-                "derivatives": {},
-                "sentiment": {"classification": "NEUTRAL"},
+                "live_market": {"btc_usdt": btc, "eth_usdt": eth, "ethbtc": ethbtc, "observation_open_utc": observation_open},
+                "breadth": {
+                    "retrieved_at_utc": "2026-09-16T17:00:00Z",
+                    "aggregate": {"advance_ratio": breadth, "advancers": 19, "decliners": 78, "equal_weight_mean_return_24h_pct": -2.59},
+                },
+                "current_breadth": {
+                    "source": "LIVE_ANCHOR_BREADTH_REFERENCE",
+                    "observed_at_utc": "2026-09-16T18:05:00Z",
+                    "advance_ratio": breadth,
+                    "advancers": 19,
+                    "decliners": 78,
+                    "selection_semantics": "FRESHEST_SAME_FAMILY_POINT_ONLY_NO_DOUBLE_VOTE",
+                },
+                "entry_signal_reference": {"state": "WAIT", "generated_at_utc": "2026-09-16T18:05:00Z"},
+                "btc_dominance": {"value_pct": 58.4, "source_timestamp": "2026-09-15T00:00:00Z", "source_verified_timestamp": "2026-09-16T18:00:00Z"},
+                "settled_etf": {"btc_reported_total_musd": -100.0, "eth_reported_total_musd": 50.0, "session_date": "2026-09-15", "retrieved_at_utc": "2026-09-16T12:00:00Z"},
+                "stablecoin_liquidity": {"total_usd": 300_000_000_000.0, "source_timestamp": "2026-09-16T00:00:00Z", "retrieved_at_utc": "2026-09-16T12:00:00Z"},
+                "derivatives": {
+                    "hourly": {
+                        "btc_open_interest": 2_750_000.0,
+                        "eth_open_interest": 5_500_000.0,
+                        "observation_open_utc": "2026-09-16T18:00:00Z",
+                    },
+                    "live_anchor": {
+                        "BTC-USDT-SWAP": {"funding": {"funding_rate": 0.00002, "funding_time": 1790000000000}},
+                        "ETH-USDT-SWAP": {"funding": {"funding_rate": 0.00003, "funding_time": 1790000000000}},
+                    },
+                },
+                "sentiment": {
+                    "cfgi": {
+                        "retrieved_at_utc": "2026-09-16T18:05:00Z",
+                        "symbols": {
+                            "BTC": {"classification": "Neutral", "score": 48.0, "timestamp": "2026-09-16T18:00:00Z"},
+                            "ETH": {"classification": "Neutral", "score": 52.0, "timestamp": "2026-09-16T18:00:00Z"},
+                            "MARKET": {"classification": "Neutral", "score": 50.0, "timestamp": "2026-09-16T18:00:00Z"},
+                        },
+                    }
+                },
                 "altseason_context": {"blockchaincenter_altcoin_season": {"horizons": {"90": {"published_score": 27}}}},
             },
             "source_health": {
@@ -83,6 +117,24 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 "next_1_3d": {"direction": "SIDEWAYS", "summary": "Structured short-horizon consolidation."},
                 "next_5_7d": {"direction": "SIDEWAYS", "summary": "Structured weekly consolidation."},
                 "next_2_3w": {"direction": "SIDEWAYS", "summary": "Structured 2-3 week consolidation."},
+                "next_21_30d": {
+                    "direction": "SIDEWAYS",
+                    "btc_direction": "SIDEWAYS",
+                    "eth_direction": "SIDEWAYS",
+                    "ethbtc_direction": "SIDEWAYS",
+                    "summary": "Structured month-ahead consolidation.",
+                    "regime_destination": "CONSOLIDATION",
+                    "expected_path": "consolidation -> reassessment",
+                    "action_posture": "HOLD",
+                    "falsification": ["Confirmed structural breakdown or expansion invalidates the consolidation thesis."],
+                    "confidence": "MEDIUM",
+                    "scenario_semantics": "UNCALIBRATED_SCENARIO_WEIGHT_NOT_PROBABILITY",
+                    "scenarios": [
+                        {"label": "BASE", "weight_pct": 60, "thesis": "Consolidation persists."},
+                        {"label": "BULL", "weight_pct": 20, "thesis": "Expansion develops."},
+                        {"label": "BEAR", "weight_pct": 20, "thesis": "Breakdown develops."},
+                    ],
+                },
                 "weeks_4_8": {
                     "state": "CONSOLIDATION",
                     "warning": "NONE",
@@ -124,7 +176,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
         projection = schema["properties"]["decision_projection"]
         self.assertEqual(
             set(projection["required"]),
-            {"contract", "next_1_3d", "next_5_7d", "next_2_3w", "weeks_4_8", "protection"},
+            {"contract", "next_1_3d", "next_5_7d", "next_2_3w", "next_21_30d", "weeks_4_8", "protection"},
         )
         self.assertEqual(
             projection["properties"]["contract"]["const"],
@@ -298,11 +350,98 @@ class OfficialDailyCompassTest(unittest.TestCase):
             for key in ("NEXT_1_3D", "NEXT_5_7D", "NEXT_2_3W", "CYCLE_ALTCOINS_3_8W"):
                 self.assertEqual(out["horizons"][key]["expected_direction"], "UNAVAILABLE")
 
+    def test_negative_market_direction_is_bearish_while_action_stays_hold(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                deltas={
+                    "btc_usdt": {"pct": -1.2},
+                    "eth_usdt": {"pct": -2.0},
+                    "ethbtc": {"pct": -0.8},
+                },
+            )
+            self.assertEqual(out["market_now"]["directional_state"], "BEARISH")
+            self.assertEqual(out["market_now"]["regime"], "BEARISH")
+            self.assertEqual(out["market_now"]["action_permission"], "HOLD_WAIT")
+            self.assertEqual(out["action_now"], "HOLD_WAIT")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "DOWN")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+
+    def test_repeated_same_hourly_observation_is_not_market_neutrality(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                observation_open="2026-09-16T18:00:00Z",
+                predecessor_observation="2026-09-16T18:00:00Z",
+                deltas={
+                    "btc_usdt": {"pct": 0.0},
+                    "eth_usdt": {"pct": 0.0},
+                    "ethbtc": {"pct": 0.0},
+                },
+            )
+            now = out["market_now"]
+            self.assertEqual(now["directional_state"], "UNCHANGED_NO_NEW_OBSERVATION")
+            self.assertEqual(now["regime"], "NO_NEW_OBSERVATION")
+            self.assertFalse(now["new_price_observation"])
+            self.assertEqual(now["action_permission"], "HOLD_WAIT")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "UNAVAILABLE")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+            self.assertEqual(out["capitalization_ladder"][0]["direction"], "UNAVAILABLE")
+            self.assertFalse(out["authority"]["portfolio_execution"])
+
+    def test_zero_move_across_distinct_observations_remains_genuine_neutral(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                observation_open="2026-09-16T18:00:00Z",
+                predecessor_observation="2026-09-16T17:00:00Z",
+                deltas={
+                    "btc_usdt": {"pct": 0.0},
+                    "eth_usdt": {"pct": 0.0},
+                    "ethbtc": {"pct": 0.0},
+                },
+            )
+            self.assertEqual(out["market_now"]["directional_state"], "NEUTRAL")
+            self.assertEqual(out["market_now"]["regime"], "NEUTRAL")
+            self.assertTrue(out["market_now"]["new_price_observation"])
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "SIDEWAYS")
+
+    def test_positive_market_direction_is_bullish_without_granting_deploy_permission(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                deltas={
+                    "btc_usdt": {"pct": 1.2},
+                    "eth_usdt": {"pct": 2.0},
+                    "ethbtc": {"pct": 0.7},
+                },
+            )
+            self.assertEqual(out["market_now"]["directional_state"], "BULLISH")
+            self.assertEqual(out["market_now"]["action_permission"], "HOLD_WAIT")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "UP")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+            self.assertFalse(out["authority"]["portfolio_execution"])
+
+    def test_mixed_market_direction_remains_mixed_independent_of_action(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                deltas={
+                    "btc_usdt": {"pct": 1.0},
+                    "eth_usdt": {"pct": -1.0},
+                    "ethbtc": {"pct": -1.5},
+                },
+            )
+            self.assertEqual(out["market_now"]["directional_state"], "MIXED")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "MIXED")
+            self.assertEqual(out["horizons"]["NEXT_12H"]["action_posture"], "HOLD")
+
     def test_missing_deltas_never_create_bullish_confirmation(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, breadth=0.55, deltas={})
-            self.assertEqual(out["market_now"]["regime"], "HOLD_WAIT")
+            self.assertEqual(out["market_now"]["regime"], "MIXED")
             self.assertEqual(out["market_now"]["directional_state"], "MIXED")
+            self.assertEqual(out["market_now"]["action_permission"], "HOLD_WAIT")
 
     def test_weekly_pullback_risk_projects_conservatively(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -460,6 +599,45 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["expected_direction"], "UNAVAILABLE")
             self.assertEqual(out["protection_tracker"]["pullback_risk_state"], "UNAVAILABLE")
             self.assertEqual(out["protection_tracker"]["distribution_risk"], "UNKNOWN")
+
+    def test_evidence_snapshot_maps_derivatives_sentiment_and_source_times(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp)
+            rows = {row["feature_id"]: row for row in out["evidence_snapshot"]["selected_features"]}
+            self.assertEqual(out["evidence_snapshot"]["mapping_integrity_status"], "PASS")
+            self.assertEqual(out["evidence_snapshot"]["pass_lane_missing_feature_ids"], [])
+            self.assertEqual(rows["btc_open_interest"]["value"], 2_750_000.0)
+            self.assertEqual(rows["eth_open_interest"]["value"], 5_500_000.0)
+            self.assertAlmostEqual(rows["btc_funding"]["value"], 0.00002)
+            self.assertAlmostEqual(rows["eth_funding"]["value"], 0.00003)
+            self.assertEqual(rows["sentiment_state"]["value"], "Neutral")
+            self.assertEqual(rows["sentiment_market_score"]["value"], 50.0)
+            self.assertEqual(rows["sentiment_btc_score"]["value"], 48.0)
+            self.assertEqual(rows["sentiment_eth_score"]["value"], 52.0)
+            self.assertEqual(rows["btc_usdt"]["observed_at"], "2026-09-16T18:00:00Z")
+            self.assertEqual(rows["btc_dominance_pct"]["observed_at"], "2026-09-15T00:00:00Z")
+            self.assertEqual(rows["btc_etf_musd"]["observed_at"], "2026-09-15")
+            self.assertEqual(rows["stablecoin_total_usd"]["observed_at"], "2026-09-16T00:00:00Z")
+            self.assertTrue(all(row["eligibility"] != "ELIGIBLE" for row in rows.values()))
+            self.assertEqual(rows["btc_open_interest"]["eligibility"], "ELIGIBLE_PRESENT")
+
+    def test_pass_lane_missing_value_degrades_compact_mapping_integrity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            auto = self.auto()
+            auto["normalized_state"]["derivatives"] = {"hourly": {}, "live_anchor": {}}
+            out = build_official_compass(
+                auto,
+                packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
+                cn_package=self.cn(),
+                cn_binding={"status": "PASS"},
+                repo_root=Path(tmp),
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                run_reason="ON_DEMAND",
+            )
+            self.assertEqual(out["evidence_snapshot"]["mapping_integrity_status"], "FAIL_PASS_LANE_MISSING_VALUE")
+            self.assertIn("btc_open_interest", out["evidence_snapshot"]["pass_lane_missing_feature_ids"])
+            self.assertIn("btc_funding", out["evidence_snapshot"]["pass_lane_missing_feature_ids"])
+            self.assertEqual(out["data_status"], "DEGRADED")
 
     def test_evidence_snapshot_carries_persistence_baseline_features(self):
         with tempfile.TemporaryDirectory() as tmp:

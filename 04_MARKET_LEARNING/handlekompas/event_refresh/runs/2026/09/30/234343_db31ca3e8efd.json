@@ -1,0 +1,106 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "DATA_HEALTH_CHANGED",
+    "ACTION_STATE_CHANGED",
+    "CAPITALIZATION_LADDER_CHANGED",
+    "PROTECTION_STATE_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT",
+  "current_data_status": "OK",
+  "current_ladder": [
+    [
+      "BTC",
+      "HOLD"
+    ],
+    [
+      "ETH",
+      "HOLD"
+    ],
+    [
+      "LARGE_CAPS",
+      "WAIT"
+    ],
+    [
+      "MID_CAPS",
+      "WAIT"
+    ],
+    [
+      "SMALL_CAPS",
+      "WAIT"
+    ],
+    [
+      "MICROCAPS",
+      "HARD_WAIT"
+    ],
+    [
+      "MEMES",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "action_permission": "HOLD_WAIT",
+    "btc_delta_pct": 0.0,
+    "directional_state": "UNCHANGED_NO_NEW_OBSERVATION",
+    "eth_delta_pct": 0.0,
+    "eth_relative_state": "NO_NEW_OBSERVATION",
+    "ethbtc_delta_pct": 0.0,
+    "market_observation_open_utc": "2026-09-30T22:00:00Z",
+    "new_price_observation": false,
+    "predecessor_market_observation_open_utc": "2026-09-30T22:00:00Z",
+    "regime": "NO_NEW_OBSERVATION",
+    "summary": "The price owner repeated the same completed hourly observation; no fresh directional market claim is made."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "LOW",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "OK",
+    "decisive_public_drivers": [
+      "W39 BTC and ETH closed above their weekly opens, but ETH/BTC fell from 0.03258 to 0.03182.",
+      "Final Master Monday identifies deterioration in latest proxy breadth, ETH-relative performance, sentiment and spot microstructure; its downside candidates are unratified shadow research.",
+      "Positive settled BTC/ETH ETF rows and an improved 30d shadow rotation score counter a one-sided downside claim.",
+      "Neither confirmed distribution nor an exit signal is established by the supplied final artifacts."
+    ],
+    "distribution_risk": "UNKNOWN",
+    "eta_window": "Pullback/retest watch during W40, particularly Day 3\u20137; timing is not confirmed.",
+    "invalidation": "The near-term downside watch weakens if ETH/BTC stabilizes, spot participation and breadth prove pullback-resistant, and price holds above the completed-week close rather than retesting it. These are observation conditions, not execution thresholds.",
+    "last_material_change_at": "2026-09-30T23:43:43Z",
+    "pullback_class": "BOUNDED RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED.",
+    "pullback_risk_state": "BUILDING",
+    "reentry_message": "No re-entry review is active.",
+    "reentry_state": "INACTIVE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-09-30T23:43:43Z",
+  "heat_detail": {
+    "btc_return_24h_pct": -0.00515,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": -0.43258,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": -0.0454
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 16389.0,
+  "last_requested_source_sha": "390e7fa0734cfde97d2065032ce1f10339a5beff522a2713f97e9fcf0a98d5da",
+  "latest_compass_source_packet_sha256": "1091caccd78013022a705eb0b301eca6c1130fd8cc61059ab1c21f5771f5a49c",
+  "protective_bypass": true,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 23597.0,
+  "source_packet_sha256": "db31ca3e8efd8a5001517069db603bf6ffeca58d3a2d9d219bd5c61573ff4273",
+  "suppressed_cause_codes": [],
+  "upstream_refresh_required": false
+}

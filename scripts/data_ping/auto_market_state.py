@@ -160,7 +160,22 @@ def stablecoin(value: Any) -> tuple[dict[str, Any] | None, dict[str, Any]]:
         return None, {"status": "FAIL", "classification": "STABLECOIN_SEMANTICS_ESCALATED"}
     if any(authority.get(key) is True for key in ("binding", "canonical_acceptance", "state_change", "portfolio_action")):
         return None, {"status": "FAIL", "classification": "STABLECOIN_AUTHORITY_ESCALATION"}
-    return {"total_usd": num(global_state.get("total_usd")), "change_1d_pct": num(global_state.get("change_1d_pct")), "change_7d_pct": num(global_state.get("change_7d_pct")), "change_30d_pct": num(global_state.get("change_30d_pct")), "evidence_role": "SUPPLY_LIQUIDITY", "deployment_confirmation": "NOT_ESTABLISHED"}, {"status": "PASS", "classification": "STABLECOIN_SUPPLY_LIQUIDITY_NORMALIZED"}
+    source_timestamp = None
+    if isinstance(global_state.get("timestamp"), (int, float)) and not isinstance(global_state.get("timestamp"), bool):
+        try:
+            source_timestamp = iso(datetime.fromtimestamp(float(global_state["timestamp"]), tz=timezone.utc))
+        except (OverflowError, OSError, ValueError):
+            source_timestamp = None
+    return {
+        "total_usd": num(global_state.get("total_usd")),
+        "change_1d_pct": num(global_state.get("change_1d_pct")),
+        "change_7d_pct": num(global_state.get("change_7d_pct")),
+        "change_30d_pct": num(global_state.get("change_30d_pct")),
+        "source_timestamp": source_timestamp,
+        "retrieved_at_utc": value.get("retrieved_at_utc"),
+        "evidence_role": "SUPPLY_LIQUIDITY",
+        "deployment_confirmation": "NOT_ESTABLISHED",
+    }, {"status": "PASS", "classification": "STABLECOIN_SUPPLY_LIQUIDITY_NORMALIZED"}
 
 
 def etf(value: Any) -> tuple[dict[str, Any] | None, dict[str, Any]]:
@@ -170,7 +185,14 @@ def etf(value: Any) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     valid = all(asset in rows and rows[asset].get("session_final") is True and rows[asset].get("total_parity") is True and num(rows[asset].get("reported_total")) is not None for asset in ("BTC", "ETH"))
     if not valid:
         return None, {"status": "UNAVAILABLE", "classification": "ETF_FINALITY_OR_PARITY_UNAVAILABLE"}
-    return {"session_date": value.get("session_date"), "btc_reported_total_musd": num(rows["BTC"]["reported_total"]), "eth_reported_total_musd": num(rows["ETH"]["reported_total"]), "session_final": True, "total_parity": True}, {"status": "PASS", "classification": "ETF_SETTLED_FINAL_PARITY"}
+    return {
+        "session_date": value.get("session_date"),
+        "retrieved_at_utc": value.get("retrieved_at_utc"),
+        "btc_reported_total_musd": num(rows["BTC"]["reported_total"]),
+        "eth_reported_total_musd": num(rows["ETH"]["reported_total"]),
+        "session_final": True,
+        "total_parity": True,
+    }, {"status": "PASS", "classification": "ETF_SETTLED_FINAL_PARITY"}
 
 
 def read_json_lane(snapshot: Any, path: str) -> tuple[Any, dict[str, Any]]:
@@ -227,6 +249,212 @@ def normalize_breadth(value: Any, *, now_utc: datetime, max_age: timedelta = tim
     if age > max_age:
         return None, {"status": "DEGRADED", "classification": "BREADTH_OWNER_STALE", "age_seconds": age.total_seconds()}
     return dict(value), {"status": "PASS", "classification": validated["classification"], "evidence_role": validated["evidence_role"], "canonical_large_cap_breadth": validated["canonical_large_cap_breadth"], "canonical_broad_alt_breadth": validated["canonical_broad_alt_breadth"], "retrieved_at_utc": value.get("retrieved_at_utc"), "age_seconds": age.total_seconds()}
+
+
+def _breadth_point(value: Any, source: str) -> dict[str, Any] | None:
+    if not isinstance(value, Mapping):
+        return None
+    aggregate = value.get("aggregate") if isinstance(value.get("aggregate"), Mapping) else value
+    advancers = num(aggregate.get("advancers"))
+    decliners = num(aggregate.get("decliners"))
+    flat = num(aggregate.get("flat"))
+    count = num(aggregate.get("constituent_count")) or num(nested(value, "universe", "constituent_count"))
+    ratio = num(aggregate.get("advance_ratio"))
+    if ratio is None and advancers is not None and count not in (None, 0):
+        ratio = advancers / count
+    observed_at = (
+        value.get("retrieved_at_utc")
+        or nested(value, "observation", "retrieval_timestamp_utc")
+        or value.get("retrieval_timestamp")
+    )
+    if ratio is None and advancers is None and decliners is None:
+        return None
+    return {
+        "source": source,
+        "observed_at_utc": observed_at,
+        "advance_ratio": ratio,
+        "advancers": int(advancers) if advancers is not None else None,
+        "decliners": int(decliners) if decliners is not None else None,
+        "flat": int(flat) if flat is not None else None,
+        "constituent_count": int(count) if count is not None else None,
+        "membership_hash": value.get("membership_hash") or nested(value, "universe", "membership_hash"),
+        "evidence_role": nested(value, "evidence_semantics", "evidence_role")
+        or nested(value, "aggregate", "evidence_semantics", "evidence_role")
+        or "PROXY_ONLY",
+    }
+
+
+def select_current_breadth(rich_breadth: Any, live_anchor_breadth: Any) -> dict[str, Any] | None:
+    """Select the freshest same-family point-in-time breadth observation without double voting.
+
+    Rich breadth remains the owner for richer statistics such as equal-weight return.
+    This selector only provides the freshest overlapping breadth counts/ratio.
+    """
+    candidates = [
+        _breadth_point(rich_breadth, "RICH_BREADTH_OWNER"),
+        _breadth_point(live_anchor_breadth, "LIVE_ANCHOR_BREADTH_REFERENCE"),
+    ]
+    candidates = [row for row in candidates if row is not None]
+    if not candidates:
+        return None
+
+    def rank(row: Mapping[str, Any]) -> tuple[int, datetime]:
+        stamp = ptime(row.get("observed_at_utc"))
+        return (1 if stamp is not None else 0, stamp or datetime.min.replace(tzinfo=timezone.utc))
+
+    selected = max(candidates, key=rank)
+    comparison = None
+    if len(candidates) == 2:
+        a, b = candidates
+        ar, br = num(a.get("advance_ratio")), num(b.get("advance_ratio"))
+        comparison = {
+            "same_upstream_family": True,
+            "independent_vote": False,
+            "advance_ratio_absolute_difference": None if ar is None or br is None else abs(ar - br),
+            "older_source": min(candidates, key=rank).get("source"),
+            "newer_source": max(candidates, key=rank).get("source"),
+        }
+    return {
+        **selected,
+        "selection_semantics": "FRESHEST_SAME_FAMILY_POINT_ONLY_NO_DOUBLE_VOTE",
+        "candidate_count": len(candidates),
+        "temporal_comparison": comparison,
+    }
+
+
+NON_BETA_PROXY_EXCLUSIONS: dict[str, str] = {
+    # Explicit point-in-time transmission exclusions only. These assets remain
+    # untouched in the Rich Breadth owner/universe so membership continuity is preserved.
+    "figure-heloc": "TOKENIZED_CREDIT_RWA",
+    "tether-gold": "TOKENIZED_COMMODITY",
+    "hashnote-usyc": "TOKENIZED_TREASURY_OR_CASH_EQUIVALENT",
+    "ondo-us-dollar-yield": "TOKENIZED_TREASURY_OR_CASH_EQUIVALENT",
+    "blackrock-usd-institutional-digital-liquidity-fund": "TOKENIZED_MONEY_MARKET",
+    "pax-gold": "TOKENIZED_COMMODITY",
+    "spiko-amundi-overnight-swap-fund-eur": "TOKENIZED_MONEY_MARKET",
+    "united-stables": "STABLE_VALUE_ASSET",
+    "falcon-finance": "STABLE_VALUE_ASSET",
+    "bfusd": "STABLE_VALUE_ASSET",
+    "usdgo": "STABLE_VALUE_ASSET",
+    "blockchain-capital": "TOKENIZED_FUND",
+    "superstate-short-duration-us-government-securities-fund-ustb": "TOKENIZED_TREASURY",
+    "eutbl": "TOKENIZED_TREASURY",
+    "janus-henderson-anemoy-aaa-clo-fund": "TOKENIZED_CREDIT_RWA",
+    "kinesis-gold": "TOKENIZED_COMMODITY",
+}
+
+
+def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
+    """Measure crypto-beta rank-bucket participation without changing the owner universe.
+
+    Rich Breadth intentionally preserves its point-in-time Top-100 membership.
+    This downstream proxy excludes only an explicit reviewed list of obvious
+    tokenized commodities, stable-value/cash-equivalent instruments and tokenized
+    funds/credit so those assets do not masquerade as alt-beta transmission.
+    These remain descriptive proxy buckets only, with zero execution authority.
+    """
+    rows = breadth.get("constituents") if isinstance(breadth, Mapping) else None
+    rows = rows if isinstance(rows, list) else []
+    valid = [row for row in rows if isinstance(row, Mapping) and num(row.get("filtered_rank")) is not None and num(row.get("change_24h_pct")) is not None]
+    btc = next((num(row.get("change_24h_pct")) for row in valid if row.get("asset_id") == "bitcoin"), None)
+    eth = next((num(row.get("change_24h_pct")) for row in valid if row.get("asset_id") == "ethereum"), None)
+    excluded_non_beta_assets = [
+        {
+            "asset_id": str(row.get("asset_id") or ""),
+            "symbol": row.get("symbol"),
+            "filtered_rank": int(float(row["filtered_rank"])),
+            "market_cap_usd": num(row.get("market_cap_usd")),
+            "return_24h_pct": num(row.get("change_24h_pct")),
+            "exclusion_class": NON_BETA_PROXY_EXCLUSIONS[str(row.get("asset_id"))],
+        }
+        for row in valid
+        if str(row.get("asset_id")) in NON_BETA_PROXY_EXCLUSIONS
+    ]
+
+    definitions = {
+        "LARGE_ALT_PROXY": (3, 20, "TOP100_FULL_RANK_WINDOW"),
+        "MID_ALT_PROXY": (21, 50, "TOP100_FULL_RANK_WINDOW"),
+        "SMALL_ALT_PROXY": (51, 100, "TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE"),
+    }
+    buckets: dict[str, Any] = {}
+    for name, (lo, hi, coverage) in definitions.items():
+        raw_selected = [
+            row for row in valid
+            if lo <= int(float(row["filtered_rank"])) <= hi
+        ]
+        excluded_in_bucket = [
+            row for row in raw_selected
+            if str(row.get("asset_id")) in NON_BETA_PROXY_EXCLUSIONS
+        ]
+        selected = [
+            row for row in raw_selected
+            if str(row.get("asset_id")) not in NON_BETA_PROXY_EXCLUSIONS
+        ]
+        changes = [float(row["change_24h_pct"]) for row in selected]
+        if not changes:
+            buckets[name] = {
+                "status": "UNAVAILABLE",
+                "rank_window": [lo, hi],
+                "coverage": coverage,
+                "raw_rank_window_constituent_count": len(raw_selected),
+                "excluded_non_beta_count": len(excluded_in_bucket),
+                "constituent_count": 0,
+            }
+            continue
+        adv = sum(v > 0 for v in changes)
+        buckets[name] = {
+            "status": "OBSERVED_PROXY",
+            "rank_window": [lo, hi],
+            "coverage": coverage,
+            "raw_rank_window_constituent_count": len(raw_selected),
+            "excluded_non_beta_count": len(excluded_in_bucket),
+            "constituent_count": len(changes),
+            "advance_ratio_24h": round(adv / len(changes), 6),
+            "median_return_24h_pct": round(float(__import__("statistics").median(changes)), 6),
+            "equal_weight_return_24h_pct": round(sum(changes) / len(changes), 6),
+            "outperforming_btc_share_24h": None if btc is None else round(sum(v > btc for v in changes) / len(changes), 6),
+            "outperforming_eth_share_24h": None if eth is None else round(sum(v > eth for v in changes) / len(changes), 6),
+            "membership": [
+                {
+                    "asset_id": row.get("asset_id"),
+                    "symbol": row.get("symbol"),
+                    "filtered_rank": int(float(row["filtered_rank"])),
+                    "market_cap_usd": num(row.get("market_cap_usd")),
+                    "return_24h_pct": num(row.get("change_24h_pct")),
+                }
+                for row in selected
+            ],
+        }
+    buckets["MICROCAP_PROXY"] = {
+        "status": "UNAVAILABLE",
+        "coverage": "BELOW_TOP100_SOURCE_UNIVERSE_NOT_OBSERVED",
+        "reason": "Current Rich Breadth owner cannot represent the framework microcap universe.",
+    }
+    return {
+        "contract": "CAPITALIZATION_TRANSMISSION_PROXY_v2",
+        "source_universe": nested(breadth, "universe", "identifier"),
+        "source_membership_hash": nested(breadth, "universe", "membership_hash") or nested(breadth, "aggregate", "membership_hash"),
+        "source_retrieved_at_utc": breadth.get("retrieved_at_utc") if isinstance(breadth, Mapping) else None,
+        "bucket_semantics": "FILTERED_TOP100_RANK_WINDOWS_EXPLICIT_NON_BETA_EXCLUSIONS_PROXY_ONLY",
+        "non_beta_exclusion_policy": {
+            "policy_id": "CAP_TRANSMISSION_NON_BETA_EXCLUSIONS_2026_10_01_A",
+            "scope": "DOWNSTREAM_PROXY_ONLY_OWNER_UNIVERSE_UNCHANGED",
+            "match_semantics": "EXACT_ASSET_ID_ONLY_NO_HEURISTIC_INFERENCE",
+            "excluded_asset_ids": sorted(NON_BETA_PROXY_EXCLUSIONS),
+        },
+        "excluded_non_beta_assets": excluded_non_beta_assets,
+        "excluded_non_beta_count": len(excluded_non_beta_assets),
+        "btc_return_24h_pct": btc,
+        "eth_return_24h_pct": eth,
+        "buckets": buckets,
+        "authority": {
+            "binding": False,
+            "canonical_rotation": False,
+            "portfolio_action": False,
+            "market_threshold_change": False,
+            "execution_weight": 0,
+        },
+    }
 
 
 def latest_macro(repo_root: Path, sha: str, now: datetime, *, max_age: timedelta = timedelta(hours=36)) -> tuple[dict[str, Any] | None, dict[str, Any]]:
@@ -309,6 +537,7 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     health["hourly_market"] = {**hourly_health, "row": row_health, "status": "PASS" if hourly_health.get("status") == "PASS" and row_health.get("status") == "PASS" else hourly_health.get("status")}
     market_metrics = nested(live, "target", "market_metrics") or {}
     derivatives = market_metrics.get("derivatives") or {}
+    microstructure = market_metrics.get("microstructure") or {}
     live_breadth_reference = market_metrics.get("breadth") or {}
     sentiment = market_metrics.get("sentiment") or {}
     altseason = market_metrics.get("altseason_context") or market_metrics.get("rotation_context") or {}
@@ -317,7 +546,20 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     health["altseason_context"] = {"status": "PASS" if altseason else "UNAVAILABLE", "classification": "LIVE_ANCHOR_ALTSEASON_CONTEXT"}
     breadth_raw, breadth_read_health = read_json(snapshot, BREADTH_OWNER)
     breadth, breadth_normalization_health = normalize_breadth(breadth_raw, now_utc=now)
-    health["breadth"] = {**breadth_read_health, "normalization": breadth_normalization_health, "status": "PASS" if breadth_read_health.get("status") == "PASS" and breadth_normalization_health.get("status") == "PASS" else breadth_normalization_health.get("status"), "classification": breadth_normalization_health.get("classification")}
+    current_breadth = select_current_breadth(breadth, live_breadth_reference)
+    cap_transmission = capitalization_transmission_proxy(breadth or {})
+    health["breadth"] = {
+        **breadth_read_health,
+        "normalization": breadth_normalization_health,
+        "temporal_selection": None if current_breadth is None else {
+            "source": current_breadth.get("source"),
+            "observed_at_utc": current_breadth.get("observed_at_utc"),
+            "selection_semantics": current_breadth.get("selection_semantics"),
+            "temporal_comparison": current_breadth.get("temporal_comparison"),
+        },
+        "status": "PASS" if breadth_read_health.get("status") == "PASS" and breadth_normalization_health.get("status") == "PASS" else breadth_normalization_health.get("status"),
+        "classification": breadth_normalization_health.get("classification"),
+    }
     macro, macro_health = latest_macro(repo_root, snapshot.commit_sha, now)
     health["macro_risk"] = macro_health
     dominance, dominance_health = btc_d(repo_root, snapshot.commit_sha, now)
@@ -351,6 +593,12 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     health["derivatives"]["hourly_status"] = "PASS" if row and row.get("btc_open_interest") and row.get("eth_open_interest") else "UNAVAILABLE"
     scalar_values = {"btc_usdt": nested(live_market, "btc_usdt"), "eth_usdt": nested(live_market, "eth_usdt"), "ethbtc": nested(live_market, "ethbtc"), "btc_dominance_pct": nested(dominance, "value_pct"), "breadth_advance_ratio": nested(breadth, "aggregate", "advance_ratio"), "stablecoin_total_usd": nested(stable_state, "total_usd"), "btc_etf_musd": nested(etf_value, "btc_reported_total_musd"), "eth_etf_musd": nested(etf_value, "eth_reported_total_musd")}
     prior, predecessor_status = prior_packet(snapshot)
+    if isinstance(predecessor_status, dict) and predecessor_status.get("status") == "AVAILABLE":
+        predecessor_status = {
+            **predecessor_status,
+            "packet_generated_at_utc": nested(prior, "packet_generated_at_utc"),
+            "market_observation_open_utc": nested(prior, "normalized_state", "live_market", "observation_open_utc"),
+        }
     prior_values = nested(prior, "normalized_state", "scalar_values") or {}
     deltas = {key: delta(value, prior_values.get(key)) for key, value in scalar_values.items()}
     derived_ethbtc = None if not live_market or not live_market.get("btc_usdt") or not live_market.get("eth_usdt") else live_market["eth_usdt"] / live_market["btc_usdt"]
@@ -363,7 +611,98 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     any_nonpass = any(health.get(lane, {}).get("status") != "PASS" for lane in LANES)
     validation_status = "FAIL" if critical_fail else "DEGRADED" if any_nonpass else "PASS"
     decision_context_status = "PASS" if not blockers else "DEGRADED"
-    packet = {"contract": CONTRACT, "packet_generated_at_utc": iso(now), "source_snapshot": {"repository": REPO, "exact_commit_sha": snapshot.commit_sha, "ref_resolution_count": snapshot.resolution_count, "consistency": snapshot.consistency()}, "source_registry_path": REGISTRY, "replay_report_path": REPLAY, "source_health": health, "normalized_state": {"live_market": live_market, "btc_dominance": dominance, "derivatives": {"live_anchor": derivatives, "hourly": {"btc_open_interest": float(row["btc_open_interest"]) if row and row.get("btc_open_interest") else None, "eth_open_interest": float(row["eth_open_interest"]) if row and row.get("eth_open_interest") else None}}, "breadth": breadth, "live_anchor_breadth_reference": live_breadth_reference or None, "settled_etf": etf_value, "stablecoin_liquidity": stable_state, "macro_risk": macro, "sentiment": sentiment or None, "altseason_context": altseason or None, "catalyst_context": catalyst, "entry_signal_reference": None if not entry else {"contract": entry.get("contract"), "generated_at_utc": entry.get("generated_at_utc"), "state": entry.get("state"), "observer_state": entry.get("observer_state"), "authority": entry.get("authority")}, "scalar_values": scalar_values}, "crosschecks": crosschecks, "predecessor": predecessor_status, "deltas_since_prior_auto_packet": deltas, "replacement_score": score, "decision_context_status": decision_context_status, "blockers": blockers, "optional_degraded_lanes": optional_degraded, "validation_status": validation_status, "missingness_policy": "MISSING_IS_UNKNOWN_DEGRADED_OR_UNAVAILABLE_NEVER_BEARISH", "fallback_policy": "NO_SILENT_FALLBACK_NO_OWNER_SWITCH_FROM_CROSSCHECK", "authority": AUTH}
+    spot_hourly = {
+        "observation_open_utc": row.get("timestamp_utc") if row else None,
+        "BTCUSDT": {
+            "open": float(row["btc_open"]) if row and row.get("btc_open") else None,
+            "high": float(row["btc_high"]) if row and row.get("btc_high") else None,
+            "low": float(row["btc_low"]) if row and row.get("btc_low") else None,
+            "close": float(row["btc_close"]) if row and row.get("btc_close") else None,
+            "volume": float(row["btc_volume"]) if row and row.get("btc_volume") else None,
+            "quote_volume": float(row["btc_quote_volume"]) if row and row.get("btc_quote_volume") else None,
+            "trade_count": int(float(row["btc_trade_count"])) if row and row.get("btc_trade_count") else None,
+            "taker_buy_quote_share": float(row["btc_taker_buy_quote_share"]) if row and row.get("btc_taker_buy_quote_share") else None,
+            "return_1h_pct": float(row["btc_return_1h_pct"]) if row and row.get("btc_return_1h_pct") else None,
+            "range_1h_pct": float(row["btc_range_1h_pct"]) if row and row.get("btc_range_1h_pct") else None,
+        },
+        "ETHUSDT": {
+            "open": float(row["eth_open"]) if row and row.get("eth_open") else None,
+            "high": float(row["eth_high"]) if row and row.get("eth_high") else None,
+            "low": float(row["eth_low"]) if row and row.get("eth_low") else None,
+            "close": float(row["eth_close"]) if row and row.get("eth_close") else None,
+            "volume": float(row["eth_volume"]) if row and row.get("eth_volume") else None,
+            "quote_volume": float(row["eth_quote_volume"]) if row and row.get("eth_quote_volume") else None,
+            "trade_count": int(float(row["eth_trade_count"])) if row and row.get("eth_trade_count") else None,
+            "taker_buy_quote_share": float(row["eth_taker_buy_quote_share"]) if row and row.get("eth_taker_buy_quote_share") else None,
+            "return_1h_pct": float(row["eth_return_1h_pct"]) if row and row.get("eth_return_1h_pct") else None,
+            "range_1h_pct": float(row["eth_range_1h_pct"]) if row and row.get("eth_range_1h_pct") else None,
+        },
+        "ETHBTC": {
+            "open": float(row["ethbtc_open"]) if row and row.get("ethbtc_open") else None,
+            "high": float(row["ethbtc_high"]) if row and row.get("ethbtc_high") else None,
+            "low": float(row["ethbtc_low"]) if row and row.get("ethbtc_low") else None,
+            "close": float(row["ethbtc_close"]) if row and row.get("ethbtc_close") else None,
+            "return_1h_pct": float(row["ethbtc_return_1h_pct"]) if row and row.get("ethbtc_return_1h_pct") else None,
+            "range_1h_pct": float(row["ethbtc_range_1h_pct"]) if row and row.get("ethbtc_range_1h_pct") else None,
+        },
+    }
+    hourly_derivatives = {
+        "btc_open_interest": float(row["btc_open_interest"]) if row and row.get("btc_open_interest") else None,
+        "eth_open_interest": float(row["eth_open_interest"]) if row and row.get("eth_open_interest") else None,
+        "btc_oi_change_1h_pct": float(row["btc_oi_change_1h_pct"]) if row and row.get("btc_oi_change_1h_pct") else None,
+        "eth_oi_change_1h_pct": float(row["eth_oi_change_1h_pct"]) if row and row.get("eth_oi_change_1h_pct") else None,
+        "btc_long_short_ratio": float(row["btc_long_short_ratio"]) if row and row.get("btc_long_short_ratio") else None,
+        "eth_long_short_ratio": float(row["eth_long_short_ratio"]) if row and row.get("eth_long_short_ratio") else None,
+        "btc_funding_event_rate": float(row["btc_funding_event_rate"]) if row and row.get("btc_funding_event_rate") else None,
+        "eth_funding_event_rate": float(row["eth_funding_event_rate"]) if row and row.get("eth_funding_event_rate") else None,
+        "btc_price_oi_state": row.get("btc_price_oi_state") if row else None,
+        "eth_price_oi_state": row.get("eth_price_oi_state") if row else None,
+        "observation_open_utc": row.get("timestamp_utc") if row else None,
+    }
+    packet = {
+        "contract": CONTRACT,
+        "packet_generated_at_utc": iso(now),
+        "source_snapshot": {"repository": REPO, "exact_commit_sha": snapshot.commit_sha, "ref_resolution_count": snapshot.resolution_count, "consistency": snapshot.consistency()},
+        "source_registry_path": REGISTRY,
+        "replay_report_path": REPLAY,
+        "source_health": health,
+        "normalized_state": {
+            "live_market": live_market,
+            "spot_hourly": spot_hourly,
+            "microstructure": microstructure or None,
+            "btc_dominance": dominance,
+            "derivatives": {"live_anchor": derivatives, "hourly": hourly_derivatives},
+            "breadth": breadth,
+            "current_breadth": current_breadth,
+            "capitalization_transmission_proxy": cap_transmission,
+            "live_anchor_breadth_reference": live_breadth_reference or None,
+            "settled_etf": etf_value,
+            "stablecoin_liquidity": stable_state,
+            "macro_risk": macro,
+            "sentiment": sentiment or None,
+            "altseason_context": altseason or None,
+            "catalyst_context": catalyst,
+            "entry_signal_reference": None if not entry else {
+                "contract": entry.get("contract"),
+                "generated_at_utc": entry.get("generated_at_utc"),
+                "state": entry.get("state"),
+                "observer_state": entry.get("observer_state"),
+                "authority": entry.get("authority"),
+            },
+            "scalar_values": scalar_values,
+        },
+        "crosschecks": crosschecks,
+        "predecessor": predecessor_status,
+        "deltas_since_prior_auto_packet": deltas,
+        "replacement_score": score,
+        "decision_context_status": decision_context_status,
+        "blockers": blockers,
+        "optional_degraded_lanes": optional_degraded,
+        "validation_status": validation_status,
+        "missingness_policy": "MISSING_IS_UNKNOWN_DEGRADED_OR_UNAVAILABLE_NEVER_BEARISH",
+        "fallback_policy": "NO_SILENT_FALLBACK_NO_OWNER_SWITCH_FROM_CROSSCHECK",
+        "authority": AUTH,
+    }
     packet["packet_sha256"] = h(canon({key: value for key, value in packet.items() if key != "packet_sha256"}))
     return packet
 

@@ -407,12 +407,37 @@ def detection_time(result):
         return None
 
 
+def is_static_dated_owner(result):
+    retrieval = result.get("retrieval")
+    return bool(
+        isinstance(retrieval, dict)
+        and retrieval.get("strategy") == "DETERMINISTIC_STATIC_DAILY_BRIEFING"
+        and retrieval.get("dynamic_archive_shell_not_required") is True
+        and isinstance(retrieval.get("situation_room_daily_url"), str)
+        and "/briefing/" in retrieval.get("situation_room_daily_url", "")
+    )
+
+
 def retain_dated_record(previous, incoming):
+    previous_static = is_static_dated_owner(previous)
+    incoming_static = is_static_dated_owner(incoming)
+
+    # The deterministic dated-briefing adapter is the authoritative daily writer.
+    # Never let a generic same-day owner overwrite it, and never let an older
+    # generic PASS suppress a fail-closed verdict from the authoritative route.
+    if previous_static != incoming_static:
+        return previous_static
+
+    old_time, new_time = detection_time(previous), detection_time(incoming)
+    if previous_static and incoming_static:
+        return old_time is None or new_time is None or new_time <= old_time
+
+    # Legacy/generic records retain the historical quality ordering only when
+    # neither row is from the authoritative static route.
     if previous.get("run_status") == "PASS" and incoming.get("run_status") != "PASS":
         return True
     if previous.get("run_status") != "PASS" and incoming.get("run_status") == "PASS":
         return False
-    old_time, new_time = detection_time(previous), detection_time(incoming)
     return old_time is None or new_time is None or new_time <= old_time
 
 
@@ -432,7 +457,29 @@ def record_superseded(root, previous, incoming):
         path.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n")
 
 
-def write_outputs(root: Path, result: dict) -> None:
+def record_displaced(root, previous, incoming):
+    digest = lambda obj: hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    receipt = {
+        "contract": "SITUATION_ROOM_DISPLACED_RECORD_v1",
+        "observation_date_utc": incoming["observation_date_utc"],
+        "displaced_run_id": previous.get("run_id"),
+        "replacement_run_id": incoming.get("run_id"),
+        "displaced_sha256": digest(previous),
+        "replacement_sha256": digest(incoming),
+        "replacement_static_owner": is_static_dated_owner(incoming),
+        "reason": (
+            "AUTHORITATIVE_STATIC_OWNER_SUPERSEDED_GENERIC"
+            if is_static_dated_owner(incoming) and not is_static_dated_owner(previous)
+            else "LATER_AUTHORITATIVE_RECORD_SUPERSEDED_PRIOR"
+        ),
+    }
+    path = root / "superseded" / (digest(receipt) + ".json")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n")
+
+
+def write_outputs(root: Path, result: dict) -> dict:
     date_utc = result["observation_date_utc"]
     year, month, _ = date_utc.split("-")
     dated = root / year / month / f"{date_utc}.json"
@@ -442,7 +489,14 @@ def write_outputs(root: Path, result: dict) -> None:
         if retain_dated_record(previous, result):
             if previous != result:
                 record_superseded(root, previous, result)
-            return  # Neither pointer nor event ledger may consume the rejected attempt.
+            return {
+                "status": "RETAINED_PRIOR_RECORD",
+                "authoritative_run_id": previous.get("run_id"),
+                "rejected_run_id": result.get("run_id"),
+                "authoritative_static_owner": is_static_dated_owner(previous),
+            }  # Neither pointer nor event ledger may consume the rejected attempt.
+        if previous != result:
+            record_displaced(root, previous, result)
     dated.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n")
     root.mkdir(parents=True, exist_ok=True)
     latest = {
@@ -476,6 +530,12 @@ def write_outputs(root: Path, result: dict) -> None:
             row["shared_row_tournament_eligible"] = False
             fh.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
             existing.add(event["event_id"])
+
+    return {
+        "status": "WROTE_INCOMING_RECORD",
+        "authoritative_run_id": result.get("run_id"),
+        "authoritative_static_owner": is_static_dated_owner(result),
+    }
 
 
 def main() -> None:

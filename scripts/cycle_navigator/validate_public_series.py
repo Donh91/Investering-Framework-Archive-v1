@@ -79,6 +79,27 @@ def main() -> None:
     assert int(binding_data["public_issue_number"]) == int(current["public_issue_number"])
     assert int(binding_data["machine_issue_number"]) == int(current["machine_issue_number"])
     assert binding_data["forecast_week"] == current["forecast_week"]
+    assert str(binding_data.get("publication_status")) == str(current.get("publication_status"))
+    assert int(pointer["public_issue_number"]) == int(current["public_issue_number"])
+    assert str(pointer.get("publication_status")) == str(current.get("publication_status"))
+
+    # Public identity is owned by the public-series index + weekly binding, not by
+    # the pre-publication machine package. A machine package may retain the public
+    # issue that was known at generation time; that is provenance, not current identity.
+    machine_path = root / pointer["week_dir"] / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+    machine = read_json(machine_path)
+    assert int(machine["issue_number"]) == int(current["machine_issue_number"])
+    machine_public_issue = int(machine.get("public_issue_number") or 0)
+    current_public_issue = int(current["public_issue_number"])
+    machine_public_identity_stale_at_freeze = machine_public_issue != current_public_issue
+    if machine_public_identity_stale_at_freeze:
+        if str(machine.get("publication_status")) == "PUBLISHED_CONFIRMED_BY_USER":
+            raise AssertionError("stale_machine_public_identity_claims_current_publication")
+        assert machine_public_issue < current_public_issue
+    if str(current.get("publication_status")) == "PUBLISHED_CONFIRMED_BY_USER":
+        assert current.get("published_path") == latest_pub.get("published_path")
+        assert binding_data.get("published_path") == latest_pub.get("published_path")
+        assert binding_data.get("publication_receipt") == latest_pub.get("publication_receipt")
 
     history = read_json(root / "05_CYCLE_NAVIGATOR/site/history-scoreboard.json")
     row = next(x for x in history["records"] if int(x["cn"]) == int(score["public_issue_number"]))
@@ -106,6 +127,9 @@ def main() -> None:
         "price_range_score": price["score"],
         "current_public_issue": current["public_issue_number"],
         "current_machine_issue": current["machine_issue_number"],
+        "machine_public_issue_at_generation": machine_public_issue,
+        "machine_public_identity_stale_at_freeze": machine_public_identity_stale_at_freeze,
+        "public_identity_authority": "CN_PUBLIC_SERIES_INDEX_PLUS_WEEKLY_BINDING",
     }, sort_keys=True))
 
 

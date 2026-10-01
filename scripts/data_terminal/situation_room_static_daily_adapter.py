@@ -96,6 +96,7 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
 
     apply_dated_discovery_fail_closed(result, date_utc)
     apply_situation_room_retrieval_fail_closed(result)
+    result["collection_route"] = "SITUATION_ROOM_STATIC_DATED_OWNER_v1"
     result.setdefault("retrieval", {})
     result["retrieval"].update({
         "situation_room_archive_url": SITUATION_ROOM_ARCHIVE,
@@ -103,7 +104,9 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         "strategy": "DETERMINISTIC_STATIC_DAILY_BRIEFING",
         "dynamic_archive_shell_not_required": True,
     })
-    owner.write_outputs(output_root, result)
+    persistence = owner.write_outputs(output_root, result)
+    result["persistence_status"] = persistence.get("status")
+    result["authoritative_run_id"] = persistence.get("authoritative_run_id")
     return result
 
 
@@ -124,6 +127,8 @@ def main() -> None:
         "daily_result": result["daily_result"],
         "run_status": result["run_status"],
         "situation_room_daily_url": daily_briefing_url(args.date_utc),
+        "persistence_status": result.get("persistence_status"),
+        "authoritative_run_id": result.get("authoritative_run_id"),
     }, sort_keys=True))
 
     if result["daily_result"] == "COLLECTOR_FAILURE":

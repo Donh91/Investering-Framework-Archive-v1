@@ -1,0 +1,94 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "DATA_HEALTH_CHANGED",
+    "ACTION_STATE_CHANGED",
+    "MARKET_STATE_CHANGED",
+    "CAPITALIZATION_LADDER_CHANGED",
+    "PROTECTION_STATE_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT_DATA_DEGRADED",
+  "current_data_status": "DEGRADED",
+  "current_ladder": [
+    [
+      "BTC",
+      "UNAVAILABLE"
+    ],
+    [
+      "ETH",
+      "UNAVAILABLE"
+    ],
+    [
+      "LARGE_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MID_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "SMALL_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MICROCAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MEMES",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "directional_state": "UNAVAILABLE",
+    "regime": "DATA_DEGRADED",
+    "summary": "Current market direction is unavailable because required state is degraded."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "LOW",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "DEGRADED",
+    "decisive_public_drivers": [],
+    "distribution_risk": "UNKNOWN",
+    "eta_window": "UNKNOWN",
+    "invalidation": "Fresh canonical market and Cycle Navigator evidence is required.",
+    "last_material_change_at": "2026-09-29T19:41:16Z",
+    "pullback_class": "UNKNOWN",
+    "pullback_risk_state": "UNAVAILABLE",
+    "reentry_message": "Re-entry review is unavailable until canonical evidence is healthy.",
+    "reentry_state": "UNAVAILABLE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-09-29T19:41:16Z",
+  "heat_detail": {
+    "btc_return_24h_pct": -0.87292,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": -0.13019,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": -2.570145
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 78435.0,
+  "last_requested_source_sha": "3032df0ba4ed1bc941317768ea79c30ae1e0850fd472051ebe4993e33502e4ec",
+  "latest_compass_source_packet_sha256": "3032df0ba4ed1bc941317768ea79c30ae1e0850fd472051ebe4993e33502e4ec",
+  "protective_bypass": true,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 38144.0,
+  "source_packet_sha256": "0dfa5e732153ccbddd2c026b2bbdaf4fd4569729b5592c00ed51113ef58ae907",
+  "suppressed_cause_codes": [],
+  "upstream_refresh_required": false
+}

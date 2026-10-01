@@ -5,6 +5,11 @@ on:
     paths:
       - '.github/workflows/framework-learning-supervisor.yml'
       - 'scripts/api_agent/senior_repair_audit_dispatch.py'
+      - 'scripts/api_agent/api_gateway.py'
+      - 'scripts/framework_intelligence/automation_orchestration_v1.py'
+      - 'research/api_agent/API_TASK_REGISTRY_v1.json'
+      - 'research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json'
+      - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
       - 'scripts/framework_intelligence/weekly_forensics_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_replay_v1.py'
@@ -13,6 +18,9 @@ on:
       - 'scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
+      - 'tests/framework_intelligence/test_automation_orchestration_v1.py'
+      - 'tests/api_agent/test_api_gateway.py'
+      - 'tests/api_agent/test_capability_router.py'
       - 'tests/framework_intelligence/test_weekly_forensics_v1.py'
       - 'tests/framework_intelligence/test_weekly_forensics_replay_v1.py'
       - 'tests/framework_intelligence/test_operational_memory_v1.py'
@@ -21,18 +29,23 @@ on:
       - '00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md'
       - '00_FMOS/WEEKLY_FORENSICS_META_HEALTH_v1.md'
       - '00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md'
+      - '00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md'
   schedule:
     - cron: '35 4 * * *'
       timezone: 'Europe/Copenhagen'
     - cron: '35 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Automation Production Health']
+    types: [completed]
   issue_comment:
     types: [created]
 
 concurrency:
-  group: framework-main-writer
-  cancel-in-progress: false
+  # Read-only PR validation must not compete with serialized production writers.
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
@@ -50,6 +63,8 @@ jobs:
         run: |
           python -m py_compile \
             scripts/api_agent/senior_repair_audit_dispatch.py \
+            scripts/api_agent/api_gateway.py \
+            scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
@@ -61,6 +76,12 @@ jobs:
         run: |
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_automation_orchestration_v1 \
+            tests.api_agent.test_api_gateway \
+            tests.api_agent.test_capability_router \
+            tests.framework_intelligence.test_automation_orchestration_v1 \
+            tests.api_agent.test_api_gateway \
+            tests.api_agent.test_capability_router \
             tests.framework_intelligence.test_weekly_forensics_v1 \
             tests.framework_intelligence.test_weekly_forensics_replay_v1 \
             tests.framework_intelligence.test_operational_memory_v1 \
@@ -282,7 +303,9 @@ jobs:
         run: |
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "SENIOR_REPAIR_AUDIT duplicate trigger $COMMENT_ID: NOOP, immutable receipt already exists."
   operate:
-    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    if: >-
+      ((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     permissions:
       contents: write
       issues: write
@@ -300,6 +323,8 @@ jobs:
       - name: Validate learning and operational-memory firewalls
         run: |
           python -m py_compile \
+            scripts/api_agent/api_gateway.py \
+            scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
@@ -307,6 +332,9 @@ jobs:
             scripts/orchestration/build_framework_handoff_manifest.py
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_automation_orchestration_v1 \
+            tests.api_agent.test_api_gateway \
+            tests.api_agent.test_capability_router \
             tests.framework_intelligence.test_operational_memory_v1 \
             tests.framework_intelligence.test_operational_memory_post_production_audit_v1 \
             tests.framework_intelligence.test_operational_memory_fail_to_codex_intake_v1 -v
@@ -321,6 +349,9 @@ jobs:
               --output-root research/framework_learning/weekly_forensics \
               --mode FINAL
           fi
+          python scripts/framework_intelligence/automation_orchestration_v1.py build \
+            --repo-root . \
+            --output-root research/framework_learning/automation_orchestration
           python scripts/framework_intelligence/framework_learning_supervisor.py \
             --repo-root . \
             --output-root research/framework_learning
@@ -369,6 +400,65 @@ jobs:
             assert key in handoff['agent_read_order']['CODEX_OPERATIONAL_PREFLIGHT'], key
             assert key in handoff['agent_read_order']['ASTRA_RESEARCH_ROUTING'], key
           PY
+      - name: Run bounded intelligent automation orchestration
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -u
+          plan="research/framework_learning/automation_orchestration/LATEST_PLAN.json"
+          outroot="research/api_agent/outputs/automation_orchestration/run-${GITHUB_RUN_ID}"
+          luna_required="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/framework_learning/automation_orchestration/LATEST_PLAN.json').read_text())
+          print('true' if p['agent_calls']['luna_required'] else 'false')
+          PY
+          )"
+          sol_required="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/framework_learning/automation_orchestration/LATEST_PLAN.json').read_text())
+          print('true' if p['agent_calls']['sol_6_1_required'] else 'false')
+          PY
+          )"
+
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "OPENAI_API_KEY unavailable; orchestration remains deterministic-only for this run."
+            luna_required=false
+            sol_required=false
+          fi
+
+          if [ "$luna_required" = "true" ]; then
+            if python scripts/api_agent/check_api_lane_budget.py                 --receipt-root research/api_agent/outputs                 --task AUTOMATION_ORCHESTRATOR_TRIAGE                 --cap-usd 2.0                 --reserve-usd 0.10               && python scripts/api_agent/check_monthly_cost_guard.py                 --receipt-root research/api_agent/outputs                 --hard-stop-usd 40                 --reserve-usd 4.0; then
+              mkdir -p "$outroot/luna"
+              if ! python scripts/api_agent/api_gateway.py                   --task AUTOMATION_ORCHESTRATOR_TRIAGE                   --registry research/api_agent/API_TASK_REGISTRY_v1.json                   --prompt-file research/framework_learning/automation_orchestration/LUNA_PROMPT.txt                   --context-file research/framework_learning/automation_orchestration/LUNA_CONTEXT.json                   --output-dir "$outroot/luna"                   --intended-write-prefix research/api_agent/outputs/automation_orchestration/; then
+                echo "Luna triage failed closed; deterministic plan remains authoritative."
+              fi
+            else
+              echo "Luna triage skipped by API budget guard."
+            fi
+          fi
+
+          if [ "$sol_required" = "true" ]; then
+            if python scripts/api_agent/check_api_lane_budget.py                 --receipt-root research/api_agent/outputs                 --task AUTOMATION_ORCHESTRATOR_ESCALATION                 --cap-usd 4.0                 --reserve-usd 0.25               && python scripts/api_agent/check_monthly_cost_guard.py                 --receipt-root research/api_agent/outputs                 --hard-stop-usd 40                 --reserve-usd 4.0; then
+              mkdir -p "$outroot/sol"
+              if ! python scripts/api_agent/api_gateway.py                   --task AUTOMATION_ORCHESTRATOR_ESCALATION                   --registry research/api_agent/API_TASK_REGISTRY_v1.json                   --prompt-file research/framework_learning/automation_orchestration/SOL_PROMPT.txt                   --context-file research/framework_learning/automation_orchestration/SOL_CONTEXT.json                   --output-dir "$outroot/sol"                   --intended-write-prefix research/api_agent/outputs/automation_orchestration/; then
+                echo "GPT-6.1 Sol escalation failed closed; deterministic plan remains authoritative."
+              fi
+            else
+              echo "GPT-6.1 Sol escalation skipped by API budget guard."
+            fi
+          fi
+
+          finalize=(python scripts/framework_intelligence/automation_orchestration_v1.py finalize
+            --output-root research/framework_learning/automation_orchestration)
+          if [ -f "$outroot/luna/output.json" ]; then
+            finalize+=(--luna-output "$outroot/luna/output.json")
+          fi
+          if [ -f "$outroot/sol/output.json" ]; then
+            finalize+=(--sol-output "$outroot/sol/output.json")
+          fi
+          "${finalize[@]}"
       - name: Manage Operational Memory audit escalation
         if: always()
         env:
@@ -510,6 +600,9 @@ jobs:
           git config user.name 'framework-learning-supervisor[bot]'
           git config user.email 'framework-learning-supervisor@users.noreply.github.com'
           git add research/framework_learning research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
+          if [ -d research/api_agent/outputs/automation_orchestration ]; then
+            git add research/api_agent/outputs/automation_orchestration
+          fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "research: refresh framework learning supervisor ${GITHUB_RUN_ID}"
           pushed=false
@@ -524,6 +617,8 @@ jobs:
             research/framework_learning/LATEST_SUPERVISOR_STATE.json \
             research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json \
             research/framework_learning/LATEST_DELEGATION_QUEUE.json \
+            research/framework_learning/automation_orchestration/LATEST_PLAN.json \
+            research/framework_learning/automation_orchestration/LATEST_AGENT_READOUT.json \
             research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_STATE.json \
             research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_HEALTH.json \
             research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_INDEX.json \

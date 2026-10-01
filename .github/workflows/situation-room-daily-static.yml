@@ -1,6 +1,13 @@
 name: Situation Room Daily Static Discovery
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/situation-room-daily-static.yml'
+      - 'scripts/data_terminal/situation_room_daily_owner.py'
+      - 'scripts/data_terminal/situation_room_static_daily_adapter.py'
+      - 'tests/data_terminal/test_situation_room_daily_owner.py'
+      - 'tests/data_terminal/test_situation_room_static_daily_adapter.py'
   schedule:
     # Situation Room daily briefing is normally generated around 06:00 UTC.
     # 08:20 Europe/Copenhagen is safely after that during both CET and CEST.
@@ -12,12 +19,31 @@ permissions:
   contents: write
 
 concurrency:
-  group: framework-main-writer
-  cancel-in-progress: false
+  # Read-only PR validation must never consume the single serialized production-writer slot.
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Situation Room static discovery semantics
+        run: |
+          python -m unittest \
+            tests.data_terminal.test_situation_room_daily_owner \
+            tests.data_terminal.test_situation_room_static_daily_adapter -v
+          python -m py_compile \
+            scripts/data_terminal/situation_room_daily_owner.py \
+            scripts/data_terminal/situation_room_static_daily_adapter.py
+
   discovery:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -65,13 +91,17 @@ jobs:
           assert row['contract']=='SITUATION_ROOM_DAILY_OWNER_v1', row
           assert row['authority']=='RESEARCH_ONLY_NON_CANONICAL', row
           assert row['situation_room_role']=='DISCOVERY_ONLY', row
+          assert row['collection_route']=='SITUATION_ROOM_STATIC_DATED_OWNER_v1', row
           assert row['market_reaction_separate_from_event'] is True, row
           assert row['canonical_effect'] is False, row
           assert row['market_state_effect'] is False, row
           assert row['portfolio_effect'] is False, row
-          assert row['retrieval']['strategy']=='DETERMINISTIC_STATIC_DAILY_BRIEFING', row
-          assert row['retrieval']['dynamic_archive_shell_not_required'] is True, row
-          assert '/briefing/' in row['retrieval']['situation_room_daily_url'], row
+          retrieval=row.get('retrieval')
+          if not isinstance(retrieval,dict):
+              raise SystemExit('situation_room_retrieval_provenance_missing')
+          assert retrieval.get('strategy')=='DETERMINISTIC_STATIC_DAILY_BRIEFING', retrieval
+          assert retrieval.get('dynamic_archive_shell_not_required') is True, retrieval
+          assert '/briefing/' in str(retrieval.get('situation_room_daily_url') or ''), retrieval
           assert latest['daily_result']==row['daily_result'], (latest,row)
           assert latest['run_status']==row['run_status'], (latest,row)
           print('SITUATION_ROOM_STATIC_DISCOVERY_VALID', row['daily_result'])

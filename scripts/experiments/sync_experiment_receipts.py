@@ -4,14 +4,98 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote, urlparse
 from typing import Any, Callable
 
 CONTRACT = "EXPERIMENT_RECEIPT_SYNC_v1"
 HEALTHY_STATES = {"HEALTHY_NEW_DATA", "HEALTHY_NO_CHANGE"}
+
+PRIVATE_SOURCE_AUTH_REQUIRED = "PRIVATE_SOURCE_AUTH_REQUIRED"
+
+
+class PrivateSourceAuthRequired(RuntimeError):
+    pass
+
+
+def raw_github_url(repository: str, path: str, ref: str = "main") -> str:
+    owner, name = repository.split("/", 1)
+    encoded = quote(path.lstrip("/"), safe="/")
+    return f"https://raw.githubusercontent.com/{owner}/{name}/{quote(ref, safe='')}/{encoded}"
+
+
+def github_contents_api_url(repository: str, path: str, ref: str = "main") -> str:
+    owner, name = repository.split("/", 1)
+    encoded = quote(path.lstrip("/"), safe="/")
+    return f"https://api.github.com/repos/{owner}/{name}/contents/{encoded}?ref={quote(ref, safe='')}"
+
+
+def raw_github_location(url: str) -> tuple[str, str, str] | None:
+    parsed = urlparse(url)
+    if parsed.netloc != "raw.githubusercontent.com":
+        return None
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) < 4:
+        return None
+    repository = f"{parts[0]}/{parts[1]}"
+    ref = parts[2]
+    path = "/".join(parts[3:])
+    return repository, path, ref
+
+
+def fetch_github_json(repository: str, path: str, ref: str, token: str | None) -> dict[str, Any]:
+    if not token:
+        raise PrivateSourceAuthRequired(PRIVATE_SOURCE_AUTH_REQUIRED)
+    request = urllib.request.Request(
+        github_contents_api_url(repository, path, ref),
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github.raw+json",
+            "User-Agent": "investering-framework-experiment-receipt-sync",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=60) as response:
+        return json.loads(response.read())
+
+
+def github_json_public_first(repository: str, path: str, ref: str, token: str | None) -> tuple[dict[str, Any], str]:
+    public_url = raw_github_url(repository, path, ref)
+    try:
+        return fetch(public_url), "GITHUB_RAW_PUBLIC"
+    except urllib.error.HTTPError as exc:
+        if exc.code not in {401, 403, 404}:
+            raise
+    if token:
+        return fetch_github_json(repository, path, ref, token), "GITHUB_CONTENTS_API_AUTHENTICATED_FALLBACK"
+    raise PrivateSourceAuthRequired(PRIVATE_SOURCE_AUTH_REQUIRED)
+
+
+def public_first_receipt_fetcher(token: str | None) -> Callable[[str], dict[str, Any]]:
+    def _fetch(url: str) -> dict[str, Any]:
+        location = raw_github_location(url)
+        if location is None:
+            return fetch(url)
+        repository, path, ref = location
+        value, _ = github_json_public_first(repository, path, ref, token)
+        return value
+    return _fetch
+
+
+def authenticated_receipt_fetcher(token: str | None) -> Callable[[str], dict[str, Any]]:
+    def _fetch(url: str) -> dict[str, Any]:
+        private = raw_github_location(url)
+        if private is None:
+            return fetch(url)
+        repository, path, ref = private
+        return fetch_github_json(repository, path, ref, token)
+    return _fetch
+
+
 
 
 def canonical(value: Any) -> bytes:
@@ -81,6 +165,10 @@ def unavailable_summary(
     now: datetime,
     previous: dict[str, Any] | None,
     error_class: str,
+    source_repository: str | None = None,
+    source_path: str | None = None,
+    source_ref: str | None = None,
+    source_transport: str | None = None,
 ) -> dict[str, Any]:
     return {
         "contract": CONTRACT,
@@ -100,6 +188,11 @@ def unavailable_summary(
         "fetch_failures": 1,
         "last_successful_sync_utc": prior_success_utc(previous),
         "failure_class": error_class,
+        "credential_requirement": "CROSS_REPO_READ_TOKEN_REQUIRED" if error_class == PRIVATE_SOURCE_AUTH_REQUIRED else None,
+        "source_repository": source_repository,
+        "source_path": source_path,
+        "source_ref": source_ref,
+        "source_transport": source_transport,
         "authority": "AUDIT_SYNC_ONLY",
     }
 
@@ -153,7 +246,11 @@ def sync_receipts(
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--manifest-url", required=True)
+    source = ap.add_mutually_exclusive_group(required=True)
+    source.add_argument("--manifest-url")
+    source.add_argument("--github-repo")
+    ap.add_argument("--github-path", default="experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json")
+    ap.add_argument("--github-ref", default="main")
     ap.add_argument("--receipt-root", type=Path, required=True)
     ap.add_argument("--sync-output", type=Path, required=True)
     ap.add_argument("--allow-unavailable", action="store_true")
@@ -164,10 +261,42 @@ def main() -> None:
     now = parse_utc(args.now_utc) if args.now_utc else datetime.now(timezone.utc)
     previous = load(args.sync_output)
 
+    token = os.environ.get("EXPERIMENT_BRIDGE_TOKEN")
     try:
-        manifest = fetch(args.manifest_url)
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError, ValueError) as exc:
-        summary = unavailable_summary(now=now, previous=previous, error_class=type(exc).__name__)
+        if args.github_repo:
+            manifest, source_transport = github_json_public_first(
+                args.github_repo, args.github_path, args.github_ref, token
+            )
+            receipt_fetcher = public_first_receipt_fetcher(token)
+        else:
+            manifest = fetch(args.manifest_url)
+            receipt_fetcher = fetch
+            source_transport = "DIRECT_URL"
+    except PrivateSourceAuthRequired as exc:
+        summary = unavailable_summary(
+            now=now,
+            previous=previous,
+            error_class=PRIVATE_SOURCE_AUTH_REQUIRED,
+            source_repository=args.github_repo,
+            source_path=args.github_path,
+            source_ref=args.github_ref,
+            source_transport="GITHUB_PUBLIC_FIRST_WITH_AUTH_FALLBACK",
+        )
+        write_summary(args.sync_output, summary)
+        print(json.dumps(summary, sort_keys=True))
+        if args.allow_unavailable:
+            return
+        raise SystemExit(2)
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError, OSError, ValueError) as exc:
+        summary = unavailable_summary(
+            now=now,
+            previous=previous,
+            error_class=type(exc).__name__,
+            source_repository=args.github_repo,
+            source_path=args.github_path if args.github_repo else None,
+            source_ref=args.github_ref if args.github_repo else None,
+            source_transport="GITHUB_PUBLIC_FIRST_WITH_AUTH_FALLBACK" if args.github_repo else "DIRECT_URL",
+        )
         write_summary(args.sync_output, summary)
         print(json.dumps(summary, sort_keys=True))
         if args.allow_unavailable:
@@ -187,7 +316,15 @@ def main() -> None:
     )
     if not manifest_valid:
         summary = {
-            **unavailable_summary(now=now, previous=previous, error_class="INVALID_RECEIPT_MANIFEST"),
+            **unavailable_summary(
+                now=now,
+                previous=previous,
+                error_class="INVALID_RECEIPT_MANIFEST",
+                source_repository=args.github_repo,
+                source_path=args.github_path if args.github_repo else None,
+                source_ref=args.github_ref if args.github_repo else None,
+                source_transport=source_transport,
+            ),
             "sync_state": "FAILED",
             "status": "FAIL",
             "source_reachable": True,
@@ -203,7 +340,15 @@ def main() -> None:
         source_generated = parse_utc(generated_raw)
     except (TypeError, ValueError):
         summary = {
-            **unavailable_summary(now=now, previous=previous, error_class="INVALID_MANIFEST_TIMESTAMP"),
+            **unavailable_summary(
+                now=now,
+                previous=previous,
+                error_class="INVALID_MANIFEST_TIMESTAMP",
+                source_repository=args.github_repo,
+                source_path=args.github_path if args.github_repo else None,
+                source_ref=args.github_ref if args.github_repo else None,
+                source_transport=source_transport,
+            ),
             "sync_state": "FAILED",
             "status": "FAIL",
             "source_reachable": True,
@@ -220,6 +365,7 @@ def main() -> None:
     imported, mismatches, fetch_failures, already_present = sync_receipts(
         manifest,
         args.receipt_root,
+        fetcher=receipt_fetcher,
     )
     sync_state, status = classify_sync_state(
         imported=imported,
@@ -246,6 +392,10 @@ def main() -> None:
         "fetch_failures": fetch_failures,
         "last_successful_sync_utc": iso(now) if sync_state in HEALTHY_STATES else prior_success_utc(previous),
         "max_source_age_hours": args.max_source_age_hours,
+        "source_repository": args.github_repo,
+        "source_path": args.github_path if args.github_repo else None,
+        "source_ref": args.github_ref if args.github_repo else None,
+        "source_transport": source_transport,
         "authority": "AUDIT_SYNC_ONLY",
     }
     write_summary(args.sync_output, summary)

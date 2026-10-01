@@ -1,0 +1,186 @@
+name: Shadow Compass v2
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shadow-compass-v2.yml'
+      - 'scripts/learning/shadow_compass_v2.py'
+      - 'scripts/data_ping/auto_market_state.py'
+      - 'tests/learning/test_shadow_compass_v2.py'
+      - 'research/api_agent/API_TASK_REGISTRY_v1.json'
+      - 'scripts/api_agent/check_api_lane_budget.py'
+      - 'scripts/api_agent/check_monthly_cost_guard.py'
+      - 'scripts/api_agent/api_gateway.py'
+  schedule:
+    - cron: '25 6 * * *'
+      timezone: 'UTC'
+    - cron: '25 7 * * *'
+      timezone: 'UTC'
+    - cron: '25 18 * * *'
+      timezone: 'UTC'
+    - cron: '25 19 * * *'
+      timezone: 'UTC'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test Shadow Compass v2
+        run: |
+          python -m py_compile scripts/learning/shadow_compass_v2.py scripts/data_ping/auto_market_state.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py
+          python -m unittest tests.learning.test_shadow_compass_v2 -v
+          python scripts/learning/shadow_compass_v2.py --input-only > /tmp/shadow-input.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/shadow-input.json'))
+          assert d['contract']=='SHADOW_COMPASS_V2_INPUT_v1'
+          assert d['rules']
+          assert 'official_compass' not in d
+          PY
+
+  shadow:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Resolve local schedule slot
+        id: slot
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" != "schedule" ]; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+            echo "reason=${GITHUB_EVENT_NAME}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          offset=$(python - <<'PY'
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo("Europe/Copenhagen"))
+          print(int(now.utcoffset().total_seconds()//3600))
+          PY
+          )
+          cron='${{ github.event.schedule }}'
+          active=false
+          reason=
+          case "$cron:$offset" in
+            '25 6 * * *:2'|'25 7 * * *:1') active=true; reason=SHADOW_MORNING ;;
+            '25 18 * * *:2'|'25 19 * * *:1') active=true; reason=SHADOW_EVENING ;;
+          esac
+          echo "active=$active" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+      - name: Enforce Shadow Compass lane and global API budgets
+        if: steps.slot.outputs.active == 'true'
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task SHADOW_COMPASS_V2 \
+            --cap-usd 8.0 \
+            --reserve-usd 0.20
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --pending-ledger-root runtime/api-cost-ledger \
+            --hard-stop-usd 40 \
+            --reserve-usd 4.0
+
+      - name: Produce GPT-6.1 Sol prospective shadow forecast
+        if: steps.slot.outputs.active == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/learning/shadow_compass_v2.py \
+            --call-api \
+            --model gpt-6.1-sol \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            | tee /tmp/shadow-compass-v2-status.json
+      - name: Validate shadow authority and binding
+        if: steps.slot.outputs.active == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          status=json.load(open('/tmp/shadow-compass-v2-status.json'))
+          if status.get('status')=='NOOP_SAME_SOURCES':
+              print('SHADOW_COMPASS_V2_NOOP', status.get('forecast_id'))
+              raise SystemExit(0)
+          pointer=Path('04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json')
+          assert pointer.exists()
+          p=json.loads(pointer.read_text())
+          forecast=Path(p['forecast_path'])
+          assert forecast.exists()
+          f=json.loads(forecast.read_text())
+          assert f['contract']=='SHADOW_COMPASS_V2_FORECAST_v1'
+          assert f['model_id'].startswith('gpt-6.1-sol')
+          assert f['authority']['portfolio_execution'] is False
+          assert f['authority']['official_compass_override'] is False
+          assert f['authority']['automatic_promotion'] is False
+          assert f['model_output']['contract']=='SHADOW_COMPASS_V2_MODEL_OUTPUT_v1'
+          assert set(f['model_output']['horizons'])=={'12h','72h','168h'}
+          receipt_path=Path(status['api_cost_receipt_path'])
+          assert receipt_path.exists(), status
+          r=json.loads(receipt_path.read_text())
+          assert r['contract']=='API_AGENT_RECEIPT_v3', r
+          assert r['task']=='SHADOW_COMPASS_V2', r
+          assert r['model']=='gpt-6.1-sol', r
+          assert r['forecast_id']==f['forecast_id'], (r,f)
+          assert r['authority']['portfolio_action'] is False
+          assert r['authority']['official_compass_override'] is False
+          print('SHADOW_COMPASS_V2_VALID', f['forecast_id'], f['usage'], r['estimated_cost_usd'])
+          PY
+      - name: Commit forward-only shadow evidence
+        if: steps.slot.outputs.active == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-data-bot
+          git config user.email framework-data-bot@users.noreply.github.com
+          git add 04_MARKET_LEARNING/handlekompas/shadow_v2 research/api_agent/outputs/shadow_compass_v2
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: Shadow Compass v2 ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          local_sha=$(sha256sum 04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json | awk '{print $1}')
+          remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json | sha256sum | awk '{print $1}')
+          [ "$local_sha" = "$remote_sha" ]
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.slot.outputs.active == 'true'
+        with:
+          name: shadow-compass-v2-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /tmp/shadow-compass-v2-status.json
+            04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json
+            research/api_agent/outputs/shadow_compass_v2/
+          retention-days: 30
+          if-no-files-found: warn

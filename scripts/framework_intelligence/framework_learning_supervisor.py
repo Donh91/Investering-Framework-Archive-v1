@@ -139,6 +139,7 @@ def main():
         "architecture_health": root / "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
         "weekly_forensics": root / "research/framework_learning/weekly_forensics/LATEST.json",
         "weekly_forensics_replay": root / "research/framework_learning/weekly_forensics/replay/LATEST_REPLAY_BASELINE.json",
+        "automation_orchestration": root / "research/framework_learning/automation_orchestration/LATEST_PLAN.json",
     }
     src = {name: load_json(path, {}) or {} for name, path in paths.items()}
     families = normalize_compounding_families(src["compounding_state"])
@@ -206,12 +207,14 @@ def main():
         "weekly_forensics_delta": src["weekly_forensics"].get("master_monday_delta") if src["weekly_forensics"].get("contract") == "WEEKLY_FORENSICS_PACK_v1" and src["weekly_forensics"].get("mode") == "FINAL" else None,
         "weekly_forensics_authority": "ADVISORY_ONLY",
     }
+    orchestration = src.get("automation_orchestration") or {}
+    orchestration_summary = orchestration.get("routing_summary") if orchestration.get("contract") == "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1" else None
     supervisor = {
         "contract": "FRAMEWORK_LEARNING_SUPERVISOR_STATE_v1", "authority": "ORCHESTRATION_ONLY", "generated_at_utc": generated, "iso_year": year, "iso_week": week,
         "semantic_family_owner": "COMPOUNDING_LEARNING_CONTROLLER_STATE_v1", "family_count": len(memory_rows), "material_delta_count": len(deltas),
         "unconsumed_information_count": len(unconsumed), "method_audit_due_count": sum(1 for x in staleness if x["status"] == "METHOD_AUDIT_DUE"), "delegation_queue_count": len(queue),
         "next_best_existing_experiment": src["next_best"], "compounding_learning_backlog_reference": "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/LEARNING_BACKLOG.json",
-        "compute_policy": "DETERMINISTIC_FIRST_SOL_FOR_DIFFICULT_OR_ARCHITECTURE", "canonical_effect": False, "portfolio_execution": False, "master_monday_live_influence": False,
+        "compute_policy": "DETERMINISTIC_FIRST_LUNA_FOR_ROUTINE_GPT6_1_SOL_FOR_DIFFICULT_ASTRA_FOR_AGENTIC_EXTREME", "automation_orchestration": orchestration_summary, "canonical_effect": False, "portfolio_execution": False, "master_monday_live_influence": False,
     }
     docs = {
         "LATEST_LEARNING_MEMORY.json": memory,

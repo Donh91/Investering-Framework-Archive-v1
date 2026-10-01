@@ -7,7 +7,7 @@ from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, 
 NOW = datetime(2026, 9, 18, 16, 0, tzinfo=timezone.utc)
 
 
-def auto_state(*, source_sha="new-source", breadth=0.60, ethbtc=0.031, validation="PASS", fresh_minutes=10):
+def auto_state(*, source_sha="new-source", breadth=0.60, ethbtc=0.031, validation="PASS", fresh_minutes=10, observation_open="2026-09-18T15:00:00Z", predecessor_observation="2026-09-18T14:00:00Z", deltas=None):
     fresh=(NOW-timedelta(minutes=fresh_minutes)).isoformat().replace("+00:00","Z")
     return {
         "packet_sha256": source_sha,
@@ -16,11 +16,15 @@ def auto_state(*, source_sha="new-source", breadth=0.60, ethbtc=0.031, validatio
         "decision_context_status": "PASS",
         "blockers": [],
         "normalized_state": {
-            "live_market": {"btc_usdt": 80000.0, "eth_usdt": 2500.0, "ethbtc": ethbtc},
+            "live_market": {"btc_usdt": 80000.0, "eth_usdt": 2500.0, "ethbtc": ethbtc, "observation_open_utc": observation_open},
             "breadth": {"aggregate": {"advance_ratio": breadth}},
             "entry_signal_reference": {"state": "WAIT"},
         },
-        "deltas_since_prior_auto_packet": {
+        "predecessor": {
+            "status": "AVAILABLE",
+            "market_observation_open_utc": predecessor_observation,
+        },
+        "deltas_since_prior_auto_packet": deltas if deltas is not None else {
             "btc_usdt": {"pct": 0.2},
             "eth_usdt": {"pct": 0.3},
             "ethbtc": {"pct": 0.1},
@@ -89,7 +93,7 @@ def compass(*, source_sha="old-source", action="HOLD_WAIT", data_status="OK", is
         "source_bindings": {"auto_market_state": {"packet_sha256": source_sha}},
         "data_status": data_status,
         "action_now": action,
-        "market_now": {"directional_state": "NEUTRAL", "regime": "HOLD_WAIT"},
+        "market_now": {"directional_state": "BULLISH", "regime": "HOLD_WAIT"},
         "capitalization_ladder": [
             {"segment": "BTC", "status": "HOLD", "action": "HOLD"},
             {"segment": "ETH", "status": "HOLD", "action": "HOLD"},
@@ -145,10 +149,33 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertEqual(out["reason"], "UPSTREAM_OWNER_FRESHNESS_STALE")
         self.assertTrue(out["owner_freshness_reasons"])
 
-    def test_action_change_dispatches(self):
+    def test_action_change_dispatches_without_masquerading_as_market_change(self):
         out=decision(latest=compass(action="PREPARE"))
         self.assertTrue(out["dispatch"])
         self.assertIn("ACTION_STATE_CHANGED", out["cause_codes"])
+        self.assertNotIn("MARKET_STATE_CHANGED", out["cause_codes"])
+
+    def test_repeated_same_price_observation_does_not_emit_market_state_change(self):
+        zeros = {
+            "btc_usdt": {"pct": 0.0},
+            "eth_usdt": {"pct": 0.0},
+            "ethbtc": {"pct": 0.0},
+        }
+        a=auto_state(
+            observation_open="2026-09-18T15:00:00Z",
+            predecessor_observation="2026-09-18T15:00:00Z",
+            deltas=zeros,
+        )
+        latest=compass()
+        out=decision(auto=a, latest=latest)
+        self.assertFalse(out["dispatch"])
+        self.assertEqual(out["reason"], "NO_MATERIAL_CHANGE")
+        self.assertEqual(
+            out["current_market_state"]["directional_state"],
+            "UNCHANGED_NO_NEW_OBSERVATION",
+        )
+        self.assertFalse(out["current_market_state"]["new_price_observation"])
+        self.assertNotIn("MARKET_STATE_CHANGED", out.get("cause_codes", []))
 
     def test_hot_episode_enters_once(self):
         out=decision(entry_latest=entry(temp="HOT", btc=9), prior_state={"last_heat_state": "NORMAL"})

@@ -25,6 +25,7 @@ def inspect(path: Path) -> list[str]:
 
     findings: list[str] = []
     push_trigger = re.search(r"(?m)^  push:\s*$", text) is not None
+    pr_trigger = re.search(r"(?m)^  pull_request:\s*$", text) is not None
     manual_trigger = re.search(r"(?m)^  workflow_dispatch:\s*$", text) is not None
     main_guard = has_job_main_guard(text)
     pinned = checkout_has_main_pin(text)
@@ -40,6 +41,8 @@ def inspect(path: Path) -> list[str]:
         findings.append("MAIN_WRITER_CHECKOUT_NOT_PINNED")
     if not writer_group:
         findings.append("MAIN_WRITER_WITHOUT_SHARED_CONCURRENCY")
+    if pr_trigger and group_value == "framework-main-writer":
+        findings.append("PR_VALIDATION_COMPETES_WITH_MAIN_WRITER")
     return findings
 
 
@@ -61,7 +64,8 @@ def main() -> None:
             "A main writer must never run from a generic push event.",
             "A manually dispatchable main writer must be pinned to main by job guard or checkout ref.",
             "Every main-writing workflow must include an explicit main checkout; immutable downstream checkouts may use a frozen commit.",
-            "Every main writer must serialize through framework-main-writer concurrency.",
+            "Every production main writer must serialize through framework-main-writer concurrency.",
+            "A workflow with pull_request validation and production main writes must isolate PR runs from framework-main-writer.",
         ],
     }
     if args.output:

@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/handlekompas/README.md",
+    "scripts/data_ping/native_handlekompas.py",
+    "tests/data_ping/test_native_handlekompas.py",
+    "tests/data_ping/test_official_daily_compass.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-287ea506bd0385ae",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Packet B: separate market direction from action permission * Packet B: compute action and descriptive direction once per native packet * Packet B tests: direction can move independently of HOLD action * Packet B tests: expose descriptive market direction in native packet * Packet B docs: separate market direction from action authority",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/handlekompas/README.md": "b5e934eb4104f202c960c2a02fa17c94238da0ef",
+    "scripts/data_ping/native_handlekompas.py": "914f8a334f3949f38b74cd3aeb62cc65f3ee2cfa",
+    "tests/data_ping/test_native_handlekompas.py": "e40df0b5e83c2cd228c19b4af63889f2b373df92",
+    "tests/data_ping/test_official_daily_compass.py": "db53504a252331f3ae45e2371decf2fe8621fad6"
+  },
+  "source_commit_sha": "287ea506bd0385ae703f22e5f37c1d44819fe7ec",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-30T22:00:57+02:00",
+  "task_class": "MARKET_STATE",
+  "task_summary": "Compass v2 Packet B: separate direction from action"
+}

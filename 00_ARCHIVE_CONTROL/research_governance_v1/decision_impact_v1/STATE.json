@@ -1,28 +1,43 @@
 {
-  "actionable_specialist_state_n": 6,
+  "actionable_specialist_state_n": 7,
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "7f1b5903c4b7243c51a7f4a6baff3c7203991569ca46561308c441d968bd08ef",
+  "evidence_fingerprint": "27982de7e3270fbc6974239beace06a9cf6488a7893c4b1b0f732f5496026d98",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "queue": [
     {
-      "action": "RUN_INCREMENTAL_VALUE_TEST",
+      "action": "STRESS_TEST_REGIME_SPECIFICITY",
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
       "deep_research_authorized": false,
-      "evidence_fingerprint": "6681f04c386df2467cd45420aad33b76a52668b9d8fa3435449eb9597ed1312f",
+      "evidence_fingerprint": "d4a7b516da15bd3e5ae4785060686b8b7c4dc5fc7e6fc2d454f62ef3455795ca",
       "impact_tier": "MEDIUM",
       "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
       "paid_data_authorized": false,
       "paid_review_only": false,
       "portfolio_execution": false,
+      "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
+      "source": "COMPOUNDING_LEARNING",
+      "target": "EC-3b5610a3c12b040694a9"
+    },
+    {
+      "action": "RUN_INCREMENTAL_VALUE_TEST",
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "c94bcdf266b91ac37d4cb3cbe6ebbf9d1d7c60babcb5f624c320ba6be211ec97",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": "NOVEL",
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
       "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
       "source": "MONTHLY_COUNCIL",
-      "target": "EC-3b9478b26fe667b5b496"
+      "target": "EC-03d0c1a48139b386534c"
     },
     {
       "action": "RECOVER_EVALUATOR",
@@ -38,6 +53,21 @@
       "reason": "registered source material exists but exact evaluator recovery is still required",
       "source": "SHADOW_REGISTRY",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+    },
+    {
+      "action": "WAIT_FOR_MORE_EVIDENCE",
+      "canonical_effect": false,
+      "decision_surface": "RESEARCH_OPERATIONS",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "5d5168428738cc3169136e588346f10fb164d188a54dc1cf94cd452d6dd776b0",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "Persistent weakness is visible in rotation but the next four-settlement checkpoint has not matured. Continue observing without research escalation.",
+      "source": "CN_PRECISION_META_LEARNING",
+      "target": ""
     },
     {
       "action": "CONTINUE_CALIBRATION",
@@ -83,29 +113,14 @@
       "reason": "terminal/closeout source state has no independent decision upside unless linked to a current high-value blocker",
       "source": "SOURCE_RECOVERY",
       "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
-    },
-    {
-      "action": "STRESS_TEST_REGIME_SPECIFICITY",
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "e05574a9891df3db976f4e1875e47f1c26ef362b5874289e0eda02365d5e326d",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "COMPOUNDING_LEARNING",
-      "target": "EC-3b5610a3c12b040694a9"
     }
   ],
-  "queue_n": 6,
-  "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
-  "resolved_specialist_state_n": 6,
-  "selected_action": "RUN_INCREMENTAL_VALUE_TEST",
+  "queue_n": 7,
+  "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
+  "resolved_specialist_state_n": 7,
+  "selected_action": "STRESS_TEST_REGIME_SPECIFICITY",
   "selected_decision_surface": "SENSOR_PORTFOLIO_QUALITY",
   "selected_impact_tier": "MEDIUM",
-  "selected_source": "MONTHLY_COUNCIL",
-  "selected_target": "EC-3b9478b26fe667b5b496"
+  "selected_source": "COMPOUNDING_LEARNING",
+  "selected_target": "EC-3b5610a3c12b040694a9"
 }

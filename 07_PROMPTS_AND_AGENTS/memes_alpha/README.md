@@ -75,6 +75,16 @@ The folder must not create a parallel research-governance stack. Existing Resear
   - preserves the external project's negative calibration evidence and forbids importing its global wallet score or current-score historical replay as canonical alpha;
   - remains research-only / shadow-only with zero trade authority.
 
+### Adversarial CA intake and on-demand launch scan
+
+- `2026-10-01__adversarial-ca-intake-and-on-demand-launch-scan-v1__operational-addendum.md`
+  - makes operator/cabal/extraction-risk checks automatic for owner-supplied exact CAs/mints and resolved DEX links;
+  - requires prominent evidence-backed warnings for strong operator-lineage/prepositioning matches even when the owner did not ask for cabal analysis;
+  - defines bounded on-demand scanning for new/upcoming BYTE-like, serial-extractor, privileged-launch and coordinated-prelaunch cases;
+  - explicitly suppresses Relay/router/bridge/CEX/shared-factory false positives;
+  - keeps extraction risk and any research-only short public expansion window as separate axes;
+  - reuses existing Moonshot/Pons, Project->CA, wallet/entity and lifecycle owners with no new scanner or trade authority.
+
 ### Goals & dreams / future top measurement
 
 - `2026-09-11__alpha-meme-lab-goals-and-dreams-v1__vision.md`
@@ -83,6 +93,13 @@ The folder must not create a parallel research-governance stack. Existing Resear
   - explicitly asks Astra to simplify as well as improve the system and to prove incremental value rather than reward complexity;
   - reserves the future north-star / top-level metric for later design from sufficient prospective evidence instead of inventing a vanity score now;
   - carries no research, signal, execution or portfolio authority.
+
+- `2026-10-01__alpha-meme-lab-goals-and-dreams-v1-1__vision-addendum.md`
+  - adds Adversarial Operator Anticipation as an explicit Alpha Lab goal: recognize repeat operator preparation even when wallets rotate;
+  - adds the Realizable First-Pump / Adversarial-Alpha Window as a falsifiable research ambition, not a trade instruction;
+  - binds BYTE, DRAFT, DEED, CRUMBS, PINK, LEGS and matched ordinary Pons launches as the initial historical adversarial set;
+  - requires benign-infrastructure exclusion, public-eligible timing, sellability, slippage, MAE and prospective matched controls before any promotion;
+  - keeps AUTO_BUY / AUTO_SELL forbidden and routes all evidence through existing operator-risk and Alpha Lab owners.
 
 Canonical parent contract:
 

@@ -192,6 +192,21 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
             ('EXPERIMENT_RECEIPT_SYNC_UNAVAILABLE', 1),
         )
 
+    def test_private_auth_required_experiment_receipt_sync_names_credential_wall(self):
+        self.assertEqual(
+            module.experiment_receipt_sync_finding(
+                {
+                    'status': 'DEGRADED',
+                    'sync_state': 'UNAVAILABLE',
+                    'source_reachable': False,
+                    'failure_class': 'PRIVATE_SOURCE_AUTH_REQUIRED',
+                    'credential_requirement': 'CROSS_REPO_READ_TOKEN_REQUIRED',
+                },
+                0.1,
+            ),
+            ('EXPERIMENT_RECEIPT_SYNC_PRIVATE_AUTH_REQUIRED', 1),
+        )
+
     def test_source_stale_experiment_receipt_sync_is_amber_even_when_sync_file_is_fresh(self):
         self.assertEqual(
             module.experiment_receipt_sync_finding(

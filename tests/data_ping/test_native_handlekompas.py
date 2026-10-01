@@ -18,8 +18,9 @@ class NativeHandlekompasTest(unittest.TestCase):
             "decision_context_status": decision,
             "blockers": blockers or [],
             "optional_degraded_lanes": [],
+            "predecessor": {"status": "AVAILABLE", "market_observation_open_utc": "2026-09-08T19:00:00Z"},
             "normalized_state": {
-                "live_market": {"ethbtc": 0.0317},
+                "live_market": {"ethbtc": 0.0317, "observation_open_utc": "2026-09-08T20:00:00Z"},
                 "breadth": {"aggregate": {"advance_ratio": breadth}},
                 "entry_signal_reference": {"state": entry_state},
             },
@@ -118,6 +119,38 @@ class NativeHandlekompasTest(unittest.TestCase):
             (state/"LATEST.json").write_text(json.dumps({"packet_path":packet_path.relative_to(root).as_posix(),"packet_sha256":"expected"}))
             with self.assertRaisesRegex(ValueError,"POINTER_HASH_MISMATCH"):
                 load_auto_state(root,Path("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json"))
+
+    def test_native_packet_exposes_direction_separately_from_action(self):
+        packet = self.packet()
+        packet["deltas_since_prior_auto_packet"] = {
+            "btc_usdt": {"pct": -1.0},
+            "eth_usdt": {"pct": -2.0},
+            "ethbtc": {"pct": -1.0},
+        }
+        out = build(packet, now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT")
+        self.assertEqual(out["market_direction"]["directional_state"], "BEARISH")
+        self.assertEqual(out["market_direction"]["action_permission"], "HOLD_WAIT")
+        self.assertFalse(out["authority"]["portfolio_execution"])
+
+    def test_repeated_market_observation_is_explicitly_not_neutral(self):
+        packet = self.packet()
+        packet["normalized_state"]["live_market"].update({
+            "btc_usdt": 80000.0,
+            "eth_usdt": 2500.0,
+            "observation_open_utc": "2026-09-08T20:00:00Z",
+        })
+        packet["predecessor"]["market_observation_open_utc"] = "2026-09-08T20:00:00Z"
+        packet["deltas_since_prior_auto_packet"] = {
+            "btc_usdt": {"pct": 0.0},
+            "eth_usdt": {"pct": 0.0},
+            "ethbtc": {"pct": 0.0},
+        }
+        out = build(packet, now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
+        self.assertEqual(out["market_direction"]["directional_state"], "UNCHANGED_NO_NEW_OBSERVATION")
+        self.assertEqual(out["market_direction"]["regime"], "NO_NEW_OBSERVATION")
+        self.assertFalse(out["market_direction"]["new_price_observation"])
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT")
 
     def test_write_pointer_is_non_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
