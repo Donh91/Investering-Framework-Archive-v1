@@ -1,0 +1,46 @@
+{
+  "contract": "ADVERSARIAL_OPERATOR_BOUNDED_INTERVAL_RECEIPT_v1",
+  "status": "INCOMPLETE_SOURCE_EVIDENCE",
+  "recorded_at_utc": "2026-10-01T16:25:52Z",
+  "counting_contract": "ADVERSARIAL_OPERATOR_COUNTING_RECEIPT_v1",
+  "executor_script_sha256": "b152209c9d3aea339df59eb6d1c6a80c34b2479fbea00d92424d717e008d3bff",
+  "manifest_path": "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-bounded-interval-manifest-v1.json",
+  "manifest_content_sha256": "6e9de085218305ac94ef2506831720bbf6fa15b1b727aedcb8e431a464ac115a",
+  "source": {
+    "repository": "Donh91/Meme-Alpha-Lab",
+    "path": "intelligence/historical_backfill/robinhood_pons/v1/events/000057373370-000057378369.jsonl",
+    "sha": "35f227dbcaee511abbaeea9901d26d2195a23bd5",
+    "evidence_class": "HISTORICAL_BACKFILL"
+  },
+  "interval_start_utc": "2026-09-08T03:35:17Z",
+  "interval_end_utc": "2026-09-08T03:43:28Z",
+  "launch_rows": 88,
+  "outcome_fields_included": false,
+  "stage_a": {
+    "raw_fires": null,
+    "qualified_fires": null,
+    "rate_per_day": null,
+    "state": "NOT_INTERPRETABLE_WITH_CURRENT_SOURCE",
+    "reason": "The source preserves exact launch events but lacks load-bearing pre-T0 preparation and operator/funding evidence for all 88 rows."
+  },
+  "stage_b": {
+    "qualified_fires": null,
+    "rate_per_day": null,
+    "state": "NOT_RUN",
+    "reason": "Stage A cannot be interpreted before qualification evidence is enriched."
+  },
+  "source_health": {
+    "exact_launch_identity_rows": 88,
+    "qualification_unknown_rows": 88,
+    "outcome_leakage_detected": false,
+    "missing_evidence_treated_as_negative": false
+  },
+  "gate": "INCOMPLETE_SOURCE_EVIDENCE",
+  "conclusion": "The counting executor correctly has no authority to turn missing qualification evidence into zero suspicious launches or a review-budget pass. The next bounded action is source enrichment, not threshold tuning.",
+  "authority": {
+    "shadow_only": true,
+    "automatic_alerts": false,
+    "automatic_trading": false,
+    "portfolio_action": false
+  }
+}
