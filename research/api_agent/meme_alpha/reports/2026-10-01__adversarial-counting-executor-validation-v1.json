@@ -1,0 +1,56 @@
+{
+  "contract": "ADVERSARIAL_OPERATOR_COUNTING_VALIDATION_v1",
+  "status": "PASS_WITH_INCOMPLETE_REAL_INTERVAL_EVIDENCE",
+  "validated_at_utc": "2026-10-01T16:21:46Z",
+  "pr_number": 1418,
+  "transition_signature": "5772814fc479a87eb694",
+  "implementation": {
+    "script_path": "scripts/research/memes_alpha/adversarial_operator_counting.py",
+    "script_sha256": "2f19b221b8e5d0b3df6d679937bdb25a06b3b0d035c0eb44cd3e15e581fc81df",
+    "test_path": "tests/research/memes_alpha/test_adversarial_operator_counting.py",
+    "test_sha256": "6bb9d06ec3ab1309c18b7e256127b1b7de096d96e42b1b896385c5e930bff858",
+    "local_exact_hash_py_compile": "PASS",
+    "local_exact_hash_unittest_count": 10,
+    "local_exact_hash_unittest_result": "PASS",
+    "existing_pr_gate": {
+      "workflow": "Meme Alpha Runtime Gate",
+      "run_id": 36890619687,
+      "conclusion": "success",
+      "caveat": "Existing focused gate does not enumerate the newly added tests/research/memes_alpha test module; exact-hash local validation is therefore preserved separately."
+    }
+  },
+  "bounded_outcome_blind_interval": {
+    "manifest_path": "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-bounded-interval-manifest-v1.json",
+    "manifest_content_sha256": "6e9de085218305ac94ef2506831720bbf6fa15b1b727aedcb8e431a464ac115a",
+    "source": {
+      "repository": "Donh91/Meme-Alpha-Lab",
+      "path": "intelligence/historical_backfill/robinhood_pons/v1/events/000057373370-000057378369.jsonl",
+      "sha": "35f227dbcaee511abbaeea9901d26d2195a23bd5",
+      "evidence_class": "HISTORICAL_BACKFILL"
+    },
+    "interval_start_utc": "2026-09-08T03:35:17Z",
+    "interval_end_utc": "2026-09-08T03:43:28Z",
+    "launch_rows": 88,
+    "outcome_fields_included": false,
+    "raw_fires_interpretable": false,
+    "qualified_fires_interpretable": false,
+    "qualification_unknown_rows": 88,
+    "expected_executor_gate": "INCOMPLETE_SOURCE_EVIDENCE",
+    "reason": "The frozen historical Pons event corpus preserves exact launch identity/T0 but does not contain load-bearing pre-T0 preparation evidence or launch calldata/decoded privileged surface. Missing evidence must remain UNKNOWN and must not become zero/no-risk."
+  },
+  "negative_acceptance": {
+    "benign_relay_can_qualify": false,
+    "unknown_infra_can_qualify": false,
+    "shared_factory_or_relaunch_alone_can_fire": false,
+    "missing_qualification_evidence_can_pass_review_budget": false
+  },
+  "authority": {
+    "shadow_only": true,
+    "automatic_alerts": false,
+    "automatic_trading": false,
+    "portfolio_action": false,
+    "new_scanner": false,
+    "new_scheduler": false
+  },
+  "next_bounded_requirement": "Enrich a contiguous frozen launch interval with raw launch calldata plus pre-T0 funding/ancestry evidence using existing RPC/Blockscout owners, then execute the same frozen counting contract. Do not change thresholds after enrichment."
+}
