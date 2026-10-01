@@ -1,0 +1,50 @@
+{
+  "contract": "SEL_PUBLIC_BINDING_v1",
+  "effective_date": "2026-10-01",
+  "status": "BOUND_TO_PRIVATE_SELECTIVE_OPERATIONAL",
+  "authority": "DISCOVERY_AND_ROUTING_ONLY",
+  "control_plane": "Donh91/Investering-Framework-Archive-v1",
+  "restricted_owner_repository": "Donh91/secrets",
+  "restricted_merge_commit": "4e1f4097e1754312810a1d810bd0681279d1670b",
+  "restricted_merge_verified_reachable_from_main": true,
+  "restricted_artifacts": [
+    {
+      "path": "GOVERNANCE/SEL_OPERATIONAL_STATUS_v1.json",
+      "git_blob_sha": "61303a4c3b090640b65e5dca8fcf364811e5b0be",
+      "contract": "SEL_OPERATIONAL_STATUS_v1",
+      "status": "SEL_V1_SELECTIVE_OPERATIONAL"
+    },
+    {
+      "path": "GOVERNANCE/CROSS_REPO_AGENT_CONTEXT_MAP.json",
+      "git_blob_sha": "a59c850c913d5fdeca4dc0f53a7753a167282893",
+      "route_id": "SHARED_EXPERIENCE_MEMORY"
+    },
+    {
+      "path": ".agents/skills/shared-experience-memory/SKILL.md",
+      "git_blob_sha": "e5d795645c20df72ee0bcc6dd624dbb4341b5664",
+      "role": "PRIVATE_OPTIONAL_SUPPORT_SKILL"
+    }
+  ],
+  "memory_rule": "MEMORY != TRUTH",
+  "practical_value_evidence": "MIXED_BUT_PROVEN",
+  "routing": {
+    "mode": "SELECTIVE_ONLY",
+    "global_auto_retrieval": "HOLD",
+    "current_authority_first": true,
+    "smallest_relevant_recall_only": true,
+    "access_failure_policy": "CONTINUE_WITH_CURRENT_AUTHORITY_NO_MEMORY",
+    "access_failure_state": "SEL_OPTIONAL_CONTEXT_UNAVAILABLE",
+    "post_task_outcome_feedback": "ONLY_WHEN_MEMORY_MATERIALLY_AFFECTED_WORK_AND_OUTCOME_BECOMES_OBSERVABLE"
+  },
+  "authority_prohibitions": [
+    "MARKET",
+    "PORTFOLIO",
+    "CANONICAL_FRAMEWORK",
+    "CREDENTIAL",
+    "AUTOMATIC_RULE_PROMOTION"
+  ],
+  "contains_private_memory_payloads": false,
+  "contains_restricted_provider_values": false,
+  "contains_credentials": false,
+  "next_expansion_gate": "ADDITIONAL_NATURAL_HIGH_VALUE_USE_WITH_DURABLE_OUTCOME_EVIDENCE"
+}
