@@ -53,6 +53,13 @@ def tri(value: Any) -> bool | None:
         return False
     return None
 
+def tri_all(values: list[bool | None]) -> bool | None:
+    if any(value is False for value in values):
+        return False
+    if all(value is True for value in values):
+        return True
+    return None
+
 
 def parameter_map(decoded_input: Any) -> dict[str, Any]:
     if not isinstance(decoded_input, dict):
@@ -162,10 +169,23 @@ def classify_event(event: dict[str, Any]) -> dict[str, Any]:
     infra = infra_state(event)
 
     exact_identity = token_ca is not None and t0 is not None
-    branch_direct = direct is True
-    branch_privileged = common is True and bundle is True
-    branch_residual = common is True and sync is True and residual is True
-    raw_pattern = exact_identity and pre_t0 is True and (branch_direct or branch_privileged or branch_residual)
+    branch_direct = direct
+    branch_privileged = tri_all([common, bundle])
+    branch_residual = tri_all([common, sync, residual])
+
+    if not exact_identity:
+        raw_pattern_state = "UNKNOWN"
+    elif pre_t0 is False:
+        raw_pattern_state = "NO"
+    elif pre_t0 is None:
+        raw_pattern_state = "UNKNOWN"
+    elif any(value is True for value in [branch_direct, branch_privileged, branch_residual]):
+        raw_pattern_state = "YES"
+    elif any(value is None for value in [branch_direct, branch_privileged, branch_residual]):
+        raw_pattern_state = "UNKNOWN"
+    else:
+        raw_pattern_state = "NO"
+    raw_pattern = raw_pattern_state == "YES"
 
     unresolved = []
     if token_ca is None:
@@ -176,18 +196,29 @@ def classify_event(event: dict[str, Any]) -> dict[str, Any]:
         unresolved.append("PRE_T0_PREP_UNKNOWN")
     if privileged.get("state") == "UNKNOWN":
         unresolved.append("PRIVILEGED_SURFACE_UNKNOWN")
+    if raw_pattern_state == "UNKNOWN":
+        unresolved.append("RAW_PATTERN_UNKNOWN")
 
     infra_false_positive = raw_pattern and infra == "BENIGN_INFRA"
     infra_unknown = raw_pattern and infra == "UNKNOWN"
     stage1_qualified = raw_pattern and infra == "NON_BENIGN"
 
     stage2_reason = None
+    stage2_state = "NOT_APPLICABLE"
     if stage1_qualified:
         if direct is True:
             stage2_reason = "DIRECT_OPERATOR_LINEAGE"
-        elif common is True and bundle is True and sync is True:
-            stage2_reason = "PRIVILEGED_BUNDLE_PLUS_COMMON_FUNDING_PLUS_SYNCHRONIZED_INVENTORY"
-    stage2_qualified = stage2_reason is not None
+            stage2_state = "YES"
+        else:
+            stage2_bundle_branch = tri_all([common, bundle, sync])
+            if stage2_bundle_branch is True:
+                stage2_reason = "PRIVILEGED_BUNDLE_PLUS_COMMON_FUNDING_PLUS_SYNCHRONIZED_INVENTORY"
+                stage2_state = "YES"
+            elif stage2_bundle_branch is False:
+                stage2_state = "NO"
+            else:
+                stage2_state = "UNKNOWN"
+    stage2_qualified = stage2_state == "YES"
 
     if infra_false_positive:
         state = "FALSE_POSITIVE_INFRA"
@@ -214,8 +245,10 @@ def classify_event(event: dict[str, Any]) -> dict[str, Any]:
         "residual_similarity": residual,
         "infra_state": infra,
         "raw_fire": raw_pattern,
+        "raw_pattern_state": raw_pattern_state,
         "stage1_qualified": stage1_qualified,
         "stage2_qualified": stage2_qualified,
+        "stage2_state": stage2_state,
         "stage2_reason": stage2_reason,
         "classification": state,
         "known_seed": token_ca in KNOWN_SEEDS or bool(event.get("known_seed")),
@@ -243,13 +276,8 @@ def count_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
     benign = [r for r in rows if r["classification"] == "FALSE_POSITIVE_INFRA"]
     infra_unknown = [r for r in rows if r["classification"] == "UNKNOWN_INFRA"]
     decode_unknown = [r for r in rows if r["privileged_surface"].get("state") == "UNKNOWN"]
-    qualification_unknown = [
-        r for r in rows
-        if any(
-            reason in {"PRE_T0_PREP_UNKNOWN", "PRIVILEGED_SURFACE_UNKNOWN"}
-            for reason in r.get("unresolved", [])
-        )
-    ]
+    qualification_unknown = [r for r in rows if r.get("raw_pattern_state") == "UNKNOWN"]
+    stage2_unknown = [r for r in q1 if r.get("stage2_state") == "UNKNOWN"]
 
     raw_rate = len(raw) / days
     q1_rate = len(q1) / days
@@ -268,7 +296,10 @@ def count_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
         stage1_gate = "STAGE2_REQUIRED"
 
     if stage1_gate == "STAGE2_REQUIRED":
-        stage2_gate = "REVIEW_BUDGET_PASS" if q2_rate <= 10 else "AUTONOMOUS_TIME_SENSITIVE_REVIEW_OPERATIONALLY_UNVIABLE"
+        if stage2_unknown:
+            stage2_gate = "INCOMPLETE_STAGE2_EVIDENCE"
+        else:
+            stage2_gate = "REVIEW_BUDGET_PASS" if q2_rate <= 10 else "AUTONOMOUS_TIME_SENSITIVE_REVIEW_OPERATIONALLY_UNVIABLE"
     else:
         stage2_gate = "NOT_REQUIRED"
 
@@ -288,6 +319,7 @@ def count_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
             "infra_unknown_raw_fires": len(infra_unknown),
             "privileged_surface_unknown_rows": len(decode_unknown),
             "qualification_unknown_rows": len(qualification_unknown),
+            "stage2_unknown_rows": len(stage2_unknown),
             "known_seed_overlap": sum(1 for r in q1 if r["known_seed"]),
             "ordinary_control_overlap": sum(1 for r in q1 if r["ordinary_control"]),
         },
@@ -307,6 +339,7 @@ def count_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
             "rows_total": len(rows),
             "rows_with_unknown_privileged_surface": len(decode_unknown),
             "rows_with_unknown_qualification_evidence": len(qualification_unknown),
+            "stage2_rows_with_unknown_evidence": len(stage2_unknown),
             "raw_fires_with_unknown_infra": len(infra_unknown),
             "missing_is_negative_evidence": False,
         },
