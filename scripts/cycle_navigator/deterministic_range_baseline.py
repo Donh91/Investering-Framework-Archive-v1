@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import statistics
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -41,6 +42,12 @@ def _finite(value: Any) -> float | None:
         return None
     value = float(value)
     return value if value == value and value not in (float("inf"), float("-inf")) else None
+
+
+def previous_iso_week(year: int, week: int) -> tuple[int, int]:
+    monday = date.fromisocalendar(year, week, 1) - timedelta(days=7)
+    iso = monday.isocalendar()
+    return int(iso.year), int(iso.week)
 
 
 def _week_key(value: Mapping[str, Any]) -> tuple[int, int] | None:
@@ -124,21 +131,40 @@ def _asset_baseline(packs: list[tuple[tuple[int, int], Path, dict[str, Any]]], a
 
 def build_baseline(repo: Path, *, target_year: int, target_week: int, lookback_weeks: int = LOOKBACK_WEEKS) -> dict[str, Any]:
     target = (target_year, target_week)
+    expected_anchor = previous_iso_week(target_year, target_week)
     eligible = eligible_weekly_packs(repo, before=target)
     selected = eligible[-lookback_weeks:]
     source_keys = [f"{year}-W{week:02d}" for (year, week), _, _ in selected]
+    selected_keys = [key for key, _, _ in selected]
+    anchor_contiguous = bool(selected_keys and selected_keys[-1] == expected_anchor)
+    if anchor_contiguous:
+        assets = {
+            "BTC": _asset_baseline(selected, "BTC"),
+            "ETH": _asset_baseline(selected, "ETH"),
+        }
+        status = "READY"
+        status_reason = "IMMEDIATE_PRIOR_WEEK_PRESENT"
+    else:
+        assets = {
+            "BTC": {"status": "UNAVAILABLE", "reason": "IMMEDIATE_PRIOR_WEEK_MISSING"},
+            "ETH": {"status": "UNAVAILABLE", "reason": "IMMEDIATE_PRIOR_WEEK_MISSING"},
+        }
+        status = "UNAVAILABLE"
+        status_reason = "IMMEDIATE_PRIOR_WEEK_MISSING"
     value = {
         "contract": CONTRACT,
         "method": METHOD,
+        "status": status,
+        "status_reason": status_reason,
         "target_iso_year": target_year,
         "target_iso_week": target_week,
+        "expected_anchor_iso_year": expected_anchor[0],
+        "expected_anchor_iso_week": expected_anchor[1],
+        "anchor_contiguous": anchor_contiguous,
         "lookback_weeks_requested": lookback_weeks,
         "lookback_weeks_used": len(selected),
         "source_weeks": source_keys,
-        "assets": {
-            "BTC": _asset_baseline(selected, "BTC"),
-            "ETH": _asset_baseline(selected, "ETH"),
-        },
+        "assets": assets,
         "independence": {
             "llm_forecast_input": False,
             "generated_without_cycle_navigator_model_output": True,

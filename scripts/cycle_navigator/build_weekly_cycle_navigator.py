@@ -9,13 +9,19 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
+
+
+def next_iso_week(year: int, week: int) -> tuple[int, int]:
+    monday = date.fromisocalendar(year, week, 1) + timedelta(days=7)
+    iso = monday.isocalendar()
+    return int(iso.year), int(iso.week)
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -565,21 +571,19 @@ def main() -> None:
     args = ap.parse_args()
     repo = args.repo_root.resolve()
     mm_ptr = read_json(repo / args.master_monday_pointer)
-    year = int(mm_ptr["iso_year"])
+    completed_year = int(mm_ptr["iso_year"])
     completed_week = int(mm_ptr["iso_week"])
-    target_week = completed_week + 1
-    # ISO year rollover is deliberately guarded rather than guessed.
-    if target_week > 53:
-        raise SystemExit("iso_year_rollover_requires_explicit_support")
+    target_year, target_week = next_iso_week(completed_year, completed_week)
     existing_pointer_path = repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
     if existing_pointer_path.exists():
         existing_pointer = read_json(existing_pointer_path)
-        if int(existing_pointer.get("iso_year", -1)) == year and int(existing_pointer.get("completed_source_week", -1)) == completed_week:
+        pointer_completed_year = int(existing_pointer.get("completed_source_year", existing_pointer.get("iso_year", -1)))
+        if pointer_completed_year == completed_year and int(existing_pointer.get("completed_source_week", -1)) == completed_week:
             print(json.dumps(existing_pointer, sort_keys=True))
             return
 
-    mm_dir = repo / "research/api_agent/outputs/weekly" / str(year) / f"W{completed_week:02d}"
-    weekly_capture_path = repo / "03_DAILY_CAPTURE_LOGS/weekly" / str(year) / f"W{completed_week:02d}.json"
+    mm_dir = repo / "research/api_agent/outputs/weekly" / str(completed_year) / f"W{completed_week:02d}"
+    weekly_capture_path = repo / "03_DAILY_CAPTURE_LOGS/weekly" / str(completed_year) / f"W{completed_week:02d}.json"
     weekly_capture = maybe_json(weekly_capture_path)
     required = ["MASTER_MONDAY_MACHINE_PACKAGE.json", "MASTER_MONDAY_REPORT.md", "MASTER_MONDAY_CALIBRATION_SCORECARD.json", "MASTER_MONDAY_OPERATIONAL_TRANSLATION.json", "MASTER_MONDAY_DELIVERY_POINTER.json"]
     missing = [name for name in required if not (mm_dir / name).exists()]
@@ -597,30 +601,42 @@ def main() -> None:
     issue = prev_issue + 1
     latest_public_issue = latest_published_public_issue(repo)
     public_issue = latest_public_issue + 1
-    target_dir = repo / "05_CYCLE_NAVIGATOR/weekly" / str(year) / f"W{target_week:02d}"
+    target_dir = repo / "05_CYCLE_NAVIGATOR/weekly" / str(target_year) / f"W{target_week:02d}"
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Publish an independent deterministic range benchmark before the LLM call.
     # It is deliberately NOT added to the model context, preserving benchmark independence.
     range_root = repo / "05_CYCLE_NAVIGATOR/range_baselines"
-    range_forecast_path = range_root / "forecasts" / str(year) / f"W{target_week:02d}.json"
-    range_forecast = build_baseline(repo, target_year=year, target_week=target_week)
+    range_forecast_path = range_root / "forecasts" / str(target_year) / f"W{target_week:02d}.json"
+    range_forecast = build_baseline(repo, target_year=target_year, target_week=target_week)
     range_forecast_path.parent.mkdir(parents=True, exist_ok=True)
     range_payload = range_canonical(range_forecast)
-    if range_forecast_path.exists() and range_forecast_path.read_bytes() != range_payload:
-        raise SystemExit("deterministic_range_baseline_rewrite_blocked")
-    range_forecast_path.write_bytes(range_payload)
+    range_forecast_persistence = "CREATED"
+    if range_forecast_path.exists():
+        if range_forecast_path.read_bytes() != range_payload:
+            range_forecast_persistence = "RETAINED_EXISTING_REWRITE_CONFLICT"
+            range_forecast = read_json(range_forecast_path)
+        else:
+            range_forecast_persistence = "NOOP_IDENTICAL"
+    else:
+        range_forecast_path.write_bytes(range_payload)
 
-    prior_range_forecast_path = range_root / "forecasts" / str(year) / f"W{completed_week:02d}.json"
-    prior_range_score_path = range_root / "scores" / str(year) / f"W{completed_week:02d}.json"
+    prior_range_forecast_path = range_root / "forecasts" / str(completed_year) / f"W{completed_week:02d}.json"
+    prior_range_score_path = range_root / "scores" / str(completed_year) / f"W{completed_week:02d}.json"
+    prior_range_score_persistence = "NOT_APPLICABLE"
     if prior_range_forecast_path.exists() and isinstance(weekly_capture, dict):
         prior_range = read_json(prior_range_forecast_path)
         prior_score = score_baseline(prior_range, weekly_capture)
         prior_range_score_path.parent.mkdir(parents=True, exist_ok=True)
         prior_score_payload = range_canonical(prior_score)
-        if prior_range_score_path.exists() and prior_range_score_path.read_bytes() != prior_score_payload:
-            raise SystemExit("deterministic_range_baseline_score_rewrite_blocked")
-        prior_range_score_path.write_bytes(prior_score_payload)
+        if prior_range_score_path.exists():
+            if prior_range_score_path.read_bytes() != prior_score_payload:
+                prior_range_score_persistence = "RETAINED_EXISTING_REWRITE_CONFLICT"
+            else:
+                prior_range_score_persistence = "NOOP_IDENTICAL"
+        else:
+            prior_range_score_path.write_bytes(prior_score_payload)
+            prior_range_score_persistence = "CREATED"
 
     context = {
         "contract": "CYCLE_NAVIGATOR_WEEKLY_INPUT_v1",
@@ -788,11 +804,11 @@ def main() -> None:
         if hourly_ready and bucket_value.upper() == "UNAVAILABLE":
             raise SystemExit(f"RANGE_CONTINUITY_BLOCK:intraday_{bucket}_unavailable_despite_168h_ready")
 
-    source_manifest = {"contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_week": completed_week, "target_iso_week": target_week, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
+    source_manifest = {"contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     generated_unix = int(time.time())
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
-    scorecard = {"contract": "CYCLE_NAVIGATOR_SCORECARD_v1", "issue_scored": prev_issue or None, "completed_iso_week": completed_week, **value["evaluation"]}
-    pointer = {"contract": "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1", "issue_number": issue, "public_issue_number": public_issue, "iso_year": year, "iso_week": target_week, "completed_source_week": completed_week, "week_dir": str(target_dir.relative_to(repo)), "status": value["status"], "status_reason_codes": value["status_reason_codes"], "publication_status": package["publication_status"], "master_monday_pointer_sha256": sha256_bytes((repo / args.master_monday_pointer).read_bytes()), "machine_package_sha256": sha256_bytes(canonical_bytes(package)), "forecast_freeze_sha256": sha256_bytes(canonical_bytes(freeze))}
+    scorecard = {"contract": "CYCLE_NAVIGATOR_SCORECARD_v1", "issue_scored": prev_issue or None, "completed_iso_year": completed_year, "completed_iso_week": completed_week, **value["evaluation"]}
+    pointer = {"contract": "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1", "issue_number": issue, "public_issue_number": public_issue, "iso_year": target_year, "iso_week": target_week, "completed_source_year": completed_year, "completed_source_week": completed_week, "week_dir": str(target_dir.relative_to(repo)), "status": value["status"], "status_reason_codes": value["status_reason_codes"], "publication_status": package["publication_status"], "master_monday_pointer_sha256": sha256_bytes((repo / args.master_monday_pointer).read_bytes()), "machine_package_sha256": sha256_bytes(canonical_bytes(package)), "forecast_freeze_sha256": sha256_bytes(canonical_bytes(freeze))}
 
     (target_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").write_bytes(canonical_bytes(package))
     (target_dir / "CYCLE_NAVIGATOR_SCORECARD.json").write_bytes(canonical_bytes(scorecard))
@@ -802,7 +818,7 @@ def main() -> None:
     (target_dir / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json").write_bytes(canonical_bytes(source_manifest))
     binding = {
         "contract": "CN_PUBLIC_SERIES_BINDING_v1",
-        "forecast_week": f"{year:04d}-W{target_week:02d}",
+        "forecast_week": f"{target_year:04d}-W{target_week:02d}",
         "public_issue_number": public_issue,
         "machine_issue_number": issue,
         "publication_status": package["publication_status"],
@@ -812,7 +828,7 @@ def main() -> None:
     (target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").write_bytes(canonical_bytes(binding))
     (target_dir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json").write_bytes(canonical_bytes(pointer))
     (repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json").write_bytes(canonical_bytes(pointer))
-    append_forward_ranges(repo, public_issue_number=public_issue, machine_issue_number=issue, year=year, week=target_week, generated_unix=generated_unix, freeze=freeze)
+    append_forward_ranges(repo, public_issue_number=public_issue, machine_issue_number=issue, year=target_year, week=target_week, generated_unix=generated_unix, freeze=freeze)
 
     series_path = repo / "05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json"
     series = maybe_json(series_path) or {
@@ -827,17 +843,17 @@ def main() -> None:
         series["latest_published"] = published_record
     series["current_public_projection"] = {
         "public_issue_number": public_issue,
-        "forecast_week": f"{year:04d}-W{target_week:02d}",
+        "forecast_week": f"{target_year:04d}-W{target_week:02d}",
         "publication_status": package["publication_status"],
         "machine_issue_number": issue,
         "machine_week_dir": str(target_dir.relative_to(repo)),
         "binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
         "note": "Public numbering follows the actually published series; machine numbering is a separate migration-era lineage.",
     }
-    lineage = [row for row in series.get("recent_lineage", []) if str(row.get("forecast_week")) != f"{year:04d}-W{target_week:02d}"]
+    lineage = [row for row in series.get("recent_lineage", []) if str(row.get("forecast_week")) != f"{target_year:04d}-W{target_week:02d}"]
     lineage.append({
         "public_issue_number": public_issue,
-        "forecast_week": f"{year:04d}-W{target_week:02d}",
+        "forecast_week": f"{target_year:04d}-W{target_week:02d}",
         "published_path": None,
         "machine_week_dir": str(target_dir.relative_to(repo)),
         "machine_issue_number": issue,
@@ -849,7 +865,7 @@ def main() -> None:
 
     ledger = repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"
     ledger.parent.mkdir(parents=True, exist_ok=True)
-    row = {"issue_scored": prev_issue or None, "completed_iso_week": completed_week, "next_issue": issue, **value["evaluation"], "score_source": "FROZEN_PRIOR_CN_PLUS_FINAL_MASTER_MONDAY", "score_authority": "PUBLIC_CONTINUITY_NOT_SCIENTIFIC_EDGE"}
+    row = {"issue_scored": prev_issue or None, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "next_issue": issue, **value["evaluation"], "score_source": "FROZEN_PRIOR_CN_PLUS_FINAL_MASTER_MONDAY", "score_authority": "PUBLIC_CONTINUITY_NOT_SCIENTIFIC_EDGE"}
     with ledger.open("a") as f:
         f.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
 
