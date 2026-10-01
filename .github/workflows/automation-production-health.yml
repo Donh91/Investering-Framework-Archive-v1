@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
+  actions: write
   contents: write
   issues: write
 
@@ -105,6 +105,19 @@ jobs:
             remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
             [ "$local_sha" = "$remote_sha" ]
           done
+      - name: Dispatch canonical Operations Dashboard refresh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          active=$(gh run list --workflow operations-dashboard.yml --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending" or .status=="waiting")] | length')
+          if [ "$active" -gt 0 ]; then
+            echo "OPERATIONS_DASHBOARD_REFRESH_ALREADY_ACTIVE count=$active"
+            exit 0
+          fi
+          gh workflow run operations-dashboard.yml --ref main
+          echo "OPERATIONS_DASHBOARD_REFRESH_DISPATCHED source_health_run=${GITHUB_RUN_ID}"
       - name: Open one sanitized incident issue for RED health
         if: steps.health.outputs.exit_code != '0'
         env:
