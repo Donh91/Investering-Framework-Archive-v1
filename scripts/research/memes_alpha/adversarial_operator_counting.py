@@ -220,7 +220,11 @@ def classify_event(event: dict[str, Any]) -> dict[str, Any]:
                 stage2_state = "UNKNOWN"
     stage2_qualified = stage2_state == "YES"
 
-    if infra_false_positive:
+    if raw_pattern_state == "NO":
+        state = "NO_HIT"
+    elif raw_pattern_state == "UNKNOWN":
+        state = "UNKNOWN"
+    elif infra_false_positive:
         state = "FALSE_POSITIVE_INFRA"
     elif infra_unknown:
         state = "UNKNOWN_INFRA"
@@ -228,10 +232,8 @@ def classify_event(event: dict[str, Any]) -> dict[str, Any]:
         state = "STAGE2_QUALIFIED"
     elif stage1_qualified:
         state = "STAGE1_QUALIFIED"
-    elif unresolved:
-        state = "UNKNOWN"
     else:
-        state = "NO_HIT"
+        state = "UNKNOWN"
 
     return {
         "token_ca": token_ca,
