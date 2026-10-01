@@ -1,0 +1,69 @@
+{
+  "authority": {
+    "automatic_rule_changes": false,
+    "portfolio_execution": false,
+    "shadow_only": true
+  },
+  "calibration_group": "BTC:4H:DOWN:4_of_6",
+  "calibration_key": "4_of_6",
+  "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+  "due_at_utc": "2026-10-01T17:00:00Z",
+  "evidence_deadline_utc": "2026-10-01T18:30:00Z",
+  "evidence_wait_hours": 1.83029,
+  "frozen_calibrated_probability_pct": null,
+  "horizon_hours": 4,
+  "issued_at_utc": "2026-10-01T13:01:55.155006Z",
+  "measured_at_utc": "2026-10-01T18:49:49.043266Z",
+  "predicted_direction": "DOWN",
+  "prediction_path": "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/01/20261001T130155Z.json",
+  "prediction_sha256": "e6d3a103ba0ecd219cd2d71ed1e745a36c58fdb46a1a673a73237dac84b2fb26",
+  "production_context": {
+    "commit_sha": "fe1ff350dc705ad42f0a1bd88b515174ac69011e",
+    "event": "schedule",
+    "ref": "refs/heads/main",
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "run_attempt": "1",
+    "run_id": "36909612912"
+  },
+  "reason": "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE",
+  "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+  "registration_receipt_sha256": "a61938f9b772f204ab0d5bc1e11798e51ee313bf1e1857f3d6bafd7b6bdf66d2",
+  "source_candle_open_utc": "2026-10-01T12:00:00+00:00",
+  "source_price_observation_utc": "2026-10-01T13:00:00Z",
+  "start_value": 83736.02,
+  "status": "CENSORED",
+  "substitute_later_price_forbidden": true,
+  "target": "BTC",
+  "votes": [
+    {
+      "direction": "DOWN",
+      "family": "return_1h",
+      "value": -0.202298388096
+    },
+    {
+      "direction": "UP",
+      "family": "return_4h",
+      "value": 0.2022928436917093
+    },
+    {
+      "direction": "UP",
+      "family": "session_vwap",
+      "value": 0.02975314475515134
+    },
+    {
+      "direction": "DOWN",
+      "family": "momentum_acceleration",
+      "value": -0.33736165942526664
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_balance",
+      "value": 0.388305404691
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_change",
+      "value": -0.0707544513256666
+    }
+  ]
+}
