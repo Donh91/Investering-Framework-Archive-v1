@@ -38,6 +38,30 @@ jobs:
 """)
         self.assertEqual(findings,[])
 
+    def test_fixed_main_writer_group_with_pr_validation_is_rejected(self):
+        findings=self.inspect("""on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    steps:
+      - run: echo validate
+  build:
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: git push origin HEAD:main
+""")
+        self.assertIn('PR_VALIDATION_COMPETES_WITH_MAIN_WRITER',findings)
+
     def test_unrecognized_dynamic_writer_group_fails(self):
         findings=self.inspect("""on:
   workflow_dispatch:
