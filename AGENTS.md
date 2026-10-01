@@ -47,6 +47,14 @@ Private evidence must be bound by private commit SHA, exact path, bytes, SHA-256
 
 Round 3 remains `PROSPECTIVE_COLLECTION_ONLY`; hypothesis testing and outcome scoring remain `OFF`. Round 1 and Round 2 are closed evidence. Historical findings can reach at most `FORWARD_TEST`. The legacy standalone Cycle Navigator repository identifier is historical only and must not be used as a current route.
 
+### 0.1 Selective Shared Experience Layer
+
+Cross-agent reusable memory is owned privately by `Donh91/secrets` and is exposed to the control plane only through the value-free binding `00_ARCHIVE_CONTROL/SEL_SELECTIVE_OPERATIONAL_BINDING_v1.json` and the `SHARED_EXPERIENCE_MEMORY` machine route.
+
+SEL is optional support, not authority. Always resolve current canonical/current source authority first. Route to SEL only for repeated failures, non-local environment constraints, reusable procedures, bounded handovers or historically expensive rediscovery. Do not route current market forecasts, portfolio actions, simple source-local tasks, credentials or unverified investment hypotheses through SEL.
+
+Global automatic memory retrieval remains `HOLD`. If SEL is unavailable, continue source-first under `SEL_OPTIONAL_CONTEXT_UNAVAILABLE`; do not block an otherwise executable task. If a recalled memory materially affects the work and the outcome later becomes observable, append one evidence-bound SEL outcome through the private owner. `MEMORY != TRUTH`.
+
 ## 0. Operational cockpit before repository work
 
 Before automation, incident, API-agent, Codex, scheduled delivery or remediation work, read in this order:
