@@ -65,8 +65,10 @@ class AutoMarketStateIntegrityTests(unittest.TestCase):
             "constituents": constituents,
         }
         out = capitalization_transmission_proxy(breadth)
-        self.assertEqual(out["contract"], "CAPITALIZATION_TRANSMISSION_PROXY_v1")
-        self.assertEqual(out["bucket_semantics"], "FILTERED_TOP100_RANK_WINDOWS_PROXY_NOT_CANONICAL_CAP_CLASSIFICATION")
+        self.assertEqual(out["contract"], "CAPITALIZATION_TRANSMISSION_PROXY_v2")
+        self.assertEqual(out["bucket_semantics"], "FILTERED_TOP100_RANK_WINDOWS_EXPLICIT_NON_BETA_EXCLUSIONS_PROXY_ONLY")
+        self.assertEqual(out["non_beta_exclusion_policy"]["scope"], "DOWNSTREAM_PROXY_ONLY_OWNER_UNIVERSE_UNCHANGED")
+        self.assertEqual(out["excluded_non_beta_count"], 0)
         self.assertFalse(out["authority"]["binding"])
         self.assertFalse(out["authority"]["canonical_rotation"])
         self.assertEqual(out["authority"]["execution_weight"], 0)
@@ -86,6 +88,45 @@ class AutoMarketStateIntegrityTests(unittest.TestCase):
         self.assertEqual(micro["coverage"], "BELOW_TOP100_SOURCE_UNIVERSE_NOT_OBSERVED")
         self.assertGreaterEqual(large["advance_ratio_24h"], 0.0)
         self.assertLessEqual(large["advance_ratio_24h"], 1.0)
+
+    def test_capitalization_proxy_excludes_explicit_non_beta_assets_without_reranking(self):
+        breadth = {
+            "retrieved_at_utc": "2026-10-01T06:00:00Z",
+            "universe": {"identifier": "TEST_TOP100", "membership_hash": "same-owner-membership"},
+            "constituents": [
+                {"asset_id": "bitcoin", "symbol": "btc", "filtered_rank": 1, "market_cap_usd": 100.0, "change_24h_pct": 1.0},
+                {"asset_id": "ethereum", "symbol": "eth", "filtered_rank": 2, "market_cap_usd": 90.0, "change_24h_pct": 2.0},
+                {"asset_id": "figure-heloc", "symbol": "figr_heloc", "filtered_rank": 8, "market_cap_usd": 80.0, "change_24h_pct": 9.0},
+                {"asset_id": "crypto-large", "symbol": "cl", "filtered_rank": 9, "market_cap_usd": 79.0, "change_24h_pct": -1.0},
+                {"asset_id": "tether-gold", "symbol": "xaut", "filtered_rank": 31, "market_cap_usd": 60.0, "change_24h_pct": 0.1},
+                {"asset_id": "crypto-mid", "symbol": "cm", "filtered_rank": 32, "market_cap_usd": 59.0, "change_24h_pct": 3.0},
+                {"asset_id": "bfusd", "symbol": "bfusd", "filtered_rank": 60, "market_cap_usd": 40.0, "change_24h_pct": 0.0},
+                {"asset_id": "crypto-small", "symbol": "cs", "filtered_rank": 61, "market_cap_usd": 39.0, "change_24h_pct": 4.0},
+            ],
+        }
+        out = capitalization_transmission_proxy(breadth)
+        self.assertEqual(out["source_membership_hash"], "same-owner-membership")
+        self.assertEqual(out["excluded_non_beta_count"], 3)
+        excluded = {row["asset_id"]: row for row in out["excluded_non_beta_assets"]}
+        self.assertEqual(excluded["figure-heloc"]["exclusion_class"], "TOKENIZED_CREDIT_RWA")
+        self.assertEqual(excluded["tether-gold"]["exclusion_class"], "TOKENIZED_COMMODITY")
+        self.assertEqual(excluded["bfusd"]["exclusion_class"], "STABLE_VALUE_ASSET")
+
+        large = out["buckets"]["LARGE_ALT_PROXY"]
+        mid = out["buckets"]["MID_ALT_PROXY"]
+        small = out["buckets"]["SMALL_ALT_PROXY"]
+        self.assertEqual(large["raw_rank_window_constituent_count"], 2)
+        self.assertEqual(large["excluded_non_beta_count"], 1)
+        self.assertEqual([row["asset_id"] for row in large["membership"]], ["crypto-large"])
+        self.assertEqual(large["membership"][0]["filtered_rank"], 9)
+        self.assertEqual(mid["raw_rank_window_constituent_count"], 2)
+        self.assertEqual([row["asset_id"] for row in mid["membership"]], ["crypto-mid"])
+        self.assertEqual(mid["membership"][0]["filtered_rank"], 32)
+        self.assertEqual(small["raw_rank_window_constituent_count"], 2)
+        self.assertEqual([row["asset_id"] for row in small["membership"]], ["crypto-small"])
+        self.assertEqual(small["membership"][0]["filtered_rank"], 61)
+        self.assertFalse(out["authority"]["binding"])
+        self.assertEqual(out["authority"]["execution_weight"], 0)
 
     def test_capitalization_proxy_does_not_smuggle_btc_eth_into_alt_bucket(self):
         breadth = {
