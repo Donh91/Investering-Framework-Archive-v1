@@ -148,5 +148,37 @@
     "market_rule_change": false,
     "model_weight_change": false,
     "automatic_merge": false
+  },
+  "adversarial_maintenance": {
+    "enabled": true,
+    "default_task_type": "RESEARCH",
+    "allowed_task_types": [
+      "ADVERSARIAL_MAINTENANCE",
+      "ADVERSARIAL_REPLAY"
+    ],
+    "use_existing_queue_and_heartbeat": true,
+    "event_driven_via_existing_intake_push": true,
+    "max_tasks_per_run": 1,
+    "qualified_finding_route": "EXISTING_INDEPENDENT_ADJUDICATION_AND_CODEX_REMEDIATION",
+    "p0_p1_may_emit_development_candidate": true,
+    "p2_p3_default_state": "SHADOW_OBSERVE",
+    "self_adjudication": false,
+    "self_merge": false,
+    "direct_code_write": false,
+    "user_alert_authority": false,
+    "trading_authority": false,
+    "parallel_runtime": false,
+    "parallel_scanner": false,
+    "parallel_ledger": false,
+    "stale_action_regression_owner": "EXISTING_MOONSHOT_SAME_RUN_EXACT_ASSET_LIVE_GATE",
+    "required_loop": [
+      "ATTACK",
+      "OBSERVE",
+      "REPRODUCE",
+      "CLASSIFY",
+      "ROUTE",
+      "RETEST",
+      "LEARN"
+    ]
   }
 }
