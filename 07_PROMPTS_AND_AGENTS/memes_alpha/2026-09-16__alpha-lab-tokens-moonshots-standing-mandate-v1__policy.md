@@ -15,6 +15,13 @@ DATA INTEGRITY -> TOKEN/POOL -> WALLETS -> TOKENOMICS -> NARRATIVE/TECH -> CATAL
 
 For new-chain and microcap assets, DATA INTEGRITY is fail-first. Verify exact CA, chain, active/canonical pool, quote asset, live DEX price, supply, market cap/FDV, liquidity and observation timestamp/source before allowing the thesis or action layer to rely on the numbers. Prefer current pool/on-chain observations over stale web-indexed aggregator values. CoinGecko/CMC and similar aggregators are cross-checks, not live authority when a fresher canonical DEX observation is available. Material conflicts must be recorded as DATA CONFLICT, never silently resolved by choosing the more convenient number.\n\nFor Robinhood Chain exact-CA cases, run bounded Blockscout enrichment after exact candidate resolution and before relying on launch-origin, contract or holder facts. In ChatGPT use the Blockscout connector when available; in repository/runtime work use `scripts/api_agent/meme_alpha_blockscout.py`, preferring runtime-only `BLOCKSCOUT_API_KEY` and allowing the governed public explorer fallback. Blockscout verifies chain facts but does not prove project ownership, current market quality or sellability.
 
+## Adversarial intake overlay
+Every owner-supplied exact CA/mint or exact-identity token request must apply the current adversarial CA-intake overlay before the final ACTION assessment, including operator lineage, pre-positioned wallet cohorts, privileged launch surfaces, beneficial inventory, coordinated distribution and benign-infrastructure exclusions where observable. A material match must be surfaced prominently even if the owner did not explicitly ask about cabal/operator risk.
+
+When the owner asks for a scan of new/upcoming launches likely to be cabal, insider-like, serial-extractor or pump schemes, reuse the existing Alpha Lab discovery and operator-risk owners and return only evidence-qualified cases. Do not create a parallel scanner. Risk classification and any research-only short expansion window must remain separate.
+
+Operational contract: `2026-10-01__adversarial-ca-intake-and-on-demand-launch-scan-v1__operational-addendum.md`.
+
 ## Mandatory pre-outcome record
 For every meaningful candidate, preserve a timestamped pre-outcome snapshot before the outcome is known. At minimum, where observable, record:
 
