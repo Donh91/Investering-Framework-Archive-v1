@@ -375,27 +375,96 @@ def assess(candidate: dict[str, Any], research: dict[str, Any], *, model: str = 
     return value
 
 
-def final_alert_decision(triage: dict[str, Any], assessment: dict[str, Any], config: dict[str, Any], *, alerts_last_24h: int = 0) -> dict[str, Any]:
-    passed = {family for family in FAMILIES if isinstance(assessment.get(family), dict) and assessment[family].get("state") == "PASS"}
+DETERMINISTIC_NON_M_FAMILIES = {"W", "S", "P", "N"}
+DETERMINISTIC_EVIDENCE_CONTRACT = "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1"
+
+
+def deterministic_alert_families(triage: dict[str, Any], evidence: dict[str, Any] | None) -> tuple[set[str], list[str]]:
+    reasons: list[str] = []
+    if not isinstance(evidence, dict) or not evidence:
+        return set(), ["DETERMINISTIC_NON_M_EVIDENCE_MISSING"]
+    if evidence.get("contract") != DETERMINISTIC_EVIDENCE_CONTRACT:
+        return set(), ["DETERMINISTIC_EVIDENCE_CONTRACT_MISMATCH"]
+    if evidence.get("status") != "PASS":
+        return set(), ["DETERMINISTIC_EVIDENCE_NOT_PASS"]
+    if evidence.get("llm_generated") is not False:
+        return set(), ["DETERMINISTIC_EVIDENCE_LLM_PROVENANCE_FORBIDDEN"]
+    candidate_id = str(triage.get("candidate_id") or "")
+    token_ca = str((triage.get("event") or {}).get("token_ca") or "").lower()
+    if evidence.get("candidate_id") != candidate_id:
+        reasons.append("DETERMINISTIC_EVIDENCE_CANDIDATE_MISMATCH")
+    if str(evidence.get("token_ca") or "").lower() != token_ca or not token_ca:
+        reasons.append("DETERMINISTIC_EVIDENCE_TOKEN_MISMATCH")
+    if reasons:
+        return set(), reasons
+    receipts = evidence.get("receipts")
+    if not isinstance(receipts, list) or not receipts:
+        reasons.append("DETERMINISTIC_EVIDENCE_RECEIPTS_MISSING")
+        return set(), reasons
+    families: set[str] = set()
+    for row in receipts:
+        if not isinstance(row, dict):
+            reasons.append("DETERMINISTIC_RECEIPT_INVALID")
+            continue
+        family = str(row.get("family") or "")
+        refs = row.get("evidence_refs")
+        if family not in DETERMINISTIC_NON_M_FAMILIES:
+            reasons.append(f"DETERMINISTIC_FAMILY_NOT_ELIGIBLE:{family or 'EMPTY'}")
+            continue
+        if row.get("state") != "PASS" or row.get("deterministic") is not True or row.get("llm_generated") is not False:
+            reasons.append(f"DETERMINISTIC_RECEIPT_NOT_PASS:{family}")
+            continue
+        if not isinstance(row.get("source_contract"), str) or not row.get("source_contract"):
+            reasons.append(f"DETERMINISTIC_SOURCE_CONTRACT_MISSING:{family}")
+            continue
+        if not isinstance(refs, list) or not refs or any(not isinstance(ref, str) or not ref.strip() for ref in refs):
+            reasons.append(f"DETERMINISTIC_EVIDENCE_REFS_MISSING:{family}")
+            continue
+        families.add(family)
+    if not families:
+        reasons.append("DETERMINISTIC_NON_M_FAMILY_NOT_PROVEN")
+    return families, reasons
+
+
+def final_alert_decision(
+    triage: dict[str, Any],
+    assessment: dict[str, Any],
+    config: dict[str, Any],
+    *,
+    alerts_last_24h: int = 0,
+    deterministic_evidence: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    llm_passed = {family for family in FAMILIES if isinstance(assessment.get(family), dict) and assessment[family].get("state") == "PASS"}
+    deterministic_families, deterministic_reasons = deterministic_alert_families(triage, deterministic_evidence)
+    deterministic_confirmed = deterministic_families & llm_passed
+    deterministic_gate_pass = bool(deterministic_confirmed)
     required = _int(config["convergence"].get("minimum_signal_families_for_gamble_alert"), 3)
     accepted_sets = [set(row) for row in config["convergence"].get("accepted_gamble_family_sets", [])]
-    accepted_combo = any(combo <= passed for combo in accepted_sets) if accepted_sets else len(passed) >= required
+    accepted_combo = any(combo <= llm_passed for combo in accepted_sets) if accepted_sets else len(llm_passed) >= required
     fatal = bool(assessment.get("fatal_risks"))
     convexity = _number(assessment.get("remaining_convexity_multiple"))
     min_convexity = _number(config["convexity"].get("minimum_remaining_convexity_multiple_for_gamble_alert"), 10)
     daily_cap = _int(config["alert"].get("daily_cap"), 3)
     if not triage.get("execution_gate_pass"):
         state = "SILENT"
-    elif assessment.get("recommendation") == "GAMBLE_CANDIDATE" and len(passed) >= required and accepted_combo and not fatal and convexity >= min_convexity and alerts_last_24h < daily_cap:
+    elif (
+        assessment.get("recommendation") == "GAMBLE_CANDIDATE"
+        and len(llm_passed) >= required
+        and accepted_combo
+        and deterministic_gate_pass
+        and not fatal
+        and convexity >= min_convexity
+        and alerts_last_24h < daily_cap
+    ):
         state = "MOONSHOT_GAMBLE_ALERT"
-    elif assessment.get("recommendation") in {"WATCH", "GAMBLE_CANDIDATE"} and len(passed) >= 2:
+    elif assessment.get("recommendation") in {"WATCH", "GAMBLE_CANDIDATE"} and len(llm_passed) >= 2:
         state = "MOONSHOT_WATCH"
     else:
         state = "SILENT"
     now = int(time.time())
     alert_id = "MS-" + sha256_bytes(canonical_bytes({"candidate": triage.get("candidate_id"), "state": state, "t": now // 300}))[:16]
     return {
-        "contract": "MOONSHOT_ALERT_DECISION_v1",
+        "contract": "MOONSHOT_ALERT_DECISION_v2",
         "alert_id": alert_id,
         "state": state,
         "lifecycle": "ACTIVE" if state in {"MOONSHOT_WATCH", "MOONSHOT_GAMBLE_ALERT"} else "EXPIRED",
@@ -405,7 +474,11 @@ def final_alert_decision(triage: dict[str, Any], assessment: dict[str, Any], con
         "token_ca": (triage.get("event") or {}).get("token_ca"),
         "symbol": (triage.get("event") or {}).get("symbol"),
         "archetype": assessment.get("archetype"),
-        "passed_families": sorted(passed),
+        "llm_judged_families": sorted(llm_passed),
+        "deterministic_verified_families": sorted(deterministic_families),
+        "deterministic_confirmed_families": sorted(deterministic_confirmed),
+        "deterministic_evidence_gate_pass": deterministic_gate_pass,
+        "deterministic_evidence_reasons": deterministic_reasons,
         "remaining_convexity_multiple": assessment.get("remaining_convexity_multiple"),
         "hundred_x_feasibility": assessment.get("hundred_x_feasibility"),
         "summary": assessment.get("summary"),
@@ -507,7 +580,7 @@ def main() -> int:
     p_scan = sub.add_parser("scan-gecko"); p_scan.add_argument("--network", default="eth"); p_scan.add_argument("--pages", type=int, default=2); p_scan.add_argument("--output", type=Path, required=True)
     p_triage = sub.add_parser("triage"); p_triage.add_argument("--events", type=Path, required=True); p_triage.add_argument("--config", type=Path, required=True); p_triage.add_argument("--output", type=Path, required=True)
     p_assess = sub.add_parser("assess"); p_assess.add_argument("--candidate", type=Path, required=True); p_assess.add_argument("--research", type=Path, required=True); p_assess.add_argument("--output", type=Path, required=True); p_assess.add_argument("--model", default="gpt-6-luna"); p_assess.add_argument("--dry-run", action="store_true")
-    p_alert = sub.add_parser("alert"); p_alert.add_argument("--triage", type=Path, required=True); p_alert.add_argument("--assessment", type=Path, required=True); p_alert.add_argument("--config", type=Path, required=True); p_alert.add_argument("--alerts-last-24h", type=int, default=0); p_alert.add_argument("--output", type=Path, required=True)
+    p_alert = sub.add_parser("alert"); p_alert.add_argument("--triage", type=Path, required=True); p_alert.add_argument("--assessment", type=Path, required=True); p_alert.add_argument("--config", type=Path, required=True); p_alert.add_argument("--deterministic-evidence", type=Path); p_alert.add_argument("--alerts-last-24h", type=int, default=0); p_alert.add_argument("--output", type=Path, required=True)
     p_prop = sub.add_parser("propose-challenger"); p_prop.add_argument("--champion", type=Path, required=True); p_prop.add_argument("--error-ledger", type=Path, required=True); p_prop.add_argument("--output", type=Path, required=True)
     p_promote = sub.add_parser("promotion-decision"); p_promote.add_argument("--champion", type=Path, required=True); p_promote.add_argument("--challenger", type=Path, required=True); p_promote.add_argument("--evaluation", type=Path, required=True); p_promote.add_argument("--contract", type=Path, required=True); p_promote.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -522,7 +595,15 @@ def main() -> int:
     elif args.command == "assess":
         payload = assess(load_object(args.candidate), load_object(args.research), model=args.model, dry_run=args.dry_run)
     elif args.command == "alert":
-        triage = load_object(args.triage); payload = final_alert_decision(triage, load_object(args.assessment), load_object(args.config), alerts_last_24h=args.alerts_last_24h)
+        triage = load_object(args.triage)
+        deterministic_evidence = load_object(args.deterministic_evidence) if args.deterministic_evidence else None
+        payload = final_alert_decision(
+            triage,
+            load_object(args.assessment),
+            load_object(args.config),
+            alerts_last_24h=args.alerts_last_24h,
+            deterministic_evidence=deterministic_evidence,
+        )
         event = triage.get("event") or {}; payload["market_cap_usd_at_alert"] = event.get("market_cap_usd"); payload["liquidity_usd_at_alert"] = event.get("liquidity_usd")
     elif args.command == "propose-challenger":
         payload = {"challengers": propose_challengers(load_object(args.champion), load_object(args.error_ledger))}

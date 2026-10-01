@@ -10,15 +10,27 @@
   ],
   "learning_epoch": "MOONSHOT_IDENTITY_EPOCH_v2",
   "initial_scope": {
-    "chains": ["ethereum"],
+    "chains": [
+      "ethereum"
+    ],
     "scan_interval_minutes": 15,
     "deep_dive_daily_cap": 3,
     "user_alert_daily_cap": 3,
     "normal_day_target_alerts": "0-1",
     "one_alert_per_correlated_cluster": true
   },
-  "states": ["SILENT", "DEEP_DIVE", "MOONSHOT_WATCH", "MOONSHOT_GAMBLE_ALERT"],
-  "lifecycle_states": ["ACTIVE", "EXTENDED", "EXPIRED", "INVALIDATED"],
+  "states": [
+    "SILENT",
+    "DEEP_DIVE",
+    "MOONSHOT_WATCH",
+    "MOONSHOT_GAMBLE_ALERT"
+  ],
+  "lifecycle_states": [
+    "ACTIVE",
+    "EXTENDED",
+    "EXPIRED",
+    "INVALIDATED"
+  ],
   "identity": {
     "primary_key": "chain + exact token contract address",
     "ticker_is_identity": false,
@@ -32,7 +44,11 @@
   "token_origin_gate": {
     "contract": "MOONSHOT_TOKEN_ORIGIN_GATE_v2",
     "source": "GeckoTerminal top pools by exact token address",
-    "states": ["FRESH_TOKEN_SUPPORTED", "EXISTING_TOKEN_NEW_POOL", "ORIGIN_UNRESOLVED"],
+    "states": [
+      "FRESH_TOKEN_SUPPORTED",
+      "EXISTING_TOKEN_NEW_POOL",
+      "ORIGIN_UNRESOLVED"
+    ],
     "freshness_threshold_minutes": 1440,
     "freshness_semantics": "Support from observed top-pool history only; never represented as contract-deployment proof.",
     "required_before_deep_dive": true,
@@ -61,7 +77,17 @@
       "known launchpad/factory events",
       "approved exact-CA social discovery sources"
     ],
-    "birth_tape_minutes": [0, 5, 15, 30, 60, 120, 240, 720, 1440],
+    "birth_tape_minutes": [
+      0,
+      5,
+      15,
+      30,
+      60,
+      120,
+      240,
+      720,
+      1440
+    ],
     "synthetic_birth_tape_backfill_forbidden": true,
     "preserve_raw_pool_observations": true,
     "preserve_token_level_candidates_for_missed_winner_audit": true,
@@ -94,8 +120,12 @@
     "N": "narrative novelty and remaining convexity"
   },
   "archetypes": [
-    "PRODUCT_STEALTH", "PURE_MEME_CULTURE", "CABAL_WALLET_PROPAGATION",
-    "ECOSYSTEM_NATIVE_EASTER_EGG", "LAUNCHPAD_NETWORK_EFFECT", "UNCLASSIFIED"
+    "PRODUCT_STEALTH",
+    "PURE_MEME_CULTURE",
+    "CABAL_WALLET_PROPAGATION",
+    "ECOSYSTEM_NATIVE_EASTER_EGG",
+    "LAUNCHPAD_NETWORK_EFFECT",
+    "UNCLASSIFIED"
   ],
   "alert_gate": {
     "price_momentum_alone_can_alert": false,
@@ -107,10 +137,27 @@
     "requires_execution_gate_pass": true,
     "requires_fresh_token_origin": true,
     "requires_deep_research_before_gamble_alert": true,
-    "alert_expires_when_entry_conditions_materially_change": true
+    "alert_expires_when_entry_conditions_materially_change": true,
+    "requires_at_least_one_deterministic_non_llm_non_m_family_before_gamble_alert": true,
+    "deterministic_family_scope": [
+      "W",
+      "S",
+      "P",
+      "N"
+    ],
+    "deterministic_evidence_contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1",
+    "deterministic_evidence_must_match_exact_candidate_and_token": true,
+    "llm_may_create_deterministic_family_evidence": false,
+    "llm_may_only_confirm_or_downgrade_deterministically_proven_family": true
   },
   "convexity": {
-    "multiples": [5, 10, 25, 50, 100],
+    "multiples": [
+      5,
+      10,
+      25,
+      50,
+      100
+    ],
     "classification": "FEASIBILITY_NOT_FORECAST",
     "compare_against_historical_analogue_market_caps": true
   },
@@ -144,7 +191,8 @@
       "missed_winner_audit_required",
       "prospective_only_evaluation",
       "negative_cases_retained",
-      "user_alert_daily_cap<=3"
+      "user_alert_daily_cap<=3",
+      "deterministic_non_llm_non_m_family_required_before_gamble_alert"
     ],
     "challenger_generation": {
       "source": "matured prospective outcomes and missed-winner ledger from origin-supported fresh tokens in the active learning epoch",
@@ -161,7 +209,7 @@
       "requires_precision_non_degradation": true,
       "requires_sellability_non_degradation": true,
       "requires_false_positive_non_increase": true,
-      "requires_validation_utility_improvement_pct": 5.0,
+      "requires_validation_utility_improvement_pct": 5,
       "requires_two_consecutive_validation_windows": true,
       "automatic_rollback_enabled": true
     },
@@ -176,11 +224,23 @@
     "note": "The system can evolve bounded research configuration autonomously. New code, identity/origin authority, risk authority or execution capability remain outside autonomous promotion."
   },
   "outcome_learning": {
-    "windows": ["1h", "4h", "24h", "3d", "7d"],
+    "windows": [
+      "1h",
+      "4h",
+      "24h",
+      "3d",
+      "7d"
+    ],
     "required": [
-      "target_token_price_multiple", "forward_return", "MFE", "MAE",
-      "realizable_return_after_slippage", "sellability", "liquidity_change",
-      "thesis_survival", "alert_state_at_observation"
+      "target_token_price_multiple",
+      "forward_return",
+      "MFE",
+      "MAE",
+      "realizable_return_after_slippage",
+      "sellability",
+      "liquidity_change",
+      "thesis_survival",
+      "alert_state_at_observation"
     ],
     "target_token_price_multiple_required": true,
     "base_quote_role_must_be_resolved_at_each_outcome_snapshot": true,
@@ -190,7 +250,11 @@
   },
   "notification": {
     "outbox_is_source_of_truth": true,
-    "adapters": ["private_github_issue", "generic_webhook", "telegram_bot"],
+    "adapters": [
+      "private_github_issue",
+      "generic_webhook",
+      "telegram_bot"
+    ],
     "adapter_failure_does_not_drop_alert": true,
     "dedupe_by_alert_id": true
   },

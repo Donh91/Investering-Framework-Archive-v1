@@ -90,6 +90,13 @@ jobs:
           assert contract['adaptive_evolution']['auto_promotion']['allowed_scope']=='research alert configuration only'
           assert contract['adaptive_evolution']['challenger_generation']['max_parameter_mutations_per_generation'] <= 2
           assert contract['initial_scope']['user_alert_daily_cap'] <= 3
+          assert contract['alert_gate']['requires_at_least_one_deterministic_non_llm_non_m_family_before_gamble_alert'] is True
+          assert contract['alert_gate']['deterministic_family_scope']==['W','S','P','N']
+          assert contract['alert_gate']['deterministic_evidence_contract']=='MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1'
+          assert contract['alert_gate']['deterministic_evidence_must_match_exact_candidate_and_token'] is True
+          assert contract['alert_gate']['llm_may_create_deterministic_family_evidence'] is False
+          assert contract['alert_gate']['llm_may_only_confirm_or_downgrade_deterministically_proven_family'] is True
+          assert 'deterministic_non_llm_non_m_family_required_before_gamble_alert' in contract['adaptive_evolution']['immutable_without_code_review']
           assert contract['gamble_risk']['automatic_execution'] is False
           assert contract['gamble_risk']['leverage_allowed'] is False
           assert all(v is False for v in contract['authority'].values())
