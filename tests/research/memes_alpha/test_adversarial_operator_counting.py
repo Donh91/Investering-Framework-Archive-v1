@@ -127,6 +127,60 @@ class AdversarialOperatorCountingTests(unittest.TestCase):
         self.assertEqual(out["gates"]["stage1"], "INCOMPLETE_SOURCE_EVIDENCE")
         self.assertEqual(out["counts"]["qualification_unknown_rows"], 1)
 
+    def test_pre_t0_true_with_unknown_operator_branches_stays_unknown(self) -> None:
+        row = m.classify_event({
+            "token_ca": "0x" + "ab" * 20,
+            "launch_t0": "2026-10-01T01:00:00Z",
+            "pre_t0_prep_observed": True,
+            "benign_infra_excluded": True,
+        })
+        self.assertEqual(row["raw_pattern_state"], "UNKNOWN")
+        self.assertEqual(row["classification"], "UNKNOWN")
+        self.assertFalse(row["stage1_qualified"])
+
+    def test_pre_t0_false_is_deterministic_no_hit_even_if_branches_unknown(self) -> None:
+        row = m.classify_event({
+            "token_ca": "0x" + "ac" * 20,
+            "launch_t0": "2026-10-01T01:00:00Z",
+            "pre_t0_prep_observed": False,
+        })
+        self.assertEqual(row["raw_pattern_state"], "NO")
+        self.assertEqual(row["classification"], "NO_HIT")
+
+    def test_direct_lineage_can_fire_without_privileged_surface(self) -> None:
+        row = m.classify_event({
+            "token_ca": "0x" + "ad" * 20,
+            "launch_t0": "2026-10-01T01:00:00Z",
+            "pre_t0_prep_observed": True,
+            "direct_operator_lineage": True,
+            "benign_infra_excluded": True,
+        })
+        self.assertEqual(row["raw_pattern_state"], "YES")
+        self.assertTrue(row["stage1_qualified"])
+        self.assertTrue(row["stage2_qualified"])
+
+    def test_stage2_missing_bundle_evidence_fails_closed_when_required(self) -> None:
+        events = []
+        for i in range(11):
+            events.append({
+                "token_ca": "0x" + f"{i + 101:040x}",
+                "launch_t0": "2026-10-01T01:00:00Z",
+                "pre_t0_prep_observed": True,
+                "common_funding": True,
+                "synchronized_inventory": True,
+                "residual_similarity": True,
+                "benign_infra_excluded": True,
+            })
+        out = m.count_manifest({
+            "contract": m.MANIFEST_CONTRACT,
+            "interval_start_utc": "2026-10-01T00:00:00Z",
+            "interval_end_utc": "2026-10-02T00:00:00Z",
+            "events": events,
+        })
+        self.assertEqual(out["gates"]["stage1"], "STAGE2_REQUIRED")
+        self.assertEqual(out["gates"]["stage2"], "INCOMPLETE_STAGE2_EVIDENCE")
+        self.assertEqual(out["counts"]["stage2_unknown_rows"], 11)
+
     def test_decoded_input_is_supported_without_raw_calldata(self) -> None:
         event = base_event()
         event.pop("raw_tx_input")
