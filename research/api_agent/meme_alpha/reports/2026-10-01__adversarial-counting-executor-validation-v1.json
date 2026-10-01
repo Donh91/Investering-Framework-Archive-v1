@@ -1,22 +1,22 @@
 {
   "contract": "ADVERSARIAL_OPERATOR_COUNTING_VALIDATION_v1",
   "status": "PASS_WITH_INCOMPLETE_REAL_INTERVAL_EVIDENCE",
-  "validated_at_utc": "2026-10-01T16:21:46Z",
+  "validated_at_utc": "2026-10-01T16:25:43Z",
   "pr_number": 1418,
   "transition_signature": "5772814fc479a87eb694",
   "implementation": {
     "script_path": "scripts/research/memes_alpha/adversarial_operator_counting.py",
-    "script_sha256": "2f19b221b8e5d0b3df6d679937bdb25a06b3b0d035c0eb44cd3e15e581fc81df",
+    "script_sha256": "b152209c9d3aea339df59eb6d1c6a80c34b2479fbea00d92424d717e008d3bff",
     "test_path": "tests/research/memes_alpha/test_adversarial_operator_counting.py",
-    "test_sha256": "6bb9d06ec3ab1309c18b7e256127b1b7de096d96e42b1b896385c5e930bff858",
+    "test_sha256": "97e69ceda5448f683b7641a30b2362a4a738f6cb5a89978a01567b1f46fad559",
     "local_exact_hash_py_compile": "PASS",
-    "local_exact_hash_unittest_count": 10,
+    "local_exact_hash_unittest_count": 14,
     "local_exact_hash_unittest_result": "PASS",
     "existing_pr_gate": {
       "workflow": "Meme Alpha Runtime Gate",
-      "run_id": 36890619687,
+      "run_id": 36891757703,
       "conclusion": "success",
-      "caveat": "Existing focused gate does not enumerate the newly added tests/research/memes_alpha test module; exact-hash local validation is therefore preserved separately."
+      "caveat": "Existing focused gate validates surrounding Meme Alpha runtime but does not enumerate the newly added tests/research/memes_alpha module; exact-hash local py_compile + 14-test run is preserved separately."
     }
   },
   "bounded_outcome_blind_interval": {
@@ -42,7 +42,9 @@
     "benign_relay_can_qualify": false,
     "unknown_infra_can_qualify": false,
     "shared_factory_or_relaunch_alone_can_fire": false,
-    "missing_qualification_evidence_can_pass_review_budget": false
+    "missing_qualification_evidence_can_pass_review_budget": false,
+    "unknown_operator_branch_evidence_can_be_treated_as_false": false,
+    "missing_stage2_bundle_evidence_can_pass_stage2_budget": false
   },
   "authority": {
     "shadow_only": true,
