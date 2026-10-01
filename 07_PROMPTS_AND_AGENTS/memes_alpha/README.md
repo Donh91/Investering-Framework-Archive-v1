@@ -84,6 +84,13 @@ The folder must not create a parallel research-governance stack. Existing Resear
   - reserves the future north-star / top-level metric for later design from sufficient prospective evidence instead of inventing a vanity score now;
   - carries no research, signal, execution or portfolio authority.
 
+- `2026-10-01__alpha-meme-lab-goals-and-dreams-v1-1__vision-addendum.md`
+  - adds Adversarial Operator Anticipation as an explicit Alpha Lab goal: recognize repeat operator preparation even when wallets rotate;
+  - adds the Realizable First-Pump / Adversarial-Alpha Window as a falsifiable research ambition, not a trade instruction;
+  - binds BYTE, DRAFT, DEED, CRUMBS, PINK, LEGS and matched ordinary Pons launches as the initial historical adversarial set;
+  - requires benign-infrastructure exclusion, public-eligible timing, sellability, slippage, MAE and prospective matched controls before any promotion;
+  - keeps AUTO_BUY / AUTO_SELL forbidden and routes all evidence through existing operator-risk and Alpha Lab owners.
+
 Canonical parent contract:
 
 `04_RESEARCH_LAB/auto_trading/MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md`
