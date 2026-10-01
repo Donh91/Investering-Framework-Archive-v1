@@ -59,8 +59,8 @@ class ShadowCompassV2Tests(unittest.TestCase):
                 "current_breadth": {"advance_ratio": 0.35, "advancers": 35, "decliners": 63, "observed_at_utc": "2026-09-30T19:05:00Z"},
                 "breadth": {"aggregate": {"equal_weight_mean_return_24h_pct": -1.0, "median_return_24h_pct": -0.8}},
                 "capitalization_transmission_proxy": {
-                    "contract": "CAPITALIZATION_TRANSMISSION_PROXY_v1",
-                    "bucket_semantics": "FILTERED_TOP100_RANK_WINDOWS_PROXY_NOT_CANONICAL_CAP_CLASSIFICATION",
+                    "contract": "CAPITALIZATION_TRANSMISSION_PROXY_v2",
+                    "bucket_semantics": "FILTERED_TOP100_RANK_WINDOWS_EXPLICIT_NON_BETA_EXCLUSIONS_PROXY_ONLY",
                     "buckets": {
                         "LARGE_ALT_PROXY": {"status": "OBSERVED_PROXY", "advance_ratio_24h": 0.45},
                         "MID_ALT_PROXY": {"status": "OBSERVED_PROXY", "advance_ratio_24h": 0.30},
