@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -71,3 +72,73 @@ jobs:
           [ "$pushed" = true ]
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
+      - name: Recover breadth-blocked Auto Market State
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          needs_recovery=$(python - <<'PY'
+          import json
+          import subprocess
+          from datetime import datetime, timezone
+
+          def show_json(path):
+              raw = subprocess.check_output(
+                  ["git", "show", f"origin/main:{path}"],
+                  text=True,
+              )
+              return json.loads(raw)
+
+          def parse_utc(value):
+              if not isinstance(value, str) or not value:
+                  return None
+              try:
+                  parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+              except ValueError:
+                  return None
+              if parsed.tzinfo is None:
+                  parsed = parsed.replace(tzinfo=timezone.utc)
+              return parsed.astimezone(timezone.utc)
+
+          try:
+              pointer = show_json("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
+              packet_path = pointer.get("packet_path")
+              packet = show_json(packet_path) if isinstance(packet_path, str) and packet_path else {}
+              breadth = show_json("03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json")
+          except Exception as exc:
+              print(f"false")
+              raise SystemExit(0)
+
+          blockers = packet.get("blockers") if isinstance(packet.get("blockers"), list) else []
+          health = ((packet.get("source_health") or {}).get("breadth") or {})
+          packet_time = parse_utc(pointer.get("packet_generated_at_utc"))
+          breadth_time = parse_utc(
+              breadth.get("retrieved_at_utc")
+              or ((breadth.get("observation") or {}).get("retrieval_timestamp_utc"))
+          )
+          stale_breadth_block = (
+              pointer.get("decision_context_status") == "DEGRADED"
+              and "breadth" in blockers
+              and health.get("classification") == "BREADTH_OWNER_STALE"
+          )
+          fresh_owner_arrived = (
+              packet_time is not None
+              and breadth_time is not None
+              and breadth_time > packet_time
+          )
+          print("true" if stale_breadth_block and fresh_owner_arrived else "false")
+          PY
+          )
+          if [ "$needs_recovery" != "true" ]; then
+            echo "BREADTH_RECOVERY_NOOP no stale breadth blocker cleared by this checkpoint"
+            exit 0
+          fi
+          active=$(gh run list --workflow entry-signal-ledger.yml --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending")] | length')
+          if [ "$active" -gt 0 ]; then
+            echo "BREADTH_RECOVERY_ALREADY_ACTIVE count=$active"
+            exit 0
+          fi
+          gh workflow run entry-signal-ledger.yml --ref main
+          echo "BREADTH_RECOVERY_ENTRY_SIGNAL_DISPATCHED source_breadth_run=${GITHUB_RUN_ID}"
