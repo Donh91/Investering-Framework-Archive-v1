@@ -1,85 +1,13 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-01T15:20:29Z",
+  "generated_at_utc": "2026-10-01T16:28:44Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
   ],
   "research_intake_enabled": true,
   "tasks": [
-    {
-      "allowed_change_scope": [
-        "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
-        "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
-        "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/experiments/** only for readback/output contract fields without changing the frozen qualification semantics",
-        "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/reports/**",
-        "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_blockscout.py only if a generic read-only transaction/funding helper is required",
-        "Donh91/secrets:collectors/memes_alpha/** only for bounded restricted-plane ancestry enrichment that reuses the existing runtime",
-        "Donh91/secrets:tests/memes_alpha/**",
-        "Donh91/secrets:private_research/memes_alpha/** for sanitized SHADOW receipts/results only"
-      ],
-      "candidate_id": "codex-research-adversarial-operator-counting-executor-v1",
-      "candidate_path": "research/codex/intake/2026/10/codex-research-adversarial-operator-counting-executor-v1.json",
-      "candidate_sha256": "1cf9fc4ac067ddaf070a6facbf5521769b1545ba559873b8f0a84924d6b0a7a9",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "ADVERSARIAL_OPERATOR_COUNTING_GATE_FROZEN_NO_EXECUTOR",
-      "first_observed_at_utc": "2026-10-01T15:35:00Z",
-      "forbidden_changes": [
-        "API budget",
-        "automatic alerts from this experiment",
-        "automatic buy or sell signals",
-        "automatic trade execution",
-        "canonical authority",
-        "market gates",
-        "model weights",
-        "new policy semantics",
-        "new scheduler",
-        "parallel Alpha runtime",
-        "parallel evidence ledger",
-        "parallel scanner",
-        "portfolio logic",
-        "review-budget threshold changes"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 5772814fc479a87eb694 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T15:20:29Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Implement the smallest deterministic SHADOW-ONLY counting executor for the already-frozen ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1 counting gate. Reuse existing Robinhood/Pons launch-event evidence, raw RPC transaction calldata and existing Blockscout/RPC bindings. Stage A must be cheap and broad, decode launch-time privileged/exemption surface without outcome lookup where possible, and never claim operator identity. Stage B may run only on Stage-A qualified rows and may add funding ancestry / money-lineage evidence after explicit benign-infrastructure exclusions. Emit denominator counts and machine-readable evidence only. Do not create a new scheduler, scanner, score, threshold, alert rule, trading engine, API budget or portfolio authority.",
-      "observations": 1,
-      "post_fix_gate": "FROZEN_STAGE_A_STAGE_B_COUNTS_REPRODUCIBLE_PLUS_SEED_REGRESSION_PASS_PLUS_BENIGN_INFRA_FALSE_POSITIVE_PASS_PLUS_ONE_BOUNDED_OUTCOME_BLIND_INTERVAL_RECEIPT_PLUS_ZERO_NEW_RUNTIME",
-      "precondition": "Candidate codex-research-adversarial-operator-counting-executor-v1 still exists on main at research/codex/intake/2026/10/codex-research-adversarial-operator-counting-executor-v1.json with SHA-256 1cf9fc4ac067ddaf070a6facbf5521769b1545ba559873b8f0a84924d6b0a7a9, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "EXPEDITED",
-      "required_evidence": [
-        "research/api_agent/meme_alpha/experiments/ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1.json",
-        "06_RESEARCH_LAB/alpha_lab/2026-10-01__adversarial-operator-claude-bitquery-counting-gate-v1.md",
-        "scripts/api_agent/meme_alpha_blockscout.py",
-        "Donh91/Meme-Alpha-Lab historical/prospective Robinhood Pons event corpus",
-        "PONSCUPINE adversarial runtime runs 36846083826 and 36881054034",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "5772814fc479a87eb694",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-10-01T15:35:00Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "FROZEN_STAGE_A_STAGE_B_COUNTS_REPRODUCIBLE_PLUS_SEED_REGRESSION_PASS_PLUS_BENIGN_INFRA_FALSE_POSITIVE_PASS_PLUS_ONE_BOUNDED_OUTCOME_BLIND_INTERVAL_RECEIPT_PLUS_ZERO_NEW_RUNTIME"
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "1bd7aea3ffd5e8ce4d8ad6d5f67169d34eb8ed00f223285115ac9c056e17e671",
-      "transition_receipt_path": "research/codex/transitions/5772814fc479a87eb694.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-adversarial-operator-counting-executor-v1"
-    },
     {
       "allowed_change_scope": [
         "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
@@ -120,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T15:20:29Z",
+      "last_observed_at_utc": "2026-10-01T16:28:44Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -192,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T15:20:29Z",
+      "last_observed_at_utc": "2026-10-01T16:28:44Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -243,12 +171,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 4b021da2dfb42a076539 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T15:20:20Z",
+      "last_observed_at_utc": "2026-10-01T16:28:35Z",
       "latest_run_id": 36777320605,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/36777320605",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve NO_RUN_HISTORY for cycle-navigator-precision-learning-supervisor.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 7,
+      "observations": 8,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 4b021da2dfb42a076539 for cycle-navigator-precision-learning-supervisor.yml/NO_RUN_HISTORY, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -292,12 +220,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 90386cf337a0366978ad --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T15:20:20Z",
+      "last_observed_at_utc": "2026-10-01T16:28:35Z",
       "latest_run_id": 36844350356,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/36844350356",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve SCHEDULE_STALE for remediation-maturation.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 2,
+      "observations": 3,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 90386cf337a0366978ad for remediation-maturation.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -341,12 +269,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature d7b16e09b0bef34e2dce --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T15:20:20Z",
+      "last_observed_at_utc": "2026-10-01T16:28:35Z",
       "latest_run_id": 36823540623,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/36823540623",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve NO_RUN_HISTORY for shadow-compass-v2.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
+      "observations": 4,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature d7b16e09b0bef34e2dce for shadow-compass-v2.yml/NO_RUN_HISTORY, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -390,12 +318,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature dbb38d4f6e5030e721ab --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T15:20:20Z",
+      "last_observed_at_utc": "2026-10-01T16:28:35Z",
       "latest_run_id": 36702822474,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/36702822474",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve SCHEDULE_STALE for monthly-ai-learning-council.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 2,
+      "observations": 3,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature dbb38d4f6e5030e721ab for monthly-ai-learning-council.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -439,12 +367,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature f9538daacc5d375062e7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T15:20:20Z",
+      "last_observed_at_utc": "2026-10-01T16:28:35Z",
       "latest_run_id": 36846296220,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/36846296220",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve SCHEDULE_STALE for operations-dashboard.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 2,
+      "observations": 3,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature f9538daacc5d375062e7 for operations-dashboard.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
