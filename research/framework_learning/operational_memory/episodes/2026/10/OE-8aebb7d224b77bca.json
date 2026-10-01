@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-capture-architecture-gate.yml",
+    ".github/workflows/daily-raw-owner-capture.yml",
+    ".github/workflows/situation-room-daily-static.yml",
+    ".github/workflows/situation-room-owner-live-gate.yml",
+    "scripts/data_terminal/situation_room_daily_owner.py",
+    "scripts/data_terminal/situation_room_static_daily_adapter.py",
+    "tests/data_terminal/test_situation_room_daily_owner.py",
+    "tests/data_terminal/test_situation_room_static_daily_adapter.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-8aebb7d224b77bca",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "root-situation-room-dual-writer-precedence",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: make dated Situation Room static route authoritative * fix: surface Situation Room authoritative persistence result * fix: remove duplicate Situation Room writer from live anchor * test: enforce single Situation Room durable writer topology * test: verify Situation Room authoritative route on durable row * test: reproduce and close Situation Room writer precedence failure * test: exercise Situation Room retention with real writer * fix: archive Situation Room record displaced by authoritative owner * test: require authoritative static Situation Room route in live gate * test: preserve d",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-capture-architecture-gate.yml": "0667bc8bcd23ca95ef3b6c2f837ee8efb061c151",
+    ".github/workflows/daily-raw-owner-capture.yml": "4dd3b597e09496d85d0ac34f8d7dcd027df6ba0d",
+    ".github/workflows/situation-room-daily-static.yml": "e09e8cbc68f3fb9bfeb41cbe55f704e987b6c7fb",
+    ".github/workflows/situation-room-owner-live-gate.yml": "f1199e8795c51356fa59f12d8928c71002b5d349",
+    "scripts/data_terminal/situation_room_daily_owner.py": "a418236f8064554a8164e8671985a326aa9a51ad",
+    "scripts/data_terminal/situation_room_static_daily_adapter.py": "ecb9b26ffe1b5e4c0e6776dcfa80504e1a3ff16e",
+    "tests/data_terminal/test_situation_room_daily_owner.py": "9239c2b81495834c5c7ed643fa8c0b509fa120bf",
+    "tests/data_terminal/test_situation_room_static_daily_adapter.py": "6f025ba32195ad2f8d32732c80e1c51fa4e727a0"
+  },
+  "source_commit_sha": "8aebb7d224b77bcacb587f66b58ac4f252c48d13",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T00:00:54+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Root-fix Situation Room dual-writer precedence"
+}

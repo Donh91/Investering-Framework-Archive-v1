@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/handlekompas/README.md",
+    "scripts/data_ping/auto_market_state.py",
+    "scripts/data_ping/compass_event_refresh.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "tests/data_ping/test_compass_event_refresh.py",
+    "tests/data_ping/test_native_handlekompas.py",
+    "tests/data_ping/test_official_daily_compass.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-20f7408b200fb461",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* data: preserve predecessor market observation time * compass: distinguish repeated price observation from neutral market * compass: do not emit market-change events from repeated observations * test: distinguish repeated price owner observation from neutral market * test: suppress event refresh for repeated price observation * test: expose repeated observation state in Native Handlekompas * docs: define no-new-observation Compass semantics * fix: fail ladder direction closed on repeated price observation * test: update regime expectation after direction-action separation",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/handlekompas/README.md": "b634f42c56021cc8330a6c056945fd67b7e4b15e",
+    "scripts/data_ping/auto_market_state.py": "5632d43132978a21215c9af46433cdc2f7665627",
+    "scripts/data_ping/compass_event_refresh.py": "694e5040786064b20fef31861f23e35b8489904f",
+    "scripts/data_ping/native_handlekompas.py": "08f5b300338ca79563ebb9bdfd0e0f2880af0e4b",
+    "tests/data_ping/test_compass_event_refresh.py": "f0be3ed8f65170c7f79edb9b84f824df138c0be6",
+    "tests/data_ping/test_native_handlekompas.py": "71bd6365f8b70087a44eeac66e71a7efcf55895d",
+    "tests/data_ping/test_official_daily_compass.py": "e3a0a55057152f9d46d4e22b1cd463cb01e0df79"
+  },
+  "source_commit_sha": "20f7408b200fb461d223434d742678bd5530e49b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T00:18:50+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "Compass: distinguish repeated price observation from neutral market"
+}

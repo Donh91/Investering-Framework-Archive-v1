@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v2.md",
+    "scripts/data_ping/native_handlekompas.py",
+    "scripts/learning/compass_outcomes.py",
+    "scripts/learning/shadow_compass_v2_outcomes.py",
+    "tests/learning/test_compass_outcomes.py",
+    "tests/learning/test_shadow_compass_v2_outcomes.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-28872d37a28c7546",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "compass-outcome-time-basis-before-first-shadow-12h",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: score Compass outcomes on hourly close time basis * fix: align Shadow Compass outcome time basis with bound market close * fix: avoid duplicate Shadow source reload during scoring * test: lock Compass scoring to reference-close horizon * test: lock Shadow scoring to bound reference close * compass: bind future freezes to corrected scoring contract v2 * docs: preregister corrected Compass outcome time basis v2",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v2.md": "c380834275f290a05f641ee51714ee9f9441d375",
+    "scripts/data_ping/native_handlekompas.py": "da4378b31eb8d04a292a2d53d5a89adf0c369c2b",
+    "scripts/learning/compass_outcomes.py": "501ada043dbf55614cbf60bf906b5bf10401d3cb",
+    "scripts/learning/shadow_compass_v2_outcomes.py": "662e61286592dd88fb6433d8413500bad66cce99",
+    "tests/learning/test_compass_outcomes.py": "9a324188a436aa7714fcb02a8d619f6f44800f5f",
+    "tests/learning/test_shadow_compass_v2_outcomes.py": "55a3970837f7ca70b3975c3b7c346c3f432f2f71"
+  },
+  "source_commit_sha": "28872d37a28c7546eecee0118ea4ecc4a385e7ec",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-30T23:54:45+02:00",
+  "task_class": "MARKET_STATE",
+  "task_summary": "Fix Compass outcome time basis before first Shadow 12h maturity"
+}

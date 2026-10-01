@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/shadow-compass-v2-bootstrap.yml",
+    ".github/workflows/shadow-compass-v2.yml",
+    "04_MARKET_LEARNING/handlekompas/shadow_v2/README.md",
+    "scripts/data_ping/auto_market_state.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "scripts/learning/shadow_compass_v2.py",
+    "tests/data_ping/test_compass_event_refresh.py",
+    "tests/learning/test_shadow_compass_v2.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-538b454a7f9eec95",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Packet C: preserve rich spot-hourly and microstructure evidence in Auto Market State * Packet C: add GPT-6.1 Sol Shadow Compass v2 reasoner * Packet C tests: validate Shadow Compass v2 input and zero-authority forecast * Packet C: add isolated GPT-6.1 Sol Shadow Compass workflow * Packet C docs: define Shadow Compass v2 authority and evidence lane * Packet C audit: deduplicate shadow API calls by evidence sources, not issue time * Packet C fix: support direct Shadow Compass script execution * Packet C fix: add main readback proof to shadow writer * Packet B remediation: preserve DATA_DEGRADE",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/shadow-compass-v2-bootstrap.yml": "c4251ec5a16fe96a6a63473130847b932027a94f",
+    ".github/workflows/shadow-compass-v2.yml": "b9de0f8c62e53977b35a814d0dc3ad1fbc97d5f4",
+    "04_MARKET_LEARNING/handlekompas/shadow_v2/README.md": "19988095379f60f448b3bb9d6f1ac56037244a54",
+    "scripts/data_ping/auto_market_state.py": "b5d7f5eb9b11f17768939f28100467df82910ead",
+    "scripts/data_ping/native_handlekompas.py": "836eb81533890424a52f68b8e7867a0831680ec8",
+    "scripts/learning/shadow_compass_v2.py": "b19fc425676cef37fae1c4cdaf4cc331c212d0a2",
+    "tests/data_ping/test_compass_event_refresh.py": "8c5dee1c080ba8b5d08d454a21c94f5df7b2c96e",
+    "tests/learning/test_shadow_compass_v2.py": "b213992af5e1630e18abc7dd1d332eb84f208303"
+  },
+  "source_commit_sha": "538b454a7f9eec95d6adcb03e4edf47a5471a49a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-30T22:14:37+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Compass v2 Packet C: rich evidence and GPT-6.1 Sol shadow reasoner"
+}

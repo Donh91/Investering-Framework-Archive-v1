@@ -1,0 +1,52 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/compass-outcomes.yml",
+    ".github/workflows/daily-capture-architecture-gate.yml",
+    ".github/workflows/framework-learning-supervisor.yml",
+    ".github/workflows/native-market-recovery.yml",
+    ".github/workflows/native-ota-research-readback.yml",
+    ".github/workflows/shadow-admission-ai-decider.yml",
+    ".github/workflows/situation-room-daily-static.yml",
+    ".github/workflows/unified-experimental-lifecycle-adjudication.yml",
+    "scripts/health/check_writer_trigger_safety.py",
+    "tests/health/test_writer_trigger_safety_v2.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-cb97d43bf1a2d358",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* ops: isolate PR validation from main writer queue in compass-outcomes.yml * ops: isolate PR validation from main writer queue in situation-room-daily-static.yml * ops: isolate unified adjudication PR validation from main writer queue * ops: isolate PR validation in shadow-admission-ai-decider.yml * ops: isolate PR validation in framework-learning-supervisor.yml * ops: isolate PR validation in native-market-recovery.yml * health: detect PR validation competing with main writer queue * test: require PR-isolated concurrency for production writers * test: accept PR-isolated Situation Room writer",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/compass-outcomes.yml": "2f0c2dafcf51c0e3b5ae66c795ea4ac57302fe26",
+    ".github/workflows/daily-capture-architecture-gate.yml": "eac7539cd1cecc7a55e9eca96998c003a2ed0962",
+    ".github/workflows/framework-learning-supervisor.yml": "d6e8db33bf9326e94c73e132a246185312703961",
+    ".github/workflows/native-market-recovery.yml": "34fa38d45160743be24b88656d94c758bcad13c6",
+    ".github/workflows/native-ota-research-readback.yml": "0784cfee890b092e274c62c29774639487c18629",
+    ".github/workflows/shadow-admission-ai-decider.yml": "c6275dd57e82d80a0232d5ce27c6f01bfdf13aa9",
+    ".github/workflows/situation-room-daily-static.yml": "2b922ef56d012f914fe74b3abcee97c266070ba6",
+    ".github/workflows/unified-experimental-lifecycle-adjudication.yml": "29ff63c4fe2b266c54475e56c3780b750c4028fd",
+    "scripts/health/check_writer_trigger_safety.py": "cd2025e77a36faee552b004178e7fd21f33fe3dc",
+    "tests/health/test_writer_trigger_safety_v2.py": "7bd0b2dfcc971d746fe21afbbd845d969ac86351"
+  },
+  "source_commit_sha": "cb97d43bf1a2d358d1e8257a532b4ac0d8ca6779",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T08:22:38+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Writer queue pressure: isolate PR validation from production serialization"
+}

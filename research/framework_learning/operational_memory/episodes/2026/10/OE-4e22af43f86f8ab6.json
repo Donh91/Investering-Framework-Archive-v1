@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/experiment-receipt-sync-bootstrap.yml",
+    ".github/workflows/framework-learning-operations.yml",
+    "scripts/experiments/sync_experiment_receipts.py",
+    "tests/experiments/test_experiment_receipt_sync_freshness.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-4e22af43f86f8ab6",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: prefer public Experiment receipt transport before auth fallback * test: public-first Experiment receipt transport with auth fallback * ops: make Experiment receipt auth optional fallback * test: import public-first receipt transport fixtures * ops: bootstrap public Experiment receipt sync after deploy",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/experiment-receipt-sync-bootstrap.yml": "bd31b0e920c99b6dcb2b5fda13bf6c65c2d03699",
+    ".github/workflows/framework-learning-operations.yml": "82c88c0749d6fc73efddf01b4775b01a69ca6041",
+    "scripts/experiments/sync_experiment_receipts.py": "44ce8b1a6c69cf80618bafa0ee48f22a5646bf2e",
+    "tests/experiments/test_experiment_receipt_sync_freshness.py": "6c9c363b7866e1ff4d8687080869d7effe1d139c"
+  },
+  "source_commit_sha": "4e22af43f86f8ab63413aa10ca41ed366c758628",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T07:56:42+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Experiment receipt sync: public-first transport with auth fallback"
+}

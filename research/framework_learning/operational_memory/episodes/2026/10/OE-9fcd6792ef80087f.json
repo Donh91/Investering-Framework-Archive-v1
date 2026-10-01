@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "scripts/cycle_navigator/deterministic_range_baseline.py",
+    "tests/cycle_navigator/test_deterministic_range_baseline.py",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-9fcd6792ef80087f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: require immediate prior week for deterministic range anchor * fix: support ISO-year rollover and fail-soft range persistence * test: range baseline fails closed on missing prior week * test: CN ISO rollover and range rewrite resilience",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "cb524e645711f00914c2a6d9b02ffe8f110faec1",
+    "scripts/cycle_navigator/deterministic_range_baseline.py": "52c2c24b9b28a92166aa63beeda68beb47ede68c",
+    "tests/cycle_navigator/test_deterministic_range_baseline.py": "5be3cac25de9343812e2cbdf6dd827ede20f0bd0",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py": "5b83102aaed1e9148e1094562e485b3f7e367837"
+  },
+  "source_commit_sha": "9fcd6792ef80087fcc1f0f4fdcfb376edd960acb",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T08:07:37+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "CN resilience: contiguous range anchor and ISO-year rollover"
+}

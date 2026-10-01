@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/compass-outcomes.yml",
+    ".github/workflows/cycle-navigator-weekly-publication.yml",
+    ".github/workflows/weekly-api-calibration-shadow.yml",
+    "scripts/api_agent/build_weekly_calibration_context.py",
+    "scripts/learning/shadow_compass_v2_outcomes.py",
+    "tests/api_agent/test_deterministic_range_learning.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-c376f3153bbd9010",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Packet E: persist and read back deterministic range baselines * Packet E: make range readback safe across ISO-year boundaries * Packet E: make Shadow Compass outcome scorer safe for direct workflow execution * Packet E CI: prove Shadow Compass outcome scorer direct execution * Packet E: feed matured deterministic range benchmark scores into Master Monday * Packet E: teach weekly calibration to compare official ranges with simple benchmark * Packet E tests: mature-only deterministic range learning for Master Monday",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/compass-outcomes.yml": "c407f9915e2ad15db1785bc4101464927ecb866b",
+    ".github/workflows/cycle-navigator-weekly-publication.yml": "0d2848acb41e43f8e5d9d09c3b5a1073cebf7391",
+    ".github/workflows/weekly-api-calibration-shadow.yml": "f6ffbff9f70caccd72a4c142a98778ebf00dd5cd",
+    "scripts/api_agent/build_weekly_calibration_context.py": "51e51266007b49d55a08cfed2c3d13e2c510d8b0",
+    "scripts/learning/shadow_compass_v2_outcomes.py": "062f74528e2b00c4865ea73e58a7956fc83f7204",
+    "tests/api_agent/test_deterministic_range_learning.py": "44fadfab4dc1913a4686c3b9e3a4acb8f6fe64b8"
+  },
+  "source_commit_sha": "c376f3153bbd9010ae93ac32e22a07e867379144",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-30T22:39:24+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Compass v2 Packet E: persist range benchmark and strengthen learning readback"
+}

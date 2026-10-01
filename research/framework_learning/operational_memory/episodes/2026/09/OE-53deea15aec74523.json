@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/framework-learning-operations.yml",
+    ".github/workflows/situation-room-daily-static.yml",
+    ".github/workflows/situation-room-static-bootstrap.yml",
+    "scripts/cycle_navigator/validate_public_series.py",
+    "scripts/experiments/sync_experiment_receipts.py",
+    "tests/data_terminal/test_situation_room_static_daily_adapter.py",
+    "tests/experiments/test_experiment_receipt_sync_freshness.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-53deea15aec74523",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* health: self-validate Situation Room fix on deploy * health: test Situation Room retrieval provenance persistence * health: make Cycle Navigator public identity authority explicit * health: support authenticated private experiment receipt sync * health: fix private receipt sync provenance handling * health: test authenticated private experiment receipt transport * health: route experiment receipt sync through private authenticated transport * health: align CN product gate with current analysis-only language * health: keep Situation Room writer off generic push * health: dispatch Situation Ro",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "99d8ba4e262935706d89accb4d3c677938587c2c",
+    ".github/workflows/framework-learning-operations.yml": "5836c9c38e5d779f1c2cfe359bc611128c03f838",
+    ".github/workflows/situation-room-daily-static.yml": "32085f96d4d6235c6cf565d5f2bf6496d811722d",
+    ".github/workflows/situation-room-static-bootstrap.yml": "05cd5ebb9e32a22632662b35a2e0cfbb6d9e19a2",
+    "scripts/cycle_navigator/validate_public_series.py": "3d85cfbb67361c2f44f5ec99c8299e36a4dc5db1",
+    "scripts/experiments/sync_experiment_receipts.py": "806d2c79717d04dc45ff258c1bde9cb6fef421cb",
+    "tests/data_terminal/test_situation_room_static_daily_adapter.py": "20ee02e545fc0ace0e4864c19a272fcbc07a4b5a",
+    "tests/experiments/test_experiment_receipt_sync_freshness.py": "967c67aed3592dd90a2f5c5e636ec33a1abf1dd9"
+  },
+  "source_commit_sha": "53deea15aec74523c6d64a326929bc2498a97fa0",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-30T23:02:13+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "P0 in-house health remediation: CN identity, Situation Room and private receipt sync"
+}

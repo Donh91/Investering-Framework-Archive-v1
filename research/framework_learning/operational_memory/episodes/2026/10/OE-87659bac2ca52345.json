@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/shadow-compass-v2.yml",
+    "research/api_agent/API_TASK_REGISTRY_v1.json",
+    "scripts/learning/shadow_compass_v2.py",
+    "tests/learning/test_shadow_compass_v2.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-87659bac2ca52345",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* api: register Shadow Compass v2 cost-controlled lane * api: govern Shadow Compass v2 model and emit standard cost receipt * api: gate Shadow Compass v2 on lane and monthly budgets * test: enforce Shadow Compass cost governance and model pin",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/shadow-compass-v2.yml": "0739b141b1fcf56c7e9786eb6206b63055b5b7a4",
+    "research/api_agent/API_TASK_REGISTRY_v1.json": "9309cc26b79384805a7f8ec9929227ee5efb70eb",
+    "scripts/learning/shadow_compass_v2.py": "bf47f483604be181907905484a43a77fd4e6fa30",
+    "tests/learning/test_shadow_compass_v2.py": "67388459e5469fc66b8d061cf9429d0728bc656a"
+  },
+  "source_commit_sha": "87659bac2ca523457358e73f4adf2f88ad300fbe",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T00:22:10+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Govern Shadow Compass v2 API cost and model lane"
+}

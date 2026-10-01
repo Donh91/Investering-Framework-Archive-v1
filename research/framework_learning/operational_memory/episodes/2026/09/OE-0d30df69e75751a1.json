@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-precision-learning-bootstrap.yml",
+    "scripts/health/build_architecture_health.py",
+    "tests/health/test_architecture_health_v2_1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-0d30df69e75751a1",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* health: classify private experiment sync credential wall explicitly * health: test explicit private receipt sync auth blocker * health: bootstrap CN precision-learning runtime proof safely",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-precision-learning-bootstrap.yml": "a815dd41856d78dc114f4d6d0b7f2000c080689c",
+    "scripts/health/build_architecture_health.py": "882b0a66e777edafc6f9131b858ffaab3f14ca02",
+    "tests/health/test_architecture_health_v2_1.py": "c1488b91fe477d97cb10247cd35f621b626a6c8c"
+  },
+  "source_commit_sha": "0d30df69e75751a1d39a75f88589b51aa1da7d35",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-30T23:06:59+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "P1 observability: explicit private-sync blocker and CN precision bootstrap"
+}

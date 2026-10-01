@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_ping/auto_market_state.py",
+    "tests/data_ping/test_auto_market_state_integrity.py",
+    "tests/learning/test_shadow_compass_v2.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-764759de8cbbfeff",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: remove explicit non-beta assets from cap-transmission proxy only * test: explicit non-beta exclusions preserve owner rank lineage * test: align Shadow fixture with cap-transmission proxy v2",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_ping/auto_market_state.py": "238ba1878ecc40b8f859f1b06dcf1a487b44aa96",
+    "tests/data_ping/test_auto_market_state_integrity.py": "1506d50141266f76721cdebb44fbbb0f2ae6a590",
+    "tests/learning/test_shadow_compass_v2.py": "abad5ee6809192bb2e5b6e39e77f3d642a3bc9c5"
+  },
+  "source_commit_sha": "764759de8cbbfeffd86672a65415ed425c9e703b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-01T08:12:11+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "Cap transmission proxy v2: exclude explicit non-beta assets"
+}
