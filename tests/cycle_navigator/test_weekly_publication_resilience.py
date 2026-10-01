@@ -166,3 +166,17 @@ def test_publication_workflow_does_not_mask_builder_failure():
     assert "set -euo pipefail" in build
     assert "--max-output-tokens 12000" in build
     assert "| tee runtime_cycle_navigator_pointer.json" in build
+
+
+def test_next_iso_week_handles_52_and_53_week_years():
+    assert mod.next_iso_week(2026, 53) == (2027, 1)
+    assert mod.next_iso_week(2025, 52) == (2026, 1)
+
+
+def test_range_benchmark_rewrite_conflict_is_fail_soft_not_publication_abort():
+    source = (ROOT / "scripts/cycle_navigator/build_weekly_cycle_navigator.py").read_text()
+    assert "deterministic_range_baseline_rewrite_blocked" not in source
+    assert "deterministic_range_baseline_score_rewrite_blocked" not in source
+    assert "RETAINED_EXISTING_REWRITE_CONFLICT" in source
+    assert "deterministic_range_baseline_persistence" in source
+
