@@ -343,6 +343,84 @@ def test_retired_unscheduled_workflow_is_inventory_observation_not_amber() -> No
     assert "LATEST_RUN_FAILED" not in findings
     assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
 
+
+def test_retired_unscheduled_cancellation_is_historical_observation() -> None:
+    row = _scheduled_row()
+    row.update({
+        "workflow": "retired-cancelled.yml",
+        "scheduled": False,
+        "cron_expressions": [],
+        "writes_main": False,
+        "write_target_class": "NO_REPO_WRITE",
+        "lifecycle_state": "RETIRED",
+        "lifecycle_reason": "SUPERSEDED",
+        "lifecycle_since": "2026-08-20T00:00:00Z",
+        "live": {
+            "state": "active",
+            "latest_run": {
+                "event": "workflow_dispatch",
+                "status": "completed",
+                "conclusion": "cancelled",
+                "created_at": "2026-08-19T00:00:00Z",
+            },
+            "recent_failure_count": 0,
+            "success_streak": 0,
+            "expected_success_streak": 0,
+            "failure_streak": 0,
+            "recent_cancellation_count": 3,
+            "recent_pr_gate_rejection_count": 0,
+            "cancellation_streak": 2,
+            "pr_gate_rejection_streak": 0,
+        },
+    })
+    status, findings = module.classify(
+        row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc)
+    )
+    assert status == "GREEN"
+    assert findings == []
+    assert row["observations"] == [
+        "LATEST_RUN_CANCELLED",
+        "REPEATED_CONSECUTIVE_CANCELLATIONS",
+        "RETIRED_WORKFLOW_LOCAL_FILE_PRESENT",
+    ]
+
+
+def test_manual_read_only_recovery_history_is_observation_not_production_amber() -> None:
+    row = _scheduled_row()
+    row.update({
+        "workflow": "manual-smoke.yml",
+        "scheduled": False,
+        "cron_expressions": [],
+        "writes_main": False,
+        "write_target_class": "NO_REPO_WRITE",
+        "lifecycle_state": "ACTIVE",
+        "live": {
+            "state": "active",
+            "latest_run": {
+                "event": "workflow_dispatch",
+                "status": "completed",
+                "conclusion": "success",
+                "created_at": "2026-08-29T03:00:00Z",
+            },
+            "recent_failure_count": 3,
+            "recent_completed_count": 8,
+            "recent_conclusions": ["success", "failure", "failure", "success"],
+            "success_streak": 1,
+            "expected_success_streak": 1,
+            "failure_streak": 0,
+            "recent_cancellation_count": 0,
+            "recent_pr_gate_rejection_count": 0,
+            "cancellation_streak": 0,
+            "pr_gate_rejection_streak": 0,
+        },
+    })
+    status, findings = module.classify(
+        row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc)
+    )
+    assert status == "GREEN"
+    assert findings == []
+    assert row["observations"] == ["RECOVERING_AFTER_RECENT_FAILURES"]
+
 def test_empty_registry_is_one_global_degradation(monkeypatch) -> None:
     def fake_api(url: str, token: str) -> dict:
         if url.endswith("/Investering-Framework-Archive-v1"): return {"default_branch": "main"}
