@@ -145,8 +145,9 @@ def infra_state(event: dict[str, Any]) -> str:
 
 
 def classify_event(event: dict[str, Any]) -> dict[str, Any]:
-    token_ca = normalize_address(event.get("token_ca"))
-    t0 = parse_iso(event.get("launch_t0") or event.get("timestamp"))
+    token_ca = normalize_address(event.get("token_ca") or event.get("token_address"))
+    t0_value = event.get("launch_t0") or event.get("timestamp") or event.get("block_timestamp_utc")
+    t0 = parse_iso(t0_value)
     privileged = decode_privileged_surface(event)
     bundle = tri(event.get("privileged_bundle_evidence"))
     if bundle is None:
@@ -203,8 +204,8 @@ def classify_event(event: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "token_ca": token_ca,
-        "launch_t0": event.get("launch_t0") or event.get("timestamp"),
-        "transaction_hash": event.get("transaction_hash"),
+        "launch_t0": t0_value,
+        "transaction_hash": event.get("transaction_hash") or event.get("tx_hash"),
         "privileged_surface": privileged,
         "pre_t0_prep_observed": pre_t0,
         "direct_operator_lineage": direct,
