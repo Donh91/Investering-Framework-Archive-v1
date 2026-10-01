@@ -11,11 +11,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BOUNDARY = ROOT / "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md"
 CONTEXT_MAP = ROOT / "00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json"
+SEL_BINDING = ROOT / "00_ARCHIVE_CONTROL/SEL_SELECTIVE_OPERATIONAL_BINDING_v1.json"
 ROUND3 = ROOT / "06_RESEARCH_LAB/round3_new_information_v1"
 
 REQUIRED_MARKERS = {
     "README.md": ["CROSS_REPO_DATA_BOUNDARY.md", "Donh91/secrets"],
-    "AGENTS.md": ["CROSS_REPO_AGENT_CONTEXT_MAP.json", "Donh91/secrets"],
+    "AGENTS.md": ["CROSS_REPO_AGENT_CONTEXT_MAP.json", "Donh91/secrets", "SEL_SELECTIVE_OPERATIONAL_BINDING_v1.json", "SEL_OPTIONAL_CONTEXT_UNAVAILABLE"],
     "00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md": [
         "CROSS_REPO_DATA_BOUNDARY.md",
         "Donh91/secrets",
@@ -42,7 +43,7 @@ REQUIRED_MARKERS = {
         "Donh91/secrets",
         "PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json",
     ],
-    ".agents/skills/canonical-context-router/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
+    ".agents/skills/canonical-context-router/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md", "SEL_SELECTIVE_OPERATIONAL_BINDING_v1.json", "SEL_OPTIONAL_CONTEXT_UNAVAILABLE"],
     ".agents/skills/archive-governance/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
     ".agents/skills/prospective-evidence-ledger/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
     ".agents/skills/research-lab-red-team/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
@@ -82,7 +83,7 @@ def load_json(path: Path, errors: list[str]) -> dict:
 def main() -> int:
     errors: list[str] = []
 
-    for path in (BOUNDARY, CONTEXT_MAP):
+    for path in (BOUNDARY, CONTEXT_MAP, SEL_BINDING):
         if not path.is_file():
             fail(f"missing canonical cross-repo file: {path.relative_to(ROOT)}", errors)
 
@@ -108,6 +109,78 @@ def main() -> int:
             ):
                 if not route.get(key):
                     fail(f"route {index} missing {key}", errors)
+
+        sel_routes = [route for route in routes if route.get("id") == "SHARED_EXPERIENCE_MEMORY"]
+        if len(sel_routes) != 1:
+            fail("SEL machine route must exist exactly once", errors)
+        else:
+            sel = sel_routes[0]
+            if sel.get("selection_policy") != "SELECTIVE_ONLY":
+                fail("SEL selection policy must remain SELECTIVE_ONLY", errors)
+            if sel.get("global_auto_retrieval") != "HOLD":
+                fail("SEL global auto retrieval must remain HOLD", errors)
+            if sel.get("access_failure_policy") != "CONTINUE_WITH_CURRENT_AUTHORITY_NO_MEMORY":
+                fail("SEL access failure policy drifted", errors)
+            if sel.get("access_failure_state") != "SEL_OPTIONAL_CONTEXT_UNAVAILABLE":
+                fail("SEL access failure state drifted", errors)
+            expected_examples = {
+                "REPEATED_RPC_OR_BACKFILL_FAILURE": "USE_SEL",
+                "CURRENT_BTC_24H_MARKET_REQUEST": "DO_NOT_USE_SEL",
+                "REPEATED_DEPLOYMENT_FAILURE": "USE_SEL",
+                "PORTFOLIO_BUY_SELL_REQUEST": "DO_NOT_USE_SEL",
+                "LOCAL_SELF_CONTAINED_TASK_WITH_CURRENT_SOURCE": "DO_NOT_USE_SEL",
+            }
+            actual_examples = {
+                row.get("case_id"): row.get("expected")
+                for row in sel.get("decision_examples", [])
+                if isinstance(row, dict)
+            }
+            if actual_examples != expected_examples:
+                fail("SEL deterministic route examples drifted", errors)
+            forbidden = set(sel.get("forbidden_actions", []))
+            for item in (
+                "AUTO_INJECT_SEL_EVERY_TASK",
+                "USE_SEL_FOR_CURRENT_MARKET_STATE",
+                "USE_SEL_FOR_PORTFOLIO_ACTION",
+                "TREAT_MEMORY_AS_CANONICAL",
+                "BLOCK_TASK_SOLELY_BECAUSE_SEL_IS_UNAVAILABLE",
+            ):
+                if item not in forbidden:
+                    fail(f"SEL route missing forbidden action: {item}", errors)
+
+        global_forbidden = set(data.get("global_forbidden_actions", []))
+        for item in ("TREAT_SEL_MEMORY_AS_CANONICAL", "AUTO_INJECT_SEL_EVERY_TASK"):
+            if item not in global_forbidden:
+                fail(f"global SEL guard missing: {item}", errors)
+
+    sel_binding = load_json(SEL_BINDING, errors)
+    if sel_binding.get("contract") != "SEL_PUBLIC_BINDING_v1":
+        fail("unexpected SEL public binding contract", errors)
+    if sel_binding.get("status") != "BOUND_TO_PRIVATE_SELECTIVE_OPERATIONAL":
+        fail("SEL public binding is not operationally bound", errors)
+    if sel_binding.get("authority") != "DISCOVERY_AND_ROUTING_ONLY":
+        fail("SEL public binding authority drifted", errors)
+    if sel_binding.get("restricted_repository") not in (None, "Donh91/secrets"):
+        fail("SEL public binding restricted repository drifted", errors)
+    if sel_binding.get("restricted_owner_repository") != "Donh91/secrets":
+        fail("SEL public binding owner drifted", errors)
+    if sel_binding.get("restricted_merge_commit") != "4e1f4097e1754312810a1d810bd0681279d1670b":
+        fail("SEL private immutable merge binding drifted", errors)
+    if sel_binding.get("restricted_merge_verified_reachable_from_main") is not True:
+        fail("SEL private merge reachability not verified", errors)
+    routing = sel_binding.get("routing", {})
+    if routing.get("mode") != "SELECTIVE_ONLY":
+        fail("SEL public binding routing mode drifted", errors)
+    if routing.get("global_auto_retrieval") != "HOLD":
+        fail("SEL public binding must keep global auto retrieval on HOLD", errors)
+    if routing.get("access_failure_policy") != "CONTINUE_WITH_CURRENT_AUTHORITY_NO_MEMORY":
+        fail("SEL public binding optional access policy drifted", errors)
+    if sel_binding.get("contains_private_memory_payloads") is not False:
+        fail("SEL public binding must not contain private memory payloads", errors)
+    if sel_binding.get("contains_restricted_provider_values") is not False:
+        fail("SEL public binding must not contain restricted provider values", errors)
+    if sel_binding.get("contains_credentials") is not False:
+        fail("SEL public binding must not contain credentials", errors)
 
     for relative, markers in REQUIRED_MARKERS.items():
         path = ROOT / relative
