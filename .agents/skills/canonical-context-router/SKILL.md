@@ -48,6 +48,45 @@ prompts and agent workflows -> 07_PROMPTS_AND_AGENTS
 external evidence -> 08_SOURCE_MATERIAL
 ```
 
+### Selective Shared Experience Layer route
+
+After current authority is resolved, evaluate whether reusable restricted memory would materially reduce repeated rediscovery.
+
+Route to `restricted:.agents/skills/shared-experience-memory/SKILL.md` only for:
+
+```text
+REPEATED_FAILURE_OR_FAILED_APPROACH
+NONLOCAL_ENVIRONMENT_CONSTRAINT
+REUSABLE_IMPLEMENTATION_PROCEDURE
+BOUNDED_HANDOVER_STATE
+HISTORICALLY_EXPENSIVE_REDISCOVERY
+```
+
+Do not route SEL for:
+
+```text
+CURRENT_MARKET_FORECAST_OR_STATE
+PORTFOLIO_BUY_SELL_OR_POSITION_ACTION
+LOCAL_SELF_CONTAINED_TASK_WITH_CURRENT_SOURCE
+UNVERIFIED_INVESTMENT_HYPOTHESIS
+```
+
+Required order:
+
+```text
+current authority
+-> SEL relevance decision
+-> smallest relevant search only when eligible
+-> lineage / invalidator / expiry / supersession verification
+-> task execution
+```
+
+Global automatic memory retrieval remains `HOLD`. A lexical match alone is insufficient. SEL never becomes canonical authority and never supplies a market or portfolio action.
+
+If a recalled memory materially affected the task and the result later becomes observable, route one evidence-bound outcome back to the restricted SEL outcome loop. If memory did not materially affect the work, do not manufacture an outcome.
+
+The public activation receipt is `00_ARCHIVE_CONTROL/SEL_SELECTIVE_OPERATIONAL_RECEIPT_2026-10-01.json`. The restricted operational status named by that receipt must be compatible before SEL is used.
+
 ### Current production data route
 
 When `current_state_required: YES` for Master Monday, Cycle Navigator, the CN website, short-horizon navigation, or general market-state work, route in this order:
