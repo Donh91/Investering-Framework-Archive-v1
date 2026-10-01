@@ -48,7 +48,9 @@
     "REOPEN_OR_RESCORE_ROUND1_OR_ROUND2",
     "PROMOTE_HISTORICAL_FINDING_ABOVE_FORWARD_TEST",
     "USE_DONH91_CYCLE_NAVIGATOR_DASH_AS_CURRENT_ROUTE",
-    "ASSUME_ALL_DATA_EXISTS_IN_ONE_REPOSITORY"
+    "ASSUME_ALL_DATA_EXISTS_IN_ONE_REPOSITORY",
+    "TREAT_SEL_MEMORY_AS_CANONICAL",
+    "AUTO_INJECT_SEL_EVERY_TASK"
   ],
   "round3_firewall": {
     "mode": "PROSPECTIVE_COLLECTION_ONLY",
@@ -76,6 +78,29 @@
       "required_canonical_files": ["control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json", "restricted:GOVERNANCE/PRIVATE_DATA_BOUNDARY.md"],
       "private_data_authority": "restricted boundary and exact binding",
       "forbidden_actions": ["ROUTE_FROM_CONVERSATION_MEMORY", "TREAT_ACCESS_FAILURE_AS_NEGATIVE_EVIDENCE"]
+    },
+    {
+      "id": "SHARED_EXPERIENCE_MEMORY",
+      "kind": "PRIVATE_OPTIONAL_SUPPORT_SKILL",
+      "match": ["repeated implementation failure", "previous failed approach", "environment constraint", "reusable procedure", "bounded handover state", "expensive rediscovery", "same failure again", "shared experience memory", "SEL"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets when SEL access is authorized and available"],
+      "required_canonical_files": ["control:00_ARCHIVE_CONTROL/SEL_SELECTIVE_OPERATIONAL_BINDING_v1.json", "control:00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json", "restricted:GOVERNANCE/SEL_OPERATIONAL_STATUS_v1.json", "restricted:.agents/skills/shared-experience-memory/SKILL.md"],
+      "private_data_authority": "immutable restricted merge and artifact bindings in 00_ARCHIVE_CONTROL/SEL_SELECTIVE_OPERATIONAL_BINDING_v1.json; SEL remains non-canonical support",
+      "selection_policy": "SELECTIVE_ONLY",
+      "global_auto_retrieval": "HOLD",
+      "positive_intent_classes": ["REPEATED_FAILURE_OR_FAILED_APPROACH", "NONLOCAL_ENVIRONMENT_CONSTRAINT", "REUSABLE_IMPLEMENTATION_PROCEDURE", "BOUNDED_HANDOVER_STATE", "HISTORICALLY_EXPENSIVE_REDISCOVERY"],
+      "negative_intent_classes": ["CURRENT_MARKET_FORECAST_OR_STATE", "PORTFOLIO_BUY_SELL_OR_POSITION_ACTION", "LOCAL_SELF_CONTAINED_TASK_WITH_CURRENT_SOURCE", "UNVERIFIED_INVESTMENT_HYPOTHESIS", "CREDENTIAL_OR_SECRET_STORAGE"],
+      "decision_examples": [
+        {"case_id": "REPEATED_RPC_OR_BACKFILL_FAILURE", "expected": "USE_SEL"},
+        {"case_id": "CURRENT_BTC_24H_MARKET_REQUEST", "expected": "DO_NOT_USE_SEL"},
+        {"case_id": "REPEATED_DEPLOYMENT_FAILURE", "expected": "USE_SEL"},
+        {"case_id": "PORTFOLIO_BUY_SELL_REQUEST", "expected": "DO_NOT_USE_SEL"},
+        {"case_id": "LOCAL_SELF_CONTAINED_TASK_WITH_CURRENT_SOURCE", "expected": "DO_NOT_USE_SEL"}
+      ],
+      "access_failure_policy": "CONTINUE_WITH_CURRENT_AUTHORITY_NO_MEMORY",
+      "access_failure_state": "SEL_OPTIONAL_CONTEXT_UNAVAILABLE",
+      "post_task_outcome_policy": "IF_SEL_MATERIALLY_AFFECTED_WORK_AND_RESULT_BECOMES_OBSERVABLE_APPEND_EXACTLY_ONE_OUTCOME",
+      "forbidden_actions": ["AUTO_INJECT_SEL_EVERY_TASK", "USE_SEL_FOR_CURRENT_MARKET_STATE", "USE_SEL_FOR_PORTFOLIO_ACTION", "TREAT_MEMORY_AS_CANONICAL", "COUNT_MODEL_RECALL_AS_INDEPENDENT_CONFIRMATION", "RECALL_WITHOUT_CURRENT_AUTHORITY", "BULK_LOAD_MEMORY_STORE", "BLOCK_TASK_SOLELY_BECAUSE_SEL_IS_UNAVAILABLE"]
     },
     {
       "id": "ARCHIVE_GOVERNANCE",
