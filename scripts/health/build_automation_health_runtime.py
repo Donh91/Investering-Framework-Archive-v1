@@ -491,8 +491,36 @@ def classify(row: dict[str, Any], now: Any) -> tuple[str, list[str]]:
     if retired_inventory_only:
         findings_set.discard("RETIRED_WORKFLOW_LOCAL_FILE_PRESENT")
         observations.add("RETIRED_WORKFLOW_LOCAL_FILE_PRESENT")
-        if status == "AMBER" and not findings_set:
-            status = "GREEN"
+
+    if row.get("lifecycle_state") == "RETIRED":
+        for finding in (
+            "LATEST_RUN_CANCELLED",
+            "LATEST_SCHEDULED_RUN_CANCELLED",
+            "REPEATED_CONSECUTIVE_CANCELLATIONS",
+        ):
+            if finding in findings_set:
+                findings_set.discard(finding)
+                observations.add(finding)
+
+    manual_recovery_only = (
+        not row.get("scheduled")
+        and not row.get("writes_main")
+        and findings_set == {"RECOVERING_AFTER_RECENT_FAILURES"}
+    )
+    if manual_recovery_only:
+        findings_set.discard("RECOVERING_AFTER_RECENT_FAILURES")
+        observations.add("RECOVERING_AFTER_RECENT_FAILURES")
+
+    semantic_warning = any(
+        finding in findings_set
+        for finding in (
+            "LATEST_RUN_CANCELLED",
+            "LATEST_SCHEDULED_RUN_CANCELLED",
+            "REPEATED_CONSECUTIVE_CANCELLATIONS",
+        )
+    )
+    if status == "AMBER" and not findings_set:
+        status = "GREEN"
 
     if row.get("write_target_class") == "DYNAMIC_TARGET_UNKNOWN":
         findings_set.add("WRITE_TARGET_UNKNOWN")
