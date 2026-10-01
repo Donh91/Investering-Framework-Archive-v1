@@ -15,7 +15,7 @@ ROUND3 = ROOT / "06_RESEARCH_LAB/round3_new_information_v1"
 
 REQUIRED_MARKERS = {
     "README.md": ["CROSS_REPO_DATA_BOUNDARY.md", "Donh91/secrets"],
-    "AGENTS.md": ["CROSS_REPO_AGENT_CONTEXT_MAP.json", "Donh91/secrets"],
+    "AGENTS.md": ["CROSS_REPO_AGENT_CONTEXT_MAP.json", "Donh91/secrets", "Shared Experience Layer selective support", "Global automatic retrieval remains `HOLD`"],
     "00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md": [
         "CROSS_REPO_DATA_BOUNDARY.md",
         "Donh91/secrets",
@@ -42,7 +42,7 @@ REQUIRED_MARKERS = {
         "Donh91/secrets",
         "PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json",
     ],
-    ".agents/skills/canonical-context-router/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
+    ".agents/skills/canonical-context-router/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md", "Selective Shared Experience Layer route", "Global automatic memory retrieval remains `HOLD`"],
     ".agents/skills/archive-governance/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
     ".agents/skills/prospective-evidence-ledger/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
     ".agents/skills/research-lab-red-team/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
@@ -108,6 +108,59 @@ def main() -> int:
             ):
                 if not route.get(key):
                     fail(f"route {index} missing {key}", errors)
+
+        sel_routes = [route for route in routes if route.get("id") == "SHARED_EXPERIENCE_MEMORY"]
+        if len(sel_routes) != 1:
+            fail("SEL machine route must exist exactly once", errors)
+        else:
+            sel = sel_routes[0]
+            if sel.get("selection_policy") != "SELECTIVE_ONLY":
+                fail("SEL selection policy must remain SELECTIVE_ONLY", errors)
+            if sel.get("global_auto_retrieval") != "HOLD":
+                fail("SEL global auto retrieval must remain HOLD", errors)
+            expected_examples = {
+                "REPEATED_RPC_OR_BACKFILL_FAILURE": "USE_SEL",
+                "CURRENT_BTC_24H_MARKET_REQUEST": "DO_NOT_USE_SEL",
+                "REPEATED_DEPLOYMENT_FAILURE": "USE_SEL",
+                "PORTFOLIO_BUY_SELL_REQUEST": "DO_NOT_USE_SEL",
+                "LOCAL_SELF_CONTAINED_TASK_WITH_CURRENT_SOURCE": "DO_NOT_USE_SEL",
+            }
+            actual_examples = {
+                row.get("case_id"): row.get("expected")
+                for row in sel.get("decision_examples", [])
+                if isinstance(row, dict)
+            }
+            if actual_examples != expected_examples:
+                fail("SEL deterministic routing examples drifted", errors)
+            if sel.get("post_task_outcome_policy") != "IF_SEL_MATERIALLY_AFFECTED_WORK_AND_RESULT_BECOMES_OBSERVABLE_APPEND_EXACTLY_ONE_OUTCOME_IN_RESTRICTED_PLANE":
+                fail("SEL post-task outcome hook drifted", errors)
+            forbidden = set(sel.get("forbidden_actions", []))
+            for item in (
+                "AUTO_INJECT_SEL_EVERY_TASK",
+                "USE_SEL_FOR_CURRENT_MARKET_STATE",
+                "USE_SEL_FOR_PORTFOLIO_ACTION",
+                "TREAT_MEMORY_AS_CANONICAL",
+            ):
+                if item not in forbidden:
+                    fail(f"SEL route missing forbidden action: {item}", errors)
+
+        sel_receipt = load_json(ROOT / "00_ARCHIVE_CONTROL/SEL_SELECTIVE_OPERATIONAL_RECEIPT_2026-10-01.json", errors)
+        if sel_receipt.get("contract") != "SEL_SELECTIVE_OPERATIONAL_RECEIPT_v1":
+            fail("unexpected SEL selective operational receipt contract", errors)
+        if sel_receipt.get("status") != "PASS":
+            fail("SEL selective operational receipt is not PASS", errors)
+        binding = sel_receipt.get("restricted_plane_binding", {})
+        if binding.get("merge_commit") != "bc2b3a793953664aa87eb8d3d8a3ade3e0909c7c":
+            fail("SEL restricted closure binding drifted", errors)
+        if binding.get("expected_status") != "SEL_V1_SELECTIVE_OPERATIONAL":
+            fail("SEL restricted expected status drifted", errors)
+        routing = sel_receipt.get("routing_decision", {})
+        if routing.get("mode") != "SELECTIVE_ONLY" or routing.get("global_auto_retrieval") != "HOLD":
+            fail("SEL public routing receipt no longer preserves selective HOLD", errors)
+        limits = sel_receipt.get("authority_limits", {})
+        for key in ("market", "portfolio", "canonical_framework", "automatic_rule_promotion"):
+            if limits.get(key) != "NONE":
+                fail(f"SEL public receipt authority drift: {key}", errors)
 
     for relative, markers in REQUIRED_MARKERS.items():
         path = ROOT / relative
