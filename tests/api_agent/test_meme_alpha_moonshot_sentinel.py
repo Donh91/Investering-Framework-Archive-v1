@@ -76,25 +76,123 @@ class SentinelTests(unittest.TestCase):
         self.assertEqual(triage["alert_state"], "SILENT")
         self.assertIn("INSUFFICIENT_SUCCESSFUL_SELL_EVIDENCE", triage["execution_gate_reasons"])
 
-    def test_gamble_alert_requires_convergence_no_fatal_and_convexity(self) -> None:
-        triage = {"execution_gate_pass": True, "candidate_id": "eth:0x1", "event": {"token_ca": "0x1", "symbol": "X"}}
+    def test_gamble_alert_requires_convergence_no_fatal_convexity_and_deterministic_non_m_evidence(self) -> None:
+        token = "0x" + "1" * 40
+        triage = {"execution_gate_pass": True, "candidate_id": f"eth:{token}", "event": {"token_ca": token, "symbol": "X"}}
         assessment = {
             "archetype": "PRODUCT_STEALTH", "M": {"state": "PASS"}, "S": {"state": "PASS"}, "P": {"state": "PASS"},
             "W": {"state": "UNKNOWN"}, "N": {"state": "UNKNOWN"}, "fatal_risks": [], "remaining_convexity_multiple": 25,
             "hundred_x_feasibility": "REMOTE", "recommendation": "GAMBLE_CANDIDATE", "invalidate_if": [], "summary": "x",
         }
-        self.assertEqual(s.final_alert_decision(triage, assessment, CONFIG)["state"], "MOONSHOT_GAMBLE_ALERT")
+        without = s.final_alert_decision(triage, assessment, CONFIG)
+        self.assertEqual(without["state"], "MOONSHOT_WATCH")
+        self.assertFalse(without["deterministic_evidence_gate_pass"])
+        self.assertIn("DETERMINISTIC_NON_M_EVIDENCE_MISSING", without["deterministic_evidence_reasons"])
+        evidence = {
+            "contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1",
+            "status": "PASS",
+            "candidate_id": f"eth:{token}",
+            "token_ca": token,
+            "llm_generated": False,
+            "receipts": [{
+                "family": "P",
+                "state": "PASS",
+                "deterministic": True,
+                "llm_generated": False,
+                "source_contract": "AUTHENTICATED_PRODUCT_PROVENANCE_RECEIPT_v1",
+                "evidence_refs": ["receipt:product:fixture"],
+            }],
+        }
+        allowed = s.final_alert_decision(triage, assessment, CONFIG, deterministic_evidence=evidence)
+        self.assertEqual(allowed["state"], "MOONSHOT_GAMBLE_ALERT")
+        self.assertEqual(allowed["llm_judged_families"], ["M", "P", "S"])
+        self.assertEqual(allowed["deterministic_verified_families"], ["P"])
+        self.assertEqual(allowed["deterministic_confirmed_families"], ["P"])
         assessment["fatal_risks"] = ["sellability conflict"]
-        self.assertEqual(s.final_alert_decision(triage, assessment, CONFIG)["state"], "MOONSHOT_WATCH")
+        self.assertEqual(s.final_alert_decision(triage, assessment, CONFIG, deterministic_evidence=evidence)["state"], "MOONSHOT_WATCH")
 
     def test_daily_cap_blocks_gamble_alert(self) -> None:
-        triage = {"execution_gate_pass": True, "candidate_id": "eth:0x1", "event": {"token_ca": "0x1", "symbol": "X"}}
+        token = "0x" + "2" * 40
+        triage = {"execution_gate_pass": True, "candidate_id": f"eth:{token}", "event": {"token_ca": token, "symbol": "X"}}
         assessment = {
             "archetype": "PRODUCT_STEALTH", "M": {"state": "PASS"}, "S": {"state": "PASS"}, "P": {"state": "PASS"},
             "W": {"state": "UNKNOWN"}, "N": {"state": "UNKNOWN"}, "fatal_risks": [], "remaining_convexity_multiple": 25,
             "hundred_x_feasibility": "REMOTE", "recommendation": "GAMBLE_CANDIDATE", "invalidate_if": [], "summary": "x",
         }
-        self.assertNotEqual(s.final_alert_decision(triage, assessment, CONFIG, alerts_last_24h=3)["state"], "MOONSHOT_GAMBLE_ALERT")
+        evidence = {
+            "contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1", "status": "PASS",
+            "candidate_id": f"eth:{token}", "token_ca": token, "llm_generated": False,
+            "receipts": [{"family": "S", "state": "PASS", "deterministic": True, "llm_generated": False,
+                          "source_contract": "INDEPENDENT_SOCIAL_ROOT_RECEIPT_v1", "evidence_refs": ["fixture:social"]}],
+        }
+        self.assertNotEqual(s.final_alert_decision(triage, assessment, CONFIG, alerts_last_24h=3, deterministic_evidence=evidence)["state"], "MOONSHOT_GAMBLE_ALERT")
+
+
+    def test_fabricated_llm_families_cannot_create_gamble_alert(self) -> None:
+        token = "0x" + "3" * 40
+        triage = {"execution_gate_pass": True, "candidate_id": f"eth:{token}", "event": {"token_ca": token, "symbol": "X"}}
+        assessment = {
+            "archetype": "CABAL_WALLET_PROPAGATION",
+            "M": {"state": "PASS"}, "W": {"state": "PASS"}, "S": {"state": "PASS"}, "P": {"state": "PASS"}, "N": {"state": "PASS"},
+            "fatal_risks": [], "remaining_convexity_multiple": 50, "hundred_x_feasibility": "PLAUSIBLE",
+            "recommendation": "GAMBLE_CANDIDATE", "invalidate_if": [], "summary": "model says all families pass",
+        }
+        result = s.final_alert_decision(triage, assessment, CONFIG)
+        self.assertEqual(result["state"], "MOONSHOT_WATCH")
+        self.assertFalse(result["deterministic_evidence_gate_pass"])
+        self.assertNotIn("passed_families", result)
+        self.assertEqual(result["llm_judged_families"], ["M", "N", "P", "S", "W"])
+
+    def test_deterministic_evidence_must_match_candidate_and_be_non_llm_non_m(self) -> None:
+        token = "0x" + "4" * 40
+        triage = {"execution_gate_pass": True, "candidate_id": f"eth:{token}", "event": {"token_ca": token, "symbol": "X"}}
+        assessment = {
+            "archetype": "PRODUCT_STEALTH", "M": {"state": "PASS"}, "W": {"state": "PASS"}, "S": {"state": "PASS"},
+            "P": {"state": "PASS"}, "N": {"state": "UNKNOWN"}, "fatal_risks": [], "remaining_convexity_multiple": 20,
+            "hundred_x_feasibility": "REMOTE", "recommendation": "GAMBLE_CANDIDATE", "invalidate_if": [], "summary": "x",
+        }
+        cases = [
+            {
+                "contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1", "status": "PASS",
+                "candidate_id": "eth:wrong", "token_ca": token, "llm_generated": False,
+                "receipts": [{"family": "W", "state": "PASS", "deterministic": True, "llm_generated": False, "source_contract": "WALLET_v1", "evidence_refs": ["x"]}],
+            },
+            {
+                "contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1", "status": "PASS",
+                "candidate_id": f"eth:{token}", "token_ca": token, "llm_generated": True,
+                "receipts": [{"family": "W", "state": "PASS", "deterministic": True, "llm_generated": False, "source_contract": "WALLET_v1", "evidence_refs": ["x"]}],
+            },
+            {
+                "contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1", "status": "PASS",
+                "candidate_id": f"eth:{token}", "token_ca": token, "llm_generated": False,
+                "receipts": [{"family": "M", "state": "PASS", "deterministic": True, "llm_generated": False, "source_contract": "MICRO_v1", "evidence_refs": ["x"]}],
+            },
+        ]
+        for evidence in cases:
+            with self.subTest(evidence=evidence):
+                result = s.final_alert_decision(triage, assessment, CONFIG, deterministic_evidence=evidence)
+                self.assertNotEqual(result["state"], "MOONSHOT_GAMBLE_ALERT")
+                self.assertFalse(result["deterministic_evidence_gate_pass"])
+
+    def test_deterministic_family_cannot_upgrade_llm_failed_family(self) -> None:
+        token = "0x" + "5" * 40
+        triage = {"execution_gate_pass": True, "candidate_id": f"eth:{token}", "event": {"token_ca": token, "symbol": "X"}}
+        assessment = {
+            "archetype": "PRODUCT_STEALTH", "M": {"state": "PASS"}, "W": {"state": "FAIL"}, "S": {"state": "PASS"},
+            "P": {"state": "PASS"}, "N": {"state": "UNKNOWN"}, "fatal_risks": [], "remaining_convexity_multiple": 20,
+            "hundred_x_feasibility": "REMOTE", "recommendation": "GAMBLE_CANDIDATE", "invalidate_if": [], "summary": "x",
+        }
+        evidence = {
+            "contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1", "status": "PASS",
+            "candidate_id": f"eth:{token}", "token_ca": token, "llm_generated": False,
+            "receipts": [{"family": "W", "state": "PASS", "deterministic": True, "llm_generated": False,
+                          "source_contract": "WALLET_v1", "evidence_refs": ["fixture:wallet"]}],
+        }
+        result = s.final_alert_decision(triage, assessment, CONFIG, deterministic_evidence=evidence)
+        self.assertEqual(result["state"], "MOONSHOT_WATCH")
+        self.assertEqual(result["deterministic_verified_families"], ["W"])
+        self.assertEqual(result["deterministic_confirmed_families"], [])
+        self.assertFalse(result["deterministic_evidence_gate_pass"])
 
     def test_challenger_mutations_are_bounded_and_preserve_risk(self) -> None:
         champion = copy.deepcopy(CONFIG)
