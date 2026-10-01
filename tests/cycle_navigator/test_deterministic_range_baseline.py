@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, score_baseline
+from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, previous_iso_week, score_baseline
 
 
 def weekly_pack(year: int, week: int, btc: tuple[float, float, float, float], eth: tuple[float, float, float, float]) -> dict:
@@ -76,6 +76,24 @@ class DeterministicRangeBaselineTests(unittest.TestCase):
             out = build_baseline(root, target_year=2026, target_week=39)
             self.assertNotIn("2026-W39", out["source_weeks"])
             self.assertLess(out["assets"]["BTC"]["high"], 200)
+
+    def test_missing_immediate_prior_week_disables_range_instead_of_stale_anchor(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.fixture_repo(root)
+            # Target W40 would require W39 as its immediate anchor, but W39 is absent.
+            out = build_baseline(root, target_year=2026, target_week=40)
+            self.assertEqual(out["status"], "UNAVAILABLE")
+            self.assertFalse(out["anchor_contiguous"])
+            self.assertEqual(out["expected_anchor_iso_year"], 2026)
+            self.assertEqual(out["expected_anchor_iso_week"], 39)
+            self.assertEqual(out["assets"]["BTC"]["reason"], "IMMEDIATE_PRIOR_WEEK_MISSING")
+            self.assertEqual(out["assets"]["ETH"]["reason"], "IMMEDIATE_PRIOR_WEEK_MISSING")
+            self.assertNotEqual(out["assets"]["BTC"].get("anchor_price"), 120)
+
+    def test_previous_iso_week_handles_year_boundary(self):
+        self.assertEqual(previous_iso_week(2027, 1), (2026, 53))
+        self.assertEqual(previous_iso_week(2026, 1), (2025, 52))
 
     def test_mismatched_actual_week_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:
