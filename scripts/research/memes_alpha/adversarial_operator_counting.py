@@ -243,6 +243,13 @@ def count_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
     benign = [r for r in rows if r["classification"] == "FALSE_POSITIVE_INFRA"]
     infra_unknown = [r for r in rows if r["classification"] == "UNKNOWN_INFRA"]
     decode_unknown = [r for r in rows if r["privileged_surface"].get("state") == "UNKNOWN"]
+    qualification_unknown = [
+        r for r in rows
+        if any(
+            reason in {"PRE_T0_PREP_UNKNOWN", "PRIVILEGED_SURFACE_UNKNOWN"}
+            for reason in r.get("unresolved", [])
+        )
+    ]
 
     raw_rate = len(raw) / days
     q1_rate = len(q1) / days
