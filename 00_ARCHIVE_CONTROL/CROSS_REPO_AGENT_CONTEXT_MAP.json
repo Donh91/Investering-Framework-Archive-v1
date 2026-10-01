@@ -60,6 +60,28 @@
   },
   "routes": [
     {
+      "id": "SHARED_EXPERIENCE_MEMORY",
+      "kind": "RESTRICTED_SUPPORT_SKILL",
+      "match": ["repeated implementation failure", "previous failed approach", "environment constraint", "reusable procedure", "bounded handover state", "expensive rediscovery", "same failure again", "shared experience memory", "SEL"],
+      "required_repositories": ["control_plane", "restricted_data_plane"],
+      "required_canonical_files": ["control:00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json", "control:00_ARCHIVE_CONTROL/SEL_SELECTIVE_OPERATIONAL_RECEIPT_2026-10-01.json", "restricted:AGENTS.md", "restricted:GOVERNANCE/SEL_OPERATIONAL_STATUS_v1.json", "restricted:.agents/skills/shared-experience-memory/SKILL.md"],
+      "private_data_authority": "restricted SEL is non-canonical reusable evidence; current control-plane authority and current source evidence always win",
+      "selection_policy": "SELECTIVE_ONLY",
+      "global_auto_retrieval": "HOLD",
+      "pre_task_order": ["RESOLVE_CURRENT_AUTHORITY", "CHECK_SEL_TASK_RELEVANCE", "SEARCH_SMALLEST_RELEVANT_QUERY_ONLY_IF_ELIGIBLE", "VERIFY_LINEAGE_INVALIDATORS_EXPIRY_SUPERSESSION", "EXECUTE_TASK"],
+      "positive_intent_classes": ["REPEATED_FAILURE_OR_FAILED_APPROACH", "NONLOCAL_ENVIRONMENT_CONSTRAINT", "REUSABLE_IMPLEMENTATION_PROCEDURE", "BOUNDED_HANDOVER_STATE", "HISTORICALLY_EXPENSIVE_REDISCOVERY"],
+      "negative_intent_classes": ["CURRENT_MARKET_FORECAST_OR_STATE", "PORTFOLIO_BUY_SELL_OR_POSITION_ACTION", "LOCAL_SELF_CONTAINED_TASK_WITH_CURRENT_SOURCE", "UNVERIFIED_INVESTMENT_HYPOTHESIS"],
+      "decision_examples": [
+        {"case_id": "REPEATED_RPC_OR_BACKFILL_FAILURE", "expected": "USE_SEL"},
+        {"case_id": "CURRENT_BTC_24H_MARKET_REQUEST", "expected": "DO_NOT_USE_SEL"},
+        {"case_id": "REPEATED_DEPLOYMENT_FAILURE", "expected": "USE_SEL"},
+        {"case_id": "PORTFOLIO_BUY_SELL_REQUEST", "expected": "DO_NOT_USE_SEL"},
+        {"case_id": "LOCAL_SELF_CONTAINED_TASK_WITH_CURRENT_SOURCE", "expected": "DO_NOT_USE_SEL"}
+      ],
+      "post_task_outcome_policy": "IF_SEL_MATERIALLY_AFFECTED_WORK_AND_RESULT_BECOMES_OBSERVABLE_APPEND_EXACTLY_ONE_OUTCOME_IN_RESTRICTED_PLANE",
+      "forbidden_actions": ["AUTO_INJECT_SEL_EVERY_TASK", "USE_SEL_FOR_CURRENT_MARKET_STATE", "USE_SEL_FOR_PORTFOLIO_ACTION", "TREAT_MEMORY_AS_CANONICAL", "COUNT_MODEL_RECALL_AS_INDEPENDENT_CONFIRMATION", "RECALL_WITHOUT_CURRENT_AUTHORITY"]
+    },
+    {
       "id": "ROOT_README_AND_ALL_NEW_SESSIONS",
       "kind": "README_AGENT_ENTRYPOINT",
       "match": ["README.md", "ChatGPT Work", "Claude", "Cowork", "Codex", "new agent session"],
