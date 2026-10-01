@@ -249,7 +249,9 @@ def count_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
     q2_rate = len(q2) / days
     benign_share = (len(benign) / len(raw)) if raw else 0.0
 
-    if infra_unknown:
+    if qualification_unknown:
+        stage1_gate = "INCOMPLETE_SOURCE_EVIDENCE"
+    elif infra_unknown:
         stage1_gate = "INCOMPLETE_UNKNOWN_INFRA"
     elif benign_share >= 0.5 and raw:
         stage1_gate = "INFRA_EXCLUSION_INADEQUATE"
@@ -278,6 +280,7 @@ def count_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
             "benign_infra_false_positives": len(benign),
             "infra_unknown_raw_fires": len(infra_unknown),
             "privileged_surface_unknown_rows": len(decode_unknown),
+            "qualification_unknown_rows": len(qualification_unknown),
             "known_seed_overlap": sum(1 for r in q1 if r["known_seed"]),
             "ordinary_control_overlap": sum(1 for r in q1 if r["ordinary_control"]),
         },
@@ -296,6 +299,7 @@ def count_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
         "source_health": {
             "rows_total": len(rows),
             "rows_with_unknown_privileged_surface": len(decode_unknown),
+            "rows_with_unknown_qualification_evidence": len(qualification_unknown),
             "raw_fires_with_unknown_infra": len(infra_unknown),
             "missing_is_negative_evidence": False,
         },
