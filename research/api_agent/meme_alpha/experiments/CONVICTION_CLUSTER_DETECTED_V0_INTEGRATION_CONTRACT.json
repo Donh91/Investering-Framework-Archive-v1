@@ -1,0 +1,87 @@
+{
+  "contract": "CONVICTION_CLUSTER_DETECTED_V0_INTEGRATION_CONTRACT",
+  "version": "0.1.0",
+  "status": "SHADOW_ONLY_PREREGISTERED",
+  "owner_issue": 1419,
+  "parent_engine": "MEME_ALPHA / CLEAN_G3",
+  "purpose": "Attach denominator-aware conviction-cluster enrichment to already discovered exact token candidates without creating a parallel scanner or trading authority.",
+  "upstream": {
+    "discovery_owners": [
+      "MOONSHOT_SENTINEL_CONTRACT_v1",
+      "PROJECT_CA_INTELLIGENCE_BRIDGE",
+      "MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1"
+    ],
+    "wallet_owner": "PROSPECTIVE_CLEAN_G3_BUYER_GRAPH_SPEC_v1",
+    "exact_identity_required": true,
+    "parallel_discovery_scanner": false
+  },
+  "reuse": {
+    "buyer_graph_contract": "MEME_ALPHA_CURRENT_TOKEN_BUYER_GRAPH_v1",
+    "wallet_quality_function": "compute_asof_wallet_quality",
+    "entity_adjustment_function": "adjust_wallet_entities",
+    "strong_controller_collapses_identity": true,
+    "same_funder_collapses_identity": false,
+    "historical_outcomes_after_candidate_cutoff_forbidden": true
+  },
+  "event": {
+    "name": "CONVICTION_CLUSTER_DETECTED_V0",
+    "min_research_qualified_independent_clusters": 2,
+    "thresholds_are_champion_rules": false,
+    "event_freeze_before_outcome": true,
+    "unknown_is_pass": false,
+    "required_states": [
+      "provenance_state",
+      "funding_independence_state",
+      "liquidity_state",
+      "sellability_state"
+    ]
+  },
+  "frozen_fields": [
+    "event_id",
+    "observed_at",
+    "token_ca",
+    "chain",
+    "launch_age",
+    "cluster_count",
+    "qualified_cluster_ids_hash",
+    "cluster_tiers_at_freeze",
+    "first_entry_ts_by_cluster",
+    "capital_deployed_usd_by_cluster",
+    "repeat_buy_count_by_cluster",
+    "retained_exposure_state",
+    "beneficial_control_confidence",
+    "funding_independence_state",
+    "provenance_state",
+    "liquidity_state",
+    "sellability_state",
+    "catalyst_state",
+    "social_propagation_state",
+    "denominator_refs",
+    "source_health"
+  ],
+  "outcome_windows": [
+    "24h",
+    "72h",
+    "7d"
+  ],
+  "controls": [
+    "matched_alpha_lab_candidates_without_cluster_convergence",
+    "single_qualified_cluster",
+    "venue_time_matched_base_rate"
+  ],
+  "authority": {
+    "buy_sell": false,
+    "position_size": false,
+    "portfolio_action": false,
+    "user_alert": false,
+    "champion_modification": false,
+    "automatic_trading": false
+  },
+  "promotion_gate": {
+    "prospective_only": true,
+    "historical_rows_credit": 0,
+    "requires_incremental_value_vs_controls": true,
+    "requires_denominator_quality": true,
+    "requires_owner_ratification": true
+  }
+}
