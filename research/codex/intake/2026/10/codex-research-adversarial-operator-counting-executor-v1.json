@@ -1,0 +1,101 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-adversarial-operator-counting-executor-v1",
+  "submitted_at_utc": "2026-10-01T15:35:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Alpha Lab adversarial operator anticipation / counting gate",
+    "source_paths": [
+      "06_RESEARCH_LAB/alpha_lab/2026-10-01__adversarial-operator-claude-bitquery-counting-gate-v1.md",
+      "research/api_agent/meme_alpha/experiments/ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1.json",
+      "06_RESEARCH_LAB/alpha_lab/2026-10-01__adversarial-operator-identity-runtime-delta-v1.md",
+      "scripts/api_agent/meme_alpha_blockscout.py",
+      "research/codex/intake/2026/09/codex-research-alpha-adversarial-runtime-wiring-v1.json"
+    ]
+  },
+  "title": "Execute frozen adversarial-operator Stage A / Stage B counting gate",
+  "objective": "Implement the smallest deterministic SHADOW-ONLY counting executor for the already-frozen ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1 counting gate. Reuse existing Robinhood/Pons launch-event evidence, raw RPC transaction calldata and existing Blockscout/RPC bindings. Stage A must be cheap and broad, decode launch-time privileged/exemption surface without outcome lookup where possible, and never claim operator identity. Stage B may run only on Stage-A qualified rows and may add funding ancestry / money-lineage evidence after explicit benign-infrastructure exclusions. Emit denominator counts and machine-readable evidence only. Do not create a new scheduler, scanner, score, threshold, alert rule, trading engine, API budget or portfolio authority.",
+  "finding_key": "ADVERSARIAL_OPERATOR_COUNTING_GATE_FROZEN_NO_EXECUTOR",
+  "primary_target": "research/api_agent/meme_alpha/experiments/ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1.json",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/experiments/** only for readback/output contract fields without changing the frozen qualification semantics",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/reports/**",
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_blockscout.py only if a generic read-only transaction/funding helper is required",
+    "Donh91/secrets:collectors/memes_alpha/** only for bounded restricted-plane ancestry enrichment that reuses the existing runtime",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:private_research/memes_alpha/** for sanitized SHADOW receipts/results only"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/experiments/ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1.json",
+      "summary": "The Stage 1/Stage 2 qualification and review-budget semantics are already frozen prospectively."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/alpha_lab/2026-10-01__adversarial-operator-claude-bitquery-counting-gate-v1.md",
+      "summary": "Claude denominator/base-rate findings plus independent Bitquery cross-check establish why a counting gate is required before any first-pump strategy research."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/api_agent/meme_alpha_blockscout.py",
+      "summary": "Existing exact-CA enrichment already decodes Pons launch input including snipeTaxExemptions and must be reused rather than duplicated where provider enrichment is needed."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "Donh91/Meme-Alpha-Lab historical/prospective Robinhood Pons event corpus",
+      "summary": "Existing research corpus preserves token, deployer, pair token, block/log and launch tx identity and is the intended denominator input. It is read-only evidence, not a new owner."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "PONSCUPINE adversarial runtime runs 36846083826 and 36881054034",
+      "summary": "Existing adversarial runtime wiring is production-shaped and fail-closed; no parallel runtime is required."
+    }
+  ],
+  "reproduction": "From fresh main, confirm ADVERSARIAL_OPERATOR_FORWARD_COHORT_v1 is frozen but no deterministic executable currently emits its raw_fires_per_day, qualified_fires_per_day, benign_infra_share, seed_overlap and ordinary_control_overlap fields from a bounded launch interval. Confirm existing Pons launch evidence exposes exact token/tx/deployer/pair/block identity and existing Pons/Blockscout code can decode launchAndBuy exemption fields. The defect is reproduced if the scientific counting contract exists but no bounded executable can produce the frozen Stage-A/Stage-B denominator receipt without manual hindsight labeling.",
+  "acceptance_tests": {
+    "positive": [
+      "A bounded invocation accepts an outcome-blind contiguous Robinhood/Pons launch interval or immutable event manifest and emits every launch row, including NO_HIT / enrichment-failure rows.",
+      "Stage A decodes the documented Pons launchAndBuy privileged/exemption surface from raw launch transaction evidence when available and records UNKNOWN rather than dropping undecodable rows.",
+      "Stage A never labels a token as same-operator solely from shared Pons factory/router, relaunch/retry, quote token, fresh-wallet count or exemption count.",
+      "Stage B runs only for rows that satisfy the already-frozen Stage-A qualification and records the reason for admission.",
+      "Stage B explicitly excludes Relay, bridge, CEX, router, Pons factory/protocol and other classified benign infrastructure before common-funder/operator-lineage evidence can qualify.",
+      "Output contains raw_fires_per_day, qualified_fires_per_day, benign_infra_share, known-seed overlap, ordinary-control overlap, source health and immutable input/output hashes.",
+      "BYTE, CRUMBS, DRAFT, DEED, PINK and LEGS exact CAs can be supplied as regression seeds without outcome values influencing qualification.",
+      "The executor is research-only and can be called by existing research/runtime ownership without a new scheduler or scanner."
+    ],
+    "negative": [
+      "No market-return, ATH, future price, caller reputation or later outcome may be read before Stage-A/Stage-B qualification is frozen.",
+      "Missing transaction decode, funding ancestry or infrastructure classification must remain UNKNOWN and must not be converted to zero/no-risk.",
+      "A common Pons creator/factory address must not count as operator lineage.",
+      "A Relay/router/bridge/CEX/shared protocol path must not satisfy common-funder/operator-lineage qualification.",
+      "The task must not change the <=10/day or 50% review-budget semantics, invent new thresholds, or tune Stage A/Stage B after outcome inspection.",
+      "No auto-buy, auto-sell, portfolio action, user alert, market gate, model weight, API budget, score or canonical promotion may be added.",
+      "No new workflow, scheduler, parallel runtime, evidence ledger or separate scanner may be created."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic trade execution",
+    "automatic buy or sell signals",
+    "automatic alerts from this experiment",
+    "review-budget threshold changes",
+    "parallel Alpha runtime",
+    "parallel scanner",
+    "parallel evidence ledger",
+    "new scheduler"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "FROZEN_STAGE_A_STAGE_B_COUNTS_REPRODUCIBLE_PLUS_SEED_REGRESSION_PASS_PLUS_BENIGN_INFRA_FALSE_POSITIVE_PASS_PLUS_ONE_BOUNDED_OUTCOME_BLIND_INTERVAL_RECEIPT_PLUS_ZERO_NEW_RUNTIME"
+}
