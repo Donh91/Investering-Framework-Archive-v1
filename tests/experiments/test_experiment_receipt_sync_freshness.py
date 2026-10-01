@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import tempfile
+import urllib.error
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.experiments.sync_experiment_receipts import (
     PRIVATE_SOURCE_AUTH_REQUIRED,
