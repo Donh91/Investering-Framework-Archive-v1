@@ -77,7 +77,7 @@ Supported lifecycle states are:
 
 - `ACTIVE`: normal production or verification behavior; failures are evaluated normally.
 - `EXPECTED_BLOCK`: an intentionally fail-closed workflow. It must be unscheduled, carry a durable reason, declare the UTC timestamp from which the lifecycle state became authoritative, declare expected exit code 78 and contain the matching exit contract. Historical runs before the lifecycle timestamp remain history and cannot be used to claim a post-declaration lifecycle violation.
-- `PENDING_FIRST_EXPECTED_RUN`: a newly scheduled workflow that has not yet had an expected schedule opportunity. It remains visible without being mislabeled `NO_RUN_HISTORY`.
+- `PENDING_FIRST_EXPECTED_RUN`: a newly scheduled workflow that has not yet had an expected schedule opportunity. It remains visible without being mislabeled `NO_RUN_HISTORY`. An ACTIVE scheduled workflow may instead declare `framework-lifecycle-since`; health then derives this pending state automatically until the first schedule opportunity after activation, and automatically falls back to `NO_RUN_HISTORY` if that opportunity is subsequently missed.
 - `RETIRED`: historical registration state only; a still-scheduled retired local workflow is a configuration defect.
 
 Lifecycle directives live with the workflow instead of in a parallel registry:
