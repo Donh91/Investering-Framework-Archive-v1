@@ -1,0 +1,60 @@
+{
+  "contract": "OUTPUTLAYER_EXECUTOR_EPISODE_REPRO_PREREG_v1",
+  "date_utc": "2026-10-02",
+  "owner_issue": 1087,
+  "experiment_parent": 1134,
+  "status": "PREREGISTERED_REPRODUCTION_PENDING_DATA_ACCESS",
+  "authority": "SHADOW_RESEARCH_ONLY",
+  "executor_contract": "0x53a42d2d0fdd60bf8f833fb94841349095a74024",
+  "chain_id": 4663,
+  "candidate_cohort_path": "research/api_agent/meme_alpha/experiments/OUTPUTLAYER_OPERATOR_TARGET_COHORT_CANDIDATES_v0.json",
+  "reuse_existing_observer": "scripts/api_agent/meme_alpha_fomo_robinhood_observer.py",
+  "reuse_existing_convergence": "scripts/api_agent/meme_alpha_fomo_robinhood_convergence.py",
+  "episode_definition": {
+    "operator_non_quote_token_in": true,
+    "same_block_preceding_target_receipt": true,
+    "same_token_required": true,
+    "infrastructure_excluded": true,
+    "ambiguous_episode": "EXCLUDE",
+    "missing_data": "UNKNOWN_DEGRADED"
+  },
+  "frozen_metrics": [
+    "target_wallet",
+    "target_tx_hash",
+    "target_tx_index",
+    "operator_tx_hash",
+    "operator_tx_index",
+    "block_number",
+    "token_ca",
+    "seconds_or_blocks_lead",
+    "target_trade_provenance",
+    "economic_entity_id",
+    "quote_notional",
+    "sellability",
+    "liquidity",
+    "MFE",
+    "MAE",
+    "realizable_return",
+    "model_vs_realized_execution_error"
+  ],
+  "primary_tests": [
+    "independent reproduction rate of external 53 attributed episodes",
+    "distinct targets after economic-entity collapse",
+    "lead time before operator action",
+    "target-wallet quality versus naive baseline",
+    "executor outcome versus target-wallet outcome",
+    "copy edge after gas/slippage/failed attempts",
+    "out-of-sample persistence after public disclosure"
+  ],
+  "kill_or_revise_if": [
+    "same-block attribution cannot be independently reproduced",
+    "most target wallets collapse into one or few economic entities",
+    "edge depends on non-public intent",
+    "realizable outcome is non-positive after costs",
+    "external performance claim cannot be reconciled with on-chain realized exits",
+    "public disclosure destroys the effect",
+    "matched naive momentum performs similarly"
+  ],
+  "current_blocker": "BLOCKSCOUT_MCP_PRO_AUTH_REQUIRED_FOR_FULL_PAGINATION",
+  "trade_authority": false
+}
