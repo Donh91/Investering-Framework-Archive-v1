@@ -5,10 +5,16 @@ import hashlib
 import json
 import math
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from scripts.learning.shadow_compass_v2_compare import pair_outcomes as pair_shadow_official_outcomes
 
 COPENHAGEN = ZoneInfo("Europe/Copenhagen")
 DIRECTOR_TIME_FIELDS = (
@@ -701,13 +707,18 @@ def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> di
                 continue
             tactical.append({
                 "compass_id": value.get("compass_id"),
+                "issued_at_utc": value.get("issued_at_utc"),
                 "horizon": value.get("horizon"),
                 "target_at_utc": value.get("target_at_utc"),
+                "target_observation_at_utc": value.get("target_observation_at_utc"),
+                "time_basis": value.get("time_basis"),
                 "realized": value.get("realized"),
                 "direction_accuracy": value.get("direction_accuracy"),
                 "triggers": value.get("triggers"),
                 "action_utility": value.get("action_utility"),
                 "baselines": value.get("baselines"),
+                "forecast_path": value.get("forecast_path"),
+                "outcome_sha256": value.get("outcome_sha256"),
                 "source_path": str(path.relative_to(repo_root)),
             })
 
@@ -744,18 +755,24 @@ def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> di
                 "forecast_id": value.get("forecast_id"),
                 "model_id": value.get("model_id"),
                 "reasoner_version": value.get("reasoner_version"),
+                "issued_at_utc": value.get("issued_at_utc"),
                 "horizon": value.get("horizon"),
                 "target_at_utc": value.get("target_at_utc"),
+                "target_observation_at_utc": value.get("target_observation_at_utc"),
+                "time_basis": value.get("time_basis"),
                 "realized": value.get("realized"),
                 "direction_accuracy": value.get("direction_accuracy"),
                 "baselines": value.get("baselines"),
                 "frozen_forecast": value.get("frozen_forecast"),
                 "comparison_metadata": value.get("comparison_metadata"),
+                "forecast_path": value.get("forecast_path"),
+                "outcome_sha256": value.get("outcome_sha256"),
                 "source_path": str(path.relative_to(repo_root)),
             })
 
     latest_strategic_path = repo_root / "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
     latest_strategic = load_json(latest_strategic_path) if latest_strategic_path.exists() else {"status": "UNAVAILABLE"}
+    shadow_official_comparison = pair_shadow_official_outcomes(tactical, shadow)
     return {
         "contract": "MASTER_MONDAY_COMPASS_LEARNING_INPUT_v1",
         "authority": "CALIBRATION_EVIDENCE_ONLY",
@@ -764,9 +781,11 @@ def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> di
         "tactical_outcomes": tactical,
         "strategic_outcomes": strategic,
         "shadow_v2_outcomes": shadow,
+        "shadow_official_comparison": shadow_official_comparison,
         "tactical_outcome_count": len(tactical),
         "strategic_outcome_count": len(strategic),
         "shadow_v2_outcome_count": len(shadow),
+        "shadow_official_pair_count": shadow_official_comparison["pair_count"],
         "latest_strategic_pointer": latest_strategic,
         "diagnostics": diagnostics,
         "rules": [
@@ -776,6 +795,7 @@ def load_compass_learning(repo_root: Path, start: datetime, end: datetime) -> di
             "Treat stabilization-to-continuation upgrades, false negatives, rotation timing and pullback underestimation as explicit calibration questions.",
             "Strategic unscored dimensions remain unavailable until their governed outcome series/scorers exist.",
             "Shadow Compass v2 is challenger evidence only. Compare it with Official Compass and simple baselines without automatic promotion.",
+            "Use shadow_official_comparison only for outcome-blind one-to-one pairs with identical frozen windows.",
             "Do not declare a head-to-head winner from mismatched issue times/source packets or overlapping horizons.",
         ],
     }
