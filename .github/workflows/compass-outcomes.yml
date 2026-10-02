@@ -8,10 +8,12 @@ on:
       - 'scripts/learning/strategic_compass.py'
       - 'scripts/learning/strategic_compass_outcomes.py'
       - 'scripts/learning/shadow_compass_v2_outcomes.py'
+      - 'scripts/learning/shadow_compass_v2_compare.py'
       - 'tests/learning/test_compass_outcomes.py'
       - 'tests/learning/test_strategic_compass.py'
       - 'tests/learning/test_strategic_compass_outcomes.py'
       - 'tests/learning/test_shadow_compass_v2_outcomes.py'
+      - 'tests/learning/test_shadow_compass_v2_compare.py'
       - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v1.md'
       - '04_MARKET_LEARNING/handlekompas/STRATEGIC_COMPASS_SCORING_CONTRACT_v1_1.md'
       - '04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v1.md'
@@ -42,11 +44,12 @@ jobs:
           python-version: '3.12'
       - name: Test maturity guardrails
         run: |
-          python -m py_compile scripts/learning/compass_outcomes.py scripts/learning/strategic_compass.py scripts/learning/strategic_compass_outcomes.py scripts/learning/shadow_compass_v2_outcomes.py
+          python -m py_compile scripts/learning/compass_outcomes.py scripts/learning/strategic_compass.py scripts/learning/strategic_compass_outcomes.py scripts/learning/shadow_compass_v2_outcomes.py scripts/learning/shadow_compass_v2_compare.py
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_strategic_compass -v
           python -m unittest tests.learning.test_strategic_compass_outcomes -v
           python -m unittest tests.learning.test_shadow_compass_v2_outcomes -v
+          python -m unittest tests.learning.test_shadow_compass_v2_compare -v
           python scripts/learning/compass_outcomes.py --dry-run > /tmp/compass-maturity.json
           python scripts/learning/shadow_compass_v2_outcomes.py --now-utc 1970-01-01T00:00:00Z > /tmp/shadow-direct-exec.json
           python - <<'PY'
@@ -76,6 +79,7 @@ jobs:
           python scripts/learning/compass_outcomes.py | tee /tmp/compass-outcomes.json
           python scripts/learning/strategic_compass_outcomes.py | tee /tmp/strategic-compass-outcomes.json
           python scripts/learning/shadow_compass_v2_outcomes.py | tee /tmp/shadow-compass-v2-outcomes.json
+          python scripts/learning/shadow_compass_v2_compare.py | tee /tmp/shadow-official-comparison.json
       - name: Verify forecasts were not rewritten
         shell: bash
         run: |
@@ -89,6 +93,15 @@ jobs:
               if row.get('status')=='MATURED':
                   assert row.get('horizon') in {'12h','72h','168h'}
                   assert row.get('outcome_sha256')
+          cmp=json.load(open('/tmp/shadow-official-comparison.json'))
+          assert cmp['contract']=='SHADOW_OFFICIAL_COMPASS_COMPARISON_REPORT_v1'
+          assert cmp['pairing_contract']=='SHADOW_OFFICIAL_PAIRING_v1'
+          assert cmp['authority']['automatic_promotion'] is False
+          assert cmp['authority']['portfolio_execution'] is False
+          for pair in cmp.get('pairs',[]):
+              assert pair['integrity']['selection_used_outcome_correctness'] is False
+              assert pair['integrity']['selection_used_realized_return'] is False
+              assert pair['cautions']['aggregate_winner_authorized'] is False
           PY
       - name: Commit mature outcomes with remote readback
         shell: bash
@@ -123,6 +136,7 @@ jobs:
             /tmp/compass-outcomes.json
             /tmp/strategic-compass-outcomes.json
             /tmp/shadow-compass-v2-outcomes.json
+            /tmp/shadow-official-comparison.json
           retention-days: 30
           if-no-files-found: warn
 
