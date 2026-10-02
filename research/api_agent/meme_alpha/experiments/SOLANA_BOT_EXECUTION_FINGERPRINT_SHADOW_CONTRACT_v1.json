@@ -1,0 +1,104 @@
+{
+  "contract": "SOLANA_BOT_EXECUTION_FINGERPRINT_SHADOW_CONTRACT_v1",
+  "frozen_date_utc": "2026-10-02",
+  "authority": "RESEARCH_ONLY",
+  "paid_data_authorized": false,
+  "new_scanner_authorized": false,
+  "trade_authority": false,
+  "owners": [
+    1087,
+    1134
+  ],
+  "source": {
+    "paper": "Demystifying Solana Bots: From GitHub Blueprints to On-Chain Fingerprints",
+    "arxiv": "2607.28424v2",
+    "replication_doi": "10.5281/zenodo.21359451",
+    "dataset": "SolanaBotDemystifyPublic.zip",
+    "source_class": "PUBLIC_RESEARCH_REPLICATION_PACKAGE"
+  },
+  "paper_backed_features": [
+    "transaction_frequency",
+    "transaction_volume",
+    "transaction_success_rate",
+    "transaction_fee",
+    "asset_diversity"
+  ],
+  "paper_backed_characterization": [
+    "venue_program_distribution",
+    "traded_token_profile",
+    "transfer_outflow_recipient_distribution",
+    "jito_tip_recipient_concentration"
+  ],
+  "temporal_stability_prior": {
+    "most_stable": "venue_program_distribution",
+    "second": "transfer_outflow_recipient_distribution",
+    "less_stable": "exact_traded_token_identity"
+  },
+  "explicit_non_claims": [
+    "behavioral_cluster_does_not_equal_same_human_operator",
+    "behavioral_cluster_does_not_equal_same_software_repository",
+    "behavioral_similarity_alone_does_not_prove_common_control"
+  ],
+  "alpha_lab_challengers": [
+    {
+      "field": "fee_payer_reuse",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "ata_creation_payer_reuse",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "address_lookup_table_reuse",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "normalized_instruction_sequence_hash",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "compute_budget_profile",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "priority_fee_percentile",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "jito_tip_percentile",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "order_size_quantization",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "launch_relative_latency_profile",
+      "status": "HYPOTHESIS"
+    },
+    {
+      "field": "collector_recipient_recurrence",
+      "status": "HYPOTHESIS"
+    }
+  ],
+  "use_rule": "SUPPORTING_ENTITY_EDGE_ONLY",
+  "forbidden_inference": "FINGERPRINT_SIMILARITY_ALONE_CANNOT_SET_SAME_ENTITY",
+  "denominator_owner": 1340,
+  "experiment_owner": 1134,
+  "primary_endpoints": [
+    "false_independence_reduction",
+    "entity_collapse_precision",
+    "incremental_lead_time",
+    "false_positive_delta",
+    "realizable_outcome_delta",
+    "prospective_persistence_after_wallet_rotation"
+  ],
+  "promotion_requires": [
+    "prospective_rows",
+    "matched_controls",
+    "point_in_time_features",
+    "incremental_value_over_existing_entity_provenance",
+    "sellability_preserved",
+    "zero_paid_provider_dependency"
+  ]
+}
