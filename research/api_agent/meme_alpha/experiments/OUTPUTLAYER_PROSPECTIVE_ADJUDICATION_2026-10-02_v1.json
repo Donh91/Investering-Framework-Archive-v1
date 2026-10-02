@@ -1,0 +1,126 @@
+{
+  "contract": "OUTPUTLAYER_PROSPECTIVE_ADJUDICATION_2026-10-02_v1",
+  "date_utc": "2026-10-02",
+  "owner_issue": 1436,
+  "canonical_owner_issue": 1087,
+  "authority": "SHADOW_RESEARCH_ONLY",
+  "executor_contract": "0x53a42d2d0fdd60bf8f833fb94841349095a74024",
+  "chain_id": 4663,
+  "preregistered_start_utc": "2026-10-02T11:03:00Z",
+  "purpose": "Freeze the first post-preregistration Outputlayer observations and adjudicate them without retroactively mutating the preregistration contract.",
+  "external_method_lead": {
+    "candidate_buy_method_ids": ["0x00000007", "0x00000009"],
+    "status": "EXTERNAL_LEAD_ONLY_NOT_IMPORTED_AS_TRUTH"
+  },
+  "rows": [
+    {
+      "operator_tx_hash": "0xdef3306d7c6c8afeee7e8bd79309835516f9f8e6e8b9e821e657386ec0656bcd",
+      "block_number": 78318568,
+      "operator_tx_index": 4,
+      "observed_at_utc": "2026-10-02T14:55:11Z",
+      "operator_method_id": "0x2fa87382",
+      "operator_token_transfers": [],
+      "raw_input_addresses_of_interest": [
+        "0x4CB066c36112e7751B12Cc5De01DCD1ba1e8c777",
+        "0x7FA6d2B81743f90E544fC794396d90b12D81B2dC"
+      ],
+      "raw_input_address_labels_at_readback": [
+        "Anti Inu / AI",
+        "CurveHandoff / CHOFF"
+      ],
+      "preceding_transactions": [
+        {
+          "tx_index": 0,
+          "tx_hash": "0xd9ed3ad9249b569bdd73654c8d3f52868c3028d1cd7423c0939de4818fae902e",
+          "classification": "SYSTEM_START_BLOCK",
+          "same_token_receipt": false
+        },
+        {
+          "tx_index": 1,
+          "tx_hash": "0x8e70753e7c34cb143396aadb59d9c154c8ba46082dc860d5163c9534bafc7176",
+          "classification": "USDG_TO_INCOME_SWAP",
+          "same_token_receipt": false
+        },
+        {
+          "tx_index": 2,
+          "tx_hash": "0x7f3882a7adc8016bda5980a1b6306e651eabacc5a4cb854ef0c2167d13dd23b2",
+          "classification": "REVERTED_CALL",
+          "same_token_receipt": false
+        },
+        {
+          "tx_index": 3,
+          "tx_hash": "0x4a38531e58d422218333f8b7a8ec0db038c0155d26c883e00a88a26f9b8e7479",
+          "classification": "AGNET_FLOW",
+          "same_token_receipt": false
+        }
+      ],
+      "strict_same_block_preceding_target_match": false,
+      "episode_status": "CONTROL_NOT_REPRODUCED_BUY_EPISODE",
+      "reason": [
+        "No operator ERC-20 token transfer was observed in the executor transaction.",
+        "No preceding same-block transaction transferred either raw-input token address.",
+        "The observed method differs from the external candidate buy-method set."
+      ],
+      "target_wallet_attribution": "UNMATCHED",
+      "public_eligible_precursor": false,
+      "alpha_credit": 0,
+      "trade_authority": false
+    },
+    {
+      "operator_tx_hash": "0xc7adb8a7a03084a5f578ee7b94e8b525543ed26953f2522e83e4af28ec737494",
+      "block_number": 78316777,
+      "operator_tx_index": 2,
+      "observed_at_utc": "2026-10-02T14:52:11Z",
+      "operator_method_id": "0x2fa87382",
+      "raw_input_addresses_of_interest": [
+        "0x6D27d20dD469DCaea56d2279163e8c1A5Aec33F5"
+      ],
+      "raw_input_address_labels_at_readback": [
+        "Google / Google"
+      ],
+      "preceding_transactions": [
+        {
+          "tx_index": 0,
+          "tx_hash": "0x0920d8899a36d6565a4af7e34523dbb7bf3b4a38fb6beb663be74687cf97e1b9",
+          "classification": "SYSTEM_START_BLOCK",
+          "same_token_receipt": false
+        },
+        {
+          "tx_index": 1,
+          "tx_hash": "0x258b4cc8adbcbd7e4c314683219f950126d45fb9d49b5ded889d0ee4dbd998a6",
+          "classification": "WETH_THESEAN_SWAP_FLOW",
+          "same_token_receipt": false
+        }
+      ],
+      "strict_same_block_preceding_target_match": false,
+      "operator_token_transfer_state": "NOT_RECHECKED_IN_CURRENT_BLOCKSCOUT_SESSION",
+      "episode_status": "RAW_CONTROL_UNMATCHED",
+      "reason": [
+        "No preceding same-block transaction transferred the raw-input Google token address.",
+        "The observed method differs from the external candidate buy-method set.",
+        "Fail closed because the operator transaction token-transfer field was not re-read before the session call budget was exhausted."
+      ],
+      "target_wallet_attribution": "UNMATCHED",
+      "public_eligible_precursor": false,
+      "alpha_credit": 0,
+      "trade_authority": false
+    }
+  ],
+  "scientific_interpretation": {
+    "post_freeze_activity_confirmed": true,
+    "eligible_buy_episode_confirmed": false,
+    "same_block_target_attribution_confirmed": false,
+    "raw_input_address_is_not_trade_evidence": true,
+    "negative_control_value": "HIGH",
+    "promotion_allowed": false
+  },
+  "next_gate": [
+    "Enumerate genuine executor non-quote token-in episodes using transfer evidence first.",
+    "Treat method IDs as supporting classification only until independently reproduced.",
+    "For each genuine episode, inspect earlier same-block exact-token receipts and exclude infrastructure before target attribution.",
+    "Persist unmatched and ambiguous episodes without forcing a wallet.",
+    "Reuse the existing FOMO Robinhood observer/convergence owners; do not create a parallel scanner."
+  ],
+  "data_access_note": "The live Blockscout session call budget was exhausted after deterministic predecessor adjudication. Full historical enumeration remains fail-closed until the existing authenticated runtime or renewed provider coverage is available.",
+  "trade_authority": false
+}
