@@ -1,18 +1,18 @@
 # Operational Memory Post-Production Audit
 
-Status: **PASS**
-Source head: `0fdd6b33001db093e31a1a56b3e9bab1dd4f0346`
-Episodes: 1810
-New episodes this run: 72
-Procedural candidates: 15
-Compatibility: `{"DRIFTED": 331, "EXACT": 319, "PARTIAL": 1144, "REMOVED": 9, "UNKNOWN": 7}`
-Retrieval probe precision: 1.0
-Recommended action: `CONTINUE_SHADOW_AUTONOMOUSLY`
+Status: **WARN**
+Source head: `74f0e55da614a8ceb9cf5291d1209bb0ba87ceeb`
+Episodes: 1896
+New episodes this run: 86
+Procedural candidates: 16
+Compatibility: `{"DRIFTED": 348, "EXACT": 321, "PARTIAL": 1204, "REMOVED": 9, "UNKNOWN": 14}`
+Retrieval probe precision: 0.9167
+Recommended action: `CONTINUE_SHADOW_AND_ACCUMULATE_BASELINE`
 
 ## Failures
 - None
 
 ## Warnings
-- None
+- candidate_requires_revalidation:1
 
 This audit is advisory framework-operations evidence only. Current GitHub `main` remains authoritative.
