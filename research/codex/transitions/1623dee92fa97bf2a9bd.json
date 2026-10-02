@@ -1,0 +1,43 @@
+{
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "state": "IN_REMEDIATION",
+  "signature": "1623dee92fa97bf2a9bd",
+  "candidate_id": "codex-research-adversarial-operator-qualification-enrichment-v1",
+  "candidate_path": "research/codex/intake/2026/10/codex-research-adversarial-operator-qualification-enrichment-v1.json",
+  "candidate_sha256": "f8d74709f24fd51348d0f85b3e326c3886dac40b52a90af7a43d82d4c04add6e",
+  "branch": "agent/task-20261002-adversarial-qualification-enrichment-impl",
+  "pr_number": null,
+  "recorded_at_utc": "2026-10-02T05:53:00Z",
+  "objective": "Implement the smallest deterministic SHADOW-ONLY enrichment needed to make the already-frozen 88-launch adversarial counting interval interpretable. Reuse existing Robinhood RPC, Blockscout and counting owners. Enrich each input launch with only pre-T0 launch-preparation/funding evidence plus at most T0..T0+1 launch-inventory evidence, preserve explicit UNKNOWN states, apply self-exemption and benign-infrastructure controls, and then execute the existing frozen counting contract without changing thresholds or qualification semantics. Do not create a new scanner, scheduler, score, alert rule, trading engine, API budget or portfolio authority.",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/reports/**",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/experiments/** only for an output/enrichment schema that does not change frozen qualification semantics",
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_blockscout.py only for a generic read-only history helper",
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_robinhood_pons_v2.py only for generic bounded receipt/log retrieval reused by the enrichment",
+    "Donh91/secrets:collectors/memes_alpha/** only if the existing restricted runtime is the only available owner for bounded ancestry retrieval",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:private_research/memes_alpha/** for sanitized SHADOW receipts only"
+  ],
+  "forbidden_changes": [
+    "API budget",
+    "automatic alerts from this experiment",
+    "automatic buy or sell signals",
+    "automatic trade execution",
+    "canonical authority",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "new scheduler",
+    "parallel Alpha runtime",
+    "parallel evidence ledger",
+    "parallel scanner",
+    "portfolio logic",
+    "post-outcome feature fitting",
+    "review-budget threshold changes"
+  ],
+  "post_fix_gate": "FROZEN_88_ROW_ENRICHMENT_REPRODUCIBLE_PLUS_SELF_EXEMPTION_GUARD_PASS_PLUS_UNKNOWN_HUB_GUARD_PASS_PLUS_NO_LOOKAHEAD_PASS_PLUS_EXISTING_COUNTING_RECEIPT_INTERPRETABLE_OR_SOURCE_TERMINAL_PLUS_ZERO_NEW_RUNTIME",
+  "task_contract_sha256": "61e884412e5e46484fb4206fb7180048e583623468e97ef6f3982173e709a716",
+  "receipt_sha256": "6a0c2507f9bb57d2f3ea665dcfc845db547481836d7fa31f7e72f848858d5b6c"
+}
