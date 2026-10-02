@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-02T07:49:13Z",
+  "generated_at_utc": "2026-10-02T07:53:01Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -48,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-02T07:49:13Z",
+      "last_observed_at_utc": "2026-10-02T07:53:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -120,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-02T07:49:13Z",
+      "last_observed_at_utc": "2026-10-02T07:53:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -153,6 +153,72 @@
       "transition_receipt_path": "research/codex/transitions/923de2eed113038e8a6c.json",
       "transition_receipt_required": true,
       "workflow": "research-intake/codex-research-memes-v3-solana-cross-chain-expansion-v1"
+    },
+    {
+      "allowed_change_scope": [
+        "scripts/remediation/mission_convergence.py",
+        "tests/remediation/test_mission_convergence.py",
+        "research/codex/convergence/supersessions/** new append-only correction artifacts only"
+      ],
+      "candidate_id": "codex-research-convergence-hash-supersession-v2",
+      "candidate_path": "research/codex/intake/2026/10/codex-research-convergence-hash-supersession-v2.json",
+      "candidate_sha256": "a42af3b3f3a46bb90bafa4142ac82ea6a51aaac5ba7f4cd0e51e440c13a53e56",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "MISSION_CONVERGENCE_APPEND_ONLY_HASH_CORRECTION_GAP",
+      "first_observed_at_utc": "2026-10-02T07:52:00Z",
+      "forbidden_changes": [
+        "API budget",
+        "accepting a supersession when the original receipt is already valid",
+        "accepting more than one applicable correction for the same base receipt",
+        "accepting semantic changes to objective, requirements, coverage, evidence, gaps, authority, candidate binding, PR binding or merge binding",
+        "automatic merge or self-promotion",
+        "canonical authority",
+        "market gates",
+        "model weights",
+        "modifying or deleting any existing file under research/codex/convergence/",
+        "new policy semantics",
+        "portfolio logic",
+        "trading authority",
+        "weakening scripts/governance/check_append_only_evidence.py"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e2e06783f79846eceb10 --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-10-02T07:53:01Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Preserve immutable convergence evidence while allowing one narrowly-scoped append-only correction when an otherwise semantically identical MISSION_CONVERGENCE_RECEIPT_v1 has only an invalid declared receipt_sha256. Add a versioned supersession sidecar under the existing append-only convergence evidence root, validate that the original receipt remains unchanged, require semantic identity except receipt_sha256, reject ambiguous or broader replacements, and let the existing convergence-aware post-fix verifier consume the correction without weakening append-only history.",
+      "observations": 1,
+      "post_fix_gate": "FOCUSED_SUPERSESSION_TESTS_PASS_PLUS_APPEND_ONLY_GATE_PASS_PLUS_ADVERSARIAL_RUNTIME_POST_FIX_VERIFIER_ACCEPTS_CONVERGENCE_WITH_ORIGINAL_BASE_RECEIPT_UNCHANGED",
+      "precondition": "Candidate codex-research-convergence-hash-supersession-v2 still exists on main at research/codex/intake/2026/10/codex-research-convergence-hash-supersession-v2.json with SHA-256 a42af3b3f3a46bb90bafa4142ac82ea6a51aaac5ba7f4cd0e51e440c13a53e56, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "research/codex/convergence/codex-research-alpha-adversarial-runtime-wiring-v1.json",
+        "36979490645",
+        "#1430",
+        "8d2f0fdcebcfb3524eafbdd906c59b7d5a05ece42ebc91ac8c0225b5eb8e8dac",
+        "codex-research-convergence-hash-supersession-v1",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "e2e06783f79846eceb10",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-10-02T07:52:00Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "FOCUSED_SUPERSESSION_TESTS_PASS_PLUS_APPEND_ONLY_GATE_PASS_PLUS_ADVERSARIAL_RUNTIME_POST_FIX_VERIFIER_ACCEPTS_CONVERGENCE_WITH_ORIGINAL_BASE_RECEIPT_UNCHANGED"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "a6e2da17c732fc811cc17206037e1646d7a7cd39ed4fe0b4da262e47c7e5673a",
+      "transition_receipt_path": "research/codex/transitions/e2e06783f79846eceb10.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-convergence-hash-supersession-v2"
     }
   ]
 }
