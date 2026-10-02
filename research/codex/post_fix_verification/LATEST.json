@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=36970427337:success,36921940891:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=36971739842:success,36970427337:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=36924303480:success,36921611825:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=36976253872:success,36974030155:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,7 +54,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=36921273298,36848366905 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=36975495717,36973785235 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -69,7 +69,7 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=36921273298,36848366905 checks=PASS",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=36975495717,36973785235 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -79,13 +79,78 @@
           "pass": false
         }
       ]
+    },
+    {
+      "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
+      "checks": [
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:status='PASS'",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:parent_replay='PASS'",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:neighbor_replay='PASS'",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:autonomous_route_observed=True",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:bounded_retest_route_observed=True",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:historical_market_reused_as_current=False",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:parallel_runtime=False",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "MISSION_CONVERGENCE_REQUIRED",
+          "kind": "MISSION_CONVERGENCE",
+          "pass": false
+        }
+      ]
+    },
+    {
+      "candidate_id": "codex-research-adversarial-operator-qualification-enrichment-v1",
+      "checks": [
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-qualification-enrichment-postfix-verification-v1.json:status='PENDING_DATA_RUN'",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": false
+        },
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-qualification-enrichment-postfix-verification-v1.json:full_88_enrichment_completed=False",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": false
+        },
+        {
+          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-qualification-enrichment-postfix-verification-v1.json:counting_interpretable_or_source_terminal=False",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": false
+        }
+      ]
     }
   ],
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
-    "machine_spec_configured": 4,
-    "machine_spec_unconfigured": 29,
-    "post_fix_total": 33
+    "machine_spec_configured": 6,
+    "machine_spec_unconfigured": 28,
+    "post_fix_total": 34
   },
   "skipped": [],
   "unconfigured": [
@@ -107,11 +172,6 @@
     {
       "candidate_id": "codex-research-adversarial-operator-counting-executor-v1",
       "post_fix_gate": "FROZEN_STAGE_A_STAGE_B_COUNTS_REPRODUCIBLE_PLUS_SEED_REGRESSION_PASS_PLUS_BENIGN_INFRA_FALSE_POSITIVE_PASS_PLUS_ONE_BOUNDED_OUTCOME_BLIND_INTERVAL_RECEIPT_PLUS_ZERO_NEW_RUNTIME",
-      "reason": "NO_MACHINE_VERIFICATION_SPEC"
-    },
-    {
-      "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
-      "post_fix_gate": "PONSCUPINE_STALE_ACTION_REPLAY_FAILS_CLOSED_PLUS_NEIGHBOR_VARIANT_PASS_PLUS_AUTONOMOUS_ROUTE_AND_RETEST_PASS_PLUS_ZERO_PARALLEL_RUNTIME",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     },
     {
