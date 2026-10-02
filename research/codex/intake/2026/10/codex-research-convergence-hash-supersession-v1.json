@@ -1,0 +1,85 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-convergence-hash-supersession-v1",
+  "title": "Add append-only recovery for convergence receipt hash mismatch",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "MISSION_CONVERGENCE_APPEND_ONLY_HASH_CORRECTION_GAP",
+  "objective": "Preserve immutable convergence evidence while allowing one narrowly-scoped append-only correction when an otherwise semantically identical MISSION_CONVERGENCE_RECEIPT_v1 has only an invalid declared receipt_sha256. Add a versioned supersession sidecar under the existing append-only convergence evidence root, validate that the original receipt itself remains unchanged, require the corrected receipt to be byte-for-byte semantically identical except receipt_sha256, reject ambiguous/multiple or broader semantic replacements, and let the existing convergence-aware post-fix verifier consume the valid correction without weakening append-only history.",
+  "primary_target": "scripts/remediation/mission_convergence.py",
+  "origin": {
+    "type": "LIVE_POST_FIX_OBSERVABILITY_FAILURE",
+    "thread_label": "2026-10-02 Alpha Lab adversarial runtime closure",
+    "source_paths": [
+      "research/codex/convergence/codex-research-alpha-adversarial-runtime-wiring-v1.json",
+      "research/codex/convergence_assessments/codex-research-alpha-adversarial-runtime-wiring-v1.json",
+      "research/codex/post_fix_verification/LATEST.json",
+      "scripts/remediation/mission_convergence.py",
+      "scripts/governance/check_append_only_evidence.py"
+    ]
+  },
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/codex/convergence/codex-research-alpha-adversarial-runtime-wiring-v1.json",
+      "summary": "The landed append-only convergence receipt has complete SATISFIED coverage but an incorrect declared receipt_sha256, so validation fails."
+    },
+    {
+      "kind": "WORKFLOW_RUN",
+      "ref": "36979490645",
+      "summary": "All configured adversarial runtime machine predicates passed; the only remaining blocker was MISSION_CONVERGENCE_REQUIRED."
+    },
+    {
+      "kind": "FAILED_PR",
+      "ref": "#1430",
+      "summary": "A one-line in-place hash correction correctly failed Automation Production Health with APPEND_ONLY_EVIDENCE_VIOLATION, proving historical convergence evidence cannot be rewritten."
+    },
+    {
+      "kind": "DETERMINISTIC_HASH",
+      "ref": "8d2f0fdcebcfb3524eafbdd906c59b7d5a05ece42ebc91ac8c0225b5eb8e8dac",
+      "summary": "Correct canonical hash of the landed convergence receipt excluding receipt_sha256; the existing declared value differs."
+    }
+  ],
+  "allowed_change_scope": [
+    "scripts/remediation/mission_convergence.py",
+    "tests/remediation/test_mission_convergence.py",
+    "research/codex/convergence/supersessions/** new append-only correction artifacts only"
+  ],
+  "forbidden_changes": [
+    "modifying or deleting any existing file under research/codex/convergence/",
+    "weakening scripts/governance/check_append_only_evidence.py",
+    "accepting semantic changes to objective, requirements, coverage, evidence, gaps, authority, candidate binding, PR binding or merge binding",
+    "accepting a supersession when the original receipt is already valid",
+    "accepting more than one applicable correction for the same base receipt",
+    "automatic merge or self-promotion",
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "trading authority"
+  ],
+  "reproduction": "On fresh main, run the existing convergence-aware post-fix verifier for codex-research-alpha-adversarial-runtime-wiring-v1. Observe all JSON predicates PASS and MISSION_CONVERGENCE_REQUIRED. Compute the canonical hash of research/codex/convergence/codex-research-alpha-adversarial-runtime-wiring-v1.json excluding receipt_sha256 and observe 8d2f0fdcebcfb3524eafbdd906c59b7d5a05ece42ebc91ac8c0225b5eb8e8dac while the landed declared hash differs. Attempting to edit the file in PR #1430 triggers APPEND_ONLY_EVIDENCE_VIOLATION.",
+  "acceptance_tests": {
+    "positive": [
+      "An invalid-hash-only base convergence receipt plus exactly one valid append-only supersession sidecar whose corrected receipt differs only in receipt_sha256 is accepted by validate_receipt.",
+      "The historical base convergence receipt remains byte-identical and the append-only evidence gate passes because recovery adds only a new sidecar.",
+      "The specific adversarial-runtime convergence receipt becomes valid through the sidecar and the existing post-fix verifier can materialize its normal completion receipt without special-casing Alpha Lab."
+    ],
+    "negative": [
+      "A supersession that changes any field other than receipt_sha256 is rejected.",
+      "A supersession is rejected when the base receipt is already valid.",
+      "Zero or multiple applicable supersessions for an invalid base receipt fail closed.",
+      "A supersession with mismatched candidate_id, signature, candidate hash, task-contract hash, PR number or merge SHA is rejected.",
+      "The recovery path cannot modify/delete protected evidence and cannot bypass append-only governance."
+    ]
+  },
+  "post_fix_gate": "FOCUSED_SUPERSESSION_TESTS_PASS_PLUS_APPEND_ONLY_GATE_PASS_PLUS_ADVERSARIAL_RUNTIME_POST_FIX_VERIFIER_ACCEPTS_CONVERGENCE_WITH_ORIGINAL_BASE_RECEIPT_UNCHANGED",
+  "clean_noop_condition": "Fresh main already supports append-only invalid-hash-only convergence correction without modifying historical convergence evidence, and the adversarial runtime task no longer fails solely on the bad declared hash.",
+  "stop_condition": "Stop without code changes if the base adversarial convergence receipt becomes valid through an existing sanctioned recovery path or if a safe fix would require arbitrary semantic receipt replacement or weakening append-only evidence.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if recovery cannot be limited to invalid-hash-only semantic identity or requires changing Alpha, market, portfolio, API-budget or canonical authority semantics.",
+  "rollback_plan": "Revert only the validator/test support for the supersession contract. Preserve the historical invalid base receipt and all supersession sidecars as audit evidence.",
+  "submitted_at_utc": "2026-10-02T07:46:00Z"
+}
