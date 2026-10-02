@@ -19,11 +19,27 @@ Keep wallet-intelligence research open to new evidence from:
 - owner-supplied public wallet lists;
 - Wazz / FOMO / external wallet research;
 - Investering AI Audit Bridge / Claude research;
-- optional read-only providers such as Nansen;
+- public/free external methodology and discovery surfaces;
 
 without creating a second wallet scanner, second research owner, copy-trading engine or self-promoting model.
 
 This program is an **open research routing contract**, not a production subsystem.
+
+### Owner cost constraint — 2026-10-02
+
+The owner explicitly forbids paid data subscriptions and paid-provider dependency for this research lane.
+
+Research target state:
+
+`PUBLIC CHAIN + OPEN SOURCE + FRAMEWORK LOGIC`
+
+External commercial services may be inspected through public documentation, free pages, open repositories or genuinely zero-cost access only to discover methods, fields and falsifiers. The framework must not require purchased credits, a paid tier or subscription to preserve canonical Alpha Lab capability.
+
+Preferred conversion:
+
+`EXTERNAL METHOD -> PUBLIC/OPEN RECONSTRUCTION -> CHAMPION/CHALLENGER TEST -> KEEP/KILL`
+
+A useful external feature should be independently reconstructed from raw/public evidence where feasible rather than becoming vendor lock-in.
 
 The existing scientific question remains:
 
@@ -292,28 +308,35 @@ D. G2 + cross-archetype convergence:
 
 No threshold or score weight is authorized.
 
-## 6. Provider role — Nansen
+## 6. External provider role — methodology / falsification only
 
-Nansen is useful as a **challenger / enrichment provider**, not truth owner.
+Commercial providers such as Nansen, StalkChain, CabalSpy, MadeOnSol, Birdeye and similar services are **not authorized dependencies** for this research program.
 
-Existing canonical provider benchmark remains:
-`04_RESEARCH_LAB/auto_trading/NANSEN_ALPHA_LAB_ABLATION_V1.md`
+Historical provider-derived research already archived remains valid as evidence about:
+- useful candidate fields;
+- source-quality defects;
+- wallet-label contamination;
+- point-in-time leakage;
+- possible external challengers.
 
-Use Nansen for:
-- wallet history retrieval;
-- current realized PnL context;
-- related-address / counterparty hypotheses;
-- Smart Money flow hypotheses;
-- provider-efficiency comparison.
+Going forward, use provider material only when accessible without payment to:
+- discover a method or field;
+- form a falsifiable hypothesis;
+- compare a public result against native-chain evidence;
+- identify what should be reconstructed independently.
 
-Never use Nansen alone for:
-- economic-entity truth;
-- insider classification;
-- historical point-in-time labels unless reconstructable;
-- automatic wallet qualification;
-- portfolio action.
+Never:
+- purchase credits or subscriptions for this lane;
+- make a paid API call;
+- let provider availability become required for canonical Alpha Lab operation;
+- treat a provider score/label as truth;
+- silently degrade when a free tier disappears.
 
-Claude's latest work strengthens the need for the existing Nansen ablation rather than justifying integration.
+When a provider exposes a valuable idea, the preferred task is:
+`REIMPLEMENT / RECONSTRUCT FROM PUBLIC EVIDENCE`
+before any integration discussion.
+
+Existing historical provider benchmark files remain archive references, not runtime mandates.
 
 ## 7. Bridge / Claude role
 
@@ -386,8 +409,10 @@ Replace raw graduation rate with:
 - creator behavior;
 - rug/dead rate.
 
-### P2 — provider ablation
-Test Nansen against framework/free evidence by information gain per credit.
+### P2 — free/open-source source ablation
+Test public/open-source challengers against framework native evidence by incremental information, lead time, reproducibility and false-positive reduction.
+
+Paid-provider performance is not a purchase criterion. If a commercial source exposes a useful public method, reconstruct the method independently where feasible.
 
 ## 10. Runtime boundary during GitHub Actions exhaustion
 
