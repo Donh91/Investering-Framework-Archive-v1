@@ -1,13 +1,87 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-01T20:30:09Z",
+  "generated_at_utc": "2026-10-02T05:46:55Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
   ],
   "research_intake_enabled": true,
   "tasks": [
+    {
+      "allowed_change_scope": [
+        "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+        "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+        "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/reports/**",
+        "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/experiments/** only for an output/enrichment schema that does not change frozen qualification semantics",
+        "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_blockscout.py only for a generic read-only history helper",
+        "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_robinhood_pons_v2.py only for generic bounded receipt/log retrieval reused by the enrichment",
+        "Donh91/secrets:collectors/memes_alpha/** only if the existing restricted runtime is the only available owner for bounded ancestry retrieval",
+        "Donh91/secrets:tests/memes_alpha/**",
+        "Donh91/secrets:private_research/memes_alpha/** for sanitized SHADOW receipts only"
+      ],
+      "candidate_id": "codex-research-adversarial-operator-qualification-enrichment-v1",
+      "candidate_path": "research/codex/intake/2026/10/codex-research-adversarial-operator-qualification-enrichment-v1.json",
+      "candidate_sha256": "f8d74709f24fd51348d0f85b3e326c3886dac40b52a90af7a43d82d4c04add6e",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "ADVERSARIAL_OPERATOR_COUNTING_INTERVAL_MISSING_PRE_T0_QUALIFICATION_EVIDENCE",
+      "first_observed_at_utc": "2026-10-02T05:48:00Z",
+      "forbidden_changes": [
+        "API budget",
+        "automatic alerts from this experiment",
+        "automatic buy or sell signals",
+        "automatic trade execution",
+        "canonical authority",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "new scheduler",
+        "parallel Alpha runtime",
+        "parallel evidence ledger",
+        "parallel scanner",
+        "portfolio logic",
+        "post-outcome feature fitting",
+        "review-budget threshold changes"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 1623dee92fa97bf2a9bd --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-10-02T05:46:55Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Implement the smallest deterministic SHADOW-ONLY enrichment needed to make the already-frozen 88-launch adversarial counting interval interpretable. Reuse existing Robinhood RPC, Blockscout and counting owners. Enrich each input launch with only pre-T0 launch-preparation/funding evidence plus at most T0..T0+1 launch-inventory evidence, preserve explicit UNKNOWN states, apply self-exemption and benign-infrastructure controls, and then execute the existing frozen counting contract without changing thresholds or qualification semantics. Do not create a new scanner, scheduler, score, alert rule, trading engine, API budget or portfolio authority.",
+      "observations": 1,
+      "post_fix_gate": "FROZEN_88_ROW_ENRICHMENT_REPRODUCIBLE_PLUS_SELF_EXEMPTION_GUARD_PASS_PLUS_UNKNOWN_HUB_GUARD_PASS_PLUS_NO_LOOKAHEAD_PASS_PLUS_EXISTING_COUNTING_RECEIPT_INTERPRETABLE_OR_SOURCE_TERMINAL_PLUS_ZERO_NEW_RUNTIME",
+      "precondition": "Candidate codex-research-adversarial-operator-qualification-enrichment-v1 still exists on main at research/codex/intake/2026/10/codex-research-adversarial-operator-qualification-enrichment-v1.json with SHA-256 f8d74709f24fd51348d0f85b3e326c3886dac40b52a90af7a43d82d4c04add6e, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-bounded-interval-receipt-v1.json",
+        "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-executor-validation-v1.json",
+        "scripts/api_agent/meme_alpha_blockscout.py",
+        "scripts/api_agent/meme_alpha_robinhood_pons_v2.py",
+        "Donh91/Investering-AI-Audit-Bridge: AUDIT-20261001-180500Z-CLAUDE-ADVERSARIAL-DENOMINATOR-ENRICHMENT + REVIEW-20261002-054500Z-CLAUDE-ADVERSARIAL-DENOMINATOR-ENRICHMENT",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "1623dee92fa97bf2a9bd",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-10-02T05:48:00Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "FROZEN_88_ROW_ENRICHMENT_REPRODUCIBLE_PLUS_SELF_EXEMPTION_GUARD_PASS_PLUS_UNKNOWN_HUB_GUARD_PASS_PLUS_NO_LOOKAHEAD_PASS_PLUS_EXISTING_COUNTING_RECEIPT_INTERPRETABLE_OR_SOURCE_TERMINAL_PLUS_ZERO_NEW_RUNTIME"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "61e884412e5e46484fb4206fb7180048e583623468e97ef6f3982173e709a716",
+      "transition_receipt_path": "research/codex/transitions/1623dee92fa97bf2a9bd.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-adversarial-operator-qualification-enrichment-v1"
+    },
     {
       "allowed_change_scope": [
         "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
@@ -48,7 +122,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T20:30:09Z",
+      "last_observed_at_utc": "2026-10-02T05:46:55Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -120,7 +194,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T20:30:09Z",
+      "last_observed_at_utc": "2026-10-02T05:46:55Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -171,12 +245,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 4b021da2dfb42a076539 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-01T20:29:58Z",
+      "last_observed_at_utc": "2026-10-02T05:46:45Z",
       "latest_run_id": 36777320605,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/36777320605",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve NO_RUN_HISTORY for cycle-navigator-precision-learning-supervisor.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 9,
+      "observations": 10,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 4b021da2dfb42a076539 for cycle-navigator-precision-learning-supervisor.yml/NO_RUN_HISTORY, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [

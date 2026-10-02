@@ -4,19 +4,14 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=36892196863:success,36883382891:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=1/2 sampled_runs=36624697658:success,36553768722:failure",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
-          "pass": true
+          "pass": false
         },
         {
           "evidence": "merged_research_zombies=0",
           "kind": "NO_MERGED_RESEARCH_ZOMBIES",
           "pass": true
-        },
-        {
-          "evidence": "MISSION_CONVERGENCE_REQUIRED",
-          "kind": "MISSION_CONVERGENCE",
-          "pass": false
         }
       ]
     },
@@ -24,7 +19,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=36921611825:success,36851467348:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=36924303480:success,36921611825:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
