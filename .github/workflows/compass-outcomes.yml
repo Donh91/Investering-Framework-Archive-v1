@@ -17,6 +17,7 @@ on:
       - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v1.md'
       - '04_MARKET_LEARNING/handlekompas/STRATEGIC_COMPASS_SCORING_CONTRACT_v1_1.md'
       - '04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v1.md'
+      - '04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v2.md'
   schedule:
     # Mature eligible 12h/72h/168h outcomes after the hourly owner sequence settles.
     - cron: '27 * * * *'
@@ -67,6 +68,11 @@ jobs:
               assert pair['integrity']['status']=='PASS'
               assert pair['integrity']['selection_used_outcome_correctness'] is False
               assert pair['integrity']['selection_used_realized_return'] is False
+          from pathlib import Path
+          shadow_v2=Path('04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v2.md').read_text()
+          assert 'SHADOW_COMPASS_V2_SCORING_v2' in shadow_v2
+          assert 'closest completed hourly close within one hour of target' in shadow_v2
+          assert 'No automatic promotion.' in shadow_v2
           PY
 
   mature:

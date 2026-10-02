@@ -100,3 +100,14 @@ The comparison may expose per-asset states such as both correct, both incorrect,
 
 The comparator is deterministic and read-only. It does not create or rewrite forecast/outcome evidence.
 
+## Time-basis erratum and v2 handoff
+
+The preregistered v1 text above states that the target observation may be selected within ±2 hours. That wording does not describe the currently operative scorer.
+
+The implemented Shadow outcome scorer uses `SHADOW_COMPASS_V2_SCORING_v2`, which inherits the Official Daily Compass v2 completed-close semantics:
+- target time is measured from the bound completed source close;
+- the endpoint is the nearest completed hourly close within one hour of target;
+- an effective window deviation greater than one hour is not scored.
+
+This erratum is documentation-only. It does not rewrite any frozen forecast, historical outcome, direction, threshold, model weight, market authority or portfolio decision. The operative v2 contract is documented separately in `SCORING_CONTRACT_v2.md`.
+
