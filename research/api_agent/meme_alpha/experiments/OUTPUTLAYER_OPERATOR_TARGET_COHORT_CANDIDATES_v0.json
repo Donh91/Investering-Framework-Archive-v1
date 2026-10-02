@@ -1,0 +1,280 @@
+{
+  "contract": "OUTPUTLAYER_OPERATOR_TARGET_COHORT_CANDIDATES_v0",
+  "date_utc": "2026-10-02",
+  "status": "EXTERNAL_RESEARCH_LEADS_NOT_SIGNAL_ELIGIBLE",
+  "owner_issue": 1087,
+  "experiment_parent": 1134,
+  "source": {
+    "repository": "raghav-rathi/copy-trading-min-latency",
+    "commit": "63d37fd16be47df6321363e919228490b005c36b",
+    "source_paths": [
+      "docs/research/operator-whale-wallets.md",
+      "docs/research/whale-profiles.md",
+      "data/whales_seed.json"
+    ],
+    "classification": "PUBLIC_EXTERNAL_RESEARCH",
+    "canonical_truth": false
+  },
+  "operator_contract": "0x53a42d2d0fdd60bf8f833fb94841349095a74024",
+  "chain_id": 4663,
+  "external_method_summary": {
+    "reported_clear_buy_episodes": 58,
+    "reported_same_block_attributed_episodes": 53,
+    "reported_distinct_targets": 25,
+    "reported_unmatched_examined": 4,
+    "reported_ambiguous_excluded": 1,
+    "reported_operator_buy_methods": [
+      "0x00000007",
+      "0x00000009"
+    ],
+    "attribution_rule": "Earlier same-block receipt transfers the same non-quote token to an end wallet; exclude pool/router/solver/hook infrastructure.",
+    "verification_state": "NOT_INDEPENDENTLY_REPRODUCED_BY_ALPHA_LAB"
+  },
+  "comparison_to_existing_frozen_cohort": {
+    "existing_contract": "FOMO_ROBINHOOD_PROSPECTIVE_WALLET_COHORT_v0",
+    "existing_member_count": 8,
+    "exact_address_overlap_count": 0,
+    "interpretation": "External operator-target set is a distinct candidate cohort. Do not mutate or backfill the pre-existing frozen cohort."
+  },
+  "fleet_lead": {
+    "funding_eoa": "0xf70da97812CB96acDF810712Aa562db8dfA3dbEF",
+    "candidate_members": [
+      "0x8A71697cc8a6E820C0bc12B29C1b329C3ab6599b",
+      "0x23ad4067aF541ee28c7f5c69Eff348139Beb7BD8",
+      "0x0B64C0469Be9502A45c79840e180842463189327",
+      "0x453f238A896538cA9560004500Af1392C7889875",
+      "0xbDcE13a1caDEa23a61013Fbfb470c7eEF4bA9520",
+      "0xf4d8eFcfEA218cE76BfDE064a2Be406345eA5ba6"
+    ],
+    "external_claim": "Six high-frequency target addresses appear funded by one EOA through RelayRouter and should be treated as one correlated fleet until independently reproduced.",
+    "verification_state": "EXTERNAL_LEAD_ONLY"
+  },
+  "members": [
+    {
+      "address": "0x8A71697cc8a6E820C0bc12B29C1b329C3ab6599b",
+      "external_episodes_copied": 9,
+      "external_classification": "fade",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x23ad4067aF541ee28c7f5c69Eff348139Beb7BD8",
+      "external_episodes_copied": 9,
+      "external_classification": "watch",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x0B64C0469Be9502A45c79840e180842463189327",
+      "external_episodes_copied": 7,
+      "external_classification": "pass",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x453f238A896538cA9560004500Af1392C7889875",
+      "external_episodes_copied": 3,
+      "external_classification": "watch",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xbDcE13a1caDEa23a61013Fbfb470c7eEF4bA9520",
+      "external_episodes_copied": 3,
+      "external_classification": "fade",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x4189BF4fA87Df00DfFe5dEe85339747F615beAD4",
+      "external_episodes_copied": 2,
+      "external_classification": "pass",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xf4d8eFcfEA218cE76BfDE064a2Be406345eA5ba6",
+      "external_episodes_copied": 2,
+      "external_classification": "pass",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x0fF344fFa232c31c2731b15121d482A4d79Bc4fa",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "OTIS",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x410795f6CC4013DF6aF5E2C05C6A6bFd5C0F0260",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "CLUB",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x20aC05aafC1b5786d7dB843eA98680708f190dce",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "PUNKS",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xA3c7bA27455617Aa74752407e75f43172268Ce89",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "revenue",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x516520189516Ba25C20E633289e7fd79EdaFD73c",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "U",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xe87548Bb6bCB664102300353A1751Aa188C36081",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "MARLIN",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x4f61815D66aC5dD30F8FEF0d642e3946650F8213",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "BALLAST",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xD223225CcAC5E89d75bC373786e5c71EDCbb41f8",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "TRENCHES",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x54e04dF6A6f6FEb56E13937E2eaF3371E5717f3c",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "CASINO",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x194DB29F5bEBacF3201aBc9dbDda452116A3FF23",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "ZIP",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xF7c0D9aEe226B632a25b1C096d8c285eD20d55b1",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "FARTDOG",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xD73D6b8B9E875569C0F03c572A3806E619BCBEc2",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "MVA",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xDCE001e4eC11AB58650c51AE9658accbe0F49c48",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "LIGER",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x696d1265C8Fc4F14797aBEBFAe3C43EBFA9D8e28",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "DOTS",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xf3756b61Cc04A16114A6bCa9f1AB6C28273D3174",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "HI",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xd874259110C6E086F1d2feE474b73e69b8F5DAB0",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "BOTBOOK",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0xa984149dA86Ad9Cc8D67a47e3d7B57aDB1415502",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "VRAX",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "address": "0x03bA951f72e59899Ac8Dab30cB5624dbE5D52Bb8",
+      "external_episodes_copied": 1,
+      "external_classification": "unrated",
+      "external_episode_token": "VRAX",
+      "address_role": "PENDING_INDEPENDENT_REPRODUCTION",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    }
+  ],
+  "hard_rules": [
+    "Do not import external classifications as Alpha Lab wallet quality.",
+    "Do not merge this set into the pre-existing frozen cohort.",
+    "Independently reproduce same-block attribution before any member becomes signal eligible.",
+    "Collapse correlated fleet/entity addresses before convergence count.",
+    "Infrastructure/shared routers/Relay are not entity evidence.",
+    "No BUY/SELL/copy-trade authority."
+  ]
+}
