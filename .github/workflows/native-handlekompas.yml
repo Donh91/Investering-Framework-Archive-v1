@@ -39,8 +39,8 @@ permissions:
 concurrency:
   # Read-only PR validation must not compete with serialized main writers.
   group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
+  queue: max
+  cancel-in-progress: false
 jobs:
   validate:
     if: github.event_name == 'pull_request'
