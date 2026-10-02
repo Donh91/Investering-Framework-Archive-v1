@@ -81,3 +81,22 @@ No source override.
 No threshold or model-weight change.
 No automatic promotion.
 No aggregate flattering accuracy score.
+
+## Deterministic Shadow vs Official pairing
+
+The implementation uses `SHADOW_OFFICIAL_PAIRING_v1` and remains outcome-blind.
+
+A pair is eligible only when the already-matured Shadow and Official outcomes have identical:
+- horizon;
+- start-reference close;
+- target time;
+- target observation close.
+
+Among eligible rows, the nearest issue timestamp is selected deterministically. Each Shadow outcome and each Official outcome may be used at most once.
+
+Correctness, realized return, MFE and MAE are not used to choose the pair. They are inspected only after pairing. A realized-path mismatch is an integrity failure; the comparator does not search for another row that would produce a better result.
+
+The comparison may expose per-asset states such as both correct, both incorrect, one correct while the other is incorrect, or one side abstaining. It must not produce an aggregate winner, flattering accuracy score, automatic promotion, model-weight change, threshold change, Official Compass override or portfolio action.
+
+The comparator is deterministic and read-only. It does not create or rewrite forecast/outcome evidence.
+
