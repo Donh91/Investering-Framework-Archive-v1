@@ -216,5 +216,76 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
             self.assertEqual(value['weekly_capture_pointer']['readiness'], 'DEGRADED')
 
 
+    def test_compass_learning_builds_outcome_blind_shadow_official_pairs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            official_root = root / '04_MARKET_LEARNING/handlekompas/official/outcomes/2026/10/01'
+            shadow_root = root / '04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes/2026/10/01'
+            official_root.mkdir(parents=True)
+            shadow_root.mkdir(parents=True)
+            realized = {
+                'btc_return_pct': -0.2,
+                'eth_return_pct': -0.3,
+                'ethbtc_return_pct': -0.1,
+                'btc_mfe_pct': 0.2,
+                'btc_mae_pct': -0.8,
+                'eth_mfe_pct': 0.4,
+                'eth_mae_pct': -1.1,
+            }
+            official = {
+                'contract': 'OFFICIAL_DAILY_COMPASS_OUTCOME_v1',
+                'compass_id': 'CMP-test',
+                'outcome_sha256': 'a' * 64,
+                'forecast_path': '04_MARKET_LEARNING/handlekompas/official/daily/2026/10/01/CMP-test.json',
+                'issued_at_utc': '2026-10-01T05:42:00Z',
+                'horizon': '12h',
+                'target_at_utc': '2026-10-01T17:00:00Z',
+                'target_observation_at_utc': '2026-10-01T16:00:00Z',
+                'time_basis': {'start_reference_at_utc': '2026-10-01T05:00:00Z'},
+                'realized': realized,
+                'direction_accuracy': {
+                    'btc': {'result': 'ABSTAINED', 'predicted': 'UNAVAILABLE'},
+                    'eth': {'result': 'ABSTAINED', 'predicted': 'UNAVAILABLE'},
+                },
+                'baselines': {'persistence': {'status': 'SCORED', 'correct': False}},
+            }
+            shadow = {
+                'contract': 'SHADOW_COMPASS_V2_OUTCOME_v1',
+                'forecast_id': 'SCV2-test',
+                'outcome_sha256': 'b' * 64,
+                'forecast_path': '04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/2026/10/01/SCV2-test.json',
+                'model_id': 'gpt-6.1-sol',
+                'reasoner_version': 'test',
+                'issued_at_utc': '2026-10-01T06:12:00Z',
+                'horizon': '12h',
+                'target_at_utc': '2026-10-01T17:00:00Z',
+                'target_observation_at_utc': '2026-10-01T16:00:00Z',
+                'time_basis': {'start_reference_at_utc': '2026-10-01T05:00:00Z'},
+                'realized': realized,
+                'direction_accuracy': {
+                    'btc': {'result': 'CORRECT', 'predicted': 'DOWN'},
+                    'eth': {'result': 'CORRECT', 'predicted': 'DOWN'},
+                },
+                'baselines': {'persistence': {'status': 'SCORED', 'correct': False}},
+                'frozen_forecast': {'direction': 'DOWN'},
+                'comparison_metadata': {'official_comparison_eligible': True},
+            }
+            (official_root / 'official.json').write_text(json.dumps(official))
+            (shadow_root / 'shadow.json').write_text(json.dumps(shadow))
+            start = datetime(2026, 10, 1, 0, 0, tzinfo=timezone.utc)
+            end = datetime(2026, 10, 2, 0, 0, tzinfo=timezone.utc)
+            data = module.load_compass_learning(root, start, end)
+            self.assertEqual(data['shadow_official_pair_count'], 1)
+            pair = data['shadow_official_comparison']['pairs'][0]
+            self.assertEqual(pair['shadow_forecast_id'], 'SCV2-test')
+            self.assertEqual(pair['official_compass_id'], 'CMP-test')
+            self.assertEqual(pair['integrity']['status'], 'PASS')
+            self.assertFalse(pair['integrity']['selection_used_outcome_correctness'])
+            self.assertEqual(
+                pair['asset_comparisons']['btc']['comparison_state'],
+                'SHADOW_CORRECT_OFFICIAL_ABSTAINED',
+            )
+
+
 if __name__ == '__main__':
     unittest.main()
