@@ -19,6 +19,9 @@ ACTIVATION_UTC = "2026-09-13T16:00:00Z"
 GAP_TYPES = {"missing", "partial", "contradicts", "unrequested"}
 REQUIREMENT_STATUS = {"SATISFIED", "BLOCKED"}
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
+HASH_CORRECTION_CONTRACT = "MISSION_CONVERGENCE_HASH_CORRECTION_v1"
+HASH_CORRECTION_AUTHORITY = "HASH_CORRECTION_ONLY_NO_SEMANTIC_REPLACEMENT"
+HASH_CORRECTION_REASON = "INVALID_DECLARED_RECEIPT_HASH"
 
 
 def now_iso() -> str:
@@ -254,7 +257,69 @@ def validate_receipt(repo_root: Path, task: dict[str, Any], completion: dict[str
         return None
     declared = str(receipt.get("receipt_sha256") or "")
     actual_hash = canonical_hash({k: v for k, v in receipt.items() if k != "receipt_sha256"})
-    return receipt if declared and declared == actual_hash else None
+    if declared and declared == actual_hash:
+        return receipt
+    return _apply_hash_correction(repo_root, task, receipt, completion, actual_hash)
+
+
+
+def _hash_correction_files(repo_root: Path, candidate_id: str) -> list[Path]:
+    root = repo_root / "research/codex/convergence/supersessions" / candidate_id
+    if not root.is_dir():
+        return []
+    return sorted(path for path in root.glob("*.json") if path.is_file())
+
+
+def _apply_hash_correction(
+    repo_root: Path,
+    task: dict[str, Any],
+    receipt: dict[str, Any],
+    completion: dict[str, Any],
+    actual_hash: str,
+) -> dict[str, Any] | None:
+    declared = str(receipt.get("receipt_sha256") or "")
+    if not declared or declared == actual_hash:
+        return None
+
+    paths = _hash_correction_files(repo_root, str(task.get("candidate_id") or ""))
+    if len(paths) != 1:
+        return None
+
+    try:
+        correction = read_json(paths[0])
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(correction, dict):
+        return None
+
+    expected_base_path = f"research/codex/convergence/{task['candidate_id']}.json"
+    required = {
+        "contract": HASH_CORRECTION_CONTRACT,
+        "candidate_id": task.get("candidate_id"),
+        "base_receipt_path": expected_base_path,
+        "base_declared_receipt_sha256": declared,
+        "corrected_receipt_sha256": actual_hash,
+        "reason_code": HASH_CORRECTION_REASON,
+        "candidate_sha256": task.get("candidate_sha256"),
+        "task_contract_sha256": task.get("task_contract_sha256"),
+        "signature": task.get("signature"),
+        "pr_number": completion.get("pr_number"),
+        "merge_commit_sha": completion.get("merge_commit_sha"),
+        "authority": HASH_CORRECTION_AUTHORITY,
+    }
+    if any(correction.get(key) != value for key, value in required.items()):
+        return None
+
+    correction_declared = str(correction.get("correction_sha256") or "")
+    correction_actual = canonical_hash(
+        {key: value for key, value in correction.items() if key != "correction_sha256"}
+    )
+    if not correction_declared or correction_declared != correction_actual:
+        return None
+
+    corrected = dict(receipt)
+    corrected["receipt_sha256"] = actual_hash
+    return corrected
 
 
 def completion_requires_convergence(completion: dict[str, Any]) -> bool:
