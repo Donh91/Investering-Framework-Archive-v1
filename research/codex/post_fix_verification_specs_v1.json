@@ -70,8 +70,78 @@
           ]
         }
       ]
+    },
+    {
+      "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
+      "predicates": [
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json",
+          "field": "status",
+          "value": "PASS"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json",
+          "field": "parent_replay",
+          "value": "PASS"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json",
+          "field": "neighbor_replay",
+          "value": "PASS"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json",
+          "field": "autonomous_route_observed",
+          "value": true
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json",
+          "field": "bounded_retest_route_observed",
+          "value": true
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json",
+          "field": "historical_market_reused_as_current",
+          "value": false
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json",
+          "field": "parallel_runtime",
+          "value": false
+        }
+      ]
+    },
+    {
+      "candidate_id": "codex-research-adversarial-operator-qualification-enrichment-v1",
+      "predicates": [
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-qualification-enrichment-postfix-verification-v1.json",
+          "field": "status",
+          "value": "PASS"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-qualification-enrichment-postfix-verification-v1.json",
+          "field": "full_88_enrichment_completed",
+          "value": true
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-qualification-enrichment-postfix-verification-v1.json",
+          "field": "counting_interpretable_or_source_terminal",
+          "value": true
+        }
+      ]
     }
   ],
-  "contract_revision": "1.3.0",
-  "verification_note": "Only explicitly machine-verifiable gates are listed. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. N_HEALTH_HISTORY_MATCH consumes immutable distinct-run health receipts bound to observed main HEAD and never infers evidence from mutable LATEST alone. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow."
+  "contract_revision": "1.4.0",
+  "verification_note": "Only explicitly machine-verifiable gates are listed. Adversarial runtime closure is bound to verified production-shaped replay receipts plus mission convergence. Adversarial qualification enrichment is intentionally configured but blocked until a real frozen 88-row enrichment/counting run becomes interpretable or explicitly source-terminal; merged code/tests alone cannot complete it. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. N_HEALTH_HISTORY_MATCH consumes immutable distinct-run health receipts bound to observed main HEAD and never infers evidence from mutable LATEST alone. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow."
 }
