@@ -1,0 +1,147 @@
+{
+  "contract": "MISSION_CONVERGENCE_ASSESSMENT_v1",
+  "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
+  "coverage": [
+    {
+      "source_ref": "objective",
+      "status": "SATISFIED",
+      "evidence": [
+        "Merge cf2a7cbecb84869375b5616c74e1cc81de8038b2 wired adversarial maintenance into MEME_ALPHA_RUNTIME_POLICY_v1 using the existing queue/heartbeat and no parallel runtime.",
+        "Public delta 06_RESEARCH_LAB/alpha_lab/2026-10-01__adversarial-operator-identity-runtime-delta-v1.md records two production-shaped adversarial replays and live existing-route behavior."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "Donh91/secrets Actions run 36846083826 selected exactly one ADVERSARIAL_REPLAY task through Meme Alpha Background Research; job 110316444833 completed successfully.",
+        "MEME_ALPHA_RUNTIME_POLICY_v1 adversarial_maintenance.max_tasks_per_run=1 and use_existing_queue_and_heartbeat=true."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "Donh91/secrets Actions run 36881054034 selected the P0 neighbor ADVERSARIAL_REPLAY and created two bounded P0 child/retest tasks through the existing child queue.",
+        "MEME_ALPHA_RUNTIME_POLICY_v1 routes qualified findings to EXISTING_INDEPENDENT_ADJUDICATION_AND_CODEX_REMEDIATION with self_adjudication=false and self_merge=false."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:3",
+      "status": "SATISFIED",
+      "evidence": [
+        "Private completion private_research/memes_alpha/research_leads/2026/10/01/2026-10-01T145000Z__ponscupine-adversarial-replay-v2-completion.json records same_run_stage0_exact_ca=true, current price/MC/sellability absent, historical_market_state_reused_as_current=false, output_state=DEGRADED and result=STALE_MARKET_ACTION_FAILS_CLOSED."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:4",
+      "status": "SATISFIED",
+      "evidence": [
+        "Public runtime delta records PONSCUPINE_STALE_MARKET_REPLAY=PASS and PONSCUPINE_STALE_ACTION_LANGUAGE_NEIGHBOR=PASS.",
+        "Actions runs 36846083826 and 36881054034 both completed successfully through the same bounded existing runtime path."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:5",
+      "status": "SATISFIED",
+      "evidence": [
+        "MEME_ALPHA_RUNTIME_POLICY_v1 sets p2_p3_default_state=SHADOW_OBSERVE and user_alert_authority=false."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:6",
+      "status": "SATISFIED",
+      "evidence": [
+        ".agents/skills/meme-alpha-supervisor/SKILL.md preserves empty-queue no-model-call no-op behavior; adversarial wiring reused the host runtime and did not replace that queue contract."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:7",
+      "status": "SATISFIED",
+      "evidence": [
+        "MEME_ALPHA_RUNTIME_POLICY_v1 sets use_existing_queue_and_heartbeat=true, event_driven_via_existing_intake_push=true, parallel_runtime=false, parallel_scanner=false and parallel_ledger=false.",
+        "Public runtime delta observes main/restricted pushes waking the existing background-research workflow and bounded child tasks routing through the existing child queue."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "Parent PONSCUPINE completion proves historical market state was not reused as current and the result failed closed DEGRADED."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "Parent and neighbor replays remained DEGRADED when same-run current price/market-cap/sellability were absent; no present-tense actionable state was carried forward."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:3",
+      "status": "SATISFIED",
+      "evidence": [
+        "LIVE_OBSERVATION_INTEGRITY_CONTRACT_v1 has unknown_is_zero=false, market_cap_may_fallback_to_fdv=false and fdv_may_be_labeled_market_cap=false; adversarial wiring reuses this existing live-observation owner."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:4",
+      "status": "SATISFIED",
+      "evidence": [
+        "LIVE_OBSERVATION_INTEGRITY_CONTRACT_v1 is ACTIVE_FAIL_CLOSED and requires timestamped current observations; stale/current conflicts stop before ACTION rather than passing ACTION_LIVE."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:5",
+      "status": "SATISFIED",
+      "evidence": [
+        "Runtime objective and live-observation integrity are exact-asset keyed by chain plus exact token contract/mint; the two replays demonstrate candidate-specific same-run hydration rather than carried ranking state."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:6",
+      "status": "SATISFIED",
+      "evidence": [
+        "MEME_ALPHA_RUNTIME_POLICY_v1 explicitly sets parallel_runtime=false, parallel_scanner=false, parallel_ledger=false and direct_code_write=false; merge cf2a7cbecb84869375b5616c74e1cc81de8038b2 added no new scheduler/workflow."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:7",
+      "status": "SATISFIED",
+      "evidence": [
+        "MEME_ALPHA_RUNTIME_POLICY_v1 sets self_adjudication=false, self_merge=false, trading_authority=false and user_alert_authority=false; forbidden authority surfaces remain unchanged."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:8",
+      "status": "SATISFIED",
+      "evidence": [
+        "Production-shaped runs 36846083826 and 36881054034 executed through the existing Meme Alpha Background Research workflow, proving host reuse rather than a second runtime."
+      ]
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "status": "SATISFIED",
+      "evidence": [
+        "Merge cf2a7cbecb84869375b5616c74e1cc81de8038b2 changed only MEME_ALPHA_RUNTIME_POLICY_v1 plus the governed transition receipt, within the candidate allowed scope."
+      ]
+    },
+    {
+      "source_ref": "authority:forbidden_changes",
+      "status": "SATISFIED",
+      "evidence": [
+        "Merge diff adds no market gates, model weights, portfolio logic, API budget, trade execution, auto-buy/sell, auto-merge, parallel runtime, parallel ledger or parallel forecast engine."
+      ]
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "status": "SATISFIED",
+      "evidence": [
+        "Parent stale-market replay PASS: private run 36846083826 plus public runtime delta.",
+        "Neighbor stale-action replay PASS and bounded retest routing observed: private run 36881054034 plus public runtime delta.",
+        "MEME_ALPHA_RUNTIME_POLICY_v1 confirms zero parallel runtime/scanner/ledger."
+      ]
+    }
+  ],
+  "gaps": []
+}
