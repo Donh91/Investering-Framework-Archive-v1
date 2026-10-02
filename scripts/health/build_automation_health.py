@@ -533,7 +533,19 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
         if row["scheduled"]:
             scheduled_latest = live.get("latest_scheduled_run") if "latest_scheduled_run" in live else latest
             if not scheduled_latest:
-                if lifecycle == "PENDING_FIRST_EXPECTED_RUN":
+                lifecycle_since = parse_ts(row.get("lifecycle_since"))
+                expected = _most_recent_expected_run(
+                    list(row.get("cron_expressions") or []),
+                    str(row.get("schedule_timezone") or "UTC"),
+                    now - SCHEDULE_LATENESS_TOLERANCE,
+                )
+                activated_after_last_expected_slot = (
+                    lifecycle == "ACTIVE"
+                    and lifecycle_since is not None
+                    and expected is not None
+                    and expected < lifecycle_since
+                )
+                if lifecycle == "PENDING_FIRST_EXPECTED_RUN" or activated_after_last_expected_slot:
                     findings.append("PENDING_FIRST_EXPECTED_RUN")
                 else:
                     findings.append("NO_RUN_HISTORY")
