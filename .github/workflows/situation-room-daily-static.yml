@@ -22,8 +22,7 @@ concurrency:
   # Read-only PR validation must never consume the single serialized production-writer slot.
   group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
   queue: max
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
+  cancel-in-progress: false
 jobs:
   validate:
     if: github.event_name == 'pull_request'

@@ -112,4 +112,24 @@ jobs:
 """)
         self.assertIn('MAIN_WRITER_WITHOUT_MAX_QUEUE',findings)
 
+
+    def test_queue_max_with_cancel_expression_fails(self):
+        findings=self.inspect("""on:
+  pull_request:
+permissions:
+  contents: write
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  queue: max
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  build:
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: git push origin HEAD:main
+""")
+        self.assertIn('MAIN_WRITER_QUEUE_CANCEL_CONFLICT',findings)
 if __name__=='__main__':unittest.main()

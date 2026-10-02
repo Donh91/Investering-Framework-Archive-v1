@@ -33,6 +33,8 @@ def inspect(path: Path) -> list[str]:
     group_value = group_match.group(1).strip().strip("'\"") if group_match else None
     queue_match = re.search(r"(?m)^\s+queue:\s*([^\n#]+)", text)
     queue_value = queue_match.group(1).strip().strip("'\"") if queue_match else None
+    cancel_match = re.search(r"(?m)^\s+cancel-in-progress:\s*([^\n#]+)", text)
+    cancel_value = cancel_match.group(1).strip().strip("'\"") if cancel_match else None
     writer_group = group_value in {"framework-main-writer", PR_ISOLATED_WRITER_GROUP}
 
     if push_trigger:
@@ -45,6 +47,8 @@ def inspect(path: Path) -> list[str]:
         findings.append("MAIN_WRITER_WITHOUT_SHARED_CONCURRENCY")
     elif queue_value != "max":
         findings.append("MAIN_WRITER_WITHOUT_MAX_QUEUE")
+    elif cancel_value not in {None, "false"}:
+        findings.append("MAIN_WRITER_QUEUE_CANCEL_CONFLICT")
     if pr_trigger and group_value == "framework-main-writer":
         findings.append("PR_VALIDATION_COMPETES_WITH_MAIN_WRITER")
     return findings

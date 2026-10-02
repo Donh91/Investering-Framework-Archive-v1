@@ -71,7 +71,7 @@ permissions:
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
   queue: max
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 jobs:
   validate:
     if: github.event_name == 'pull_request'
@@ -1060,3 +1060,25 @@ jobs:
     row = module.workflow_static(path)
     assert row["writer_queue"] == "max"
     assert "MAIN_WRITER_WITHOUT_MAX_QUEUE" not in row["static_risks"]
+
+def test_shared_writer_queue_max_rejects_cancel_expression_that_can_be_true(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Queue Safety
+on:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  queue: max
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  observe:
+    steps:
+      - run: echo observe
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["writer_queue"] == "max"
+    assert "MAIN_WRITER_QUEUE_CANCEL_CONFLICT" in row["static_risks"]

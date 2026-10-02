@@ -360,6 +360,7 @@ def workflow_static(path: Path) -> dict[str, Any]:
     uses_cfgi = "CFGI_API_KEY" in text or "cfgi_" in text.lower()
     writer_group = _mapping_direct_scalar(text, "concurrency", "group")
     writer_queue = _mapping_direct_scalar(text, "concurrency", "queue")
+    writer_cancel = _mapping_direct_scalar(text, "concurrency", "cancel-in-progress")
     cron_expressions, schedule_timezone = _schedule_metadata(text)
     cron_count = len(cron_expressions)
     permissions = sorted(set(re.findall(r"(?m)^\s{2}([a-z-]+):\s*(read|write|none)\s*$", text)))
@@ -384,6 +385,8 @@ def workflow_static(path: Path) -> dict[str, Any]:
         risks.append("NON_GLOBAL_WRITER_LOCK")
     if writer_group and "framework-main-writer" in writer_group and writer_queue != "max":
         risks.append("MAIN_WRITER_WITHOUT_MAX_QUEUE")
+    if writer_group and "framework-main-writer" in writer_group and writer_queue == "max" and writer_cancel not in {None, "false"}:
+        risks.append("MAIN_WRITER_QUEUE_CANCEL_CONFLICT")
     if writes and "git rebase --abort" not in text:
         risks.append("NO_REBASE_ABORT")
     if writes and "merge-base --is-ancestor" not in text and "git show origin/main:" not in text:
@@ -432,6 +435,7 @@ def workflow_static(path: Path) -> dict[str, Any]:
         "writes_main": writes,
         "writer_group": writer_group,
         "writer_queue": writer_queue,
+        "writer_cancel_in_progress": writer_cancel,
         "openai_enabled": uses_openai,
         "cfgi_enabled": uses_cfgi,
         "permissions": [{"scope": scope, "level": level} for scope, level in permissions],
@@ -623,6 +627,7 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
         "REPEATED_CONSECUTIVE_FAILURES",
         "NON_GLOBAL_WRITER_LOCK",
         "MAIN_WRITER_WITHOUT_MAX_QUEUE",
+        "MAIN_WRITER_QUEUE_CANCEL_CONFLICT",
         "NO_MAIN_READBACK",
         "INVALID_LIFECYCLE_STATE",
         "EXPECTED_BLOCK_HAS_SCHEDULE",
