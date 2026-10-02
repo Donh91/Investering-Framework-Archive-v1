@@ -192,6 +192,39 @@ def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
     return False
 
 
+
+def _mapping_direct_scalar(text: str, parent: str, child: str) -> str | None:
+    """Return one scalar direct child from a top-level YAML block mapping."""
+    lines = text.splitlines()
+    parent_re = re.compile(
+        rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"])\s*:\s*(?:#.*)?$"
+    )
+    child_re = re.compile(
+        rf"(?:{re.escape(child)}|['\"]{re.escape(child)}['\"])\s*:\s*([^#]+?)(?:\s+#.*)?$"
+    )
+    for index, line in enumerate(lines):
+        if not parent_re.fullmatch(line):
+            continue
+        block: list[tuple[int, str]] = []
+        for candidate in lines[index + 1:]:
+            stripped = candidate.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            indent = len(candidate) - len(candidate.lstrip(" "))
+            if indent == 0:
+                break
+            block.append((indent, candidate.lstrip(" ")))
+        if not block:
+            return None
+        direct_indent = min(indent for indent, _ in block)
+        for indent, value in block:
+            if indent != direct_indent:
+                continue
+            match = child_re.fullmatch(value)
+            if match:
+                return match.group(1).strip().strip("'\"")
+    return None
+
 def _quoted_values(text: str, key: str) -> list[str]:
     pattern = re.compile(rf"(?:^|[{{,\s-]){re.escape(key)}\s*:\s*(['\"])(.*?)\1", re.MULTILINE)
     return [match.group(2).strip() for match in pattern.finditer(text)]
@@ -325,10 +358,8 @@ def workflow_static(path: Path) -> dict[str, Any]:
     manual = "workflow_dispatch:" in text
     uses_openai = "OPENAI_API_KEY" in text or "api_gateway.py" in text
     uses_cfgi = "CFGI_API_KEY" in text or "cfgi_" in text.lower()
-    writer_group = None
-    match = re.search(r"(?m)^\s*group:\s*([^\n#]+)", text)
-    if match:
-        writer_group = match.group(1).strip().strip("'\"")
+    writer_group = _mapping_direct_scalar(text, "concurrency", "group")
+    writer_queue = _mapping_direct_scalar(text, "concurrency", "queue")
     cron_expressions, schedule_timezone = _schedule_metadata(text)
     cron_count = len(cron_expressions)
     permissions = sorted(set(re.findall(r"(?m)^\s{2}([a-z-]+):\s*(read|write|none)\s*$", text)))
@@ -351,6 +382,8 @@ def workflow_static(path: Path) -> dict[str, Any]:
     writer_group_safe = writer_group in {WRITER_GROUP, PR_ISOLATED_WRITER_GROUP}
     if writes and not writer_group_safe:
         risks.append("NON_GLOBAL_WRITER_LOCK")
+    if writer_group and "framework-main-writer" in writer_group and writer_queue != "max":
+        risks.append("MAIN_WRITER_WITHOUT_MAX_QUEUE")
     if writes and "git rebase --abort" not in text:
         risks.append("NO_REBASE_ABORT")
     if writes and "merge-base --is-ancestor" not in text and "git show origin/main:" not in text:
@@ -398,6 +431,7 @@ def workflow_static(path: Path) -> dict[str, Any]:
         "schedule_timezone": schedule_timezone,
         "writes_main": writes,
         "writer_group": writer_group,
+        "writer_queue": writer_queue,
         "openai_enabled": uses_openai,
         "cfgi_enabled": uses_cfgi,
         "permissions": [{"scope": scope, "level": level} for scope, level in permissions],
@@ -588,6 +622,7 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
         "LATEST_RUN_FAILED",
         "REPEATED_CONSECUTIVE_FAILURES",
         "NON_GLOBAL_WRITER_LOCK",
+        "MAIN_WRITER_WITHOUT_MAX_QUEUE",
         "NO_MAIN_READBACK",
         "INVALID_LIFECYCLE_STATE",
         "EXPECTED_BLOCK_HAS_SCHEDULE",

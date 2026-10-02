@@ -23,6 +23,7 @@ permissions:
   contents: write
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  queue: max
 jobs:
   validate:
     if: github.event_name == 'pull_request'
@@ -46,6 +47,7 @@ permissions:
   contents: write
 concurrency:
   group: framework-main-writer
+  queue: max
   cancel-in-progress: false
 jobs:
   validate:
@@ -89,5 +91,25 @@ jobs:
     def test_missing_shared_concurrency_fails(self):
         findings=self.inspect("""on:\n  workflow_dispatch:\npermissions:\n  contents: write\njobs:\n  build:\n    if: github.ref == 'refs/heads/main'\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: main\n      - run: git push origin HEAD:main\n""")
         self.assertIn('MAIN_WRITER_WITHOUT_SHARED_CONCURRENCY',findings)
+
+
+    def test_shared_writer_without_max_queue_fails(self):
+        findings=self.inspect("""on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: git push origin HEAD:main
+""")
+        self.assertIn('MAIN_WRITER_WITHOUT_MAX_QUEUE',findings)
 
 if __name__=='__main__':unittest.main()

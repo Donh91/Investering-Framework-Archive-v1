@@ -70,6 +70,7 @@ permissions:
   contents: write
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  queue: max
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   validate:
@@ -1011,3 +1012,51 @@ jobs:
     assert status == "AMBER"
     assert "NO_RUN_HISTORY" in findings
     assert "PENDING_FIRST_EXPECTED_RUN" not in findings
+
+
+def test_shared_writer_without_max_queue_is_red(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Queue Safety
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+jobs:
+  observe:
+    steps:
+      - run: echo observe
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["writer_group"] == "framework-main-writer"
+    assert row["writer_queue"] is None
+    status, findings = module.classify(row, datetime(2026, 10, 2, 6, 30, tzinfo=timezone.utc))
+    assert status == "RED"
+    assert "MAIN_WRITER_WITHOUT_MAX_QUEUE" in findings
+
+
+def test_shared_writer_max_queue_is_safe_even_for_non_writer_group_member(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Queue Safety
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: framework-main-writer
+  queue: max
+  cancel-in-progress: false
+jobs:
+  observe:
+    steps:
+      - run: echo observe
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["writer_queue"] == "max"
+    assert "MAIN_WRITER_WITHOUT_MAX_QUEUE" not in row["static_risks"]

@@ -31,6 +31,8 @@ def inspect(path: Path) -> list[str]:
     pinned = checkout_has_main_pin(text)
     group_match = re.search(r"(?m)^\s+group:\s*([^\n#]+)", text)
     group_value = group_match.group(1).strip().strip("'\"") if group_match else None
+    queue_match = re.search(r"(?m)^\s+queue:\s*([^\n#]+)", text)
+    queue_value = queue_match.group(1).strip().strip("'\"") if queue_match else None
     writer_group = group_value in {"framework-main-writer", PR_ISOLATED_WRITER_GROUP}
 
     if push_trigger:
@@ -41,6 +43,8 @@ def inspect(path: Path) -> list[str]:
         findings.append("MAIN_WRITER_CHECKOUT_NOT_PINNED")
     if not writer_group:
         findings.append("MAIN_WRITER_WITHOUT_SHARED_CONCURRENCY")
+    elif queue_value != "max":
+        findings.append("MAIN_WRITER_WITHOUT_MAX_QUEUE")
     if pr_trigger and group_value == "framework-main-writer":
         findings.append("PR_VALIDATION_COMPETES_WITH_MAIN_WRITER")
     return findings
@@ -65,6 +69,7 @@ def main() -> None:
             "A manually dispatchable main writer must be pinned to main by job guard or checkout ref.",
             "Every main-writing workflow must include an explicit main checkout; immutable downstream checkouts may use a frozen commit.",
             "Every production main writer must serialize through framework-main-writer concurrency.",
+            "Every framework-main-writer member must use queue: max so later group members cannot replace a pending production writer.",
             "A workflow with pull_request validation and production main writes must isolate PR runs from framework-main-writer.",
         ],
     }
