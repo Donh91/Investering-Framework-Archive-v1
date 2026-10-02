@@ -22,7 +22,7 @@ def write_workflow(tmp_path: Path, body: str) -> Path:
 def healthy_writer(tmp_path: Path) -> dict:
     path = write_workflow(
         tmp_path,
-        """name: Test\non:\n  schedule:\n    - cron: '0 1 * * *'\n      timezone: 'Europe/Copenhagen'\npermissions:\n  contents: write\nconcurrency:\n  group: framework-main-writer\njobs:\n  x:\n    steps:\n      - run: |\n          git add out\n          if git diff --cached --quiet; then exit 0; fi\n          git rebase --abort || true\n          git push origin HEAD:main\n          git merge-base --is-ancestor HEAD origin/main\n""",
+        """name: Test\non:\n  schedule:\n    - cron: '0 1 * * *'\n      timezone: 'Europe/Copenhagen'\npermissions:\n  contents: write\nconcurrency:\n  group: framework-main-writer\n  queue: max\n  cancel-in-progress: false\njobs:\n  x:\n    steps:\n      - run: |\n          git add out\n          if git diff --cached --quiet; then exit 0; fi\n          git rebase --abort || true\n          git push origin HEAD:main\n          git merge-base --is-ancestor HEAD origin/main\n""",
     )
     return module.workflow_static(path)
 
