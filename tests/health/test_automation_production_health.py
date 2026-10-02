@@ -937,3 +937,77 @@ def test_askr_target_watcher_is_retired_after_verified_launch() -> None:
     assert positive["launch_block"] == 66443556
     assert positive["launch_tx"] == "0xa5ffe87bd1e9b6b91f84bb237c2d6408a7df39cb0651f85760004712074585f3"
 
+
+
+def test_active_weekly_workflow_activated_after_last_slot_is_pending_until_first_expected_opportunity(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """# framework-lifecycle-reason: FIRST_WEEKLY_SLOT_NOT_YET_REACHED
+# framework-lifecycle-since: 2026-09-28T20:51:29Z
+name: New Weekly
+on:
+  schedule:
+    - cron: '45 10 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+jobs:
+  x:
+    steps:
+      - run: echo ok
+""",
+    )
+    row = module.workflow_static(path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {
+            "status": "completed",
+            "conclusion": "success",
+            "event": "workflow_dispatch",
+            "created_at": "2026-09-30T21:07:08Z",
+        },
+        "latest_scheduled_run": None,
+        "recent_failure_count": 0,
+        "failure_streak": 0,
+        "expected_success_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 10, 2, 6, 30, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "PENDING_FIRST_EXPECTED_RUN" in findings
+    assert "NO_RUN_HISTORY" not in findings
+
+
+def test_active_weekly_workflow_becomes_no_history_after_first_expected_opportunity_is_missed(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """# framework-lifecycle-reason: FIRST_WEEKLY_SLOT_NOT_YET_REACHED
+# framework-lifecycle-since: 2026-09-28T20:51:29Z
+name: New Weekly
+on:
+  schedule:
+    - cron: '45 10 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+jobs:
+  x:
+    steps:
+      - run: echo ok
+""",
+    )
+    row = module.workflow_static(path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {
+            "status": "completed",
+            "conclusion": "success",
+            "event": "workflow_dispatch",
+            "created_at": "2026-09-30T21:07:08Z",
+        },
+        "latest_scheduled_run": None,
+        "recent_failure_count": 0,
+        "failure_streak": 0,
+        "expected_success_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 10, 5, 15, 0, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "NO_RUN_HISTORY" in findings
+    assert "PENDING_FIRST_EXPECTED_RUN" not in findings
