@@ -1,0 +1,41 @@
+{
+  "contract": "ADVERSARIAL_RUNTIME_POST_FIX_VERIFICATION_v1",
+  "status": "PASS",
+  "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
+  "merge_commit_sha": "cf2a7cbecb84869375b5616c74e1cc81de8038b2",
+  "verified_at_utc": "2026-10-02T07:35:00Z",
+  "parent_replay": "PASS",
+  "neighbor_replay": "PASS",
+  "autonomous_route_observed": true,
+  "bounded_retest_route_observed": true,
+  "same_run_exact_ca_gate_observed": true,
+  "historical_market_reused_as_current": false,
+  "parallel_runtime": false,
+  "parallel_scanner": false,
+  "parallel_ledger": false,
+  "automatic_trading": false,
+  "user_alert_authority": false,
+  "private_runtime_evidence": [
+    {
+      "repository": "Donh91/secrets",
+      "workflow": "Meme Alpha Background Research",
+      "run_id": 36846083826,
+      "job_id": 110316444833,
+      "conclusion": "success",
+      "role": "PARENT_STALE_MARKET_REPLAY"
+    },
+    {
+      "repository": "Donh91/secrets",
+      "workflow": "Meme Alpha Background Research",
+      "run_id": 36881054034,
+      "job_id": 110432600146,
+      "conclusion": "success",
+      "role": "NEIGHBOR_STALE_ACTION_REPLAY"
+    }
+  ],
+  "public_evidence": [
+    "06_RESEARCH_LAB/alpha_lab/2026-10-01__adversarial-operator-identity-runtime-delta-v1.md",
+    "research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json"
+  ],
+  "authority": "POST_FIX_VERIFICATION_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY"
+}
