@@ -4,14 +4,19 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=1/2 sampled_runs=36624697658:success,36553768722:failure",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=36970427337:success,36921940891:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
-          "pass": false
+          "pass": true
         },
         {
           "evidence": "merged_research_zombies=0",
           "kind": "NO_MERGED_RESEARCH_ZOMBIES",
           "pass": true
+        },
+        {
+          "evidence": "MISSION_CONVERGENCE_REQUIRED",
+          "kind": "MISSION_CONVERGENCE",
+          "pass": false
         }
       ]
     },
