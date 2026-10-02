@@ -1,0 +1,109 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-adversarial-operator-qualification-enrichment-v1",
+  "submitted_at_utc": "2026-10-02T05:48:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Alpha Lab adversarial operator anticipation / denominator enrichment",
+    "source_paths": [
+      "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-bounded-interval-manifest-v1.json",
+      "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-bounded-interval-receipt-v1.json",
+      "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-executor-validation-v1.json",
+      "scripts/research/memes_alpha/adversarial_operator_counting.py",
+      "scripts/api_agent/meme_alpha_blockscout.py",
+      "scripts/api_agent/meme_alpha_robinhood_pons_v2.py"
+    ]
+  },
+  "title": "Enrich frozen adversarial launch denominator with pre-T0 qualification evidence",
+  "objective": "Implement the smallest deterministic SHADOW-ONLY enrichment needed to make the already-frozen 88-launch adversarial counting interval interpretable. Reuse existing Robinhood RPC, Blockscout and counting owners. Enrich each input launch with only pre-T0 launch-preparation/funding evidence plus at most T0..T0+1 launch-inventory evidence, preserve explicit UNKNOWN states, apply self-exemption and benign-infrastructure controls, and then execute the existing frozen counting contract without changing thresholds or qualification semantics. Do not create a new scanner, scheduler, score, alert rule, trading engine, API budget or portfolio authority.",
+  "finding_key": "ADVERSARIAL_OPERATOR_COUNTING_INTERVAL_MISSING_PRE_T0_QUALIFICATION_EVIDENCE",
+  "primary_target": "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-bounded-interval-manifest-v1.json",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/reports/**",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/experiments/** only for an output/enrichment schema that does not change frozen qualification semantics",
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_blockscout.py only for a generic read-only history helper",
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_robinhood_pons_v2.py only for generic bounded receipt/log retrieval reused by the enrichment",
+    "Donh91/secrets:collectors/memes_alpha/** only if the existing restricted runtime is the only available owner for bounded ancestry retrieval",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:private_research/memes_alpha/** for sanitized SHADOW receipts only"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-bounded-interval-receipt-v1.json",
+      "summary": "The deterministic counting executor correctly stopped at INCOMPLETE_SOURCE_EVIDENCE because all 88 frozen rows lack load-bearing qualification enrichment."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/reports/2026-10-01__adversarial-counting-executor-validation-v1.json",
+      "summary": "Counting code and 14 focused tests are already merged; the next bounded requirement is source enrichment, not threshold tuning."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/api_agent/meme_alpha_blockscout.py",
+      "summary": "Existing Blockscout transport already supports authenticated PRO with public fallback and arbitrary read-only /api/v2 paths without persisting credentials."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/api_agent/meme_alpha_robinhood_pons_v2.py",
+      "summary": "Existing Robinhood RPC owner already provides chain-checked bounded log/event access and must be reused."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "Donh91/Investering-AI-Audit-Bridge: AUDIT-20261001-180500Z-CLAUDE-ADVERSARIAL-DENOMINATOR-ENRICHMENT + REVIEW-20261002-054500Z-CLAUDE-ADVERSARIAL-DENOMINATOR-ENRICHMENT",
+      "summary": "Independent source-feasibility research found the 88-row enrichment is testable, identified a self-exemption trap, and established UNKNOWN_HUB and anti-leakage requirements."
+    }
+  ],
+  "reproduction": "From fresh main, run the existing adversarial_operator_counting.py against the frozen 88-row manifest. Confirm the receipt remains INCOMPLETE_SOURCE_EVIDENCE because pre_t0_prep_observed, common funding/operator evidence, privileged launch surface and related qualification fields are absent. Confirm repository RPC/Blockscout owners can retrieve launch transaction/calldata and bounded address history. The defect is reproduced when the frozen scientific counting contract is executable but the selected outcome-blind source interval cannot be classified without a deterministic enrichment layer.",
+  "acceptance_tests": {
+    "positive": [
+      "A bounded enrichment invocation accepts the immutable 88-row manifest and preserves every input launch row, including enrichment failures.",
+      "Launch calldata/receipt evidence is decoded without outcome lookup and records the raw snipeTaxExemptions list where available.",
+      "Third-party privileged exemptions exclude deployer, recipient and tx_from so automatic/self exemption cannot create a false privilege signal.",
+      "All pre-T0 history-derived features discard rows after launch T0; launch-inventory evidence is capped at T0..T0+1 block and an as_of_block_max is persisted.",
+      "Pre-T0 preparation becomes TRUE only from launch-relevant preparation evidence; unrelated prior wallet activity remains contextual.",
+      "Common funding becomes FALSE only with sufficiently complete relevant histories; missing or truncated histories stay UNKNOWN.",
+      "Named protocol/router/Relay/bridge/CEX/factory infrastructure cannot satisfy common-funding/operator qualification.",
+      "An unlabeled high-throughput EOA meeting the frozen >=10000 transaction ambiguity rule is classified UNKNOWN_HUB and cannot qualify as benign infrastructure or operator evidence.",
+      "Direct operator lineage in v1 is set TRUE only from exact deterministic matches to already-frozen historical evidence, never from same factory/router or similarity alone.",
+      "No price, return, ATH, caller reputation, later distribution outcome or future token performance is read or emitted during enrichment.",
+      "The enriched manifest is consumable by the already-merged adversarial_operator_counting.py without changing its frozen <=10/day and 50% infrastructure semantics.",
+      "One bounded receipt for the frozen interval resolves to an interpretable counting state or explicitly NOT_MEASURABLE_WITH_CURRENT_FREE_SOURCES with source-health reasons."
+    ],
+    "negative": [
+      "No missing field may be converted to zero, false, no-risk or no-hit unless the required source coverage proves absence.",
+      "No post-T0 transaction history may influence pre-T0 funding/preparation fields.",
+      "Router-emitted self exemption alone must not create privileged_bundle_evidence.",
+      "A high-throughput unlabeled EOA must not be auto-classified as CEX, Relay, benign infrastructure or operator.",
+      "No multi-hop beneficial-owner inference, deanonymization or real-world identity claim is permitted.",
+      "No outcome fields may be joined before the enriched qualification row and counting result are frozen.",
+      "No review-budget threshold, Stage A/Stage B semantic, alert rule, market gate, model weight or API budget may change.",
+      "No new workflow, scheduler, parallel runtime, evidence ledger, scanner or trading authority may be created."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic trade execution",
+    "automatic buy or sell signals",
+    "automatic alerts from this experiment",
+    "review-budget threshold changes",
+    "parallel Alpha runtime",
+    "parallel scanner",
+    "parallel evidence ledger",
+    "new scheduler",
+    "post-outcome feature fitting"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "FROZEN_88_ROW_ENRICHMENT_REPRODUCIBLE_PLUS_SELF_EXEMPTION_GUARD_PASS_PLUS_UNKNOWN_HUB_GUARD_PASS_PLUS_NO_LOOKAHEAD_PASS_PLUS_EXISTING_COUNTING_RECEIPT_INTERPRETABLE_OR_SOURCE_TERMINAL_PLUS_ZERO_NEW_RUNTIME"
+}
