@@ -6,8 +6,13 @@ import hashlib
 import json
 import os
 import time
+import sys
 from pathlib import Path
 from typing import Any
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
 from api_gateway import PRICES_PER_MILLION, call_api, canonical_bytes, estimate_cost, sha256_bytes
 
