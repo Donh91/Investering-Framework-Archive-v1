@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/framework-learning-supervisor.yml'
       - 'scripts/api_agent/senior_repair_audit_dispatch.py'
+      - 'scripts/api_agent/fmos_mission_loop_audit_dispatch.py'
       - 'scripts/api_agent/api_gateway.py'
       - 'scripts/framework_intelligence/automation_orchestration_v1.py'
       - 'research/api_agent/API_TASK_REGISTRY_v1.json'
@@ -20,6 +21,7 @@ on:
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
       - 'tests/framework_intelligence/test_automation_orchestration_v1.py'
       - 'tests/api_agent/test_api_gateway.py'
+      - 'tests/api_agent/test_fmos_mission_loop_audit_dispatch.py'
       - 'tests/api_agent/test_capability_router.py'
       - 'tests/framework_intelligence/test_weekly_forensics_v1.py'
       - 'tests/framework_intelligence/test_weekly_forensics_replay_v1.py'
@@ -63,6 +65,7 @@ jobs:
         run: |
           python -m py_compile \
             scripts/api_agent/senior_repair_audit_dispatch.py \
+            scripts/api_agent/fmos_mission_loop_audit_dispatch.py \
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
@@ -78,6 +81,7 @@ jobs:
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
+            tests.api_agent.test_fmos_mission_loop_audit_dispatch \
             tests.api_agent.test_capability_router \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
@@ -302,6 +306,163 @@ jobs:
           COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "SENIOR_REPAIR_AUDIT duplicate trigger $COMMENT_ID: NOOP, immutable receipt already exists."
+  fmos-mission-loop-audit:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1440 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[FMOS_MISSION_LOOP_AUDIT]')
+    permissions:
+      contents: write
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate bounded FMOS audit machinery
+        run: |
+          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py scripts/api_agent/fmos_mission_loop_audit_dispatch.py
+          python -m unittest tests.api_agent.test_fmos_mission_loop_audit_dispatch -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          policy=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
+          task=registry['tasks']['FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT']
+          assert task['model']=='gpt-6.1-sol'
+          assert task['reasoning_effort']=='high'
+          assert task['invocation_mode']=='EVENT_DRIVEN_OWNER_GATED_ONE_OFF'
+          assert task['advisory_only'] is True
+          assert task['automatic_code_write'] is False
+          assert task['automatic_merge'] is False
+          assert registry['single_run_hard_stop_usd']==3.0
+          assert policy['monthly_hard_stop_usd']==40.0
+          assert policy['lane_caps_usd']['FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT']==6
+          assert policy['fmos_autonomous_mission_loop_audit']['maximum_runs_per_mission']==3
+          PY
+      - name: Deduplicate exact audit trigger
+        id: dedupe
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          dest="research/api_agent/outputs/fmos_autonomous_mission_loop_audit/issue-1440/comment-${COMMENT_ID}"
+          if [ -f "$dest/pass3/receipt.json" ]; then
+            echo "run_audit=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_audit=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "dest=$dest" >> "$GITHUB_OUTPUT"
+      - name: Enforce FMOS lane and global API budgets
+        if: steps.dedupe.outputs.run_audit == 'true'
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT --cap-usd 6.0 --reserve-usd 0.50
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4.0
+      - name: Build PASS 1 fresh-main context
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          rm -rf runtime/fmos-mission-loop-audit
+          python scripts/api_agent/fmos_mission_loop_audit_dispatch.py build-pass1 --repo-root . --output-dir runtime/fmos-mission-loop-audit/pass1 --issue-number 1440 --comment-id "$COMMENT_ID"
+      - name: Run PASS 1 GPT-6.1 Sol
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/fmos-mission-loop-audit/pass1/prompt.txt --context-file runtime/fmos-mission-loop-audit/pass1/context.json --output-dir runtime/fmos-mission-loop-audit/pass1/output --intended-write-prefix research/api_agent/outputs/fmos_autonomous_mission_loop_audit/
+      - name: Build PASS 2 adversarial context
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          python scripts/api_agent/fmos_mission_loop_audit_dispatch.py build-pass2 --repo-root . --output-dir runtime/fmos-mission-loop-audit/pass2 --issue-number 1440 --comment-id "$COMMENT_ID" --prior-output runtime/fmos-mission-loop-audit/pass1/output/output.json
+      - name: Run PASS 2 GPT-6.1 Sol
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/fmos-mission-loop-audit/pass2/prompt.txt --context-file runtime/fmos-mission-loop-audit/pass2/context.json --output-dir runtime/fmos-mission-loop-audit/pass2/output --intended-write-prefix research/api_agent/outputs/fmos_autonomous_mission_loop_audit/
+      - name: Build PASS 3 synthesis context
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          python scripts/api_agent/fmos_mission_loop_audit_dispatch.py build-pass3 --repo-root . --output-dir runtime/fmos-mission-loop-audit/pass3 --issue-number 1440 --comment-id "$COMMENT_ID" --prior-output runtime/fmos-mission-loop-audit/pass1/output/output.json --prior-output runtime/fmos-mission-loop-audit/pass2/output/output.json
+      - name: Run PASS 3 GPT-6.1 Sol
+        if: steps.dedupe.outputs.run_audit == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/fmos-mission-loop-audit/pass3/prompt.txt --context-file runtime/fmos-mission-loop-audit/pass3/context.json --output-dir runtime/fmos-mission-loop-audit/pass3/output --intended-write-prefix research/api_agent/outputs/fmos_autonomous_mission_loop_audit/
+      - name: Validate 3-pass audit
+        if: steps.dedupe.outputs.run_audit == 'true'
+        run: python scripts/api_agent/fmos_mission_loop_audit_dispatch.py validate --root runtime/fmos-mission-loop-audit
+      - name: Persist immutable audit evidence and receipts
+        if: always() && steps.dedupe.outputs.run_audit == 'true'
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          set -euo pipefail
+          dest="research/api_agent/outputs/fmos_autonomous_mission_loop_audit/issue-1440/comment-${COMMENT_ID}"
+          mkdir -p "$dest"
+          copied=false
+          for pass in pass1 pass2 pass3; do
+            src="runtime/fmos-mission-loop-audit/$pass"
+            if [ -f "$src/output/receipt.json" ]; then
+              mkdir -p "$dest/$pass"
+              cp "$src/output/receipt.json" "$dest/$pass/receipt.json"
+              cp "$src/output/output.json" "$dest/$pass/output.json"
+              cp "$src/context_manifest.json" "$dest/$pass/context_manifest.json"
+              copied=true
+            fi
+          done
+          [ "$copied" = true ] || { echo "no_audit_receipt_to_persist"; exit 0; }
+          git config user.name 'framework-learning-supervisor[bot]'
+          git config user.email 'framework-learning-supervisor@users.noreply.github.com'
+          git add "$dest"
+          git diff --cached --quiet && exit 0
+          git commit -m "audit: persist FMOS mission-loop Sol evidence comment-${COMMENT_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - name: Report successful final audit
+        if: success() && steps.dedupe.outputs.run_audit == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          dest="research/api_agent/outputs/fmos_autonomous_mission_loop_audit/issue-1440/comment-${COMMENT_ID}"
+          python scripts/api_agent/fmos_mission_loop_audit_dispatch.py report --root runtime/fmos-mission-loop-audit --persisted-path "$dest" --output runtime/fmos-mission-loop-audit/report.md
+          gh issue comment 1440 --repo "$GITHUB_REPOSITORY" --body-file runtime/fmos-mission-loop-audit/report.md
+      - name: Report failed audit attempt
+        if: failure() && steps.dedupe.outputs.run_audit == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          gh issue comment 1440 --repo "$GITHUB_REPOSITORY" --body "FMOS mission-loop audit trigger ${COMMENT_ID} failed closed. Any available paid-call receipts were persisted by the always-step. Inspect the matching workflow run and immutable partial output before retrying. Do not duplicate the same pass blindly."
+      - name: Report duplicate trigger as NOOP
+        if: steps.dedupe.outputs.run_audit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          gh issue comment 1440 --repo "$GITHUB_REPOSITORY" --body "FMOS mission-loop audit duplicate trigger ${COMMENT_ID}: NOOP, final immutable receipt already exists."
   operate:
     if: >-
       ((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main') ||
