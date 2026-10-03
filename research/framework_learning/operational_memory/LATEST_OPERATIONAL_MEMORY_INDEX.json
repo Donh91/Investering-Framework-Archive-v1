@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 2040,
-  "generated_at_utc": "2026-10-03T08:31:33.094571Z",
+  "episode_count": 2043,
+  "generated_at_utc": "2026-10-03T09:22:42.180425Z",
   "rows": [
     {
       "changed_paths": [
@@ -55345,10 +55345,10 @@
         "research/architecture_health/history/37057862223-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 5,
         "checked": 6,
         "removed": 0,
-        "same": 4,
+        "same": 1,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -55436,11 +55436,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 4,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-842ebaf6e9d87a17",
@@ -55448,7 +55448,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "842ebaf6e9d87a170f6e5507229e90bbbf4677c2",
       "source_timestamp": "2026-10-02T20:22:37Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -56292,11 +56292,11 @@
         "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-83d21d69bba233c6",
@@ -57144,11 +57144,11 @@
         "research/experiment_lifecycle/receipts/XR-049191ad9a7002f23d36.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 25,
         "removed": 0,
-        "same": 25,
-        "status": "EXACT"
+        "same": 23,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-ea6ca85a930ed1d6",
@@ -57228,11 +57228,11 @@
         "04_MARKET_LEARNING/handlekompas/runs/2026/10/03/070838_34bc5264b8ab.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-864450ef6130f644",
@@ -57296,6 +57296,87 @@
     },
     {
       "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/03/083521_d74f83a4f89e.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 2,
+        "removed": 0,
+        "same": 2,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-f8a98618fd9517d1",
+      "episode_path": "episodes/2026/10/OE-f8a98618fd9517d1.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "f8a98618fd9517d16642e9043e2394a80155376a",
+      "source_timestamp": "2026-10-03T08:35:22Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 37110192812"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/history/37112574865-attempt-1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 6,
+        "removed": 0,
+        "same": 6,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-78c0dab5147021d3",
+      "episode_path": "episodes/2026/10/OE-78c0dab5147021d3.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "78c0dab5147021d3a17084189383f3845b622e3a",
+      "source_timestamp": "2026-10-03T09:21:40Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 37112574865"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-f3f593469d9daf04",
+      "episode_path": "episodes/2026/10/OE-f3f593469d9daf04.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "f3f593469d9daf04c9c4824ec9333ebe0593b172",
+      "source_timestamp": "2026-10-03T09:22:10Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 37112787813"
+    },
+    {
+      "changed_paths": [
         ".github/workflows/meme-alpha-moonshot-gate.yml",
         "research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CONTRACT_v1.json",
         "scripts/api_agent/meme_alpha_eth_blockscout_provenance.py",
@@ -57323,5 +57404,5 @@
       "task_summary": "F-06: add ETH deterministic provenance producer (#1439)"
     }
   ],
-  "source_head_sha": "744d9a90363a2b91342579d7955a9b2fa02e4379"
+  "source_head_sha": "f3f593469d9daf04c9c4824ec9333ebe0593b172"
 }
