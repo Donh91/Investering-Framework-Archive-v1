@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/framework-learning-supervisor.yml",
+    "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+    "research/api_agent/API_TASK_REGISTRY_v1.json",
+    "research/repository_safety/2026-10-03__fmos-mission-loop-audit-harness-safepoint-receipt.json",
+    "scripts/api_agent/fmos_mission_loop_audit_dispatch.py",
+    "tests/api_agent/test_fmos_mission_loop_audit_dispatch.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-2d6d79ff38663799",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* audit: add bounded FMOS mission-loop Sol audit dispatcher * audit: register one-off FMOS mission-loop Sol lane * audit: add bounded FMOS mission-loop API lane cap * test: cover FMOS mission-loop audit dispatcher * audit: wire owner-gated 3-pass FMOS Sol audit * safety: record FMOS audit harness safepoint",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/framework-learning-supervisor.yml": "39e3b2d12ff898e2d68fc24507446e5e790f95c1",
+    "research/api_agent/API_INTELLIGENCE_POLICY_v2.json": "96b4c78836845a196f3e6a9726188e8174a114ac",
+    "research/api_agent/API_TASK_REGISTRY_v1.json": "1712595aca587814cc5884dab3438d04380b3a7f",
+    "research/repository_safety/2026-10-03__fmos-mission-loop-audit-harness-safepoint-receipt.json": "b2d14c31adfe22edce1d9ed7a8a907ff20a8fecf",
+    "scripts/api_agent/fmos_mission_loop_audit_dispatch.py": "5d84abb8ba043dc15429f3afe7db8dc490ae7c0c",
+    "tests/api_agent/test_fmos_mission_loop_audit_dispatch.py": "67b109db57c75d1054ea1c42fb7620fd41d7f564"
+  },
+  "source_commit_sha": "2d6d79ff3866379963a16076eedecccb2d360851",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-03T18:39:40+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "FMOS audit: add owner-gated GPT-6.1 Sol mission-loop audit harness"
+}
