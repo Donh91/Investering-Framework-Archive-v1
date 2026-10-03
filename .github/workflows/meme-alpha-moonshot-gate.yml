@@ -7,11 +7,13 @@ on:
       - 'scripts/api_agent/meme_alpha_moonshot_scan_v2.py'
       - 'scripts/api_agent/meme_alpha_moonshot_token_pool.py'
       - 'scripts/api_agent/meme_alpha_moonshot_age_cohort.py'
+      - 'scripts/api_agent/meme_alpha_eth_blockscout_provenance.py'
       - 'scripts/api_agent/meme_alpha_robinhood_pons_v2.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_sentinel.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_scan_v2.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_token_pool.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_age_cohort.py'
+      - 'tests/api_agent/test_meme_alpha_eth_blockscout_provenance.py'
       - 'tests/api_agent/test_meme_alpha_robinhood_pons_v2.py'
       - 'research/api_agent/meme_alpha/MOONSHOT_SENTINEL_*.json'
       - 'research/api_agent/meme_alpha/MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1.json'
@@ -37,11 +39,13 @@ jobs:
           scripts/api_agent/meme_alpha_moonshot_scan_v2.py
           scripts/api_agent/meme_alpha_moonshot_token_pool.py
           scripts/api_agent/meme_alpha_moonshot_age_cohort.py
+          scripts/api_agent/meme_alpha_eth_blockscout_provenance.py
           scripts/api_agent/meme_alpha_robinhood_pons_v2.py
           tests/api_agent/test_meme_alpha_moonshot_sentinel.py
           tests/api_agent/test_meme_alpha_moonshot_scan_v2.py
           tests/api_agent/test_meme_alpha_moonshot_token_pool.py
           tests/api_agent/test_meme_alpha_moonshot_age_cohort.py
+          tests/api_agent/test_meme_alpha_eth_blockscout_provenance.py
           tests/api_agent/test_meme_alpha_robinhood_pons_v2.py
       - name: Run focused tests
         run: >-
@@ -50,6 +54,7 @@ jobs:
           tests.api_agent.test_meme_alpha_moonshot_scan_v2
           tests.api_agent.test_meme_alpha_moonshot_token_pool
           tests.api_agent.test_meme_alpha_moonshot_age_cohort
+          tests.api_agent.test_meme_alpha_eth_blockscout_provenance
           tests.api_agent.test_meme_alpha_robinhood_pons_v2 -v
       - name: Validate immutable authority, identity, recall and adaptive bounds
         run: |
@@ -94,6 +99,7 @@ jobs:
           assert contract['alert_gate']['deterministic_family_scope']==['W','S','P','N']
           assert contract['alert_gate']['deterministic_evidence_contract']=='MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1'
           assert contract['alert_gate']['deterministic_evidence_must_match_exact_candidate_and_token'] is True
+          assert contract['alert_gate']['deterministic_p_source_contract_by_chain']=={'eth':'MEME_ALPHA_ETH_BLOCKSCOUT_EXACT_CA_PROVENANCE_v1'}
           assert contract['alert_gate']['llm_may_create_deterministic_family_evidence'] is False
           assert contract['alert_gate']['llm_may_only_confirm_or_downgrade_deterministically_proven_family'] is True
           assert 'deterministic_non_llm_non_m_family_required_before_gamble_alert' in contract['adaptive_evolution']['immutable_without_code_review']
