@@ -168,6 +168,7 @@ def produce(
             "is_scam": address_payload.get("is_scam"),
             "creator_address": normalize_address(address_payload.get("creator_address_hash") or address_payload.get("creator_address")),
             "creation_transaction_hash": creation_hash,
+            "returned_creation_transaction_hash": normalize_tx_hash((tx_payload or {}).get("hash")),
             "creation_status": _creation_status(tx_payload or {}),
             "source_health": {
                 "status": "PASS" if address_health.get("status") == "PASS" and tx_health and tx_health.get("status") == "PASS" else "UNKNOWN",
@@ -192,7 +193,9 @@ def produce(
         frozen["is_verified"] is True,
         frozen["creation_status"] == "success",
         frozen["creation_transaction_hash"] is not None,
+        frozen["returned_creation_transaction_hash"] == frozen["creation_transaction_hash"],
         frozen["creator_address"] is not None,
+        isinstance(frozen_payload_ref, str) and bool(frozen_payload_ref.strip()),
         frozen["is_scam"] is False,
         frozen["source_health"]["status"] == "PASS",
     ))
