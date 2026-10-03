@@ -99,7 +99,7 @@ class SentinelTests(unittest.TestCase):
                 "state": "PASS",
                 "deterministic": True,
                 "llm_generated": False,
-                "source_contract": "AUTHENTICATED_PRODUCT_PROVENANCE_RECEIPT_v1",
+                "source_contract": "MEME_ALPHA_ETH_BLOCKSCOUT_EXACT_CA_PROVENANCE_v1",
                 "evidence_refs": ["receipt:product:fixture"],
             }],
         }
@@ -191,6 +191,47 @@ class SentinelTests(unittest.TestCase):
         result = s.final_alert_decision(triage, assessment, CONFIG, deterministic_evidence=evidence)
         self.assertEqual(result["state"], "MOONSHOT_WATCH")
         self.assertEqual(result["deterministic_verified_families"], ["W"])
+        self.assertEqual(result["deterministic_confirmed_families"], [])
+        self.assertFalse(result["deterministic_evidence_gate_pass"])
+
+    def test_eth_p_rejects_robinhood_source_contract(self) -> None:
+        token = "0x" + "6" * 40
+        triage = {"execution_gate_pass": True, "candidate_id": f"eth:{token}", "event": {"token_ca": token, "symbol": "X"}}
+        assessment = {
+            "archetype": "PRODUCT_STEALTH", "M": {"state": "PASS"}, "S": {"state": "PASS"},
+            "P": {"state": "PASS"}, "W": {"state": "UNKNOWN"}, "N": {"state": "UNKNOWN"},
+            "fatal_risks": [], "remaining_convexity_multiple": 25,
+            "hundred_x_feasibility": "REMOTE", "recommendation": "GAMBLE_CANDIDATE", "invalidate_if": [], "summary": "x",
+        }
+        evidence = {
+            "contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1", "status": "PASS",
+            "candidate_id": f"eth:{token}", "token_ca": token, "llm_generated": False,
+            "receipts": [{"family": "P", "state": "PASS", "deterministic": True, "llm_generated": False,
+                          "source_contract": "MEME_ALPHA_BLOCKSCOUT_EXACT_CA_ENRICHMENT_v1", "evidence_refs": ["fixture:robinhood"]}],
+        }
+        result = s.final_alert_decision(triage, assessment, CONFIG, deterministic_evidence=evidence)
+        self.assertEqual(result["state"], "MOONSHOT_WATCH")
+        self.assertFalse(result["deterministic_evidence_gate_pass"])
+        self.assertIn("DETERMINISTIC_SOURCE_CONTRACT_CHAIN_MISMATCH:P", result["deterministic_evidence_reasons"])
+
+    def test_deterministic_eth_p_cannot_upgrade_llm_p_unknown(self) -> None:
+        token = "0x" + "7" * 40
+        triage = {"execution_gate_pass": True, "candidate_id": f"eth:{token}", "event": {"token_ca": token, "symbol": "X"}}
+        assessment = {
+            "archetype": "PRODUCT_STEALTH", "M": {"state": "PASS"}, "S": {"state": "PASS"},
+            "P": {"state": "UNKNOWN"}, "W": {"state": "UNKNOWN"}, "N": {"state": "UNKNOWN"},
+            "fatal_risks": [], "remaining_convexity_multiple": 25,
+            "hundred_x_feasibility": "REMOTE", "recommendation": "GAMBLE_CANDIDATE", "invalidate_if": [], "summary": "x",
+        }
+        evidence = {
+            "contract": "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1", "status": "PASS",
+            "candidate_id": f"eth:{token}", "token_ca": token, "llm_generated": False,
+            "receipts": [{"family": "P", "state": "PASS", "deterministic": True, "llm_generated": False,
+                          "source_contract": "MEME_ALPHA_ETH_BLOCKSCOUT_EXACT_CA_PROVENANCE_v1", "evidence_refs": ["fixture:eth"]}],
+        }
+        result = s.final_alert_decision(triage, assessment, CONFIG, deterministic_evidence=evidence)
+        self.assertEqual(result["state"], "MOONSHOT_WATCH")
+        self.assertEqual(result["deterministic_verified_families"], ["P"])
         self.assertEqual(result["deterministic_confirmed_families"], [])
         self.assertFalse(result["deterministic_evidence_gate_pass"])
 

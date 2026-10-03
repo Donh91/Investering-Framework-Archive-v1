@@ -377,6 +377,7 @@ def assess(candidate: dict[str, Any], research: dict[str, Any], *, model: str = 
 
 DETERMINISTIC_NON_M_FAMILIES = {"W", "S", "P", "N"}
 DETERMINISTIC_EVIDENCE_CONTRACT = "MOONSHOT_DETERMINISTIC_ALERT_EVIDENCE_v1"
+ETH_P_SOURCE_CONTRACT = "MEME_ALPHA_ETH_BLOCKSCOUT_EXACT_CA_PROVENANCE_v1"
 
 
 def deterministic_alert_families(triage: dict[str, Any], evidence: dict[str, Any] | None) -> tuple[set[str], list[str]]:
@@ -391,6 +392,7 @@ def deterministic_alert_families(triage: dict[str, Any], evidence: dict[str, Any
         return set(), ["DETERMINISTIC_EVIDENCE_LLM_PROVENANCE_FORBIDDEN"]
     candidate_id = str(triage.get("candidate_id") or "")
     token_ca = str((triage.get("event") or {}).get("token_ca") or "").lower()
+    candidate_chain = candidate_id.split(":", 1)[0].lower() if ":" in candidate_id else ""
     if evidence.get("candidate_id") != candidate_id:
         reasons.append("DETERMINISTIC_EVIDENCE_CANDIDATE_MISMATCH")
     if str(evidence.get("token_ca") or "").lower() != token_ca or not token_ca:
@@ -416,6 +418,13 @@ def deterministic_alert_families(triage: dict[str, Any], evidence: dict[str, Any
             continue
         if not isinstance(row.get("source_contract"), str) or not row.get("source_contract"):
             reasons.append(f"DETERMINISTIC_SOURCE_CONTRACT_MISSING:{family}")
+            continue
+        source_contract = row["source_contract"]
+        if family == "P" and candidate_chain == "eth" and source_contract != ETH_P_SOURCE_CONTRACT:
+            reasons.append("DETERMINISTIC_SOURCE_CONTRACT_CHAIN_MISMATCH:P")
+            continue
+        if family == "P" and candidate_chain != "eth" and source_contract == ETH_P_SOURCE_CONTRACT:
+            reasons.append("DETERMINISTIC_SOURCE_CONTRACT_CHAIN_MISMATCH:P")
             continue
         if not isinstance(refs, list) or not refs or any(not isinstance(ref, str) or not ref.strip() for ref in refs):
             reasons.append(f"DETERMINISTIC_EVIDENCE_REFS_MISSING:{family}")
