@@ -16,6 +16,10 @@ class TestFmosMissionLoopAuditDispatch(unittest.TestCase):
     def test_extract_decision_rejects_unknown_value(self):
         self.assertIsNone(mod.extract_decision({"summary": "DECISION=DO_WHATEVER;"}))
 
+    def test_context_cap_covers_failed_owner_audit_packet(self):
+        self.assertEqual(mod.MAX_CONTEXT_BYTES, 650000)
+        self.assertGreater(mod.MAX_CONTEXT_BYTES, 318928)
+
     def test_clip_is_bounded(self):
         out = mod.clip("x" * 100, 10)
         self.assertTrue(out.startswith("x" * 10))
