@@ -207,6 +207,114 @@ class MissionConvergenceTests(unittest.TestCase):
         self.assertFalse(convergence.completion_requires_convergence(completion))
         self.assertIsNotNone(gated.valid_completion(root, task))
 
+
+    def write_hash_correction(self, root, task, completion, receipt, *, suffix="v1", mutate=None):
+        actual_hash = convergence.canonical_hash(
+            {k: v for k, v in receipt.items() if k != "receipt_sha256"}
+        )
+        correction = {
+            "contract": convergence.HASH_CORRECTION_CONTRACT,
+            "candidate_id": task["candidate_id"],
+            "base_receipt_path": f"research/codex/convergence/{task['candidate_id']}.json",
+            "base_declared_receipt_sha256": receipt["receipt_sha256"],
+            "corrected_receipt_sha256": actual_hash,
+            "reason_code": convergence.HASH_CORRECTION_REASON,
+            "candidate_sha256": task["candidate_sha256"],
+            "task_contract_sha256": task["task_contract_sha256"],
+            "signature": task["signature"],
+            "pr_number": completion["pr_number"],
+            "merge_commit_sha": completion["merge_commit_sha"],
+            "created_at_utc": "2026-10-02T07:58:00Z",
+            "authority": convergence.HASH_CORRECTION_AUTHORITY,
+        }
+        if mutate:
+            correction.update(mutate)
+        correction["correction_sha256"] = convergence.canonical_hash(correction)
+        path = root / "research/codex/convergence/supersessions" / task["candidate_id"] / f"{suffix}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(correction, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return path
+
+    def test_invalid_hash_only_receipt_accepts_exactly_one_append_only_correction(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        assessment_path = root / "assessment.json"
+        assessment_path.write_text(json.dumps(self.assessment_for(task, candidate)), encoding="utf-8")
+        receipt = convergence.build_receipt(
+            root,
+            candidate["candidate_id"],
+            completion["merge_commit_sha"],
+            completion["pr_number"],
+            assessment_path,
+        )
+        path = root / "research/codex/convergence" / f"{candidate['candidate_id']}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        bad = dict(receipt)
+        bad["receipt_sha256"] = "0" * 64
+        original_bytes = (json.dumps(bad, indent=2, sort_keys=True) + "\n").encode()
+        path.write_bytes(original_bytes)
+        self.assertIsNone(convergence.validate_receipt(root, task, completion))
+
+        self.write_hash_correction(root, task, completion, bad)
+        corrected = convergence.validate_receipt(root, task, completion)
+        self.assertIsNotNone(corrected)
+        self.assertEqual(
+            corrected["receipt_sha256"],
+            convergence.canonical_hash({k: v for k, v in bad.items() if k != "receipt_sha256"}),
+        )
+        self.assertEqual(path.read_bytes(), original_bytes)
+
+    def test_hash_correction_with_binding_mismatch_is_rejected(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        assessment_path = root / "assessment.json"
+        assessment_path.write_text(json.dumps(self.assessment_for(task, candidate)), encoding="utf-8")
+        receipt = convergence.build_receipt(
+            root, candidate["candidate_id"], completion["merge_commit_sha"], completion["pr_number"], assessment_path
+        )
+        receipt["receipt_sha256"] = "0" * 64
+        path = root / "research/codex/convergence" / f"{candidate['candidate_id']}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.write_hash_correction(
+            root, task, completion, receipt, mutate={"merge_commit_sha": "e" * 40}
+        )
+        self.assertIsNone(convergence.validate_receipt(root, task, completion))
+
+    def test_multiple_hash_corrections_fail_closed(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        assessment_path = root / "assessment.json"
+        assessment_path.write_text(json.dumps(self.assessment_for(task, candidate)), encoding="utf-8")
+        receipt = convergence.build_receipt(
+            root, candidate["candidate_id"], completion["merge_commit_sha"], completion["pr_number"], assessment_path
+        )
+        receipt["receipt_sha256"] = "0" * 64
+        path = root / "research/codex/convergence" / f"{candidate['candidate_id']}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.write_hash_correction(root, task, completion, receipt, suffix="one")
+        self.write_hash_correction(root, task, completion, receipt, suffix="two")
+        self.assertIsNone(convergence.validate_receipt(root, task, completion))
+
+    def test_valid_base_receipt_does_not_consume_hash_correction(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        assessment_path = root / "assessment.json"
+        assessment_path.write_text(json.dumps(self.assessment_for(task, candidate)), encoding="utf-8")
+        receipt = convergence.build_receipt(
+            root, candidate["candidate_id"], completion["merge_commit_sha"], completion["pr_number"], assessment_path
+        )
+        path = root / "research/codex/convergence" / f"{candidate['candidate_id']}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.write_hash_correction(root, task, completion, receipt, mutate={"base_declared_receipt_sha256": "f" * 64})
+        self.assertEqual(convergence.validate_receipt(root, task, completion), receipt)
+
     def test_workflow_uses_convergence_aware_owner(self):
         workflow = (Path(__file__).parents[2] / ".github/workflows/remediation-maturation.yml").read_text(encoding="utf-8")
         self.assertEqual(workflow.count("merge_codex_research_intake_converged.py"), 2)
