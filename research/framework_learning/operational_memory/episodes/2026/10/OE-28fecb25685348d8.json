@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/meme-alpha-moonshot-gate.yml",
+    "research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CONTRACT_v1.json",
+    "scripts/api_agent/meme_alpha_eth_blockscout_provenance.py",
+    "scripts/api_agent/meme_alpha_moonshot_sentinel.py",
+    "tests/api_agent/test_meme_alpha_eth_blockscout_provenance.py",
+    "tests/api_agent/test_meme_alpha_moonshot_sentinel.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-28fecb25685348d8",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-approved implementation under Donh91/secrets#183. Exact-head gates, including Moonshot Sentinel 37107764237, passed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/meme-alpha-moonshot-gate.yml": "f6245009ebe073a3f8fbfd78eb7990cbef0cb00c",
+    "research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CONTRACT_v1.json": "3e6fb424a7ddf0f4c1bd56b498dae24a38d25eb0",
+    "scripts/api_agent/meme_alpha_eth_blockscout_provenance.py": "1adf5a5abfaab9750fbf45781389aee6e2f8990a",
+    "scripts/api_agent/meme_alpha_moonshot_sentinel.py": "31c5b03e0ac267cb5da4e823f6f1d347b1586aff",
+    "tests/api_agent/test_meme_alpha_eth_blockscout_provenance.py": "3dfce1a22059ded234e92940bffef4c56133842c",
+    "tests/api_agent/test_meme_alpha_moonshot_sentinel.py": "72571b20d9afddc2eff98d23b9cd03679304ee62"
+  },
+  "source_commit_sha": "28fecb25685348d8d11468d110655a9e660306de",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-03T09:54:11+02:00",
+  "task_class": "MEME_ALPHA",
+  "task_summary": "F-06: add ETH deterministic provenance producer (#1439)"
+}
