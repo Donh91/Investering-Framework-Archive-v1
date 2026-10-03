@@ -5,8 +5,8 @@ import argparse, hashlib, json, subprocess
 from pathlib import Path
 
 MAX_CONTEXT_BYTES = 650_000
-MAX_FILE_CHARS = 18_000
-MAX_SEARCH_HITS_PER_TERM = 80
+MAX_FILE_CHARS = 15_000
+MAX_SEARCH_HITS_PER_TERM = 50
 
 REQUIRED = [
     "README.md", "AGENTS.md", "LATEST_OPERATIONS_DASHBOARD.json", "LATEST_HANDOFF.json",
