@@ -1,0 +1,265 @@
+name: FMOS Mission Loop GPT-6 Sol Audit
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/fmos-mission-loop-sol-audit.yml'
+      - 'scripts/api_agent/fmos_mission_loop_audit_context.py'
+      - 'scripts/api_agent/fmos_mission_loop_audit_runner.py'
+      - 'tests/api_agent/test_fmos_mission_loop_audit.py'
+      - 'research/api_agent/API_TASK_REGISTRY_v1.json'
+      - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
+      - 'research/architecture_audits/fmos_autonomous_mission_loop_v1/**'
+      - 'research/repository_safety/2026-10-03__fmos-sol-audit-safepoint-receipt.json'
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify high-impact safepoint and separation receipt
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('research/repository_safety/2026-10-03__fmos-sol-audit-safepoint-receipt.json')
+          x=json.loads(p.read_text())
+          assert x['source_commit_sha']=='9fff203f04f80d7dffdd695840b22e62f1a5ebcc'
+          assert x['safepoint_sha']==x['source_commit_sha']
+          assert x['verification_result']=='PASS_INTERNAL_SAFEPOINT_VERIFIED'
+          assert x['separation_result']=='PASS'
+          assert x['source_destructive_authority']=='NO'
+          assert x['recovery_destructive_authority']=='NO'
+          assert x['force_operations'] is False
+          assert x['authority_change'] is False
+          PY
+          test "$(git ls-remote origin refs/heads/backup-safepoint/2026-10-03-fmos-sol-audit | cut -f1)" = "9fff203f04f80d7dffdd695840b22e62f1a5ebcc"
+      - name: Compile and test bounded audit harness
+        run: |
+          python -m py_compile             scripts/api_agent/fmos_mission_loop_audit_context.py             scripts/api_agent/fmos_mission_loop_audit_runner.py
+          python -m unittest tests.api_agent.test_fmos_mission_loop_audit -v
+      - name: Build deterministic audit context dry run
+        run: |
+          rm -rf runtime/fmos-mission-loop-audit
+          python scripts/api_agent/fmos_mission_loop_audit_context.py             --repo-root .             --output-dir runtime/fmos-mission-loop-audit/pass-0
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          c=json.loads(Path('runtime/fmos-mission-loop-audit/pass-0/coverage.json').read_text())
+          assert c['required_present'] >= 28, c
+          assert c['workflow_count'] > 0, c
+          assert c['contents_write_workflows'], c
+          m=json.loads(Path('runtime/fmos-mission-loop-audit/pass-0/context_manifest.json').read_text())
+          assert m['restricted_values_included'] is False
+          PY
+
+  audit:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1440 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[FMOS_SOL_AUDIT_START]')
+    permissions:
+      contents: write
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate one-off owner-gated authority
+        run: |
+          python -m unittest tests.api_agent.test_fmos_mission_loop_audit -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          t=r['tasks']['FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT']
+          assert t['model']=='gpt-6-sol'
+          assert t['reasoning_effort']=='high'
+          assert t['invocation_mode']=='OWNER_GATED_ONE_OFF'
+          assert t['advisory_only'] is True
+          assert t['automatic_code_write'] is False
+          assert t['automatic_merge'] is False
+          assert t['canonical_effect'] is False
+          assert t['portfolio_action'] is False
+          p=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
+          assert p['monthly_hard_stop_usd']==40
+          assert p['global_reserve_usd']==4
+          assert p['lane_caps_usd']['FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT']==6
+          assert p['fmos_autonomous_mission_loop_audit']['periodic_schedule'] is False
+          PY
+      - name: Dedupe exact owner trigger
+        id: dedupe
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          dest="research/api_agent/outputs/fmos_mission_loop_audit/issue-1440/comment-${COMMENT_ID}"
+          if [ -f "$dest/FINAL_AUDIT_POINTER.json" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "dest=$dest" >> "$GITHUB_OUTPUT"
+      - name: Enforce current lane and monthly budgets
+        if: steps.dedupe.outputs.run == 'true'
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py             --receipt-root research/api_agent/outputs             --task FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT             --cap-usd 6             --reserve-usd 0.75
+          python scripts/api_agent/check_monthly_cost_guard.py             --receipt-root research/api_agent/outputs             --hard-stop-usd 40             --reserve-usd 4
+      - name: Build fresh deterministic repository context
+        if: steps.dedupe.outputs.run == 'true'
+        run: |
+          rm -rf runtime/fmos-mission-loop-audit
+          python scripts/api_agent/fmos_mission_loop_audit_context.py             --repo-root .             --output-dir runtime/fmos-mission-loop-audit/pass-0
+      - name: Run three bounded GPT-6 Sol audit passes
+        if: steps.dedupe.outputs.run == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          base="research/architecture_audits/fmos_autonomous_mission_loop_v1"
+          ctx="runtime/fmos-mission-loop-audit/pass-0/context.json"
+          for pass in 1 2 3; do
+            runtime_spent="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          total=0.0
+          for p in Path('runtime/fmos-mission-loop-audit').glob('pass-*/receipt.json'):
+              total += float(json.loads(p.read_text()).get('estimated_cost_usd') or 0)
+          print(f"{total:.8f}")
+          PY
+            )"
+            python - "$runtime_spent" <<'PY'
+          import sys
+          spent=float(sys.argv[1])
+          if spent >= 5.25:
+              raise SystemExit(f"audit_runtime_lane_reserve_reached:{spent}")
+          PY
+            args=(python scripts/api_agent/fmos_mission_loop_audit_runner.py
+              --registry research/api_agent/API_TASK_REGISTRY_v1.json
+              --base-prompt "$base/AUDIT_MISSION.md"
+              --schema "$base/AUDIT_OUTPUT_SCHEMA.json"
+              --context "$ctx"
+              --output-dir "runtime/fmos-mission-loop-audit/pass-${pass}"
+              --pass-id "$pass")
+            if [ "$pass" -ge 2 ]; then args+=(--prior-pass runtime/fmos-mission-loop-audit/pass-1/output.json); fi
+            if [ "$pass" -ge 3 ]; then args+=(--prior-pass runtime/fmos-mission-loop-audit/pass-2/output.json); fi
+            "${args[@]}"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          total=sum(float(json.loads(p.read_text()).get('estimated_cost_usd') or 0) for p in Path('runtime/fmos-mission-loop-audit').glob('pass-*/receipt.json'))
+          if total > 6:
+              raise SystemExit(f"audit_lane_cap_exceeded:{total}")
+          print(f"runtime_audit_cost_usd={total:.8f}")
+          PY
+      - name: Persist immutable audit evidence with main readback
+        if: steps.dedupe.outputs.run == 'true'
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          set -euo pipefail
+          dest="research/api_agent/outputs/fmos_mission_loop_audit/issue-1440/comment-${COMMENT_ID}"
+          mkdir -p "$dest/pass-0" "$dest/pass-1" "$dest/pass-2" "$dest/pass-3"
+          cp runtime/fmos-mission-loop-audit/pass-0/{coverage.json,workflow_writer_inventory.json,search_inventory.json,context_manifest.json} "$dest/pass-0/"
+          for pass in 1 2 3; do
+            cp runtime/fmos-mission-loop-audit/pass-${pass}/{output.json,receipt.json} "$dest/pass-${pass}/"
+          done
+          python - <<'PY'
+          import hashlib,json,os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          cid=os.environ['COMMENT_ID']
+          dest=Path(f'research/api_agent/outputs/fmos_mission_loop_audit/issue-1440/comment-{cid}')
+          def h(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+          p3=json.loads((dest/'pass-3/output.json').read_text())
+          receipts=[json.loads((dest/f'pass-{i}/receipt.json').read_text()) for i in (1,2,3)]
+          ptr={
+            'contract':'FMOS_AUTONOMOUS_MISSION_LOOP_FINAL_AUDIT_POINTER_v1',
+            'generated_at_utc':datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
+            'issue':1440,
+            'trigger_comment_id':cid,
+            'model':'gpt-6-sol',
+            'reasoning_effort':'high',
+            'pass_count':3,
+            'estimated_total_cost_usd':round(sum(float(r.get('estimated_cost_usd') or 0) for r in receipts),8),
+            'fresh_control_plane_main_sha':p3['fresh_control_plane_main_sha'],
+            'final_decision':p3['final_decision'],
+            'final_output_path':str(dest/'pass-3/output.json'),
+            'final_output_sha256':h(dest/'pass-3/output.json'),
+            'pass_1_sha256':h(dest/'pass-1/output.json'),
+            'pass_2_sha256':h(dest/'pass-2/output.json'),
+            'pass_3_sha256':h(dest/'pass-3/output.json'),
+            'context_manifest_sha256':h(dest/'pass-0/context_manifest.json'),
+            'authority':'ADVISORY_READ_ONLY',
+            'automatic_implementation':False,
+          }
+          (dest/'FINAL_AUDIT_POINTER.json').write_text(json.dumps(ptr,indent=2,sort_keys=True)+'\n')
+          PY
+          git config user.name 'fmos-sol-audit[bot]'
+          git config user.email 'fmos-sol-audit@users.noreply.github.com'
+          git add "$dest"
+          git commit -m "audit: GPT-6 Sol FMOS mission-loop review ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          for rel in pass-0/context_manifest.json pass-1/output.json pass-1/receipt.json pass-2/output.json pass-2/receipt.json pass-3/output.json pass-3/receipt.json FINAL_AUDIT_POINTER.json; do
+            tmp="/tmp/${COMMENT_ID}-$(echo "$rel" | tr '/' '-')"
+            git show "origin/main:$dest/$rel" > "$tmp"
+            cmp -s "$dest/$rel" "$tmp" || { echo "audit_main_readback_mismatch:$rel"; exit 1; }
+          done
+      - name: Report final audit result
+        if: success() && steps.dedupe.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          python - <<'PY' > /tmp/report.md
+          import json,os
+          from pathlib import Path
+          cid=os.environ['COMMENT_ID']
+          dest=Path(f'research/api_agent/outputs/fmos_mission_loop_audit/issue-1440/comment-{cid}')
+          out=json.loads((dest/'pass-3/output.json').read_text())
+          ptr=json.loads((dest/'FINAL_AUDIT_POINTER.json').read_text())
+          print('## GPT-6 Sol FMOS Mission Loop audit complete')
+          print()
+          print(f"Final decision: **{out['final_decision']}**")
+          print(f"Model: gpt-6-sol high, 3 passes, estimated total cost: ${ptr['estimated_total_cost_usd']:.4f}")
+          print(f"Evidence: `{dest}/FINAL_AUDIT_POINTER.json`")
+          print()
+          print(out['executive_summary'][:3500])
+          PY
+          gh issue comment 1440 --repo "$GITHUB_REPOSITORY" --body-file /tmp/report.md
+      - name: Report fail-closed audit
+        if: failure() && steps.dedupe.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment 1440 --repo "$GITHUB_REPOSITORY" --body "FMOS GPT-6 Sol audit failed closed during context, API or persistence. No architecture verdict is accepted from this attempt. Retry only after classifying the failure."
