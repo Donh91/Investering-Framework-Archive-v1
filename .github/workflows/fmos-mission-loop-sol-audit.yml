@@ -221,6 +221,10 @@ jobs:
           git config user.name 'fmos-sol-audit[bot]'
           git config user.email 'fmos-sol-audit@users.noreply.github.com'
           git add "$dest"
+          if git diff --cached --quiet; then
+            echo "audit_evidence_noop"
+            exit 0
+          fi
           git commit -m "audit: GPT-6 Sol FMOS mission-loop review ${GITHUB_RUN_ID}"
           pushed=false
           for attempt in 1 2 3; do
@@ -230,6 +234,7 @@ jobs:
           done
           [ "$pushed" = true ]
           git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
           for rel in pass-0/context_manifest.json pass-1/output.json pass-1/receipt.json pass-2/output.json pass-2/receipt.json pass-3/output.json pass-3/receipt.json FINAL_AUDIT_POINTER.json; do
             tmp="/tmp/${COMMENT_ID}-$(echo "$rel" | tr '/' '-')"
             git show "origin/main:$dest/$rel" > "$tmp"
