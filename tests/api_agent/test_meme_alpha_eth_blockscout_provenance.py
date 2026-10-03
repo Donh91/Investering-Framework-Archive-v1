@@ -10,7 +10,7 @@ CREATOR = "0x" + "c" * 40
 TX = "0x" + "d" * 64
 
 
-def getter_for(address=None, *, verified=True, is_contract=True, is_scam=False, creator=CREATOR, tx=TX, tx_status="ok", fail=False):
+def getter_for(address=None, *, verified=True, is_contract=True, is_scam=False, creator=CREATOR, tx=TX, returned_tx=TX, tx_status="ok", fail=False):
     address = address or TOKEN
 
     def getter(url, timeout=20):
@@ -26,7 +26,7 @@ def getter_for(address=None, *, verified=True, is_contract=True, is_scam=False, 
                 "creation_transaction_hash": tx,
             }
         if "/transactions/" in url:
-            return 200, {"hash": TX, "status": tx_status}
+            return 200, {"hash": returned_tx, "status": tx_status}
         raise AssertionError(url)
 
     return getter
@@ -67,7 +67,7 @@ class EthBlockscoutProvenanceTests(unittest.TestCase):
         self.assertEqual(evidence["receipts"], [])
 
     def test_missing_or_failed_creation_transaction_produces_no_receipt(self):
-        for getter in (getter_for(tx=None), getter_for(tx_status="error")):
+        for getter in (getter_for(tx=None), getter_for(tx_status="error"), getter_for(returned_tx="0x" + "e" * 64)):
             with self.subTest(getter=getter):
                 evidence, _ = self.produce(getter=getter)
                 self.assertEqual(evidence["receipts"], [])
