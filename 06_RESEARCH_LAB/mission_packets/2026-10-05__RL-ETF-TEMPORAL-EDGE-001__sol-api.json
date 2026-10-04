@@ -1,0 +1,57 @@
+{
+  "contract": "RESEARCH_LAB_SOL_API_MISSION_PACKET_v1",
+  "created_date": "2026-10-05",
+  "status": "READY_FOR_DEEP_RESEARCH_MANUAL_DISPATCH_NOT_EXECUTED",
+  "mission_id": "RL-ETF-TEMPORAL-EDGE-001",
+  "priority": "P0",
+  "recommended_task_lane": "DEEP_RESEARCH_MANUAL",
+  "recommended_model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "source_snapshot": {
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "commit_sha": "f3ed5764b887ea10edd7841a3c8d49dc5afe91f7"
+  },
+  "question": "Is ETF-flow persistence still one of the framework's strongest documented decision edges when historical decisions are replayed using only ETF information that was actually knowable at each decision timestamp?",
+  "hypothesis": "The defensive value of ETF outflow persistence survives strict knowledge-time correction, while positive ETF inflows remain substantially weaker as offensive evidence.",
+  "baseline": "Existing canonical Sensor Audit / ETF asymmetry learning evaluated against true point-in-time ETF vintages rather than latest-vintage hindsight.",
+  "required_analysis": [
+    "Reconstruct decision-time ETF knowledge states using observed_at, verification time, revision chains and knowledge_time_status.",
+    "Compare first-known, first-complete, settled-double-read and latest-vintage values where evidence permits.",
+    "Measure decision divergence for historically material warning/market-state episodes.",
+    "Quantify warning lead time, false positives, false negatives and directionally material sign/value revisions.",
+    "Test the asymmetric claim that ETF outflows have higher decision value than ETF inflows.",
+    "Separate source-integrity failure from signal-quality failure.",
+    "Preserve UNKNOWN where knowledge time cannot be proven."
+  ],
+  "required_outputs": [
+    "claim_verdicts",
+    "point_in_time_replay_summary",
+    "decision_divergence_cases",
+    "false_positive_cost",
+    "false_negative_cost",
+    "source_vintage_sensitivity",
+    "strongest_falsification",
+    "remaining_unknowns",
+    "minimum_next_action"
+  ],
+  "falsifier": "The ETF-warning advantage materially disappears, reverses, or becomes non-reproducible when only point-in-time knowable vintages are allowed.",
+  "kill_condition": "If corrected ETF evidence adds no reproducible decision divergence beyond existing price/breadth/rotation owners, demote the sensor from claimed decision edge to context/crosscheck.",
+  "forbidden": [
+    "latest-vintage values treated as if known historically",
+    "retroactive threshold changes",
+    "new market rules",
+    "portfolio actions",
+    "canonical promotion",
+    "repository writes",
+    "moving frozen criteria after outcome"
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "repository_write": false
+  }
+}
