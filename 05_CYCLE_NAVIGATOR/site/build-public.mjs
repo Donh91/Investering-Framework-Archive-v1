@@ -21,8 +21,8 @@ function sanitizeDecisionProjection(dp){
     next_1_3d:pick(dp.next_1_3d||{},["direction","summary"]),
     next_5_7d:pick(dp.next_5_7d||{},["direction","summary"]),
     next_2_3w:pick(dp.next_2_3w||{},["direction","summary"]),
-    next_21_30d:pick(dp.next_21_30d||{},["direction","btc_direction","eth_direction","ethbtc_direction","summary","regime_destination","expected_path","action_posture","falsification","confidence","scenario_semantics","scenarios"]),
-    weeks_4_8:pick(dp.weeks_4_8||{},["state","warning","direction","action_posture","summary","through_date","horizon_days","eta","confidence"]),
+    next_21_30d:pick(dp.next_21_30d||{},["direction","summary","regime_destination","expected_path","action_posture","confidence"]),
+    weeks_4_8:pick(dp.weeks_4_8||{},["state","warning","direction","action_posture","summary","eta","confidence"]),
     protection:pick(dp.protection||{},["pullback_risk_state","pullback_class","distribution_risk","eta_window","confidence_quality","drivers","invalidation"])
   };
 }
