@@ -329,7 +329,8 @@ function altcoinTarget(pkg,compass,stages){
   const row=key=>stages.find(x=>x.key===key)||{};
   const small=compassSegment(compass,'SMALL_CAPS')||{},micro=compassSegment(compass,'MICROCAPS')||{};
   const cycle=compass?.horizons?.CYCLE_ALTCOINS_3_8W||{},p=compass?.protection_tracker||{},sell=compass?.sell_assessment||{};
-  const sellState=String(sell.state||'').toUpperCase(),dist=String(p.distribution_risk||'').toUpperCase(),cycleState=String(cycle.state||'').toUpperCase();
+  const sellState=String(sell.state||'').toUpperCase(),dist=String(p.distribution_risk||'').toUpperCase(),cycleState=String(cycle.state||'').toUpperCase(),reentryState=String(p.reentry_state||'').toUpperCase();
+  if(/WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH|REVIEW|ACTIVE|CONFIRMED/.test(reentryState))return{key:'REENTRY',mode:'OPPORTUNITY',eyebrow:'NEXT RECOVERY PHASE',title:'Cooldown / re-entry',subtitle:'Governed re-entry state after protection',eta:'NO SUPPORTED ETA',status:pathStatus(p.reentry_state)};
   if(sellState&&!/UNAVAILABLE|UNKNOWN|INACTIVE|NONE/.test(sellState))return{key:'EXIT',mode:'PROTECTION',eyebrow:'NEXT DEFENSIVE PHASE',title:'Exit / protection window',subtitle:'Governed sell-assessment owner',eta:pathEta(sell.eta),status:pathStatus(sell.state)};
   if(/WARNING|CONFIRMED/.test(dist))return{key:'DISTRIBUTION',mode:'PROTECTION',eyebrow:'NEXT DEFENSIVE PHASE',title:'Distribution watch',subtitle:'Protection takes priority over upside sequencing',eta:'NO SUPPORTED ETA',status:pathStatus(p.distribution_risk)};
   if(cycleState==='PARABOLIC_ALTSEASON')return{key:'DISTRIBUTION',mode:'PROTECTION',eyebrow:'NEXT RISK PHASE',title:'Distribution watch',subtitle:'Mania is active; protection becomes the next thing to watch',eta:'NO SUPPORTED ETA',status:pathStatus(p.distribution_risk)};
@@ -339,23 +340,25 @@ function altcoinTarget(pkg,compass,stages){
   const ignition=row('IGNITION');
   return{key:'IGNITION',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'ALTSEASON IGNITION',subtitle:'Small-cap expansion begins',eta:pathEta(ignition.eta),status:pathStatus(ignition.status)};
 }
-function altcoinCurrentIndex(pkg,compass,stages){
+function altcoinCurrentStage(pkg,compass,stages){
   const order=['REENTRY','EXIT','DISTRIBUTION','MANIA','BROAD','MICRO','IGNITION','LARGE_MID','ETH_UNLOCK'];
   for(const key of order){
-    const s=stages.find(x=>x.key===key);
-    if(s&&statusActive(s.status))return stages.indexOf(s);
-    if(key==='DISTRIBUTION'&&/WARNING|CONFIRMED/.test(String(s?.status||'').toUpperCase()))return stages.indexOf(s);
+    const s=stages.find(x=>x.key===key),raw=String(s?.status||'').toUpperCase();
+    if(key==='REENTRY'&&/WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH|REVIEW|ACTIVE|CONFIRMED/.test(raw))return{index:stages.indexOf(s),source:'LIVE'};
+    if(s&&statusActive(s.status))return{index:stages.indexOf(s),source:'LIVE'};
+    if(key==='DISTRIBUTION'&&/WARNING|CONFIRMED/.test(raw))return{index:stages.indexOf(s),source:'LIVE'};
   }
   const monday=Array.isArray(pkg?.altseason_countdown)?pkg.altseason_countdown:[];
   const active=monday.findIndex(x=>/ACTIVE WATCH|\bACTIVE\b/i.test(String(x?.phase||'')));
-  return active>=0?0:-1;
+  const map=[0,1,2,3,5];
+  return active>=0?{index:map[active]??-1,source:'MONDAY'}:{index:-1,source:'NONE'};
 }
 function altcoinCycleTimer(pkg,compass){
-  const stages=altcoinCycleStages(pkg,compass),target=altcoinTarget(pkg,compass,stages),current=altcoinCurrentIndex(pkg,compass,stages);
+  const stages=altcoinCycleStages(pkg,compass),target=altcoinTarget(pkg,compass,stages),current=altcoinCurrentStage(pkg,compass,stages);
   const targetIndex=stages.findIndex(x=>x.key===target.key);
   const rows=stages.map((x,i)=>{
-    const isCurrent=i===current,isTarget=i===targetIndex;
-    return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(pathStatus(x.status))+'</strong><b>ETA · '+esc(pathEta(x.eta))+'</b><details><summary>Why?</summary>'+(x.monday?'<p><em>Monday:</em> '+esc(pathEta(x.monday))+'</p>':'')+'<p>'+esc(short(investorText(x.why),240))+'</p></details></article>';
+    const isCurrent=i===current.index,isTarget=i===targetIndex,currentClass=isCurrent?' current'+(current.source==='MONDAY'?' monday-current':''):'';
+    return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+currentClass+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(pathStatus(x.status))+'</strong><b>ETA · '+esc(pathEta(x.eta))+'</b><details><summary>Why?</summary>'+(x.monday?'<p><em>Monday:</em> '+esc(pathEta(x.monday))+'</p>':'')+'<p>'+esc(short(investorText(x.why),240))+'</p></details></article>';
   }).join('');
   return '<section class="path-track altcoin-timer-v2" data-path-track="altcoin-cycle" data-contract="CN_PATH_THREE_TRACK_v2">'
     +'<header class="alt-timer-hero"><div><span>3 · ALTCOIN CYCLE TIMER</span><small>'+esc(target.eyebrow)+'</small><h3>'+esc(target.title)+'</h3><p>'+esc(target.subtitle)+'</p></div><div class="alt-countdown '+(target.mode==='PROTECTION'?'protect':'')+'"><span>ADAPTIVE ETA</span><strong>'+esc(target.eta)+'</strong><b>'+esc(target.status)+'</b></div></header>'
@@ -369,10 +372,10 @@ function rotationFocus(compass){
   return candidate?{label:candidate.label,status:pathStatus(candidate.row.status||candidate.row.action),eta:pathEta(candidate.row.eta)}:{label:'UNAVAILABLE',status:'UNAVAILABLE',eta:'NO SUPPORTED ETA'};
 }
 function pathOverview(pkg,compass){
-  const cycle=cyclePhaseFromSources(pkg),cycleLabel=(MARKET_CYCLE.find(x=>x[0]===cycle.key)||['','UNCLEAR'])[1];
+  const cycle=cycleForwardFromSources(pkg),cycleLabel=(MARKET_CYCLE.find(x=>x[0]===cycle.key)||['','UNCLEAR'])[1];
   const rotation=rotationFocus(compass),target=altcoinTarget(pkg,compass,altcoinCycleStages(pkg,compass));
   return '<section class="path-overview-v2">'
-    +'<article><span>MARKET CYCLE</span><strong>'+esc(cycleLabel)+'</strong><b>ETA · '+esc(cycle.key==='UNCLEAR'?'NO SUPPORTED ETA':'NOW')+'</b></article>'
+    +'<article><span>MARKET CYCLE · FORWARD</span><strong>'+esc(cycleLabel)+'</strong><b>ETA · '+esc(cycle.eta)+'</b></article>'
     +'<article><span>NEXT ROTATION GATE</span><strong>'+esc(rotation.label)+'</strong><b>'+esc(rotation.status)+' · ETA '+esc(rotation.eta)+'</b></article>'
     +'<article class="focus"><span>ALTCOIN TIMER</span><strong>'+esc(target.title)+'</strong><b>ETA · '+esc(target.eta)+'</b></article>'
     +'</section>';
