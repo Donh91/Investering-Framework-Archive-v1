@@ -48,4 +48,6 @@ The public-series identity pointer is:
 
 After the completed week is scored, `scripts/cycle_navigator/materialize_public_scorecard.py` must materialize the public scorecard from the public-series binding, frozen range ledger, completed 168-hour actuals and the canonical completed-week CN score evidence.
 
+A valid `CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json` is sufficient public freeze proof when its digest matches the prospectively frozen forecast. X publication is optional downstream distribution. During the open week, `scripts/cycle_navigator/build_public_live_precision.py` may publish a provisional Price Range score from complete observed data to date; it must use the same six range rows and formula as final settlement, display coverage and timestamp, and never overwrite the frozen forecast.
+
 The website and Master Monday consumers should read these public scorecards rather than infer a score by matching machine issue numbers.
