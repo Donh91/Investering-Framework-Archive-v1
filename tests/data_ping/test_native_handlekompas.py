@@ -62,6 +62,18 @@ class NativeHandlekompasTest(unittest.TestCase):
         self.assertEqual(out["action"]["NOW"], "HOLD_WAIT")
         self.assertIn("DESCRIPTIVE_TOP100_BREADTH=0.29", out["action"]["WHY"])
 
+    def test_optional_source_degradation_does_not_poison_decision_health(self):
+        packet = self.packet(validation="DEGRADED", decision="PASS")
+        packet["optional_degraded_lanes"] = ["catalyst_context"]
+        packet["source_health"]["catalyst_context"] = {
+            "status": "DEGRADED",
+            "classification": "CATALYST_DISCOVERY_ONLY_REFERENCE",
+        }
+        out = build(packet, now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
+        self.assertEqual(out["DATA_HEALTH"]["status"], "PASS")
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT")
+        self.assertEqual(out["DATA_HEALTH"]["source_validation_status"], "DEGRADED")
+
     def test_stale_owner_fails_native_action_closed(self):
         out = build(self.packet(), now=datetime(2026,9,9,4,0,tzinfo=timezone.utc))
         self.assertEqual(out["action"]["NOW"], "HOLD_WAIT_DATA_DEGRADED")
