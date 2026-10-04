@@ -288,6 +288,45 @@ Every surfaced case should include exact identity where known, pre-propagation e
 
 Do not create a second scanner for this behavior. Use the existing Moonshot/Pons, Project->CA, wallet/entity, operator-risk and lifecycle owners.
 
+
+## Long-horizon durability and mortality research
+
+When the task asks whether an early project/token/chain is likely to survive, remain economically viable, or deserves conviction beyond the launch phase, read:
+
+`06_RESEARCH_LAB/alpha_lab/2026-10-04__lifecycle-durability-mortality-learning-v1__shadow.md`
+
+If restricted evidence is materially required and authorized, read only the exact Blast lifecycle benchmark/synthesis/matched-control files named there.
+
+Keep these horizons separate:
+
+```text
+LAUNCH_ALPHA
+MOMENTUM_ALPHA
+SURVIVAL_ALPHA
+DURABILITY_ALPHA
+```
+
+Do not infer long-horizon durability from peak TVL, token price, user count, VC/founder prestige, raw incentive activity or technical shipping alone.
+
+For long-horizon research, prefer:
+
+- post-catalyst retention at 30/60/90/180/365 days;
+- revenue survival slope rather than peak revenue;
+- incentive treatment effect rather than generic "incentives = bad";
+- capital quality and subsidy-adjusted activity;
+- liquidity/sellability survival;
+- token/protocol/operator divergence;
+- explicit failure-mode classification.
+
+Treat developer/app retention, operator economic margin and reward-to-revenue as research candidates until data quality is sufficient.
+
+Do not use roadmap-pivot density, a universal TVL drawdown threshold, or a universal revenue threshold unless matched-control evidence demonstrates incremental value.
+
+A shutdown must be classified by cause. At minimum distinguish `ECONOMIC_UNSUSTAINABILITY`, `STRATEGIC_SUNSET`, `SECURITY_FAILURE`, `LIQUIDITY_DEATH`, `USER_RETENTION_FAILURE`, `DEVELOPER_ECOSYSTEM_DECAY`, `TOKEN_VALUE_CAPTURE_FAILURE`, `GOVERNANCE_OR_OPERATOR_FAILURE`, and `UNKNOWN`.
+
+Historical negative cases generate hypotheses only. Never backfill terminal outcomes into earlier snapshots, and never promote a live threshold from one retrospective case.
+
+
 ## Research output
 
 A qualified v1.2 run should return:
