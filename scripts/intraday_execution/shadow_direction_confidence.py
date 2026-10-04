@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import math
+import sys
 import os
 import re
 import statistics
@@ -13,7 +14,12 @@ import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
 from backtest_engine.statistics import wilson_interval
+
 from typing import Any
 
 BREADTH = Path("03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json")
