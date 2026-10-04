@@ -195,6 +195,22 @@ jobs:
           if len(live_precision.get('frozen_sequence') or []) != 3:
               raise SystemExit('public_live_precision_sequence_incomplete')
 
+          receipt_rel=str(live_precision.get('freeze_receipt_public_path') or '')
+          if not receipt_rel.startswith('data/public-freezes/') or '..' in receipt_rel:
+              raise SystemExit('public_freeze_receipt_public_path_invalid')
+          receipt_path=Path('05_CYCLE_NAVIGATOR/site/dist')/receipt_rel
+          if not receipt_path.is_file():
+              raise SystemExit('public_freeze_receipt_missing_from_artifact')
+          public_receipt=json.loads(receipt_path.read_text())
+          frozen_ranges=((public_receipt.get('public_frozen_price_ranges') or {}).get('rows') or [])
+          frozen_sequence=public_receipt.get('public_frozen_sequence') or []
+          if len(frozen_ranges) != 6:
+              raise SystemExit('public_freeze_receipt_requires_six_ranges')
+          if len(frozen_sequence) != 3:
+              raise SystemExit('public_freeze_receipt_requires_three_sequence_windows')
+          if public_receipt.get('x_distribution_required') is not False:
+              raise SystemExit('public_freeze_receipt_x_dependency_regression')
+
           index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
           required_scripts=('./quiet-production.js','./shortcut.js','./weekly-score.js','./live-observation.js','./public-copy.js','./market-compass-premium.js','./precision-accountability.js')
           for script in required_scripts:
