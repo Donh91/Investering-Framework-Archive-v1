@@ -6,10 +6,16 @@ import csv
 import hashlib
 import json
 import math
+import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
 from backtest_engine.statistics import wilson_interval
+
 
 DEFAULT_ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
 
