@@ -1,0 +1,81 @@
+{
+  "contract": "RESEARCH_LAB_PAIRED_INTELLIGENCE_QUEUE_v1",
+  "created_date": "2026-10-05",
+  "status": "ACTIVE",
+  "execution_mode": "STRICT_SEQUENTIAL_ONE_ACTIVE_MISSION",
+  "framework_source_snapshot": {
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "commit_sha": "89b6c41528ded2be670559cc87c14e85b8849d7c"
+  },
+  "bridge_source_snapshot": {
+    "repository": "Donh91/Investering-AI-Audit-Bridge",
+    "commit_sha": "caf4e5873b8f4ec801c7478387a540c044cc671b"
+  },
+  "broker": "CHATGPT_5_6_SOL_HIGH",
+  "independent_arms": {
+    "claude_code": {
+      "role": "CODE_PROVENANCE_ADVERSARIAL",
+      "write_scope": "BRIDGE_ONLY",
+      "framework_write": false
+    },
+    "gpt_6_1_sol_api": {
+      "role": "SCIENTIFIC_ECONOMIC_FALSIFICATION",
+      "repository_write": false,
+      "authority": "ADVISORY_ONLY"
+    }
+  },
+  "exchange_policy": {
+    "blind_first_pass": true,
+    "raw_cross_feed": false,
+    "chatgpt_adjudicated_delta_only": true,
+    "bounded_cross_examination_on_material_conflict": true,
+    "final_adjudicator": "CHATGPT_5_6_SOL_HIGH"
+  },
+  "no_codex": true,
+  "missions": [
+    {
+      "sequence": 1,
+      "id": "RL-ETF-TEMPORAL-EDGE-001",
+      "title": "ETF Temporal Integrity & True Decision Value",
+      "state": "ACTIVE",
+      "release_condition": "ALREADY_RELEASED"
+    },
+    {
+      "sequence": 2,
+      "id": "RL-OFFENSIVE-FNP-002",
+      "title": "Offensive Edge / False-Negative Opportunity Cost",
+      "state": "QUEUED_WAIT_PREDECESSOR",
+      "release_condition": "RL-ETF-TEMPORAL-EDGE-001_FINAL_CHATGPT_ADJUDICATION"
+    },
+    {
+      "sequence": 3,
+      "id": "RL-CN-SKILL-BASELINE-003",
+      "title": "Cycle Navigator Skill Decomposition vs Mechanical Baseline",
+      "state": "QUEUED_WAIT_PREDECESSOR",
+      "release_condition": "RL-OFFENSIVE-FNP-002_FINAL_CHATGPT_ADJUDICATION"
+    },
+    {
+      "sequence": 4,
+      "id": "RL-AUTOTRADING-EVIDENCE-004",
+      "title": "Auto Trading Evidence Machine / Next Empirical Phase",
+      "state": "QUEUED_WAIT_PREDECESSOR",
+      "release_condition": "RL-CN-SKILL-BASELINE-003_FINAL_CHATGPT_ADJUDICATION"
+    },
+    {
+      "sequence": 5,
+      "id": "RL-TECHDEV97-005",
+      "title": "TechDev #97 Final Adjudication",
+      "state": "QUEUED_WAIT_PREDECESSOR",
+      "release_condition": "RL-AUTOTRADING-EVIDENCE-004_FINAL_CHATGPT_ADJUDICATION"
+    }
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "portfolio_action": false,
+    "canonical_promotion": false,
+    "automatic_merge": false
+  }
+}
