@@ -186,13 +186,13 @@ function pathEta(value){
 }
 function pathStatus(value){
   const s=String(value||'').toUpperCase();
-  const hit=s.match(/ACTIVE WATCH|NOT CONFIRMED|UNCONFIRMED|INACTIVE|PAUSED|HARD_WAIT|HARD WAIT|BUILDING|ELEVATED|WARNING|CONFIRMED|UNAVAILABLE|UNKNOWN|ACTIVE|WAIT|HOLD|HIGH|NORMAL|NONE/);
-  return hit?hit[0].replace('_',' '):'PENDING';
+  const hit=s.match(/WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH|ACTIVE WATCH|NOT CONFIRMED|UNCONFIRMED|INACTIVE|PAUSED|HARD_WAIT|HARD WAIT|BUILDING|ELEVATED|WARNING|CONFIRMED|UNAVAILABLE|UNKNOWN|REVIEW|ACTIVE|WAIT|HOLD|HIGH|NORMAL|NONE/);
+  return hit?hit[0].replaceAll('_',' '):'PENDING';
 }
 function pathTone(value){
   const s=String(value||'').toUpperCase();
   if(/INACTIVE|UNAVAILABLE|UNKNOWN|PAUSED/.test(s))return'unknown';
-  if(/NOT CONFIRMED|UNCONFIRMED|HARD_WAIT|HARD WAIT|WAIT|ELEVATED|HIGH/.test(s))return'wait';
+  if(/WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH|REVIEW|NOT CONFIRMED|UNCONFIRMED|HARD_WAIT|HARD WAIT|WAIT|ELEVATED|HIGH/.test(s))return'wait';
   if(/ACTIVE WATCH|BUILDING|WATCH|WARNING/.test(s))return'watch';
   if(/HOLD|NORMAL|NONE/.test(s))return'hold';
   if(/CONFIRMED|ACTIVE/.test(s))return'active';
@@ -270,7 +270,7 @@ function exitRiskClock(compass){
   const valid=compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1';
   const rows=[
     {label:'PULLBACK / RETEST',status:valid?p.pullback_risk_state:'UNAVAILABLE',eta:valid?p.eta_window:null,reason:valid?p.pullback_class:'A fresh Official Compass is required.'},
-    {label:'DISTRIBUTION',status:valid?p.distribution_risk:'UNAVAILABLE',eta:null,reason:valid?(Array.isArray(p.decisive_public_drivers)&&p.decisive_public_drivers.length?p.decisive_public_drivers[0]:'No governed distribution explanation is published.'):'A fresh Official Compass is required.'},
+    {label:'DISTRIBUTION',status:valid?p.distribution_risk:'UNAVAILABLE',eta:null,reason:valid?((Array.isArray(p.decisive_public_drivers)?p.decisive_public_drivers:[]).find(x=>/distribution/i.test(String(x||'')))||'No governed distribution explanation is published.'):'A fresh Official Compass is required.'},
     {label:'EXIT WINDOW',status:valid?sell.state:'UNAVAILABLE',eta:valid?sell.eta:null,reason:valid?sell.reason:'A governed sell/trim owner is unavailable.'}
   ];
   return '<section class="exit-clock">'
