@@ -59,6 +59,12 @@ jobs:
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          test -f 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
+          test -f 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.css
+          grep -q 'market-compass-premium.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'CYCLE NAVIGATOR · CONCLUSION' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
+          grep -q 'HOW THIS READING IS BUILT' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
+          grep -q '2–3 WEEKS' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
           grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
