@@ -218,11 +218,21 @@ function mondayAlt(pkg,index){
   const rows=Array.isArray(pkg?.altseason_countdown)?pkg.altseason_countdown:[];
   return rows[index]||{};
 }
-function cyclePhaseFromSources(pkg){
-  const weekly=String(pkg?.decision_projection?.weeks_4_8?.state||'').toUpperCase();
+function cycleDestination(pkg){
+  const x=pkg?.decision_projection?.next_21_30d||{};
+  const d=String(x.regime_destination||'').toUpperCase();
+  const map={EXPANSION:'PRE_ROTATION',CONSOLIDATION:'CONSOLIDATION',DISTRIBUTION:'DISTRIBUTION',CONTRACTION:'DEFENSIVE'};
+  return map[d]||null;
+}
+function cycleForwardFromSources(pkg){
   const known=['DEFENSIVE','CONSOLIDATION','PRE_ROTATION','ROTATION','BROAD_ALTSEASON','PARABOLIC_ALTSEASON','DISTRIBUTION','EXIT_RISK'];
-  if(known.includes(weekly))return{key:weekly,source:'STRUCTURED MONDAY 4–8W'};
-  return{key:'UNCLEAR',source:'NO STRUCTURED 4–8W PHASE'};
+  const month=pkg?.decision_projection?.next_21_30d||{},monthKey=cycleDestination(pkg);
+  if(monthKey&&month.direction&&!/UNAVAILABLE|NO_EDGE/.test(String(month.direction).toUpperCase())){
+    return{key:monthKey,source:'STRUCTURED MONDAY 21–30D',eta:'21–30D HORIZON'};
+  }
+  const weekly=pkg?.decision_projection?.weeks_4_8||{},weeklyKey=String(weekly.state||'').toUpperCase();
+  if(known.includes(weeklyKey))return{key:weeklyKey,source:'STRUCTURED MONDAY 4–8W',eta:pathEta(weekly.eta||'4–8W HORIZON')};
+  return{key:'UNCLEAR',source:'NO STRUCTURED LONG-CYCLE PHASE',eta:'NO SUPPORTED ETA'};
 }
 const MARKET_CYCLE=[
   ['DEFENSIVE','Reset / defensive'],
@@ -234,35 +244,30 @@ const MARKET_CYCLE=[
   ['DISTRIBUTION','Distribution'],
   ['EXIT_RISK','Exit risk']
 ];
-function cycleDestination(pkg){
-  const x=pkg?.decision_projection?.next_21_30d||{};
-  const d=String(x.regime_destination||'').toUpperCase();
-  const map={EXPANSION:'PRE_ROTATION',CONSOLIDATION:'CONSOLIDATION',DISTRIBUTION:'DISTRIBUTION',CONTRACTION:'DEFENSIVE'};
-  return map[d]||null;
-}
-function cycleEtaFor(key,pkg,compass,currentKey){
-  if(key===currentKey)return'NOW';
-  const month=pkg?.decision_projection?.next_21_30d||{},monthKey=cycleDestination(pkg);
-  if(monthKey===key&&month.direction&&!/UNAVAILABLE|NO_EDGE/.test(String(month.direction).toUpperCase()))return'21–30D HORIZON';
-  const w=pkg?.decision_projection?.weeks_4_8||compass?.horizons?.CYCLE_ALTCOINS_3_8W||{};
-  if(String(w.state||'').toUpperCase()===key)return pathEta(w.eta||'4–8W HORIZON');
+function cycleEtaFor(key,pkg,compass){
+  const forward=cycleForwardFromSources(pkg);
+  if(key===forward.key)return forward.eta;
   if(key==='PARABOLIC_ALTSEASON')return pathEta(pkg?.altseason_mania_window);
   if(key==='DISTRIBUTION')return'NO SUPPORTED ETA';
   if(key==='EXIT_RISK')return pathEta(compass?.sell_assessment?.eta);
   return'NO SUPPORTED ETA';
 }
+function weeklyCycleState(pkg){
+  const s=investorText(pkg?.market_state||pkg?.base_case_this_week||'').trim();
+  return s?short(s,150):'No governed weekly market-state text is published.';
+}
 function marketCycleTrack(pkg,compass){
-  const current=cyclePhaseFromSources(pkg),idx=MARKET_CYCLE.findIndex(x=>x[0]===current.key),next=idx>=0&&idx<MARKET_CYCLE.length-1?MARKET_CYCLE[idx+1]:null;
-  const warning=String(pkg?.decision_projection?.weeks_4_8?.warning||compass?.horizons?.CYCLE_ALTCOINS_3_8W?.warning||'NONE').replaceAll('_',' ');
-  const rows=MARKET_CYCLE.map(([key,label],i)=>{
-    const isCurrent=key===current.key,passed=idx>=0&&i<idx;
-    return '<div class="market-cycle-step'+(isCurrent?' current':'')+(passed?' passed':'')+'"><i></i><span>'+esc(label)+'</span><b>'+esc(isCurrent?'NOW':cycleEtaFor(key,pkg,compass,current.key))+'</b></div>';
+  const forward=cycleForwardFromSources(pkg);
+  const warning=String(pkg?.decision_projection?.weeks_4_8?.warning||'NONE').replaceAll('_',' ');
+  const rows=MARKET_CYCLE.map(([key,label])=>{
+    const isForward=key===forward.key;
+    return '<div class="market-cycle-step'+(isForward?' destination':'')+'"><i></i><span>'+esc(label)+'</span><b>'+esc(cycleEtaFor(key,pkg,compass))+'</b></div>';
   }).join('');
   return '<section class="path-track market-cycle-v2" data-path-track="market-cycle">'
-    +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The big-picture market phase.</h3></div><aside><span>CURRENT</span><strong>'+esc((MARKET_CYCLE.find(x=>x[0]===current.key)||['','UNCLEAR'])[1])+'</strong><small>'+esc(current.source)+'</small></aside></header>'
-    +'<div class="market-cycle-summary"><div><span>NEXT PHASE</span><strong>'+esc(next?.[1]||'NO SUPPORTED NEXT PHASE')+'</strong></div><div><span>ETA</span><strong>'+esc(next?cycleEtaFor(next[0],pkg,compass,current.key):'NO SUPPORTED ETA')+'</strong></div><div><span>WARNING</span><strong>'+esc(warning)+'</strong></div></div>'
+    +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The big-picture market cycle.</h3><p>Current weekly state stays separate from forward phase placement. The rail only highlights a structured 21–30d or 4–8w destination.</p></div><aside><span>NEXT STRUCTURED PHASE</span><strong>'+esc((MARKET_CYCLE.find(x=>x[0]===forward.key)||['','UNCLEAR'])[1])+'</strong><small>'+esc(forward.source)+'</small></aside></header>'
+    +'<div class="market-cycle-summary"><div><span>WEEKLY NOW</span><strong>'+esc(weeklyCycleState(pkg))+'</strong></div><div><span>FORWARD ETA</span><strong>'+esc(forward.eta)+'</strong></div><div><span>WARNING</span><strong>'+esc(warning)+'</strong></div></div>'
     +'<div class="market-cycle-rail">'+rows+'</div>'
-    +'<details class="path-track-detail"><summary>Why this market phase?</summary><p>'+esc(short(investorText(pkg?.market_state||pkg?.base_case_this_week||'No governed market-cycle explanation is published.'),420))+'</p></details>'
+    +'<details class="path-track-detail"><summary>Why this cycle path?</summary><p>'+esc(short(investorText(pkg?.base_case_2_3_weeks||pkg?.market_state||'No governed market-cycle explanation is published.'),420))+'</p></details>'
     +'</section>';
 }
 const ROTATION_ORDER=[
