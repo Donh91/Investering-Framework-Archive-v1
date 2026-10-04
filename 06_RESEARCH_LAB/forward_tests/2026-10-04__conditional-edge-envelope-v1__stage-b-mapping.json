@@ -1,0 +1,452 @@
+{
+  "contract": "CONDITIONAL_EDGE_ENVELOPE_STAGE_B_MAPPING_v1",
+  "candidate": "CONDITIONAL_EDGE_ENVELOPE_v1",
+  "created_at_utc": "2026-10-04T19:10:00Z",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "execution_authorized": false,
+  "outcome_queries_performed": 0,
+  "source_framework_commit": "c6b64cc8eb18242ce3e5e6b54fa07b378a27bb42",
+  "stage_a_path": "06_RESEARCH_LAB/forward_tests/2026-09-14__conditional-edge-envelope-v1__shadow-preregistration.md",
+  "stage_a_blob_sha": "5e16c4fa849a956ae92f3b6c3eff9dfc22e6b310",
+  "mapping_policy": {
+    "existing_owner_first": true,
+    "no_substitute_question_for_blocked_mapping": true,
+    "no_outcome_inspection": true,
+    "no_queue_mutation": true,
+    "no_new_paid_calls": true,
+    "no_market_or_portfolio_authority": true,
+    "minimum_n_policy": {
+      "counts_always_visible": true,
+      "global_numeric_threshold": null,
+      "rule": "Each question must freeze an owner/event-structure-specific minimum-N rule before any outcome query. No Edge-Stats default such as N=10/N=30 is imported as framework semantics.",
+      "fail_closed": "If a defensible minimum-N rule cannot be frozen without inspecting target outcomes, the question remains MAPPING_BLOCKED."
+    }
+  },
+  "owner_bindings": {
+    "active_test_registry": {
+      "path": "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+      "blob_sha": "85d2e6d2f453bc280f2e65dc06cf10516913aa45"
+    },
+    "rotation_runtime": {
+      "path": "scripts/learning/t6_rotation_survival.py",
+      "blob_sha": "e682676aa25ec5bba35ff764e11e12a7d0ea6f13",
+      "row_root": "research/framework_memory/rotation_survival_forward_rows"
+    },
+    "fnp_runtime": {
+      "path": "scripts/learning/fnp_cumulative_forward.py",
+      "blob_sha": "6a277b74fd7bb60a7a2b183901b32ac3b0ce465b",
+      "row_root": "research/framework_memory/fnp_forward_rows"
+    },
+    "etf_transmission": {
+      "path": "research/experiments/etf_absorption_transmission_v1/EXPERIMENT_SPEC_v1.json",
+      "blob_sha": "7570f952b0795345485e03fecc963a0e1c4af166"
+    },
+    "macro_trigger": {
+      "path": "research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04B_METHOD_AND_GOVERNANCE_v1.md",
+      "blob_sha": "3157417e98b249450ccf2822c602577b914703e7"
+    },
+    "global_liquidity": {
+      "path": "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/research/global_liquidity_causal_chain_v1/PREREGISTERED_ANALYSIS_CONTRACT_v1.md",
+      "blob_sha": "5270ab195013c94ce14798bf6513186b5612dcc9"
+    },
+    "rotation_architecture": {
+      "path": "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/ROTATION_ARCHITECTURE_v2.json",
+      "blob_sha": "a2310d97b67cb69aadabdf88c7bc58e23efc8c02"
+    },
+    "pullback_policy": {
+      "path": "01_CORE_FRAMEWORK/governance/2026-07-10__pullback-policy-v0-2-reproducibility-correction__canonical.md",
+      "blob_sha": "3d4b07807a9759588a8a697a2e6bfa939fa93798"
+    },
+    "exit_distribution_program": {
+      "path": "research/framework_evolution_learning/2026-08-29__cycle-compass-exit-distribution-research-program-v1.md",
+      "blob_sha": "333dd9aac36b8b5018d864e7d867b08774faf95e"
+    }
+  },
+  "questions": [
+    {
+      "question_id": "CEE-Q01",
+      "class": "Rotation survival",
+      "status": "MAPPING_BLOCKED_FIXED_HORIZON_NOT_OWNER_FROZEN",
+      "owner": "T6_ROTATION_SURVIVAL_FORWARD",
+      "owner_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+        "scripts/learning/t6_rotation_survival.py"
+      ],
+      "source_dataset_id_or_binding": "research/framework_memory/rotation_survival_forward_rows @ source_framework_commit",
+      "metric_paths": [
+        "sequence_start_utc",
+        "time_in_state_days",
+        "axes.ETHBTC",
+        "axes.breadth",
+        "axes.BTC_D",
+        "axes.deployment",
+        "axes.flow",
+        "failure_outcome",
+        "exit_side_outcome"
+      ],
+      "units": [
+        "UTC",
+        "days",
+        "mixed owner-native units"
+      ],
+      "availability_semantics": "Prospective packet timestamp only; missing axes remain UNKNOWN and are never inferred.",
+      "eligibility": "A prospective first ETH/BTC cross above the existing registered read-only level with immutable source packet hash.",
+      "conditions": "Existing first-cross baseline plus frozen available rotation axes.",
+      "lookback": "No retrospective discovery lookback; sequence starts at prospective first cross.",
+      "outcome": "Persistence versus failure/reversal of the frozen rotation attempt.",
+      "horizon": null,
+      "missingness_rule": "MISSING_REMAINS_UNKNOWN_NEVER_INFERRED",
+      "overlap_rule": "Overlapping observations belong to the same active sequence and are not independent rows.",
+      "holdout_boundary": "Chronological holdout required after a fixed horizon is owner-frozen.",
+      "regime_split": "Existing framework regime only when point-in-time owner binding exists.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
+      "confirmatory_trial_number": 1,
+      "blocker": "Current T6 runtime measures event duration/reversal but does not freeze the fixed forward horizon required by CEE Stage A."
+    },
+    {
+      "question_id": "CEE-Q02",
+      "class": "Rotation failure / reversion",
+      "status": "MAPPING_BLOCKED_FIXED_HORIZON_NOT_OWNER_FROZEN",
+      "owner": "T6_ROTATION_SURVIVAL_FORWARD",
+      "owner_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+        "scripts/learning/t6_rotation_survival.py"
+      ],
+      "source_dataset_id_or_binding": "research/framework_memory/rotation_survival_forward_rows @ source_framework_commit",
+      "metric_paths": [
+        "first_cross_detected",
+        "current_ethbtc",
+        "registered_ethbtc_level_read_only",
+        "event",
+        "right_censored",
+        "failure_outcome"
+      ],
+      "units": [
+        "boolean",
+        "ratio",
+        "event label"
+      ],
+      "availability_semantics": "Reversal is recorded prospectively when ETH/BTC returns below the registered first-cross level.",
+      "eligibility": "Same prospective sequence population as CEE-Q01.",
+      "conditions": "Eligible first-cross sequence.",
+      "lookback": "None beyond frozen owner state at first cross.",
+      "outcome": "Failure/reversion after rotation attempt.",
+      "horizon": null,
+      "missingness_rule": "No inferred failure; right-censored sequences remain incomplete.",
+      "overlap_rule": "One sequence is one dependency cluster.",
+      "holdout_boundary": "Chronological holdout required after horizon repair.",
+      "regime_split": "Existing point-in-time regime only.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
+      "confirmatory_trial_number": 2,
+      "blocker": "Failure event is defined, but no fixed evaluation horizon is frozen."
+    },
+    {
+      "question_id": "CEE-Q03",
+      "class": "Pullback recovery",
+      "status": "MAPPING_BLOCKED_MINIMUM_N_RULE_NOT_FROZEN",
+      "owner": "T4_PULLBACK_EDGE_20260708_01_OUTCOMES",
+      "owner_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md"
+      ],
+      "source_dataset_id_or_binding": "Existing T4 prospective event/outcome rows only; no retrospective pseudo-rows.",
+      "metric_paths": [
+        "event_start_utc",
+        "state_survived_to_24H",
+        "state_survived_to_72H",
+        "state_survived_to_7D",
+        "recovery_attempt_count",
+        "24H_outcome",
+        "72H_outcome",
+        "7D_outcome",
+        "event_close_outcome"
+      ],
+      "units": [
+        "UTC",
+        "boolean/count",
+        "owner-defined outcome labels"
+      ],
+      "availability_semantics": "Only source-backed matured T4 horizons available at or after due time.",
+      "eligibility": "Existing registered pullback edge events with valid prospective source and maturity lineage.",
+      "conditions": "Already-defined framework stress/pullback event, not qualitative Mild/Moderate/Large/Extreme labels.",
+      "lookback": "Event-local frozen source state.",
+      "outcome": "Recovery state at 24H, 72H and 7D.",
+      "horizon": [
+        "24H",
+        "72H",
+        "7D"
+      ],
+      "missingness_rule": "Unmatured horizon is UNKNOWN/right-censored, never failure or success.",
+      "overlap_rule": "Same pullback event across multiple maturity horizons is one event cluster.",
+      "holdout_boundary": "Future chronological T4 events after Stage B merge are the untouched prospective holdout.",
+      "regime_split": "Only existing point-in-time regime tags carried by eligible event rows.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
+      "confirmatory_trial_number": 3,
+      "blocker": "Existing T4 owner and 24H/72H/7D outcomes are mapped, but Stage A requires a defensible event-structure-specific minimum-N rule to be frozen before outcome queries."
+    },
+    {
+      "question_id": "CEE-Q04",
+      "class": "Drawdown escalation",
+      "status": "MAPPING_BLOCKED_OUTCOME_SPEC_INCOMPLETE",
+      "owner": "T4_PULLBACK_EDGE_20260708_01_OUTCOMES + PULLBACK_POLICY_V0_2",
+      "owner_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+        "01_CORE_FRAMEWORK/governance/2026-07-10__pullback-policy-v0-2-reproducibility-correction__canonical.md"
+      ],
+      "source_dataset_id_or_binding": "T4 prospective events; qualitative pullback labels explicitly excluded.",
+      "metric_paths": [],
+      "units": [],
+      "availability_semantics": "Owner policy forbids mechanical drawdown classification from qualitative labels until exact measurement anchors/bands are frozen.",
+      "eligibility": "Not executable at Stage B.",
+      "conditions": "Would require an already-defined risk/stress state with reproducible drawdown anchor.",
+      "lookback": null,
+      "outcome": "Deeper adverse move after stress state.",
+      "horizon": null,
+      "missingness_rule": "UNKNOWN until exact drawdown metric and anchor exist.",
+      "overlap_rule": "Not frozen.",
+      "holdout_boundary": "Not frozen.",
+      "regime_split": "Not frozen.",
+      "minimum_N_rule": "Not applicable while mapping blocked.",
+      "confirmatory_trial_number": 4,
+      "blocker": "Current canonical pullback policy explicitly suspends mechanical qualitative drawdown classification."
+    },
+    {
+      "question_id": "CEE-Q05",
+      "class": "Reclaim durability",
+      "status": "MAPPING_BLOCKED_NO_DISTINCT_EVALUATION_OWNER",
+      "owner": "DATA_PING_EVENT_GATES_EXIST; NO_DISTINCT_CEE_COMPATIBLE_OUTCOME_OWNER",
+      "owner_paths": [
+        "02_DATA_PING/operational_handoffs/latest_decision_context_state.json"
+      ],
+      "source_dataset_id_or_binding": "Current event-scoped reclaim/survival gates exist, but no frozen distinct durability denominator/outcome contract was found.",
+      "metric_paths": [
+        "event_scoped_runtime_gates.btc_reclaim",
+        "event_scoped_runtime_gates.btc_survival"
+      ],
+      "units": [
+        "USD price levels"
+      ],
+      "availability_semantics": "Current event gates are operational context, not a preregistered reclaim-durability outcome study.",
+      "eligibility": "Blocked.",
+      "conditions": "Would require a frozen settled reclaim event identity.",
+      "lookback": null,
+      "outcome": "Durable reclaim versus transient reclaim.",
+      "horizon": null,
+      "missingness_rule": "Do not infer from narrative event history.",
+      "overlap_rule": "Not frozen.",
+      "holdout_boundary": "Not frozen.",
+      "regime_split": "Not frozen.",
+      "minimum_N_rule": "Not applicable while mapping blocked.",
+      "confirmatory_trial_number": 5,
+      "blocker": "A separate CEE-compatible denominator/horizon contract does not currently exist; do not create one merely to fill the ten-question slate."
+    },
+    {
+      "question_id": "CEE-Q06",
+      "class": "Relative-strength persistence",
+      "status": "MAPPING_BLOCKED_DISTINCT_HORIZON_AND_OUTCOME_NOT_FROZEN",
+      "owner": "ROTATION_ARCHITECTURE_v2 + T6_ROTATION_SURVIVAL_FORWARD",
+      "owner_paths": [
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/ROTATION_ARCHITECTURE_v2.json",
+        "scripts/learning/t6_rotation_survival.py"
+      ],
+      "source_dataset_id_or_binding": "Direct settled ETH/BTC owner plus prospective T6 sequence rows.",
+      "metric_paths": [
+        "ETH_RELATIVE_STRENGTH.required",
+        "axes.ETHBTC",
+        "time_in_state_days"
+      ],
+      "units": [
+        "ETH/BTC ratio",
+        "days"
+      ],
+      "availability_semantics": "Direct settled ETH/BTC only; derived ratio has no gate authority.",
+      "eligibility": "Prospective direct ETH/BTC state with valid source timing.",
+      "conditions": "Already-defined ETH relative-strength state.",
+      "lookback": "Owner-defined settled persistence only.",
+      "outcome": "Persistence of relative-strength state.",
+      "horizon": null,
+      "missingness_rule": "No direct pair means UNKNOWN.",
+      "overlap_rule": "Repeated observations inside one sequence are dependent.",
+      "holdout_boundary": "Requires fixed horizon first.",
+      "regime_split": "Existing regime tags only.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
+      "confirmatory_trial_number": 6,
+      "blocker": "Current owners define state/persistence but not a separate fixed CEE outcome horizon."
+    },
+    {
+      "question_id": "CEE-Q07",
+      "class": "Breadth persistence",
+      "status": "MAPPING_BLOCKED_COMPARABLE_BREADTH_HISTORY",
+      "owner": "T6_ROTATION_SURVIVAL_FORWARD / breadth truth governance",
+      "owner_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+        "research/framework_evolution_learning/2026-08-29__cycle-compass-exit-distribution-research-program-v1.md"
+      ],
+      "source_dataset_id_or_binding": "Prospective breadth state only where constituent continuity and point-in-time membership are valid.",
+      "metric_paths": [
+        "breadth_state",
+        "breadth_survival_days"
+      ],
+      "units": [
+        "owner-defined breadth state",
+        "days"
+      ],
+      "availability_semantics": "Comparable breadth history is explicitly a prospective evidence gap; changed/dynamic cohorts cannot be treated as persistence.",
+      "eligibility": "Only fixed/comparable breadth cohorts with point-in-time membership.",
+      "conditions": "Already-defined breadth expansion.",
+      "lookback": "Prospective comparable cohort only.",
+      "outcome": "Continuation versus collapse.",
+      "horizon": null,
+      "missingness_rule": "Changed or unavailable cohort => UNKNOWN / non-eligible.",
+      "overlap_rule": "Repeated overlapping cohort observations are one dependency cluster.",
+      "holdout_boundary": "Requires enough future fixed-cohort events.",
+      "regime_split": "Existing point-in-time regime only.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
+      "confirmatory_trial_number": 7,
+      "blocker": "Comparable breadth continuity is not currently sufficient for a clean fixed-horizon Stage B execution mapping."
+    },
+    {
+      "question_id": "CEE-Q08",
+      "class": "Flow / price transmission",
+      "status": "DUPLICATE_ACTIVE_OWNER_NO_CEE_EXECUTION",
+      "owner": "ETF-ABSORPTION-TRANSMISSION-v1",
+      "owner_paths": [
+        "research/experiments/etf_absorption_transmission_v1/EXPERIMENT_SPEC_v1.json"
+      ],
+      "source_dataset_id_or_binding": "Existing ETF owner adapter and queued experiment contract.",
+      "metric_paths": [
+        "candidate_inputs.btc_etf_flow_state",
+        "target_outcomes.BTC_DRAWDOWN_7D",
+        "target_outcomes.ETH_DRAWDOWN_7D",
+        "target_outcomes.FAILED_ROTATION_14D",
+        "target_outcomes.ECOSYSTEM_DISTRIBUTION_14D"
+      ],
+      "units": [
+        "owner-defined flow state",
+        "7D/14D outcomes"
+      ],
+      "availability_semantics": "Timestamp-safe existing-owner join required; no duplicate ETF calls.",
+      "eligibility": "Existing ETF experiment eligibility only.",
+      "conditions": "Frozen ETF-supported absorption/flow state.",
+      "lookback": "Owner-defined.",
+      "outcome": [
+        "BTC_DRAWDOWN_7D",
+        "ETH_DRAWDOWN_7D",
+        "FAILED_ROTATION_14D",
+        "ECOSYSTEM_DISTRIBUTION_14D"
+      ],
+      "horizon": [
+        "7D",
+        "14D"
+      ],
+      "missingness_rule": "Existing owner rules.",
+      "overlap_rule": "Matched control windows per existing experiment.",
+      "holdout_boundary": "Existing experiment lifecycle owns holdout.",
+      "regime_split": "Existing experiment/regime owner.",
+      "minimum_N_rule": "Existing experiment owner; CEE does not create a parallel test.",
+      "confirmatory_trial_number": 8,
+      "blocker": "CEE-Q08 is materially owned by an existing queued transmission experiment and is therefore retained as a duplicate/null mapping, not a new executable question."
+    },
+    {
+      "question_id": "CEE-Q09",
+      "class": "Macro-to-crypto transmission",
+      "status": "MAPPING_BLOCKED_EXISTING_PROGRAM_OWNS_SEMANTICS",
+      "owner": "MARKET_ANTICIPATION_WP04B + GLOBAL_LIQUIDITY_CAUSAL_CHAIN_RESEARCH_v1",
+      "owner_paths": [
+        "research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04B_METHOD_AND_GOVERNANCE_v1.md",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/research/global_liquidity_causal_chain_v1/PREREGISTERED_ANALYSIS_CONTRACT_v1.md"
+      ],
+      "source_dataset_id_or_binding": "Existing point-in-time/vintage-correct macro owner data only.",
+      "metric_paths": [
+        "macro stress components",
+        "BTC lower-tail daily return",
+        "ETH/BTC daily return",
+        "transmission state"
+      ],
+      "units": [
+        "robust standardized states",
+        "daily returns"
+      ],
+      "availability_semantics": "Publication/knowledge time must precede crypto outcome; revised history is descriptive unless vintage-correct.",
+      "eligibility": "Existing macro trigger/transmission contract only.",
+      "conditions": "At least two of three macro stress components active for two eligible publication days, as owner-defined.",
+      "lookback": "Owner-defined trailing robust windows.",
+      "outcome": "Crypto transmission and later outcome rate.",
+      "horizon": "Existing owner contracts differ; CEE must not invent a competing horizon.",
+      "missingness_rule": "Missing trigger inputs => UNKNOWN and non-enumerable.",
+      "overlap_rule": "Owner-defined event clustering/reset.",
+      "holdout_boundary": "Global-liquidity owner preserves chronological holdout; CEE does not duplicate it.",
+      "regime_split": "Owner-defined era/regime design.",
+      "minimum_N_rule": "Existing owner; no parallel CEE execution while semantics remain owned elsewhere.",
+      "confirmatory_trial_number": 9,
+      "blocker": "The framework already has frozen macro-transmission semantics and an economic-execution lock. CEE must not create a parallel owner."
+    },
+    {
+      "question_id": "CEE-Q10",
+      "class": "Exit opportunity cost",
+      "status": "MAPPING_BLOCKED_EXISTING_OWNER_EVALUATOR_NOT_READY",
+      "owner": "T5_FNP_CUMULATIVE",
+      "owner_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+        "scripts/learning/fnp_cumulative_forward.py",
+        "research/framework_evolution_learning/2026-08-29__cycle-compass-exit-distribution-research-program-v1.md"
+      ],
+      "source_dataset_id_or_binding": "research/framework_memory/fnp_forward_rows @ source_framework_commit",
+      "metric_paths": [
+        "frozen_horizons.24H",
+        "frozen_horizons.72H",
+        "frozen_horizons.7D",
+        "outcome_fields.actual_cost_pct",
+        "outcome_fields.drawdown_avoided_pct",
+        "outcome_fields.missed_upside_pct",
+        "outcome_fields.final_classification"
+      ],
+      "units": [
+        "UTC",
+        "percent",
+        "classification"
+      ],
+      "availability_semantics": "Only real prospective decision-divergence rows; no retrospective horizon selection.",
+      "eligibility": "Existing T2 WAIT-vs-BTC_PARTIAL divergence captured after activation and attached to valid maturity receipts.",
+      "conditions": "Already-defined defensive lock/action divergence.",
+      "lookback": "No retrospective discovery.",
+      "outcome": "Damage avoided versus missed upside / false-exit cost.",
+      "horizon": [
+        "24H",
+        "72H",
+        "7D"
+      ],
+      "missingness_rule": "Derived metrics remain null until authoritative FNP evaluator exists.",
+      "overlap_rule": "One decision divergence is one event cluster across its three frozen horizons.",
+      "holdout_boundary": "Future eligible divergence rows only.",
+      "regime_split": "Existing point-in-time regime when available.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
+      "confirmatory_trial_number": 10,
+      "blocker": "Current T5 runtime explicitly blocks derived FNP metrics because the authoritative evaluator is not yet available."
+    }
+  ],
+  "stage_b_summary": {
+    "mapping_rows": 10,
+    "outcome_queries": 0,
+    "executable_now": 0,
+    "duplicate_active_owner": [
+      "CEE-Q08"
+    ],
+    "mapped_pending_maturity": [],
+    "blocked": [
+      "CEE-Q01",
+      "CEE-Q02",
+      "CEE-Q03",
+      "CEE-Q04",
+      "CEE-Q05",
+      "CEE-Q06",
+      "CEE-Q07",
+      "CEE-Q09",
+      "CEE-Q10"
+    ],
+    "candidate_execution_state": "NO_EXECUTION",
+    "queue_mutation": false,
+    "next_bounded_action": "Do not query outcomes. Resolve only owner-native blockers, including per-question minimum-N rules, fixed horizons and missing evaluator contracts, without inventing substitute questions or parallel owners. Shared statistical primitives may be centralized independently if they remove verified duplication.",
+    "stage_b_passed": false,
+    "stage_b_status": "OWNER_MAPPING_COMPLETE_EXECUTION_MAPPING_BLOCKED"
+  }
+}
