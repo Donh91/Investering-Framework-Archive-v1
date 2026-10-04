@@ -50,4 +50,8 @@ After the completed week is scored, `scripts/cycle_navigator/materialize_public_
 
 A valid `CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json` is sufficient public freeze proof when its digest matches the prospectively frozen forecast. X publication is optional downstream distribution. During the open week, `scripts/cycle_navigator/build_public_live_precision.py` may publish a provisional Price Range score from complete observed data to date; it must use the same six range rows and formula as final settlement, display coverage and timestamp, and never overwrite the frozen forecast.
 
+For site-native freezes created after the W40 migration, the Price Range scoring window is also frozen prospectively. `FIRST_COMPLETE_UTC_HOUR_AT_OR_AFTER_FREEZE_v1` excludes any market hour that began before the forecast existed; both the live scorer and final settlement must honor the same `scoring_valid_from_utc`. Migration-era W40 remains on its original legacy week-boundary scoring policy and is not retrospectively rewritten.
+
+The public live score is expected to refresh from the existing hourly owner chain (`Hourly Sequence Capture -> Entry Signal Ledger -> Native Handlekompas -> Pages`). The site treats observations older than the published freshness SLA as `STALE`, preserving the last score while refusing to describe it as current.
+
 The website and Master Monday consumers should read these public scorecards rather than infer a score by matching machine issue numbers.
