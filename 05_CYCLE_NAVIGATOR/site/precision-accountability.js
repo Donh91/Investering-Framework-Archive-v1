@@ -221,7 +221,6 @@ function watchRoots() {
     rootObserver = null;
     mount();
     watch();
-    watchRoots();
     return;
   }
   if (rootObserver || !document.body) return;
@@ -248,6 +247,7 @@ async function load() {
     document.getElementById('publicLiveAccountabilityLite')?.remove();
     mount();
     watch();
+    watchRoots();
   } catch (error) {
     console.warn('Public precision accountability unavailable', error);
   }
