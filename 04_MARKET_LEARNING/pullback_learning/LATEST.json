@@ -1,7 +1,7 @@
 {
   "adaptive_evidence": {
     "adaptive_percentiles_ready": true,
-    "breadth_percentile_rank": 83.88888888888889,
+    "breadth_percentile_rank": 77.77777777777777,
     "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
     "drawdown_percentile_rank": 65.55555555555556,
     "eligibility_status": {
@@ -18,7 +18,7 @@
     },
     "observation_count": 180,
     "rules_are_research_only": true,
-    "step_return_percentile_rank": 80.55555555555556
+    "step_return_percentile_rank": 48.333333333333336
   },
   "authority": {
     "automatic_rule_changes": false,
@@ -28,9 +28,8 @@
   },
   "contract": "PULLBACK_LEARNING_LATEST_v1",
   "data_ping_bridge": {
-    "display_line": "PULLBACK LEARNING: REGIME_NOT_ACTIVE | ELIGIBILITY_CONTRACT_UNAVAILABLE | observation unchanged"
+    "display_line": "PULLBACK LEARNING: REGIME_NOT_ACTIVE | ELIGIBILITY_CONTRACT_UNAVAILABLE | descriptive only | dd=-1.10% | breadth=72% | sample=181"
   },
-  "duplicate_price_observation_skipped": true,
   "eligibility_status": {
     "adaptive_descriptive_statistics": true,
     "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
@@ -43,34 +42,55 @@
     "owner_valid": true,
     "status": "SUSPENDED_NO_ELIGIBILITY_CONTRACT"
   },
-  "generated_at_utc": "2026-10-04T00:08:30.797182+00:00",
+  "generated_at_utc": "2026-10-04T06:26:57.659474+00:00",
   "market_snapshot": {
-    "advancer_pct": 76,
-    "breadth": 0.76,
-    "btc_usdt": 84749.75,
-    "captured_at_utc": "2026-10-03T21:50:21.436918+00:00",
+    "adaptive_evidence": {
+      "adaptive_percentiles_ready": true,
+      "breadth_percentile_rank": 77.77777777777777,
+      "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
+      "drawdown_percentile_rank": 65.55555555555556,
+      "eligibility_status": {
+        "adaptive_descriptive_statistics": true,
+        "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
+        "existing_episode_maturation": false,
+        "mechanical_research_classification": false,
+        "new_episode_creation": false,
+        "observation_collection": true,
+        "owner_path": "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json",
+        "owner_sha256": "1f423e723641fb8a3297981f320e3904baaca1f8ff742db8dbfb96ccedfa3192",
+        "owner_valid": true,
+        "status": "SUSPENDED_NO_ELIGIBILITY_CONTRACT"
+      },
+      "observation_count": 180,
+      "rules_are_research_only": true,
+      "step_return_percentile_rank": 48.333333333333336
+    },
+    "advancer_pct": 72,
+    "breadth": 0.72,
+    "btc_usdt": 84753.56,
+    "captured_at_utc": "2026-10-04T06:26:57.660926+00:00",
     "contract": "PULLBACK_LEARNING_OBSERVATION_v1",
-    "drawdown_from_running_peak_pct": -1.1383085640883195,
+    "drawdown_from_running_peak_pct": -1.0992268733217125,
     "entry_heat": "NORMAL",
     "entry_state": "WAIT",
-    "eth_usdt": 2686.74,
+    "eth_usdt": 2687.23,
     "ethbtc": 0.0317,
-    "ew_return_24h_pct": 2.538711,
-    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20261003T210729Z_9d11364b747b",
-    "matched_constituent_count": 99,
-    "matched_top100_step_return_pct": 0.9436154043576436,
-    "median_return_24h_pct": 1.804975,
-    "membership_hash": "0f6dadb7b2d2e4d0084df80b5005237d50922f477932071fbf1f842c971043ac",
-    "price_observation_utc": "2026-10-03T20:00:00+00:00",
+    "ew_return_24h_pct": 1.357042,
+    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20261004T003029Z_0e5b712981c7",
+    "matched_constituent_count": 100,
+    "matched_top100_step_return_pct": 0.03953168330316234,
+    "median_return_24h_pct": 0.57398,
+    "membership_hash": "75c25ce66598ffb7ed939229701890b280c736f8f2dc110d7286b1e30bb49812",
+    "price_observation_utc": "2026-10-03T23:00:00+00:00",
     "price_source": "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES",
+    "research_state": "REGIME_NOT_ACTIVE",
     "running_peak_index": 139.26762142055978,
-    "synthetic_top100_index": 137.68232615892745
+    "synthetic_top100_index": 137.73675430006904
   },
-  "out_of_order_price_observation_skipped": false,
   "performance_summary": {
     "closed_episode_count": 0,
     "contract": "PULLBACK_LEARNING_PERFORMANCE_SUMMARY_v1",
-    "generated_at_utc": "2026-10-04T00:08:30.797182+00:00",
+    "generated_at_utc": "2026-10-04T06:26:57.659474+00:00",
     "governance": {
       "automatic_rule_changes": false,
       "canonical_market_state": false,
