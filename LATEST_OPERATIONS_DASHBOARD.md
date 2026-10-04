@@ -1,28 +1,28 @@
 # Operations Dashboard
 
 Overall: **AMBER**
-Generated: `2026-10-04T13:45:42.924663Z`
+Generated: `2026-10-04T18:45:31.248865Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 3.222 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 3.03 |
-| `weekly_output` | **GREEN** | FRESH | 151.916 |
-| `automation_health` | **AMBER** | AMBER | 0.144 |
-| `architecture_health` | **GREEN** | GREEN | 0.092 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 3.027 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 6.756 |
-| `remediation_maturation` | **GREEN** | FRESH | 3.531 |
+| `daily_capture` | **GREEN** | FRESH | 1.91 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 0.923 |
+| `weekly_output` | **GREEN** | FRESH | 156.913 |
+| `automation_health` | **AMBER** | AMBER | 0.057 |
+| `architecture_health` | **GREEN** | GREEN | 0.015 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 0.919 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 11.752 |
+| `remediation_maturation` | **GREEN** | FRESH | 8.528 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **55**
-- OpenAI cost this month: **$3.772378**
+- OpenAI receipts this month: **59**
+- OpenAI cost this month: **$3.974338**
 - Pending forecast candidates: **222**
-- Experiment candidates: **459**
-- Experiment dispatch requests: **18518**
+- Experiment candidates: **461**
+- Experiment dispatch requests: **18947**
 - Codex-ready remediation tasks: **3**
 - Needs-more-evidence items: **2**
 
@@ -35,4 +35,4 @@ Open incident references: **21**
 - **P1** `automation_health` - SEMANTIC_STATUS_AMBER
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `7af0586a6b03be522fb994574eb6755d3e7587237ea51bb4c4c915b7752cf545`
+Dashboard SHA-256: `ad8b1f6af683e9867952eb4d943135f44c77ac2e904b51e8cf69349f02d6a2f6`
