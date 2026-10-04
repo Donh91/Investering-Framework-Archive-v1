@@ -20,11 +20,11 @@ It is intentionally a presentation and live-context surface, not a new market-st
 10. Live Price Range Precision MUST expose its source timestamp and freshness SLA. If the last complete hourly owner observation exceeds the SLA, the UI must show `STALE` rather than `LIVE`.
 11. The Pages delivery should refresh after the successful hourly owner chain reaches Native Handlekompas. This is delivery only and cannot alter Official Compass or Cycle Navigator authority.
 12. PATH is a three-track presentation surface: `MARKET CYCLE`, `ROTATION`, and `ALTCOIN CYCLE TIMER`. None of these tracks is an independent market classifier or execution owner.
-13. MARKET CYCLE prefers the structured public `decision_projection.weeks_4_8` / `next_21_30d` fields when present. If the structured phase is unavailable or `UNCLEAR`, presentation may map only explicit Monday market-state language into the canonical cycle vocabulary; otherwise it must remain `UNCLEAR`.
+13. MARKET CYCLE MUST use only structured public `decision_projection.weeks_4_8` / `next_21_30d` fields for canonical phase placement and forward destination. If the structured phase is unavailable or `UNCLEAR`, the public phase MUST remain `UNCLEAR`; free-form Monday text MUST NOT be converted into a canonical cycle phase by the browser.
 14. ROTATION MUST read the typed Official Compass `capitalization_ladder` for live BTC → ETH → large → mid → small → micro → memes status and ETA. Frozen weekly `rotation_ladder` text may be shown only as supporting context.
-15. ALTCOIN CYCLE TIMER defaults to `ALTSEASON IGNITION` with the public meaning `Small-cap expansion begins`. Its adaptive ETA MUST come from the governed SMALL_CAPS Compass row when available. When that target is already activated, the focus may advance to Mania / Euphoria; when governed distribution or sell states become active, the focus may switch to protection.
+15. ALTCOIN CYCLE TIMER defaults to `ALTSEASON IGNITION` with the public meaning `Small-cap expansion begins`. Its adaptive ETA MUST come from the governed SMALL_CAPS Compass row when available. As governed stages activate, the focus may advance one useful step at a time through Micro acceleration → Broad altseason → Mania / Euphoria. During parabolic/mania conditions the next highlighted phase may switch to Distribution; any governed sell/trim state may switch focus to Exit / Protection.
 16. PATH MUST NOT synthesize a calendar countdown or a more precise ETA from elapsed time, prices, stage order, historical averages, or client-side arithmetic. If the relevant governed source does not publish an ETA, the public result is `NO SUPPORTED ETA`.
-17. The Altcoin Cycle sequence may show Participation → ETH unlock → Large/Mid transmission → Altseason Ignition → Micro acceleration → Mania/Euphoria → Distribution → Exit/Protection → Re-entry, but later sequence steps are references only until their governing sources activate them.
+17. The Altcoin Cycle sequence may show Participation → ETH unlock → Large/Mid transmission → Altseason Ignition → Micro acceleration → Broad altseason → Mania/Euphoria → Distribution → Exit/Protection → Re-entry, but later sequence steps are references only until their governing sources activate them.
 18. Distribution MUST read `COMPASS_PROTECTION_TRACKER_v1.distribution_risk`; Exit / Protection MUST read `COMPASS_SELL_ASSESSMENT_v1`; Re-entry MUST read `COMPASS_PROTECTION_TRACKER_v1.reentry_state`. Neither pullback nor distribution context alone may become a frontend sell instruction.
 19. If the Official Compass is unavailable, live Rotation and Altcoin Cycle states fail closed to `UNAVAILABLE`; independently frozen Monday context may remain visible.
 
@@ -87,7 +87,7 @@ Public delivery artifact:
 
 - `/data/latest.json`
 
-The public artifact is a mechanically selected subset of canonical fields. It must never infer or rewrite state.
+The public artifact is a mechanically selected subset of canonical fields. It must never infer or rewrite state. Strategic `decision_projection` delivery MUST be field-minimized to what PATH actually presents; internal scenario weights, asset-specific 21–30d directions and falsification details are not public-site dependencies.
 
 ### Live context layer
 
