@@ -2,6 +2,7 @@
 'use strict';
 
 const DATA_URL = './data/latest.json';
+const FREEZE_INDEX_URL = './data/public-freezes/index.json';
 const esc = (value) => String(value ?? '')
   .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -42,6 +43,30 @@ const phaseTone = (value) => ({
   DEGRADED:'degraded'
 }[String(value||'').toUpperCase()] || 'upcoming');
 
+function freshnessMeta(live) {
+  const d = live?.live_as_of_utc ? new Date(live.live_as_of_utc) : null;
+  const ageMs = d && Number.isFinite(d.getTime()) ? Date.now() - d.getTime() : null;
+  const sla = Math.max(30, Number(live?.freshness_sla_minutes || 90));
+  const stale = ageMs === null || ageMs > sla * 60 * 1000;
+  const mins = ageMs === null ? null : Math.max(0, Math.floor(ageMs / 60000));
+  const age = mins === null ? 'unknown age' : mins >= 60 ? Math.floor(mins/60) + 'h ' + (mins%60) + 'm old' : mins + ' min old';
+  return {stale, age, sla};
+}
+
+function recordLabel(live) {
+  return live?.freeze_record_kind === 'MIGRATED_VERIFIED_FREEZE'
+    ? 'MIGRATED VERIFIED FREEZE'
+    : 'SITE SOURCE OF RECORD';
+}
+
+function archivePanel() {
+  const records = Array.isArray(freezeIndex?.records) ? [...freezeIndex.records].sort((a,b)=>Number(b.public_issue_number||0)-Number(a.public_issue_number||0)).slice(0,8) : [];
+  if (!records.length) return '';
+  return '<section class="pa-archive"><header><div><span class="pa-kicker">PUBLIC FREEZE ARCHIVE</span><h3>What was locked before the outcome.</h3></div><p>Each record preserves public issue identity, forecast week and immutable forecast hash. Site-native freezes can replace X as the proof channel.</p></header><div class="pa-archive-grid">'
+    + records.map((r)=>'<a href="'+esc(r.path||'#')+'" target="_blank" rel="noopener"><span>CN #'+esc(r.public_issue_number)+' · '+esc(r.forecast_week||'—')+'</span><strong>'+esc(String(r.record_kind||'SITE_NATIVE_SOURCE_OF_RECORD').replaceAll('_',' '))+'</strong><small>'+esc(shortHash(r.source_forecast_freeze_sha256))+' · View frozen record →</small></a>').join('')
+    + '</div></section>';
+}
+
 function rowsByWindow(live, window) {
   return (Array.isArray(live?.rows) ? live.rows : []).filter((r) => r?.window === window);
 }
@@ -60,8 +85,9 @@ function windowCard(live, key, title) {
       + '</div>';
   }).join('');
   const coverage = String(w.observed_hours ?? 0) + '/' + String(w.expected_hours_so_far ?? 0) + ' observed hours';
+  const scoringNote = w.scoring_start_utc && w.scoring_start_utc !== w.window_start_utc ? ' · scored from ' + stamp(w.scoring_start_utc) : '';
   return '<article class="pa-window tone-' + esc(tone) + '">'
-    + '<header><div><span>' + esc(title) + '</span><small>' + esc(stamp(w.window_start_utc)) + ' → ' + esc(stamp(w.window_end_utc)) + '</small></div><b>' + esc(phaseLabel(w.phase)) + '</b></header>'
+    + '<header><div><span>' + esc(title) + '</span><small>' + esc(stamp(w.window_start_utc)) + ' → ' + esc(stamp(w.window_end_utc)) + esc(scoringNote) + '</small></div><b>' + esc(phaseLabel(w.phase)) + '</b></header>'
     + '<div class="pa-window-score"><strong>' + esc(score(w.score_to_date)) + '</strong><small>' + esc(coverage) + '</small></div>'
     + '<div class="pa-assets">' + assets + '</div>'
     + '</article>';
@@ -88,24 +114,25 @@ function fullPanel(snapshot) {
   const settled = Number(live.completed_rows || 0);
   const liveRows = Number(live.live_rows || 0);
   const pending = Number(live.pending_rows || 0);
+  const fresh = freshnessMeta(live);
   const status = live.status === 'READY_FOR_FINAL_WEEKLY_SETTLEMENT'
     ? 'WEEK COMPLETE · AWAITING VERIFIED SETTLEMENT'
     : live.running_price_precision_pct == null
       ? 'AWAITING SCOREABLE RANGE DATA'
-      : 'PROVISIONAL · LIVE';
+      : fresh.stale ? 'PROVISIONAL · STALE' : 'PROVISIONAL · LIVE';
 
   return '<section id="publicLiveAccountability" class="pa-full">'
-    + '<header class="pa-head"><div><span class="pa-kicker">THIS WEEK · PUBLIC ACCOUNTABILITY</span><h2>Frozen Monday. Scored live. Verified after close.</h2><p>The running percentage uses the same six prospectively frozen BTC/ETH intraday ranges and the same formula as the final public Cycle Navigator Price Range score.</p></div><div class="pa-state-pill">' + esc(status) + '</div></header>'
+    + '<header class="pa-head"><div><span class="pa-kicker">THIS WEEK · PUBLIC ACCOUNTABILITY</span><h2>Frozen Monday. Scored live. Verified after close.</h2><p>The running percentage uses the same six prospectively frozen BTC/ETH intraday ranges and the same formula as the final public Cycle Navigator Price Range score.</p></div><div class="pa-state-pill' + (fresh.stale?' stale':'') + '">' + esc(status) + '</div></header>'
     + '<div class="pa-score-hero">'
       + '<div class="pa-identity"><span>CURRENT FROZEN FORECAST</span><strong>CN #' + esc(live.public_issue_number ?? current.public_issue_number ?? '—') + '</strong><b>' + esc(live.forecast_week || current.forecast_week || '—') + '</b><small>Frozen ' + esc(stamp(live.frozen_at_utc)) + '</small></div>'
-      + '<div class="pa-running-score"><span>PRICE RANGE PRECISION · LIVE</span><strong>' + esc(running) + '</strong><small>As of ' + esc(stamp(live.live_as_of_utc)) + '</small></div>'
+      + '<div class="pa-running-score"><span>PRICE RANGE PRECISION · ' + (fresh.stale?'STALE':'LIVE') + '</span><strong>' + esc(running) + '</strong><small>As of ' + esc(stamp(live.live_as_of_utc)) + ' · ' + esc(fresh.age) + (fresh.stale?' · waiting for the next complete hourly owner update':'') + '</small></div>'
       + '<div class="pa-coverage"><span>COVERAGE</span><strong>' + esc(settled) + ' settled · ' + esc(liveRows) + ' live</strong><small>' + esc(pending) + ' pending · ' + esc(live.scored_rows ?? 0) + '/' + esc(live.final_row_count ?? 6) + ' currently scoreable</small></div>'
     + '</div>'
     + '<div class="pa-freeze-proof">'
       + '<div><span>FREEZE PROOF</span><strong>' + esc(shortHash(live.freeze_sha256)) + '</strong><small>Immutable forecast hash</small>' + (live.freeze_receipt_public_path?'<a class="pa-audit-link" href="' + esc(live.freeze_receipt_public_path) + '" target="_blank" rel="noopener">View freeze receipt →</a>':'') + '</div>'
       + '<div><span>SCORE FAMILY</span><strong>PRICE RANGE PRECISION</strong><small>Same family that becomes the verified CN score</small></div>'
       + '<div><span>FORMULA</span><strong>70% containment + 30% overlap</strong><small>No live re-weighting</small></div>'
-      + '<div><span>PUBLIC RECORD</span><strong>SITE SOURCE OF RECORD</strong><small>X is optional distribution, not required for validity</small></div>'
+      + '<div><span>PUBLIC RECORD</span><strong>' + esc(recordLabel(live)) + '</strong><small>' + (live.freeze_record_kind==='MIGRATED_VERIFIED_FREEZE'?'Forecast was frozen prospectively; the site receipt was materialized during migration.':'X is optional distribution, not required for validity.') + '</small></div>'
     + '</div>'
     + '<section class="pa-ranges"><div class="pa-section-head"><div><span class="pa-kicker">FROZEN PRICE RANGES</span><h3>Six rows. Same rows from Monday to final score.</h3></div><p>Observed ranges expand only with new hourly outcomes. Frozen ranges never move.</p></div>'
       + '<div class="pa-window-grid">' + windowCard(live,'day_1_2','DAY 1–2') + windowCard(live,'day_3_4','DAY 3–4') + windowCard(live,'day_5_7','DAY 5–7') + '</div>'
@@ -116,7 +143,8 @@ function fullPanel(snapshot) {
       + '<div class="current"><i>2</i><span>LIVE</span><b>' + esc(running) + ' · ' + esc(stamp(live.live_as_of_utc)) + '</b></div><em>→</em>'
       + '<div><i>3</i><span>VERIFIED</span><b>Locks after 168h settlement</b></div>'
     + '</div>'
-    + '<p class="pa-footnote">Provisional means “correct so far against complete observed data to this timestamp.” It can move while an open window is still accumulating. The verified number is written only after the completed week is settled and then becomes the official public CN Price Range Precision shown in this Proof tab.</p>'
+    + '<p class="pa-footnote">Provisional means “correct so far against complete observed data to this timestamp.” It can move while an open window is still accumulating. STALE means the last complete owner observation is older than the public freshness SLA; the score is preserved but is not presented as current. The verified number is written only after the completed week is settled and then becomes the official public CN Price Range Precision shown in this Proof tab.</p>'
+    + archivePanel()
     + '</section>';
 }
 
@@ -124,16 +152,18 @@ function litePanel(snapshot) {
   const live = snapshot?.public_live_precision;
   if (live?.contract !== 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1') return '';
   const running = score(live.running_price_precision_pct);
-  const phase = live.running_price_precision_pct == null ? 'AWAITING' : 'LIVE';
-  return '<section id="publicLiveAccountabilityLite" class="pa-lite">'
+  const fresh = freshnessMeta(live);
+  const phase = live.running_price_precision_pct == null ? 'AWAITING' : (fresh.stale ? 'STALE' : 'LIVE');
+  return '<section id="publicLiveAccountabilityLite" class="pa-lite' + (fresh.stale?' stale':'') + '">';
     + '<div class="pa-lite-mark"><i></i><span>WEEKLY TRACK RECORD · ' + esc(phase) + '</span></div>'
     + '<div class="pa-lite-score"><strong>' + esc(running) + '</strong><small>provisional Price Range Precision</small></div>'
-    + '<div class="pa-lite-meta"><span>CN #' + esc(live.public_issue_number) + ' · ' + esc(live.forecast_week) + '</span><b>Frozen ' + esc(stamp(live.frozen_at_utc)) + '</b><small>Live as of ' + esc(stamp(live.live_as_of_utc)) + ' · ' + esc(live.completed_rows ?? 0) + ' settled / ' + esc(live.live_rows ?? 0) + ' live</small></div>'
+    + '<div class="pa-lite-meta"><span>CN #' + esc(live.public_issue_number) + ' · ' + esc(live.forecast_week) + '</span><b>Frozen ' + esc(stamp(live.frozen_at_utc)) + '</b><small>' + (fresh.stale?'Last complete observation ':'Live as of ') + esc(stamp(live.live_as_of_utc)) + ' · ' + esc(fresh.age) + ' · ' + esc(live.completed_rows ?? 0) + ' settled / ' + esc(live.live_rows ?? 0) + ' live</small></div>'
     + '<button type="button" data-pa-proof>View full scorecard →</button>'
     + '</section>';
 }
 
 let latest = null;
+let freezeIndex = null;
 let nowObserver = null;
 let proofObserver = null;
 
@@ -186,9 +216,13 @@ function watch() {
 
 async function load() {
   try {
-    const r = await fetch(DATA_URL + '?precision-accountability=' + Date.now(), {cache:'no-store'});
+    const [r, archive] = await Promise.all([
+      fetch(DATA_URL + '?precision-accountability=' + Date.now(), {cache:'no-store'}),
+      fetch(FREEZE_INDEX_URL + '?precision-accountability=' + Date.now(), {cache:'no-store'}).catch(()=>null)
+    ]);
     if (!r.ok) throw new Error('precision accountability HTTP ' + r.status);
     latest = await r.json();
+    freezeIndex = archive?.ok ? await archive.json() : null;
     document.getElementById('publicLiveAccountability')?.remove();
     document.getElementById('publicLiveAccountabilityLite')?.remove();
     mount();
