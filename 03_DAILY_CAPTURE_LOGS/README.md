@@ -18,7 +18,7 @@ All three lanes are non-binding calibration evidence. They do not replace canoni
 
 Production schedule, UTC:
 
-- every hour at `:05 UTC`
+- every hour at `:12 UTC`
 
 The schedule authority is `.github/workflows/hourly-sequence-capture.yml`; this README mirrors that production cadence and must not be treated as a separate schedule owner. UTC is deliberate because the underlying Binance/OKX 1h observations are UTC-aligned. Daylight-saving transitions must not skip or duplicate a source hour.
 
