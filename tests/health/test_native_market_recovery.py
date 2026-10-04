@@ -55,7 +55,9 @@ class NativeMarketRecoveryTest(unittest.TestCase):
 
     def test_quota_suppresses_wasteful_retry(self):
         prior=default_state();prior["lanes"]["sentiment"]={"consecutive_nonpass":5,"last_dispatch_utc":None}
-        decision,state=decide(self.auto({"sentiment":{"status":"DEGRADED","classification":"CFGI_HTTP_429_QUOTA_EXHAUSTED"}}),prior,datetime(2026,9,8,20,0,tzinfo=timezone.utc))
+        health={lane:{"status":"PASS","classification":"PASS"} for lane in POLICY}
+        health["sentiment"]={"status":"DEGRADED","classification":"CFGI_HTTP_429_QUOTA_EXHAUSTED"}
+        decision,state=decide(self.auto(health),prior,datetime(2026,9,8,20,0,tzinfo=timezone.utc))
         self.assertTrue(decision["suppressed_retries"])
         self.assertFalse(decision["dispatches"])
         self.assertTrue(state["lanes"]["sentiment"]["retry_suppressed_provider_limit"])
