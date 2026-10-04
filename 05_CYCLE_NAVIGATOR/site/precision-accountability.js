@@ -102,7 +102,7 @@ function fullPanel(snapshot) {
       + '<div class="pa-coverage"><span>COVERAGE</span><strong>' + esc(settled) + ' settled · ' + esc(liveRows) + ' live</strong><small>' + esc(pending) + ' pending · ' + esc(live.scored_rows ?? 0) + '/' + esc(live.final_row_count ?? 6) + ' currently scoreable</small></div>'
     + '</div>'
     + '<div class="pa-freeze-proof">'
-      + '<div><span>FREEZE PROOF</span><strong>' + esc(shortHash(live.freeze_sha256)) + '</strong><small>Immutable forecast hash</small></div>'
+      + '<div><span>FREEZE PROOF</span><strong>' + esc(shortHash(live.freeze_sha256)) + '</strong><small>Immutable forecast hash</small>' + (live.freeze_receipt_public_path?'<a class="pa-audit-link" href="' + esc(live.freeze_receipt_public_path) + '" target="_blank" rel="noopener">View freeze receipt →</a>':'') + '</div>'
       + '<div><span>SCORE FAMILY</span><strong>PRICE RANGE PRECISION</strong><small>Same family that becomes the verified CN score</small></div>'
       + '<div><span>FORMULA</span><strong>70% containment + 30% overlap</strong><small>No live re-weighting</small></div>'
       + '<div><span>PUBLIC RECORD</span><strong>SITE SOURCE OF RECORD</strong><small>X is optional distribution, not required for validity</small></div>'
