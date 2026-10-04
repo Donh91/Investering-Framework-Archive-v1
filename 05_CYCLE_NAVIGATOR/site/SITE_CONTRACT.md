@@ -19,6 +19,10 @@ It is intentionally a presentation and live-context surface, not a new market-st
 9. The NOW risk curve MUST be owned by the typed Official Compass capitalization ladder. Legacy weekly rotation text may appear only as structural context outside the live action surface and must not be converted into site-derived action badges.
 10. Live Price Range Precision MUST expose its source timestamp and freshness SLA. If the last complete hourly owner observation exceeds the SLA, the UI must show `STALE` rather than `LIVE`.
 11. The Pages delivery should refresh after the successful hourly owner chain reaches Native Handlekompas. This is delivery only and cannot alter Official Compass or Cycle Navigator authority.
+12. PATH may combine the frozen weekly `altseason_countdown` with typed Official Compass live gates only as presentation. The frozen Monday phase/window MUST remain visibly separate from the live gate and MUST NOT be rewritten by the browser.
+13. PATH MUST NOT synthesize a calendar countdown or a more precise ETA from elapsed time, prices, stage order or historical averages. If the relevant governed source does not publish an ETA, the public result is `NO SUPPORTED ETA`.
+14. PATH exit/protection presentation MUST read pullback/distribution from `COMPASS_PROTECTION_TRACKER_v1` and the exit window from `COMPASS_SELL_ASSESSMENT_v1`. Pullback or distribution context alone MUST NOT become a frontend sell instruction.
+15. If the Official Compass is unavailable, adaptive PATH live gates fail closed to `UNAVAILABLE`; the frozen Monday baseline may remain visible because it is independently governed.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
