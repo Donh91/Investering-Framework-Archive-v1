@@ -212,7 +212,7 @@ function installNowRefinements(data,history){
 }
 function preciseScorePct(value){
   const n=Number(value);if(!Number.isFinite(n))return '—';
-  return n.toFixed(2).replace(/\\.?0+$/,'')+'%';
+  return n.toFixed(2).replace(/\.?0+$/,'')+'%';
 }
 function completedForecastReceipt(data){
   const x=data?.latest_completed_forecast;
