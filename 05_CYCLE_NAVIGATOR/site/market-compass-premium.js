@@ -107,6 +107,53 @@ function riskSummary(compass) {
   return 'Pullback ' + pullback + ' · Distribution ' + distribution;
 }
 
+function decisionMeta(compass) {
+  const market = compass?.market_now || {};
+  return {
+    phase: words(market.regime || market.directional_state || 'UNAVAILABLE'),
+    next: clean(compass?.next_meaningful_change_eta) || 'No fixed ETA',
+    risk: riskSummary(compass)
+  };
+}
+
+function soWhat(row, lane) {
+  if (!row?.ok) return 'No governed edge — wait for a verified read.';
+  const action = actionFromLane(lane);
+  const tone = statusTone(row);
+  if (action === 'PREPARE' && tone === 'bull') return 'Prepare selectively — confirmation still comes before broad risk.';
+  if (action === 'PREPARE') return 'Prepare, but keep deployment conditional on confirmation.';
+  if (action === 'HOLD') return 'Stay positioned — do not chase high-beta from this horizon alone.';
+  if (tone === 'bull') return 'Bullish pressure is visible, but action authority still says wait.';
+  if (tone === 'bear') return 'Downside pressure dominates — keep new high-beta risk contained.';
+  return 'No broad edge — keep high-beta risk contained.';
+}
+
+function ladderTone(status) {
+  const s = String(status || '').toUpperCase();
+  if (/DEPLOY|ACTIVE|ELIGIBLE/.test(s)) return 'active';
+  if (/PREPARE|WATCH/.test(s)) return 'watch';
+  if (/HOLD/.test(s)) return 'hold';
+  if (/WAIT/.test(s)) return 'wait';
+  return 'pending';
+}
+
+function riskCurve(compass) {
+  const rows = Array.isArray(compass?.capitalization_ladder) ? compass.capitalization_ladder : [];
+  const ordered = ['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'];
+  const bySegment = new Map(rows.map((row) => [String(row?.segment || '').toUpperCase(), row]));
+  const resolved = ordered.map((segment) => bySegment.get(segment) || { segment, status: 'UNAVAILABLE', action: 'UNAVAILABLE', reason: 'No governed public reading is available.' });
+  const meme = resolved.find((row) => String(row.segment).toUpperCase() === 'MEMES') || {};
+  const rail = resolved.map((row, index) => {
+    const label = words(row.segment).replace('LARGE CAPS','LARGE').replace('MID CAPS','MID').replace('SMALL CAPS','SMALL').replace('MICROCAPS','MICRO');
+    return '<div class="premium-rung tone-' + esc(ladderTone(row.status)) + '"><i>' + esc(index + 1) + '</i><span>' + esc(label) + '</span><strong>' + esc(words(row.status || row.action || 'UNAVAILABLE')) + '</strong></div>';
+  }).join('');
+  return '<section class="premium-risk-curve">'
+    + '<header><div><span class="premium-kicker">RISK CURVE · NOW</span><h3>Bitcoin → memes</h3></div><p>How far out on the risk curve the governed evidence currently supports going.</p></header>'
+    + '<div class="premium-rung-grid">' + rail + '</div>'
+    + '<div class="premium-meme-focus"><span>MEME RISK</span><strong>' + esc(words(meme.status || meme.action || 'UNAVAILABLE')) + '</strong><p>' + esc(clean(meme.reason) || 'No governed meme-specific reading is currently published.') + '</p><small>ETA · ' + esc(clean(meme.eta) || 'No fixed ETA') + '</small></div>'
+    + '</section>';
+}
+
 function evidenceDrivers(compass) {
   const rows = Array.isArray(compass?.protection_tracker?.decisive_public_drivers)
     ? compass.protection_tracker.decisive_public_drivers.filter(Boolean).slice(0, 4)
@@ -163,11 +210,13 @@ function horizonCard(snapshot, compass, scale, horizon) {
     : '<div class="premium-meter unavailable"><div></div></div>';
   const call = row.ok ? words(row.bias || 'NEUTRAL') : 'AWAITING COMPASS';
   const summary = clean(row.summary) || clean(lane.expected_path) || 'No governed reading is published for this horizon.';
+  const takeaway = soWhat(row, lane);
   return '<article class="premium-horizon tone-' + esc(tone) + '">'
     + '<header><div><span class="premium-horizon-label">' + esc(horizon.label) + '</span><small>' + esc(horizon.title) + '</small></div><b>' + esc(call) + '</b></header>'
     + score
     + meter
     + '<p>' + esc(summary) + '</p>'
+    + '<div class="premium-so-what"><span>SO WHAT?</span><strong>' + esc(takeaway) + '</strong></div>'
     + '<div class="premium-horizon-meta"><span>' + esc(actionFromLane(lane)) + '</span><span>' + esc(lane?.eta || 'No fixed ETA') + '</span></div>'
     + detailsPanel(snapshot, compass, row, lane, horizon)
     + '</article>';
@@ -178,17 +227,19 @@ function renderPremium(snapshot, compass) {
   if (!root) return false;
   const scale = officialScale(compass);
   const rec = recommendation(compass?.action_now || snapshot?.live_observation?.current_action?.stance);
+  const meta = decisionMeta(compass);
   const dataOk = compass?.data_status === 'OK';
   const section = document.createElement('section');
   section.id = 'premiumMarketCompass';
   section.className = 'premium-market-compass';
   section.innerHTML =
     '<div class="premium-overview">'
-    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'The framework is waiting for fresh evidence.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p></div>'
-    + '<aside><span>RECOMMENDATION</span><strong>' + esc(rec.action) + '</strong><p>' + esc(rec.copy) + '</p><small>' + esc(riskSummary(compass)) + '</small></aside>'
+    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'The framework is waiting for fresh evidence.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><div><span>MARKET PHASE</span><strong>' + esc(meta.phase) + '</strong></div><div><span>NEXT CHANGE</span><strong>' + esc(meta.next) + '</strong></div><div><span>RISK</span><strong>' + esc(meta.risk) + '</strong></div></div></div>'
+    + '<aside><span>RECOMMENDATION</span><strong>' + esc(rec.action) + '</strong><p>' + esc(rec.copy) + '</p><small>Official action posture · market direction remains a separate signal.</small></aside>'
     + '</div>'
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, compass, scale, h)).join('') + '</div>'
+    + riskCurve(compass)
     + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(words(compass?.data_status || 'UNAVAILABLE')) + '</b></span><span>CAPITAL TRANSMISSION · ' + esc(capSummary(compass)) + '</span><span>Evidence balance · not probability</span></div>';
 
   root.querySelector('#premiumMarketCompass')?.remove();
