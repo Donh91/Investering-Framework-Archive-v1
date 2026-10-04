@@ -210,12 +210,17 @@ function installNowRefinements(data,history){
   nowObserver.observe(root,{childList:true,subtree:true});
   apply();
 }
+function preciseScorePct(value){
+  if(value===null||value===undefined||value==='')return '—';
+  const n=Number(value);if(!Number.isFinite(n))return '—';
+  return n.toFixed(2).replace(/\.?0+$/,'')+'%';
+}
 function completedForecastReceipt(data){
   const x=data?.latest_completed_forecast;
   if(x?.contract!=='CN_PUBLIC_COMPLETED_FORECAST_RECEIPT_v1')return '';
   const list=(title,rows,fallback)=>'<div><span>'+esc(title)+'</span><ul>'+(rows.length?rows.map(v=>'<li>'+esc(short(v,190))+'</li>').join(''):'<li>'+esc(fallback)+'</li>')+'</ul></div>';
   const held=Array.isArray(x.held_up)?x.held_up:[],missed=Array.isArray(x.missed)?x.missed:[];
-  return '<section class="completed-receipt"><header><div><small>LAST COMPLETED FORECAST</small><h3>CN #'+esc(x.public_issue_number)+' · '+esc(x.forecast_week)+' · FINAL</h3></div><strong>Price Range '+esc(pct(x.price_range_score))+'</strong></header><div class="completed-grid">'+list('HELD UP',held,'Structured outcome detail is not available in this public receipt.')+list('MISSED',missed,'Structured outcome detail is not available in this public receipt.')+'</div><button type="button" data-ledger-link="'+esc(x.exact_ledger_issue)+'">View full archived record →</button></section>';
+  return '<section class="completed-receipt"><header><div><small>LAST COMPLETED FORECAST</small><h3>CN #'+esc(x.public_issue_number)+' · '+esc(x.forecast_week)+' · FINAL</h3></div><strong>Price Range '+esc(preciseScorePct(x.price_range_score))+'</strong></header><div class="completed-grid">'+list('HELD UP',held,'Structured outcome detail is not available in this public receipt.')+list('MISSED',missed,'Structured outcome detail is not available in this public receipt.')+'</div><button type="button" data-ledger-link="'+esc(x.exact_ledger_issue)+'">View full archived record →</button></section>';
 }
 
 function marketStructureAnalysisBlock(data){

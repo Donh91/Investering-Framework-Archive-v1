@@ -137,7 +137,7 @@ async function deriveLatestCompletedForecast(series,currentPackage){
     const evaluation=currentPublicIssue===completedIssue+1?currentPackage?.evaluation:null;
     const held=Array.isArray(evaluation?.strengths)?evaluation.strengths.filter(x=>typeof x==="string"&&x.trim()).slice(0,2):[];
     const missed=Array.isArray(evaluation?.misses)?evaluation.misses.filter(x=>typeof x==="string"&&x.trim()).slice(0,2):[];
-    return {contract:"CN_PUBLIC_COMPLETED_FORECAST_RECEIPT_v1",public_issue_number:completedIssue,forecast_week:String(latest?.forecast_week||""),status:String(latest?.status||"FINAL"),price_range_score:Number.isFinite(Number(latest?.price_range_score))?Number(latest.price_range_score):null,held_up:held,missed,exact_ledger_issue:completedIssue};
+    return {contract:"CN_PUBLIC_COMPLETED_FORECAST_RECEIPT_v1",public_issue_number:completedIssue,forecast_week:String(latest?.forecast_week||""),status:String(latest?.status||"FINAL"),price_range_score:typeof latest?.price_range_score==="number"&&Number.isFinite(latest.price_range_score)?latest.price_range_score:null,held_up:held,missed,exact_ledger_issue:completedIssue};
   }catch{return null;}
 }
 const sinceLastCN=await deriveSinceLastCN(publicSeriesRaw,standaloneFreeze);
