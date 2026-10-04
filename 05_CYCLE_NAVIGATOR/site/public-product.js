@@ -186,16 +186,26 @@ function pathEta(value){
 }
 function pathStatus(value){
   const s=String(value||'').toUpperCase();
-  const hit=s.match(/ACTIVE WATCH|NOT CONFIRMED|UNCONFIRMED|PAUSED|CONFIRMED|ACTIVE|HARD_WAIT|HARD WAIT|WAIT|HOLD|BUILDING|ELEVATED|HIGH|NORMAL|NONE|WARNING|UNKNOWN|UNAVAILABLE/);
+  const hit=s.match(/ACTIVE WATCH|NOT CONFIRMED|UNCONFIRMED|INACTIVE|PAUSED|HARD_WAIT|HARD WAIT|BUILDING|ELEVATED|WARNING|CONFIRMED|UNAVAILABLE|UNKNOWN|ACTIVE|WAIT|HOLD|HIGH|NORMAL|NONE/);
   return hit?hit[0].replace('_',' '):'PENDING';
 }
 function pathTone(value){
   const s=String(value||'').toUpperCase();
-  if(/CONFIRMED|ACTIVE/.test(s)&&!/NOT CONFIRMED|UNCONFIRMED/.test(s))return'active';
-  if(/HOLD|NORMAL|NONE/.test(s))return'hold';
+  if(/INACTIVE|UNAVAILABLE|UNKNOWN|PAUSED/.test(s))return'unknown';
+  if(/NOT CONFIRMED|UNCONFIRMED|HARD_WAIT|HARD WAIT|WAIT|ELEVATED|HIGH/.test(s))return'wait';
   if(/ACTIVE WATCH|BUILDING|WATCH|WARNING/.test(s))return'watch';
-  if(/WAIT|NOT CONFIRMED|UNCONFIRMED|ELEVATED|HIGH/.test(s))return'wait';
+  if(/HOLD|NORMAL|NONE/.test(s))return'hold';
+  if(/CONFIRMED|ACTIVE/.test(s))return'active';
   return'unknown';
+}
+function adaptiveStageTitle(raw,index){
+  const s=String(raw||'').toLowerCase();
+  if(/short-horizon alt participation/.test(s))return'Short-horizon alt participation';
+  if(/eth-relative stabilization/.test(s))return'Ethereum stabilises vs Bitcoin';
+  if(/large-cap and midcap transmission/.test(s))return'Large + mid-cap transmission';
+  if(/small- and microcap transmission/.test(s))return'Small + micro-cap transmission';
+  if(/broad, multi-horizon altseason|broad.*altseason/.test(s))return'Broad altseason confirmation';
+  return stageName(raw,index);
 }
 function utcLabel(value){
   if(!value)return'—';
@@ -234,17 +244,18 @@ function adaptiveGateRows(compass,index){
 function adaptiveRotationTimeline(pkg,compass){
   const raw=Array.isArray(pkg?.altseason_countdown)?pkg.altseason_countdown:[];
   if(!raw.length)return '<section class="adaptive-path empty"><span>CYCLE PATH · ADAPTIVE TIMELINE</span><strong>No frozen Monday path is published.</strong><p>The site will not create a countdown without a governed baseline.</p></section>';
-  const frozenCurrent=Math.max(0,raw.findIndex(x=>/ACTIVE WATCH|\bACTIVE\b/i.test(String(x?.phase||''))));
+  const frozenCurrent=raw.findIndex(x=>/ACTIVE WATCH|\bACTIVE\b/i.test(String(x?.phase||'')));
   const compassStatus=compass?.data_status||'UNAVAILABLE';
   const cards=raw.map((x,i)=>{
     const gates=adaptiveGateRows(compass,i);
-    const gateHtml=gates.map(g=>'<div class="adaptive-live-row tone-'+esc(g.tone)+'"><div><span>'+esc(g.label)+'</span><b>'+esc(g.status)+'</b></div><strong>'+esc(g.eta)+'</strong><p>'+esc(short(g.reason,170))+'</p></div>').join('');
-    const current=i===frozenCurrent;
+    const gateHtml=gates.map(g=>'<div class="adaptive-live-row tone-'+esc(g.tone)+'"><div><span>'+esc(g.label)+'</span><b>'+esc(g.status)+'</b></div><strong>'+esc(g.eta)+'</strong></div>').join('');
+    const gateReasons=gates.map(g=>'<div class="adaptive-detail-row"><b>'+esc(g.label)+'</b><p>'+esc(short(g.reason,220))+'</p></div>').join('');
+    const current=frozenCurrent>=0&&i===frozenCurrent;
     return '<article class="adaptive-stage'+(current?' baseline-current':'')+'">'
-      +'<header><i>'+esc(i+1)+'</i><div><span>'+(current?'MONDAY · YOU ARE HERE':'MONDAY BASELINE')+'</span><strong>'+esc(stageName(x.phase,i))+'</strong></div><b class="baseline-tone tone-'+esc(pathTone(x.phase))+'">'+esc(pathStatus(x.phase))+'</b></header>'
+      +'<header><i>'+esc(i+1)+'</i><div><span>'+(current?'MONDAY · YOU ARE HERE':'MONDAY BASELINE')+'</span><strong>'+esc(adaptiveStageTitle(x.phase,i))+'</strong></div><b class="baseline-tone tone-'+esc(pathTone(x.phase))+'">'+esc(pathStatus(x.phase))+'</b></header>'
       +'<div class="adaptive-window"><span>MONDAY WINDOW</span><strong>'+esc(pathEta(x.window))+'</strong></div>'
       +'<div class="adaptive-live"><span class="adaptive-live-title">LIVE GATE</span>'+gateHtml+'</div>'
-      +'<details><summary>What moves this stage?</summary><p>'+esc(short(investorText(x.phase),260))+'</p></details>'
+      +'<details><summary>What moves this stage?</summary><div class="adaptive-detail-row"><b>MONDAY BASELINE</b><p>'+esc(short(investorText(x.phase),260))+'</p></div>'+gateReasons+'</details>'
       +'</article>';
   }).join('');
   return '<section class="adaptive-path" data-contract="CN_ADAPTIVE_PATH_PRESENTATION_v1">'
