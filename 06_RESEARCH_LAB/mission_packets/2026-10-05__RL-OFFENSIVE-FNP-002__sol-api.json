@@ -1,0 +1,71 @@
+{
+  "contract": "RESEARCH_LAB_SOL_API_MISSION_PACKET_v1",
+  "created_date": "2026-10-05",
+  "status": "QUEUED_WAIT_PREDECESSOR",
+  "mission_id": "RL-OFFENSIVE-FNP-002",
+  "title": "Offensive Edge / False-Negative Opportunity Cost",
+  "priority": "P1",
+  "predecessor": "RL-ETF-TEMPORAL-EDGE-001",
+  "release_condition": "RL-ETF-TEMPORAL-EDGE-001_FINAL_CHATGPT_ADJUDICATION",
+  "recommended_task_lane": "DEEP_RESEARCH_MANUAL_OR_CURRENT_SENIOR_SOL_RESEARCH_LANE",
+  "recommended_model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "source_snapshot": {
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "commit_sha": "89b6c41528ded2be670559cc87c14e85b8849d7c"
+  },
+  "paired_protocol": "06_RESEARCH_LAB/mission_packets/2026-10-05__PAIRED_INTELLIGENCE_PROTOCOL_v1.md",
+  "bridge_queue": "programs/research_lab_paired_intelligence/QUEUE_v1.json",
+  "cross_agent_exchange": {
+    "phase_a": "INDEPENDENT_BLIND_PASS",
+    "claude_role": "CODE_PROVENANCE_ADVERSARIAL",
+    "sol_role": "SCIENTIFIC_ECONOMIC_FALSIFICATION",
+    "raw_counterparty_output_allowed": false,
+    "broker": "CHATGPT_5_6_SOL_HIGH",
+    "phase_b": "CHATGPT_ADJUDICATED_DELTA_ONLY",
+    "phase_c": "BOUNDED_CROSS_EXAMINATION_ONLY_IF_MATERIAL_CONFLICT",
+    "phase_d": "CHATGPT_FINAL_ADJUDICATION"
+  },
+  "question": "How much upside has the framework sacrificed through delayed confirmation, by asset tier and regime, and when was that delay justified by drawdown avoided?",
+  "hypothesis": "The framework's defensive stack has genuine protection value but may impose materially different false-negative costs across BTC, ETH and alt tiers; a uniform confirmation posture may not be economically optimal.",
+  "baseline": "Existing FNP, deployment, forecast/sequence and decision lineage evaluated point-in-time without hindsight entry selection.",
+  "required_analysis": [
+    "Reconstruct comparable decision episodes and preserve frozen horizons.",
+    "Compare WAIT/permission/actual action against preregistered or mechanically defined partial-deployment counterfactuals.",
+    "Segment BTC, ETH, large, mid and small/micro where evidence supports it.",
+    "Quantify delay days, upside missed, drawdown avoided and net decision divergence.",
+    "Distinguish justified caution from excess confirmation cost.",
+    "Test whether false-negative cost is regime-dependent and tier-dependent."
+  ],
+  "required_outputs": [
+    "episode_table",
+    "tier_and_regime_summary",
+    "delay_cost_distribution",
+    "drawdown_avoided",
+    "false_negative_cost",
+    "false_positive_tradeoff",
+    "strongest_falsification",
+    "remaining_unknowns",
+    "minimum_next_action"
+  ],
+  "falsifier": "Apparent offensive underperformance disappears after point-in-time constraints, reasonable baseline choice and drawdown-risk adjustment.",
+  "kill_condition": "If opportunity-cost estimates are unstable, hindsight-dependent or do not alter decisions versus the existing defensive baseline, retain current posture and close as explanatory-only.",
+  "forbidden": [
+    "raw model consensus as evidence",
+    "retroactive goalpost movement",
+    "new market rules",
+    "portfolio actions",
+    "canonical promotion",
+    "repository writes by API model",
+    "automatic merge"
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "repository_write": false
+  }
+}
