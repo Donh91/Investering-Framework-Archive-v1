@@ -84,17 +84,29 @@ function weeklyDir(value){
   const rel=String(value||"");
   return rel.startsWith("05_CYCLE_NAVIGATOR/weekly/")&&!rel.includes("..")?rel:null;
 }
-function freezeSignals(freeze){
-  const text=[freeze?.ethbtc_condition,freeze?.breadth_condition,...(Array.isArray(freeze?.structural_calls)?freeze.structural_calls:[])].join(" ").toLowerCase();
-  const eth=/at or below|weaken|fell|declin/.test(text)?"WEAKENING_OR_AT_RISK":/non-negative|higher|stabili[sz]/.test(text)?"STABLE_OR_SUPPORTED":"UNAVAILABLE";
-  const pullback=/pullback|retest/.test(text)?"ACTIVE_WATCH":"NOT_CALLED";
-  const broad=/broad[^.]{0,80}(not|unconfirmed|inactive)|not[^.]{0,80}broad|inactive[^.]{0,80}altseason/.test(text)?"UNCONFIRMED":/broad[^.]{0,80}(confirm|expansion)|altseason[^.]{0,80}(confirm|active)/.test(text)?"CONFIRMED_OR_ACTIVE":"UNAVAILABLE";
-  return {eth_relative:eth,pullback_watch:pullback,broad_altseason:broad};
+const comparisonFields=[
+  ["ETH/BTC condition","ethbtc_condition"],
+  ["Breadth condition","breadth_condition"]
+];
+function exactFreezeComparison(previousFreeze,currentFreeze){
+  const changed=[],stillTrue=[];
+  for(const [label,key] of comparisonFields){
+    const previous=typeof previousFreeze?.[key]==="string"?previousFreeze[key].trim():"";
+    const current=typeof currentFreeze?.[key]==="string"?currentFreeze[key].trim():"";
+    if(!previous||!current)continue;
+    const row={label,previous,current};
+    (previous===current?stillTrue:changed).push(row);
+  }
+  return {changed:changed.slice(0,2),still_true:stillTrue.slice(0,2)};
 }
-function sentenceList(markdown,patterns,limit=2){
-  const text=String(markdown||"").replace(/\*\*/g,"").replace(/[_#>]/g," ").replace(/\s+/g," ").trim();
-  const sentences=text.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
-  return sentences.filter(s=>patterns.some(p=>p.test(s))).slice(0,limit);
+function publicStructureAnalysis(freeze){
+  const calls=Array.isArray(freeze?.structural_calls)?freeze.structural_calls:[];
+  if(calls.length!==5||calls.some(value=>typeof value!=="string"||!value.includes(":")))return null;
+  const dimensions=calls.map(value=>{
+    const split=value.indexOf(":");
+    return {label:value.slice(0,split).replaceAll("_"," "),analysis:value.slice(split+1).trim()};
+  });
+  return {contract:"CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1",source:"CYCLE_NAVIGATOR_FORECAST_FREEZE.structural_calls",dimensions};
 }
 async function deriveSinceLastCN(series,currentFreeze){
   try{
@@ -104,33 +116,29 @@ async function deriveSinceLastCN(series,currentFreeze){
     const previousDir=weeklyDir(previous?.machine_week_dir);
     if(!Number.isInteger(currentIssue)||!previousDir||!currentFreeze)return null;
     const previousFreeze=await readJson(resolve(repoRoot,previousDir,"CYCLE_NAVIGATOR_FORECAST_FREEZE.json"));
-    const before=freezeSignals(previousFreeze),after=freezeSignals(currentFreeze);
-    const changed=[];
-    if(before.eth_relative!==after.eth_relative&&after.eth_relative!=="UNAVAILABLE")changed.push(after.eth_relative==="WEAKENING_OR_AT_RISK"?"ETH-relative strength moved to active risk watch.":"ETH-relative condition changed in the current frozen forecast.");
-    if(before.pullback_watch!==after.pullback_watch&&after.pullback_watch==="ACTIVE_WATCH")changed.push("Pullback / retest risk moved to active watch.");
-    const still=[];
-    if(before.broad_altseason==="UNCONFIRMED"&&after.broad_altseason==="UNCONFIRMED")still.push("Broad altseason remains unconfirmed.");
-    if(!changed.length&&!still.length)return null;
-    return {contract:"CN_PUBLIC_SINCE_LAST_V1",current_public_issue:currentIssue,previous_public_issue:currentIssue-1,changed:changed.slice(0,2),still_true:still.slice(0,2)};
+    const comparison=exactFreezeComparison(previousFreeze,currentFreeze);
+    if(!comparison.changed.length&&!comparison.still_true.length)return null;
+    return {contract:"CN_PUBLIC_SINCE_LAST_V1",comparison_method:"EXACT_GOVERNED_FIELD_EQUALITY",current_public_issue:currentIssue,previous_public_issue:currentIssue-1,...comparison};
   }catch{return null;}
 }
-async function deriveLatestCompletedForecast(series){
+async function deriveLatestCompletedForecast(series,currentPackage){
   try{
     const latest=series?.latest_completed_score;
-    const current=series?.current_public_projection;
-    const completedIssue=Number(latest?.public_issue_number),currentIssue=Number(current?.public_issue_number);
+    const completedIssue=Number(latest?.public_issue_number);
     const outcome=(series?.recent_lineage||[]).find(row=>Number(row?.public_issue_number)===completedIssue+1);
-    if(!Number.isInteger(completedIssue)||currentIssue!==completedIssue+1||!outcome?.published_path||!String(outcome.published_path).startsWith("05_CYCLE_NAVIGATOR/published/"))return null;
-    const markdown=await readFile(resolve(repoRoot,outcome.published_path),"utf8");
-    const held=sentenceList(markdown,[/Both weekly BTC and ETH ranges contained/i,/Price structure held better/i,/broader regime right/i]);
-    const missed=sentenceList(markdown,[/ETH\/BTC weakened/i,/transmission stayed selective/i,/BTC broke both boundaries/i,/main price miss/i]);
+    if(!Number.isInteger(completedIssue)||!outcome?.published_path||!String(outcome.published_path).startsWith("05_CYCLE_NAVIGATOR/published/"))return null;
+    await readFile(resolve(repoRoot,outcome.published_path),"utf8");
+    const currentPublicIssue=Number(series?.current_public_projection?.public_issue_number);
+    const evaluation=currentPublicIssue===completedIssue+1?currentPackage?.evaluation:null;
+    const held=Array.isArray(evaluation?.strengths)?evaluation.strengths.filter(x=>typeof x==="string"&&x.trim()).slice(0,2):[];
+    const missed=Array.isArray(evaluation?.misses)?evaluation.misses.filter(x=>typeof x==="string"&&x.trim()).slice(0,2):[];
     return {contract:"CN_PUBLIC_COMPLETED_FORECAST_RECEIPT_v1",public_issue_number:completedIssue,forecast_week:String(latest?.forecast_week||""),status:String(latest?.status||"FINAL"),price_range_score:Number.isFinite(Number(latest?.price_range_score))?Number(latest.price_range_score):null,held_up:held,missed,exact_ledger_issue:completedIssue};
   }catch{return null;}
 }
 const sinceLastCN=await deriveSinceLastCN(publicSeriesRaw,standaloneFreeze);
-const latestCompletedForecast=await deriveLatestCompletedForecast(publicSeriesRaw);
+const latestCompletedForecast=await deriveLatestCompletedForecast(publicSeriesRaw,pkg);
 
-const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure_analysis:standaloneFreeze?.market_structure_analysis||null,public_bull_bear_scale:standaloneFreeze?.bull_bear_scale||null,since_last_cn:sinceLastCN,latest_completed_forecast:latestCompletedForecast};
+const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure_analysis:publicStructureAnalysis(standaloneFreeze),public_bull_bear_scale:standaloneFreeze?.bull_bear_scale||null,since_last_cn:sinceLastCN,latest_completed_forecast:latestCompletedForecast};
 const compass=await buildCompassSnapshot();
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");

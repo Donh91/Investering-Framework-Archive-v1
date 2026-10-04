@@ -175,19 +175,20 @@ function trustStrip(data,history){
   const coverage=history?.coverage||{},current=data?.public_series?.current_public_projection||{};
   const completed=Number(coverage.completed_issues),audited=Number(coverage.rows_with_published_or_canonical_score_evidence),open=Number(coverage.latest_open_issue||current.public_issue_number);
   if(!Number.isInteger(completed)||completed<1||audited!==completed||!Number.isInteger(open))return '';
-  return '<button class="cn-trust-strip" type="button" data-proof-link><span>'+esc(completed+' / '+audited+' completed forecasts audited')+'</span><i aria-hidden="true">·</i><span>CN #'+esc(open)+' open</span><i aria-hidden="true">·</i><strong>Forecast locked before outcome</strong><small>View proof →</small></button>';
+  return '<button class="cn-trust-strip" type="button" data-proof-link><span>'+esc(audited+' / '+completed+' completed forecasts with score evidence')+'</span><i aria-hidden="true">·</i><span>CN #'+esc(open)+' open</span><i aria-hidden="true">·</i><strong>Forecast locked before outcome</strong><small>View proof →</small></button>';
 }
 function sinceLastBlock(data){
   const x=data?.since_last_cn;
   if(x?.contract!=='CN_PUBLIC_SINCE_LAST_V1')return '';
-  const changed=Array.isArray(x.changed)?x.changed.filter(Boolean).slice(0,2):[],still=Array.isArray(x.still_true)?x.still_true.filter(Boolean).slice(0,2):[];
+  if(x.comparison_method!=='EXACT_GOVERNED_FIELD_EQUALITY')return '';
+  const changed=Array.isArray(x.changed)?x.changed.filter(v=>v?.label&&v?.current&&v?.previous).slice(0,2):[],still=Array.isArray(x.still_true)?x.still_true.filter(v=>v?.label&&v?.current).slice(0,2):[];
   if(!changed.length&&!still.length)return '';
-  const section=(label,rows)=>rows.length?'<div><span>'+esc(label)+'</span>'+rows.map(v=>'<p>'+esc(v)+'</p>').join('')+'</div>':'';
+  const section=(label,rows)=>rows.length?'<div><span>'+esc(label)+'</span>'+rows.map(v=>'<p><b>'+esc(v.label)+'</b>'+esc(v.current)+(label==='CHANGED'?'<small>Previous: '+esc(v.previous)+'</small>':'')+'</p>').join('')+'</div>':'';
   return '<section class="cn-since-last"><header><small>SINCE LAST CN</small><strong>CN #'+esc(x.previous_public_issue)+' → CN #'+esc(x.current_public_issue)+'</strong></header><div class="cn-since-grid">'+section('CHANGED',changed)+section('STILL TRUE',still)+'</div></section>';
 }
 function whyThisCallBlock(data){
   const analysis=data?.public_market_structure_analysis,dims=Array.isArray(analysis?.dimensions)?analysis.dimensions:[];
-  if(analysis?.contract!=='CN_PUBLIC_MARKET_STRUCTURE_ANALYSIS_v1'||dims.length!==5)return '';
+  if(analysis?.contract!=='CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1'||analysis?.source!=='CYCLE_NAVIGATOR_FORECAST_FREEZE.structural_calls'||dims.length!==5)return '';
   return '<section class="cn-why-call"><header><div><small>WHY THIS CALL</small><h2>Five lenses, one disciplined read.</h2></div><p>Analysis only · not an accuracy score</p></header><ol>'+dims.map(x=>'<li><b>'+esc(x.label||x.id||'Dimension')+'</b><span>'+esc(short(x.analysis||'',200))+'</span></li>').join('')+'</ol></section>';
 }
 let nowObserver=null;
@@ -195,16 +196,17 @@ function installNowRefinements(data,history){
   nowObserver?.disconnect();
   const root=document.getElementById('productNow');if(!root)return;
   const apply=()=>{
-    if(root.querySelector('.cn-trust-strip'))return;
-    const hero=root.querySelector('.action-hero');if(!hero)return;
+    if(root.querySelector('.cn-now-refinements'))return true;
+    const hero=root.querySelector('.action-hero');if(!hero)return false;
     const wrap=document.createElement('div');wrap.className='cn-now-refinements';
     wrap.innerHTML=trustStrip(data,history)+sinceLastBlock(data)+whyThisCallBlock(data);
-    if(!wrap.innerHTML.trim())return;
+    if(!wrap.innerHTML.trim())return true;
     hero.after(wrap);
     wrap.querySelector('[data-proof-link]')?.addEventListener('click',showProof);
+    return true;
   };
-  apply();
-  nowObserver=new MutationObserver(()=>queueMicrotask(apply));
+  if(apply())return;
+  nowObserver=new MutationObserver(()=>queueMicrotask(()=>{if(apply())nowObserver?.disconnect();}));
   nowObserver.observe(root,{childList:true,subtree:true});
 }
 function completedForecastReceipt(data){
@@ -212,13 +214,13 @@ function completedForecastReceipt(data){
   if(x?.contract!=='CN_PUBLIC_COMPLETED_FORECAST_RECEIPT_v1')return '';
   const list=(title,rows,fallback)=>'<div><span>'+esc(title)+'</span><ul>'+(rows.length?rows.map(v=>'<li>'+esc(short(v,190))+'</li>').join(''):'<li>'+esc(fallback)+'</li>')+'</ul></div>';
   const held=Array.isArray(x.held_up)?x.held_up:[],missed=Array.isArray(x.missed)?x.missed:[];
-  return '<section class="completed-receipt"><header><div><small>LAST COMPLETED FORECAST</small><h3>CN #'+esc(x.public_issue_number)+' · '+esc(x.forecast_week)+' · FINAL</h3></div><strong>Price Range '+esc(pct(x.price_range_score))+'</strong></header><div class="completed-grid">'+list('HELD UP',held,'No public outcome detail was published for this completed record.')+list('MISSED',missed,'No additional public miss detail was published for this completed record.')+'</div><button type="button" data-ledger-link="'+esc(x.exact_ledger_issue)+'">View full archived record →</button></section>';
+  return '<section class="completed-receipt"><header><div><small>LAST COMPLETED FORECAST</small><h3>CN #'+esc(x.public_issue_number)+' · '+esc(x.forecast_week)+' · FINAL</h3></div><strong>Price Range '+esc(pct(x.price_range_score))+'</strong></header><div class="completed-grid">'+list('HELD UP',held,'Structured outcome detail is not available in this public receipt.')+list('MISSED',missed,'Structured outcome detail is not available in this public receipt.')+'</div><button type="button" data-ledger-link="'+esc(x.exact_ledger_issue)+'">View full archived record →</button></section>';
 }
 
 function marketStructureAnalysisBlock(data){
   const analysis=data?.public_market_structure_analysis;
   const dims=Array.isArray(analysis?.dimensions)?analysis.dimensions:[];
-  if(analysis?.contract!=='CN_PUBLIC_MARKET_STRUCTURE_ANALYSIS_v1'||dims.length!==5)return '';
+  if(analysis?.contract!=='CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1'||analysis?.source!=='CYCLE_NAVIGATOR_FORECAST_FREEZE.structural_calls'||dims.length!==5)return '';
   const rows=dims.map((x,i)=>(i+1)+'. <b>'+esc(x.label||x.id||'Dimension')+'</b> — '+esc(short(x.analysis||'',190))).join('<br>');
   return '<section class="live-score"><span>MARKET STRUCTURE · ANALYSIS ONLY</span><strong>No accuracy score from CN #27 onward</strong><p>'+rows+'</p></section>';
 }

@@ -3,17 +3,17 @@
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "2a19b4a98426caa85192d951b2f8b2bb98ece85d27bb07276d313a8e820a1c79",
+      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
       "execution_mode": "AUTO_LOCAL_RESEARCH",
       "impact_tier": "MEDIUM",
-      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
+      "novelty_verdict": null,
       "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
-      "source": "MONTHLY_COUNCIL",
-      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
-      "target": "EC-03d0c1a48139b386534c"
+      "reason": "registered source material exists but exact evaluator recovery is still required",
+      "source": "SHADOW_REGISTRY",
+      "specialist_action": "RECOVER_EVALUATOR",
+      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
     }
   ],
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -83,31 +83,16 @@
   "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
   "controller_conflicts": [],
   "deep_research_authorized": false,
-  "evidence_fingerprint": "3645558a1016147f637a7e884be8e5123a97ff5327670b9418744e83c757e827",
+  "evidence_fingerprint": "b3351063d4cf921cde585f3ba9819ecef9688feab0dbaeb7ad09943df3e5371f",
   "external_provider_calls_authorized": false,
   "max_concurrent_heavy_workstreams": 1,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "primary_action": "QUEUE_BOUNDED_RESEARCH",
   "primary_execution_mode": "AUTO_LOCAL_RESEARCH",
-  "primary_source": "MONTHLY_COUNCIL",
-  "primary_target": "EC-03d0c1a48139b386534c",
+  "primary_source": "SHADOW_REGISTRY",
+  "primary_target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
   "queue": [
-    {
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "2a19b4a98426caa85192d951b2f8b2bb98ece85d27bb07276d313a8e820a1c79",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "MEDIUM",
-      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
-      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
-      "source": "MONTHLY_COUNCIL",
-      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
-      "target": "EC-03d0c1a48139b386534c"
-    },
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
@@ -137,6 +122,21 @@
       "source": "COMPOUNDING_LEARNING",
       "specialist_action": "STRESS_TEST_REGIME_SPECIFICITY",
       "target": "EC-3b5610a3c12b040694a9"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "2a19b4a98426caa85192d951b2f8b2bb98ece85d27bb07276d313a8e820a1c79",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "BLOCKED",
+      "novelty_verdict": "DUPLICATE_EXACT",
+      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
+      "target": "EC-03d0c1a48139b386534c"
     },
     {
       "canonical_effect": false,
@@ -200,6 +200,6 @@
     }
   ],
   "queue_n": 7,
-  "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+  "reason": "registered source material exists but exact evaluator recovery is still required",
   "sentinel_verdict": "PASS"
 }
