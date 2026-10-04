@@ -9,7 +9,9 @@
     "public_issue_number": 27,
     "publication_status": "PUBLISHED_CONFIRMED_BY_USER",
     "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLISHED_2026-09-29.md",
-    "note": "CN27 is the current published W40 public issue. User attestation is authoritative."
+    "note": "CN27 is the current published W40 public issue. User attestation is authoritative.",
+    "site_publication_status": "SITE_FROZEN_SOURCE_OF_RECORD",
+    "site_publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
   },
   "invariants": [
     "Never join public and machine Cycle Navigator records on issue_number alone.",
@@ -18,7 +20,8 @@
     "Machine CYCLE_NAVIGATOR_SCORECARD.json is not automatically the public-series scorecard during the migration-offset window.",
     "Every new weekly machine package must materialize CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json and append its numeric ranges to CN_FORWARD_RANGE_LEDGER_v2.jsonl at freeze time.",
     "X publication status is user-attested: never require independent or external X verification; when the user says an exact version is published, archive it as PUBLISHED_CONFIRMED_BY_USER.",
-    "Market/Structure public scoring ends with CN26. For CN27 and later, market_structure_score must remain null/absent; historical Market/Structure scores remain immutable and visible. Price Range precision continues unchanged; Bull/Bear is not a probability or accuracy score."
+    "Market/Structure public scoring ends with CN26. For CN27 and later, market_structure_score must remain null/absent; historical Market/Structure scores remain immutable and visible. Price Range precision continues unchanged; Bull/Bear is not a probability or accuracy score.",
+    "The public site freeze receipt is a valid public source-of-record; X publication is optional downstream distribution."
   ],
   "latest_completed_score": {
     "public_issue_number": 26,
@@ -77,7 +80,16 @@
       "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLISHED_2026-09-29.md",
       "approved_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_APPROVED_2026-09-28.md",
       "publication_status": "PUBLISHED_CONFIRMED_BY_USER",
-      "publication_receipt": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLICATION_RECEIPT_2026-09-29.json"
+      "publication_receipt": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLICATION_RECEIPT_2026-09-29.json",
+      "site_publication_status": "SITE_FROZEN_SOURCE_OF_RECORD",
+      "site_publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
     }
-  ]
+  ],
+  "latest_site_freeze": {
+    "public_issue_number": 27,
+    "forecast_week": "2026-W40",
+    "site_publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+    "source_forecast_freeze_sha256": "e64e4c52af960220f03fa69a86cbd9853888d085c99d5b2c7ff061aa3aa8471f",
+    "frozen_unix": 1790574817
+  }
 }
