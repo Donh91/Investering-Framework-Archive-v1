@@ -193,6 +193,7 @@ def main() -> None:
         raise SystemExit("public_live_precision_forecast_week_invalid") from exc
 
     ledger_rows = load_range_rows(root, public_issue, forecast_week)
+    frozen_intraday = freeze.get("intraday_map") if isinstance(freeze.get("intraday_map"), dict) else {}
     hourly = load_hourly_rows(root, iso_year, iso_week)
     bounds = window_bounds(iso_year, iso_week)
     latest_open = parse_utc(hourly[-1]["timestamp_utc"]) if hourly else None
@@ -266,6 +267,7 @@ def main() -> None:
         window_summary[window] = {
             "phase": phase,
             "score_to_date": window_score,
+            "frozen_sequence_text": str(frozen_intraday.get(window) or "").strip() or None,
             "rows_scored": len(row_scores),
             "rows_total": 2,
             "observed_hours": observed,
@@ -300,6 +302,18 @@ def main() -> None:
         "live_rows": live_rows,
         "pending_rows": 6 - len(scored),
         "window_scores": window_summary,
+        "frozen_sequence": [
+            {
+                "window": window,
+                "label": {"day_1_2": "DAY 1–2", "day_3_4": "DAY 3–4", "day_5_7": "DAY 5–7"}[window],
+                "frozen_text": window_summary[window].get("frozen_sequence_text"),
+                "phase": window_summary[window].get("phase"),
+                "score_to_date": window_summary[window].get("score_to_date"),
+                "window_start_utc": window_summary[window].get("window_start_utc"),
+                "window_end_utc": window_summary[window].get("window_end_utc"),
+            }
+            for window in ("day_1_2", "day_3_4", "day_5_7")
+        ],
         "rows": results,
         "frozen_at_utc": fmt_iso(frozen_at),
         "live_as_of_utc": fmt_iso(observed_through),
