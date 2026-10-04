@@ -219,18 +219,11 @@ function mondayAlt(pkg,index){
   return rows[index]||{};
 }
 function cyclePhaseFromSources(pkg,compass){
-  const typed=String(pkg?.decision_projection?.weeks_4_8?.state||compass?.horizons?.CYCLE_ALTCOINS_3_8W?.state||'').toUpperCase();
+  const weekly=String(pkg?.decision_projection?.weeks_4_8?.state||'').toUpperCase();
+  const live=String(compass?.horizons?.CYCLE_ALTCOINS_3_8W?.state||'').toUpperCase();
   const known=['DEFENSIVE','CONSOLIDATION','PRE_ROTATION','ROTATION','BROAD_ALTSEASON','PARABOLIC_ALTSEASON','DISTRIBUTION','EXIT_RISK'];
-  if(known.includes(typed))return{key:typed,source:'STRUCTURED 4–8W'};
-  const s=(String(pkg?.market_state||'')+' '+String(pkg?.base_case_this_week||'')).toUpperCase();
-  if(/EXIT[_ -]?RISK/.test(s))return{key:'EXIT_RISK',source:'MONDAY BASE CASE'};
-  if(/DISTRIBUTION/.test(s)&&!/NOT CONFIRMED|NEITHER.*DISTRIBUTION/.test(s))return{key:'DISTRIBUTION',source:'MONDAY BASE CASE'};
-  if(/PARABOLIC|EUPHORIA|MANIA/.test(s))return{key:'PARABOLIC_ALTSEASON',source:'MONDAY BASE CASE'};
-  if(/BROAD.*ALTSEASON/.test(s)&&!/NOT CONFIRMED|NOT A CONFIRMED|NO CONFIRMED/.test(s))return{key:'BROAD_ALTSEASON',source:'MONDAY BASE CASE'};
-  if(/PRE[_ -]?ROTATION|EARLY ROTATION/.test(s))return{key:'PRE_ROTATION',source:'MONDAY BASE CASE'};
-  if(/CONSOLIDATION|TRANSITION/.test(s))return{key:'CONSOLIDATION',source:'MONDAY BASE CASE'};
-  if(/CONFIRMED ROTATION|ROTATION REGIME|ROTATION IS ACTIVE/.test(s))return{key:'ROTATION',source:'MONDAY BASE CASE'};
-  if(/DEFENSIVE|CONFIRMED BREAKDOWN/.test(s))return{key:'DEFENSIVE',source:'MONDAY BASE CASE'};
+  if(known.includes(weekly))return{key:weekly,source:'STRUCTURED MONDAY 4–8W'};
+  if(known.includes(live))return{key:live,source:'STRUCTURED OFFICIAL COMPASS'};
   return{key:'UNCLEAR',source:'NO STRUCTURED PHASE'};
 }
 const MARKET_CYCLE=[
@@ -267,9 +260,10 @@ function marketCycleTrack(pkg,compass){
     const isCurrent=key===current.key,passed=idx>=0&&i<idx;
     return '<div class="market-cycle-step'+(isCurrent?' current':'')+(passed?' passed':'')+'"><i></i><span>'+esc(label)+'</span><b>'+esc(isCurrent?'NOW':cycleEtaFor(key,pkg,compass,current.key))+'</b></div>';
   }).join('');
+  const currentLabel=(MARKET_CYCLE.find(x=>x[0]===current.key)||['','UNCLEAR'])[1];
   return '<section class="path-track market-cycle-v2" data-path-track="market-cycle">'
-    +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The big-picture market phase.</h3></div><aside><span>CURRENT</span><strong>'+esc((MARKET_CYCLE.find(x=>x[0]===current.key)||['','Unclear'])[1])+'</strong><small>'+esc(current.source)+'</small></aside></header>'
-    +'<div class="market-cycle-summary"><div><span>NEXT PHASE</span><strong>'+esc(next?.[1]||'No later phase inferred')+'</strong></div><div><span>ETA</span><strong>'+esc(next?cycleEtaFor(next[0],pkg,compass,current.key):'NO SUPPORTED ETA')+'</strong></div><div><span>WARNING</span><strong>'+esc(warning)+'</strong></div></div>'
+    +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The big-picture market phase.</h3></div><aside><span>CURRENT</span><strong>'+esc(currentLabel)+'</strong><small>'+esc(current.source)+'</small></aside></header>'
+    +'<div class="market-cycle-summary"><div><span>NEXT PHASE</span><strong>'+esc(next?.[1]||'NO SUPPORTED NEXT PHASE')+'</strong></div><div><span>ETA</span><strong>'+esc(next?cycleEtaFor(next[0],pkg,compass,current.key):'NO SUPPORTED ETA')+'</strong></div><div><span>WARNING</span><strong>'+esc(warning)+'</strong></div></div>'
     +'<div class="market-cycle-rail">'+rows+'</div>'
     +'<details class="path-track-detail"><summary>Why this market phase?</summary><p>'+esc(short(investorText(pkg?.market_state||pkg?.base_case_this_week||'No governed market-cycle explanation is published.'),420))+'</p></details>'
     +'</section>';
@@ -322,7 +316,8 @@ function altcoinCycleStages(pkg,compass){
     {key:'LARGE_MID',title:'Large + mid transmission',status:valid?lmStatus:pathStatus(monday(2).phase),eta:valid?sharedEta([large,mid]):monday(2).window,monday:monday(2).window,why:valid?[large.reason,mid.reason].filter(Boolean).join(' '):monday(2).phase},
     {key:'IGNITION',title:'Altseason ignition',subtitle:'Small-cap expansion begins',status:valid?(small.status||small.action):pathStatus(monday(3).phase),eta:valid?small.eta:monday(3).window,monday:monday(3).window,why:valid?small.reason:monday(3).phase},
     {key:'MICRO',title:'Micro acceleration',status:valid?(micro.status||micro.action):pathStatus(monday(3).phase),eta:valid?micro.eta:monday(3).window,monday:monday(3).window,why:valid?micro.reason:monday(3).phase},
-    {key:'MANIA',title:'Mania / euphoria',status:maniaActive?'ACTIVE':'LOCKED',eta:maniaActive?cycle.eta:pkg?.altseason_mania_window,monday:monday(4).window,why:maniaActive?cycle.expected_path:'Only unlocks after broad altseason is credibly confirmed.'},
+    {key:'BROAD',title:'Broad altseason',status:String(cycle.state||'').toUpperCase()==='BROAD_ALTSEASON'?'ACTIVE':pathStatus(monday(4).phase),eta:valid?cycle.eta:monday(4).window,monday:monday(4).window,why:valid?(cycle.expected_path||monday(4).phase):monday(4).phase},
+    {key:'MANIA',title:'Mania / euphoria',status:maniaActive?'ACTIVE':'LOCKED',eta:maniaActive?cycle.eta:pkg?.altseason_mania_window,monday:null,why:maniaActive?cycle.expected_path:'Only unlocks after broad altseason is credibly confirmed.'},
     {key:'DISTRIBUTION',title:'Distribution',status:valid?p.distribution_risk:'UNAVAILABLE',eta:null,monday:null,why:valid?distributionDriver(compass):'A fresh Official Compass is required.'},
     {key:'EXIT',title:'Exit / protection',status:valid?sell.state:'UNAVAILABLE',eta:valid?sell.eta:null,monday:null,why:valid?sell.reason:'A governed sell/trim owner is unavailable.'},
     {key:'REENTRY',title:'Cooldown / re-entry',status:valid?p.reentry_state:'UNAVAILABLE',eta:null,monday:null,why:valid?p.reentry_message:'Re-entry review is unavailable.'}
@@ -338,7 +333,7 @@ function altcoinTarget(pkg,compass,stages){
   return{key:'IGNITION',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'ALTSEASON IGNITION',subtitle:'Small-cap expansion begins',eta:pathEta(ignition.eta),status:pathStatus(ignition.status)};
 }
 function altcoinCurrentIndex(pkg,compass,stages){
-  const order=['REENTRY','EXIT','DISTRIBUTION','MANIA','MICRO','IGNITION','LARGE_MID','ETH_UNLOCK'];
+  const order=['REENTRY','EXIT','DISTRIBUTION','MANIA','BROAD','MICRO','IGNITION','LARGE_MID','ETH_UNLOCK'];
   for(const key of order){
     const s=stages.find(x=>x.key===key);
     if(s&&statusActive(s.status))return stages.indexOf(s);
