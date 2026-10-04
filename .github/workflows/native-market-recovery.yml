@@ -93,6 +93,11 @@ jobs:
           PY
           while IFS= read -r workflow; do
             [ -z "$workflow" ] && continue
+            active=$(gh run list --workflow "$workflow" --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending" or .status=="waiting")] | length')
+            if [ "$active" -gt 0 ]; then
+              echo "OWNER_REPAIR_ALREADY_ACTIVE workflow=$workflow count=$active"
+              continue
+            fi
             echo "Dispatching admitted owner repair: $workflow"
             gh workflow run "$workflow" --ref main
           done < /tmp/workflows.txt

@@ -12,14 +12,15 @@ from typing import Any, Mapping
 CONTRACT = "NATIVE_MARKET_RECOVERY_DECISION_v1"
 STATE_CONTRACT = "NATIVE_MARKET_RECOVERY_STATE_v1"
 DEFAULT_AUTO_POINTER = Path("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
+DEFAULT_HOURLY_POINTER = Path("03_DAILY_CAPTURE_LOGS/hourly/LATEST.json")
 DEFAULT_STATE = Path("09_SOURCE_QA/native_market_recovery/STATE.json")
 DEFAULT_DECISION_ROOT = Path("09_SOURCE_QA/native_market_recovery/decisions")
 
 POLICY = {
-    "hourly_market": {"workflow": "hourly-sequence-capture.yml", "streak": 2, "cooldown_hours": 2},
+    "hourly_market": {"workflow": "hourly-sequence-capture.yml", "streak": 1, "cooldown_hours": 1},
     "derivatives": {"workflow": "hourly-sequence-capture.yml", "streak": 2, "cooldown_hours": 2},
     "live_anchor": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
-    "breadth": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
+    "breadth": {"workflow": "daily-raw-owner-capture.yml", "streak": 1, "cooldown_hours": 2},
     "sentiment": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
     "altseason_context": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
     "macro_risk": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
@@ -70,6 +71,60 @@ def load_auto(repo_root: Path, pointer_path: Path) -> Mapping[str, Any]:
 def provider_limited(row: Mapping[str, Any]) -> bool:
     text = f"{row.get('classification','')} {row.get('detail','')}".upper()
     return any(token in text for token in SUPPRESS_RETRY_TOKENS)
+
+
+def apply_runtime_owner_freshness(
+    repo_root: Path,
+    auto: Mapping[str, Any],
+    now: datetime,
+    *,
+    hourly_pointer: Path = DEFAULT_HOURLY_POINTER,
+    max_hourly_age: timedelta = timedelta(minutes=65),
+) -> dict[str, Any]:
+    """Overlay operational freshness so recovery does not trust an old health snapshot."""
+    out = json.loads(json.dumps(auto))
+    health = out.setdefault("source_health", {})
+    prior = health.get("hourly_market") if isinstance(health, Mapping) else None
+    prior = prior if isinstance(prior, Mapping) else {}
+    path = repo_root / hourly_pointer
+    try:
+        pointer = json.loads(path.read_text())
+        retrieved = parse_utc(pointer.get("retrieved_at_utc"))
+        covered = parse_utc(pointer.get("window_end_utc"))
+        stamps = [stamp for stamp in (retrieved, covered) if stamp is not None]
+        if len(stamps) != 2:
+            raise ValueError("HOURLY_OWNER_TIMESTAMP_MISSING")
+        ages = [(now - stamp).total_seconds() for stamp in stamps]
+        if any(age < 0 for age in ages):
+            status = "UNAVAILABLE"
+            classification = "HOURLY_OWNER_FUTURE_TIMESTAMP_AT_RECOVERY_CHECK"
+        elif any(age > max_hourly_age.total_seconds() for age in ages):
+            status = "DEGRADED"
+            classification = "HOURLY_OWNER_STALE_AT_RECOVERY_CHECK"
+        else:
+            status = str(prior.get("status") or "PASS")
+            classification = str(prior.get("classification") or "GITHUB_POINTER_TARGET_CHAIN_VALID")
+        health["hourly_market"] = {
+            **prior,
+            "status": status,
+            "classification": classification,
+            "runtime_freshness_check": {
+                "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
+                "retrieved_at_utc": pointer.get("retrieved_at_utc"),
+                "window_end_utc": pointer.get("window_end_utc"),
+                "max_age_seconds": max_hourly_age.total_seconds(),
+                "retrieval_age_seconds": ages[0],
+                "coverage_age_seconds": ages[1],
+            },
+        }
+    except Exception as exc:
+        health["hourly_market"] = {
+            **prior,
+            "status": "UNAVAILABLE",
+            "classification": "HOURLY_OWNER_RUNTIME_FRESHNESS_UNAVAILABLE",
+            "detail": str(exc),
+        }
+    return out
 
 
 def decide(auto: Mapping[str, Any], prior: Mapping[str, Any], now: datetime) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -172,6 +227,7 @@ def main() -> None:
     if now is None:
         raise ValueError("INVALID_NOW_UTC")
     auto = load_auto(args.repo_root, args.auto_pointer)
+    auto = apply_runtime_owner_freshness(args.repo_root, auto, now)
     state_abs = args.repo_root / args.state
     prior = json.loads(state_abs.read_text()) if state_abs.exists() else default_state()
     decision, state = decide(auto, prior, now)

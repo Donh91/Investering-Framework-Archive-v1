@@ -346,7 +346,16 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
     provider = classify_provider_health(auto_state)
     freshness = owner_freshness(auto_state, generated)
     source_validation = str(auto_state.get("validation_status") or "UNKNOWN")
-    effective_data_status = source_validation if freshness.get("status") == "PASS" else "DEGRADED"
+    decision_context_status = str(auto_state.get("decision_context_status") or "UNKNOWN")
+    decision_blockers = list(auto_state.get("blockers") or [])
+    decision_ready = (
+        source_validation != "FAIL"
+        and decision_context_status == "PASS"
+        and not decision_blockers
+    )
+    # Optional/non-decision lanes remain visible in provider/source health, but
+    # must not alone suppress a healthy governed Compass decision context.
+    effective_data_status = "PASS" if decision_ready and freshness.get("status") == "PASS" else "DEGRADED"
     native_action = action_context(auto_state, as_of=generated)
     market_direction = derive_market_now(auto_state, native_action, as_of=generated)
     packet = {

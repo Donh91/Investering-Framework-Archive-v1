@@ -6,6 +6,8 @@ const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(si
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
 const COMPASS_EVENT_STATUS_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json");
+const HOURLY_POINTER_PATH=resolve(repoRoot,"03_DAILY_CAPTURE_LOGS/hourly/LATEST.json");
+const NATIVE_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/LATEST.json");
 const RANGE_SCORE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json");
 const PROSPECTIVE_RANGE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json");
 const PUBLIC_SERIES_INDEX_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json");
@@ -28,6 +30,20 @@ async function buildCompassSnapshot(){
     const projection=JSON.parse(projectionBytes.toString("utf8"));
     if(projection?.contract!=="PUBLIC_COMPASS_PROJECTION_v1") throw new Error("Unexpected public Compass projection contract");
     if(projection?.compass_id!==pointer?.compass_id) throw new Error("Public Compass pointer/projection id mismatch");
+    const [hourlyPointer,nativePointer]=await Promise.all([
+      readJson(HOURLY_POINTER_PATH).catch(()=>null),
+      readJson(NATIVE_COMPASS_POINTER_PATH).catch(()=>null)
+    ]);
+    projection.public_data_health={
+      contract:"CN_PUBLIC_DATA_HEALTH_v1",
+      hourly_status:typeof hourlyPointer?.status==="string"?hourlyPointer.status:"UNAVAILABLE",
+      hourly_retrieved_at_utc:typeof hourlyPointer?.retrieved_at_utc==="string"?hourlyPointer.retrieved_at_utc:null,
+      latest_complete_market_hour_utc:typeof hourlyPointer?.window_end_utc==="string"?hourlyPointer.window_end_utc:null,
+      native_checked_at_utc:typeof nativePointer?.generated_at_utc==="string"?nativePointer.generated_at_utc:null,
+      native_data_health:typeof nativePointer?.data_health==="string"?nativePointer.data_health:"UNAVAILABLE",
+      weekly_cycle_navigator_available:true,
+      authority:false
+    };
     if(!projection.protection_tracker){
       projection.protection_tracker={
         contract:"COMPASS_PROTECTION_TRACKER_v1",

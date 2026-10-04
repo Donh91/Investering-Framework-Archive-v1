@@ -2,10 +2,45 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.data_ping.auto_market_state import capitalization_transmission_proxy, etf, select_current_breadth, stablecoin
+from scripts.data_ping.auto_market_state import capitalization_transmission_proxy, etf, normalize_breadth, select_current_breadth, stablecoin
 
 
 class AutoMarketStateIntegrityTests(unittest.TestCase):
+    def test_c5e_breadth_owner_contract_and_timestamp_alias_are_accepted(self):
+        membership = "b" * 64
+        value = {
+            "contract": "C5E_TOP100_BREADTH_OWNER_v1_2",
+            "retrieval_timestamp": "2026-10-04T13:00:00Z",
+            "universe": {
+                "identifier": "COINGECKO_MARKET_CAP_TOP100_FILTERED_EX_STABLECOINS_v1",
+                "version": "TOP100_FILTERED_STABLE_EXCLUSION_RICH_BREADTH_v1_2",
+                "constituent_count": 100,
+                "membership_hash": membership,
+            },
+            "aggregate": {
+                "constituent_count": 100,
+                "advancers": 66,
+                "decliners": 29,
+                "flat": 5,
+                "advance_ratio": 0.66,
+                "membership_hash": membership,
+            },
+            "evidence_semantics": {
+                "evidence_role": "PROXY_ONLY",
+                "canonical_compatible": False,
+                "canonical_large_cap_breadth": "UNCONFIRMED",
+                "canonical_broad_alt_breadth": "UNCONFIRMED",
+            },
+        }
+        out, health = normalize_breadth(
+            value,
+            now_utc=__import__("datetime").datetime(2026, 10, 4, 13, 30, tzinfo=__import__("datetime").timezone.utc),
+        )
+        self.assertIsNotNone(out)
+        self.assertEqual(health["status"], "PASS")
+        self.assertEqual(health["source_contract"], "C5E_TOP100_BREADTH_OWNER_v1_2")
+        self.assertEqual(health["retrieved_at_utc"], "2026-10-04T13:00:00Z")
+
     def test_freshest_same_family_breadth_point_wins_without_double_vote(self):
         rich = {
             "retrieved_at_utc": "2026-09-30T14:59:03Z",
