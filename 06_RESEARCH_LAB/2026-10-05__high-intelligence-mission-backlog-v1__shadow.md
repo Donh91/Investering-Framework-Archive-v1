@@ -158,5 +158,22 @@ ChatGPT remains the Research Lab owner for this sequence.
 
 ## Current execution state
 
-**M1 is active.**  
-M2–M5 are retained backlog and must not be started merely because capacity exists.
+**M1 is active.**
+
+M2–M5 are now fully staged as paired Claude/Sol missions and are locked behind predecessor adjudication:
+
+- M2 `RL-OFFENSIVE-FNP-002` — `QUEUED_WAIT_PREDECESSOR`
+- M3 `RL-CN-SKILL-BASELINE-003` — `QUEUED_WAIT_PREDECESSOR`
+- M4 `RL-AUTOTRADING-EVIDENCE-004` — `QUEUED_WAIT_PREDECESSOR`
+- M5 `RL-TECHDEV97-005` — `QUEUED_WAIT_PREDECESSOR`
+
+Shared protocol:
+`06_RESEARCH_LAB/mission_packets/2026-10-05__PAIRED_INTELLIGENCE_PROTOCOL_v1.md`
+
+Queue owner:
+`06_RESEARCH_LAB/mission_packets/2026-10-05__PAIRED_INTELLIGENCE_QUEUE_v1.json`
+
+Bridge mirror:
+`Donh91/Investering-AI-Audit-Bridge:programs/research_lab_paired_intelligence/QUEUE_v1.json`
+
+Queue presence is not execution authority. Only ChatGPT final adjudication of the predecessor, or an explicit owner override, releases the next mission.
