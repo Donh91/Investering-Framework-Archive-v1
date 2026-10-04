@@ -64,7 +64,7 @@ class NativeMarketRecoveryTest(unittest.TestCase):
 
     def test_live_anchor_related_lanes_deduplicate(self):
         prior=default_state()
-        shared=("live_anchor","sentiment","altseason_context","macro_risk")
+        shared=("live_anchor","breadth","sentiment","altseason_context","macro_risk")
         health={lane:{"status":"PASS","classification":"PASS"} for lane in POLICY}
         for lane in shared:
             prior["lanes"][lane]={"consecutive_nonpass":1,"last_dispatch_utc":None}
@@ -74,11 +74,11 @@ class NativeMarketRecoveryTest(unittest.TestCase):
         self.assertEqual(len(rows),1)
         self.assertEqual(set(rows[0]["lanes"]),set(shared))
 
-    def test_breadth_first_failure_uses_dedicated_checkpoint_owner(self):
+    def test_breadth_first_failure_uses_existing_shared_owner(self):
         health={lane:{"status":"PASS","classification":"PASS"} for lane in POLICY}
         health["breadth"]={"status":"UNAVAILABLE","classification":"BREADTH_CONTRACT_UNAVAILABLE"}
         decision,_=decide(self.auto(health),default_state(),datetime(2026,9,8,20,0,tzinfo=timezone.utc))
-        rows=[row for row in decision["dispatches"] if row["workflow"]=="rich-breadth-checkpoint.yml"]
+        rows=[row for row in decision["dispatches"] if row["workflow"]=="daily-raw-owner-capture.yml"]
         self.assertEqual(len(rows),1)
         self.assertEqual(rows[0]["lanes"],["breadth"])
 
