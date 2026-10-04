@@ -189,7 +189,7 @@ function sinceLastBlock(data){
 }
 function whyThisCallBlock(data){
   const analysis=data?.public_market_structure_analysis,dims=Array.isArray(analysis?.dimensions)?analysis.dimensions:[];
-  if(analysis?.contract!=='CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1'||analysis?.source!=='CYCLE_NAVIGATOR_FORECAST_FREEZE.structural_calls'||dims.length!==5)return '';
+  if(analysis?.contract!=='CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1'||!String(analysis?.source||'').startsWith('CYCLE_NAVIGATOR_FORECAST_FREEZE.market_structure_')||dims.length!==5)return '';
   return '<section class="cn-why-call"><header><div><small>WHY THIS CALL</small><h2>Five lenses, one disciplined read.</h2></div><p>Analysis only · not an accuracy score</p></header><ol>'+dims.map(x=>'<li><b>'+esc(x.label||x.id||'Dimension')+'</b><span>'+esc(short(x.analysis||'',200))+'</span></li>').join('')+'</ol></section>';
 }
 let nowObserver=null;
@@ -198,11 +198,11 @@ function installNowRefinements(data,history){
   const root=document.getElementById('productNow');if(!root)return;
   const apply=()=>{
     if(root.querySelector('.cn-now-refinements'))return true;
-    const hero=root.querySelector('.action-hero');if(!hero)return false;
+    const anchor=root.querySelector('.action-hero,.fail-card');if(!anchor)return false;
     const wrap=document.createElement('div');wrap.className='cn-now-refinements';
     wrap.innerHTML=trustStrip(data,history)+sinceLastBlock(data)+whyThisCallBlock(data);
     if(!wrap.innerHTML.trim())return true;
-    hero.after(wrap);
+    anchor.after(wrap);
     wrap.querySelector('[data-proof-link]')?.addEventListener('click',showProof);
     return true;
   };
@@ -221,7 +221,7 @@ function completedForecastReceipt(data){
 function marketStructureAnalysisBlock(data){
   const analysis=data?.public_market_structure_analysis;
   const dims=Array.isArray(analysis?.dimensions)?analysis.dimensions:[];
-  if(analysis?.contract!=='CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1'||analysis?.source!=='CYCLE_NAVIGATOR_FORECAST_FREEZE.structural_calls'||dims.length!==5)return '';
+  if(analysis?.contract!=='CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1'||!String(analysis?.source||'').startsWith('CYCLE_NAVIGATOR_FORECAST_FREEZE.market_structure_')||dims.length!==5)return '';
   const rows=dims.map((x,i)=>(i+1)+'. <b>'+esc(x.label||x.id||'Dimension')+'</b> — '+esc(short(x.analysis||'',190))).join('<br>');
   return '<section class="live-score"><span>MARKET STRUCTURE · ANALYSIS ONLY</span><strong>No accuracy score from CN #27 onward</strong><p>'+rows+'</p></section>';
 }
