@@ -15,12 +15,11 @@
     "no_queue_mutation": true,
     "no_new_paid_calls": true,
     "no_market_or_portfolio_authority": true,
-    "minimum_n_default": {
+    "minimum_n_policy": {
       "counts_always_visible": true,
-      "estimate_withheld_below_n": 10,
-      "confirmatory_language_forbidden_below_n": 30,
-      "wide_interval_override": "Even at N>=30, no edge language when Wilson 95% interval remains too wide for decision use.",
-      "rationale": "Predeclared low-N guard adapted from the already-qualified Edge Stats donor pattern; final execution still reports exact N and Wilson interval."
+      "global_numeric_threshold": null,
+      "rule": "Each question must freeze an owner/event-structure-specific minimum-N rule before any outcome query. No Edge-Stats default such as N=10/N=30 is imported as framework semantics.",
+      "fail_closed": "If a defensible minimum-N rule cannot be frozen without inspecting target outcomes, the question remains MAPPING_BLOCKED."
     }
   },
   "owner_bindings": {
@@ -100,7 +99,7 @@
       "overlap_rule": "Overlapping observations belong to the same active sequence and are not independent rows.",
       "holdout_boundary": "Chronological holdout required after a fixed horizon is owner-frozen.",
       "regime_split": "Existing framework regime only when point-in-time owner binding exists.",
-      "minimum_N_rule": "CEE default low-N guard after fixed-horizon repair.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
       "confirmatory_trial_number": 1,
       "blocker": "Current T6 runtime measures event duration/reversal but does not freeze the fixed forward horizon required by CEE Stage A."
     },
@@ -137,14 +136,14 @@
       "overlap_rule": "One sequence is one dependency cluster.",
       "holdout_boundary": "Chronological holdout required after horizon repair.",
       "regime_split": "Existing point-in-time regime only.",
-      "minimum_N_rule": "CEE default low-N guard after fixed-horizon repair.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
       "confirmatory_trial_number": 2,
       "blocker": "Failure event is defined, but no fixed evaluation horizon is frozen."
     },
     {
       "question_id": "CEE-Q03",
       "class": "Pullback recovery",
-      "status": "MAPPED_EXISTING_OWNER_PENDING_SAMPLE_MATURITY",
+      "status": "MAPPING_BLOCKED_MINIMUM_N_RULE_NOT_FROZEN",
       "owner": "T4_PULLBACK_EDGE_20260708_01_OUTCOMES",
       "owner_paths": [
         "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md"
@@ -180,8 +179,9 @@
       "overlap_rule": "Same pullback event across multiple maturity horizons is one event cluster.",
       "holdout_boundary": "Future chronological T4 events after Stage B merge are the untouched prospective holdout.",
       "regime_split": "Only existing point-in-time regime tags carried by eligible event rows.",
-      "minimum_N_rule": "CEE default low-N guard; current owner is expected to remain INSUFFICIENT_N until enough independent events exist.",
-      "confirmatory_trial_number": 3
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
+      "confirmatory_trial_number": 3,
+      "blocker": "Existing T4 owner and 24H/72H/7D outcomes are mapped, but Stage A requires a defensible event-structure-specific minimum-N rule to be frozen before outcome queries."
     },
     {
       "question_id": "CEE-Q04",
@@ -268,7 +268,7 @@
       "overlap_rule": "Repeated observations inside one sequence are dependent.",
       "holdout_boundary": "Requires fixed horizon first.",
       "regime_split": "Existing regime tags only.",
-      "minimum_N_rule": "CEE default low-N guard after horizon repair.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
       "confirmatory_trial_number": 6,
       "blocker": "Current owners define state/persistence but not a separate fixed CEE outcome horizon."
     },
@@ -300,7 +300,7 @@
       "overlap_rule": "Repeated overlapping cohort observations are one dependency cluster.",
       "holdout_boundary": "Requires enough future fixed-cohort events.",
       "regime_split": "Existing point-in-time regime only.",
-      "minimum_N_rule": "CEE default low-N guard after comparable-cohort and horizon repair.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
       "confirmatory_trial_number": 7,
       "blocker": "Comparable breadth continuity is not currently sufficient for a clean fixed-horizon Stage B execution mapping."
     },
@@ -419,7 +419,7 @@
       "overlap_rule": "One decision divergence is one event cluster across its three frozen horizons.",
       "holdout_boundary": "Future eligible divergence rows only.",
       "regime_split": "Existing point-in-time regime when available.",
-      "minimum_N_rule": "CEE default low-N guard after evaluator becomes authoritative.",
+      "minimum_N_rule": "UNFROZEN_OWNER_SPECIFIC_RULE_REQUIRED_BEFORE_EXECUTION",
       "confirmatory_trial_number": 10,
       "blocker": "Current T5 runtime explicitly blocks derived FNP metrics because the authoritative evaluator is not yet available."
     }
@@ -431,12 +431,11 @@
     "duplicate_active_owner": [
       "CEE-Q08"
     ],
-    "mapped_pending_maturity": [
-      "CEE-Q03"
-    ],
+    "mapped_pending_maturity": [],
     "blocked": [
       "CEE-Q01",
       "CEE-Q02",
+      "CEE-Q03",
       "CEE-Q04",
       "CEE-Q05",
       "CEE-Q06",
@@ -446,6 +445,8 @@
     ],
     "candidate_execution_state": "NO_EXECUTION",
     "queue_mutation": false,
-    "next_bounded_action": "Add only shared statistical primitives that are independently useful to existing owners, then let blocked owners mature or repair their own semantics. Do not create substitute CEE questions."
+    "next_bounded_action": "Do not query outcomes. Resolve only owner-native blockers, including per-question minimum-N rules, fixed horizons and missing evaluator contracts, without inventing substitute questions or parallel owners. Shared statistical primitives may be centralized independently if they remove verified duplication.",
+    "stage_b_passed": false,
+    "stage_b_status": "OWNER_MAPPING_COMPLETE_EXECUTION_MAPPING_BLOCKED"
   }
 }
