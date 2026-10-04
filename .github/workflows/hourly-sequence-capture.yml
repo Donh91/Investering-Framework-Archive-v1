@@ -3,9 +3,11 @@ name: Hourly Sequence Capture
 on:
   schedule:
     # Materialize each newly completed UTC 1H owner candle shortly after close.
+    # :12 avoids the globally congested top-of-hour schedule window while still
+    # leaving the owner evidence comfortably inside the public 90-minute freshness SLA.
     # UTC is deliberate: the underlying Binance/OKX hourly candles are UTC-aligned,
     # so DST transitions must not skip or duplicate a source hour.
-    - cron: '5 * * * *'
+    - cron: '12 * * * *'
       timezone: 'UTC'
   workflow_dispatch:
     inputs:
