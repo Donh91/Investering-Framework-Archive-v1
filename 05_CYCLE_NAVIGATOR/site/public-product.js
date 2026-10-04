@@ -141,9 +141,10 @@ function rotationEta(item){
   return({active:'Now',hold:'Now · reassess on the next update',watch:'Next confirmation',wait:'No reliable estimate yet',pause:'No ETA until conditions improve',unknown:'No reliable estimate yet'})[state(item?.status)]||'No reliable estimate yet';
 }
 
-function capitalRail(rows){
-  rows=Array.isArray(rows)&&rows.length?rows:[{segment:'Bitcoin'},{segment:'Ethereum'},{segment:'Large caps'},{segment:'Mid caps'},{segment:'Small caps'},{segment:'Microcaps'}];
-  return `<div class="capital-line">${rows.map((r,i)=>`<div class="capital-step state-${state(r.status)}"><div class="capital-node">${i+1}</div><div class="capital-copy"><div class="capital-title"><strong>${esc(r.segment||'Segment')}</strong><b>${statusLabel(r.status)}</b></div><p>${esc(actionCopy(r.status))}</p><small>ETA · ${esc(rotationEta(r))}</small></div></div>`).join('')}</div>`;
+function structuralRotation(rows){
+  rows=Array.isArray(rows)&&rows.length?rows:[];
+  if(!rows.length)return '';
+  return '<div class="capital-line structural-context-rail">'+rows.map((r,i)=>'<div class="capital-step"><div class="capital-node">'+esc(i+1)+'</div><div class="capital-copy"><div class="capital-title"><strong>'+esc(r.segment||'Segment')+'</strong><b>WEEKLY CONTEXT</b></div><p>'+esc(investorText(r.status||'No structural context published.'))+'</p></div></div>').join('')+'</div>';
 }
 
 function renderNow(data,px){
@@ -152,7 +153,7 @@ function renderNow(data,px){
   const next=investorText(a.next_days)||(`Stay ${actionTitle(st).toLowerCase()} while the next market confirmation develops.`);
   const confirm=gate(a.confirmation,'confirm'),risk=gate(a.invalidation,'risk');
   const headline=!available?'Fresh evidence is temporarily unavailable. No new risk call is inferred from price alone.':limited?'Signal confidence is temporarily limited. Keep risk contained until the evidence improves.':({HOLD:'Keep current positioning. Do not add broad market risk yet.',WAIT:'Stay patient. A broader risk-on move is not confirmed yet.',PREPARE:'Prepare for a possible shift, but wait for confirmation before adding broadly.',SELECTIVE:'Add selectively only. Broad market risk is not confirmed yet.','PROTECT CAPITAL':'Reduce risk and protect capital until conditions improve.','BROADER DEPLOYMENT':'Broader participation is confirmed enough to add risk across the market.'}[st]||'Keep the current stance until the evidence changes.');
-  document.getElementById('productNow').innerHTML=`<div id="productFreshness" class="freshness-strip"></div><section class="action-hero"><div class="action-label">MARKET COMPASS</div><div class="action-word">${esc(available?actionTitle(st):'WAIT')}</div><p>${esc(headline)}</p><div class="hero-lines"><div><span>MARKET PHASE</span><strong>${esc(marketPhase)}</strong></div><div><span>NEXT 1–3 DAYS</span><strong>${esc(short(next,180))}</strong></div><div><span>NEXT CONFIRMATION</span><strong>${esc(short(confirm,180))}</strong></div><div class="risk-line"><span>RISK</span><strong>${esc(short(risk,170))}</strong></div></div></section><section class="now-section"><div class="section-title"><div><small>CAPITAL ROTATION · HERE AND NOW</small><h2>Bitcoin → microcaps</h2></div><p>How far out on the risk curve the current evidence supports going right now.</p></div>${capitalRail(p.rotation_ladder)}</section><section class="context-row"><article><span>LIVE MARKET</span><strong>${esc(px||'Live prices temporarily unavailable')}</strong><small>Market context only. Prices cannot rewrite the weekly outlook.</small></article><article><span>THIS WEEK</span><strong>${esc(short(investorText(p.base_case_this_week||p.market_state)||'No public weekly summary available.',220))}</strong><small>Plain-English translation of the current weekly outlook.</small></article></section>`;
+  document.getElementById('productNow').innerHTML=`<div id="productFreshness" class="freshness-strip"></div><section class="action-hero"><div class="action-label">MARKET COMPASS</div><div class="action-word">${esc(available?actionTitle(st):'WAIT')}</div><p>${esc(headline)}</p><div class="hero-lines"><div><span>MARKET PHASE</span><strong>${esc(marketPhase)}</strong></div><div><span>NEXT 1–3 DAYS</span><strong>${esc(short(next,180))}</strong></div><div><span>NEXT CONFIRMATION</span><strong>${esc(short(confirm,180))}</strong></div><div class="risk-line"><span>RISK</span><strong>${esc(short(risk,170))}</strong></div></div></section><section class="context-row"><article><span>LIVE MARKET</span><strong>${esc(px||'Live prices temporarily unavailable')}</strong><small>Market context only. Prices cannot rewrite the weekly outlook.</small></article><article><span>THIS WEEK</span><strong>${esc(short(investorText(p.base_case_this_week||p.market_state)||'No public weekly summary available.',220))}</strong><small>Plain-English translation of the current weekly outlook.</small></article></section>`;
   freshness();
 }
 
@@ -166,7 +167,7 @@ function renderPath(data){
     const delay=future?'What delays it: renewed relative weakness or narrowing participation.':'';
     return `<article class="cycle-step ${future?'future':''} state-${state(x.phase)}"><span>${i+1}</span><div><em>${where}</em><strong>${esc(stageName(x.phase,i))}</strong><p>${esc(explanation)}</p>${delay?`<p class="delay">${esc(delay)}</p>`:''}<small>ETA · ${esc(investorText(x.window)||'No reliable estimate yet')}</small></div></article>`;
   }).join('');
-  document.getElementById('productPath').innerHTML=`<header class="product-head"><small>CONDITIONAL MARKET PATH</small><h2>Where capital could rotate next.</h2><p>This is a sequence of confirmations, not a promise of altseason. Market phase and investor action are shown separately so a developing rotation never automatically becomes a buy signal.</p></header><div class="cycle-line">${rail}</div><section class="horizon-grid"><article><span>NEXT 2–3 WEEKS</span><p>${esc(short(investorText(p.base_case_2_3_weeks)||'No supported 2–3 week view is published.',270))}</p></article><article><span>NEXT 4–8 WEEKS</span><p>${esc(short(investorText(p.base_case_4_8_weeks||p.compass_4_8_weeks)||'No supported 4–8 week view is published.',270))}</p></article></section>`;
+  document.getElementById('productPath').innerHTML=`<header class="product-head"><small>CONDITIONAL MARKET PATH</small><h2>Where capital could rotate next.</h2><p>This is a sequence of confirmations, not a promise of altseason. Market phase and investor action are shown separately so a developing rotation never automatically becomes a buy signal.</p></header><div class="cycle-line">${rail}</div><section class="horizon-grid"><article><span>NEXT 2–3 WEEKS</span><p>${esc(short(investorText(p.base_case_2_3_weeks)||'No supported 2–3 week view is published.',270))}</p></article><article><span>NEXT 4–8 WEEKS</span><p>${esc(short(investorText(p.base_case_4_8_weeks||p.compass_4_8_weeks)||'No supported 4–8 week view is published.',270))}</p></article></section><section class="now-section structural-rotation"><div class="section-title"><div><small>WEEKLY STRUCTURAL ROTATION CONTEXT</small><h2>Bitcoin → microcaps</h2></div><p>Frozen Cycle Navigator context only. Live actions are owned by the Market Compass on NOW.</p></div>${structuralRotation(p.rotation_ladder)}</section>${sinceLastBlock(data)}${whyThisCallBlock(data)}`;
 }
 
 
@@ -200,7 +201,7 @@ function installNowRefinements(data,history){
     if(root.querySelector('.cn-now-refinements'))return true;
     const anchor=root.querySelector('.action-hero,.fail-card');if(!anchor)return false;
     const wrap=document.createElement('div');wrap.className='cn-now-refinements';
-    wrap.innerHTML=trustStrip(data,history)+sinceLastBlock(data)+whyThisCallBlock(data);
+    wrap.innerHTML=trustStrip(data,history);
     if(!wrap.innerHTML.trim())return true;
     anchor.after(wrap);
     wrap.querySelector('[data-proof-link]')?.addEventListener('click',showProof);
