@@ -124,6 +124,7 @@ function shell(){
 }
 
 async function json(u){const r=await fetch(`${u}?v=${Date.now()}`,{cache:'no-store'});if(!r.ok)throw Error(r.status);return r.json();}
+async function jsonOptional(u){try{return await json(u);}catch{return null;}}
 async function prices(){try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd',{cache:'no-store'}),d=await r.json(),b=+d.bitcoin?.usd,e=+d.ethereum?.usd;return b&&e?`BTC $${Math.round(b).toLocaleString()} · ETH $${Math.round(e).toLocaleString()} · ETH/BTC ${(e/b).toFixed(5)}`:null;}catch{return null;}}
 
 function freshness(){
@@ -178,19 +179,104 @@ function renderNow(data,px){
   freshness();
 }
 
-function renderPath(data){
-  const p=data.package||{},raw=Array.isArray(p.altseason_countdown)?p.altseason_countdown:[];
-  const stages=raw.length?raw:[{phase:'Bitcoin leadership',window:'No reliable estimate yet'},{phase:'Consolidation / transition',window:'No reliable estimate yet'},{phase:'Ethereum + large caps strengthen',window:'No reliable estimate yet'},{phase:'Broad altcoin participation',window:'No reliable estimate yet'},{phase:'High-risk expansion',window:'No reliable estimate yet'}];
-  let current=stages.findIndex(x=>['active','watch','hold'].includes(state(x.phase)));if(current<0)current=0;
-  const rail=stages.map((x,i)=>{
-    const future=i>current,where=i===current?'YOU ARE HERE':i<current?'EARLIER':'NEXT IF CONFIRMED';
-    const explanation=i===current?'Current market phase. The investor action can still remain more defensive than the phase itself.':i===current+1?'What moves us here: stronger Ethereum leadership and broader participation.':future?'What moves us here: the preceding stage must confirm and participation must broaden further.':'This stage helped define the path into the current market state.';
-    const delay=future?'What delays it: renewed relative weakness or narrowing participation.':'';
-    return `<article class="cycle-step ${future?'future':''} state-${state(x.phase)}"><span>${i+1}</span><div><em>${where}</em><strong>${esc(stageName(x.phase,i))}</strong><p>${esc(explanation)}</p>${delay?`<p class="delay">${esc(delay)}</p>`:''}<small>ETA · ${esc(investorText(x.window)||'No reliable estimate yet')}</small></div></article>`;
-  }).join('');
-  document.getElementById('productPath').innerHTML=`<header class="product-head"><small>CONDITIONAL MARKET PATH</small><h2>Where capital could rotate next.</h2><p>This is a sequence of confirmations, not a promise of altseason. Market phase and investor action are shown separately so a developing rotation never automatically becomes a buy signal.</p></header><div class="cycle-line">${rail}</div><section class="horizon-grid"><article><span>NEXT 2–3 WEEKS</span><p>${esc(short(investorText(p.base_case_2_3_weeks)||'No supported 2–3 week view is published.',270))}</p></article><article><span>NEXT 4–8 WEEKS</span><p>${esc(short(investorText(p.base_case_4_8_weeks||p.compass_4_8_weeks)||'No supported 4–8 week view is published.',270))}</p></article></section><section class="now-section structural-rotation"><div class="section-title"><div><small>WEEKLY STRUCTURAL ROTATION CONTEXT</small><h2>Bitcoin → microcaps</h2></div><p>Frozen Cycle Navigator context only. Live actions are owned by the Market Compass on NOW.</p></div>${structuralRotation(p.rotation_ladder)}</section>${sinceLastBlock(data)}${whyThisCallBlock(data)}`;
+function pathEta(value){
+  const s=investorText(value).trim();
+  if(!s||/UNAVAILABLE|UNKNOWN|NO FIXED ETA|NO SUPPORTED ETA/i.test(s))return'NO SUPPORTED ETA';
+  return s;
 }
-
+function pathStatus(value){
+  const s=String(value||'').toUpperCase();
+  const hit=s.match(/ACTIVE WATCH|NOT CONFIRMED|UNCONFIRMED|PAUSED|CONFIRMED|ACTIVE|HARD_WAIT|HARD WAIT|WAIT|HOLD|BUILDING|ELEVATED|HIGH|NORMAL|NONE|WARNING|UNKNOWN|UNAVAILABLE/);
+  return hit?hit[0].replace('_',' '):'PENDING';
+}
+function pathTone(value){
+  const s=String(value||'').toUpperCase();
+  if(/CONFIRMED|ACTIVE/.test(s)&&!/NOT CONFIRMED|UNCONFIRMED/.test(s))return'active';
+  if(/HOLD|NORMAL|NONE/.test(s))return'hold';
+  if(/ACTIVE WATCH|BUILDING|WATCH|WARNING/.test(s))return'watch';
+  if(/WAIT|NOT CONFIRMED|UNCONFIRMED|ELEVATED|HIGH/.test(s))return'wait';
+  return'unknown';
+}
+function utcLabel(value){
+  if(!value)return'—';
+  const d=new Date(value);if(!Number.isFinite(d.getTime()))return'—';
+  return d.toLocaleString('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',','')+' UTC';
+}
+function compassSegment(compass,segment){
+  return (Array.isArray(compass?.capitalization_ladder)?compass.capitalization_ladder:[]).find(x=>x?.segment===segment)||null;
+}
+function liveGateItem(label,status,eta,reason){
+  return {label,status:pathStatus(status),tone:pathTone(status),eta:pathEta(eta),reason:investorText(reason)||'No additional governed explanation is published.'};
+}
+function adaptiveGateRows(compass,index){
+  if(compass?.contract!=='PUBLIC_COMPASS_PROJECTION_v1'){
+    return [liveGateItem('OFFICIAL COMPASS','UNAVAILABLE',null,'A fresh Official Compass is required before the live gate can update.')];
+  }
+  const h=compass.horizons||{};
+  const seg=s=>compassSegment(compass,s);
+  if(index===0){
+    const x=h.NEXT_1_3D||{};
+    return [liveGateItem('1–3D MARKET',x.action_posture||x.state,x.eta,x.expected_path)];
+  }
+  if(index===1){
+    const x=seg('ETH')||{};
+    return [liveGateItem('ETH',x.status||x.action,x.eta,x.reason)];
+  }
+  if(index===2){
+    return ['LARGE_CAPS','MID_CAPS'].map(s=>{const x=seg(s)||{};return liveGateItem(s.replace('_',' '),x.status||x.action,x.eta,x.reason);});
+  }
+  if(index===3){
+    return ['SMALL_CAPS','MICROCAPS'].map(s=>{const x=seg(s)||{};return liveGateItem(s.replace('_',' '),x.status||x.action,x.eta,x.reason);});
+  }
+  const x=h.CYCLE_ALTCOINS_3_8W||{};
+  return [liveGateItem('BROAD ALTCOINS',x.action_posture||x.state,x.eta,x.expected_path)];
+}
+function adaptiveRotationTimeline(pkg,compass){
+  const raw=Array.isArray(pkg?.altseason_countdown)?pkg.altseason_countdown:[];
+  if(!raw.length)return '<section class="adaptive-path empty"><span>CYCLE PATH · ADAPTIVE TIMELINE</span><strong>No frozen Monday path is published.</strong><p>The site will not create a countdown without a governed baseline.</p></section>';
+  const frozenCurrent=Math.max(0,raw.findIndex(x=>/ACTIVE WATCH|\bACTIVE\b/i.test(String(x?.phase||''))));
+  const compassStatus=compass?.data_status||'UNAVAILABLE';
+  const cards=raw.map((x,i)=>{
+    const gates=adaptiveGateRows(compass,i);
+    const gateHtml=gates.map(g=>'<div class="adaptive-live-row tone-'+esc(g.tone)+'"><div><span>'+esc(g.label)+'</span><b>'+esc(g.status)+'</b></div><strong>'+esc(g.eta)+'</strong><p>'+esc(short(g.reason,170))+'</p></div>').join('');
+    const current=i===frozenCurrent;
+    return '<article class="adaptive-stage'+(current?' baseline-current':'')+'">'
+      +'<header><i>'+esc(i+1)+'</i><div><span>'+(current?'MONDAY · YOU ARE HERE':'MONDAY BASELINE')+'</span><strong>'+esc(stageName(x.phase,i))+'</strong></div><b class="baseline-tone tone-'+esc(pathTone(x.phase))+'">'+esc(pathStatus(x.phase))+'</b></header>'
+      +'<div class="adaptive-window"><span>MONDAY WINDOW</span><strong>'+esc(pathEta(x.window))+'</strong></div>'
+      +'<div class="adaptive-live"><span class="adaptive-live-title">LIVE GATE</span>'+gateHtml+'</div>'
+      +'<details><summary>What moves this stage?</summary><p>'+esc(short(investorText(x.phase),260))+'</p></details>'
+      +'</article>';
+  }).join('');
+  return '<section class="adaptive-path" data-contract="CN_ADAPTIVE_PATH_PRESENTATION_v1">'
+    +'<header class="adaptive-head"><div><span>CYCLE PATH · ADAPTIVE TIMELINE</span><h3>Frozen Monday. Adaptive live gates.</h3><p>The Monday path never moves. Live gates refresh from the Official Compass and may tighten, delay or lose an ETA as evidence changes.</p></div>'
+    +'<aside><span>LIVE OWNER</span><strong>'+esc(compassStatus)+'</strong><small>'+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header>'
+    +'<div class="adaptive-legend"><span><i class="frozen"></i>Monday baseline</span><span><i class="live"></i>Official Compass live gate</span><b>ETA windows only · no client-side countdown synthesis</b></div>'
+    +'<div class="adaptive-stage-grid">'+cards+'</div>'
+    +'</section>';
+}
+function exitRiskClock(compass){
+  const p=compass?.protection_tracker||{},sell=compass?.sell_assessment||{};
+  const valid=compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1';
+  const rows=[
+    {label:'PULLBACK / RETEST',status:valid?p.pullback_risk_state:'UNAVAILABLE',eta:valid?p.eta_window:null,reason:valid?p.pullback_class:'A fresh Official Compass is required.'},
+    {label:'DISTRIBUTION',status:valid?p.distribution_risk:'UNAVAILABLE',eta:null,reason:valid?(Array.isArray(p.decisive_public_drivers)&&p.decisive_public_drivers.length?p.decisive_public_drivers[0]:'No governed distribution explanation is published.'):'A fresh Official Compass is required.'},
+    {label:'EXIT WINDOW',status:valid?sell.state:'UNAVAILABLE',eta:valid?sell.eta:null,reason:valid?sell.reason:'A governed sell/trim owner is unavailable.'}
+  ];
+  return '<section class="exit-clock">'
+    +'<header><div><span>EXIT RISK CLOCK</span><h3>Protection can accelerate independently of altseason.</h3><p>Distribution does not wait for every rotation stage to complete. This lane is owned by the existing protection and sell-assessment contracts.</p></div><b>NO FRONTEND SELL RULE</b></header>'
+    +'<div class="exit-rail">'+rows.map((r,i)=>'<article class="tone-'+esc(pathTone(r.status))+'"><i>'+esc(i+1)+'</i><div><span>'+esc(r.label)+'</span><strong>'+esc(pathStatus(r.status))+'</strong><b>ETA · '+esc(pathEta(r.eta))+'</b><p>'+esc(short(investorText(r.reason),190))+'</p></div></article>').join('')+'</div>'
+    +'<footer><span>Re-entry</span><strong>'+esc(pathStatus(valid?p.reentry_state:'UNAVAILABLE'))+'</strong><p>'+esc(short(investorText(valid?p.reentry_message:'Re-entry review is unavailable.'),180))+'</p></footer>'
+    +'</section>';
+}
+function renderPath(data,compass){
+  const p=data.package||{};
+  document.getElementById('productPath').innerHTML='<header class="product-head"><small>CONDITIONAL MARKET PATH</small><h2>Where capital could rotate next — and when protection starts to matter.</h2><p>Cycle Navigator freezes the weekly route. The Official Compass updates the live gates. ETA is shown only where a governed source already supports a window.</p></header>'
+    +adaptiveRotationTimeline(p,compass)
+    +exitRiskClock(compass)
+    +'<section class="horizon-grid"><article><span>NEXT 2–3 WEEKS</span><p>'+esc(short(investorText(p.base_case_2_3_weeks)||'No supported 2–3 week view is published.',270))+'</p></article><article><span>NEXT 4–8 WEEKS</span><p>'+esc(short(investorText(p.base_case_4_8_weeks||p.compass_4_8_weeks)||'No supported 4–8 week view is published.',270))+'</p></article></section>'
+    +'<section class="now-section structural-rotation"><div class="section-title"><div><small>WEEKLY STRUCTURAL ROTATION CONTEXT</small><h2>Bitcoin → microcaps</h2></div><p>Frozen Cycle Navigator context only. Live actions are owned by the Market Compass on NOW.</p></div>'+structuralRotation(p.rotation_ladder)+'</section>'
+    +sinceLastBlock(data)+whyThisCallBlock(data);
+}
 
 function showProof(){document.querySelector('[data-tab="proof"]')?.click();}
 function trustStrip(data,history){
@@ -274,7 +360,7 @@ function renderProof(data,history){
 async function render(){
   shell();
   try{
-    const [s,h,p]=await Promise.all([json('./data/latest.json'),json('./history-scoreboard.json'),prices()]);snapshot=s;renderNow(s,p);document.querySelector('[data-pa-proof-native]')?.addEventListener('click',showProof);renderPath(s);renderProof(s,h);installNowRefinements(s,h);document.querySelectorAll("[data-ledger-link]").forEach(b=>b.onclick=()=>{const row=document.getElementById(`cn-record-${b.dataset.ledgerLink}`);if(row){row.open=true;row.scrollIntoView({behavior:"smooth",block:"start"});}});clearInterval(refreshTimer);refreshTimer=setInterval(freshness,30000);
+    const [s,h,p,compass]=await Promise.all([json('./data/latest.json'),json('./history-scoreboard.json'),prices(),jsonOptional('./data/compass.json')]);snapshot=s;renderNow(s,p);document.querySelector('[data-pa-proof-native]')?.addEventListener('click',showProof);renderPath(s,compass);renderProof(s,h);installNowRefinements(s,h);document.querySelectorAll("[data-ledger-link]").forEach(b=>b.onclick=()=>{const row=document.getElementById(`cn-record-${b.dataset.ledgerLink}`);if(row){row.open=true;row.scrollIntoView({behavior:"smooth",block:"start"});}});clearInterval(refreshTimer);refreshTimer=setInterval(freshness,30000);
   }catch(e){console.warn('Cycle Navigator unavailable',e);const n=document.getElementById('productNow');if(n)n.innerHTML='<section class="fail-card"><small>MARKET DATA TEMPORARILY UNAVAILABLE</small><h1>WAIT</h1><p>No new action is inferred while verified evidence is unavailable.</p></section>';}
 }
 

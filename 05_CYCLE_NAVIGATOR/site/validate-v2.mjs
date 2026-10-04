@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
 const h=JSON.parse(history);
+const etaStart=product.indexOf('function pathEta'),etaEnd=product.indexOf('function pathStatus');
+const etaSlice=etaStart>=0&&etaEnd>etaStart?product.slice(etaStart,etaEnd):'';
 const checks=[
  ['fallback action-first hero',html.includes('WHAT SHOULD I DO NOW?')],
  ['weekly authority firewall',html.includes('never rewrite the forecast')&&liveBuilder.includes('NON_AUTHORITATIVE_OBSERVATION_ONLY')],
@@ -19,11 +21,17 @@ const checks=[
  ['weekly structural rotation moved to PATH without site-derived live action',product.includes('WEEKLY STRUCTURAL ROTATION CONTEXT')&&product.includes('structuralRotation')&&product.includes('Bitcoin → microcaps')&&!product.includes('CAPITAL ROTATION · HERE AND NOW')&&!product.includes('capitalRail(p.rotation_ladder)')],
  ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')&&product.includes('ownerMinute=12')],
  ['conditional path rail with ETA',product.includes('CONDITIONAL MARKET PATH')&&product.includes('YOU ARE HERE')&&product.includes('ETA ·')],
+ ['adaptive PATH binds frozen Monday baseline to optional Official Compass live gates',product.includes('CN_ADAPTIVE_PATH_PRESENTATION_v1')&&product.includes('MONDAY BASELINE')&&product.includes('LIVE GATE')&&product.includes("jsonOptional('./data/compass.json')")&&product.includes('PUBLIC_COMPASS_PROJECTION_v1')],
+ ['adaptive PATH never manufactures countdown math',product.includes('NO SUPPORTED ETA')&&etaSlice.includes('pathEta')&&!etaSlice.includes('Date')&&!etaSlice.includes('Math')&&!etaSlice.includes('parseInt')&&!etaSlice.includes('parseFloat')],
+ ['adaptive rotation consumes typed Compass ladder and long altcoin lane',product.includes("seg('ETH')")&&product.includes("['LARGE_CAPS','MID_CAPS']")&&product.includes("['SMALL_CAPS','MICROCAPS']")&&product.includes('CYCLE_ALTCOINS_3_8W')&&product.includes('capitalization_ladder')],
+ ['exit risk clock preserves protection/sell authority separation',product.includes('EXIT RISK CLOCK')&&product.includes('protection_tracker')&&product.includes('sell_assessment')&&product.includes("label:'EXIT WINDOW'")&&product.includes("status:valid?sell.state:'UNAVAILABLE'")&&product.includes('NO FRONTEND SELL RULE')],
+ ['adaptive PATH styling is mobile-first and two-lane',css.includes('.adaptive-path')&&css.includes('.adaptive-stage-grid')&&css.includes('.exit-clock')&&css.includes('@media(max-width:640px)')],
+
  ['scoreboard integrity uses coverage not a cross-era aggregate',h.policy?.cross_era_aggregate===false&&product.includes('completed forecasts with score evidence')&&!product.includes('HISTORICAL WEEKLY AVERAGE')&&!product.includes('mean(scores.map')],
  ['trust strip binds score coverage and prefers current projection identity',product.includes('cn-trust-strip')&&product.includes('Number.isInteger(currentIssue)?currentIssue:coverageOpen')&&product.includes('Forecast locked before outcome')&&product.includes('data-proof-link')],
  ['Since Last CN compares exact governed fields only',build.includes('EXACT_GOVERNED_FIELD_EQUALITY')&&!build.includes('freezeSignals')&&product.includes('SINCE LAST CN')],
  ['NOW refinements survive later Compass root replacements without loops',product.includes("if(!root.querySelector('.cn-now-refinements'))apply()")&&product.includes('nowObserver.observe(root')&&product.includes("if(root.querySelector('.cn-now-refinements'))return true")],
- ['NOW refinements stay compact while analysis moves to PATH',product.includes('wrap.innerHTML=trustStrip(data,history)')&&product.includes('renderPath(data)')&&product.includes("${sinceLastBlock(data)}${whyThisCallBlock(data)}")],
+ ['NOW refinements stay compact while analysis moves to PATH',product.includes('wrap.innerHTML=trustStrip(data,history)')&&product.includes('renderPath(s,compass)')&&product.includes('sinceLastBlock(data)+whyThisCallBlock(data)')],
  ['trust-first components ship styled desktop and mobile layouts',['.cn-now-refinements','.cn-trust-strip','.cn-since-last','.cn-why-call','.completed-receipt','.completed-grid'].every(token=>css.includes(token))&&css.includes('@media(max-width:640px)')],
  ['Why This Call consumes governed structured dimensions with migration fallback',build.includes('market_structure_analysis.dimensions')&&build.includes('market_structure_v2.dimensions')&&!build.includes('value.includes(":")')&&product.includes("CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1")&&product.includes('dims.length!==5')],
  ['NOW refinements survive Compass unavailable renders',product.includes("root.querySelector('.action-hero,.fail-card')")&&product.includes('anchor.after(wrap)')],

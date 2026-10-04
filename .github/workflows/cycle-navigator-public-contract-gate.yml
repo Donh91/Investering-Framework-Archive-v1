@@ -225,6 +225,9 @@ jobs:
           required_files=(
               '05_CYCLE_NAVIGATOR/site/dist/live-observation.js',
               '05_CYCLE_NAVIGATOR/site/dist/public-copy.js',
+              '05_CYCLE_NAVIGATOR/site/dist/public-product.js',
+              '05_CYCLE_NAVIGATOR/site/dist/public-product.css',
+              '05_CYCLE_NAVIGATOR/site/dist/data/compass.json',
               '05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js',
               '05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.css',
               '05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js',
@@ -237,5 +240,15 @@ jobs:
           for path in required_files:
               if not Path(path).exists():
                   raise SystemExit(f'final_public_asset_missing:{path}')
+          product=Path('05_CYCLE_NAVIGATOR/site/dist/public-product.js').read_text()
+          if 'CN_ADAPTIVE_PATH_PRESENTATION_v1' not in product:
+              raise SystemExit('adaptive_path_contract_missing')
+          for marker in ('MONDAY BASELINE','LIVE GATE','EXIT RISK CLOCK','NO FRONTEND SELL RULE','NO SUPPORTED ETA'):
+              if marker not in product:
+                  raise SystemExit(f'adaptive_path_marker_missing:{marker}')
+          if "jsonOptional('./data/compass.json')" not in product:
+              raise SystemExit('adaptive_path_not_bound_to_public_compass')
+          if "status:valid?sell.state:'UNAVAILABLE'" not in product:
+              raise SystemExit('adaptive_exit_owner_not_sell_assessment')
           print(json.dumps({'status':'PASS','final_pages_artifact':'VERIFIED','public_scorecard':'BOUND_BY_PUBLIC_LINEAGE','machine_calibration':'SEPARATE','live_observation':'FAIL_CLOSED_SAFE'},sort_keys=True))
           PY
