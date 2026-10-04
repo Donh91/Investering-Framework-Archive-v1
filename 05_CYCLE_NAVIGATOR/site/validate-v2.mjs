@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
-const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,history]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./history-scoreboard.json')]);
+const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json')]);
 const h=JSON.parse(history);
 const checks=[
  ['fallback action-first hero',html.includes('WHAT SHOULD I DO NOW?')],
@@ -12,11 +12,12 @@ const checks=[
  ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')],
  ['conditional path rail with ETA',product.includes('CONDITIONAL MARKET PATH')&&product.includes('YOU ARE HERE')&&product.includes('ETA ·')],
  ['scoreboard integrity uses coverage not a cross-era aggregate',h.policy?.cross_era_aggregate===false&&product.includes('completed forecasts with score evidence')&&!product.includes('HISTORICAL WEEKLY AVERAGE')&&!product.includes('mean(scores.map')],
- ['trust strip binds completed coverage and current open issue',product.includes('cn-trust-strip')&&product.includes('Forecast locked before outcome')&&product.includes('data-proof-link')],
+ ['trust strip binds score coverage and prefers current projection identity',product.includes('cn-trust-strip')&&product.includes('Number.isInteger(currentIssue)?currentIssue:coverageOpen')&&product.includes('Forecast locked before outcome')&&product.includes('data-proof-link')],
  ['Since Last CN compares exact governed fields only',build.includes('EXACT_GOVERNED_FIELD_EQUALITY')&&!build.includes('freezeSignals')&&product.includes('SINCE LAST CN')],
- ['NOW refinements install at most once',product.includes("root.querySelector('.cn-now-refinements')")&&product.includes('if(apply())return')&&product.includes('nowObserver?.disconnect()')],
+ ['NOW refinements survive later Compass root replacements without loops',product.includes("if(!root.querySelector('.cn-now-refinements'))apply()")&&product.includes('nowObserver.observe(root')&&product.includes("if(root.querySelector('.cn-now-refinements'))return true")],
+ ['trust-first components ship styled desktop and mobile layouts',['.cn-now-refinements','.cn-trust-strip','.cn-since-last','.cn-why-call','.completed-receipt','.completed-grid'].every(token=>css.includes(token))&&css.includes('@media(max-width:640px)')],
  ['Why This Call presents the existing five frozen structural calls',build.includes('CYCLE_NAVIGATOR_FORECAST_FREEZE.structural_calls')&&product.includes("CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1")&&product.includes('dims.length!==5')],
- ['last completed forecast uses structured evaluation detail and survives score lag',build.includes('deriveLatestCompletedForecast')&&build.includes('evaluation?.strengths')&&build.includes('evaluation?.misses')&&!build.includes('currentIssue!==completedIssue+1')&&product.includes('LAST COMPLETED FORECAST')&&product.includes('data-ledger-link')],
+ ['last completed forecast binds to completed scorecard and survives publication lag',build.includes('deriveLatestCompletedForecast')&&build.includes('05_CYCLE_NAVIGATOR/public_scorecards/')&&build.includes('evaluation?.strengths')&&build.includes('evaluation?.misses')&&!build.includes('outcome?.published_path')&&!build.includes('currentIssue!==completedIssue+1')&&product.includes('LAST COMPLETED FORECAST')&&product.includes('data-ledger-link')],
  ['live score fail-closed',product.includes('Waiting for evidence')&&product.includes('No percentage is shown until at least one call is genuinely scoreable.')&&liveWidget.includes("live.provisional_score !== null")],
  ['latest completed precision uses public forecast lineage',weeklyWidget.includes('Latest completed public precision')&&weeklyWidget.includes('public_scorecard')&&weeklyWidget.includes('migration-era machine issue number alone')],
  ['new scoring is price only',weeklyWidget.includes('Price Ranges')&&!weeklyWidget.includes('cal-summary-label">Market / Structure')],
