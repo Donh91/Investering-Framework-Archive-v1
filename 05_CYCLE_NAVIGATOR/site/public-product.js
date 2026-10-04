@@ -173,7 +173,8 @@ function renderPath(data){
 function showProof(){document.querySelector('[data-tab="proof"]')?.click();}
 function trustStrip(data,history){
   const coverage=history?.coverage||{},current=data?.public_series?.current_public_projection||{};
-  const completed=Number(coverage.completed_issues),audited=Number(coverage.rows_with_published_or_canonical_score_evidence),open=Number(coverage.latest_open_issue||current.public_issue_number);
+  const completed=Number(coverage.completed_issues),audited=Number(coverage.rows_with_published_or_canonical_score_evidence);
+  const currentIssue=Number(current.public_issue_number),coverageOpen=Number(coverage.latest_open_issue),open=Number.isInteger(currentIssue)?currentIssue:coverageOpen;
   if(!Number.isInteger(completed)||completed<1||audited!==completed||!Number.isInteger(open))return '';
   return '<button class="cn-trust-strip" type="button" data-proof-link><span>'+esc(audited+' / '+completed+' completed forecasts with score evidence')+'</span><i aria-hidden="true">·</i><span>CN #'+esc(open)+' open</span><i aria-hidden="true">·</i><strong>Forecast locked before outcome</strong><small>View proof →</small></button>';
 }
@@ -205,9 +206,9 @@ function installNowRefinements(data,history){
     wrap.querySelector('[data-proof-link]')?.addEventListener('click',showProof);
     return true;
   };
-  if(apply())return;
-  nowObserver=new MutationObserver(()=>queueMicrotask(()=>{if(apply())nowObserver?.disconnect();}));
+  nowObserver=new MutationObserver(()=>queueMicrotask(()=>{if(!root.querySelector('.cn-now-refinements'))apply();}));
   nowObserver.observe(root,{childList:true,subtree:true});
+  apply();
 }
 function completedForecastReceipt(data){
   const x=data?.latest_completed_forecast;
