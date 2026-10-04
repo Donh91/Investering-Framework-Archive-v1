@@ -6,7 +6,7 @@ from backtest_engine.graphs import latest_upstream_knowledge, temporal_dependenc
 from backtest_engine.ledgers import CounterfactualDeploymentRow, DecisionLineageRepairRow, DecisionLineageRow, validate_decision_lineage, validate_repair_ledger
 from backtest_engine.rotation import RotationEvidence, classify_rotation
 from backtest_engine.sensors import SensorDefinition, cluster_aware_evidence_count, validate_sensor_registry
-from backtest_engine.statistics import benjamini_hochberg, cluster_bootstrap_mean_ci, connected_interval_clusters, empirical_coverage, entropy_effective_rank, interval_score, leave_one_out_means, mean_interval_width, moving_block_bootstrap_indices, participation_ratio, pinball_loss, purged_expanding_walk_forward, stationary_bootstrap_indices
+from backtest_engine.statistics import benjamini_hochberg, cluster_bootstrap_mean_ci, connected_interval_clusters, empirical_coverage, entropy_effective_rank, interval_score, leave_one_out_means, mean_interval_width, moving_block_bootstrap_indices, participation_ratio, pinball_loss, purged_expanding_walk_forward, stationary_bootstrap_indices, wilson_interval
 
 
 class StatisticalFoundationTests(unittest.TestCase):
@@ -22,6 +22,14 @@ class StatisticalFoundationTests(unittest.TestCase):
         upper = [2.0, 2.5, 3.0]
         self.assertAlmostEqual(empirical_coverage(observed, lower, upper), 2 / 3)
         self.assertAlmostEqual(mean_interval_width(lower, upper), 4 / 3)
+
+    def test_wilson_interval_golden_vectors(self) -> None:
+        low, high = wilson_interval(5, 10)
+        self.assertAlmostEqual(low, 0.2365930905, places=9)
+        self.assertAlmostEqual(high, 0.7634069095, places=9)
+        self.assertEqual(wilson_interval(0, 0), (None, None))
+        with self.assertRaises(ValueError):
+            wilson_interval(11, 10)
 
     def test_effective_rank_definitions(self) -> None:
         self.assertAlmostEqual(participation_ratio([1.0, 1.0, 1.0, 1.0]), 4.0)
