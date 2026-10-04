@@ -17,7 +17,7 @@ const checks=[
  ['premium layer ships in final Pages bundle',liveBuilder.includes('market-compass-premium.js')&&liveBuilder.includes('market-compass-premium.css')&&premiumCss.includes('.premium-horizon-grid')&&premiumCss.includes('@media(max-width:520px)')],
  ['single-action hero',product.includes("HOLD:'HOLD'")&&!product.includes("HOLD:'HOLD / WAIT'")],
  ['weekly structural rotation moved to PATH without site-derived live action',product.includes('WEEKLY STRUCTURAL ROTATION CONTEXT')&&product.includes('structuralRotation')&&product.includes('Bitcoin → microcaps')&&!product.includes('CAPITAL ROTATION · HERE AND NOW')&&!product.includes('capitalRail(p.rotation_ladder)')],
- ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')],
+ ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')&&product.includes('ownerMinute=12')],
  ['conditional path rail with ETA',product.includes('CONDITIONAL MARKET PATH')&&product.includes('YOU ARE HERE')&&product.includes('ETA ·')],
  ['scoreboard integrity uses coverage not a cross-era aggregate',h.policy?.cross_era_aggregate===false&&product.includes('completed forecasts with score evidence')&&!product.includes('HISTORICAL WEEKLY AVERAGE')&&!product.includes('mean(scores.map')],
  ['trust strip binds score coverage and prefers current projection identity',product.includes('cn-trust-strip')&&product.includes('Number.isInteger(currentIssue)?currentIssue:coverageOpen')&&product.includes('Forecast locked before outcome')&&product.includes('data-proof-link')],

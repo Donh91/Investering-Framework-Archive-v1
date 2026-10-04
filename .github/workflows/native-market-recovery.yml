@@ -4,13 +4,17 @@ on:
   pull_request:
     paths:
       - '.github/workflows/native-market-recovery.yml'
+      - '.github/workflows/hourly-sequence-capture.yml'
       - 'scripts/health/native_market_recovery.py'
       - 'tests/health/test_native_market_recovery.py'
       - '09_SOURCE_QA/native_market_recovery/**'
   schedule:
-    # Evaluate after hourly owner capture and before :50 state assembly.
-    - cron: '35 * * * *'
-      timezone: 'Europe/Copenhagen'
+    # Independent bounded fallback for the UTC-aligned hourly owner.
+    # Primary capture is :12 UTC. At :24 the next hour, a missed primary run makes
+    # the prior window_end 84 minutes old, above the 65-minute recovery threshold
+    # but still inside the public site's 90-minute freshness SLA.
+    - cron: '24 * * * *'
+      timezone: 'UTC'
   workflow_dispatch:
 
 permissions:
@@ -37,6 +41,23 @@ jobs:
         run: |
           python -m py_compile scripts/health/native_market_recovery.py
           python -m unittest tests.health.test_native_market_recovery -v
+      - name: Guard primary/recovery cadence contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
+          recovery=Path('.github/workflows/native-market-recovery.yml').read_text()
+          engine=Path('scripts/health/native_market_recovery.py').read_text()
+          assert "cron: '12 * * * *'" in hourly
+          assert "timezone: 'UTC'" in hourly
+          assert "cron: '24 * * * *'" in recovery
+          assert "timezone: 'UTC'" in recovery
+          assert "timedelta(minutes=65)" in engine
+          assert "framework-main-writer" in recovery
+          assert "queue: max" in recovery
+          assert "cancel-in-progress: false" in recovery
+          print('NATIVE_MARKET_RECOVERY_CADENCE_PASS')
+          PY
 
   recover:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

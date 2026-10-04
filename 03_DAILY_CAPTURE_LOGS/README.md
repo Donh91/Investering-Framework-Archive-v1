@@ -18,7 +18,7 @@ All three lanes are non-binding calibration evidence. They do not replace canoni
 
 Production schedule, UTC:
 
-- every hour at `:05 UTC`
+- every hour at `:12 UTC`
 
 The schedule authority is `.github/workflows/hourly-sequence-capture.yml`; this README mirrors that production cadence and must not be treated as a separate schedule owner. UTC is deliberate because the underlying Binance/OKX 1h observations are UTC-aligned. Daylight-saving transitions must not skip or duplicate a source hour.
 
@@ -171,7 +171,7 @@ Creates a useful near-end-of-week package for Sunday review, while explicitly re
 Runs after:
 
 - Sunday UTC week close at 24:00 UTC / 02:00 CPH during CEST;
-- the first post-close Hourly Sequence materialization at 00:05 UTC, which includes the completed 23:00-24:00 UTC closing candle through the 26-hour overlap window;
+- the first post-close Hourly Sequence materialization at 00:12 UTC, which includes the completed 23:00-24:00 UTC closing candle through the 26-hour overlap window;
 - the separate final market-close package scheduled after week completion.
 
 The final build targets the **previous completed ISO week**, not the new Monday week.
