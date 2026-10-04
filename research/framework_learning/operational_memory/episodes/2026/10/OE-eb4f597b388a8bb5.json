@@ -1,0 +1,62 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cycle-navigator-weekly-publication.yml",
+    ".github/workflows/native-market-recovery.yml",
+    ".github/workflows/rich-breadth-checkpoint.yml",
+    "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs",
+    "05_CYCLE_NAVIGATOR/site/compass-product-v5.css",
+    "05_CYCLE_NAVIGATOR/site/compass-product-v5.js",
+    "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_DELIVERY_POINTER.json",
+    "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json",
+    "scripts/data_ping/auto_market_state.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "scripts/health/native_market_recovery.py",
+    "tests/data_ping/test_auto_market_state_integrity.py",
+    "tests/data_ping/test_native_handlekompas.py",
+    "tests/health/test_native_market_recovery.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-eb4f597b388a8bb5",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: accept governed breadth owner contracts * fix: separate decision health from optional degradation * fix: make native recovery owner-freshness aware * test: cover canonical breadth owner compatibility * test: keep optional degradation non-blocking * test: cover runtime freshness recovery * ops: refresh hourly owner after pipeline repairs * ops: self-refresh market state after assembler changes * ops: recover breadth contract and freshness blockers * ops: deduplicate active owner recovery runs * fix: clear stale CN receipt degradation after verification * site: expose bounded public data-",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cycle-navigator-weekly-publication.yml": "63ce4951ac1a437732d5125703bab0e9674d1d7d",
+    ".github/workflows/native-market-recovery.yml": "7309ddc4a4c6ca14eaa4dcd5ab5f6946fd3547e8",
+    ".github/workflows/rich-breadth-checkpoint.yml": "9818d209d4ed65349f044af1431303b55e92b3e5",
+    "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json": "d9aaaa133d9b6f5f3220d995a02e08633b7bea70",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs": "7acbe2eae3b7bf560f50a9d998ce506b53eb2523",
+    "05_CYCLE_NAVIGATOR/site/compass-product-v5.css": "3a0286ba4060619d7e908c2ec53f7f54008b59f2",
+    "05_CYCLE_NAVIGATOR/site/compass-product-v5.js": "dcd4c1061150fb1f194b986c73cd51ebca04b39f",
+    "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_DELIVERY_POINTER.json": "d9aaaa133d9b6f5f3220d995a02e08633b7bea70",
+    "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json": "b9d168920c1cf75122e9e70697ee016bfba3a8f3",
+    "scripts/data_ping/auto_market_state.py": "6196286539bd3e3688dc3bbcf322b15112b9ef5c",
+    "scripts/data_ping/native_handlekompas.py": "51515d75298ca25e3eb54da9f63300c4a66ea572",
+    "scripts/health/native_market_recovery.py": "4f2ef6aa6e88defdc96f0d499f4831537066fb99",
+    "tests/data_ping/test_auto_market_state_integrity.py": "dbd33d32cbec5b352599df37dde6b2d6a3000a84",
+    "tests/data_ping/test_native_handlekompas.py": "bf7b3f1bc014b9ef0beb83cbb9b2deccbd1cdfe8",
+    "tests/health/test_native_market_recovery.py": "e7aee6488266a6fd4384f700de5d97f75bbd444f"
+  },
+  "source_commit_sha": "eb4f597b388a8bb5fbe025c3ffbaad091f54a70c",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-04T15:36:11+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Cycle Navigator: close Market Compass runtime and receipt gaps (#1447)"
+}

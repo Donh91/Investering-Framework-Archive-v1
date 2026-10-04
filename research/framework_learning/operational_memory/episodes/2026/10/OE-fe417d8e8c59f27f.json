@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs",
+    "05_CYCLE_NAVIGATOR/site/public-product.js",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-fe417d8e8c59f27f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "ARCHIVE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Follow-up closure repair for #1444. Preserves canonical decimal precision in the Last Completed receipt and rejects absent or malformed score values before numeric coercion.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs": "cb8e100a4f0e8e28ceddf2716e4dde727f272f57",
+    "05_CYCLE_NAVIGATOR/site/public-product.js": "abb6f1c18213db19ad3b23c3ebc498fa66813449",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "40ac26e100a45b0777bb462b0201ba0d21f2766b"
+  },
+  "source_commit_sha": "fe417d8e8c59f27f0800206b5b83bbcf0d5f5ac0",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-04T13:59:32+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Cycle Navigator: preserve exact completed-score precision (#1446)"
+}
