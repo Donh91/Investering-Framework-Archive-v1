@@ -125,9 +125,9 @@ async function deriveLatestCompletedForecast(series,currentPackage){
   try{
     const latest=series?.latest_completed_score;
     const completedIssue=Number(latest?.public_issue_number);
-    const outcome=(series?.recent_lineage||[]).find(row=>Number(row?.public_issue_number)===completedIssue+1);
-    if(!Number.isInteger(completedIssue)||!outcome?.published_path||!String(outcome.published_path).startsWith("05_CYCLE_NAVIGATOR/published/"))return null;
-    await readFile(resolve(repoRoot,outcome.published_path),"utf8");
+    const scorecardPath=String(latest?.scorecard_path||"");
+    if(!Number.isInteger(completedIssue)||!scorecardPath.startsWith("05_CYCLE_NAVIGATOR/public_scorecards/")||scorecardPath.includes(".."))return null;
+    await readFile(resolve(repoRoot,scorecardPath),"utf8");
     const currentPublicIssue=Number(series?.current_public_projection?.public_issue_number);
     const evaluation=currentPublicIssue===completedIssue+1?currentPackage?.evaluation:null;
     const held=Array.isArray(evaluation?.strengths)?evaluation.strengths.filter(x=>typeof x==="string"&&x.trim()).slice(0,2):[];
