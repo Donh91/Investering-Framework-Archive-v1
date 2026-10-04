@@ -55,6 +55,9 @@ jobs:
           grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'MARKET COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q "github.event.workflow_run.head_branch == 'main'" .github/workflows/cycle-navigator-pages.yml
+          grep -q "github.event.workflow_run.conclusion == 'success'" .github/workflows/cycle-navigator-pages.yml
+          ! grep -q "github.event.workflow_run.event == 'workflow_run'" .github/workflows/cycle-navigator-pages.yml
           grep -q 'Bitcoin → microcaps' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'completed forecasts with score evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'SINCE LAST CN' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
