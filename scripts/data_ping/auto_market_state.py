@@ -23,6 +23,7 @@ SCORE = "MANUAL_DATA_PING_REPLACEMENT_SCORE_v1"
 REGISTRY = "02_DATA_PING/source_integrations/2026-09-02__auto-market-state-source-admission-v1_1.json"
 REPLAY = "02_DATA_PING/development_validation/2026-09-01__auto-market-state-replay-report-v1.json"
 BREADTH_OWNER = "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json"
+BREADTH_OWNER_CONTRACTS = frozenset({"RICH_BREADTH_CHECKPOINT_v1", "C5E_TOP100_BREADTH_OWNER_v1_2"})
 DEFAULT_ROOT = Path("04_MARKET_LEARNING/entry_signals/auto_market_state")
 AUTH = {
     "binding": False,
@@ -234,21 +235,27 @@ def normalize_etf(result: Any, *, now_utc: datetime | None = None) -> tuple[dict
 def normalize_breadth(value: Any, *, now_utc: datetime, max_age: timedelta = timedelta(hours=8)) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     if not isinstance(value, Mapping):
         return None, {"status": "UNAVAILABLE", "classification": "BREADTH_OWNER_UNAVAILABLE"}
-    if value.get("contract") != "RICH_BREADTH_CHECKPOINT_v1":
-        return None, {"status": "UNAVAILABLE", "classification": "BREADTH_CONTRACT_UNAVAILABLE"}
+    contract = value.get("contract")
+    if contract not in BREADTH_OWNER_CONTRACTS:
+        return None, {"status": "UNAVAILABLE", "classification": "BREADTH_CONTRACT_UNAVAILABLE", "observed_contract": contract}
     try:
         validated = ti.validate_breadth_owner_interface(value)
     except Exception as exc:
         return None, {"status": "FAIL", "classification": getattr(exc, "classification", "BREADTH_OWNER_INTERFACE_FAIL"), "detail": getattr(exc, "detail", str(exc))}
-    stamp = ptime(value.get("retrieved_at_utc"))
+    stamp_text = (
+        value.get("retrieved_at_utc")
+        or value.get("retrieval_timestamp")
+        or nested(value, "observation", "retrieval_timestamp_utc")
+    )
+    stamp = ptime(stamp_text)
     if stamp is None:
-        return None, {"status": "UNAVAILABLE", "classification": "BREADTH_TIMESTAMP_UNAVAILABLE"}
+        return None, {"status": "UNAVAILABLE", "classification": "BREADTH_TIMESTAMP_UNAVAILABLE", "source_contract": contract}
     if stamp > now_utc:
-        return None, {"status": "FAIL", "classification": "BREADTH_FUTURE_TIMESTAMP", "retrieved_at_utc": value.get("retrieved_at_utc")}
+        return None, {"status": "FAIL", "classification": "BREADTH_FUTURE_TIMESTAMP", "retrieved_at_utc": stamp_text, "source_contract": contract}
     age = now_utc - stamp
     if age > max_age:
-        return None, {"status": "DEGRADED", "classification": "BREADTH_OWNER_STALE", "age_seconds": age.total_seconds()}
-    return dict(value), {"status": "PASS", "classification": validated["classification"], "evidence_role": validated["evidence_role"], "canonical_large_cap_breadth": validated["canonical_large_cap_breadth"], "canonical_broad_alt_breadth": validated["canonical_broad_alt_breadth"], "retrieved_at_utc": value.get("retrieved_at_utc"), "age_seconds": age.total_seconds()}
+        return None, {"status": "DEGRADED", "classification": "BREADTH_OWNER_STALE", "age_seconds": age.total_seconds(), "retrieved_at_utc": stamp_text, "source_contract": contract}
+    return dict(value), {"status": "PASS", "classification": validated["classification"], "evidence_role": validated["evidence_role"], "canonical_large_cap_breadth": validated["canonical_large_cap_breadth"], "canonical_broad_alt_breadth": validated["canonical_broad_alt_breadth"], "retrieved_at_utc": stamp_text, "source_contract": contract, "age_seconds": age.total_seconds()}
 
 
 def _breadth_point(value: Any, source: str) -> dict[str, Any] | None:
