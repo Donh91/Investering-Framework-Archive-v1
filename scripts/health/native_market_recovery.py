@@ -20,7 +20,7 @@ POLICY = {
     "hourly_market": {"workflow": "hourly-sequence-capture.yml", "streak": 1, "cooldown_hours": 1},
     "derivatives": {"workflow": "hourly-sequence-capture.yml", "streak": 2, "cooldown_hours": 2},
     "live_anchor": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
-    "breadth": {"workflow": "rich-breadth-checkpoint.yml", "streak": 1, "cooldown_hours": 2},
+    "breadth": {"workflow": "daily-raw-owner-capture.yml", "streak": 1, "cooldown_hours": 2},
     "sentiment": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
     "altseason_context": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
     "macro_risk": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
