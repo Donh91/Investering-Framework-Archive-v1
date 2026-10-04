@@ -226,7 +226,7 @@ jobs:
           # Hourly lane materializes every completed UTC source hour while retaining
           # a 26-hour overlap window for deterministic self-healing after missed runs.
           assert '--lookback-hours 26' in hourly
-          assert "cron: '5 * * * *'" in hourly
+          assert "cron: '12 * * * *'" in hourly
           assert "timezone: 'UTC'" in hourly
           assert "cron: '10 2 * * 1'" not in hourly
           for field in ('quote_volume','trade_count','taker_buy_quote_volume','taker_sell_quote_volume','taker_buy_quote_share'):
