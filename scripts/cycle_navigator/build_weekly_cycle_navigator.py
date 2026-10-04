@@ -9,7 +9,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -815,6 +815,8 @@ def main() -> None:
 
     source_manifest = {"contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     generated_unix = int(time.time())
+    scoring_valid_from_unix = ((generated_unix + 3599) // 3600) * 3600
+    scoring_valid_from_utc = datetime.fromtimestamp(scoring_valid_from_unix, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
     scorecard = {"contract": "CYCLE_NAVIGATOR_SCORECARD_v1", "issue_scored": prev_issue or None, "completed_iso_year": completed_year, "completed_iso_week": completed_week, **value["evaluation"]}
     pointer = {"contract": "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1", "issue_number": issue, "public_issue_number": public_issue, "iso_year": target_year, "iso_week": target_week, "completed_source_year": completed_year, "completed_source_week": completed_week, "week_dir": str(target_dir.relative_to(repo)), "status": value["status"], "status_reason_codes": value["status_reason_codes"], "publication_status": package["publication_status"], "master_monday_pointer_sha256": sha256_bytes((repo / args.master_monday_pointer).read_bytes()), "machine_package_sha256": sha256_bytes(canonical_bytes(package)), "forecast_freeze_sha256": sha256_bytes(canonical_bytes(freeze))}
@@ -851,6 +853,8 @@ def main() -> None:
         "source_binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
         "score_family": "PRICE_RANGE_PRECISION",
         "score_formula": "70pct_containment_plus_30pct_jaccard",
+        "score_window_policy": "FIRST_COMPLETE_UTC_HOUR_AT_OR_AFTER_FREEZE_v1",
+        "scoring_valid_from_utc": scoring_valid_from_utc,
         "public_site_is_valid_distribution_channel": True,
         "x_distribution_required": False,
         "identity_basis": "SITE_FROZEN_PUBLIC_SERIES_BINDING",
