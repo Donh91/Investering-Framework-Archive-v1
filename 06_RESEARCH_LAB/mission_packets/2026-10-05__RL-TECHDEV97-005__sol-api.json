@@ -1,0 +1,69 @@
+{
+  "contract": "RESEARCH_LAB_SOL_API_MISSION_PACKET_v1",
+  "created_date": "2026-10-05",
+  "status": "QUEUED_WAIT_PREDECESSOR",
+  "mission_id": "RL-TECHDEV97-005",
+  "title": "TechDev #97 Final Adjudication",
+  "priority": "P2_CHEAP_CLOSURE",
+  "predecessor": "RL-AUTOTRADING-EVIDENCE-004",
+  "release_condition": "RL-AUTOTRADING-EVIDENCE-004_FINAL_CHATGPT_ADJUDICATION",
+  "recommended_task_lane": "DEEP_RESEARCH_MANUAL_OR_CURRENT_SENIOR_SOL_RESEARCH_LANE",
+  "recommended_model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "source_snapshot": {
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "commit_sha": "89b6c41528ded2be670559cc87c14e85b8849d7c"
+  },
+  "paired_protocol": "06_RESEARCH_LAB/mission_packets/2026-10-05__PAIRED_INTELLIGENCE_PROTOCOL_v1.md",
+  "bridge_queue": "programs/research_lab_paired_intelligence/QUEUE_v1.json",
+  "cross_agent_exchange": {
+    "phase_a": "INDEPENDENT_BLIND_PASS",
+    "claude_role": "CODE_PROVENANCE_ADVERSARIAL",
+    "sol_role": "SCIENTIFIC_ECONOMIC_FALSIFICATION",
+    "raw_counterparty_output_allowed": false,
+    "broker": "CHATGPT_5_6_SOL_HIGH",
+    "phase_b": "CHATGPT_ADJUDICATED_DELTA_ONLY",
+    "phase_c": "BOUNDED_CROSS_EXAMINATION_ONLY_IF_MATERIAL_CONFLICT",
+    "phase_d": "CHATGPT_FINAL_ADJUDICATION"
+  },
+  "question": "Did the frozen June 29 TechDev #97 claims about September ETH/BTC breakout, rotation and DeFi/Aave leadership survive their original validation and failure criteria?",
+  "hypothesis": "Some structural elements may have been directionally useful, but the time-specific breakout/leadership claims must be judged strictly against the frozen criteria without moving goalposts.",
+  "baseline": "Original June 29 frozen claim package and only evidence available through the completed evaluation window, scored claim-by-claim.",
+  "required_analysis": [
+    "Recover and preserve every frozen claim and its original validation/failure criteria.",
+    "Evaluate BTC/ETH bottom claims, ETH/BTC higher-low/breakout sequence, BTC.D behavior, breadth, DeFi/Aave leadership and timing window separately.",
+    "Distinguish beta/oversold rebound from genuine leading information.",
+    "Record partial credit only where criteria explicitly allow it.",
+    "Do not use later narrative to rescue a failed September timing claim."
+  ],
+  "required_outputs": [
+    "frozen_claim_table",
+    "claim_by_claim_verdict",
+    "timing_verdict",
+    "leadership_verdict",
+    "false_positive_and_false_negative_learning",
+    "goalpost_integrity_check",
+    "reusable_learning",
+    "final_closeout"
+  ],
+  "falsifier": "The article's apparently successful elements fail their own frozen timing/sequence criteria or add no lead over simpler market evidence.",
+  "kill_condition": "Close the shadow item after adjudication. Retain only reusable mechanisms supported by frozen evidence; no permanent open-ended rescue window.",
+  "forbidden": [
+    "raw model consensus as evidence",
+    "retroactive goalpost movement",
+    "new market rules",
+    "portfolio actions",
+    "canonical promotion",
+    "repository writes by API model",
+    "automatic merge"
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "repository_write": false
+  }
+}
