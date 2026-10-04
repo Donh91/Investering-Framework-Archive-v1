@@ -33,6 +33,8 @@ const checks=[
  ['PATH preserves compound re-entry states and INACTIVE ordering',product.includes('WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH')&&product.includes("replaceAll('_',' ')")&&product.includes("if(/INACTIVE|UNAVAILABLE|UNKNOWN|PAUSED|LOCKED/.test(s))return'unknown'")],
  ['Three-track PATH styling is mobile-first and ETA-forward',css.includes('.market-cycle-v2')&&css.includes('.rotation-rail-v2')&&css.includes('.altcoin-timer-v2')&&css.includes('.alt-countdown')&&css.includes('@media(max-width:640px)')],
  ['Altcoin ETA panel overrides dark hero surface with high-contrast light panel',css.includes('.alt-timer-hero>.alt-countdown{background:linear-gradient(150deg,#f6fbf8,#fff);color:#0f172a}')&&css.includes('.alt-timer-hero>.alt-countdown.protect')],
+ ['PATH hero has intentional dark-surface contrast',css.includes('.path-v2-head h2{color:#fff}')&&css.includes('.path-v2-head p{max-width:760px;color:#cbd5e1}')&&css.includes('.path-v2-head small{color:#8dc1ff}')],
+ ['mobile altcoin stages are compact and use non-absolute current-stage wording',css.includes('content:"CURRENT STAGE"')&&!css.includes('content:"YOU ARE HERE"')&&css.includes('.alt-cycle-step>strong{grid-column:3;grid-row:1')&&css.includes('.alt-cycle-step>b{grid-column:2/4;grid-row:2')],
  ['Long reasons stay behind disclosure on rotation and altcoin rails',product.includes('rotation-rung-v2')&&product.includes('alt-cycle-step')&&product.includes('<details><summary>Why?</summary>')&&css.includes('.path-track-detail')],
  ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')&&product.includes('ownerMinute=12')],
 
