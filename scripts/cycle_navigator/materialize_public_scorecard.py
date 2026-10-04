@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +28,64 @@ def interval_score(fl: float, fh: float, al: float, ah: float) -> float:
     containment = inter / actual_width if actual_width > 0 else 0.0
     jaccard = inter / union if union > 0 else 0.0
     return round(100.0 * (0.7 * containment + 0.3 * jaccard), 2)
+
+
+def parse_utc(value: str) -> datetime:
+    stamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    if stamp.utcoffset() is None:
+        raise ValueError("timezone_required")
+    return stamp.astimezone(timezone.utc)
+
+
+def load_hourly_rows(root: Path, iso_year: int, iso_week: int) -> list[dict[str, str]]:
+    rows: dict[datetime, dict[str, str]] = {}
+    hourly_root = root / "03_DAILY_CAPTURE_LOGS/hourly" / str(iso_year)
+    if not hourly_root.is_dir():
+        return []
+    for path in sorted(hourly_root.rglob("*.csv")):
+        try:
+            with path.open(newline="", encoding="utf-8") as handle:
+                for row in csv.DictReader(handle):
+                    try:
+                        stamp = parse_utc(row.get("timestamp_utc") or "")
+                    except Exception:
+                        continue
+                    y, w, _ = stamp.isocalendar()
+                    if y != iso_year or w != iso_week:
+                        continue
+                    if str(row.get("spot_status") or "").upper() not in {"PASS", "OK"}:
+                        continue
+                    rows[stamp] = row
+        except (OSError, csv.Error):
+            continue
+    return [rows[k] for k in sorted(rows)]
+
+
+def score_window_bounds(year: int, week: int, receipt: dict[str, Any] | None) -> dict[str, tuple[datetime, datetime]]:
+    monday = datetime.combine(date.fromisocalendar(year, week, 1), datetime.min.time(), tzinfo=timezone.utc)
+    bounds = {
+        "day_1_2": (monday, monday + timedelta(days=2)),
+        "day_3_4": (monday + timedelta(days=2), monday + timedelta(days=4)),
+        "day_5_7": (monday + timedelta(days=4), monday + timedelta(days=7)),
+    }
+    if not receipt or str(receipt.get("score_window_policy") or "") != "FIRST_COMPLETE_UTC_HOUR_AT_OR_AFTER_FREEZE_v1":
+        return bounds
+    valid = str(receipt.get("scoring_valid_from_utc") or "")
+    if not valid:
+        raise SystemExit("site_public_freeze_receipt_scoring_valid_from_missing")
+    start, end = bounds["day_1_2"]
+    bounds["day_1_2"] = (max(start, parse_utc(valid)), end)
+    return bounds
+
+
+def hourly_realized(rows: list[dict[str, str]], start: datetime, end: datetime, asset: str) -> dict[str, float]:
+    subset = [r for r in rows if start <= parse_utc(r["timestamp_utc"]) < end]
+    expected = int((end - start).total_seconds() // 3600)
+    if len(subset) != expected:
+        raise SystemExit(f"public_scorecard_post_freeze_hourly_coverage_mismatch:{asset}:{len(subset)}/{expected}")
+    lows = [float(r[f"{asset.lower()}_low"]) for r in subset]
+    highs = [float(r[f"{asset.lower()}_high"]) for r in subset]
+    return {"low": min(lows), "high": max(highs)}
 
 MARKET_STRUCTURE_V2_IDS = [
     "REGIME_RESILIENCE",
@@ -149,6 +209,7 @@ def main() -> None:
     index = read_json(index_path)
     site_receipt_path = binding_path.parent / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
     public_proof = None
+    site_receipt = None
     if site_receipt_path.is_file():
         site_receipt = read_json(site_receipt_path)
         freeze_digest = hashlib.sha256(prior_freeze_path.read_bytes()).hexdigest()
@@ -216,13 +277,20 @@ def main() -> None:
 
     windows = actual["day_window_actuals"]["windows"]
     keymap = {"day_1_2": "DAY1_2", "day_3_4": "DAY3_4", "day_5_7": "DAY5_7"}
+    score_window_policy = str((site_receipt or {}).get("score_window_policy") or "LEGACY_WEEK_BOUNDARY_v1")
+    score_bounds = score_window_bounds(year, completed_week, site_receipt)
+    hourly_rows = load_hourly_rows(root, year, completed_week) if score_window_policy == "FIRST_COMPLETE_UTC_HOUR_AT_OR_AFTER_FREEZE_v1" else []
     scored = []
     by_asset = {"BTC": [], "ETH": []}
     by_window = {k: [] for k in keymap}
     for row in intraday_rows:
         asset = str(row["asset"])
         window = str(row["window"])
-        realized = windows[keymap[window]][asset.lower()]
+        if score_window_policy == "FIRST_COMPLETE_UTC_HOUR_AT_OR_AFTER_FREEZE_v1":
+            start, end = score_bounds[window]
+            realized = hourly_realized(hourly_rows, start, end, asset)
+        else:
+            realized = windows[keymap[window]][asset.lower()]
         score = interval_score(
             float(row["forecast_low"]),
             float(row["forecast_high"]),
@@ -237,6 +305,7 @@ def main() -> None:
             "actual_low": float(realized["low"]),
             "actual_high": float(realized["high"]),
             "score": score,
+            "score_window_policy": score_window_policy,
         }
         scored.append(scored_row)
         by_asset[asset].append(score)
@@ -273,6 +342,8 @@ def main() -> None:
             "eth_score": asset_scores["ETH"],
             "intraday_window_scores": window_scores,
             "formula": FORMULA,
+            "score_window_policy": score_window_policy,
+            "scoring_valid_from_utc": (site_receipt or {}).get("scoring_valid_from_utc"),
             "rows": scored,
             "source": str(ledger_path.relative_to(root)),
             "actuals": str(actual_path.relative_to(root)),

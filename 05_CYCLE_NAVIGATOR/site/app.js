@@ -12,8 +12,8 @@ function compactState(state){
   if(!state) return "Official state unavailable";
   return String(state).split(". ")[0].replace(/\.$/, "");
 }
-function issueLabel(pointer,pkg){
-  const issue=pkg?.issue_number ?? pointer?.issue_number;
+function issueLabel(pointer,pkg,publicIssue){
+  const issue=publicIssue ?? pkg?.public_issue_number ?? pointer?.public_issue_number ?? pkg?.issue_number ?? pointer?.issue_number;
   const week=pointer?.iso_week ? ` · ${pointer.iso_year}-W${String(pointer.iso_week).padStart(2,"0")}` : "";
   return `Cycle Navigator #${issue ?? "—"}${week}`;
 }
@@ -104,8 +104,9 @@ function officialNextDays(pkg){
 function renderSnapshot(snapshot){
   latestSnapshot=snapshot;
   const pointer=snapshot?.pointer||{},pkg=snapshot?.package||{},live=snapshot?.live_observation||{},action=live?.current_action||null,score=snapshot?.machine_calibration_bundle||pkg?.evaluation||{};
+  const publicIssue=snapshot?.public_series?.current_public_projection?.public_issue_number ?? pkg?.public_issue_number ?? pointer?.public_issue_number;
   const heroAction=clean(action?.stance)||compactState(pkg.market_state);
-  text("issueLabel",issueLabel(pointer,pkg));
+  text("issueLabel",issueLabel(pointer,pkg,publicIssue));
   text("marketState",heroAction);
   text("stateSummary",pkg.market_state||"Official weekly state unavailable.");
   text("weekCase",pkg.base_case_this_week||"Not published in this issue.");
@@ -122,7 +123,7 @@ function renderSnapshot(snapshot){
 
   const scoreValue=Number(score?.structural_score);const hasScore=Number.isFinite(scoreValue);if($("scoreRing")) $("scoreRing").style.setProperty("--score",hasScore?Math.max(0,Math.min(100,scoreValue)):0);text("scoreValue",hasScore?`${Math.round(scoreValue)}%`:"—");text("scoreCaption",hasScore?`Official structural score for Cycle Navigator #${score.issue_scored ?? pkg.previous_issue_number ?? "prior"}.`:`No completed structural score is available.`);
 
-  const q=publicQuality(pkg.status||pointer.status);for(const id of ["qualityBadge","dataQualityBadge"]){const n=$(id);if(n){n.textContent=q.label;n.className=`quality-badge ${q.cls}`;}}text("dataQualityTitle",q.title);text("officialStatus",`OFFICIAL weekly #${pkg.issue_number ?? pointer.issue_number ?? "—"}`);text("feedMode",live?.authority?"Feed mode: official weekly + bounded LIVE observation":"Feed mode: official weekly snapshot");
+  const q=publicQuality(pkg.status||pointer.status);for(const id of ["qualityBadge","dataQualityBadge"]){const n=$(id);if(n){n.textContent=q.label;n.className=`quality-badge ${q.cls}`;}}text("dataQualityTitle",q.title);text("officialStatus",`OFFICIAL weekly CN #${publicIssue ?? "—"}`);text("feedMode",live?.authority?"Feed mode: official weekly + bounded LIVE observation":"Feed mode: official weekly snapshot");
 
   renderRanges(snapshot);renderRotation(pkg.rotation_ladder);renderCountdown(pkg.altseason_countdown);renderList("strengths",score?.strengths||pkg?.evaluation?.strengths);renderList("misses",score?.misses||pkg?.evaluation?.misses);renderList("frozenTests",pkg?.forecast_freeze?.structural_calls);renderList("uncertainties",pkg.uncertainties,4);
   text("publicationStatus",`Publication: ${human(pointer.publication_status||pkg.publication_status)}`);text("sourceWeek",pointer.completed_source_week?`Completed source week W${pointer.completed_source_week} · current W${pointer.iso_week}`:"Source week unavailable");
@@ -137,7 +138,7 @@ async function loadMarket(){
   try{const r=await fetch(`${MARKET_URL}&t=${Date.now()}`,{cache:"no-store"});if(!r.ok)throw new Error(`market HTTP ${r.status}`);const d=await r.json(),btc=d.bitcoin,eth=d.ethereum,ratio=Number(eth?.usd)/Number(btc?.usd);text("btcPrice",price(Number(btc?.usd)));text("ethPrice",price(Number(eth?.usd)));text("ethBtc",Number.isFinite(ratio)?ratio.toFixed(5):"—");setChange("btcChange",Number(btc?.usd_24h_change));setChange("ethChange",Number(eth?.usd_24h_change));const updated=Math.max(Number(btc?.last_updated_at||0),Number(eth?.last_updated_at||0));text("marketTimestamp",`LIVE updated ${new Date((updated||Date.now()/1000)*1000).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})}`);}catch(e){console.warn("LIVE market feed unavailable",e);text("marketTimestamp","LIVE context unavailable");}
 }
 async function shareSnapshot(){
-  const pkg=latestSnapshot?.package||{},action=latestSnapshot?.live_observation?.current_action?.stance;const title=`Cycle Navigator #${pkg.issue_number ?? ""}`;const body=`${action||compactState(pkg.market_state)}. Broad altseason: ${broadAltseasonState(pkg.altseason_countdown)}. Scenario map only, not investment advice.`;try{if(navigator.share){await navigator.share({title,text:body,url:location.href});return;}await navigator.clipboard.writeText(`${title}\n${body}\n${location.href}`);text("shareButton","Copied");setTimeout(()=>text("shareButton","Share snapshot"),1500);}catch(e){console.warn("Share unavailable",e);}
+  const pkg=latestSnapshot?.package||{},action=latestSnapshot?.live_observation?.current_action?.stance,publicIssue=latestSnapshot?.public_series?.current_public_projection?.public_issue_number??pkg?.public_issue_number;const title=`Cycle Navigator #${publicIssue ?? ""}`;const body=`${action||compactState(pkg.market_state)}. Broad altseason: ${broadAltseasonState(pkg.altseason_countdown)}. Scenario map only, not investment advice.`;try{if(navigator.share){await navigator.share({title,text:body,url:location.href});return;}await navigator.clipboard.writeText(`${title}\n${body}\n${location.href}`);text("shareButton","Copied");setTimeout(()=>text("shareButton","Share snapshot"),1500);}catch(e){console.warn("Share unavailable",e);}
 }
 if($("shareButton")) $("shareButton").addEventListener("click",shareSnapshot);
 loadNavigator();loadMarket();setInterval(loadMarket,60_000);setInterval(loadNavigator,5*60_000);

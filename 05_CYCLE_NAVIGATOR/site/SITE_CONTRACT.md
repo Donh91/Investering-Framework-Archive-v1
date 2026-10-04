@@ -15,6 +15,11 @@ It is intentionally a presentation and live-context surface, not a new market-st
 5. When the canonical public snapshot is unavailable, the UI may show a clearly bounded embedded fallback, but must label the official feed as unavailable.
 6. If the canonical package status is `DEGRADED`, the public site must expose that status rather than cosmetically hiding it.
 7. Numeric forecast ranges must remain absent when the machine package freezes those fields as `null`.
+8. Public-facing Cycle Navigator identity MUST use `public_series.current_public_projection.public_issue_number`; migration-era machine issue numbers must not be exposed as the public CN number.
+9. The NOW risk curve MUST be owned by the typed Official Compass capitalization ladder. Legacy weekly rotation text may appear only as structural context outside the live action surface and must not be converted into site-derived action badges.
+10. Live Price Range Precision MUST expose its source timestamp and freshness SLA. If the last complete hourly owner observation exceeds the SLA, the UI must show `STALE` rather than `LIVE`.
+11. The Pages delivery should refresh after the successful hourly owner chain reaches Native Handlekompas. This is delivery only and cannot alter Official Compass or Cycle Navigator authority.
+
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
 ## NEXT DAYS / short-horizon rule

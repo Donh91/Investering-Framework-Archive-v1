@@ -95,13 +95,23 @@ def fmt_iso(stamp: datetime | None) -> str | None:
     return stamp.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def window_bounds(year: int, week: int) -> dict[str, tuple[datetime, datetime, int]]:
+def window_bounds(year: int, week: int) -> dict[str, tuple[datetime, datetime]]:
     monday = datetime.combine(date.fromisocalendar(year, week, 1), datetime.min.time(), tzinfo=timezone.utc)
     return {
-        "day_1_2": (monday, monday + timedelta(days=2), 48),
-        "day_3_4": (monday + timedelta(days=2), monday + timedelta(days=4), 48),
-        "day_5_7": (monday + timedelta(days=4), monday + timedelta(days=7), 72),
+        "day_1_2": (monday, monday + timedelta(days=2)),
+        "day_3_4": (monday + timedelta(days=2), monday + timedelta(days=4)),
+        "day_5_7": (monday + timedelta(days=4), monday + timedelta(days=7)),
     }
+
+
+def scoring_start_for_window(receipt: dict[str, Any], window: str, start: datetime) -> datetime:
+    policy = str(receipt.get("score_window_policy") or "LEGACY_WEEK_BOUNDARY_v1")
+    if policy != "FIRST_COMPLETE_UTC_HOUR_AT_OR_AFTER_FREEZE_v1" or window != "day_1_2":
+        return start
+    value = str(receipt.get("scoring_valid_from_utc") or "")
+    if not value:
+        raise SystemExit("public_live_precision_scoring_valid_from_missing")
+    return max(start, parse_utc(value))
 
 
 def numeric(row: dict[str, str], key: str) -> float | None:
@@ -171,6 +181,7 @@ def copy_public_freeze_archive(root: Path, dist_data: Path) -> int:
             "forecast_week": receipt.get("forecast_week"),
             "frozen_unix": receipt.get("frozen_unix"),
             "source_forecast_freeze_sha256": receipt.get("source_forecast_freeze_sha256"),
+            "record_kind": "MIGRATED_VERIFIED_FREEZE" if receipt.get("migration_note") else "SITE_NATIVE_SOURCE_OF_RECORD",
             "path": payload["archive_path"],
         })
     (archive / "index.json").write_text(json.dumps({
@@ -234,7 +245,9 @@ def main() -> None:
     completed_rows = live_rows = pending_rows = 0
 
     for window in ("day_1_2", "day_3_4", "day_5_7"):
-        start, end, expected_total = bounds[window]
+        calendar_start, end = bounds[window]
+        start = scoring_start_for_window(receipt, window, calendar_start)
+        expected_total = max(0, int((end - start).total_seconds() // 3600))
         subset = []
         for row in hourly:
             stamp = parse_utc(row["timestamp_utc"])
@@ -304,7 +317,8 @@ def main() -> None:
             "expected_hours_so_far": expected_so_far,
             "expected_hours_final": expected_total,
             "coverage_complete_to_date": complete_coverage,
-            "window_start_utc": fmt_iso(start),
+            "window_start_utc": fmt_iso(calendar_start),
+            "scoring_start_utc": fmt_iso(start),
             "window_end_utc": fmt_iso(end),
         }
 
@@ -324,6 +338,11 @@ def main() -> None:
         "status": status,
         "score_family": "PRICE_RANGE_PRECISION",
         "formula": FORMULA,
+        "score_window_policy": str(receipt.get("score_window_policy") or "LEGACY_WEEK_BOUNDARY_v1"),
+        "scoring_valid_from_utc": receipt.get("scoring_valid_from_utc"),
+        "freshness_sla_minutes": 90,
+        "refresh_cadence": "HOURLY_OWNER_CHAIN",
+        "freeze_record_kind": "MIGRATED_VERIFIED_FREEZE" if receipt.get("migration_note") else "SITE_NATIVE_SOURCE_OF_RECORD",
         "running_price_precision_pct": running,
         "running_score_semantics": "SAME_FORMULA_AS_FINAL_PUBLIC_PRICE_RANGE_PRECISION_APPLIED_TO_COMPLETE_OBSERVED_DATA_TO_DATE",
         "scored_rows": len(scored),
@@ -340,6 +359,7 @@ def main() -> None:
                 "phase": window_summary[window].get("phase"),
                 "score_to_date": window_summary[window].get("score_to_date"),
                 "window_start_utc": window_summary[window].get("window_start_utc"),
+                "scoring_start_utc": window_summary[window].get("scoring_start_utc"),
                 "window_end_utc": window_summary[window].get("window_end_utc"),
             }
             for window in ("day_1_2", "day_3_4", "day_5_7")

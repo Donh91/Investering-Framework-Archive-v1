@@ -1,4 +1,4 @@
-import { copyFile, readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
@@ -9,8 +9,6 @@ const distDir = resolve(siteDir, "dist");
 const pointerPath = resolve(repoRoot, "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const snapshotPath = resolve(distDir, "data/latest.json");
 const distIndexPath = resolve(distDir, "index.html");
-const sourceWidgetPath = resolve(siteDir, "weekly-score.js");
-const distWidgetPath = resolve(distDir, "weekly-score.js");
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
@@ -92,14 +90,8 @@ async function main() {
   snapshot.machine_calibration_note = "This bundle is migration-era machine calibration evidence. Public Cycle Navigator precision is resolved separately through public_series and public_scorecard by forecast-week lineage.";
   await writeFile(snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
 
-  await copyFile(sourceWidgetPath, distWidgetPath);
-  let index = await readFile(distIndexPath, "utf8");
-  const tag = '<script src="./weekly-score.js" defer></script>';
-  if (!index.includes(tag)) {
-    if (!index.includes("</body>")) throw new Error("Cannot inject weekly score widget: </body> missing");
-    index = index.replace("</body>", `  ${tag}\n</body>`);
-    await writeFile(distIndexPath, index, "utf8");
-  }
+  // The public product owns completed-score presentation in PROOF.
+  // Do not inject the legacy standalone weekly-score widget into the premium shell.
 
   console.log(`Bound machine calibration snapshot to ${scorecard.contract || "CYCLE_NAVIGATOR_SCORECARD"} for machine issue #${scorecard.issue_scored ?? "?"}`);
 }

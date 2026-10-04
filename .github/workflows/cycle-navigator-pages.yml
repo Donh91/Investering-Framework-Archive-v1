@@ -24,6 +24,14 @@ on:
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
       - "04_MARKET_LEARNING/entry_signals/LATEST.json"
       - ".github/workflows/cycle-navigator-pages.yml"
+  workflow_run:
+    # Rebuild after the successful hourly owner chain reaches Native Handlekompas.
+    # This works even though framework-data-bot commits use GITHUB_TOKEN and therefore
+    # cannot recursively trigger push-based workflows.
+    workflows:
+      - Native Handlekompas
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -35,6 +43,13 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'workflow_run'
+      )
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -42,6 +57,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
       - name: Validate public series identity and score lineage
         run: python3 scripts/cycle_navigator/validate_public_series.py
       - name: Validate public product contract
@@ -75,6 +93,9 @@ jobs:
           grep -q 'SITE SOURCE OF RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'FROZEN MONDAY PATH' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+          grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+          grep -q '"refresh_cadence": "HOURLY_OWNER_CHAIN"' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
           grep -q 'market-compass-premium.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
           grep -q 'CYCLE NAVIGATOR · CONCLUSION' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
           grep -q 'HOW THIS READING IS BUILT' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
@@ -90,6 +111,8 @@ jobs:
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'MARKET COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Bitcoin → microcaps' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'WEEKLY STRUCTURAL ROTATION CONTEXT' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q 'CAPITAL ROTATION · HERE AND NOW' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'MARKET COMPASS UPDATED' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'completed forecasts with score evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'SINCE LAST CN' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
