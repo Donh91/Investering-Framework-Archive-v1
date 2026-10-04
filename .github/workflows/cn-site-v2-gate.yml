@@ -55,18 +55,25 @@ jobs:
           grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'MARKET COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Cycle. Rotation. Altcoin timing.' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q '1 · MARKET CYCLE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q '2 · ROTATION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q '3 · ALTCOIN CYCLE TIMER' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'ALTSEASON IGNITION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Small-cap expansion begins' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Mania / euphoria' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Distribution' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Exit / protection' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'CN_PATH_THREE_TRACK_v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'no browser countdown math' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'market-cycle-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'rotation-rail-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'altcoin-timer-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q "github.event.workflow_run.head_branch == 'main'" .github/workflows/cycle-navigator-pages.yml
           grep -q "github.event.workflow_run.conclusion == 'success'" .github/workflows/cycle-navigator-pages.yml
           ! grep -q "github.event.workflow_run.event == 'workflow_run'" .github/workflows/cycle-navigator-pages.yml
-          grep -q 'Bitcoin → microcaps' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'CYCLE PATH · ADAPTIVE TIMELINE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'MONDAY BASELINE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'LIVE GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'EXIT RISK CLOCK' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'NO FRONTEND SELL RULE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'CN_ADAPTIVE_PATH_PRESENTATION_v1' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'adaptive-stage-grid' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q 'completed forecasts with score evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'SINCE LAST CN' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
