@@ -147,13 +147,34 @@ function structuralRotation(rows){
   return '<div class="capital-line structural-context-rail">'+rows.map((r,i)=>'<div class="capital-step"><div class="capital-node">'+esc(i+1)+'</div><div class="capital-copy"><div class="capital-title"><strong>'+esc(r.segment||'Segment')+'</strong><b>WEEKLY CONTEXT</b></div><p>'+esc(investorText(r.status||'No structural context published.'))+'</p></div></div>').join('')+'</div>';
 }
 
+function precisionLite(data){
+  const live=data?.public_live_precision;
+  if(live?.contract!=='CN_PUBLIC_LIVE_PRICE_PRECISION_v1')return '';
+  const n=live.running_price_precision_pct===null||live.running_price_precision_pct===undefined?null:Number(live.running_price_precision_pct);
+  const score=Number.isFinite(n)?n.toFixed(2).replace(/\.?0+$/,'')+'%':'—';
+  const d=live.live_as_of_utc?new Date(live.live_as_of_utc):null;
+  const ageMs=d&&Number.isFinite(d.getTime())?Date.now()-d.getTime():null;
+  const sla=Math.max(30,Number(live.freshness_sla_minutes||90));
+  const stale=ageMs===null||ageMs>sla*60*1000;
+  const mins=ageMs===null?null:Math.max(0,Math.floor(ageMs/60000));
+  const age=mins===null?'unknown age':mins>=60?Math.floor(mins/60)+'h '+(mins%60)+'m old':mins+' min old';
+  const phase=!Number.isFinite(n)?'AWAITING':stale?'STALE':'LIVE';
+  const stamp=v=>{const x=v?new Date(v):null;return x&&Number.isFinite(x.getTime())?x.toLocaleString('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',','')+' UTC':'—';};
+  return '<section id="publicLiveAccountabilityLite" class="pa-lite'+(stale?' stale':'')+'">'
+    +'<div class="pa-lite-mark"><i></i><span>WEEKLY TRACK RECORD · '+esc(phase)+'</span></div>'
+    +'<div class="pa-lite-score"><strong>'+esc(score)+'</strong><small>provisional Price Range Precision</small></div>'
+    +'<div class="pa-lite-meta"><span>CN #'+esc(live.public_issue_number)+' · '+esc(live.forecast_week)+'</span><b>Frozen '+esc(stamp(live.frozen_at_utc))+'</b><small>'+(stale?'Last complete observation ':'Live as of ')+esc(stamp(live.live_as_of_utc))+' · '+esc(age)+' · '+esc(live.completed_rows??0)+' settled / '+esc(live.live_rows??0)+' live</small></div>'
+    +'<button type="button" data-pa-proof-native>View full scorecard →</button>'
+    +'</section>';
+}
+
 function renderNow(data,px){
   const p=data.package||{},live=data.live_observation||{},a=live.current_action||{},st=String(a.stance||'WAIT').toUpperCase(),available=!!a.generated_at,limited=/DATA_DEGRADED/i.test(String(a.current||''));
   const marketPhase=phaseCopy(p.market_state||'');
   const next=investorText(a.next_days)||(`Stay ${actionTitle(st).toLowerCase()} while the next market confirmation develops.`);
   const confirm=gate(a.confirmation,'confirm'),risk=gate(a.invalidation,'risk');
   const headline=!available?'Fresh evidence is temporarily unavailable. No new risk call is inferred from price alone.':limited?'Signal confidence is temporarily limited. Keep risk contained until the evidence improves.':({HOLD:'Keep current positioning. Do not add broad market risk yet.',WAIT:'Stay patient. A broader risk-on move is not confirmed yet.',PREPARE:'Prepare for a possible shift, but wait for confirmation before adding broadly.',SELECTIVE:'Add selectively only. Broad market risk is not confirmed yet.','PROTECT CAPITAL':'Reduce risk and protect capital until conditions improve.','BROADER DEPLOYMENT':'Broader participation is confirmed enough to add risk across the market.'}[st]||'Keep the current stance until the evidence changes.');
-  document.getElementById('productNow').innerHTML=`<div id="productFreshness" class="freshness-strip"></div><section class="action-hero"><div class="action-label">MARKET COMPASS</div><div class="action-word">${esc(available?actionTitle(st):'WAIT')}</div><p>${esc(headline)}</p><div class="hero-lines"><div><span>MARKET PHASE</span><strong>${esc(marketPhase)}</strong></div><div><span>NEXT 1–3 DAYS</span><strong>${esc(short(next,180))}</strong></div><div><span>NEXT CONFIRMATION</span><strong>${esc(short(confirm,180))}</strong></div><div class="risk-line"><span>RISK</span><strong>${esc(short(risk,170))}</strong></div></div></section><section class="context-row"><article><span>LIVE MARKET</span><strong>${esc(px||'Live prices temporarily unavailable')}</strong><small>Market context only. Prices cannot rewrite the weekly outlook.</small></article><article><span>THIS WEEK</span><strong>${esc(short(investorText(p.base_case_this_week||p.market_state)||'No public weekly summary available.',220))}</strong><small>Plain-English translation of the current weekly outlook.</small></article></section>`;
+  document.getElementById('productNow').innerHTML=`<div id="productFreshness" class="freshness-strip"></div><section class="action-hero"><div class="action-label">MARKET COMPASS</div><div class="action-word">${esc(available?actionTitle(st):'WAIT')}</div><p>${esc(headline)}</p><div class="hero-lines"><div><span>MARKET PHASE</span><strong>${esc(marketPhase)}</strong></div><div><span>NEXT 1–3 DAYS</span><strong>${esc(short(next,180))}</strong></div><div><span>NEXT CONFIRMATION</span><strong>${esc(short(confirm,180))}</strong></div><div class="risk-line"><span>RISK</span><strong>${esc(short(risk,170))}</strong></div></div></section><section class="context-row"><article><span>LIVE MARKET</span><strong>${esc(px||'Live prices temporarily unavailable')}</strong><small>Market context only. Prices cannot rewrite the weekly outlook.</small></article><article><span>THIS WEEK</span><strong>${esc(short(investorText(p.base_case_this_week||p.market_state)||'No public weekly summary available.',220))}</strong><small>Plain-English translation of the current weekly outlook.</small></article></section>${precisionLite(data)}`;
   freshness();
 }
 
@@ -253,7 +274,7 @@ function renderProof(data,history){
 async function render(){
   shell();
   try{
-    const [s,h,p]=await Promise.all([json('./data/latest.json'),json('./history-scoreboard.json'),prices()]);snapshot=s;renderNow(s,p);renderPath(s);renderProof(s,h);installNowRefinements(s,h);document.querySelectorAll("[data-ledger-link]").forEach(b=>b.onclick=()=>{const row=document.getElementById(`cn-record-${b.dataset.ledgerLink}`);if(row){row.open=true;row.scrollIntoView({behavior:"smooth",block:"start"});}});clearInterval(refreshTimer);refreshTimer=setInterval(freshness,30000);
+    const [s,h,p]=await Promise.all([json('./data/latest.json'),json('./history-scoreboard.json'),prices()]);snapshot=s;renderNow(s,p);document.querySelector('[data-pa-proof-native]')?.addEventListener('click',showProof);renderPath(s);renderProof(s,h);installNowRefinements(s,h);document.querySelectorAll("[data-ledger-link]").forEach(b=>b.onclick=()=>{const row=document.getElementById(`cn-record-${b.dataset.ledgerLink}`);if(row){row.open=true;row.scrollIntoView({behavior:"smooth",block:"start"});}});clearInterval(refreshTimer);refreshTimer=setInterval(freshness,30000);
   }catch(e){console.warn('Cycle Navigator unavailable',e);const n=document.getElementById('productNow');if(n)n.innerHTML='<section class="fail-card"><small>MARKET DATA TEMPORARILY UNAVAILABLE</small><h1>WAIT</h1><p>No new action is inferred while verified evidence is unavailable.</p></section>';}
 }
 
