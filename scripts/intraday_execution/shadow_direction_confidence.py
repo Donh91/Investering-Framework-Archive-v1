@@ -6,12 +6,20 @@ import hashlib
 import io
 import json
 import math
+import sys
 import os
 import re
 import statistics
 import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from backtest_engine.statistics import wilson_interval
+
 from typing import Any
 
 BREADTH = Path("03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json")
@@ -291,13 +299,7 @@ def _outcome_paths() -> list[Path]:
 
 
 def _wilson_lower(hits: int, total: int, z: float = 1.959963984540054) -> float | None:
-    if total <= 0:
-        return None
-    p = hits / total
-    den = 1 + z * z / total
-    center = p + z * z / (2 * total)
-    radius = z * math.sqrt((p * (1 - p) + z * z / (4 * total)) / total)
-    return max(0.0, (center - radius) / den)
+    return wilson_interval(hits, total, z)[0]
 
 
 def _independent_rows(rows: list[dict[str, Any]], horizon_hours: int) -> list[dict[str, Any]]:

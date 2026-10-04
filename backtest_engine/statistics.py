@@ -57,6 +57,33 @@ def mean_interval_width(lower: Sequence[float], upper: Sequence[float]) -> float
     return sum(widths) / len(widths)
 
 
+def wilson_interval(
+    successes: int,
+    total: int,
+    z: float = 1.959963984540054,
+) -> tuple[float | None, float | None]:
+    """Return a two-sided Wilson score interval without adding decision authority."""
+    if isinstance(successes, bool) or isinstance(total, bool):
+        raise ValueError("successes and total must be integers")
+    if not isinstance(successes, int) or not isinstance(total, int):
+        raise ValueError("successes and total must be integers")
+    if total < 0:
+        raise ValueError("total cannot be negative")
+    if total == 0:
+        return None, None
+    if successes < 0 or successes > total:
+        raise ValueError("successes must be between zero and total")
+    if not math.isfinite(z) or z <= 0.0:
+        raise ValueError("z must be finite and positive")
+
+    p = successes / total
+    z2 = z * z
+    denominator = 1.0 + z2 / total
+    center = (p + z2 / (2.0 * total)) / denominator
+    margin = z * math.sqrt((p * (1.0 - p) + z2 / (4.0 * total)) / total) / denominator
+    return max(0.0, center - margin), min(1.0, center + margin)
+
+
 def participation_ratio(eigenvalues: Iterable[float]) -> float:
     values = [float(value) for value in eigenvalues if float(value) > 0.0]
     if not values:
