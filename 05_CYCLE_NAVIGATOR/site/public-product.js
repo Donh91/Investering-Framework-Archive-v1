@@ -261,7 +261,7 @@ function marketCycleTrack(pkg,compass){
   const warning=String(pkg?.decision_projection?.weeks_4_8?.warning||'NONE').replaceAll('_',' ');
   const rows=MARKET_CYCLE.map(([key,label])=>{
     const isForward=key===forward.key;
-    return '<div class="market-cycle-step'+(isForward?' destination':'')+'"><i></i><span>'+esc(label)+'</span><b>'+esc(cycleEtaFor(key,pkg,compass))+'</b></div>';
+    return '<div class="market-cycle-step'+(isForward?' current':'')+'" data-cycle-role="'+(isForward?'forward-destination':'reference')+'"><i></i><span>'+esc(label)+'</span><b>'+esc(cycleEtaFor(key,pkg,compass))+'</b></div>';
   }).join('');
   return '<section class="path-track market-cycle-v2" data-path-track="market-cycle">'
     +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The big-picture market cycle.</h3><p>Current weekly state stays separate from forward phase placement. The rail only highlights a structured 21–30d or 4–8w destination.</p></div><aside><span>NEXT STRUCTURED PHASE</span><strong>'+esc((MARKET_CYCLE.find(x=>x[0]===forward.key)||['','UNCLEAR'])[1])+'</strong><small>'+esc(forward.source)+'</small></aside></header>'
@@ -357,7 +357,7 @@ function altcoinCycleTimer(pkg,compass){
   const stages=altcoinCycleStages(pkg,compass),target=altcoinTarget(pkg,compass,stages),current=altcoinCurrentStage(pkg,compass,stages);
   const targetIndex=stages.findIndex(x=>x.key===target.key);
   const rows=stages.map((x,i)=>{
-    const isCurrent=i===current.index,isTarget=i===targetIndex,currentClass=isCurrent?' current'+(current.source==='MONDAY'?' monday-current':''):'';
+    const isCurrent=i===current.index,isTarget=i===targetIndex,currentClass=isCurrent&&current.source==='LIVE'?' current':'';
     return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+currentClass+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(pathStatus(x.status))+'</strong><b>ETA · '+esc(pathEta(x.eta))+'</b><details><summary>Why?</summary>'+(x.monday?'<p><em>Monday:</em> '+esc(pathEta(x.monday))+'</p>':'')+'<p>'+esc(short(investorText(x.why),240))+'</p></details></article>';
   }).join('');
   return '<section class="path-track altcoin-timer-v2" data-path-track="altcoin-cycle" data-contract="CN_PATH_THREE_TRACK_v2">'
