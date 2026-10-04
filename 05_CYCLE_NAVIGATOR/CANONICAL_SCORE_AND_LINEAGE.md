@@ -31,6 +31,10 @@ For **"Cycle Navigator precision", "score from last week", "today's CN score", "
 6. Use machine scorecards only as outcome/calibration evidence when their claim lineage is explicitly mapped to the public issue.
 7. Never blend PRICE RANGE and MARKET/STRUCTURE into an overall percentage unless a stable prospective aggregation contract exists.
 
+8. For current and future issues, accept `CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json` as an immutable public forecast source when its CN number, forecast week and freeze hash match the weekly public-series binding.
+9. X is distribution, not score authority. A missing X publication cannot invalidate a correctly frozen site-source-of-record issue.
+10. The website's live percentage is provisional Price Range Precision only: the same six frozen BTC/ETH intraday rows and the same scoring formula later used by the completed public scorecard.
+
 ## Current completed public score
 
 **CN #26, forecast week 2026-W39**
