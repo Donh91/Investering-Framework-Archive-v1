@@ -134,6 +134,36 @@ def copy_public_freeze_archive(root: Path, dist_data: Path) -> int:
         rel_dir.mkdir(parents=True, exist_ok=True)
         out = rel_dir / f"CN{issue}_PUBLIC_FREEZE.json"
         payload = dict(receipt)
+        freeze_rel = str(receipt.get("source_forecast_freeze_path") or "")
+        freeze = read_json(root / freeze_rel) if freeze_rel.startswith("05_CYCLE_NAVIGATOR/weekly/") and ".." not in freeze_rel else {}
+        forecast_week = str(receipt.get("forecast_week") or "")
+        range_rows = load_range_rows(root, issue, forecast_week)
+        payload["public_frozen_price_ranges"] = {
+            "score_family": "PRICE_RANGE_PRECISION",
+            "formula": FORMULA,
+            "rows": [
+                {
+                    "asset": str(row["asset"]),
+                    "window": str(row["window"]),
+                    "forecast_low": float(row["forecast_low"]),
+                    "forecast_high": float(row["forecast_high"]),
+                }
+                for row in sorted(range_rows, key=lambda x: (str(x["window"]), str(x["asset"])))
+            ],
+            "weekly_envelope": {
+                "BTC": {"low": freeze.get("btc_range_low"), "high": freeze.get("btc_range_high")},
+                "ETH": {"low": freeze.get("eth_range_low"), "high": freeze.get("eth_range_high")},
+            },
+        }
+        intraday = freeze.get("intraday_map") if isinstance(freeze.get("intraday_map"), dict) else {}
+        payload["public_frozen_sequence"] = [
+            {
+                "window": window,
+                "label": {"day_1_2": "DAY 1–2", "day_3_4": "DAY 3–4", "day_5_7": "DAY 5–7"}[window],
+                "frozen_text": str(intraday.get(window) or "").strip() or None,
+            }
+            for window in ("day_1_2", "day_3_4", "day_5_7")
+        ]
         payload["archive_path"] = f"data/public-freezes/{year}/{week}/CN{issue}_PUBLIC_FREEZE.json"
         out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
         index.append({
