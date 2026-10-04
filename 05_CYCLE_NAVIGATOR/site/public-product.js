@@ -228,9 +228,9 @@ function cyclePhaseFromSources(pkg,compass){
   if(/PARABOLIC|EUPHORIA|MANIA/.test(s))return{key:'PARABOLIC_ALTSEASON',source:'MONDAY BASE CASE'};
   if(/BROAD.*ALTSEASON/.test(s)&&!/NOT CONFIRMED|NOT A CONFIRMED|NO CONFIRMED/.test(s))return{key:'BROAD_ALTSEASON',source:'MONDAY BASE CASE'};
   if(/PRE[_ -]?ROTATION|EARLY ROTATION/.test(s))return{key:'PRE_ROTATION',source:'MONDAY BASE CASE'};
-  if(/ROTATION/.test(s)&&!/NO .*ROTATION|NOT CONFIRMED|UNCONFIRMED/.test(s))return{key:'ROTATION',source:'MONDAY BASE CASE'};
   if(/CONSOLIDATION|TRANSITION/.test(s))return{key:'CONSOLIDATION',source:'MONDAY BASE CASE'};
-  if(/DEFENSIVE|BREAKDOWN/.test(s))return{key:'DEFENSIVE',source:'MONDAY BASE CASE'};
+  if(/CONFIRMED ROTATION|ROTATION REGIME|ROTATION IS ACTIVE/.test(s))return{key:'ROTATION',source:'MONDAY BASE CASE'};
+  if(/DEFENSIVE|CONFIRMED BREAKDOWN/.test(s))return{key:'DEFENSIVE',source:'MONDAY BASE CASE'};
   return{key:'UNCLEAR',source:'NO STRUCTURED PHASE'};
 }
 const MARKET_CYCLE=[
