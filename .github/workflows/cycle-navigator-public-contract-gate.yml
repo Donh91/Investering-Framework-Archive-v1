@@ -168,7 +168,7 @@ jobs:
               raise SystemExit('fabricated_live_score_without_eligible_evidence')
 
           index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
-          required_scripts=('./quiet-production.js','./shortcut.js','./weekly-score.js','./live-observation.js','./public-copy.js')
+          required_scripts=('./quiet-production.js','./shortcut.js','./weekly-score.js','./live-observation.js','./public-copy.js','./market-compass-premium.js')
           for script in required_scripts:
               if script not in index:
                   raise SystemExit(f'final_public_widget_not_injected:{script}')
@@ -176,6 +176,8 @@ jobs:
               '05_CYCLE_NAVIGATOR/site/dist/weekly-score.js',
               '05_CYCLE_NAVIGATOR/site/dist/live-observation.js',
               '05_CYCLE_NAVIGATOR/site/dist/public-copy.js',
+              '05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js',
+              '05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.css',
               '05_CYCLE_NAVIGATOR/site/dist/quiet-production.js',
               '05_CYCLE_NAVIGATOR/site/dist/shortcut.js',
               '05_CYCLE_NAVIGATOR/site/dist/social-card.png'
