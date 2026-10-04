@@ -129,7 +129,7 @@ async function prices(){try{const r=await fetch('https://api.coingecko.com/api/v
 function freshness(){
   const h=document.getElementById('productFreshness');if(!h||!snapshot)return;
   const a=snapshot.live_observation?.current_action||{},p=snapshot.package||{},d=a.generated_at?new Date(a.generated_at):p.generated_unix?new Date(+p.generated_unix*1000):null,n=new Date();
-  const age=d?n-d:null,next=new Date(n);next.setUTCSeconds(0,0);if(next.getUTCMinutes()<5)next.setUTCMinutes(5);else{next.setUTCHours(next.getUTCHours()+1);next.setUTCMinutes(5);}
+  const age=d?n-d:null,next=new Date(n),ownerMinute=12;next.setUTCSeconds(0,0);if(next.getUTCMinutes()<ownerMinute)next.setUTCMinutes(ownerMinute);else{next.setUTCHours(next.getUTCHours()+1);next.setUTCMinutes(ownerMinute);}
   const mins=x=>{const m=Math.max(0,Math.ceil(x/60000));return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m} min`;};
   const stale=age!=null&&age>90*60*1000;
   const publicIssue=snapshot?.public_series?.current_public_projection?.public_issue_number;
