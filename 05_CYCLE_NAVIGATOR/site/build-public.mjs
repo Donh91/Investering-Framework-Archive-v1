@@ -14,7 +14,19 @@ const PUBLIC_SERIES_INDEX_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/public_serie
 const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","compass-product-v5.js","compass-product-v5.css","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","social-card.svg"];
 const pick=(obj,keys)=>Object.fromEntries(keys.filter(k=>Object.prototype.hasOwnProperty.call(obj||{},k)).map(k=>[k,obj[k]]));
 const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_week","issue_number","publication_status","status"]);
-function sanitizePackage(pkg){return {...pick(pkg,["issue_number","previous_issue_number","generated_unix","status","market_state","base_case_this_week","base_case_2_3_weeks","base_case_4_8_weeks","compass_4_8_weeks","rotation_ladder","altseason_countdown","altseason_mania_window","uncertainties","publication_status"]),evaluation:pkg?.evaluation?pick(pkg.evaluation,["structural_score","price_range_score","score_status","strengths","misses"]):{},forecast_freeze:pkg?.forecast_freeze?pick(pkg.forecast_freeze,["breadth_condition","btc_range_low","btc_range_high","eth_range_low","eth_range_high","structural_calls","forecast_horizon_days","intraday_map"]):{}}}
+function sanitizeDecisionProjection(dp){
+  if(!dp||dp.contract!=="CYCLE_NAVIGATOR_DECISION_PROJECTION_v1")return null;
+  return {
+    contract:dp.contract,
+    next_1_3d:pick(dp.next_1_3d||{},["direction","summary"]),
+    next_5_7d:pick(dp.next_5_7d||{},["direction","summary"]),
+    next_2_3w:pick(dp.next_2_3w||{},["direction","summary"]),
+    next_21_30d:pick(dp.next_21_30d||{},["direction","btc_direction","eth_direction","ethbtc_direction","summary","regime_destination","expected_path","action_posture","falsification","confidence","scenario_semantics","scenarios"]),
+    weeks_4_8:pick(dp.weeks_4_8||{},["state","warning","direction","action_posture","summary","through_date","horizon_days","eta","confidence"]),
+    protection:pick(dp.protection||{},["pullback_risk_state","pullback_class","distribution_risk","eta_window","confidence_quality","drivers","invalidation"])
+  };
+}
+function sanitizePackage(pkg){return {...pick(pkg,["issue_number","previous_issue_number","generated_unix","status","market_state","base_case_this_week","base_case_2_3_weeks","base_case_4_8_weeks","compass_4_8_weeks","rotation_ladder","altseason_countdown","altseason_mania_window","uncertainties","publication_status"]),decision_projection:sanitizeDecisionProjection(pkg?.decision_projection),evaluation:pkg?.evaluation?pick(pkg.evaluation,["structural_score","price_range_score","score_status","strengths","misses"]):{},forecast_freeze:pkg?.forecast_freeze?pick(pkg.forecast_freeze,["breadth_condition","btc_range_low","btc_range_high","eth_range_low","eth_range_high","structural_calls","forecast_horizon_days","intraday_map"]):{}}}
 async function readJson(path){return JSON.parse(await readFile(path,"utf8"))}
 async function buildCompassSnapshot(){
   try{

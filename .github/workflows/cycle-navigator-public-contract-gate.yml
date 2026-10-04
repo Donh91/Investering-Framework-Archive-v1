@@ -241,14 +241,25 @@ jobs:
               if not Path(path).exists():
                   raise SystemExit(f'final_public_asset_missing:{path}')
           product=Path('05_CYCLE_NAVIGATOR/site/dist/public-product.js').read_text()
-          if 'CN_ADAPTIVE_PATH_PRESENTATION_v1' not in product:
-              raise SystemExit('adaptive_path_contract_missing')
-          for marker in ('MONDAY BASELINE','LIVE GATE','EXIT RISK CLOCK','NO FRONTEND SELL RULE','NO SUPPORTED ETA'):
+          if 'CN_PATH_THREE_TRACK_v2' not in product:
+              raise SystemExit('path_three_track_contract_missing')
+          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion begins','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA'):
               if marker not in product:
-                  raise SystemExit(f'adaptive_path_marker_missing:{marker}')
+                  raise SystemExit(f'path_three_track_marker_missing:{marker}')
           if "jsonOptional('./data/compass.json')" not in product:
-              raise SystemExit('adaptive_path_not_bound_to_public_compass')
-          if "status:valid?sell.state:'UNAVAILABLE'" not in product:
-              raise SystemExit('adaptive_exit_owner_not_sell_assessment')
+              raise SystemExit('path_not_bound_to_public_compass')
+          if "compass?.sell_assessment" not in product or "compass?.protection_tracker" not in product:
+              raise SystemExit('path_protection_or_sell_owner_missing')
+          if "eta:pathEta(ignition.eta)" not in product:
+              raise SystemExit('altseason_ignition_eta_not_source_owned')
+          if "no browser countdown math" not in product:
+              raise SystemExit('altseason_timer_countdown_semantics_missing')
+          latest=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
+          package=latest.get('package') or {}
+          if 'decision_projection' not in package:
+              raise SystemExit('public_strategic_cycle_projection_missing')
+          projection=package.get('decision_projection')
+          if projection is not None and projection.get('contract') != 'CYCLE_NAVIGATOR_DECISION_PROJECTION_v1':
+              raise SystemExit('public_strategic_cycle_projection_contract_invalid')
           print(json.dumps({'status':'PASS','final_pages_artifact':'VERIFIED','public_scorecard':'BOUND_BY_PUBLIC_LINEAGE','machine_calibration':'SEPARATE','live_observation':'FAIL_CLOSED_SAFE'},sort_keys=True))
           PY
