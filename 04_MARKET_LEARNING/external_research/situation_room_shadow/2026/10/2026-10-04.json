@@ -1,0 +1,54 @@
+{
+  "authority": "SHADOW_RESEARCH_ONLY_NON_CANONICAL",
+  "authority_firewall": {
+    "canonical_effect": false,
+    "execution_authority": false,
+    "market_state_effect": false,
+    "portfolio_effect": false,
+    "topup_authority": false
+  },
+  "contract": "SITUATION_ROOM_VERIFICATION_SHADOW_BRIDGE_v1",
+  "generated_at_utc": "2026-10-04T12:23:18Z",
+  "observation_date_utc": "2026-10-04",
+  "pending_verification": [
+    {
+      "canonical_effect": false,
+      "detection_time_utc": "2026-10-04T12:22:42Z",
+      "event_time_utc": "2026-10-04T06:00:23.777000Z",
+      "market_state_effect": false,
+      "portfolio_effect": false,
+      "shadow_admission": "NOT_ADMITTED_PENDING_VERIFICATION",
+      "shadow_id": "SRSH_f2dd9e1fbee9003a4f34",
+      "source": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 102275,
+        "error_class": null,
+        "fetched_at_utc": "2026-10-04T12:22:43Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "712ece6bbf3f50193375777ce919e0bd67e22db63c349205f0dcebcdc2a7d9e6",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-10-04"
+      },
+      "title": "Houthis hit Aramco site south of Riyadh as G7 draws reserves \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-10-04",
+      "verification_status": "PENDING_PRIMARY_VERIFICATION"
+    }
+  ],
+  "source_owner_contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "source_owner_path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/10/2026-10-04.json",
+  "source_run_id": "SRDO_ac6509bd5369b081",
+  "status": "PENDING_VERIFICATION",
+  "verification_policy": {
+    "accepted_methods": [
+      "OWNER_PRIMARY_EVENT_TITLE_OVERLAP",
+      "SITUATION_ROOM_LINKED_PRIMARY_SOURCE"
+    ],
+    "automatic_admission_requires_primary_corroboration": true,
+    "minimum_shared_tokens": 2,
+    "minimum_title_overlap": 0.45,
+    "situation_room_is_discovery_only": true
+  },
+  "verified_shadow_context": []
+}
