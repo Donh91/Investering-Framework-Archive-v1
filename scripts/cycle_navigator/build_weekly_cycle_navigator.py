@@ -96,6 +96,15 @@ def latest_published_public_issue(repo: Path) -> int:
     return int(latest_published_public_record(repo)["public_issue_number"])
 
 
+def latest_site_public_issue(repo: Path) -> int:
+    series = maybe_json(repo / "05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json") or {}
+    current = series.get("current_public_projection") or {}
+    try:
+        return int(current.get("public_issue_number", 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def append_forward_ranges(
     repo: Path,
     *,
@@ -599,7 +608,7 @@ def main() -> None:
             prev_machine = dict(prev_machine)
             prev_machine["forecast_freeze"] = read_json(prior_standalone_freeze)
     issue = prev_issue + 1
-    latest_public_issue = latest_published_public_issue(repo)
+    latest_public_issue = max(latest_published_public_issue(repo), latest_site_public_issue(repo))
     public_issue = latest_public_issue + 1
     target_dir = repo / "05_CYCLE_NAVIGATOR/weekly" / str(target_year) / f"W{target_week:02d}"
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -825,7 +834,28 @@ def main() -> None:
         "latest_confirmed_public_issue_at_generation": latest_public_issue,
         "rule": "PUBLIC_IDENTITY_FROM_CONFIRMED_PUBLISHED_SERIES_MACHINE_IDENTITY_SEPARATE",
     }
+    site_receipt_rel = str((target_dir / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json").relative_to(repo))
+    binding["site_publication_status"] = "SITE_FROZEN_SOURCE_OF_RECORD"
+    binding["site_publication_receipt"] = site_receipt_rel
     (target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").write_bytes(canonical_bytes(binding))
+    site_receipt = {
+        "contract": "CN_SITE_PUBLIC_FREEZE_RECEIPT_v1",
+        "authority": "PUBLIC_FORECAST_ACCOUNTABILITY_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+        "status": "SITE_FROZEN_SOURCE_OF_RECORD",
+        "public_issue_number": public_issue,
+        "machine_issue_number": issue,
+        "forecast_week": f"{target_year:04d}-W{target_week:02d}",
+        "frozen_unix": generated_unix,
+        "source_forecast_freeze_path": str((target_dir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").relative_to(repo)),
+        "source_forecast_freeze_sha256": pointer["forecast_freeze_sha256"],
+        "source_binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
+        "score_family": "PRICE_RANGE_PRECISION",
+        "score_formula": "70pct_containment_plus_30pct_jaccard",
+        "public_site_is_valid_distribution_channel": True,
+        "x_distribution_required": False,
+        "identity_basis": "SITE_FROZEN_PUBLIC_SERIES_BINDING",
+    }
+    (target_dir / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json").write_bytes(canonical_bytes(site_receipt))
     (target_dir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json").write_bytes(canonical_bytes(pointer))
     (repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json").write_bytes(canonical_bytes(pointer))
     append_forward_ranges(repo, public_issue_number=public_issue, machine_issue_number=issue, year=target_year, week=target_week, generated_unix=generated_unix, freeze=freeze)
@@ -848,7 +878,16 @@ def main() -> None:
         "machine_issue_number": issue,
         "machine_week_dir": str(target_dir.relative_to(repo)),
         "binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
-        "note": "Public numbering follows the actually published series; machine numbering is a separate migration-era lineage.",
+        "site_publication_status": "SITE_FROZEN_SOURCE_OF_RECORD",
+        "site_publication_receipt": site_receipt_rel,
+        "note": "Public numbering is continuous from the public site freeze record; X is an optional downstream distribution channel.",
+    }
+    series["latest_site_freeze"] = {
+        "public_issue_number": public_issue,
+        "forecast_week": f"{target_year:04d}-W{target_week:02d}",
+        "site_publication_receipt": site_receipt_rel,
+        "source_forecast_freeze_sha256": pointer["forecast_freeze_sha256"],
+        "frozen_unix": generated_unix,
     }
     lineage = [row for row in series.get("recent_lineage", []) if str(row.get("forecast_week")) != f"{target_year:04d}-W{target_week:02d}"]
     lineage.append({
@@ -858,6 +897,8 @@ def main() -> None:
         "machine_week_dir": str(target_dir.relative_to(repo)),
         "machine_issue_number": issue,
         "binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
+        "site_publication_receipt": site_receipt_rel,
+        "site_publication_status": "SITE_FROZEN_SOURCE_OF_RECORD",
     })
     series["recent_lineage"] = lineage[-12:]
     series_path.parent.mkdir(parents=True, exist_ok=True)
