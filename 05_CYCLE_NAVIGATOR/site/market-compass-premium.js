@@ -116,6 +116,13 @@ function decisionMeta(compass) {
   };
 }
 
+function recommendationWindow(compass) {
+  const explicit = clean(compass?.next_meaningful_change_eta);
+  const near = clean(compass?.horizons?.NEXT_12H?.eta);
+  const fallback = clean(compass?.horizons?.NEXT_1_3D?.eta);
+  return explicit || near || fallback || 'Next Compass update';
+}
+
 function soWhat(row, lane) {
   if (!row?.ok) return 'No governed edge — wait for a verified read.';
   const action = actionFromLane(lane);
@@ -235,7 +242,7 @@ function renderPremium(snapshot, compass) {
   section.innerHTML =
     '<div class="premium-overview">'
     + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'The framework is waiting for fresh evidence.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><div><span>MARKET PHASE</span><strong>' + esc(meta.phase) + '</strong></div><div><span>NEXT CHANGE</span><strong>' + esc(meta.next) + '</strong></div><div><span>RISK</span><strong>' + esc(meta.risk) + '</strong></div></div></div>'
-    + '<aside><span>RECOMMENDATION</span><strong>' + esc(rec.action) + '</strong><p>' + esc(rec.copy) + '</p><small>Official action posture · market direction remains a separate signal.</small></aside>'
+    + '<aside><span>RECOMMENDATION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window">APPLIES NOW · NEXT GOVERNED REVIEW ' + esc(recommendationWindow(compass)) + '</div><p>' + esc(rec.copy) + '</p><small>Official action posture · market direction remains a separate signal.</small></aside>'
     + '</div>'
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, compass, scale, h)).join('') + '</div>'
