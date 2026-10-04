@@ -96,9 +96,7 @@ def main() -> None:
     assert str(site_receipt["forecast_week"]) == str(current["forecast_week"])
     assert site_receipt.get("x_distribution_required") is False
     freeze_path = root / pointer["week_dir"] / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
-    freeze = read_json(freeze_path)
-    canonical_freeze = (json.dumps(freeze, sort_keys=True, separators=(",", ":")) + "\n").encode()
-    assert hashlib.sha256(canonical_freeze).hexdigest() == str(site_receipt["source_forecast_freeze_sha256"])
+    assert hashlib.sha256(freeze_path.read_bytes()).hexdigest() == str(site_receipt["source_forecast_freeze_sha256"])
     latest_site = index.get("latest_site_freeze") or {}
     assert int(latest_site.get("public_issue_number", -1)) == current_issue
     assert str(latest_site.get("forecast_week")) == str(current["forecast_week"])
