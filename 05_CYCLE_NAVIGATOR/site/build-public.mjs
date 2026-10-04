@@ -79,7 +79,71 @@ const publicSeries=publicSeriesRaw?{
   latest_completed_score:pick(publicSeriesRaw.latest_completed_score||{},["public_issue_number","forecast_week","price_range_score","market_structure_status","status"]),
   current_public_projection:pick(publicSeriesRaw.current_public_projection||{},["public_issue_number","forecast_week","publication_status"])
 }:null;
-const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure_analysis:standaloneFreeze?.market_structure_analysis||null,public_bull_bear_scale:standaloneFreeze?.bull_bear_scale||null};
+
+function weeklyDir(value){
+  const rel=String(value||"");
+  return rel.startsWith("05_CYCLE_NAVIGATOR/weekly/")&&!rel.includes("..")?rel:null;
+}
+const comparisonFields=[
+  ["ETH/BTC condition","ethbtc_condition"],
+  ["Breadth condition","breadth_condition"]
+];
+function exactFreezeComparison(previousFreeze,currentFreeze){
+  const changed=[],stillTrue=[];
+  for(const [label,key] of comparisonFields){
+    const previous=typeof previousFreeze?.[key]==="string"?previousFreeze[key].trim():"";
+    const current=typeof currentFreeze?.[key]==="string"?currentFreeze[key].trim():"";
+    if(!previous||!current)continue;
+    const row={label,previous,current};
+    (previous===current?stillTrue:changed).push(row);
+  }
+  return {changed:changed.slice(0,2),still_true:stillTrue.slice(0,2)};
+}
+function publicStructureAnalysis(freeze){
+  const expected=["REGIME_RESILIENCE","LEADERSHIP","ROTATION_TRANSMISSION","BREADTH_PERSISTENCE","FLOW_QUALITY_FRAGILITY"];
+  const governed=freeze?.market_structure_analysis;
+  const governedDims=Array.isArray(governed?.dimensions)?governed.dimensions:[];
+  if(governed?.contract==="CN_PUBLIC_MARKET_STRUCTURE_ANALYSIS_v1"&&governed?.scoring_authority===false&&governedDims.length===5&&governedDims.every((x,i)=>x?.id===expected[i]&&typeof x?.label==="string"&&typeof x?.analysis==="string"&&x.analysis.trim())){
+    return {contract:"CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1",source:"CYCLE_NAVIGATOR_FORECAST_FREEZE.market_structure_analysis.dimensions",dimensions:governedDims.map(x=>({id:x.id,label:x.label,analysis:x.analysis}))};
+  }
+  const legacy=freeze?.market_structure_v2;
+  const legacyDims=Array.isArray(legacy?.dimensions)?legacy.dimensions:[];
+  if(legacy?.contract==="CN_PUBLIC_MARKET_STRUCTURE_V2"&&legacy?.status==="FROZEN_PROSPECTIVE"&&legacyDims.length===5&&legacyDims.every(x=>typeof x?.label==="string"&&typeof x?.forecast==="string"&&x.forecast.trim())){
+    return {contract:"CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1",source:"CYCLE_NAVIGATOR_FORECAST_FREEZE.market_structure_v2.dimensions",dimensions:legacyDims.map(x=>({id:x.id,label:x.label,analysis:x.forecast}))};
+  }
+  return null;
+}
+async function deriveSinceLastCN(series,currentFreeze){
+  try{
+    const current=series?.current_public_projection;
+    const currentIssue=Number(current?.public_issue_number);
+    const previous=(series?.recent_lineage||[]).find(row=>Number(row?.public_issue_number)===currentIssue-1);
+    const previousDir=weeklyDir(previous?.machine_week_dir);
+    if(!Number.isInteger(currentIssue)||!previousDir||!currentFreeze)return null;
+    const previousFreeze=await readJson(resolve(repoRoot,previousDir,"CYCLE_NAVIGATOR_FORECAST_FREEZE.json"));
+    const comparison=exactFreezeComparison(previousFreeze,currentFreeze);
+    if(!comparison.changed.length&&!comparison.still_true.length)return null;
+    return {contract:"CN_PUBLIC_SINCE_LAST_V1",comparison_method:"EXACT_GOVERNED_FIELD_EQUALITY",current_public_issue:currentIssue,previous_public_issue:currentIssue-1,...comparison};
+  }catch{return null;}
+}
+async function deriveLatestCompletedForecast(series,currentPackage){
+  try{
+    const latest=series?.latest_completed_score;
+    const completedIssue=Number(latest?.public_issue_number);
+    const scorecardPath=String(latest?.scorecard_path||"");
+    if(!Number.isInteger(completedIssue)||!scorecardPath.startsWith("05_CYCLE_NAVIGATOR/public_scorecards/")||scorecardPath.includes(".."))return null;
+    await readFile(resolve(repoRoot,scorecardPath),"utf8");
+    const currentPublicIssue=Number(series?.current_public_projection?.public_issue_number);
+    const evaluation=currentPublicIssue===completedIssue+1?currentPackage?.evaluation:null;
+    const held=Array.isArray(evaluation?.strengths)?evaluation.strengths.filter(x=>typeof x==="string"&&x.trim()).slice(0,2):[];
+    const missed=Array.isArray(evaluation?.misses)?evaluation.misses.filter(x=>typeof x==="string"&&x.trim()).slice(0,2):[];
+    return {contract:"CN_PUBLIC_COMPLETED_FORECAST_RECEIPT_v1",public_issue_number:completedIssue,forecast_week:String(latest?.forecast_week||""),status:String(latest?.status||"FINAL"),price_range_score:Number.isFinite(Number(latest?.price_range_score))?Number(latest.price_range_score):null,held_up:held,missed,exact_ledger_issue:completedIssue};
+  }catch{return null;}
+}
+const sinceLastCN=await deriveSinceLastCN(publicSeriesRaw,standaloneFreeze);
+const latestCompletedForecast=await deriveLatestCompletedForecast(publicSeriesRaw,pkg);
+
+const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure_analysis:publicStructureAnalysis(standaloneFreeze),public_bull_bear_scale:standaloneFreeze?.bull_bear_scale||null,since_last_cn:sinceLastCN,latest_completed_forecast:latestCompletedForecast};
 const compass=await buildCompassSnapshot();
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
