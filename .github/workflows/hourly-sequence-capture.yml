@@ -1,6 +1,14 @@
 name: Hourly Sequence Capture
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/data_ping/auto_market_state.py'
+      - 'scripts/health/native_market_recovery.py'
+      - '.github/workflows/hourly-sequence-capture.yml'
+      - '.github/workflows/native-market-recovery.yml'
   schedule:
     # Materialize each newly completed UTC 1H owner candle shortly after close.
     # UTC is deliberate: the underlying Binance/OKX hourly candles are UTC-aligned,
