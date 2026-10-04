@@ -211,6 +211,7 @@ function installNowRefinements(data,history){
   apply();
 }
 function preciseScorePct(value){
+  if(value===null||value===undefined||value==='')return '—';
   const n=Number(value);if(!Number.isFinite(n))return '—';
   return n.toFixed(2).replace(/\.?0+$/,'')+'%';
 }
