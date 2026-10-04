@@ -202,8 +202,8 @@ def main() -> None:
 
     week_dir = binding_path.parent
     freeze_path = week_dir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
-    freeze = read_json(freeze_path)
-    freeze_canonical = (json.dumps(freeze, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    freeze_bytes = freeze_path.read_bytes()
+    freeze = json.loads(freeze_bytes)
     receipt_path = week_dir / RECEIPT
     if not receipt_path.is_file():
         raise SystemExit("public_live_precision_site_freeze_receipt_missing")
@@ -212,7 +212,7 @@ def main() -> None:
         raise SystemExit("public_live_precision_site_freeze_contract_invalid")
     if int(receipt.get("public_issue_number", -1)) != public_issue or str(receipt.get("forecast_week")) != forecast_week:
         raise SystemExit("public_live_precision_site_freeze_identity_mismatch")
-    digest = sha256_bytes(freeze_canonical)
+    digest = sha256_bytes(freeze_bytes)
     if str(receipt.get("source_forecast_freeze_sha256") or "") != digest:
         raise SystemExit("public_live_precision_site_freeze_hash_mismatch")
 
