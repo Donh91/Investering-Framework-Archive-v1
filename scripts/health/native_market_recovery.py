@@ -79,7 +79,7 @@ def apply_runtime_owner_freshness(
     now: datetime,
     *,
     hourly_pointer: Path = DEFAULT_HOURLY_POINTER,
-    max_hourly_age: timedelta = timedelta(minutes=95),
+    max_hourly_age: timedelta = timedelta(minutes=65),
 ) -> dict[str, Any]:
     """Overlay operational freshness so recovery does not trust an old health snapshot."""
     out = json.loads(json.dumps(auto))
