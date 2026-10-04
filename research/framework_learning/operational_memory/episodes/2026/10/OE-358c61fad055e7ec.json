@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/repository_safety/2026-10-03__fmos-converge-audit-v2-safepoint-receipt.json",
+    "scripts/api_agent/fmos_mission_loop_audit_dispatch.py",
+    "tests/api_agent/test_fmos_mission_loop_audit_dispatch.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-358c61fad055e7ec",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "fmos-context-cap-1443",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* safety: bind FMOS audit convergence safepoint * fix: raise bounded FMOS audit context cap * test: lock FMOS audit context repair",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/repository_safety/2026-10-03__fmos-converge-audit-v2-safepoint-receipt.json": "7462591eb4f5f6f80a3a321ef8064eee6e3b92d2",
+    "scripts/api_agent/fmos_mission_loop_audit_dispatch.py": "1bae84b8de66899ed3a0d09e082730e24a6ee8cf",
+    "tests/api_agent/test_fmos_mission_loop_audit_dispatch.py": "3a501fb762705dece0f4f7cbc208eb9aa4fa051a"
+  },
+  "source_commit_sha": "358c61fad055e7ecf2677d12fd16684c38a7be1b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-03T22:39:54+02:00",
+  "task_class": "API_AGENT",
+  "task_summary": "Fix FMOS audit context cap (#1443)"
+}
