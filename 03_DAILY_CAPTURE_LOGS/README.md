@@ -171,7 +171,7 @@ Creates a useful near-end-of-week package for Sunday review, while explicitly re
 Runs after:
 
 - Sunday UTC week close at 24:00 UTC / 02:00 CPH during CEST;
-- the first post-close Hourly Sequence materialization at 00:05 UTC, which includes the completed 23:00-24:00 UTC closing candle through the 26-hour overlap window;
+- the first post-close Hourly Sequence materialization at 00:12 UTC, which includes the completed 23:00-24:00 UTC closing candle through the 26-hour overlap window;
 - the separate final market-close package scheduled after week completion.
 
 The final build targets the **previous completed ISO week**, not the new Monday week.
