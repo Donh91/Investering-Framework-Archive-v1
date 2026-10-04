@@ -52,3 +52,13 @@
 .weather-unavailable{margin-top:7px;padding:6px 8px;border-radius:999px;background:#f2f4f7;color:#98a2b3;font-size:7px;font-weight:850;letter-spacing:.035em;text-align:center}
 @media(max-width:760px){.weather-grid{grid-template-columns:1fr}.market-weather{padding:12px}.weather-row{display:grid;grid-template-columns:minmax(92px,.34fr) minmax(0,.66fr);column-gap:10px;align-items:center}.weather-meta{display:block}.weather-meta strong{display:block;margin-top:3px}.weather-scale,.weather-unavailable{margin-top:0}.weather-row>small{grid-column:2;margin-top:4px}.weather-head{align-items:flex-start}.weather-head>small{text-align:right;max-width:125px}}
 @media(max-width:430px){.market-weather{margin-top:11px;border-radius:15px}.weather-head>div>strong{font-size:13px}.weather-row{padding:9px}.weather-scale{height:22px}.weather-scale span{font-size:6.5px}}
+
+
+.fail-card-health{padding:clamp(24px,5vw,42px);border:1px solid #e3e8ef;border-radius:24px;background:#fff}
+.fail-card-health>small{color:#748095;font-size:9px;font-weight:900;letter-spacing:.12em}
+.fail-health-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;margin-top:20px;overflow:hidden;border:1px solid #e4e8ef;border-radius:16px;background:#e4e8ef}
+.fail-health-grid>div{padding:13px 14px;background:#fbfcfe}
+.fail-health-grid span{display:block;color:#7b8798;font-size:8px;font-weight:900;letter-spacing:.09em}
+.fail-health-grid strong{display:block;margin-top:5px;color:#172033;font-size:12px;line-height:1.35}
+.fail-health-note{margin-top:14px!important;color:#7b8798!important;font-size:11px!important}
+@media(max-width:640px){.fail-health-grid{grid-template-columns:1fr}.fail-card-health{padding:20px}}
