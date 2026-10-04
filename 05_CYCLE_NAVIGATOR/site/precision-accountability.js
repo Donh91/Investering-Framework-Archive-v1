@@ -166,6 +166,7 @@ let latest = null;
 let freezeIndex = null;
 let nowObserver = null;
 let proofObserver = null;
+let rootObserver = null;
 
 function showProof() {
   document.querySelector('[data-tab="proof"]')?.click();
@@ -214,6 +215,26 @@ function watch() {
   }
 }
 
+function watchRoots() {
+  if (document.getElementById('productNow') && document.getElementById('productProof')) {
+    rootObserver?.disconnect();
+    rootObserver = null;
+    mount();
+    watch();
+    watchRoots();
+    return;
+  }
+  if (rootObserver || !document.body) return;
+  rootObserver = new MutationObserver(() => {
+    if (!document.getElementById('productNow') || !document.getElementById('productProof')) return;
+    rootObserver?.disconnect();
+    rootObserver = null;
+    mount();
+    watch();
+  });
+  rootObserver.observe(document.body,{childList:true,subtree:true});
+}
+
 async function load() {
   try {
     const [r, archive] = await Promise.all([
@@ -233,6 +254,7 @@ async function load() {
 }
 
 function boot() {
+  watchRoots();
   load();
   setInterval(load,5*60*1000);
 }
