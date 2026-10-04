@@ -9,6 +9,8 @@ import math
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+from backtest_engine.statistics import wilson_interval
+
 DEFAULT_ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
 
 
@@ -56,13 +58,7 @@ def fnum(value):
 
 
 def wilson(k, n, z):
-    if n <= 0:
-        return (None, None)
-    p = k / n
-    den = 1 + z * z / n
-    center = (p + z * z / (2 * n)) / den
-    margin = z * math.sqrt((p * (1 - p) + z * z / (4 * n)) / n) / den
-    return (max(0.0, center - margin), min(1.0, center + margin))
+    return wilson_interval(k, n, z)
 
 
 def candidate_registry(root: Path):
