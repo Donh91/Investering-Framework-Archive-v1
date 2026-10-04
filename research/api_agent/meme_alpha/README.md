@@ -44,3 +44,23 @@ Revoked provenance must propagate into descendant research tasks. PONSCUPINE is 
 
 Unchanged inputs are idempotent. Empty queue means no model call. Repeated unchanged failures are dead-lettered after the policy limit. Development findings are candidates only and do not require Codex for ordinary research.
 \n## Blockscout exact-CA transport\n\nFor Robinhood Chain exact-CA enrichment, the repository runtime uses `scripts/api_agent/meme_alpha_blockscout.py`. The transport preference is authenticated Blockscout PRO through `BLOCKSCOUT_API_KEY`, then the chain-specific public explorer as a bounded fallback. The credential is runtime-only and must never be persisted.\n\nThe module is downstream of discovery and upstream of first-party cross-binding and market/sellability checks. It can freeze contract state, creation transaction, verified-source status, token metadata and decoded launch-origin fields. It is not a scanner, price oracle or project-ownership oracle.\n
+
+## Lifecycle durability / mortality research
+
+Long-horizon project survival research is owned by the existing lifecycle stack, not by a new scanner or engine.
+
+Public synthesis:
+
+`06_RESEARCH_LAB/alpha_lab/2026-10-04__lifecycle-durability-mortality-learning-v1__shadow.md`
+
+Restricted evidence package:
+
+- `Donh91/secrets/private_research/memes_alpha/external_benchmarks/lifecycle/2026/10/04/blast_l2_mortality_case_v1.json`
+- `Donh91/secrets/private_research/memes_alpha/external_benchmarks/lifecycle/2026/10/04/blast_lifecycle_deep_research_synthesis_v2.json`
+- `Donh91/secrets/private_research/memes_alpha/research_leads/2026/10/04/blast_lifecycle_matched_control_program_v2.json`
+
+Research distinction:
+
+`LAUNCH_ALPHA -> MOMENTUM_ALPHA -> SURVIVAL_ALPHA -> DURABILITY_ALPHA`
+
+These are separate horizons. A strong launch does not imply durable economics, and a later failure does not retroactively invalidate a valid launch-alpha observation. Any long-horizon feature must remain point-in-time, matched-control tested and research-only until the existing scientific owner accepts it.
