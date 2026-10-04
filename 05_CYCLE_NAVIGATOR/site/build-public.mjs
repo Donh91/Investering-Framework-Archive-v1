@@ -100,13 +100,18 @@ function exactFreezeComparison(previousFreeze,currentFreeze){
   return {changed:changed.slice(0,2),still_true:stillTrue.slice(0,2)};
 }
 function publicStructureAnalysis(freeze){
-  const calls=Array.isArray(freeze?.structural_calls)?freeze.structural_calls:[];
-  if(calls.length!==5||calls.some(value=>typeof value!=="string"||!value.includes(":")))return null;
-  const dimensions=calls.map(value=>{
-    const split=value.indexOf(":");
-    return {label:value.slice(0,split).replaceAll("_"," "),analysis:value.slice(split+1).trim()};
-  });
-  return {contract:"CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1",source:"CYCLE_NAVIGATOR_FORECAST_FREEZE.structural_calls",dimensions};
+  const expected=["REGIME_RESILIENCE","LEADERSHIP","ROTATION_TRANSMISSION","BREADTH_PERSISTENCE","FLOW_QUALITY_FRAGILITY"];
+  const governed=freeze?.market_structure_analysis;
+  const governedDims=Array.isArray(governed?.dimensions)?governed.dimensions:[];
+  if(governed?.contract==="CN_PUBLIC_MARKET_STRUCTURE_ANALYSIS_v1"&&governed?.scoring_authority===false&&governedDims.length===5&&governedDims.every((x,i)=>x?.id===expected[i]&&typeof x?.label==="string"&&typeof x?.analysis==="string"&&x.analysis.trim())){
+    return {contract:"CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1",source:"CYCLE_NAVIGATOR_FORECAST_FREEZE.market_structure_analysis.dimensions",dimensions:governedDims.map(x=>({id:x.id,label:x.label,analysis:x.analysis}))};
+  }
+  const legacy=freeze?.market_structure_v2;
+  const legacyDims=Array.isArray(legacy?.dimensions)?legacy.dimensions:[];
+  if(legacy?.contract==="CN_PUBLIC_MARKET_STRUCTURE_V2"&&legacy?.status==="FROZEN_PROSPECTIVE"&&legacyDims.length===5&&legacyDims.every(x=>typeof x?.label==="string"&&typeof x?.forecast==="string"&&x.forecast.trim())){
+    return {contract:"CN_PUBLIC_MARKET_STRUCTURE_PRESENTATION_v1",source:"CYCLE_NAVIGATOR_FORECAST_FREEZE.market_structure_v2.dimensions",dimensions:legacyDims.map(x=>({id:x.id,label:x.label,analysis:x.forecast}))};
+  }
+  return null;
 }
 async function deriveSinceLastCN(series,currentFreeze){
   try{
