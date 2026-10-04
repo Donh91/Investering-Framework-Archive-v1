@@ -1,0 +1,242 @@
+(() => {
+'use strict';
+
+window.CN_PREMIUM_COMPASS_OWNER = true;
+
+const COMPASS_URL = './data/compass.json';
+const SNAPSHOT_URL = './data/latest.json';
+const HORIZONS = [
+  { scale: '1_3d', lane: 'NEXT_1_3D', label: '1–3 DAYS', title: 'Near term' },
+  { scale: '5_7d', lane: 'NEXT_5_7D', label: '5–7 DAYS', title: 'This week' },
+  { scale: '2_3w', lane: 'NEXT_2_3W', label: '2–3 WEEKS', title: 'Forward view' }
+];
+
+const esc = (value) => String(value ?? '')
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;');
+
+const words = (value) => String(value || '').replaceAll('_', ' ').replace(/\s+/g, ' ').trim();
+const clean = (value) => typeof value === 'string' && value.trim() ? value.trim() : null;
+
+function officialScale(compass) {
+  const scale = compass?.bull_bear_scale;
+  if (scale?.contract !== 'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1') return null;
+  if (scale?.semantics !== 'EVIDENCE_BALANCE_NOT_PROBABILITY') return null;
+  if (scale?.owner !== 'OFFICIAL_COMPASS') return null;
+  if (scale?.source_of_truth_contract !== 'MARKET_WEATHER_SOURCE_OF_TRUTH_v1') return null;
+  if (scale?.authority?.site_synthesis_allowed !== false) return null;
+  return scale;
+}
+
+function scoreRow(scale, key) {
+  const row = scale?.horizons?.[key] || {};
+  const bull = Number(row.bull);
+  const bear = Number(row.bear);
+  const ok = row.status === 'OK'
+    && Number.isInteger(bull)
+    && Number.isInteger(bear)
+    && bull >= 0 && bull <= 10
+    && bear >= 0 && bear <= 10
+    && bull + bear === 10;
+  return { ...row, bull: ok ? bull : null, bear: ok ? bear : null, ok };
+}
+
+function publicAction(raw) {
+  const value = String(raw || '').toUpperCase();
+  if (/GRADUATED_TOPUP_ACTIVE|BROAD.*DEPLOY|BROAD.*TOPUP/.test(value)) return 'ADD BROADLY';
+  if (/PREPARE/.test(value)) return 'PREPARE';
+  if (/HOLD_DEFENSIVE|PROTECT|DE_RISK|REDUCE|EXIT/.test(value)) return 'PROTECT CAPITAL';
+  if (/SELECTIVE|TOPUP/.test(value)) return 'ADD SELECTIVELY';
+  if (/HOLD/.test(value)) return 'HOLD';
+  return 'WAIT';
+}
+
+function recommendation(raw) {
+  const action = publicAction(raw);
+  const map = {
+    'ADD BROADLY': 'Broader participation is confirmed enough to add risk, while keeping the published invalidation conditions in view.',
+    'ADD SELECTIVELY': 'Add selectively only. Broader market risk is not yet confirmed across the full rotation ladder.',
+    'PREPARE': 'Prepare for a possible shift, but wait for confirmation before broadening exposure.',
+    'PROTECT CAPITAL': 'Keep risk contained and protect capital until the official Compass confirms that conditions have repaired.',
+    'HOLD': 'Keep current positioning. Do not broaden risk from this reading alone.',
+    'WAIT': 'Stay patient. Do not infer a new risk-on call until the official Compass publishes enough evidence.'
+  };
+  return { action, copy: map[action] || map.WAIT };
+}
+
+function cnConclusion(snapshot) {
+  const pkg = snapshot?.package || {};
+  return clean(pkg.base_case_this_week)
+    || clean(pkg.market_state)
+    || 'The current weekly Cycle Navigator conclusion is not available.';
+}
+
+function twoThreeWeekContext(snapshot) {
+  const pkg = snapshot?.package || {};
+  return clean(pkg.base_case_2_3_weeks) || 'No separate 2–3 week Cycle Navigator context is published.';
+}
+
+function statusTone(row) {
+  const bias = String(row?.bias || '').toUpperCase();
+  if (!row?.ok) return 'pending';
+  if (/BULL|UP/.test(bias)) return 'bull';
+  if (/BEAR|DOWN/.test(bias)) return 'bear';
+  return 'neutral';
+}
+
+function actionFromLane(lane) {
+  const p = String(lane?.action_posture || '').toUpperCase();
+  if (/PREPARE|ADD|DEPLOY|TOPUP|BUY/.test(p)) return 'PREPARE';
+  if (/HOLD/.test(p)) return 'HOLD';
+  return 'WAIT';
+}
+
+function capSummary(compass) {
+  const rows = Array.isArray(compass?.capitalization_ladder) ? compass.capitalization_ladder : [];
+  if (!rows.length) return 'Capital-transmission evidence is unavailable.';
+  return rows.slice(0, 6).map((row) => words(row.segment) + ' ' + words(row.status)).join(' · ');
+}
+
+function riskSummary(compass) {
+  const protection = compass?.protection_tracker || {};
+  const pullback = words(protection.pullback_risk_state || 'UNAVAILABLE');
+  const distribution = words(protection.distribution_risk || 'UNKNOWN');
+  return 'Pullback ' + pullback + ' · Distribution ' + distribution;
+}
+
+function evidenceDrivers(compass) {
+  const rows = Array.isArray(compass?.protection_tracker?.decisive_public_drivers)
+    ? compass.protection_tracker.decisive_public_drivers.filter(Boolean).slice(0, 4)
+    : [];
+  return rows;
+}
+
+function scoreFormula(row) {
+  if (!row.ok) {
+    return '<div class="premium-formula pending"><span>OFFICIAL BALANCE</span><strong>AWAITING GOVERNED READ</strong><small>No Bull/Bear number is reconstructed by the website.</small></div>';
+  }
+  return '<div class="premium-formula"><span>OFFICIAL BALANCE</span><strong>BULL ' + esc(row.bull) + ' + BEAR ' + esc(row.bear) + ' = 10</strong><small>Evidence balance, not probability. Published upstream by Official Compass.</small></div>';
+}
+
+function evidenceFamily(label, copy) {
+  return '<article><span>' + esc(label) + '</span><p>' + esc(copy) + '</p></article>';
+}
+
+function detailsPanel(snapshot, compass, row, lane, horizon) {
+  const drivers = evidenceDrivers(compass);
+  const context23 = horizon.scale === '2_3w' && !row.ok
+    ? '<div class="premium-cn-context"><span>CYCLE NAVIGATOR CONTEXT · NOT A LIVE SCORE</span><p>' + esc(twoThreeWeekContext(snapshot)) + '</p></div>'
+    : '';
+  const driverBlock = drivers.length
+    ? '<div class="premium-drivers"><span>CURRENT PUBLIC EVIDENCE</span><ul>' + drivers.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul></div>'
+    : '<div class="premium-drivers"><span>CURRENT PUBLIC EVIDENCE</span><p>No decisive public drivers are published for this Compass state.</p></div>';
+
+  return '<details class="premium-breakdown">'
+    + '<summary><span>HOW THIS READING IS BUILT</span><b>View inputs & method</b></summary>'
+    + '<div class="premium-breakdown-body">'
+    + scoreFormula(row)
+    + '<div class="premium-call"><div><span>DIRECTION</span><strong>' + esc(words(lane?.expected_direction || row?.bias || 'UNAVAILABLE')) + '</strong></div><div><span>ACTION</span><strong>' + esc(actionFromLane(lane)) + '</strong></div><div><span>WINDOW</span><strong>' + esc(lane?.eta || horizon.label) + '</strong></div></div>'
+    + '<div class="premium-families">'
+    + evidenceFamily('PRICE & STRUCTURE', 'BTC and ETH price behaviour, relative trend and the horizon-specific market path.')
+    + evidenceFamily('PARTICIPATION & ROTATION', 'Market participation, Ethereum vs Bitcoin, Bitcoin dominance and capital transmission across size tiers.')
+    + evidenceFamily('LIQUIDITY & POSITIONING', 'Settled ETF flows, stablecoin liquidity, open interest, funding and leverage context when eligible.')
+    + evidenceFamily('SENTIMENT & CYCLE', 'Market sentiment, risk conditions and the frozen Cycle Navigator context for the relevant horizon.')
+    + '</div>'
+    + driverBlock
+    + context23
+    + '<p class="premium-method-note"><b>Important:</b> the website displays the governed score exactly as published. It does not recalculate or reverse-engineer private thresholds, weights, prompts or fallback routes. Contradictory or stale evidence reduces confidence or leaves the horizon unavailable.</p>'
+    + '</div></details>';
+}
+
+function horizonCard(snapshot, compass, scale, horizon) {
+  const row = scoreRow(scale, horizon.scale);
+  const lane = compass?.horizons?.[horizon.lane] || {};
+  const tone = statusTone(row);
+  const score = row.ok
+    ? '<div class="premium-score"><strong>' + esc(row.bull) + '</strong><span>BULL</span><i>vs</i><strong>' + esc(row.bear) + '</strong><span>BEAR</span></div>'
+    : '<div class="premium-score unavailable"><strong>—</strong><span>AWAITING</span></div>';
+  const meter = row.ok
+    ? '<div class="premium-meter" style="--bull:' + esc(row.bull * 10) + '%"><div class="premium-bear-zone"></div><i aria-hidden="true"></i><div class="premium-bull-zone"></div></div>'
+    : '<div class="premium-meter unavailable"><div></div></div>';
+  const call = row.ok ? words(row.bias || 'NEUTRAL') : 'AWAITING COMPASS';
+  const summary = clean(row.summary) || clean(lane.expected_path) || 'No governed reading is published for this horizon.';
+  return '<article class="premium-horizon tone-' + esc(tone) + '">'
+    + '<header><div><span class="premium-horizon-label">' + esc(horizon.label) + '</span><small>' + esc(horizon.title) + '</small></div><b>' + esc(call) + '</b></header>'
+    + score
+    + meter
+    + '<p>' + esc(summary) + '</p>'
+    + '<div class="premium-horizon-meta"><span>' + esc(actionFromLane(lane)) + '</span><span>' + esc(lane?.eta || 'No fixed ETA') + '</span></div>'
+    + detailsPanel(snapshot, compass, row, lane, horizon)
+    + '</article>';
+}
+
+function renderPremium(snapshot, compass) {
+  const root = document.getElementById('productNow');
+  if (!root) return false;
+  const scale = officialScale(compass);
+  const rec = recommendation(compass?.action_now || snapshot?.live_observation?.current_action?.stance);
+  const dataOk = compass?.data_status === 'OK';
+  const section = document.createElement('section');
+  section.id = 'premiumMarketCompass';
+  section.className = 'premium-market-compass';
+  section.innerHTML =
+    '<div class="premium-overview">'
+    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'The framework is waiting for fresh evidence.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p></div>'
+    + '<aside><span>RECOMMENDATION</span><strong>' + esc(rec.action) + '</strong><p>' + esc(rec.copy) + '</p><small>' + esc(riskSummary(compass)) + '</small></aside>'
+    + '</div>'
+    + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
+    + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, compass, scale, h)).join('') + '</div>'
+    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(words(compass?.data_status || 'UNAVAILABLE')) + '</b></span><span>CAPITAL TRANSMISSION · ' + esc(capSummary(compass)) + '</span><span>Evidence balance · not probability</span></div>';
+
+  root.querySelector('#premiumMarketCompass')?.remove();
+  root.classList.add('premium-compass-installed');
+  const anchor = root.querySelector('.action-hero,.fail-card');
+  if (anchor) anchor.after(section);
+  else root.prepend(section);
+  return true;
+}
+
+let latestSnapshot = null;
+let latestCompass = null;
+let observer = null;
+
+function install() {
+  if (!latestSnapshot || !latestCompass) return;
+  const root = document.getElementById('productNow');
+  if (!root) return;
+  if (!observer) {
+    observer = new MutationObserver(() => {
+      if (!document.getElementById('premiumMarketCompass')) queueMicrotask(() => renderPremium(latestSnapshot, latestCompass));
+    });
+    observer.observe(root, { childList: true, subtree: false });
+  }
+  renderPremium(latestSnapshot, latestCompass);
+}
+
+async function load() {
+  try {
+    const stamp = Date.now();
+    const [s, c] = await Promise.all([
+      fetch(SNAPSHOT_URL + '?premium=' + stamp, { cache: 'no-store' }),
+      fetch(COMPASS_URL + '?premium=' + stamp, { cache: 'no-store' })
+    ]);
+    if (!s.ok || !c.ok) throw new Error('Premium Compass source unavailable');
+    latestSnapshot = await s.json();
+    latestCompass = await c.json();
+    install();
+  } catch (error) {
+    console.warn('Premium Market Compass unavailable', error);
+  }
+}
+
+function boot() {
+  load();
+  setInterval(load, 5 * 60 * 1000);
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+else boot();
+})();
