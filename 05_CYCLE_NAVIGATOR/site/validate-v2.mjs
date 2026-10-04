@@ -1,12 +1,16 @@
 import { readFile } from 'node:fs/promises';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
-const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json')]);
+const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css')]);
 const h=JSON.parse(history);
 const checks=[
  ['fallback action-first hero',html.includes('WHAT SHOULD I DO NOW?')],
  ['weekly authority firewall',html.includes('never rewrite the forecast')&&liveBuilder.includes('NON_AUTHORITATIVE_OBSERVATION_ONLY')],
  ['NOW/PATH/PROOF product tabs',['data-tab="now"','data-tab="path"','data-tab="proof"'].every(t=>product.includes(t))&&!product.includes('data-tab="score"')&&!product.includes('data-tab="how"')],
  ['Market Compass public language',product.includes('MARKET COMPASS')&&!product.includes('HANDLEKOMPAS ·')&&!product.includes('MASTER MONDAY →')],
+ ['premium three-horizon Compass is Official-Compass owned',premium.includes('OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1')&&premium.includes('MARKET_WEATHER_SOURCE_OF_TRUTH_v1')&&premium.includes('site_synthesis_allowed')&&['1_3d','5_7d','2_3w'].every(x=>premium.includes("scale: '"+x+"'"))],
+ ['premium Bull/Bear fails closed instead of synthesising',premium.includes("row.status === 'OK'")&&premium.includes('bull + bear === 10')&&premium.includes('No Bull/Bear number is reconstructed by the website.')&&!/expected_direction[^\n]{0,120}(bull|bear)\s*=/.test(premium)],
+ ['premium conclusion recommendation and explainability',premium.includes('CYCLE NAVIGATOR · CONCLUSION')&&premium.includes('RECOMMENDATION')&&premium.includes('HOW THIS READING IS BUILT')&&premium.includes('PRICE & STRUCTURE')&&premium.includes('PARTICIPATION & ROTATION')&&premium.includes('LIQUIDITY & POSITIONING')&&premium.includes('SENTIMENT & CYCLE')&&premium.includes('Evidence balance, not probability')],
+ ['premium layer ships in final Pages bundle',liveBuilder.includes('market-compass-premium.js')&&liveBuilder.includes('market-compass-premium.css')&&premiumCss.includes('.premium-horizon-grid')&&premiumCss.includes('@media(max-width:520px)')],
  ['single-action hero',product.includes("HOLD:'HOLD'")&&!product.includes("HOLD:'HOLD / WAIT'")],
  ['large-to-micro action rail',product.includes('Bitcoin → microcaps')&&product.includes('capitalRail')&&product.includes('rotation_ladder')],
  ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')],

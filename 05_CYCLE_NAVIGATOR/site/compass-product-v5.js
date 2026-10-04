@@ -51,5 +51,5 @@ function render(c,e){const root=document.getElementById('productNow');if(!root)r
  tickNextCompass();enhancePath(c);
 }
 async function load(){try{const stamp=Date.now();const [r,e]=await Promise.all([fetch(`${URL}?v=${stamp}`,{cache:'no-store'}),fetch(`${EVENT_URL}?v=${stamp}`,{cache:'no-store'}).catch(()=>null)]);if(!r.ok)throw Error(r.status);const c=await r.json();let ev=null;if(e?.ok)ev=await e.json();render(c,ev);}catch{render(null,null);}}
-function boot(){load();setInterval(load,5*60*1000);setInterval(tickNextCompass,1000);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,50));else setTimeout(boot,50);
+function boot(){if(window.CN_PREMIUM_COMPASS_OWNER===true)return;load();setInterval(load,5*60*1000);setInterval(tickNextCompass,1000);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,50));else setTimeout(boot,50);
 })();
