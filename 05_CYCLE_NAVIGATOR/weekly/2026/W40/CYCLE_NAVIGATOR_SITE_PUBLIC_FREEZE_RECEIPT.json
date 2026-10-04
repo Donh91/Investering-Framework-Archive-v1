@@ -1,0 +1,18 @@
+{
+  "contract": "CN_SITE_PUBLIC_FREEZE_RECEIPT_v1",
+  "authority": "PUBLIC_FORECAST_ACCOUNTABILITY_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "status": "SITE_FROZEN_SOURCE_OF_RECORD",
+  "public_issue_number": 27,
+  "machine_issue_number": 28,
+  "forecast_week": "2026-W40",
+  "frozen_unix": 1790574817,
+  "source_forecast_freeze_path": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+  "source_forecast_freeze_sha256": "e64e4c52af960220f03fa69a86cbd9853888d085c99d5b2c7ff061aa3aa8471f",
+  "source_binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json",
+  "score_family": "PRICE_RANGE_PRECISION",
+  "score_formula": "70pct_containment_plus_30pct_jaccard",
+  "public_site_is_valid_distribution_channel": true,
+  "x_distribution_required": false,
+  "identity_basis": "CONFIRMED_PUBLIC_SERIES_BINDING",
+  "migration_note": "W40 receipt materialized after the site-source-of-record migration. Forecast content and freeze hash predate outcome completion; no forecast values were changed."
+}

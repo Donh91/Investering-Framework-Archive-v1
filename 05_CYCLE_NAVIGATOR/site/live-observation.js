@@ -12,6 +12,10 @@
     if (document.getElementById('livePrecisionObservation')) return;
     const live = snapshot?.live_observation;
     if (!live) return;
+    if (snapshot?.public_live_precision?.contract === 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1') {
+      document.getElementById('livePrecisionObservation')?.remove();
+      return;
+    }
 
     const section = document.createElement('section');
     section.id = 'livePrecisionObservation';

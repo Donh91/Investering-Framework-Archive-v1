@@ -9,6 +9,12 @@ on:
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+      - "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl"
+      - "scripts/cycle_navigator/build_public_live_precision.py"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+      - "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl"
+      - "scripts/cycle_navigator/build_public_live_precision.py"
       - "05_CYCLE_NAVIGATOR/public_series/**"
       - "05_CYCLE_NAVIGATOR/public_scorecards/**"
       - "05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md"
@@ -111,6 +117,7 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
+          python3 scripts/cycle_navigator/build_public_live_precision.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
 
       - name: Verify final public artifact and live-observation firewall
@@ -130,6 +137,7 @@ jobs:
           public_score=snapshot.get('public_scorecard') or {}
           public_series=snapshot.get('public_series') or {}
           live=snapshot.get('live_observation') or {}
+          live_precision=snapshot.get('public_live_precision') or {}
 
           if bundle.get('authority') != 'CYCLE_NAVIGATOR_SCORECARD':
               raise SystemExit('public_snapshot_missing_machine_calibration')
@@ -167,8 +175,44 @@ jobs:
           if not ranges and live.get('provisional_score') is not None:
               raise SystemExit('fabricated_live_score_without_eligible_evidence')
 
+          if live_precision.get('contract') != 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1':
+              raise SystemExit('public_live_precision_contract_missing')
+          current=(public_series.get('current_public_projection') or {})
+          if int(live_precision.get('public_issue_number') or 0) != int(current.get('public_issue_number') or 0):
+              raise SystemExit('public_live_precision_issue_mismatch')
+          if str(live_precision.get('forecast_week') or '') != str(current.get('forecast_week') or ''):
+              raise SystemExit('public_live_precision_week_mismatch')
+          if live_precision.get('score_family') != 'PRICE_RANGE_PRECISION':
+              raise SystemExit('public_live_precision_wrong_score_family')
+          if live_precision.get('formula') != '70pct_containment_plus_30pct_jaccard':
+              raise SystemExit('public_live_precision_formula_drift')
+          if int(live_precision.get('final_row_count') or 0) != 6:
+              raise SystemExit('public_live_precision_final_row_count_drift')
+          if live_precision.get('x_distribution_required') is not False:
+              raise SystemExit('public_live_precision_x_dependency_regression')
+          if not str(live_precision.get('freeze_sha256') or ''):
+              raise SystemExit('public_live_precision_freeze_hash_missing')
+          if len(live_precision.get('frozen_sequence') or []) != 3:
+              raise SystemExit('public_live_precision_sequence_incomplete')
+
+          receipt_rel=str(live_precision.get('freeze_receipt_public_path') or '')
+          if not receipt_rel.startswith('data/public-freezes/') or '..' in receipt_rel:
+              raise SystemExit('public_freeze_receipt_public_path_invalid')
+          receipt_path=Path('05_CYCLE_NAVIGATOR/site/dist')/receipt_rel
+          if not receipt_path.is_file():
+              raise SystemExit('public_freeze_receipt_missing_from_artifact')
+          public_receipt=json.loads(receipt_path.read_text())
+          frozen_ranges=((public_receipt.get('public_frozen_price_ranges') or {}).get('rows') or [])
+          frozen_sequence=public_receipt.get('public_frozen_sequence') or []
+          if len(frozen_ranges) != 6:
+              raise SystemExit('public_freeze_receipt_requires_six_ranges')
+          if len(frozen_sequence) != 3:
+              raise SystemExit('public_freeze_receipt_requires_three_sequence_windows')
+          if public_receipt.get('x_distribution_required') is not False:
+              raise SystemExit('public_freeze_receipt_x_dependency_regression')
+
           index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
-          required_scripts=('./quiet-production.js','./shortcut.js','./weekly-score.js','./live-observation.js','./public-copy.js','./market-compass-premium.js')
+          required_scripts=('./quiet-production.js','./shortcut.js','./weekly-score.js','./live-observation.js','./public-copy.js','./market-compass-premium.js','./precision-accountability.js')
           for script in required_scripts:
               if script not in index:
                   raise SystemExit(f'final_public_widget_not_injected:{script}')
@@ -178,6 +222,9 @@ jobs:
               '05_CYCLE_NAVIGATOR/site/dist/public-copy.js',
               '05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js',
               '05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.css',
+              '05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js',
+              '05_CYCLE_NAVIGATOR/site/dist/precision-accountability.css',
+              '05_CYCLE_NAVIGATOR/site/dist/data/public-freezes/index.json',
               '05_CYCLE_NAVIGATOR/site/dist/quiet-production.js',
               '05_CYCLE_NAVIGATOR/site/dist/shortcut.js',
               '05_CYCLE_NAVIGATOR/site/dist/social-card.png'

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -19,24 +20,25 @@ def main() -> None:
     latest_score = index["latest_completed_score"]
     current = index["current_public_projection"]
 
-    if str(current.get("publication_status")) == "PUBLISHED_CONFIRMED_BY_USER":
-        assert int(current["public_issue_number"]) == int(latest_pub["public_issue_number"])
-        assert str(current["forecast_week"]) == str(latest_pub["forecast_week"])
-    else:
-        assert int(current["public_issue_number"]) == int(latest_pub["public_issue_number"]) + 1
-    assert int(latest_score["public_issue_number"]) <= int(latest_pub["public_issue_number"])
+    current_issue = int(current["public_issue_number"])
+    latest_published_issue = int(latest_pub.get("public_issue_number", 0) or 0)
+    assert current_issue >= latest_published_issue
+    assert int(latest_score["public_issue_number"]) < current_issue or int(latest_score["public_issue_number"]) == current_issue
 
-    published = root / latest_pub["published_path"]
-    receipt = root / latest_pub["publication_receipt"]
     scorecard = root / latest_score["scorecard_path"]
-    assert published.is_file()
-    assert receipt.is_file()
     assert scorecard.is_file()
-
-    receipt_data = read_json(receipt)
     score = read_json(scorecard)
-    assert receipt_data["status"] == "PUBLISHED_CONFIRMED_BY_USER"
-    assert int(receipt_data["public_issue_number"]) == int(latest_pub["public_issue_number"])
+
+    # X publication remains valid legacy distribution evidence when present, but
+    # it no longer owns current public-series continuity.
+    if latest_published_issue > 0:
+        published = root / latest_pub["published_path"]
+        receipt = root / latest_pub["publication_receipt"]
+        assert published.is_file()
+        assert receipt.is_file()
+        receipt_data = read_json(receipt)
+        assert receipt_data["status"] == "PUBLISHED_CONFIRMED_BY_USER"
+        assert int(receipt_data["public_issue_number"]) == latest_published_issue
     # Publication may advance before the newest published week is mature/scored.
     # User attestation is authoritative for publication identity; scoring may legitimately lag.
     assert int(score["public_issue_number"]) == int(latest_score["public_issue_number"])
@@ -82,6 +84,22 @@ def main() -> None:
     assert str(binding_data.get("publication_status")) == str(current.get("publication_status"))
     assert int(pointer["public_issue_number"]) == int(current["public_issue_number"])
     assert str(pointer.get("publication_status")) == str(current.get("publication_status"))
+
+    site_receipt_rel = str(current.get("site_publication_receipt") or binding_data.get("site_publication_receipt") or "")
+    assert site_receipt_rel.startswith("05_CYCLE_NAVIGATOR/weekly/") and ".." not in site_receipt_rel
+    site_receipt_path = root / site_receipt_rel
+    assert site_receipt_path.is_file()
+    site_receipt = read_json(site_receipt_path)
+    assert site_receipt.get("contract") == "CN_SITE_PUBLIC_FREEZE_RECEIPT_v1"
+    assert site_receipt.get("status") == "SITE_FROZEN_SOURCE_OF_RECORD"
+    assert int(site_receipt["public_issue_number"]) == current_issue
+    assert str(site_receipt["forecast_week"]) == str(current["forecast_week"])
+    assert site_receipt.get("x_distribution_required") is False
+    freeze_path = root / pointer["week_dir"] / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+    assert hashlib.sha256(freeze_path.read_bytes()).hexdigest() == str(site_receipt["source_forecast_freeze_sha256"])
+    latest_site = index.get("latest_site_freeze") or {}
+    assert int(latest_site.get("public_issue_number", -1)) == current_issue
+    assert str(latest_site.get("forecast_week")) == str(current["forecast_week"])
 
     # Public identity is owned by the public-series index + weekly binding, not by
     # the pre-publication machine package. A machine package may retain the public
@@ -129,7 +147,9 @@ def main() -> None:
         "current_machine_issue": current["machine_issue_number"],
         "machine_public_issue_at_generation": machine_public_issue,
         "machine_public_identity_stale_at_freeze": machine_public_identity_stale_at_freeze,
-        "public_identity_authority": "CN_PUBLIC_SERIES_INDEX_PLUS_WEEKLY_BINDING",
+        "public_identity_authority": "CN_PUBLIC_SERIES_INDEX_PLUS_WEEKLY_BINDING_PLUS_SITE_FREEZE_RECEIPT",
+        "site_public_source_of_record": True,
+        "x_distribution_required": False,
     }, sort_keys=True))
 
 

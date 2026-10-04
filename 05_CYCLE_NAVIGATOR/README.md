@@ -27,6 +27,12 @@ In particular, W38's actually published forecast is **public CN #25**, and its p
 
 The latest completed public score must be resolved from `public_series/CN_PUBLIC_SERIES_INDEX.json -> latest_completed_score`. Machine `CYCLE_NAVIGATOR_SCORECARD.json` remains valid machine/calibration evidence but is not automatically the public-series scorecard during this offset window.
 
+### Public site freeze source-of-record
+
+From the W40/CN #27 accountability upgrade onward, the public site freeze receipt is a first-class immutable public source-of-record. Each new weekly CN must materialize `CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json` at freeze time, bind the public CN number + forecast week + freeze hash, and append the six BTC/ETH Day 1-2 / Day 3-4 / Day 5-7 rows to `CN_FORWARD_RANGE_LEDGER_v2.jsonl`.
+
+The public website may therefore prove `FROZEN -> LIVE -> VERIFIED` without requiring a post on X. X remains an optional downstream distribution channel and may mirror the same CN issue, but absence of an X post must not block public score settlement when a valid site freeze receipt exists. Live provisional Price Range Precision must use the same `70% containment + 30% interval overlap/Jaccard` formula and the same six frozen rows as the final public score; open windows remain explicitly provisional.
+
 ## Current production-routing notice
 
 Binding current routing owner:

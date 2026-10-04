@@ -7,6 +7,9 @@ on:
       - '05_CYCLE_NAVIGATOR/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'
       - '05_CYCLE_NAVIGATOR/public_series/**'
       - '05_CYCLE_NAVIGATOR/public_scorecards/**'
+      - '05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl'
+      - '05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json'
+      - 'scripts/cycle_navigator/build_public_live_precision.py'
       - '05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md'
       - 'scripts/cycle_navigator/validate_public_series.py'
       - '.github/workflows/cycle-navigator-pages.yml'
@@ -28,6 +31,7 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
+          python3 scripts/cycle_navigator/build_public_live_precision.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Verify public investor product
         run: |
@@ -36,6 +40,14 @@ jobs:
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          test -f 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          test -f 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.css
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/public-freezes/index.json
+          grep -q 'Frozen Monday. Scored live. Verified after close.' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'FROZEN PRICE RANGES' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'FROZEN MONDAY PATH' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js

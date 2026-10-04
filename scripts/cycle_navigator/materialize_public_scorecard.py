@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -142,25 +143,50 @@ def main() -> None:
     prior_freeze = read_json(prior_freeze_path)
 
     # Public Proof is publication accountability, not merely machine calibration.
-    # Never advance the public score pointer/history from an X-ready draft.
+    # The public site freeze is a first-class source-of-record. X remains optional
+    # downstream distribution for new issues and a valid legacy proof for older ones.
     index_path = root / "05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json"
     index = read_json(index_path)
-    latest_pub = index.get("latest_published") or {}
-    if (
-        int(latest_pub.get("public_issue_number", -1)) != public_issue
-        or str(latest_pub.get("forecast_week", "")) != forecast_week
-    ):
-        print(json.dumps({
-            "status": "NOOP",
-            "reason": "PUBLICATION_NOT_CONFIRMED_FOR_COMPLETED_WEEK",
-            "public_issue_number": public_issue,
-            "forecast_week": forecast_week,
-        }, sort_keys=True))
-        return
-    for field in ("published_path", "publication_receipt"):
-        rel = str(latest_pub.get(field) or "")
-        if not rel or ".." in rel or not (root / rel).is_file():
-            raise SystemExit(f"latest_published_{field}_missing_or_invalid")
+    site_receipt_path = binding_path.parent / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+    public_proof = None
+    if site_receipt_path.is_file():
+        site_receipt = read_json(site_receipt_path)
+        freeze_digest = hashlib.sha256(prior_freeze_path.read_bytes()).hexdigest()
+        if site_receipt.get("contract") != "CN_SITE_PUBLIC_FREEZE_RECEIPT_v1":
+            raise SystemExit("site_public_freeze_receipt_contract_invalid")
+        if int(site_receipt.get("public_issue_number", -1)) != public_issue:
+            raise SystemExit("site_public_freeze_receipt_issue_mismatch")
+        if str(site_receipt.get("forecast_week") or "") != forecast_week:
+            raise SystemExit("site_public_freeze_receipt_week_mismatch")
+        if str(site_receipt.get("source_forecast_freeze_sha256") or "") != freeze_digest:
+            raise SystemExit("site_public_freeze_receipt_hash_mismatch")
+        public_proof = {
+            "channel": "SITE_SOURCE_OF_RECORD",
+            "receipt": str(site_receipt_path.relative_to(root)),
+            "freeze_sha256": freeze_digest,
+        }
+    else:
+        latest_pub = index.get("latest_published") or {}
+        if (
+            int(latest_pub.get("public_issue_number", -1)) != public_issue
+            or str(latest_pub.get("forecast_week", "")) != forecast_week
+        ):
+            print(json.dumps({
+                "status": "NOOP",
+                "reason": "NO_PUBLIC_FREEZE_PROOF_FOR_COMPLETED_WEEK",
+                "public_issue_number": public_issue,
+                "forecast_week": forecast_week,
+            }, sort_keys=True))
+            return
+        for field in ("published_path", "publication_receipt"):
+            rel = str(latest_pub.get(field) or "")
+            if not rel or ".." in rel or not (root / rel).is_file():
+                raise SystemExit(f"latest_published_{field}_missing_or_invalid")
+        public_proof = {
+            "channel": "LEGACY_X_PUBLICATION",
+            "published_path": str(latest_pub.get("published_path")),
+            "receipt": str(latest_pub.get("publication_receipt")),
+        }
 
     machine_score = read_json(current_week_dir / "CYCLE_NAVIGATOR_SCORECARD.json")
     if int(machine_score.get("issue_scored") or -1) != machine_issue:
@@ -269,6 +295,7 @@ def main() -> None:
             "public_series_key": f"PUBLIC_CN{public_issue}__{forecast_week}",
             "machine_issue_number": machine_issue,
             "valid_join_key": ["series", "issue_number", "forecast_week", "immutable_source"],
+            "public_proof": public_proof,
         },
     }
 

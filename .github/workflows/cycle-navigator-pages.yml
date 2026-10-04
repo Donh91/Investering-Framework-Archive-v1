@@ -10,6 +10,9 @@ on:
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+      - "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl"
+      - "scripts/cycle_navigator/build_public_live_precision.py"
       - "05_CYCLE_NAVIGATOR/published/**"
       - "05_CYCLE_NAVIGATOR/public_series/**"
       - "05_CYCLE_NAVIGATOR/public_scorecards/**"
@@ -51,6 +54,8 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
       - name: Add bounded live observation
         run: node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
+      - name: Build public live Price Range precision
+        run: python3 scripts/cycle_navigator/build_public_live_precision.py
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Verify final investor-facing shell and privacy
@@ -61,6 +66,15 @@ jobs:
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           test -f 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.css
+          test -f 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          test -f 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.css
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/public-freezes/index.json
+          grep -q 'precision-accountability.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'Frozen Monday. Scored live. Verified after close.' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'SITE SOURCE OF RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'FROZEN MONDAY PATH' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q 'market-compass-premium.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
           grep -q 'CYCLE NAVIGATOR · CONCLUSION' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
           grep -q 'HOW THIS READING IS BUILT' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
