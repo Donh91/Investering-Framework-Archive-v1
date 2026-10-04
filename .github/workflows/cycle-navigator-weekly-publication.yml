@@ -142,13 +142,25 @@ jobs:
           raw_reasons=machine.get('status_reason_codes')
           reasons=[str(reason) for reason in raw_reasons] if isinstance(raw_reasons,list) else []
           reasons=list(dict.fromkeys(reasons))
+          receipt_verified=receipt.get('consumption_state')=='VERIFIED'
+          if receipt_verified:
+              reasons=[reason for reason in reasons if reason!='CONSUMER_RECEIPT_UNVERIFIED']
+              raw_uncertainties=machine.get('uncertainties')
+              if isinstance(raw_uncertainties,list):
+                  machine['uncertainties']=[
+                      value for value in raw_uncertainties
+                      if not (
+                          isinstance(value,str)
+                          and 'separate verified receipt for this new Cycle Navigator handoff was not supplied' in value
+                      )
+                  ]
           if original=='BLOCKED':
               effective='BLOCKED'
               if not reasons: reasons=['LEGACY_NON_READY_CAUSE_UNAVAILABLE']
           elif original=='DEGRADED':
-              effective='DEGRADED'
-              if not reasons: reasons=['LEGACY_NON_READY_CAUSE_UNAVAILABLE']
-          elif receipt.get('consumption_state')=='VERIFIED':
+              effective='DEGRADED' if reasons else ('READY' if receipt_verified else 'DEGRADED')
+              if effective=='DEGRADED' and not reasons: reasons=['LEGACY_NON_READY_CAUSE_UNAVAILABLE']
+          elif receipt_verified:
               effective='READY'
               reasons=[]
           else:
