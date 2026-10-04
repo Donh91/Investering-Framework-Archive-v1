@@ -1,13 +1,6 @@
 name: Entry Signal Ledger
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'scripts/data_ping/auto_market_state.py'
-      - 'scripts/entry_signal/entry_signal_ledger.py'
-      - 'scripts/entry_signal/entry_signal_ledger_core.py'
   workflow_run:
     # Hourly capture can be delayed by the shared main-writer queue. Build the
     # downstream state from the completed owner publication instead of assuming
