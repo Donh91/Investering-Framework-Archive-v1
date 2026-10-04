@@ -148,41 +148,16 @@ function fullPanel(snapshot) {
     + '</section>';
 }
 
-function litePanel(snapshot) {
-  const live = snapshot?.public_live_precision;
-  if (live?.contract !== 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1') return '';
-  const running = score(live.running_price_precision_pct);
-  const fresh = freshnessMeta(live);
-  const phase = live.running_price_precision_pct == null ? 'AWAITING' : (fresh.stale ? 'STALE' : 'LIVE');
-  return '<section id="publicLiveAccountabilityLite" class="pa-lite' + (fresh.stale?' stale':'') + '">';
-    + '<div class="pa-lite-mark"><i></i><span>WEEKLY TRACK RECORD · ' + esc(phase) + '</span></div>'
-    + '<div class="pa-lite-score"><strong>' + esc(running) + '</strong><small>provisional Price Range Precision</small></div>'
-    + '<div class="pa-lite-meta"><span>CN #' + esc(live.public_issue_number) + ' · ' + esc(live.forecast_week) + '</span><b>Frozen ' + esc(stamp(live.frozen_at_utc)) + '</b><small>' + (fresh.stale?'Last complete observation ':'Live as of ') + esc(stamp(live.live_as_of_utc)) + ' · ' + esc(fresh.age) + ' · ' + esc(live.completed_rows ?? 0) + ' settled / ' + esc(live.live_rows ?? 0) + ' live</small></div>'
-    + '<button type="button" data-pa-proof>View full scorecard →</button>'
-    + '</section>';
-}
-
 let latest = null;
 let freezeIndex = null;
-let nowObserver = null;
 let proofObserver = null;
 let rootObserver = null;
-
-function showProof() {
-  document.querySelector('[data-tab="proof"]')?.click();
-}
 
 function mount() {
   if (!latest?.public_live_precision) return;
 
   const oldLegacy = document.getElementById('livePrecisionObservation');
   if (oldLegacy) oldLegacy.remove();
-
-  const now = document.getElementById('productNow');
-  if (now && !document.getElementById('publicLiveAccountabilityLite')) {
-    now.insertAdjacentHTML('beforeend', litePanel(latest));
-    now.querySelector('[data-pa-proof]')?.addEventListener('click', showProof);
-  }
 
   const proof = document.getElementById('productProof');
   if (proof) {
@@ -196,40 +171,31 @@ function mount() {
   }
 }
 
-function watch() {
-  const now = document.getElementById('productNow');
+function watchProof() {
   const proof = document.getElementById('productProof');
-  nowObserver?.disconnect();
   proofObserver?.disconnect();
-  if (now) {
-    nowObserver = new MutationObserver(() => {
-      if (!document.getElementById('publicLiveAccountabilityLite')) queueMicrotask(mount);
-    });
-    nowObserver.observe(now,{childList:true,subtree:false});
-  }
-  if (proof) {
-    proofObserver = new MutationObserver(() => {
-      if (!document.getElementById('publicLiveAccountability')) queueMicrotask(mount);
-    });
-    proofObserver.observe(proof,{childList:true,subtree:false});
-  }
+  if (!proof) return;
+  proofObserver = new MutationObserver(() => {
+    if (!document.getElementById('publicLiveAccountability')) queueMicrotask(mount);
+  });
+  proofObserver.observe(proof,{childList:true,subtree:false});
 }
 
-function watchRoots() {
-  if (document.getElementById('productNow') && document.getElementById('productProof')) {
+function watchRoot() {
+  if (document.getElementById('productProof')) {
     rootObserver?.disconnect();
     rootObserver = null;
     mount();
-    watch();
+    watchProof();
     return;
   }
   if (rootObserver || !document.body) return;
   rootObserver = new MutationObserver(() => {
-    if (!document.getElementById('productNow') || !document.getElementById('productProof')) return;
+    if (!document.getElementById('productProof')) return;
     rootObserver?.disconnect();
     rootObserver = null;
     mount();
-    watch();
+    watchProof();
   });
   rootObserver.observe(document.body,{childList:true,subtree:true});
 }
@@ -244,17 +210,16 @@ async function load() {
     latest = await r.json();
     freezeIndex = archive?.ok ? await archive.json() : null;
     document.getElementById('publicLiveAccountability')?.remove();
-    document.getElementById('publicLiveAccountabilityLite')?.remove();
     mount();
-    watch();
-    watchRoots();
+    watchProof();
+    watchRoot();
   } catch (error) {
     console.warn('Public precision accountability unavailable', error);
   }
 }
 
 function boot() {
-  watchRoots();
+  watchRoot();
   load();
   setInterval(load,5*60*1000);
 }
