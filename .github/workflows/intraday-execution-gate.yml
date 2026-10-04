@@ -128,7 +128,7 @@ jobs:
           hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           intraday=Path('.github/workflows/intraday-execution-research.yml').read_text()
           runner=Path('.github/actions/intraday-execution/action.yml').read_text()
-          assert "cron: '5 * * * *'" in hourly
+          assert "cron: '12 * * * *'" in hourly
           assert "timezone: 'UTC'" in hourly
           assert 'Materialize each newly completed UTC 1H owner candle' in hourly
           assert '  schedule:' not in intraday
