@@ -151,8 +151,7 @@ def main() -> None:
     public_proof = None
     if site_receipt_path.is_file():
         site_receipt = read_json(site_receipt_path)
-        canonical_freeze = (json.dumps(prior_freeze, sort_keys=True, separators=(",", ":")) + "\n").encode()
-        freeze_digest = hashlib.sha256(canonical_freeze).hexdigest()
+        freeze_digest = hashlib.sha256(prior_freeze_path.read_bytes()).hexdigest()
         if site_receipt.get("contract") != "CN_SITE_PUBLIC_FREEZE_RECEIPT_v1":
             raise SystemExit("site_public_freeze_receipt_contract_invalid")
         if int(site_receipt.get("public_issue_number", -1)) != public_issue:
