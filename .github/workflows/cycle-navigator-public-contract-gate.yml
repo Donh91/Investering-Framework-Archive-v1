@@ -216,12 +216,13 @@ jobs:
               raise SystemExit('public_freeze_receipt_x_dependency_regression')
 
           index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
-          required_scripts=('./quiet-production.js','./shortcut.js','./weekly-score.js','./live-observation.js','./public-copy.js','./market-compass-premium.js','./precision-accountability.js')
+          required_scripts=('./quiet-production.js','./shortcut.js','./live-observation.js','./public-copy.js','./market-compass-premium.js','./precision-accountability.js')
           for script in required_scripts:
               if script not in index:
                   raise SystemExit(f'final_public_widget_not_injected:{script}')
+          if './weekly-score.js' in index:
+              raise SystemExit('legacy_weekly_score_widget_still_injected')
           required_files=(
-              '05_CYCLE_NAVIGATOR/site/dist/weekly-score.js',
               '05_CYCLE_NAVIGATOR/site/dist/live-observation.js',
               '05_CYCLE_NAVIGATOR/site/dist/public-copy.js',
               '05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js',
