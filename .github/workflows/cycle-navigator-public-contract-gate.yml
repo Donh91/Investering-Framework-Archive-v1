@@ -243,7 +243,7 @@ jobs:
           product=Path('05_CYCLE_NAVIGATOR/site/dist/public-product.js').read_text()
           if 'CN_PATH_THREE_TRACK_v2' not in product:
               raise SystemExit('path_three_track_contract_missing')
-          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion begins','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA'):
+          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion begins','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION GATE'):
               if marker not in product:
                   raise SystemExit(f'path_three_track_marker_missing:{marker}')
           if "jsonOptional('./data/compass.json')" not in product:
@@ -252,6 +252,12 @@ jobs:
               raise SystemExit('path_protection_or_sell_owner_missing')
           if "eta:pathEta(ignition.eta)" not in product:
               raise SystemExit('altseason_ignition_eta_not_source_owned')
+          if "source:'MONDAY BASE CASE'" in product or "CONSOLIDATION|TRANSITION" in product:
+              raise SystemExit('market_cycle_frontend_classifier_regression')
+          if "source:'NO STRUCTURED 4–8W PHASE'" not in product:
+              raise SystemExit('market_cycle_fail_closed_state_missing')
+          if "return{key:'MICRO'" not in product or "return{key:'BROAD'" not in product or "return{key:'MANIA'" not in product:
+              raise SystemExit('altcoin_target_progression_incomplete')
           if "no browser countdown math" not in product:
               raise SystemExit('altseason_timer_countdown_semantics_missing')
           latest=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
@@ -261,5 +267,10 @@ jobs:
           projection=package.get('decision_projection')
           if projection is not None and projection.get('contract') != 'CYCLE_NAVIGATOR_DECISION_PROJECTION_v1':
               raise SystemExit('public_strategic_cycle_projection_contract_invalid')
+          if projection:
+              month=projection.get('next_21_30d') or {}
+              forbidden={'btc_direction','eth_direction','ethbtc_direction','falsification','scenario_semantics','scenarios'}
+              if forbidden.intersection(month):
+                  raise SystemExit('public_strategic_projection_exposes_private_detail')
           print(json.dumps({'status':'PASS','final_pages_artifact':'VERIFIED','public_scorecard':'BOUND_BY_PUBLIC_LINEAGE','machine_calibration':'SEPARATE','live_observation':'FAIL_CLOSED_SAFE'},sort_keys=True))
           PY
