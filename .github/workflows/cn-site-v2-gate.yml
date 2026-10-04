@@ -46,7 +46,8 @@ jobs:
           grep -q 'Frozen Monday. Scored live. Verified after close.' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'FROZEN PRICE RANGES' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'FROZEN MONDAY PATH' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
-          grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
