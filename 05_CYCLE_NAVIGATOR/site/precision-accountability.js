@@ -6,10 +6,10 @@ const esc = (value) => String(value ?? '')
   .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 
-const num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
+const num = (v) => v===null||v===undefined||v==='' ? null : (Number.isFinite(Number(v)) ? Number(v) : null);
 const score = (v) => {
   const n = num(v);
-  return n === null ? '—' : n.toFixed(2).replace(/\\.?0+$/, '') + '%';
+  return n === null ? '—' : n.toFixed(2).replace(/\.?0+$/, '') + '%';
 };
 const range = (lo, hi) => {
   const a = num(lo), b = num(hi);
