@@ -24,7 +24,7 @@ permissions:
 
 concurrency:
   # Read-only PR validation must not compete with serialized production writers.
-  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-market-owner-writer' }}
   queue: max
   cancel-in-progress: false
 jobs:
@@ -53,7 +53,7 @@ jobs:
           assert "cron: '24 * * * *'" in recovery
           assert "timezone: 'UTC'" in recovery
           assert "timedelta(minutes=65)" in engine
-          assert "framework-main-writer" in recovery
+          assert "framework-market-owner-writer" in recovery
           assert "queue: max" in recovery
           assert "cancel-in-progress: false" in recovery
           print('NATIVE_MARKET_RECOVERY_CADENCE_PASS')

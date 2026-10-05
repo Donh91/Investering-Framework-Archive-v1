@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       chain_entry_signal:
-        description: 'Explicitly dispatch Entry Signal after an on-demand Hourly recovery'
+        description: 'Dispatch Entry Signal after an on-demand Hourly run'
         required: false
         type: boolean
         default: true
@@ -23,7 +23,7 @@ permissions:
   issues: write
 
 concurrency:
-  group: framework-main-writer
+  group: framework-market-owner-writer
   queue: max
   cancel-in-progress: false
 
@@ -75,8 +75,8 @@ jobs:
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
           echo "source_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Bridge on-demand recovery to Entry Signal
-        if: github.event_name == 'workflow_dispatch' && inputs.chain_entry_signal == true
+      - name: Dispatch Entry Signal after hourly owner publish
+        if: github.event_name != 'workflow_dispatch' || inputs.chain_entry_signal == true
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -84,15 +84,15 @@ jobs:
           set -euo pipefail
           active=$(gh run list --workflow entry-signal-ledger.yml --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending")] | length')
           if [ "$active" -gt 0 ]; then
-            echo "ENTRY_SIGNAL_RECOVERY_ALREADY_ACTIVE count=$active"
+            echo "ENTRY_SIGNAL_HANDOFF_ALREADY_ACTIVE count=$active"
           else
             gh workflow run entry-signal-ledger.yml --ref main
-            echo "ENTRY_SIGNAL_RECOVERY_DISPATCHED source_hourly_run=${GITHUB_RUN_ID}"
+            echo "ENTRY_SIGNAL_HANDOFF_DISPATCHED source_hourly_run=${GITHUB_RUN_ID}"
           fi
 
 
   intraday:
-    # This dependency remains inside the SAME workflow-level main-writer lock.
+    # This dependency remains inside the SAME latency-critical market-owner writer lock.
     # No independently pending Intraday run can be displaced between source and research.
     needs: sequence
     if: github.ref == 'refs/heads/main' && needs.sequence.result == 'success'

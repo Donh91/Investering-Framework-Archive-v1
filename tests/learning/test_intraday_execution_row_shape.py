@@ -385,7 +385,7 @@ def test_scheduled_intraday_chain_keeps_one_writer_lock_and_frozen_source():
     # PyYAML's YAML 1.1 parser interprets the unquoted Actions key `on` as True.
     assert set(manual.get("on", manual.get(True))) == {"workflow_dispatch"}
     for workflow in (hourly, manual):
-        assert workflow["concurrency"] == {"group": "framework-main-writer", "queue": "max", "cancel-in-progress": False}
+        assert workflow["concurrency"] == {"group": "framework-market-owner-writer", "queue": "max", "cancel-in-progress": False}
         assert all("concurrency" not in job for job in workflow["jobs"].values())
     job = hourly["jobs"]["intraday"]
     assert job["needs"] == "sequence"

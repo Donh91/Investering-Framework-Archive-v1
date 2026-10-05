@@ -9,14 +9,8 @@ on:
       - 'tests/data_ping/test_compass_event_refresh.py'
       - '04_MARKET_LEARNING/handlekompas/event_refresh/**'
       - '05_CYCLE_NAVIGATOR/site/**'
-  workflow_run:
-    workflows:
-      - Entry Signal Ledger
-    types:
-      - completed
   schedule:
-    # Fallback only. New owner evidence is normally evaluated immediately after
-    # Entry Signal Ledger completes.
+    # Fallback only. Entry Signal Ledger explicitly dispatches the primary evaluation.
     - cron: '55 * * * *'
       timezone: 'UTC'
   workflow_dispatch:
@@ -28,7 +22,7 @@ permissions:
 
 concurrency:
   # Read-only PR validation must not compete with serialized main writers.
-  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-market-owner-writer' }}
   queue: max
   cancel-in-progress: false
 jobs:
@@ -47,12 +41,7 @@ jobs:
           python -m unittest tests.data_ping.test_compass_event_refresh -v
 
   detect:
-    if: >-
-      github.event_name != 'pull_request' &&
-      ((github.event_name == 'workflow_run' &&
-        github.event.workflow_run.head_branch == 'main' &&
-        github.event.workflow_run.conclusion == 'success') ||
-       (github.event_name != 'workflow_run' && github.ref == 'refs/heads/main'))
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:

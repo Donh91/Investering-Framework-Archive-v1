@@ -334,8 +334,9 @@ jobs:
         run: |
           set -euo pipefail
           # Dispatch only after the complete CN package passed durable readback.
-          # Both workflows share framework-main-writer, so the Compass run waits
-          # until this weekly writer has released the global writer lock.
+          # Official Compass uses the dedicated market-owner writer lane, so once
+          # this weekly package has passed durable readback it can refresh without
+          # waiting behind unrelated research/operations writers.
           gh workflow run daily-compass.yml --ref main -f run_reason=EVENT_DRIVEN
           echo "WEEKLY_CN_COMPASS_HANDOFF_DISPATCHED"
 
