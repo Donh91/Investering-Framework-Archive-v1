@@ -1,7 +1,7 @@
 {
   "contract": "RESEARCH_LAB_SOL_QUEUE_v1",
   "created_date": "2026-10-05",
-  "status": "ACTIVE",
+  "status": "ORIGINAL_FIVE_MISSIONS_COMPLETE",
   "trigger_issue": 1476,
   "trigger_marker": "[RESEARCH_LAB_SOL]",
   "task_name": "RESEARCH_LAB_SOL_ANALYSIS",
@@ -109,7 +109,7 @@
     {
       "sequence": 5,
       "mission_id": "RL-TECHDEV97-005",
-      "state": "ACTIVE_RELEASED",
+      "state": "FINAL_ADJUDICATED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-TECHDEV97-005__sol-api.json",
       "context_status": "FRESH_COMPACT_CLAIM_ADJUDICATION",
       "context_paths": [
@@ -126,7 +126,10 @@
         "03_DAILY_CAPTURE_LOGS/weekly/2026/W39.json",
         "03_DAILY_CAPTURE_LOGS/weekly/2026/W40.json"
       ],
-      "sol_instruction": "CLAIM_BY_CLAIM. DO_NOT_RESCUE_ORIGINAL_CLAIMS_WITH_LATER_REVISIONS. NOT_DUE_REMAINS_NOT_DUE."
+      "sol_instruction": "CLAIM_BY_CLAIM. DO_NOT_RESCUE_ORIGINAL_CLAIMS_WITH_LATER_REVISIONS. NOT_DUE_REMAINS_NOT_DUE.",
+      "final_verdict": "WEAKENED",
+      "final_adjudication_path": "06_RESEARCH_LAB/m5_checkpoints/2026-10-05__RL-TECHDEV97-005__FINAL_ADJUDICATION_v1.md",
+      "no_further_sol_passes_unless_new_material_evidence": true
     }
   ],
   "authority": {
@@ -139,5 +142,5 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "RL-TECHDEV97-005"
+  "active_mission": null
 }
