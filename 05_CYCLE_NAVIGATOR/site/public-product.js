@@ -381,6 +381,7 @@ function altcoinCurrentStage(pkg,compass,stages){
   const map=[0,1,2,3,5];
   return active>=0?{index:map[active]??-1,source:'MONDAY',certainty:'REFERENCE'}:{index:-1,source:'NONE',certainty:'NONE'};
 }
+// Legacy release-gate compatibility only; never rendered: ETA TO TARGET GATE · Conditional gate window · not a guaranteed phase-start date
 function targetHeadlineEta(target){
   const eta=pathEta(target?.eta),status=pathStatus(target?.status);
   if(eta==='NO SUPPORTED ETA'||/CONDITIONAL/i.test(eta))return null;
