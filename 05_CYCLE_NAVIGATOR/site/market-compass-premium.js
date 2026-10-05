@@ -41,6 +41,7 @@ const publicCompassText = (value) => {
     .replace(/MASTER MONDAY/gi, 'weekly review')
     .replace(/\bgoverned\b/gi, 'verified')
     .replace(/\bcanonical\b/gi, 'confirmed')
+    .replace(/\bframework\b/gi, 'research process')
     .replace(/\bdecision owner\b/gi, 'signal source')
     .replace(/\bowner\b/gi, 'signal source')
     .replace(/\bETHBTC\b/gi, 'Ethereum vs Bitcoin')
@@ -328,7 +329,7 @@ function renderPremium(snapshot, compass) {
   section.className = 'premium-market-compass';
   section.innerHTML =
     '<div class="premium-overview">'
-    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'The framework is waiting for fresh evidence.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong><small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong><small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a><a href="#liveDecisionDetail" data-live-detail><span>RISK WATCH</span><strong>' + esc(meta.risk) + '</strong><small>' + esc(meta.riskEta) + ' · Distribution ' + esc(meta.distribution) + '</small></a></div></div>'
+    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong><small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong><small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a><a href="#liveDecisionDetail" data-live-detail><span>RISK WATCH</span><strong>' + esc(meta.risk) + '</strong><small>' + esc(meta.riskEta) + ' · Distribution ' + esc(meta.distribution) + '</small></a></div></div>'
     + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div><p>' + esc(rec.copy) + '</p>' + hourlyMonitor(snapshot) + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
     + decisionDetail(compass, rec, meta)

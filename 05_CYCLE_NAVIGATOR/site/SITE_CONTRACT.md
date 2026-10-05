@@ -55,6 +55,22 @@ It is intentionally a presentation and live-context surface, not a new market-st
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
+## PATH v2 product freeze
+
+Effective 2026-10-05, the three-track PATH product architecture is considered **product-frozen** after PR #1500 and the subsequent clarity/polish passes.
+
+Frozen product invariants:
+
+- The first-scan questions remain: **Where is the market? → Where is capital rotating? → What is the next supported phase/watch target and when should it be reviewed?**
+- The information architecture remains `MARKET CYCLE` → `ROTATION` → `ALTCOIN CYCLE TIMER` unless a documented user problem or new source-owned data capability justifies a versioned change.
+- `ALTSEASON IGNITION` remains the default high-beta watch target when supported, with current position visually distinct from the amber next-watch target.
+- Conditional windows remain watch windows, not countdowns. Unsupported timing remains `NO SUPPORTED ETA`.
+- Presentation changes must prefer public market language and must not expose internal governance vocabulary merely because source artifacts use it.
+- Cosmetic churn alone is not sufficient reason to redesign PATH. Future changes require a concrete regression, evidence-backed usability problem, or genuinely new source capability.
+- Historical development branch `feat/cn-path-three-track-v2` is superseded by current `main` and MUST NOT be merged or rebased back into production as a unit. It is salvage/history only; any future reuse requires a fresh semantic diff against current main.
+
+This freeze constrains presentation churn only. It does not block source-owned Compass/Cycle Navigator data updates, scoring/accountability fixes, privacy repairs, or safety/reliability corrections.
+
 ## NEXT DAYS / short-horizon rule
 
 The shortcut `NEXT DAYS` surface is governed by the active Weekly Cycle Navigator Publication Contract v1.1.
