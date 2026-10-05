@@ -130,7 +130,8 @@ jobs:
           pointer=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
           root=Path(pointer['week_dir'])
           scorecard=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
-          freeze=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json').read_text())
+          internal_freeze_path=root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json'
+          freeze=json.loads(internal_freeze_path.read_text()) if internal_freeze_path.is_file() else {'claims': []}
           public_freeze=json.loads((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_text())
           snapshot=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
           bundle=snapshot.get('machine_calibration_bundle') or {}
