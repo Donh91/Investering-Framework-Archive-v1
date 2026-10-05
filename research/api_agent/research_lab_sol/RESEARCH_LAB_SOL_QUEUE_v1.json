@@ -90,7 +90,7 @@
     {
       "sequence": 4,
       "mission_id": "RL-AUTOTRADING-EVIDENCE-004",
-      "state": "ACTIVE_RELEASED",
+      "state": "FINAL_ADJUDICATED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-AUTOTRADING-EVIDENCE-004__sol-api.json",
       "context_status": "FRESH_COMPACT_READINESS_AND_RANKING",
       "context_paths": [
@@ -102,14 +102,16 @@
         "04_RESEARCH_LAB/auto_trading/experiments/E3_TRIAL_N5_INDEPENDENT_RESULT.json",
         "04_RESEARCH_LAB/auto_trading/audit_summaries/2026-09-14__historical-market-archive-reconciliation-closure-v1.json"
       ],
-      "sol_instruction": "ASSESS_READINESS_FIRST; RANK_AT_MOST_3_EXISTING_HYPOTHESES_ONLY_IF_SELECTIVE_RESEARCH_IS_ADMISSIBLE"
+      "sol_instruction": "ASSESS_READINESS_FIRST; RANK_AT_MOST_3_EXISTING_HYPOTHESES_ONLY_IF_SELECTIVE_RESEARCH_IS_ADMISSIBLE",
+      "no_further_sol_passes_unless_new_material_evidence": true,
+      "final_verdict": "PARTIALLY_READY_BROAD_SEARCH_BLOCKED_BUILD_NOTHING_FOR_NEW_TESTS"
     },
     {
       "sequence": 5,
       "mission_id": "RL-TECHDEV97-005",
-      "state": "QUEUED_WAIT_PREDECESSOR",
+      "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-TECHDEV97-005__sol-api.json",
-      "context_status": "FRESH_BIND_AT_RELEASE",
+      "context_status": "FRESH_BIND_REQUIRED",
       "context_paths": []
     }
   ],
@@ -123,5 +125,5 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "RL-AUTOTRADING-EVIDENCE-004"
+  "active_mission": "RL-TECHDEV97-005"
 }
