@@ -15,7 +15,7 @@
     {
       "sequence": 1,
       "mission_id": "RL-ETF-TEMPORAL-EDGE-001",
-      "state": "ACTIVE_RELEASED",
+      "state": "FINAL_ADJUDICATED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__sol-api.json",
       "context_status": "FRESH_BOUND_PLUS_REPRODUCIBLE_REPLAY_AND_ACTION_PROVENANCE",
       "context_paths": [
@@ -42,14 +42,15 @@
         "06_RESEARCH_LAB/m1_checkpoints/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__historical-action-authority-v1.md"
       ],
       "second_pass_reason": "NEW_DETERMINISTIC_PIT_REPLAY_AND_OUTCOME_CROSSWALK",
-      "third_pass_reason": "PROVENANCE_CORRECTION_PLUS_EXECUTABLE_REPLAY_TESTS"
+      "third_pass_reason": "PROVENANCE_CORRECTION_PLUS_EXECUTABLE_REPLAY_TESTS",
+      "no_further_sol_passes_unless_new_material_evidence": true
     },
     {
       "sequence": 2,
       "mission_id": "RL-OFFENSIVE-FNP-002",
-      "state": "QUEUED_WAIT_PREDECESSOR",
+      "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-OFFENSIVE-FNP-002__sol-api.json",
-      "context_status": "FRESH_BIND_AT_RELEASE",
+      "context_status": "FRESH_BIND_REQUIRED_BEFORE_TRIGGER",
       "context_paths": []
     },
     {
@@ -86,5 +87,6 @@
     "canonical_promotion": false,
     "automatic_merge": false,
     "automatic_code_write": false
-  }
+  },
+  "active_mission": "RL-OFFENSIVE-FNP-002"
 }
