@@ -185,3 +185,49 @@ The strongest Ocellus idea survived the design audit and has been converted into
 Evidence that the method improves returns is still UNKNOWN.
 
 That distinction is intentional and binding.
+
+
+## Follow-up: Pons curve flow live proof
+
+The largest Ocellus-derived data gap was immediately investigated against the public Pons v2 source.
+
+Public Pons contract semantics prove that:
+- CurveBuy records buyer, token recipient, quote in, tokens out, fee and tax;
+- purchased tokens are transferred to the event recipient;
+- CurveSell records seller, quote recipient, tokens in, quote out, fee and tax;
+- sold tokens are transferred from msg.sender into the curve.
+
+Alpha therefore resolves:
+- BUY token-flow wallet = recipient, while retaining buyer/payer separately;
+- SELL token-flow wallet = seller, while retaining quote recipient separately.
+
+This avoids falsely treating launch-and-buy/router infrastructure as the economic token holder.
+
+A deterministic decoder and retention proxy were built in Meme Alpha Lab and live-proven through the official Robinhood public RPC.
+
+Live proof:
+- workflow run: 37380316701;
+- job: 112000308572;
+- curve: 0x9072235918dcdd9b5849daf039c1dd836ca915b5;
+- token: 0xacf8e7075e4702dfc2992f7ed36a2eecff4c7cbe;
+- decoded events: 20;
+- buys: 12;
+- sells: 8;
+- unique buy recipients: 12;
+- RPC calls: 2;
+- RPC errors: 0;
+- first-10 raw curve-flow sold fraction: 0.24593028249389565;
+- first-50/available-12 raw curve-flow sold fraction: 0.19016062184963714;
+- external/unseen-inventory contamination flag: false.
+
+These values are capability evidence from one launch, not predictive-edge evidence.
+
+The metric is deliberately named CURVE_FLOW_RETENTION_PROXY rather than holder retention because direct transfers and post-graduation Uniswap-v4 activity are not yet reconciled.
+
+Research consequence:
+EARLY_BUYER_RETENTION is now a registered Research Genome method candidate backed by a partial live-proven adapter instead of an abstract future idea.
+
+Canonical evidence preference:
+Pons public contract events + Alpha chain evidence > Ocellus label for pre-graduation trade identity.
+
+Ocellus remains useful as challenger/enrichment for fields Alpha does not yet reproduce, especially creator fate, dexPaidAt and launch progress.
