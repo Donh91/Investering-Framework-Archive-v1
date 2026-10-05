@@ -24,15 +24,6 @@ on:
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
       - "04_MARKET_LEARNING/entry_signals/LATEST.json"
       - ".github/workflows/cycle-navigator-pages.yml"
-  workflow_run:
-    # Rebuild after any successful production Native Handlekompas completion on main.
-    # This covers the primary Hourly → Entry Signal → Native chain plus Native's
-    # scheduled/manual fallback paths. Bot commits use GITHUB_TOKEN and therefore
-    # cannot be relied on to recursively trigger push-based workflows.
-    workflows:
-      - Native Handlekompas
-    types:
-      - completed
   workflow_dispatch:
 
 permissions:
@@ -44,12 +35,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
-    if: >-
-      github.event_name != 'workflow_run' ||
-      (
-        github.event.workflow_run.head_branch == 'main' &&
-        github.event.workflow_run.conclusion == 'success'
-      )
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
