@@ -296,7 +296,7 @@ function pathWeeklyAlignment(data,compass){
 }
 function pathAlignmentNotice(alignment){
   if(alignment.ok)return'';
-  return '<section class="path-alignment-warning"><span>LIVE GATES REFRESHING</span><strong>Monday path stays frozen while live Compass lineage catches up.</strong><p>Rotation and Altcoin live gates fail closed until the Compass is verified against the current weekly outlook.</p></section>';
+  return '<section class="path-alignment-warning"><span>LIVE SIGNALS REFRESHING</span><strong>The weekly path stays fixed while live data catches up.</strong><p>Rotation and Altcoin signals temporarily show no live call until the fresh data matches the current weekly outlook.</p></section>';
 }
 function statusActive(value){
   const s=String(value||'').toUpperCase();
@@ -496,7 +496,7 @@ function altcoinCycleTimer(pkg,compass){
   const targetIndex=stages.findIndex(x=>x.key===target.key),currentStage=stages[current.index]||null,headlineEta=targetHeadlineEta(target);
   const rows=stages.map((x,i)=>{
     const isCurrent=i===current.index&&current.source==='LIVE',isTarget=i===targetIndex;
-    return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(publicPathStatus(x.status))+'</strong><div class="alt-step-timing">'+timingMarkup(x.eta,'TIMING')+'</div><details><summary>Why?</summary>'+(x.monday?'<p><em>Monday window:</em> '+esc(timingInline(x.monday))+'</p>':'')+'<p>'+esc(short(investorText(x.why),240))+'</p></details></article>';
+    return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(publicPathStatus(x.status))+'</strong><div class="alt-step-timing">'+timingMarkup(x.eta,'TIMING')+'</div><details><summary>Why?</summary>'+(x.monday?'<p><em>Monday window:</em> '+esc(timingInline(x.monday))+'</p>':'')+'<p>'+esc(short(publicPathText(x.why),240))+'</p></details></article>';
   }).join('');
   const nowStrip=currentStage&&current.source==='LIVE'
     ?'<div class="alt-now-strip"><span>NOW POSITION</span><strong>'+esc(currentStage.title)+'</strong><b>'+esc(publicPathStatus(currentStage.status))+' · '+esc(timingInline(currentStage.eta))+'</b><small>Blue = current confirmed position in this sequence. Amber = next watch target. A watch window is conditional, never a countdown.</small></div>'
@@ -507,7 +507,7 @@ function altcoinCycleTimer(pkg,compass){
   return '<section class="path-track altcoin-timer-v2" data-path-track="altcoin-cycle" data-contract="CN_PATH_THREE_TRACK_v2">'
     +'<header class="alt-timer-hero"><div><span>3 · ALTCOIN CYCLE TIMER</span><small>'+esc(target.eyebrow)+' · WATCH TARGET</small><h3>'+esc(target.title)+'</h3><p>'+esc(target.subtitle)+'</p></div>'+targetPanel+'</header>'
     +nowStrip
-    +'<div class="alt-timer-note"><span>Blue = where the governed sequence is now. Amber = the next gate worth watching.</span><b>Timing comes from the published market signal · no browser countdown math</b></div>'
+    +'<div class="alt-timer-note"><span>Blue = current confirmed position. Amber = the next gate worth watching.</span><b>Timing comes from the published market signal · no browser countdown math</b></div>'
     +'<div class="alt-cycle-rail">'+rows+'</div>'
     +'</section>';
 }
