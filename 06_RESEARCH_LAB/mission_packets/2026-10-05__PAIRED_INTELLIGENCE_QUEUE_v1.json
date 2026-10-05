@@ -55,15 +55,17 @@
       "sequence": 3,
       "id": "RL-CN-SKILL-BASELINE-003",
       "title": "Cycle Navigator Skill Decomposition vs Mechanical Baseline",
-      "state": "ACTIVE",
-      "release_condition": "SATISFIED_BY_M2_FINAL_ADJUDICATION"
+      "state": "FINAL_ADJUDICATED",
+      "release_condition": "SATISFIED_BY_M2_FINAL_ADJUDICATION",
+      "final_adjudication_path": "06_RESEARCH_LAB/m3_checkpoints/2026-10-05__RL-CN-SKILL-BASELINE-003__FINAL_ADJUDICATION_v1.md",
+      "verdict": "STRONG_RANGE_SUPERIORITY_REJECTED_CONTAINMENT_VALUE_SUPPORTED_ALPHA_UNESTABLISHED"
     },
     {
       "sequence": 4,
       "id": "RL-AUTOTRADING-EVIDENCE-004",
       "title": "Auto Trading Evidence Machine / Next Empirical Phase",
-      "state": "QUEUED_WAIT_PREDECESSOR",
-      "release_condition": "RL-CN-SKILL-BASELINE-003_FINAL_CHATGPT_ADJUDICATION"
+      "state": "ACTIVE",
+      "release_condition": "SATISFIED_BY_M3_FINAL_ADJUDICATION"
     },
     {
       "sequence": 5,
@@ -82,5 +84,5 @@
     "canonical_promotion": false,
     "automatic_merge": false
   },
-  "active_mission": "RL-CN-SKILL-BASELINE-003"
+  "active_mission": "RL-AUTOTRADING-EVIDENCE-004"
 }
