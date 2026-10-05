@@ -74,15 +74,17 @@
       "mission_id": "RL-CN-SKILL-BASELINE-003",
       "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-CN-SKILL-BASELINE-003__sol-api.json",
-      "context_status": "COMPACT_RETRY_AFTER_API_TIMEOUT",
+      "context_status": "BOUNDED_CROSS_EXAM_NEW_DETERMINISTIC_EVIDENCE",
       "context_paths": [
-        "06_RESEARCH_LAB/m3_checkpoints/2026-10-05__RL-CN-SKILL-BASELINE-003__compact-baseline-evidence-v1.md",
-        "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-CN-SKILL-BASELINE-003__sol-api.json",
-        "06_RESEARCH_LAB/m3_checkpoints/2026-10-05__RL-CN-SKILL-BASELINE-003__kickoff-v1.md"
+        "06_RESEARCH_LAB/m3_checkpoints/2026-10-05__RL-CN-SKILL-BASELINE-003__deterministic-delta-v1.md",
+        "06_RESEARCH_LAB/m3_replay/2026-10-05__RL-CN-SKILL-BASELINE-003__reconstructed-baseline-v1.json",
+        "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-CN-SKILL-BASELINE-003__sol-api.json"
       ],
       "analysis_focus": "INCREMENTAL_SKILL_DECOMPOSITION_RANGE_VS_BASELINE_SEPARATE_FROM_STRUCTURAL_ACCOUNTABILITY",
       "first_attempt": "FAILED_CLOSED_API_READ_TIMEOUT_NO_DURABLE_RECEIPT",
-      "retry_policy": "ONE_COMPACT_RETRY_ONLY"
+      "retry_policy": "ONE_COMPACT_RETRY_ONLY",
+      "cross_exam_reason": "NEW_CURRENT_ERA_RECONSTRUCTED_BASELINE_AFTER_PRIOR_SOL_PASS",
+      "additional_sol_pass_limit": 1
     },
     {
       "sequence": 4,
