@@ -125,10 +125,25 @@ def select_etf_pit_rows(
     asset: str,
     cutoff_utc: str,
 ) -> list[dict[str, Any]]:
-    """Bind each session to the latest eligible vintage knowable at cutoff."""
+    """Bind each session to the latest eligible vintage knowable at cutoff.
+
+    The raw observation set also supplies the expected trading-session sequence.
+    Eligible rows retain that sequence index so downstream trailing features can
+    fail closed across an unavailable trading session rather than silently
+    bridging the gap.
+    """
     if asset not in {"BTC", "ETH"}:
         raise ContractViolation(f"unsupported ETF asset: {asset!r}")
+    observations = list(observations)
     cutoff = parse_timestamp(cutoff_utc)
+    expected_sessions = sorted({
+        str(observation.get("session_date"))
+        for observation in observations
+        if observation.get("asset") == asset
+        and observation.get("is_trading_session") is True
+        and str(observation.get("session_date") or "") >= ETF_PIT_FIRST_TIMED_SESSION
+    })
+    session_index = {day: index for index, day in enumerate(expected_sessions)}
     latest: dict[str, tuple[tuple[datetime, int, datetime], dict[str, Any]]] = {}
 
     for observation in observations:
@@ -137,6 +152,9 @@ def select_etf_pit_rows(
         mapped = map_etf_observation_to_pit_row(observation)
         if mapped is None:
             continue
+        if mapped["date"] not in session_index:
+            raise ContractViolation(f"ETF PIT session sequence missing mapped date: {mapped['date']}")
+        mapped = {**mapped, "trading_session_index": session_index[mapped["date"]]}
         knowledge = parse_timestamp(mapped["knowledge_available_at_utc"])
         if knowledge > cutoff:
             continue
@@ -150,20 +168,29 @@ def select_etf_pit_rows(
 
 
 def build_etf_trailing_pit(rows: list[dict[str, Any]], asset: str) -> list[dict[str, Any]]:
-    """Build official PIT trailing features without touching frozen W30 v1 outputs."""
+    """Build official PIT trailing features without touching frozen W30 v1 outputs.
+
+    #1211/D6 semantics are enforced per feature window. Missing admissible
+    trading sessions break the consecutive segment; a 3/5/10/20-session
+    feature never bridges across a missing session.
+    """
     seen: set[str] = set()
-    flows: list[float] = []
+    segment_flows: list[float] = []
+    segment_knowledges: list[datetime] = []
     streak = 0
     output: list[dict[str, Any]] = []
-    feature_knowledge: datetime | None = None
+    previous_session_index: int | None = None
     metadata_fields = {
         "asset", "date", "total_usd_millions", "knowledge_available_at_utc",
         "knowledge_time_status", "knowledge_rule_id", "source_observed_at_utc",
         "verification_completed_at_utc", "schema_id", "schema_status", "vintage_seq",
-        "source", "method_id",
+        "source", "method_id", "trading_session_index",
     }
 
-    for index, row in enumerate(sorted(rows, key=lambda r: r["date"])):
+    def max_iso(values: list[datetime]) -> str | None:
+        return max(values).isoformat().replace("+00:00", "Z") if values else None
+
+    for row in sorted(rows, key=lambda r: r["date"]):
         if row.get("asset") != asset:
             raise ContractViolation(f"ETF PIT row asset mismatch: expected {asset}, got {row.get('asset')!r}")
         date_text = str(row["date"])
@@ -177,31 +204,62 @@ def build_etf_trailing_pit(rows: list[dict[str, Any]], asset: str) -> list[dict[
         if row.get("knowledge_rule_id") != ETF_PIT_DECISION_ID:
             raise ContractViolation(f"ETF PIT row lacks owner decision {ETF_PIT_DECISION_ID}: {date_text}")
 
-        row_knowledge = parse_timestamp(str(row["knowledge_available_at_utc"]))
-        feature_knowledge = row_knowledge if feature_knowledge is None else max(feature_knowledge, row_knowledge)
+        session_index = row.get("trading_session_index")
+        if isinstance(session_index, bool) or not isinstance(session_index, int):
+            raise ContractViolation(f"ETF PIT row lacks trading_session_index: {date_text}")
+        gap = (
+            previous_session_index is not None
+            and session_index != previous_session_index + 1
+        )
+        if gap:
+            segment_flows = []
+            segment_knowledges = []
+            streak = 0
+        previous_session_index = session_index
 
+        row_knowledge = parse_timestamp(str(row["knowledge_available_at_utc"]))
+        previous_flow = segment_flows[-1] if segment_flows else None
         flow = float(row["total_usd_millions"])
-        flows.append(flow)
+        segment_flows.append(flow)
+        segment_knowledges.append(row_knowledge)
+
         sign = _sign(flow)
+        previous_sign = _sign(previous_flow) if previous_flow is not None else 0
         if sign == 0:
             streak = 0
-        elif index == 0 or _sign(flows[index - 1]) != sign:
+        elif previous_flow is None or previous_sign != sign:
             streak = sign
         else:
             streak += sign
 
+        windows = (1, 3, 5, 10, 20)
         rolling = {
-            window: sum(flows[-window:]) if len(flows) >= window else None
-            for window in (1, 3, 5, 10, 20)
+            window: sum(segment_flows[-window:]) if len(segment_flows) >= window else None
+            for window in windows
         }
-        previous_3 = sum(flows[-4:-1]) if len(flows) >= 4 else None
+        rolling_knowledge = {
+            window: max_iso(segment_knowledges[-window:]) if len(segment_knowledges) >= window else None
+            for window in windows
+        }
+
+        widest_complete = max(
+            (window for window in windows if rolling[window] is not None),
+            default=1,
+        )
+        bundle_knowledge = rolling_knowledge[widest_complete]
+
+        previous_3 = sum(segment_flows[-4:-1]) if len(segment_flows) >= 4 else None
         acceleration_3 = (
             rolling[3] - previous_3
             if rolling[3] is not None and previous_3 is not None
             else None
         )
-        acceleration_1 = flow - flows[-2] if len(flows) >= 2 else None
-        previous_sign = _sign(flows[-2]) if len(flows) >= 2 else 0
+        acceleration_1 = flow - segment_flows[-2] if len(segment_flows) >= 2 else None
+
+        streak_len = abs(streak) if streak else 1
+        streak_knowledge = max_iso(segment_knowledges[-streak_len:])
+        acceleration_1_knowledge = max_iso(segment_knowledges[-2:]) if len(segment_knowledges) >= 2 else None
+        acceleration_3_knowledge = max_iso(segment_knowledges[-4:]) if len(segment_knowledges) >= 4 else None
 
         fund_columns = [column for column in row if column not in metadata_fields]
         fund_abs = [
@@ -214,9 +272,13 @@ def build_etf_trailing_pit(rows: list[dict[str, Any]], asset: str) -> list[dict[
         output.append({
             "asset": asset,
             "date": date_text,
+            "trading_session_index": session_index,
+            "consecutive_segment_length": len(segment_flows),
+            "session_gap_from_previous": gap,
             "total_usd_millions": flow,
             "knowledge_available_at_utc": row["knowledge_available_at_utc"],
-            "feature_knowledge_available_at_utc": feature_knowledge.isoformat().replace("+00:00", "Z"),
+            "feature_knowledge_available_at_utc": bundle_knowledge,
+            "feature_knowledge_semantics": "BUNDLE_MAX_OF_WIDEST_COMPLETE_EXACT_WINDOW_USE_PER_FEATURE_FIELDS",
             "knowledge_rule_id": ETF_PIT_DECISION_ID,
             "rolling_net_flow_1s_usd_millions": rolling[1],
             "rolling_net_flow_3s_usd_millions": rolling[3],
@@ -228,15 +290,23 @@ def build_etf_trailing_pit(rows: list[dict[str, Any]], asset: str) -> list[dict[
             "rolling_5s_complete": rolling[5] is not None,
             "rolling_10s_complete": rolling[10] is not None,
             "rolling_20s_complete": rolling[20] is not None,
+            "rolling_1s_knowledge_available_at_utc": rolling_knowledge[1],
+            "rolling_3s_knowledge_available_at_utc": rolling_knowledge[3],
+            "rolling_5s_knowledge_available_at_utc": rolling_knowledge[5],
+            "rolling_10s_knowledge_available_at_utc": rolling_knowledge[10],
+            "rolling_20s_knowledge_available_at_utc": rolling_knowledge[20],
             "signed_flow_streak_sessions": streak,
+            "signed_flow_streak_knowledge_available_at_utc": streak_knowledge,
             "flow_acceleration_1s_usd_millions": acceleration_1,
+            "flow_acceleration_1s_knowledge_available_at_utc": acceleration_1_knowledge,
             "flow_acceleration_3s_usd_millions": acceleration_3,
+            "flow_acceleration_3s_knowledge_available_at_utc": acceleration_3_knowledge,
             "reversal_flag": sign != 0 and previous_sign != 0 and sign != previous_sign,
             "issuer_concentration_abs_share": concentration,
-            "feature_method_id": ETF_PIT_TRAILING_METHOD_ID,
+            "issuer_concentration_knowledge_available_at_utc": row["knowledge_available_at_utc"],
+            "feature_method_id": "ETF_TRAILING_ONLY_FEATURES_PIT_v3",
         })
     return output
-
 
 def build_etf_divergence_pit(
     btc_rows: list[dict[str, Any]],
