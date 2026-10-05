@@ -64,15 +64,17 @@
       "sequence": 4,
       "id": "RL-AUTOTRADING-EVIDENCE-004",
       "title": "Auto Trading Evidence Machine / Next Empirical Phase",
-      "state": "ACTIVE",
-      "release_condition": "SATISFIED_BY_M3_FINAL_ADJUDICATION"
+      "state": "FINAL_ADJUDICATED",
+      "release_condition": "SATISFIED_BY_M3_FINAL_ADJUDICATION",
+      "final_adjudication_path": "06_RESEARCH_LAB/m4_checkpoints/2026-10-05__RL-AUTOTRADING-EVIDENCE-004__FINAL_ADJUDICATION_v1.md",
+      "verdict": "PARTIALLY_READY_BROAD_SEARCH_BLOCKED_NEW_TEST_ADMISSION_BUILD_NOTHING"
     },
     {
       "sequence": 5,
       "id": "RL-TECHDEV97-005",
       "title": "TechDev #97 Final Adjudication",
-      "state": "QUEUED_WAIT_PREDECESSOR",
-      "release_condition": "RL-AUTOTRADING-EVIDENCE-004_FINAL_CHATGPT_ADJUDICATION"
+      "state": "ACTIVE",
+      "release_condition": "SATISFIED_BY_M4_FINAL_ADJUDICATION"
     }
   ],
   "authority": {
@@ -84,5 +86,5 @@
     "canonical_promotion": false,
     "automatic_merge": false
   },
-  "active_mission": "RL-AUTOTRADING-EVIDENCE-004"
+  "active_mission": "RL-TECHDEV97-005"
 }
