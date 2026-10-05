@@ -12,7 +12,8 @@
     "SENIOR_REPAIR_AUDIT": 10,
     "AUTOMATION_ORCHESTRATOR_TRIAGE": 2,
     "AUTOMATION_ORCHESTRATOR_ESCALATION": 4,
-    "FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT": 6
+    "FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT": 6,
+    "RESEARCH_LAB_SOL_ANALYSIS": 10
   },
   "director_schedule": {
     "maximum_runs_per_day": 4,
@@ -84,5 +85,19 @@
     "automatic_code_write": false,
     "automatic_merge": false,
     "monthly_hard_stop_unchanged": true
+  },
+  "research_lab_sol_analysis": {
+    "enabled": true,
+    "task": "RESEARCH_LAB_SOL_ANALYSIS",
+    "invocation_mode": "EVENT_DRIVEN_OWNER_GATED_ONLY",
+    "maximum_runs_per_mission": 3,
+    "maximum_active_missions": 1,
+    "periodic_schedule": false,
+    "requires_existing_owner_issue": 1476,
+    "canonical_market_state": false,
+    "automatic_code_write": false,
+    "automatic_merge": false,
+    "monthly_hard_stop_unchanged": true,
+    "predecessor_adjudication_required": true
   }
 }
