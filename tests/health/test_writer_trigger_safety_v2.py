@@ -64,6 +64,69 @@ jobs:
 """)
         self.assertIn('PR_VALIDATION_COMPETES_WITH_MAIN_WRITER',findings)
 
+    def test_approved_market_owner_writer_group_is_safe(self):
+        findings=self.inspect("""on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: framework-market-owner-writer
+  queue: max
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: git push origin HEAD:main
+""")
+        # Generic temp path is not allowlisted, so exercise the real approved filename too.
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'hourly-sequence-capture.yml'
+            path.write_text("""on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: framework-market-owner-writer
+  queue: max
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: git push origin HEAD:main
+""")
+            self.assertEqual(module.inspect(path),[])
+        self.assertIn('MAIN_WRITER_WITHOUT_SHARED_CONCURRENCY',findings)
+
+    def test_unapproved_market_owner_writer_group_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'unrelated-writer.yml'
+            path.write_text("""on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: framework-market-owner-writer
+  queue: max
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: git push origin HEAD:main
+""")
+            self.assertIn('MAIN_WRITER_WITHOUT_SHARED_CONCURRENCY',module.inspect(path))
+
     def test_unrecognized_dynamic_writer_group_fails(self):
         findings=self.inspect("""on:
   workflow_dispatch:
