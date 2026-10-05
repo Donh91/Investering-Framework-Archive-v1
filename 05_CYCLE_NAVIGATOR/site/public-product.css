@@ -187,3 +187,19 @@
   .path-read-guide p{font-size:8px}
 }
 
+
+
+/* PATH final UX audit — current context without inventing a cycle stage */
+.cycle-position-chip.current-context{border-color:#9fb9d1;background:linear-gradient(90deg,#eef6fd,#fbfdff)}
+.cycle-position-chip.current-context>i{background:#315b85;box-shadow:0 0 0 5px rgba(49,91,133,.12)}
+.cycle-position-chip.current-context>span{color:#315b85}
+.cycle-position-chip.current-context>strong{color:#1e3f62;font-weight:950}
+.cycle-position-chip.current-context>small{color:#66798e}
+.cycle-position-chip.current-context+ .cycle-position-chip.next-supported{margin-top:-2px}
+
+.alt-step-timing .path-timing:not(.conditional){letter-spacing:.025em}
+.path-read-guide p b+ b{color:#355b7d}
+
+@media(max-width:640px){
+  .cycle-position-chip.current-context+ .cycle-position-chip.next-supported{margin-top:6px}
+}
