@@ -1,0 +1,87 @@
+name: Research Lab M6 SPAR Comparator Feasibility
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: research-lab-m6-spar-comparator
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    if: >-
+      github.event.issue.number == 1476 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[M6_SPAR_COMPARATOR]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate frozen method and existing SPAR owner
+        run: |
+          test -f 06_RESEARCH_LAB/m6_methods/2026-10-05__spar-comparator-feasibility-method-v1.md
+          test -f scripts/experiments/spar_v1.py
+          test -f research/experiments/spar_v1/SPAR_CONFIG_v1.json
+          python -m py_compile scripts/research/m6_spar_comparator_feasibility.py
+
+      - name: Run discovery-only comparator replay
+        run: |
+          mkdir -p runtime/m6-spar
+          python scripts/research/m6_spar_comparator_feasibility.py \
+            --repo-root . \
+            --output runtime/m6-spar/result.json
+
+      - name: Persist immutable research result
+        run: |
+          set -euo pipefail
+          dest="06_RESEARCH_LAB/m6_replay/2026-10-05__spar-comparator-feasibility-v1.json"
+          mkdir -p "$(dirname "$dest")"
+          cp runtime/m6-spar/result.json "$dest"
+          git config user.name 'research-lab-m6[bot]'
+          git config user.email 'research-lab-m6@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m "research: persist M6 SPAR comparator feasibility"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt*4))
+            done
+            [ "$pushed" = true ]
+          fi
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > runtime/m6-spar/comment.md
+          import json
+          p='06_RESEARCH_LAB/m6_replay/2026-10-05__spar-comparator-feasibility-v1.json'
+          o=json.load(open(p))
+          print('## M6 SPAR comparator feasibility completed')
+          print()
+          for name,s in o['summaries'].items():
+              h=s['horizons']['72']
+              print(f"- {name}: events {s['event_count']}, matured72 {h['matured_count']}, BTC72 median {h['median_btc_return_pct']}, MAE {h['median_btc_mae_pct']}")
+          print()
+          d=o['descriptive_target_minus_primary_72h']
+          print(f"Strict-P3 minus ETH-weakness comparator, discovery-only: BTC return median delta {d['btc_return_median_delta_pp']}, MAE delta {d['btc_mae_median_delta_pp']} pp.")
+          print()
+          print('No incremental-edge, warning or exit claim is authorized.')
+          print(f"Artifact: `{p}`")
+          PY
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body-file runtime/m6-spar/comment.md
