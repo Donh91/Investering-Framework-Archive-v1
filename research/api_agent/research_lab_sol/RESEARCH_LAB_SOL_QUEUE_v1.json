@@ -72,7 +72,7 @@
     {
       "sequence": 3,
       "mission_id": "RL-CN-SKILL-BASELINE-003",
-      "state": "ACTIVE_RELEASED",
+      "state": "FINAL_ADJUDICATED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-CN-SKILL-BASELINE-003__sol-api.json",
       "context_status": "BOUNDED_CROSS_EXAM_NEW_DETERMINISTIC_EVIDENCE",
       "context_paths": [
@@ -84,14 +84,15 @@
       "first_attempt": "FAILED_CLOSED_API_READ_TIMEOUT_NO_DURABLE_RECEIPT",
       "retry_policy": "ONE_COMPACT_RETRY_ONLY",
       "cross_exam_reason": "NEW_CURRENT_ERA_RECONSTRUCTED_BASELINE_AFTER_PRIOR_SOL_PASS",
-      "additional_sol_pass_limit": 1
+      "additional_sol_pass_limit": 1,
+      "no_further_sol_passes_unless_new_material_evidence": true
     },
     {
       "sequence": 4,
       "mission_id": "RL-AUTOTRADING-EVIDENCE-004",
-      "state": "QUEUED_WAIT_PREDECESSOR",
+      "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-AUTOTRADING-EVIDENCE-004__sol-api.json",
-      "context_status": "FRESH_BIND_AT_RELEASE",
+      "context_status": "FRESH_BIND_REQUIRED_BEFORE_TRIGGER",
       "context_paths": []
     },
     {
@@ -113,5 +114,5 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "RL-CN-SKILL-BASELINE-003"
+  "active_mission": "RL-AUTOTRADING-EVIDENCE-004"
 }
