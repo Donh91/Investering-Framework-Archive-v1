@@ -151,11 +151,28 @@ def test_decision_projection_is_required_and_typed():
     assert "decision_projection" in schema["required"]
     projection = schema["properties"]["decision_projection"]
     assert projection["additionalProperties"] is False
-    assert set(projection["required"]) == {"contract", "next_1_3d", "next_5_7d", "next_2_3w", "weeks_4_8", "protection"}
+    assert set(projection["required"]) == {"contract", "next_1_3d", "next_5_7d", "next_2_3w", "next_21_30d", "weeks_4_8", "protection"}
     assert projection["properties"]["contract"]["const"] == "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"
     protection = projection["properties"]["protection"]
     assert "pullback_risk_state" in protection["required"]
     assert "distribution_risk" in protection["required"]
+
+
+def test_weekly_publication_dispatches_fresh_official_compass_after_durable_readback():
+    weekly = (ROOT / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
+    daily = (ROOT / ".github/workflows/daily-compass.yml").read_text()
+    assert "actions: write" in weekly
+    readback = weekly.index("- name: Durable readback of complete Cycle Navigator package")
+    handoff = weekly.index("- name: Refresh Official Compass from newly published weekly CN")
+    assert readback < handoff
+    handoff_block = weekly[handoff:]
+    assert "if: steps.precheck.outputs.skip != 'true'" in handoff_block
+    assert "gh workflow run daily-compass.yml --ref main -f run_reason=EVENT_DRIVEN" in handoff_block
+    assert "group: framework-main-writer" in weekly
+    assert "workflow_dispatch:" in daily
+    assert "Publish current Compass to Cycle Navigator Pages" in daily
+    assert "gh workflow run cycle-navigator-pages.yml --ref main" in daily
+    assert "'.github/workflows/cycle-navigator-weekly-publication.yml'" in daily
 
 
 def test_publication_workflow_does_not_mask_builder_failure():
