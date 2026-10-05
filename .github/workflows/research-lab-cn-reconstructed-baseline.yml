@@ -1,0 +1,102 @@
+name: Research Lab CN Reconstructed Baseline
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: research-lab-cn-baseline
+  cancel-in-progress: false
+
+jobs:
+  reconstruct:
+    if: >-
+      github.event.issue.number == 1476 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[RESEARCH_LAB_CN_BASELINE]') &&
+      contains(github.event.comment.body, 'mission=RL-CN-SKILL-BASELINE-003')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate research-only baseline code
+        run: |
+          python -m py_compile scripts/research/cn_reconstructed_baseline_v1.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows=[json.loads(x) for x in Path('05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl').read_text().splitlines() if x.strip()]
+          exact=[r for r in rows if r.get('forecast_week') in {'2026-W39','2026-W40'} and r.get('window')=='weekly' and r.get('asset') in {'BTC','ETH'}]
+          assert exact
+          for key in [('2026-W39','BTC'),('2026-W39','ETH'),('2026-W40','BTC'),('2026-W40','ETH')]:
+              matches=[r for r in exact if (r['forecast_week'],r['asset'])==key]
+              assert matches, key
+              assert len({(r['forecast_low'],r['forecast_high'],r['generated_unix']) for r in matches})==1
+          PY
+
+      - name: Reconstruct ex-ante mechanical baselines and score
+        run: |
+          mkdir -p runtime/cn-baseline
+          python scripts/research/cn_reconstructed_baseline_v1.py \
+            --repo-root . \
+            --output runtime/cn-baseline/result.json
+
+      - name: Persist immutable research result
+        run: |
+          set -euo pipefail
+          dest="06_RESEARCH_LAB/m3_replay/2026-10-05__RL-CN-SKILL-BASELINE-003__reconstructed-baseline-v1.json"
+          mkdir -p "$(dirname "$dest")"
+          cp runtime/cn-baseline/result.json "$dest"
+          git config user.name 'research-lab-cn-baseline[bot]'
+          git config user.email 'research-lab-cn-baseline@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m "research: persist M3 reconstructed CN baseline tournament"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt*4))
+            done
+            [ "$pushed" = true ]
+          fi
+
+      - name: Report result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > runtime/cn-baseline/comment.md
+          import json
+          p='06_RESEARCH_LAB/m3_replay/2026-10-05__RL-CN-SKILL-BASELINE-003__reconstructed-baseline-v1.json'
+          o=json.load(open(p))
+          print('## RESEARCH_LAB_CN_BASELINE completed')
+          print()
+          print('Research-only reconstructed ex-ante baseline, not a historical frozen-score rewrite.')
+          print()
+          for r in o['rows']:
+              print(f"### {r['forecast_week']} {r['asset']}")
+              print(f"- anchor: {r['anchor_date']} close {r['anchor_close']:.2f}, ATR14 {r['atr14_whole_usd']}")
+              for m in ('CN','DUMB15','DUMB20'):
+                  s=r['scores'][m]
+                  print(f"- {m}: Jaccard {s['jaccard']:.3f}, Winkler10 {s['winkler_a10']:.2f}, containment {s['daily_containment_pct']:.1f}%")
+          print()
+          print('Means:')
+          for m,v in o['means'].items():
+              print(f"- {m}: Jaccard {v['mean_jaccard']:.3f}, Winkler10 {v['mean_winkler_a10']:.2f}, containment {v['mean_containment_pct']:.1f}%")
+          print()
+          print(f"Immutable result: `{p}`")
+          print('No canonical/public score or authority changed.')
+          PY
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body-file runtime/cn-baseline/comment.md
