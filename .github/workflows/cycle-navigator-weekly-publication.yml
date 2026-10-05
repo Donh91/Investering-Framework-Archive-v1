@@ -10,6 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -324,6 +325,19 @@ jobs:
             --manifest runtime_cn_readback_manifest.json \
             --ref origin/main \
             --output runtime_cn_readback_receipt.json
+
+      - name: Refresh Official Compass from newly published weekly CN
+        if: steps.precheck.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Dispatch only after the complete CN package passed durable readback.
+          # Both workflows share framework-main-writer, so the Compass run waits
+          # until this weekly writer has released the global writer lock.
+          gh workflow run daily-compass.yml --ref main -f run_reason=EVENT_DRIVEN
+          echo "WEEKLY_CN_COMPASS_HANDOFF_DISPATCHED"
 
       - uses: actions/upload-artifact@v4
         if: always()
