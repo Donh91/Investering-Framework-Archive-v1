@@ -1,0 +1,209 @@
+{
+  "contract": "HCEL_O1_INDEPENDENT_E1_E3_CONTINUITY_VERIFIER_v1",
+  "status": "RESEARCH_ONLY_INDEPENDENT_IMPLEMENTATION",
+  "panel": "06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/hourly_features.csv.gz",
+  "daily_rows": 1064,
+  "segments": 2,
+  "warmup_2025": {
+    "BTC": {
+      "sma50_first": "2025-02-19",
+      "sma140_first": "2025-05-20",
+      "br7_first": "2025-01-08",
+      "ethbtc30_first": "2025-01-31",
+      "stable30_first": "2025-01-31"
+    },
+    "ETH": {
+      "sma50_first": "2025-02-19",
+      "sma140_first": "2025-05-20",
+      "br7_first": "2025-01-08",
+      "ethbtc30_first": "2025-01-31",
+      "stable30_first": "2025-01-31"
+    },
+    "ALT_EW": {
+      "sma50_first": "2025-02-19",
+      "sma140_first": "2025-05-20",
+      "br7_first": "2025-01-08",
+      "ethbtc30_first": "2025-01-31",
+      "stable30_first": "2025-01-31"
+    }
+  },
+  "scalars": {
+    "0": {
+      "E1": {
+        "WA": -0.03210282644335911,
+        "WB": 0.014478977662929476,
+        "WC": 0.03311169930544491
+      },
+      "E3": {
+        "WA": -0.013211459368356026,
+        "WB": 0.01697927185032799,
+        "WC": 0.029055564337801595
+      }
+    },
+    "20": {
+      "E1": {
+        "WA": -0.03602341500676041,
+        "WB": 0.01189695521151333,
+        "WC": 0.03106510329882282
+      },
+      "E3": {
+        "WA": -0.02075749523229966,
+        "WB": 0.01222752782472379,
+        "WC": 0.02542153704753317
+      }
+    },
+    "50": {
+      "E1": {
+        "WA": -0.04191905418113324,
+        "WB": 0.007886540451319984,
+        "WC": 0.02780877830430127
+      },
+      "E3": {
+        "WA": -0.03209297692207965,
+        "WB": 0.005036797145669992,
+        "WC": 0.01988870677276985
+      }
+    }
+  },
+  "selected_cells_cost20": [
+    {
+      "episode": "EP-03_2025_JAN_TOP",
+      "asset": "BTC",
+      "cost": 20,
+      "policy": "E1",
+      "twr": 1.0,
+      "maxdd_policy": 27.773936270623345,
+      "maxdd_hold": 27.773936270623345,
+      "first_exposure_change_date": null,
+      "time_out": 0.0
+    },
+    {
+      "episode": "EP-03_2025_JAN_TOP",
+      "asset": "BTC",
+      "cost": 20,
+      "policy": "E3",
+      "twr": 0.9900779676687232,
+      "maxdd_policy": 20.8056532788236,
+      "maxdd_hold": 27.773936270623345,
+      "first_exposure_change_date": "2025-02-08",
+      "time_out": 0.27900552486187846
+    },
+    {
+      "episode": "EP-03_2025_JAN_TOP",
+      "asset": "ETH",
+      "cost": 20,
+      "policy": "E1",
+      "twr": 1.0,
+      "maxdd_policy": 60.065466893778186,
+      "maxdd_hold": 60.065466893778186,
+      "first_exposure_change_date": null,
+      "time_out": 0.0
+    },
+    {
+      "episode": "EP-03_2025_JAN_TOP",
+      "asset": "ETH",
+      "cost": 20,
+      "policy": "E3",
+      "twr": 1.2053642001766673,
+      "maxdd_policy": 39.33887982557233,
+      "maxdd_hold": 60.065466893778186,
+      "first_exposure_change_date": "2025-02-08",
+      "time_out": 0.35220994475138123
+    },
+    {
+      "episode": "EP-03_2025_JAN_TOP",
+      "asset": "ALT_EW",
+      "cost": 20,
+      "policy": "E1",
+      "twr": 1.0393315317056522,
+      "maxdd_policy": 57.39637114424014,
+      "maxdd_hold": 57.39637114424014,
+      "first_exposure_change_date": "2025-05-21",
+      "time_out": 0.2154696132596685
+    },
+    {
+      "episode": "EP-03_2025_JAN_TOP",
+      "asset": "ALT_EW",
+      "cost": 20,
+      "policy": "E3",
+      "twr": 1.0784855792789603,
+      "maxdd_policy": 48.08188539825453,
+      "maxdd_hold": 57.39637114424014,
+      "first_exposure_change_date": "2025-02-08",
+      "time_out": 0.32320441988950277
+    },
+    {
+      "episode": "CTRL-03_2025_RECOVERY_LEG",
+      "asset": "BTC",
+      "cost": 20,
+      "policy": "E1",
+      "twr": 0.9535927216958741,
+      "maxdd_policy": 12.616660299982696,
+      "maxdd_hold": 12.616660299982696,
+      "first_exposure_change_date": "2025-09-27",
+      "time_out": 0.01639344262295082
+    },
+    {
+      "episode": "CTRL-03_2025_RECOVERY_LEG",
+      "asset": "BTC",
+      "cost": 20,
+      "policy": "E3",
+      "twr": 0.8605638483152658,
+      "maxdd_policy": 14.019866063667052,
+      "maxdd_hold": 12.616660299982696,
+      "first_exposure_change_date": "2025-04-09",
+      "time_out": 0.06557377049180328
+    },
+    {
+      "episode": "CTRL-03_2025_RECOVERY_LEG",
+      "asset": "ETH",
+      "cost": 20,
+      "policy": "E1",
+      "twr": 1.0,
+      "maxdd_policy": 19.832218366543852,
+      "maxdd_hold": 19.832218366543852,
+      "first_exposure_change_date": null,
+      "time_out": 0.0
+    },
+    {
+      "episode": "CTRL-03_2025_RECOVERY_LEG",
+      "asset": "ETH",
+      "cost": 20,
+      "policy": "E3",
+      "twr": 0.7723178245674468,
+      "maxdd_policy": 19.83221836654383,
+      "maxdd_hold": 19.832218366543852,
+      "first_exposure_change_date": "2025-04-09",
+      "time_out": 0.13797814207650272
+    },
+    {
+      "episode": "CTRL-03_2025_RECOVERY_LEG",
+      "asset": "ALT_EW",
+      "cost": 20,
+      "policy": "E1",
+      "twr": 0.9479602140456477,
+      "maxdd_policy": 19.03935378326189,
+      "maxdd_hold": 29.159362687282265,
+      "first_exposure_change_date": "2025-05-21",
+      "time_out": 0.2677595628415301
+    },
+    {
+      "episode": "CTRL-03_2025_RECOVERY_LEG",
+      "asset": "ALT_EW",
+      "cost": 20,
+      "policy": "E3",
+      "twr": 0.7518268486120353,
+      "maxdd_policy": 27.241434969911726,
+      "maxdd_hold": 29.159362687282265,
+      "first_exposure_change_date": "2025-04-09",
+      "time_out": 0.11065573770491803
+    }
+  ],
+  "interpretation": [
+    "Implementation is independent of Claude's o1_continuity_audit.py and only covers E1/E3.",
+    "No original v0 ranking value is used as an input.",
+    "This verifies material ranking direction, not every one of the 54 changed cells.",
+    "Historical F&G/stablecoin knowledge-time validity is not asserted.",
+    "No live rule or portfolio authority."
+  ]
+}
