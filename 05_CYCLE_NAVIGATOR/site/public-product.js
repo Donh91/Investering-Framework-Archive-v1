@@ -77,7 +77,6 @@ function publicPathText(raw){
   return s.replace(/\s+/g,' ').trim();
 }
 
-// Legacy release-gate compatibility only; never rendered: Small-cap expansion gate
 function publicPathStatus(value){
   const s=pathStatus(value);
   return({
@@ -338,7 +337,6 @@ function cycleDestination(pkg){
   const map={EXPANSION:'PRE_ROTATION',CONSOLIDATION:'CONSOLIDATION',DISTRIBUTION:'DISTRIBUTION',CONTRACTION:'DEFENSIVE'};
   return map[d]||null;
 }
-// Legacy release-gate compatibility only; never rendered: source:'NO STRUCTURED 4–8W PHASE'
 function cycleForwardFromSources(pkg){
   const known=['DEFENSIVE','CONSOLIDATION','PRE_ROTATION','ROTATION','BROAD_ALTSEASON','PARABOLIC_ALTSEASON','DISTRIBUTION','EXIT_RISK'];
   const month=pkg?.decision_projection?.next_21_30d||{},monthKey=cycleDestination(pkg);
@@ -512,7 +510,6 @@ function altcoinCurrentStage(pkg,compass,stages){
   const map=[0,1,2,3,5];
   return active>=0?{index:map[active]??-1,source:'MONDAY',certainty:'REFERENCE'}:{index:-1,source:'NONE',certainty:'NONE'};
 }
-// Legacy release-gate compatibility only; never rendered: ETA TO TARGET GATE · Conditional gate window · not a guaranteed phase-start date
 function targetHeadlineEta(target){
   const eta=pathEta(target?.eta),status=pathStatus(target?.status);
   if(eta==='NO SUPPORTED ETA'||/CONDITIONAL/i.test(eta))return null;
