@@ -134,12 +134,22 @@
     {
       "sequence": 6,
       "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
-      "state": "WAIT_FOR_EVIDENCE",
+      "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__sol-api.json",
-      "context_status": "NOT_BOUND_YET",
-      "context_paths": [],
-      "release_gate": "CLAUDE_OR_DETERMINISTIC_M6_RESULTS_PLUS_CHATGPT_ADJUDICATED_PACKET",
-      "no_early_sol_opinion": true
+      "context_status": "DETERMINISTIC_EVIDENCE_V1_BOUND_CLAUDE_PENDING",
+      "context_paths": [
+        "06_RESEARCH_LAB/m6_checkpoints/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__deterministic-evidence-v1.md",
+        "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__sol-api.json",
+        "research/experiments/spar_v1/LATEST_REPORT.json",
+        "research/experiments/spar_v1/LATEST_FRAGILITY_REPORT.json",
+        "02_DATA_PING/live_state_handover/2026-07-11__pullback-edge-20260708-01__72h-event-close-receipt.md",
+        "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+        "research/framework_memory/rotation_survival_forward_rows/LATEST.json",
+        "research/framework_evolution_learning/2026-08-29__cycle-compass-exit-distribution-research-program-v1.md"
+      ],
+      "release_gate": "SATISFIED_BY_DETERMINISTIC_M6_RESULTS; CLAUDE_FULL_CENSUS_PENDING_NONBLOCKING",
+      "no_early_sol_opinion": false,
+      "pass_scope": "BOUNDED_EVIDENCE_TRIAGE_NO_SIGNAL_INVENTION"
     }
   ],
   "authority": {
