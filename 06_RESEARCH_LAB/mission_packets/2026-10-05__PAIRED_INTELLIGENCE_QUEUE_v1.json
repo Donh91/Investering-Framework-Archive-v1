@@ -37,15 +37,17 @@
       "sequence": 1,
       "id": "RL-ETF-TEMPORAL-EDGE-001",
       "title": "ETF Temporal Integrity & True Decision Value",
-      "state": "ACTIVE",
-      "release_condition": "ALREADY_RELEASED"
+      "state": "FINAL_ADJUDICATED",
+      "release_condition": "ALREADY_RELEASED",
+      "final_adjudication_path": "06_RESEARCH_LAB/m1_checkpoints/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__FINAL_ADJUDICATION_v1.md",
+      "verdict": "STRONG_CLAIM_REJECTED_NARROW_HYPOTHESIS_WEAKENED"
     },
     {
       "sequence": 2,
       "id": "RL-OFFENSIVE-FNP-002",
       "title": "Offensive Edge / False-Negative Opportunity Cost",
-      "state": "QUEUED_WAIT_PREDECESSOR",
-      "release_condition": "RL-ETF-TEMPORAL-EDGE-001_FINAL_CHATGPT_ADJUDICATION"
+      "state": "ACTIVE",
+      "release_condition": "SATISFIED_BY_M1_FINAL_ADJUDICATION"
     },
     {
       "sequence": 3,
@@ -77,5 +79,6 @@
     "portfolio_action": false,
     "canonical_promotion": false,
     "automatic_merge": false
-  }
+  },
+  "active_mission": "RL-OFFENSIVE-FNP-002"
 }
