@@ -1,1 +1,108 @@
-{"authority":"PUBLIC_SERIES_IDENTITY_AND_SCORE_ROUTING_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY","contract":"CN_PUBLIC_SERIES_INDEX_v1","current_public_projection":{"binding_path":"05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json","forecast_week":"2026-W41","machine_issue_number":29,"machine_week_dir":"05_CYCLE_NAVIGATOR/weekly/2026/W41","note":"Public numbering is continuous from the public site freeze record; X is an optional downstream distribution channel.","public_issue_number":28,"publication_status":"X_READY_NOT_CONFIRMED_PUBLISHED","site_publication_receipt":"05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json","site_publication_status":"SITE_FROZEN_SOURCE_OF_RECORD"},"invariants":["Never join public and machine Cycle Navigator records on issue_number alone.","For public precision, resolve forecast_week and immutable published source first.","For the latest completed public score, use latest_completed_score.scorecard_path.","Machine CYCLE_NAVIGATOR_SCORECARD.json is not automatically the public-series scorecard during the migration-offset window.","Every new weekly machine package must materialize CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json and append its numeric ranges to CN_FORWARD_RANGE_LEDGER_v2.jsonl at freeze time.","X publication status is user-attested: never require independent or external X verification; when the user says an exact version is published, archive it as PUBLISHED_CONFIRMED_BY_USER.","Market/Structure public scoring ends with CN26. For CN27 and later, market_structure_score must remain null/absent; historical Market/Structure scores remain immutable and visible. Price Range precision continues unchanged; Bull/Bear is not a probability or accuracy score.","The public site freeze receipt is a valid public source-of-record; X publication is optional downstream distribution."],"latest_completed_score":{"combined_score":null,"forecast_week":"2026-W40","frozen_claim_score":83.33,"market_structure_score":null,"market_structure_status":"ANALYSIS_ONLY_NOT_SCORED","price_range_score":82.05,"public_issue_number":27,"scorecard_path":"05_CYCLE_NAVIGATOR/public_scorecards/2026/W40/CN27_PUBLIC_SCORECARD.json","status":"FINAL_DUAL_TRACK"},"latest_published":{"forecast_week":"2026-W40","public_issue_number":27,"publication_receipt":null,"published_path":"05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLISHED_2026-09-29.md"},"latest_site_freeze":{"forecast_week":"2026-W41","frozen_unix":1791180846,"public_issue_number":28,"site_publication_receipt":"05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json","source_forecast_freeze_sha256":"41cb3ea00c751bb8c4099f0f3fb88e8eb8f357f052adb3a3d00798886a0589f3"},"recent_lineage":[{"forecast_week":"2026-W36","machine_issue_number":24,"machine_week_dir":"05_CYCLE_NAVIGATOR/weekly/2026/W36","public_issue_number":23,"published_path":"05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_23_X_PUBLISHED_2026-09-01.md"},{"forecast_week":"2026-W37","machine_issue_number":25,"machine_week_dir":"05_CYCLE_NAVIGATOR/weekly/2026/W37","public_issue_number":24,"published_path":"05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_24_X_PUBLISHED_2026-09-07.md"},{"forecast_week":"2026-W38","machine_issue_number":26,"machine_week_dir":"05_CYCLE_NAVIGATOR/weekly/2026/W38","public_issue_number":25,"published_path":"05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_25_X_PUBLISHED_2026-09-14.md"},{"binding_path":"05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json","forecast_week":"2026-W39","machine_issue_number":27,"machine_week_dir":"05_CYCLE_NAVIGATOR/weekly/2026/W39","public_issue_number":26,"publication_status":"PUBLISHED_CONFIRMED_BY_USER","published_path":"05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_26_X_PUBLISHED_2026-09-21.md"},{"approved_path":"05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_APPROVED_2026-09-28.md","binding_path":"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json","forecast_week":"2026-W40","machine_issue_number":28,"machine_week_dir":"05_CYCLE_NAVIGATOR/weekly/2026/W40","public_issue_number":27,"publication_receipt":"05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLICATION_RECEIPT_2026-09-29.json","publication_status":"PUBLISHED_CONFIRMED_BY_USER","published_path":"05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLISHED_2026-09-29.md","site_publication_receipt":"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json","site_publication_status":"SITE_FROZEN_SOURCE_OF_RECORD"},{"binding_path":"05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json","forecast_week":"2026-W41","machine_issue_number":29,"machine_week_dir":"05_CYCLE_NAVIGATOR/weekly/2026/W41","public_issue_number":28,"published_path":null,"site_publication_receipt":"05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json","site_publication_status":"SITE_FROZEN_SOURCE_OF_RECORD"}]}
+{
+  "authority": "PUBLIC_SERIES_IDENTITY_AND_SCORE_ROUTING_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "contract": "CN_PUBLIC_SERIES_INDEX_v1",
+  "current_public_projection": {
+    "binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json",
+    "forecast_week": "2026-W41",
+    "machine_issue_number": 29,
+    "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W41",
+    "note": "Public numbering is continuous from the public site freeze record; X is an optional downstream distribution channel.",
+    "public_issue_number": 28,
+    "publication_status": "PUBLISHED_CONFIRMED_BY_USER",
+    "site_publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+    "site_publication_status": "SITE_FROZEN_SOURCE_OF_RECORD",
+    "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_28_X_PUBLISHED_2026-10-05.md",
+    "publication_receipt": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_28_X_PUBLICATION_RECEIPT_2026-10-05.json"
+  },
+  "invariants": [
+    "Never join public and machine Cycle Navigator records on issue_number alone.",
+    "For public precision, resolve forecast_week and immutable published source first.",
+    "For the latest completed public score, use latest_completed_score.scorecard_path.",
+    "Machine CYCLE_NAVIGATOR_SCORECARD.json is not automatically the public-series scorecard during the migration-offset window.",
+    "Every new weekly machine package must materialize CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json and append its numeric ranges to CN_FORWARD_RANGE_LEDGER_v2.jsonl at freeze time.",
+    "X publication status is user-attested: never require independent or external X verification; when the user says an exact version is published, archive it as PUBLISHED_CONFIRMED_BY_USER.",
+    "Market/Structure public scoring ends with CN26. For CN27 and later, market_structure_score must remain null/absent; historical Market/Structure scores remain immutable and visible. Price Range precision continues unchanged; Bull/Bear is not a probability or accuracy score.",
+    "The public site freeze receipt is a valid public source-of-record; X publication is optional downstream distribution."
+  ],
+  "latest_completed_score": {
+    "combined_score": null,
+    "forecast_week": "2026-W40",
+    "frozen_claim_score": 83.33,
+    "market_structure_score": null,
+    "market_structure_status": "ANALYSIS_ONLY_NOT_SCORED",
+    "price_range_score": 82.05,
+    "public_issue_number": 27,
+    "scorecard_path": "05_CYCLE_NAVIGATOR/public_scorecards/2026/W40/CN27_PUBLIC_SCORECARD.json",
+    "status": "FINAL_DUAL_TRACK"
+  },
+  "latest_published": {
+    "forecast_week": "2026-W41",
+    "public_issue_number": 28,
+    "publication_receipt": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_28_X_PUBLICATION_RECEIPT_2026-10-05.json",
+    "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_28_X_PUBLISHED_2026-10-05.md"
+  },
+  "latest_site_freeze": {
+    "forecast_week": "2026-W41",
+    "frozen_unix": 1791180846,
+    "public_issue_number": 28,
+    "site_publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+    "source_forecast_freeze_sha256": "41cb3ea00c751bb8c4099f0f3fb88e8eb8f357f052adb3a3d00798886a0589f3"
+  },
+  "recent_lineage": [
+    {
+      "forecast_week": "2026-W36",
+      "machine_issue_number": 24,
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W36",
+      "public_issue_number": 23,
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_23_X_PUBLISHED_2026-09-01.md"
+    },
+    {
+      "forecast_week": "2026-W37",
+      "machine_issue_number": 25,
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W37",
+      "public_issue_number": 24,
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_24_X_PUBLISHED_2026-09-07.md"
+    },
+    {
+      "forecast_week": "2026-W38",
+      "machine_issue_number": 26,
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W38",
+      "public_issue_number": 25,
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_25_X_PUBLISHED_2026-09-14.md"
+    },
+    {
+      "binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json",
+      "forecast_week": "2026-W39",
+      "machine_issue_number": 27,
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W39",
+      "public_issue_number": 26,
+      "publication_status": "PUBLISHED_CONFIRMED_BY_USER",
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_26_X_PUBLISHED_2026-09-21.md"
+    },
+    {
+      "approved_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_APPROVED_2026-09-28.md",
+      "binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json",
+      "forecast_week": "2026-W40",
+      "machine_issue_number": 28,
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W40",
+      "public_issue_number": 27,
+      "publication_receipt": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLICATION_RECEIPT_2026-09-29.json",
+      "publication_status": "PUBLISHED_CONFIRMED_BY_USER",
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_27_X_PUBLISHED_2026-09-29.md",
+      "site_publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+      "site_publication_status": "SITE_FROZEN_SOURCE_OF_RECORD"
+    },
+    {
+      "binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json",
+      "forecast_week": "2026-W41",
+      "machine_issue_number": 29,
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W41",
+      "public_issue_number": 28,
+      "publication_status": "PUBLISHED_CONFIRMED_BY_USER",
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_28_X_PUBLISHED_2026-10-05.md",
+      "publication_receipt": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_28_X_PUBLICATION_RECEIPT_2026-10-05.json",
+      "site_publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+      "site_publication_status": "SITE_FROZEN_SOURCE_OF_RECORD"
+    }
+  ]
+}
