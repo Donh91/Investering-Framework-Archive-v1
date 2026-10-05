@@ -261,7 +261,26 @@ jobs:
               raise SystemExit('altcoin_target_progression_incomplete')
           if "no browser countdown math" not in product:
               raise SystemExit('altseason_timer_countdown_semantics_missing')
+          if "Conditional gate window · not a guaranteed phase-start date" not in product:
+              raise SystemExit('altseason_timer_conditional_gate_disclosure_missing')
+          if "LIVE GATES REFRESHING" not in product or "function pathWeeklyAlignment" not in product:
+              raise SystemExit('path_weekly_alignment_guard_missing')
           latest=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
+          compass=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/compass.json').read_text())
+          weekly=compass.get('weekly_context') or {}
+          current=((latest.get('public_series') or {}).get('current_public_projection') or {})
+          if weekly.get('contract') != 'CN_COMPASS_WEEKLY_ALIGNMENT_v1':
+              raise SystemExit('compass_weekly_alignment_contract_missing')
+          if weekly.get('status') != 'ALIGNED':
+              raise SystemExit('compass_weekly_alignment_not_aligned')
+          if int(weekly.get('public_issue_number') or 0) != int(current.get('public_issue_number') or 0):
+              raise SystemExit('compass_weekly_public_issue_mismatch')
+          if str(weekly.get('forecast_week') or '') != str(current.get('forecast_week') or ''):
+              raise SystemExit('compass_weekly_forecast_week_mismatch')
+          if set(weekly) != {'contract','status','forecast_week','public_issue_number','authority','semantics'}:
+              raise SystemExit('compass_weekly_alignment_privacy_surface_changed')
+          if weekly.get('authority') is not False or weekly.get('semantics') != 'DELIVERY_ALIGNMENT_ONLY':
+              raise SystemExit('compass_weekly_alignment_authority_violation')
           package=latest.get('package') or {}
           if 'decision_projection' not in package:
               raise SystemExit('public_strategic_cycle_projection_missing')
