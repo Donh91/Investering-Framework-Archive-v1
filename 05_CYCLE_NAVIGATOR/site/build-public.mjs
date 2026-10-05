@@ -43,31 +43,37 @@ async function buildCompassSnapshot(weeklyPointer){
     const projection=JSON.parse(projectionBytes.toString("utf8"));
     if(projection?.contract!=="PUBLIC_COMPASS_PROJECTION_v1") throw new Error("Unexpected public Compass projection contract");
     if(projection?.compass_id!==pointer?.compass_id) throw new Error("Public Compass pointer/projection id mismatch");
-    const internalPointer=await readJson(INTERNAL_COMPASS_POINTER_PATH);
-    if(internalPointer?.contract!=="OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1") throw new Error("Unexpected internal Compass pointer contract");
-    if(internalPointer?.compass_id!==projection.compass_id) throw new Error("Public/internal Compass id mismatch");
-    const internalRel=internalPointer.compass_path;
-    if(typeof internalRel!=="string"||!internalRel.startsWith("04_MARKET_LEARNING/handlekompas/official/daily/")) throw new Error("Internal Compass pointer escaped daily root");
-    const internalPath=resolve(repoRoot,internalRel);
-    if(relative(repoRoot,internalPath).startsWith("..")) throw new Error("Internal Compass path escaped repository");
-    const internalBytes=await readFile(internalPath);
-    const internalContentSha=createHash("sha256").update(internalBytes).digest("hex");
-    if(internalContentSha!==internalPointer?.compass_content_sha256) throw new Error("Internal Compass pointer/content hash mismatch");
-    const internalCompass=JSON.parse(internalBytes.toString("utf8"));
-    if(internalCompass?.compass_id!==projection.compass_id) throw new Error("Internal/public Compass artifact mismatch");
-    const cnBinding=internalCompass?.source_bindings?.cycle_navigator||{};
-    const weeklyYear=Number(weeklyPointer?.iso_year),weeklyWeek=Number(weeklyPointer?.iso_week),weeklyIssue=Number(weeklyPointer?.issue_number);
-    const boundYear=Number(cnBinding?.iso_year),boundWeek=Number(cnBinding?.iso_week),boundIssue=Number(cnBinding?.issue_number);
-    const machineSha=String(cnBinding?.machine_package?.content_sha256||"");
-    const aligned=cnBinding?.status==="PASS"&&Number.isInteger(weeklyYear)&&Number.isInteger(weeklyWeek)&&Number.isInteger(weeklyIssue)&&boundYear===weeklyYear&&boundWeek===weeklyWeek&&boundIssue===weeklyIssue&&machineSha!==""&&machineSha===String(weeklyPointer?.machine_package_sha256||"");
-    projection.weekly_context={
-      contract:"CN_COMPASS_WEEKLY_ALIGNMENT_v1",
-      status:aligned?"ALIGNED":"MISMATCH",
-      forecast_week:Number.isInteger(weeklyYear)&&Number.isInteger(weeklyWeek)?`${weeklyYear}-W${String(weeklyWeek).padStart(2,"0")}`:null,
-      public_issue_number:aligned&&Number.isInteger(Number(weeklyPointer?.public_issue_number))?Number(weeklyPointer.public_issue_number):null,
-      authority:false,
-      semantics:"DELIVERY_ALIGNMENT_ONLY"
-    };
+    projection.weekly_context={contract:"CN_COMPASS_WEEKLY_ALIGNMENT_v1",status:"UNVERIFIED",forecast_week:null,public_issue_number:null,authority:false,semantics:"DELIVERY_ALIGNMENT_ONLY"};
+    try{
+      const internalPointer=await readJson(INTERNAL_COMPASS_POINTER_PATH);
+      if(internalPointer?.contract!=="OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1") throw new Error("Unexpected internal Compass pointer contract");
+      if(internalPointer?.compass_id!==projection.compass_id) throw new Error("Public/internal Compass id mismatch");
+      const internalRel=internalPointer.compass_path;
+      if(typeof internalRel!=="string"||!internalRel.startsWith("04_MARKET_LEARNING/handlekompas/official/daily/")) throw new Error("Internal Compass pointer escaped daily root");
+      const internalPath=resolve(repoRoot,internalRel);
+      if(relative(repoRoot,internalPath).startsWith("..")) throw new Error("Internal Compass path escaped repository");
+      const internalBytes=await readFile(internalPath);
+      const internalContentSha=createHash("sha256").update(internalBytes).digest("hex");
+      if(internalContentSha!==internalPointer?.compass_content_sha256) throw new Error("Internal Compass pointer/content hash mismatch");
+      const internalCompass=JSON.parse(internalBytes.toString("utf8"));
+      if(internalCompass?.compass_id!==projection.compass_id) throw new Error("Internal/public Compass artifact mismatch");
+      const cnBinding=internalCompass?.source_bindings?.cycle_navigator||{};
+      const weeklyYear=Number(weeklyPointer?.iso_year),weeklyWeek=Number(weeklyPointer?.iso_week),weeklyIssue=Number(weeklyPointer?.issue_number);
+      const boundYear=Number(cnBinding?.iso_year),boundWeek=Number(cnBinding?.iso_week),boundIssue=Number(cnBinding?.issue_number);
+      const machineSha=String(cnBinding?.machine_package?.content_sha256||"");
+      const aligned=cnBinding?.status==="PASS"&&Number.isInteger(weeklyYear)&&Number.isInteger(weeklyWeek)&&Number.isInteger(weeklyIssue)&&boundYear===weeklyYear&&boundWeek===weeklyWeek&&boundIssue===weeklyIssue&&machineSha!==""&&machineSha===String(weeklyPointer?.machine_package_sha256||"");
+      projection.weekly_context={
+        contract:"CN_COMPASS_WEEKLY_ALIGNMENT_v1",
+        status:aligned?"ALIGNED":"MISMATCH",
+        forecast_week:Number.isInteger(weeklyYear)&&Number.isInteger(weeklyWeek)?`${weeklyYear}-W${String(weeklyWeek).padStart(2,"0")}`:null,
+        public_issue_number:aligned&&Number.isInteger(Number(weeklyPointer?.public_issue_number))?Number(weeklyPointer.public_issue_number):null,
+        authority:false,
+        semantics:"DELIVERY_ALIGNMENT_ONLY"
+      };
+    }catch{
+      // Preserve the independently verified public Compass for NOW. Only PATH
+      // live gates will fail closed when weekly lineage cannot be proven.
+    }
     const [hourlyPointer,nativePointer]=await Promise.all([
       readJson(HOURLY_POINTER_PATH).catch(()=>null),
       readJson(NATIVE_COMPASS_POINTER_PATH).catch(()=>null)
