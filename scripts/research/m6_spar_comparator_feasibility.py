@@ -5,6 +5,7 @@ import argparse
 import importlib.util
 import json
 import statistics
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,7 @@ def load_spar(repo_root: Path):
     if spec is None or spec.loader is None:
         raise RuntimeError("cannot_load_spar_module")
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
     spec.loader.exec_module(mod)
     return mod
 
