@@ -1,0 +1,76 @@
+{
+  "contract": "T2_LEGACY_BTC_PARTIAL_EVALUATOR_RECOVERY_STATUS_v1",
+  "created_date": "2026-10-05",
+  "test_id": "GATE_BTC_PARTIAL_FT_1",
+  "historical_identity": "GATE-BTC-PARTIAL-v0.1.1",
+  "status": "PARTIALLY_RECOVERED_TRIGGER_UNRECOVERED",
+  "authority": {
+    "market_permission": false,
+    "portfolio_action": false,
+    "canonical_promotion": false,
+    "forward_observation_enabled": false
+  },
+  "recovered": {
+    "freeze_date": "2026-06-10",
+    "evaluation_deadline": "2026-07-10",
+    "preregistration_semantics": "NO_NARRATIVE_REINTERPRETATION_OR_RULE_CHANGE_BEFORE_OUTCOME",
+    "benchmark_allocation": {
+      "BTC_pct": 0,
+      "STABLE_pct": 100,
+      "ALT_pct": 0
+    },
+    "experimental_allocation_after_ENTERED": {
+      "BTC_pct": 10,
+      "STABLE_pct": 90,
+      "ALT_pct": 0
+    },
+    "mechanical_return_divergence_formula": "0.10 * BTC_RETURN_AFTER_VALID_ENTERED_ROW",
+    "later_status": "INVALIDATED_DEAD_AFTER_FAILED_RESET_AROUND_2026-06-30",
+    "later_failure_context": [
+      "CLOSE_BASIS_BREACH_AROUND_58.524K",
+      "OLD_64K_RECLAIM_DEAD_STALE_LEVEL"
+    ],
+    "expected_fnp_cost_5_7pct_status": "HISTORICAL_RESEARCH_HEURISTIC_RAW_DERIVATION_UNRECOVERED"
+  },
+  "unrecovered": [
+    "EXACT_ENTERED_TRIGGER",
+    "EXACT_THRESHOLD_CONJUNCTION",
+    "EXACT_PERSISTENCE_REQUIREMENT",
+    "EXACT_RECLAIM_RESET_STATE_MACHINE",
+    "EXACT_OWNER_FIELDS_FOR_PERMISSION_ASSERTION",
+    "DETERMINISTIC_EVALUATOR_IMPLEMENTATION"
+  ],
+  "source_classes": [
+    {
+      "source": "Project RESEARCH LAB canonical June-2026 summary",
+      "supports": [
+        "frozen identity",
+        "freeze date",
+        "evaluation deadline",
+        "no rule change before outcome",
+        "5-7pct heuristic reference"
+      ]
+    },
+    {
+      "source": "Library RESEARCH_LAB_EVIDENCE_PACK_GATE_BTC_PARTIAL_GRADUATED_DEPLOYMENT_v1.md",
+      "supports": [
+        "WAIT allocation",
+        "10pct BTC allocation after ENTERED",
+        "mechanical divergence",
+        "data/testability boundaries"
+      ]
+    },
+    {
+      "source": "Library Fable5_Expert_Onboarding_Batch1_ChatGPT_Answer_2026-07-03.txt",
+      "supports": [
+        "full draft unavailable",
+        "FAILED_RESET bookkeeping",
+        "58.524K close-basis context",
+        "64K stale/dead level",
+        "FT1/FT2 separation"
+      ]
+    }
+  ],
+  "hard_rule": "DO_NOT_SYNTHESIZE_ENTERED_ROWS_OR_PERMISSION_FROM_SUMMARIES_THRESHOLD_PROXIMITY_OR_LATER_RULES",
+  "next_gate": "CLAUDE-M2-T2-EVALUATOR-RECOVERY-012"
+}
