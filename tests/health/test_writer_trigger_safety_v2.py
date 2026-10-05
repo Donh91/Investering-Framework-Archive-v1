@@ -195,4 +195,26 @@ jobs:
       - run: git push origin HEAD:main
 """)
         self.assertIn('MAIN_WRITER_QUEUE_CANCEL_CONFLICT',findings)
+    def test_current_market_owner_chain_is_priority_serialized_and_explicit(self):
+        root=Path(__file__).parents[2]
+        hourly=(root/'.github/workflows/hourly-sequence-capture.yml').read_text()
+        entry=(root/'.github/workflows/entry-signal-ledger.yml').read_text()
+        native=(root/'.github/workflows/native-handlekompas.yml').read_text()
+        recovery=(root/'.github/workflows/native-market-recovery.yml').read_text()
+        event=(root/'.github/workflows/compass-event-refresh.yml').read_text()
+        daily=(root/'.github/workflows/daily-compass.yml').read_text()
+        pages=(root/'.github/workflows/cycle-navigator-pages.yml').read_text()
+        for text in (hourly,entry,native,recovery,event,daily):
+            self.assertIn('framework-market-owner-writer',text)
+            self.assertIn('queue: max',text)
+            self.assertIn('cancel-in-progress: false',text)
+        self.assertIn('gh workflow run entry-signal-ledger.yml --ref main',hourly)
+        self.assertIn('gh workflow run native-handlekompas.yml --ref main',entry)
+        self.assertIn('gh workflow run compass-event-refresh.yml --ref main',entry)
+        self.assertIn('gh workflow run cycle-navigator-pages.yml --ref main',native)
+        self.assertNotIn('workflow_run:',entry)
+        self.assertNotIn('workflow_run:',native)
+        self.assertNotIn('workflow_run:',event)
+        self.assertNotIn('workflow_run:',pages)
+
 if __name__=='__main__':unittest.main()
