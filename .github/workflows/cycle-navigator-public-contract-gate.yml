@@ -244,7 +244,7 @@ jobs:
           product=Path('05_CYCLE_NAVIGATOR/site/dist/public-product.js').read_text()
           if 'CN_PATH_THREE_TRACK_v2' not in product:
               raise SystemExit('path_three_track_contract_missing')
-          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion gate','ETA TO TARGET GATE','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION GATE'):
+          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion gate','ETA TO TARGET GATE','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION WATCH','CURRENT CYCLE POSITION','NEXT SUPPORTED PHASE'):
               if marker not in product:
                   raise SystemExit(f'path_three_track_marker_missing:{marker}')
           if "jsonOptional('./data/compass.json')" not in product:
@@ -263,7 +263,11 @@ jobs:
               raise SystemExit('altseason_timer_countdown_semantics_missing')
           if "Conditional gate window · not a guaranteed phase-start date" not in product:
               raise SystemExit('altseason_timer_conditional_gate_disclosure_missing')
-          if "LIVE GATES REFRESHING" not in product or "function pathWeeklyAlignment" not in product:
+          if "function publicPathText" not in product or "function publicPathStatus" not in product:
+              raise SystemExit('path_public_language_filter_missing')
+          if "this is a destination, not the current phase." not in product:
+              raise SystemExit('path_forward_destination_current_phase_guard_missing')
+          if "LIVE SIGNALS REFRESHING" not in product or "function pathWeeklyAlignment" not in product:
               raise SystemExit('path_weekly_alignment_guard_missing')
           latest=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
           compass=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/compass.json').read_text())

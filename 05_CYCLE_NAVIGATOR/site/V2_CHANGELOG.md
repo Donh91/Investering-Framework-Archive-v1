@@ -17,3 +17,10 @@
 - Conditional source timing is rendered as a watch window with explicit confirmation semantics, never as a countdown.
 - Big-picture Market Cycle now separates decision windows from the full governed cycle route.
 - Long-cycle placement remains visibly unresolved when the 4–8-week owner cannot support a phase call.
+
+## 2026-10-05 · PATH final polish
+
+- Public PATH copy now translates internal machine vocabulary into investor-facing language.
+- The full cycle route separates current position from a forward destination; forward phases can never masquerade as “where we are”.
+- Mobile decision windows keep all five horizons visible at once; the longer cycle route stays horizontally swipeable.
+- Conditional windows remain source-owned and are explicitly presented as watch windows, never countdowns.
