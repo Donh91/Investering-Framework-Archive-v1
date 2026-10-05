@@ -415,11 +415,13 @@ function rotationFocus(compass){
 }
 function pathOverview(pkg,compass){
   const cycle=cycleForwardFromSources(pkg),cycleLabel=(MARKET_CYCLE.find(x=>x[0]===cycle.key)||['','UNCLEAR'])[1];
-  const rotation=rotationFocus(compass),target=altcoinTarget(pkg,compass,altcoinCycleStages(pkg,compass));
+  const rotation=rotationFocus(compass),stages=altcoinCycleStages(pkg,compass),target=altcoinTarget(pkg,compass,stages),current=altcoinCurrentStage(pkg,compass,stages),currentStage=stages[current.index]||null;
+  const nowLabel=currentStage&&current.source==='LIVE'?currentStage.title:'Not safely resolved';
+  const nowState=currentStage&&current.source==='LIVE'?pathStatus(currentStage.status):'LIVE MARKER WITHHELD';
   return '<section class="path-overview-v2">'
     +'<article><span>MARKET CYCLE · FORWARD</span><strong>'+esc(cycleLabel)+'</strong><b>ETA · '+esc(cycle.eta)+'</b></article>'
     +'<article><span>NEXT ROTATION GATE</span><strong>'+esc(rotation.label)+'</strong><b>'+esc(rotation.status)+' · ETA '+esc(rotation.eta)+'</b></article>'
-    +'<article class="focus"><span>ALTCOIN TIMER</span><strong>'+esc(target.title)+'</strong><b>ETA TO GATE · '+esc(target.eta)+'</b></article>'
+    +'<article class="focus"><span>ALTCOIN TIMER · NOW</span><strong>'+esc(nowLabel)+'</strong><b>'+esc(nowState)+'</b><small>WATCH · '+esc(target.title)+' · '+esc(pathEta(target.eta))+'</small></article>'
     +'</section>';
 }
 
