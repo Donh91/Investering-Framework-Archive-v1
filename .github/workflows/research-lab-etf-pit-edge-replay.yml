@@ -1,0 +1,93 @@
+name: Research Lab ETF PIT Edge Replay
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: research-lab-etf-pit-edge-replay
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    if: >-
+      github.event.issue.number == 1476 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[RESEARCH_LAB_PIT]') &&
+      contains(github.event.comment.body, 'mission=RL-ETF-TEMPORAL-EDGE-001')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate deterministic replay code
+        run: |
+          python -m py_compile scripts/research/etf_pit_edge_replay_v1.py
+          python -m unittest -v tests.research.test_etf_pit_edge_replay_v1
+          python -m unittest -v tests.research.test_etf_temporal_integrity_lab
+
+      - name: Run deterministic PIT signal replay
+        run: |
+          mkdir -p runtime/research-lab-pit
+          python scripts/research/etf_pit_edge_replay_v1.py \
+            --repo-root . \
+            --output runtime/research-lab-pit/result.json
+
+      - name: Persist research-only replay
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          set -euo pipefail
+          dest="06_RESEARCH_LAB/m1_replay/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__pit-edge-replay-v1.json"
+          cp runtime/research-lab-pit/result.json "$dest"
+          git config user.name 'research-lab-pit[bot]'
+          git config user.email 'research-lab-pit@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m "research: add deterministic ETF PIT edge replay"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt*5))
+            done
+            [ "$pushed" = true ]
+          fi
+          echo "RESULT_PATH=$dest" >> "$GITHUB_ENV"
+
+      - name: Report replay result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > runtime/research-lab-pit/report.md
+          import json, os
+          from pathlib import Path
+          r=json.loads(Path(os.environ['RESULT_PATH']).read_text())
+          print("## RESEARCH_LAB_PIT completed")
+          print()
+          print("Mission: `RL-ETF-TEMPORAL-EDGE-001`")
+          print("Deterministic model-free replay, no API call.")
+          print()
+          for v in r["variants"]:
+              print(f"### {v['mode']}")
+              print(f"- admissible sessions: {v['sessions_with_admissible_events']}")
+              print(f"- A1 first-state true endpoints: {v['a1']['first_state_true_count']}")
+              print(f"- A2 first-state true endpoints: {v['a2']['first_state_true_count']}")
+              print(f"- A1 post-evaluation state changes: {v['a1']['state_changed_after_first_eval_count']}")
+              print(f"- A2 post-evaluation state changes: {v['a2']['state_changed_after_first_eval_count']}")
+          print()
+          print(f"Immutable result: `{os.environ['RESULT_PATH']}`")
+          print("No authority change performed.")
+          PY
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body-file runtime/research-lab-pit/report.md
