@@ -1,38 +1,38 @@
 # Operations Dashboard
 
-Overall: **AMBER**
-Generated: `2026-10-04T19:13:33.837607Z`
+Overall: **RED**
+Generated: `2026-10-05T10:44:34.208004Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.377 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.391 |
-| `weekly_output` | **GREEN** | FRESH | 157.38 |
-| `automation_health` | **AMBER** | AMBER | 0.525 |
-| `architecture_health` | **GREEN** | GREEN | 0.483 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 1.386 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 12.22 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.418 |
+| `daily_capture` | **GREEN** | FRESH | 5.041 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 10.632 |
+| `weekly_output` | **GREEN** | FRESH | 4.559 |
+| `automation_health` | **RED** | RED | 0.049 |
+| `architecture_health` | **GREEN** | GREEN | 0.009 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 3.536 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 3.576 |
+| `remediation_maturation` | **GREEN** | FRESH | 15.935 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **59**
-- OpenAI cost this month: **$3.974338**
-- Pending forecast candidates: **222**
-- Experiment candidates: **461**
-- Experiment dispatch requests: **18947**
+- OpenAI receipts this month: **76**
+- OpenAI cost this month: **$5.341684**
+- Pending forecast candidates: **223**
+- Experiment candidates: **462**
+- Experiment dispatch requests: **19160**
 - Codex-ready remediation tasks: **3**
 - Needs-more-evidence items: **0**
 
 ## Incidents
 
-Open incident references: **21**
+Open incident references: **22**
 
 ## Required actions
 
-- **P1** `automation_health` - SEMANTIC_STATUS_AMBER
+- **P0** `automation_health` - ['research-lab-m6-episode-power.yml:NON_GLOBAL_WRITER_LOCK', 'research-lab-m6-episode-power.yml:NO_MAIN_READBACK', 'research-lab-m6-spar-comparator.yml:NON_GLOBAL_WRITER_LOCK', 'research-lab-m6-spar-comparator.yml:NO_MAIN_READBACK', 'research-lab-m6-t4-7d.yml:NON_GLOBAL_WRITER_LOCK', 'research-lab-m6-t4-7d.yml:NO_MAIN_READBACK']
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `137e06d4714bb530e474c6e1c6fcb8f42300e86e028ace241fce4b1fcb40958d`
+Dashboard SHA-256: `a72f0756317681b4b2eb741e16cd63fd473ca6774a58e1c4f7799d5fb9a320f6`
