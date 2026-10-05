@@ -104,16 +104,22 @@ function capSummary(compass) {
 function riskSummary(compass) {
   const protection = compass?.protection_tracker || {};
   const pullback = words(protection.pullback_risk_state || 'UNAVAILABLE');
-  const distribution = words(protection.distribution_risk || 'UNKNOWN');
-  return 'Pullback ' + pullback + ' · Distribution ' + distribution;
+  return 'Pullback ' + pullback;
 }
 
 function decisionMeta(compass) {
   const market = compass?.market_now || {};
+  const near = compass?.horizons?.NEXT_12H || {};
+  const weekly = compass?.horizons?.NEXT_5_7D || {};
+  const protection = compass?.protection_tracker || {};
   return {
-    phase: words(market.regime || market.directional_state || 'UNAVAILABLE'),
-    next: clean(compass?.next_meaningful_change_eta) || 'No fixed ETA',
-    risk: riskSummary(compass)
+    live: words(market.directional_state || market.regime || near.label || near.expected_direction || 'UNAVAILABLE'),
+    liveEta: clean(near.eta) || clean(compass?.next_meaningful_change_eta) || 'No fixed ETA',
+    weekly: words(weekly.label || weekly.expected_direction || 'UNAVAILABLE'),
+    weeklyEta: clean(weekly.eta) || '5–7d',
+    risk: riskSummary(compass),
+    riskEta: clean(protection.eta_window) || 'No supported risk window',
+    distribution: words(protection.distribution_risk || 'UNKNOWN')
   };
 }
 
@@ -122,6 +128,24 @@ function recommendationWindow(compass) {
   const near = clean(compass?.horizons?.NEXT_12H?.eta);
   const fallback = clean(compass?.horizons?.NEXT_1_3D?.eta);
   return explicit || near || fallback || 'Next Compass update';
+}
+
+function decisionDetail(compass, rec, meta) {
+  const protection = compass?.protection_tracker || {};
+  const invalidation = clean(protection.invalidation) || 'No governed invalidation text is currently published.';
+  const issued = clean(compass?.issued_at_utc);
+  const issuedLabel = issued ? new Date(issued).toLocaleString('en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',','') + ' CPH' : 'timestamp unavailable';
+  const investor = rec.action === 'HOLD'
+    ? 'Keep existing positioning. The bearish 0–12h pressure reading is tactical, not the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.'
+    : rec.copy;
+  const swing = 'Treat ' + meta.live + ' over ' + meta.liveEta + ' as short-horizon pressure, while the 5–7 day outlook remains ' + meta.weekly + '. ' + meta.risk + ' means a retest deserves attention, but it is not a confirmed sell, short or distribution signal.';
+  return '<details id="liveDecisionDetail" class="premium-decision-detail">'
+    + '<summary><span>DECISION DETAIL</span><b>Investor + swing trader context</b></summary>'
+    + '<div class="premium-decision-body">'
+    + '<div class="premium-decision-strip"><div><span>NEAR-TERM PRESSURE</span><strong>'+esc(meta.live)+'</strong><small>'+esc(meta.liveEta)+'</small></div><div><span>WEEKLY OUTLOOK</span><strong>'+esc(meta.weekly)+'</strong><small>'+esc(meta.weeklyEta)+'</small></div><div><span>RISK WINDOW</span><strong>'+esc(meta.risk)+'</strong><small>'+esc(meta.riskEta)+'</small></div></div>'
+    + '<div class="premium-audience-grid"><article><span>FOR AN INVESTOR</span><p>'+esc(investor)+'</p></article><article><span>FOR A SWING TRADER</span><p>'+esc(swing)+'</p></article></div>'
+    + '<div class="premium-risk-detail"><span>WHAT TO WATCH</span><strong>'+esc(meta.risk)+' · Distribution '+esc(meta.distribution)+'</strong><p><b>When:</b> '+esc(meta.riskEta)+'</p><p><b>Risk weakens if:</b> '+esc(invalidation)+'</p><small>Protection context is not execution authority. Official Compass issued '+esc(issuedLabel)+'.</small></div>'
+    + '</div></details>';
 }
 
 function hourlyMonitor(snapshot) {
@@ -259,9 +283,10 @@ function renderPremium(snapshot, compass) {
   section.className = 'premium-market-compass';
   section.innerHTML =
     '<div class="premium-overview">'
-    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'The framework is waiting for fresh evidence.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><div><span>MARKET PHASE</span><strong>' + esc(meta.phase) + '</strong></div><div><span>NEXT CHANGE</span><strong>' + esc(meta.next) + '</strong></div><div><span>RISK</span><strong>' + esc(meta.risk) + '</strong></div></div></div>'
-    + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT GOVERNED REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div><p>' + esc(rec.copy) + '</p>' + hourlyMonitor(snapshot) + '<small>Official action posture · market direction remains a separate signal.</small></aside>'
+    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'The framework is waiting for fresh evidence.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong><small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong><small>' + esc(meta.weeklyEta) + ' · current W41 view</small></a><a href="#liveDecisionDetail" data-live-detail><span>RISK WATCH</span><strong>' + esc(meta.risk) + '</strong><small>' + esc(meta.riskEta) + ' · Distribution ' + esc(meta.distribution) + '</small></a></div></div>'
+    + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT GOVERNED REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div><p>' + esc(rec.copy) + '</p>' + hourlyMonitor(snapshot) + '<small>Official action posture · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
+    + decisionDetail(compass, rec, meta)
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, compass, scale, h)).join('') + '</div>'
     + riskCurve(compass)
@@ -272,6 +297,13 @@ function renderPremium(snapshot, compass) {
   const anchor = root.querySelector('.action-hero,.fail-card');
   if (anchor) anchor.after(section);
   else root.prepend(section);
+  section.querySelectorAll('[data-live-detail]').forEach((link) => link.addEventListener('click', (event) => {
+    event.preventDefault();
+    const detail = section.querySelector('#liveDecisionDetail');
+    if (!detail) return;
+    detail.open = true;
+    requestAnimationFrame(() => detail.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }));
   return true;
 }
 
