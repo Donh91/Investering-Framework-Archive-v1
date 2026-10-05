@@ -1,7 +1,7 @@
 {
   "contract": "RESEARCH_LAB_SOL_QUEUE_v1",
   "created_date": "2026-10-05",
-  "status": "ORIGINAL_FIVE_MISSIONS_COMPLETE",
+  "status": "EXTENDED_M6_WAITING_FOR_EVIDENCE",
   "trigger_issue": 1476,
   "trigger_marker": "[RESEARCH_LAB_SOL]",
   "task_name": "RESEARCH_LAB_SOL_ANALYSIS",
@@ -130,6 +130,16 @@
       "final_verdict": "WEAKENED",
       "final_adjudication_path": "06_RESEARCH_LAB/m5_checkpoints/2026-10-05__RL-TECHDEV97-005__FINAL_ADJUDICATION_v1.md",
       "no_further_sol_passes_unless_new_material_evidence": true
+    },
+    {
+      "sequence": 6,
+      "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
+      "state": "WAIT_FOR_EVIDENCE",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__sol-api.json",
+      "context_status": "NOT_BOUND_YET",
+      "context_paths": [],
+      "release_gate": "CLAUDE_OR_DETERMINISTIC_M6_RESULTS_PLUS_CHATGPT_ADJUDICATED_PACKET",
+      "no_early_sol_opinion": true
     }
   ],
   "authority": {
@@ -142,5 +152,5 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": null
+  "active_mission": "RL-DISTRIBUTION-SURVIVAL-META-006"
 }
