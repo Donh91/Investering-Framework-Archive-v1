@@ -244,7 +244,7 @@ jobs:
           product=Path('05_CYCLE_NAVIGATOR/site/dist/public-product.js').read_text()
           if 'CN_PATH_THREE_TRACK_v2' not in product:
               raise SystemExit('path_three_track_contract_missing')
-          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion gate','NOW POSITION','WATCH TARGET · NOT CURRENT','ETA TO WATCH TARGET','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION GATE'):
+          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion gate','ETA TO TARGET GATE','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION GATE'):
               if marker not in product:
                   raise SystemExit(f'path_three_track_marker_missing:{marker}')
           if "jsonOptional('./data/compass.json')" not in product:
@@ -261,10 +261,8 @@ jobs:
               raise SystemExit('altcoin_target_progression_incomplete')
           if "no browser countdown math" not in product:
               raise SystemExit('altseason_timer_countdown_semantics_missing')
-          if "Headline ETA withheld" not in product or "The governed ETA remains on the timeline below" not in product:
-              raise SystemExit('altseason_timer_conditional_eta_promotion_guard_missing')
-          if "function targetHeadlineEta" not in product or "/CONDITIONAL/i.test(eta)" not in product:
-              raise SystemExit('altseason_timer_headline_eta_guard_missing')
+          if "Conditional gate window · not a guaranteed phase-start date" not in product:
+              raise SystemExit('altseason_timer_conditional_gate_disclosure_missing')
           if "LIVE GATES REFRESHING" not in product or "function pathWeeklyAlignment" not in product:
               raise SystemExit('path_weekly_alignment_guard_missing')
           latest=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
