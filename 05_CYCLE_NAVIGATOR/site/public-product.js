@@ -65,6 +65,7 @@ function publicPathText(raw){
     [/Current-state continuation unless the live confirmation or deterioration gate changes state\.?/i,'Near-term momentum can continue, but the view changes if confirmation weakens or deterioration appears.'],
     [/Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap\.?/i,'Near-term signals are mixed. Broader participation must improve before moving further down the risk curve.'],
     [/No evidence-supported 4[–-]8-week cycle direction or stance\. A conditional 21[–-]30-day scenario does not fill the missing longer-window confirmation\.?/i,'There is not enough long-range evidence yet to call a 4–8 week cycle phase. A shorter 21–30 day scenario is not enough to fill that gap.'],
+    [/UNAVAILABLE cycle direction and UNAVAILABLE stance\. The 56-day shadow rotation window has \d+ passing days against \d+ required, and final weekly review does not establish a stable cycle phase\.?/i,'The 4–8 week cycle view is not ready yet. Longer-range evidence has not reached the minimum coverage needed to call a stable cycle phase.'],
     [/Live gate unavailable; the weekly baseline remains visible in details\.?/i,'Live confirmation is unavailable. The weekly baseline remains visible in the details.'],
     [/A fresh aligned Official Compass is required\.?/i,'Fresh verified market data is required.'],
     [/A verified aligned sell\/trim signal source is unavailable\.?/i,'No verified sell or trim signal is currently available.'],
@@ -353,7 +354,7 @@ function cycleEtaFor(key,pkg,compass){
   return'NO SUPPORTED ETA';
 }
 function weeklyCycleState(pkg){
-  const s=investorText(pkg?.market_state||pkg?.base_case_this_week||'').trim();
+  const s=investorText(pkg?.base_case_this_week||pkg?.market_state||'').trim();
   return s?short(publicPathText(s),150):'No public weekly market summary is available.';
 }
 function cycleIcon(key){
@@ -378,13 +379,13 @@ function marketCycleTrack(pkg,compass){
     return '<div class="market-cycle-step'+(isForward?' next':'')+'" data-cycle-role="'+(isForward?'forward-destination':'reference')+'"><i>'+esc(cycleIcon(key))+'</i><span>'+esc(label)+'</span>'+(eta.supported?'<b>'+esc(eta.label)+'</b>':'')+'</div>';
   }).join('');
   const horizons=horizonCell(compass,'NEXT_12H','NOW · 0–12H')+horizonCell(compass,'NEXT_1_3D','1–3 DAYS')+horizonCell(compass,'NEXT_5_7D','5–7 DAYS')+horizonCell(compass,'NEXT_2_3W','2–3 WEEKS')+horizonCell(compass,'CYCLE_ALTCOINS_3_8W','4–8 WEEKS');
-  const positionChip=forwardKnown
-    ?'<div class="cycle-position-chip next-supported"><i></i><span>NEXT SUPPORTED PHASE</span><strong>'+esc(nextStage)+'</strong><small>'+esc(timingInline(forward.eta))+' · this is a destination, not the current phase.</small></div>'
-    :'<div class="cycle-position-chip unresolved"><i></i><span>CURRENT CYCLE POSITION</span><strong>Not confirmed yet</strong><small>Shorter-term direction is available, but long-range evidence is not strong enough to place the market on one cycle stage yet.</small></div>';
+  const currentPosition='<div class="cycle-position-chip unresolved"><i></i><span>CURRENT CYCLE POSITION</span><strong>Not confirmed yet</strong><small>Shorter-term direction is available, but long-range evidence is not strong enough to place the market on one cycle stage yet.</small></div>';
+  const nextPosition=forwardKnown?'<div class="cycle-position-chip next-supported"><i></i><span>NEXT SUPPORTED PHASE</span><strong>'+esc(nextStage)+'</strong><small>'+esc(timingInline(forward.eta))+' · this is a destination, not the current phase.</small></div>':'';
+  const positionChip=currentPosition+nextPosition;
   return '<section class="path-track market-cycle-v2" data-path-track="market-cycle">'
     +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The big-picture market cycle.</h3><p>Read the decision windows first, then the full market route. A long-cycle phase is highlighted only when the long-range evidence is strong enough.</p></div><aside><span>LONG-RANGE SIGNAL</span><strong>'+esc(forwardKnown?'NEXT: '+nextStage:'NOT CONFIRMED')+'</strong><small>'+esc(stageNote)+'</small></aside></header>'
     +'<div class="market-cycle-summary"><div><span>NEAR TERM · 0–12H</span><strong>'+esc(horizonStateLabel(h12.label||h12.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h12.eta))+'</small></div><div><span>WEEK AHEAD · 5–7D</span><strong>'+esc(horizonStateLabel(h57.label||h57.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h57.eta))+'</small></div><div><span>LONG CYCLE · 4–8W</span><strong>'+esc(horizonStateLabel(h48.state||h48.label||'UNCLEAR'))+'</strong><small>'+esc(timingInline(h48.eta))+'</small></div></div>'
-    +'<div class="market-cycle-nowline"><span>WEEKLY CONTEXT</span><p>'+esc(weeklyCycleState(pkg))+'</p></div>'
+    +'<div class="market-cycle-nowline"><span>WEEK-AHEAD CONTEXT</span><p>'+esc(weeklyCycleState(pkg))+'</p></div>'
     +'<div class="market-horizon-title"><span>DECISION WINDOWS</span><small>Blue = NOW · each point keeps its own time horizon</small></div><div class="market-horizon-rail">'+horizons+'</div>'
     +'<div class="market-route-title"><span>FULL CYCLE ROUTE</span><small>'+esc(forwardKnown?'Amber = next supported destination · swipe to follow the route →':'No phase is highlighted until the long-range evidence can support one · swipe →')+'</small></div>'
     +positionChip
@@ -499,7 +500,7 @@ function altcoinCycleTimer(pkg,compass){
   const targetIndex=stages.findIndex(x=>x.key===target.key),currentStage=stages[current.index]||null,headlineEta=targetHeadlineEta(target);
   const rows=stages.map((x,i)=>{
     const isCurrent=i===current.index&&current.source==='LIVE',isTarget=i===targetIndex;
-    return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(publicPathStatus(x.status))+'</strong><div class="alt-step-timing">'+timingMarkup(x.eta,'TIMING')+'</div><details><summary>Why?</summary>'+(x.monday?'<p><em>Monday window:</em> '+esc(timingInline(x.monday))+'</p>':'')+'<p>'+esc(short(publicPathText(x.why),240))+'</p></details></article>';
+    return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(publicPathStatus(x.status))+'</strong><div class="alt-step-timing">'+timingMarkup(x.eta,'TIMING')+'</div><details><summary>Why?</summary>'+(x.monday?'<p><em>Weekly timing:</em> '+esc(timingInline(x.monday))+'</p>':'')+'<p>'+esc(short(publicPathText(x.why),240))+'</p></details></article>';
   }).join('');
   const nowStrip=currentStage&&current.source==='LIVE'
     ?'<div class="alt-now-strip"><span>NOW POSITION</span><strong>'+esc(currentStage.title)+'</strong><b>'+esc(publicPathStatus(currentStage.status))+' · '+esc(timingInline(currentStage.eta))+'</b><small>Blue = current confirmed position in this sequence. Amber = next watch target. A watch window is conditional, never a countdown.</small></div>'
