@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/research-lab-m6-episode-power.yml",
+    ".github/workflows/research-lab-m6-spar-comparator.yml",
+    ".github/workflows/research-lab-m6-t4-7d.yml"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-871e005058814e18",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "m6-writer-safety-blockers",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Serialize the three M6 issue-comment writers through the canonical main-writer queue and add post-write main ancestry readback, clearing repository-wide automation health blockers without changing research or market authority.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/research-lab-m6-episode-power.yml": "d5031339618fb9b99bdba449ae47d4dfd8d6f4a2",
+    ".github/workflows/research-lab-m6-spar-comparator.yml": "ec55719d9453797374262c5eb62efbc35756deae",
+    ".github/workflows/research-lab-m6-t4-7d.yml": "d76f8a85e3b894badbba789347ff3ecc9f7ee791"
+  },
+  "source_commit_sha": "871e005058814e186bd055042c925df9b8f4286a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-05T14:40:11+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Repair M6 research writer safety blockers"
+}

@@ -1,7 +1,46 @@
 {
   "contract": "AUTOMATION_ORCHESTRATOR_LUNA_CONTEXT_v1",
   "instructions_context": "Triage only. Distinguish transient execution failure, likely shared dependency, missing evidence, or code-defect candidate. Do not create remediation authority.",
-  "items": [],
-  "plan_fingerprint": "468b01e84e818efc0128fe19f658ce9ef96b46b6818f7d1ae9fd6b68a0f160fb",
-  "source_health_generated_at_utc": "2026-10-04T18:42:04.907165Z"
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED"
+      ],
+      "latest_head_sha": "e069aebfa3e97755939a8b648f65bde6f7fa2a33",
+      "latest_run_id": 37348134743,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37348134743",
+      "model_lane": "GPT_6_LUNA",
+      "openai_enabled": true,
+      "recent_failure_count": 1,
+      "route": "LUNA_TRIAGE",
+      "scheduled": true,
+      "workflow": "cycle-navigator-precision-learning-supervisor.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED"
+      ],
+      "latest_head_sha": "066fce34a3c32c94c1c2ab9a69d08531012fc1fd",
+      "latest_run_id": 37340145456,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37340145456",
+      "model_lane": "GPT_6_LUNA",
+      "openai_enabled": true,
+      "recent_failure_count": 1,
+      "route": "LUNA_TRIAGE",
+      "scheduled": true,
+      "workflow": "framework-learning-supervisor.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
+    }
+  ],
+  "plan_fingerprint": "10b181640382ecec21303573aaf100c84feedaf48b95141cf5346009bf2a075f",
+  "source_health_generated_at_utc": "2026-10-05T22:05:49.712900Z"
 }
