@@ -266,10 +266,18 @@ def coverage_gate_passes(coverage: dict[str, Any] | None, policy: dict[str, Any]
     gate = policy.get("coverage_gate", {})
     if not isinstance(coverage, dict):
         return False
+    minimum_checks = int(gate.get("minimum_checks_total", 1))
+    minimum_evaluable = int(gate.get("minimum_evaluable_checks_total", minimum_checks))
+    checks_total = int(coverage.get("checks_total", 0) or 0)
+    evaluable_checks = (
+        int(coverage.get("no_divergence_checks", 0) or 0)
+        + int(coverage.get("divergence_source_rows", 0) or 0)
+    )
     return (
         coverage.get("contract") == gate.get("required_coverage_contract")
         and coverage.get("coverage_status") == gate.get("required_coverage_status")
-        and int(coverage.get("checks_total", 0) or 0) >= int(gate.get("minimum_checks_total", 1))
+        and checks_total >= minimum_checks
+        and evaluable_checks >= minimum_evaluable
     )
 
 
