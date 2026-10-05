@@ -80,9 +80,9 @@ jobs:
           grep -q 'market-cycle-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'rotation-rail-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'altcoin-timer-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          grep -q "github.event.workflow_run.head_branch == 'main'" .github/workflows/cycle-navigator-pages.yml
-          grep -q "github.event.workflow_run.conclusion == 'success'" .github/workflows/cycle-navigator-pages.yml
-          ! grep -q "github.event.workflow_run.event == 'workflow_run'" .github/workflows/cycle-navigator-pages.yml
+          grep -q 'workflow_dispatch:' .github/workflows/cycle-navigator-pages.yml
+          ! grep -q 'workflow_run:' .github/workflows/cycle-navigator-pages.yml
+          grep -q 'gh workflow run cycle-navigator-pages.yml --ref main' .github/workflows/native-handlekompas.yml
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q 'completed forecasts with score evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
