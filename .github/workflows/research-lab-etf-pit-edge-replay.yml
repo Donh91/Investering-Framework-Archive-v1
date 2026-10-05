@@ -50,6 +50,7 @@ jobs:
         run: |
           set -euo pipefail
           dest="06_RESEARCH_LAB/m1_replay/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__pit-edge-replay-v1.json"
+          mkdir -p "$(dirname "$dest")"
           cp runtime/research-lab-pit/result.json "$dest"
           git config user.name 'research-lab-pit[bot]'
           git config user.email 'research-lab-pit@users.noreply.github.com'
