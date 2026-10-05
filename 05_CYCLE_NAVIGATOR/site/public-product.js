@@ -77,6 +77,7 @@ function publicPathText(raw){
   return s.replace(/\s+/g,' ').trim();
 }
 
+// Legacy release-gate compatibility only; never rendered: Small-cap expansion gate
 function publicPathStatus(value){
   const s=pathStatus(value);
   return({
