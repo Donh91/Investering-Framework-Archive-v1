@@ -301,8 +301,13 @@ function weeklyCycleState(pkg){
 function cycleIcon(key){
   return({DEFENSIVE:'↺',CONSOLIDATION:'◐',PRE_ROTATION:'↗',ROTATION:'⇢',BROAD_ALTSEASON:'✦',PARABOLIC_ALTSEASON:'⚡',DISTRIBUTION:'◒',EXIT_RISK:'↓'})[key]||'•';
 }
+function horizonStateLabel(value){
+  const s=String(value||'UNAVAILABLE').toUpperCase().replaceAll('_',' ');
+  if(/^(BULLISH|BEARISH|MIXED|NEUTRAL|UNCLEAR|UNAVAILABLE)$/.test(s))return s;
+  return pathStatus(value);
+}
 function horizonCell(compass,key,label){
-  const h=compass?.horizons?.[key]||{},stateLabel=pathStatus(h.label||h.state||h.expected_direction||'UNAVAILABLE'),eta=timingWindow(h.eta);
+  const h=compass?.horizons?.[key]||{},stateLabel=horizonStateLabel(h.label||h.state||h.expected_direction||'UNAVAILABLE'),eta=timingWindow(h.eta);
   return '<div class="market-horizon-step'+(key==='NEXT_12H'?' now':'')+'"><i></i><span>'+esc(label)+'</span><strong>'+esc(stateLabel)+'</strong><small>'+esc(eta.supported?eta.label:'No supported timing')+'</small></div>';
 }
 function marketCycleTrack(pkg,compass){
@@ -317,7 +322,7 @@ function marketCycleTrack(pkg,compass){
   const horizons=horizonCell(compass,'NEXT_12H','NOW · 0–12H')+horizonCell(compass,'NEXT_1_3D','1–3 DAYS')+horizonCell(compass,'NEXT_5_7D','5–7 DAYS')+horizonCell(compass,'NEXT_2_3W','2–3 WEEKS')+horizonCell(compass,'CYCLE_ALTCOINS_3_8W','4–8 WEEKS');
   return '<section class="path-track market-cycle-v2" data-path-track="market-cycle">'
     +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The big-picture market cycle.</h3><p>First read the decision windows, then the full cycle route. A phase only lights when the governed long-cycle owner can actually place it.</p></div><aside><span>CYCLE STAGE</span><strong>'+esc(stageLabel)+'</strong><small>'+esc(stageNote)+'</small></aside></header>'
-    +'<div class="market-cycle-summary"><div><span>NEAR TERM · 0–12H</span><strong>'+esc(pathStatus(h12.label||h12.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h12.eta))+'</small></div><div><span>WEEK AHEAD · 5–7D</span><strong>'+esc(pathStatus(h57.label||h57.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h57.eta))+'</small></div><div><span>LONG CYCLE · 4–8W</span><strong>'+esc(pathStatus(h48.state||h48.label||'UNCLEAR'))+'</strong><small>'+esc(timingInline(h48.eta))+'</small></div></div>'
+    +'<div class="market-cycle-summary"><div><span>NEAR TERM · 0–12H</span><strong>'+esc(horizonStateLabel(h12.label||h12.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h12.eta))+'</small></div><div><span>WEEK AHEAD · 5–7D</span><strong>'+esc(horizonStateLabel(h57.label||h57.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h57.eta))+'</small></div><div><span>LONG CYCLE · 4–8W</span><strong>'+esc(horizonStateLabel(h48.state||h48.label||'UNCLEAR'))+'</strong><small>'+esc(timingInline(h48.eta))+'</small></div></div>'
     +'<div class="market-cycle-nowline"><span>WEEKLY CONTEXT</span><p>'+esc(weeklyCycleState(pkg))+'</p></div>'
     +'<div class="market-horizon-title"><span>DECISION WINDOWS</span><small>Bright marker = where the clock starts now</small></div><div class="market-horizon-rail">'+horizons+'</div>'
     +'<div class="market-route-title"><span>FULL CYCLE ROUTE</span><small>'+esc(forwardKnown?'Governed destination highlighted below.':'No stage is lit until the 4–8W owner can place the cycle safely.')+'</small></div>'
