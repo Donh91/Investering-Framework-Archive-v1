@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(siteDir,"../.."); const outputDir=resolve(siteDir,"dist"); const dataDir=resolve(outputDir,"data");
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
+const INTERNAL_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json");
 const COMPASS_EVENT_STATUS_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json");
 const HOURLY_POINTER_PATH=resolve(repoRoot,"03_DAILY_CAPTURE_LOGS/hourly/LATEST.json");
 const NATIVE_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/LATEST.json");
@@ -28,7 +29,7 @@ function sanitizeDecisionProjection(dp){
 }
 function sanitizePackage(pkg){return {...pick(pkg,["issue_number","previous_issue_number","generated_unix","status","market_state","base_case_this_week","base_case_2_3_weeks","base_case_4_8_weeks","compass_4_8_weeks","rotation_ladder","altseason_countdown","altseason_mania_window","uncertainties","publication_status"]),decision_projection:sanitizeDecisionProjection(pkg?.decision_projection),evaluation:pkg?.evaluation?pick(pkg.evaluation,["structural_score","price_range_score","score_status","strengths","misses"]):{},forecast_freeze:pkg?.forecast_freeze?pick(pkg.forecast_freeze,["breadth_condition","btc_range_low","btc_range_high","eth_range_low","eth_range_high","structural_calls","forecast_horizon_days","intraday_map"]):{}}}
 async function readJson(path){return JSON.parse(await readFile(path,"utf8"))}
-async function buildCompassSnapshot(){
+async function buildCompassSnapshot(weeklyPointer){
   try{
     const pointer=await readJson(COMPASS_POINTER_PATH);
     if(pointer?.contract!=="PUBLIC_COMPASS_LATEST_POINTER_v1") throw new Error("Unexpected public Compass pointer contract");
@@ -42,6 +43,31 @@ async function buildCompassSnapshot(){
     const projection=JSON.parse(projectionBytes.toString("utf8"));
     if(projection?.contract!=="PUBLIC_COMPASS_PROJECTION_v1") throw new Error("Unexpected public Compass projection contract");
     if(projection?.compass_id!==pointer?.compass_id) throw new Error("Public Compass pointer/projection id mismatch");
+    const internalPointer=await readJson(INTERNAL_COMPASS_POINTER_PATH);
+    if(internalPointer?.contract!=="OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1") throw new Error("Unexpected internal Compass pointer contract");
+    if(internalPointer?.compass_id!==projection.compass_id) throw new Error("Public/internal Compass id mismatch");
+    const internalRel=internalPointer.compass_path;
+    if(typeof internalRel!=="string"||!internalRel.startsWith("04_MARKET_LEARNING/handlekompas/official/daily/")) throw new Error("Internal Compass pointer escaped daily root");
+    const internalPath=resolve(repoRoot,internalRel);
+    if(relative(repoRoot,internalPath).startsWith("..")) throw new Error("Internal Compass path escaped repository");
+    const internalBytes=await readFile(internalPath);
+    const internalContentSha=createHash("sha256").update(internalBytes).digest("hex");
+    if(internalContentSha!==internalPointer?.compass_content_sha256) throw new Error("Internal Compass pointer/content hash mismatch");
+    const internalCompass=JSON.parse(internalBytes.toString("utf8"));
+    if(internalCompass?.compass_id!==projection.compass_id) throw new Error("Internal/public Compass artifact mismatch");
+    const cnBinding=internalCompass?.source_bindings?.cycle_navigator||{};
+    const weeklyYear=Number(weeklyPointer?.iso_year),weeklyWeek=Number(weeklyPointer?.iso_week),weeklyIssue=Number(weeklyPointer?.issue_number);
+    const boundYear=Number(cnBinding?.iso_year),boundWeek=Number(cnBinding?.iso_week),boundIssue=Number(cnBinding?.issue_number);
+    const machineSha=String(cnBinding?.machine_package?.content_sha256||"");
+    const aligned=cnBinding?.status==="PASS"&&Number.isInteger(weeklyYear)&&Number.isInteger(weeklyWeek)&&Number.isInteger(weeklyIssue)&&boundYear===weeklyYear&&boundWeek===weeklyWeek&&boundIssue===weeklyIssue&&machineSha!==""&&machineSha===String(weeklyPointer?.machine_package_sha256||"");
+    projection.weekly_context={
+      contract:"CN_COMPASS_WEEKLY_ALIGNMENT_v1",
+      status:aligned?"ALIGNED":"MISMATCH",
+      forecast_week:Number.isInteger(weeklyYear)&&Number.isInteger(weeklyWeek)?`${weeklyYear}-W${String(weeklyWeek).padStart(2,"0")}`:null,
+      public_issue_number:aligned&&Number.isInteger(Number(weeklyPointer?.public_issue_number))?Number(weeklyPointer.public_issue_number):null,
+      authority:false,
+      semantics:"DELIVERY_ALIGNMENT_ONLY"
+    };
     const [hourlyPointer,nativePointer]=await Promise.all([
       readJson(HOURLY_POINTER_PATH).catch(()=>null),
       readJson(NATIVE_COMPASS_POINTER_PATH).catch(()=>null)
@@ -75,7 +101,7 @@ async function buildCompassSnapshot(){
     }
     return projection;
   }catch(error){
-    return {contract:"PUBLIC_COMPASS_PROJECTION_v1",compass_id:null,issued_at_utc:null,data_status:"NOT_PUBLISHED",market_now:{directional_state:"UNAVAILABLE",regime:"NOT_PUBLISHED",summary:"The official daily Compass has not been published yet."},horizons:{},capitalization_ladder:[],protection_tracker:{contract:"COMPASS_PROTECTION_TRACKER_v1",pullback_risk_state:"UNAVAILABLE",pullback_class:"UNKNOWN",distribution_risk:"UNKNOWN",eta_window:"UNKNOWN",confidence_quality:"LOW",decisive_public_drivers:[],invalidation:"Fresh Official Compass evidence is required.",last_material_change_at:null,data_quality:"DEGRADED",reentry_state:"UNAVAILABLE",reentry_message:"Re-entry review is unavailable.",authority:{portfolio_execution:false,wallet_specific:false,new_market_classifier:false}},sell_assessment:{contract:"COMPASS_SELL_ASSESSMENT_v1",state:"UNAVAILABLE",horizon:"UNKNOWN",eta:"UNKNOWN",reason:"A fresh governed sell/trim decision owner is not available.",protection_context:{pullback_risk_state:"UNAVAILABLE",distribution_risk:"UNKNOWN"},authority:{portfolio_execution:false,new_sell_rule:false,automatic_action:false,protection_is_sell_authority:false}},action_now:"UNAVAILABLE",next_meaningful_change_eta:null,conclusion:"Official daily Compass unavailable. No short-horizon signal is synthesized by the site.",authority:{official_navigation_output:true,portfolio_execution:false,source_override:false},failure_state:String(error?.message||error)};
+    return {contract:"PUBLIC_COMPASS_PROJECTION_v1",compass_id:null,issued_at_utc:null,data_status:"NOT_PUBLISHED",weekly_context:{contract:"CN_COMPASS_WEEKLY_ALIGNMENT_v1",status:"UNVERIFIED",forecast_week:null,public_issue_number:null,authority:false,semantics:"DELIVERY_ALIGNMENT_ONLY"},market_now:{directional_state:"UNAVAILABLE",regime:"NOT_PUBLISHED",summary:"The official daily Compass has not been published yet."},horizons:{},capitalization_ladder:[],protection_tracker:{contract:"COMPASS_PROTECTION_TRACKER_v1",pullback_risk_state:"UNAVAILABLE",pullback_class:"UNKNOWN",distribution_risk:"UNKNOWN",eta_window:"UNKNOWN",confidence_quality:"LOW",decisive_public_drivers:[],invalidation:"Fresh Official Compass evidence is required.",last_material_change_at:null,data_quality:"DEGRADED",reentry_state:"UNAVAILABLE",reentry_message:"Re-entry review is unavailable.",authority:{portfolio_execution:false,wallet_specific:false,new_market_classifier:false}},sell_assessment:{contract:"COMPASS_SELL_ASSESSMENT_v1",state:"UNAVAILABLE",horizon:"UNKNOWN",eta:"UNKNOWN",reason:"A fresh governed sell/trim decision owner is not available.",protection_context:{pullback_risk_state:"UNAVAILABLE",distribution_risk:"UNKNOWN"},authority:{portfolio_execution:false,new_sell_rule:false,automatic_action:false,protection_is_sell_authority:false}},action_now:"UNAVAILABLE",next_meaningful_change_eta:null,conclusion:"Official daily Compass unavailable. No short-horizon signal is synthesized by the site.",authority:{official_navigation_output:true,portfolio_execution:false,source_override:false},failure_state:String(error?.message||error)};
   }
 }
 async function buildCompassEventSnapshot(){
@@ -172,7 +198,7 @@ const sinceLastCN=await deriveSinceLastCN(publicSeriesRaw,standaloneFreeze);
 const latestCompletedForecast=await deriveLatestCompletedForecast(publicSeriesRaw,pkg);
 
 const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure_analysis:publicStructureAnalysis(standaloneFreeze),public_bull_bear_scale:standaloneFreeze?.bull_bear_scale||null,since_last_cn:sinceLastCN,latest_completed_forecast:latestCompletedForecast};
-const compass=await buildCompassSnapshot();
+const compass=await buildCompassSnapshot(pointer);
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
