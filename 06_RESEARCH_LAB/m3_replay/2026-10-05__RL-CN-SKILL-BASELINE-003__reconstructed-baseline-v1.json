@@ -1,0 +1,293 @@
+{
+  "authority": {
+    "canonical_score_rewrite": false,
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "public_surface_effect": false
+  },
+  "contract": "CN_RESEARCH_RECONSTRUCTED_BASELINE_TOURNAMENT_v1",
+  "critical_boundary": "These DUMB baselines were reconstructed after the fact from pre-freeze market inputs. Outcomes were not used to form them, but they were not committed at original publication and MUST NOT be represented as original frozen protocol baselines.",
+  "limitations": [
+    "N=4 asset-week rows across only two weeks.",
+    "BTC and ETH rows within a week are correlated.",
+    "Binance BTCUSDT/ETHUSDT is a research provider and may differ slightly from the original CN/FMP/Kraken source basis.",
+    "No statistical significance or promotion decision is implied.",
+    "W36-W38 are excluded because the v2 ledger does not expose exact comparable weekly-window freezes for those weeks."
+  ],
+  "means": {
+    "CN": {
+      "mean_containment_pct": 100.0,
+      "mean_jaccard": 0.504487,
+      "mean_winkler_a10": 13.494651
+    },
+    "DUMB15": {
+      "mean_containment_pct": 75.0,
+      "mean_jaccard": 0.547552,
+      "mean_winkler_a10": 29.499821
+    },
+    "DUMB20": {
+      "mean_containment_pct": 89.2857,
+      "mean_jaccard": 0.460933,
+      "mean_winkler_a10": 23.96162
+    }
+  },
+  "method": {
+    "actual_window": "ISO forecast week Monday-Sunday, same provider for all compared ranges",
+    "atr_seed": "SMA first 14 TR then Wilder recursive update",
+    "baseline": "anchor close +/- 1.5x and 2.0x Wilder ATR14",
+    "knowledge_rule": "only daily klines whose close_time <= forecast freeze generated_unix",
+    "rounding": "ATR and baseline bounds rounded to whole USD, half-up",
+    "warmup": "all available Binance daily bars from 2025-12-01; minimum 120 pre-freeze bars enforced"
+  },
+  "mission_id": "RL-CN-SKILL-BASELINE-003",
+  "pairwise": {
+    "CN_vs_DUMB15": {
+      "jaccard_losses": 3,
+      "jaccard_wins": 1,
+      "winkler_losses": 2,
+      "winkler_wins": 2
+    },
+    "CN_vs_DUMB20": {
+      "jaccard_losses": 3,
+      "jaccard_wins": 1,
+      "winkler_losses": 3,
+      "winkler_wins": 1
+    }
+  },
+  "provider_receipts": {
+    "BTC": {
+      "end": "2026-10-04",
+      "endpoint": "https://data-api.binance.vision/api/v3/klines",
+      "interval": "1d",
+      "provider": "BINANCE_PUBLIC_DATA_MIRROR",
+      "response_sha256": "776e966a4ab8d3d0fd37d2f23622ed7304e30d870f2c9294e8ada50bc0cee2d4",
+      "row_count": 308,
+      "start": "2025-12-01",
+      "symbol": "BTCUSDT",
+      "url_query": {
+        "endTime": 1791158399999,
+        "interval": "1d",
+        "limit": 1000,
+        "startTime": 1764547200000,
+        "symbol": "BTCUSDT"
+      }
+    },
+    "ETH": {
+      "end": "2026-10-04",
+      "endpoint": "https://data-api.binance.vision/api/v3/klines",
+      "interval": "1d",
+      "provider": "BINANCE_PUBLIC_DATA_MIRROR",
+      "response_sha256": "235d374f51065a890515188458d8238eeab47c8b3b40f06c9fcdb6a9c491609c",
+      "row_count": 308,
+      "start": "2025-12-01",
+      "symbol": "ETHUSDT",
+      "url_query": {
+        "endTime": 1791158399999,
+        "interval": "1d",
+        "limit": 1000,
+        "startTime": 1764547200000,
+        "symbol": "ETHUSDT"
+      }
+    }
+  },
+  "purpose": "Current-era no-outcome-input mechanical comparison for exact weekly W39-W40 BTC/ETH freezes.",
+  "rows": [
+    {
+      "anchor_close": 81178.0,
+      "anchor_date": "2026-09-20",
+      "asset": "BTC",
+      "atr14_raw_long_warmup": 2199.85858864,
+      "atr14_whole_usd": 2200,
+      "forecast_week": "2026-W39",
+      "freeze_generated_unix": 1790014421,
+      "freeze_generated_utc": "2026-09-21T18:13:41Z",
+      "freeze_source": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+      "history_rows_available_pre_freeze": 294,
+      "public_issue_number": 26,
+      "reconstruction_status": "RESEARCH_RECONSTRUCTED_EX_ANTE_INPUTS_NOT_ORIGINALLY_FROZEN",
+      "scores": {
+        "CN": {
+          "actual_high": 87395.67,
+          "actual_low": 80850.22,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 88740.0,
+          "jaccard": 0.688415,
+          "low": 79232.0,
+          "width_ratio": 1.452612,
+          "winkler_a10": 11.712533
+        },
+        "DUMB15": {
+          "actual_high": 87395.67,
+          "actual_low": 80850.22,
+          "breach_days": 6,
+          "daily_containment_pct": 14.2857,
+          "high": 84478,
+          "jaccard": 0.381163,
+          "low": 77878,
+          "width_ratio": 1.008334,
+          "winkler_a10": 80.01355
+        },
+        "DUMB20": {
+          "actual_high": 87395.67,
+          "actual_low": 80850.22,
+          "breach_days": 3,
+          "daily_containment_pct": 57.1429,
+          "high": 85578,
+          "jaccard": 0.445275,
+          "low": 76778,
+          "width_ratio": 1.344445,
+          "winkler_a10": 55.622706
+        }
+      }
+    },
+    {
+      "anchor_close": 2645.21,
+      "anchor_date": "2026-09-20",
+      "asset": "ETH",
+      "atr14_raw_long_warmup": 100.91283822,
+      "atr14_whole_usd": 101,
+      "forecast_week": "2026-W39",
+      "freeze_generated_unix": 1790014421,
+      "freeze_generated_utc": "2026-09-21T18:13:41Z",
+      "freeze_source": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+      "history_rows_available_pre_freeze": 294,
+      "public_issue_number": 26,
+      "reconstruction_status": "RESEARCH_RECONSTRUCTED_EX_ANTE_INPUTS_NOT_ORIGINALLY_FROZEN",
+      "scores": {
+        "CN": {
+          "actual_high": 2807.34,
+          "actual_low": 2600.15,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 2947.0,
+          "jaccard": 0.485222,
+          "low": 2520.0,
+          "width_ratio": 2.06091,
+          "winkler_a10": 16.142386
+        },
+        "DUMB15": {
+          "actual_high": 2807.34,
+          "actual_low": 2600.15,
+          "breach_days": 1,
+          "daily_containment_pct": 85.7143,
+          "high": 2797,
+          "jaccard": 0.628231,
+          "low": 2494,
+          "width_ratio": 1.462426,
+          "winkler_a10": 19.272572
+        },
+        "DUMB20": {
+          "actual_high": 2807.34,
+          "actual_low": 2600.15,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 2847,
+          "jaccard": 0.512847,
+          "low": 2443,
+          "width_ratio": 1.949901,
+          "winkler_a10": 15.272889
+        }
+      }
+    },
+    {
+      "anchor_close": 84472.0,
+      "anchor_date": "2026-09-27",
+      "asset": "BTC",
+      "atr14_raw_long_warmup": 2252.95594973,
+      "atr14_whole_usd": 2253,
+      "forecast_week": "2026-W40",
+      "freeze_generated_unix": 1790574817,
+      "freeze_generated_utc": "2026-09-28T05:53:37Z",
+      "freeze_source": "CYCLE_NAVIGATOR_FORECAST_FREEZE",
+      "history_rows_available_pre_freeze": 301,
+      "public_issue_number": 27,
+      "reconstruction_status": "RESEARCH_RECONSTRUCTED_EX_ANTE_INPUTS_NOT_ORIGINALLY_FROZEN",
+      "scores": {
+        "CN": {
+          "actual_high": 87220.0,
+          "actual_low": 82563.0,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 89000.0,
+          "jaccard": 0.490211,
+          "low": 79500.0,
+          "width_ratio": 2.03994,
+          "winkler_a10": 11.24633
+        },
+        "DUMB15": {
+          "actual_high": 87220.0,
+          "actual_low": 82563.0,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 87852,
+          "jaccard": 0.689007,
+          "low": 81093,
+          "width_ratio": 1.451364,
+          "winkler_a10": 8.001468
+        },
+        "DUMB20": {
+          "actual_high": 87220.0,
+          "actual_low": 82563.0,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 88978,
+          "jaccard": 0.516755,
+          "low": 79966,
+          "width_ratio": 1.935151,
+          "winkler_a10": 10.668624
+        }
+      }
+    },
+    {
+      "anchor_close": 2688.65,
+      "anchor_date": "2026-09-27",
+      "asset": "ETH",
+      "atr14_raw_long_warmup": 95.54309834,
+      "atr14_whole_usd": 96,
+      "forecast_week": "2026-W40",
+      "freeze_generated_unix": 1790574817,
+      "freeze_generated_utc": "2026-09-28T05:53:37Z",
+      "freeze_source": "CYCLE_NAVIGATOR_FORECAST_FREEZE",
+      "history_rows_available_pre_freeze": 301,
+      "public_issue_number": 27,
+      "reconstruction_status": "RESEARCH_RECONSTRUCTED_EX_ANTE_INPUTS_NOT_ORIGINALLY_FROZEN",
+      "scores": {
+        "CN": {
+          "actual_high": 2777.33,
+          "actual_low": 2635.69,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 2880.0,
+          "jaccard": 0.3541,
+          "low": 2480.0,
+          "width_ratio": 2.824061,
+          "winkler_a10": 14.877355
+        },
+        "DUMB15": {
+          "actual_high": 2777.33,
+          "actual_low": 2635.69,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 2833,
+          "jaccard": 0.491806,
+          "low": 2545,
+          "width_ratio": 2.033324,
+          "winkler_a10": 10.711695
+        },
+        "DUMB20": {
+          "actual_high": 2777.33,
+          "actual_low": 2635.69,
+          "breach_days": 0,
+          "daily_containment_pct": 100.0,
+          "high": 2881,
+          "jaccard": 0.368854,
+          "low": 2497,
+          "width_ratio": 2.711099,
+          "winkler_a10": 14.282261
+        }
+      }
+    }
+  ],
+  "status": "RESEARCH_ONLY_NOT_CANONICAL_SCORE"
+}
