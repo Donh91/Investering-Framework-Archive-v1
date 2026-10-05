@@ -64,11 +64,11 @@ jobs:
           grep -q 'Small-cap expansion gate' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'ETA TO TARGET GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Conditional gate window · not a guaranteed phase-start date' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'LIVE GATES REFRESHING' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'LIVE SIGNALS REFRESHING' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'CN_COMPASS_WEEKLY_ALIGNMENT_v1' 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q '"status": "ALIGNED"' 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q 'Broad altseason' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'NEXT ROTATION GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'NEXT ROTATION WATCH' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'path-overview-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'NO STRUCTURED LONG-CYCLE PHASE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -q "source:'MONDAY BASE CASE'" 05_CYCLE_NAVIGATOR/site/dist/public-product.js
@@ -79,6 +79,10 @@ jobs:
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'no browser countdown math' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'market-cycle-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'CURRENT CYCLE POSITION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'NEXT SUPPORTED PHASE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'function publicPathText' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'market-cycle-step.next' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'rotation-rail-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'altcoin-timer-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'workflow_dispatch:' .github/workflows/cycle-navigator-pages.yml
