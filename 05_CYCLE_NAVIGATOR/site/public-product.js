@@ -312,7 +312,7 @@ function reentryEngaged(value){
 }
 function distributionDriver(compass){
   const rows=Array.isArray(compass?.protection_tracker?.decisive_public_drivers)?compass.protection_tracker.decisive_public_drivers:[];
-  return rows.find(x=>/distribution/i.test(String(x||'')))||'No governed distribution explanation is published.';
+  return rows.find(x=>/distribution/i.test(String(x||'')))||'No public distribution explanation is available.';
 }
 function mondayAlt(pkg,index){
   const rows=Array.isArray(pkg?.altseason_countdown)?pkg.altseason_countdown:[];
