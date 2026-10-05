@@ -1,7 +1,7 @@
 {
   "contract": "RESEARCH_LAB_PAIRED_INTELLIGENCE_QUEUE_v1",
   "created_date": "2026-10-05",
-  "status": "M6_HCEL_O1_TEMPORAL_REVALIDATION_PENDING",
+  "status": "M6_HCEL_O1_PENDING_M7_PRESTAGED",
   "execution_mode": "STRICT_SEQUENTIAL_ONE_ACTIVE_MISSION",
   "framework_source_snapshot": {
     "repository": "Donh91/Investering-Framework-Archive-v1",
@@ -95,6 +95,20 @@
       "policy_evidence_status": "TEMPORAL_REVALIDATION_REQUIRED",
       "hcel_integrity_alert": "06_RESEARCH_LAB/m6_checkpoints/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__HCEL-temporal-integrity-alert-v1.md",
       "lane_c_protocol": "06_RESEARCH_LAB/m6_protocols/2026-10-05__lane-C-prospective-warning-survival-v1.json"
+    },
+    {
+      "sequence": 7,
+      "id": "RL-SHARED-ROW-TOURNAMENT-007",
+      "title": "Shared Row Model Tournament - Activation & Incremental Information Value",
+      "state": "QUEUED_AFTER_M6",
+      "release_condition": "M6_HCEL_O1_ADJUDICATED_THEN_CLAUDE_FOLDER_AUDIT_COMPLETED_AND_CHATGPT_REVIEWED",
+      "target_folder": "06_RESEARCH_LAB/shared_row_model_tournament_v1/",
+      "claude_command": "messages/chatgpt/2026/10/2026-10-05T161000Z_CHATGPT_SHARED_ROW_FOLDER_AUDIT_CONDITIONAL.md",
+      "sol_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-SHARED-ROW-TOURNAMENT-007__sol-api.json",
+      "sol_state": "HOLD_FOR_CLAUDE_BLIND_FOLDER_AUDIT",
+      "chatgpt_current_mechanical_verdict": "ACTIVATION_REQUIRES_ONE_SMALL_REPAIR",
+      "activation_executed": false,
+      "selected_live_rules": []
     }
   ],
   "authority": {
