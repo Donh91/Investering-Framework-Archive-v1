@@ -27,6 +27,9 @@ It is intentionally a presentation and live-context surface, not a new market-st
 17. The Altcoin Cycle sequence may show Participation → ETH unlock → Large/Mid transmission → Altseason Ignition → Micro acceleration → Broad altseason → Mania/Euphoria → Distribution → Exit/Protection → Re-entry, but later sequence steps are references only until their governing sources activate them.
 18. Distribution MUST read `COMPASS_PROTECTION_TRACKER_v1.distribution_risk`; Exit / Protection MUST read `COMPASS_SELL_ASSESSMENT_v1`; Re-entry MUST read `COMPASS_PROTECTION_TRACKER_v1.reentry_state`. Neither pullback nor distribution context alone may become a frontend sell instruction.
 19. If the Official Compass is unavailable, live Rotation and Altcoin Cycle states fail closed to `UNAVAILABLE`; independently frozen Monday context may remain visible.
+20. Pages MUST verify the exact internal Official Compass source binding against the current canonical Cycle Navigator pointer before PATH may use that Compass as a live weekly overlay. The public delivery receipt may expose only alignment status, public issue identity and forecast week; internal paths, hashes and machine issue identifiers remain private.
+21. If Compass→weekly alignment is `MISMATCH` or `UNVERIFIED`, PATH MUST keep the frozen Monday path visible but fail live Rotation, Altcoin Cycle, protection and exit overlays closed until lineage is aligned. This delivery safeguard MUST NOT make the independently verified NOW Compass unavailable.
+22. Every prominent Altcoin Cycle ETA MUST remain visibly described as a conditional target-gate/review window, not a guaranteed phase-start date or automatic sell date.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
