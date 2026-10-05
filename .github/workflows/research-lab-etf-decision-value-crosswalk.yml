@@ -1,0 +1,86 @@
+name: Research Lab ETF Decision Value Crosswalk
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: research-lab-etf-decision-value-crosswalk
+  cancel-in-progress: false
+
+jobs:
+  crosswalk:
+    if: >-
+      github.event.issue.number == 1476 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[RESEARCH_LAB_VALUE]') &&
+      contains(github.event.comment.body, 'mission=RL-ETF-TEMPORAL-EDGE-001')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate crosswalk
+        run: |
+          python -m py_compile scripts/research/etf_pit_decision_value_crosswalk_v1.py
+          python -m unittest -v tests.research.test_etf_pit_decision_value_crosswalk_v1
+      - name: Build model-free decision-value crosswalk
+        run: |
+          mkdir -p runtime/research-lab-value
+          python scripts/research/etf_pit_decision_value_crosswalk_v1.py \
+            --repo-root . \
+            --output runtime/research-lab-value/result.json
+      - name: Persist research-only crosswalk
+        run: |
+          set -euo pipefail
+          dest="06_RESEARCH_LAB/m1_replay/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__decision-value-crosswalk-v1.json"
+          mkdir -p "$(dirname "$dest")"
+          cp runtime/research-lab-value/result.json "$dest"
+          git config user.name 'research-lab-value[bot]'
+          git config user.email 'research-lab-value@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m "research: add ETF PIT decision-value crosswalk"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt*5))
+            done
+            [ "$pushed" = true ]
+          fi
+          echo "RESULT_PATH=$dest" >> "$GITHUB_ENV"
+      - name: Report crosswalk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > runtime/research-lab-value/report.md
+          import json, os
+          from pathlib import Path
+          r=json.loads(Path(os.environ['RESULT_PATH']).read_text())
+          print("## RESEARCH_LAB_VALUE completed")
+          print()
+          for s in r["signals"]:
+              p=s["pre_signal_price_rotation_context"]
+              o=s["outcomes"]
+              print(f"### {s['signal']}")
+              print(f"- known at: {s['signal_known_at_utc']}")
+              print(f"- BTC anchor: {s['hourly_anchor']['btc_close']}")
+              print(f"- BTC prior 24h / 72h: {p['btc_return_prior_24h_pct']}% / {p['btc_return_prior_72h_pct']}%")
+              print(f"- C2 already true: {p['c2_ethbtc_5d_le_minus_3pct']}")
+              print(f"- BTC +24h / +72h / +7d: {o['h24']['btc_return_pct']}% / {o['h72']['btc_return_pct']}% / {o['h168']['btc_return_pct']}%")
+              print(f"- max drawdown by +7d: {o['h168']['btc_max_drawdown_from_anchor_pct']}%")
+              print()
+          print(f"Immutable result: `{os.environ['RESULT_PATH']}`")
+          print("No authority change performed.")
+          PY
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body-file runtime/research-lab-value/report.md
