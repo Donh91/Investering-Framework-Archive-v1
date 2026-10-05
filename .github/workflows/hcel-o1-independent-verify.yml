@@ -39,12 +39,18 @@ jobs:
           git add "$dest"
           if ! git diff --cached --quiet; then
             git commit -m "research: independently verify HCEL E1 E3 continuity"
+            pushed=0
             for n in 1 2 3; do
-              git pull --rebase origin main && git push origin HEAD:main && exit 0
+              if git pull --rebase origin main && git push origin HEAD:main; then
+                pushed=1
+                break
+              fi
               git rebase --abort 2>/dev/null || true
               sleep $((n*3))
             done
-            exit 1
+            [ "$pushed" -eq 1 ] || exit 1
+            git fetch origin main
+            git merge-base --is-ancestor HEAD origin/main
           fi
       - name: Report
         env:
