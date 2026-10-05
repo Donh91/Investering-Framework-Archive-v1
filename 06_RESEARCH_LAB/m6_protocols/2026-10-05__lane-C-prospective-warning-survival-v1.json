@@ -1,0 +1,123 @@
+{
+  "contract": "M6_LANE_C_PROSPECTIVE_WARNING_SURVIVAL_v1",
+  "created_date": "2026-10-05",
+  "status": "FROZEN_RESEARCH_PROTOCOL",
+  "authority": {
+    "portfolio_action": false,
+    "live_exit_rule": false,
+    "market_rule_change": false,
+    "canonical_promotion": false
+  },
+  "lane_a_verdict": "LANE_A_ZERO_USABLE_EPISODES",
+  "warning_identity": {
+    "field": "pullback_risk_state",
+    "primary_states": [
+      "ELEVATED",
+      "HIGH",
+      "CONFIRMED"
+    ],
+    "watch_only": [
+      "BUILDING"
+    ],
+    "non_warning": [
+      "NORMAL"
+    ],
+    "non_assessable": [
+      "UNAVAILABLE",
+      "DATA_DEGRADED",
+      null
+    ],
+    "first_warning_time": "FIRST_LEGALLY_KNOWABLE_TRANSITION_INTO_PRIMARY_STATE",
+    "execution_authority": false
+  },
+  "reduce_capable_identity": {
+    "current_default": "UNAVAILABLE",
+    "requires": "SEPARATELY_FROZEN_TYPED_REDUCE_ACTION_SEMANTICS",
+    "infer_from_warning": false,
+    "infer_from_prose": false
+  },
+  "episode_grid_pct": {
+    "BTC": [
+      10,
+      15,
+      20
+    ],
+    "ETH": [
+      15,
+      20,
+      30
+    ],
+    "ALT": "DISABLED_UNTIL_CLEAN_PROSPECTIVE_INDEX_OWNER"
+  },
+  "episode_family": {
+    "primary_gap_days": 14,
+    "sensitivity_gap_days": [
+      7,
+      30
+    ],
+    "overlap_same_family": true
+  },
+  "horizons_hours": [
+    24,
+    72,
+    168,
+    336,
+    720
+  ],
+  "price_only_comparator": {
+    "primary_drawdown_from_running_peak_pct": 5,
+    "sensitivity_pct": 3,
+    "authority": "RESEARCH_COMPARATOR_ONLY"
+  },
+  "prospective_e3_input_readiness": {
+    "F1_PRICE_TREND": {
+      "status": "SOURCE_AVAILABLE",
+      "source": "03_DAILY_CAPTURE_LOGS/hourly/",
+      "pre_use": [
+        "FREEZE_DAILY_CLOCK",
+        "FREEZE_WARMUP",
+        "RIGHT_TRUNCATION_PASS"
+      ]
+    },
+    "F2_BREADTH": {
+      "status": "AVAILABLE_BUT_THRESHOLD_PARITY_UNPROVEN",
+      "source": "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
+      "current_field": "aggregate.advance_ratio",
+      "owner_semantics": [
+        "PROXY_ONLY",
+        "REGISTERED_THRESHOLD_COMPATIBILITY_UNCONFIRMED",
+        "NO_HIDDEN_SUBSTITUTION"
+      ],
+      "prospective_parity_state": "UNKNOWN_UNTIL_PREOUTCOME_OWNER_PARITY_FREEZE"
+    },
+    "F3_ETHBTC": {
+      "status": "SOURCE_AVAILABLE_TRANSFORM_NOT_YET_FROZEN",
+      "source": "03_DAILY_CAPTURE_LOGS/hourly/",
+      "pre_use": [
+        "FREEZE_30D_RETURN_TRANSFORM",
+        "RIGHT_TRUNCATION_PASS"
+      ]
+    },
+    "F4_EUPHORIA_FADE": {
+      "status": "UNAVAILABLE_FOR_PARITY",
+      "historical_source": "ALTERNATIVE_ME_FEAR_GREED",
+      "prospective_state": "UNKNOWN_NO_SIGNAL",
+      "silent_cfgi_substitution": false
+    },
+    "F5_STABLECOIN_SUPPLY": {
+      "status": "RESEARCH_SOURCE_AVAILABLE",
+      "source": "03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/LATEST.json",
+      "field": "global.change_30d_pct",
+      "semantic_boundary": "SUPPLY_LIQUIDITY_NOT_DEPLOYMENT"
+    }
+  },
+  "prerequisites_before_policy_shadow": [
+    "HCEL_O1_ADJUDICATED",
+    "BYTE_FROZEN_POLICY_SPEC",
+    "BASELINES_SAME_CLOCK",
+    "REENTRY_DEFINED",
+    "PER_FAMILY_PROVENANCE",
+    "NO_THRESHOLD_TUNING"
+  ],
+  "selected_live_rules": []
+}
