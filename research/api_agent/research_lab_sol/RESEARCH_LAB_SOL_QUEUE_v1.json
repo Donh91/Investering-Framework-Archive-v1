@@ -92,8 +92,17 @@
       "mission_id": "RL-AUTOTRADING-EVIDENCE-004",
       "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-AUTOTRADING-EVIDENCE-004__sol-api.json",
-      "context_status": "FRESH_BIND_REQUIRED_BEFORE_TRIGGER",
-      "context_paths": []
+      "context_status": "FRESH_COMPACT_READINESS_AND_RANKING",
+      "context_paths": [
+        "06_RESEARCH_LAB/m4_checkpoints/2026-10-05__RL-AUTOTRADING-EVIDENCE-004__readiness-v1.md",
+        "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-AUTOTRADING-EVIDENCE-004__sol-api.json",
+        "04_RESEARCH_LAB/auto_trading/THEORY_LEDGER.md",
+        "04_RESEARCH_LAB/auto_trading/experiments/E1_LEAKAGE_VALIDATION_RESULT_v1.json",
+        "04_RESEARCH_LAB/auto_trading/experiments/E3_TRIAL_N5_PREREGISTRATION.json",
+        "04_RESEARCH_LAB/auto_trading/experiments/E3_TRIAL_N5_INDEPENDENT_RESULT.json",
+        "04_RESEARCH_LAB/auto_trading/audit_summaries/2026-09-14__historical-market-archive-reconciliation-closure-v1.json"
+      ],
+      "sol_instruction": "ASSESS_READINESS_FIRST; RANK_AT_MOST_3_EXISTING_HYPOTHESES_ONLY_IF_SELECTIVE_RESEARCH_IS_ADMISSIBLE"
     },
     {
       "sequence": 5,
