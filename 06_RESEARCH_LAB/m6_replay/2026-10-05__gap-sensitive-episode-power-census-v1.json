@@ -1,0 +1,4013 @@
+{
+  "authority": {
+    "canonical_promotion": false,
+    "exit_rule": false,
+    "market_rule_change": false,
+    "portfolio_action": false
+  },
+  "contract": "M6_GAP_SENSITIVE_EPISODE_POWER_CENSUS_v1",
+  "family_gap_grid_days": [
+    7,
+    14,
+    30
+  ],
+  "interpretation_boundary": [
+    "Counts are an observable episode inventory, not evidence of framework warning skill.",
+    "All 20/30/40 drawdown thresholds and 7/14/30-day family-gap rules are reported; none is selected post hoc as the true definition.",
+    "Gap-crossing peak-to-trough paths remain visible but are separated from fully observed no-gap paths.",
+    "No terminal-distribution label is inferred from drawdown magnitude alone.",
+    "The 2020-2021 and 2025-2026 research windows are never stitched across the missing 2022-2024 period."
+  ],
+  "method_path": "06_RESEARCH_LAB/m6_methods/2026-10-05__gap-sensitive-episode-power-method-v1.md",
+  "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
+  "source_path": "06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/hourly_features.csv.gz",
+  "status": "RESEARCH_ONLY_POWER_CENSUS",
+  "threshold_grid_pct": [
+    20,
+    30,
+    40
+  ],
+  "windows": {
+    "ALTSEASON_2020_2021": {
+      "assets": {
+        "BTCUSDT": {
+          "20": {
+            "episode_count_all_observed_endpoints": 9,
+            "episode_count_peak_to_trough_no_gap": 8,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -23.819411962089177,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-01-08T14:00:00Z",
+                "peak_to_rebound_hours": 137.0,
+                "peak_to_trough_hours": 73.0,
+                "peak_value": 41454.13,
+                "rebound_confirm_timestamp_utc": "2021-01-14T07:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-01-11T06:00:00Z",
+                "trough_timestamp_utc": "2021-01-11T15:00:00Z",
+                "trough_value": 31580.0
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -25.951488803816137,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-01-14T19:00:00Z",
+                "peak_to_rebound_hours": 349.0,
+                "peak_to_trough_hours": 173.0,
+                "peak_value": 39876.98,
+                "rebound_confirm_timestamp_utc": "2021-01-29T08:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-01-21T14:00:00Z",
+                "trough_timestamp_utc": "2021-01-22T00:00:00Z",
+                "trough_value": 29528.31
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -25.891568582192026,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-02-21T18:00:00Z",
+                "peak_to_rebound_hours": 234.0,
+                "peak_to_trough_hours": 167.0,
+                "peak_value": 58183.69,
+                "rebound_confirm_timestamp_utc": "2021-03-03T12:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-02-23T11:00:00Z",
+                "trough_timestamp_utc": "2021-02-28T17:00:00Z",
+                "trough_value": 43119.02
+              },
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": true,
+                "drawdown_pct": -26.291592427427236,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-04-14T06:00:00Z",
+                "peak_to_rebound_hours": 393.0,
+                "peak_to_trough_hours": 279.0,
+                "peak_value": 64577.26,
+                "rebound_confirm_timestamp_utc": "2021-04-30T15:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-04-22T20:00:00Z",
+                "trough_timestamp_utc": "2021-04-25T21:00:00Z",
+                "trough_value": 47598.87
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -45.689421053305466,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-10T03:00:00Z",
+                "peak_to_rebound_hours": 352.0,
+                "peak_to_trough_hours": 325.0,
+                "peak_value": 59356.76,
+                "rebound_confirm_timestamp_utc": "2021-05-24T19:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-15T23:00:00Z",
+                "trough_timestamp_utc": "2021-05-23T16:00:00Z",
+                "trough_value": 32237.0
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -21.811965921569886,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-26T06:00:00Z",
+                "peak_to_rebound_hours": 446.0,
+                "peak_to_trough_hours": 321.0,
+                "peak_value": 40549.99,
+                "rebound_confirm_timestamp_utc": "2021-06-13T20:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-06-08T13:00:00Z",
+                "trough_timestamp_utc": "2021-06-08T15:00:00Z",
+                "trough_value": 31705.24
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -28.16493644809528,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-06-15T17:00:00Z",
+                "peak_to_rebound_hours": 225.0,
+                "peak_to_trough_hours": 164.0,
+                "peak_value": 40702.95,
+                "rebound_confirm_timestamp_utc": "2021-06-25T02:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-06-21T10:00:00Z",
+                "trough_timestamp_utc": "2021-06-22T13:00:00Z",
+                "trough_value": 29238.99
+              },
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -23.131560970055798,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-09-07T02:00:00Z",
+                "peak_to_rebound_hours": 639.0,
+                "peak_to_trough_hours": 356.0,
+                "peak_value": 52698.0,
+                "rebound_confirm_timestamp_utc": "2021-10-03T17:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-09-21T00:00:00Z",
+                "trough_timestamp_utc": "2021-09-21T22:00:00Z",
+                "trough_value": 40508.13
+              },
+              {
+                "crosses_gap_peak_to_rebound": null,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -33.471287934540605,
+                "open_right_censored": true,
+                "peak_timestamp_utc": "2021-11-10T17:00:00Z",
+                "peak_to_rebound_hours": null,
+                "peak_to_trough_hours": 896.0,
+                "peak_value": 68633.69,
+                "rebound_confirm_timestamp_utc": null,
+                "threshold_cross_timestamp_utc": "2021-11-26T09:00:00Z",
+                "trough_timestamp_utc": "2021-12-18T01:00:00Z",
+                "trough_value": 45661.11
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-01-08T14:00:00Z",
+                    "last_peak_utc": "2021-01-14T19:00:00Z",
+                    "max_drawdown_pct": -25.951488803816137
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-21T18:00:00Z",
+                    "last_peak_utc": "2021-02-21T18:00:00Z",
+                    "max_drawdown_pct": -25.891568582192026
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-04-14T06:00:00Z",
+                    "max_drawdown_pct": -26.291592427427236
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-05-10T03:00:00Z",
+                    "last_peak_utc": "2021-05-10T03:00:00Z",
+                    "max_drawdown_pct": -45.689421053305466
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-05-26T06:00:00Z",
+                    "last_peak_utc": "2021-05-26T06:00:00Z",
+                    "max_drawdown_pct": -21.811965921569886
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-06-15T17:00:00Z",
+                    "last_peak_utc": "2021-06-15T17:00:00Z",
+                    "max_drawdown_pct": -28.16493644809528
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-09-07T02:00:00Z",
+                    "last_peak_utc": "2021-09-07T02:00:00Z",
+                    "max_drawdown_pct": -23.131560970055798
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 8
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-01-08T14:00:00Z",
+                    "last_peak_utc": "2021-01-14T19:00:00Z",
+                    "max_drawdown_pct": -25.951488803816137
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-21T18:00:00Z",
+                    "last_peak_utc": "2021-02-21T18:00:00Z",
+                    "max_drawdown_pct": -25.891568582192026
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 4,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-06-15T17:00:00Z",
+                    "max_drawdown_pct": -45.689421053305466
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-09-07T02:00:00Z",
+                    "last_peak_utc": "2021-09-07T02:00:00Z",
+                    "max_drawdown_pct": -23.131560970055798
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 5
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-01-08T14:00:00Z",
+                    "last_peak_utc": "2021-01-14T19:00:00Z",
+                    "max_drawdown_pct": -25.951488803816137
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-21T18:00:00Z",
+                    "last_peak_utc": "2021-02-21T18:00:00Z",
+                    "max_drawdown_pct": -25.891568582192026
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-04-14T06:00:00Z",
+                    "max_drawdown_pct": -26.291592427427236
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-05-10T03:00:00Z",
+                    "last_peak_utc": "2021-05-10T03:00:00Z",
+                    "max_drawdown_pct": -45.689421053305466
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-05-26T06:00:00Z",
+                    "last_peak_utc": "2021-05-26T06:00:00Z",
+                    "max_drawdown_pct": -21.811965921569886
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-06-15T17:00:00Z",
+                    "last_peak_utc": "2021-06-15T17:00:00Z",
+                    "max_drawdown_pct": -28.16493644809528
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-09-07T02:00:00Z",
+                    "last_peak_utc": "2021-09-07T02:00:00Z",
+                    "max_drawdown_pct": -23.131560970055798
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 8
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-01-08T14:00:00Z",
+                    "last_peak_utc": "2021-01-14T19:00:00Z",
+                    "max_drawdown_pct": -25.951488803816137
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-21T18:00:00Z",
+                    "last_peak_utc": "2021-02-21T18:00:00Z",
+                    "max_drawdown_pct": -25.891568582192026
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-05-10T03:00:00Z",
+                    "last_peak_utc": "2021-05-10T03:00:00Z",
+                    "max_drawdown_pct": -45.689421053305466
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-05-26T06:00:00Z",
+                    "last_peak_utc": "2021-05-26T06:00:00Z",
+                    "max_drawdown_pct": -21.811965921569886
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-06-15T17:00:00Z",
+                    "last_peak_utc": "2021-06-15T17:00:00Z",
+                    "max_drawdown_pct": -28.16493644809528
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-09-07T02:00:00Z",
+                    "last_peak_utc": "2021-09-07T02:00:00Z",
+                    "max_drawdown_pct": -23.131560970055798
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 7
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-01-08T14:00:00Z",
+                    "last_peak_utc": "2021-01-14T19:00:00Z",
+                    "max_drawdown_pct": -25.951488803816137
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-21T18:00:00Z",
+                    "last_peak_utc": "2021-02-21T18:00:00Z",
+                    "max_drawdown_pct": -25.891568582192026
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-05-10T03:00:00Z",
+                    "last_peak_utc": "2021-06-15T17:00:00Z",
+                    "max_drawdown_pct": -45.689421053305466
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-09-07T02:00:00Z",
+                    "last_peak_utc": "2021-09-07T02:00:00Z",
+                    "max_drawdown_pct": -23.131560970055798
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 5
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-01-08T14:00:00Z",
+                    "last_peak_utc": "2021-01-14T19:00:00Z",
+                    "max_drawdown_pct": -25.951488803816137
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-21T18:00:00Z",
+                    "last_peak_utc": "2021-02-21T18:00:00Z",
+                    "max_drawdown_pct": -25.891568582192026
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-05-10T03:00:00Z",
+                    "last_peak_utc": "2021-05-10T03:00:00Z",
+                    "max_drawdown_pct": -45.689421053305466
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-05-26T06:00:00Z",
+                    "last_peak_utc": "2021-05-26T06:00:00Z",
+                    "max_drawdown_pct": -21.811965921569886
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-06-15T17:00:00Z",
+                    "last_peak_utc": "2021-06-15T17:00:00Z",
+                    "max_drawdown_pct": -28.16493644809528
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-09-07T02:00:00Z",
+                    "last_peak_utc": "2021-09-07T02:00:00Z",
+                    "max_drawdown_pct": -23.131560970055798
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 7
+              }
+            },
+            "gap_crossing_episode_count": 1,
+            "right_censored_episode_count": 1
+          },
+          "30": {
+            "episode_count_all_observed_endpoints": 2,
+            "episode_count_peak_to_trough_no_gap": 1,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": true,
+                "drawdown_pct": -54.72246732053977,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-04-14T06:00:00Z",
+                "peak_to_rebound_hours": 2467.0,
+                "peak_to_trough_hours": 1663.0,
+                "peak_value": 64577.26,
+                "rebound_confirm_timestamp_utc": "2021-07-26T01:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-16T20:00:00Z",
+                "trough_timestamp_utc": "2021-06-22T13:00:00Z",
+                "trough_value": 29238.99
+              },
+              {
+                "crosses_gap_peak_to_rebound": null,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -33.471287934540605,
+                "open_right_censored": true,
+                "peak_timestamp_utc": "2021-11-10T17:00:00Z",
+                "peak_to_rebound_hours": null,
+                "peak_to_trough_hours": 896.0,
+                "peak_value": 68633.69,
+                "rebound_confirm_timestamp_utc": null,
+                "threshold_cross_timestamp_utc": "2021-12-04T05:00:00Z",
+                "trough_timestamp_utc": "2021-12-18T01:00:00Z",
+                "trough_value": 45661.11
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-04-14T06:00:00Z",
+                    "max_drawdown_pct": -54.72246732053977
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 2
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-04-14T06:00:00Z",
+                    "max_drawdown_pct": -54.72246732053977
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 2
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-04-14T06:00:00Z",
+                    "max_drawdown_pct": -54.72246732053977
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 2
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 1
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 1
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-11-10T17:00:00Z",
+                    "last_peak_utc": "2021-11-10T17:00:00Z",
+                    "max_drawdown_pct": -33.471287934540605
+                  }
+                ],
+                "family_count": 1
+              }
+            },
+            "gap_crossing_episode_count": 1,
+            "right_censored_episode_count": 1
+          },
+          "40": {
+            "episode_count_all_observed_endpoints": 1,
+            "episode_count_peak_to_trough_no_gap": 0,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": true,
+                "drawdown_pct": -54.72246732053977,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-04-14T06:00:00Z",
+                "peak_to_rebound_hours": 2583.0,
+                "peak_to_trough_hours": 1663.0,
+                "peak_value": 64577.26,
+                "rebound_confirm_timestamp_utc": "2021-07-30T21:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-19T11:00:00Z",
+                "trough_timestamp_utc": "2021-06-22T13:00:00Z",
+                "trough_value": 29238.99
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-04-14T06:00:00Z",
+                    "max_drawdown_pct": -54.72246732053977
+                  }
+                ],
+                "family_count": 1
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-04-14T06:00:00Z",
+                    "max_drawdown_pct": -54.72246732053977
+                  }
+                ],
+                "family_count": 1
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2021-04-14T06:00:00Z",
+                    "last_peak_utc": "2021-04-14T06:00:00Z",
+                    "max_drawdown_pct": -54.72246732053977
+                  }
+                ],
+                "family_count": 1
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [],
+                "family_count": 0
+              },
+              "30": {
+                "families": [],
+                "family_count": 0
+              },
+              "7": {
+                "families": [],
+                "family_count": 0
+              }
+            },
+            "gap_crossing_episode_count": 1,
+            "right_censored_episode_count": 0
+          }
+        },
+        "EW_ALT_CHAINED": {
+          "20": {
+            "episode_count_all_observed_endpoints": 18,
+            "episode_count_peak_to_trough_no_gap": 16,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -35.77166595022807,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2020-09-01T07:00:00Z",
+                "peak_to_rebound_hours": 202.0,
+                "peak_to_trough_hours": 117.0,
+                "peak_value": 102.28787230737795,
+                "rebound_confirm_timestamp_utc": "2020-09-09T17:00:00Z",
+                "threshold_cross_timestamp_utc": "2020-09-03T23:00:00Z",
+                "trough_timestamp_utc": "2020-09-06T04:00:00Z",
+                "trough_value": 65.69779631798687
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -23.425692786648234,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2020-09-13T07:00:00Z",
+                "peak_to_rebound_hours": 710.0,
+                "peak_to_trough_hours": 572.0,
+                "peak_value": 84.61213526175902,
+                "rebound_confirm_timestamp_utc": "2020-10-12T21:00:00Z",
+                "threshold_cross_timestamp_utc": "2020-09-23T23:00:00Z",
+                "trough_timestamp_utc": "2020-10-07T03:00:00Z",
+                "trough_value": 64.79115639511609
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -27.08474260903366,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2020-10-12T21:00:00Z",
+                "peak_to_rebound_hours": 592.0,
+                "peak_to_trough_hours": 546.0,
+                "peak_value": 77.78820764730825,
+                "rebound_confirm_timestamp_utc": "2020-11-06T13:00:00Z",
+                "threshold_cross_timestamp_utc": "2020-10-30T03:00:00Z",
+                "trough_timestamp_utc": "2020-11-04T15:00:00Z",
+                "trough_value": 56.71947182585417
+              },
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -22.247410901865393,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2020-11-24T08:00:00Z",
+                "peak_to_rebound_hours": 150.0,
+                "peak_to_trough_hours": 58.0,
+                "peak_value": 103.61945979467151,
+                "rebound_confirm_timestamp_utc": "2020-11-30T14:00:00Z",
+                "threshold_cross_timestamp_utc": "2020-11-26T08:00:00Z",
+                "trough_timestamp_utc": "2020-11-26T18:00:00Z",
+                "trough_value": 80.56681279985773
+              },
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": true,
+                "drawdown_pct": -20.198123822695703,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2020-12-20T09:00:00Z",
+                "peak_to_rebound_hours": 174.0,
+                "peak_to_trough_hours": 93.0,
+                "peak_value": 117.51474045233539,
+                "rebound_confirm_timestamp_utc": "2020-12-27T15:00:00Z",
+                "threshold_cross_timestamp_utc": "2020-12-24T06:00:00Z",
+                "trough_timestamp_utc": "2020-12-24T06:00:00Z",
+                "trough_value": 93.77896766585322
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -24.684710166233902,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-01-10T07:00:00Z",
+                "peak_to_rebound_hours": 78.0,
+                "peak_to_trough_hours": 33.0,
+                "peak_value": 191.0062893517944,
+                "rebound_confirm_timestamp_utc": "2021-01-13T13:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-01-11T06:00:00Z",
+                "trough_timestamp_utc": "2021-01-11T16:00:00Z",
+                "trough_value": 143.85694042602586
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -21.49193719113449,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-01-19T13:00:00Z",
+                "peak_to_rebound_hours": 90.0,
+                "peak_to_trough_hours": 59.0,
+                "peak_value": 219.29099941238317,
+                "rebound_confirm_timestamp_utc": "2021-01-23T07:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-01-22T00:00:00Z",
+                "trough_timestamp_utc": "2021-01-22T00:00:00Z",
+                "trough_value": 172.16111555286267
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -30.002633569869186,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-02-20T13:00:00Z",
+                "peak_to_rebound_hours": 84.0,
+                "peak_to_trough_hours": 67.0,
+                "peak_value": 633.4943887902383,
+                "rebound_confirm_timestamp_utc": "2021-02-24T01:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-02-23T08:00:00Z",
+                "trough_timestamp_utc": "2021-02-23T08:00:00Z",
+                "trough_value": 443.42938863582066
+              },
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": true,
+                "drawdown_pct": -31.36723279625908,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-04-17T08:00:00Z",
+                "peak_to_rebound_hours": 225.0,
+                "peak_to_trough_hours": 143.0,
+                "peak_value": 1167.1116546092512,
+                "rebound_confirm_timestamp_utc": "2021-04-26T17:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-04-18T04:00:00Z",
+                "trough_timestamp_utc": "2021-04-23T07:00:00Z",
+                "trough_value": 801.0210249156961
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -43.754110398357014,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-12T03:00:00Z",
+                "peak_to_rebound_hours": 180.0,
+                "peak_to_trough_hours": 177.0,
+                "peak_value": 1368.949664412254,
+                "rebound_confirm_timestamp_utc": "2021-05-19T15:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-19T04:00:00Z",
+                "trough_timestamp_utc": "2021-05-19T12:00:00Z",
+                "trough_value": 769.9779169473785
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -22.887832313030987,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-19T16:00:00Z",
+                "peak_to_rebound_hours": 14.0,
+                "peak_to_trough_hours": 8.0,
+                "peak_value": 980.9572831969322,
+                "rebound_confirm_timestamp_utc": "2021-05-20T06:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-20T00:00:00Z",
+                "trough_timestamp_utc": "2021-05-20T00:00:00Z",
+                "trough_value": 756.4374251563538
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -46.205002250294655,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-21T00:00:00Z",
+                "peak_to_rebound_hours": 72.0,
+                "peak_to_trough_hours": 64.0,
+                "peak_value": 1000.6238210324966,
+                "rebound_confirm_timestamp_utc": "2021-05-24T00:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-21T19:00:00Z",
+                "trough_timestamp_utc": "2021-05-23T16:00:00Z",
+                "trough_value": 538.2855620074472
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -23.858919888627018,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-26T07:00:00Z",
+                "peak_to_rebound_hours": 136.0,
+                "peak_to_trough_hours": 90.0,
+                "peak_value": 914.9684553897889,
+                "rebound_confirm_timestamp_utc": "2021-05-31T23:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-29T15:00:00Z",
+                "trough_timestamp_utc": "2021-05-30T01:00:00Z",
+                "trough_value": 696.6668646121311
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -49.74591197871641,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-06-03T23:00:00Z",
+                "peak_to_rebound_hours": 458.0,
+                "peak_to_trough_hours": 446.0,
+                "peak_value": 931.6274239972585,
+                "rebound_confirm_timestamp_utc": "2021-06-23T01:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-06-08T02:00:00Z",
+                "trough_timestamp_utc": "2021-06-22T13:00:00Z",
+                "trough_value": 468.1808656859992
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -32.577744472856295,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-07-07T13:00:00Z",
+                "peak_to_rebound_hours": 362.0,
+                "peak_to_trough_hours": 308.0,
+                "peak_value": 700.3225975289154,
+                "rebound_confirm_timestamp_utc": "2021-07-22T15:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-07-16T08:00:00Z",
+                "trough_timestamp_utc": "2021-07-20T09:00:00Z",
+                "trough_value": 472.1732912202755
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -23.02779479622359,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-09-07T05:00:00Z",
+                "peak_to_rebound_hours": 204.0,
+                "peak_to_trough_hours": 26.0,
+                "peak_value": 1254.967365312914,
+                "rebound_confirm_timestamp_utc": "2021-09-15T17:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-09-07T14:00:00Z",
+                "trough_timestamp_utc": "2021-09-08T07:00:00Z",
+                "trough_value": 965.9760556690825
+              },
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -25.892720536239644,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-09-16T06:00:00Z",
+                "peak_to_rebound_hours": 392.0,
+                "peak_to_trough_hours": 136.0,
+                "peak_value": 1185.7140286490446,
+                "rebound_confirm_timestamp_utc": "2021-10-02T14:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-09-20T23:00:00Z",
+                "trough_timestamp_utc": "2021-09-21T22:00:00Z",
+                "trough_value": 878.7004088519591
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -41.57167686814017,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-11-10T16:00:00Z",
+                "peak_to_rebound_hours": 1029.0,
+                "peak_to_trough_hours": 805.0,
+                "peak_value": 1404.726028799807,
+                "rebound_confirm_timestamp_utc": "2021-12-23T13:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-11-18T14:00:00Z",
+                "trough_timestamp_utc": "2021-12-14T05:00:00Z",
+                "trough_value": 820.7578632244936
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-13T07:00:00Z",
+                    "max_drawdown_pct": -35.77166595022807
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2020-10-12T21:00:00Z",
+                    "last_peak_utc": "2020-10-12T21:00:00Z",
+                    "max_drawdown_pct": -27.08474260903366
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2020-11-24T08:00:00Z",
+                    "last_peak_utc": "2020-11-24T08:00:00Z",
+                    "max_drawdown_pct": -22.247410901865393
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2020-12-20T09:00:00Z",
+                    "last_peak_utc": "2020-12-20T09:00:00Z",
+                    "max_drawdown_pct": -20.198123822695703
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-01-10T07:00:00Z",
+                    "last_peak_utc": "2021-01-19T13:00:00Z",
+                    "max_drawdown_pct": -24.684710166233902
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-04-17T08:00:00Z",
+                    "last_peak_utc": "2021-04-17T08:00:00Z",
+                    "max_drawdown_pct": -31.36723279625908
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 5,
+                    "family_id": "F08",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F09",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F10",
+                    "first_peak_utc": "2021-09-07T05:00:00Z",
+                    "last_peak_utc": "2021-09-16T06:00:00Z",
+                    "max_drawdown_pct": -25.892720536239644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F11",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 11
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-10-12T21:00:00Z",
+                    "max_drawdown_pct": -35.77166595022807
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 4,
+                    "family_id": "F02",
+                    "first_peak_utc": "2020-11-24T08:00:00Z",
+                    "last_peak_utc": "2021-01-19T13:00:00Z",
+                    "max_drawdown_pct": -24.684710166233902
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 6,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-04-17T08:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-09-07T05:00:00Z",
+                    "last_peak_utc": "2021-09-16T06:00:00Z",
+                    "max_drawdown_pct": -25.892720536239644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 7
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -35.77166595022807
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2020-09-13T07:00:00Z",
+                    "last_peak_utc": "2020-09-13T07:00:00Z",
+                    "max_drawdown_pct": -23.425692786648234
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2020-10-12T21:00:00Z",
+                    "last_peak_utc": "2020-10-12T21:00:00Z",
+                    "max_drawdown_pct": -27.08474260903366
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2020-11-24T08:00:00Z",
+                    "last_peak_utc": "2020-11-24T08:00:00Z",
+                    "max_drawdown_pct": -22.247410901865393
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2020-12-20T09:00:00Z",
+                    "last_peak_utc": "2020-12-20T09:00:00Z",
+                    "max_drawdown_pct": -20.198123822695703
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-01-10T07:00:00Z",
+                    "last_peak_utc": "2021-01-10T07:00:00Z",
+                    "max_drawdown_pct": -24.684710166233902
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-01-19T13:00:00Z",
+                    "last_peak_utc": "2021-01-19T13:00:00Z",
+                    "max_drawdown_pct": -21.49193719113449
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F09",
+                    "first_peak_utc": "2021-04-17T08:00:00Z",
+                    "last_peak_utc": "2021-04-17T08:00:00Z",
+                    "max_drawdown_pct": -31.36723279625908
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F10",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-05-12T03:00:00Z",
+                    "max_drawdown_pct": -43.754110398357014
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F11",
+                    "first_peak_utc": "2021-05-19T16:00:00Z",
+                    "last_peak_utc": "2021-05-26T07:00:00Z",
+                    "max_drawdown_pct": -46.205002250294655
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F12",
+                    "first_peak_utc": "2021-06-03T23:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F13",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F14",
+                    "first_peak_utc": "2021-09-07T05:00:00Z",
+                    "last_peak_utc": "2021-09-07T05:00:00Z",
+                    "max_drawdown_pct": -23.02779479622359
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F15",
+                    "first_peak_utc": "2021-09-16T06:00:00Z",
+                    "last_peak_utc": "2021-09-16T06:00:00Z",
+                    "max_drawdown_pct": -25.892720536239644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F16",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 16
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-13T07:00:00Z",
+                    "max_drawdown_pct": -35.77166595022807
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2020-10-12T21:00:00Z",
+                    "last_peak_utc": "2020-10-12T21:00:00Z",
+                    "max_drawdown_pct": -27.08474260903366
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2020-11-24T08:00:00Z",
+                    "last_peak_utc": "2020-11-24T08:00:00Z",
+                    "max_drawdown_pct": -22.247410901865393
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-01-10T07:00:00Z",
+                    "last_peak_utc": "2021-01-19T13:00:00Z",
+                    "max_drawdown_pct": -24.684710166233902
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 5,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F08",
+                    "first_peak_utc": "2021-09-07T05:00:00Z",
+                    "last_peak_utc": "2021-09-16T06:00:00Z",
+                    "max_drawdown_pct": -25.892720536239644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F09",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 9
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-10-12T21:00:00Z",
+                    "max_drawdown_pct": -35.77166595022807
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2020-11-24T08:00:00Z",
+                    "last_peak_utc": "2020-11-24T08:00:00Z",
+                    "max_drawdown_pct": -22.247410901865393
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-01-10T07:00:00Z",
+                    "last_peak_utc": "2021-01-19T13:00:00Z",
+                    "max_drawdown_pct": -24.684710166233902
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 5,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-09-07T05:00:00Z",
+                    "last_peak_utc": "2021-09-16T06:00:00Z",
+                    "max_drawdown_pct": -25.892720536239644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 8
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -35.77166595022807
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2020-09-13T07:00:00Z",
+                    "last_peak_utc": "2020-09-13T07:00:00Z",
+                    "max_drawdown_pct": -23.425692786648234
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2020-10-12T21:00:00Z",
+                    "last_peak_utc": "2020-10-12T21:00:00Z",
+                    "max_drawdown_pct": -27.08474260903366
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2020-11-24T08:00:00Z",
+                    "last_peak_utc": "2020-11-24T08:00:00Z",
+                    "max_drawdown_pct": -22.247410901865393
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-01-10T07:00:00Z",
+                    "last_peak_utc": "2021-01-10T07:00:00Z",
+                    "max_drawdown_pct": -24.684710166233902
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-01-19T13:00:00Z",
+                    "last_peak_utc": "2021-01-19T13:00:00Z",
+                    "max_drawdown_pct": -21.49193719113449
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-05-12T03:00:00Z",
+                    "max_drawdown_pct": -43.754110398357014
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F09",
+                    "first_peak_utc": "2021-05-19T16:00:00Z",
+                    "last_peak_utc": "2021-05-26T07:00:00Z",
+                    "max_drawdown_pct": -46.205002250294655
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F10",
+                    "first_peak_utc": "2021-06-03T23:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F11",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F12",
+                    "first_peak_utc": "2021-09-07T05:00:00Z",
+                    "last_peak_utc": "2021-09-07T05:00:00Z",
+                    "max_drawdown_pct": -23.02779479622359
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F13",
+                    "first_peak_utc": "2021-09-16T06:00:00Z",
+                    "last_peak_utc": "2021-09-16T06:00:00Z",
+                    "max_drawdown_pct": -25.892720536239644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F14",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 14
+              }
+            },
+            "gap_crossing_episode_count": 2,
+            "right_censored_episode_count": 0
+          },
+          "30": {
+            "episode_count_all_observed_endpoints": 8,
+            "episode_count_peak_to_trough_no_gap": 7,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -44.54917230518731,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2020-09-01T07:00:00Z",
+                "peak_to_rebound_hours": 1613.0,
+                "peak_to_trough_hours": 1544.0,
+                "peak_value": 102.28787230737795,
+                "rebound_confirm_timestamp_utc": "2020-11-07T12:00:00Z",
+                "threshold_cross_timestamp_utc": "2020-09-05T12:00:00Z",
+                "trough_timestamp_utc": "2020-11-04T15:00:00Z",
+                "trough_value": 56.71947182585417
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -30.002633569869186,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-02-20T13:00:00Z",
+                "peak_to_rebound_hours": 240.0,
+                "peak_to_trough_hours": 67.0,
+                "peak_value": 633.4943887902383,
+                "rebound_confirm_timestamp_utc": "2021-03-02T13:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-02-23T08:00:00Z",
+                "trough_timestamp_utc": "2021-02-23T08:00:00Z",
+                "trough_value": 443.42938863582066
+              },
+              {
+                "crosses_gap_peak_to_rebound": true,
+                "crosses_gap_peak_to_trough": true,
+                "drawdown_pct": -31.36723279625908,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-04-17T08:00:00Z",
+                "peak_to_rebound_hours": 253.0,
+                "peak_to_trough_hours": 143.0,
+                "peak_value": 1167.1116546092512,
+                "rebound_confirm_timestamp_utc": "2021-04-27T21:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-04-23T07:00:00Z",
+                "trough_timestamp_utc": "2021-04-23T07:00:00Z",
+                "trough_value": 801.0210249156961
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -44.74322578682079,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-12T03:00:00Z",
+                "peak_to_rebound_hours": 201.0,
+                "peak_to_trough_hours": 189.0,
+                "peak_value": 1368.949664412254,
+                "rebound_confirm_timestamp_utc": "2021-05-20T12:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-19T12:00:00Z",
+                "trough_timestamp_utc": "2021-05-20T00:00:00Z",
+                "trough_value": 756.4374251563538
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -46.205002250294655,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-21T00:00:00Z",
+                "peak_to_rebound_hours": 79.0,
+                "peak_to_trough_hours": 64.0,
+                "peak_value": 1000.6238210324966,
+                "rebound_confirm_timestamp_utc": "2021-05-24T07:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-23T07:00:00Z",
+                "trough_timestamp_utc": "2021-05-23T16:00:00Z",
+                "trough_value": 538.2855620074472
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -49.74591197871641,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-06-03T23:00:00Z",
+                "peak_to_rebound_hours": 601.0,
+                "peak_to_trough_hours": 446.0,
+                "peak_value": 931.6274239972585,
+                "rebound_confirm_timestamp_utc": "2021-06-29T00:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-06-20T10:00:00Z",
+                "trough_timestamp_utc": "2021-06-22T13:00:00Z",
+                "trough_value": 468.1808656859992
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -32.577744472856295,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-07-07T13:00:00Z",
+                "peak_to_rebound_hours": 443.0,
+                "peak_to_trough_hours": 308.0,
+                "peak_value": 700.3225975289154,
+                "rebound_confirm_timestamp_utc": "2021-07-26T00:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-07-20T03:00:00Z",
+                "trough_timestamp_utc": "2021-07-20T09:00:00Z",
+                "trough_value": 472.1732912202755
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -41.57167686814017,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-11-10T16:00:00Z",
+                "peak_to_rebound_hours": 1110.0,
+                "peak_to_trough_hours": 805.0,
+                "peak_value": 1404.726028799807,
+                "rebound_confirm_timestamp_utc": "2021-12-26T22:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-12-04T04:00:00Z",
+                "trough_timestamp_utc": "2021-12-14T05:00:00Z",
+                "trough_value": 820.7578632244936
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-04-17T08:00:00Z",
+                    "last_peak_utc": "2021-04-17T08:00:00Z",
+                    "max_drawdown_pct": -31.36723279625908
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 6
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 4,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-04-17T08:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 5
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": true,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-04-17T08:00:00Z",
+                    "last_peak_utc": "2021-04-17T08:00:00Z",
+                    "max_drawdown_pct": -31.36723279625908
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-05-12T03:00:00Z",
+                    "max_drawdown_pct": -44.74322578682079
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-05-21T00:00:00Z",
+                    "last_peak_utc": "2021-05-21T00:00:00Z",
+                    "max_drawdown_pct": -46.205002250294655
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-06-03T23:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 8
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 5
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 5
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-02-20T13:00:00Z",
+                    "last_peak_utc": "2021-02-20T13:00:00Z",
+                    "max_drawdown_pct": -30.002633569869186
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-05-12T03:00:00Z",
+                    "max_drawdown_pct": -44.74322578682079
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-05-21T00:00:00Z",
+                    "last_peak_utc": "2021-05-21T00:00:00Z",
+                    "max_drawdown_pct": -46.205002250294655
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2021-06-03T23:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2021-07-07T13:00:00Z",
+                    "last_peak_utc": "2021-07-07T13:00:00Z",
+                    "max_drawdown_pct": -32.577744472856295
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 7
+              }
+            },
+            "gap_crossing_episode_count": 1,
+            "right_censored_episode_count": 0
+          },
+          "40": {
+            "episode_count_all_observed_endpoints": 4,
+            "episode_count_peak_to_trough_no_gap": 4,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -44.54917230518731,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2020-09-01T07:00:00Z",
+                "peak_to_rebound_hours": 1845.0,
+                "peak_to_trough_hours": 1544.0,
+                "peak_value": 102.28787230737795,
+                "rebound_confirm_timestamp_utc": "2020-11-17T04:00:00Z",
+                "threshold_cross_timestamp_utc": "2020-11-03T00:00:00Z",
+                "trough_timestamp_utc": "2020-11-04T15:00:00Z",
+                "trough_value": 56.71947182585417
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -60.67893685203136,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-05-12T03:00:00Z",
+                "peak_to_rebound_hours": 296.0,
+                "peak_to_trough_hours": 277.0,
+                "peak_value": 1368.949664412254,
+                "rebound_confirm_timestamp_utc": "2021-05-24T11:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-05-19T12:00:00Z",
+                "trough_timestamp_utc": "2021-05-23T16:00:00Z",
+                "trough_value": 538.2855620074472
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -49.74591197871641,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2021-06-03T23:00:00Z",
+                "peak_to_rebound_hours": 614.0,
+                "peak_to_trough_hours": 446.0,
+                "peak_value": 931.6274239972585,
+                "rebound_confirm_timestamp_utc": "2021-06-29T13:00:00Z",
+                "threshold_cross_timestamp_utc": "2021-06-21T21:00:00Z",
+                "trough_timestamp_utc": "2021-06-22T13:00:00Z",
+                "trough_value": 468.1808656859992
+              },
+              {
+                "crosses_gap_peak_to_rebound": null,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -41.57167686814017,
+                "open_right_censored": true,
+                "peak_timestamp_utc": "2021-11-10T16:00:00Z",
+                "peak_to_rebound_hours": null,
+                "peak_to_trough_hours": 805.0,
+                "peak_value": 1404.726028799807,
+                "rebound_confirm_timestamp_utc": null,
+                "threshold_cross_timestamp_utc": "2021-12-13T18:00:00Z",
+                "trough_timestamp_utc": "2021-12-14T05:00:00Z",
+                "trough_value": 820.7578632244936
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-05-12T03:00:00Z",
+                    "max_drawdown_pct": -60.67893685203136
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-06-03T23:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 4
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -60.67893685203136
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 3
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-05-12T03:00:00Z",
+                    "max_drawdown_pct": -60.67893685203136
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-06-03T23:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 4
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-05-12T03:00:00Z",
+                    "max_drawdown_pct": -60.67893685203136
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-06-03T23:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 4
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -60.67893685203136
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 3
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2020-09-01T07:00:00Z",
+                    "last_peak_utc": "2020-09-01T07:00:00Z",
+                    "max_drawdown_pct": -44.54917230518731
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2021-05-12T03:00:00Z",
+                    "last_peak_utc": "2021-05-12T03:00:00Z",
+                    "max_drawdown_pct": -60.67893685203136
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2021-06-03T23:00:00Z",
+                    "last_peak_utc": "2021-06-03T23:00:00Z",
+                    "max_drawdown_pct": -49.74591197871641
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2021-11-10T16:00:00Z",
+                    "last_peak_utc": "2021-11-10T16:00:00Z",
+                    "max_drawdown_pct": -41.57167686814017
+                  }
+                ],
+                "family_count": 4
+              }
+            },
+            "gap_crossing_episode_count": 0,
+            "right_censored_episode_count": 1
+          }
+        }
+      },
+      "continuity_gap_count": 9,
+      "continuity_gap_timestamps_utc": [
+        "2020-11-30T08:00:00Z",
+        "2020-12-21T19:00:00Z",
+        "2020-12-25T04:00:00Z",
+        "2021-02-11T06:00:00Z",
+        "2021-03-06T04:00:00Z",
+        "2021-04-20T05:00:00Z",
+        "2021-04-25T09:00:00Z",
+        "2021-08-13T07:00:00Z",
+        "2021-09-29T10:00:00Z"
+      ],
+      "first_timestamp_utc": "2020-09-01T01:00:00Z",
+      "last_timestamp_utc": "2021-12-31T23:00:00Z",
+      "rebase_trap_signature": {
+        "largest_drawdown_pct": -78.17396891664383,
+        "largest_examples": [
+          {
+            "crosses_gap_peak_to_rebound": false,
+            "crosses_gap_peak_to_trough": false,
+            "drawdown_pct": -78.17396891664383,
+            "open_right_censored": false,
+            "peak_timestamp_utc": "2021-02-10T11:00:00Z",
+            "peak_to_rebound_hours": 235.0,
+            "peak_to_trough_hours": 19.0,
+            "peak_value": 460.16328419281297,
+            "rebound_confirm_timestamp_utc": "2021-02-20T06:00:00Z",
+            "threshold_cross_timestamp_utc": "2021-02-11T06:00:00Z",
+            "trough_timestamp_utc": "2021-02-11T06:00:00Z",
+            "trough_value": 100.43538144211594
+          },
+          {
+            "crosses_gap_peak_to_rebound": false,
+            "crosses_gap_peak_to_trough": false,
+            "drawdown_pct": -59.289686077861646,
+            "open_right_censored": false,
+            "peak_timestamp_utc": "2021-04-17T08:00:00Z",
+            "peak_to_rebound_hours": 214.0,
+            "peak_to_trough_hours": 143.0,
+            "peak_value": 207.29273001283963,
+            "rebound_confirm_timestamp_utc": "2021-04-26T06:00:00Z",
+            "threshold_cross_timestamp_utc": "2021-04-20T05:00:00Z",
+            "trough_timestamp_utc": "2021-04-23T07:00:00Z",
+            "trough_value": 84.3895211259977
+          },
+          {
+            "crosses_gap_peak_to_rebound": false,
+            "crosses_gap_peak_to_trough": false,
+            "drawdown_pct": -49.745911978716336,
+            "open_right_censored": false,
+            "peak_timestamp_utc": "2021-06-03T23:00:00Z",
+            "peak_to_rebound_hours": 601.0,
+            "peak_to_trough_hours": 446.0,
+            "peak_value": 109.09505526735718,
+            "rebound_confirm_timestamp_utc": "2021-06-29T00:00:00Z",
+            "threshold_cross_timestamp_utc": "2021-06-20T10:00:00Z",
+            "trough_timestamp_utc": "2021-06-22T13:00:00Z",
+            "trough_value": 54.82472510092573
+          }
+        ],
+        "naive_raw_ew_30pct_count": 10
+      },
+      "row_count": 11659
+    },
+    "MODERN_ANALOGUE_2025_2026": {
+      "assets": {
+        "BTCUSDT": {
+          "20": {
+            "episode_count_all_observed_endpoints": 3,
+            "episode_count_peak_to_trough_no_gap": 3,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -30.93611235818756,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-01-20T08:00:00Z",
+                "peak_to_rebound_hours": 2213.0,
+                "peak_to_trough_hours": 1846.0,
+                "peak_value": 108320.01,
+                "rebound_confirm_timestamp_utc": "2025-04-22T13:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-02-26T17:00:00Z",
+                "trough_timestamp_utc": "2025-04-07T06:00:00Z",
+                "trough_value": 74810.01
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -50.08379415223316,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-10-06T18:00:00Z",
+                "peak_to_rebound_hours": 3871.0,
+                "peak_to_trough_hours": 3379.0,
+                "peak_value": 126011.18,
+                "rebound_confirm_timestamp_utc": "2026-03-17T01:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-11-04T19:00:00Z",
+                "trough_timestamp_utc": "2026-02-24T13:00:00Z",
+                "trough_value": 62900.0
+              },
+              {
+                "crosses_gap_peak_to_rebound": null,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -29.364846529247824,
+                "open_right_censored": true,
+                "peak_timestamp_utc": "2026-05-06T11:00:00Z",
+                "peak_to_rebound_hours": null,
+                "peak_to_trough_hours": 1202.0,
+                "peak_value": 82522.89,
+                "rebound_confirm_timestamp_utc": null,
+                "threshold_cross_timestamp_utc": "2026-06-03T03:00:00Z",
+                "trough_timestamp_utc": "2026-06-25T13:00:00Z",
+                "trough_value": 58290.17
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2026-05-06T11:00:00Z",
+                    "last_peak_utc": "2026-05-06T11:00:00Z",
+                    "max_drawdown_pct": -29.364846529247824
+                  }
+                ],
+                "family_count": 3
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2026-05-06T11:00:00Z",
+                    "last_peak_utc": "2026-05-06T11:00:00Z",
+                    "max_drawdown_pct": -29.364846529247824
+                  }
+                ],
+                "family_count": 3
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2026-05-06T11:00:00Z",
+                    "last_peak_utc": "2026-05-06T11:00:00Z",
+                    "max_drawdown_pct": -29.364846529247824
+                  }
+                ],
+                "family_count": 3
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2026-05-06T11:00:00Z",
+                    "last_peak_utc": "2026-05-06T11:00:00Z",
+                    "max_drawdown_pct": -29.364846529247824
+                  }
+                ],
+                "family_count": 3
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2026-05-06T11:00:00Z",
+                    "last_peak_utc": "2026-05-06T11:00:00Z",
+                    "max_drawdown_pct": -29.364846529247824
+                  }
+                ],
+                "family_count": 3
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2026-05-06T11:00:00Z",
+                    "last_peak_utc": "2026-05-06T11:00:00Z",
+                    "max_drawdown_pct": -29.364846529247824
+                  }
+                ],
+                "family_count": 3
+              }
+            },
+            "gap_crossing_episode_count": 0,
+            "right_censored_episode_count": 1
+          },
+          "30": {
+            "episode_count_all_observed_endpoints": 2,
+            "episode_count_peak_to_trough_no_gap": 2,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -30.93611235818756,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-01-20T08:00:00Z",
+                "peak_to_rebound_hours": 2454.0,
+                "peak_to_trough_hours": 1846.0,
+                "peak_value": 108320.01,
+                "rebound_confirm_timestamp_utc": "2025-05-02T14:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-04-07T06:00:00Z",
+                "trough_timestamp_utc": "2025-04-07T06:00:00Z",
+                "trough_value": 74810.01
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -50.08379415223316,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-10-06T18:00:00Z",
+                "peak_to_rebound_hours": 5078.0,
+                "peak_to_trough_hours": 3379.0,
+                "peak_value": 126011.18,
+                "rebound_confirm_timestamp_utc": "2026-05-06T08:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-11-20T16:00:00Z",
+                "trough_timestamp_utc": "2026-02-24T13:00:00Z",
+                "trough_value": 62900.0
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  }
+                ],
+                "family_count": 2
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  }
+                ],
+                "family_count": 2
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  }
+                ],
+                "family_count": 2
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  }
+                ],
+                "family_count": 2
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  }
+                ],
+                "family_count": 2
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-20T08:00:00Z",
+                    "last_peak_utc": "2025-01-20T08:00:00Z",
+                    "max_drawdown_pct": -30.93611235818756
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -50.08379415223316
+                  }
+                ],
+                "family_count": 2
+              }
+            },
+            "gap_crossing_episode_count": 0,
+            "right_censored_episode_count": 0
+          },
+          "40": {
+            "episode_count_all_observed_endpoints": 1,
+            "episode_count_peak_to_trough_no_gap": 1,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": null,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -53.74206479139391,
+                "open_right_censored": true,
+                "peak_timestamp_utc": "2025-10-06T18:00:00Z",
+                "peak_to_rebound_hours": null,
+                "peak_to_trough_hours": 6283.0,
+                "peak_value": 126011.18,
+                "rebound_confirm_timestamp_utc": null,
+                "threshold_cross_timestamp_utc": "2026-02-02T05:00:00Z",
+                "trough_timestamp_utc": "2026-06-25T13:00:00Z",
+                "trough_value": 58290.17
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -53.74206479139391
+                  }
+                ],
+                "family_count": 1
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -53.74206479139391
+                  }
+                ],
+                "family_count": 1
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -53.74206479139391
+                  }
+                ],
+                "family_count": 1
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -53.74206479139391
+                  }
+                ],
+                "family_count": 1
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -53.74206479139391
+                  }
+                ],
+                "family_count": 1
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -53.74206479139391
+                  }
+                ],
+                "family_count": 1
+              }
+            },
+            "gap_crossing_episode_count": 0,
+            "right_censored_episode_count": 1
+          }
+        },
+        "EW_ALT_CHAINED": {
+          "20": {
+            "episode_count_all_observed_endpoints": 12,
+            "episode_count_peak_to_trough_no_gap": 12,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -22.615975719595472,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-01-06T16:00:00Z",
+                "peak_to_rebound_hours": 223.0,
+                "peak_to_trough_hours": 163.0,
+                "peak_value": 118.30289416789545,
+                "rebound_confirm_timestamp_utc": "2025-01-15T23:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-01-13T10:00:00Z",
+                "trough_timestamp_utc": "2025-01-13T11:00:00Z",
+                "trough_value": 91.54754034730549
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -44.41993493986042,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-01-18T00:00:00Z",
+                "peak_to_rebound_hours": 402.0,
+                "peak_to_trough_hours": 386.0,
+                "peak_value": 117.1943570987974,
+                "rebound_confirm_timestamp_utc": "2025-02-03T18:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-01-27T04:00:00Z",
+                "trough_timestamp_utc": "2025-02-03T02:00:00Z",
+                "trough_value": 65.1366999223239
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -20.288869363869587,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-02-03T22:00:00Z",
+                "peak_to_rebound_hours": 642.0,
+                "peak_to_trough_hours": 584.0,
+                "peak_value": 81.23605432868543,
+                "rebound_confirm_timestamp_utc": "2025-03-02T16:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-02-28T06:00:00Z",
+                "trough_timestamp_utc": "2025-02-28T06:00:00Z",
+                "trough_value": 64.75417738957631
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -30.852027411471393,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-03-02T23:00:00Z",
+                "peak_to_rebound_hours": 511.0,
+                "peak_to_trough_hours": 193.0,
+                "peak_value": 79.1052268192699,
+                "rebound_confirm_timestamp_utc": "2025-03-24T06:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-03-09T13:00:00Z",
+                "trough_timestamp_utc": "2025-03-11T00:00:00Z",
+                "trough_value": 54.69966055708213
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -31.86762318661176,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-03-26T10:00:00Z",
+                "peak_to_rebound_hours": 343.0,
+                "peak_to_trough_hours": 284.0,
+                "peak_value": 68.11690023481437,
+                "rebound_confirm_timestamp_utc": "2025-04-09T17:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-04-06T17:00:00Z",
+                "trough_timestamp_utc": "2025-04-07T06:00:00Z",
+                "trough_value": 46.409663141583465
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -31.311914040501275,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-05-14T00:00:00Z",
+                "peak_to_rebound_hours": 1363.0,
+                "peak_to_trough_hours": 957.0,
+                "peak_value": 77.940898621782,
+                "rebound_confirm_timestamp_utc": "2025-07-09T19:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-05-31T02:00:00Z",
+                "trough_timestamp_utc": "2025-06-22T21:00:00Z",
+                "trough_value": 53.53611144293537
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -23.076688995869375,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-07-21T14:00:00Z",
+                "peak_to_rebound_hours": 462.0,
+                "peak_to_trough_hours": 292.0,
+                "peak_value": 85.18048558610285,
+                "rebound_confirm_timestamp_utc": "2025-08-09T20:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-08-01T13:00:00Z",
+                "trough_timestamp_utc": "2025-08-02T18:00:00Z",
+                "trough_value": 65.52364984222655
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -27.33774937318382,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-10-06T18:00:00Z",
+                "peak_to_rebound_hours": 151.0,
+                "peak_to_trough_hours": 99.0,
+                "peak_value": 83.04175517481367,
+                "rebound_confirm_timestamp_utc": "2025-10-13T01:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-10-10T21:00:00Z",
+                "trough_timestamp_utc": "2025-10-10T21:00:00Z",
+                "trough_value": 60.34000827003021
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -21.338845482536396,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-10-13T20:00:00Z",
+                "peak_to_rebound_hours": 597.0,
+                "peak_to_trough_hours": 529.0,
+                "peak_value": 75.91170436754709,
+                "rebound_confirm_timestamp_utc": "2025-11-07T17:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-11-04T18:00:00Z",
+                "trough_timestamp_utc": "2025-11-04T21:00:00Z",
+                "trough_value": 59.713023069396385
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -35.79101502568012,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-11-07T21:00:00Z",
+                "peak_to_rebound_hours": 1416.0,
+                "peak_to_trough_hours": 982.0,
+                "peak_value": 72.74082126581246,
+                "rebound_confirm_timestamp_utc": "2026-01-05T21:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-11-21T02:00:00Z",
+                "trough_timestamp_utc": "2025-12-18T19:00:00Z",
+                "trough_value": 46.7061429967624
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -41.5095545994234,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2026-01-14T15:00:00Z",
+                "peak_to_rebound_hours": 758.0,
+                "peak_to_trough_hours": 537.0,
+                "peak_value": 57.54762905319053,
+                "rebound_confirm_timestamp_utc": "2026-02-15T05:00:00Z",
+                "threshold_cross_timestamp_utc": "2026-01-29T15:00:00Z",
+                "trough_timestamp_utc": "2026-02-06T00:00:00Z",
+                "trough_value": 33.65986455068276
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -35.874928635833705,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2026-05-10T18:00:00Z",
+                "peak_to_rebound_hours": 861.0,
+                "peak_to_trough_hours": 634.0,
+                "peak_value": 44.159883767537615,
+                "rebound_confirm_timestamp_utc": "2026-06-15T15:00:00Z",
+                "threshold_cross_timestamp_utc": "2026-06-02T15:00:00Z",
+                "trough_timestamp_utc": "2026-06-06T04:00:00Z",
+                "trough_value": 28.317556980266385
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-18T00:00:00Z",
+                    "max_drawdown_pct": -44.41993493986042
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-02-03T22:00:00Z",
+                    "last_peak_utc": "2025-02-03T22:00:00Z",
+                    "max_drawdown_pct": -20.288869363869587
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-03-02T23:00:00Z",
+                    "last_peak_utc": "2025-03-02T23:00:00Z",
+                    "max_drawdown_pct": -30.852027411471393
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2025-03-26T10:00:00Z",
+                    "last_peak_utc": "2025-03-26T10:00:00Z",
+                    "max_drawdown_pct": -31.86762318661176
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -23.076688995869375
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F07",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-13T20:00:00Z",
+                    "max_drawdown_pct": -27.33774937318382
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2025-11-07T21:00:00Z",
+                    "last_peak_utc": "2025-11-07T21:00:00Z",
+                    "max_drawdown_pct": -35.79101502568012
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F09",
+                    "first_peak_utc": "2026-01-14T15:00:00Z",
+                    "last_peak_utc": "2026-01-14T15:00:00Z",
+                    "max_drawdown_pct": -41.5095545994234
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F10",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -35.874928635833705
+                  }
+                ],
+                "family_count": 10
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 5,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-03-26T10:00:00Z",
+                    "max_drawdown_pct": -44.41993493986042
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -23.076688995869375
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F04",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-11-07T21:00:00Z",
+                    "max_drawdown_pct": -35.79101502568012
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2026-01-14T15:00:00Z",
+                    "last_peak_utc": "2026-01-14T15:00:00Z",
+                    "max_drawdown_pct": -41.5095545994234
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -35.874928635833705
+                  }
+                ],
+                "family_count": 6
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -22.615975719595472
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-01-18T00:00:00Z",
+                    "last_peak_utc": "2025-01-18T00:00:00Z",
+                    "max_drawdown_pct": -44.41993493986042
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-02-03T22:00:00Z",
+                    "last_peak_utc": "2025-02-03T22:00:00Z",
+                    "max_drawdown_pct": -20.288869363869587
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2025-03-02T23:00:00Z",
+                    "last_peak_utc": "2025-03-02T23:00:00Z",
+                    "max_drawdown_pct": -30.852027411471393
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2025-03-26T10:00:00Z",
+                    "last_peak_utc": "2025-03-26T10:00:00Z",
+                    "max_drawdown_pct": -31.86762318661176
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -23.076688995869375
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -27.33774937318382
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F09",
+                    "first_peak_utc": "2025-10-13T20:00:00Z",
+                    "last_peak_utc": "2025-10-13T20:00:00Z",
+                    "max_drawdown_pct": -21.338845482536396
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F10",
+                    "first_peak_utc": "2025-11-07T21:00:00Z",
+                    "last_peak_utc": "2025-11-07T21:00:00Z",
+                    "max_drawdown_pct": -35.79101502568012
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F11",
+                    "first_peak_utc": "2026-01-14T15:00:00Z",
+                    "last_peak_utc": "2026-01-14T15:00:00Z",
+                    "max_drawdown_pct": -41.5095545994234
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F12",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -35.874928635833705
+                  }
+                ],
+                "family_count": 12
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-18T00:00:00Z",
+                    "max_drawdown_pct": -44.41993493986042
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-02-03T22:00:00Z",
+                    "last_peak_utc": "2025-02-03T22:00:00Z",
+                    "max_drawdown_pct": -20.288869363869587
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-03-02T23:00:00Z",
+                    "last_peak_utc": "2025-03-02T23:00:00Z",
+                    "max_drawdown_pct": -30.852027411471393
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2025-03-26T10:00:00Z",
+                    "last_peak_utc": "2025-03-26T10:00:00Z",
+                    "max_drawdown_pct": -31.86762318661176
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -23.076688995869375
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 2,
+                    "family_id": "F07",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-13T20:00:00Z",
+                    "max_drawdown_pct": -27.33774937318382
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2025-11-07T21:00:00Z",
+                    "last_peak_utc": "2025-11-07T21:00:00Z",
+                    "max_drawdown_pct": -35.79101502568012
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F09",
+                    "first_peak_utc": "2026-01-14T15:00:00Z",
+                    "last_peak_utc": "2026-01-14T15:00:00Z",
+                    "max_drawdown_pct": -41.5095545994234
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F10",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -35.874928635833705
+                  }
+                ],
+                "family_count": 10
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 5,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-03-26T10:00:00Z",
+                    "max_drawdown_pct": -44.41993493986042
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -23.076688995869375
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 3,
+                    "family_id": "F04",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-11-07T21:00:00Z",
+                    "max_drawdown_pct": -35.79101502568012
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2026-01-14T15:00:00Z",
+                    "last_peak_utc": "2026-01-14T15:00:00Z",
+                    "max_drawdown_pct": -41.5095545994234
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -35.874928635833705
+                  }
+                ],
+                "family_count": 6
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -22.615975719595472
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-01-18T00:00:00Z",
+                    "last_peak_utc": "2025-01-18T00:00:00Z",
+                    "max_drawdown_pct": -44.41993493986042
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-02-03T22:00:00Z",
+                    "last_peak_utc": "2025-02-03T22:00:00Z",
+                    "max_drawdown_pct": -20.288869363869587
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2025-03-02T23:00:00Z",
+                    "last_peak_utc": "2025-03-02T23:00:00Z",
+                    "max_drawdown_pct": -30.852027411471393
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F05",
+                    "first_peak_utc": "2025-03-26T10:00:00Z",
+                    "last_peak_utc": "2025-03-26T10:00:00Z",
+                    "max_drawdown_pct": -31.86762318661176
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F06",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F07",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -23.076688995869375
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F08",
+                    "first_peak_utc": "2025-10-06T18:00:00Z",
+                    "last_peak_utc": "2025-10-06T18:00:00Z",
+                    "max_drawdown_pct": -27.33774937318382
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F09",
+                    "first_peak_utc": "2025-10-13T20:00:00Z",
+                    "last_peak_utc": "2025-10-13T20:00:00Z",
+                    "max_drawdown_pct": -21.338845482536396
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F10",
+                    "first_peak_utc": "2025-11-07T21:00:00Z",
+                    "last_peak_utc": "2025-11-07T21:00:00Z",
+                    "max_drawdown_pct": -35.79101502568012
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F11",
+                    "first_peak_utc": "2026-01-14T15:00:00Z",
+                    "last_peak_utc": "2026-01-14T15:00:00Z",
+                    "max_drawdown_pct": -41.5095545994234
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F12",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -35.874928635833705
+                  }
+                ],
+                "family_count": 12
+              }
+            },
+            "gap_crossing_episode_count": 0,
+            "right_censored_episode_count": 0
+          },
+          "30": {
+            "episode_count_all_observed_endpoints": 4,
+            "episode_count_peak_to_trough_no_gap": 4,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -60.77047525505262,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-01-06T16:00:00Z",
+                "peak_to_rebound_hours": 2551.0,
+                "peak_to_trough_hours": 2174.0,
+                "peak_value": 118.30289416789545,
+                "rebound_confirm_timestamp_utc": "2025-04-22T23:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-02-02T17:00:00Z",
+                "trough_timestamp_utc": "2025-04-07T06:00:00Z",
+                "trough_value": 46.409663141583465
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -31.311914040501275,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-05-14T00:00:00Z",
+                "peak_to_rebound_hours": 1396.0,
+                "peak_to_trough_hours": 957.0,
+                "peak_value": 77.940898621782,
+                "rebound_confirm_timestamp_utc": "2025-07-11T04:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-06-22T13:00:00Z",
+                "trough_timestamp_utc": "2025-06-22T21:00:00Z",
+                "trough_value": 53.53611144293537
+              },
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -60.536398790376644,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-07-21T14:00:00Z",
+                "peak_to_rebound_hours": 7034.0,
+                "peak_to_trough_hours": 6032.0,
+                "peak_value": 85.18048558610285,
+                "rebound_confirm_timestamp_utc": "2026-05-10T16:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-11-19T17:00:00Z",
+                "trough_timestamp_utc": "2026-03-29T22:00:00Z",
+                "trough_value": 33.61528714012034
+              },
+              {
+                "crosses_gap_peak_to_rebound": null,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -36.516699961389634,
+                "open_right_censored": true,
+                "peak_timestamp_utc": "2026-05-10T18:00:00Z",
+                "peak_to_rebound_hours": null,
+                "peak_to_trough_hours": 1099.0,
+                "peak_value": 44.159883767537615,
+                "rebound_confirm_timestamp_utc": null,
+                "threshold_cross_timestamp_utc": "2026-06-05T06:00:00Z",
+                "trough_timestamp_utc": "2026-06-25T13:00:00Z",
+                "trough_value": 28.0341515088475
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -60.536398790376644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -36.516699961389634
+                  }
+                ],
+                "family_count": 4
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -60.536398790376644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -36.516699961389634
+                  }
+                ],
+                "family_count": 4
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -60.536398790376644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -36.516699961389634
+                  }
+                ],
+                "family_count": 4
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -60.536398790376644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -36.516699961389634
+                  }
+                ],
+                "family_count": 4
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -60.536398790376644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -36.516699961389634
+                  }
+                ],
+                "family_count": 4
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-05-14T00:00:00Z",
+                    "last_peak_utc": "2025-05-14T00:00:00Z",
+                    "max_drawdown_pct": -31.311914040501275
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F03",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -60.536398790376644
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F04",
+                    "first_peak_utc": "2026-05-10T18:00:00Z",
+                    "last_peak_utc": "2026-05-10T18:00:00Z",
+                    "max_drawdown_pct": -36.516699961389634
+                  }
+                ],
+                "family_count": 4
+              }
+            },
+            "gap_crossing_episode_count": 0,
+            "right_censored_episode_count": 1
+          },
+          "40": {
+            "episode_count_all_observed_endpoints": 2,
+            "episode_count_peak_to_trough_no_gap": 2,
+            "episodes": [
+              {
+                "crosses_gap_peak_to_rebound": false,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -60.77047525505262,
+                "open_right_censored": false,
+                "peak_timestamp_utc": "2025-01-06T16:00:00Z",
+                "peak_to_rebound_hours": 2625.0,
+                "peak_to_trough_hours": 2174.0,
+                "peak_value": 118.30289416789545,
+                "rebound_confirm_timestamp_utc": "2025-04-26T01:00:00Z",
+                "threshold_cross_timestamp_utc": "2025-02-03T01:00:00Z",
+                "trough_timestamp_utc": "2025-04-07T06:00:00Z",
+                "trough_value": 46.409663141583465
+              },
+              {
+                "crosses_gap_peak_to_rebound": null,
+                "crosses_gap_peak_to_trough": false,
+                "drawdown_pct": -67.08852818112925,
+                "open_right_censored": true,
+                "peak_timestamp_utc": "2025-07-21T14:00:00Z",
+                "peak_to_rebound_hours": null,
+                "peak_to_trough_hours": 8135.0,
+                "peak_value": 85.18048558610285,
+                "rebound_confirm_timestamp_utc": null,
+                "threshold_cross_timestamp_utc": "2025-12-01T16:00:00Z",
+                "trough_timestamp_utc": "2026-06-25T13:00:00Z",
+                "trough_value": 28.0341515088475
+              }
+            ],
+            "families_all": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -67.08852818112925
+                  }
+                ],
+                "family_count": 2
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -67.08852818112925
+                  }
+                ],
+                "family_count": 2
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -67.08852818112925
+                  }
+                ],
+                "family_count": 2
+              }
+            },
+            "families_no_gap": {
+              "14": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -67.08852818112925
+                  }
+                ],
+                "family_count": 2
+              },
+              "30": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -67.08852818112925
+                  }
+                ],
+                "family_count": 2
+              },
+              "7": {
+                "families": [
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F01",
+                    "first_peak_utc": "2025-01-06T16:00:00Z",
+                    "last_peak_utc": "2025-01-06T16:00:00Z",
+                    "max_drawdown_pct": -60.77047525505262
+                  },
+                  {
+                    "contains_gap_crossing_episode": false,
+                    "episode_count": 1,
+                    "family_id": "F02",
+                    "first_peak_utc": "2025-07-21T14:00:00Z",
+                    "last_peak_utc": "2025-07-21T14:00:00Z",
+                    "max_drawdown_pct": -67.08852818112925
+                  }
+                ],
+                "family_count": 2
+              }
+            },
+            "gap_crossing_episode_count": 0,
+            "right_censored_episode_count": 1
+          }
+        }
+      },
+      "continuity_gap_count": 0,
+      "continuity_gap_timestamps_utc": [],
+      "first_timestamp_utc": "2025-01-01T01:00:00Z",
+      "last_timestamp_utc": "2026-07-31T23:00:00Z",
+      "rebase_trap_signature": {
+        "largest_drawdown_pct": -60.77047525505259,
+        "largest_examples": [
+          {
+            "crosses_gap_peak_to_rebound": false,
+            "crosses_gap_peak_to_trough": false,
+            "drawdown_pct": -60.77047525505259,
+            "open_right_censored": false,
+            "peak_timestamp_utc": "2025-01-06T16:00:00Z",
+            "peak_to_rebound_hours": 2551.0,
+            "peak_to_trough_hours": 2174.0,
+            "peak_value": 117.12286567658964,
+            "rebound_confirm_timestamp_utc": "2025-04-22T23:00:00Z",
+            "threshold_cross_timestamp_utc": "2025-02-02T17:00:00Z",
+            "trough_timestamp_utc": "2025-04-07T06:00:00Z",
+            "trough_value": 45.94674357258925
+          },
+          {
+            "crosses_gap_peak_to_rebound": false,
+            "crosses_gap_peak_to_trough": false,
+            "drawdown_pct": -60.53639879037728,
+            "open_right_censored": false,
+            "peak_timestamp_utc": "2025-07-21T14:00:00Z",
+            "peak_to_rebound_hours": 7034.0,
+            "peak_to_trough_hours": 6032.0,
+            "peak_value": 84.33084111542604,
+            "rebound_confirm_timestamp_utc": "2026-05-10T16:00:00Z",
+            "threshold_cross_timestamp_utc": "2025-11-19T17:00:00Z",
+            "trough_timestamp_utc": "2026-03-29T22:00:00Z",
+            "trough_value": 33.279986834512286
+          },
+          {
+            "crosses_gap_peak_to_rebound": null,
+            "crosses_gap_peak_to_trough": false,
+            "drawdown_pct": -36.51669996138971,
+            "open_right_censored": true,
+            "peak_timestamp_utc": "2026-05-10T18:00:00Z",
+            "peak_to_rebound_hours": null,
+            "peak_to_trough_hours": 1099.0,
+            "peak_value": 43.719404932382915,
+            "rebound_confirm_timestamp_utc": null,
+            "threshold_cross_timestamp_utc": "2026-06-05T06:00:00Z",
+            "trough_timestamp_utc": "2026-06-25T13:00:00Z",
+            "trough_value": 27.75452100831963
+          }
+        ],
+        "naive_raw_ew_30pct_count": 4
+      },
+      "row_count": 13847
+    }
+  }
+}
