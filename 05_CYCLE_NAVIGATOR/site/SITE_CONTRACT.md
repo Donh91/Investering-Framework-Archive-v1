@@ -44,6 +44,9 @@ It is intentionally a presentation and live-context surface, not a new market-st
 34. A structured forward destination MUST NOT be labeled as the current market-cycle phase. Until an independently supported current long-cycle phase exists, PATH must keep the current cycle position explicitly unconfirmed while it may separately highlight the next supported destination.
 35. PATH presentation SHOULD translate internal implementation vocabulary into public investment language without changing the underlying state. Terms such as owner, lineage, fail-closed, canonical, frozen Monday and machine package must not be required knowledge for understanding the public PATH surface.
 36. Public display labels MAY simplify internal status vocabulary for readability, for example HARD_WAIT → WAIT, LOCKED/INACTIVE → NOT ACTIVE and UNAVAILABLE → NO SIGNAL, provided the raw state remains unchanged and the display never makes the signal more permissive.
+37. PATH SHOULD expose a compact reading guide that makes the visual grammar self-explanatory: blue means current/now, amber means next watch, and grey means not confirmed or not yet supported.
+38. Public PATH horizon labels MAY translate raw `UNAVAILABLE` into `NOT READY` and data-health `OK/PASS` into `UP TO DATE`, provided the underlying values remain untouched and no unavailable signal is represented as active.
+39. Public Altcoin stage naming SHOULD prefer market language over implementation language, for example `Large + mid caps join` and `Small caps begin to participate`, while preserving the exact source state and timing rules.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
