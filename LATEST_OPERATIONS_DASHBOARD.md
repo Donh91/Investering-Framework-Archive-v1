@@ -1,28 +1,28 @@
 # Operations Dashboard
 
-Overall: **RED**
-Generated: `2026-10-05T11:18:15.083877Z`
+Overall: **AMBER**
+Generated: `2026-10-05T12:50:11.810653Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 5.602 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 11.193 |
-| `weekly_output` | **GREEN** | FRESH | 5.12 |
-| `automation_health` | **RED** | RED | 0.61 |
-| `architecture_health` | **GREEN** | GREEN | 0.57 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 4.098 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 4.137 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.42 |
+| `daily_capture` | **GREEN** | FRESH | 1.447 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.051 |
+| `weekly_output` | **GREEN** | FRESH | 6.653 |
+| `automation_health` | **AMBER** | AMBER | 0.09 |
+| `architecture_health` | **GREEN** | GREEN | 0.028 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 1.045 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 5.669 |
+| `remediation_maturation` | **GREEN** | FRESH | 1.952 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **76**
-- OpenAI cost this month: **$5.341684**
+- OpenAI receipts this month: **81**
+- OpenAI cost this month: **$6.072582**
 - Pending forecast candidates: **223**
-- Experiment candidates: **462**
-- Experiment dispatch requests: **19160**
+- Experiment candidates: **464**
+- Experiment dispatch requests: **19375**
 - Codex-ready remediation tasks: **3**
 - Needs-more-evidence items: **14**
 
@@ -32,7 +32,7 @@ Open incident references: **22**
 
 ## Required actions
 
-- **P0** `automation_health` - ['research-lab-m6-episode-power.yml:NON_GLOBAL_WRITER_LOCK', 'research-lab-m6-episode-power.yml:NO_MAIN_READBACK', 'research-lab-m6-spar-comparator.yml:NON_GLOBAL_WRITER_LOCK', 'research-lab-m6-spar-comparator.yml:NO_MAIN_READBACK', 'research-lab-m6-t4-7d.yml:NON_GLOBAL_WRITER_LOCK', 'research-lab-m6-t4-7d.yml:NO_MAIN_READBACK']
+- **P1** `automation_health` - SEMANTIC_STATUS_AMBER
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `0b2e16bfd929cc61c992e74866d56c70c029b96bf36478a682ed2c9215a12c66`
+Dashboard SHA-256: `9615745c8367e66f7ae75fdeee4ce23b1a1167742bd501f04a357326f6e0aba1`
