@@ -32,6 +32,9 @@ It is intentionally a presentation and live-context surface, not a new market-st
 22. Every prominent Altcoin Cycle ETA MUST remain visibly described as a conditional target-gate/review window, not a guaranteed phase-start date or automatic sell date.
 23. The Altcoin Cycle Timer MUST visually separate the live `NOW POSITION` from the amber `WATCH TARGET`. The current marker is presentation-only and may select the furthest sequential stage whose governed live owner is already `HOLD`, `ACTIVE` or `CONFIRMED`; it MUST NOT upgrade the underlying stage status or turn a target into a current phase.
 24. A target ETA MAY appear in the large Altcoin Timer headline only when the source-owned ETA is supported and the governed target status is already `HOLD`, `ACTIVE` or `CONFIRMED`. Conditional or unsupported ETAs remain visible on the relevant timeline row but MUST be withheld from the headline.
+25. The compact PATH overview MUST preserve the same NOW-vs-target distinction as the detailed Altcoin Timer. It MUST NOT summarize the watch target as though it were the current phase.
+26. The premium NOW recommendation MUST expose its next governed review window prominently. That window is a reassessment horizon, not a promise that the action changes at expiry.
+27. Hourly Native Handlekompas may be shown as a clearly labeled context-only freshness monitor. It MUST expose age/staleness and MUST NOT replace Official Compass as the action, horizon, Bull/Bear or execution owner.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
