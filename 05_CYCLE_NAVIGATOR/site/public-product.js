@@ -210,6 +210,10 @@ function statusActive(value){
   const s=String(value||'').toUpperCase();
   return !/NOT CONFIRMED|UNCONFIRMED|INACTIVE|UNAVAILABLE|UNKNOWN|HARD_WAIT|HARD WAIT|WAIT|PAUSED|LOCKED/.test(s)&&/(BUY|ACTIVE|CONFIRMED|BROADER DEPLOYMENT)/.test(s);
 }
+function reentryEngaged(value){
+  const s=String(value||'').toUpperCase();
+  return ['WAIT_FOR_FLUSH','WAIT_FOR_RECLAIM','REVIEW'].includes(s);
+}
 function distributionDriver(compass){
   const rows=Array.isArray(compass?.protection_tracker?.decisive_public_drivers)?compass.protection_tracker.decisive_public_drivers:[];
   return rows.find(x=>/distribution/i.test(String(x||'')))||'No governed distribution explanation is published.';
@@ -331,7 +335,7 @@ function altcoinTarget(pkg,compass,stages){
   const small=compassSegment(compass,'SMALL_CAPS')||{},micro=compassSegment(compass,'MICROCAPS')||{};
   const cycle=compass?.horizons?.CYCLE_ALTCOINS_3_8W||{},p=compass?.protection_tracker||{},sell=compass?.sell_assessment||{};
   const sellState=String(sell.state||'').toUpperCase(),dist=String(p.distribution_risk||'').toUpperCase(),cycleState=String(cycle.state||'').toUpperCase(),reentryState=String(p.reentry_state||'').toUpperCase();
-  if(/WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH|REVIEW|ACTIVE|CONFIRMED/.test(reentryState))return{key:'REENTRY',mode:'OPPORTUNITY',eyebrow:'NEXT RECOVERY PHASE',title:'Cooldown / re-entry',subtitle:'Governed re-entry state after protection',eta:'NO SUPPORTED ETA',status:pathStatus(p.reentry_state)};
+  if(reentryEngaged(reentryState))return{key:'REENTRY',mode:'OPPORTUNITY',eyebrow:'NEXT RECOVERY PHASE',title:'Cooldown / re-entry',subtitle:'Governed re-entry state after protection',eta:'NO SUPPORTED ETA',status:pathStatus(p.reentry_state)};
   if(sellState&&!/UNAVAILABLE|UNKNOWN|INACTIVE|NONE/.test(sellState))return{key:'EXIT',mode:'PROTECTION',eyebrow:'NEXT DEFENSIVE PHASE',title:'Exit / protection window',subtitle:'Governed sell-assessment owner',eta:pathEta(sell.eta),status:pathStatus(sell.state)};
   if(/WARNING|CONFIRMED/.test(dist))return{key:'DISTRIBUTION',mode:'PROTECTION',eyebrow:'NEXT DEFENSIVE PHASE',title:'Distribution watch',subtitle:'Protection takes priority over upside sequencing',eta:'NO SUPPORTED ETA',status:pathStatus(p.distribution_risk)};
   if(cycleState==='PARABOLIC_ALTSEASON')return{key:'DISTRIBUTION',mode:'PROTECTION',eyebrow:'NEXT RISK PHASE',title:'Distribution watch',subtitle:'Mania is active; protection becomes the next thing to watch',eta:'NO SUPPORTED ETA',status:pathStatus(p.distribution_risk)};
@@ -345,7 +349,7 @@ function altcoinCurrentStage(pkg,compass,stages){
   const order=['REENTRY','EXIT','DISTRIBUTION','MANIA','BROAD','MICRO','IGNITION','LARGE_MID','ETH_UNLOCK'];
   for(const key of order){
     const s=stages.find(x=>x.key===key),raw=String(s?.status||'').toUpperCase();
-    if(key==='REENTRY'&&/WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH|REVIEW|ACTIVE|CONFIRMED/.test(raw))return{index:stages.indexOf(s),source:'LIVE'};
+    if(key==='REENTRY'&&reentryEngaged(raw))return{index:stages.indexOf(s),source:'LIVE'};
     if(s&&statusActive(s.status))return{index:stages.indexOf(s),source:'LIVE'};
     if(key==='DISTRIBUTION'&&/WARNING|CONFIRMED/.test(raw))return{index:stages.indexOf(s),source:'LIVE'};
   }
