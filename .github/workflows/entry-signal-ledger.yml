@@ -75,3 +75,16 @@ jobs:
             gh workflow run native-handlekompas.yml --ref main
             echo "NATIVE_HANDLEKOMPAS_HANDOFF_DISPATCHED source_entry_run=${GITHUB_RUN_ID}"
           fi
+      - name: Dispatch Compass event refresh after Entry state publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          active=$(gh run list --workflow compass-event-refresh.yml --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending" or .status=="waiting")] | length')
+          if [ "$active" -gt 0 ]; then
+            echo "COMPASS_EVENT_REFRESH_HANDOFF_ALREADY_ACTIVE count=$active"
+          else
+            gh workflow run compass-event-refresh.yml --ref main
+            echo "COMPASS_EVENT_REFRESH_HANDOFF_DISPATCHED source_entry_run=${GITHUB_RUN_ID}"
+          fi
