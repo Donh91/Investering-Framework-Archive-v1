@@ -11,3 +11,9 @@
 - Updated public build to ship scoreboard assets.
 - Archived recovered CN6, CN10, CN16–CN20 publication records and bound CN21 without duplication.
 - Added product, data/science and adversarial source-review evidence.
+
+## 2026-10-05 · PATH clarity pass
+
+- Conditional source timing is rendered as a watch window with explicit confirmation semantics, never as a countdown.
+- Big-picture Market Cycle now separates decision windows from the full governed cycle route.
+- Long-cycle placement remains visibly unresolved when the 4–8-week owner cannot support a phase call.
