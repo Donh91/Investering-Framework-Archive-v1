@@ -321,7 +321,7 @@ function altcoinCycleStages(pkg,compass){
     {key:'PARTICIPATION',title:'Participation building',status:valid?(h.NEXT_1_3D?.action_posture||h.NEXT_1_3D?.state):pathStatus(monday(0).phase),eta:valid?h.NEXT_1_3D?.eta:monday(0).window,monday:monday(0).window,why:valid?h.NEXT_1_3D?.expected_path:monday(0).phase},
     {key:'ETH_UNLOCK',title:'Ethereum unlock',status:valid?(eth.status||eth.action):pathStatus(monday(1).phase),eta:valid?eth.eta:monday(1).window,monday:monday(1).window,why:valid?eth.reason:monday(1).phase},
     {key:'LARGE_MID',title:'Large + mid transmission',status:valid?lmStatus:pathStatus(monday(2).phase),eta:valid?sharedEta([large,mid]):monday(2).window,monday:monday(2).window,why:valid?[large.reason,mid.reason].filter(Boolean).join(' '):monday(2).phase},
-    {key:'IGNITION',title:'Altseason ignition',subtitle:'Small-cap expansion begins',status:valid?(small.status||small.action):pathStatus(monday(3).phase),eta:valid?small.eta:monday(3).window,monday:monday(3).window,why:valid?small.reason:monday(3).phase},
+    {key:'IGNITION',title:'Altseason ignition',subtitle:'Small-cap expansion gate',status:valid?(small.status||small.action):pathStatus(monday(3).phase),eta:valid?small.eta:monday(3).window,monday:monday(3).window,why:valid?small.reason:monday(3).phase},
     {key:'MICRO',title:'Micro acceleration',status:valid?(micro.status||micro.action):pathStatus(monday(3).phase),eta:valid?micro.eta:monday(3).window,monday:monday(3).window,why:valid?micro.reason:monday(3).phase},
     {key:'BROAD',title:'Broad altseason',status:String(cycle.state||'').toUpperCase()==='BROAD_ALTSEASON'?'ACTIVE':pathStatus(monday(4).phase),eta:valid?cycle.eta:monday(4).window,monday:monday(4).window,why:valid?(cycle.expected_path||monday(4).phase):monday(4).phase},
     {key:'MANIA',title:'Mania / euphoria',status:maniaActive?'ACTIVE':'LOCKED',eta:maniaActive?cycle.eta:pkg?.altseason_mania_window,monday:null,why:maniaActive?cycle.expected_path:'Only unlocks after broad altseason is credibly confirmed.'},
@@ -343,7 +343,7 @@ function altcoinTarget(pkg,compass,stages){
   if(statusActive(micro.status||micro.action)){const broad=row('BROAD');return{key:'BROAD',mode:'OPPORTUNITY',eyebrow:'NEXT ALTCOIN PHASE',title:'Broad altseason',subtitle:'Persistent multi-horizon confirmation',eta:pathEta(broad.eta),status:pathStatus(broad.status)};}
   if(statusActive(small.status||small.action)){const next=row('MICRO');return{key:'MICRO',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'Micro acceleration',subtitle:'After small-cap transmission confirms',eta:pathEta(next.eta),status:pathStatus(next.status)};}
   const ignition=row('IGNITION');
-  return{key:'IGNITION',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'ALTSEASON IGNITION',subtitle:'Small-cap expansion begins',eta:pathEta(ignition.eta),status:pathStatus(ignition.status)};
+  return{key:'IGNITION',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'ALTSEASON IGNITION',subtitle:'Small-cap expansion gate',eta:pathEta(ignition.eta),status:pathStatus(ignition.status)};
 }
 function altcoinCurrentStage(pkg,compass,stages){
   const order=['REENTRY','EXIT','DISTRIBUTION','MANIA','BROAD','MICRO','IGNITION','LARGE_MID','ETH_UNLOCK'];
@@ -366,7 +366,7 @@ function altcoinCycleTimer(pkg,compass){
     return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+currentClass+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(pathStatus(x.status))+'</strong><b>ETA · '+esc(pathEta(x.eta))+'</b><details><summary>Why?</summary>'+(x.monday?'<p><em>Monday:</em> '+esc(pathEta(x.monday))+'</p>':'')+'<p>'+esc(short(investorText(x.why),240))+'</p></details></article>';
   }).join('');
   return '<section class="path-track altcoin-timer-v2" data-path-track="altcoin-cycle" data-contract="CN_PATH_THREE_TRACK_v2">'
-    +'<header class="alt-timer-hero"><div><span>3 · ALTCOIN CYCLE TIMER</span><small>'+esc(target.eyebrow)+'</small><h3>'+esc(target.title)+'</h3><p>'+esc(target.subtitle)+'</p></div><div class="alt-countdown '+(target.mode==='PROTECTION'?'protect':'')+'"><span>ADAPTIVE ETA</span><strong>'+esc(target.eta)+'</strong><b>'+esc(target.status)+'</b></div></header>'
+    +'<header class="alt-timer-hero"><div><span>3 · ALTCOIN CYCLE TIMER</span><small>'+esc(target.eyebrow)+'</small><h3>'+esc(target.title)+'</h3><p>'+esc(target.subtitle)+'</p></div><div class="alt-countdown '+(target.mode==='PROTECTION'?'protect':'')+'"><span>ETA TO TARGET GATE</span><strong>'+esc(target.eta)+'</strong><b>'+esc(target.status)+'</b></div></header>'
     +'<div class="alt-timer-note"><span>Countdown target adapts as the cycle advances.</span><b>ETA is source-owned · no browser countdown math</b></div>'
     +'<div class="alt-cycle-rail">'+rows+'</div>'
     +'</section>';
@@ -382,7 +382,7 @@ function pathOverview(pkg,compass){
   return '<section class="path-overview-v2">'
     +'<article><span>MARKET CYCLE · FORWARD</span><strong>'+esc(cycleLabel)+'</strong><b>ETA · '+esc(cycle.eta)+'</b></article>'
     +'<article><span>NEXT ROTATION GATE</span><strong>'+esc(rotation.label)+'</strong><b>'+esc(rotation.status)+' · ETA '+esc(rotation.eta)+'</b></article>'
-    +'<article class="focus"><span>ALTCOIN TIMER</span><strong>'+esc(target.title)+'</strong><b>ETA · '+esc(target.eta)+'</b></article>'
+    +'<article class="focus"><span>ALTCOIN TIMER</span><strong>'+esc(target.title)+'</strong><b>ETA TO GATE · '+esc(target.eta)+'</b></article>'
     +'</section>';
 }
 

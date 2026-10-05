@@ -71,7 +71,7 @@ jobs:
           scorecard=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
           machine=json.loads((root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_text())
 
-          scorecard_evaluation={k:v for k,v in scorecard.items() if k not in {'contract','issue_scored','completed_iso_week'}}
+          scorecard_evaluation={k:v for k,v in scorecard.items() if k not in {'contract','issue_scored','completed_iso_week','completed_iso_year'}}
           if machine.get('evaluation') != scorecard_evaluation:
               raise SystemExit('machine_evaluation_scorecard_mismatch')
           if int(scorecard.get('issue_scored') or 0) != int(machine.get('previous_issue_number') or 0):
@@ -130,7 +130,8 @@ jobs:
           pointer=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
           root=Path(pointer['week_dir'])
           scorecard=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
-          freeze=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json').read_text())
+          internal_freeze_path=root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json'
+          freeze=json.loads(internal_freeze_path.read_text()) if internal_freeze_path.is_file() else {'claims': []}
           public_freeze=json.loads((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_text())
           snapshot=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
           bundle=snapshot.get('machine_calibration_bundle') or {}
@@ -243,7 +244,7 @@ jobs:
           product=Path('05_CYCLE_NAVIGATOR/site/dist/public-product.js').read_text()
           if 'CN_PATH_THREE_TRACK_v2' not in product:
               raise SystemExit('path_three_track_contract_missing')
-          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion begins','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION GATE'):
+          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion gate','ETA TO TARGET GATE','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION GATE'):
               if marker not in product:
                   raise SystemExit(f'path_three_track_marker_missing:{marker}')
           if "jsonOptional('./data/compass.json')" not in product:

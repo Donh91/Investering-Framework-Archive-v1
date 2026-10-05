@@ -82,13 +82,22 @@ def latest_published_public_record(repo: Path) -> dict[str, Any]:
     if not found:
         return {"public_issue_number": 0, "forecast_week": None, "published_path": None}
     issue, path, forecast_week = max(found, key=lambda row: row[0])
-    y, w = forecast_week.split("-W")
-    receipt = repo / "05_CYCLE_NAVIGATOR/weekly" / y / f"W{int(w):02d}" / "CYCLE_NAVIGATOR_X_APPROVAL_RECEIPT.json"
+    receipt_candidates = sorted(pub.rglob(f"CYCLE_NAVIGATOR_{issue}_X_PUBLICATION_RECEIPT_*.json"))
+    receipt = receipt_candidates[-1] if receipt_candidates else None
+    if receipt is not None:
+        receipt_data = read_json(receipt)
+        if (
+            receipt_data.get("contract") != "CN_X_PUBLICATION_RECEIPT_v1"
+            or int(receipt_data.get("public_issue_number", 0) or 0) != issue
+            or str(receipt_data.get("published_path") or "") != str(path.relative_to(repo))
+            or str(receipt_data.get("status") or "") != "PUBLISHED_CONFIRMED_BY_USER"
+        ):
+            receipt = None
     return {
         "public_issue_number": issue,
         "forecast_week": forecast_week,
         "published_path": str(path.relative_to(repo)),
-        "publication_receipt": str(receipt.relative_to(repo)) if receipt.exists() else None,
+        "publication_receipt": str(receipt.relative_to(repo)) if receipt is not None else None,
     }
 
 
