@@ -32,13 +32,24 @@ def main() -> None:
     # X publication remains valid legacy distribution evidence when present, but
     # it no longer owns current public-series continuity.
     if latest_published_issue > 0:
-        published = root / latest_pub["published_path"]
-        receipt = root / latest_pub["publication_receipt"]
+        published_rel = str(latest_pub.get("published_path") or "")
+        assert published_rel.startswith("05_CYCLE_NAVIGATOR/published/") and ".." not in published_rel
+        published = root / published_rel
         assert published.is_file()
-        assert receipt.is_file()
-        receipt_data = read_json(receipt)
-        assert receipt_data["status"] == "PUBLISHED_CONFIRMED_BY_USER"
-        assert int(receipt_data["public_issue_number"]) == latest_published_issue
+        receipt_rel = str(latest_pub.get("publication_receipt") or "")
+        if receipt_rel:
+            assert receipt_rel.startswith("05_CYCLE_NAVIGATOR/published/") and ".." not in receipt_rel
+            receipt = root / receipt_rel
+            assert receipt.is_file()
+            receipt_data = read_json(receipt)
+            assert receipt_data["contract"] == "CN_X_PUBLICATION_RECEIPT_v1"
+            assert receipt_data["status"] == "PUBLISHED_CONFIRMED_BY_USER"
+            assert int(receipt_data["public_issue_number"]) == latest_published_issue
+            assert str(receipt_data.get("published_path") or "") == published_rel
+        else:
+            # A legacy published archive file may predate the attestation receipt.
+            # Absence is preserved as missingness; never synthesize publication proof.
+            assert not str(latest_pub.get("publication_receipt") or "")
     # Publication may advance before the newest published week is mature/scored.
     # User attestation is authoritative for publication identity; scoring may legitimately lag.
     assert int(score["public_issue_number"]) == int(latest_score["public_issue_number"])
