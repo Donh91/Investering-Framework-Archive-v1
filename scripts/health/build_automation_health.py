@@ -21,6 +21,7 @@ MARKET_WRITER_ALLOWLIST = {
     "entry-signal-ledger.yml",
     "native-handlekompas.yml",
     "native-market-recovery.yml",
+    "intraday-execution-research.yml",
     "compass-event-refresh.yml",
     "daily-compass.yml",
 }
