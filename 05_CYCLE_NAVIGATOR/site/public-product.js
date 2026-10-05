@@ -101,7 +101,7 @@ function dataStatusLabel(value){
   return s==='UNAVAILABLE'||!s?'WAITING':'CHECKING';
 }
 function pathLegend(){
-  return '<section class="path-read-guide"><div><span>READ PATH IN 10 SECONDS</span><strong>Blue = now · Amber = next watch · Grey = not confirmed</strong></div><p><b>Watch window</b> means a phase can become actionable inside that range only if its confirmation arrives. It is never a countdown.</p></section>';
+  return '<section class="path-read-guide"><div><span>READ PATH IN 10 SECONDS</span><strong>Blue = what is known now · Amber = next watch · Grey = not confirmed</strong></div><p><b>Watch window</b> means a phase can become actionable inside that range only if confirmation arrives. <b>Review window</b> means the signal is reassessed in that period. Neither is a countdown.</p></section>';
 }
 function publicCycleSource(source){
   const s=String(source||'');
@@ -371,6 +371,16 @@ function weeklyCycleState(pkg){
   const s=investorText(pkg?.base_case_this_week||pkg?.market_state||'').trim();
   return s?short(publicPathText(s),150):'No public weekly market summary is available.';
 }
+function weeklySetupLabel(pkg){
+  const s=publicPathText(pkg?.base_case_this_week||pkg?.market_state||'').trim();
+  if(!s)return'Current setup unavailable';
+  let first=(s.split(/[.!?]/)[0]||s).trim()
+    .replace(/^This week begins with\s+/i,'')
+    .replace(/^Completed This week was\s+/i,'')
+    .replace(/^Completed\s+/i,'');
+  if(first)first=first[0].toUpperCase()+first.slice(1);
+  return short(first,96);
+}
 function cycleIcon(key){
   return({DEFENSIVE:'↺',CONSOLIDATION:'◐',PRE_ROTATION:'↗',ROTATION:'⇢',BROAD_ALTSEASON:'✦',PARABOLIC_ALTSEASON:'⚡',DISTRIBUTION:'◒',EXIT_RISK:'↓'})[key]||'•';
 }
@@ -381,7 +391,7 @@ function horizonStateLabel(value){
 }
 function horizonCell(compass,key,label){
   const h=compass?.horizons?.[key]||{},stateLabel=publicHorizonState(h.label||h.state||h.expected_direction||'UNAVAILABLE'),eta=timingWindow(h.eta);
-  return '<div class="market-horizon-step'+(key==='NEXT_12H'?' now':'')+'"><i></i><span>'+esc(label)+'</span><strong>'+esc(stateLabel)+'</strong><small>'+esc(eta.supported?eta.label:'No supported timing')+'</small></div>';
+  return '<div class="market-horizon-step'+(key==='NEXT_12H'?' now':'')+'"><i></i><span>'+esc(label)+'</span><strong>'+esc(stateLabel)+'</strong><small>'+esc(eta.label)+'</small></div>';
 }
 function marketCycleTrack(pkg,compass){
   const forward=cycleForwardFromSources(pkg),forwardKnown=forward.key!=='UNCLEAR';
@@ -393,7 +403,7 @@ function marketCycleTrack(pkg,compass){
     return '<div class="market-cycle-step'+(isForward?' next':'')+'" data-cycle-role="'+(isForward?'forward-destination':'reference')+'"><i>'+esc(cycleIcon(key))+'</i><span>'+esc(label)+'</span>'+(eta.supported?'<b>'+esc(eta.label)+'</b>':'')+'</div>';
   }).join('');
   const horizons=horizonCell(compass,'NEXT_12H','NOW · 0–12H')+horizonCell(compass,'NEXT_1_3D','1–3 DAYS')+horizonCell(compass,'NEXT_5_7D','5–7 DAYS')+horizonCell(compass,'NEXT_2_3W','2–3 WEEKS')+horizonCell(compass,'CYCLE_ALTCOINS_3_8W','4–8 WEEKS');
-  const currentPosition='<div class="cycle-position-chip unresolved"><i></i><span>CURRENT CYCLE POSITION</span><strong>Not confirmed yet</strong><small>Shorter-term direction is available, but long-range evidence is not strong enough to place the market on one cycle stage yet.</small></div>';
+  const currentPosition='<div class="cycle-position-chip current-context"><i></i><span>HERE NOW · CURRENT SETUP</span><strong>Cycle stage not confirmed</strong><small>'+esc(weeklySetupLabel(pkg))+' · shorter-term direction is known, but the long-cycle stage is deliberately left unassigned.</small></div>';
   const nextPosition=forwardKnown?'<div class="cycle-position-chip next-supported"><i></i><span>NEXT SUPPORTED PHASE</span><strong>'+esc(nextStage)+'</strong><small>'+esc(timingInline(forward.eta))+' · this is a destination, not the current phase.</small></div>':'';
   const positionChip=currentPosition+nextPosition;
   return '<section class="path-track market-cycle-v2" data-path-track="market-cycle">'
@@ -453,7 +463,7 @@ function altcoinCycleStages(pkg,compass){
   const unavailableWhy='Live confirmation is unavailable. The weekly baseline remains visible in the details.';
   return [
     {key:'PARTICIPATION',title:'Participation building',status:valid?(h.NEXT_1_3D?.action_posture||h.NEXT_1_3D?.state||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?h.NEXT_1_3D?.eta:null,monday:monday(0).window,why:publicPathText(valid?h.NEXT_1_3D?.expected_path:unavailableWhy)},
-    {key:'ETH_UNLOCK',title:'Ethereum unlock',status:valid?(eth.status||eth.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?eth.eta:null,monday:monday(1).window,why:publicPathText(valid?eth.reason:unavailableWhy)},
+    {key:'ETH_UNLOCK',title:'Ethereum leadership',subtitle:'Relative strength must hold',status:valid?(eth.status||eth.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?eth.eta:null,monday:monday(1).window,why:publicPathText(valid?eth.reason:unavailableWhy)},
     {key:'LARGE_MID',title:'Large + mid caps join',status:lmStatus,eta:valid?sharedEta([large,mid]):null,monday:monday(2).window,why:publicPathText(valid?[large.reason,mid.reason].filter(Boolean).join(' '):unavailableWhy)},
     {key:'IGNITION',title:'Altseason ignition',subtitle:'Small caps begin to participate',status:valid?(small.status||small.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?small.eta:null,monday:monday(3).window,why:publicPathText(valid?small.reason:unavailableWhy)},
     {key:'MICRO',title:'Micro acceleration',status:valid?(micro.status||micro.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?micro.eta:null,monday:monday(3).window,why:publicPathText(valid?micro.reason:unavailableWhy)},
@@ -514,7 +524,8 @@ function altcoinCycleTimer(pkg,compass){
   const targetIndex=stages.findIndex(x=>x.key===target.key),currentStage=stages[current.index]||null,headlineEta=targetHeadlineEta(target);
   const rows=stages.map((x,i)=>{
     const isCurrent=i===current.index&&current.source==='LIVE',isTarget=i===targetIndex;
-    return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(publicPathStatus(x.status))+'</strong><div class="alt-step-timing">'+timingMarkup(x.eta,'TIMING')+'</div><details><summary>Why?</summary>'+(x.monday?'<p><em>Weekly timing:</em> '+esc(timingInline(x.monday))+'</p>':'')+'<p>'+esc(short(publicPathText(x.why),240))+'</p></details></article>';
+    const t=timingWindow(x.eta),rawStatus=pathStatus(x.status),timingKind=t.supported&&!t.conditional&&/WAIT|NOT CONFIRMED|UNCONFIRMED|REVIEW/.test(rawStatus)?'REVIEW WINDOW':'TIMING';
+    return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(publicPathStatus(x.status))+'</strong><div class="alt-step-timing">'+timingMarkup(x.eta,timingKind)+'</div><details><summary>Why?</summary>'+(x.monday?'<p><em>Weekly timing:</em> '+esc(timingInline(x.monday))+'</p>':'')+'<p>'+esc(short(publicPathText(x.why),240))+'</p></details></article>';
   }).join('');
   const nowStrip=currentStage&&current.source==='LIVE'
     ?'<div class="alt-now-strip"><span>NOW POSITION</span><strong>'+esc(currentStage.title)+'</strong><b>'+esc(publicPathStatus(currentStage.status))+' · '+esc(timingInline(currentStage.eta))+'</b><small>Blue = current confirmed position in this sequence. Amber = next watch target. A watch window is conditional, never a countdown.</small></div>'
