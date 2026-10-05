@@ -1,0 +1,41 @@
+name: Market Owner Chain Bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/market-owner-chain-bootstrap.yml'
+      - '.github/workflows/hourly-sequence-capture.yml'
+      - '.github/workflows/entry-signal-ledger.yml'
+      - '.github/workflows/native-handlekompas.yml'
+      - '.github/workflows/native-market-recovery.yml'
+      - '.github/workflows/compass-event-refresh.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: market-owner-chain-bootstrap
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch one bounded end-to-end market owner canary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          active=$(gh run list --workflow hourly-sequence-capture.yml --branch main --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending" or .status=="waiting")] | length')
+          if [ "$active" -gt 0 ]; then
+            echo "MARKET_OWNER_CANARY_ALREADY_ACTIVE count=$active"
+            exit 0
+          fi
+          gh workflow run hourly-sequence-capture.yml --ref main -f chain_entry_signal=true
+          echo "MARKET_OWNER_CANARY_DISPATCHED source_bootstrap_run=${GITHUB_RUN_ID}"
