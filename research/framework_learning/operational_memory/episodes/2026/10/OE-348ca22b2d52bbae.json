@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cycle-navigator-weekly-publication.yml",
+    ".github/workflows/daily-compass.yml",
+    ".github/workflows/research-lab-cn-reconstructed-baseline.yml",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-348ca22b2d52bbae",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Dispatch a fresh Official Compass after durable weekly Cycle Navigator publication so PATH live gates cannot remain bound to the prior weekly package; preserve the global writer queue, Pages handoff, and regression coverage. Also restore writer/readback safety for the newly added Research Lab CN baseline workflow. No market, ETA, score, sell or portfolio semantics changed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cycle-navigator-weekly-publication.yml": "d4f71fa4c6cbf98578a96e01933dbf1303015e26",
+    ".github/workflows/daily-compass.yml": "418c37c3f5f29238b2a3b6ddba7a99ee2a7cc207",
+    ".github/workflows/research-lab-cn-reconstructed-baseline.yml": "20110446cd9875011466fabd3c1a19915af40cca",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py": "c9ab76ec068f6ad53bfd2607ddb9d3809aeac3cc"
+  },
+  "source_commit_sha": "348ca22b2d52bbaef059a8ab60a02e570d2ab6e6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-05T09:04:06+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "CN weekly: fresh Compass handoff + writer safety"
+}

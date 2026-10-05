@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "backtest_engine/statistics.py",
+    "scripts/intraday_execution/shadow_direction_confidence.py",
+    "scripts/research/shared_row_next_action_controller.py",
+    "tests/backtest_engine/test_wave1_2_foundation.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-814e26e109310261",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Move duplicated Wilson score math into backtest_engine.statistics, retain compatibility wrappers in shared-row and intraday consumers, and add golden-vector validation. No CEE outcome execution or market authority change.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "backtest_engine/statistics.py": "21abd5140e5aa6c1b6788511a40bbd76d99b1dad",
+    "scripts/intraday_execution/shadow_direction_confidence.py": "5a067ffa8706298907bc4b1cb71cfc8aeed4c8c0",
+    "scripts/research/shared_row_next_action_controller.py": "fad37a120b6e66f56fb654d444afa7f694314a8e",
+    "tests/backtest_engine/test_wave1_2_foundation.py": "9b360aaaf79b969c5b1ac2c073fb4affbbdef400"
+  },
+  "source_commit_sha": "814e26e109310261dc367fc5b0f91607cbf8ecbb",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-04T21:17:00+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "stats: centralize Wilson interval primitive"
+}

@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-824c19b1fbfa3c9d",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Allow the public Cycle Navigator deployment to rebuild after any successful Native Handlekompas completion on main, including scheduled and manual fallback runs, while retaining PR/non-main filtering. Add a product-gate assertion so the fallback coverage cannot silently regress. Publication plumbing only; no market, score, forecast or portfolio semantics changed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "f222f0d431a67f521357b9616e2d13d1dcfab12e",
+    ".github/workflows/cycle-navigator-pages.yml": "15fe00121dff48d66792405e1d134e7e615416cf"
+  },
+  "source_commit_sha": "824c19b1fbfa3c9dadca82f84ee4fb609669ee84",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-04T22:53:07+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "CN Pages: publish successful Native fallback state"
+}

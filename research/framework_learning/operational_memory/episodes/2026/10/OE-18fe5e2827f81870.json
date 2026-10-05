@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-capture-architecture-gate.yml",
+    ".github/workflows/hourly-sequence-capture.yml",
+    ".github/workflows/intraday-execution-gate.yml",
+    ".github/workflows/native-market-recovery.yml",
+    "03_DAILY_CAPTURE_LOGS/README.md",
+    "05_CYCLE_NAVIGATOR/site/public-product.js",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-18fe5e2827f81870",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Move the UTC hourly market owner from :05 to :12, align the bounded recovery watchdog to :24 UTC with the existing 65-minute stale threshold, preserve the global main-writer lock, update architecture gates/docs, and align the public NEXT UPDATE clock. No market semantics, forecast, scoring or portfolio authority changes.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-capture-architecture-gate.yml": "ab3e46abaf3b8a7b5057be203a93532140462b25",
+    ".github/workflows/hourly-sequence-capture.yml": "128e7739a4eb559120935bd07c4f18682fc117da",
+    ".github/workflows/intraday-execution-gate.yml": "b53e9de7c2505376b5846263d6e102943bf70bc0",
+    ".github/workflows/native-market-recovery.yml": "e90ccac688e1c4e7808e1de95186d8870b9c6ac7",
+    "03_DAILY_CAPTURE_LOGS/README.md": "2c11fa2a29712dc5a186a19a00a78e8f464b2e7e",
+    "05_CYCLE_NAVIGATOR/site/public-product.js": "8dda580aa9b00ba00f95619f3408617c3a99f466",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "89834c10b00fb3396abd803e23ed407ecc35a970"
+  },
+  "source_commit_sha": "18fe5e2827f81870979347e88e968964a7f72bd6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-04T22:36:41+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Hourly owner cadence: resilient :12 primary with :24 bounded recovery"
+}
