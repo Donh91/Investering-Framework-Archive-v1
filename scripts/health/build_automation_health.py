@@ -14,6 +14,16 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 UTC = timezone.utc
 WRITER_GROUP = "framework-main-writer"
 PR_ISOLATED_WRITER_GROUP = "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
+MARKET_WRITER_GROUP = "framework-market-owner-writer"
+PR_ISOLATED_MARKET_WRITER_GROUP = "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-market-owner-writer' }}"
+MARKET_WRITER_ALLOWLIST = {
+    "hourly-sequence-capture.yml",
+    "entry-signal-ledger.yml",
+    "native-handlekompas.yml",
+    "native-market-recovery.yml",
+    "compass-event-refresh.yml",
+    "daily-compass.yml",
+}
 GOOD_CONCLUSIONS = {"success", "neutral", "skipped"}
 LIFECYCLE_STATES = {"ACTIVE", "EXPECTED_BLOCK", "PENDING_FIRST_EXPECTED_RUN", "RETIRED"}
 SCHEDULE_LATENESS_TOLERANCE = timedelta(hours=6)
@@ -380,12 +390,17 @@ def workflow_static(path: Path) -> dict[str, Any]:
     risks: list[str] = []
     if lifecycle_state == "INVALID":
         risks.append("INVALID_LIFECYCLE_STATE")
-    writer_group_safe = writer_group in {WRITER_GROUP, PR_ISOLATED_WRITER_GROUP}
+    global_writer_group = writer_group in {WRITER_GROUP, PR_ISOLATED_WRITER_GROUP}
+    market_writer_group = path.name in MARKET_WRITER_ALLOWLIST and writer_group in {
+        MARKET_WRITER_GROUP,
+        PR_ISOLATED_MARKET_WRITER_GROUP,
+    }
+    writer_group_safe = global_writer_group or market_writer_group
     if writes and not writer_group_safe:
         risks.append("NON_GLOBAL_WRITER_LOCK")
-    if writer_group and "framework-main-writer" in writer_group and writer_queue != "max":
+    if writer_group_safe and writer_queue != "max":
         risks.append("MAIN_WRITER_WITHOUT_MAX_QUEUE")
-    if writer_group and "framework-main-writer" in writer_group and writer_queue == "max" and writer_cancel not in {None, "false"}:
+    if writer_group_safe and writer_queue == "max" and writer_cancel not in {None, "false"}:
         risks.append("MAIN_WRITER_QUEUE_CANCEL_CONFLICT")
     if writes and "git rebase --abort" not in text:
         risks.append("NO_REBASE_ABORT")
