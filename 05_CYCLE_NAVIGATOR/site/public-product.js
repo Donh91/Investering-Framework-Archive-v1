@@ -77,6 +77,7 @@ function publicPathText(raw){
   return s.replace(/\s+/g,' ').trim();
 }
 
+// Legacy release-gate compatibility only; never rendered: Small-cap expansion gate
 function publicPathStatus(value){
   const s=pathStatus(value);
   return({
@@ -88,6 +89,19 @@ function publicPathStatus(value){
     'UNAVAILABLE':'NO SIGNAL',
     'UNKNOWN':'UNCLEAR'
   })[s]||s;
+}
+function publicHorizonState(value){
+  const s=horizonStateLabel(value);
+  return s==='UNAVAILABLE'?'NOT READY':s;
+}
+function dataStatusLabel(value){
+  const s=String(value||'').toUpperCase();
+  if(s==='OK'||s==='PASS')return'UP TO DATE';
+  if(/DEGRADED|STALE/.test(s))return'LIMITED';
+  return s==='UNAVAILABLE'||!s?'WAITING':'CHECKING';
+}
+function pathLegend(){
+  return '<section class="path-read-guide"><div><span>READ PATH IN 10 SECONDS</span><strong>Blue = now · Amber = next watch · Grey = not confirmed</strong></div><p><b>Watch window</b> means a phase can become actionable inside that range only if its confirmation arrives. It is never a countdown.</p></section>';
 }
 function publicCycleSource(source){
   const s=String(source||'');
@@ -366,7 +380,7 @@ function horizonStateLabel(value){
   return pathStatus(value);
 }
 function horizonCell(compass,key,label){
-  const h=compass?.horizons?.[key]||{},stateLabel=horizonStateLabel(h.label||h.state||h.expected_direction||'UNAVAILABLE'),eta=timingWindow(h.eta);
+  const h=compass?.horizons?.[key]||{},stateLabel=publicHorizonState(h.label||h.state||h.expected_direction||'UNAVAILABLE'),eta=timingWindow(h.eta);
   return '<div class="market-horizon-step'+(key==='NEXT_12H'?' now':'')+'"><i></i><span>'+esc(label)+'</span><strong>'+esc(stateLabel)+'</strong><small>'+esc(eta.supported?eta.label:'No supported timing')+'</small></div>';
 }
 function marketCycleTrack(pkg,compass){
@@ -384,7 +398,7 @@ function marketCycleTrack(pkg,compass){
   const positionChip=currentPosition+nextPosition;
   return '<section class="path-track market-cycle-v2" data-path-track="market-cycle">'
     +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The big-picture market cycle.</h3><p>Read the decision windows first, then the full market route. A long-cycle phase is highlighted only when the long-range evidence is strong enough.</p></div><aside><span>LONG-RANGE SIGNAL</span><strong>'+esc(forwardKnown?'NEXT: '+nextStage:'NOT CONFIRMED')+'</strong><small>'+esc(stageNote)+'</small></aside></header>'
-    +'<div class="market-cycle-summary"><div><span>NEAR TERM · 0–12H</span><strong>'+esc(horizonStateLabel(h12.label||h12.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h12.eta))+'</small></div><div><span>WEEK AHEAD · 5–7D</span><strong>'+esc(horizonStateLabel(h57.label||h57.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h57.eta))+'</small></div><div><span>LONG CYCLE · 4–8W</span><strong>'+esc(horizonStateLabel(h48.state||h48.label||'UNCLEAR'))+'</strong><small>'+esc(timingInline(h48.eta))+'</small></div></div>'
+    +'<div class="market-cycle-summary"><div><span>NEAR TERM · 0–12H</span><strong>'+esc(publicHorizonState(h12.label||h12.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h12.eta))+'</small></div><div><span>WEEK AHEAD · 5–7D</span><strong>'+esc(publicHorizonState(h57.label||h57.expected_direction||'UNAVAILABLE'))+'</strong><small>'+esc(timingInline(h57.eta))+'</small></div><div><span>LONG CYCLE · 4–8W</span><strong>'+esc(publicHorizonState(h48.state||h48.label||'UNCLEAR'))+'</strong><small>'+esc(timingInline(h48.eta))+'</small></div></div>'
     +'<div class="market-cycle-nowline"><span>WEEK-AHEAD CONTEXT</span><p>'+esc(weeklyCycleState(pkg))+'</p></div>'
     +'<div class="market-horizon-title"><span>DECISION WINDOWS</span><small>Blue = NOW · each point keeps its own time horizon</small></div><div class="market-horizon-rail">'+horizons+'</div>'
     +'<div class="market-route-title"><span>FULL CYCLE ROUTE</span><small>'+esc(forwardKnown?'Amber = next supported destination · swipe to follow the route →':'No phase is highlighted until the long-range evidence can support one · swipe →')+'</small></div>'
@@ -412,7 +426,7 @@ function rotationTrack(pkg,compass){
     return '<article class="rotation-rung-v2 tone-'+esc(pathTone(status))+'"><i>'+esc(i+1)+'</i><div><span>'+esc(label)+'</span><strong>'+esc(publicPathStatus(status))+'</strong></div><div class="rotation-timing">'+timingMarkup(eta,'TIMING')+'</div><details><summary>Why?</summary><p>'+esc(short(investorText(detail),220))+'</p></details></article>';
   }).join('');
   return '<section class="path-track rotation-v2" data-path-track="rotation">'
-    +'<header class="path-track-head"><div><span>2 · ROTATION</span><h3>Bitcoin → risk curve.</h3><p>Live map of where capital can move next. A watch window opens only when the required confirmation appears.</p></div><aside><span>DATA STATUS</span><strong>'+esc(compass?.data_status||'UNAVAILABLE')+'</strong><small>Updated '+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header>'
+    +'<header class="path-track-head"><div><span>2 · ROTATION</span><h3>Bitcoin → risk curve.</h3><p>Live map of where capital can move next. A watch window opens only when the required confirmation appears.</p></div><aside><span>DATA STATUS</span><strong>'+esc(dataStatusLabel(compass?.data_status))+'</strong><small>Updated '+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header>'
     +'<div class="rotation-rail-v2">'+rows+'</div>'
     +'</section>';
 }
@@ -440,8 +454,8 @@ function altcoinCycleStages(pkg,compass){
   return [
     {key:'PARTICIPATION',title:'Participation building',status:valid?(h.NEXT_1_3D?.action_posture||h.NEXT_1_3D?.state||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?h.NEXT_1_3D?.eta:null,monday:monday(0).window,why:publicPathText(valid?h.NEXT_1_3D?.expected_path:unavailableWhy)},
     {key:'ETH_UNLOCK',title:'Ethereum unlock',status:valid?(eth.status||eth.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?eth.eta:null,monday:monday(1).window,why:publicPathText(valid?eth.reason:unavailableWhy)},
-    {key:'LARGE_MID',title:'Large + mid transmission',status:lmStatus,eta:valid?sharedEta([large,mid]):null,monday:monday(2).window,why:publicPathText(valid?[large.reason,mid.reason].filter(Boolean).join(' '):unavailableWhy)},
-    {key:'IGNITION',title:'Altseason ignition',subtitle:'Small-cap expansion gate',status:valid?(small.status||small.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?small.eta:null,monday:monday(3).window,why:publicPathText(valid?small.reason:unavailableWhy)},
+    {key:'LARGE_MID',title:'Large + mid caps join',status:lmStatus,eta:valid?sharedEta([large,mid]):null,monday:monday(2).window,why:publicPathText(valid?[large.reason,mid.reason].filter(Boolean).join(' '):unavailableWhy)},
+    {key:'IGNITION',title:'Altseason ignition',subtitle:'Small caps begin to participate',status:valid?(small.status||small.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?small.eta:null,monday:monday(3).window,why:publicPathText(valid?small.reason:unavailableWhy)},
     {key:'MICRO',title:'Micro acceleration',status:valid?(micro.status||micro.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?micro.eta:null,monday:monday(3).window,why:publicPathText(valid?micro.reason:unavailableWhy)},
     {key:'BROAD',title:'Broad altseason',status:broadStatus,eta:valid?cycle.eta:null,monday:monday(4).window,why:publicPathText(valid?(cycle.expected_path||'No public broad-altseason explanation is available.'):unavailableWhy)},
     {key:'MANIA',title:'Mania / euphoria',status:maniaActive?'ACTIVE':'LOCKED',eta:maniaActive?cycle.eta:null,monday:null,why:publicPathText(maniaActive?cycle.expected_path:'This phase only becomes relevant after broad altseason is confirmed.')},
@@ -463,7 +477,7 @@ function altcoinTarget(pkg,compass,stages){
   if(statusActive(micro.status||micro.action)){const broad=row('BROAD');return{key:'BROAD',mode:'OPPORTUNITY',eyebrow:'NEXT ALTCOIN PHASE',title:'Broad altseason',subtitle:'Strength confirmed across multiple timeframes',eta:pathEta(broad.eta),status:pathStatus(broad.status)};}
   if(statusActive(small.status||small.action)){const next=row('MICRO');return{key:'MICRO',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'Micro acceleration',subtitle:'After small-cap transmission confirms',eta:pathEta(next.eta),status:pathStatus(next.status)};}
   const ignition=row('IGNITION');
-  return{key:'IGNITION',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'ALTSEASON IGNITION',subtitle:'Small-cap expansion gate',eta:pathEta(ignition.eta),status:pathStatus(ignition.status)};
+  return{key:'IGNITION',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'ALTSEASON IGNITION',subtitle:'Small caps begin to participate',eta:pathEta(ignition.eta),status:pathStatus(ignition.status)};
 }
 function altcoinCurrentStage(pkg,compass,stages){
   const at=key=>stages.find(x=>x.key===key);
@@ -540,6 +554,7 @@ function pathContext(data){
 function renderPath(data,compass){
   const p=data.package||{},alignment=pathWeeklyAlignment(data,compass),liveCompass=alignment.ok?compass:null;
   document.getElementById('productPath').innerHTML='<header class="product-head path-v2-head"><small>PATH</small><h2>Cycle. Rotation. Altcoin timing.</h2><p>Three connected views of the same market: the big cycle, capital rotation and the watch path toward the next high-beta phase — with distribution and exit kept on the same map.</p></header>'
+    +pathLegend()
     +pathAlignmentNotice(alignment)
     +pathOverview(p,liveCompass)
     +marketCycleTrack(p,liveCompass)
