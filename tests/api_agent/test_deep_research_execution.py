@@ -199,18 +199,41 @@ def test_copper_gold_complete_independent_bundle_passes_preflight():
     assert reasons == []
 
 
-def test_drq018_coverage_gate_requires_observed_complete_checks():
+def test_drq018_coverage_gate_requires_observed_evaluable_complete_checks():
     p = policy()
+    p["coverage_gate"]["minimum_evaluable_checks_total"] = 1
     assert coverage_gate_passes(None, p) is False
     assert coverage_gate_passes({
         "contract": "BTC_PARTIAL_WAIT_COVERAGE_HEALTH_v1",
         "coverage_status": "COMPLETE_FOR_EXPECTED_CHECK_SET",
         "checks_total": 0,
+        "no_divergence_checks": 0,
+        "divergence_source_rows": 0,
+        "data_blocked_checks": 0,
     }, p) is False
     assert coverage_gate_passes({
         "contract": "BTC_PARTIAL_WAIT_COVERAGE_HEALTH_v1",
         "coverage_status": "COMPLETE_FOR_EXPECTED_CHECK_SET",
         "checks_total": 1,
+        "no_divergence_checks": 0,
+        "divergence_source_rows": 0,
+        "data_blocked_checks": 1,
+    }, p) is False
+    assert coverage_gate_passes({
+        "contract": "BTC_PARTIAL_WAIT_COVERAGE_HEALTH_v1",
+        "coverage_status": "COMPLETE_FOR_EXPECTED_CHECK_SET",
+        "checks_total": 1,
+        "no_divergence_checks": 1,
+        "divergence_source_rows": 0,
+        "data_blocked_checks": 0,
+    }, p) is True
+    assert coverage_gate_passes({
+        "contract": "BTC_PARTIAL_WAIT_COVERAGE_HEALTH_v1",
+        "coverage_status": "COMPLETE_FOR_EXPECTED_CHECK_SET",
+        "checks_total": 1,
+        "no_divergence_checks": 0,
+        "divergence_source_rows": 1,
+        "data_blocked_checks": 0,
     }, p) is True
 
 
