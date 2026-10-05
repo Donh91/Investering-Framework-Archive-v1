@@ -1,0 +1,81 @@
+name: Research Lab M6 T4 7D Reconstruction
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: research-lab-m6-t4-7d
+  cancel-in-progress: false
+
+jobs:
+  reconstruct:
+    if: >-
+      github.event.issue.number == 1476 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[M6_T4_7D_RECONSTRUCT]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate script
+        run: |
+          python -m py_compile scripts/research/m6_t4_7d_reconstruct.py
+
+      - name: Reconstruct 7D path with canonical 24h/72h controls
+        run: |
+          mkdir -p runtime/m6-t4
+          python scripts/research/m6_t4_7d_reconstruct.py \
+            --output runtime/m6-t4/result.json
+
+      - name: Persist research-only reconstruction
+        run: |
+          set -euo pipefail
+          dest="06_RESEARCH_LAB/m6_replay/2026-10-05__PULLBACK_EDGE_20260708_01__7d-reconstruction-v1.json"
+          mkdir -p "$(dirname "$dest")"
+          cp runtime/m6-t4/result.json "$dest"
+          git config user.name 'research-lab-m6[bot]'
+          git config user.email 'research-lab-m6@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m "research: reconstruct T4 seven-day outcome for M6"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt*4))
+            done
+            [ "$pushed" = true ]
+          fi
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > runtime/m6-t4/comment.md
+          import json
+          p='06_RESEARCH_LAB/m6_replay/2026-10-05__PULLBACK_EDGE_20260708_01__7d-reconstruction-v1.json'
+          o=json.load(open(p))
+          s=o['summaries']['168']
+          print('## M6 T4 7D reconstruction completed')
+          print()
+          print('Canonical 24h/72h Binance 1m positive controls: PASS.')
+          print(f"7D research reconstruction: low {s['horizon_low']:.2f}, high {s['horizon_high']:.2f}, close {s['horizon_close']:.2f}.")
+          print(f"From canonical warning anchor: max downside {s['max_drawdown_pct']:.3f}%, max upside {s['max_rebound_pct']:.3f}%, terminal {s['close_move_from_reference_pct']:.3f}%.")
+          print()
+          print('This is RESEARCH_RECONSTRUCTED_NOT_ORIGINAL_MATURATION. Historical T4 is not rewritten.')
+          print(f"Artifact: `{p}`")
+          PY
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body-file runtime/m6-t4/comment.md
