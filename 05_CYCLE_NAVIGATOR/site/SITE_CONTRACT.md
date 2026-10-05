@@ -49,6 +49,9 @@ It is intentionally a presentation and live-context surface, not a new market-st
 39. Public Altcoin stage naming SHOULD prefer market language over implementation language, for example `Large + mid caps join` and `Small caps begin to participate`, while preserving the exact source state and timing rules.
 40. The visible NOW and PATH surfaces SHOULD use public investment language rather than framework-governance language. Terms such as `governed`, `owner`, `canonical`, `lineage`, `action authority`, and `capital transmission` may remain internal implementation concepts but SHOULD NOT be required to understand an investor-facing conclusion.
 41. Public-language translation MUST remain presentation-only. It may rename `OK/PASS` to `UP TO DATE`, `UNAVAILABLE` to `NOT READY`, or similar conservative labels, but MUST NOT alter the underlying Compass state, timing, Bull/Bear balance, action or risk semantics.
+42. When the exact long-cycle stage is not supported, PATH MAY still show a blue current-context marker describing the published weekly setup, but it MUST explicitly say that the cycle stage is not confirmed and MUST NOT place that marker on a specific cycle node.
+43. A non-conditional future horizon attached to a WAIT-like Altcoin state SHOULD be labeled as a review window rather than an event ETA. Conditional gates remain watch windows. Neither presentation may imply that the phase begins automatically when the window expires.
+44. The public Altcoin sequence SHOULD label the ETH step in market language such as `Ethereum leadership` rather than implementation shorthand such as `Ethereum unlock`, while leaving the internal key and authority unchanged.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
