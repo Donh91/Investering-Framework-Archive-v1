@@ -47,6 +47,8 @@ It is intentionally a presentation and live-context surface, not a new market-st
 37. PATH SHOULD expose a compact reading guide that makes the visual grammar self-explanatory: blue means current/now, amber means next watch, and grey means not confirmed or not yet supported.
 38. Public PATH horizon labels MAY translate raw `UNAVAILABLE` into `NOT READY` and data-health `OK/PASS` into `UP TO DATE`, provided the underlying values remain untouched and no unavailable signal is represented as active.
 39. Public Altcoin stage naming SHOULD prefer market language over implementation language, for example `Large + mid caps join` and `Small caps begin to participate`, while preserving the exact source state and timing rules.
+40. The visible NOW and PATH surfaces SHOULD use public investment language rather than framework-governance language. Terms such as `governed`, `owner`, `canonical`, `lineage`, `action authority`, and `capital transmission` may remain internal implementation concepts but SHOULD NOT be required to understand an investor-facing conclusion.
+41. Public-language translation MUST remain presentation-only. It may rename `OK/PASS` to `UP TO DATE`, `UNAVAILABLE` to `NOT READY`, or similar conservative labels, but MUST NOT alter the underlying Compass state, timing, Bull/Bear balance, action or risk semantics.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
