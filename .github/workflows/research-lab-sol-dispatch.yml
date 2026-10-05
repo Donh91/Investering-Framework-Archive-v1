@@ -1,0 +1,199 @@
+name: Research Lab Sol Mission Dispatcher
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: research-lab-sol-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  research-lab-sol:
+    if: >-
+      github.event.issue.number == 1476 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[RESEARCH_LAB_SOL]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate bounded Research Lab Sol machinery
+        run: |
+          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py scripts/api_agent/research_lab_sol_dispatch.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          policy=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
+          queue=json.loads(Path('research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json').read_text())
+          task=registry['tasks']['RESEARCH_LAB_SOL_ANALYSIS']
+          assert task['model']=='gpt-6.1-sol'
+          assert task['reasoning_effort']=='high'
+          assert task['invocation_mode']=='EVENT_DRIVEN_OWNER_GATED_ONLY'
+          assert task['advisory_only'] is True
+          assert task['automatic_code_write'] is False
+          assert task['automatic_merge'] is False
+          assert policy['lane_caps_usd']['RESEARCH_LAB_SOL_ANALYSIS']==10
+          assert policy['research_lab_sol_analysis']['requires_existing_owner_issue']==1476
+          assert policy['research_lab_sol_analysis']['periodic_schedule'] is False
+          assert queue['trigger_issue']==1476
+          assert queue['max_active_missions']==1
+          assert sum(row['state']=='ACTIVE_RELEASED' for row in queue['missions'])==1
+          assert queue['authority']['automatic_code_write'] is False
+          assert queue['authority']['automatic_merge'] is False
+          PY
+
+      - name: Parse owner trigger and enforce whitelist
+        id: trigger
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          mkdir -p runtime/research-lab-sol
+          python scripts/api_agent/research_lab_sol_dispatch.py parse-comment \
+            --comment-body "$COMMENT_BODY" \
+            --output runtime/research-lab-sol/mission.txt
+          echo "mission=$(cat runtime/research-lab-sol/mission.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Deduplicate exact issue-comment trigger
+        id: dedupe
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+          MISSION_ID: ${{ steps.trigger.outputs.mission }}
+        run: |
+          dest="research/api_agent/outputs/research_lab_sol/${MISSION_ID}/issue-1476/comment-${COMMENT_ID}"
+          if [ -f "$dest/receipt.json" ]; then
+            echo "run_analysis=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_analysis=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "dest=$dest" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce Research Lab Sol and monthly API budgets
+        if: steps.dedupe.outputs.run_analysis == 'true'
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task RESEARCH_LAB_SOL_ANALYSIS \
+            --cap-usd 10.0 \
+            --reserve-usd 1.0
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 40 \
+            --reserve-usd 4.0
+
+      - name: Build fresh-main bounded mission packet
+        if: steps.dedupe.outputs.run_analysis == 'true'
+        env:
+          COMMENT_ID: ${{ github.event.comment.id }}
+          MISSION_ID: ${{ steps.trigger.outputs.mission }}
+        run: |
+          python scripts/api_agent/research_lab_sol_dispatch.py build \
+            --repo-root . \
+            --output-dir runtime/research-lab-sol \
+            --mission-id "$MISSION_ID" \
+            --issue-number 1476 \
+            --comment-id "$COMMENT_ID"
+
+      - name: Run one GPT-6.1 Sol Research Lab analysis
+        if: steps.dedupe.outputs.run_analysis == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task RESEARCH_LAB_SOL_ANALYSIS \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/research-lab-sol/prompt.txt \
+            --context-file runtime/research-lab-sol/context.json \
+            --output-dir runtime/research-lab-sol/output \
+            --intended-write-prefix research/api_agent/outputs/research_lab_sol/
+
+      - name: Validate accepted Sol output
+        if: steps.dedupe.outputs.run_analysis == 'true'
+        run: |
+          python scripts/api_agent/research_lab_sol_dispatch.py validate \
+            --output-dir runtime/research-lab-sol
+
+      - name: Persist immutable output and receipt
+        if: always() && steps.dedupe.outputs.run_analysis == 'true'
+        env:
+          DEST: ${{ steps.dedupe.outputs.dest }}
+        run: |
+          set -euo pipefail
+          receipt="runtime/research-lab-sol/output/receipt.json"
+          output="runtime/research-lab-sol/output/output.json"
+          manifest="runtime/research-lab-sol/context_manifest.json"
+          if [ ! -f "$receipt" ]; then
+            echo "research_lab_sol_no_receipt_to_persist"
+            exit 0
+          fi
+          [ -f "$output" ]
+          [ -f "$manifest" ]
+          mkdir -p "$DEST"
+          cp "$output" "$DEST/RESEARCH_LAB_SOL_ANALYSIS.json"
+          cp "$receipt" "$DEST/receipt.json"
+          cp "$manifest" "$DEST/context_manifest.json"
+          git config user.name 'research-lab-sol[bot]'
+          git config user.email 'research-lab-sol@users.noreply.github.com'
+          git add "$DEST"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: persist GPT-6.1 Sol Research Lab evidence"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - name: Report Research Lab Sol result
+        if: success() && steps.dedupe.outputs.run_analysis == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          MISSION_ID: ${{ steps.trigger.outputs.mission }}
+          DEST: ${{ steps.dedupe.outputs.dest }}
+        run: |
+          python scripts/api_agent/research_lab_sol_dispatch.py report \
+            --output-dir runtime/research-lab-sol \
+            --mission-id "$MISSION_ID" \
+            --comment-id "$COMMENT_ID" \
+            --persisted-path "$DEST" \
+            --output runtime/research-lab-sol/report.md
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body-file runtime/research-lab-sol/report.md
+
+      - name: Report failed attempt
+        if: failure() && steps.dedupe.outputs.run_analysis == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          MISSION_ID: ${{ steps.trigger.outputs.mission }}
+        run: |
+          python scripts/api_agent/research_lab_sol_dispatch.py failure-report \
+            --output-dir runtime/research-lab-sol \
+            --mission-id "$MISSION_ID" \
+            --comment-id "$COMMENT_ID" \
+            --output runtime/research-lab-sol/failure.md
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body-file runtime/research-lab-sol/failure.md
+
+      - name: Report duplicate trigger as NOOP
+        if: steps.dedupe.outputs.run_analysis != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body "RESEARCH_LAB_SOL duplicate trigger ${COMMENT_ID}: CLEAN_NOOP, immutable receipt already exists."
