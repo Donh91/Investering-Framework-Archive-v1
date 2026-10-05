@@ -345,7 +345,7 @@ function rotationTrack(pkg,compass){
     return '<article class="rotation-rung-v2 tone-'+esc(pathTone(status))+'"><i>'+esc(i+1)+'</i><div><span>'+esc(label)+'</span><strong>'+esc(pathStatus(status))+'</strong></div><div class="rotation-timing">'+timingMarkup(eta,'TIMING')+'</div><details><summary>Why?</summary><p>'+esc(short(investorText(detail),220))+'</p></details></article>';
   }).join('');
   return '<section class="path-track rotation-v2" data-path-track="rotation">'
-    +'<header class="path-track-head"><div><span>2 · ROTATION</span><h3>Bitcoin → risk curve.</h3><p>Minimal live map of where capital can move next. ETA comes directly from the Official Compass.</p></div><aside><span>LIVE OWNER</span><strong>'+esc(compass?.data_status||'UNAVAILABLE')+'</strong><small>'+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header>'
+    +'<header class="path-track-head"><div><span>2 · ROTATION</span><h3>Bitcoin → risk curve.</h3><p>Minimal live map of where capital can move next. Timing windows come directly from the Official Compass.</p></div><aside><span>LIVE OWNER</span><strong>'+esc(compass?.data_status||'UNAVAILABLE')+'</strong><small>'+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header>'
     +'<div class="rotation-rail-v2">'+rows+'</div>'
     +'</section>';
 }
@@ -439,12 +439,12 @@ function altcoinCycleTimer(pkg,compass){
     ?'<div class="alt-now-strip"><span>NOW POSITION</span><strong>'+esc(currentStage.title)+'</strong><b>'+esc(pathStatus(currentStage.status))+' · '+esc(timingInline(currentStage.eta))+'</b><small>Blue = current governed position. Amber = next watch target. A watch window is conditional, never a countdown.</small></div>'
     :'<div class="alt-now-strip unresolved"><span>NOW POSITION</span><strong>Not safely resolved</strong><b>Live stage marker withheld</b><small>Frozen Monday context remains reference only until the live owner can place the sequence safely.</small></div>';
   const targetPanel=headlineEta
-    ?'<div class="alt-countdown '+(target.mode==='PROTECTION'?'protect':'')+'"><span>ETA TO WATCH TARGET</span><strong>'+esc(headlineEta)+'</strong><b>'+esc(target.status)+'</b><small class="alt-countdown-semantics">'+esc(target.mode==='PROTECTION'?'Governed review window · not an automatic sell date':'This is the next watch target, not the current market phase.')+'</small></div>'
+    ?'<div class="alt-countdown '+(target.mode==='PROTECTION'?'protect':'')+'"><span>WATCH WINDOW · NOT CURRENT PHASE</span><strong>'+esc(timingWindow(headlineEta).label)+'</strong><b>'+esc(target.status)+'</b><small class="alt-countdown-semantics">'+esc(target.mode==='PROTECTION'?'Governed review window · not an automatic sell date':'This is the next watch target, not the current market phase or a countdown.')+'</small></div>'
     :'<div class="alt-countdown watch-target '+(target.mode==='PROTECTION'?'protect':'')+'"><span>WATCH TARGET · NOT CURRENT</span><strong>'+esc(target.status)+'</strong><b>'+esc(timingInline(target.eta))+'</b><small class="alt-countdown-semantics">'+esc(timingWindow(target.eta).conditional?'This window opens only if confirmation arrives. It is not a countdown to altseason.':'No headline countdown is shown unless the target timing is fully supported.')+'</small></div>';
   return '<section class="path-track altcoin-timer-v2" data-path-track="altcoin-cycle" data-contract="CN_PATH_THREE_TRACK_v2">'
     +'<header class="alt-timer-hero"><div><span>3 · ALTCOIN CYCLE TIMER</span><small>'+esc(target.eyebrow)+' · WATCH TARGET</small><h3>'+esc(target.title)+'</h3><p>'+esc(target.subtitle)+'</p></div>'+targetPanel+'</header>'
     +nowStrip
-    +'<div class="alt-timer-note"><span>Blue = where the governed sequence is now. Amber = the next gate worth watching.</span><b>ETA is source-owned · no browser countdown math</b></div>'
+    +'<div class="alt-timer-note"><span>Blue = where the governed sequence is now. Amber = the next gate worth watching.</span><b>Timing is source-owned · no browser countdown math</b></div>'
     +'<div class="alt-cycle-rail">'+rows+'</div>'
     +'</section>';
 }
