@@ -70,7 +70,7 @@ async function main() {
   const snapshot = await readJson(snapshotPath);
 
   const scorecardEvaluation = Object.fromEntries(
-    Object.entries(scorecard).filter(([key]) => !["contract", "issue_scored", "completed_iso_week"].includes(key))
+    Object.entries(scorecard).filter(([key]) => !["contract", "issue_scored", "completed_iso_week", "completed_iso_year"].includes(key))
   );
   if (!machine?.evaluation || !isDeepStrictEqual(machine.evaluation, scorecardEvaluation)) {
     throw new Error("CN score authority mismatch: machine evaluation and scorecard evaluation payload differ");
