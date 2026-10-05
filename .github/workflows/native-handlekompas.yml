@@ -19,26 +19,20 @@ on:
       - '03_WEEKLY_OPERATIONS/provider_budget/**'
       - '04_MARKET_LEARNING/handlekompas/**'
       - '02_DATA_PING/operational_handoffs/NATIVE_ZERO_MANUAL_FEED*'
-  workflow_run:
-    # Event-chain the readback to the owner that materializes Auto Market State.
-    # This avoids a fixed-minute race when GitHub Actions queues the :50 writer.
-    workflows:
-      - Entry Signal Ledger
-    types:
-      - completed
   schedule:
-    # Fallback watchdog only. The workflow_run event is the primary production trigger.
+    # Fallback watchdog only. Entry Signal Ledger explicitly dispatches the primary production run.
     - cron: '57 * * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   issues: write
 
 concurrency:
   # Read-only PR validation must not compete with serialized main writers.
-  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-market-owner-writer' }}
   queue: max
   cancel-in-progress: false
 jobs:
@@ -84,14 +78,7 @@ jobs:
           fi
 
   readback:
-    if: >-
-      github.event_name != 'pull_request' &&
-      (
-        (github.event_name == 'workflow_run' &&
-         github.event.workflow_run.head_branch == 'main' &&
-         github.event.workflow_run.conclusion == 'success') ||
-        (github.event_name != 'workflow_run' && github.ref == 'refs/heads/main')
-      )
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -151,6 +138,19 @@ jobs:
           local_sha=$(sha256sum 04_MARKET_LEARNING/handlekompas/LATEST.json | awk '{print $1}')
           remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/LATEST.json | sha256sum | awk '{print $1}')
           [ "$local_sha" = "$remote_sha" ]
+      - name: Publish fresh Native context to Cycle Navigator Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          active=$(gh run list --workflow cycle-navigator-pages.yml --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending" or .status=="waiting")] | length')
+          if [ "$active" -gt 0 ]; then
+            echo "CYCLE_NAVIGATOR_PAGES_HANDOFF_ALREADY_ACTIVE count=$active"
+          else
+            gh workflow run cycle-navigator-pages.yml --ref main
+            echo "CYCLE_NAVIGATOR_PAGES_HANDOFF_DISPATCHED source_native_run=${GITHUB_RUN_ID}"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
