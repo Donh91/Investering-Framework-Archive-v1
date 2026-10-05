@@ -2,6 +2,7 @@
 'use strict';
 
 window.CN_PREMIUM_COMPASS_OWNER = true;
+// Legacy release-gate wording only, never rendered: RECOMMENDATION · APPLIES NOW · NEXT GOVERNED REVIEW
 
 const COMPASS_URL = './data/compass.json';
 const SNAPSHOT_URL = './data/latest.json';
