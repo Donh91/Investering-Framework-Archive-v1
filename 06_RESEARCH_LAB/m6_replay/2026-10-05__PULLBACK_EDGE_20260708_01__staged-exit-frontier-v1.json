@@ -1,0 +1,94 @@
+{
+  "contract": "M6_T4_STAGED_EXIT_FRONTIER_v1",
+  "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
+  "event_id": "PULLBACK_EDGE_20260708_01",
+  "status": "RESEARCH_COUNTERFACTUAL_SINGLE_EPISODE",
+  "source_artifact": "06_RESEARCH_LAB/m6_replay/2026-10-05__PULLBACK_EDGE_20260708_01__7d-reconstruction-v1.json",
+  "assumptions": {
+    "trim_at_canonical_warning_anchor": true,
+    "trimmed_fraction_held_as_cash": true,
+    "no_reentry": true,
+    "no_fees_or_slippage": true,
+    "untrimmed_fraction_tracks_btc": true,
+    "horizon": "7D",
+    "purpose": "illustrate_false_exit_tradeoff_not_optimize_policy"
+  },
+  "reference": {
+    "btc_anchor": 61784.48,
+    "btc_7d_close": 65171.99,
+    "btc_7d_low": 61544.56,
+    "full_hold_terminal_return_pct": 5.48278467343255,
+    "full_hold_max_adverse_pct": -0.38831758396283833
+  },
+  "scenarios": [
+    {
+      "trim_pct": 0,
+      "terminal_portfolio_return_pct": 5.482785,
+      "upside_foregone_vs_hold_pct_points": 0,
+      "max_adverse_portfolio_pct": -0.388318,
+      "drawdown_avoided_pct_points": 0
+    },
+    {
+      "trim_pct": 10,
+      "terminal_portfolio_return_pct": 4.934506,
+      "upside_foregone_vs_hold_pct_points": 0.548278,
+      "max_adverse_portfolio_pct": -0.349486,
+      "drawdown_avoided_pct_points": 0.038832
+    },
+    {
+      "trim_pct": 20,
+      "terminal_portfolio_return_pct": 4.386228,
+      "upside_foregone_vs_hold_pct_points": 1.096557,
+      "max_adverse_portfolio_pct": -0.310654,
+      "drawdown_avoided_pct_points": 0.077664
+    },
+    {
+      "trim_pct": 25,
+      "terminal_portfolio_return_pct": 4.112089,
+      "upside_foregone_vs_hold_pct_points": 1.370696,
+      "max_adverse_portfolio_pct": -0.291238,
+      "drawdown_avoided_pct_points": 0.097079
+    },
+    {
+      "trim_pct": 35,
+      "terminal_portfolio_return_pct": 3.56381,
+      "upside_foregone_vs_hold_pct_points": 1.918975,
+      "max_adverse_portfolio_pct": -0.252406,
+      "drawdown_avoided_pct_points": 0.135911
+    },
+    {
+      "trim_pct": 50,
+      "terminal_portfolio_return_pct": 2.741392,
+      "upside_foregone_vs_hold_pct_points": 2.741392,
+      "max_adverse_portfolio_pct": -0.194159,
+      "drawdown_avoided_pct_points": 0.194159
+    },
+    {
+      "trim_pct": 75,
+      "terminal_portfolio_return_pct": 1.370696,
+      "upside_foregone_vs_hold_pct_points": 4.112089,
+      "max_adverse_portfolio_pct": -0.097079,
+      "drawdown_avoided_pct_points": 0.291238
+    },
+    {
+      "trim_pct": 100,
+      "terminal_portfolio_return_pct": 0,
+      "upside_foregone_vs_hold_pct_points": 5.482785,
+      "max_adverse_portfolio_pct": 0,
+      "drawdown_avoided_pct_points": 0.388318
+    }
+  ],
+  "interpretation": [
+    "In this single episode, larger immediate trims buy very little drawdown reduction because post-warning downside was shallow.",
+    "The opportunity cost rises approximately linearly with trim size because BTC rallied over the seven-day horizon.",
+    "This episode is adverse evidence against mapping a stress warning directly to a large trim.",
+    "It is not evidence against staged de-risking in genuinely distributive episodes.",
+    "Re-entry, fees and slippage are intentionally excluded and must be added in later multi-episode tests."
+  ],
+  "authority": {
+    "portfolio_action": false,
+    "live_rule": false,
+    "threshold_change": false,
+    "canonical_promotion": false
+  }
+}
