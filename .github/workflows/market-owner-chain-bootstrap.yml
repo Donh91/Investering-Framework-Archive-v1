@@ -29,13 +29,14 @@ jobs:
       - name: Dispatch one bounded end-to-end market owner canary
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
           set -euo pipefail
-          active=$(gh run list --workflow hourly-sequence-capture.yml --branch main --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending" or .status=="waiting")] | length')
+          active=$(gh run list --repo "$GH_REPO" --workflow hourly-sequence-capture.yml --branch main --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending" or .status=="waiting")] | length')
           if [ "$active" -gt 0 ]; then
             echo "MARKET_OWNER_CANARY_ALREADY_ACTIVE count=$active"
             exit 0
           fi
-          gh workflow run hourly-sequence-capture.yml --ref main -f chain_entry_signal=true
+          gh workflow run hourly-sequence-capture.yml --repo "$GH_REPO" --ref main -f chain_entry_signal=true
           echo "MARKET_OWNER_CANARY_DISPATCHED source_bootstrap_run=${GITHUB_RUN_ID}"
