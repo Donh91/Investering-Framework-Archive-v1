@@ -134,24 +134,22 @@
     {
       "sequence": 6,
       "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
-      "state": "WAIT_FOR_CLAUDE_SLICE2_OR_HCEL_O1",
+      "state": "ACTIVE_RELEASED_HCEL_O1_CROSS_EXAM",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__sol-api.json",
-      "context_status": "M6_V3_ADJUDICATED_NO_ADDITIONAL_SOL_CALL_NEEDED",
+      "context_status": "CHATGPT_ADJUDICATED_HCEL_O1_DELTA_BOUND",
       "context_paths": [
-        "06_RESEARCH_LAB/m6_checkpoints/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__deterministic-evidence-v2.md",
-        "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__sol-api.json",
-        "06_RESEARCH_LAB/m6_replay/2026-10-05__PULLBACK_EDGE_20260708_01__7d-reconstruction-v1.json",
-        "research/experiments/spar_v1/LATEST_REPORT.json",
-        "research/experiments/spar_v1/LATEST_FRAGILITY_REPORT.json",
-        "02_DATA_PING/live_state_handover/2026-07-11__pullback-edge-20260708-01__72h-event-close-receipt.md",
-        "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-        "research/framework_memory/rotation_survival_forward_rows/LATEST.json",
-        "research/framework_evolution_learning/2026-08-29__cycle-compass-exit-distribution-research-program-v1.md"
+        "06_RESEARCH_LAB/m6_checkpoints/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__HCEL-O1-adjudicated-delta-v1.md",
+        "06_RESEARCH_LAB/m6_checkpoints/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__HCEL-temporal-integrity-alert-v1.md",
+        "06_RESEARCH_LAB/m6_protocols/2026-10-05__lane-C-prospective-warning-survival-v1.json",
+        "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__sol-api.json"
       ],
-      "release_gate": "CLAUDE_SLICE2_RESULT_OR_HCEL_O1_RESULT",
-      "no_early_sol_opinion": true,
-      "pass_scope": "BOUNDED_EVIDENCE_TRIAGE_V2_NO_SIGNAL_INVENTION",
-      "previous_attempt": "FAILED_CLOSED_BEFORE_API_QUEUE_STATUS_CONTRACT_NO_PAID_RECEIPT"
+      "release_gate": "SATISFIED_BY_CLAUDE_O1_AND_CHATGPT_ADJUDICATED_DELTA",
+      "no_early_sol_opinion": false,
+      "pass_scope": "HCEL_O1_CONTAMINATION_AND_AMENDED_SPEC_CROSS_EXAM",
+      "previous_attempt": "FAILED_CLOSED_BEFORE_API_QUEUE_STATUS_CONTRACT_NO_PAID_RECEIPT",
+      "cross_exam_reason": "MATERIAL_NEW_EVIDENCE: 54/504 rows changed, historical model-selection ranking flips",
+      "additional_sol_pass_limit": 1,
+      "selected_live_rules": []
     }
   ],
   "authority": {
@@ -165,5 +163,5 @@
     "automatic_code_write": false
   },
   "active_mission": "RL-DISTRIBUTION-SURVIVAL-META-006",
-  "program_phase": "M6_AWAIT_CLAUDE_SLICE2"
+  "program_phase": "M6_HCEL_O1_SOL_CROSS_EXAM"
 }
