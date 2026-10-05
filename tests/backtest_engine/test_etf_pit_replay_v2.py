@@ -89,16 +89,43 @@ class EtfPitReplayV2Test(unittest.TestCase):
         self.assertIsNone(map_etf_observation_to_pit_row(lower_bound))
         self.assertIsNone(map_etf_observation_to_pit_row(provisional))
 
-    def test_feature_knowledge_time_is_cumulative_max_across_input_rows(self):
+    def test_feature_knowledge_time_is_exact_per_window(self):
         observations = [
-            observation("2026-07-15", "2026-07-18T08:00:00Z", 10.0),
+            observation("2026-07-15", "2026-07-30T08:00:00Z", 10.0),
             observation("2026-07-16", "2026-07-17T06:00:00Z", 20.0),
+            observation("2026-07-17", "2026-07-18T06:00:00Z", 30.0),
+            observation("2026-07-20", "2026-07-21T06:00:00Z", 40.0),
+            observation("2026-07-21", "2026-07-22T06:00:00Z", 50.0),
         ]
-        rows = select_etf_pit_rows(observations, "BTC", "2026-07-19T00:00:00Z")
+        rows = select_etf_pit_rows(observations, "BTC", "2026-07-31T00:00:00Z")
         features = build_etf_trailing_pit(rows, "BTC")
-        self.assertEqual(features[0]["feature_knowledge_available_at_utc"], "2026-07-18T08:00:00Z")
-        self.assertEqual(features[1]["feature_knowledge_available_at_utc"], "2026-07-18T08:00:00Z")
-        self.assertEqual(features[1]["knowledge_rule_id"], ETF_PIT_DECISION_ID)
+        last = features[-1]
+        self.assertEqual(last["rolling_3s_knowledge_available_at_utc"], "2026-07-22T06:00:00Z")
+        self.assertEqual(last["rolling_5s_knowledge_available_at_utc"], "2026-07-30T08:00:00Z")
+        self.assertEqual(last["feature_knowledge_available_at_utc"], "2026-07-30T08:00:00Z")
+        self.assertEqual(last["knowledge_rule_id"], ETF_PIT_DECISION_ID)
+
+    def test_missing_admissible_trading_session_breaks_streak_and_rolling_window(self):
+        missing = observation(
+            "2026-07-16",
+            None,
+            -20.0,
+            knowledge_status="LOWER_BOUND_ONLY",
+        )
+        observations = [
+            observation("2026-07-15", "2026-07-16T06:00:00Z", -10.0),
+            missing,
+            observation("2026-07-17", "2026-07-20T06:00:00Z", -30.0),
+        ]
+        rows = select_etf_pit_rows(observations, "BTC", "2026-07-21T00:00:00Z")
+        self.assertEqual([row["trading_session_index"] for row in rows], [0, 2])
+        features = build_etf_trailing_pit(rows, "BTC")
+        last = features[-1]
+        self.assertTrue(last["session_gap_from_previous"])
+        self.assertEqual(last["consecutive_segment_length"], 1)
+        self.assertEqual(last["signed_flow_streak_sessions"], -1)
+        self.assertFalse(last["rolling_3s_complete"])
+        self.assertIsNone(last["rolling_net_flow_3s_usd_millions"])
 
     def test_post_cutoff_revision_cannot_enter_earlier_replay(self):
         v1 = observation("2026-07-16", "2026-07-17T06:34:00Z", 79.1, vintage_seq=1)
