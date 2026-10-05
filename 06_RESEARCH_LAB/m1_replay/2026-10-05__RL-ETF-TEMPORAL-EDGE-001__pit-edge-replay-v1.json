@@ -1,0 +1,1195 @@
+{
+  "authority": {
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "portfolio_action": false,
+    "threshold_change": false,
+    "weight_change": false
+  },
+  "contract": "ETF_PIT_EDGE_REPLAY_v1",
+  "frozen_rules": {
+    "A1": "BTC rolling net flow over exactly five consecutive NYSE sessions < -500m USD",
+    "A2": "BTC net ETF outflow on each of exactly three consecutive NYSE sessions",
+    "feature_knowledge_time": "max knowledge time across exact window inputs",
+    "first_timed_capture_utc": "2026-07-15T20:48:00Z",
+    "missing_session_policy": "UNAVAILABLE; never bridge across a missing admissible trading session",
+    "pre_capture_history_eligible": false
+  },
+  "generated_from_main_sha": "042440786fbd3c34dc2015317461d59b09a3da26",
+  "interpretation_note": "This artifact measures signal reconstruction only. It does not measure price outcomes, economic decision value, baseline incremental value, or portfolio impact.",
+  "mission_id": "RL-ETF-TEMPORAL-EDGE-001",
+  "source_ledger_path": "research/etf_temporal_integrity/2026-09-23/ETF_VINTAGE_LEDGER.jsonl.gz",
+  "source_ledger_rows": 3732,
+  "source_ledger_sha256": "ff7be4c0455f9d7606423f2a17a3dc4b93d1ca732e5bbe54237424008c24a4d4",
+  "variants": [
+    {
+      "a1": {
+        "changed_endpoints": [],
+        "endpoints_total": 45,
+        "evaluable_endpoints": 19,
+        "final_state_true_count": 2,
+        "first_state_true_count": 2,
+        "first_true_endpoints": [
+          {
+            "endpoint_session": "2026-09-15",
+            "final_state": true,
+            "first_evaluable_at_utc": "2026-09-16T11:25:33Z",
+            "first_sum_usd_m": -706.6,
+            "first_values_usd_m": [
+              -120.2,
+              -282.7,
+              -13.2,
+              159.9,
+              -450.4
+            ]
+          },
+          {
+            "endpoint_session": "2026-09-16",
+            "final_state": true,
+            "first_evaluable_at_utc": "2026-09-17T11:35:28Z",
+            "first_sum_usd_m": -882.3,
+            "first_values_usd_m": [
+              -282.7,
+              -13.2,
+              159.9,
+              -450.4,
+              -295.9
+            ]
+          }
+        ],
+        "signal": "A1_BTC_5_SESSION_NET_LT_MINUS_500M",
+        "state_changed_after_first_eval_count": 0,
+        "unavailable_endpoints": 26,
+        "unavailable_examples": [
+          {
+            "endpoint_session": "2026-07-21",
+            "missing_sessions": [
+              "2026-07-15",
+              "2026-07-16",
+              "2026-07-17",
+              "2026-07-20",
+              "2026-07-21"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-22",
+            "missing_sessions": [
+              "2026-07-16",
+              "2026-07-17",
+              "2026-07-20",
+              "2026-07-21",
+              "2026-07-22"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-23",
+            "missing_sessions": [
+              "2026-07-17",
+              "2026-07-20",
+              "2026-07-21",
+              "2026-07-22",
+              "2026-07-23"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-24",
+            "missing_sessions": [
+              "2026-07-20",
+              "2026-07-21",
+              "2026-07-22",
+              "2026-07-23",
+              "2026-07-24"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-27",
+            "missing_sessions": [
+              "2026-07-21",
+              "2026-07-22",
+              "2026-07-23",
+              "2026-07-24",
+              "2026-07-27"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-28",
+            "missing_sessions": [
+              "2026-07-22",
+              "2026-07-23",
+              "2026-07-24",
+              "2026-07-27",
+              "2026-07-28"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-29",
+            "missing_sessions": [
+              "2026-07-23",
+              "2026-07-24",
+              "2026-07-27",
+              "2026-07-28",
+              "2026-07-29"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-30",
+            "missing_sessions": [
+              "2026-07-24",
+              "2026-07-27",
+              "2026-07-28",
+              "2026-07-29",
+              "2026-07-30"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-31",
+            "missing_sessions": [
+              "2026-07-27",
+              "2026-07-28",
+              "2026-07-29",
+              "2026-07-30",
+              "2026-07-31"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-03",
+            "missing_sessions": [
+              "2026-07-28",
+              "2026-07-29",
+              "2026-07-30",
+              "2026-07-31",
+              "2026-08-03"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-04",
+            "missing_sessions": [
+              "2026-07-29",
+              "2026-07-30",
+              "2026-07-31",
+              "2026-08-03",
+              "2026-08-04"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-05",
+            "missing_sessions": [
+              "2026-07-30",
+              "2026-07-31",
+              "2026-08-03",
+              "2026-08-04",
+              "2026-08-05"
+            ]
+          }
+        ]
+      },
+      "a2": {
+        "changed_endpoints": [],
+        "endpoints_total": 47,
+        "evaluable_endpoints": 21,
+        "final_state_true_count": 2,
+        "first_state_true_count": 2,
+        "first_true_endpoints": [
+          {
+            "endpoint_session": "2026-09-10",
+            "final_state": true,
+            "first_evaluable_at_utc": "2026-09-11T11:12:13Z",
+            "first_sum_usd_m": -449.5,
+            "first_values_usd_m": [
+              -46.6,
+              -120.2,
+              -282.7
+            ]
+          },
+          {
+            "endpoint_session": "2026-09-11",
+            "final_state": true,
+            "first_evaluable_at_utc": "2026-09-12T10:40:02Z",
+            "first_sum_usd_m": -416.1,
+            "first_values_usd_m": [
+              -120.2,
+              -282.7,
+              -13.2
+            ]
+          }
+        ],
+        "signal": "A2_BTC_OUTFLOW_STREAK_GE_3",
+        "state_changed_after_first_eval_count": 0,
+        "unavailable_endpoints": 26,
+        "unavailable_examples": [
+          {
+            "endpoint_session": "2026-07-17",
+            "missing_sessions": [
+              "2026-07-15",
+              "2026-07-16",
+              "2026-07-17"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-20",
+            "missing_sessions": [
+              "2026-07-16",
+              "2026-07-17",
+              "2026-07-20"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-21",
+            "missing_sessions": [
+              "2026-07-17",
+              "2026-07-20",
+              "2026-07-21"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-22",
+            "missing_sessions": [
+              "2026-07-20",
+              "2026-07-21",
+              "2026-07-22"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-23",
+            "missing_sessions": [
+              "2026-07-21",
+              "2026-07-22",
+              "2026-07-23"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-24",
+            "missing_sessions": [
+              "2026-07-22",
+              "2026-07-23",
+              "2026-07-24"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-27",
+            "missing_sessions": [
+              "2026-07-23",
+              "2026-07-24",
+              "2026-07-27"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-28",
+            "missing_sessions": [
+              "2026-07-24",
+              "2026-07-27",
+              "2026-07-28"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-29",
+            "missing_sessions": [
+              "2026-07-27",
+              "2026-07-28",
+              "2026-07-29"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-30",
+            "missing_sessions": [
+              "2026-07-28",
+              "2026-07-29",
+              "2026-07-30"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-31",
+            "missing_sessions": [
+              "2026-07-29",
+              "2026-07-30",
+              "2026-07-31"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-03",
+            "missing_sessions": [
+              "2026-07-30",
+              "2026-07-31",
+              "2026-08-03"
+            ]
+          }
+        ]
+      },
+      "admissible_event_count": 32,
+      "calendar_first": "2026-07-15",
+      "calendar_last": "2026-09-22",
+      "calendar_sessions": 49,
+      "case_rows": {
+        "a1": [
+          {
+            "endpoint_session": "2026-08-12",
+            "missing_sessions": [
+              "2026-08-06",
+              "2026-08-07",
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-06",
+              "2026-08-07",
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-13",
+            "missing_sessions": [
+              "2026-08-07",
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-07",
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-14",
+            "missing_sessions": [
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13",
+              "2026-08-14"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-17",
+            "missing_sessions": [
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13",
+              "2026-08-14",
+              "2026-08-17"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-19",
+            "missing_sessions": [
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-13",
+              "2026-08-14",
+              "2026-08-17",
+              "2026-08-18",
+              "2026-08-19"
+            ]
+          },
+          {
+            "consecutive_session_guard": true,
+            "endpoint_session": "2026-09-08",
+            "feature_knowledge_rule": "MAX_KNOWLEDGE_TIME_WITHIN_EXACT_WINDOW",
+            "final_state": false,
+            "final_sum_usd_m": 723.4,
+            "final_values_usd_m": [
+              -236.5,
+              101.1,
+              730.8,
+              174.6,
+              -46.6
+            ],
+            "first_evaluable_at_utc": "2026-09-09T11:14:59Z",
+            "first_state": false,
+            "first_sum_usd_m": 723.4,
+            "first_values_usd_m": [
+              -236.5,
+              101.1,
+              730.8,
+              174.6,
+              -46.6
+            ],
+            "state_changed_after_first_eval": false,
+            "status": "EVALUABLE",
+            "transitions": [
+              {
+                "cutoff_utc": "2026-09-09T11:14:59Z",
+                "selected_ledger_keys": [
+                  "a68f13e5e0345b6435e469e6",
+                  "eed622a256e4ece80705bc2d",
+                  "8a88304efef7b49ad8c8e9b1",
+                  "cf27ff7d240f3ea9ee7ce41d",
+                  "523bd30ec29723c24348336a"
+                ],
+                "state": false,
+                "sum_usd_m": 723.4,
+                "values_usd_m": [
+                  -236.5,
+                  101.1,
+                  730.8,
+                  174.6,
+                  -46.6
+                ]
+              }
+            ],
+            "window_sessions": [
+              "2026-09-01",
+              "2026-09-02",
+              "2026-09-03",
+              "2026-09-04",
+              "2026-09-08"
+            ]
+          }
+        ],
+        "a2": [
+          {
+            "endpoint_session": "2026-08-12",
+            "missing_sessions": [
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-13",
+            "missing_sessions": [
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-14",
+            "missing_sessions": [
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-12",
+              "2026-08-13",
+              "2026-08-14"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-17",
+            "missing_sessions": [
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-13",
+              "2026-08-14",
+              "2026-08-17"
+            ]
+          },
+          {
+            "consecutive_session_guard": true,
+            "endpoint_session": "2026-08-19",
+            "feature_knowledge_rule": "MAX_KNOWLEDGE_TIME_WITHIN_EXACT_WINDOW",
+            "final_state": false,
+            "final_sum_usd_m": 1004.0,
+            "final_values_usd_m": [
+              297.5,
+              189.3,
+              517.2
+            ],
+            "first_evaluable_at_utc": "2026-08-21T07:04:04Z",
+            "first_state": false,
+            "first_sum_usd_m": 1004.0,
+            "first_values_usd_m": [
+              297.5,
+              189.3,
+              517.2
+            ],
+            "state_changed_after_first_eval": false,
+            "status": "EVALUABLE",
+            "transitions": [
+              {
+                "cutoff_utc": "2026-08-21T07:04:04Z",
+                "selected_ledger_keys": [
+                  "3e52f10cf268aebb57062a69",
+                  "bcf84f006732a31f5864e15e",
+                  "df59cecd37bb9f853acdfa3f"
+                ],
+                "state": false,
+                "sum_usd_m": 1004.0,
+                "values_usd_m": [
+                  297.5,
+                  189.3,
+                  517.2
+                ]
+              }
+            ],
+            "window_sessions": [
+              "2026-08-17",
+              "2026-08-18",
+              "2026-08-19"
+            ]
+          },
+          {
+            "consecutive_session_guard": true,
+            "endpoint_session": "2026-09-08",
+            "feature_knowledge_rule": "MAX_KNOWLEDGE_TIME_WITHIN_EXACT_WINDOW",
+            "final_state": false,
+            "final_sum_usd_m": 858.8,
+            "final_values_usd_m": [
+              730.8,
+              174.6,
+              -46.6
+            ],
+            "first_evaluable_at_utc": "2026-09-09T11:14:59Z",
+            "first_state": false,
+            "first_sum_usd_m": 858.8,
+            "first_values_usd_m": [
+              730.8,
+              174.6,
+              -46.6
+            ],
+            "state_changed_after_first_eval": false,
+            "status": "EVALUABLE",
+            "transitions": [
+              {
+                "cutoff_utc": "2026-09-09T11:14:59Z",
+                "selected_ledger_keys": [
+                  "8a88304efef7b49ad8c8e9b1",
+                  "cf27ff7d240f3ea9ee7ce41d",
+                  "523bd30ec29723c24348336a"
+                ],
+                "state": false,
+                "sum_usd_m": 858.8,
+                "values_usd_m": [
+                  730.8,
+                  174.6,
+                  -46.6
+                ]
+              }
+            ],
+            "window_sessions": [
+              "2026-09-03",
+              "2026-09-04",
+              "2026-09-08"
+            ]
+          }
+        ]
+      },
+      "mode": "VERIFIED_ONLY",
+      "sessions_with_admissible_events": 23
+    },
+    {
+      "a1": {
+        "changed_endpoints": [],
+        "endpoints_total": 45,
+        "evaluable_endpoints": 19,
+        "final_state_true_count": 2,
+        "first_state_true_count": 2,
+        "first_true_endpoints": [
+          {
+            "endpoint_session": "2026-09-15",
+            "final_state": true,
+            "first_evaluable_at_utc": "2026-09-16T11:25:33Z",
+            "first_sum_usd_m": -706.6,
+            "first_values_usd_m": [
+              -120.2,
+              -282.7,
+              -13.2,
+              159.9,
+              -450.4
+            ]
+          },
+          {
+            "endpoint_session": "2026-09-16",
+            "final_state": true,
+            "first_evaluable_at_utc": "2026-09-17T11:35:28Z",
+            "first_sum_usd_m": -882.3,
+            "first_values_usd_m": [
+              -282.7,
+              -13.2,
+              159.9,
+              -450.4,
+              -295.9
+            ]
+          }
+        ],
+        "signal": "A1_BTC_5_SESSION_NET_LT_MINUS_500M",
+        "state_changed_after_first_eval_count": 0,
+        "unavailable_endpoints": 26,
+        "unavailable_examples": [
+          {
+            "endpoint_session": "2026-07-21",
+            "missing_sessions": [
+              "2026-07-15",
+              "2026-07-16",
+              "2026-07-17",
+              "2026-07-20",
+              "2026-07-21"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-22",
+            "missing_sessions": [
+              "2026-07-16",
+              "2026-07-17",
+              "2026-07-20",
+              "2026-07-21",
+              "2026-07-22"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-23",
+            "missing_sessions": [
+              "2026-07-17",
+              "2026-07-20",
+              "2026-07-21",
+              "2026-07-22",
+              "2026-07-23"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-24",
+            "missing_sessions": [
+              "2026-07-20",
+              "2026-07-21",
+              "2026-07-22",
+              "2026-07-23",
+              "2026-07-24"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-27",
+            "missing_sessions": [
+              "2026-07-21",
+              "2026-07-22",
+              "2026-07-23",
+              "2026-07-24",
+              "2026-07-27"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-28",
+            "missing_sessions": [
+              "2026-07-22",
+              "2026-07-23",
+              "2026-07-24",
+              "2026-07-27",
+              "2026-07-28"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-29",
+            "missing_sessions": [
+              "2026-07-23",
+              "2026-07-24",
+              "2026-07-27",
+              "2026-07-28",
+              "2026-07-29"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-30",
+            "missing_sessions": [
+              "2026-07-24",
+              "2026-07-27",
+              "2026-07-28",
+              "2026-07-29",
+              "2026-07-30"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-31",
+            "missing_sessions": [
+              "2026-07-27",
+              "2026-07-28",
+              "2026-07-29",
+              "2026-07-30",
+              "2026-07-31"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-03",
+            "missing_sessions": [
+              "2026-07-28",
+              "2026-07-29",
+              "2026-07-30",
+              "2026-07-31",
+              "2026-08-03"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-04",
+            "missing_sessions": [
+              "2026-07-29",
+              "2026-07-30",
+              "2026-07-31",
+              "2026-08-03",
+              "2026-08-04"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-05",
+            "missing_sessions": [
+              "2026-07-30",
+              "2026-07-31",
+              "2026-08-03",
+              "2026-08-04",
+              "2026-08-05"
+            ]
+          }
+        ]
+      },
+      "a2": {
+        "changed_endpoints": [],
+        "endpoints_total": 47,
+        "evaluable_endpoints": 21,
+        "final_state_true_count": 2,
+        "first_state_true_count": 2,
+        "first_true_endpoints": [
+          {
+            "endpoint_session": "2026-09-10",
+            "final_state": true,
+            "first_evaluable_at_utc": "2026-09-11T11:12:13Z",
+            "first_sum_usd_m": -449.5,
+            "first_values_usd_m": [
+              -46.6,
+              -120.2,
+              -282.7
+            ]
+          },
+          {
+            "endpoint_session": "2026-09-11",
+            "final_state": true,
+            "first_evaluable_at_utc": "2026-09-12T10:40:02Z",
+            "first_sum_usd_m": -416.1,
+            "first_values_usd_m": [
+              -120.2,
+              -282.7,
+              -13.2
+            ]
+          }
+        ],
+        "signal": "A2_BTC_OUTFLOW_STREAK_GE_3",
+        "state_changed_after_first_eval_count": 0,
+        "unavailable_endpoints": 26,
+        "unavailable_examples": [
+          {
+            "endpoint_session": "2026-07-17",
+            "missing_sessions": [
+              "2026-07-15",
+              "2026-07-16",
+              "2026-07-17"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-20",
+            "missing_sessions": [
+              "2026-07-16",
+              "2026-07-17",
+              "2026-07-20"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-21",
+            "missing_sessions": [
+              "2026-07-17",
+              "2026-07-20",
+              "2026-07-21"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-22",
+            "missing_sessions": [
+              "2026-07-20",
+              "2026-07-21",
+              "2026-07-22"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-23",
+            "missing_sessions": [
+              "2026-07-21",
+              "2026-07-22",
+              "2026-07-23"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-24",
+            "missing_sessions": [
+              "2026-07-22",
+              "2026-07-23",
+              "2026-07-24"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-27",
+            "missing_sessions": [
+              "2026-07-23",
+              "2026-07-24",
+              "2026-07-27"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-28",
+            "missing_sessions": [
+              "2026-07-24",
+              "2026-07-27",
+              "2026-07-28"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-29",
+            "missing_sessions": [
+              "2026-07-27",
+              "2026-07-28",
+              "2026-07-29"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-30",
+            "missing_sessions": [
+              "2026-07-28",
+              "2026-07-29",
+              "2026-07-30"
+            ]
+          },
+          {
+            "endpoint_session": "2026-07-31",
+            "missing_sessions": [
+              "2026-07-29",
+              "2026-07-30",
+              "2026-07-31"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-03",
+            "missing_sessions": [
+              "2026-07-30",
+              "2026-07-31",
+              "2026-08-03"
+            ]
+          }
+        ]
+      },
+      "admissible_event_count": 375,
+      "calendar_first": "2026-07-15",
+      "calendar_last": "2026-09-22",
+      "calendar_sessions": 49,
+      "case_rows": {
+        "a1": [
+          {
+            "endpoint_session": "2026-08-12",
+            "missing_sessions": [
+              "2026-08-06",
+              "2026-08-07",
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-06",
+              "2026-08-07",
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-13",
+            "missing_sessions": [
+              "2026-08-07",
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-07",
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-14",
+            "missing_sessions": [
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13",
+              "2026-08-14"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-17",
+            "missing_sessions": [
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13",
+              "2026-08-14",
+              "2026-08-17"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-19",
+            "missing_sessions": [
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-13",
+              "2026-08-14",
+              "2026-08-17",
+              "2026-08-18",
+              "2026-08-19"
+            ]
+          },
+          {
+            "consecutive_session_guard": true,
+            "endpoint_session": "2026-09-08",
+            "feature_knowledge_rule": "MAX_KNOWLEDGE_TIME_WITHIN_EXACT_WINDOW",
+            "final_state": false,
+            "final_sum_usd_m": 723.4,
+            "final_values_usd_m": [
+              -236.5,
+              101.1,
+              730.8,
+              174.6,
+              -46.6
+            ],
+            "first_evaluable_at_utc": "2026-09-09T11:14:59Z",
+            "first_state": false,
+            "first_sum_usd_m": 723.4,
+            "first_values_usd_m": [
+              -236.5,
+              101.1,
+              730.8,
+              174.6,
+              -46.6
+            ],
+            "state_changed_after_first_eval": false,
+            "status": "EVALUABLE",
+            "transitions": [
+              {
+                "cutoff_utc": "2026-09-09T11:14:59Z",
+                "selected_ledger_keys": [
+                  "acfd440515fb25067cb06170",
+                  "7e2807144f0101ee2009852e",
+                  "e32e81bd1b60851201dbb1a0",
+                  "34d6884c7ceca45e5f97ad01",
+                  "523bd30ec29723c24348336a"
+                ],
+                "state": false,
+                "sum_usd_m": 723.4,
+                "values_usd_m": [
+                  -236.5,
+                  101.1,
+                  730.8,
+                  174.6,
+                  -46.6
+                ]
+              }
+            ],
+            "window_sessions": [
+              "2026-09-01",
+              "2026-09-02",
+              "2026-09-03",
+              "2026-09-04",
+              "2026-09-08"
+            ]
+          }
+        ],
+        "a2": [
+          {
+            "endpoint_session": "2026-08-12",
+            "missing_sessions": [
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-10",
+              "2026-08-11",
+              "2026-08-12"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-13",
+            "missing_sessions": [
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-11",
+              "2026-08-12",
+              "2026-08-13"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-14",
+            "missing_sessions": [
+              "2026-08-12",
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-12",
+              "2026-08-13",
+              "2026-08-14"
+            ]
+          },
+          {
+            "endpoint_session": "2026-08-17",
+            "missing_sessions": [
+              "2026-08-13"
+            ],
+            "status": "UNAVAILABLE_MISSING_ADMISSIBLE_SESSION",
+            "window_sessions": [
+              "2026-08-13",
+              "2026-08-14",
+              "2026-08-17"
+            ]
+          },
+          {
+            "consecutive_session_guard": true,
+            "endpoint_session": "2026-08-19",
+            "feature_knowledge_rule": "MAX_KNOWLEDGE_TIME_WITHIN_EXACT_WINDOW",
+            "final_state": false,
+            "final_sum_usd_m": 1004.0,
+            "final_values_usd_m": [
+              297.5,
+              189.3,
+              517.2
+            ],
+            "first_evaluable_at_utc": "2026-08-21T07:04:04Z",
+            "first_state": false,
+            "first_sum_usd_m": 1004.0,
+            "first_values_usd_m": [
+              297.5,
+              189.3,
+              517.2
+            ],
+            "state_changed_after_first_eval": false,
+            "status": "EVALUABLE",
+            "transitions": [
+              {
+                "cutoff_utc": "2026-08-21T07:04:04Z",
+                "selected_ledger_keys": [
+                  "81132bd529ec65d8a19ee88b",
+                  "1d4132b2b344e76b351dbbe7",
+                  "df59cecd37bb9f853acdfa3f"
+                ],
+                "state": false,
+                "sum_usd_m": 1004.0,
+                "values_usd_m": [
+                  297.5,
+                  189.3,
+                  517.2
+                ]
+              }
+            ],
+            "window_sessions": [
+              "2026-08-17",
+              "2026-08-18",
+              "2026-08-19"
+            ]
+          },
+          {
+            "consecutive_session_guard": true,
+            "endpoint_session": "2026-09-08",
+            "feature_knowledge_rule": "MAX_KNOWLEDGE_TIME_WITHIN_EXACT_WINDOW",
+            "final_state": false,
+            "final_sum_usd_m": 858.8,
+            "final_values_usd_m": [
+              730.8,
+              174.6,
+              -46.6
+            ],
+            "first_evaluable_at_utc": "2026-09-09T11:14:59Z",
+            "first_state": false,
+            "first_sum_usd_m": 858.8,
+            "first_values_usd_m": [
+              730.8,
+              174.6,
+              -46.6
+            ],
+            "state_changed_after_first_eval": false,
+            "status": "EVALUABLE",
+            "transitions": [
+              {
+                "cutoff_utc": "2026-09-09T11:14:59Z",
+                "selected_ledger_keys": [
+                  "e32e81bd1b60851201dbb1a0",
+                  "34d6884c7ceca45e5f97ad01",
+                  "523bd30ec29723c24348336a"
+                ],
+                "state": false,
+                "sum_usd_m": 858.8,
+                "values_usd_m": [
+                  730.8,
+                  174.6,
+                  -46.6
+                ]
+              }
+            ],
+            "window_sessions": [
+              "2026-09-03",
+              "2026-09-04",
+              "2026-09-08"
+            ]
+          }
+        ]
+      },
+      "mode": "D1_START_D4_COMPLETE_REVISIONS",
+      "sessions_with_admissible_events": 23
+    }
+  ]
+}
