@@ -1,0 +1,42 @@
+name: Research Governance Smoke
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: research-governance-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: >-
+      github.event.issue.number == 1478 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[RESEARCH_GOVERNANCE_SMOKE]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install bounded test dependency
+        run: python -m pip install --disable-pip-version-check "pytest>=8,<9"
+      - name: Compile research governance code
+        run: |
+          python -m py_compile \
+            scripts/api_agent/deep_research_executor.py \
+            scripts/api_agent/run_deep_research_task.py \
+            scripts/api_agent/forward_evidence_observer.py
+      - name: Run focused research governance tests
+        run: |
+          python -m pytest -q \
+            tests/api_agent/test_deep_research_execution.py \
+            tests/api_agent/test_forward_evidence_coordination.py
