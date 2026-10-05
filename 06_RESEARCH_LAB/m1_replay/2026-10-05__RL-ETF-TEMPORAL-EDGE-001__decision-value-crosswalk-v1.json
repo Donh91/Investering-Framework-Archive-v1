@@ -1,0 +1,239 @@
+{
+  "authority": {
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "portfolio_action": false,
+    "threshold_change": false,
+    "weight_change": false
+  },
+  "baseline_rules": {
+    "C2": "existing frozen ETHBTC 5d return <= -3% warning definition",
+    "D2_D3": "not recomputed because the current source packet does not freeze enough implementation detail to reconstruct swingDOWN / 20d-range-break without inventing semantics",
+    "breadth_rotation": "last live capture at or before signal time, descriptive only",
+    "outcomes": "future closed-hour BTC/ETHBTC bars, 24h/72h/168h plus max adverse/upside excursion",
+    "price_anchor": "latest CLOSED 1h BTC bar from an hourly owner run retrieved before signal knowledge time",
+    "price_context": "plain prior 24h/72h BTC returns, descriptive only"
+  },
+  "contract": "ETF_PIT_DECISION_VALUE_CROSSWALK_v1",
+  "generated_from_main_sha": "a929694d01758ba9cf2c056d70e937a33d1b8da1",
+  "limits": [
+    "Only two independent signal onsets are available in verified PIT data: A2 onset and later A1 onset; persistence endpoints are not independent events.",
+    "This crosswalk measures timing/outcomes, not causal incremental value versus a full multivariate baseline.",
+    "Breadth and rotation capture metrics are descriptive and retain zero standalone predictive authority.",
+    "Outcome bars are final historical closed bars and are never used as signal-time inputs."
+  ],
+  "mission_id": "RL-ETF-TEMPORAL-EDGE-001",
+  "purpose": "Measure point-in-time ETF warning onset against contemporaneous pre-signal price/rotation context and subsequent outcomes without inventing new warning thresholds.",
+  "signals": [
+    {
+      "breadth_advancer_share_change_vs_24h_baseline": 0.05,
+      "episode_onset_endpoint_session": "2026-09-10",
+      "hourly_anchor": {
+        "anchor_bar_close_utc": "2026-09-11T11:00:00Z",
+        "anchor_bar_open_utc": "2026-09-11T10:00:00Z",
+        "availability_lag_minutes": 3.32,
+        "btc_close": 76993.25,
+        "btc_return_1h_pct": -0.06327717348978412,
+        "eth_close": 2462.14,
+        "ethbtc_close": 0.03198,
+        "ethbtc_return_1h_pct": -0.24953212726137597,
+        "run_path": "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/09/11/110854_HOURLY_SEQUENCE_20260911T110854Z_5057ddf50723.json",
+        "run_retrieved_at_utc": "2026-09-11T11:08:54Z",
+        "run_window_end_utc": "2026-09-11T11:00:00Z"
+      },
+      "last_live_capture_before_signal": {
+        "blockchaincenter_30d_outperforming_btc_share": 0.387755102041,
+        "blockchaincenter_30d_score": 39,
+        "blockchaincenter_90d_outperforming_btc_share": 0.34693877551,
+        "blockchaincenter_90d_score": 35,
+        "breadth_advancer_share": 0.26,
+        "breadth_advancers": 26,
+        "breadth_constituent_count": 100,
+        "breadth_decliners": 72,
+        "captured_at_utc": "2026-09-11T08:52:56Z",
+        "cfgi_btc_classification": "Neutral",
+        "cfgi_btc_score": 53.5,
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/09/11/085256_gh-34581331134-1.json"
+      },
+      "live_capture_24h_baseline": {
+        "blockchaincenter_30d_outperforming_btc_share": 0.408163265306,
+        "blockchaincenter_30d_score": 41,
+        "blockchaincenter_90d_outperforming_btc_share": 0.326530612245,
+        "blockchaincenter_90d_score": 33,
+        "breadth_advancer_share": 0.21,
+        "breadth_advancers": 21,
+        "breadth_constituent_count": 100,
+        "breadth_decliners": 77,
+        "captured_at_utc": "2026-09-10T08:54:54Z",
+        "cfgi_btc_classification": "Fear",
+        "cfgi_btc_score": 38.5,
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/09/10/085454_gh-34457716898-1.json"
+      },
+      "outcomes": {
+        "h168": {
+          "btc_close": 78062.0,
+          "btc_max_drawdown_from_anchor_pct": -2.6305,
+          "btc_max_high": 79890.0,
+          "btc_max_upside_from_anchor_pct": 3.7623,
+          "btc_min_low": 74967.97,
+          "btc_return_pct": 1.3881,
+          "ethbtc_close": 0.03213,
+          "observed_bar_close_utc": "2026-09-18T12:00:00Z",
+          "target_offset_minutes": 47.78,
+          "target_utc": "2026-09-18T11:12:13Z"
+        },
+        "h24": {
+          "btc_close": 77356.04,
+          "btc_max_drawdown_from_anchor_pct": -1.2295,
+          "btc_max_high": 79890.0,
+          "btc_max_upside_from_anchor_pct": 3.7623,
+          "btc_min_low": 76046.58,
+          "btc_return_pct": 0.4712,
+          "ethbtc_close": 0.03279,
+          "observed_bar_close_utc": "2026-09-12T12:00:00Z",
+          "target_offset_minutes": 47.78,
+          "target_utc": "2026-09-12T11:12:13Z"
+        },
+        "h72": {
+          "btc_close": 77776.0,
+          "btc_max_drawdown_from_anchor_pct": -1.2295,
+          "btc_max_high": 79890.0,
+          "btc_max_upside_from_anchor_pct": 3.7623,
+          "btc_min_low": 76046.58,
+          "btc_return_pct": 1.0166,
+          "ethbtc_close": 0.03226,
+          "observed_bar_close_utc": "2026-09-14T12:00:00Z",
+          "target_offset_minutes": 47.78,
+          "target_utc": "2026-09-14T11:12:13Z"
+        }
+      },
+      "persistence_true_endpoints": [
+        "2026-09-10",
+        "2026-09-11"
+      ],
+      "pre_signal_price_rotation_context": {
+        "btc_return_prior_120h_pct": -3.7632,
+        "btc_return_prior_24h_pct": -1.1173,
+        "btc_return_prior_72h_pct": -2.0043,
+        "c2_definition": "ETHBTC 5d return <= -3%, frozen Sensor Survival C2 definition",
+        "c2_ethbtc_5d_le_minus_3pct": false,
+        "ethbtc_return_prior_120h_pct": 2.2705
+      },
+      "signal": "A2_BTC_OUTFLOW_STREAK_GE_3",
+      "signal_known_at_utc": "2026-09-11T11:12:13Z",
+      "signal_sum_usd_m": -449.5,
+      "signal_values_usd_m": [
+        -46.6,
+        -120.2,
+        -282.7
+      ]
+    },
+    {
+      "breadth_advancer_share_change_vs_24h_baseline": -0.14,
+      "episode_onset_endpoint_session": "2026-09-15",
+      "hourly_anchor": {
+        "anchor_bar_close_utc": "2026-09-16T07:00:00Z",
+        "anchor_bar_open_utc": "2026-09-16T06:00:00Z",
+        "availability_lag_minutes": 229.17,
+        "btc_close": 76030.01,
+        "btc_return_1h_pct": 0.08951843164761719,
+        "eth_close": 2406.77,
+        "ethbtc_close": 0.03166,
+        "ethbtc_return_1h_pct": -0.06313131313131493,
+        "run_path": "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/09/16/073623_HOURLY_SEQUENCE_20260916T073623Z_4bae2195c57c.json",
+        "run_retrieved_at_utc": "2026-09-16T07:36:23Z",
+        "run_window_end_utc": "2026-09-16T07:00:00Z"
+      },
+      "last_live_capture_before_signal": {
+        "blockchaincenter_30d_outperforming_btc_share": 0.326530612245,
+        "blockchaincenter_30d_score": 33,
+        "blockchaincenter_90d_outperforming_btc_share": 0.265306122449,
+        "blockchaincenter_90d_score": 27,
+        "breadth_advancer_share": 0.19,
+        "breadth_advancers": 19,
+        "breadth_constituent_count": 100,
+        "breadth_decliners": 79,
+        "captured_at_utc": "2026-09-16T09:15:17Z",
+        "cfgi_btc_classification": "Neutral",
+        "cfgi_btc_score": 45,
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/09/16/091517_gh-35078327977-1.json"
+      },
+      "live_capture_24h_baseline": {
+        "blockchaincenter_30d_outperforming_btc_share": 0.326530612245,
+        "blockchaincenter_30d_score": 33,
+        "blockchaincenter_90d_outperforming_btc_share": 0.265306122449,
+        "blockchaincenter_90d_score": 27,
+        "breadth_advancer_share": 0.33,
+        "breadth_advancers": 33,
+        "breadth_constituent_count": 100,
+        "breadth_decliners": 64,
+        "captured_at_utc": "2026-09-15T09:22:26Z",
+        "cfgi_btc_classification": "Fear",
+        "cfgi_btc_score": 32.5,
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/09/15/092226_gh-34952164234-1.json"
+      },
+      "outcomes": {
+        "h168": {
+          "btc_close": 85649.95,
+          "btc_max_drawdown_from_anchor_pct": -1.2695,
+          "btc_max_high": 87395.67,
+          "btc_max_upside_from_anchor_pct": 14.9489,
+          "btc_min_low": 75064.82,
+          "btc_return_pct": 12.6528,
+          "ethbtc_close": 0.03185,
+          "observed_bar_close_utc": "2026-09-23T12:00:00Z",
+          "target_offset_minutes": 34.45,
+          "target_utc": "2026-09-23T11:25:33Z"
+        },
+        "h24": {
+          "btc_close": 76482.0,
+          "btc_max_drawdown_from_anchor_pct": -1.2695,
+          "btc_max_high": 76774.08,
+          "btc_max_upside_from_anchor_pct": 0.9787,
+          "btc_min_low": 75064.82,
+          "btc_return_pct": 0.5945,
+          "ethbtc_close": 0.03193,
+          "observed_bar_close_utc": "2026-09-17T12:00:00Z",
+          "target_offset_minutes": 34.45,
+          "target_utc": "2026-09-17T11:25:33Z"
+        },
+        "h72": {
+          "btc_close": 81302.63,
+          "btc_max_drawdown_from_anchor_pct": -1.2695,
+          "btc_max_high": 81741.0,
+          "btc_max_upside_from_anchor_pct": 7.5115,
+          "btc_min_low": 75064.82,
+          "btc_return_pct": 6.9349,
+          "ethbtc_close": 0.03247,
+          "observed_bar_close_utc": "2026-09-19T12:00:00Z",
+          "target_offset_minutes": 34.45,
+          "target_utc": "2026-09-19T11:25:33Z"
+        }
+      },
+      "persistence_true_endpoints": [
+        "2026-09-15",
+        "2026-09-16"
+      ],
+      "pre_signal_price_rotation_context": {
+        "btc_return_prior_120h_pct": -1.2511,
+        "btc_return_prior_24h_pct": -1.3287,
+        "btc_return_prior_72h_pct": -0.8442,
+        "c2_definition": "ETHBTC 5d return <= -3%, frozen Sensor Survival C2 definition",
+        "c2_ethbtc_5d_le_minus_3pct": false,
+        "ethbtc_return_prior_120h_pct": -1.0006
+      },
+      "signal": "A1_BTC_5_SESSION_NET_LT_MINUS_500M",
+      "signal_known_at_utc": "2026-09-16T11:25:33Z",
+      "signal_sum_usd_m": -706.6,
+      "signal_values_usd_m": [
+        -120.2,
+        -282.7,
+        -13.2,
+        159.9,
+        -450.4
+      ]
+    }
+  ],
+  "source_replay": "06_RESEARCH_LAB/m1_replay/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__pit-edge-replay-v1.json"
+}
