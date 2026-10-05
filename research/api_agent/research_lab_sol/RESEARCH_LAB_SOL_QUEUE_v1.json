@@ -17,7 +17,7 @@
       "mission_id": "RL-ETF-TEMPORAL-EDGE-001",
       "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__sol-api.json",
-      "context_status": "FRESH_BOUND",
+      "context_status": "FRESH_BOUND_PLUS_DETERMINISTIC_REPLAY",
       "context_paths": [
         "06_RESEARCH_LAB/m1_checkpoints/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__chatgpt-interim-v1.md",
         "research/etf_temporal_integrity/2026-09-23/ETF_TEMPORAL_INTEGRITY_REPORT.md",
@@ -29,8 +29,13 @@
         "scripts/data_ping/auto_market_state.py",
         "06_RESEARCH_LAB/audit_summaries/sensor_survival_v1/data/SENSOR_SURVIVAL_MATRIX_v1.csv",
         "06_RESEARCH_LAB/current_relationship_compression/CURRENT_SENSOR_RELATIONSHIP_COMPRESSION.json",
-        "03_DAILY_CAPTURE_LOGS/etf/2026/10/03/113503_2026-10-02.json"
-      ]
+        "03_DAILY_CAPTURE_LOGS/etf/2026/10/03/113503_2026-10-02.json",
+        "06_RESEARCH_LAB/m1_checkpoints/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__decision-value-delta-v1.md",
+        "06_RESEARCH_LAB/m1_replay/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__pit-edge-replay-v1.json",
+        "06_RESEARCH_LAB/m1_replay/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__decision-value-crosswalk-v1.json",
+        "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-bf5b03ce2d63.json"
+      ],
+      "second_pass_reason": "NEW_DETERMINISTIC_PIT_REPLAY_AND_OUTCOME_CROSSWALK"
     },
     {
       "sequence": 2,
