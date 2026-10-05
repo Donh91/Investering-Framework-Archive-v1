@@ -123,6 +123,23 @@ function recommendationWindow(compass) {
   return explicit || near || fallback || 'Next Compass update';
 }
 
+function hourlyMonitor(snapshot) {
+  const live = snapshot?.live_observation;
+  const action = live?.current_action || {};
+  if (live?.contract !== 'CYCLE_NAVIGATOR_PUBLIC_LIVE_OBSERVATION_v2' || !clean(action.generated_at)) {
+    return '<div class="premium-live-monitor unavailable"><span>HOURLY MONITOR</span><strong>AWAITING VERIFIED UPDATE</strong><small>Context only. Official Compass remains the action owner.</small></div>';
+  }
+  const d = new Date(action.generated_at);
+  const ageMinutes = Number.isFinite(d.getTime()) ? Math.max(0, Math.floor((Date.now() - d.getTime()) / 60000)) : null;
+  const age = ageMinutes === null ? 'unknown age' : ageMinutes >= 60 ? Math.floor(ageMinutes / 60) + 'h ' + (ageMinutes % 60) + 'm ago' : ageMinutes + 'm ago';
+  const raw = String(action.current || '').toUpperCase();
+  const stale = ageMinutes === null || ageMinutes > 90;
+  const degraded = /DATA_DEGRADED/.test(raw);
+  const health = stale ? 'STALE' : degraded ? 'DEGRADED' : 'LIVE';
+  const cls = stale ? ' stale' : degraded ? ' degraded' : '';
+  return '<div class="premium-live-monitor' + cls + '"><span>HOURLY MONITOR</span><strong>' + esc(publicAction(action.stance || action.current)) + ' · ' + esc(health) + '</strong><small>Updated ' + esc(age) + ' · context only, Official Compass remains the action owner.</small></div>';
+}
+
 function soWhat(row, lane) {
   if (!row?.ok) return 'No governed edge — wait for a verified read.';
   const action = actionFromLane(lane);
@@ -242,7 +259,7 @@ function renderPremium(snapshot, compass) {
   section.innerHTML =
     '<div class="premium-overview">'
     + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'The framework is waiting for fresh evidence.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><div><span>MARKET PHASE</span><strong>' + esc(meta.phase) + '</strong></div><div><span>NEXT CHANGE</span><strong>' + esc(meta.next) + '</strong></div><div><span>RISK</span><strong>' + esc(meta.risk) + '</strong></div></div></div>'
-    + '<aside><span>RECOMMENDATION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window">APPLIES NOW · NEXT GOVERNED REVIEW ' + esc(recommendationWindow(compass)) + '</div><p>' + esc(rec.copy) + '</p><small>Official action posture · market direction remains a separate signal.</small></aside>'
+    + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT GOVERNED REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div><p>' + esc(rec.copy) + '</p>' + hourlyMonitor(snapshot) + '<small>Official action posture · market direction remains a separate signal.</small></aside>'
     + '</div>'
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, compass, scale, h)).join('') + '</div>'
