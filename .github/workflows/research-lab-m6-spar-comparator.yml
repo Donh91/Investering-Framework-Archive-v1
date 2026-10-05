@@ -9,7 +9,8 @@ permissions:
   issues: write
 
 concurrency:
-  group: research-lab-m6-spar-comparator
+  group: framework-main-writer
+  queue: max
   cancel-in-progress: false
 
 jobs:
@@ -63,6 +64,8 @@ jobs:
             done
             [ "$pushed" = true ]
           fi
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
 
       - name: Report
         env:
