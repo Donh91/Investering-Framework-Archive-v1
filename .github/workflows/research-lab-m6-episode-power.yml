@@ -1,0 +1,88 @@
+name: Research Lab M6 Episode Power Census
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: research-lab-m6-episode-power
+  cancel-in-progress: false
+
+jobs:
+  census:
+    if: >-
+      github.event.issue.number == 1476 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[M6_EPISODE_POWER]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate method and runner
+        run: |
+          test -f 06_RESEARCH_LAB/m6_methods/2026-10-05__gap-sensitive-episode-power-method-v1.md
+          test -f 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/hourly_features.csv.gz
+          python -m py_compile scripts/research/m6_gap_sensitive_episode_power.py
+
+      - name: Run frozen power census
+        run: |
+          mkdir -p runtime/m6-power
+          python scripts/research/m6_gap_sensitive_episode_power.py \
+            --repo-root . \
+            --output runtime/m6-power/result.json
+
+      - name: Persist immutable result
+        run: |
+          set -euo pipefail
+          dest="06_RESEARCH_LAB/m6_replay/2026-10-05__gap-sensitive-episode-power-census-v1.json"
+          mkdir -p "$(dirname "$dest")"
+          cp runtime/m6-power/result.json "$dest"
+          git config user.name 'research-lab-m6[bot]'
+          git config user.email 'research-lab-m6@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m "research: persist M6 gap-sensitive episode power census"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt*4))
+            done
+            [ "$pushed" = true ]
+          fi
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > runtime/m6-power/comment.md
+          import json
+          p='06_RESEARCH_LAB/m6_replay/2026-10-05__gap-sensitive-episode-power-census-v1.json'
+          o=json.load(open(p))
+          print('## M6 gap-sensitive episode power census completed')
+          print()
+          for w,wo in o['windows'].items():
+              print(f"### {w}")
+              print(f"- continuity gaps: {wo['continuity_gap_count']}")
+              for asset,ao in wo['assets'].items():
+                  for th,x in ao.items():
+                      fam=x['families_no_gap']['14']['family_count']
+                      print(f"- {asset} >= {th}%: episodes all/no-gap {x['episode_count_all_observed_endpoints']}/{x['episode_count_peak_to_trough_no_gap']}; 14d no-gap families {fam}")
+          print()
+          print('All 20/30/40% thresholds and 7/14/30d family-gap sensitivities are retained in the immutable artifact.')
+          print(f"Artifact: `{p}`")
+          print('No warning/exit skill claim or authority change was made.')
+          PY
+          gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body-file runtime/m6-power/comment.md
