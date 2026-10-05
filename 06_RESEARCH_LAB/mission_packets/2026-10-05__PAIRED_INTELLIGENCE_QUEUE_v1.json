@@ -46,15 +46,17 @@
       "sequence": 2,
       "id": "RL-OFFENSIVE-FNP-002",
       "title": "Offensive Edge / False-Negative Opportunity Cost",
-      "state": "ACTIVE",
-      "release_condition": "SATISFIED_BY_M1_FINAL_ADJUDICATION"
+      "state": "FINAL_ADJUDICATED",
+      "release_condition": "SATISFIED_BY_M1_FINAL_ADJUDICATION",
+      "verdict": "INSUFFICIENT_EVIDENCE_MEASUREMENT_PIPELINE_BLOCKED",
+      "final_adjudication_path": "06_RESEARCH_LAB/m2_checkpoints/2026-10-05__RL-OFFENSIVE-FNP-002__FINAL_ADJUDICATION_v1.md"
     },
     {
       "sequence": 3,
       "id": "RL-CN-SKILL-BASELINE-003",
       "title": "Cycle Navigator Skill Decomposition vs Mechanical Baseline",
-      "state": "QUEUED_WAIT_PREDECESSOR",
-      "release_condition": "RL-OFFENSIVE-FNP-002_FINAL_CHATGPT_ADJUDICATION"
+      "state": "ACTIVE",
+      "release_condition": "SATISFIED_BY_M2_FINAL_ADJUDICATION"
     },
     {
       "sequence": 4,
@@ -80,5 +82,5 @@
     "canonical_promotion": false,
     "automatic_merge": false
   },
-  "active_mission": "RL-OFFENSIVE-FNP-002"
+  "active_mission": "RL-CN-SKILL-BASELINE-003"
 }
