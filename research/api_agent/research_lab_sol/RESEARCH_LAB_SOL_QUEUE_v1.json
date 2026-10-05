@@ -134,9 +134,9 @@
     {
       "sequence": 6,
       "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
-      "state": "ACTIVE_RELEASED",
+      "state": "WAIT_FOR_CLAUDE_SLICE2_OR_HCEL_O1",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__sol-api.json",
-      "context_status": "DETERMINISTIC_EVIDENCE_V2_BOUND_CLAUDE_SLICE2_BLIND_PENDING",
+      "context_status": "M6_V3_ADJUDICATED_NO_ADDITIONAL_SOL_CALL_NEEDED",
       "context_paths": [
         "06_RESEARCH_LAB/m6_checkpoints/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__deterministic-evidence-v2.md",
         "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-DISTRIBUTION-SURVIVAL-META-006__sol-api.json",
@@ -148,8 +148,8 @@
         "research/framework_memory/rotation_survival_forward_rows/LATEST.json",
         "research/framework_evolution_learning/2026-08-29__cycle-compass-exit-distribution-research-program-v1.md"
       ],
-      "release_gate": "SATISFIED_BY_DETERMINISTIC_M6_V2; CLAUDE_SLICE2_PENDING_BLIND_NONBLOCKING",
-      "no_early_sol_opinion": false,
+      "release_gate": "CLAUDE_SLICE2_RESULT_OR_HCEL_O1_RESULT",
+      "no_early_sol_opinion": true,
       "pass_scope": "BOUNDED_EVIDENCE_TRIAGE_V2_NO_SIGNAL_INVENTION",
       "previous_attempt": "FAILED_CLOSED_BEFORE_API_QUEUE_STATUS_CONTRACT_NO_PAID_RECEIPT"
     }
@@ -165,5 +165,5 @@
     "automatic_code_write": false
   },
   "active_mission": "RL-DISTRIBUTION-SURVIVAL-META-006",
-  "program_phase": "M6_DISTRIBUTION_SURVIVAL"
+  "program_phase": "M6_AWAIT_CLAUDE_SLICE2"
 }
