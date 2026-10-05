@@ -48,7 +48,7 @@
     {
       "sequence": 2,
       "mission_id": "RL-OFFENSIVE-FNP-002",
-      "state": "ACTIVE_RELEASED",
+      "state": "FINAL_ADJUDICATED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-OFFENSIVE-FNP-002__sol-api.json",
       "context_status": "FRESH_BOUND",
       "context_paths": [
@@ -66,14 +66,15 @@
         "research/api_agent/coordination/RESEARCH_EXECUTION_COORDINATOR_v1.json",
         "research/api_agent/deep_research/DEEP_RESEARCH_EXECUTION_ADDENDUM_v1.json"
       ],
-      "analysis_focus": "EVIDENCE_READINESS_VS_ECONOMIC_CONCLUSION_WITH_ZERO_PROSPECTIVE_FNP_ROWS"
+      "analysis_focus": "EVIDENCE_READINESS_VS_ECONOMIC_CONCLUSION_WITH_ZERO_PROSPECTIVE_FNP_ROWS",
+      "no_further_sol_passes_unless_new_material_evidence": true
     },
     {
       "sequence": 3,
       "mission_id": "RL-CN-SKILL-BASELINE-003",
-      "state": "QUEUED_WAIT_PREDECESSOR",
+      "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-05__RL-CN-SKILL-BASELINE-003__sol-api.json",
-      "context_status": "FRESH_BIND_AT_RELEASE",
+      "context_status": "FRESH_BIND_REQUIRED_BEFORE_TRIGGER",
       "context_paths": []
     },
     {
@@ -103,5 +104,5 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "RL-OFFENSIVE-FNP-002"
+  "active_mission": "RL-CN-SKILL-BASELINE-003"
 }
