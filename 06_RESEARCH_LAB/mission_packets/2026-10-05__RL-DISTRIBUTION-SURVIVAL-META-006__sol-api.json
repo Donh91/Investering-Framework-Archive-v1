@@ -1,0 +1,60 @@
+{
+  "contract": "RESEARCH_LAB_SOL_API_MISSION_PACKET_v1",
+  "created_date": "2026-10-05",
+  "status": "WAIT_FOR_CLAUDE_OR_DETERMINISTIC_RESULTS",
+  "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
+  "title": "Research Lab Distribution Survival / Exit Timing",
+  "priority": "P1",
+  "predecessor": "RL-TECHDEV97-005",
+  "release_condition": "M5_FINAL_AND_M6_EVIDENCE_AVAILABLE",
+  "recommended_task_lane": "RESEARCH_LAB_SOL_ANALYSIS",
+  "recommended_model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "paired_protocol": "06_RESEARCH_LAB/mission_packets/2026-10-05__PAIRED_INTELLIGENCE_PROTOCOL_v1.md",
+  "bridge_mandate": "messages/chatgpt/2026/10/2026-10-05_CLAUDE_RESEARCH_LAB_DISTRIBUTION_SURVIVAL_010.md",
+  "question": "Can framework distribution/pullback evidence materially improve staged exit timing versus price-only or hold baselines without excessive premature exits?",
+  "hypothesis": "A small subset of point-in-time framework signals may add useful pre-crash lead time, but only if they survive false-exit, re-entry, multiplicity and price-only baseline tests.",
+  "baseline": "HOLD plus simple price-only drawdown/trend baselines, with tier-aware volatility and no exact-top objective.",
+  "required_analysis": [
+    "Separate historical-as-was from current-machine retro replay.",
+    "Reject any result that depends on revised data before historical knowledge time.",
+    "Quantify drawdown avoided and upside surrendered jointly.",
+    "Include false alarms, recovered warnings and missed drawdowns.",
+    "Compare staged trim policies only as research counterfactuals.",
+    "Penalize correlated signals and multiple testing.",
+    "Prefer simple combinations and leave-one-signal-out tests.",
+    "Recommend prospective confirmation only after historical falsification survives."
+  ],
+  "required_outputs": [
+    "claim_status",
+    "episode_quality",
+    "incremental_value_vs_price_baseline",
+    "false_exit_cost",
+    "lead_time_value",
+    "reentry_value",
+    "signal_family_ablation",
+    "survival_scorecard_design",
+    "strongest_falsification",
+    "minimum_next_action"
+  ],
+  "falsifier": "Warnings add no useful lead beyond price, or false exits/whipsaw consume the avoided drawdown benefit.",
+  "kill_condition": "If no signal family adds robust incremental decision value across admissible episodes and controls, retain distribution monitoring as context only and do not create an exit engine.",
+  "forbidden": [
+    "exact-top optimization",
+    "retroactive threshold tuning",
+    "live portfolio action",
+    "market-rule change",
+    "canonical promotion",
+    "repository writes by API model",
+    "automatic merge"
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "repository_write": false
+  }
+}
