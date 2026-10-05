@@ -9,7 +9,9 @@ permissions:
   issues: write
 
 concurrency:
-  group: research-lab-cn-baseline
+  # This workflow commits to main and must share the global production writer queue.
+  group: framework-main-writer
+  queue: max
   cancel-in-progress: false
 
 jobs:
@@ -71,6 +73,8 @@ jobs:
               sleep $((attempt*4))
             done
             [ "$pushed" = true ]
+            git fetch origin main
+            git merge-base --is-ancestor HEAD origin/main
           fi
 
       - name: Report result
