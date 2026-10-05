@@ -35,18 +35,37 @@ const publicDataStatus = (value) => {
   if (/DEGRADED|STALE/.test(s)) return 'LIMITED';
   return s === 'UNAVAILABLE' || !s ? 'WAITING' : s;
 };
-const publicCompassText = (value) => words(value)
-  .replace(/\bW\d+\b/g, 'This week')
-  .replace(/\bgoverned\b/gi, 'verified')
-  .replace(/\bcanonical\b/gi, 'confirmed')
-  .replace(/\bowner\b/gi, 'signal source')
-  .replace(/\bETHBTC\b/gi, 'Ethereum vs Bitcoin')
-  .replace(/\bETH\/BTC\b/gi, 'Ethereum vs Bitcoin')
-  .replace(/\bbreadth\b/gi, 'market participation')
-  .replace(/\bmicrostructure\b/gi, 'market structure')
-  .replace(/\baction posture\b/gi, 'current action')
-  .replace(/\s+/g, ' ')
-  .trim();
+const publicCompassText = (value) => {
+  let s = words(value)
+    .replace(/\bW\d+\b/g, 'This week')
+    .replace(/MASTER MONDAY/gi, 'weekly review')
+    .replace(/\bgoverned\b/gi, 'verified')
+    .replace(/\bcanonical\b/gi, 'confirmed')
+    .replace(/\bdecision owner\b/gi, 'signal source')
+    .replace(/\bowner\b/gi, 'signal source')
+    .replace(/\bETHBTC\b/gi, 'Ethereum vs Bitcoin')
+    .replace(/\bETH\/BTC\b/gi, 'Ethereum vs Bitcoin')
+    .replace(/\bETH-relative\b/gi, 'Ethereum-relative')
+    .replace(/\bbreadth\b/gi, 'market participation')
+    .replace(/\bmicrostructure\b/gi, 'market structure')
+    .replace(/\baction posture\b/gi, 'current action')
+    .replace(/\bALTCOIN_SEASON\b/gi, 'altcoin-season')
+    .replace(/\b30d shadow source\b/gi, '30-day altcoin participation reading')
+    .replace(/\bbroad transmission\b/gi, 'broad participation')
+    .replace(/\bcapital transmission\b/gi, 'capital rotation')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const exact = [
+    [/The 30-day altcoin participation reading ended at 78 with an altcoin-season label, but 90d was 55 and 365d was 37; the shorter-window label varied during This week\.?/i,
+      'The 30-day altcoin participation reading was strong, while the 90-day and one-year readings were materially weaker. Shorter-term participation also moved around during the week.'],
+    [/Five settled sessions totaled \+82\.9 in reported BTC ETF units versus [−-]118\.0 in ETH ETF units; final weekly review describes mixed market structure and no confirmed broad participation\.?/i,
+      'Recent settled ETF flows favoured Bitcoin over Ethereum, while market structure remained mixed and broad altcoin participation was not confirmed.'],
+    [/Meme risk is a separate rung and requires a verified meme-specific signal source\. No such signal source is currently bound, so MICROCAPS cannot be used as a proxy\.?/i,
+      'Meme risk needs its own confirmed signal. No meme-specific signal is active yet, so microcaps are not used as a substitute.']
+  ];
+  for (const [pattern, replacement] of exact) s = s.replace(pattern, replacement);
+  return s;
+};
 
 function officialScale(compass) {
   const scale = compass?.bull_bear_scale;
@@ -225,7 +244,7 @@ function riskCurve(compass) {
   return '<section class="premium-risk-curve">'
     + '<header><div><span class="premium-kicker">RISK CURVE · NOW</span><h3>Bitcoin → memes</h3></div><p>How far out on the risk curve the verified evidence currently supports going.</p></header>'
     + '<div class="premium-rung-grid">' + rail + '</div>'
-    + '<div class="premium-meme-focus"><span>MEME RISK</span><strong>' + esc(publicState(meme.status || meme.action || 'UNAVAILABLE')) + '</strong><p>' + esc(clean(meme.reason) || 'No verified meme-specific signal is available yet.') + '</p><small>ETA · ' + esc(clean(meme.eta) || 'No fixed ETA') + '</small></div>'
+    + '<div class="premium-meme-focus"><span>MEME RISK</span><strong>' + esc(publicState(meme.status || meme.action || 'UNAVAILABLE')) + '</strong><p>' + esc(publicCompassText(clean(meme.reason) || 'No verified meme-specific signal is available yet.')) + '</p><small>ETA · ' + esc(clean(meme.eta) || 'No fixed ETA') + '</small></div>'
     + '</section>';
 }
 
@@ -233,7 +252,7 @@ function evidenceDrivers(compass) {
   const rows = Array.isArray(compass?.protection_tracker?.decisive_public_drivers)
     ? compass.protection_tracker.decisive_public_drivers.filter(Boolean).slice(0, 4)
     : [];
-  return rows;
+  return rows.map((x) => publicCompassText(x));
 }
 
 function scoreFormula(row) {
@@ -260,7 +279,7 @@ function detailsPanel(snapshot, compass, row, lane, horizon) {
     + '<summary><span>HOW THIS READING IS BUILT</span><b>View inputs & method</b></summary>'
     + '<div class="premium-breakdown-body">'
     + scoreFormula(row)
-    + '<div class="premium-call"><div><span>DIRECTION</span><strong>' + esc(words(lane?.expected_direction || row?.bias || 'UNAVAILABLE')) + '</strong></div><div><span>ACTION</span><strong>' + esc(actionFromLane(lane)) + '</strong></div><div><span>WINDOW</span><strong>' + esc(lane?.eta || horizon.label) + '</strong></div></div>'
+    + '<div class="premium-call"><div><span>DIRECTION</span><strong>' + esc(publicState(lane?.expected_direction || row?.bias || 'UNAVAILABLE')) + '</strong></div><div><span>ACTION</span><strong>' + esc(actionFromLane(lane)) + '</strong></div><div><span>WINDOW</span><strong>' + esc(lane?.eta || horizon.label) + '</strong></div></div>'
     + '<div class="premium-families">'
     + evidenceFamily('PRICE & STRUCTURE', 'BTC and ETH price behaviour, relative trend and the horizon-specific market path.')
     + evidenceFamily('PARTICIPATION & ROTATION', 'Market participation, Ethereum vs Bitcoin, Bitcoin dominance and capital movement across size tiers.')
