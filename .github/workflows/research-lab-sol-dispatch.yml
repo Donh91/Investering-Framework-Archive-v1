@@ -9,7 +9,9 @@ permissions:
   issues: write
 
 concurrency:
-  group: research-lab-sol-${{ github.event.issue.number }}
+  # This workflow can commit to main, so it must share the global production-writer queue.
+  group: framework-main-writer
+  queue: max
   cancel-in-progress: false
 
 jobs:
