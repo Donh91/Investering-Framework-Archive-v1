@@ -19,7 +19,8 @@ Artifact:
 
 Source ledger:
 - 3,732 vintage rows
-- SHA-256 `ff7be4c948492233411cfc1bf0d21c6f4fbd7a02fb359703282d4e6cbdd0dc4b`
+- SHA-256 `ff7be4c0455f9d7606423f2a17a3dc4b93d1ca732e5bbe54237424008c24a4d4`
+- independently matches `research/etf_temporal_integrity/2026-09-23/CHECKSUMS.sha256`
 
 Both replay interpretations produced the same signal fires:
 - `VERIFIED_ONLY`
