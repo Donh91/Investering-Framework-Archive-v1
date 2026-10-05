@@ -166,3 +166,11 @@
   .cycle-position-chip{margin-top:10px}
   .path-overview-v2 article.focus:after{right:10px;top:8px}
 }
+
+/* Current position stays visible even when long-cycle placement is unresolved */
+.cycle-position-chip.unresolved>i{background:#fff;border:2px solid #315b85;box-shadow:0 0 0 5px rgba(49,91,133,.10)}
+.cycle-position-chip.unresolved>span{color:#315b85}
+.cycle-position-chip.unresolved+ .cycle-position-chip.next-supported{margin-top:-2px}
+@media(max-width:640px){
+  .cycle-position-chip.unresolved+ .cycle-position-chip.next-supported{margin-top:6px}
+}
