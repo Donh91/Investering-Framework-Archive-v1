@@ -224,7 +224,8 @@ function cycleDestination(pkg){
   const map={EXPANSION:'PRE_ROTATION',CONSOLIDATION:'CONSOLIDATION',DISTRIBUTION:'DISTRIBUTION',CONTRACTION:'DEFENSIVE'};
   return map[d]||null;
 }
-// Legacy release-gate compatibility only; never rendered: source:'NO STRUCTURED 4–8W PHASE'\nfunction cycleForwardFromSources(pkg){
+// Legacy release-gate compatibility only; never rendered: source:'NO STRUCTURED 4–8W PHASE'
+function cycleForwardFromSources(pkg){
   const known=['DEFENSIVE','CONSOLIDATION','PRE_ROTATION','ROTATION','BROAD_ALTSEASON','PARABOLIC_ALTSEASON','DISTRIBUTION','EXIT_RISK'];
   const month=pkg?.decision_projection?.next_21_30d||{},monthKey=cycleDestination(pkg);
   if(monthKey&&month.direction&&!/UNAVAILABLE|NO_EDGE/.test(String(month.direction).toUpperCase())){
