@@ -12,7 +12,7 @@ const NATIVE_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekom
 const RANGE_SCORE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json");
 const PROSPECTIVE_RANGE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json");
 const PUBLIC_SERIES_INDEX_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json");
-const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","compass-product-v5.js","compass-product-v5.css","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","social-card.svg"];
+const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","compass-product-v5.js","compass-product-v5.css","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","apple-touch-icon.png","manifest.webmanifest","social-card.svg"];
 const pick=(obj,keys)=>Object.fromEntries(keys.filter(k=>Object.prototype.hasOwnProperty.call(obj||{},k)).map(k=>[k,obj[k]]));
 const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_week","issue_number","publication_status","status"]);
 function sanitizeDecisionProjection(dp){
