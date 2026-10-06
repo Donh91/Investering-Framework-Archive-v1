@@ -25,6 +25,28 @@ Research verdict:
 HIGH_VALUE_CHALLENGER for S2 Wallet Skill Truth and S7 Attention Conversion.
 Do not import Smart Money/insider/bundler labels as truth.
 
+
+Public source-code audit:
+- upstream repository: GMGNAI/gmgn-skills;
+- license: MIT;
+- current package version observed: gmgn-cli 1.6.6;
+- exact public wallet-analysis code separates AUTHENTICITY, CURRENCY, REACHABILITY and SURVIVABILITY;
+- portfolio API documentation exposes stats, profits and paginated activity under API-key-only auth;
+- the upstream README provides a public testing key for read-only token/market/portfolio commands.
+
+High-value method transfer:
+- profit concentration;
+- recent-vs-historical skill decay;
+- median first-buy->first-sell copy window;
+- reachability/latency;
+- left-tail survivability;
+- self-authored dev-wallet separation;
+- unmeasured != pass/fail.
+
+Exact GMGN numeric cutoffs remain external heuristics and are not Framework canon.
+
+Live source-audit state:
+S2 Alpha PR #102 is testing whether the public read-only key provides enough indexed portfolio history to act as an OPTIONAL_CHALLENGER for INDEXED_WALLET_PORTFOLIO_V1. The first run proved stats access but triggered the shared-key/IP rate limit before profits/activity could be judged. That is rate-limit evidence, not an endpoint-permission verdict.
 ## GoPlus
 
 Current public docs reviewed:
