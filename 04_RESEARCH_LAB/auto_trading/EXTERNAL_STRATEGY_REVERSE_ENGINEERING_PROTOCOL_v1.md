@@ -381,6 +381,31 @@ The first Edge experiment should prioritize:
 
 Vault/token research remains secondary to the behavioral strategy-reconstruction question.
 
+
+## Extension - external specialist product dissection
+
+The strategy-reconstruction protocol above covers traders, bots and observable decision policies. A broader sibling pattern now exists for specialist products, dashboards, analytics services and research projects whose strongest value may be a feature, data transform, risk gate or experimental design rather than a complete strategy.
+
+Canonical specialist pattern:
+
+`specialist product -> identify niche competence -> decompose into primitive hypotheses -> locate public/internal evidence -> reproduce the reproducible part -> benchmark specialist versus internal challenger -> matched controls -> prospective evidence -> retain / modify / kill`
+
+Reference success case:
+Ocellus exposed Early Buyer Retention and related launch-quality concepts. Rather than importing an Ocellus score, Meme Alpha Lab decomposed the concept, audited its existing Pons launch evidence, found a buyer/seller-history gap, then located the public Pons v2 smart-contract source. CurveBuy and CurveSell semantics were reproducible from first-party contract events, so Alpha Lab built and live-proved its own Robinhood-chain curve-flow decoder.
+
+The reusable lesson is:
+
+- external products can reveal high-value research questions without being admitted as truth;
+- public first-party code/data can sometimes replace an external composite label with a deterministic internal primitive;
+- a successful technical reproduction is capability evidence, not proof of predictive edge;
+- the external provider may remain useful as a challenger even when the internal primitive becomes canonical;
+- disagreements between provider labels and internal evidence are themselves valid research objects.
+
+Canonical Alpha Lab protocol:
+`Donh91/Meme-Alpha-Lab/architecture/EXTERNAL_SPECIALIST_DISSECTION_V1.md`.
+
+Use this extension before launching broad source/tool scans. Prefer one specialist, one niche competence and one falsifiable primitive at a time.
+
 ## Success condition
 
 This protocol succeeds if it turns external performance stories into reusable, falsifiable evidence and reliably separates:
