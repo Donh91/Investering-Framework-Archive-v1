@@ -1,17 +1,11 @@
 {
-  "api_review_status": "DEGRADED",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "automatic_promotion": false,
-  "automatic_threshold_change": false,
-  "automatic_weight_change": false,
   "canonical_effect": false,
-  "checkpoint_sequence": 1,
-  "contract": "CN_PRECISION_LEARNING_STATE_v1",
-  "deep_research_authorized": false,
-  "evidence_fingerprint": "048f57bc5ddac62c990690d4c77e593157eb119b4fadbf0f8369ba68cdc23948",
-  "external_provider_calls_authorized": false,
-  "family": "rotation",
-  "family_states": {
+  "checkpoint_due": true,
+  "completed_iso_week": 40,
+  "completed_iso_year": 2026,
+  "contract": "CN_PRECISION_WEEKLY_TREND_v1",
+  "family_trends": {
     "altseason": {
       "change_vs_previous_4w_pp": null,
       "family": "altseason",
@@ -293,15 +287,14 @@
       "zero_weeks_4w": 0
     }
   },
-  "last_checkpoint_settled_count": 4,
-  "last_settled_score_key": "Y2026-W40-CN28",
-  "latest_checkpoint": "05_CYCLE_NAVIGATOR/internal_learning/checkpoints/2026/W40_C001.json",
-  "latest_weekly_snapshot": "05_CYCLE_NAVIGATOR/internal_learning/weekly/2026/W40.json",
-  "paid_data_authorized": false,
+  "persistent_families": [
+    "rotation"
+  ],
   "portfolio_execution": false,
-  "primary_action": "RESEARCH_NEW_HYPOTHESIS",
   "public_surface_effect": false,
-  "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=58.33 weak_weeks=2 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized. Deep review: The supplied four settlements support a research-only concern about claim rigidity and timing responsiveness, with rotation as the checkpoint trigger. However, the rotation pattern is materially weakened by only three valid observations, an improving final observed score, W40 missingness, changing parameter coverage, and no prior four-week comparator. The stronger provisional finding is therefore not a confirmed rotation-specific defect, but a bounded candidate blind spot: frozen or slow-to-update framing may miss short-horizon transitions, potentially concentrated around midweek paths. This remains unconfirmed under sparse, staggered family coverage. First bounded hypothesis: H1 (frozen-claim responsiveness): In the next four settled issues that contain a directional or state framing plus a realized within-week reversal or acceleration, precision failures will be more frequent for claims expressed as unqualified frozen directional/state assertions than for claims that explicitly delimit an invalidation condition or near-term alternative path. Falsification: no excess failure frequency is observed, or the eligible sample has fewer than four settled comparisons.",
+  "score_key": "Y2026-W40-CN28",
   "settled_week_count": 4,
-  "target": "CN_PRECISION::rotation"
+  "watch_families": [
+    "breadth"
+  ]
 }

@@ -1,17 +1,46 @@
 {
-  "api_review_status": "DEGRADED",
+  "api_review": {
+    "evidence_against": [
+      "The apparent rotation weakness is not a clean recurring deterioration: its three valid observations are 50, 50, and 75, with the latest observed score improving to 75.",
+      "Rotation is absent in W40, so the four-settlement window does not establish whether the W39 improvement persisted or reversed.",
+      "The observation set changes across settlements: 7 mature parameters in W37-W38 versus 12 in W39-W40. This limits direct cross-week attribution of a family-level pattern.",
+      "Range families do not corroborate a broad precision breakdown: BTC and ETH range scores were both 100 in each of their two available observations.",
+      "Most family states remain NORMAL, and breadth is WATCH rather than persistent weakness; the supplied evidence does not establish a generalized cross-family failure mode."
+    ],
+    "evidence_for": [
+      "Rotation is the only checkpoint-designated PERSISTENT_WEAKNESS family, with mean_4w 58.33, median 50, and two weak observations among three valid observations.",
+      "A recurring rigidity/timing pattern appears in the settlement critiques: W38 says the frozen weak-breadth framing was too strong after short-horizon improvement; W39 says a frozen non-negative ETH/BTC call failed; W40 says volatile-consolidation/retest framing underweighted a BTC-led advance.",
+      "The direction of the identified misses is not uniform, but each critique concerns insufficient responsiveness to realized near-term changes rather than range-bound price containment.",
+      "Intraday day 3-4 scored 50 in both available observations, while days 1-2 and 5-7 improved from 50 in W39 to 100 in W40. This is consistent with, but does not prove, a midweek timing-shape blind spot.",
+      "Cross-family evidence is sparse and staggered: deeper_transmission and first_handoff each have only one 50 observation, breadth_persistence only one 100 observation, and multiple families have null weekly slots. A weekly review could overinterpret either isolated failures or apparent recoveries under this coverage pattern."
+    ],
+    "forecast_candidates": [],
+    "hypotheses": [
+      "H1 (frozen-claim responsiveness): In the next four settled issues that contain a directional or state framing plus a realized within-week reversal or acceleration, precision failures will be more frequent for claims expressed as unqualified frozen directional/state assertions than for claims that explicitly delimit an invalidation condition or near-term alternative path. Falsification: no excess failure frequency is observed, or the eligible sample has fewer than four settled comparisons.",
+      "H2 (midweek timing shape): Among the next four settlements with mature intraday day 1-2, day 3-4, and day 5-7 parameters, day 3-4 precision will remain at least 25 percentage points below the average of day 1-2 and day 5-7 precision. Falsification: the day 3-4 gap is below 25 points or reverses across the completed sample.",
+      "H3 (rotation weakness versus sparse-sample artifact): In the next three valid rotation-family settlements, the mean rotation score will remain below 75. Falsification: the three-settlement mean is at least 75; this would support the interpretation that the current persistent-weakness label primarily reflects two early 50 scores and incomplete W40 coverage.",
+      "H4 (cross-family transition lag): In the next four eligible settlements where breadth/rotation or ETH/BTC conditions improve or deteriorate materially within the completed week, related regime or leadership framing will lag the realized change more often than the BTC/ETH range families. Falsification: no such relative excess of lagged errors appears, or fewer than two eligible cross-family transition events occur."
+    ],
+    "status": "DEGRADED",
+    "summary": "The supplied four settlements support a research-only concern about claim rigidity and timing responsiveness, with rotation as the checkpoint trigger. However, the rotation pattern is materially weakened by only three valid observations, an improving final observed score, W40 missingness, changing parameter coverage, and no prior four-week comparator. The stronger provisional finding is therefore not a confirmed rotation-specific defect, but a bounded candidate blind spot: frozen or slow-to-update framing may miss short-horizon transitions, potentially concentrated around midweek paths. This remains unconfirmed under sparse, staggered family coverage.",
+    "uncertainties": [
+      "No previous four-week means or changes versus the preceding window are supplied, preventing trend or regime-comparative inference.",
+      "Family scores are coarse and do not provide parameter-level error direction, claim wording, realized path details, or whether a score of 50 reflects timing, direction, range width, or another error class.",
+      "The four settlements span differing parameter counts and family availability, so family scores may not be compositionally comparable over time.",
+      "The W38, W39, and W40 self-critiques identify distinct failure instances, but three instances do not establish a stable common mechanism.",
+      "Regime dependence cannot be tested from the supplied evidence because no explicit regime labels, transition dates, or stratified historical outcomes are provided.",
+      "Perfect range-family scores are based on only two observations each and therefore cannot reliably falsify a broader range-shape weakness."
+    ]
+  },
+  "api_review_required": true,
+  "api_review_tier": "TERRA_MEDIUM",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "automatic_promotion": false,
-  "automatic_threshold_change": false,
-  "automatic_weight_change": false,
   "canonical_effect": false,
   "checkpoint_sequence": 1,
-  "contract": "CN_PRECISION_LEARNING_STATE_v1",
-  "deep_research_authorized": false,
-  "evidence_fingerprint": "048f57bc5ddac62c990690d4c77e593157eb119b4fadbf0f8369ba68cdc23948",
-  "external_provider_calls_authorized": false,
-  "family": "rotation",
-  "family_states": {
+  "completed_iso_week": 40,
+  "completed_iso_year": 2026,
+  "contract": "CN_PRECISION_4W_CHECKPOINT_v1",
+  "family_trends": {
     "altseason": {
       "change_vs_previous_4w_pp": null,
       "family": "altseason",
@@ -293,15 +322,26 @@
       "zero_weeks_4w": 0
     }
   },
-  "last_checkpoint_settled_count": 4,
-  "last_settled_score_key": "Y2026-W40-CN28",
-  "latest_checkpoint": "05_CYCLE_NAVIGATOR/internal_learning/checkpoints/2026/W40_C001.json",
-  "latest_weekly_snapshot": "05_CYCLE_NAVIGATOR/internal_learning/weekly/2026/W40.json",
-  "paid_data_authorized": false,
+  "persistent_families": [
+    "rotation"
+  ],
   "portfolio_execution": false,
-  "primary_action": "RESEARCH_NEW_HYPOTHESIS",
+  "previous_score_keys": [],
   "public_surface_effect": false,
-  "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=58.33 weak_weeks=2 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized. Deep review: The supplied four settlements support a research-only concern about claim rigidity and timing responsiveness, with rotation as the checkpoint trigger. However, the rotation pattern is materially weakened by only three valid observations, an improving final observed score, W40 missingness, changing parameter coverage, and no prior four-week comparator. The stronger provisional finding is therefore not a confirmed rotation-specific defect, but a bounded candidate blind spot: frozen or slow-to-update framing may miss short-horizon transitions, potentially concentrated around midweek paths. This remains unconfirmed under sparse, staggered family coverage. First bounded hypothesis: H1 (frozen-claim responsiveness): In the next four settled issues that contain a directional or state framing plus a realized within-week reversal or acceleration, precision failures will be more frequent for claims expressed as unqualified frozen directional/state assertions than for claims that explicitly delimit an invalidation condition or near-term alternative path. Falsification: no excess failure frequency is observed, or the eligible sample has fewer than four settled comparisons.",
-  "settled_week_count": 4,
-  "target": "CN_PRECISION::rotation"
+  "recent_score_keys": [
+    "Y2026-W37-CN25",
+    "Y2026-W38-CN26",
+    "Y2026-W39-CN27",
+    "Y2026-W40-CN28"
+  ],
+  "research_signal": {
+    "family": "rotation",
+    "primary_action": "RESEARCH_NEW_HYPOTHESIS",
+    "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=58.33 weak_weeks=2 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized.",
+    "target": "CN_PRECISION::rotation"
+  },
+  "settlement_count": 4,
+  "watch_families": [
+    "breadth"
+  ]
 }
