@@ -19,6 +19,10 @@ ACTIVATION_UTC = "2026-09-13T16:00:00Z"
 GAP_TYPES = {"missing", "partial", "contradicts", "unrequested"}
 REQUIREMENT_STATUS = {"SATISFIED", "BLOCKED"}
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
+SHA256 = re.compile(r"^[0-9a-f]{64}$")
+SUPERSESSION_CONTRACT = "MISSION_CONVERGENCE_RECEIPT_SUPERSESSION_v1"
+SUPERSESSION_STATUS = "HASH_CORRECTION_ONLY"
+SUPERSESSION_AUTHORITY = "HASH_CORRECTION_ONLY_NO_SEMANTIC_REPLACEMENT"
 
 
 def now_iso() -> str:
@@ -214,6 +218,82 @@ def build_receipt(
     return receipt
 
 
+def git_blob_sha(path: Path) -> str:
+    raw = path.read_bytes()
+    payload = f"blob {len(raw)}\0".encode("utf-8") + raw
+    return hashlib.sha1(payload, usedforsecurity=False).hexdigest()
+
+
+def supersession_paths(repo_root: Path, candidate_id: str) -> list[Path]:
+    root = repo_root / "research/codex/convergence/supersessions" / candidate_id
+    if not root.is_dir():
+        return []
+    return sorted(path for path in root.glob("*.json") if path.is_file())
+
+
+def validate_hash_supersession(
+    repo_root: Path,
+    base_path: Path,
+    receipt: dict[str, Any],
+    task: dict[str, Any],
+    completion: dict[str, Any],
+    actual_hash: str,
+) -> dict[str, Any] | None:
+    paths = supersession_paths(repo_root, str(task.get("candidate_id") or ""))
+    if len(paths) != 1:
+        return None
+    try:
+        sidecar = read_json(paths[0])
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(sidecar, dict):
+        return None
+    allowed_keys = {
+        "contract",
+        "status",
+        "candidate_id",
+        "signature",
+        "candidate_sha256",
+        "task_contract_sha256",
+        "pr_number",
+        "merge_commit_sha",
+        "base_path",
+        "base_blob_sha",
+        "original_receipt_sha256",
+        "corrected_receipt_sha256",
+        "authority",
+    }
+    if set(sidecar) != allowed_keys:
+        return None
+    try:
+        base_rel = base_path.relative_to(repo_root).as_posix()
+    except ValueError:
+        return None
+    declared = str(receipt.get("receipt_sha256") or "")
+    if not SHA256.fullmatch(declared) or not SHA256.fullmatch(actual_hash) or declared == actual_hash:
+        return None
+    expected = {
+        "contract": SUPERSESSION_CONTRACT,
+        "status": SUPERSESSION_STATUS,
+        "candidate_id": task.get("candidate_id"),
+        "signature": task.get("signature"),
+        "candidate_sha256": task.get("candidate_sha256"),
+        "task_contract_sha256": task.get("task_contract_sha256"),
+        "pr_number": completion.get("pr_number"),
+        "merge_commit_sha": completion.get("merge_commit_sha"),
+        "base_path": base_rel,
+        "base_blob_sha": git_blob_sha(base_path),
+        "original_receipt_sha256": declared,
+        "corrected_receipt_sha256": actual_hash,
+        "authority": SUPERSESSION_AUTHORITY,
+    }
+    if sidecar != expected:
+        return None
+    corrected = dict(receipt)
+    corrected["receipt_sha256"] = actual_hash
+    return corrected
+
+
 def validate_receipt(repo_root: Path, task: dict[str, Any], completion: dict[str, Any]) -> dict[str, Any] | None:
     path = repo_root / "research/codex/convergence" / f"{task['candidate_id']}.json"
     if not path.is_file():
@@ -254,7 +334,11 @@ def validate_receipt(repo_root: Path, task: dict[str, Any], completion: dict[str
         return None
     declared = str(receipt.get("receipt_sha256") or "")
     actual_hash = canonical_hash({k: v for k, v in receipt.items() if k != "receipt_sha256"})
-    return receipt if declared and declared == actual_hash else None
+    sidecars = supersession_paths(repo_root, str(task.get("candidate_id") or ""))
+    if declared and declared == actual_hash:
+        # A valid historical receipt must never acquire or depend on a correction sidecar.
+        return None if sidecars else receipt
+    return validate_hash_supersession(repo_root, path, receipt, task, completion, actual_hash)
 
 
 def completion_requires_convergence(completion: dict[str, Any]) -> bool:
