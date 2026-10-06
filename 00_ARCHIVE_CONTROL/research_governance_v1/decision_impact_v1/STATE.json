@@ -4,25 +4,55 @@
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "4f4d378ae0124d5852c392f72582cd7c8edf3ca063dd8663e76ad7b751fbb4e5",
+  "evidence_fingerprint": "6a642a82827f47bfb31d37ac5a3e466ffe24e39400e5348f2bd4f23aa7625f3b",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "queue": [
     {
-      "action": "RUN_INCREMENTAL_VALUE_TEST",
+      "action": "RESEARCH_NEW_HYPOTHESIS",
+      "canonical_effect": false,
+      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "048f57bc5ddac62c990690d4c77e593157eb119b4fadbf0f8369ba68cdc23948",
+      "impact_tier": "HIGH",
+      "novelty_verdict": "NOVEL",
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=58.33 weak_weeks=2 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized. Deep review: The supplied four settlements support a research-only concern about claim rigidity and timing responsiveness, with rotation as the checkpoint trigger. However, the rotation pattern is materially weakened by only three valid observations, an improving final observed score, W40 missingness, changing parameter coverage, and no prior four-week comparator. The stronger provisional finding is therefore not a confirmed rotation-specific defect, but a bounded candidate blind spot: frozen or slow-to-update framing may miss short-horizon transitions, potentially concentrated around midweek paths. This remains unconfirmed under sparse, staggered family coverage. First bounded hypothesis: H1 (frozen-claim responsiveness): In the next four settled issues that contain a directional or state framing plus a realized within-week reversal or acceleration, precision failures will be more frequent for claims expressed as unqualified frozen directional/state assertions than for claims that explicitly delimit an invalidation condition or near-term alternative path. Falsification: no excess failure frequency is observed, or the eligible sample has fewer than four settled comparisons.",
+      "source": "CN_PRECISION_META_LEARNING",
+      "target": "CN_PRECISION::rotation"
+    },
+    {
+      "action": "STRESS_TEST_REGIME_SPECIFICITY",
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
       "deep_research_authorized": false,
-      "evidence_fingerprint": "41126bae756bf0d1f3b6fb9a0491b2a867f685c2dd33ed31fbc697db8d4d8706",
+      "evidence_fingerprint": "a94d8f1f623bc2efc14dcbc49e230231174ec41236f95637475ba8bbb3624cc8",
       "impact_tier": "MEDIUM",
       "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
       "paid_data_authorized": false,
       "paid_review_only": false,
       "portfolio_execution": false,
+      "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
+      "source": "COMPOUNDING_LEARNING",
+      "target": "EC-3b5610a3c12b040694a9"
+    },
+    {
+      "action": "RUN_INCREMENTAL_VALUE_TEST",
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "f8f3e55a4d45d17795643785c4ab97e9c4c25359c6697a868976b3cc4c3a0a33",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": "NOVEL",
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
       "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
       "source": "MONTHLY_COUNCIL",
-      "target": "EC-03d0c1a48139b386534c"
+      "target": "EC-0258e3807909a4d1987f"
     },
     {
       "action": "RECOVER_EVALUATOR",
@@ -38,21 +68,6 @@
       "reason": "registered source material exists but exact evaluator recovery is still required",
       "source": "SHADOW_REGISTRY",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
-    },
-    {
-      "action": "WAIT_FOR_MORE_EVIDENCE",
-      "canonical_effect": false,
-      "decision_surface": "RESEARCH_OPERATIONS",
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "5d5168428738cc3169136e588346f10fb164d188a54dc1cf94cd452d6dd776b0",
-      "impact_tier": "LOW",
-      "novelty_verdict": null,
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "Persistent weakness is visible in rotation but the next four-settlement checkpoint has not matured. Continue observing without research escalation.",
-      "source": "CN_PRECISION_META_LEARNING",
-      "target": ""
     },
     {
       "action": "CONTINUE_CALIBRATION",
@@ -98,29 +113,14 @@
       "reason": "terminal/closeout source state has no independent decision upside unless linked to a current high-value blocker",
       "source": "SOURCE_RECOVERY",
       "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
-    },
-    {
-      "action": "STRESS_TEST_REGIME_SPECIFICITY",
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "d4a7b516da15bd3e5ae4785060686b8b7c4dc5fc7e6fc2d454f62ef3455795ca",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "COMPOUNDING_LEARNING",
-      "target": "EC-3b5610a3c12b040694a9"
     }
   ],
   "queue_n": 7,
-  "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+  "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=58.33 weak_weeks=2 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized. Deep review: The supplied four settlements support a research-only concern about claim rigidity and timing responsiveness, with rotation as the checkpoint trigger. However, the rotation pattern is materially weakened by only three valid observations, an improving final observed score, W40 missingness, changing parameter coverage, and no prior four-week comparator. The stronger provisional finding is therefore not a confirmed rotation-specific defect, but a bounded candidate blind spot: frozen or slow-to-update framing may miss short-horizon transitions, potentially concentrated around midweek paths. This remains unconfirmed under sparse, staggered family coverage. First bounded hypothesis: H1 (frozen-claim responsiveness): In the next four settled issues that contain a directional or state framing plus a realized within-week reversal or acceleration, precision failures will be more frequent for claims expressed as unqualified frozen directional/state assertions than for claims that explicitly delimit an invalidation condition or near-term alternative path. Falsification: no excess failure frequency is observed, or the eligible sample has fewer than four settled comparisons.",
   "resolved_specialist_state_n": 7,
-  "selected_action": "RUN_INCREMENTAL_VALUE_TEST",
-  "selected_decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-  "selected_impact_tier": "MEDIUM",
-  "selected_source": "MONTHLY_COUNCIL",
-  "selected_target": "EC-03d0c1a48139b386534c"
+  "selected_action": "RESEARCH_NEW_HYPOTHESIS",
+  "selected_decision_surface": "ALTSEASON_ENTRY_ROTATION",
+  "selected_impact_tier": "HIGH",
+  "selected_source": "CN_PRECISION_META_LEARNING",
+  "selected_target": "CN_PRECISION::rotation"
 }
