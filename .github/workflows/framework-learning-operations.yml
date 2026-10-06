@@ -192,6 +192,21 @@ jobs:
           assert row['live_exit_rule']=='NONE'
           print('M6_WARNING_EVENTS', 'events=', row['event_count'], 'provisional_families=', row['provisional_independent_family_count'])
           PY
+      - name: Capture EDGE-001 Tsunami point-in-time feature ledger
+        run: |
+          python -m unittest tests.learning.test_edge001_tsunami_feature_ledger -q
+          python scripts/learning/edge001_tsunami_feature_ledger.py \
+            --repo-root . \
+            --output research/framework_memory/edge001_tsunami_features/LATEST.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          row=json.loads(Path('research/framework_memory/edge001_tsunami_features/LATEST.json').read_text())
+          assert row['outcome_joined'] is False
+          assert row['warning_is_sell'] is False
+          assert row['live_exit_rule']=='NONE'
+          print('EDGE001_TSUNAMI_FEATURES', 'rows=', row['row_count'], 'collection_only=', row['collection_only'])
+          PY
       - name: Build DEL segment-return research foundation
         run: |
           python -m unittest tests.learning.test_segment_return_foundation -q
