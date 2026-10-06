@@ -145,6 +145,21 @@ class ProtectionCalibrationTests(unittest.TestCase):
                 ],
             )
 
+    def test_building_watch_with_unknown_distribution_is_calibrated_not_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outcome_root = self.write_case(
+                root,
+                policy="2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+                pullback="BUILDING",
+                distribution="UNKNOWN",
+            )
+            report = MODULE.build_report(root, outcome_root, "2026-10-06T17:00:00Z")
+            self.assertEqual(report["status"], "PASS")
+            self.assertEqual(report["eligible_series_row_count"], 2)
+            self.assertEqual(report["warning_series_row_count"], 0)
+            self.assertIn("NO_MATURED_TYPED_WARNING_OUTCOMES", report["promotion_readiness"]["blockers"])
+
     def test_normal_typed_state_is_calibrated_without_being_called_a_warning(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
