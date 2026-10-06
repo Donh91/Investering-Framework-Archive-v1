@@ -141,3 +141,26 @@ Evaluation: the repaired outcome mechanics are reproducible and survive the inde
 Next separate mission after exact main readback: T2B source/provenance preflight, binding input to the v1.2 hash above. Confirm archived typed-owner coverage and first-main-commit knowledge times before any actual signal join. Missing warning coverage must remain UNKNOWN / OWNER_NOT_AVAILABLE, never an invented NO_WARNING performance result. T3 and trading remain closed. #1521 is separate and remains open only for its unverified v1 Actions run; this mission does not close it.
 
 Archive write manifest: isolated explicit task branch; new outcome-only artifacts, read-only auditor, separate control-repair contract/generator and append to existing README. No deletion, workflow, canonical index, frozen v1/v1.1 contract or raw-source change. Backup product: NONE for this run. Main persistence and closure status are recorded in #1526 after CI and readback.
+
+
+## Continued mission: T2B provenance preflight, 2026-10-07
+
+Completed after #1527 merged and all nine intended files were verified on main at `e42e26ac95d0288331b4e3a0a5ffaa1cb4983fc4`. #1526 is closed as execution/adjudication completed with the v1.1 FAIL preserved and the separate v1.2 repair PASS; this is not a false v1.1 PASS. #1521 remains open and separate.
+
+Receipt: `EDGE-001_TSUNAMI/T2B_PROVENANCE_PREFLIGHT_v1.json`.
+Input: immutable T2 v1.2, SHA-256 `627318638be5901f1aa4c165fa73a1297c496f74e9e751924a826acac6931f2a`.
+Source inventory: Official Compass immutable daily owner at `9929081d0570a6510ce7a0457a5b25dcf54914f9`.
+
+Work actually performed:
+- Read metadata from all 120 archived daily snapshots, binding file SHA-256, Git blob SHA, issued time, contract and policy version. No warning-state performance was inspected.
+- Observed issued-time coverage is 2026-09-16T20:37:24Z through 2026-10-06T21:11:52Z. All T2 outcome windows end by 2026-07-31T23:00:00Z.
+- Checked the frozen 14d attribution window for every family and the time of every control; recorded unavailable typed provenance for 94 existing family/control IDs without changing membership.
+- Recorded six observed policy strata separately; 48 snapshot metadata records have no policy version. No missing version was inferred or pooled.
+- No first-main-commit time was inferred from a filename, issue time or file hash. All source issued times are already after every attribution window, so additional commit latency cannot make these rows historically eligible.
+- Performed no actual warning-state join, lead statistic, hit rate, circular-shift test, action simulation or promotion.
+
+Verdict: T2B_PREFLIGHT_COMPLETE / PRIMARY_HISTORICAL_TYPED_JOIN_NOT_ADMISSIBLE for this official-source/tape combination. Missing coverage is not NO_WARNING, not a false negative and not evidence that warnings failed. The family/control annotations carry missing primary-typed provenance, not a downgrade of the independently audited price outcomes.
+
+Next admissible routes remain the existing prospective M6 Lane C and separately frozen native-predecessor discovery. Older prose/reconstructions cannot be relabeled current typed states. A predecessor inventory would require native source/field, policy version, exact knowledge time, evidence grade and source hash before any subsequent discovery-only join. This receipt does not claim an exhaustive census of every older predecessor owner or completion of the full T2B join.
+
+Evaluation: the research machinery now has a reproducible repaired outcome tape and an explicit temporal coverage boundary. Generating more historical scores against unavailable current typed warnings would add no valid evidence. Preserve the failed audit, keep the modern single-control power limitation visible, and use prospective collection for the primary typed claim. CLAIM_LEVEL=HYPOTHESIS; LIVE_EXIT_RULE=NONE.
