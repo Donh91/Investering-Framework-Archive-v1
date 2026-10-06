@@ -4,21 +4,21 @@
     "luna_required": false,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
-    "sol_6_1_required": false
+    "sol_6_1_required": true
   },
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "9d97a8268e18e858f35b48591bdd4e973b8790719befccdc127c9d5ab0728147",
+  "fingerprint": "f2df1bd00dfd8451bfe75b3674a511cc4bb33f1df439cc24309e1e1b23cb6acb",
   "fleet": {
-    "amber_count": 11,
-    "green_count": 184,
-    "red_count": 0,
+    "amber_count": 5,
+    "green_count": 190,
+    "red_count": 1,
     "scheduled_workflow_count": 56,
-    "workflow_count": 195,
+    "workflow_count": 196,
     "writer_count": 67
   },
-  "generated_at_utc": "2026-10-06T10:39:19Z",
+  "generated_at_utc": "2026-10-06T20:33:15Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -30,14 +30,35 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "items": [],
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 3,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES"
+      ],
+      "latest_head_sha": "4dfac230e272629692bb71a40991c0f65b485a06",
+      "latest_run_id": 37502821033,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37502821033",
+      "model_lane": "GPT_6_1_SOL",
+      "openai_enabled": false,
+      "recent_failure_count": 6,
+      "route": "SOL_DIAGNOSIS",
+      "scheduled": true,
+      "workflow": "framework-learning-operations.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    }
+  ],
   "material_delta": true,
   "routing_summary": {
     "existing_remediation_count": 0,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 0
+    "sol_6_1_diagnosis_count": 1
   },
-  "source_health_generated_at_utc": "2026-10-06T10:34:56.691858Z",
-  "source_health_status": "AMBER"
+  "source_health_generated_at_utc": "2026-10-06T20:28:21.875146Z",
+  "source_health_status": "RED"
 }

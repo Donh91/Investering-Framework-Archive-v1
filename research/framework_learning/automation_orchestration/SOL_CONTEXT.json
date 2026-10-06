@@ -2,7 +2,28 @@
   "clusters": [],
   "contract": "AUTOMATION_ORCHESTRATOR_SOL_CONTEXT_v1",
   "instructions_context": "Root-cause and deduplication only. Test shared-cause before independent repair. Existing remediation state remains authoritative.",
-  "items": [],
-  "plan_fingerprint": "9d97a8268e18e858f35b48591bdd4e973b8790719befccdc127c9d5ab0728147",
-  "source_health_generated_at_utc": "2026-10-06T10:34:56.691858Z"
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 3,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES"
+      ],
+      "latest_head_sha": "4dfac230e272629692bb71a40991c0f65b485a06",
+      "latest_run_id": 37502821033,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37502821033",
+      "model_lane": "GPT_6_1_SOL",
+      "openai_enabled": false,
+      "recent_failure_count": 6,
+      "route": "SOL_DIAGNOSIS",
+      "scheduled": true,
+      "workflow": "framework-learning-operations.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    }
+  ],
+  "plan_fingerprint": "f2df1bd00dfd8451bfe75b3674a511cc4bb33f1df439cc24309e1e1b23cb6acb",
+  "source_health_generated_at_utc": "2026-10-06T20:28:21.875146Z"
 }
