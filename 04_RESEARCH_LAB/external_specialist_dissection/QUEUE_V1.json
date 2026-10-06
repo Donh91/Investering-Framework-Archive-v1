@@ -125,14 +125,17 @@
       "id": "S6_DISTRIBUTION_EGRESS_AND_EXCHANGE_FLOW_V1",
       "priority": "P1",
       "score": 21,
-      "state": "OPEN",
+      "state": "DESTINATION_SEMANTICS_MERGED_RAW_COLLECTION_PENDING",
       "owner": "Distribution/Exit Overhang + Wallet Alpha",
       "targets": [
         "Arkham",
         "Nansen challenger",
         "raw chain"
       ],
-      "next_action": "Test whether attributable CEX/pool egress adds value beyond wallet sell events"
+      "next_action": "Collect bounded raw egress observations from qualified/early wallets and compare supported destination egress against latent overhang and realized sells. Provider CEX labels remain challengers.",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/107",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/108",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S6_EXECUTION_RECEIPT_2026-10-06.md"
     },
     {
       "rank": 7,
@@ -203,10 +206,10 @@
   },
   "master_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
   "current_next_action": {
-    "id": "S6_DISTRIBUTION_EGRESS_AND_EXCHANGE_FLOW_V1",
-    "detail": "Fresh-read Distribution/Exit Overhang and Wallet Alpha owners. Reproduce destination/egress evidence from raw chain or admitted label challengers without treating exchange labels as truth. Test whether attributable CEX/pool egress adds value beyond observed wallet sells."
+    "id": "S7_ATTENTION_CONVERSION_CURVE_V1",
+    "detail": "Fresh-read Narrative/Culture, Promotion Network and existing DexScreener PROFILE/BOOST data. Build the smallest point-in-time attention-event to qualified-wallet response primitive without equating visibility, boost or paid-profile semantics."
   },
   "source_capability_snapshot": "04_RESEARCH_LAB/external_specialist_dissection/SOURCE_CAPABILITY_SNAPSHOT_2026-10-06.md",
-  "last_completed_action": "S5_EXCHANGE_NATIVE_CROWDING_BASELINE_MERGED_PR1515",
+  "last_completed_action": "S6_DESTINATION_SEMANTICS_MERGED_PR108",
   "last_completed_at_utc": "2026-10-06"
 }
