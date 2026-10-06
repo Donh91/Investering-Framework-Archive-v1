@@ -450,7 +450,7 @@ function altseasonWatchPanel(pkg,compass,state){
   const protection=target.mode==='PROTECTION';
   return '<section class="cycle-watch-v3'+(protection?' protect':'')+'">'
     +'<div><span>'+esc(protection?'PROTECTION WATCH':'ALTSEASON WATCH')+'</span><strong>'+esc(target.title)+'</strong><p>'+esc(target.subtitle||'Next source-owned cycle milestone')+'</p></div>'
-    +'<aside>'+timingMarkup(target.eta,protection?'REVIEW WINDOW':'TIMING')+'<small>'+esc(t.conditional?'Only if confirmation arrives · not a countdown':protection?'Not an automatic sell date':'The next milestone changes only when its own signal confirms.')+'</small></aside>'
+    +'<aside>'+timingMarkup(target.eta,protection?'REVIEW WINDOW':'TIMING')+'<small>'+esc(t.conditional?'Only if confirmation arrives · not a countdown':protection?'Not an automatic sell date':'The next milestone changes only when its own signal confirms. · no browser countdown math')+'</small></aside>'
     +'</section>';
 }
 function marketCycleTrack(pkg,compass){
@@ -480,7 +480,7 @@ function rotationTrack(pkg,compass){
   }).join('');
   const current=state.current,next=state.next,nextTiming=timingWindow(next?.eta),reason=next?.reason||'No downstream rotation gate is currently available.';
   return '<section class="path-track rotation-v3" data-path-track="rotation">'
-    +'<header class="path-track-head"><div><span>2 · THIS WEEK\'S ROTATION</span><h3>Where capital can move next.</h3><p>A compact live risk-curve map. The next tier opens only when its own market signal confirms.</p></div><aside><span>DATA STATUS</span><strong>'+esc(dataStatusLabel(compass?.data_status))+'</strong><small>'+esc(week)+' · updated '+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header>'
+    +'<header class="path-track-head"><div><span>2 · THIS WEEK’S ROTATION</span><h3>Where capital can move next.</h3><p>A compact live risk-curve map. The next tier opens only when its own market signal confirms.</p></div><aside><span>DATA STATUS</span><strong>'+esc(dataStatusLabel(compass?.data_status))+'</strong><small>'+esc(week)+' · updated '+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header>'
     +'<div class="rotation-week-v3"><span>MONDAY BASELINE</span><b>LIVE NOW</b><span>SUNDAY REVIEW</span><small>Conditional sequence · not a day-by-day promise</small></div>'
     +'<div class="rotation-line-v3">'+nodes+'</div>'
     +'<div class="rotation-readout-v3"><article><span>CURRENT POSITION</span><strong>'+esc(current?.label||'Not confirmed')+'</strong><small>'+esc(current?publicPathStatus(current.status):'Waiting for a fresh signal')+'</small></article><article class="next"><span>NEXT GATE</span><strong>'+esc(next?.label||'No downstream gate')+'</strong><small>'+esc(next?(nextTiming.supported?(nextTiming.conditional?'Watch window · '+nextTiming.label:nextTiming.label):'No supported ETA'):'—')+'</small></article><article><span>WHAT UNLOCKS IT</span><p>'+esc(short(investorText(reason),180))+'</p></article></div>'
