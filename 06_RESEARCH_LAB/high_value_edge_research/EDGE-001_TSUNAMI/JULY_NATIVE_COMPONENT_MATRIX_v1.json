@@ -1,0 +1,306 @@
+{
+  "contract": "EDGE001_JULY_NATIVE_COMPONENT_MATRIX_v1",
+  "status": "BYTE_FROZEN_PRE_OUTCOME_COMPONENT_MATRIX",
+  "authority": "RESEARCH_ONLY_DISCOVERY_ONLY",
+  "dependence_group": "JULY_2026_DATA_PING_EDGE_FAMILY",
+  "independent_n_claim": 1,
+  "source_ledgers": [
+    {
+      "event_id": "PULLBACK_EDGE_20260708_01",
+      "path": "02_DATA_PING/live_state_handover/2026-07-08__pullback-edge-20260708-01__event-ledger.md",
+      "blob_sha": "be063f94911e45375772f5314c2f41b7d94553f8"
+    },
+    {
+      "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+      "path": "02_DATA_PING/live_state_handover/2026-07-12__rotation-repair-edge-20260712-01__event-ledger.md",
+      "blob_sha": "17b59f3869feb1f9bf3dee3489151ba0cc171b18"
+    }
+  ],
+  "rules": {
+    "no_outcome_used": true,
+    "no_threshold_fit": true,
+    "no_current_state_mapping": true,
+    "missing_preserved": true,
+    "no_definition_harmonization": true
+  },
+  "rows": [
+    {
+      "row_id": "A1_PREALERT_1115",
+      "event_id": "PULLBACK_EDGE_20260708_01",
+      "timestamp_utc": "2026-07-08T11:15:00Z",
+      "run_id": "DATA_PING_V4_20260708T111500Z",
+      "sensor_state": "NEAR_PRESENT",
+      "framework_state": "NEAR_PRESENT",
+      "canonical_status": "SOURCE_BACKED_CANDIDATE_NOT_CANONICAL_FIRST_NEAR_PRESENT",
+      "alert_status": "WATCH_HIGH",
+      "btc": {
+        "gate": "ABOVE_61900_MARGINAL / BELOW_63300",
+        "price": null
+      },
+      "ethbtc": {
+        "gate": "HOLDS_0275",
+        "price": null
+      },
+      "breadth": {
+        "h1": "REPAIRED",
+        "h24": "VERY_WEAK",
+        "d7": "STRONG"
+      },
+      "flow": {
+        "taker": null,
+        "oi": null,
+        "funding": null,
+        "cvd": null
+      },
+      "etf": "LATEST_POSITIVE / BTC_7D_NEGATIVE",
+      "cfgi": null,
+      "stablecoin": null,
+      "action": {
+        "new_pullback_alert": null,
+        "active_trim": null,
+        "sell_edge": null
+      }
+    },
+    {
+      "row_id": "A1_PRESENT_1403",
+      "event_id": "PULLBACK_EDGE_20260708_01",
+      "timestamp_utc": "2026-07-08T14:03:00Z",
+      "run_id": "DEEP_DATA_PING_V4_20260708T140300Z",
+      "sensor_state": "PRESENT",
+      "framework_state": "PRESENT",
+      "canonical_status": "CANONICAL_FIRST_PRESENT",
+      "alert_status": "TRIGGERED",
+      "btc": {
+        "gate": "SURVIVAL_LOST_INTRADAY_CURRENT_BELOW / CLOSE_NOT_CONFIRMED",
+        "price": 61784.48
+      },
+      "ethbtc": {
+        "gate": "HOLDS_REPAIR",
+        "price": null
+      },
+      "breadth": {
+        "h1": null,
+        "h24": "VERY_WEAK",
+        "d7": null
+      },
+      "flow": {
+        "taker": "SELL_SKEW",
+        "oi": "NOT_EXPANDING_AGGRESSIVELY",
+        "funding": null,
+        "cvd": null
+      },
+      "etf": "BTC_PRINT_POSITIVE_TREND_UNCONFIRMED / ETH_CONFIRMED",
+      "cfgi": "FEAR_PRESSURE",
+      "stablecoin": null,
+      "action": {
+        "new_pullback_alert": null,
+        "active_trim": null,
+        "sell_edge": "TACTICAL_TRIM_INTERPRETATION_FRAMEWORK_OWNED"
+      }
+    },
+    {
+      "row_id": "A1_PRESENT_1633",
+      "event_id": "PULLBACK_EDGE_20260708_01",
+      "timestamp_utc": "2026-07-08T16:33:00Z",
+      "run_id": "DATA_PING_HYBRID_v0_5_1_20260708T163300Z",
+      "sensor_state": "PRESENT",
+      "framework_state": "PRESENT",
+      "canonical_status": "NATIVE_LEDGER",
+      "alert_status": "STILL_ACTIVE",
+      "btc": {
+        "gate": "BELOW_61900_CURRENT / CLOSE_NOT_CONFIRMED",
+        "price": null
+      },
+      "ethbtc": {
+        "gate": "HOLDS_0275",
+        "price": null
+      },
+      "breadth": {
+        "h1": null,
+        "h24": "6PCT",
+        "d7": "62PCT"
+      },
+      "flow": {
+        "taker": "SELL_SKEW_LESS_EXTREME",
+        "oi": "MIXED",
+        "funding": null,
+        "cvd": null
+      },
+      "etf": null,
+      "cfgi": null,
+      "stablecoin": null,
+      "action": {
+        "new_pullback_alert": null,
+        "active_trim": null,
+        "sell_edge": null
+      }
+    },
+    {
+      "row_id": "A1_RESOLVING_2006",
+      "event_id": "PULLBACK_EDGE_20260708_01",
+      "timestamp_utc": "2026-07-08T20:06:00Z",
+      "run_id": "DATA_PING_HYBRID_v0_5_1_20260708T200600Z",
+      "sensor_state": "NEAR_PRESENT",
+      "framework_state": "NEAR_PRESENT",
+      "canonical_status": "CANONICAL_FIRST_RESOLVING",
+      "alert_status": "RESOLVING",
+      "btc": {
+        "gate": "RECLAIMED_61900_CURRENT / CLOSE_NOT_CONFIRMED",
+        "price": null
+      },
+      "ethbtc": {
+        "gate": "HOLDS_0275",
+        "price": null
+      },
+      "breadth": {
+        "h1": "REPAIRED",
+        "h24": "STILL_WEAK",
+        "d7": "REPAIRED"
+      },
+      "flow": {
+        "taker": "SELL_SKEW_FADED_TO_MIXED",
+        "oi": null,
+        "funding": null,
+        "cvd": null
+      },
+      "etf": null,
+      "cfgi": null,
+      "stablecoin": null,
+      "action": {
+        "new_pullback_alert": null,
+        "active_trim": null,
+        "sell_edge": null
+      }
+    },
+    {
+      "row_id": "A1_WATCH_0632",
+      "event_id": "PULLBACK_EDGE_20260708_01",
+      "timestamp_utc": "2026-07-09T06:32:00Z",
+      "run_id": "DATA_PING_HYBRID_v0_5_1_20260709T063200Z",
+      "sensor_state": "WATCH",
+      "framework_state": "WATCH",
+      "canonical_status": "NATIVE_LEDGER",
+      "alert_status": "RESOLVING",
+      "btc": {
+        "gate": "CURRENT_AND_DAILY_CLOSE_ABOVE_61900 / BELOW_63300",
+        "price": null
+      },
+      "ethbtc": {
+        "gate": "HOLDS_0275",
+        "price": null
+      },
+      "breadth": {
+        "h1": "REPAIRED",
+        "h24": "REPAIRED",
+        "d7": "NOT_CONFIRMED"
+      },
+      "flow": {
+        "taker": "SELL_SKEW_FADED_TO_MIXED",
+        "oi": "NOT_EXPANDING",
+        "funding": null,
+        "cvd": null
+      },
+      "etf": null,
+      "cfgi": null,
+      "stablecoin": null,
+      "action": {
+        "new_pullback_alert": null,
+        "active_trim": null,
+        "sell_edge": null
+      }
+    },
+    {
+      "row_id": "A2_OPEN_0039",
+      "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+      "timestamp_utc": "2026-07-12T00:39:18Z",
+      "run_id": "DATA_PING_HYBRID_v0_5_1_20260712T003918Z",
+      "sensor_state": "NEAR_PRESENT",
+      "framework_state": "WATCH",
+      "canonical_status": "CANONICAL_START_FRAMEWORK_MODERATED",
+      "alert_status": "WATCH",
+      "data_quality": "MEDIUM",
+      "btc": {
+        "current": 63780.65,
+        "daily_close": 64355.99,
+        "gate": "ABOVE_63300_CURRENT_AND_COMPLETED",
+        "consecutive_daily_above_63300": 2,
+        "consecutive_daily_above_61900": 9
+      },
+      "ethbtc": {
+        "current": 0.02799,
+        "daily_close": 0.02835,
+        "gate": "HOLDS_0275",
+        "consecutive_daily_above_0275": 10,
+        "distance_above_repair_gate_pct": 1.78
+      },
+      "breadth": {
+        "h1_pct": 9,
+        "h24_pct": 29,
+        "d7_pct": 29
+      },
+      "flow": {
+        "btc_taker_ratio_latest": 0.7677,
+        "btc_oi_24h_pct": -2.4546,
+        "eth_oi_24h_pct": 1.5068,
+        "eth_oi_3d_pct": 4.1687,
+        "cvd": "DATA_MISSING"
+      },
+      "etf": "DATA_MISSING",
+      "cfgi": null,
+      "stablecoin": "DATA_MISSING",
+      "action": {
+        "new_pullback_alert": "NO",
+        "active_trim": "NO",
+        "sell_edge": "WATCH_ONLY_NOT_ACTIONABLE"
+      }
+    },
+    {
+      "row_id": "A2_NEAR_PRESENT_0525",
+      "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+      "timestamp_utc": "2026-07-13T05:25:47Z",
+      "run_id": "DATA_PING_V4_20260713T052547Z",
+      "sensor_state": null,
+      "framework_state": "NEAR_PRESENT",
+      "canonical_status": "CANONICAL_FIRST_FRAMEWORK_NEAR_PRESENT",
+      "alert_status": "TRIGGERED",
+      "data_quality": "MEDIUM",
+      "btc": {
+        "current": 62694.59,
+        "daily_close": 63920.4,
+        "gate": "CURRENT_AND_2_SETTLED_HOURLY_BELOW_63300 / CURRENT_ABOVE_61900_AND_59400",
+        "distance_below_63300_pct": -0.96,
+        "settled_hourly_below_63300": 2
+      },
+      "ethbtc": {
+        "current": 0.02841,
+        "daily_close": 0.02835,
+        "gate": "HOLDS_0275 / 0300_NOT_CONFIRMED"
+      },
+      "breadth": {
+        "h1_pct": 51,
+        "h24_pct": 29,
+        "d7_pct": 23
+      },
+      "flow": {
+        "btc_taker": "SELL_LEAN_ALL_HORIZONS",
+        "eth_taker": "SELL_LEAN_ALL_HORIZONS",
+        "btc_oi_24h_pct": -1.63,
+        "eth_oi_24h_pct": -1.05,
+        "funding": "NO_ACUTE_STRESS",
+        "cvd": "DATA_MISSING"
+      },
+      "etf": "DATA_MISSING_PENDING",
+      "cfgi": null,
+      "stablecoin": "DATA_MISSING",
+      "action": {
+        "new_pullback_alert": "NO",
+        "active_trim": "NO",
+        "sell_edge": "NEAR_PRESENT_NOT_ACTIONABLE"
+      }
+    }
+  ],
+  "outcome_attached": false,
+  "claim_level": "HYPOTHESIS",
+  "warning_is_sell": false,
+  "live_exit_rule": "NONE"
+}
