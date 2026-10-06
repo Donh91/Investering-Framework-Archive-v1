@@ -142,14 +142,23 @@
       "id": "S7_ATTENTION_CONVERSION_CURVE_V1",
       "priority": "P1",
       "score": 20,
-      "state": "PARTIAL_DATA_READY",
+      "state": "ATTENTION_EVENT_TRUTH_MERGED_RESPONSE_JOIN_PENDING",
       "owner": "Narrative/Culture + Promotion Network",
       "targets": [
         "DexScreener",
         "GeckoTerminal",
         "GMGN Callouts"
       ],
-      "next_action": "Use existing timestamped profile/boost data; separate visibility, paid, callout and organic events; join qualified-wallet lead/lag"
+      "next_action": "Join frozen attention events to qualified-wallet/Pons flow, liquidity/price outcomes and S6 egress under existing owners. Do not infer PAID_PROFILE from PROFILE/BOOST.",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/109",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/110",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S7_EXECUTION_RECEIPT_2026-10-06.md",
+      "readiness": {
+        "event_count": 13706,
+        "unique_chain_token_count": 6696,
+        "first_event_count": 7153,
+        "change_event_count": 6553
+      }
     },
     {
       "rank": 8,
@@ -206,10 +215,10 @@
   },
   "master_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
   "current_next_action": {
-    "id": "S7_ATTENTION_CONVERSION_CURVE_V1",
-    "detail": "Fresh-read Narrative/Culture, Promotion Network and existing DexScreener PROFILE/BOOST data. Build the smallest point-in-time attention-event to qualified-wallet response primitive without equating visibility, boost or paid-profile semantics."
+    "id": "S8_UNLOCK_SUPPLY_OVERHANG_V1",
+    "detail": "Fresh-read existing Unlock Supply Overhang package and current source/data owners. Execute only the smallest missing source-reconciliation/freeze primitive; do not create another package."
   },
   "source_capability_snapshot": "04_RESEARCH_LAB/external_specialist_dissection/SOURCE_CAPABILITY_SNAPSHOT_2026-10-06.md",
-  "last_completed_action": "S6_DESTINATION_SEMANTICS_MERGED_PR108",
+  "last_completed_action": "S7_ATTENTION_EVENT_TRUTH_MERGED_PR110",
   "last_completed_at_utc": "2026-10-06"
 }
