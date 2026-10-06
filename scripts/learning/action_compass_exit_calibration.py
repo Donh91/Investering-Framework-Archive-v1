@@ -63,8 +63,8 @@ def eligible_typed_protection(freeze: dict[str, Any]) -> tuple[dict[str, Any] | 
     if isinstance(schema, bool) or not isinstance(schema, (int, float)) or int(schema) < 3:
         return None, "PRE_DECISION_INTEGRITY_SCHEMA"
     policy = str(freeze.get("decision_policy_version") or "")
-    if not policy.startswith(ELIGIBLE_DECISION_POLICY_PREFIX):
-        return None, "PRE_DECISION_INTEGRITY_POLICY"
+    if policy not in ELIGIBLE_DECISION_POLICIES:
+        return None, "UNREGISTERED_DECISION_POLICY"
 
     cn = ((freeze.get("source_bindings") or {}).get("cycle_navigator") or {})
     if cn.get("decision_projection_source") != ELIGIBLE_PROJECTION_SOURCE:
@@ -75,7 +75,7 @@ def eligible_typed_protection(freeze: dict[str, Any]) -> tuple[dict[str, Any] | 
         return None, "PROTECTION_TRACKER_MISSING"
     if tracker.get("data_quality") != "OK":
         return None, "PROTECTION_DATA_QUALITY_NOT_OK"
-    if tracker.get("pullback_risk_state") == "UNAVAILABLE" or tracker.get("distribution_risk") == "UNKNOWN":
+    if tracker.get("pullback_risk_state") in {None, "", "UNAVAILABLE"}:
         return None, "PROTECTION_STATE_UNAVAILABLE"
     if not isinstance(tracker.get("invalidation"), str) or not tracker.get("invalidation", "").strip():
         return None, "PROTECTION_INVALIDATION_MISSING"
