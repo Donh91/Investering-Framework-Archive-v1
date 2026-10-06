@@ -11,6 +11,25 @@ def read(p, default=None):
     try: return json.loads(p.read_text()) if p.exists() else default
     except Exception: return default
 
+def read_frozen_snapshot(p):
+    if not p.exists():
+        return None
+    text=p.read_text()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Legacy W40 FINAL was written with a literal trailing "\\n".
+        # Accept only that exact historical writer defect without mutating frozen evidence.
+        if text.endswith("\\n"):
+            try:
+                return json.loads(text[:-2])
+            except json.JSONDecodeError:
+                pass
+        return None
+
+def write_json(p, doc):
+    p.write_text(json.dumps(doc,indent=2,sort_keys=True)+"\n")
+
 def h(x): return hashlib.sha256(json.dumps(x,sort_keys=True,default=str).encode()).hexdigest()[:20]
 
 def finding(module,severity,route,reason,evidence,owner,next_action,stop,gate,confidence="MEDIUM"):
@@ -77,14 +96,14 @@ def main():
          "modules":["PULLBACK_REENTRY","FORECAST_DECISION","ROTATION_TRANSMISSION","META_HEALTH","LEARNING_MATURATION","DATA_EVIDENCE_INTEGRITY"],
          "findings":findings,"actionable_count":len(actionable),"routing_contract":sorted(ROUTES),
          "master_monday_delta":{"authority":"ADVISORY_ONLY","source_iso_year":y,"source_iso_week":w,"source_mode":a.mode,"items":[{"module":x["module"],"severity":x["severity"],"reason":x["reason"],"route":x["route"]} for x in actionable[:8]]}}
-    out.mkdir(parents=True,exist_ok=True); (out/"LATEST.json").write_text(json.dumps(doc,indent=2,sort_keys=True)+"\n")
+    out.mkdir(parents=True,exist_ok=True); write_json(out/"LATEST.json",doc)
     snap=out/"snapshots"/str(y)/f"W{w:02d}"; snap.mkdir(parents=True,exist_ok=True); snapfile=snap/f"{a.mode}.json"
     if a.mode=="FINAL" and snapfile.exists():
-      frozen=read(snapfile,{}) or {}
+      frozen=read_frozen_snapshot(snapfile) or {}
       if frozen.get("contract")=="WEEKLY_FORENSICS_PACK_v1":
         doc=frozen
-        (out/"LATEST.json").write_text(json.dumps(doc,indent=2,sort_keys=True)+"\\n")
+        write_json(out/"LATEST.json",doc)
       else: raise SystemExit("FINAL_FREEZE_CONTRACT_INVALID")
-    else: snapfile.write_text(json.dumps(doc,indent=2,sort_keys=True)+"\\n")
+    else: write_json(snapfile,doc)
     print(json.dumps({"status":"PASS","mode":a.mode,"findings":len(findings),"actionable":len(actionable)}))
 if __name__=="__main__": main()

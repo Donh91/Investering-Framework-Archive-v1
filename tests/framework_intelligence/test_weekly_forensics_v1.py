@@ -12,6 +12,23 @@ class WeeklyForensicsTest(unittest.TestCase):
         for k in ("fingerprint","dedup_key","owner","next_action","stop_condition","acceptance_gate","cheapest_sufficient_executor"): self.assertIn(k,x)
     def test_invalid_route_rejected(self):
         with self.assertRaises(AssertionError): mod.finding("X","HIGH","MAGIC","r",[],"o","n","s","g")
+    def test_frozen_reader_accepts_exact_legacy_literal_newline_only(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/"FINAL.json"
+            payload={"contract":"WEEKLY_FORENSICS_PACK_v1","iso_week":40}
+            p.write_text(json.dumps(payload)+"\\n")
+            self.assertEqual(mod.read_frozen_snapshot(p),payload)
+            p.write_text(json.dumps(payload)+"garbage")
+            self.assertIsNone(mod.read_frozen_snapshot(p))
+    def test_writer_uses_real_newline_not_literal_escape(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/"FINAL.json"
+            payload={"contract":"WEEKLY_FORENSICS_PACK_v1"}
+            mod.write_json(p,payload)
+            raw=p.read_text()
+            self.assertTrue(raw.endswith("\n"))
+            self.assertFalse(raw.endswith("\\n"))
+            self.assertEqual(json.loads(raw),payload)
 
 if __name__=="__main__": unittest.main()
 
