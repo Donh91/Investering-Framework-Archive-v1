@@ -404,6 +404,13 @@ The reusable lesson is:
 Canonical Alpha Lab protocol:
 `Donh91/Meme-Alpha-Lab/architecture/EXTERNAL_SPECIALIST_DISSECTION_V1.md`.
 
+Canonical cross-framework execution queue:
+- `04_RESEARCH_LAB/external_specialist_dissection/README.md`
+- `04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json`
+- master resume issue: #1512
+
+Future agents must fresh-read that queue before opening another specialist-product research lane.
+
 Use this extension before launching broad source/tool scans. Prefer one specialist, one niche competence and one falsifiable primitive at a time.
 
 ## Success condition
