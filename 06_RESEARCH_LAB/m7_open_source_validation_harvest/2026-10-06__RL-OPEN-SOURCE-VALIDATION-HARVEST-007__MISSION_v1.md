@@ -293,3 +293,27 @@ The next agent must:
 Execute P0-1 and P0-2 before expanding the reference set further.
 
 The harvest has enough methodology evidence to improve the machine. More repository browsing now has lower marginal value than implementation and local falsification.
+
+
+## Execution checkpoint, 2026-10-06 evening
+
+Evidence-based progress on current main:
+
+- P0-1 CONTRACT: COMPLETE. Frozen `M6_EVENT_OUTCOME_CONTRACT_v1`.
+- P0-1 PRODUCER: IMPLEMENTED. `scripts/learning/m6_warning_event_outcomes.py` now captures only primary `ELEVATED/HIGH/CONFIRMED` warnings into a research-only outcome index, with 24h/72h/7d/14d/30d maturation, BTC/ETH MAE/MFE/terminal return, inherited adverse barriers, provenance and explicit zero action authority.
+- BUILDING remains watch/control only and is deliberately excluded from M6 primary warning events.
+- Episode families are explicitly `PROVISIONAL_OPEN_UNTIL_TROUGH_OBSERVED`; repeated warnings receive zero additional independent-family weight until the frozen trough-based family rule can be resolved.
+- Producer is wired into `framework-learning-operations.yml` with unit tests and `WARNING_IS_SELL=FALSE / LIVE_EXIT_RULE=NONE` assertions.
+- P0-2: COMPLETE. F3 ETHBTC30 transform is byte-frozen under the prospective temporal contract.
+- P0-3: BLOCKED_BY_DESIGN, not implementation debt. Fresh owner audit found no legitimate typed M2 challenger/decision owner replacing the superseded BTC_PARTIAL gate. Do not wire T2 merely to manufacture observations.
+- Action Compass calibration regression repaired: registered V3.2/V4 policy whitelist, distribution UNKNOWN no longer invalidates an otherwise typed pullback state, and BUILDING+UNKNOWN has a dedicated regression test as eligible calibration/control but not warning.
+- Current healthy Compass on 2026-10-06 emitted BUILDING with protection data_quality OK. This is a prospective watch/control observation, not a primary warning and not action authority.
+
+Next empirical gate:
+1. allow natural Official Compass outcome maturation;
+2. verify the next Framework Learning Operations run produces calibration rows under the repaired gate;
+3. if a primary ELEVATED/HIGH/CONFIRMED warning appears, verify M6 producer creates the immutable event before outcome;
+4. resolve provisional episode family only when trough evidence makes the frozen Lane-C family rule deterministically knowable;
+5. do not weaken gates to obtain N.
+
+No live market, SELL, TRIM, re-entry or portfolio authority was created.
