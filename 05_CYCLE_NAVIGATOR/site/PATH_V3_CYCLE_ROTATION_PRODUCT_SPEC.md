@@ -49,13 +49,14 @@ Canonical public journey:
 
 1. BTC leadership
 2. Ethereum leadership
-3. Large-cap rotation
-4. Mid-cap expansion
-5. Small-cap ignition
+3. Large + mid rotation
+4. Altseason ignition
+5. Micro acceleration
 6. Broad altseason
 7. Mania / euphoria
-8. Distribution / protection
-9. Cooldown / re-entry
+8. Distribution
+9. Exit / protection
+10. Cooldown / re-entry
 
 The timeline is presentation-only. It may use live Compass/weekly source-owned states to identify a **current checkpoint** and a **next watch target**, but it MUST NOT fabricate a long-cycle classification.
 
@@ -195,7 +196,7 @@ Suggested labels:
 
 Nodes may be swipeable on narrow screens.
 
-The timeline should be fun to follow visually, but never imply deterministic progress.
+The timeline should be fun to follow visually, but never imply deterministic progress. Large and mid caps are intentionally combined at the cycle level; the detailed weekly Rotation rail keeps LARGE and MID separate. This prevents the cycle timeline from duplicating the risk-curve rail.
 
 ### Altseason watch card
 
