@@ -1,21 +1,30 @@
 from __future__ import annotations
-import importlib.util,json,tempfile,unittest
+import csv,importlib.util,json,tempfile,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 SPEC=importlib.util.spec_from_file_location("m6",ROOT/"scripts/learning/m6_warning_event_outcomes.py")
 M=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(M)
 
 class M6WarningEventTests(unittest.TestCase):
-    def freeze(self,root,state):
+    def freeze(self,root,state,btc=85000.0,eth=2700.0,issued="2026-10-06T16:14:15Z"):
         p=root/"04_MARKET_LEARNING/handlekompas/official/daily/2026/10/06"/f"CMP-{state}.json";p.parent.mkdir(parents=True,exist_ok=True)
-        p.write_text(json.dumps({"contract":"OFFICIAL_DAILY_COMPASS_v1","compass_id":f"CMP-{state}","issued_at_utc":"2026-10-06T16:14:15Z",
-          "market_reference":{"btc_usdt":85000.0,"eth_usdt":2700.0,"observation_open_utc":"2026-10-06T15:00:00Z"},
+        p.write_text(json.dumps({"contract":"OFFICIAL_DAILY_COMPASS_v1","compass_id":f"CMP-{state}","issued_at_utc":issued,
+          "market_reference":{"btc_usdt":btc,"eth_usdt":eth,"observation_open_utc":"2026-10-06T15:00:00Z"},
           "protection_tracker":{"contract":"COMPASS_PROTECTION_TRACKER_v1","data_quality":"OK","pullback_risk_state":state}}))
+
+    def write_hourly(self,root,rows):
+        p=root/"03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-06.csv";p.parent.mkdir(parents=True,exist_ok=True)
+        fields=["timestamp_utc","source_window_end_utc","btc_close","btc_high","btc_low","eth_close","eth_high","eth_low","spot_status"]
+        with p.open("w",newline="") as fh:
+            w=csv.DictWriter(fh,fieldnames=fields);w.writeheader()
+            for row in rows:w.writerow(row)
+
     def test_building_is_watch_only_not_event(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t);self.freeze(root,"BUILDING")
             r=M.build(root,M.parse("2026-10-08T00:00:00Z"))
             self.assertEqual(r["event_count"],0);self.assertFalse(r["warning_is_sell"])
+
     def test_primary_warning_is_captured_before_maturity(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t);self.freeze(root,"ELEVATED")
@@ -23,6 +32,13 @@ class M6WarningEventTests(unittest.TestCase):
             self.assertEqual(r["event_count"],1);e=r["events"][0]
             self.assertEqual(e["warning_state"],"ELEVATED");self.assertEqual(e["horizons"]["24h"]["maturity_state"],"PENDING")
             self.assertEqual(e["independent_family_weight"],1.0);self.assertFalse(e["authority"]["sell"])
+            self.assertFalse(r["economic_action_scoring_ready"])
+
+    def test_numeric_string_reference_price_is_rejected(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);self.freeze(root,"ELEVATED",btc="85000.0")
+            self.assertEqual(M.build(root,M.parse("2026-10-08T00:00:00Z"))["event_count"],0)
+
     def test_repeated_warning_does_not_inflate_independent_n(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t);self.freeze(root,"ELEVATED")
@@ -34,4 +50,16 @@ class M6WarningEventTests(unittest.TestCase):
             self.assertEqual(r["event_count"],2);self.assertEqual(r["provisional_independent_family_count"],1)
             self.assertEqual([x["independent_family_weight"] for x in r["events"]],[1.0,0.0])
             self.assertTrue(all(x["episode_family_status"]=="PROVISIONAL_OPEN_UNTIL_TROUGH_OBSERVED" for x in r["events"]))
+
+    def test_spot_fail_rows_cannot_mature_horizon(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);self.freeze(root,"ELEVATED",issued="2026-10-06T16:00:00Z")
+            rows=[]
+            for h in range(16,24):
+                rows.append({"timestamp_utc":f"2026-10-06T{h:02d}:00:00Z","source_window_end_utc":f"2026-10-06T{h:02d}:59:59Z",
+                    "btc_close":85000,"btc_high":85100,"btc_low":84900,"eth_close":2700,"eth_high":2710,"eth_low":2690,"spot_status":"FAIL"})
+            self.write_hourly(root,rows)
+            r=M.build(root,M.parse("2026-10-07T18:00:00Z"))
+            self.assertEqual(r["events"][0]["horizons"]["24h"]["maturity_state"],"UNKNOWN_INCOMPLETE_TAPE")
+
 if __name__=="__main__":unittest.main()
