@@ -1,10 +1,10 @@
 # LATEST HANDOFF
 
-Generated: 2026-10-06T11:07:44.437248Z
-Hash: `3dee00d6cc1034e9dc1fac60889a9b330ce7d0feb58af228ff64aa94061fcd0d`
+Generated: 2026-10-06T20:32:40.927054Z
+Hash: `92eb8dcdd9a4c3806bce758dde80ae114a0eddc7f8b0d1c2fae1cc9fd16c6990`
 
 - **latest_capture**: `03_DAILY_CAPTURE_LOGS/captures/LATEST.json`
-- **latest_director_output**: `research/api_agent/outputs/daily/2026/10/06/015153/DAILY_DIRECTOR_OUTPUT.json`
+- **latest_director_output**: `research/api_agent/outputs/daily/2026/10/06/190445/DAILY_DIRECTOR_OUTPUT.json`
 - **latest_weekly_output**: `research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json`
 - **health**: `research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json`
 - **latest_accepted_data_ping**: `UNAVAILABLE`
@@ -14,12 +14,12 @@ Hash: `3dee00d6cc1034e9dc1fac60889a9b330ce7d0feb58af228ff64aa94061fcd0d`
 - **remediation_queue**: `research/remediation/LATEST_REMEDIATION_QUEUE.json`
 - **codex_ready_tasks**: `research/remediation/LATEST_CODEX_READY_TASKS.json`
 
-Open incidents: 23 of 125 incident files
+Open incidents: 24 of 126 incident files
 Resolved incidents with valid receipts: 102
 Invalid incident resolution receipts: 0
 Pending forecast candidates: 224 distinct actionable
 Pending candidate files scanned: 358
 Legacy candidates quarantined: 21
 Duplicate candidate files excluded: 113
-Experiment candidates: 467
+Experiment candidates: 470
 Codex-ready tasks: 5
