@@ -1,0 +1,140 @@
+{
+  "T2B_ready_after_main_readback": true,
+  "T3_scoring_performed": false,
+  "claim_level": "HYPOTHESIS",
+  "code_sha256": "b5a688efc780e3065e2e7ae830b25b793d81e21df7cf89699cffdde918e083cb",
+  "control_identity_and_classification_unchanged": true,
+  "control_metadata_changes": [
+    {
+      "added_fields": [
+        "censor_reason",
+        "censor_utc"
+      ],
+      "control_id": "EDGE001_CTL_ALTSEASON20202021_BTCUSDT_VREV_1_20201221T100000Z",
+      "window": "ALTSEASON_2020_2021"
+    },
+    {
+      "added_fields": [
+        "censor_reason",
+        "censor_utc"
+      ],
+      "control_id": "EDGE001_CTL_ALTSEASON20202021_BTCUSDT_VREV_3_20210209T100000Z",
+      "window": "ALTSEASON_2020_2021"
+    }
+  ],
+  "control_repair_contract_commit_before_execution": "5b6b0dea46e6b7d1a6e2a47fea83062aaeb58a55",
+  "episode_family_comparator_cluster_rows_unchanged": true,
+  "framework_warning_data_joined": false,
+  "live_exit_rule": "NONE",
+  "reconciliation": {
+    "ALTSEASON_2020_2021": {
+      "BTCUSDT": {
+        "10": {
+          "v1_1_episodes": 30,
+          "v1_1_families": 11,
+          "v1_1_right_censored": 4,
+          "v1_episodes": 27,
+          "v1_families": 12
+        },
+        "15": {
+          "v1_1_episodes": 16,
+          "v1_1_families": 9,
+          "v1_1_right_censored": 4,
+          "v1_episodes": 13,
+          "v1_families": 8
+        },
+        "20": {
+          "v1_1_episodes": 8,
+          "v1_1_families": 5,
+          "v1_1_right_censored": 2,
+          "v1_episodes": 7,
+          "v1_families": 6
+        }
+      },
+      "ETHUSDT": {
+        "15": {
+          "v1_1_episodes": 25,
+          "v1_1_families": 10,
+          "v1_1_right_censored": 3,
+          "v1_episodes": 23,
+          "v1_families": 10
+        },
+        "20": {
+          "v1_1_episodes": 13,
+          "v1_1_families": 8,
+          "v1_1_right_censored": 3,
+          "v1_episodes": 11,
+          "v1_families": 6
+        },
+        "30": {
+          "v1_1_episodes": 6,
+          "v1_1_families": 4,
+          "v1_1_right_censored": 2,
+          "v1_episodes": 4,
+          "v1_families": 2
+        }
+      },
+      "primary_cross_asset_cluster_count": 11
+    },
+    "MODERN_ANALOGUE_2025_2026": {
+      "BTCUSDT": {
+        "10": {
+          "v1_1_episodes": 16,
+          "v1_1_families": 8,
+          "v1_1_right_censored": 0,
+          "v1_episodes": 16,
+          "v1_families": 13
+        },
+        "15": {
+          "v1_1_episodes": 5,
+          "v1_1_families": 4,
+          "v1_1_right_censored": 1,
+          "v1_episodes": 5,
+          "v1_families": 5
+        },
+        "20": {
+          "v1_1_episodes": 3,
+          "v1_1_families": 3,
+          "v1_1_right_censored": 1,
+          "v1_episodes": 3,
+          "v1_families": 3
+        }
+      },
+      "ETHUSDT": {
+        "15": {
+          "v1_1_episodes": 14,
+          "v1_1_families": 7,
+          "v1_1_right_censored": 0,
+          "v1_episodes": 14,
+          "v1_families": 12
+        },
+        "20": {
+          "v1_1_episodes": 7,
+          "v1_1_families": 5,
+          "v1_1_right_censored": 0,
+          "v1_episodes": 7,
+          "v1_families": 7
+        },
+        "30": {
+          "v1_1_episodes": 3,
+          "v1_1_families": 3,
+          "v1_1_right_censored": 1,
+          "v1_episodes": 3,
+          "v1_families": 3
+        }
+      },
+      "primary_cross_asset_cluster_count": 6
+    }
+  },
+  "registry_v11_sha256": "b8ffeadecf4a1adf182eac8a5ab163d002af1237c1274cf3e867588977592882",
+  "registry_v12_sha256": "627318638be5901f1aa4c165fa73a1297c496f74e9e751924a826acac6931f2a",
+  "source_head": "9929081d0570a6510ce7a0457a5b25dcf54914f9",
+  "status": "PASS",
+  "v11_audit_status": "FAIL",
+  "v11_failed_fixtures": [
+    "control_end_of_tape",
+    "control_cross_at_p1_fire"
+  ],
+  "v12_audit_status": "PASS",
+  "v12_repeated_bytes_identical": true
+}
