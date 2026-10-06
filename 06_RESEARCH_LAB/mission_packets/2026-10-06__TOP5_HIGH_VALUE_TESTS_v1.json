@@ -1,0 +1,289 @@
+{
+  "contract": "RESEARCH_EXECUTION_ROADMAP_v1",
+  "id": "TOP5_HIGH_VALUE_TESTS_2026-10-06",
+  "created_at_utc": "2026-10-06T19:24:00Z",
+  "status": "PROPOSED_BACKLOG_NOT_ADMITTED",
+  "purpose": "Prioritized, agent-readable research/test designs derived from a cross-archive review. This document is a proposal and retrieval index, not an execution queue, forecast authority, or permission to bypass existing owners.",
+  "discovery": {
+    "keywords": [
+      "top 5",
+      "high value research",
+      "forward path",
+      "false green",
+      "temporal integrity",
+      "Alpha Lab",
+      "paired rule ablation",
+      "shared row tournament"
+    ],
+    "canonical_repository": "Donh91/Investering-Framework-Archive-v1",
+    "path": "06_RESEARCH_LAB/mission_packets/2026-10-06__TOP5_HIGH_VALUE_TESTS_v1.json",
+    "agent_entrypoint": "Search for contract=RESEARCH_EXECUTION_ROADMAP_v1 or id=TOP5_HIGH_VALUE_TESTS_2026-10-06, then fresh-read each source path and current owner before acting.",
+    "source_snapshot": {
+      "control_plane": {
+        "repository": "Donh91/Investering-Framework-Archive-v1",
+        "commit": "6d92292f04a213cc3a7508c9d95098536058a62c"
+      },
+      "audit_bridge": {
+        "repository": "Donh91/Investering-AI-Audit-Bridge",
+        "commit": "1516eb037f8fb5ab8f3bfc2749ab761a00508237"
+      },
+      "caveat": "These are immutable research snapshots, not a claim that they are still current at execution time."
+    }
+  },
+  "execution_governance": {
+    "sequencing": "One active research mission at a time under the existing paired-intelligence contract. Do not activate this backlog until current active owners and their release conditions are freshly read.",
+    "mission_1516": "Issue #1516 remains a separate active owner-mandated mission and must be executed against fresh main. This roadmap does not claim its implementation or acceptance gates are complete.",
+    "source_policy": "Use only point-in-time evidence with defensible knowledge_time <= forecast_time. Bind each run to immutable commits, source manifests, schema and coverage. Missing, stale, unparseable or unverifiable evidence stays UNKNOWN/UNAVAILABLE.",
+    "promotion": "Historical replay informs design and calibration only. Any live-facing claim requires prospective frozen evidence and existing owner approval.",
+    "authority": "Research/simulation only. No live trading, portfolio sizing, automatic market action, threshold/weight change, canonical promotion, new API spend or parallel engine.",
+    "required_record": "Every mission must preserve preregistration, frozen input/version IDs, raw eligibility counts, excluded/missing rows, outcome maturity/censoring, deviations, all tried variants, negative results, artifact hashes and independent review."
+  },
+  "ranking_basis": [
+    "potential to reverse or materially weaken a stored conclusion",
+    "decision relevance",
+    "reuse of existing owners and datasets",
+    "speed and falsifiability",
+    "duplicate-owner risk"
+  ],
+  "plans": [
+    {
+      "rank": 1,
+      "id": "R1-RESEARCH-TRUTH-TEMPORAL-SEAM-011",
+      "status": "PROPOSED_URGENT_ADJUDICATION",
+      "title": "Repair false-green evidence and re-adjudicate the ETF persistence KILL",
+      "why_now": "Claude's latest bridge handoff reports that P4-C01 ETF-PERSISTENCE = KILL relied on a degenerate ETF source: 351/392 scorable rows were degenerate and 0/316 comparable 2025-03..2026-05 dates matched truth_layer v1_1. The same audit identifies false-green temporal seam flags, a dropped-day ETHBTC gate, a missing-sentinel default-to-PASS, and missing-as-zero scoring. This can invalidate research conclusions and should precede new model claims.",
+      "owner_map": [
+        "existing ETF temporal-integrity and Phase-4 research owners",
+        "existing report claim-binder/source-QA owners",
+        "existing native OTA and research-meta owners for any code repairs"
+      ],
+      "source_refs": [
+        "Bridge: programs/research_lab_paired_intelligence/temporal_seam_011/TOP_10_MATERIAL_FINDINGS.md @ 1516eb037f8fb5ab8f3bfc2749ab761a00508237",
+        "Bridge: programs/research_lab_paired_intelligence/temporal_seam_011/RESEARCH_LAB_TEMPORAL_SEAM_CENSUS.md @ 1516eb037f8fb5ab8f3bfc2749ab761a00508237",
+        "Bridge: programs/research_lab_paired_intelligence/temporal_seam_011/CHEAPEST_DETERMINISTIC_FIXTURES.md @ 1516eb037f8fb5ab8f3bfc2749ab761a00508237",
+        "Framework: 06_RESEARCH_LAB/mission_packets/2026-10-05__PAIRED_INTELLIGENCE_QUEUE_v1.json @ 6d92292f04a213cc3a7508c9d95098536058a62c"
+      ],
+      "research_question": "Which verdicts and reported metrics remain supportable after source-integrity, temporal-adjacency, missingness and knowledge-time defects are corrected?",
+      "phases": [
+        "A. Import bridge findings as unadjudicated evidence; independently bind every claim to exact framework paths and source hashes.",
+        "B. Verify truth_layer v1_1 independently for the ETF comparison window; if valid, mark the old P4-C01 result UNTESTABLE_SOURCE_DEGENERATE and preserve the original receipt unchanged.",
+        "C. Re-run ETF persistence only under the existing ETF PIT/temporal-integrity contract with NYSE session alignment, knowledge-time availability, coverage and missingness accounting.",
+        "D. Add expected-fail-before/expected-pass-after fixtures to existing owners for ETF content degeneracy, segment seam resets, calendar-adjacent ETHBTC observations, missing/corrupt sentinel, and DATA_MISSING aggregation.",
+        "E. Recompute only affected claims; use the claim binder on verdict-bearing outputs; publish limitations and negative evidence."
+      ],
+      "preregistered_outputs": [
+        "claim-to-source binding ledger",
+        "P4-C01 corrected state and immutable supersession link if needed",
+        "PIT replay manifest and coverage table",
+        "fixture outcomes with pre-repair SHA",
+        "updated adjudication with valid-row denominators"
+      ],
+      "acceptance_tests": [
+        "No result uses session date in place of knowledge_time when publication availability is required.",
+        "ETF replay refuses degenerate or coverage-incomplete source input and cannot emit a KILL verdict from it.",
+        "Gap-crossing ETHBTC observations return UNKNOWN_GAP or equivalent, never a silently bridged trigger.",
+        "Absent/corrupt sentinel cannot pass or advance canonical-review preparation.",
+        "Unknown/data-missing rows are excluded from both numerator and denominator unless the pre-existing metric contract explicitly says otherwise.",
+        "Prior frozen receipts remain byte-identical; all corrections are append-only and linked."
+      ],
+      "falsifiers": [
+        "independent primary ETF evidence validates the source values and a corrected PIT replay reproduces the original KILL",
+        "adjudication proves the reported seam fields are non-consumed and no consumer or verdict depends on them"
+      ],
+      "stop_conditions": [
+        "truth_layer comparator lacks independent integrity evidence",
+        "point-in-time availability cannot be reconstructed",
+        "a proposed repair requires new policy, threshold, authority, or historical rewriting"
+      ],
+      "authority_boundary": "No market-rule or strategy change. Any code repair uses the original owner, narrow PR scope and usual exact-head gates."
+    },
+    {
+      "rank": 2,
+      "id": "R2-FORWARD-PATH-ENGINE-1516",
+      "status": "ACTIVE_OWNER_MISSION",
+      "title": "Forward Path Engine v1 for 2-3 week Compass forecasts with 4-6 week shadow context",
+      "why_now": "Issue #1516 directly addresses the user's need for an intelligible 2-3 week path, scenario envelopes, turning windows, pullback depth and invalidation while preserving official Compass action authority. Existing archives can support a leakage-safe historical replay without pretending to simulate portfolio execution.",
+      "owner_map": [
+        "issue #1516 owner",
+        "scripts/learning/strategic_compass.py",
+        "04_MARKET_LEARNING/handlekompas/strategic/**",
+        "existing CN forward-range ledger/protocol",
+        "COMPASS_PROTECTION_TRACKER_v1",
+        "existing outcome maturation / learning supervisor"
+      ],
+      "source_refs": [
+        "GitHub issue #1516",
+        "research/codex/issue-1516 archive-audit comment",
+        "research/codex/issue-1516 temporary fresh-preflight comment",
+        "04_MARKET_LEARNING/handlekompas/strategic/",
+        "scripts/learning/strategic_compass.py"
+      ],
+      "design": [
+        "Fresh-read main, AGENTS, owner contracts and current branches/PRs; bind every step to exact head.",
+        "Extend existing strategic/CN/Compass/protection/outcome owners. No parallel long-horizon forecast ledger, pullback engine or action authority.",
+        "Replay historical forecasts only when E1X/right-truncation admission proves every feature knowledge_time <= forecast_time and warm-up/coverage gates pass.",
+        "Freeze prospective checkpoints NOW, 3-7d, 8-14d, 15-21d and 22-30d. 21-30d may only consume the prospectively frozen CN decision_projection.next_21_30d.",
+        "4-6w binds the existing CN-owned 4-8W projection and remains SHADOW; no independent 4-6w model or action authority.",
+        "Measure BTC/ETH range coverage and sharpness, path ordering, reversal-window error, drawdown error, warning lead time, false/missed warnings, regime/horizon calibration and abstention.",
+        "Bind official Compass only after schema, immutable freeze, degraded/UNKNOWN, no-hindsight and authority-leakage gates pass."
+      ],
+      "existing_data_use": [
+        "eligible CN/Compass/price and truth-layer data",
+        "frozen breadth weekly snapshots, with 184/184 coverage and explicit universe binding",
+        "MAEVE only as optional behavior/action context, never forecast authority; exclude unsafe post-entry fields",
+        "stablecoin deployment proxy as shadow/ablation only",
+        "TechDev as non-authoritative challenger only",
+        "do not claim full OKX historical coverage from the verified 100-record BTC/ETH seeds"
+      ],
+      "acceptance_tests": [
+        "forecast freeze is immutable and source-state bound",
+        "UNKNOWN/degraded propagates without invented probabilities or ranges",
+        "historical right-truncation and warm-up negative controls fail as expected",
+        "4-6w cannot influence official action",
+        "weekly CN freeze is not mutated or rewritten",
+        "coverage reports eligible windows, independent regimes, prospective N and abstention rate"
+      ],
+      "release_gates": [
+        "historical leakage-safe walk-forward",
+        "prospective frozen-forward observations",
+        "adversarial owner review",
+        "normal CI, PR and exact-head post-merge readback"
+      ],
+      "forbidden": [
+        "parallel long-cycle engine",
+        "portfolio execution assumptions presented as path accuracy",
+        "retrospective prospective labels",
+        "new scoring owner",
+        "vanity composite score",
+        "site work blocking engine/accountability"
+      ]
+    },
+    {
+      "rank": 3,
+      "id": "R3-ALPHA-LAB-OBSERVATION-UTILITY",
+      "status": "PROPOSED_AFTER_OWNER_PREFLIGHT",
+      "title": "Alpha Lab launch evidence: detection lead time, denominator quality and incremental outcome value",
+      "why_now": "Alpha Lab already has active Pons/birth-tape collection and exact launch identity; the current CODEX_READY Memes v3 queue items are stale relative to the existing authority map. The valuable test is whether current observations actually arrive early enough, cover the eligible universe, and add information beyond age/liquidity/basic momentum, not another scanner.",
+      "owner_map": [
+        "Meme-Alpha-Lab current ALPHA_AUTHORITY_MAP_V1",
+        "Pons/birth-tape census and historical-gap owner",
+        "existing case-memory and qualification/alert authority"
+      ],
+      "source_refs": [
+        "Donh91/Meme-Alpha-Lab: ALPHA_AUTHORITY_MAP_V1 as_of 2026-10-04",
+        "Donh91/Meme-Alpha-Lab: intelligence/collection_receipts/v4/2026/10/06.csv",
+        "issue #643 Alpha preflight comment"
+      ],
+      "phases": [
+        "A. Refresh Alpha authority map, issue #1087, receipt schema and private-watchlist boundary; map each feature to its current owner.",
+        "B. Freeze all eligible launches at first observable timestamp, including missed/late/ambiguous cases; preserve source/rate-limit coverage and the denominator.",
+        "C. Reconstruct detection latency and feature availability as-of decision time for Robinhood/Pons and Ethereum; no retrospective inferred feature values.",
+        "D. Compare existing Alpha evidence against simple age, liquidity/raised amount and buyer-count baselines on identical opportunities and horizons.",
+        "E. Evaluate graduation, post-graduation survival, early distribution, sellability, rug/dead and censored outcomes; separate anti-snipe/cluster flags from verified entity identity.",
+        "F. Run fake-hit, passive-receipt, source-gap, delayed-capture, duplicate-event and chain-mismatch negative controls."
+      ],
+      "acceptance_tests": [
+        "complete denominator reconciles to birth-tape receipts plus explicit coverage gaps",
+        "features unavailable at cutoff cannot enter a frozen row",
+        "matched outcomes use common horizons, cost/sellability conventions and censorship labels",
+        "no current watched token or private seed is exposed in public artifacts",
+        "no trade, sizing, alert or qualification authority is granted"
+      ],
+      "kill_criteria": [
+        "detection routinely arrives after the useful outcome window",
+        "coverage/selective capture cannot be measured honestly",
+        "incremental information disappears against simple matched baselines",
+        "entity resolution or sellability is too weak to support classification"
+      ],
+      "outputs": [
+        "point-in-time launch panel",
+        "detection-latency distribution by chain and coverage state",
+        "matched incremental-value report",
+        "negative-control results",
+        "owner-mapped repair backlog, if needed"
+      ]
+    },
+    {
+      "rank": 4,
+      "id": "R4-AUTOTRADING-PAIRED-GATE-ABLATION",
+      "status": "EXISTING_RESEARCH_QUEUE_TO_REUSE",
+      "title": "Measure the marginal value and false-negative cost of Auto Trading gates",
+      "why_now": "The Ocellus transfer and existing AUTO_TRADING lifecycle identify a reusable question across every strategy: which refusal gates reduce real post-cost risk and which block viable opportunities? Existing queue requires research design before implementation and explicitly prohibits execution authority.",
+      "owner_map": [
+        "AUTO_TRADING experiment lifecycle",
+        "Experiment Factory + Research Genome",
+        "04_RESEARCH_LAB/auto_trading/OCELLUS_RULE_ABLATION_RESEARCH_QUEUE.md",
+        "Paper Wallet scientific controls"
+      ],
+      "research_question": "On the exact same frozen opportunity stream, what is the paired post-cost effect of removing or changing one refusal rule, including avoided downside, foregone upside and redundancy with other gates?",
+      "phases": [
+        "A. Fresh-read active P0s and current champion; do not start until existing Memes v3 baseline is operational and dataset admission is approved.",
+        "B. Freeze opportunity universe, feature cutoff, champion version, costs, fill/sellability model, notional convention and one-rule challenger before outcomes.",
+        "C. Log every evaluated gate, every refusal, sole-blocker status and one-gate-removed counterfactual; NO_TRADE remains an outcome-bearing decision.",
+        "D. Compare paired post-cost outcomes, avoided MAE, foregone MFE, missed-winner rate, refusal overlap and regime-conditioned effects.",
+        "E. Account for dependence, overlapping events, all tested variants, trial budget, holdout and prospective confirmation; separate selection from exit-policy tests."
+      ],
+      "acceptance_tests": [
+        "champion and challenger share exact opportunity and input IDs",
+        "exactly one declared rule differs in the primary ablation",
+        "unknown/unavailable features do not silently become PASS",
+        "all refusals and all trial variants are counted",
+        "historical findings do not self-promote thresholds or live permission"
+      ],
+      "kill_criteria": [
+        "opportunity universe or executable fills cannot be reconstructed symmetrically",
+        "rule interactions dominate and no pre-registered factorial plan is justified",
+        "the sample is too dependent or costs/capacity make results unidentifiable"
+      ],
+      "outputs": [
+        "refusal-value schema proposal for existing ledger owner",
+        "paired frozen cohort report",
+        "multiple-testing ledger",
+        "negative results and explicit promotion decision by existing governance"
+      ]
+    },
+    {
+      "rank": 5,
+      "id": "R5-SHARED-ROW-MODEL-TOURNAMENT",
+      "status": "PRESTAGED_CONDITIONALLY_QUEUED",
+      "title": "Shared Row Model Tournament: incremental information value",
+      "why_now": "The paired-intelligence machine queue already pre-stages this after M6 distribution-survival adjudication and the Claude folder audit. This has unusually high leverage because it can distinguish useful signal from correlated duplicate inputs without creating another model stack.",
+      "owner_map": [
+        "existing shared-row tournament owner",
+        "current M6/Historical Cycle Exit Lab owner",
+        "existing learning and evidence-gap contracts"
+      ],
+      "source_refs": [
+        "06_RESEARCH_LAB/mission_packets/2026-10-05__PAIRED_INTELLIGENCE_QUEUE_v1.json @ 6d92292f04a213cc3a7508c9d95098536058a62c",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/",
+        "04_MARKET_LEARNING/"
+      ],
+      "release_condition": "Do not start until M6/HCEL O1 temporal revalidation is adjudicated, the owner-authorized Claude folder audit is complete, ChatGPT reviews that delta, and the canonical paired queue says release conditions are satisfied.",
+      "phases": [
+        "A. Fresh-read the dataset registry, shared-row owner contract, active evidence-gap registry, and M6 release receipts.",
+        "B. Freeze eligible rows and information cutoffs; reuse E1X leakage admission and preserve missingness/right-censoring.",
+        "C. Compare simple baselines and one existing model/family at a time on identical rows; ablate correlated sensor families to measure incremental value.",
+        "D. Report performance, calibration, stability by regime, eligible row coverage, independent sequence count and degradation/UNKNOWN behavior.",
+        "E. Retain only improvements that survive holdout and prospective gates; otherwise record null value and keep the baseline."
+      ],
+      "acceptance_tests": [
+        "release prerequisites are explicit and machine-verifiable",
+        "all models receive byte-identical eligible rows and horizons",
+        "ablation changes one declared family at a time",
+        "missingness and coverage are reported beside every metric",
+        "no selected live rules or canonical promotion without existing authority"
+      ],
+      "kill_criteria": [
+        "no independent incremental value over a transparent baseline",
+        "temporal or row-binding risk cannot be resolved",
+        "the audit shows activation would duplicate an existing owner or violate the active one-mission sequence"
+      ],
+      "outputs": [
+        "eligible-row manifest",
+        "baseline and paired ablation table",
+        "regime/coverage calibration report",
+        "owner-reviewed release or kill receipt"
+      ]
+    }
+  ]
+}
