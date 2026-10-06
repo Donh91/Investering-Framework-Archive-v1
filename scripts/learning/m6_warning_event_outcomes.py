@@ -78,7 +78,7 @@ def cluster(rows):
         if last is None or (r["knowledge"]-last)>=timedelta(days=14):
             current="M6F-"+r["knowledge"].strftime("%Y%m%dT%H%M%SZ"); idx=0
         else: idx+=1
-        r["episode_family_id"]=current; r["within_family_warning_index"]=idx
+        r["episode_family_id"]=current; r["episode_family_status"]="PROVISIONAL_OPEN_UNTIL_TROUGH_OBSERVED"; r["within_family_warning_index"]=idx
         r["independent_family_weight"]=1.0 if idx==0 else 0.0
         last=r["knowledge"]; fam.append(r)
     return fam
@@ -101,7 +101,7 @@ def build(root,now):
           "warning_timestamp":f.get("issued_at_utc"),"knowledge_timestamp":start.isoformat().replace("+00:00","Z"),
           "source_path":r["path"].relative_to(root).as_posix(),"source_hash":sha(r["path"]),
           "compass_id":f.get("compass_id"),"data_health_state":t.get("data_quality"),
-          "episode_family_id":r["episode_family_id"],"within_family_warning_index":r["within_family_warning_index"],
+          "episode_family_id":r["episode_family_id"],"episode_family_status":r["episode_family_status"],"within_family_warning_index":r["within_family_warning_index"],
           "independent_family_weight":r["independent_family_weight"],"start_prices":{"BTC":ref["btc_usdt"],"ETH":ref["eth_usdt"]},
           "horizons":{},"authority":{"research_only":True,"sell":False,"trim":False,"portfolio_action":False}}
         for name,hours in HORIZONS.items():
@@ -124,7 +124,7 @@ def build(root,now):
             event["horizons"][name]=h
         events.append(event)
     return {"contract":INDEX_CONTRACT,"generated_at_utc":now.isoformat().replace("+00:00","Z"),"primary_warning_states":sorted(PRIMARY),
-      "event_count":len(events),"independent_family_count":len({e["episode_family_id"] for e in events}),
+      "event_count":len(events),"provisional_independent_family_count":len({e["episode_family_id"] for e in events}),
       "warning_is_sell":False,"live_exit_rule":"NONE","events":events}
 
 def main():
@@ -132,5 +132,5 @@ def main():
     a=ap.parse_args();now=parse(a.now_utc) if a.now_utc else datetime.now(timezone.utc).replace(microsecond=0)
     if now is None: raise ValueError("INVALID_NOW")
     report=build(a.repo_root,now);a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
-    print(json.dumps({"contract":report["contract"],"event_count":report["event_count"],"independent_family_count":report["independent_family_count"]}))
+    print(json.dumps({"contract":report["contract"],"event_count":report["event_count"],"provisional_independent_family_count":report["provisional_independent_family_count"]}))
 if __name__=="__main__":main()
