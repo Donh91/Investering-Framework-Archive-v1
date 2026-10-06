@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-06T09:21:41Z",
+  "generated_at_utc": "2026-10-06T10:39:40Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -13,39 +13,15 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "luna_triage": {
-    "evidence_against": [
-      "Each workflow has only one reported recent failure and a failure streak of 1; persistence is not established.",
-      "The failures are from different run IDs and head SHAs, and no shared error signature or dependency evidence is supplied.",
-      "No job logs, failing step, exit code, or dependency health details are provided to identify a transient cause or code defect."
-    ],
-    "evidence_for": [
-      "Both supplied workflows have a latest run marked failed.",
-      "Both items report scheduled execution, OpenAI enabled, and an existing remediation state of OBSERVED."
-    ],
-    "forecast_candidates": [],
-    "hypotheses": [
-      "Batch as two isolated, unclassified latest-run failures; the supplied evidence does not support attributing them to a shared dependency or code defect.",
-      "Treat both as possibly transient execution noise, but unconfirmed until the failing steps and logs are inspected.",
-      "For cycle-navigator-precision-learning-supervisor.yml, the supplied existing next owner is framework-main-writer.",
-      "For framework-learning-supervisor.yml, the supplied writer-group expression selects framework-main-writer outside pull-request events; event context is absent, so confirm the applicable existing owner."
-    ],
-    "status": "DEGRADED",
-    "summary": "Two workflows have one latest-run failure each, with no evidence of a persistent pattern. Batch for log-level inspection; retain their existing OBSERVED remediation states and do not create duplicate remediation.",
-    "uncertainties": [
-      "Failing job and step, error output, exit code, and whether either run was retried.",
-      "Whether the failures share a dependency or have workflow-specific causes.",
-      "The event context needed to resolve the second workflow's conditional writer-group expression."
-    ]
-  },
+  "luna_triage": null,
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "b4d64e1f36e60e4373b7d4c44aa1e6303978b51a7ade82fc79517a0b5e99c4bd",
+  "plan_fingerprint": "9d97a8268e18e858f35b48591bdd4e973b8790719befccdc127c9d5ab0728147",
   "routing_summary": {
     "existing_remediation_count": 0,
-    "luna_triage_count": 2,
+    "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
   "sol_6_1_diagnosis": null,
-  "source_health_generated_at_utc": "2026-10-05T22:05:49.712900Z"
+  "source_health_generated_at_utc": "2026-10-06T10:34:56.691858Z"
 }

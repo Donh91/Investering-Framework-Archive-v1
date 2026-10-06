@@ -9,16 +9,16 @@
   "automatic_escalation_required": false,
   "candidate_revalidation_count": 1,
   "compatibility_counts": {
-    "DRIFTED": 508,
-    "EXACT": 471,
-    "PARTIAL": 1702,
+    "DRIFTED": 509,
+    "EXACT": 472,
+    "PARTIAL": 1709,
     "REMOVED": 11,
     "UNKNOWN": 15
   },
   "contract": "OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1",
-  "episode_count": 2707,
+  "episode_count": 2716,
   "failures": [],
-  "generated_at_utc": "2026-10-06T09:21:29.606241Z",
+  "generated_at_utc": "2026-10-06T10:39:38.502884Z",
   "materialized_candidate_count": 20,
   "measurement": {
     "failed_task_rate": "BASELINE_ACCUMULATING",
@@ -29,48 +29,12 @@
     "useful_retrieval_precision": 1.0
   },
   "memory_reuse_allowed": true,
-  "new_episode_count": 98,
+  "new_episode_count": 9,
   "procedural_candidate_count": 20,
   "recommended_action": "CONTINUE_SHADOW_AND_ACCUMULATE_BASELINE",
   "retrieval_probe": {
     "probe_count": 12,
     "results": [
-      {
-        "episode_id": "OE-bd69472e6b5a47c6",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-83fa76019268d1de",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-b08078ef95ef615e",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-c499ce2d322ce092",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
       {
         "episode_id": "OE-78481ad351b75353",
         "expected_task_class": "GENERAL_FRAMEWORK",
@@ -108,10 +72,46 @@
         "top_task_class": "AUTOMATION_REMEDIATION"
       },
       {
+        "episode_id": "OE-039121714f1c5bc7",
+        "expected_task_class": "MARKET_STATE",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "MARKET_STATE"
+      },
+      {
         "episode_id": "OE-d9446bb84dd9192a",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-2544bb25fddc1ff1",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-a6873677505e1b20",
+        "expected_task_class": "MARKET_STATE",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "MARKET_STATE"
+      },
+      {
+        "episode_id": "OE-7bcf683517ceb3e5",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 1,
+        "revalidation_count": 4,
         "selected_count": 5,
         "top_class_match": true,
         "top_task_class": "GENERAL_FRAMEWORK"
@@ -148,8 +148,8 @@
     "top_task_class_hits": 12,
     "top_task_class_precision": 1.0
   },
-  "source_head_sha": "7b09a4f1bc71ac3eeae1f2352aa709b5300d20a7",
-  "stale_share": 0.1917,
+  "source_head_sha": "7bcf683517ceb3e541dc037b90a1c9c405503c54",
+  "stale_share": 0.1915,
   "status": "WARN",
   "warnings": [
     "candidate_requires_revalidation:1"

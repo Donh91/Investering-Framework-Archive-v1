@@ -1,7 +1,7 @@
 {
   "agent_calls": {
     "astra_required": false,
-    "luna_required": true,
+    "luna_required": false,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
     "sol_6_1_required": false
@@ -9,16 +9,16 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "b4d64e1f36e60e4373b7d4c44aa1e6303978b51a7ade82fc79517a0b5e99c4bd",
+  "fingerprint": "9d97a8268e18e858f35b48591bdd4e973b8790719befccdc127c9d5ab0728147",
   "fleet": {
-    "amber_count": 10,
-    "green_count": 183,
-    "red_count": 2,
+    "amber_count": 11,
+    "green_count": 184,
+    "red_count": 0,
     "scheduled_workflow_count": 56,
     "workflow_count": 195,
     "writer_count": 67
   },
-  "generated_at_utc": "2026-10-06T09:21:06Z",
+  "generated_at_utc": "2026-10-06T10:39:19Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -30,63 +30,14 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "items": [
-    {
-      "cluster_id": null,
-      "existing_remediation": {
-        "finding": "LATEST_RUN_FAILED",
-        "route": "OBSERVE",
-        "signature": "f6739e0078acc8f59091",
-        "state": "OBSERVED"
-      },
-      "failure_streak": 1,
-      "findings": [
-        "LATEST_RUN_FAILED"
-      ],
-      "latest_head_sha": "e069aebfa3e97755939a8b648f65bde6f7fa2a33",
-      "latest_run_id": 37348134743,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37348134743",
-      "model_lane": "GPT_6_LUNA",
-      "openai_enabled": true,
-      "recent_failure_count": 1,
-      "route": "LUNA_TRIAGE",
-      "scheduled": true,
-      "workflow": "cycle-navigator-precision-learning-supervisor.yml",
-      "write_target_class": "DIRECT_MAIN",
-      "writer_group": "framework-main-writer"
-    },
-    {
-      "cluster_id": null,
-      "existing_remediation": {
-        "finding": "LATEST_RUN_FAILED",
-        "route": "OBSERVE",
-        "signature": "6527da8c9acf543d83c1",
-        "state": "OBSERVED"
-      },
-      "failure_streak": 1,
-      "findings": [
-        "LATEST_RUN_FAILED"
-      ],
-      "latest_head_sha": "066fce34a3c32c94c1c2ab9a69d08531012fc1fd",
-      "latest_run_id": 37340145456,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37340145456",
-      "model_lane": "GPT_6_LUNA",
-      "openai_enabled": true,
-      "recent_failure_count": 1,
-      "route": "LUNA_TRIAGE",
-      "scheduled": true,
-      "workflow": "framework-learning-supervisor.yml",
-      "write_target_class": "DIRECT_MAIN",
-      "writer_group": "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
-    }
-  ],
+  "items": [],
   "material_delta": true,
   "routing_summary": {
     "existing_remediation_count": 0,
-    "luna_triage_count": 2,
+    "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
-  "source_health_generated_at_utc": "2026-10-05T22:05:49.712900Z",
-  "source_health_status": "RED"
+  "source_health_generated_at_utc": "2026-10-06T10:34:56.691858Z",
+  "source_health_status": "AMBER"
 }
