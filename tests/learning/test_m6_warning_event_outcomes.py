@@ -32,5 +32,6 @@ class M6WarningEventTests(unittest.TestCase):
               "protection_tracker":{"contract":"COMPASS_PROTECTION_TRACKER_v1","data_quality":"OK","pullback_risk_state":"HIGH"}}))
             r=M.build(root,M.parse("2026-10-08T00:00:00Z"))
             self.assertEqual(r["event_count"],2);self.assertEqual(r["provisional_independent_family_count"],1)
-            self.assertEqual([x["independent_family_weight"] for x in r["events"]],[1.0,0.0])\n            self.assertTrue(all(x["episode_family_status"]=="PROVISIONAL_OPEN_UNTIL_TROUGH_OBSERVED" for x in r["events"]))
+            self.assertEqual([x["independent_family_weight"] for x in r["events"]],[1.0,0.0])
+            self.assertTrue(all(x["episode_family_status"]=="PROVISIONAL_OPEN_UNTIL_TROUGH_OBSERVED" for x in r["events"]))
 if __name__=="__main__":unittest.main()

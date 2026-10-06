@@ -19,57 +19,55 @@ It is intentionally a presentation and live-context surface, not a new market-st
 9. The NOW risk curve MUST be owned by the typed Official Compass capitalization ladder. Legacy weekly rotation text may appear only as structural context outside the live action surface and must not be converted into site-derived action badges.
 10. Live Price Range Precision MUST expose its source timestamp and freshness SLA. If the last complete hourly owner observation exceeds the SLA, the UI must show `STALE` rather than `LIVE`.
 11. The Pages delivery should refresh after the successful hourly owner chain reaches Native Handlekompas. This is delivery only and cannot alter Official Compass or Cycle Navigator authority.
-12. PATH is a three-track presentation surface: `MARKET CYCLE`, `ROTATION`, and `ALTCOIN CYCLE TIMER`. None of these tracks is an independent market classifier or execution owner.
-13. MARKET CYCLE MUST use only structured public `decision_projection.weeks_4_8` / `next_21_30d` fields for canonical phase placement and forward destination. If the structured phase is unavailable or `UNCLEAR`, the public phase MUST remain `UNCLEAR`; free-form Monday text MUST NOT be converted into a canonical cycle phase by the browser.
-14. ROTATION MUST read the typed Official Compass `capitalization_ladder` for live BTC → ETH → large → mid → small → micro → memes status and ETA. Frozen weekly `rotation_ladder` text may be shown only as supporting context.
-15. ALTCOIN CYCLE TIMER defaults to `ALTSEASON IGNITION` with the public meaning `Small-cap expansion gate`. Its displayed ETA is an ETA to that governed target gate, not a guarantee that the phase itself begins inside the window. The ETA MUST come from the governed SMALL_CAPS Compass row when available. As governed stages activate, the focus may advance one useful step at a time through Micro acceleration → Broad altseason → Mania / Euphoria. During parabolic/mania conditions the next highlighted phase may switch to Distribution; any governed sell/trim state may switch focus to Exit / Protection.
-16. PATH MUST NOT synthesize a calendar countdown or a more precise ETA from elapsed time, prices, stage order, historical averages, or client-side arithmetic. If the relevant governed source does not publish an ETA, the public result is `NO SUPPORTED ETA`.
-17. The Altcoin Cycle sequence may show Participation → ETH unlock → Large/Mid transmission → Altseason Ignition → Micro acceleration → Broad altseason → Mania/Euphoria → Distribution → Exit/Protection → Re-entry, but later sequence steps are references only until their governing sources activate them.
-18. Distribution MUST read `COMPASS_PROTECTION_TRACKER_v1.distribution_risk`; Exit / Protection MUST read `COMPASS_SELL_ASSESSMENT_v1`; Re-entry MUST read `COMPASS_PROTECTION_TRACKER_v1.reentry_state`. Neither pullback nor distribution context alone may become a frontend sell instruction.
-19. If the Official Compass is unavailable, live Rotation and Altcoin Cycle states fail closed to `UNAVAILABLE`; independently frozen Monday context may remain visible.
-20. Pages MUST verify the exact internal Official Compass source binding against the current canonical Cycle Navigator pointer before PATH may use that Compass as a live weekly overlay. The public delivery receipt may expose only alignment status, public issue identity and forecast week; internal paths, hashes and machine issue identifiers remain private.
-21. If Compass→weekly alignment is `MISMATCH` or `UNVERIFIED`, PATH MUST keep the frozen Monday path visible but fail live Rotation, Altcoin Cycle, protection and exit overlays closed until lineage is aligned. This delivery safeguard MUST NOT make the independently verified NOW Compass unavailable.
-22. Every prominent Altcoin Cycle ETA MUST remain visibly described as a conditional target-gate/review window, not a guaranteed phase-start date or automatic sell date.
-23. The Altcoin Cycle Timer MUST visually separate the live `NOW POSITION` from the amber `WATCH TARGET`. The current marker is presentation-only and may select the furthest sequential stage whose governed live owner is already `HOLD`, `ACTIVE` or `CONFIRMED`; it MUST NOT upgrade the underlying stage status or turn a target into a current phase.
-24. A target ETA MAY appear in the large Altcoin Timer headline only when the source-owned ETA is supported and the governed target status is already `HOLD`, `ACTIVE` or `CONFIRMED`. Conditional or unsupported ETAs remain visible on the relevant timeline row but MUST be withheld from the headline.
-25. The compact PATH overview MUST preserve the same NOW-vs-target distinction as the detailed Altcoin Timer. It MUST NOT summarize the watch target as though it were the current phase.
-26. The premium NOW recommendation MUST expose its next governed review window prominently. That window is a reassessment horizon, not a promise that the action changes at expiry.
-27. Hourly Native Handlekompas may be shown as a clearly labeled context-only freshness monitor. It MUST expose age/staleness and MUST NOT replace Official Compass as the action, horizon, Bull/Bear or execution owner.
-28. The NOW conclusion triad MUST label short-horizon direction by its actual horizon and MUST NOT present a 0–12h directional state as the weekly market phase. The 5–7d Official Compass outlook remains visually separate.
-29. The NOW risk field MUST pair the governed pullback state with the source-owned protection ETA/window when available and keep distribution status as separate context. A pullback watch MUST NOT be presented as an automatic sell or short instruction.
-30. The NOW triad MAY link to a presentation-only decision detail panel that explains the same governed fields for investors and swing traders. The panel MUST NOT introduce new thresholds, forecasts, execution rules or site-side market classification.
-31. Conditional PATH timing MUST be presented as a watch window with explicit confirmation semantics, not as a countdown. Presentation may translate units such as `1-7d conditional` into plain English such as `1–7 days · only if confirmation arrives`, but MUST preserve the source-owned timing and MUST NOT add precision.
-32. MARKET CYCLE MAY show a visual route and short-horizon decision-window rail for orientation. A long-cycle stage may light only when the structured long-cycle owner supports that placement. When the long-cycle phase is `UNCLEAR` or unavailable, the site MUST say that the exact cycle phase is not confirmed rather than infer a stage from price action or weekly prose.
-33. The big-picture PATH surface SHOULD preserve both expert and fast-scan value: short-horizon direction, week-ahead direction, long-cycle availability, the full cycle route, and the longer explanation remain distinct layers rather than being collapsed into one market-phase label.
-34. A structured forward destination MUST NOT be labeled as the current market-cycle phase. Until an independently supported current long-cycle phase exists, PATH must keep the current cycle position explicitly unconfirmed while it may separately highlight the next supported destination.
-35. PATH presentation SHOULD translate internal implementation vocabulary into public investment language without changing the underlying state. Terms such as owner, lineage, fail-closed, canonical, frozen Monday and machine package must not be required knowledge for understanding the public PATH surface.
-36. Public display labels MAY simplify internal status vocabulary for readability, for example HARD_WAIT → WAIT, LOCKED/INACTIVE → NOT ACTIVE and UNAVAILABLE → NO SIGNAL, provided the raw state remains unchanged and the display never makes the signal more permissive.
-37. PATH SHOULD expose a compact reading guide that makes the visual grammar self-explanatory: blue means current/now, amber means next watch, and grey means not confirmed or not yet supported.
-38. Public PATH horizon labels MAY translate raw `UNAVAILABLE` into `NOT READY` and data-health `OK/PASS` into `UP TO DATE`, provided the underlying values remain untouched and no unavailable signal is represented as active.
-39. Public Altcoin stage naming SHOULD prefer market language over implementation language, for example `Large + mid caps join` and `Small caps begin to participate`, while preserving the exact source state and timing rules.
-40. The visible NOW and PATH surfaces SHOULD use public investment language rather than framework-governance language. Terms such as `governed`, `owner`, `canonical`, `lineage`, `action authority`, and `capital transmission` may remain internal implementation concepts but SHOULD NOT be required to understand an investor-facing conclusion.
-41. Public-language translation MUST remain presentation-only. It may rename `OK/PASS` to `UP TO DATE`, `UNAVAILABLE` to `NOT READY`, or similar conservative labels, but MUST NOT alter the underlying Compass state, timing, Bull/Bear balance, action or risk semantics.
-42. When the exact long-cycle stage is not supported, PATH MAY still show a blue current-context marker describing the published weekly setup, but it MUST explicitly say that the cycle stage is not confirmed and MUST NOT place that marker on a specific cycle node.
-43. A non-conditional future horizon attached to a WAIT-like Altcoin state SHOULD be labeled as a review window rather than an event ETA. Conditional gates remain watch windows. Neither presentation may imply that the phase begins automatically when the window expires.
-44. The public Altcoin sequence SHOULD label the ETH step in market language such as `Ethereum leadership` rather than implementation shorthand such as `Ethereum unlock`, while leaving the internal key and authority unchanged.
+12. PATH v3 is a two-primary-layer presentation surface: `MARKET CYCLE` and `THIS WEEK'S ROTATION`. Altseason timing remains a compact milestone/watch panel inside MARKET CYCLE rather than a third duplicated phase ladder. None of these presentation layers is an independent market classifier or execution owner.
+13. MARKET CYCLE MUST present the crypto journey as a source-owned checkpoint route: BTC leadership → Ethereum leadership → Large + mid rotation → Altseason ignition → Micro acceleration → Broad altseason → Mania / euphoria → Distribution → Exit / protection → Cooldown / re-entry.
+14. The MARKET CYCLE route MAY mark a live current checkpoint from typed Official Compass / protection / sell / re-entry state, but the marker is presentation-only. It MUST NOT silently claim that an independently unconfirmed 4–8 week cycle phase has become confirmed.
+15. A structured `decision_projection.next_21_30d` or `weeks_4_8` destination may be shown as a separate long-range view. A forward destination MUST NOT masquerade as the current checkpoint.
+16. The old PATH short-horizon `DECISION WINDOWS` rail (0–12h / 1–3d / 5–7d / 2–3w / 4–8w) is retired from the primary PATH journey because NOW/Market Compass already owns those horizons.
+17. THIS WEEK'S ROTATION MUST read the typed Official Compass `capitalization_ladder` for BTC → ETH → large → mid → small → micro → memes. Weekly CN `rotation_ladder` text is supporting explanation only.
+18. Rotation MUST use one compact rail with a visually distinct CURRENT POSITION and NEXT GATE. Seven stacked primary rotation cards are not the preferred v3 presentation.
+19. The Rotation rail MAY be framed as Monday baseline → live now → Sunday review, but it MUST NOT fabricate day-by-day asset sequencing or imply that every tier must open before the week ends.
+20. MICROCAPS MUST NOT proxy MEMES. MEMES remains unavailable until its own signal exists.
+21. The compact Altseason Watch defaults to `ALTSEASON IGNITION` with public meaning `Small caps begin to participate`. Its ETA is a source-owned target/watch window, not a guaranteed phase-start date.
+22. As source-owned stages activate, the Altseason Watch target MAY advance to Micro acceleration → Broad altseason → Mania / euphoria → Distribution / protection → Re-entry. The target changes; PATH MUST NOT reintroduce a second long duplicate stage ladder.
+23. Distribution MUST read `COMPASS_PROTECTION_TRACKER_v1.distribution_risk`; Exit / Protection MUST read `COMPASS_SELL_ASSESSMENT_v1`; Re-entry MUST read `COMPASS_PROTECTION_TRACKER_v1.reentry_state`. Neither pullback nor distribution context alone may become a frontend sell instruction.
+24. PATH MUST NOT synthesize a calendar countdown or more precise ETA from elapsed time, prices, stage order, historical averages or client-side arithmetic. Unsupported timing remains `NO SUPPORTED ETA`.
+25. Conditional timing MUST be presented as a watch window with explicit confirmation semantics, for example `1–7 days · only if confirmation arrives`. It is never a countdown.
+26. If Official Compass is unavailable or Compass→weekly alignment is not `ALIGNED`, live checkpoint, Rotation, Altseason Watch, protection and exit overlays fail closed. Independently frozen weekly context may remain visible.
+27. Pages MUST verify the exact internal Official Compass source binding against the current Cycle Navigator public identity before live PATH overlays are accepted.
+28. The compact PATH overview MUST keep CURRENT CHECKPOINT, NEXT WATCH and LONG-RANGE VIEW distinct. It MUST NOT summarize the next watch as the current phase.
+29. The current checkpoint may select the furthest sequential live tier already supported by existing Compass semantics. A `HOLD` status may identify the current supported rotation position but MUST NOT be rewritten into `ACTIVE` or `CONFIRMED`.
+30. The MARKET CYCLE visual grammar is: blue = current supported checkpoint, amber = next watch target, grey = later/reference phase. Past checkpoints may be visually muted but not rewritten.
+31. PATH SHOULD be understandable without internal terms such as owner, lineage, canonical, fail-closed, machine package, action authority or capital transmission.
+32. Public display labels MAY simplify internal status vocabulary conservatively, but MUST NOT make a signal more permissive or precise.
+33. Longer 2–3 week / 4–8 week prose belongs behind `More cycle context` or another progressive disclosure, not as a repeated primary timeline.
+34. The primary mobile acceptance target is that current checkpoint, next watch, cycle route and Altseason Watch are visible within the first PATH viewport plus a short scroll, while Rotation remains compact and scan-friendly.
+35. The v3 release contract marker is `CN_PATH_CYCLE_ROTATION_v3`. Release gates MUST reject a regression that restores the old primary Decision Windows rail or requires the retired `3 · ALTCOIN CYCLE TIMER` section.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
-## PATH v2 product freeze
+## PATH product freeze and v3 supersession
 
-Effective 2026-10-05, the three-track PATH product architecture is considered **product-frozen** after PR #1500 and the subsequent clarity/polish passes.
+PATH v2 was product-frozen on 2026-10-05 after PR #1500. On 2026-10-06, production iPhone screenshots documented a concrete usability regression: Compass decision-window duplication inside PATH, repeated rotation/altseason ladders and excessive vertical density.
 
-Frozen product invariants:
+That evidence activates the versioned exception permitted by the freeze.
 
-- The first-scan questions remain: **Where is the market? → Where is capital rotating? → What is the next supported phase/watch target and when should it be reviewed?**
-- The information architecture remains `MARKET CYCLE` → `ROTATION` → `ALTCOIN CYCLE TIMER` unless a documented user problem or new source-owned data capability justifies a versioned change.
-- `ALTSEASON IGNITION` remains the default high-beta watch target when supported, with current position visually distinct from the amber next-watch target.
-- Conditional windows remain watch windows, not countdowns. Unsupported timing remains `NO SUPPORTED ETA`.
-- Presentation changes must prefer public market language and must not expose internal governance vocabulary merely because source artifacts use it.
-- Cosmetic churn alone is not sufficient reason to redesign PATH. Future changes require a concrete regression, evidence-backed usability problem, or genuinely new source capability.
-- Historical development branch `feat/cn-path-three-track-v2` is superseded by current `main` and MUST NOT be merged or rebased back into production as a unit. It is salvage/history only; any future reuse requires a fresh semantic diff against current main.
+PATH v3 therefore supersedes the v2 **presentation architecture only**.
 
-This freeze constrains presentation churn only. It does not block source-owned Compass/Cycle Navigator data updates, scoring/accountability fixes, privacy repairs, or safety/reliability corrections.
+Frozen v3 product invariants:
+
+- First-scan questions remain: **Where are we in the market journey? → What must unlock next? → Where is capital rotating this week?**
+- Primary IA is `MARKET CYCLE` → `THIS WEEK'S ROTATION`, with Altseason Watch embedded as a compact cycle milestone.
+- Market Cycle owns the big journey from BTC leadership through altseason and protection.
+- Rotation owns the detailed BTC → ETH → large → mid → small → micro → memes live risk curve.
+- Short-horizon Compass decision windows are not duplicated as the primary PATH timeline.
+- Altseason Watch remains source-owned and conditional; no browser countdown math.
+- Current checkpoint and next watch must remain visually and semantically distinct.
+- Cosmetic churn alone is not sufficient reason to redesign PATH after v3. Future changes require a documented regression, evidence-backed usability problem or genuinely new source capability.
+- Historical branch `feat/cn-path-three-track-v2` remains salvage/history only and MUST NOT be merged or rebased into production as a unit.
+- Implementation specification: `05_CYCLE_NAVIGATOR/site/PATH_V3_CYCLE_ROTATION_PRODUCT_SPEC.md`.
+
+This freeze constrains presentation churn only. It does not block source-owned Compass/Cycle Navigator updates, scoring/accountability fixes, privacy repairs or safety/reliability corrections.
 
 ## NEXT DAYS / short-horizon rule
 
