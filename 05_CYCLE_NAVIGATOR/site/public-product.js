@@ -450,7 +450,7 @@ function altseasonWatchPanel(pkg,compass,state){
   const protection=target.mode==='PROTECTION';
   return '<section class="cycle-watch-v3'+(protection?' protect':'')+'">'
     +'<div><span>'+esc(protection?'PROTECTION WATCH':'ALTSEASON WATCH')+'</span><strong>'+esc(target.title)+'</strong><p>'+esc(target.subtitle||'Next source-owned cycle milestone')+'</p></div>'
-    +'<aside>'+timingMarkup(target.eta,protection?'REVIEW WINDOW':'TIMING')+'<small>'+esc(t.conditional?'Only if confirmation arrives · not a countdown':protection?'Not an automatic sell date':'The next milestone changes only when its own signal confirms. · no browser countdown math')+'</small></aside>'
+    +'<aside>'+timingMarkup(target.eta,protection?'REVIEW WINDOW':'TIMING')+(t.conditional&&!protection?'':'<small>'+esc(protection?'Not an automatic sell date':'The next milestone changes only when its own signal confirms. · no browser countdown math')+'</small>')+'</aside>'
     +'</section>';
 }
 function marketCycleTrack(pkg,compass){
