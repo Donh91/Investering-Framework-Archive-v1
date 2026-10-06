@@ -108,14 +108,17 @@
       "id": "S5_DERIVATIVES_CROWDING_TO_PULLBACK_V1",
       "priority": "P0_P1",
       "score": 22,
-      "state": "OPEN_AFTER_P0_ALPHA_LANES",
+      "state": "BASELINE_MERGED_PROSPECTIVE_GRADING_PENDING",
       "owner": "existing SPOT_PERP_FLOW_DIVERGENCE + Compass/Pullback",
       "targets": [
         "CoinGlass",
         "Laevitas",
         "exchange-native"
       ],
-      "next_action": "Extend existing benchmark, do not create parallel derivatives engine; preregister pullback/distribution outcomes"
+      "next_action": "Accumulate prospective frozen crowding vectors and grade them against existing M6 outcomes. Add liquidation/options challengers only after baseline incremental value can be measured.",
+      "merged_pr": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1515",
+      "execution_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1514",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S5_EXECUTION_RECEIPT_2026-10-06.md"
     },
     {
       "rank": 6,
@@ -200,10 +203,10 @@
   },
   "master_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
   "current_next_action": {
-    "id": "S5_DERIVATIVES_CROWDING_TO_PULLBACK_V1",
-    "detail": "Fresh-read existing spot/perp divergence and Pullback/Compass owners. Reproduce the smallest crowding/liquidation primitive from exchange-native/public evidence before adding provider dependency. Preregister pullback/distribution outcomes and do not create a parallel market engine."
+    "id": "S6_DISTRIBUTION_EGRESS_AND_EXCHANGE_FLOW_V1",
+    "detail": "Fresh-read Distribution/Exit Overhang and Wallet Alpha owners. Reproduce destination/egress evidence from raw chain or admitted label challengers without treating exchange labels as truth. Test whether attributable CEX/pool egress adds value beyond observed wallet sells."
   },
   "source_capability_snapshot": "04_RESEARCH_LAB/external_specialist_dissection/SOURCE_CAPABILITY_SNAPSHOT_2026-10-06.md",
-  "last_completed_action": "S3_RELATIONSHIP_RESOLVER_MERGED_PR106_RAW_MEMBERSHIP_GAP_EXPLICIT",
+  "last_completed_action": "S5_EXCHANGE_NATIVE_CROWDING_BASELINE_MERGED_PR1515",
   "last_completed_at_utc": "2026-10-06"
 }
