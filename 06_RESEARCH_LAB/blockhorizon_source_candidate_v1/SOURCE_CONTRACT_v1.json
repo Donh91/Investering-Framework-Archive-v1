@@ -1,11 +1,11 @@
 {
   "source_contract_id": "BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1",
-  "status": "MANUAL_EXPORT_SEED_ACTIVE__API_PENDING__RESEARCH_ONLY__PRIVATE_RAW_RETENTION_AUTHORIZED",
+  "status": "OFFICIAL_EXPORT_TRANSPORT_ACTIVE__API_MCP_PENDING__RESEARCH_ONLY__PRIVATE_RAW_RETENTION_AUTHORIZED",
   "provider": "BlockHorizon",
   "instrument_scope": [
     "BTC"
   ],
-  "access_mode": "USER_INITIATED_MANUAL_EXPORT_ONLY",
+  "access_mode": "USER_INITIATED_OFFICIAL_EXPORT",
   "automated_collection": "NOT_AUTHORIZED_BY_THIS_CONTRACT",
   "canonical_authority": "NONE_BY_ITSELF",
   "portfolio_authority": "NONE",
@@ -61,5 +61,36 @@
     ],
     "current_pointer": "CURRENT_PRIVATE_BINDING.json"
   },
-  "promotion_rule": "Historical findings remain research evidence and may not self-promote into canonical thresholds, weights, runtime authority or portfolio action."
+  "promotion_rule": "Historical findings remain research evidence and may not self-promote into canonical thresholds, weights, runtime authority or portfolio action.",
+  "access_transport_status": "ACCESS_TRANSPORT_STATUS_v1.json",
+  "official_export_transport": {
+    "status": "VALIDATED_AVAILABLE_ON_PROVIDER_SITE",
+    "historical_scope": "FULL_HISTORY_PER_SELECTED_METRIC",
+    "tabular_formats": [
+      "CSV",
+      "JSON",
+      "EXCEL"
+    ],
+    "visual_format": "PNG",
+    "framework_ingestion_preference": "CSV_PRIMARY__JSON_SECONDARY__EXCEL_FALLBACK",
+    "raw_archive_rule": "PRESERVE_ORIGINAL_PROVIDER_EXPORT_BYTE_FOR_BYTE_IN_RESTRICTED_DATA_PLANE",
+    "undocumented_internal_endpoints": "DO_NOT_USE"
+  },
+  "website_chart_read": {
+    "status": "ALLOWED_FOR_INSPECTION_AND_RESEARCH_TRIAGE",
+    "allowed": [
+      "CURRENT_DISPLAYED_VALUE_READING",
+      "AXIS_AND_SERIES_INTERPRETATION",
+      "METRIC_DISCOVERY",
+      "VISUAL_CROSSCHECK"
+    ],
+    "archive_rule": "WHEN A TABULAR EXPORT EXISTS, USE THE EXPORT RATHER THAN PIXEL_ESTIMATION FOR HISTORICAL SERIES",
+    "provenance_rule": "RECORD PROVIDER URL AND OBSERVATION DATE WHEN WEBSITE-READ VALUES MATERIALLY INFORM RESEARCH"
+  },
+  "public_machine_access": {
+    "api": "NOT_PUBLICLY_DOCUMENTED_OR_VALIDATED_AS_OF_2026-10-06",
+    "mcp": "NOT_PUBLICLY_DOCUMENTED_OR_VALIDATED_AS_OF_2026-10-06",
+    "transition_rule": "DO NOT INTEGRATE UNTIL ACCESS IS PUBLIC OR OWNER-AUTHORIZED AND HISTORICAL RETRIEVAL, IDENTIFIERS, AUTH, RATE LIMITS, TIMESTAMP SEMANTICS AND REVISION BEHAVIOR ARE VALIDATED"
+  },
+  "transport_abstraction_rule": "KEEP DOWNSTREAM RAW ARCHIVE, PROVENANCE, NORMALIZATION AND RESEARCH GATES STABLE; CHANGE ONLY THE RETRIEVAL TRANSPORT AFTER A HASHED PARITY CHECK AGAINST AN EXISTING OFFICIAL EXPORT."
 }
