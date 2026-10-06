@@ -53,6 +53,10 @@ function publicPathText(raw){
     .replace(/\bdecision owner\b/gi,'signal source')
     .replace(/\bowner\b/gi,'signal source')
     .replace(/\bnative\b/gi,'live')
+    .replace(/ETH-relative/gi,'Ethereum-vs-Bitcoin')
+    .replace(/settled ETH ETF flows/gi,'Ethereum ETF flows')
+    .replace(/mixed microstructure/gi,'mixed short-term market structure')
+    .replace(/microstructure/gi,'short-term market structure')
     .replace(/\s+/g,' ')
     .trim();
   const exact=[
@@ -71,7 +75,8 @@ function publicPathText(raw){
     [/A verified aligned sell\/trim signal source is unavailable\.?/i,'No verified sell or trim signal is currently available.'],
     [/No verified sell\/trim signal source is bound\.?/i,'No verified sell or trim signal is active.'],
     [/Only unlocks after broad altseason is credibly confirmed\.?/i,'This phase only becomes relevant after broad altseason is confirmed.'],
-    [/Persistent multi-horizon confirmation\.?/i,'Strength confirmed across multiple timeframes.']
+    [/Persistent multi-horizon confirmation\.?/i,'Strength confirmed across multiple timeframes.'],
+    [/Meme risk is a separate rung and requires a verified meme-specific signal source\. No such signal source is currently bound, so MICROCAPS cannot be used as a proxy\.?/i,'Meme risk is tracked separately. No verified meme-specific signal is available yet, so microcaps are not used as a substitute.']
   ];
   for(const [pattern,replacement] of exact)s=s.replace(pattern,replacement);
   return s.replace(/\s+/g,' ').trim();
@@ -525,7 +530,7 @@ function altcoinCycleTimer(pkg,compass){
     return '<article class="alt-cycle-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isTarget?' target':'')+'"><i>'+esc(i+1)+'</i><div><span>'+esc(x.title)+'</span>'+(x.subtitle?'<small>'+esc(x.subtitle)+'</small>':'')+'</div><strong>'+esc(publicPathStatus(x.status))+'</strong><div class="alt-step-timing">'+timingMarkup(x.eta,timingKind)+'</div><details><summary>Why?</summary>'+(x.monday?'<p><em>Weekly timing:</em> '+esc(timingInline(x.monday))+'</p>':'')+'<p>'+esc(short(publicPathText(x.why),240))+'</p></details></article>';
   }).join('');
   const nowStrip=currentStage&&current.source==='LIVE'
-    ?'<div class="alt-now-strip"><span>NOW POSITION</span><strong>'+esc(currentStage.title)+'</strong><b>'+esc(publicPathStatus(currentStage.status))+' · '+esc(timingInline(currentStage.eta))+'</b><small>Blue = current confirmed position in this sequence. Amber = next watch target. A watch window is conditional, never a countdown.</small></div>'
+    ?'<div class="alt-now-strip"><span>NOW POSITION</span><strong>'+esc(currentStage.title)+'</strong><b>'+esc(publicPathStatus(currentStage.status))+' · '+esc(timingInline(currentStage.eta))+'</b><small>Blue = current checkpoint in this sequence. Amber = next watch target. A watch window is conditional, never a countdown.</small></div>'
     :'<div class="alt-now-strip unresolved"><span>NOW POSITION</span><strong>Not confirmed yet</strong><b>Waiting for a fresh live signal</b><small>The weekly baseline remains visible, but the current live stage is not shown until the data can place it reliably.</small></div>';
   const targetPanel=headlineEta
     ?'<div class="alt-countdown '+(target.mode==='PROTECTION'?'protect':'')+'"><span>WATCH WINDOW · NOT CURRENT PHASE</span><strong>'+esc(timingWindow(headlineEta).label)+'</strong><b>'+esc(publicPathStatus(target.status))+'</b><small class="alt-countdown-semantics">'+esc(target.mode==='PROTECTION'?'Review window · not an automatic sell date':'This is the next watch target, not the current market phase or a countdown.')+'</small></div>'
@@ -533,7 +538,7 @@ function altcoinCycleTimer(pkg,compass){
   return '<section class="path-track altcoin-timer-v2" data-path-track="altcoin-cycle" data-contract="CN_PATH_THREE_TRACK_v2">'
     +'<header class="alt-timer-hero"><div><span>3 · ALTCOIN CYCLE TIMER</span><small>'+esc(target.eyebrow)+' · WATCH TARGET</small><h3>'+esc(target.title)+'</h3><p>'+esc(target.subtitle)+'</p></div>'+targetPanel+'</header>'
     +nowStrip
-    +'<div class="alt-timer-note"><span>Blue = current confirmed position. Amber = the next gate worth watching.</span><b>Timing comes from the published market signal · no browser countdown math</b></div>'
+    +'<div class="alt-timer-note"><span>Blue = current checkpoint. Amber = the next gate worth watching.</span><b>Timing comes from the published market signal · no browser countdown math</b></div>'
     +'<div class="alt-cycle-rail">'+rows+'</div>'
     +'</section>';
 }
