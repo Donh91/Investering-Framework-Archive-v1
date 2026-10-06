@@ -20,7 +20,7 @@
       "score": 25,
       "state": "WAITING_FOR_COMPARABLE_CLAIMS",
       "owner": "04_RESEARCH_LAB",
-      "next_action": "Define shared disagreement receipt once S1-S3 produce provider/internal claim pairs"
+      "next_action": "Define shared disagreement receipt after S1-S3 produce comparable claim pairs; archive spec in canonical folder."
     }
   ],
   "lanes": [
@@ -29,14 +29,16 @@
       "id": "S1_EXECUTABLE_SELLABILITY_TRUTH_V1",
       "priority": "P0",
       "score": 24,
-      "state": "OPEN_NEXT",
+      "state": "SPECIFIED_WAITING_FOR_HEAVY_LANE",
       "owner": "Meme-Alpha-Lab microstructure/execution-quality",
       "targets": [
         "GoPlus",
         "Honeypot.is",
         "raw simulation/routes"
       ],
-      "next_action": "Fresh overlap audit sellability owners; specify matched provider-vs-independent round-trip cohort; source-audit APIs before dependency"
+      "next_action": "Fresh overlap audit sellability owners; specify matched provider-vs-independent round-trip cohort; source-audit APIs before dependency",
+      "spec": "04_RESEARCH_LAB/external_specialist_dissection/S1_EXECUTABLE_SELLABILITY_TRUTH_V1.md",
+      "blocker": "Respect Meme Alpha one-heavy-lane rule while Ocellus/Pons PR #97 is unresolved."
     },
     {
       "rank": 2,
@@ -177,5 +179,10 @@
       "Meme-Alpha-Lab/research/discovery/PONS_V2_PUBLIC_SOURCE_TRANSFER_2026-10-05.md",
       "Meme-Alpha-Lab/scripts/collectors/robinhood_pons_curve_trades_v1.py"
     ]
+  },
+  "master_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+  "current_next_action": {
+    "id": "RESOLVE_ACTIVE_S4_THEN_START_S1",
+    "detail": "Keep S4 Ocellus/Pons as the only active heavy Alpha lane. After its PR is resolved, implement the smallest S1 provider-observation challenger joined to existing execution_shadow_v4; do not create a second execution engine."
   }
 }
