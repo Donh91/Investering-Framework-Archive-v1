@@ -1,3 +1,11 @@
+## 2026-10-06 · PATH v3 cycle journey
+
+- Replaced the duplicated PATH Decision Windows rail with a source-owned crypto cycle journey from BTC leadership through rotation, altseason, protection and re-entry.
+- Collapsed the seven stacked Rotation cards into one compact weekly BTC → ETH → large → mid → small → micro → memes rail with CURRENT POSITION, NEXT GATE and WHAT UNLOCKS IT.
+- Retired the separate long Altcoin Cycle Timer ladder as a duplicate presentation; Altseason remains a compact watch milestone attached to the main cycle route.
+- Preserved source-owned ETA semantics, Compass/CN alignment, separate distribution/sell/re-entry authority and fail-closed behavior.
+- Added `CN_PATH_CYCLE_ROTATION_v3`, mobile-first v3 styling, versioned product spec and regression gates that reject restoration of the old primary Decision Windows / third Altcoin ladder.
+
 # V2 changelog — 2026-09-16
 
 - Replaced multi-section primary navigation with NOW / PATH / WHY.
