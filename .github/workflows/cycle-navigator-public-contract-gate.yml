@@ -242,11 +242,14 @@ jobs:
               if not Path(path).exists():
                   raise SystemExit(f'final_public_asset_missing:{path}')
           product=Path('05_CYCLE_NAVIGATOR/site/dist/public-product.js').read_text()
-          if 'CN_PATH_THREE_TRACK_v2' not in product:
-              raise SystemExit('path_three_track_contract_missing')
-          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small caps begin to participate','WATCH TARGET · NOT CURRENT','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION WATCH','HERE NOW · CURRENT SETUP','NEXT SUPPORTED PHASE'):
+          if 'CN_PATH_CYCLE_ROTATION_v3' not in product:
+              raise SystemExit('path_v3_contract_missing')
+          for marker in ('1 · MARKET CYCLE','2 · THIS WEEK’S ROTATION','CURRENT CHECKPOINT','NEXT WATCH','LONG-RANGE VIEW','BTC leadership','Ethereum leadership','Large + mid rotation','ALTSEASON IGNITION','Small caps begin to participate','Micro acceleration','Broad altseason','Mania / euphoria','Distribution','Exit / protection','Cooldown / re-entry','MONDAY BASELINE','SUNDAY REVIEW','CURRENT POSITION','NEXT GATE','WHAT UNLOCKS IT','NO SUPPORTED ETA'):
               if marker not in product:
-                  raise SystemExit(f'path_three_track_marker_missing:{marker}')
+                  raise SystemExit(f'path_v3_marker_missing:{marker}')
+          for retired in ('DECISION WINDOWS','3 · ALTCOIN CYCLE TIMER'):
+              if retired in product:
+                  raise SystemExit(f'path_v3_retired_surface_regression:{retired}')
           if "jsonOptional('./data/compass.json')" not in product:
               raise SystemExit('path_not_bound_to_public_compass')
           if "compass?.sell_assessment" not in product or "compass?.protection_tracker" not in product:
@@ -260,13 +263,15 @@ jobs:
           if "return{key:'MICRO'" not in product or "return{key:'BROAD'" not in product or "return{key:'MANIA'" not in product:
               raise SystemExit('altcoin_target_progression_incomplete')
           if "no browser countdown math" not in product:
-              raise SystemExit('altseason_timer_countdown_semantics_missing')
-          if "This window opens only if confirmation arrives. It is not a countdown to altseason." not in product:
-              raise SystemExit('altseason_timer_watch_window_disclosure_missing')
+              raise SystemExit('altseason_watch_countdown_semantics_missing')
+          if "Only if confirmation arrives" not in product:
+              raise SystemExit('altseason_watch_window_disclosure_missing')
           if "function publicPathText" not in product or "function publicPathStatus" not in product:
               raise SystemExit('path_public_language_filter_missing')
-          if "this is a destination, not the current phase." not in product:
-              raise SystemExit('path_forward_destination_current_phase_guard_missing')
+          if "function cycleRouteState" not in product or "data-cycle-role=" not in product or "'current-checkpoint'" not in product or "'next-watch'" not in product:
+              raise SystemExit('path_current_next_separation_missing')
+          if "function rotationSnapshot" not in product or "rotation-line-v3" not in product:
+              raise SystemExit('path_weekly_rotation_contract_missing')
           if "LIVE SIGNALS REFRESHING" not in product or "function pathWeeklyAlignment" not in product:
               raise SystemExit('path_weekly_alignment_guard_missing')
           latest=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
