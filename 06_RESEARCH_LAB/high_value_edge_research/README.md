@@ -59,7 +59,7 @@ Listing is not evidence and creates no implementation or live authority.
 
 ## Execution and adversarial evaluation, #1521, 2026-10-06
 
-Status: T2_LOCAL_EXECUTION_PASS / REMOTE_WORKFLOW_PENDING_VERIFICATION / METHOD_REVIEW_REQUIRED.
+Status: T2_LOCAL_EXECUTION_PASS / ARTIFACT_PERSISTED_VIA_PR / REMOTE_WORKFLOW_DISPATCH_UNAVAILABLE / METHOD_REVIEW_REQUIRED.
 Authority: RESEARCH_ONLY. CLAIM_LEVEL=HYPOTHESIS. WARNING_IS_SELL=FALSE. LIVE_EXIT_RULE=NONE.
 
 This is an execution receipt and method review, not a new research owner or evidence of warning/trading skill. Issue: [#1521](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1521). Exact source checkout: `9320d4f6977de93f1a5b01473b5058c53685e730`.
@@ -108,4 +108,6 @@ Coverage/inferential readiness: NOT_READY.
 Edge/promotion status: NO_CHANGE.
 Write manifest: one generator newline repair plus append to this existing README; no frozen-contract, workflow, registry-policy, index or source-data changes.
 Backup product for this run: NONE; no new Vault snapshot verified.
-Remote run/merge completion must be recorded in the #1521 issue thread after exact-head readback; the local PASS above must not be mistaken for a remote Actions PASS.
+Repair PR #1523 merged at `d969e0cd8b548ed4a2e74a0027969a78b7c86a26` after both exact-head checks (Data Architecture Gate and Storage Health Gate) passed. The existing push trigger produced no observed Actions run for that merge at the follow-up check. The available GitHub connection exposes no new workflow-dispatch operation. The exact locally generated registry is therefore persisted through a second isolated PR, without changing its bytes or claim status. #1521 stays OPEN until its required current-main GitHub Actions run is verified. A later workflow run should be an idempotent no-change build if the source remains unchanged. Do not rerun an old failed run: it is bound to the pre-repair commit and cannot verify this fix.
+
+Outstanding agent action: dispatch `.github/workflows/edge001-t2-registry.yml` on fresh main, verify build and guard success, confirm the committed registry hash above, then close the execution issue independently of the unresolved method-review gate. This README's method findings remain binding caution for research follow-up; no blanket inferential PASS is claimed.
