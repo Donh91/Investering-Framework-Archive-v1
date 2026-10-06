@@ -1,0 +1,44 @@
+name: Research S5 Derivatives Crowding v1
+
+on:
+  pull_request:
+    paths:
+      - '04_RESEARCH_LAB/external_specialist_dissection/S5_DERIVATIVES_CROWDING_TO_PULLBACK_V1.md'
+      - '06_RESEARCH_LAB/derivatives_crowding_v1/**'
+      - 'scripts/experiments/derivatives_crowding_features_v1.py'
+      - 'tests/experiments/test_derivatives_crowding_features_v1.py'
+      - '.github/workflows/research-s5-derivatives-crowding-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: python -m py_compile scripts/experiments/derivatives_crowding_features_v1.py
+      - name: Unit tests
+        run: python -m unittest tests.experiments.test_derivatives_crowding_features_v1 -v
+      - name: Frozen live-source fixture replay
+        run: |
+          for f in 06_RESEARCH_LAB/derivatives_crowding_v1/fixtures/BINANCE_*_2026-10-06.json; do
+            python scripts/experiments/derivatives_crowding_features_v1.py --input "$f" --output /tmp/out.json >/dev/null
+            python - <<'PY'
+          import json
+          x=json.load(open('/tmp/out.json'))
+          assert x['contract']=='DERIVATIVES_CROWDING_FEATURE_VECTOR_V1'
+          assert x['authority']=='RESEARCH_ONLY'
+          assert x['compass_authority'] is False
+          assert x['thresholds_tuned'] is False
+          assert x['windows']['24h']['state']=='COMPLETE'
+          assert x['interpretation_boundary']['incomplete_intervals_excluded'] is True
+          print('S5_FROZEN_SOURCE_FIXTURE_PASS',x['symbol'],x['decision_cutoff_utc'])
+          PY
+          done
