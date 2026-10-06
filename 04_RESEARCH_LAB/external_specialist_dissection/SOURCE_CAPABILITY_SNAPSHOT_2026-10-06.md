@@ -71,9 +71,8 @@ Documented capability:
 Research verdict:
 HIGH_VALUE challenger for S1 where chain coverage is supported.
 
-Important uncertainty:
-Robinhood Chain support was not established in this discovery pass.
-Fail closed until coverage is proven.
+Documented chain scope:
+Honeypot.is currently documents Ethereum, Binance Smart Chain and Base only. Robinhood Chain is not documented as supported and must not be used as Robinhood evidence.
 
 ## Arkham
 
