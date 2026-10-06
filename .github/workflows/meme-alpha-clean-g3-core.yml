@@ -7,6 +7,9 @@ on:
       - 'tests/api_agent/test_meme_alpha_clean_g3.py'
       - '.github/workflows/meme-alpha-clean-g3-core.yml'
       - 'research/api_agent/meme_alpha/contracts/PROSPECTIVE_CLEAN_G3_BUYER_GRAPH_SPEC_v1.json'
+      - 'research/api_agent/meme_alpha/experiments/PONS_EARLY_BUYER_PRECURSOR_INTEGRATION_V1.json'
+      - 'scripts/api_agent/meme_alpha_pons_early_buyer.py'
+      - 'tests/api_agent/test_meme_alpha_pons_early_buyer.py'
   workflow_dispatch:
 
 permissions:
@@ -24,4 +27,6 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run clean G3 deterministic tests
-        run: python -m unittest tests.api_agent.test_meme_alpha_clean_g3 -v
+        run: |
+          python -m unittest tests.api_agent.test_meme_alpha_clean_g3 -v
+          python -m unittest tests.api_agent.test_meme_alpha_pons_early_buyer -v
