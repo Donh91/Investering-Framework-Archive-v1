@@ -1,0 +1,52 @@
+name: EDGE-001 T2 Outcome Registry
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/research/edge001_t2_outcome_registry.py'
+      - '.github/workflows/edge001-t2-registry.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: edge001-t2-registry
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build outcome-only registry
+        run: |
+          python scripts/research/edge001_t2_outcome_registry.py \
+            --repo-root . \
+            --output 06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/T2_OUTCOME_ONLY_EPISODE_REGISTRY_v1.json
+      - name: Guard no Framework join
+        run: |
+          python - <<'PY'
+          import json
+          p='06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/T2_OUTCOME_ONLY_EPISODE_REGISTRY_v1.json'
+          x=json.load(open(p))
+          assert x['framework_warning_data_joined'] is False
+          assert x['primary_cell']['grid_pct']==10
+          assert x['primary_cell']['asset']=='BTCUSDT'
+          print('EDGE001_T2_GUARD_PASS')
+          PY
+      - name: Commit immutable registry
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          p=06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/T2_OUTCOME_ONLY_EPISODE_REGISTRY_v1.json
+          git add "$p"
+          if git diff --cached --quiet; then
+            echo "No registry change"
+            exit 0
+          fi
+          git commit -m "research: freeze EDGE-001 T2 outcome-only registry"
+          git push
