@@ -4,7 +4,12 @@
   "items": [
     {
       "cluster_id": null,
-      "existing_remediation": null,
+      "existing_remediation": {
+        "finding": "LATEST_RUN_FAILED",
+        "route": "OBSERVE",
+        "signature": "f6739e0078acc8f59091",
+        "state": "OBSERVED"
+      },
       "failure_streak": 1,
       "findings": [
         "LATEST_RUN_FAILED"
@@ -23,7 +28,12 @@
     },
     {
       "cluster_id": null,
-      "existing_remediation": null,
+      "existing_remediation": {
+        "finding": "LATEST_RUN_FAILED",
+        "route": "OBSERVE",
+        "signature": "6527da8c9acf543d83c1",
+        "state": "OBSERVED"
+      },
       "failure_streak": 1,
       "findings": [
         "LATEST_RUN_FAILED"
@@ -41,6 +51,6 @@
       "writer_group": "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
     }
   ],
-  "plan_fingerprint": "10b181640382ecec21303573aaf100c84feedaf48b95141cf5346009bf2a075f",
+  "plan_fingerprint": "b4d64e1f36e60e4373b7d4c44aa1e6303978b51a7ade82fc79517a0b5e99c4bd",
   "source_health_generated_at_utc": "2026-10-05T22:05:49.712900Z"
 }

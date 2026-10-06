@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-05T22:10:07Z",
+  "generated_at_utc": "2026-10-06T09:21:41Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,31 +15,31 @@
   },
   "luna_triage": {
     "evidence_against": [
-      "Each workflow has only one reported recent failure and a failure streak of one, so persistence is not established.",
-      "No run logs, failed job or step, error message, exit code, or dependency status were supplied.",
-      "The shared GPT_6_LUNA lane and scheduled execution do not by themselves establish a common dependency failure."
+      "Each workflow has only one reported recent failure and a failure streak of 1; persistence is not established.",
+      "The failures are from different run IDs and head SHAs, and no shared error signature or dependency evidence is supplied.",
+      "No job logs, failing step, exit code, or dependency health details are provided to identify a transient cause or code defect."
     ],
     "evidence_for": [
-      "Both supplied workflows have LATEST_RUN_FAILED and each has recent_failure_count 1.",
-      "Both are scheduled, use the GPT_6_LUNA lane, and have OpenAI enabled.",
-      "The supplied writer-group information points to framework-main-writer for the scheduled runs."
+      "Both supplied workflows have a latest run marked failed.",
+      "Both items report scheduled execution, OpenAI enabled, and an existing remediation state of OBSERVED."
     ],
     "forecast_candidates": [],
     "hypotheses": [
-      "Batch as two unconfirmed, single-run failures for initial inspection; current evidence cannot distinguish transient execution noise from a dependency failure or code defect.",
-      "cycle-navigator-precision-learning-supervisor.yml: failure class undetermined; transient is possible, but not demonstrated. Missing evidence includes job/step logs and the specific error. Existing owner to inspect next: framework-main-writer.",
-      "framework-learning-supervisor.yml: failure class undetermined; transient is possible, but not demonstrated. Missing evidence includes job/step logs and the specific error. Its scheduled writer-group expression resolves to framework-main-writer; inspect with that existing owner."
+      "Batch as two isolated, unclassified latest-run failures; the supplied evidence does not support attributing them to a shared dependency or code defect.",
+      "Treat both as possibly transient execution noise, but unconfirmed until the failing steps and logs are inspected.",
+      "For cycle-navigator-precision-learning-supervisor.yml, the supplied existing next owner is framework-main-writer.",
+      "For framework-learning-supervisor.yml, the supplied writer-group expression selects framework-main-writer outside pull-request events; event context is absent, so confirm the applicable existing owner."
     ],
     "status": "DEGRADED",
-    "summary": "Two current failed runs, each with a streak of one. Triage is limited by absent run-level failure details; no persistent defect or shared dependency failure is established. No existing remediation is reported.",
+    "summary": "Two workflows have one latest-run failure each, with no evidence of a persistent pattern. Batch for log-level inspection; retain their existing OBSERVED remediation states and do not create duplicate remediation.",
     "uncertainties": [
-      "The cause and failing step for each run are unknown because run logs and error details were not supplied.",
-      "It is unknown whether the failures share a dependency or are unrelated.",
-      "The second workflow's writer-group value is an expression; its scheduled-run path indicates framework-main-writer, but no other ownership information was supplied."
+      "Failing job and step, error output, exit code, and whether either run was retried.",
+      "Whether the failures share a dependency or have workflow-specific causes.",
+      "The event context needed to resolve the second workflow's conditional writer-group expression."
     ]
   },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "10b181640382ecec21303573aaf100c84feedaf48b95141cf5346009bf2a075f",
+  "plan_fingerprint": "b4d64e1f36e60e4373b7d4c44aa1e6303978b51a7ade82fc79517a0b5e99c4bd",
   "routing_summary": {
     "existing_remediation_count": 0,
     "luna_triage_count": 2,
