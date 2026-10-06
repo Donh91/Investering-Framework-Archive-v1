@@ -10,6 +10,9 @@ on:
       - 'research/api_agent/meme_alpha/experiments/PONS_EARLY_BUYER_PRECURSOR_INTEGRATION_V1.json'
       - 'scripts/api_agent/meme_alpha_pons_early_buyer.py'
       - 'tests/api_agent/test_meme_alpha_pons_early_buyer.py'
+      - 'research/api_agent/meme_alpha/experiments/ROBINHOOD_WALLET_HISTORY_COMPLETENESS_V1.json'
+      - 'scripts/api_agent/robinhood_wallet_history_completeness_v1.py'
+      - 'tests/api_agent/test_robinhood_wallet_history_completeness_v1.py'
   workflow_dispatch:
 
 permissions:
@@ -30,3 +33,4 @@ jobs:
         run: |
           python -m unittest tests.api_agent.test_meme_alpha_clean_g3 -v
           python -m unittest tests.api_agent.test_meme_alpha_pons_early_buyer -v
+          python -m unittest tests.api_agent.test_robinhood_wallet_history_completeness_v1 -v
