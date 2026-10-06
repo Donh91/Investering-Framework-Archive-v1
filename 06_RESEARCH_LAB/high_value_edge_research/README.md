@@ -111,3 +111,33 @@ Backup product for this run: NONE; no new Vault snapshot verified.
 Repair PR #1523 merged at `d969e0cd8b548ed4a2e74a0027969a78b7c86a26` after both exact-head checks (Data Architecture Gate and Storage Health Gate) passed. The existing push trigger produced no observed Actions run for that merge at the follow-up check. The available GitHub connection exposes no new workflow-dispatch operation. The exact locally generated registry is therefore persisted through a second isolated PR, without changing its bytes or claim status. #1521 stays OPEN until its required current-main GitHub Actions run is verified. A later workflow run should be an idempotent no-change build if the source remains unchanged. Do not rerun an old failed run: it is bound to the pre-repair commit and cannot verify this fix.
 
 Outstanding agent action: dispatch `.github/workflows/edge001-t2-registry.yml` on fresh main, verify build and guard success, confirm the committed registry hash above, then close the execution issue independently of the unresolved method-review gate. This README's method findings remain binding caution for research follow-up; no blanket inferential PASS is claimed.
+
+
+## #1526 execution and continued control-repair mission, 2026-10-07
+
+Authority: RESEARCH_ONLY. No Framework-warning data was read or joined. No T3 statistic, action simulation, threshold tuning, policy change or live action was performed.
+
+### Completed, not queued
+
+1. Executed frozen v1.1 generator twice from source head `9929081d0570a6510ce7a0457a5b25dcf54914f9`. Syntax PASS; byte-identical output SHA-256 `b8ffeadecf4a1adf182eac8a5ab163d002af1237c1274cf3e867588977592882`. Source and immutable v1 parent hashes match #1526.
+2. Independent audit checks all actual segment-end censored episodes, trough-based/segment-separated family memberships, globally unique IDs including fires and clusters, and cross-asset overlap-only transitive components. Those checks PASS.
+3. Two additional control fixtures FAIL on v1.1: unresolved end-of-tape control omitted; BTC10 crossing already present at the P1 fire close can be mislabeled V_REVERSAL. Neither changes an actual classified control on this tape. v1.1 execution is complete, but its unrestricted method gate is FAIL, not T2B_READY.
+4. Preserved exact v1.1 output and FAIL audit. Separately froze `T2_OUTCOME_REGISTRY_CONTROL_REPAIR_v1_2.md` at commit `5b6b0dea46e6b7d1a6e2a47fea83062aaeb58a55` before v1.2 execution. Implemented only the two control-boundary repairs in a separate generator.
+5. Executed v1.2 twice; byte-identical output SHA-256 `627318638be5901f1aa4c165fa73a1297c496f74e9e751924a826acac6931f2a`. Independent audit PASS. v1, v1.1 generators, frozen contracts and parent v1 bytes remain unchanged.
+6. Reconciled v1.1/v1.2: every episode, family, comparator and primary cluster row is identical. Actual control IDs/classifications are identical. Exactly two existing censored controls gain censor_utc/censor_reason metadata. No outcome membership was selected using warnings.
+7. Persisted separate machine receipts: `T2_V1_1_EXECUTION_AUDIT_v1.json`, `T2_V1_2_EXECUTION_AUDIT_v1.json`, `T2_V1_1_V1_2_RECONCILIATION_v1.json`. Reusable read-only auditor: `scripts/research/edge001_outcome_registry_audit.py`.
+
+### Reconciliation and evaluation
+
+| Window | Primary BTC10 families, v1 -> repaired | Primary ETH15 families, v1 -> repaired | Primary BTC/ETH clusters | BTC recovered / censored controls |
+| --- | --- | --- | ---: | --- |
+| ALTSEASON_2020_2021 | 12 -> 11 | 10 -> 10 | 11 | 14 / 2 |
+| MODERN_ANALOGUE_2025_2026 | 13 -> 8 | 12 -> 7 | 6 | 1 / 0 |
+
+The older BTC family count is 11 rather than the earlier exploratory trough-only count 7 because v1.1 correctly prohibits merging across continuity segments and retains crossed censored episodes. The earlier diagnostic was not a replacement registry. These cross-asset cluster counts are outcome independence bookkeeping, not eligible typed-warning inferential N or edge evidence.
+
+Evaluation: the repaired outcome mechanics are reproducible and survive the independent audit. This does not solve absent historical typed-warning provenance, the single modern recovered-control power limitation, regime coverage or action economics. Current typed Claim A remains NOT_TESTABLE_AT_PIT and Claim B NOT_TESTABLE_NOW. Modern controls may not be silently pooled to rescue the three-control floor.
+
+Next separate mission after exact main readback: T2B source/provenance preflight, binding input to the v1.2 hash above. Confirm archived typed-owner coverage and first-main-commit knowledge times before any actual signal join. Missing warning coverage must remain UNKNOWN / OWNER_NOT_AVAILABLE, never an invented NO_WARNING performance result. T3 and trading remain closed. #1521 is separate and remains open only for its unverified v1 Actions run; this mission does not close it.
+
+Archive write manifest: isolated explicit task branch; new outcome-only artifacts, read-only auditor, separate control-repair contract/generator and append to existing README. No deletion, workflow, canonical index, frozen v1/v1.1 contract or raw-source change. Backup product: NONE for this run. Main persistence and closure status are recorded in #1526 after CI and readback.
