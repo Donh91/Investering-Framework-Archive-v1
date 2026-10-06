@@ -13,7 +13,7 @@ OUTCOME_CONTRACT = "OFFICIAL_DAILY_COMPASS_OUTCOME_v1"
 FREEZE_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
 PROTECTION_CONTRACT = "COMPASS_PROTECTION_TRACKER_v1"
 REPORT_CONTRACT = "ACTION_COMPASS_PROTECTION_CALIBRATION_v2"
-ELIGIBLE_DECISION_POLICY_PREFIX = "2026-09-25_DECISION_INTEGRITY_"
+ELIGIBLE_DECISION_POLICIES = {\n    "2026-09-25_DECISION_INTEGRITY_V3_2",\n    "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",\n}
 ELIGIBLE_PROJECTION_SOURCE = "MACHINE_PACKAGE"
 
 
@@ -229,7 +229,7 @@ def build_report(repo_root: Path, outcome_root: Path, generated_at_utc: str | No
         "cohorts": cohorts,
         "prospective_source_gate": {
             "minimum_compass_schema_version": 3,
-            "decision_policy_prefix": ELIGIBLE_DECISION_POLICY_PREFIX,
+            "registered_decision_policies": sorted(ELIGIBLE_DECISION_POLICIES),
             "required_decision_projection_source": ELIGIBLE_PROJECTION_SOURCE,
             "required_protection_contract": PROTECTION_CONTRACT,
             "historical_prose_backfill": False,
