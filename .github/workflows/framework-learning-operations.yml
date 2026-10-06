@@ -171,6 +171,13 @@ jobs:
             --repo-root . \
             --outcome-root 04_MARKET_LEARNING/handlekompas/official/outcomes \
             --output research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json')
+          row=json.loads(p.read_text())
+          print('PROTECTION_CALIBRATION', row.get('status'), 'eligible=', row.get('eligible_series_row_count'), 'warnings=', row.get('warning_series_row_count'), 'excluded=', row.get('excluded_outcome_counts'))
+          PY
       - name: Build DEL segment-return research foundation
         run: |
           python -m unittest tests.learning.test_segment_return_foundation -q
