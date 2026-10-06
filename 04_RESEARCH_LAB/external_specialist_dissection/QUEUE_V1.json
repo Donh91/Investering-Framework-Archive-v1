@@ -30,7 +30,7 @@
       "id": "S1_EXECUTABLE_SELLABILITY_TRUTH_V1",
       "priority": "P0",
       "score": 24,
-      "state": "SPECIFIED_WAITING_FOR_HEAVY_LANE",
+      "state": "ACTIVE_IMPLEMENTATION",
       "owner": "Meme-Alpha-Lab microstructure/execution-quality",
       "targets": [
         "GoPlus",
@@ -39,8 +39,9 @@
       ],
       "next_action": "Fresh overlap audit sellability owners; specify matched provider-vs-independent round-trip cohort; source-audit APIs before dependency",
       "spec": "04_RESEARCH_LAB/external_specialist_dissection/S1_EXECUTABLE_SELLABILITY_TRUTH_V1.md",
-      "blocker": "Respect Meme Alpha one-heavy-lane rule while Ocellus/Pons PR #97 is unresolved.",
-      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/98"
+      "blocker": "",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/98",
+      "active_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/100"
     },
     {
       "rank": 2,
@@ -79,13 +80,14 @@
       "id": "S4_LAUNCH_TRAJECTORY_AND_RETENTION_V1",
       "priority": "P0",
       "score": 23,
-      "state": "ACTIVE_IMPLEMENTATION",
+      "state": "MERGED_CAPABILITY_ACTIVE",
       "owner": "Meme-Alpha-Lab",
       "targets": [
         "Pons v2 first-party",
         "Ocellus challenger"
       ],
-      "next_action": "Continue append-only curve trades, first-sale latency, fixed-horizon cohort maturation and graduation-progress reconstruction"
+      "next_action": "Continue append-only curve trades, first-sale latency, fixed-horizon cohort maturation and graduation-progress reconstruction",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/97"
     },
     {
       "rank": 5,
@@ -184,10 +186,10 @@
   },
   "master_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
   "current_next_action": {
-    "id": "RESOLVE_ACTIVE_S4_THEN_START_S1",
-    "detail": "Keep S4 Ocellus/Pons as the only active heavy Alpha lane. After its PR is resolved, implement the smallest S1 provider-observation challenger joined to existing execution_shadow_v4; do not create a second execution engine."
+    "id": "S1_LIVE_PROVIDER_PROOF",
+    "detail": "Complete PR #100 CI. If source/normalization gates pass, merge and begin bounded provider-vs-internal cohort capture; if a provider fails, retain the negative source result and do not force admission."
   },
   "source_capability_snapshot": "04_RESEARCH_LAB/external_specialist_dissection/SOURCE_CAPABILITY_SNAPSHOT_2026-10-06.md",
-  "last_completed_action": "MASTER_QUEUE_CREATED_AND_S1_SPECIFIED",
+  "last_completed_action": "S4_OCELLUS_PONS_MERGED_S1_IMPLEMENTATION_STARTED",
   "last_completed_at_utc": "2026-10-06"
 }
