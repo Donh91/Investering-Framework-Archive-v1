@@ -177,6 +177,102 @@ class MissionConvergenceTests(unittest.TestCase):
         convergence_path.write_text(json.dumps(mutated), encoding="utf-8")
         self.assertIsNone(gated.valid_completion(root, task))
 
+    def write_convergence_receipt(self, root, task, candidate, completion, *, corrupt_hash=False):
+        assessment_path = root / "assessment.json"
+        assessment_path.write_text(json.dumps(self.assessment_for(task, candidate)), encoding="utf-8")
+        receipt = convergence.build_receipt(
+            root,
+            candidate["candidate_id"],
+            completion["merge_commit_sha"],
+            completion["pr_number"],
+            assessment_path,
+        )
+        if corrupt_hash:
+            receipt["receipt_sha256"] = "a" * 64
+        path = root / "research/codex/convergence" / f"{candidate['candidate_id']}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return path, receipt
+
+    def write_hash_supersession(self, root, task, completion, base_path, receipt, *, name="v1.json", **overrides):
+        actual_hash = convergence.canonical_hash({k: v for k, v in receipt.items() if k != "receipt_sha256"})
+        sidecar = {
+            "contract": convergence.SUPERSESSION_CONTRACT,
+            "status": convergence.SUPERSESSION_STATUS,
+            "candidate_id": task["candidate_id"],
+            "signature": task["signature"],
+            "candidate_sha256": task["candidate_sha256"],
+            "task_contract_sha256": task["task_contract_sha256"],
+            "pr_number": completion["pr_number"],
+            "merge_commit_sha": completion["merge_commit_sha"],
+            "base_path": base_path.relative_to(root).as_posix(),
+            "base_blob_sha": convergence.git_blob_sha(base_path),
+            "original_receipt_sha256": receipt["receipt_sha256"],
+            "corrected_receipt_sha256": actual_hash,
+            "authority": convergence.SUPERSESSION_AUTHORITY,
+        }
+        sidecar.update(overrides)
+        path = root / "research/codex/convergence/supersessions" / task["candidate_id"] / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(sidecar, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return path
+
+    def test_invalid_hash_only_receipt_accepts_exact_append_only_supersession(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        base_path, receipt = self.write_convergence_receipt(root, task, candidate, completion, corrupt_hash=True)
+        original_bytes = base_path.read_bytes()
+        self.assertIsNone(convergence.validate_receipt(root, task, completion))
+        self.write_hash_supersession(root, task, completion, base_path, receipt)
+        corrected = convergence.validate_receipt(root, task, completion)
+        self.assertIsNotNone(corrected)
+        self.assertEqual(base_path.read_bytes(), original_bytes)
+        self.assertEqual(
+            corrected["receipt_sha256"],
+            convergence.canonical_hash({k: v for k, v in receipt.items() if k != "receipt_sha256"}),
+        )
+
+    def test_supersession_rejects_semantic_or_binding_change(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        base_path, receipt = self.write_convergence_receipt(root, task, candidate, completion, corrupt_hash=True)
+        self.write_hash_supersession(
+            root, task, completion, base_path, receipt,
+            merge_commit_sha="e" * 40,
+        )
+        self.assertIsNone(convergence.validate_receipt(root, task, completion))
+
+    def test_valid_base_receipt_rejects_unnecessary_supersession(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        base_path, receipt = self.write_convergence_receipt(root, task, candidate, completion)
+        self.write_hash_supersession(root, task, completion, base_path, receipt)
+        self.assertIsNone(convergence.validate_receipt(root, task, completion))
+
+    def test_multiple_supersessions_fail_closed(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        base_path, receipt = self.write_convergence_receipt(root, task, candidate, completion, corrupt_hash=True)
+        self.write_hash_supersession(root, task, completion, base_path, receipt, name="v1.json")
+        self.write_hash_supersession(root, task, completion, base_path, receipt, name="v2.json")
+        self.assertIsNone(convergence.validate_receipt(root, task, completion))
+
+    def test_supersession_with_extra_semantic_payload_fails_closed(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        completion = self.write_completion(root, task)
+        base_path, receipt = self.write_convergence_receipt(root, task, candidate, completion, corrupt_hash=True)
+        self.write_hash_supersession(
+            root, task, completion, base_path, receipt,
+            corrected_receipt={"objective": "forbidden semantic replacement"},
+        )
+        self.assertIsNone(convergence.validate_receipt(root, task, completion))
+
+
     def test_candidate_mutation_after_task_binding_fails_closed(self):
         root = self.make_root()
         candidate, task = self.prepare_task(root)
