@@ -115,7 +115,7 @@ class ProtectionCalibrationTests(unittest.TestCase):
             outcome_root = self.write_case(root, policy="2026-09-24_LEGACY")
             report = MODULE.build_report(root, outcome_root, "2026-09-30T00:00:00Z")
             self.assertEqual(report["eligible_series_row_count"], 0)
-            self.assertEqual(report["excluded_outcome_counts"]["PRE_DECISION_INTEGRITY_POLICY"], 1)
+            self.assertEqual(report["excluded_outcome_counts"]["UNREGISTERED_DECISION_POLICY"], 1)
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -123,6 +123,27 @@ class ProtectionCalibrationTests(unittest.TestCase):
             report = MODULE.build_report(root, outcome_root, "2026-09-30T00:00:00Z")
             self.assertEqual(report["eligible_series_row_count"], 0)
             self.assertEqual(report["excluded_outcome_counts"]["PROTECTION_DATA_QUALITY_NOT_OK"], 1)
+
+    def test_current_v4_policy_and_pullback_warning_are_eligible_with_unknown_distribution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outcome_root = self.write_case(
+                root,
+                policy="2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+                pullback="ELEVATED",
+                distribution="UNKNOWN",
+            )
+            report = MODULE.build_report(root, outcome_root, "2026-10-06T00:00:00Z")
+            self.assertEqual(report["status"], "PASS")
+            self.assertEqual(report["eligible_series_row_count"], 2)
+            self.assertEqual(report["warning_series_row_count"], 2)
+            self.assertEqual(
+                report["prospective_source_gate"]["registered_decision_policies"],
+                [
+                    "2026-09-25_DECISION_INTEGRITY_V3_2",
+                    "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+                ],
+            )
 
     def test_normal_typed_state_is_calibrated_without_being_called_a_warning(self):
         with tempfile.TemporaryDirectory() as tmp:
