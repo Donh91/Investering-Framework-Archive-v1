@@ -190,7 +190,7 @@ jobs:
           row=json.loads(Path('research/framework_memory/m6_warning_events/LATEST.json').read_text())
           assert row['warning_is_sell'] is False
           assert row['live_exit_rule']=='NONE'
-          print('M6_WARNING_EVENTS', 'events=', row['event_count'], 'families=', row['independent_family_count'])
+          print('M6_WARNING_EVENTS', 'events=', row['event_count'], 'provisional_families=', row['provisional_independent_family_count'])
           PY
       - name: Build DEL segment-return research foundation
         run: |
