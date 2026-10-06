@@ -4,7 +4,8 @@ import argparse,csv,gzip,json,hashlib
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
 
-# T2 outcome membership is frozen before any Framework signal join.\nSRC=Path("06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/hourly_features.csv.gz")
+# T2 outcome membership is frozen before any Framework signal join.
+SRC=Path("06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/hourly_features.csv.gz")
 WINDOWS=("ALTSEASON_2020_2021","MODERN_ANALOGUE_2025_2026")
 GRIDS={"BTCUSDT":(0.10,0.15,0.20),"ETHUSDT":(0.15,0.20,0.30)}
 COL={"BTCUSDT":"btc_usdt","ETHUSDT":"eth_usdt"}
