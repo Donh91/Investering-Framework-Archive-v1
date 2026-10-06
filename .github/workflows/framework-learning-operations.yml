@@ -178,6 +178,20 @@ jobs:
           row=json.loads(p.read_text())
           print('PROTECTION_CALIBRATION', row.get('status'), 'eligible=', row.get('eligible_series_row_count'), 'warnings=', row.get('warning_series_row_count'), 'excluded=', row.get('excluded_outcome_counts'))
           PY
+      - name: Build prospective M6 warning-event research outcomes
+        run: |
+          python -m unittest tests.learning.test_m6_warning_event_outcomes -q
+          python scripts/learning/m6_warning_event_outcomes.py \
+            --repo-root . \
+            --output research/framework_memory/m6_warning_events/LATEST.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          row=json.loads(Path('research/framework_memory/m6_warning_events/LATEST.json').read_text())
+          assert row['warning_is_sell'] is False
+          assert row['live_exit_rule']=='NONE'
+          print('M6_WARNING_EVENTS', 'events=', row['event_count'], 'families=', row['independent_family_count'])
+          PY
       - name: Build DEL segment-return research foundation
         run: |
           python -m unittest tests.learning.test_segment_return_foundation -q
