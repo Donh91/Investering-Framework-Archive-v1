@@ -7,9 +7,8 @@ def capture(*,spot_sign=1,fut_sign=1,oi_sign=1,price_sign=1):
     # 25 completed hourly rows ending one hour before BASE, plus one deliberately
     # incomplete/future raw row that the cutoff must ignore.
     spot=[];oi=[];fut=[];basis=[]
-    for age in range(25,-1,-1):
-        ts=BASE-HOUR_MS-age*HOUR_MS
-        step=25-age
+    for step in range(26):
+        ts=BASE-25*HOUR_MS+step*HOUR_MS
         close=100.0 + price_sign*step
         oiv=1000.0 + oi_sign*step*5
         q=1000.0
