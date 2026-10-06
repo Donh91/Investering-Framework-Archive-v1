@@ -60,11 +60,11 @@ Public documentation exposes:
 - pair information;
 - top-holder resource.
 
-Important unresolved item:
-Robinhood Chain support is not established by the documentation reviewed for this spec.
+Current documented chain scope:
+Honeypot.is documents Ethereum, Binance Smart Chain and Base. Robinhood Chain is not in its documented supported-chain set.
 
 State:
-`API_CAPABILITY_CONFIRMED / ROBINHOOD_COVERAGE_UNKNOWN`.
+`API_CAPABILITY_CONFIRMED / ETH_BSC_BASE_ONLY_DOCUMENTED / NOT_ROBINHOOD_EVIDENCE`.
 
 ## Minimal provider observation contract
 
