@@ -52,7 +52,7 @@
       "id": "S2_WALLET_SKILL_TRUTH_TOURNAMENT_V1",
       "priority": "P0",
       "score": 23,
-      "state": "CAPABILITY_MERGED_PARTIAL_INDEXED_CHALLENGER",
+      "state": "PONS_PRECURSOR_ADAPTER_MERGED_ROBINHOOD_HISTORY_COMPLETENESS_PENDING",
       "owner": "Meme-Alpha-Lab Wallet Alpha Protocol",
       "targets": [
         "GMGN",
@@ -63,12 +63,14 @@
         "Lookonchain",
         "raw chain"
       ],
-      "next_action": "Continue bounded pagination/history-depth, winner+loser coverage, economic price/PnL reconciliation and prospective label-vs-internal tournament under existing Wallet Alpha owner. No new wallet engine.",
+      "next_action": "Audit bounded Robinhood wallet-history completeness/pagination through the existing Blockscout runtime owner before admitting wallet age/activity/funding features. Missing or truncated history remains UNKNOWN.",
       "spec": "04_RESEARCH_LAB/external_specialist_dissection/S2_WALLET_SKILL_TRUTH_TOURNAMENT_V1.md",
       "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/101",
       "active_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/102",
       "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/102",
-      "source_proof": "Meme-Alpha-Lab/research/discovery/GMGN_INDEXED_WALLET_SOURCE_PROOF_2026-10-06.md"
+      "source_proof": "Meme-Alpha-Lab/research/discovery/GMGN_INDEXED_WALLET_SOURCE_PROOF_2026-10-06.md",
+      "pons_precursor_pr": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1522",
+      "pons_precursor_receipt": "06_RESEARCH_LAB/alpha_lab/2026-10-06__pons-early-buyer-precursor-integration-v1.md"
     },
     {
       "rank": 3,
@@ -226,10 +228,10 @@
   },
   "master_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
   "current_next_action": {
-    "id": "PONS_EARLY_BUYER_PRECURSOR_INTEGRATION_V1",
-    "detail": "Finish and merge the existing-owner Pons first-10 -> Wallet Precursor/Clean G3 adapter after exact-head gates pass. In parallel, durable Pons capture is ACTIVE_WAIT for the first eligible post-activation case; do not alter selection rules."
+    "id": "ROBINHOOD_WALLET_HISTORY_COMPLETENESS_AUDIT_V1",
+    "detail": "Use existing Blockscout runtime transport and a real Pons fixture to prove pagination/history-depth semantics for pre-cutoff wallet transactions/token transfers. Do not create a new scanner or scheduler. Only after completeness is measurable may wallet-age/activity/funding context feed the Pons precursor packet."
   },
   "source_capability_snapshot": "04_RESEARCH_LAB/external_specialist_dissection/SOURCE_CAPABILITY_SNAPSHOT_2026-10-06.md",
-  "last_completed_action": "PONS_DURABLE_CAPTURE_FORWARD_BOUNDARY_ACTIVATED",
-  "last_completed_at_utc": "2026-10-06T21:41:43Z"
+  "last_completed_action": "PONS_EARLY_BUYER_PRECURSOR_INTEGRATION_MERGED_PR1522",
+  "last_completed_at_utc": "2026-10-06"
 }
