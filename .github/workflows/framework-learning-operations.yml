@@ -207,6 +207,27 @@ jobs:
           assert row['live_exit_rule']=='NONE'
           print('EDGE001_TSUNAMI_FEATURES', 'rows=', row['row_count'], 'collection_only=', row['collection_only'])
           PY
+      - name: Evaluate deterministic Edge Compound Governor
+        run: |
+          python -m unittest tests.research.test_edge_compound_governor -q
+          python scripts/research/edge_compound_governor.py \
+            --repo-root . \
+            --output research/framework_memory/edge_compound_governor/LATEST.json \
+            --history-root research/framework_memory/edge_compound_governor/history
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('research/framework_memory/edge_compound_governor/LATEST.json')
+          if p.exists():
+              row=json.loads(p.read_text())
+              assert row['authority']['portfolio_action'] is False
+              assert row['external_routing']['automatic_dispatch'] is False
+              assert row['rules']['warning_is_sell'] is False
+              assert row['rules']['live_exit_rule']=='NONE'
+              print('EDGE_COMPOUND_GOVERNOR', row['decision'], row['semantic_fingerprint'][:16], row['external_routing'])
+          else:
+              print('EDGE_COMPOUND_GOVERNOR NO_PERSISTED_DELTA')
+          PY
       - name: Build DEL segment-return research foundation
         run: |
           python -m unittest tests.learning.test_segment_return_foundation -q
