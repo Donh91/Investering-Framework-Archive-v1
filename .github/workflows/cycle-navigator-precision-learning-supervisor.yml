@@ -113,17 +113,36 @@ jobs:
       - name: Enforce internal-only public firewall
         run: |
           set -euo pipefail
+          is_allowed_precision_path() {
+            case "$1" in
+              05_CYCLE_NAVIGATOR/internal_learning/*|research/api_agent/outputs/cn_precision_learning/*|runtime/cn_precision_learning/*|runtime_cn_precision_learning_*.json)
+                return 0
+                ;;
+              */__pycache__/*.pyc)
+                # Python bytecode is an execution by-product, not a durable framework write.
+                return 0
+                ;;
+              *)
+                return 1
+                ;;
+            esac
+          }
+
+          # Positive and negative regression controls for the firewall boundary.
+          is_allowed_precision_path "scripts/api_agent/__pycache__/api_gateway.cpython-312.pyc"
+          if is_allowed_precision_path "05_CYCLE_NAVIGATOR/site/public-product.js"; then
+            echo "PRECISION_FIREWALL_NEGATIVE_CONTROL_FAILED"
+            exit 1
+          fi
+
           forbidden=false
           while IFS= read -r path; do
             [ -z "$path" ] && continue
-            case "$path" in
-              05_CYCLE_NAVIGATOR/internal_learning/*|research/api_agent/outputs/cn_precision_learning/*|runtime/cn_precision_learning/*|runtime_cn_precision_learning_*.json)
-                ;;
-              *)
-                echo "FORBIDDEN_PRECISION_LEARNING_WRITE:$path"
-                forbidden=true
-                ;;
-            esac
+            if is_allowed_precision_path "$path"; then
+              continue
+            fi
+            echo "FORBIDDEN_PRECISION_LEARNING_WRITE:$path"
+            forbidden=true
           done < <(git status --porcelain --untracked-files=all | sed 's/^...//')
           [ "$forbidden" = false ]
 
