@@ -16,7 +16,7 @@ class WeeklyForensicsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             p=Path(td)/"FINAL.json"
             payload={"contract":"WEEKLY_FORENSICS_PACK_v1","iso_week":40}
-            p.write_text(json.dumps(payload)+"\\\\n")
+            p.write_text(json.dumps(payload)+"\\n")
             self.assertEqual(mod.read_frozen_snapshot(p),payload)
             p.write_text(json.dumps(payload)+"garbage")
             self.assertIsNone(mod.read_frozen_snapshot(p))
