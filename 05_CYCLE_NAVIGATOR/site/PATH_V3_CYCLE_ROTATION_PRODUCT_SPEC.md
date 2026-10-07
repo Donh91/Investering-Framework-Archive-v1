@@ -358,3 +358,18 @@ Archive decision: EXISTING_OWNER_UPDATE. Classification: OPERATIONAL. Primary ow
 3. Run existing public-product/contract validators and exact-head CI. Archive concrete validation outcomes here.
 4. Merge only after checks pass, verify Pages exact SHA and artifact, inspect live browser output. Record any mobile acceptance limits honestly; issue #1518 is not PASS without actual viewport evidence.
 5. Read current data/storage/architecture/automation health. Report scoped product success separately from pre-existing estate alerts.
+
+
+## Decision clarity implementation record, 2026-10-07
+
+Status: OPERATIONAL, implemented on task branch; deployment pending.
+
+- Overview now uses sequential NEXT CHECKPOINT and no duplicate numeric timing. The repeated current-setup tile is reduced to one short context line. The full visual legend moves behind More cycle context; the route retains its short legend. Past checkpoints do not display future arrival ETAs.
+- Market Cycle remains the macro route, Rotation remains segment permission, Altseason Watch remains the compact milestone. No separate altcoin ladder is recreated. A collapsed action lens preserves investor, swing sell/re-entry and high-beta/meme permissions without repeating NOW horizon cards.
+- Weekly range journey renders two responsive SVG charts from existing public frozen and observed ranges. Bars represent each window’s aggregate low/high, not a chronological close-price path. The final frozen window spans Fri–Sun; upcoming hours and incomplete windows remain empty. Labelled boundary breaches show distance, without changing the official range score.
+- NOW retest card replaces the repeated primary risk tile. Current ordinary retest classification stays unconfirmed; LOW quality is qualitative. Depth and duration are unavailable in the current typed signal. Sell/rebuy edge is not established when the separate sell assessment is unavailable. Re-entry remains source-owned and can remain inactive.
+- PATH additionally requires an OK public Compass before accepting ALIGNED live overlays. Unavailable/stale evidence is never upgraded into a risk call. No workflows, source engines, raw-data schemas, frozen forecasts or historical scores were modified.
+
+Validation checkpoint: node syntax validation passed for both changed browser scripts. Existing and new renderer checks: 123/123 public-product release checks passed locally. Synthetic tests cover issue/week mismatch, unavailable source, immutable input preservation, complete coverage only, labelled breach, stale observation, ordinary unconfirmed risk and stale Compass risk rejection. Exact-head CI and deployed visual acceptance remain pending.
+
+Pre-change health snapshot: architecture evidence GREEN; automation production health RED with pre-existing adaptive-decision-miss-validation and edge001-t2-registry alerts. Product CI success must not be represented as aggregate estate health.
