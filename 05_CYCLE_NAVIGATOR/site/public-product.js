@@ -303,11 +303,11 @@ function pathTone(value){
 }
 function cycleGateState(value){
   const tone=pathTone(value);
-  if(tone==='active')return{key:'confirmed',level:4,label:'CONFIRMED'};
-  if(tone==='watch')return{key:'watch',level:2,label:'SIGNAL DEVELOPING'};
-  if(tone==='wait')return{key:'wait',level:0,label:'WAITING FOR CONFIRMATION'};
-  if(tone==='hold')return{key:'hold',level:0,label:'HOLD · NO NEW GATE'};
-  return{key:'unknown',level:0,label:'NO LIVE GATE'};
+  if(tone==='active')return{key:'confirmed',label:'CONFIRMED'};
+  if(tone==='watch')return{key:'watch',label:'SIGNAL DEVELOPING'};
+  if(tone==='wait')return{key:'wait',label:'WAITING FOR CONFIRMATION'};
+  if(tone==='hold')return{key:'hold',label:'HOLD · NO NEW GATE'};
+  return{key:'unknown',label:'NO LIVE GATE'};
 }
 function utcLabel(value){
   if(!value)return'—';
