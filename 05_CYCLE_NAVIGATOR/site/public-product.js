@@ -301,6 +301,14 @@ function pathTone(value){
   if(/CONFIRMED|ACTIVE/.test(s))return'active';
   return'unknown';
 }
+function cycleGateState(value){
+  const tone=pathTone(value);
+  if(tone==='active')return{key:'confirmed',level:4,label:'CONFIRMED'};
+  if(tone==='watch')return{key:'watch',level:2,label:'SIGNAL DEVELOPING'};
+  if(tone==='wait')return{key:'wait',level:0,label:'WAITING FOR CONFIRMATION'};
+  if(tone==='hold')return{key:'hold',level:0,label:'HOLD · NO NEW GATE'};
+  return{key:'unknown',level:0,label:'NO LIVE GATE'};
+}
 function utcLabel(value){
   if(!value)return'—';
   const d=new Date(value);if(!Number.isFinite(d.getTime()))return'—';
@@ -447,26 +455,31 @@ function cycleRouteState(pkg,compass){
 }
 function altseasonWatchPanel(pkg,compass,state){
   const target=state?.target||altcoinTarget(pkg,compass,altcoinCycleStages(pkg,compass)),t=timingWindow(target.eta);
-  const protection=target.mode==='PROTECTION';
+  const protection=target.mode==='PROTECTION',phase=state?.route?.find(x=>x.key===target.key)||{},gate=cycleGateState(phase.status);
+  const note=t.supported?(protection?'Review timing is shown on the route; this is not an automatic sell date.':'Any supported ETA is shown on the route and depends on its own signal.'):'No source-supported time range is available for this milestone.';
   return '<section class="cycle-watch-v3'+(protection?' protect':'')+'">'
     +'<div><span>'+esc(protection?'PROTECTION WATCH':'ALTSEASON WATCH')+'</span><strong>'+esc(target.title)+'</strong><p>'+esc(target.subtitle||'Next source-owned cycle milestone')+'</p></div>'
-    +'<aside>'+timingMarkup(target.eta,protection?'REVIEW WINDOW':'TIMING')+(t.conditional&&!protection?'':'<small>'+esc(protection?'Not an automatic sell date':'The next milestone changes only when its own signal confirms. · no browser countdown math')+'</small>')+'</aside>'
+    +'<aside><span>GATE STATUS</span><strong>'+esc(gate.label)+'</strong><small>'+esc(note)+'</small></aside>'
     +'</section>';
 }
 function marketCycleTrack(pkg,compass){
   const state=cycleRouteState(pkg,compass),forward=state.forward,forwardKnown=forward.key!=='UNCLEAR';
   const currentIndex=state.route.findIndex(x=>x.key===state.currentKey),targetIndex=state.route.findIndex(x=>x.key===state.targetKey);
   const rows=state.route.map((x,i)=>{
-    const isCurrent=i===currentIndex,isNext=i===targetIndex&&i!==currentIndex,isPassed=currentIndex>0&&i<currentIndex;
-    const eta=isNext?timingWindow(state.target.eta):timingWindow(x.eta);
-    return '<article class="cycle-journey-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isNext?' next':'')+(isPassed?' passed':'')+'" data-cycle-role="'+(isCurrent?'current-checkpoint':isNext?'next-watch':'reference')+'">'
-      +'<i>'+esc(cycleIcon(x.key))+'</i><span>'+esc(x.title)+'</span><b>'+esc(publicPathStatus(x.status))+'</b>'+(isNext&&eta.supported?'<small>'+esc(eta.conditional?'WATCH · '+eta.label:eta.label)+'</small>':'')+'</article>';
+    const isCurrent=i===currentIndex,isNext=currentIndex>=0&&i===currentIndex+1,isWatch=i===targetIndex&&!isCurrent&&!isNext,isPassed=currentIndex>0&&i<currentIndex;
+    const eta=timingWindow(i===targetIndex?state.target.eta:x.eta),incomingKind=['DISTRIBUTION','EXIT','REENTRY'].includes(x.key)?'REVIEW WINDOW':'ETA';
+    const nextGate=i<state.route.length-1?cycleGateState(state.route[i+1].status):null;
+    const dots=nextGate?'<span class="cycle-journey-dots gate-'+esc(nextGate.key)+(isCurrent?' live':'')+'" role="img" aria-label="Next gate: '+esc(nextGate.label)+'. Dots show Compass status, not elapsed time."><i></i><i></i><i></i><i></i></span>':'';
+    const timing=!isCurrent&&eta.supported?'<small class="cycle-journey-eta">'+esc(incomingKind+' FROM NOW · '+eta.label+(eta.conditional?' · IF CONFIRMED':''))+'</small>':'';
+    const role=isCurrent?'current-checkpoint':isWatch?'next-watch':isNext?'next-checkpoint':'reference';
+    return '<article class="cycle-journey-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isNext?' next':'')+(isWatch?' watch':'')+(isPassed?' passed':'')+'" data-cycle-role="'+role+'">'
+      +'<i>'+esc(cycleIcon(x.key))+'</i>'+dots+'<span class="cycle-journey-name">'+esc(x.title)+'</span><b>'+esc(publicPathStatus(x.status))+'</b>'+timing+'</article>';
   }).join('');
   const forwardLabel=forwardKnown?publicCycleSource(forward.source):'Long-range phase not confirmed';
   return '<section class="path-track market-cycle-v3" data-path-track="market-cycle" data-contract="CN_PATH_CYCLE_ROTATION_v3">'
     +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The cycle journey.</h3><p>Follow the market from Bitcoin leadership through rotation, altseason and protection. This route shows checkpoints, not a guaranteed sequence.</p></div><aside><span>LONG-RANGE VIEW</span><strong>'+esc(forwardKnown?'NEXT: '+((MARKET_CYCLE.find(x=>x[0]===forward.key)||['','Unresolved'])[1]):'NOT CONFIRMED')+'</strong><small>'+esc(forwardKnown?timingInline(forward.eta)+' · '+forwardLabel:'The site will not guess a long-cycle phase.')+'</small></aside></header>'
     +'<div class="cycle-context-v3"><span>CURRENT SETUP</span><strong>'+esc(state.currentKey?(state.route.find(x=>x.key===state.currentKey)?.title||'Current checkpoint'):'Checkpoint not confirmed')+'</strong><p>'+esc(weeklySetupLabel(pkg))+'</p></div>'
-    +'<div class="cycle-route-title-v3"><span>THE MARKET JOURNEY</span><small>Blue = current supported checkpoint · Amber = next watch · Grey = later phases</small></div>'
+    +'<div class="cycle-route-title-v3"><span>THE MARKET JOURNEY</span><small>Blue = current · Amber = next / watch · Grey = later phases<br>Dots show Compass gate status, not elapsed time. ETAs are from now; conditional windows need confirmation and are not countdowns.</small></div>'
     +'<div class="cycle-journey-rail">'+rows+'</div>'
     +altseasonWatchPanel(pkg,compass,state)
     +'<details class="path-track-detail"><summary>Why this cycle view?</summary><p>'+esc(short(publicPathText(pkg?.base_case_2_3_weeks||pkg?.market_state||'No public market-cycle explanation is available.'),420))+'</p></details>'
