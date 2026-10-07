@@ -194,7 +194,9 @@ function shell(){
     root=document.createElement('section');root.id='publicProduct';root.className='public-product';
     root.innerHTML='<nav class="product-tabs" aria-label="Cycle Navigator"><button class="active" data-tab="now">NOW</button><button data-tab="path">PATH</button><button data-tab="proof">PROOF</button></nav><div id="productNow" class="product-view active"></div><div id="productPath" class="product-view"></div><div id="productProof" class="product-view"></div>';
     main.prepend(root);
-    root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{root.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));root.querySelectorAll('.product-view').forEach(x=>x.classList.toggle('active',x.id===`product${b.dataset.tab[0].toUpperCase()}${b.dataset.tab.slice(1)}`));window.scrollTo({top:Math.max(0,root.offsetTop-8),behavior:'smooth'});});
+    root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{root.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));root.querySelectorAll('.product-view').forEach(x=>x.classList.toggle('active',x.id===`product${b.dataset.tab[0].toUpperCase()}${b.dataset.tab.slice(1)}`));history.replaceState(null,'','#'+b.dataset.tab);window.scrollTo({top:Math.max(0,root.offsetTop-8),behavior:'smooth'});});
+    const initialView=location.hash.slice(1);
+    if(['path','proof'].includes(initialView))root.querySelector('[data-tab="'+initialView+'"]')?.click();
   }
   main.querySelectorAll(':scope > section:not(#publicProduct)').forEach(x=>x.classList.add('legacy-detail'));
   document.querySelector('.journey-nav-wrap')?.classList.add('legacy-detail');
