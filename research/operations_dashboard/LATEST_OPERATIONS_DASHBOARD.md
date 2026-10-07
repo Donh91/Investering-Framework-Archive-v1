@@ -1,38 +1,38 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-10-07T10:56:39.836883Z`
+Generated: `2026-10-07T20:15:21.555539Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 4.925 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 9.976 |
-| `weekly_output` | **GREEN** | FRESH | 52.76 |
-| `automation_health` | **RED** | RED | 0.506 |
-| `architecture_health` | **GREEN** | GREEN | 0.465 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 3.639 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 3.641 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.344 |
+| `daily_capture` | **GREEN** | FRESH | 1.308 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 0.717 |
+| `weekly_output` | **GREEN** | FRESH | 62.072 |
+| `automation_health` | **RED** | RED | 0.052 |
+| `architecture_health` | **GREEN** | GREEN | 0.009 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 0.712 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 12.953 |
+| `remediation_maturation` | **GREEN** | FRESH | 9.655 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **115**
-- OpenAI cost this month: **$7.793815**
+- OpenAI receipts this month: **122**
+- OpenAI cost this month: **$8.179637**
 - Pending forecast candidates: **226**
-- Experiment candidates: **472**
-- Experiment dispatch requests: **20899**
+- Experiment candidates: **478**
+- Experiment dispatch requests: **21558**
 - Codex-ready remediation tasks: **4**
 - Needs-more-evidence items: **5**
 
 ## Incidents
 
-Open incident references: **26**
+Open incident references: **27**
 
 ## Required actions
 
-- **P0** `automation_health` - ['adaptive-decision-miss-validation.yml:LATEST_RUN_FAILED', 'edge001-t2-registry.yml:REPEATED_CONSECUTIVE_FAILURES']
+- **P0** `automation_health` - ['adaptive-decision-miss-validation.yml:LATEST_RUN_FAILED']
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `fe06980586a594fa663dd7e193d5706c44b108668e5ff12c3e2c86755c1b2265`
+Dashboard SHA-256: `6abc02af9cf9baf1f58067f871cb2876031e81f8b1cc03ebd2e0f8aba94a5b7a`
