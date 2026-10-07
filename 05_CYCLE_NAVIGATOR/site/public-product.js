@@ -330,7 +330,7 @@ function pathAlignmentNotice(alignment){
 }
 function statusActive(value){
   const s=String(value||'').toUpperCase();
-  return !/NOT CONFIRMED|UNCONFIRMED|INACTIVE|UNAVAILABLE|UNKNOWN|HARD_WAIT|HARD WAIT|WAIT|PAUSED|LOCKED/.test(s)&&/(BUY|ACTIVE|CONFIRMED|BROADER DEPLOYMENT)/.test(s);
+  return !/NOT CONFIRMED|UNCONFIRMED|INACTIVE|UNAVAILABLE|UNKNOWN|HARD_WAIT|HARD WAIT|WAIT|WATCH|BUILDING|PREPARE|PAUSED|LOCKED/.test(s)&&/(BUY|ACTIVE|CONFIRMED|BROADER DEPLOYMENT)/.test(s);
 }
 function reentryEngaged(value){
   const s=String(value||'').toUpperCase();
@@ -360,18 +360,6 @@ function cycleForwardFromSources(pkg){
   if(known.includes(weeklyKey))return{key:weeklyKey,source:'STRUCTURED MONDAY 4–8W',eta:pathEta(weekly.eta||'4–8W HORIZON')};
   return{key:'UNCLEAR',source:'NO STRUCTURED LONG-CYCLE PHASE',eta:'NO SUPPORTED ETA'};
 }
-const MARKET_CYCLE=[
-  ['BTC','BTC leadership'],
-  ['ETH_UNLOCK','Ethereum leadership'],
-  ['LARGE_MID','Large + mid rotation'],
-  ['IGNITION','Altseason ignition'],
-  ['MICRO','Micro acceleration'],
-  ['BROAD','Broad altseason'],
-  ['MANIA','Mania / euphoria'],
-  ['DISTRIBUTION','Distribution'],
-  ['EXIT','Exit / protection'],
-  ['REENTRY','Cooldown / re-entry']
-];
 function weeklyCycleState(pkg){
   const s=investorText(pkg?.base_case_this_week||pkg?.market_state||'').trim();
   return s?short(publicPathText(s),150):'No public weekly market summary is available.';
@@ -453,52 +441,33 @@ function cycleRouteState(pkg,compass){
   const target=altcoinTarget(pkg,compass,stages),targetKey=route.some(x=>x.key===target.key)?target.key:null;
   return{route,currentKey,target,targetKey,rotation,forward:cycleForwardFromSources(pkg)};
 }
-function altseasonWatchPanel(pkg,compass,state){
-  const target=state?.target||altcoinTarget(pkg,compass,altcoinCycleStages(pkg,compass)),t=timingWindow(target.eta);
-  const protection=target.mode==='PROTECTION',phase=state?.route?.find(x=>x.key===target.key)||{},gate=cycleGateState(phase.status);
-  const note=t.supported?(protection?'Review timing is shown on the route; this is not an automatic sell date.':'Any supported ETA is shown on the route and depends on its own signal.'):'No source-supported time range is available for this milestone.';
-  return '<section class="cycle-watch-v3'+(protection?' protect':'')+'">'
-    +'<div><span>'+esc(protection?'PROTECTION WATCH':'ALTSEASON WATCH')+'</span><strong>'+esc(target.title)+'</strong><p>'+esc(target.subtitle||'Next source-owned cycle milestone')+'</p></div>'
-    +'<aside><span>GATE STATUS</span><strong>'+esc(gate.label)+'</strong><small>'+esc(note)+'</small></aside>'
-    +'</section>';
-}
 function marketCycleTrack(pkg,compass){
-  const state=cycleRouteState(pkg,compass),forward=state.forward,forwardKnown=forward.key!=='UNCLEAR';
-  const currentIndex=state.route.findIndex(x=>x.key===state.currentKey),targetIndex=state.route.findIndex(x=>x.key===state.targetKey);
-  const rows=state.route.map((x,i)=>{
-    const isCurrent=i===currentIndex,isNext=currentIndex>=0&&i===currentIndex+1,isWatch=i===targetIndex&&!isCurrent&&!isNext,isPassed=currentIndex>0&&i<currentIndex;
-    const eta=timingWindow(i===targetIndex?state.target.eta:x.eta),incomingKind=['DISTRIBUTION','EXIT','REENTRY'].includes(x.key)?'REVIEW WINDOW':'ETA';
-    const nextGate=i<state.route.length-1?cycleGateState(state.route[i+1].status):null;
-    const dots=nextGate?'<span class="cycle-journey-dots gate-'+esc(nextGate.key)+(isCurrent?' live':'')+'" role="img" aria-label="Next gate: '+esc(nextGate.label)+'. Dots show Compass status, not elapsed time."><i></i><i></i><i></i><i></i></span>':'';
-    const timing=!isCurrent&&!isPassed&&eta.supported?'<small class="cycle-journey-eta">'+esc(incomingKind+' FROM NOW · '+eta.label+(eta.conditional?' · IF CONFIRMED':''))+'</small>':'';
-    const role=isCurrent?'current-checkpoint':isWatch?'next-watch':isNext?'next-checkpoint':'reference';
-    return '<article class="cycle-journey-step tone-'+esc(pathTone(x.status))+(isCurrent?' current':'')+(isNext?' next':'')+(isWatch?' watch':'')+(isPassed?' passed':'')+'" data-cycle-role="'+role+'">'
-      +'<i>'+esc(cycleIcon(x.key))+'</i>'+dots+'<span class="cycle-journey-name">'+esc(x.title)+'</span><b>'+esc(publicPathStatus(x.status))+'</b>'+timing+'</article>';
-  }).join('');
-  const forwardLabel=forwardKnown?publicCycleSource(forward.source):'Long-range phase not confirmed';
-  return '<section class="path-track market-cycle-v3" data-path-track="market-cycle" data-contract="CN_PATH_CYCLE_ROTATION_v3">'
-    +'<header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The cycle journey.</h3><p>Follow the market from Bitcoin leadership through rotation, altseason and protection. This route shows checkpoints, not a guaranteed sequence.</p></div><aside><span>LONG-RANGE VIEW</span><strong>'+esc(forwardKnown?'NEXT: '+((MARKET_CYCLE.find(x=>x[0]===forward.key)||['','Unresolved'])[1]):'NOT CONFIRMED')+'</strong><small>'+esc(forwardKnown?timingInline(forward.eta)+' · '+forwardLabel:'The site will not guess a long-cycle phase.')+'</small></aside></header>'
-    +'<p class="cycle-setup-note">'+esc(weeklySetupLabel(pkg))+'</p>'
-    +'<div class="cycle-route-title-v3"><span>THE MARKET JOURNEY</span><small>Blue = current · Amber = next / watch · Grey = later phases<br>Dots show Compass gate status, not elapsed time. ETAs are from now; conditional windows need confirmation and are not countdowns.</small></div>'
-    +'<div class="cycle-journey-rail">'+rows+'</div>'
-    +altseasonWatchPanel(pkg,compass,state)
-    +'<details class="path-track-detail"><summary>Why this cycle view?</summary><p>Checkpoints follow the published market and segment signals. Filled connector dots show gate status, not distance travelled. A HOLD checkpoint does not confirm the next phase. Distribution, selling and re-entry each need their own signal; recovery never resets this route on a timer.</p></details>'
-    +'</section>';
+  const source=pkg?.decision_projection?.weeks_4_8||{},forward=cycleForwardFromSources(pkg);
+  const labels=[['PRE_ROTATION','BTC-led expansion'],['ROTATION','Broad rotation'],['BROAD_ALTSEASON','Broad altseason'],['PARABOLIC_ALTSEASON','Mania / euphoria'],['DISTRIBUTION','Distribution'],['EXIT_RISK','Protection'],['DEFENSIVE','Recovery / reset']];
+  // Forward scenarios are never presented as today's confirmed macro phase.
+  const current=String(pkg?.market_cycle_context?.current_phase||'UNAVAILABLE').toUpperCase();
+  const known=labels.some(([key])=>key===current),next=labels.find(([key])=>key===forward.key);
+  return '<section class="path-track market-cycle-v4" data-path-track="market-cycle" data-contract="CN_PATH_CYCLE_ROTATION_v3"><header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The bigger picture.</h3><p>Market regime · separate from the live altcoin rotation below.</p></div></header>'
+    +'<div class="macro-current"><span>WEEKLY REGIME</span><strong>'+esc(known?labels.find(([key])=>key===current)[1]:'Stable cycle phase not confirmed')+'</strong><p>'+esc(publicPathText(pkg?.market_cycle_context?.why||weeklySetupLabel(pkg)))+'</p></div>'
+    +'<ul class="macro-phases">'+labels.map(([key,label])=>'<li'+(known&&current===key?' class="current" aria-current="step"':'')+'><i></i><span>'+esc(label)+'</span>'+(known&&current===key?'<b>NOW</b>':'')+'</li>').join('')+'</ul>'
+    +'<div class="macro-conclusion"><span>CYCLE CONCLUSION</span><p>'+esc(known?'A confirmed phase does not authorize the next rotation tier.':'The weekly setup supports selective participation; it does not establish a stable long-cycle phase.')+'</p><b>'+esc(next?'Forward scenario: '+next[1]+' · '+timingInline(forward.eta):'Next phase: no supported ETA')+'</b><small>'+esc(short(publicPathText(pkg?.market_cycle_context?.next_gate||source.summary||'Further relative strength and sustained breadth confirmation are required.'),210))+'</small></div>'
+    +'<details class="path-track-detail"><summary>Why this regime? <span aria-hidden="true">↓</span></summary><p>'+esc(short(publicPathText(pkg.base_case_4_8_weeks||'No supported long-cycle view is published.'),330))+'</p><p>Tactical hold, trim and re-entry decisions are on NOW. This cycle view does not override them.</p><button type="button" data-now-link>Open current Compass →</button></details></section>';
 }
 function rotationTrack(pkg,compass){
-  const state=rotationSnapshot(pkg,compass),week=compass?.weekly_context?.forecast_week||'THIS WEEK';
-  const nodes=state.rows.map((row,i)=>{
-    const current=i===state.currentIndex,next=i===state.nextIndex,passed=state.currentIndex>0&&i<state.currentIndex;
-    return '<article class="rotation-node-v3 tone-'+esc(pathTone(row.status))+(current?' current':'')+(next?' next':'')+(passed?' passed':'')+'"><i></i><span>'+esc(row.label)+'</span><strong>'+esc(publicPathStatus(row.status))+'</strong></article>';
+  const state=cycleRouteState(pkg,compass),currentIndex=state.route.findIndex(x=>x.key===state.currentKey),current=state.route[currentIndex],next=state.route[currentIndex+1];
+  const nodes=state.route.map((row,i)=>{
+    const active=i===currentIndex,watch=i===currentIndex+1,passed=currentIndex>=0&&i<currentIndex;
+    const incoming=timingWindow(row.eta),gate=cycleGateState(row.status);
+    const connector=i?'<div class="alt-transition '+(watch?'live ':'')+'gate-'+esc(gate.key)+'"><div class="alt-track-dots" role="img" aria-label="'+esc('Incoming gate: '+gate.label)+'. Progress is confirmation, not distance or elapsed time."><i></i><i></i><i></i><i></i></div><small>'+esc(passed||active?'':incoming.supported?'ARRIVAL FROM NOW\n'+incoming.label+(incoming.conditional?' · conditional':''):'ETA not confirmed')+'</small></div>':'';
+    return connector+'<article class="cycle-journey-step'+(active?' current':'')+(watch?' next':'')+(passed?' passed':'')+'" data-cycle-role="'+(active?'current-checkpoint':watch?'next-checkpoint':row.key===state.targetKey?'next-watch':'reference')+'"><i>'+esc(cycleIcon(row.key))+'</i><span class="cycle-journey-name">'+esc(row.title)+'</span><b>'+esc(publicPathStatus(row.status))+'</b></article>';
   }).join('');
-  const current=state.current,next=state.next,nextTiming=timingWindow(next?.eta),reason=next?.reason||'No downstream rotation gate is currently available.';
-  return '<section class="path-track rotation-v3" data-path-track="rotation">'
-    +'<header class="path-track-head"><div><span>2 · THIS WEEK’S ROTATION</span><h3>Where capital can move next.</h3><p>A compact live risk-curve map. The next tier opens only when its own market signal confirms.</p></div><aside><span>DATA STATUS</span><strong>'+esc(dataStatusLabel(compass?.data_status))+'</strong><small>'+esc(week)+' · updated '+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header>'
-    +'<div class="rotation-week-v3"><span>MONDAY BASELINE</span><b>LIVE NOW</b><span>SUNDAY REVIEW</span><small>Conditional sequence · not a day-by-day promise</small></div>'
-    +'<div class="rotation-line-v3">'+nodes+'</div>'
-    +'<div class="rotation-readout-v3"><article><span>CURRENT POSITION</span><strong>'+esc(current?.label||'Not confirmed')+'</strong><small>'+esc(current?publicPathStatus(current.status):'Waiting for a fresh signal')+'</small></article><article class="next"><span>NEXT GATE</span><strong>'+esc(next?.label||'No downstream gate')+'</strong><small>'+esc(next?(nextTiming.supported?(nextTiming.conditional?'Watch window · '+nextTiming.label:nextTiming.label):'No supported ETA'):'—')+'</small></article><article><span>WHAT UNLOCKS IT</span><p>'+esc(short(investorText(reason),180))+'</p></article></div>'
-    +'<details class="path-track-detail"><summary>Why this rotation?</summary><p>'+esc(short(investorText([current?.reason,next?.reason].filter(Boolean).join(' ')||weeklyCycleState(pkg)),360))+'</p></details>'
-    +'</section>';
+  const small=compassSegment(compass,'SMALL_CAPS')||{},takeoff=statusActive(small.status||small.action),eta=timingWindow(small.eta);
+  const gates=[['ETH','ETH relative strength'],['LARGE_CAPS','Large caps'],['MID_CAPS','Mid caps'],['SMALL_CAPS','Small-cap takeoff']].map(([key,label])=>{const r=compassSegment(compass,key)||{},confirmed=statusActive(r.status||r.action);return '<li class="'+(confirmed?'confirmed':'pending')+'"><i>'+ (confirmed?'✓':'○')+'</i>'+esc(label)+'<b>'+esc(confirmed?'CONFIRMED':publicPathStatus(r.status||r.action||'UNAVAILABLE'))+'</b></li>';}).join('');
+  const memes=compassSegment(compass,'MEMES')||{};
+  return '<section id="altcoinJourney" class="path-track rotation-v4" data-path-track="rotation"><header class="path-track-head"><div><span>2 · ALTCOIN / ROTATION JOURNEY</span><h3>From leadership to takeoff.</h3><p>One route through rotation, altseason and protection. Swipe to follow the later phases →</p></div><aside><span>DATA STATUS</span><strong>'+esc(dataStatusLabel(compass?.data_status))+'</strong><small>'+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header><div class="alt-journey-rail cycle-journey-rail">'+nodes+'</div>'
+    +'<div class="rotation-readout-v3"><article><span>CURRENT POSITION</span><strong>'+esc(current?.title||'Not confirmed')+'</strong><small>'+esc(current?publicPathStatus(current.status):'Waiting for a current signal')+'</small></article><article class="next"><span>NEXT GATE</span><strong>'+esc(next?.title||'Await fresh leadership')+'</strong><small>'+esc(next?cycleGateState(next.status).label:'No automatic reset')+'</small></article><article><span>WHAT UNLOCKS IT</span><p>'+esc(short(publicPathText(next?.why||'The next cycle begins only after a governed re-entry and renewed leadership signal.'),180))+'</p></article></div>'
+    +'<details class="takeoff-watch"'+(takeoff?' open':'')+'><summary><span>ALTSEASON TAKEOFF</span><strong>'+esc(takeoff?'100% · Small-cap takeoff confirmed':'Waiting for small-cap confirmation')+'</strong><small>'+esc(takeoff?'Follow rotation and protection above.':eta.supported?'Possible arrival · '+eta.label+' · requires confirmation':'Timing not confirmed')+'</small><b>Readiness gates <span aria-hidden="true">↓</span></b></summary><div><ul>'+gates+'</ul><p>'+esc(takeoff?'This marks small-cap takeoff, not guaranteed mania.':'No source-backed readiness percentage is published. Gate dots show confirmation; elapsed time cannot open a gate.')+'</p><p>MEMES · '+esc(publicPathStatus(memes.status||memes.action||'UNAVAILABLE'))+'. Independent liquidity and risk gates remain required.</p><button type="button" data-now-link>View live permissions in Compass →</button></div></details>'
+    +'<details class="path-track-detail"><summary>Cycle plan and timing <span aria-hidden="true">↓</span></summary><p>Blue is the supported position; amber is the immediate next gate. Dots describe its signal status. Arrival windows are measured from the source observation, not time spent travelling between phases. A conditional ETA can expire without confirmation.</p><p>Distribution, exit and re-entry need separate verified signals. No automatic loop and no meme permission from takeoff alone.</p><p>'+esc(short(publicPathText(current?.why||'No current position is confirmed.'),260))+'</p></details></section>';
 }
 function conservativeStatus(values){
   const states=values.map(pathStatus);
@@ -549,101 +518,69 @@ function altcoinTarget(pkg,compass,stages){
   const ignition=row('IGNITION');
   return{key:'IGNITION',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'ALTSEASON IGNITION',subtitle:'Small caps begin to participate',eta:pathEta(ignition.eta),status:pathStatus(ignition.status)};
 }
-function altcoinCurrentStage(pkg,compass,stages){
-  const at=key=>stages.find(x=>x.key===key);
-  const liveOrder=['REENTRY','EXIT','DISTRIBUTION','MANIA','BROAD','MICRO','IGNITION','LARGE_MID'];
-  for(const key of liveOrder){
-    const s=at(key),raw=String(s?.status||'').toUpperCase();
-    if(key==='REENTRY'&&reentryEngaged(raw))return{index:stages.indexOf(s),source:'LIVE',certainty:'GOVERNED'};
-    if(s&&statusActive(s.status))return{index:stages.indexOf(s),source:'LIVE',certainty:'GOVERNED'};
-    if(key==='DISTRIBUTION'&&/WARNING|CONFIRMED/.test(raw))return{index:stages.indexOf(s),source:'LIVE',certainty:'GOVERNED'};
-  }
-  const eth=compassSegment(compass,'ETH'),ethState=pathStatus(eth?.status||eth?.action);
-  if(eth&&/HOLD|ACTIVE|CONFIRMED/.test(ethState)){
-    const s=at('ETH_UNLOCK');
-    return{index:stages.indexOf(s),source:'LIVE',certainty:'POSITION'};
-  }
-  const participation=at('PARTICIPATION');
-  if(participation&&!/UNAVAILABLE|UNKNOWN/.test(pathStatus(participation.status))){
-    return{index:stages.indexOf(participation),source:'LIVE',certainty:'POSITION'};
-  }
-  const monday=Array.isArray(pkg?.altseason_countdown)?pkg.altseason_countdown:[];
-  const active=monday.findIndex(x=>/ACTIVE WATCH|\bACTIVE\b/i.test(String(x?.phase||'')));
-  const map=[0,1,2,3,5];
-  return active>=0?{index:map[active]??-1,source:'MONDAY',certainty:'REFERENCE'}:{index:-1,source:'NONE',certainty:'NONE'};
-}
-function targetHeadlineEta(target){
-  const eta=pathEta(target?.eta),status=pathStatus(target?.status);
-  if(eta==='NO SUPPORTED ETA'||/CONDITIONAL/i.test(eta))return null;
-  if(!/ACTIVE|CONFIRMED|HOLD/.test(status))return null;
-  return eta;
-}
-function pathOverview(pkg,compass){
-  const state=cycleRouteState(pkg,compass),index=state.route.findIndex(x=>x.key===state.currentKey),current=state.route[index],next=index>=0?state.route[index+1]:null,target=next||state.target;
-  return '<section class="path-overview-v3">'
-    +'<article class="current"><span>CURRENT CHECKPOINT</span><strong>'+esc(current?.title||'Not confirmed')+'</strong><b>'+esc(current?publicPathStatus(current.status):'Waiting for fresh signal')+'</b></article>'
-    +'<article class="next"><span>'+esc(next?'NEXT CHECKPOINT':current?'CYCLE RESET':'NEXT WATCH')+'</span><strong>'+esc(current&&!next?'Await fresh BTC leadership':target.title)+'</strong><b>'+esc(next?cycleGateState(next.status).label:current?'No automatic restart':cycleGateState(target.status).label)+'</b></article>'
-    +'</section>';
-}
-
-function pathActionLens(compass){
-  const valid=compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK';
-  const raw=String(valid?compass.action_now:'WAIT').toUpperCase(),sell=valid?compass.sell_assessment||{}:{},p=valid?compass.protection_tracker||{}:{};
-  const action=/REDUCE|EXIT|PROTECT|DEFENSIVE/.test(raw)?'PROTECT CAPITAL':/GRADUATED_TOPUP_ACTIVE|BROAD.*DEPLOY/.test(raw)?'ADD BROADLY':/SELECTIVE|TOPUP/.test(raw)?'ADD SELECTIVELY':/PREPARE/.test(raw)?'PREPARE':/HOLD/.test(raw)?'HOLD':'WAIT';
-  const meme=valid?compassSegment(compass,'MEMES'):null,small=valid?compassSegment(compass,'SMALL_CAPS'):null;
-  return '<details class="path-action-lens"><summary><span>YOUR ACTION NOW</span><strong>'+esc(action)+'</strong><b>Investor · swing · high beta</b></summary><div class="path-lens-grid">'
-    +'<article><span>INVESTOR</span><strong>'+esc(action)+'</strong><p>'+esc(valid?publicPathText(compass.conclusion||'Use the current Compass action until its confirmation or invalidation changes.'):'Fresh aligned Compass evidence is required.')+'</p></article>'
-    +'<article><span>SWING TRADER</span><strong>SELL / TRIM · '+esc(publicPathStatus(sell.state||'UNAVAILABLE'))+'</strong><p>'+esc(publicPathText(sell.reason||'No verified sell or trim signal is currently available.'))+'</p><small>RE-ENTRY · '+esc(publicPathStatus(p.reentry_state||'UNAVAILABLE'))+'</small><p>'+esc(publicPathText(p.reentry_message||'No re-entry signal is available.'))+'</p></article>'
-    +'<article><span>ALTCOINS + MEMES</span><strong>SMALL · '+esc(publicPathStatus(small?.status||'UNAVAILABLE'))+' / MEMES · '+esc(publicPathStatus(meme?.status||'UNAVAILABLE'))+'</strong><p>'+esc(publicPathText(meme?.reason||'Meme risk needs its own confirmed signal. Microcaps cannot unlock memes.'))+'</p></article>'
-    +'</div><p class="path-lens-note">A cycle checkpoint is context. Only Compass can change the action. A risk warning alone cannot unlock selling or re-entry.</p></details>';
-}
-
 function weeklyJourney(data){
   const live=data?.public_live_precision,current=data?.public_series?.current_public_projection||{};
   if(live?.contract!=='CN_PUBLIC_LIVE_PRICE_PRECISION_v1'||live.public_issue_number!==current.public_issue_number||live.forecast_week!==current.forecast_week)return '';
-  const number=v=>v===null||v===undefined||v===''?null:Number.isFinite(Number(v))?Number(v):null;
-  const windows=['day_1_2','day_3_4','day_5_7'],summary=live.window_scores||{},start=Date.parse(summary.day_1_2?.window_start_utc),end=Date.parse(summary.day_5_7?.window_end_utc),cutoff=Date.parse(live.live_as_of_utc);
-  if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)return '';
+  const num=v=>typeof v==='number'&&Number.isFinite(v)&&v>0?v:null;
+  const windows=['day_1_2','day_3_4','day_5_7'],summary=live.window_scores||{},start=Date.parse(summary.day_1_2?.window_start_utc),end=Date.parse(summary.day_5_7?.window_end_utc);
+  const obs=live.daily_observations?.contract==='CN_PUBLIC_DAILY_OBSERVATIONS_v1'?live.daily_observations:null,cutoff=Date.parse(obs?.observed_through_utc||live.live_as_of_utc);
+  if(!Number.isFinite(start)||!Number.isFinite(end)||end-start!==7*86400000)return '';
   const age=Date.now()-cutoff,stale=!Number.isFinite(cutoff)||age<0||age>Math.max(30,Number(live.freshness_sla_minutes)||90)*60000;
-  const rows=Array.isArray(live.rows)?live.rows:[],price=v=>'$'+Number(v).toLocaleString('en-US',{maximumFractionDigits:0});
-  const x=t=>58+Math.max(0,Math.min(1,(t-start)/(end-start)))*426;
+  const frozen=live.daily_price_path,validPath=frozen?.contract==='CN_FROZEN_DAILY_PRICE_PATH_v1'&&frozen.forecast_week===live.forecast_week;
+  const money=v=>num(v)!==null?'$'+v.toLocaleString('en-US',{maximumFractionDigits:2}):'—';
+  const x=t=>68+Math.max(0,Math.min(1,(t-start)/(end-start)))*412;
+  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const charts=['BTC','ETH'].map(asset=>{
-    const ar=windows.map(window=>rows.find(r=>r.asset===asset&&r.window===window));
-    if(ar.some(r=>!r||number(r.forecast_low)===null||number(r.forecast_high)===null||Number(r.forecast_low)<=0||Number(r.forecast_high)<=Number(r.forecast_low)))return '<article class="week-asset"><h4>'+asset+'</h4><p>Frozen range data unavailable.</p></article>';
-    const values=ar.flatMap(r=>[r.forecast_low,r.forecast_high,r.actual_low_to_date,r.actual_high_to_date]).map(number).filter(v=>v!==null&&v>0),lo=Math.min(...values),hi=Math.max(...values),pad=(hi-lo)*.12,y=v=>174-(v-lo+pad)/(hi-lo+2*pad)*142;
-    const grid=[lo,(lo+hi)/2,hi].map(v=>'<line x1="58" x2="484" y1="'+y(v)+'" y2="'+y(v)+'" class="week-grid"/><text x="50" y="'+(y(v)+4)+'" text-anchor="end">'+esc(price(v))+'</text>').join('');
-    const bands=ar.map((r,i)=>{
-      const w=summary[windows[i]]||{},a=Date.parse(w.window_start_utc),b=Date.parse(w.window_end_utc);
-      if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a)return '';
-      const al=number(r.actual_low_to_date),ah=number(r.actual_high_to_date),seen=r.coverage_complete_to_date===true&&al!==null&&ah!==null&&al>0&&ah>=al&&Number.isFinite(cutoff)&&cutoff>a;
-      return '<rect x="'+x(a)+'" y="'+y(r.forecast_high)+'" width="'+(x(b)-x(a))+'" height="'+(y(r.forecast_low)-y(r.forecast_high))+'" class="week-frozen"/>'
-        +(seen?'<rect x="'+(x(Math.max(a,Date.parse(w.scoring_start_utc)||a))+3)+'" y="'+y(ah)+'" width="'+Math.max(1,x(Math.min(b,cutoff))-x(Math.max(a,Date.parse(w.scoring_start_utc)||a))-6)+'" height="'+Math.max(2,y(al)-y(ah))+'" class="week-observed"/>':'')
-        +'<text x="'+((x(a)+x(b))/2)+'" y="205" text-anchor="middle">'+['MON–TUE','WED–THU','FRI–SUN'][i]+'</text>';
+    const bucketRows=windows.map(window=>(live.rows||[]).find(r=>r.asset===asset&&r.window===window));
+    if(bucketRows.some(r=>!r||num(r.forecast_low)===null||num(r.forecast_high)===null||r.forecast_low>=r.forecast_high))return '<article class="week-asset"><h4>'+asset+'</h4><p>Frozen forecast unavailable.</p></article>';
+    const raw=validPath&&frozen[asset]?.status==='PUBLISHED'?frozen[asset].points:[];
+    const daily=Array.isArray(raw)&&raw.length===7&&raw.every((p,i)=>p.day===i+1&&[p.low,p.high,p.expected_close].every(v=>num(v)!==null)&&p.low<p.high&&p.low<=p.expected_close&&p.expected_close<=p.high)?raw:[];
+    const actual=dayNames.map((_,i)=>{
+      const p=obs?.[asset]?.find(p=>p.day===i+1),a=Date.parse(p?.as_of_utc),dayStart=start+i*86400000;
+      return p&&p.date===new Date(dayStart).toISOString().slice(0,10)&&p.coverage_complete_to_date===true&&a>dayStart&&a<=dayStart+86400000&&a<=cutoff&&a<=Date.now()&&[p.low,p.high,p.close].every(v=>num(v)!==null)&&p.low<=p.close&&p.close<=p.high?p:null;
+    });
+    const values=[...bucketRows.flatMap(p=>[p.forecast_low,p.forecast_high]),...daily.flatMap(p=>[p.low,p.high]),...actual.filter(Boolean).flatMap(p=>[p.low,p.high])];
+    const lo=Math.min(...values),hi=Math.max(...values),pad=Math.max((hi-lo)*.12,hi*.002),y=v=>204-(v-lo+pad)/(hi-lo+pad*2)*162;
+    const coord=(t,v)=>x(t).toFixed(2)+','+y(v).toFixed(2);
+    const grid=[lo,(lo+hi)/2,hi].map(v=>'<line x1="68" x2="480" y1="'+y(v)+'" y2="'+y(v)+'" class="journey-grid"/><text x="59" y="'+(y(v)+5)+'" text-anchor="end">'+esc('$'+(v/1000).toFixed(1)+'k')+'</text>').join('');
+    const dates=dayNames.map((label,i)=>'<text x="'+x(start+(i+.5)*86400000)+'" y="236" text-anchor="middle">'+label+'</text>').join('');
+    let forecast='';
+    if(daily.length){
+      const upper=daily.map((p,i)=>coord(start+(i+1)*86400000,p.high)),lower=daily.map((p,i)=>coord(start+(i+1)*86400000,p.low)).reverse();
+      forecast='<polygon points="'+upper.concat(lower).join(' ')+'" class="journey-envelope"/><polyline points="'+daily.map((p,i)=>coord(start+(i+1)*86400000,p.expected_close)).join(' ')+'" class="journey-forecast"/>'
+        +daily.map((p,i)=>'<circle cx="'+x(start+(i+1)*86400000)+'" cy="'+y(p.expected_close)+'" r="3" class="journey-forecast-point"/>').join('');
+    }else{
+      forecast=bucketRows.map((r,i)=>{const a=Date.parse(summary[windows[i]]?.window_start_utc),b=Date.parse(summary[windows[i]]?.window_end_utc);return '<rect x="'+x(a)+'" y="'+y(r.forecast_high)+'" width="'+(x(b)-x(a))+'" height="'+(y(r.forecast_low)-y(r.forecast_high))+'" class="journey-envelope legacy"/>';}).join('');
+    }
+    // Separate polylines on each contiguous run; a missing day never connects prices.
+    let runs=[],run=[];
+    actual.forEach(p=>{if(p)run.push(coord(Date.parse(p.as_of_utc),p.close));else if(run.length){runs.push(run);run=[];}});if(run.length)runs.push(run);
+    const green=runs.map(r=>'<polyline points="'+r.join(' ')+'" class="journey-actual"/>').join('')+actual.map(p=>p?'<line x1="'+x(Date.parse(p.as_of_utc))+'" x2="'+x(Date.parse(p.as_of_utc))+'" y1="'+y(p.high)+'" y2="'+y(p.low)+'" class="journey-wick"/><circle cx="'+x(Date.parse(p.as_of_utc))+'" cy="'+y(p.close)+'" r="4.5" class="journey-actual-point"/>':'').join('');
+    const cursor=Number.isFinite(cutoff)&&cutoff>=start?'<line x1="'+x(cutoff)+'" x2="'+x(cutoff)+'" y1="33" y2="214" class="journey-now"/><text x="'+Math.min(455,Math.max(94,x(cutoff)))+'" y="22" text-anchor="middle">'+(stale?'AS OF':'NOW')+'</text>':'';
+    const last=actual.filter(Boolean).at(-1),relation=last?money(last.close)+' · '+(last.status==='LIVE'?'today to date':'latest close'):'Awaiting complete observations';
+    const days=dayNames.map((name,i)=>{
+      const f=daily[i],p=actual[i],date=new Date(start+i*86400000).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
+      const bucket=bucketRows[i<2?0:i<4?1:2],delta=p&&f&&p.status==='COMPLETE'?((p.close/f.expected_close-1)*100).toFixed(2)+'% versus expected close':p&&f?'Day still open; closing deviation pending':'Daily closing forecast not published';
+      return '<details class="journey-day"><summary>'+name+'<span>'+esc(date)+'</span></summary><div><strong>'+asset+' · '+esc(date)+'</strong><p>'+esc(f?'Expected close '+money(f.expected_close)+' · range '+money(f.low)+'–'+money(f.high):'Frozen interval '+money(bucket.forecast_low)+'–'+money(bucket.forecast_high))+'</p><p>'+esc(p?'Actual '+money(p.close)+' · low/high '+money(p.low)+'–'+money(p.high):'No complete observed coverage for this day')+'</p><p>'+esc(delta)+'</p>'+(p?'<small>'+esc(utcLabel(p.as_of_utc))+' · '+esc(p.observed_hours)+' observed hours</small>':'')+'</div></details>';
     }).join('');
-    const last=ar.filter(r=>r.coverage_complete_to_date===true&&number(r.actual_low_to_date)!==null&&number(r.actual_high_to_date)!==null).at(-1);
-    const breaches=last?[Number(last.actual_low_to_date)<Number(last.forecast_low)?((Number(last.forecast_low)-Number(last.actual_low_to_date))/Number(last.forecast_low)*100).toFixed(2)+'% below lower band':null,Number(last.actual_high_to_date)>Number(last.forecast_high)?((Number(last.actual_high_to_date)-Number(last.forecast_high))/Number(last.forecast_high)*100).toFixed(2)+'% above upper band':null].filter(Boolean):[];
-    const relation=last?(breaches.length?breaches.join(' · '):'Observed range inside frozen band'):'Awaiting complete observed data';
-    const cursor=Number.isFinite(cutoff)?'<line x1="'+x(cutoff)+'" x2="'+x(cutoff)+'" y1="20" y2="182" class="week-cutoff"/><text x="'+Math.min(457,Math.max(86,x(cutoff)))+'" y="13" text-anchor="middle">AS OF</text>':'';
-    return '<article class="week-asset"><header><h4>'+asset+'</h4><b>'+esc(relation)+'</b></header><svg viewBox="0 0 500 216" role="img" aria-label="'+esc(asset+' frozen forecast bands and complete observed ranges, Monday to Sunday. '+relation)+'">'+grid+bands+cursor+'</svg><p>'+esc(last?'Latest observed window · '+price(last.actual_low_to_date)+'–'+price(last.actual_high_to_date):'Incomplete hours remain unplotted.')+'</p></article>';
+    return '<article class="week-asset journey-asset"><header><h4>'+asset+'</h4><b>'+esc(relation)+'</b></header><svg viewBox="0 0 500 254" role="img" aria-label="'+esc(asset+' Monday-Sunday frozen '+(daily.length?'daily forecast':'range intervals')+' and observed daily closing prices with low/high whiskers. Future observations remain empty.')+'">'+grid+forecast+green+cursor+dates+'</svg>'+(daily.length?'':'<p class="journey-legacy-note">This freeze contains interval ranges only. A daily expected-close line was not published.</p>')+'<div class="journey-days">'+days+'</div></article>';
   }).join('');
-  return '<section class="path-track week-journey" data-contract="CN_WEEK_RANGE_JOURNEY_v1"><header class="path-track-head"><div><span>3 · THIS WEEK’S PRICE JOURNEY</span><h3>Frozen plan. Actual range.</h3><p>Monday to Sunday · CN #'+esc(live.public_issue_number)+' / '+esc(live.forecast_week)+'</p></div><aside><span>OBSERVATIONS</span><strong>'+esc(stale?'STALE SNAPSHOT':'HOURLY UPDATE')+'</strong><small>'+esc(utcLabel(live.live_as_of_utc))+'</small></aside></header><div class="week-legend"><span><i class="frozen"></i>Frozen forecast band</span><span><i class="observed"></i>Observed range to date</span></div><div class="week-charts">'+charts+'</div><p class="week-caption">Each observed bar shows the full low–high range for that window, not a price at every point. Future hours stay empty. Band width is not direction, pullback depth or trade confidence.</p><details class="path-track-detail"><summary>What was expected this week?</summary>'+windows.map(window=>'<article><b>'+esc(window.replaceAll('_',' ').toUpperCase())+'</b><p>'+esc(publicPathText(summary[window]?.frozen_sequence_text||'No frozen sequence text available.'))+'</p></article>').join('')+'<p>Forecast frozen '+esc(utcLabel(live.frozen_at_utc))+'. Observations refresh automatically through the existing hourly pipeline. Incomplete windows are not plotted.</p><button type="button" data-proof-link>View price precision and freeze proof →</button></details></section>';
+  return '<section class="path-track week-journey" data-contract="CN_WEEK_RANGE_JOURNEY_v1"><header class="path-track-head"><div><span>3 · THIS WEEK’S PRICE JOURNEY</span><h3>The plan. The market.</h3><p>Mon–Sun · UTC · CN #'+esc(live.public_issue_number)+' / '+esc(live.forecast_week)+'</p></div><aside><span>OBSERVATIONS</span><strong>'+esc(stale?'STALE SNAPSHOT':'HOURLY UPDATE')+'</strong><small>'+esc(utcLabel(live.live_as_of_utc))+'</small></aside></header><div class="week-legend"><span><i class="frozen"></i>Blue · frozen forecast</span><span><i class="observed"></i>Green · actual price + low/high</span></div><div class="week-charts">'+charts+'</div><p class="week-caption">Tap a day for exact values. The current day shows its latest observed price; future days stay empty. Low/high whiskers show the daily range. Missing hours break the live curve.</p><details class="path-track-detail"><summary>Forecast, method and proof <span aria-hidden="true">↓</span></summary>'+windows.map(window=>'<article><b>'+esc(window.replaceAll('_',' ').toUpperCase())+'</b><p>'+esc(publicPathText(summary[window]?.frozen_sequence_text||'No frozen sequence text available.'))+'</p></article>').join('')+'<p>Forecast frozen '+esc(utcLabel(live.frozen_at_utc))+'. Daily expected-close points are prospective analysis, not a promise of intraday movement. Older interval-only freezes stay unchanged. Price precision retains its existing three-window scoring method.</p><button type="button" data-proof-link>View price precision and freeze proof →</button></details></section>';
 }
-
 function pathContext(data){
   const p=data.package||{},extra=sinceLastBlock(data)+whyThisCallBlock(data);
   return '<details class="path-more"><summary>More cycle context</summary>'+pathLegend()+'<div class="horizon-grid"><article><span>2–3 WEEK OUTLOOK</span><p>'+esc(short(publicPathText(p.base_case_2_3_weeks)||'No reliable 2–3 week view is published.',270))+'</p></article><article><span>4–8 WEEK OUTLOOK</span><p>'+esc(short(publicPathText(p.base_case_4_8_weeks||p.compass_4_8_weeks)||'No reliable 4–8 week view is published.',270))+'</p></article></div>'+extra+'</details>';
 }
 function renderPath(data,compass){
   const p=data.package||{},alignment=pathWeeklyAlignment(data,compass),liveCompass=alignment.ok?compass:null;
-  document.getElementById('productPath').innerHTML='<header class="product-head path-v2-head"><small>PATH</small><h2>The market journey.</h2><p>Follow the cycle from Bitcoin leadership through rotation, altseason and protection. Blue shows the current supported checkpoint. Amber shows what the market must unlock next.</p></header>'
+  document.getElementById('productPath').innerHTML='<header class="product-head path-v2-head"><small>PATH</small><h2>The market journey.</h2><p>The market regime, altcoin rotation and weekly price plan. Open a card for the evidence behind it.</p></header>'
     +pathAlignmentNotice(alignment)
-    +pathOverview(p,liveCompass)
     +marketCycleTrack(p,liveCompass)
     +rotationTrack(p,liveCompass)
-    +pathActionLens(liveCompass)
     +weeklyJourney(data)
     +pathContext(data);
   document.querySelector('#productPath [data-proof-link]')?.addEventListener('click',showProof);
+  document.querySelectorAll('#productPath [data-now-link]').forEach(b=>b.onclick=()=>document.querySelector('[data-tab="now"]')?.click());
 }
 
 function showProof(){document.querySelector('[data-tab="proof"]')?.click();}
