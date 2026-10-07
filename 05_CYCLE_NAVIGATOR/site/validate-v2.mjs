@@ -21,6 +21,7 @@ const translateCompass = new Function('words', premium.slice(premium.indexOf('co
 const translateInvestor=new Function('return '+extract(product,'investorText','publicPathText'))();
 const weekIdentityText=translateCompass('W40 BTC gained 2.44%. Possible W41 retest.');
 const checks=[
+ ['public tab links restore PATH or PROOF without creating another forecast',product.includes("const initialView=location.hash.slice(1)")&&product.includes("['path','proof'].includes(initialView)")&&product.includes("history.replaceState(null,'','#'+b.dataset.tab)")],
  ['public near-term no-observation status has a plain-language explanation',premium.includes("s === 'UNCHANGED NO NEW OBSERVATION'")&&premium.includes("return 'NO NEW READING'")&&premium.includes('Current action unchanged · awaiting a fresh near-term reading.')],
  ['chart legend matches actual green and frozen blue price curves',css.includes('.week-legend .observed{background:#239570}')&&css.includes('.week-legend .frozen{background:#244f92}')],
  ['arrival windows and rotation facts remain readable on mobile',css.includes('.alt-transition small{font-size:12px')&&css.includes('.rotation-readout-v3 p{font-size:13px')],
