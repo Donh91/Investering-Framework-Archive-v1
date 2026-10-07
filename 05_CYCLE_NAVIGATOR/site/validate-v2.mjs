@@ -5,7 +5,24 @@ const h=JSON.parse(history);
 const etaStart=product.indexOf('function pathEta'),etaEnd=product.indexOf('function pathStatus');
 const productSyntaxOk=(()=>{try{new Function(product);return true}catch{return false}})();
 const etaSlice=etaStart>=0&&etaEnd>etaStart?product.slice(etaStart,etaEnd):'';
+// Exercise public renderers with synthetic contract inputs; never fetch market values.
+const extract=(source,name,next)=>source.slice(source.indexOf('function '+name+'('),source.indexOf('function '+next+'('));
+const escapeHtml=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const graph=new Function('esc','utcLabel','publicPathText','return '+extract(product,'weeklyJourney','pathContext'))(escapeHtml,v=>String(v??''),v=>String(v??''));
+const risk=new Function('esc','clean','publicState','publicCompassText','return '+extract(premium,'pullbackCard','renderPremium'))(escapeHtml,v=>typeof v==='string'&&v.trim()?v.trim():null,v=>String(v||''),v=>String(v||''));
+const synthetic={public_series:{current_public_projection:{public_issue_number:9,forecast_week:'2026-W41'}},public_live_precision:{contract:'CN_PUBLIC_LIVE_PRICE_PRECISION_v1',public_issue_number:9,forecast_week:'2026-W41',live_as_of_utc:'2026-10-07T12:00:00Z',window_scores:{day_1_2:{window_start_utc:'2026-10-05T00:00:00Z',window_end_utc:'2026-10-07T00:00:00Z'},day_3_4:{window_start_utc:'2026-10-07T00:00:00Z',window_end_utc:'2026-10-09T00:00:00Z'},day_5_7:{window_start_utc:'2026-10-09T00:00:00Z',window_end_utc:'2026-10-12T00:00:00Z'}},rows:['BTC','ETH'].flatMap(asset=>['day_1_2','day_3_4','day_5_7'].map(window=>({asset,window,forecast_low:100,forecast_high:120,actual_low_to_date:window==='day_1_2'?99:null,actual_high_to_date:window==='day_1_2'?111:null,coverage_complete_to_date:window==='day_1_2'})))}};
+const frozenBefore=JSON.stringify(synthetic),graphHtml=graph(synthetic),gap=structuredClone(synthetic);gap.public_live_precision.rows.forEach(r=>r.coverage_complete_to_date=false);
+const riskInput={contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',protection_tracker:{contract:'COMPASS_PROTECTION_TRACKER_v1',pullback_risk_state:'BUILDING',pullback_class:'ORDINARY RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED.',confidence_quality:'LOW',eta_window:'Conditional watch only',reentry_state:'INACTIVE'},sell_assessment:{contract:'COMPASS_SELL_ASSESSMENT_v1',state:'UNAVAILABLE'}};
+const riskHtml=risk(riskInput),limitedRisk=risk({...riskInput,data_status:'STALE'});
 const checks=[
+ ['weekly graph binds public issue and week and omits unavailable sources',graph({})===''&&graph({...synthetic,public_series:{current_public_projection:{public_issue_number:10,forecast_week:'2026-W41'}}})===''],
+ ['weekly graph preserves frozen inputs and plots only complete observed ranges',JSON.stringify(synthetic)===frozenBefore&&(graphHtml.match(/class="week-observed"/g)||[]).length===2&&!graph(gap).includes('class="week-observed"')],
+ ['weekly graph labels observed breach without creating a trade signal',graphHtml.includes('1.00% below lower band')&&graphHtml.includes('not direction, pullback depth or trade confidence')&&!graphHtml.includes('polyline')],
+ ['weekly graph marks stale observations and empty future hours',graphHtml.includes('Future hours stay empty')&&graph({...synthetic,public_live_precision:{...synthetic.public_live_precision,live_as_of_utc:'2020-01-01T00:00:00Z'}}).includes('STALE SNAPSHOT')],
+ ['pullback card separates ordinary unconfirmed watch from sell and re-entry',riskHtml.includes('Ordinary retest watch')&&riskHtml.includes('DEVELOPING · UNCONFIRMED')&&riskHtml.includes('NOT ESTABLISHED')&&riskHtml.includes('Not quantified by the current signal')],
+ ['pullback card fails unavailable and stale sources closed',risk({}).includes('Risk assessment unavailable')&&limitedRisk.includes('Risk assessment unavailable')&&!limitedRisk.includes('Conditional watch only')],
+ ['overview removes duplicate numeric timing and uses the sequential checkpoint',extract(product,'pathOverview','pathActionLens').includes('NEXT CHECKPOINT')&&!extract(product,'pathOverview','pathActionLens').includes('timingWindow')&&!extract(product,'pathOverview','pathActionLens').includes('WATCH WINDOW')],
+ ['new graph and action disclosure ship through existing public assets',product.includes('+weeklyJourney(data)')&&product.includes('pathActionLens(liveCompass)')&&css.includes('.week-charts')&&premium.includes('+ pullbackCard(compass)')&&premiumCss.includes('.premium-pullback')],
  ['public product browser script parses before release',productSyntaxOk],
  ['fallback action-first hero',html.includes('WHAT SHOULD I DO NOW?')],
  ['weekly authority firewall',html.includes('never rewrite the forecast')&&liveBuilder.includes('NON_AUTHORITATIVE_OBSERVATION_ONLY')],
@@ -128,3 +145,4 @@ const checks=[
 ];
 let failed=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
 if(failed)process.exit(1);console.log(`PASS ${checks.length}/${checks.length} Cycle Navigator public product release checks`);
+
