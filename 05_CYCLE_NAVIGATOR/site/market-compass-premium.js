@@ -37,7 +37,7 @@ const publicDataStatus = (value) => {
 };
 const publicCompassText = (value) => {
   let s = words(value)
-    .replace(/\bW\d+\b/g, 'This week')
+    .replace(/\bW(\d+)\b/g, 'week $1')
     .replace(/MASTER MONDAY/gi, 'weekly review')
     .replace(/\bgoverned\b/gi, 'verified')
     .replace(/\bcanonical\b/gi, 'confirmed')

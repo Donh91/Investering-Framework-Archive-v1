@@ -389,3 +389,12 @@ Status: RECEIPT. PR #1538 merged. Product deployment verified; browser cache fol
 - Browser cannot set an iPhone viewport through its exposed APIs. The attempted local-file preview was rejected by browser protocol policy and abandoned. Do not claim native iPhone/Safari visual acceptance or close #1518 as PASS from desktop screenshots or CSS checks alone.
 
 Resume: finish asset-freshness PR, exact-head CI and Pages verification; inspect the actual new live PATH, graph and risk disclosure; verify downstream fresh observations; append final acceptance evidence to this receipt/PR.
+
+
+### Final browser audit: preserve evidence week identity (2026-10-07)
+
+Production browser inspection on Pages #453 exposed a material existing translation defect: `W40` historical drivers and `W41` possible onset were both rewritten to `This week`. This could misdate historical evidence in the new expanded risk card. The corrective patch preserves the explicit week number in readable text (`week 40`, `week 41`) and adds an executable cross-week regression test. No source values or decision authority change.
+
+Pages #453 independently verified: merge `70ac7ecd5eb3f8eaf26a8ca249d1a80482bbd5da`; artifact 11507913497; digest `sha256:7638e8c833e277e3d092aa0846be660790c92a14a70a48f8d2a6580173972258`; all 21 JS/CSS fingerprints match artifact bytes and four implementation files match the tested source. Browser verified automatic charts, investor/swing/high-beta disclosure, forecast detail and navigation to PROOF. Compass `CMP-20261007-38128ce3656b` is OK; weekly price observations cut off at 20:00 UTC; CN #28 / W41 freeze hash remains unchanged.
+
+Post-deploy health audit at 20:12–20:14 UTC: scoped architecture evidence GREEN without blockers. Automation fleet RED with one pre-existing blocker, `adaptive-decision-miss-validation.yml:LATEST_RUN_FAILED` (run 37558730528, before this build). Root cause is invalid JSON in a model response at `adaptive_decision_miss_auditor.py:91`, not site data, contract or deployment. Normal budget and fail-closed gates remain intact; no unrelated research engine repair is hidden in this UI change. EDGE001 recovered to GREEN. Desktop visual inspection passed; actual iPhone/Safari acceptance is unverified, so issue #1518 remains open. Resume with that concrete device check, not a cosmetic redesign backlog.

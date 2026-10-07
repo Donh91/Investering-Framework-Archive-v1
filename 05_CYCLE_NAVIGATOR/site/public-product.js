@@ -15,7 +15,7 @@ const cleanPhase=v=>String(v||'').replace(/^\d+\.\s*/,'').replace(/\s[—–-]\s
 function investorText(raw){
   let s=String(raw||'').trim();
   if(!s)return'';
-  s=s.replace(/HANDLEKOMPAS/gi,'Market Compass').replace(/\bW\d+\b/g,'This week')
+  s=s.replace(/HANDLEKOMPAS/gi,'Market Compass').replace(/\bW(\d+)\b/g,'week $1')
     .replace(/MASTER MONDAY/gi,'weekly review')
     .replace(/FROZEN CYCLE NAVIGATOR/gi,'weekly outlook')
     .replace(/CANONICAL CONFIRMATION/gi,'confirmed signal')

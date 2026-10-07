@@ -14,7 +14,11 @@ const synthetic={public_series:{current_public_projection:{public_issue_number:9
 const frozenBefore=JSON.stringify(synthetic),graphHtml=graph(synthetic),gap=structuredClone(synthetic);gap.public_live_precision.rows.forEach(r=>r.coverage_complete_to_date=false);
 const riskInput={contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',protection_tracker:{contract:'COMPASS_PROTECTION_TRACKER_v1',pullback_risk_state:'BUILDING',pullback_class:'ORDINARY RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED.',confidence_quality:'LOW',eta_window:'Conditional watch only',reentry_state:'INACTIVE'},sell_assessment:{contract:'COMPASS_SELL_ASSESSMENT_v1',state:'UNAVAILABLE'}};
 const riskHtml=risk(riskInput),limitedRisk=risk({...riskInput,data_status:'STALE'});
+const translateCompass = new Function('words', premium.slice(premium.indexOf('const publicCompassText ='), premium.indexOf('function officialScale'))+';return publicCompassText;')(v=>String(v||''));
+const translateInvestor=new Function('return '+extract(product,'investorText','publicPathText'))();
+const weekIdentityText=translateCompass('W40 BTC gained 2.44%. Possible W41 retest.');
 const checks=[
+ ['public Compass translation preserves historical week and future watch identity',weekIdentityText==='week 40 BTC gained 2.44%. Possible week 41 retest.'&&translateInvestor('W40 BTC gained 2.44%. Possible W41 retest.')===weekIdentityText&&!weekIdentityText.includes('This week')],
  ['weekly graph binds public issue and week and omits unavailable sources',graph({})===''&&graph({...synthetic,public_series:{current_public_projection:{public_issue_number:10,forecast_week:'2026-W41'}}})===''],
  ['weekly graph preserves frozen inputs and plots only complete observed ranges',JSON.stringify(synthetic)===frozenBefore&&(graphHtml.match(/class="week-observed"/g)||[]).length===2&&!graph(gap).includes('class="week-observed"')],
  ['weekly graph labels observed breach without creating a trade signal',graphHtml.includes('1.00% below lower band')&&graphHtml.includes('not direction, pullback depth or trade confidence')&&!graphHtml.includes('polyline')],
