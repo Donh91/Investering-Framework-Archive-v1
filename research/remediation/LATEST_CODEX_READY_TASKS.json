@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-06T20:38:10Z",
+  "generated_at_utc": "2026-10-07T07:56:49Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -48,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-06T20:38:10Z",
+      "last_observed_at_utc": "2026-10-07T07:56:49Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -120,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-06T20:38:10Z",
+      "last_observed_at_utc": "2026-10-07T07:56:49Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -184,7 +184,7 @@
         "weakening scripts/governance/check_append_only_evidence.py"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e2e06783f79846eceb10 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-06T20:38:10Z",
+      "last_observed_at_utc": "2026-10-07T07:56:49Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -222,78 +222,29 @@
     },
     {
       "allowed_change_scope": [
-        ".github/workflows/framework-learning-operations.yml",
+        ".github/workflows/edge001-t2-registry.yml",
         "directly related scripts and tests"
       ],
       "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
       "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 3,
-      "finding": "LATEST_RUN_FAILED",
-      "first_observed_at_utc": "2026-10-06T20:38:01Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature de75e01cec1253a0a7a5 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-06T20:38:01Z",
-      "latest_run_id": 37502821033,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37502821033",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve LATEST_RUN_FAILED for framework-learning-operations.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature de75e01cec1253a0a7a5 for framework-learning-operations.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 2,
-      "risk_class": "B_CODEX_PR",
-      "route": "CODEX_PR",
-      "signature": "de75e01cec1253a0a7a5",
-      "source_health_generated_at_utc": "2026-10-06T20:28:21.875146Z",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "71c5decd2cfa1f6c1eb1a7dc02a5d2d70598b49ced2f402851b50f6f8f0cab7b",
-      "transition_receipt_path": "research/remediation/transitions/de75e01cec1253a0a7a5.json",
-      "transition_receipt_required": true,
-      "workflow": "framework-learning-operations.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/framework-learning-operations.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 3,
+      "failure_streak": 4,
       "finding": "REPEATED_CONSECUTIVE_FAILURES",
-      "first_observed_at_utc": "2026-10-06T20:38:01Z",
+      "first_observed_at_utc": "2026-10-07T07:56:38Z",
       "forbidden_changes": [
         "market gates",
         "model weights",
         "canonical authority",
         "portfolio logic"
       ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature f22fa37ead720d16b5d8 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-06T20:38:01Z",
-      "latest_run_id": 37502821033,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37502821033",
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 8354aa73e005b52baf1a --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-10-07T07:56:38Z",
+      "latest_run_id": 37533959148,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37533959148",
       "lifecycle_state": "ACTIVE",
-      "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for framework-learning-operations.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for edge001-t2-registry.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
       "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature f22fa37ead720d16b5d8 for framework-learning-operations.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
+      "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
+      "precondition": "Fresh Automation Production Health still contains signature 8354aa73e005b52baf1a for edge001-t2-registry.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
         "workflow job logs",
         "reproduction or repeated identical signature",
@@ -302,21 +253,21 @@
       "required_observations": 2,
       "risk_class": "B_CODEX_PR",
       "route": "CODEX_PR",
-      "signature": "f22fa37ead720d16b5d8",
-      "source_health_generated_at_utc": "2026-10-06T20:28:21.875146Z",
+      "signature": "8354aa73e005b52baf1a",
+      "source_health_generated_at_utc": "2026-10-07T07:44:48.186855Z",
       "state": "CODEX_READY",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
         "workflow job logs",
         "reproduction or repeated identical signature",
         "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
+        "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN"
       ],
       "success_streak": 0,
-      "task_contract_sha256": "652c46890229264b50aa7b5c677dc38f45f5fe7868526f3462bb67933a2adb83",
-      "transition_receipt_path": "research/remediation/transitions/f22fa37ead720d16b5d8.json",
+      "task_contract_sha256": "45d82965f17816befd921e0f78aab1df5a593e036d97b74f0a96189e6ecdaa31",
+      "transition_receipt_path": "research/remediation/transitions/8354aa73e005b52baf1a.json",
       "transition_receipt_required": true,
-      "workflow": "framework-learning-operations.yml"
+      "workflow": "edge001-t2-registry.yml"
     }
   ]
 }
