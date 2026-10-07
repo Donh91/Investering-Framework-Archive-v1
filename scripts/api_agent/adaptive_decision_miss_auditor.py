@@ -92,6 +92,19 @@ def extract(resp:dict[str,Any])->dict[str,Any]:
     if out.get("status") not in {"READY","NO_SUPPORTED_MISSES"}:raise ValueError("invalid_status")
     return out
 
+def blocked_result(reason:str)->dict[str,Any]:
+    return {"status":"BLOCKED","misses":[],"reason":reason}
+
+def call_with_bounded_retry(key:str,ctx:dict[str,Any])->tuple[dict[str,Any]|None,list[dict[str,Any]],list[str]]:
+    responses=[];errors=[];out=None
+    for attempt in range(2):
+        resp=call(key,ctx);responses.append(resp)
+        try:
+            out=extract(resp);break
+        except (ValueError,json.JSONDecodeError) as exc:
+            errors.append(f"attempt_{attempt+1}:{type(exc).__name__}:{str(exc)[:240]}")
+    return out,responses,errors
+
 def main()->None:
     ap=argparse.ArgumentParser();ap.add_argument("--analysis-root",action="append",type=Path,required=True);ap.add_argument("--gap-registry",type=Path,required=True);ap.add_argument("--output-dir",type=Path,required=True);ap.add_argument("--max-documents",type=int,default=24);a=ap.parse_args()
     ds=docs(a.analysis_root,max(1,min(a.max_documents,40)))
@@ -100,22 +113,30 @@ def main()->None:
     ctx={"contract":"ADAPTIVE_DECISION_MISS_AUDIT_INPUT_v1_1","documents":ds,"existing_evidence_gap_registry":gaps,"rules":["Discovery episode cannot validate its proposed metric.","Use only supplied repository evidence.","Prefer NO_SUPPORTED_MISSES over speculative hindsight.","Signal attribution is descriptive unless direct unique-contribution evidence exists.","Aligned sensor count is not proof of independence or marginal value."]}
     a.output_dir.mkdir(parents=True,exist_ok=True);ctx_hash=sh(ctx)
     prior=list(a.output_dir.parent.rglob("MISS_AUDIT_RECEIPT.json")) if a.output_dir.parent.exists() else []
+    responses=[];parse_errors=[];api_status="PASS"
     for p in prior[-100:]:
         try:
             if json.loads(p.read_text()).get("context_sha256")==ctx_hash:
-                out={"status":"NO_SUPPORTED_MISSES","misses":[]};resp={"id":None,"usage":{}}
+                out={"status":"NO_SUPPORTED_MISSES","misses":[]};responses=[{"id":None,"usage":{}}]
                 break
         except Exception:continue
     else:
         key=os.environ.get("OPENAI_API_KEY")
         if not key:raise SystemExit("OPENAI_API_KEY_missing")
-        resp=call(key,ctx);out=extract(resp)
-    usage=resp.get("usage") if isinstance(resp.get("usage"),dict) else {};it=int(usage.get("input_tokens",0) or 0);ot=int(usage.get("output_tokens",0) or 0);cost=round((it*PRICE_INPUT_PER_M+ot*PRICE_OUTPUT_PER_M)/1_000_000,8)
+        out,responses,parse_errors=call_with_bounded_retry(key,ctx)
+        if out is None:
+            out=blocked_result("API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY");api_status="API_OUTPUT_INVALID"
+    it=ot=0
+    for resp in responses:
+        usage=resp.get("usage") if isinstance(resp.get("usage"),dict) else {}
+        it+=int(usage.get("input_tokens",0) or 0);ot+=int(usage.get("output_tokens",0) or 0)
+    cost=round((it*PRICE_INPUT_PER_M+ot*PRICE_OUTPUT_PER_M)/1_000_000,8)
     if cost>0.30:raise SystemExit(f"miss_audit_cost_exceeded:{cost}")
     gap_candidates=[]
     for m in out.get("misses",[]):
         gap_candidates.append({"metric_name":m["proposed_metric_name"],"decision_relevance":f"{m['phase']} / {m['miss_type']}: {m['decision_relevance']}","missing_history_problem":m["missing_history_problem"],"desired_history_days":m["desired_history_days"],"desired_cadence_minutes":m["desired_cadence_minutes"],"data_shape":m["data_shape"],"capability_hint":m["capability_hint"],"evidence_reference":f"DISCOVERY_ONLY::{m['decision_reference']}::{m['outcome_reference']}"})
-    (a.output_dir/"MISS_AUDIT.json").write_bytes(cb(out));(a.output_dir/"GAP_AUDIT_FROM_MISSES.json").write_bytes(cb({"status":"READY" if gap_candidates else "NO_GAPS","candidates":gap_candidates}))
-    receipt={"contract":"ADAPTIVE_DECISION_MISS_RECEIPT_v1_1","task":"DECISION_MISS_AUDIT","model":MODEL,"context_sha256":ctx_hash,"response_id":resp.get("id"),"input_tokens":it,"output_tokens":ot,"estimated_cost_usd":cost,"created_unix":int(time.time()),"discovery_events_are_validation":False,"signal_attribution_is_causal":False,"direct_incremental_value_requires_explicit_unique_contribution_evidence":True,"authority":{"market_rule_change":False,"canonical_state":False,"portfolio_action":False,"sensor_weight_change":False,"self_merge":False}}
+    gap_status="BLOCKED" if api_status!="PASS" else ("READY" if gap_candidates else "NO_GAPS")
+    (a.output_dir/"MISS_AUDIT.json").write_bytes(cb(out));(a.output_dir/"GAP_AUDIT_FROM_MISSES.json").write_bytes(cb({"status":gap_status,"candidates":gap_candidates}))
+    receipt={"contract":"ADAPTIVE_DECISION_MISS_RECEIPT_v1_1","task":"DECISION_MISS_AUDIT","model":MODEL,"context_sha256":ctx_hash,"response_id":responses[-1].get("id") if responses else None,"response_ids":[r.get("id") for r in responses],"attempt_count":len(responses),"input_tokens":it,"output_tokens":ot,"estimated_cost_usd":cost,"created_unix":int(time.time()),"status":api_status,"parse_errors":parse_errors,"discovery_events_are_validation":False,"signal_attribution_is_causal":False,"direct_incremental_value_requires_explicit_unique_contribution_evidence":True,"authority":{"market_rule_change":False,"canonical_state":False,"portfolio_action":False,"sensor_weight_change":False,"self_merge":False}}
     (a.output_dir/"MISS_AUDIT_RECEIPT.json").write_bytes(cb(receipt));print(json.dumps({"status":out["status"],"miss_count":len(out.get("misses",[])),"gap_candidate_count":len(gap_candidates),"estimated_cost_usd":cost},sort_keys=True))
 if __name__=="__main__":main()

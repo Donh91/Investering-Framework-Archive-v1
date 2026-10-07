@@ -163,6 +163,20 @@ jobs:
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
 
+      - name: Keep invalid decision-miss API output visible to health
+        if: steps.budget.outputs.decision_eligible == 'true'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/adaptive-miss/MISS_AUDIT_RECEIPT.json')
+          row=json.loads(p.read_text())
+          status=row.get('status')
+          if status!='PASS':
+              raise SystemExit(f"decision_miss_api_status:{status}")
+          print('DECISION_MISS_API_STATUS_PASS')
+          PY
+
   notify:
     needs: learn-and-validate
     if: failure() && github.ref == 'refs/heads/main'
