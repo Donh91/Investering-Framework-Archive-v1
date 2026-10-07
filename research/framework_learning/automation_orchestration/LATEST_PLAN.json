@@ -9,16 +9,16 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "5bc58a2725539565ce48f9fdfafac8ff7acea851667386780992c126a631df9a",
+  "fingerprint": "e25f48364018c5aa268fb0dffcd1d863acd756b9ca775c9cd2f3e0ac236bf721",
   "fleet": {
-    "amber_count": 8,
-    "green_count": 187,
-    "red_count": 2,
+    "amber_count": 6,
+    "green_count": 190,
+    "red_count": 1,
     "scheduled_workflow_count": 56,
     "workflow_count": 197,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-10-07T10:29:58Z",
+  "generated_at_utc": "2026-10-07T20:15:49Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -54,39 +54,15 @@
       "workflow": "adaptive-decision-miss-validation.yml",
       "write_target_class": "DIRECT_MAIN",
       "writer_group": "framework-main-writer"
-    },
-    {
-      "cluster_id": null,
-      "existing_remediation": {
-        "finding": "REPEATED_CONSECUTIVE_FAILURES",
-        "route": "CODEX_PR",
-        "signature": "8354aa73e005b52baf1a",
-        "state": "CODEX_READY"
-      },
-      "failure_streak": 4,
-      "findings": [
-        "REPEATED_CONSECUTIVE_FAILURES"
-      ],
-      "latest_head_sha": "e31047eb996003a4cb325c473abb3564645d43f4",
-      "latest_run_id": 37533959148,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37533959148",
-      "model_lane": "NONE",
-      "openai_enabled": false,
-      "recent_failure_count": 4,
-      "route": "FOLLOW_EXISTING_REMEDIATION",
-      "scheduled": false,
-      "workflow": "edge001-t2-registry.yml",
-      "write_target_class": "DIRECT_MAIN",
-      "writer_group": "framework-main-writer"
     }
   ],
   "material_delta": true,
   "routing_summary": {
-    "existing_remediation_count": 1,
+    "existing_remediation_count": 0,
     "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
-  "source_health_generated_at_utc": "2026-10-07T10:26:19.910434Z",
+  "source_health_generated_at_utc": "2026-10-07T20:12:14.121217Z",
   "source_health_status": "RED"
 }
