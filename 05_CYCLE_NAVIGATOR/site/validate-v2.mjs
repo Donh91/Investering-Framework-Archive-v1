@@ -21,6 +21,11 @@ const translateCompass = new Function('words', premium.slice(premium.indexOf('co
 const translateInvestor=new Function('return '+extract(product,'investorText','publicPathText'))();
 const weekIdentityText=translateCompass('W40 BTC gained 2.44%. Possible W41 retest.');
 const checks=[
+ ['public tab links restore PATH or PROOF without creating another forecast',product.includes("const initialView=location.hash.slice(1)")&&product.includes("['path','proof'].includes(initialView)")&&product.includes("history.replaceState(null,'','#'+b.dataset.tab)")],
+ ['public near-term no-observation status has a plain-language explanation',premium.includes("s === 'UNCHANGED NO NEW OBSERVATION'")&&premium.includes("return 'NO NEW READING'")&&premium.includes('Current action unchanged · awaiting a fresh near-term reading.')],
+ ['chart legend matches actual green and frozen blue price curves',css.includes('.week-legend .observed{background:#239570}')&&css.includes('.week-legend .frozen{background:#244f92}')],
+ ['arrival windows and rotation facts remain readable on mobile',css.includes('.alt-transition small{font-size:12px')&&css.includes('.rotation-readout-v3 p{font-size:13px')],
+
  ['public Compass translation preserves historical week and future watch identity',weekIdentityText==='week 40 BTC gained 2.44%. Possible week 41 retest.'&&translateInvestor('W40 BTC gained 2.44%. Possible W41 retest.')===weekIdentityText&&!weekIdentityText.includes('This week')],
  ['weekly graph binds public issue and week and omits unavailable sources',graph({})===''&&graph({...synthetic,public_series:{current_public_projection:{public_issue_number:10,forecast_week:'2026-W41'}}})===''],
  ['weekly chart preserves freeze and plots only complete daily coverage',JSON.stringify(synthetic)===frozenBefore&&(graphHtml.match(/class="journey-actual-point"/g)||[]).length===4&&!graph(gap).includes('class="journey-actual-point"')],
