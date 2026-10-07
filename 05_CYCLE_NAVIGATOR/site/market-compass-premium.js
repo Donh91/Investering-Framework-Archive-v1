@@ -317,6 +317,23 @@ function horizonCard(snapshot, compass, scale, horizon) {
     + '</article>';
 }
 
+function pullbackCard(compass) {
+  const valid=compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK';
+  const p=valid&&compass?.protection_tracker?.contract==='COMPASS_PROTECTION_TRACKER_v1'?compass.protection_tracker:{};
+  const sell=valid&&compass?.sell_assessment?.contract==='COMPASS_SELL_ASSESSMENT_v1'?compass.sell_assessment:{};
+  const state=String(p.pullback_risk_state||'UNAVAILABLE').toUpperCase();
+  const classification=clean(p.pullback_class),ordinary=!!classification&&/ORDINARY|RETEST|DIP/i.test(classification)&&!/MAJOR|SEVERE|DEEP/i.test(classification);
+  const title=state==='UNAVAILABLE'?'Risk assessment unavailable':ordinary?'Ordinary retest watch':'Pullback assessment';
+  const status=state==='BUILDING'?'DEVELOPING · UNCONFIRMED':state==='UNKNOWN'?'UNCLEAR':state==='INACTIVE'?'NO ACTIVE WARNING':publicState(state);
+  const quality=clean(p.confidence_quality)||'UNAVAILABLE',eta=publicCompassText(clean(p.eta_window)||'No supported timing window');
+  const drivers=Array.isArray(p.decisive_public_drivers)?p.decisive_public_drivers.filter(x=>typeof x==='string').slice(0,4):[];
+  return '<details id="pullbackWatch" class="premium-pullback" data-contract="CN_PULLBACK_WATCH_v1"><summary><div><span>RISK WATCH · DIP / PULLBACK</span><h3>'+esc(title)+'</h3><p>'+esc(eta)+'</p></div><div class="pullback-summary-state"><strong>'+esc(status)+'</strong><small>EVIDENCE QUALITY · '+esc(publicState(quality))+'</small><b>Sell / rebuy edge: '+esc(!sell.state||sell.state==='UNAVAILABLE'?'NOT ESTABLISHED':'see verified assessment')+'</b><span>Details ↓</span></div></summary><div class="pullback-body">'
+    +'<div class="pullback-facts"><article><span>CLASSIFICATION</span><strong>'+esc(publicCompassText(classification||'Not quantified'))+'</strong></article><article><span>DEPTH + DURATION</span><strong>Not quantified by the current signal</strong><p>A watch window is possible onset, not how long a decline will last.</p></article><article><span>SELL / TRIM</span><strong>'+esc(publicState(sell.state||'UNAVAILABLE'))+'</strong><p>'+esc(publicCompassText(sell.reason||'No verified sell or trim assessment available.'))+'</p></article><article><span>RE-ENTRY</span><strong>'+esc(publicState(p.reentry_state||'UNAVAILABLE'))+'</strong><p>'+esc(publicCompassText(p.reentry_message||'No verified re-entry assessment available.'))+'</p></article></div>'
+    +'<div class="pullback-impact"><span>BTC / ETH / ALTCOINS</span><p>'+esc(ordinary?'An ordinary retest watch does not establish a large market decline. BTC and ETH range misses remain forecast accountability; altcoin and meme permissions stay on their own Compass gates.':'Use the verified classification and segment permissions. A price range breach alone cannot establish distribution or a sell signal.')+'</p></div>'
+    +'<div class="pullback-evidence"><span>WHAT SUPPORTS THE WATCH</span>'+ (drivers.length?'<ul>'+drivers.map(x=>'<li>'+esc(publicCompassText(x))+'</li>').join('')+'</ul>':'<p>No verified public drivers available.</p>')+'<span>WHAT WOULD WEAKEN IT</span><p>'+esc(publicCompassText(p.invalidation||'No public invalidation condition is available.'))+'</p></div>'
+    +'<p class="pullback-note">Evidence quality is qualitative, not a probability. This warning cannot create a sell, short or early re-entry signal.</p></div></details>';
+}
+
 function renderPremium(snapshot, compass) {
   const root = document.getElementById('productNow');
   if (!root) return false;
@@ -329,10 +346,11 @@ function renderPremium(snapshot, compass) {
   section.className = 'premium-market-compass';
   section.innerHTML =
     '<div class="premium-overview">'
-    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong><small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong><small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a><a href="#liveDecisionDetail" data-live-detail><span>RISK WATCH</span><strong>' + esc(meta.risk) + '</strong><small>' + esc(meta.riskEta) + ' · Distribution ' + esc(meta.distribution) + '</small></a></div></div>'
+    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong><small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong><small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
     + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div><p>' + esc(rec.copy) + '</p>' + hourlyMonitor(snapshot) + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
     + decisionDetail(compass, rec, meta)
+    + pullbackCard(compass)
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, compass, scale, h)).join('') + '</div>'
     + riskCurve(compass)
