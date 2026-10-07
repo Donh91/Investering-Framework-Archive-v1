@@ -163,6 +163,9 @@
       "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets"],
       "required_canonical_files": ["control:source contract for SC01/SC03/SC14", "restricted:GOVERNANCE/COLLECTION_ACTIVATION.json", "restricted:GOVERNANCE/ROUND3_SOURCE_BINDINGS.json"],
       "private_data_authority": "restricted raw capture and private health receipts",
+      "scheduled_owner_by_source": {"SC01_OKX_ETH_OI_HOURLY_V1": "restricted:.github/workflows/round3-okx-funding.yml", "SC03_OKX_ETH_REALIZED_FUNDING_V1": "restricted:.github/workflows/round3-okx-funding.yml", "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": "restricted:.github/workflows/round3-deribit-skew.yml"},
+      "manual_fallback_by_source": {"SC01_OKX_ETH_OI_HOURLY_V1": "restricted:.github/workflows/round3-okx-oi.yml"},
+      "routing_note": "SC01 and SC03 share the scheduled minute-02 private runner. Source contracts, restricted storage, provenance and exact cadences remain independent.",
       "forbidden_actions": ["WRITE_PROVIDER_VALUES_TO_CONTROL", "EMIT_VALUES_TO_PUBLIC_LOG", "RUN_HYPOTHESIS_TEST"]
     },
     {
