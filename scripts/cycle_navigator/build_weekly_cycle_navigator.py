@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
 
@@ -259,7 +260,7 @@ def output_schema() -> dict[str, Any]:
         "required": [
             "status", "status_reason_codes", "issue_number", "previous_issue_number", "market_state",
             "evaluation", "base_case_this_week", "base_case_2_3_weeks", "base_case_4_8_weeks",
-            "altseason_countdown", "rotation_ladder", "forecast_freeze", "decision_projection",
+            "altseason_countdown", "rotation_ladder", "market_cycle_context", "forecast_freeze", "decision_projection",
             "readable_markdown", "x_ready_markdown", "uncertainties"
         ],
         "properties": {
@@ -272,6 +273,14 @@ def output_schema() -> dict[str, Any]:
             "issue_number": {"type": "integer", "minimum": 1},
             "previous_issue_number": {"type": ["integer", "null"]},
             "market_state": {"type": "string"},
+            "market_cycle_context": {
+                "type": "object", "additionalProperties": False,
+                "required": ["current_phase", "why", "next_gate"], "properties": {
+                    "current_phase": {"type": "string", "enum": ["PRE_ROTATION", "ROTATION", "BROAD_ALTSEASON", "PARABOLIC_ALTSEASON", "DISTRIBUTION", "EXIT_RISK", "DEFENSIVE", "UNAVAILABLE"]},
+                    "why": {"type": "string", "maxLength": 240},
+                    "next_gate": {"type": "string", "maxLength": 240}
+                }
+            },
             "evaluation": {
                 "type": "object", "additionalProperties": False,
                 "required": ["public_continuity_score", "score_status", "price_range_score", "structural_score", "decision_utility_score", "parameter_scores", "parameter_coverage_pct", "strengths", "misses", "method_note"],
@@ -313,7 +322,7 @@ def output_schema() -> dict[str, Any]:
             },
             "forecast_freeze": {
                 "type": "object", "additionalProperties": False,
-                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_analysis", "bull_bear_scale", "forecast_horizon_days", "intraday_map"],
+                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_analysis", "bull_bear_scale", "forecast_horizon_days", "intraday_map", "daily_price_path"],
                 "properties": {
                     "scoring_contract": {"type": "string", "const": "CN_PUBLIC_CONTINUITY_v1"},
                     "btc_range_low": nullable_num, "btc_range_high": nullable_num,
@@ -381,6 +390,7 @@ def output_schema() -> dict[str, Any]:
                         }
                     },
                     "forecast_horizon_days": {"type": "integer", "minimum": 5, "maximum": 10},
+                    "daily_price_path": daily_path_schema(),
                     "intraday_map": intraday_schema
                 }
             },
@@ -459,8 +469,9 @@ def output_schema() -> dict[str, Any]:
                     },
                     "protection": {
                         "type": "object", "additionalProperties": False,
-                        "required": ["pullback_risk_state", "pullback_class", "distribution_risk", "eta_window", "confidence_quality", "drivers", "invalidation"],
+                        "required": ["pullback_risk_state", "pullback_class", "distribution_risk", "eta_window", "confidence_quality", "drivers", "invalidation", "public_explanation"],
                         "properties": {
+                            "public_explanation": public_copy_schema(),
                             "pullback_risk_state": {"type": "string", "enum": ["NORMAL", "BUILDING", "ELEVATED", "HIGH", "CONFIRMED", "UNAVAILABLE"]},
                             "pullback_class": {"type": "string"},
                             "distribution_risk": {"type": "string", "enum": ["NONE", "WARNING", "CONFIRMED", "UNKNOWN"]},
@@ -512,6 +523,9 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Never invent historical track-record values. Price Ranges remain the public precision-score family and their scoring semantics must not change. Market / Structure is analysis-only from public CN #27 onward: use exactly five fixed analytical headings in this order: REGIME_RESILIENCE, LEADERSHIP, ROTATION_TRANSMISSION, BREADTH_PERSISTENCE, FLOW_QUALITY_FRAGILITY. Populate forecast_freeze.market_structure_analysis with those five analyses and never emit or imply a public Market / Structure accuracy percentage. FLOW_QUALITY_FRAGILITY must synthesize internal confirmation quality such as spot/microstructure, settled flows, breadth, sentiment, relative strength and counterevidence when available rather than restating a chart. Also populate forecast_freeze.bull_bear_scale for 1-3d, 5-7d and 2-3w. For each horizon bull and bear are integers 0-10 that sum to 10; they represent evidence balance, not probability. The 2-3w Bull/Bear horizon must be semantically equivalent to decision_projection.next_2_3w and base_case_2_3_weeks; use the same evidence synthesis rather than extrapolating from 5-7d. The Bull/Bear scale must synthesize multi-factor Cycle Navigator evidence and be semantically consistent with decision_projection. Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
         "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
+        "market_cycle_context describes the current accepted weekly macro regime, not a projected destination or a tactical segment permission. Use UNAVAILABLE when no stable phase is established. Translate why and next_gate into brief public English, without implying a scheduled transition. "
+        "Also populate forecast_freeze.daily_price_path with prospective BTC/ETH UTC Monday-Sunday daily expected closing prices and low/high ranges inside the weekly envelope, day 1 through 7. These are explicit analytical forecasts from the same final Master Monday synthesis, not measured prices, band midpoints or interpolated missing data. Use PUBLISHED only when a coherent evidence-supported daily profile can be stated; otherwise UNAVAILABLE with a reason and an empty points array. Never force a fabricated wiggle or use target-week observed outcomes to fit the curve. The daily path is presentation-only and does not change public price precision scoring. "
+        "In protection.public_explanation, translate the internal analysis into three short plain-English evidence statements: summary, watch_for, weakens_if. No internal jargon, numbers, dates, percentages or trading instructions in that copy. Preserve risk classification and uncertainty. onset_start_day/onset_end_day are nullable UTC days 1-7 of the forecast week for a supported possible onset window, never decline duration. Both must be null if timing is unsupported. This copy has no action authority. "
         "Populate decision_projection as the sole machine-readable directional/protection projection, including next_1_3d, next_5_7d, next_2_3w, next_21_30d, weeks_4_8 and protection. In next_21_30d, scenario weights are uncalibrated analytical weights, never probabilities, and BTC/ETH/ETHBTC directions must be explicit. It must be semantically equivalent to the narrative but never inferred by downstream keyword parsing. "
         "Use NO_EDGE or UNAVAILABLE rather than forcing direction. Protection fields must be evidence-bounded, and warnings must not be manufactured from wording alone. "
         "The readable output is for the owner and the X-ready output is public-facing. Keep X prose compact with cohesive sections, not excessive one-line spacing. "
@@ -805,6 +819,14 @@ def main() -> None:
             raise SystemExit(f"partial_{asset}_range")
         if lo is not None and float(lo) >= float(hi):
             raise SystemExit(f"invalid_{asset}_range")
+
+    try:
+        validate_daily_path(freeze.get("daily_price_path"), freeze, target_year, target_week)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+    protection_copy = (value.get("decision_projection") or {}).get("protection") or {}
+    if protection_copy.get("public_explanation") is not None and validated_public_copy(protection_copy, target_year, target_week) is None:
+        raise SystemExit("public_protection_copy_invalid")
 
     hourly_ready = isinstance(weekly_capture, dict) and weekly_capture.get("readiness") == "READY" and int((weekly_capture.get("hourly_gap_diagnostics") or {}).get("observed_hours", 0) or 0) == 168
     if hourly_ready:
