@@ -4,12 +4,12 @@
     "luna_required": true,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
-    "sol_6_1_required": true
+    "sol_6_1_required": false
   },
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "86e2592152f3ef7e1ec6822bc0ef11f2d9bac7bf0ea470b6bed44003c82fde87",
+  "fingerprint": "2efdc80e23187cd1333095711b006decd9b84e4ed55ced7ef0beb1be74a8defb",
   "fleet": {
     "amber_count": 5,
     "green_count": 190,
@@ -18,7 +18,7 @@
     "workflow_count": 197,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-10-07T07:47:58Z",
+  "generated_at_utc": "2026-10-07T09:11:08Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -33,7 +33,12 @@
   "items": [
     {
       "cluster_id": null,
-      "existing_remediation": null,
+      "existing_remediation": {
+        "finding": "LATEST_RUN_FAILED",
+        "route": "OBSERVE",
+        "signature": "5928685943974993d02b",
+        "state": "OBSERVED"
+      },
       "failure_streak": 1,
       "findings": [
         "LATEST_RUN_FAILED"
@@ -52,7 +57,12 @@
     },
     {
       "cluster_id": null,
-      "existing_remediation": null,
+      "existing_remediation": {
+        "finding": "REPEATED_CONSECUTIVE_FAILURES",
+        "route": "CODEX_PR",
+        "signature": "8354aa73e005b52baf1a",
+        "state": "CODEX_READY"
+      },
       "failure_streak": 4,
       "findings": [
         "REPEATED_CONSECUTIVE_FAILURES"
@@ -60,10 +70,10 @@
       "latest_head_sha": "e31047eb996003a4cb325c473abb3564645d43f4",
       "latest_run_id": 37533959148,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37533959148",
-      "model_lane": "GPT_6_1_SOL",
+      "model_lane": "NONE",
       "openai_enabled": false,
       "recent_failure_count": 4,
-      "route": "SOL_DIAGNOSIS",
+      "route": "FOLLOW_EXISTING_REMEDIATION",
       "scheduled": false,
       "workflow": "edge001-t2-registry.yml",
       "write_target_class": "DIRECT_MAIN",
@@ -72,10 +82,10 @@
   ],
   "material_delta": true,
   "routing_summary": {
-    "existing_remediation_count": 0,
+    "existing_remediation_count": 1,
     "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 1
+    "sol_6_1_diagnosis_count": 0
   },
   "source_health_generated_at_utc": "2026-10-07T07:44:48.186855Z",
   "source_health_status": "RED"

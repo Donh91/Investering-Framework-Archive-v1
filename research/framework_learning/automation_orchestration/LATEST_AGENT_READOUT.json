@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-07T07:48:56Z",
+  "generated_at_utc": "2026-10-07T09:11:35Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,63 +15,35 @@
   },
   "luna_triage": {
     "evidence_against": [
-      "No error log, step-level result, runner details, or dependency status is supplied, so a transient execution issue, shared dependency failure, missing evidence, and code defect cannot be distinguished.",
-      "The failure streak is 1, which does not establish an uninterrupted current failure pattern."
+      "The supplied record contains no failed-step details, logs, error message, or dependency status to identify a specific cause.",
+      "The current failure streak is 1, so this record alone does not establish consecutive failures."
     ],
     "evidence_for": [
-      "Workflow adaptive-decision-miss-validation.yml has a latest-run failure (run 37558730528).",
-      "Recent failure count is 8, indicating repeated failures in the reported recent window, though their timing and causes are unspecified.",
-      "The supplied existing writer group is framework-main-writer; no remediation is recorded."
+      "The latest run of adaptive-decision-miss-validation.yml is marked LATEST_RUN_FAILED.",
+      "The supplied recent_failure_count is 8, suggesting failures have occurred recently, though their timing and relationship to this run are not provided.",
+      "Existing remediation is OBSERVED with route OBSERVE; no new remediation authority is indicated."
     ],
     "forecast_candidates": [],
     "hypotheses": [
-      "Failure class is undetermined from the supplied summary; inspect the run logs before attributing it to transient noise, missing evidence, a dependency, or a code defect.",
-      "The elevated recent failure count merits inspection for a recurring issue, but does not establish persistence or a shared cause."
+      "Failure class is undetermined from the supplied evidence; treat as an execution failure of unknown cause, not as a confirmed transient, dependency failure, or code defect.",
+      "The recent failure count warrants inspection, but the single current failure streak does not establish persistence."
     ],
     "status": "DEGRADED",
-    "summary": "Triage is limited to one failed workflow summary without diagnostic details. Existing owner to inspect next: framework-main-writer. No remediation state is supplied; this triage does not create one.",
+    "summary": "One workflow is supplied. Its latest run failed, but available metadata is insufficient to classify the cause. Existing owner to inspect next: framework-main-writer. Keep the existing OBSERVED remediation state; do not create duplicate remediation.",
     "uncertainties": [
-      "Failure step, error message, and whether the run failed before or during evidence collection are unknown.",
-      "Timing and causes of the 8 recent failures are unknown.",
-      "Dependency health and comparison with other workflows are not supplied."
+      "Failed job and step, error output, and run logs are not supplied.",
+      "The time window and scope represented by recent_failure_count are unspecified.",
+      "No evidence is supplied about shared dependency health or whether recent failures share a signature."
     ]
   },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "86e2592152f3ef7e1ec6822bc0ef11f2d9bac7bf0ea470b6bed44003c82fde87",
+  "plan_fingerprint": "2efdc80e23187cd1333095711b006decd9b84e4ed55ced7ef0beb1be74a8defb",
   "routing_summary": {
-    "existing_remediation_count": 0,
+    "existing_remediation_count": 1,
     "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 1
+    "sol_6_1_diagnosis_count": 0
   },
-  "sol_6_1_diagnosis": {
-    "evidence_against": [
-      "Only one workflow is supplied, so there is no observed cross-workflow pair supporting a shared-head or dependency cluster.",
-      "Only the latest run's head SHA is supplied; the four failures cannot be attributed to the same revision.",
-      "No job logs, error signatures, dependency records, or overlapping execution times are supplied to distinguish a persistent cause from independent failures.",
-      "The writer-group label and openai_enabled=false are configuration metadata, not evidence of contention or an OpenAI-related failure."
-    ],
-    "evidence_for": [
-      "edge001-t2-registry.yml has failure_streak=4, recent_failure_count=4, and the finding REPEATED_CONSECUTIVE_FAILURES. These describe repeated failures and should not be counted as eight separate events.",
-      "The latest failed run is 37533959148 at head e31047eb996003a4cb325c473abb3564645d43f4.",
-      "The workflow is labeled DIRECT_MAIN and belongs to framework-main-writer, making shared writer interactions a diagnostic consideration, not an established cause.",
-      "The supplied clusters list is empty, cluster_id is null, and existing_remediation is null. No cluster assignment or remediation is represented in this snapshot."
-    ],
-    "forecast_candidates": [],
-    "hypotheses": [
-      "Priority 1 \u2014 A persistent workflow or shared environmental fault may explain the four consecutive failures rather than four independent incidents. Bounded diagnostic: read-only compare the failing job, step, normalized error signature, and head SHA across those four runs and the nearest preceding successful run, if available. Different failure signatures would weaken a single-cause explanation; recurrence across different heads would weaken a revision-specific explanation.",
-      "Priority 2 \u2014 A failed upstream dependency may be producing repeated downstream symptoms. Bounded diagnostic: identify only the inputs, artifacts, credentials, or workflow dependencies referenced by the failing step, then inspect their corresponding health and run chronology. A healthy dependency with valid inputs at each failure would weaken that specific upstream-cause hypothesis.",
-      "Priority 3 \u2014 Shared-head or writer-group interactions may connect this workflow to failures outside the supplied item. Bounded diagnostic: inspect available contemporaneous health records for matching heads or framework-main-writer membership; compare failure signatures and actual execution overlap before proposing deduplication. Shared labels alone are insufficient, and no demonstrated overlap would weaken a contention explanation."
-    ],
-    "status": "DEGRADED",
-    "summary": "Four consecutive failures warrant testing a persistent shared cause before treating them independently, but the supplied evidence does not establish root cause or cross-workflow deduplication. Start with read-only failure-signature and head comparison, then examine dependencies implicated by the failing step. Treat the four-run sequence as a provisional review group, not a canonical cluster. Check current remediation records before proposing any separate remediation; this snapshot contains no recorded remediation, which does not prove none exists.",
-    "uncertainties": [
-      "The preceding three failed run IDs, their head SHAs, timestamps, and job-level errors are missing.",
-      "Upstream/downstream relationships and contemporaneous failures in other workflows are not supplied.",
-      "Actual writer activity, concurrency controls, and execution overlap are unknown.",
-      "The health snapshot was generated at 2026-10-07T07:44:48.186855Z; subsequent outcomes or remediation changes are not represented.",
-      "No bounded inspection has been performed here; all diagnostic hypotheses remain unverified."
-    ]
-  },
+  "sol_6_1_diagnosis": null,
   "source_health_generated_at_utc": "2026-10-07T07:44:48.186855Z"
 }
