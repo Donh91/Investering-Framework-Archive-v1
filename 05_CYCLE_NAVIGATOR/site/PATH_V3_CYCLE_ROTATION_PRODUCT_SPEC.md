@@ -402,7 +402,7 @@ Post-deploy health audit at 20:12–20:14 UTC: scoped architecture evidence GREE
 
 ## 2026-10-08 implementation checkpoint: daily journey and clear cycle scope
 
-Status: IMPLEMENTATION_IN_PROGRESS. This section supersedes earlier site layout choices for the requested revision; historical acceptance receipts remain historical.
+Status: IMPLEMENTATION_COMPLETE; production and browser verification pending. This section supersedes earlier site layout choices for the requested revision; historical acceptance receipts remain historical.
 
 User approval: real daily frozen BTC/ETH forecasts from the existing Monday producer, with observed daily prices overlaid. Existing W41 freeze must remain byte-identical (SHA-256 41cb3ea00c751bb8c4099f0f3fb88e8eb8f357f052adb3a3d00798886a0589f3). No retroactive daily forecasts or range-midpoint forecast invention.
 
@@ -416,3 +416,13 @@ Implementation route:
 - Route protection public copy from the existing LLM producer through validation and Compass projection. Preserve structured state/action authority. Calendar onset bounds come from structured owner day bounds, never a guessed decline duration.
 
 Archive decision: EXISTING_OWNER_UPDATE; normal isolated branch/PR, no workflows, archive routing, scoring or frozen market records changed. Primary owners: this specification and SITE_CONTRACT.md. Backup product: NONE; no Vault/full-mirror claim. Validation: causal date/price/coverage tests, public product and contract checks, exact-head CI, production artifact audit and actual mobile browser inspection. Issue #1518 remains open until visual acceptance is evidenced.
+
+
+Implementation record:
+- 14 intended files including this existing owner; no workflows, frozen W41 artifacts, scoring owners, routing indexes or private source records changed.
+- New reusable presentation validator: scripts/cycle_navigator/daily_price_journey.py. Existing producer, hourly materializer and Compass projection consume it. New tests: tests/cycle_navigator/test_daily_price_journey.py.
+- Seven daily forecasts are explicit producer outputs; legacy intervals never acquire a synthetic midpoint forecast. Current daily actuals are observed UTC closes with low/high and coverage.
+- LLM public protection copy and typed macro context start with the next weekly issue. Current W41 uses bounded fallback wording and only its explicit source Day 3–7 timing is formatted as calendar onset dates.
+- Local verification: 69 Python tests, 124/124 release checks, JS parse checks; W41 freeze hash unchanged. A pre-existing substring test falsely matched value inside bucket_value and now validates AST assignment targets in the actual loop.
+- Readback: all 13 implementation files matched exact local contents after write. PR #1541 contains code, requirements and review history. Established public contract labels remain meaningful in the revised design; no CI bypass or weakened gate.
+- Visual scope: cloud Chrome desktop is available. This browser exposes no supported viewport/device resize, so physical iPhone/Safari acceptance cannot be claimed from it. Keep #1518 open unless actual required mobile evidence is available.
