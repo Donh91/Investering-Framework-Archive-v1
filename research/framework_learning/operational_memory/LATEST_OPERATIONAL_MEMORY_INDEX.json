@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 3029,
-  "generated_at_utc": "2026-10-07T20:26:00.003737Z",
+  "episode_count": 3032,
+  "generated_at_utc": "2026-10-07T20:45:34.291407Z",
   "rows": [
     {
       "changed_paths": [
@@ -83041,11 +83041,11 @@
         "09_SOURCE_QA/native_market_recovery/decisions/2026/10/07/143853_6bfe04b288b4.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 3,
         "removed": 0,
-        "same": 3,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "09_SOURCE_QA",
       "episode_id": "OE-4cf226c0a754c2de",
@@ -84233,11 +84233,11 @@
         "research/architecture_health/history/37607355677-attempt-3.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 5,
         "checked": 6,
         "removed": 0,
-        "same": 6,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-3f3bf9936402fa2d",
@@ -84262,11 +84262,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 7,
-        "status": "EXACT"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-6f595a5e997d6a43",
@@ -84274,11 +84274,99 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "6f595a5e997d6a435e13d3eda72991d6a36af9f6",
       "source_timestamp": "2026-10-07T20:25:23Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: refresh operations dashboard 37681820688"
+    },
+    {
+      "changed_paths": [
+        "09_SOURCE_QA/native_market_recovery/LATEST.json",
+        "09_SOURCE_QA/native_market_recovery/STATE.json",
+        "09_SOURCE_QA/native_market_recovery/decisions/2026/10/07/204122_aa61c4438ae0.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "09_SOURCE_QA",
+      "episode_id": "OE-a67c73c44ffdf5d3",
+      "episode_path": "episodes/2026/10/OE-a67c73c44ffdf5d3.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "a67c73c44ffdf5d34c42d16be79654ff08c22bd2",
+      "source_timestamp": "2026-10-07T20:41:23Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: native market recovery 37683882001"
+    },
+    {
+      "changed_paths": [
+        "09_SOURCE_QA/incidents/resolutions/INCIDENT_automation-production-health-37298162880-attempt-1.json",
+        "09_SOURCE_QA/incidents/resolutions/INCIDENT_automation-production-health-37380198538-attempt-1.json",
+        "09_SOURCE_QA/incidents/resolutions/INCIDENT_automation-production-health-37526419069-attempt-1.json",
+        "09_SOURCE_QA/incidents/resolutions/INCIDENT_automation-production-health-37526419069-attempt-2.json",
+        "09_SOURCE_QA/incidents/resolutions/INCIDENT_automation-production-health-37607355677-attempt-1.json",
+        "09_SOURCE_QA/incidents/resolutions/INCIDENT_automation-production-health-37607355677-attempt-2.json",
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/history/37683920612-attempt-1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 12,
+        "removed": 0,
+        "same": 12,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "09_SOURCE_QA",
+      "episode_id": "OE-52648fb61f6ae339",
+      "episode_path": "episodes/2026/10/OE-52648fb61f6ae339.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "52648fb61f6ae3394b4def0ace5981917aa2e80a",
+      "source_timestamp": "2026-10-07T20:44:34Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 37683920612"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-6950dbb9cf2227c3",
+      "episode_path": "episodes/2026/10/OE-6950dbb9cf2227c3.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "6950dbb9cf2227c34c73875acde0cdd132b26ca7",
+      "source_timestamp": "2026-10-07T20:45:01Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 37684340716"
     },
     {
       "changed_paths": [
@@ -84311,5 +84399,5 @@
       "task_summary": "Clarify PATH journey ETA and phase progression"
     }
   ],
-  "source_head_sha": "6f595a5e997d6a435e13d3eda72991d6a36af9f6"
+  "source_head_sha": "6950dbb9cf2227c34c73875acde0cdd132b26ca7"
 }
