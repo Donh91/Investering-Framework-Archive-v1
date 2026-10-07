@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 from pathlib import Path
 import sys
@@ -143,7 +144,10 @@ def test_output_budget_growth_is_bounded():
 def test_intraday_validation_does_not_shadow_structured_output_mapping():
     source = (ROOT / "scripts/cycle_navigator/build_weekly_cycle_navigator.py").read_text()
     assert 'bucket_value = str(intraday.get(bucket)' in source
-    assert 'value = str(intraday.get(bucket)' not in source
+    main = next(node for node in ast.parse(source).body if isinstance(node, ast.FunctionDef) and node.name == 'main')
+    bucket_loop = next(node for node in ast.walk(main) if isinstance(node, ast.For) and isinstance(node.target, ast.Name) and node.target.id == 'bucket')
+    assert not any(isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == 'value' for target in node.targets) for node in ast.walk(bucket_loop))
+
 
 
 def test_decision_projection_is_required_and_typed():

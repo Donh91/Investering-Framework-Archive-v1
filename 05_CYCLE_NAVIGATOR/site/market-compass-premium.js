@@ -323,20 +323,34 @@ function pullbackCard(compass) {
   const sell=valid&&compass?.sell_assessment?.contract==='COMPASS_SELL_ASSESSMENT_v1'?compass.sell_assessment:{};
   const state=String(p.pullback_risk_state||'UNAVAILABLE').toUpperCase();
   const classification=clean(p.pullback_class),ordinary=!!classification&&/ORDINARY|RETEST|DIP/i.test(classification)&&!/MAJOR|SEVERE|DEEP/i.test(classification);
-  const title=state==='UNAVAILABLE'?'Risk assessment unavailable':ordinary?'Ordinary retest watch':'Pullback assessment';
-  const status=state==='BUILDING'?'DEVELOPING · UNCONFIRMED':state==='UNKNOWN'?'UNCLEAR':state==='INACTIVE'?'NO ACTIVE WARNING':publicState(state);
-  const quality=clean(p.confidence_quality)||'UNAVAILABLE',eta=publicCompassText(clean(p.eta_window)||'No supported timing window');
-  const drivers=Array.isArray(p.decisive_public_drivers)?p.decisive_public_drivers.filter(x=>typeof x==='string').slice(0,4):[];
-  return '<details id="pullbackWatch" class="premium-pullback" data-contract="CN_PULLBACK_WATCH_v1"><summary><div><span>RISK WATCH · DIP / PULLBACK</span><h3>'+esc(title)+'</h3><p>'+esc(eta)+'</p></div><div class="pullback-summary-state"><strong>'+esc(status)+'</strong><small>EVIDENCE QUALITY · '+esc(publicState(quality))+'</small><b>Sell / rebuy edge: '+esc(!sell.state||sell.state==='UNAVAILABLE'?'NOT ESTABLISHED':'see verified assessment')+'</b><span>Details ↓</span></div></summary><div class="pullback-body">'
-    +'<div class="pullback-facts"><article><span>CLASSIFICATION</span><strong>'+esc(publicCompassText(classification||'Not quantified'))+'</strong></article><article><span>DEPTH + DURATION</span><strong>Not quantified by the current signal</strong><p>A watch window is possible onset, not how long a decline will last.</p></article><article><span>SELL / TRIM</span><strong>'+esc(publicState(sell.state||'UNAVAILABLE'))+'</strong><p>'+esc(publicCompassText(sell.reason||'No verified sell or trim assessment available.'))+'</p></article><article><span>RE-ENTRY</span><strong>'+esc(publicState(p.reentry_state||'UNAVAILABLE'))+'</strong><p>'+esc(publicCompassText(p.reentry_message||'No verified re-entry assessment available.'))+'</p></article></div>'
-    +'<div class="pullback-impact"><span>BTC / ETH / ALTCOINS</span><p>'+esc(ordinary?'An ordinary retest watch does not establish a large market decline. BTC and ETH range misses remain forecast accountability; altcoin and meme permissions stay on their own Compass gates.':'Use the verified classification and segment permissions. A price range breach alone cannot establish distribution or a sell signal.')+'</p></div>'
-    +'<div class="pullback-evidence"><span>WHAT SUPPORTS THE WATCH</span>'+ (drivers.length?'<ul>'+drivers.map(x=>'<li>'+esc(publicCompassText(x))+'</li>').join('')+'</ul>':'<p>No verified public drivers available.</p>')+'<span>WHAT WOULD WEAKEN IT</span><p>'+esc(publicCompassText(p.invalidation||'No public invalidation condition is available.'))+'</p></div>'
-    +'<p class="pullback-note">Evidence quality is qualitative, not a probability. This warning cannot create a sell, short or early re-entry signal.</p></div></details>';
+  const title=state==='UNAVAILABLE'?'Risk assessment unavailable':state==='NORMAL'?'No major pullback signal':ordinary?'Ordinary dip watch':'Pullback watch';
+  const status=state==='BUILDING'?'DEVELOPING · UNCONFIRMED':state==='NORMAL'?'NO ACTIVE WARNING':publicState(state);
+  const rawCopy=p.public_explanation,copy=rawCopy?.contract==='CN_PUBLIC_PROTECTION_COPY_v1'&&rawCopy.action_authority===false&&rawCopy.risk_state===state&&rawCopy.risk_class===classification.toUpperCase()&&rawCopy.forecast_week===compass?.weekly_context?.forecast_week?rawCopy:null;
+  const safeCopy=v=>typeof v==='string'&&v.length<=180&&!/\d|%|\b(?:buy|sell|short|rebuy|guaranteed|probability|internal|shadow|data_ping)\b/i.test(v)?v:null;
+  let start=Date.parse(copy?.onset_start_utc),end=Date.parse(copy?.onset_end_utc);
+  // Legacy date formatting changes no alert or action: only an explicit owner's Day N–N window.
+  if(!Number.isFinite(start)||!Number.isFinite(end)){
+    const week=String(compass?.weekly_context?.forecast_week||'').match(/^(\d{4})-W(\d{2})$/),days=String(p.eta_window||'').match(/\bDay\s+([1-7])\s*[–-]\s*([1-7])\b/i);
+    if(week&&days&&Number(days[1])<=Number(days[2])){
+      const jan4=new Date(Date.UTC(Number(week[1]),0,4)),monday=jan4.getTime()-((jan4.getUTCDay()+6)%7)*86400000+(Number(week[2])-1)*7*86400000;
+      start=monday+(Number(days[1])-1)*86400000;end=monday+Number(days[2])*86400000;
+    }
+  }
+  const date=v=>new Date(v).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
+  const timing=Number.isFinite(start)&&Number.isFinite(end)&&end>start?(Date.now()>=end?'Prior watch window · ':Date.now()>=start?'Window open · ':'Possible onset · ')+date(start)+'–'+date(end-1)+' · UTC':'Possible onset date not established';
+  const explanation=safeCopy(copy?.summary)||(ordinary?'A routine retest is possible. A large decline is not confirmed.':state==='NORMAL'?'The current signal does not establish a material pullback.':'The evidence does not establish a confirmed decline.');
+  const edge=!!sell.state&&!['UNAVAILABLE','UNKNOWN','INACTIVE','NONE'].includes(sell.state);
+  const rec=recommendation(valid?compass.action_now:'WAIT');
+  return '<details id="pullbackWatch" class="premium-pullback" data-contract="CN_PULLBACK_WATCH_v1"><summary><div><span>RISK WATCH · DIP / PULLBACK</span><h3>'+esc(title)+'</h3><p class="pullback-window">'+esc(timing)+'</p><p>'+esc(explanation)+'</p></div><div class="pullback-summary-state"><strong>'+esc(status)+'</strong><small>EVIDENCE QUALITY · '+esc(publicState(p.confidence_quality||'UNAVAILABLE'))+'</small><b>'+esc(edge?'SELL / TRIM · '+publicState(sell.state):'Sell / rebuy edge: NOT ESTABLISHED')+'</b><span>Investor details ↓</span></div></summary><div class="pullback-body">'
+    +'<div class="pullback-facts"><article><span>ACTION NOW · COMPASS</span><strong>'+esc(rec.action)+'</strong><p>'+esc(rec.copy)+'</p></article><article><span>DEPTH + DURATION</span><strong>Not quantified</strong><p>Dates describe possible onset, not the length or size of a decline.</p></article><article><span>SELL / TRIM</span><strong>'+esc(publicState(sell.state||'UNAVAILABLE'))+'</strong><p>'+esc(edge?'A separate verified assessment is available in the current Compass.':'This watch does not establish a reason to sell and buy back lower.')+'</p></article><article><span>RE-ENTRY</span><strong>'+esc(publicState(p.reentry_state||'UNAVAILABLE'))+'</strong><p>'+esc(publicCompassText(p.reentry_message||'No verified re-entry assessment available.'))+'</p></article></div>'
+    +'<div class="pullback-impact"><span>BTC / ETH / ALTCOINS</span><p>'+esc(ordinary?'A routine dip does not imply a major BTC or ETH decline. Small caps and memes still require their own risk and liquidity confirmation.':'The current classification and segment permissions govern risk. A price-range miss alone does not establish distribution or a sell signal.')+'</p></div>'
+    +'<div class="pullback-evidence"><span>WATCH FOR</span><p>'+esc(safeCopy(copy?.watch_for)||'A fresh verified risk update before changing the current action.')+'</p><span>WHAT WOULD WEAKEN IT</span><p>'+esc(safeCopy(copy?.weakens_if)||'The warning must be downgraded by the next verified protection assessment.')+'</p></div>'
+    +'<p class="pullback-note">Evidence quality is qualitative, not a probability. Possible onset dates can pass without confirmation. Risk warnings and trading permissions remain separate.</p></div></details>';
 }
-
 function renderPremium(snapshot, compass) {
   const root = document.getElementById('productNow');
   if (!root) return false;
+  const expanded = [...root.querySelectorAll('#premiumMarketCompass details[open][id]')].map(d=>d.id);
   const scale = officialScale(compass);
   const rec = recommendation(compass?.action_now || snapshot?.live_observation?.current_action?.stance);
   const meta = decisionMeta(compass);
@@ -346,7 +360,7 @@ function renderPremium(snapshot, compass) {
   section.className = 'premium-market-compass';
   section.innerHTML =
     '<div class="premium-overview">'
-    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong><small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong><small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
+    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong>' + (meta.live.includes('MIXED') ? '<p class="mixed-explanation">Conflicting signals · no clear near-term direction.</p>' : '') + '<small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong>' + (meta.weekly.includes('MIXED') ? '<p class="mixed-explanation">Mixed weekly evidence · no clear directional edge.</p>' : '') + '<small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
     + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div><p>' + esc(rec.copy) + '</p>' + hourlyMonitor(snapshot) + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
     + decisionDetail(compass, rec, meta)
@@ -356,6 +370,7 @@ function renderPremium(snapshot, compass) {
     + riskCurve(compass)
     + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(publicDataStatus(compass?.data_status || 'UNAVAILABLE')) + '</b></span><span>RISK ROTATION · ' + esc(capSummary(compass)) + '</span><span>Evidence balance · not probability</span></div>';
 
+  expanded.forEach(id=>{const d=section.querySelector('#'+id);if(d)d.open=true;});
   root.querySelector('#premiumMarketCompass')?.remove();
   root.classList.add('premium-compass-installed');
   const anchor = root.querySelector('.action-hero,.fail-card');
