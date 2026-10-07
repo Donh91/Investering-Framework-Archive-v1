@@ -373,3 +373,19 @@ Status: OPERATIONAL, implemented on task branch; deployment pending.
 Validation checkpoint: node syntax validation passed for both changed browser scripts. Existing and new renderer checks: 123/123 public-product release checks passed locally. Synthetic tests cover issue/week mismatch, unavailable source, immutable input preservation, complete coverage only, labelled breach, stale observation, ordinary unconfirmed risk and stale Compass risk rejection. Exact-head CI and deployed visual acceptance remain pending.
 
 Pre-change health snapshot: architecture evidence GREEN; automation production health RED with pre-existing adaptive-decision-miss-validation and edge001-t2-registry alerts. Product CI success must not be represented as aggregate estate health.
+
+
+## Production receipt and delivery follow-up, 2026-10-07
+
+Status: RECEIPT. PR #1538 merged. Product deployment verified; browser cache follow-up in progress.
+
+- Exact tested head: 6485ce7ad0fb70b2b64b28da8681b9c9243d2e17.
+- Production merge: af209e471dfee8bc866583c3028f5aa62dd0567f.
+- All six triggered exact-head workflows succeeded: Public Product #174 / 37678860563, Public Contract #322 / 37678860511, Official Daily Compass #435 / 37678860696, Compass Event Refresh #485 / 37678860506, Data Architecture #2119 / 37678860482, Storage Health #2116 / 37678860633.
+- Pages #448 / 37679248230 SUCCESS on the exact merge SHA. Artifact 11508337455; digest sha256:6ca50858736d21fe0378f37e5bc486b8dee17a472bf28f9e9ac1397955bddb6c. Independent download verified all four changed JS/CSS assets byte-for-byte and both scripts parsed. Deployed build passed 123/123 public-product release checks.
+- Deployed Compass CMP-20261007-588ceb095f06, data_status OK, weekly alignment ALIGNED to public CN #28 / 2026-W41. Frozen forecast SHA-256 remained 41cb3ea00c751bb8c4099f0f3fb88e8eb8f357f052adb3a3d00798886a0589f3.
+- Data audit found the last complete observation at 16:00 UTC, beyond the 90-minute SLA during acceptance. Re-ran the existing successful Hourly Sequence Capture job 112897853468 under run 37652125085 attempt 2. Existing workflow checks out current main and retains its normal collector/Entry Signal/intraday chain; no workflow or forecast changes. Fresh pointer readback: COMPLETE, 26 complete spot hours, observation cutoff 20:00 UTC, retrieved 20:05:17 UTC. Downstream site refresh still needs verification.
+- The browser continued loading old unversioned JS after the correct Pages deployment. Concrete delivery correction: build-live-observation.mjs fingerprints same-origin browser JS/CSS URLs using their actual file bytes. Test on a source-bound local build verified 21 URLs against exact content hashes; 123/123 product checks still pass. Forecast fixture binding first failed due to an extra newline introduced by local file hydration, was restored to exact source bytes, and the bound build then passed. No forecast file was changed in GitHub.
+- Browser cannot set an iPhone viewport through its exposed APIs. The attempted local-file preview was rejected by browser protocol policy and abandoned. Do not claim native iPhone/Safari visual acceptance or close #1518 as PASS from desktop screenshots or CSS checks alone.
+
+Resume: finish asset-freshness PR, exact-head CI and Pages verification; inspect the actual new live PATH, graph and risk disclosure; verify downstream fresh observations; append final acceptance evidence to this receipt/PR.
