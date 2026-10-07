@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 3025,
-  "generated_at_utc": "2026-10-07T20:15:54.859524Z",
+  "episode_count": 3029,
+  "generated_at_utc": "2026-10-07T20:26:00.003737Z",
   "rows": [
     {
       "changed_paths": [
@@ -73838,10 +73838,10 @@
         "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 3,
         "checked": 7,
         "removed": 0,
-        "same": 5,
+        "same": 4,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -80569,11 +80569,11 @@
         "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 2,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-60323d940d41eb31",
@@ -82817,10 +82817,10 @@
         "05_CYCLE_NAVIGATOR/site/validate-v2.mjs"
       ],
       "compatibility": {
-        "changed": 1,
+        "changed": 4,
         "checked": 7,
         "removed": 0,
-        "same": 6,
+        "same": 3,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
@@ -82841,11 +82841,11 @@
         "05_CYCLE_NAVIGATOR/site/build-live-observation.mjs"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
       "episode_id": "OE-70ac7ecd5eb3f8ea",
@@ -82883,6 +82883,32 @@
       "source_timestamp": "2026-10-07T13:13:51Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "data: log settled ETF calibration 37626657974"
+    },
+    {
+      "changed_paths": [
+        "05_CYCLE_NAVIGATOR/site/PATH_V3_CYCLE_ROTATION_PRODUCT_SPEC.md",
+        "05_CYCLE_NAVIGATOR/site/market-compass-premium.js",
+        "05_CYCLE_NAVIGATOR/site/public-product.js",
+        "05_CYCLE_NAVIGATOR/site/validate-v2.mjs"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+      "episode_id": "OE-034f6075912f089a",
+      "episode_path": "episodes/2026/10/OE-034f6075912f089a.json",
+      "failure_signature": "site-historical-weeks-compass-path-evidence-1540",
+      "newer_related_episode": null,
+      "operation_type": "FIX",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "034f6075912f089a4e6c3de2d6f2f8d784b72ce5",
+      "source_timestamp": "2026-10-07T13:21:16-07:00",
+      "task_class": "CYCLE_NAVIGATOR",
+      "task_summary": "fix(site): preserve historical weeks in Compass and PATH evidence (#1540)"
     },
     {
       "changed_paths": [
@@ -84121,11 +84147,11 @@
         "research/architecture_health/history/37607355677-attempt-2.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 5,
         "checked": 7,
         "removed": 0,
-        "same": 7,
-        "status": "EXACT"
+        "same": 2,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-a569fc3c8c5b1628",
@@ -84150,11 +84176,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 7,
-        "status": "EXACT"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-e8915c7dba024571",
@@ -84162,11 +84188,97 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "e8915c7dba024571dfcf0228fa7ba46a4d6601d7",
       "source_timestamp": "2026-10-07T20:15:22Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: refresh operations dashboard 37680552192"
+    },
+    {
+      "changed_paths": [
+        "research/api_agent/outputs/decision_miss/2026/10/07/201953/MISS_AUDIT.json",
+        "research/api_agent/outputs/decision_miss/2026/10/07/201953/MISS_AUDIT_RECEIPT.json",
+        "research/api_agent/outputs/evidence_gap_validation/2026/10/07/201953/VALIDATION_AUDIT.json",
+        "research/api_agent/outputs/evidence_gap_validation/2026/10/07/201953/VALIDATION_RECEIPT.json",
+        "research/evidence_gap/ADAPTIVE_DECISION_MISS_REGISTRY_v1.json",
+        "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_QUEUE_v1.json",
+        "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-aafa01ca2676c175",
+      "episode_path": "episodes/2026/10/OE-aafa01ca2676c175.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "aafa01ca2676c17553907fbf5b2c1366523d6aa1",
+      "source_timestamp": "2026-10-07T20:19:54Z",
+      "task_class": "API_AGENT",
+      "task_summary": "learning: update decision miss and gap validation 37558730528"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/history/37607355677-attempt-3.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 6,
+        "removed": 0,
+        "same": 6,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-3f3bf9936402fa2d",
+      "episode_path": "episodes/2026/10/OE-3f3bf9936402fa2d.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "3f3bf9936402fa2d870bca0ebadd20e266d8eafd",
+      "source_timestamp": "2026-10-07T20:24:53Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 37607355677"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-6f595a5e997d6a43",
+      "episode_path": "episodes/2026/10/OE-6f595a5e997d6a43.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "6f595a5e997d6a435e13d3eda72991d6a36af9f6",
+      "source_timestamp": "2026-10-07T20:25:23Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 37681820688"
     },
     {
       "changed_paths": [
@@ -84199,5 +84311,5 @@
       "task_summary": "Clarify PATH journey ETA and phase progression"
     }
   ],
-  "source_head_sha": "e8915c7dba024571dfcf0228fa7ba46a4d6601d7"
+  "source_head_sha": "6f595a5e997d6a435e13d3eda72991d6a36af9f6"
 }

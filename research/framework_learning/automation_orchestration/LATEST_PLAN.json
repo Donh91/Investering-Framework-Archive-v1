@@ -1,7 +1,7 @@
 {
   "agent_calls": {
     "astra_required": false,
-    "luna_required": true,
+    "luna_required": false,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
     "sol_6_1_required": false
@@ -9,16 +9,16 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "e25f48364018c5aa268fb0dffcd1d863acd756b9ca775c9cd2f3e0ac236bf721",
+  "fingerprint": "b30b6f0f40af9a2b851397aae1c9d0b5cbf6e89d29304557c0317c58a026e4ad",
   "fleet": {
-    "amber_count": 6,
+    "amber_count": 7,
     "green_count": 190,
-    "red_count": 1,
+    "red_count": 0,
     "scheduled_workflow_count": 56,
     "workflow_count": 197,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-10-07T20:15:49Z",
+  "generated_at_utc": "2026-10-07T20:25:55Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -30,39 +30,14 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "items": [
-    {
-      "cluster_id": null,
-      "existing_remediation": {
-        "finding": "LATEST_RUN_FAILED",
-        "route": "OBSERVE",
-        "signature": "5928685943974993d02b",
-        "state": "OBSERVED"
-      },
-      "failure_streak": 1,
-      "findings": [
-        "LATEST_RUN_FAILED"
-      ],
-      "latest_head_sha": "114b45f47ada16402a6c28d365c1532836a33ea6",
-      "latest_run_id": 37558730528,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37558730528",
-      "model_lane": "GPT_6_LUNA",
-      "openai_enabled": true,
-      "recent_failure_count": 8,
-      "route": "LUNA_TRIAGE",
-      "scheduled": true,
-      "workflow": "adaptive-decision-miss-validation.yml",
-      "write_target_class": "DIRECT_MAIN",
-      "writer_group": "framework-main-writer"
-    }
-  ],
+  "items": [],
   "material_delta": true,
   "routing_summary": {
     "existing_remediation_count": 0,
-    "luna_triage_count": 1,
+    "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
-  "source_health_generated_at_utc": "2026-10-07T20:12:14.121217Z",
-  "source_health_status": "RED"
+  "source_health_generated_at_utc": "2026-10-07T20:21:38.272956Z",
+  "source_health_status": "AMBER"
 }
