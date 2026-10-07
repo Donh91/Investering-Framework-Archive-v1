@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=37452187669:success,37380704875:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=37527269668:success,37452187669:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=37589468552:success,37529141969:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=37607676036:success,37589468552:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,7 +54,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=37526419069,37450687378 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=37607355677,37526419069 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -69,7 +69,7 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=37526419069,37450687378 checks=PASS",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=37607355677,37526419069 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -103,11 +103,16 @@
   ],
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
-    "machine_spec_configured": 6,
+    "machine_spec_configured": 5,
     "machine_spec_unconfigured": 28,
-    "post_fix_total": 34
+    "post_fix_total": 33
   },
-  "skipped": [],
+  "skipped": [
+    {
+      "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
+      "reason": "NOT_POST_FIX_OBSERVATION"
+    }
+  ],
   "unconfigured": [
     {
       "candidate_id": "codex-daily-director-directional-threshold-root-cause-v1",
@@ -250,52 +255,5 @@
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     }
   ],
-  "verified": [
-    {
-      "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
-      "checks": [
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:status='PASS'",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:parent_replay='PASS'",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:neighbor_replay='PASS'",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:autonomous_route_observed=True",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:bounded_retest_route_observed=True",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:historical_market_reused_as_current=False",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:parallel_runtime=False",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "receipt_sha256=8d2f0fdcebcfb3524eafbdd906c59b7d5a05ece42ebc91ac8c0225b5eb8e8dac",
-          "kind": "MISSION_CONVERGENCE",
-          "pass": true
-        }
-      ],
-      "receipt_sha256": "d58ac4bd871b0dc5f14447161590574bde7dc44d4a3da44e506a634e1ccc4fbc"
-    }
-  ]
+  "verified": []
 }
