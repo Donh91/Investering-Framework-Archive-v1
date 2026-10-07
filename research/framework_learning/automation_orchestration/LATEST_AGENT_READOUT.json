@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-07T09:11:35Z",
+  "generated_at_utc": "2026-10-07T10:30:35Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,29 +15,29 @@
   },
   "luna_triage": {
     "evidence_against": [
-      "The supplied record contains no failed-step details, logs, error message, or dependency status to identify a specific cause.",
-      "The current failure streak is 1, so this record alone does not establish consecutive failures."
+      "Failure streak is 1, which does not establish a persistent workflow-specific defect.",
+      "No failure logs, failed job or step, or dependency status are supplied to distinguish execution noise from a dependency issue or code defect."
     ],
     "evidence_for": [
-      "The latest run of adaptive-decision-miss-validation.yml is marked LATEST_RUN_FAILED.",
-      "The supplied recent_failure_count is 8, suggesting failures have occurred recently, though their timing and relationship to this run are not provided.",
-      "Existing remediation is OBSERVED with route OBSERVE; no new remediation authority is indicated."
+      "The workflow's latest run (37558730528) is marked LATEST_RUN_FAILED.",
+      "The supplied recent_failure_count is 8, but its scope and relationship to this workflow are unspecified.",
+      "An existing remediation record is already OBSERVED with route OBSERVE; preserve that state and do not duplicate remediation."
     ],
     "forecast_candidates": [],
     "hypotheses": [
-      "Failure class is undetermined from the supplied evidence; treat as an execution failure of unknown cause, not as a confirmed transient, dependency failure, or code defect.",
-      "The recent failure count warrants inspection, but the single current failure streak does not establish persistence."
+      "Failure class is indeterminate from the supplied summary. A single-run transient is possible, but the recent_failure_count warrants checking run history before treating this as isolated.",
+      "No evidence identifies a shared dependency failure or a code defect."
     ],
     "status": "DEGRADED",
-    "summary": "One workflow is supplied. Its latest run failed, but available metadata is insufficient to classify the cause. Existing owner to inspect next: framework-main-writer. Keep the existing OBSERVED remediation state; do not create duplicate remediation.",
+    "summary": "Triage the failed run as unresolved rather than assigning a root cause. The streak of 1 is consistent with a possible transient, while the unexplained count of 8 prevents confidence that the broader pattern is isolated. The existing framework-main-writer owner should inspect the run's failed step and logs next; retain the existing OBSERVED/OBSERVE remediation state.",
     "uncertainties": [
-      "Failed job and step, error output, and run logs are not supplied.",
-      "The time window and scope represented by recent_failure_count are unspecified.",
-      "No evidence is supplied about shared dependency health or whether recent failures share a signature."
+      "Failure logs, job and step details, and the immediate error are absent.",
+      "The timeframe and scope of recent_failure_count are not provided.",
+      "No prior run outcomes or dependency health evidence are supplied."
     ]
   },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "2efdc80e23187cd1333095711b006decd9b84e4ed55ced7ef0beb1be74a8defb",
+  "plan_fingerprint": "5bc58a2725539565ce48f9fdfafac8ff7acea851667386780992c126a631df9a",
   "routing_summary": {
     "existing_remediation_count": 1,
     "luna_triage_count": 1,
@@ -45,5 +45,5 @@
     "sol_6_1_diagnosis_count": 0
   },
   "sol_6_1_diagnosis": null,
-  "source_health_generated_at_utc": "2026-10-07T07:44:48.186855Z"
+  "source_health_generated_at_utc": "2026-10-07T10:26:19.910434Z"
 }
