@@ -1,7 +1,7 @@
 {
   "agent_calls": {
     "astra_required": false,
-    "luna_required": false,
+    "luna_required": true,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
     "sol_6_1_required": true
@@ -9,16 +9,16 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "f2df1bd00dfd8451bfe75b3674a511cc4bb33f1df439cc24309e1e1b23cb6acb",
+  "fingerprint": "86e2592152f3ef7e1ec6822bc0ef11f2d9bac7bf0ea470b6bed44003c82fde87",
   "fleet": {
     "amber_count": 5,
     "green_count": 190,
-    "red_count": 1,
+    "red_count": 2,
     "scheduled_workflow_count": 56,
-    "workflow_count": 196,
-    "writer_count": 67
+    "workflow_count": 197,
+    "writer_count": 68
   },
-  "generated_at_utc": "2026-10-06T20:33:15Z",
+  "generated_at_utc": "2026-10-07T07:47:58Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -34,20 +34,38 @@
     {
       "cluster_id": null,
       "existing_remediation": null,
-      "failure_streak": 3,
+      "failure_streak": 1,
       "findings": [
-        "LATEST_RUN_FAILED",
+        "LATEST_RUN_FAILED"
+      ],
+      "latest_head_sha": "114b45f47ada16402a6c28d365c1532836a33ea6",
+      "latest_run_id": 37558730528,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37558730528",
+      "model_lane": "GPT_6_LUNA",
+      "openai_enabled": true,
+      "recent_failure_count": 8,
+      "route": "LUNA_TRIAGE",
+      "scheduled": true,
+      "workflow": "adaptive-decision-miss-validation.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 4,
+      "findings": [
         "REPEATED_CONSECUTIVE_FAILURES"
       ],
-      "latest_head_sha": "4dfac230e272629692bb71a40991c0f65b485a06",
-      "latest_run_id": 37502821033,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37502821033",
+      "latest_head_sha": "e31047eb996003a4cb325c473abb3564645d43f4",
+      "latest_run_id": 37533959148,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37533959148",
       "model_lane": "GPT_6_1_SOL",
       "openai_enabled": false,
-      "recent_failure_count": 6,
+      "recent_failure_count": 4,
       "route": "SOL_DIAGNOSIS",
-      "scheduled": true,
-      "workflow": "framework-learning-operations.yml",
+      "scheduled": false,
+      "workflow": "edge001-t2-registry.yml",
       "write_target_class": "DIRECT_MAIN",
       "writer_group": "framework-main-writer"
     }
@@ -55,10 +73,10 @@
   "material_delta": true,
   "routing_summary": {
     "existing_remediation_count": 0,
-    "luna_triage_count": 0,
+    "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 1
   },
-  "source_health_generated_at_utc": "2026-10-06T20:28:21.875146Z",
+  "source_health_generated_at_utc": "2026-10-07T07:44:48.186855Z",
   "source_health_status": "RED"
 }

@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-06T20:34:18Z",
+  "generated_at_utc": "2026-10-07T07:48:56Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -13,44 +13,65 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "luna_triage": null,
+  "luna_triage": {
+    "evidence_against": [
+      "No error log, step-level result, runner details, or dependency status is supplied, so a transient execution issue, shared dependency failure, missing evidence, and code defect cannot be distinguished.",
+      "The failure streak is 1, which does not establish an uninterrupted current failure pattern."
+    ],
+    "evidence_for": [
+      "Workflow adaptive-decision-miss-validation.yml has a latest-run failure (run 37558730528).",
+      "Recent failure count is 8, indicating repeated failures in the reported recent window, though their timing and causes are unspecified.",
+      "The supplied existing writer group is framework-main-writer; no remediation is recorded."
+    ],
+    "forecast_candidates": [],
+    "hypotheses": [
+      "Failure class is undetermined from the supplied summary; inspect the run logs before attributing it to transient noise, missing evidence, a dependency, or a code defect.",
+      "The elevated recent failure count merits inspection for a recurring issue, but does not establish persistence or a shared cause."
+    ],
+    "status": "DEGRADED",
+    "summary": "Triage is limited to one failed workflow summary without diagnostic details. Existing owner to inspect next: framework-main-writer. No remediation state is supplied; this triage does not create one.",
+    "uncertainties": [
+      "Failure step, error message, and whether the run failed before or during evidence collection are unknown.",
+      "Timing and causes of the 8 recent failures are unknown.",
+      "Dependency health and comparison with other workflows are not supplied."
+    ]
+  },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "f2df1bd00dfd8451bfe75b3674a511cc4bb33f1df439cc24309e1e1b23cb6acb",
+  "plan_fingerprint": "86e2592152f3ef7e1ec6822bc0ef11f2d9bac7bf0ea470b6bed44003c82fde87",
   "routing_summary": {
     "existing_remediation_count": 0,
-    "luna_triage_count": 0,
+    "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 1
   },
   "sol_6_1_diagnosis": {
     "evidence_against": [
-      "Only one workflow item is supplied, so cross-workflow deduplication and shared-cause attribution cannot be established.",
-      "The clusters array is empty and cluster_id is null; this does not establish that shared-head or dependency relationships are absent.",
-      "No failure logs, failed-step identities, prior-run head SHAs, or dependency outcomes are supplied. Repetition alone cannot distinguish a persistent defect from recurring environmental failures.",
-      "DIRECT_MAIN and framework-main-writer identify write-related metadata, not evidence of contention. Likewise, openai_enabled=false does not establish a failure cause."
+      "Only one workflow is supplied, so there is no observed cross-workflow pair supporting a shared-head or dependency cluster.",
+      "Only the latest run's head SHA is supplied; the four failures cannot be attributed to the same revision.",
+      "No job logs, error signatures, dependency records, or overlapping execution times are supplied to distinguish a persistent cause from independent failures.",
+      "The writer-group label and openai_enabled=false are configuration metadata, not evidence of contention or an OpenAI-related failure."
     ],
     "evidence_for": [
-      "framework-learning-operations.yml has a reported failure_streak of 3 and recent_failure_count of 6, supporting investigation of a recurring cause before treating failures independently.",
-      "The latest failed run is 37502821033 at head 4dfac230e272629692bb71a40991c0f65b485a06, providing an anchor for read-only comparison.",
-      "The workflow is scheduled and assigned to writer_group framework-main-writer with write_target_class DIRECT_MAIN, making scheduled upstream inputs and overlapping writers relevant diagnostic possibilities.",
-      "existing_remediation is null in the supplied item; no existing remediation details are available to assess coverage or duplication."
+      "edge001-t2-registry.yml has failure_streak=4, recent_failure_count=4, and the finding REPEATED_CONSECUTIVE_FAILURES. These describe repeated failures and should not be counted as eight separate events.",
+      "The latest failed run is 37533959148 at head e31047eb996003a4cb325c473abb3564645d43f4.",
+      "The workflow is labeled DIRECT_MAIN and belongs to framework-main-writer, making shared writer interactions a diagnostic consideration, not an established cause.",
+      "The supplied clusters list is empty, cluster_id is null, and existing_remediation is null. No cluster assignment or remediation is represented in this snapshot."
     ],
     "forecast_candidates": [],
     "hypotheses": [
-      "Priority 1 \u2014 A persistent failure mechanism may explain the consecutive failures rather than independent incidents. Bounded check: compare the latest run, the two preceding failed runs, and the nearest prior successful run if available, recording failed step, error signature, head SHA, and relevant configuration differences. Different signatures or stages would weaken a single-mechanism explanation.",
-      "Priority 2 \u2014 A shared-head or shared-component regression may affect other workflows, despite no supplied cluster. Bounded check: inspect available health records for the exact latest head SHA and compare their failed steps and signatures with this run. Unrelated signatures would weaken head-based deduplication; matching SHAs alone would not establish causality.",
-      "Priority 3 \u2014 An upstream dependency or shared scheduled input may explain repeated downstream failures. Bounded check: inspect the workflow's declared dependencies and referenced artifacts for the latest failed run, checking producer outcomes and input availability. Successful producers and valid inputs would weaken this hypothesis.",
-      "Priority 4 \u2014 Overlapping framework-main-writer runs may cause write contention. Bounded check: examine runs overlapping the latest failure and its write-step logs for explicit concurrency, rejected-update, permission, or branch-protection errors. No overlap or failure before any write operation would weaken this hypothesis."
+      "Priority 1 \u2014 A persistent workflow or shared environmental fault may explain the four consecutive failures rather than four independent incidents. Bounded diagnostic: read-only compare the failing job, step, normalized error signature, and head SHA across those four runs and the nearest preceding successful run, if available. Different failure signatures would weaken a single-cause explanation; recurrence across different heads would weaken a revision-specific explanation.",
+      "Priority 2 \u2014 A failed upstream dependency may be producing repeated downstream symptoms. Bounded diagnostic: identify only the inputs, artifacts, credentials, or workflow dependencies referenced by the failing step, then inspect their corresponding health and run chronology. A healthy dependency with valid inputs at each failure would weaken that specific upstream-cause hypothesis.",
+      "Priority 3 \u2014 Shared-head or writer-group interactions may connect this workflow to failures outside the supplied item. Bounded diagnostic: inspect available contemporaneous health records for matching heads or framework-main-writer membership; compare failure signatures and actual execution overlap before proposing deduplication. Shared labels alone are insufficient, and no demonstrated overlap would weaken a contention explanation."
     ],
     "status": "DEGRADED",
-    "summary": "The supplied evidence identifies one repeatedly failing workflow, but does not establish root cause or a cross-workflow cluster. Independence remains unproven: prioritize signature comparison across consecutive failures, then test shared-head, upstream-input, and writer-overlap explanations. Keep the review read-only and bounded; verify existing remediation coverage before considering any separate repair.",
+    "summary": "Four consecutive failures warrant testing a persistent shared cause before treating them independently, but the supplied evidence does not establish root cause or cross-workflow deduplication. Start with read-only failure-signature and head comparison, then examine dependencies implicated by the failing step. Treat the four-run sequence as a provisional review group, not a canonical cluster. Check current remediation records before proposing any separate remediation; this snapshot contains no recorded remediation, which does not prove none exists.",
     "uncertainties": [
-      "Failure stage, error signatures, logs, and prior-run head SHAs are missing.",
-      "The recent-failure counting window and total run count are unspecified; six recent failures cannot be converted into a failure rate.",
-      "Upstream/downstream relationships, artifact lineage, and overlapping writer outcomes are not supplied.",
-      "Null remediation metadata does not prove that no remediation or Codex state exists elsewhere.",
-      "The expected behavior of the GPT_6_1_SOL lane with openai_enabled=false is unspecified, so configuration validity cannot be assessed."
+      "The preceding three failed run IDs, their head SHAs, timestamps, and job-level errors are missing.",
+      "Upstream/downstream relationships and contemporaneous failures in other workflows are not supplied.",
+      "Actual writer activity, concurrency controls, and execution overlap are unknown.",
+      "The health snapshot was generated at 2026-10-07T07:44:48.186855Z; subsequent outcomes or remediation changes are not represented.",
+      "No bounded inspection has been performed here; all diagnostic hypotheses remain unverified."
     ]
   },
-  "source_health_generated_at_utc": "2026-10-06T20:28:21.875146Z"
+  "source_health_generated_at_utc": "2026-10-07T07:44:48.186855Z"
 }

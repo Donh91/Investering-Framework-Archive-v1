@@ -1,7 +1,27 @@
 {
   "contract": "AUTOMATION_ORCHESTRATOR_LUNA_CONTEXT_v1",
   "instructions_context": "Triage only. Distinguish transient execution failure, likely shared dependency, missing evidence, or code-defect candidate. Do not create remediation authority.",
-  "items": [],
-  "plan_fingerprint": "f2df1bd00dfd8451bfe75b3674a511cc4bb33f1df439cc24309e1e1b23cb6acb",
-  "source_health_generated_at_utc": "2026-10-06T20:28:21.875146Z"
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED"
+      ],
+      "latest_head_sha": "114b45f47ada16402a6c28d365c1532836a33ea6",
+      "latest_run_id": 37558730528,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37558730528",
+      "model_lane": "GPT_6_LUNA",
+      "openai_enabled": true,
+      "recent_failure_count": 8,
+      "route": "LUNA_TRIAGE",
+      "scheduled": true,
+      "workflow": "adaptive-decision-miss-validation.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    }
+  ],
+  "plan_fingerprint": "86e2592152f3ef7e1ec6822bc0ef11f2d9bac7bf0ea470b6bed44003c82fde87",
+  "source_health_generated_at_utc": "2026-10-07T07:44:48.186855Z"
 }

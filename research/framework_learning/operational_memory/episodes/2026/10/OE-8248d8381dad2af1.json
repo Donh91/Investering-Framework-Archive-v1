@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/edge001_tsunami_feature_ledger.py",
+    "tests/learning/test_edge001_tsunami_feature_ledger.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-8248d8381dad2af1",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "edge-001-breadth-artifact-schema-crash-1531",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Fail closed on non-breadth JSON artifact shapes * Test EDGE-001 breadth schema guards",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/edge001_tsunami_feature_ledger.py": "10a7d44ab51b22b722e31366f3f1fbf39be41ac7",
+    "tests/learning/test_edge001_tsunami_feature_ledger.py": "565bffc6bb79f88af8baa1e4b5d27a9d82cba16e"
+  },
+  "source_commit_sha": "8248d8381dad2af1ac5f1cac91e66663fd61eea7",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-07T08:25:14+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "Fix EDGE-001 breadth artifact schema crash (#1531)"
+}
