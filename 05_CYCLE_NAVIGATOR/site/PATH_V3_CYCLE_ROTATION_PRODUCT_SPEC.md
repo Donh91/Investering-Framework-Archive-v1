@@ -398,3 +398,21 @@ Production browser inspection on Pages #453 exposed a material existing translat
 Pages #453 independently verified: merge `70ac7ecd5eb3f8eaf26a8ca249d1a80482bbd5da`; artifact 11507913497; digest `sha256:7638e8c833e277e3d092aa0846be660790c92a14a70a48f8d2a6580173972258`; all 21 JS/CSS fingerprints match artifact bytes and four implementation files match the tested source. Browser verified automatic charts, investor/swing/high-beta disclosure, forecast detail and navigation to PROOF. Compass `CMP-20261007-38128ce3656b` is OK; weekly price observations cut off at 20:00 UTC; CN #28 / W41 freeze hash remains unchanged.
 
 Post-deploy health audit at 20:12–20:14 UTC: scoped architecture evidence GREEN without blockers. Automation fleet RED with one pre-existing blocker, `adaptive-decision-miss-validation.yml:LATEST_RUN_FAILED` (run 37558730528, before this build). Root cause is invalid JSON in a model response at `adaptive_decision_miss_auditor.py:91`, not site data, contract or deployment. Normal budget and fail-closed gates remain intact; no unrelated research engine repair is hidden in this UI change. EDGE001 recovered to GREEN. Desktop visual inspection passed; actual iPhone/Safari acceptance is unverified, so issue #1518 remains open. Resume with that concrete device check, not a cosmetic redesign backlog.
+
+
+## 2026-10-08 implementation checkpoint: daily journey and clear cycle scope
+
+Status: IMPLEMENTATION_IN_PROGRESS. This section supersedes earlier site layout choices for the requested revision; historical acceptance receipts remain historical.
+
+User approval: real daily frozen BTC/ETH forecasts from the existing Monday producer, with observed daily prices overlaid. Existing W41 freeze must remain byte-identical (SHA-256 41cb3ea00c751bb8c4099f0f3fb88e8eb8f357f052adb3a3d00798886a0589f3). No retroactive daily forecasts or range-midpoint forecast invention.
+
+Implementation route:
+- Extend the existing weekly producer's single structured LLM response with validated seven-day price paths and concise non-authoritative protection explanations. No parallel website forecast engine, new score or additional scheduled API call.
+- Extend existing public hourly precision materialization with UTC daily observed low/high/last close, explicit coverage and freeze binding. Keep the established six-row price-precision scoring unchanged.
+- Render blue frozen daily expected-close line and range envelope when published; render only existing frozen range corridors for older freezes. Green observations stop at their source cutoff; missing days break the line. Day disclosures expose exact values and dates.
+- Market Cycle becomes a compact phase list. A long-cycle phase cannot be inferred from a tactical ETH HOLD. One altcoin/rotation timeline carries current position, connectors, arrival ETAs, takeoff, mania, distribution, protection and governed re-entry.
+- Remove standalone tactical PATH action card; integrate a scoped cycle conclusion and refer tactical decisions to NOW. Explain MIXED and expose investor details clearly.
+- Integrate takeoff readiness in the altcoin section. No invented probability/countdown/percentage. 100% is available only for confirmed small-cap takeoff; otherwise show explicit confirmed gates and unsupported ETA status.
+- Route protection public copy from the existing LLM producer through validation and Compass projection. Preserve structured state/action authority. Calendar onset bounds come from structured owner day bounds, never a guessed decline duration.
+
+Archive decision: EXISTING_OWNER_UPDATE; normal isolated branch/PR, no workflows, archive routing, scoring or frozen market records changed. Primary owners: this specification and SITE_CONTRACT.md. Backup product: NONE; no Vault/full-mirror claim. Validation: causal date/price/coverage tests, public product and contract checks, exact-head CI, production artifact audit and actual mobile browser inspection. Issue #1518 remains open until visual acceptance is evidenced.
