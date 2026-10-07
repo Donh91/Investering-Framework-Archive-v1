@@ -309,3 +309,8 @@
 .cycle-watch-v3>aside>strong{display:block;margin-top:4px;color:#76510c;font-size:10px;line-height:1.2}
 .cycle-watch-v3.protect>aside>strong{color:#8b4f0c}
 @media(prefers-reduced-motion:reduce){.cycle-journey-step>.cycle-journey-dots.live.gate-watch>i:nth-child(2){animation:none}}
+
+/* Distinguish the immediate next phase from a later Altseason watch target. */
+.cycle-journey-step.next:after{content:none}
+.cycle-journey-step.watch>i{background:#c88a13;color:#fff;box-shadow:0 0 0 1px #c88a13,0 0 0 6px rgba(200,138,19,.13)}
+.cycle-journey-step.watch:after{content:"WATCH";position:absolute;top:-5px;left:39px;padding:2px 5px;border-radius:999px;background:#fff4d9;color:#8a5a08;font-size:6px;font-weight:950;letter-spacing:.08em}
