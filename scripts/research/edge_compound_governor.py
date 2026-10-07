@@ -131,13 +131,18 @@ def deltas(prev:dict|None,current:dict):
 
 def choose(prev:dict|None,s:dict,d:list[str]):
     blockers=s["blockers"]
-    prevsem=(prev or {}).get("semantic_state") or {}
+    if blockers:
+        return "FALSIFY",False,False,"Resolve deterministic integrity/cohort blockers before scoring or external interpretation."
+    if prev is None:
+        active_evidence=(s["m6_event_count"]>0 or s["feature_row_count"]>0 or s["pullback_risk_state"] in {"BUILDING","ELEVATED","HIGH","CONFIRMED"})
+        if active_evidence:
+            return "COLLECT",False,False,"Initial governor snapshot establishes the comparison baseline only; existing maturity is not a new-family delta."
+        return "NOOP",False,False,"Initial governor snapshot establishes an empty comparison baseline; no external review is justified."
+    prevsem=prev.get("semantic_state") or {}
     prevfam=prevsem.get("matured_family_counts") or {}
     new7=s["matured_family_counts"]["7d"]>int(prevfam.get("7d") or 0)
     new14=s["matured_family_counts"]["14d"]>int(prevfam.get("14d") or 0)
     new30=s["matured_family_counts"]["30d"]>int(prevfam.get("30d") or 0)
-    if blockers:
-        return "FALSIFY",False,False,"Resolve deterministic integrity/cohort blockers before scoring or external interpretation."
     if new30 or new14:
         return "CONCLUSION_REVIEW",True,True,"New independent-family long-horizon maturity merits separate adjudication plus independent review."
     if new7:

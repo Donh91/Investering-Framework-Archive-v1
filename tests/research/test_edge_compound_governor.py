@@ -37,6 +37,11 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             cal.write_text(json.dumps({"eligible_series_row_count":0,"warning_series_row_count":0}))
             out=root/"out.json";hist=root/"hist"
             first=build(root,out,hist,datetime(2026,10,7,tzinfo=timezone.utc))
+            self.assertEqual(first["deltas"],["INITIAL_GOVERNOR_SNAPSHOT"])
+            self.assertEqual(first["decision"],"COLLECT")
+            self.assertFalse(first["external_routing"]["sol_recommended"])
+            self.assertFalse(first["external_routing"]["claude_recommended"])
+            self.assertFalse(first["conclusion_layer"]["review_due"])
             # establish prior state with zero 7d family
             prior=json.loads(out.read_text());prior["semantic_state"]["matured_family_counts"]["7d"]=0
             out.write_text(json.dumps(prior))
