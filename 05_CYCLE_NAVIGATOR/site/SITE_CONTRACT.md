@@ -35,7 +35,7 @@ It is intentionally a presentation and live-context surface, not a new market-st
 25. Conditional timing MUST be presented as a watch window with explicit confirmation semantics, for example `1–7 days · only if confirmation arrives`. It is never a countdown.
 26. If Official Compass is unavailable or Compass→weekly alignment is not `ALIGNED`, live checkpoint, Rotation, Altseason Watch, protection and exit overlays fail closed. Independently frozen weekly context may remain visible.
 27. Pages MUST verify the exact internal Official Compass source binding against the current Cycle Navigator public identity before live PATH overlays are accepted.
-28. The compact PATH overview MUST keep CURRENT CHECKPOINT, NEXT WATCH and LONG-RANGE VIEW distinct. It MUST NOT summarize the next watch as the current phase.
+28. The compact PATH overview MUST show CURRENT CHECKPOINT and the immediate NEXT CHECKPOINT with gate status. Numeric ETA belongs once on the route. If no checkpoint is known, NEXT WATCH may show the source-owned milestone. Long-range view remains in the cycle header; it must not be repeated as a third overview tile.
 29. The current checkpoint may select the furthest sequential live tier already supported by existing Compass semantics. A `HOLD` status may identify the current supported rotation position but MUST NOT be rewritten into `ACTIVE` or `CONFIRMED`.
 30. The MARKET CYCLE visual grammar is: blue = current supported checkpoint, amber = next watch target, grey = later/reference phase. Past checkpoints may be visually muted but not rewritten.
 31. PATH SHOULD be understandable without internal terms such as owner, lineage, canonical, fail-closed, machine package, action authority or capital transmission.
@@ -47,6 +47,11 @@ It is intentionally a presentation and live-context surface, not a new market-st
 37. Each supported phase ETA MUST be attached to that phase's incoming route segment and labelled as measured from the current verified snapshot. Conditionality MUST stay explicit. Independent intervals may overlap and MUST NOT be summed or presented as a scheduled arrival.
 38. The route's connector dots MUST map only the next phase's typed Compass gate status (WAIT, WATCH/BUILDING, ACTIVE/CONFIRMED, or unavailable). Dot fill is categorical source state, never percentage, elapsed time or a new market score. No interpolated or animated travel progress may be shown.
 39. The Altseason Watch panel MUST NOT repeat a numeric ETA already shown on the route; it summarizes target and gate status only. Unsupported timing remains unavailable, with no browser countdown or inferred estimate.
+40. The optional weekly range journey is an accountability visual, separate from macro cycle checkpoints and weekly segment permission. It MUST bind CN_PUBLIC_LIVE_PRICE_PRECISION_v1 to the current public issue and forecast week. Grey bands are immutable forecast ranges; blue bars are full observed low–high ranges to date for each window, not per-point prices. Empty future hours and incomplete coverage MUST remain unplotted. No forecast line may be inferred from band midpoints.
+41. The weekly graph MUST show observation cutoff and freshness; observations exceeding the existing freshness SLA are labelled STALE SNAPSHOT. Any percentage distance is a labelled observed-range breach relative to its frozen boundary, never a probability, pullback prediction, current spot location or buy/sell signal. The graph consumes only existing sanitized public fields and creates no new raw-data projection or scoring formula.
+42. The always-present NOW dip/pullback disclosure MUST consume only typed COMPASS_PROTECTION_TRACKER_v1 and COMPASS_SELL_ASSESSMENT_v1 under an OK public Compass. Source classification, onset watch, qualitative confidence, sell assessment and re-entry stay distinct. Missing depth, severity, duration and sell/rebuy edge MUST remain unquantified or unconfirmed. Ordinary retest wording may translate the published classification but cannot establish that an actual decline is small or confirmed.
+43. A protection warning cannot grant a sell, short or early re-entry instruction. LOW/MEDIUM/HIGH evidence quality is qualitative and cannot be converted into probability. The primary risk summary appears once in the expandable risk card, with details behind it.
+44. PATH action lenses MUST use the aligned OK Compass action, distinct sell assessment and separate capitalization permissions. MICROCAPS cannot proxy MEMES. Cooldown / re-entry must await fresh source confirmation before a new BTC-leadership checkpoint; no timed cycle restart is permitted.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
@@ -185,3 +190,4 @@ Build output directory:
 `05_CYCLE_NAVIGATOR/site/dist`
 
 The production website remains plain HTML, CSS and browser JavaScript so the presentation is portable and is not coupled to one hosting vendor.
+
