@@ -131,14 +131,20 @@ def breadth_context(root,k):
             if p.name=="LATEST.json":continue
             try:j=json.loads(p.read_text())
             except Exception:continue
-            obs=j.get("observation") or {};life=j.get("lifecycle") or {}
+            if not isinstance(j,dict):continue
+            obs=j.get("observation")
+            if not isinstance(obs,dict):continue
+            life=j.get("lifecycle")
+            if not isinstance(life,dict):life={}
             times=[parse(obs.get("cutoff_utc")),parse(j.get("retrieved_at_utc")),parse(life.get("retrieval_complete_time"))]
             times=[x for x in times if x]
             if not times:continue
             availability=max(times)
             if availability<=k:candidates.append((availability,p,j))
     if not candidates:return {"status":"UNAVAILABLE","canonical_compatible":False,"scoring_eligible":False}
-    availability,p,j=max(candidates,key=lambda x:x[0]);sem=j.get("evidence_semantics") or {}
+    availability,p,j=max(candidates,key=lambda x:x[0])
+    sem=j.get("evidence_semantics")
+    if not isinstance(sem,dict):sem={}
     hist=first_commit_exact_file(root,p);ct=parse(hist.get("commit_time_utc"))
     pit=hist.get("status")=="FOUND" and ct is not None and ct<=k
     return {"status":"CONTEXT_ONLY_PIT_VERIFIED" if pit else "CONTEXT_ONLY_PIT_UNVERIFIED",
