@@ -191,3 +191,19 @@ Build output directory:
 
 The production website remains plain HTML, CSS and browser JavaScript so the presentation is portable and is not coupled to one hosting vendor.
 
+
+## PATH daily-journey revision (2026-10-08)
+
+This section supersedes earlier PATH layout requirements where they conflict. Source authority and frozen scoring contracts remain unchanged.
+
+- Market Cycle is a compact macro-phase list. `market_cycle_context.current_phase` is the accepted Monday regime and may be UNAVAILABLE. A projected destination or tactical ETH HOLD cannot become today's macro phase. The cycle conclusion is integrated here; tactical investor/swing decisions are in NOW.
+- The single Altcoin / Rotation journey retains Compass-owned checkpoints from BTC/ETH through takeoff, mania, distribution, exit and governed re-entry. Arrival ETAs sit between nodes and explicitly describe timing from the source observation, not travel duration. Missing or conditional timing cannot become a countdown.
+- Takeoff readiness becomes 100% only on an active/confirmed small-cap permission. ACTIVE WATCH, BUILDING, PREPARE and WAIT never unlock takeoff. Unquantified readiness shows individual source-owned gates instead of an invented percentage. MEMES retain independent permission and liquidity requirements.
+- `forecast_freeze.daily_price_path`, contract `CN_FROZEN_DAILY_PRICE_PATH_v1`, is produced by the existing weekly LLM synthesis. Each PUBLISHED asset has exactly seven ordered UTC expected-close/low/high points within its weekly range. Unsupported assets have empty points and a reason. No historical freeze is rewritten or given retrospectively fitted daily points.
+- `public_live_precision.daily_observations`, contract `CN_PUBLIC_DAILY_OBSERVATIONS_v1`, comes from the existing PASS/OK hourly capture. Daily low/high and last observed close require contiguous valid coverage from UTC day start to the source cutoff. Duplicate timestamps do not add coverage; missing/non-finite values create gaps. Future or unclosed hours cannot enter actuals.
+- Blue means frozen forecast; green means actual price. The envelope shows daily forecast low/high, whiskers show daily observed low/high. Straight segments connect real daily points; no fabricated intraday wiggles. Current-day actuals are partial and closing deviation stays pending. Day disclosures expose exact dates, prices, coverage and source time. Historical interval-only forecasts retain their original corridors with an explicit missing-daily-forecast note.
+- Daily-path presentation does not alter the six-row, three-window public precision formula, frozen hash, scorecards or final settlement.
+- Protection `public_explanation`, contract `CN_PUBLIC_PROTECTION_COPY_v1`, is generated inside the existing weekly LLM call, validated and projected through Compass. It has no action authority; it cannot introduce numbers, probabilities or trading instructions. Structured onset day bounds become calendar dates for possible onset only. Legacy copies fall back to bounded plain-English state explanation. Only explicit source Day N–N legacy timing is formatted as dates; no prose becomes a new risk classifier.
+- NOW MIXED includes a concise no-clear-direction explanation. The pullback disclosure preserves expanded state across the automatic Compass refresh. No browser LLM call, API credential, second forecast engine or new workflow is introduced.
+
+Acceptance remains gated on Python contract tests, public release checks, exact-head CI, deployed source readback and real mobile browser inspection. A source test or screenshot transfer failure is not visual acceptance.
