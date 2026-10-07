@@ -43,6 +43,10 @@ It is intentionally a presentation and live-context surface, not a new market-st
 33. Longer 2–3 week / 4–8 week prose belongs behind `More cycle context` or another progressive disclosure, not as a repeated primary timeline.
 34. The primary mobile acceptance target is that current checkpoint, next watch, cycle route and Altseason Watch are visible within the first PATH viewport plus a short scroll, while Rotation remains compact and scan-friendly.
 35. The v3 release contract marker is `CN_PATH_CYCLE_ROTATION_v3`. Release gates MUST reject a regression that restores the old primary Decision Windows rail or requires the retired `3 · ALTCOIN CYCLE TIMER` section.
+36. The Market Cycle route MUST mark the immediate sequential phase after CURRENT CHECKPOINT as NEXT. A later source-owned Altseason milestone MAY remain separately marked WATCH.
+37. Each supported phase ETA MUST be attached to that phase's incoming route segment and labelled as measured from the current verified snapshot. Conditionality MUST stay explicit. Independent intervals may overlap and MUST NOT be summed or presented as a scheduled arrival.
+38. The route's connector dots MUST map only the next phase's typed Compass gate status (WAIT, WATCH/BUILDING, ACTIVE/CONFIRMED, or unavailable). Dot fill is categorical source state, never percentage, elapsed time or a new market score. No interpolated or animated travel progress may be shown.
+39. The Altseason Watch panel MUST NOT repeat a numeric ETA already shown on the route; it summarizes target and gate status only. Unsupported timing remains unavailable, with no browser countdown or inferred estimate.
 
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
