@@ -332,3 +332,44 @@ This change does not:
 This change is a versioned exception to the previous PATH v2 product freeze because a concrete mobile usability problem has been documented with production screenshots: Compass horizon duplication, repeated phase ladders and excessive vertical density.
 
 The new architecture should be considered the preferred PATH presentation if and only if its exact-head release gates and post-deploy verification pass.
+
+
+## 2026-10-07 decision clarity build checkpoint
+
+Status: OPERATIONAL IMPLEMENTATION IN PROGRESS. User-authorized extension of PATH v3, preserving the existing design and source authority. Base: b97a4e14abd5b9e02f0052da97b09251d814b321. Task branch: agent/task-20261007-path-decision-clarity.
+
+### Audit findings and approved scope
+
+- The overview repeats a conditional 1–7d Altseason watch and calls it NEXT while Large + mid is the sequential next checkpoint. Replace this numeric summary with NEXT CHECKPOINT and its typed gate status. Phase timing stays on the route.
+- Market Cycle is the macro journey. Rotation is this week's segment permission, including a separate MEMES gate. Altseason Watch is a compact opportunity/protection milestone, never a third repeated journey.
+- Add a compact action lens for investor, swing and high-beta/meme readers, reading only official Compass action, sell assessment, capitalization permissions and re-entry. Warnings never create a sell instruction.
+- Add an automated weekly visual in PATH after the cycle/rotation readout: immutable DAY 1–2, DAY 3–4 and DAY 5–7 BTC/ETH forecast bands versus published observed ranges to date from CN_PUBLIC_LIVE_PRICE_PRECISION_v1. Monday–Sunday horizontal calendar, observation cutoff and data gaps explicit. Reuse the existing hourly owner delivery chain and public schema. Do not publish restricted raw OHLC, draw a guessed close-price curve, infer direction from band midpoints, or treat the precision score as trade confidence.
+- NOW gains one always-present compact dip/pullback card with expandable evidence, source ETA, confidence quality, classification, sell authority and re-entry. Existing data currently classifies ORDINARY RETEST WATCH with LOW evidence quality and unquantified depth/severity. Do not call it a confirmed large pullback or assert profitable sell/rebuy edge. Missing depth, duration and early re-entry remain visibly unquantified/unconfirmed.
+- Remove duplicated primary risk summaries as this card takes over that job. Preserve existing Compass directional evidence and action authority.
+
+### Source and safety manifest
+
+Archive decision: EXISTING_OWNER_UPDATE. Classification: OPERATIONAL. Primary owner: this specification and SITE_CONTRACT.md. No canonical index, routing, source governance, workflow, credentials or backup changes planned. Normal isolated branch writes and reviewed PR only; no destructive source/recovery authority used. Backup scope: Git version history, no independent Vault snapshot claim. Public-only presentation work; existing sanitized public projections are the inputs. Round 3 and private source values are outside scope.
+
+### Completion and resume requirements
+
+1. Read this checkpoint and current task-branch diff before continuing.
+2. Finish source audit, implement JS/CSS with progressive disclosure, and test valid, stale, missing and misaligned data cases.
+3. Run existing public-product/contract validators and exact-head CI. Archive concrete validation outcomes here.
+4. Merge only after checks pass, verify Pages exact SHA and artifact, inspect live browser output. Record any mobile acceptance limits honestly; issue #1518 is not PASS without actual viewport evidence.
+5. Read current data/storage/architecture/automation health. Report scoped product success separately from pre-existing estate alerts.
+
+
+## Decision clarity implementation record, 2026-10-07
+
+Status: OPERATIONAL, implemented on task branch; deployment pending.
+
+- Overview now uses sequential NEXT CHECKPOINT and no duplicate numeric timing. The repeated current-setup tile is reduced to one short context line. The full visual legend moves behind More cycle context; the route retains its short legend. Past checkpoints do not display future arrival ETAs.
+- Market Cycle remains the macro route, Rotation remains segment permission, Altseason Watch remains the compact milestone. No separate altcoin ladder is recreated. A collapsed action lens preserves investor, swing sell/re-entry and high-beta/meme permissions without repeating NOW horizon cards.
+- Weekly range journey renders two responsive SVG charts from existing public frozen and observed ranges. Bars represent each window’s aggregate low/high, not a chronological close-price path. The final frozen window spans Fri–Sun; upcoming hours and incomplete windows remain empty. Labelled boundary breaches show distance, without changing the official range score.
+- NOW retest card replaces the repeated primary risk tile. Current ordinary retest classification stays unconfirmed; LOW quality is qualitative. Depth and duration are unavailable in the current typed signal. Sell/rebuy edge is not established when the separate sell assessment is unavailable. Re-entry remains source-owned and can remain inactive.
+- PATH additionally requires an OK public Compass before accepting ALIGNED live overlays. Unavailable/stale evidence is never upgraded into a risk call. No workflows, source engines, raw-data schemas, frozen forecasts or historical scores were modified.
+
+Validation checkpoint: node syntax validation passed for both changed browser scripts. Existing and new renderer checks: 123/123 public-product release checks passed locally. Synthetic tests cover issue/week mismatch, unavailable source, immutable input preservation, complete coverage only, labelled breach, stale observation, ordinary unconfirmed risk and stale Compass risk rejection. Exact-head CI and deployed visual acceptance remain pending.
+
+Pre-change health snapshot: architecture evidence GREEN; automation production health RED with pre-existing adaptive-decision-miss-validation and edge001-t2-registry alerts. Product CI success must not be represented as aggregate estate health.

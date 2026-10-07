@@ -314,3 +314,39 @@
 .cycle-journey-step.next:after{content:none}
 .cycle-journey-step.watch>i{background:#c88a13;color:#fff;box-shadow:0 0 0 1px #c88a13,0 0 0 6px rgba(200,138,19,.13)}
 .cycle-journey-step.watch:after{content:"WATCH";position:absolute;top:-5px;left:39px;padding:2px 5px;border-radius:999px;background:#fff4d9;color:#8a5a08;font-size:6px;font-weight:950;letter-spacing:.08em}
+
+/* Decision clarity: existing surfaces, one job per block. */
+.path-overview-v3{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cycle-setup-note{font-size:14px;color:#67758a;margin:0 0 20px;line-height:1.55}
+.path-action-lens{background:#fff;border:1px solid #dce4ee;border-radius:22px;margin:22px 0;padding:22px}
+.path-action-lens summary{display:flex;align-items:center;gap:16px;flex-wrap:wrap;cursor:pointer;list-style:none}
+.path-action-lens summary span,.path-lens-grid article>span{font-size:10px;font-weight:800;letter-spacing:.14em;color:#778396}
+.path-action-lens summary strong{font-size:22px;color:#315e83}
+.path-action-lens summary b{font-size:12px;color:#67758a;margin-left:auto}
+.path-lens-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-top:22px}
+.path-lens-grid article{min-width:0}.path-lens-grid strong,.path-lens-grid small{display:block;margin-top:10px;font-size:13px}
+.path-lens-grid p,.path-lens-note{font-size:13px;color:#67758a;line-height:1.6}
+.path-lens-note{border-top:1px solid #e8edf3;padding-top:14px}
+.week-legend{display:flex;gap:18px;flex-wrap:wrap;margin:20px 0;font-size:12px;color:#67758a}
+.week-legend span{display:flex;align-items:center;gap:7px}.week-legend i{width:18px;height:10px;border-radius:3px}
+.week-legend .frozen{background:#edf2f7;border:1px solid #b6c5d5}.week-legend .observed{background:#3d759d}
+.week-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.week-asset{border:1px solid #e0e7ef;border-radius:18px;padding:18px;min-width:0;background:#fbfcfe}
+.week-asset header{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.week-asset h4{margin:0;font-size:20px;color:#142436}.week-asset header b{font-size:11px;line-height:1.6;color:#315e83;text-align:right;max-width:65%}
+.week-asset svg{width:100%;height:auto;display:block;overflow:visible;margin-top:20px}
+.week-asset svg text{fill:#64748b;font:11px system-ui,sans-serif}.week-grid{stroke:#e3e9f0;stroke-width:1}
+.week-frozen{fill:#edf2f7;stroke:#b6c5d5;stroke-width:1}.week-observed{fill:#3d759d;fill-opacity:.82}
+.week-cutoff{stroke:#b77d1c;stroke-dasharray:3 4;stroke-width:1.5}
+.week-asset p,.week-caption{font-size:12px;line-height:1.6;color:#67758a;margin-bottom:0}
+.week-journey .path-track-detail button{border:0;background:#edf3f8;color:#315e83;border-radius:10px;padding:12px;font:inherit;cursor:pointer}
+@media(max-width:640px){
+  .path-overview-v3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .path-overview-v3 article{min-width:0;padding:14px}.path-overview-v3 strong{font-size:16px}.path-overview-v3 b{font-size:10px}
+  .path-action-lens{padding:18px}.path-action-lens summary{gap:8px}.path-action-lens summary b{width:100%;margin-left:0}
+  .path-lens-grid,.week-charts{grid-template-columns:1fr}.path-lens-grid{gap:14px}
+  .week-asset{padding:14px}.week-asset svg text{font-size:12px}.week-legend{gap:12px}
+}
+.cycle-journey-step>.cycle-journey-name{font-size:11px;line-height:1.35}
+.cycle-journey-step>b{font-size:9px}.cycle-journey-step>.cycle-journey-eta{font-size:9px;line-height:1.5}
+@media(max-width:640px){.week-asset svg text{font-size:15px}.cycle-route-title-v3 small{font-size:10px;line-height:1.5}}
