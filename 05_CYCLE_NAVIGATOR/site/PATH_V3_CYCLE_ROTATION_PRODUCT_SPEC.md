@@ -194,7 +194,11 @@ Suggested labels:
 - Distribution
 - Re-entry
 
-Nodes may be swipeable on narrow screens.
+Nodes may be swipeable on narrow screens. Mark the first phase after the current checkpoint as `NEXT`; preserve the source-owned Altseason target as a separate `WATCH` milestone if it lies later in the route.
+
+Show each source-supported phase ETA on its incoming route segment as `ETA FROM NOW`. Display conditionality beside that range. ETAs are independent snapshots measured from now, may overlap and MUST NOT be added together. Unsupported ETAs remain absent and MUST NOT be inferred from phase order.
+
+A compact dotted connector reflects only the destination phase’s current Compass gate state: WAIT = no filled dots, WATCH / BUILDING = partial amber dots, CONFIRMED / ACTIVE = blue dots. These are categorical source-state markers, not a percentage, a time estimate or deterministic progress. The active connector may use a restrained pulse when the source is WATCH; no dot may travel as though time or market progress were being measured.
 
 The timeline should be fun to follow visually, but never imply deterministic progress. Large and mid caps are intentionally combined at the cycle level; the detailed weekly Rotation rail keeps LARGE and MID separate. This prevents the cycle timeline from duplicating the risk-curve rail.
 
@@ -207,8 +211,8 @@ Example:
 ALTSEASON WATCH  
 Next milestone: **ALTSEASON IGNITION**  
 Small caps begin to participate  
-**WATCH WINDOW · 1–7 days**  
-Only if confirmation arrives · not a countdown
+**GATE STATUS · WAITING FOR CONFIRMATION**  
+Any supported ETA is shown once on the milestone’s route segment, measured from now. Conditional windows require confirmation and are not countdowns.
 
 When a later phase becomes relevant, the same card changes target rather than adding another timeline.
 

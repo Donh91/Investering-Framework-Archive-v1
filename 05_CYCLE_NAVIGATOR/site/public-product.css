@@ -292,3 +292,25 @@
   .rotation-readout-v3{grid-template-columns:1fr 1fr}
   .rotation-readout-v3 article:last-child{grid-column:1/3}
 }
+
+/* PATH journey legs: dot fill mirrors source status, never elapsed time. */
+.cycle-journey-step>.cycle-journey-name{display:block;margin-top:8px;color:#4b596c;font-size:9px;font-weight:850;line-height:1.25}
+.cycle-journey-step.current>.cycle-journey-name{color:#1e4f78}
+.cycle-journey-step.next>.cycle-journey-name,.cycle-journey-step.watch>.cycle-journey-name{color:#74500b}
+.cycle-journey-step.current>.cycle-journey-dots:before,.cycle-journey-step.next>.cycle-journey-dots:before,.cycle-journey-step.watch>.cycle-journey-dots:before{content:none}
+.cycle-journey-step>.cycle-journey-dots{position:absolute;z-index:2;top:13px;left:39px;right:-1px;display:flex;align-items:center;justify-content:space-evenly;height:9px;margin:0;padding:0;pointer-events:none}
+.cycle-journey-step>.cycle-journey-dots>i{display:block;width:4px;height:4px;margin:0;border:0;border-radius:50%;background:#d7dee7;box-shadow:none}
+.cycle-journey-step>.cycle-journey-dots.gate-watch>i:nth-child(-n+2){background:#c88a13}
+.cycle-journey-step>.cycle-journey-dots.gate-confirmed>i{background:#315b85}
+.cycle-journey-step>.cycle-journey-dots.live.gate-watch>i:nth-child(2){animation:cycleGatePulse 1.8s ease-in-out infinite}
+@keyframes cycleGatePulse{0%,100%{opacity:.55;transform:scale(.85)}50%{opacity:1;transform:scale(1.35)}}
+.cycle-journey-eta{display:block;margin-top:4px;color:#8a650e;font-size:6.5px;font-weight:850;line-height:1.25;letter-spacing:.015em}
+.cycle-watch-v3>aside>span{display:block;color:#8a7551;font-size:7px;font-weight:900;letter-spacing:.1em}
+.cycle-watch-v3>aside>strong{display:block;margin-top:4px;color:#76510c;font-size:10px;line-height:1.2}
+.cycle-watch-v3.protect>aside>strong{color:#8b4f0c}
+@media(prefers-reduced-motion:reduce){.cycle-journey-step>.cycle-journey-dots.live.gate-watch>i:nth-child(2){animation:none}}
+
+/* Distinguish the immediate next phase from a later Altseason watch target. */
+.cycle-journey-step.next:after{content:none}
+.cycle-journey-step.watch>i{background:#c88a13;color:#fff;box-shadow:0 0 0 1px #c88a13,0 0 0 6px rgba(200,138,19,.13)}
+.cycle-journey-step.watch:after{content:"WATCH";position:absolute;top:-5px;left:39px;padding:2px 5px;border-radius:999px;background:#fff4d9;color:#8a5a08;font-size:6px;font-weight:950;letter-spacing:.08em}

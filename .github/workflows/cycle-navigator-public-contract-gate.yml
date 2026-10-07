@@ -262,8 +262,8 @@ jobs:
               raise SystemExit('market_cycle_fail_closed_state_missing')
           if "return{key:'MICRO'" not in product or "return{key:'BROAD'" not in product or "return{key:'MANIA'" not in product:
               raise SystemExit('altcoin_target_progression_incomplete')
-          if "no browser countdown math" not in product:
-              raise SystemExit('altseason_watch_countdown_semantics_missing')
+          if "GATE STATUS" not in product or "Any supported ETA is shown on the route" not in product:
+              raise SystemExit('altseason_watch_gate_semantics_missing')
           if "Only if confirmation arrives" not in product:
               raise SystemExit('altseason_watch_window_disclosure_missing')
           if "function publicPathText" not in product or "function publicPathStatus" not in product:
