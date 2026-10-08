@@ -521,53 +521,9 @@ function altcoinTarget(pkg,compass,stages){
   return{key:'IGNITION',mode:'OPPORTUNITY',eyebrow:'NEXT HIGH-BETA PHASE',title:'ALTSEASON IGNITION',subtitle:'Small caps begin to participate',eta:pathEta(ignition.eta),status:pathStatus(ignition.status)};
 }
 function weeklyJourney(data){
-  const live=data?.public_live_precision,current=data?.public_series?.current_public_projection||{};
+  const live=data.public_live_precision,current=data?.public_series?.current_public_projection||{};
   if(live?.contract!=='CN_PUBLIC_LIVE_PRICE_PRECISION_v1'||live.public_issue_number!==current.public_issue_number||live.forecast_week!==current.forecast_week)return '';
-  const num=v=>typeof v==='number'&&Number.isFinite(v)&&v>0?v:null;
-  const windows=['day_1_2','day_3_4','day_5_7'],summary=live.window_scores||{},start=Date.parse(summary.day_1_2?.window_start_utc),end=Date.parse(summary.day_5_7?.window_end_utc);
-  const obs=live.daily_observations?.contract==='CN_PUBLIC_DAILY_OBSERVATIONS_v1'?live.daily_observations:null,cutoff=Date.parse(obs?.observed_through_utc||live.live_as_of_utc);
-  if(!Number.isFinite(start)||!Number.isFinite(end)||end-start!==7*86400000)return '';
-  const age=Date.now()-cutoff,stale=!Number.isFinite(cutoff)||age<0||age>Math.max(30,Number(live.freshness_sla_minutes)||90)*60000;
-  const frozen=live.daily_price_path,validPath=frozen?.contract==='CN_FROZEN_DAILY_PRICE_PATH_v1'&&frozen.forecast_week===live.forecast_week;
-  const money=v=>num(v)!==null?'$'+v.toLocaleString('en-US',{maximumFractionDigits:2}):'—';
-  const x=t=>68+Math.max(0,Math.min(1,(t-start)/(end-start)))*412;
-  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const charts=['BTC','ETH'].map(asset=>{
-    const bucketRows=windows.map(window=>(live.rows||[]).find(r=>r.asset===asset&&r.window===window));
-    if(bucketRows.some(r=>!r||num(r.forecast_low)===null||num(r.forecast_high)===null||r.forecast_low>=r.forecast_high))return '<article class="week-asset"><h4>'+asset+'</h4><p>Frozen forecast unavailable.</p></article>';
-    const raw=validPath&&frozen[asset]?.status==='PUBLISHED'?frozen[asset].points:[];
-    const daily=Array.isArray(raw)&&raw.length===7&&raw.every((p,i)=>p.day===i+1&&[p.low,p.high,p.expected_close].every(v=>num(v)!==null)&&p.low<p.high&&p.low<=p.expected_close&&p.expected_close<=p.high)?raw:[];
-    const actual=dayNames.map((_,i)=>{
-      const p=obs?.[asset]?.find(p=>p.day===i+1),a=Date.parse(p?.as_of_utc),dayStart=start+i*86400000;
-      return p&&p.date===new Date(dayStart).toISOString().slice(0,10)&&p.coverage_complete_to_date===true&&a>dayStart&&a<=dayStart+86400000&&a<=cutoff&&a<=Date.now()&&[p.low,p.high,p.close].every(v=>num(v)!==null)&&p.low<=p.close&&p.close<=p.high?p:null;
-    });
-    const values=[...bucketRows.flatMap(p=>[p.forecast_low,p.forecast_high]),...daily.flatMap(p=>[p.low,p.high]),...actual.filter(Boolean).flatMap(p=>[p.low,p.high])];
-    const lo=Math.min(...values),hi=Math.max(...values),pad=Math.max((hi-lo)*.12,hi*.002),y=v=>204-(v-lo+pad)/(hi-lo+pad*2)*162;
-    const coord=(t,v)=>x(t).toFixed(2)+','+y(v).toFixed(2);
-    const grid=[lo,(lo+hi)/2,hi].map(v=>'<line x1="68" x2="480" y1="'+y(v)+'" y2="'+y(v)+'" class="journey-grid"/><text x="59" y="'+(y(v)+5)+'" text-anchor="end">'+esc('$'+(v/1000).toFixed(1)+'k')+'</text>').join('');
-    const dates=dayNames.map((label,i)=>'<text x="'+x(start+(i+1)*86400000)+'" y="236" text-anchor="middle">'+label+'</text>').join('');
-    let forecast='';
-    if(daily.length){
-      const upper=daily.map((p,i)=>coord(start+(i+1)*86400000,p.high)),lower=daily.map((p,i)=>coord(start+(i+1)*86400000,p.low)).reverse();
-      forecast='<polygon points="'+upper.concat(lower).join(' ')+'" class="journey-envelope"/><polyline points="'+daily.map((p,i)=>coord(start+(i+1)*86400000,p.expected_close)).join(' ')+'" class="journey-forecast"/>'
-        +daily.map((p,i)=>'<circle cx="'+x(start+(i+1)*86400000)+'" cy="'+y(p.expected_close)+'" r="3" class="journey-forecast-point"/>').join('');
-    }else{
-      forecast=bucketRows.map((r,i)=>{const a=Date.parse(summary[windows[i]]?.window_start_utc),b=Date.parse(summary[windows[i]]?.window_end_utc);return '<rect x="'+x(a)+'" y="'+y(r.forecast_high)+'" width="'+(x(b)-x(a))+'" height="'+(y(r.forecast_low)-y(r.forecast_high))+'" class="journey-envelope legacy"/>';}).join('');
-    }
-    // Separate polylines on each contiguous run; a missing day never connects prices.
-    let runs=[],run=[];
-    actual.forEach(p=>{if(p)run.push(coord(Date.parse(p.as_of_utc),p.close));else if(run.length){runs.push(run);run=[];}});if(run.length)runs.push(run);
-    const green=runs.map(r=>'<polyline points="'+r.join(' ')+'" class="journey-actual"/>').join('')+actual.map(p=>p?'<line x1="'+x(Date.parse(p.as_of_utc))+'" x2="'+x(Date.parse(p.as_of_utc))+'" y1="'+y(p.high)+'" y2="'+y(p.low)+'" class="journey-wick"/><circle cx="'+x(Date.parse(p.as_of_utc))+'" cy="'+y(p.close)+'" r="4.5" class="journey-actual-point"/>':'').join('');
-    const cursor=Number.isFinite(cutoff)&&cutoff>=start?'<line x1="'+x(cutoff)+'" x2="'+x(cutoff)+'" y1="33" y2="214" class="journey-now"/><text x="'+Math.min(455,Math.max(94,x(cutoff)))+'" y="22" text-anchor="middle">'+(stale?'AS OF':'NOW')+'</text>':'';
-    const last=actual.filter(Boolean).at(-1),relation=last?money(last.close)+' · '+(last.status==='LIVE'?'today to date':'latest close'):'Awaiting complete observations';
-    const days=dayNames.map((name,i)=>{
-      const f=daily[i],p=actual[i],date=new Date(start+i*86400000).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
-      const bucket=bucketRows[i<2?0:i<4?1:2],delta=p&&f&&p.status==='COMPLETE'?((p.close/f.expected_close-1)*100).toFixed(2)+'% versus expected close':p&&f?'Day still open; closing deviation pending':'Daily closing forecast not published';
-      return '<details class="journey-day"><summary>'+name+'<span>'+esc(date)+'</span></summary><div><strong>'+asset+' · '+esc(date)+'</strong><p>'+esc(f?'Expected close '+money(f.expected_close)+' · range '+money(f.low)+'–'+money(f.high):'Frozen interval '+money(bucket.forecast_low)+'–'+money(bucket.forecast_high))+'</p><p>'+esc(p?'Actual '+money(p.close)+' · low/high '+money(p.low)+'–'+money(p.high):'No complete observed coverage for this day')+'</p><p>'+esc(delta)+'</p>'+(p?'<small>'+esc(utcLabel(p.as_of_utc))+' · '+esc(p.observed_hours)+' observed hours</small>':'')+'</div></details>';
-    }).join('');
-    return '<article class="week-asset journey-asset"><header><h4>'+asset+'</h4><b>'+esc(relation)+'</b></header><svg viewBox="0 0 500 254" role="img" aria-label="'+esc(asset+' Monday-Sunday frozen '+(daily.length?'daily forecast':'range intervals')+' and observed daily closing prices with low/high whiskers. Future observations remain empty.')+'">'+grid+forecast+green+cursor+dates+'</svg>'+(daily.length?'':'<p class="journey-legacy-note">This freeze contains interval ranges only. A daily expected-close line was not published.</p>')+'<div class="journey-days">'+days+'</div></article>';
-  }).join('');
-  return '<section class="path-track week-journey" data-contract="CN_WEEK_RANGE_JOURNEY_v1"><header class="path-track-head"><div><span>3 · THIS WEEK’S PRICE JOURNEY</span><h3>The plan. The market.</h3><p>Mon–Sun · UTC · CN #'+esc(live.public_issue_number)+' / '+esc(live.forecast_week)+'</p></div><aside><span>OBSERVATIONS</span><strong>'+esc(stale?'STALE SNAPSHOT':'HOURLY UPDATE')+'</strong><small>'+esc(utcLabel(live.live_as_of_utc))+'</small></aside></header><div class="week-legend"><span><i class="frozen"></i>Blue · frozen forecast</span><span><i class="observed"></i>Green · actual price + low/high</span></div><div class="week-charts">'+charts+'</div><p class="week-caption">Tap a day for exact values. The current day shows its latest observed price; future days stay empty. Low/high whiskers show the daily range. Missing hours break the live curve.</p><details class="path-track-detail"><summary>Forecast, method and proof <span aria-hidden="true">↓</span></summary>'+windows.map(window=>'<article><b>'+esc(window.replaceAll('_',' ').toUpperCase())+'</b><p>'+esc(publicPathText(summary[window]?.frozen_sequence_text||'No frozen sequence text available.'))+'</p></article>').join('')+'<p>MONDAY BASELINE · Forecast frozen '+esc(utcLabel(live.frozen_at_utc))+'. Daily expected-close points are prospective analysis, not a promise of intraday movement. SUNDAY REVIEW · Older interval-only freezes stay unchanged. Price precision retains its existing three-window scoring method.</p><button type="button" data-proof-link>View price precision and freeze proof →</button></details></section>';
+  return '<section class="path-track week-journey pro-week" data-contract="CN_WEEK_RANGE_JOURNEY_v1"><header class="path-track-head"><div><span>3 · THIS WEEK’S PRICE JOURNEY</span><h3>The plan. The market.</h3><p>Frozen weekly ranges against observed prices. UTC.</p></div></header><div id="frozenWeekChart" class="frozen-week-chart"></div><details class="path-track-detail"><summary>Forecast, method and proof <span aria-hidden="true">↓</span></summary>'+['day_1_2','day_3_4','day_5_7'].map(w=>'<article><b>'+esc(w.replaceAll('_',' ').toUpperCase())+'</b><p>'+esc(publicPathText(live.window_scores?.[w]?.frozen_sequence_text||'No frozen sequence text available.'))+'</p></article>').join('')+'<p>Price precision retains its existing three-window scoring method. Frozen forecast fields never change.</p><button type="button" data-proof-link>View price precision and freeze proof →</button></details></section>';
 }
 function pathContext(data){
   const p=data.package||{},extra=sinceLastBlock(data)+whyThisCallBlock(data);
@@ -581,6 +537,7 @@ function renderPath(data,compass){
     +rotationTrack(p,liveCompass)
     +weeklyJourney(data)
     +pathContext(data);
+  window.CNWeekChart?.mount(document.getElementById("frozenWeekChart"),data);
   document.querySelector('#productPath [data-proof-link]')?.addEventListener('click',showProof);
   document.querySelectorAll('#productPath [data-now-link]').forEach(b=>b.onclick=()=>document.querySelector('[data-tab="now"]')?.click());
 }
@@ -667,7 +624,7 @@ function renderProof(data,history){
 async function render(){
   shell();
   try{
-    const [s,h,p,compass]=await Promise.all([json('./data/latest.json'),json('./history-scoreboard.json'),prices(),jsonOptional('./data/compass.json')]);snapshot=s;renderNow(s,p);document.querySelector('[data-pa-proof-native]')?.addEventListener('click',showProof);renderPath(s,compass);renderProof(s,h);installNowRefinements(s,h);document.querySelectorAll("[data-ledger-link]").forEach(b=>b.onclick=()=>{const row=document.getElementById(`cn-record-${b.dataset.ledgerLink}`);if(row){row.open=true;row.scrollIntoView({behavior:"smooth",block:"start"});}});clearInterval(refreshTimer);refreshTimer=setInterval(freshness,30000);
+    const [s,h,p,compass]=await Promise.all([json('./data/latest.json'),json('./history-scoreboard.json'),prices(),jsonOptional('./data/compass.json')]);snapshot=s;window.CNI18n?.registerTranslations(s.presentation_translations);renderNow(s,p);document.querySelector('[data-pa-proof-native]')?.addEventListener('click',showProof);renderPath(s,compass);renderProof(s,h);installNowRefinements(s,h);document.querySelectorAll("[data-ledger-link]").forEach(b=>b.onclick=()=>{const row=document.getElementById(`cn-record-${b.dataset.ledgerLink}`);if(row){row.open=true;row.scrollIntoView({behavior:"smooth",block:"start"});}});clearInterval(refreshTimer);refreshTimer=setInterval(freshness,30000);
   }catch(e){console.warn('Cycle Navigator unavailable',e);const n=document.getElementById('productNow');if(n)n.innerHTML='<section class="fail-card"><small>MARKET DATA TEMPORARILY UNAVAILABLE</small><h1>WAIT</h1><p>No new action is inferred while verified evidence is unavailable.</p></section>';}
 }
 
