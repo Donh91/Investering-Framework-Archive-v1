@@ -141,6 +141,10 @@ def semantic_snapshot(root:Path):
       "m6_integrity":m6_check,
       "m6_event_count":int((m6 or {}).get("event_count") or 0) if isinstance(m6,dict) else 0,
       "m6_provisional_family_count":int((m6 or {}).get("provisional_independent_family_count") or 0) if isinstance(m6,dict) else 0,
+      "m6_family_semantics":"PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
+      "verified_independent_adverse_family_count":None,
+      "information_edge_claim":"NOT_ESTABLISHED",
+      "economic_action_edge_claim":"NOT_ESTABLISHED",
       "matured_event_counts":maturity,"matured_family_counts":families,"unknown_horizon_counts":unknown,
       "feature_row_count":fcount,"pit_verified_feature_rows":pit,"pit_unverified_feature_rows":unverified,
       "calibration_eligible_rows":int((cal or {}).get("eligible_series_row_count") or 0) if isinstance(cal,dict) else 0,
@@ -186,10 +190,11 @@ def choose(prev:dict|None,s:dict,d:list[str]):
     new7=s["matured_family_counts"]["7d"]>int(prevfam.get("7d") or 0)
     new14=s["matured_family_counts"]["14d"]>int(prevfam.get("14d") or 0)
     new30=s["matured_family_counts"]["30d"]>int(prevfam.get("30d") or 0)
-    if new30 or new14:
-        return "CONCLUSION_REVIEW",True,True,"New independent-family long-horizon maturity merits separate adjudication plus independent review."
-    if new7:
-        return "CONCLUSION_REVIEW",True,False,"New 7d independent-family maturity merits bounded Sol economic/falsification review; Claude not yet necessary by default."
+    # M6 warning-observation clusters are not independently confirmed adverse
+    # peak-to-trough families. Maturity of warning clusters alone cannot open
+    # an Edge conclusion gate or justify automatic paid external review.
+    if new30 or new14 or new7:
+        return "COLLECT",False,False,"New matured WARNING-CLUSTER data are descriptive controls, not independent adverse-family proof; await separately frozen conclusion-candidate admission."
     if s["pullback_risk_state"] in {"ELEVATED","HIGH","CONFIRMED"} or s["feature_row_count"]>int(prevsem.get("feature_row_count") or 0):
         return "COLLECT",False,False,"Natural warning evidence is accumulating; preserve pre-outcome features and await maturation."
     if s["pullback_risk_state"]=="BUILDING":
