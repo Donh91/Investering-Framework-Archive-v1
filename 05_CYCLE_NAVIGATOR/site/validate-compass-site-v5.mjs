@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const site=dirname(fileURLToPath(import.meta.url));
@@ -22,6 +23,34 @@ if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined rende
 if(!premiumRenderer.includes('compositeIntel(compass)'))throw Error('active premium renderer ignores integrated Compass');
 if(!premiumRenderer.includes('CN_PREMIUM_COMPASS_OWNER = true'))throw Error('premium owner not detected');
 if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model research')&&!premiumRenderer.includes('Research direction'))throw Error('premium research disclosure absent');
+// Independent end-to-end producer-digest and weekly-source regression checks.
+const root=resolve(site,'../..');
+const j=async p=>JSON.parse(await readFile(resolve(root,p),'utf8'));
+const sortKeys=v=>Array.isArray(v)?v.map(sortKeys):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,sortKeys(v[k])])):v;
+const digest=(o,key)=>{const value={...o};delete value[key];return createHash('sha256').update(JSON.stringify(sortKeys(value))+'\\n').digest('hex');};
+const [op,ap,wp,shp,stp]=await Promise.all([
+ j('04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json'),
+ j('04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json'),
+ j('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'),
+ j('04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json'),
+ j('04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json')]);
+const sh=await j(shp.forecast_path),st=await j(stp.anchor_path);
+const shCurrent=sh.source_bindings?.auto_market_state?.packet_sha256===ap.packet_sha256
+ && ap.packet_sha256===op.source_packet_sha256
+ && sh.source_bindings?.cycle_navigator?.machine_package_sha256===wp.machine_package_sha256
+ && Number(sh.source_bindings?.cycle_navigator?.iso_week)===Number(wp.iso_week);
+const shHash=digest(sh,'forecast_sha256')===shp.forecast_sha256;
+if(shCurrent&&shHash&&!['ALIGNED_RESEARCH','STALE_RESEARCH'].includes(f.shadow.status))throw Error('valid current Shadow suppressed');
+if(shCurrent&&!shHash&&f.shadow.status!=='UNVERIFIED')throw Error('tampered Shadow promoted');
+if(shHash){const mut=structuredClone(sh);mut.model_output={...sh.model_output,tampered:true};if(digest(mut,'forecast_sha256')===shp.forecast_sha256)throw Error('tampered Shadow not detected');}
+const stBound=st.source_bindings?.cycle_navigator||{};
+const stCurrent=Number(stBound.iso_year)===Number(wp.iso_year)&&Number(stBound.iso_week)===Number(wp.iso_week)
+ && Number(stBound.issue_number)===Number(wp.issue_number)&&stBound.sha256===wp.machine_package_sha256;
+const stHash=digest(st,'anchor_sha256')===stp.anchor_sha256;
+if(stCurrent&&stHash&&f.strategic.status!=='BOUND_WEEKLY_ANCHOR')throw Error('current strategic source suppressed');
+if((!stCurrent||!stHash)&&f.strategic.status!=='UNVERIFIED')throw Error('stale or tampered strategic anchor promoted');
+if(stHash){const mut=structuredClone(st);mut.strategic_21_30d={...st.strategic_21_30d,tampered:true};if(digest(mut,'anchor_sha256')===stp.anchor_sha256)throw Error('tampered strategic not detected');}
+if(/source_bindings|packet_sha256|wallet_address|portfolio_actions|api_key/i.test(JSON.stringify(f)))throw Error('restricted evidence leaked');
 if(compass.contract!=='PUBLIC_COMPASS_PROJECTION_v1') throw Error('wrong Compass contract');
 if(event.contract!=='PUBLIC_COMPASS_EVENT_STATUS_v1') throw Error('wrong Compass event status contract');
 if(!['IDLE','REASSESSMENT_REQUESTED'].includes(event.status)) throw Error('wrong Compass event status');
@@ -72,4 +101,5 @@ if(compass.sell_assessment?.authority?.portfolio_execution!==false) throw Error(
 if(/source_packet_sha256|heat_detail|market_snapshot/.test(JSON.stringify(event))) throw Error('private event evidence leaked');
 if(!renderer.includes("c?.bull_bear_scale")||!renderer.includes("OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1")) throw Error('Market Weather must read Official Compass Bull Bear payload');
 if(/expected_direction[^\n]{0,160}(bull|bear)/i.test(renderer)) throw Error('client-side Bull Bear signal synthesis detected');
+console.log(JSON.stringify({full_stack:f.status,shadow:f.shadow.status,strategic:f.strategic.status,source_status:f.source_status}));
 console.log(JSON.stringify({status:'PASS',compass_id:compass.compass_id,data_status:compass.data_status,altcoin_action:compass.horizons?.CYCLE_ALTCOINS_3_8W?.action_posture||null,pullback_risk:compass.protection_tracker?.pullback_risk_state||null,reentry_state:compass.protection_tracker?.reentry_state||null,rotation_position_ui:true}));
