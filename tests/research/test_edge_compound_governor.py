@@ -106,7 +106,11 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             self.assertFalse(repaired["external_routing"]["claude_recommended"])
             self.assertFalse(repaired["conclusion_layer"]["review_due"])
             self.assertEqual(repaired["prior_false_bootstrap_supersession"]["previous_decision"],"CONCLUSION_REVIEW")
-            self.assertTrue(any(history.rglob("*.json")))
+            entries=sorted(history.rglob("*.json"))
+            self.assertEqual(len(entries),2)
+            self.assertEqual(sorted(json.loads(p.read_text())["decision"] for p in entries),["COLLECT","NOOP"])
+            self.assertTrue(any(p.stem.endswith("-bootstrap-supersession") for p in entries))
             self.assertFalse(build(root,out,history,now)["material_delta"])
+            self.assertEqual(len(list(history.rglob("*.json"))),2)
 
 if __name__=="__main__":unittest.main()
