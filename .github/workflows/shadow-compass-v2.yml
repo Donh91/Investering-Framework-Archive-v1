@@ -153,6 +153,7 @@ jobs:
           print('SHADOW_COMPASS_V2_VALID', f['forecast_id'], f['usage'], r['estimated_cost_usd'])
           PY
       - name: Commit forward-only shadow evidence
+        id: publish
         if: steps.slot.outputs.active == 'true'
         shell: bash
         run: |
@@ -174,6 +175,12 @@ jobs:
           local_sha=$(sha256sum 04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json | awk '{print $1}')
           remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json | sha256sum | awk '{print $1}')
           [ "$local_sha" = "$remote_sha" ]
+          echo "published=true" >> "$GITHUB_OUTPUT"
+      - name: Request Pages refresh after verified Shadow publication
+        if: steps.slot.outputs.active == 'true' && steps.publish.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "/repos/${GITHUB_REPOSITORY}/dispatches" -f event_type=shadow-compass-v2-published
       - uses: actions/upload-artifact@v4
         if: always() && steps.slot.outputs.active == 'true'
         with:
