@@ -51,6 +51,29 @@ class M6WarningEventTests(unittest.TestCase):
             self.assertEqual([x["independent_family_weight"] for x in r["events"]],[1.0,0.0])
             self.assertTrue(all(x["episode_family_status"]=="PROVISIONAL_OPEN_UNTIL_TROUGH_OBSERVED" for x in r["events"]))
 
+    def test_intrabar_extrema_before_warning_must_not_count(self):
+        start=M.parse("2026-10-06T16:14:15Z")
+        segment=[
+            {"close":M.parse("2026-10-06T17:00:00Z"),"btc":100.0,"btc_high":999.0,"btc_low":1.0},
+            {"close":M.parse("2026-10-06T18:00:00Z"),"btc":102.0,"btc_high":110.0,"btc_low":95.0}
+        ]
+        v=M.asset_view(segment,100.0,"BTC",start)
+        self.assertEqual(v["state"],"MATURED")
+        self.assertEqual(v["excluded_straddling_bar_extrema"],1)
+        self.assertAlmostEqual(v["reference_anchor"]["mae_pct"],-5.0)
+        self.assertAlmostEqual(v["reference_anchor"]["mfe_pct"],10.0)
+        self.assertFalse(v["adverse_barriers"]["-10.0"]["touched"])
+
+    def test_missing_full_post_warning_bar_ohlc_fails_closed(self):
+        start=M.parse("2026-10-06T16:14:15Z")
+        segment=[
+            {"close":M.parse("2026-10-06T17:00:00Z"),"btc":100.0,"btc_high":110.0,"btc_low":90.0},
+            {"close":M.parse("2026-10-06T18:00:00Z"),"btc":102.0,"btc_high":None,"btc_low":95.0}
+        ]
+        v=M.asset_view(segment,100.0,"BTC",start)
+        self.assertEqual(v["state"],"UNKNOWN_INCOMPLETE_ASSET_PATH")
+        self.assertEqual(v["reason"],"MISSING_FULL_BAR_OHLC")
+
     def test_spot_fail_rows_cannot_mature_horizon(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t);self.freeze(root,"ELEVATED",issued="2026-10-06T16:00:00Z")
