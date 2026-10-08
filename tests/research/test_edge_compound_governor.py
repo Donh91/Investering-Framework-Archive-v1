@@ -13,7 +13,7 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
         event={"compass_id":"CMP-TEST","knowledge_timestamp":when,
             "episode_family_id":"M6F-20261007T000000Z","independent_family_weight":1.0,
             "horizons":horizons}
-        m6.write_text(json.dumps({"integrity_revision":"v1.1_STRICT_TAPE_AND_ANCHOR",
+        m6.write_text(json.dumps({"integrity_revision":"v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
             "event_count":1,"provisional_independent_family_count":1,"events":[event]}))
         f.write_text(json.dumps({"integrity_revision":"v1.1_PIT_STRICT",
             "rows":[{"compass_id":"CMP-TEST","knowledge_timestamp":when}]}))
@@ -21,7 +21,7 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
     def seed_empty_owners(self,root):
         m6=root/"research/framework_memory/m6_warning_events/LATEST.json";m6.parent.mkdir(parents=True,exist_ok=True)
         f=root/"research/framework_memory/edge001_tsunami_features/LATEST.json";f.parent.mkdir(parents=True,exist_ok=True)
-        m6.write_text(json.dumps({"integrity_revision":"v1.1_STRICT_TAPE_AND_ANCHOR","event_count":0,"events":[]}))
+        m6.write_text(json.dumps({"integrity_revision":"v1.2_POST_KNOWLEDGE_BAR_INTEGRITY","event_count":0,"events":[]}))
         f.write_text(json.dumps({"integrity_revision":"v1.1_PIT_STRICT","rows":[]}))
 
 
