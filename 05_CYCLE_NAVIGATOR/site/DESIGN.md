@@ -123,4 +123,6 @@ Use Apple-style restraint and design-engineering review principles: remove befor
 
 The weekly price instrument is a restrained dark navy exception inside the existing light page: one BTC/ETH selector, fine grid, right price scale, blue immutable corridors/forecast, green observed path, explicit observation cutoff and a single day readout. TradingView Lightweight Charts supplies the financial-chart interaction and typography geometry. No fabricated candles or decorative market movement.
 
+PATH uses one visible narrative thread: leadership → rotation → altseason → protection/reset. Its connector dots encode source-published time distance only, using fewer illuminated dots for longer windows and none for unsupported timing. They never depict completion or probability. Frozen weekly timing is the conservative ceiling when a faster live review window disagrees.
+
 The DA/ENG control is a compact upper-right segmented button, with a navy active state and a saved language preference. Keep both controls readable and operable on narrow iPhone screens. Technical validation is separate from Morten's visual acceptance.
