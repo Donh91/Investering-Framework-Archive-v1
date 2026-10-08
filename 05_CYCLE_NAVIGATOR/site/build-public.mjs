@@ -122,10 +122,22 @@ function verifiedRelative(p,prefix){
   return relative(repoRoot,resolved).startsWith("..")?null:resolved;
 }
 function publicNarrative(s){
-  if(typeof s!=="string"||s.length>650||/[\\$%]|0x[0-9a-f]{8}|https?:|wallet|address|secret|token[-_ ]?key/i.test(s))return null;
+  if(typeof s!=="string"||s.length>650||/[0-9\\$%]|0x[0-9a-f]{8}|https?:|wallet|address|secret|token[-_ ]?key/i.test(s))return null;
   return s.trim()||null;
 }
 const researchEnum=(v,allowed,fallback="UNAVAILABLE")=>allowed.includes(v)?v:fallback;
+// Producer digests canonical sorted-key JSON, with its hash field removed.
+function sortedCanonical(v){
+  if(Array.isArray(v))return v.map(sortedCanonical);
+  if(v&&typeof v==="object")return Object.fromEntries(Object.keys(v).sort().map(k=>[k,sortedCanonical(v[k])]));
+  return v;
+}
+function verifiedModelDigest(obj,field,expected){
+  if(!obj||typeof expected!=="string"||!/^([a-f0-9]{64})$/.test(expected)||obj[field]!==expected)return false;
+  const copy={...obj};delete copy[field];
+  const digest=createHash("sha256").update(JSON.stringify(sortedCanonical(copy))+"\n").digest("hex");
+  return digest===expected;
+}
 const directionValues=["UP","DOWN","SIDEWAYS","MIXED","NO_EDGE","UNAVAILABLE"];
 async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
   const [official,auto,native,shadowPtr,strategicPtr,master]=await Promise.all([
@@ -150,8 +162,13 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
   const officialSource=official?.source_packet_sha256;
   const autoSource=auto?.packet_sha256;
   const nativeAligned=Boolean(officialSource&&officialSource===autoSource&&native?.source_packet_sha256===autoSource);
-  const weeklyAligned=weeklyPointer?.iso_week===weeklyPackage?.iso_week
-      || (Number(weeklyPointer?.issue_number)===Number(weeklyPackage?.issue_number));
+  let weeklyAligned=false;
+  try{
+    const p=verifiedRelative(String(weeklyPointer?.week_dir||"")+"/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json","05_CYCLE_NAVIGATOR/weekly/");
+    const bytes=p?await readFile(p):null;
+    weeklyAligned=Boolean(bytes&&createHash("sha256").update(bytes).digest("hex")===weeklyPointer?.machine_package_sha256&&
+      Number(weeklyPointer?.issue_number)===Number(weeklyPackage?.issue_number));
+  }catch{}
   const mp=master?.pointer;
   const masterAligned=Boolean(mp?.contract==="MASTER_MONDAY_DELIVERY_POINTER_v1"&&mp?.status==="READY"&&
     mp?.iso_week===weeklyPointer?.completed_source_week&&mp?.iso_year===weeklyPointer?.completed_source_year&&
@@ -163,7 +180,12 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       if(p){
         const x=await readJson(p);
         shadowAligned=x?.contract==="SHADOW_COMPASS_V2_FORECAST_v1"&&
-          x?.forecast_id===shadowPtr.forecast_id&&x?.forecast_sha256===shadowPtr.forecast_sha256&&
+          x?.forecast_id===shadowPtr.forecast_id&&
+          verifiedModelDigest(x,"forecast_sha256",shadowPtr.forecast_sha256)&&
+          x?.source_fingerprint===shadowPtr?.source_fingerprint&&
+          Number(x?.source_bindings?.cycle_navigator?.iso_week)===Number(weeklyPointer?.iso_week)&&
+          Number(x?.source_bindings?.cycle_navigator?.iso_year)===Number(weeklyPointer?.iso_year)&&
+          x?.source_bindings?.cycle_navigator?.machine_package_sha256===weeklyPointer?.machine_package_sha256&&
           x?.source_bindings?.auto_market_state?.packet_sha256===autoSource&&
           x?.source_bindings?.auto_market_state?.packet_sha256===officialSource;
         if(shadowAligned){
@@ -194,7 +216,13 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       const p=verifiedRelative(strategicPtr.anchor_path,"04_MARKET_LEARNING/handlekompas/strategic/anchors/");
       if(p){
         const anchor=await readJson(p);
-        if(anchor.anchor_id===strategicPtr.anchor_id&&anchor.anchor_sha256===strategicPtr.anchor_sha256){
+        if(anchor.contract==="STRATEGIC_COMPASS_ANCHOR_v1"&&anchor.anchor_id===strategicPtr.anchor_id&&
+           verifiedModelDigest(anchor,"anchor_sha256",strategicPtr.anchor_sha256)&&
+           anchor.source_fingerprint===strategicPtr.source_fingerprint&&
+           Number(anchor?.source_bindings?.cycle_navigator?.iso_year)===Number(weeklyPointer?.iso_year)&&
+           Number(anchor?.source_bindings?.cycle_navigator?.iso_week)===Number(weeklyPointer?.iso_week)&&
+           Number(anchor?.source_bindings?.cycle_navigator?.issue_number)===Number(weeklyPointer?.issue_number)&&
+           anchor?.source_bindings?.cycle_navigator?.sha256===weeklyPointer?.machine_package_sha256&&weeklyAligned){
           strategic={status:"BOUND_WEEKLY_ANCHOR",issued_at_utc:anchor.issued_at_utc,
             horizon_21_30d:{direction:researchEnum(anchor?.strategic_21_30d?.direction,directionValues),
               action:researchEnum(anchor?.strategic_21_30d?.action_posture,["WAIT","HOLD","UNAVAILABLE"]),
@@ -207,7 +235,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     }
   }catch{}
   const officialValid=compass?.data_status==="OK"&&official?.compass_id===compass?.compass_id;
-  const quality=officialValid&&nativeAligned&&shadowAligned&&masterAligned&&strategic&&weeklyAligned?"COMPLETE":"PARTIAL_OR_DEGRADED";
+  const quality=officialValid&&nativeAligned&&shadow?.status==="ALIGNED_RESEARCH"&&masterAligned&&strategic&&weeklyAligned?"COMPLETE":"PARTIAL_OR_DEGRADED";
   return {
     contract:"PUBLIC_COMPASS_FULL_STACK_READBACK_v1",
     status:quality,
