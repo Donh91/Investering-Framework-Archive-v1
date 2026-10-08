@@ -155,12 +155,27 @@ def choose(prev:dict|None,s:dict,d:list[str]):
 
 def build(root:Path,output:Path,history_root:Path,now:datetime):
     current,bindings=semantic_snapshot(root);prev=previous_state(output);d=deltas(prev,current)
-    material=bool(d);decision,sol,claude,reason=choose(prev,current,d)
+    # Earlier v1 bootstrap treated a first snapshot's already-matured families as
+    # new discoveries and emitted a false CONCLUSION_REVIEW. Reconcile LATEST
+    # without silently mutating its immutable archived historical copy.
+    legacy_bootstrap=bool(
+        prev and prev.get("deltas")==["INITIAL_GOVERNOR_SNAPSHOT"]
+        and prev.get("decision")=="CONCLUSION_REVIEW"
+        and prev.get("semantic_fingerprint")==digest(current)
+    )
+    if legacy_bootstrap:
+        d=["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED_NO_NEW_EVIDENCE"]
+    material=bool(d)
+    decision,sol,claude,reason=choose(None if legacy_bootstrap else prev,current,d)
     state={"contract":CONTRACT,"generated_at_utc":now.astimezone(timezone.utc).isoformat().replace("+00:00","Z"),
       "semantic_fingerprint":digest(current),"material_delta":material,"deltas":d,"decision":decision,"decision_reason":reason,
       "external_routing":{"sol_recommended":sol,"claude_recommended":claude,"automatic_dispatch":False},
       "conclusion_layer":{"separate_from_collection":True,"review_due":decision=="CONCLUSION_REVIEW","automatic_promotion":False},
       "semantic_state":current,"source_bindings":bindings,"authority":AUTHORITY,
+      "prior_false_bootstrap_supersession":({
+        "previous_decision":"CONCLUSION_REVIEW","reason":"INITIAL_EXISTING_MATURITY_IS_NOT_NEW_EVIDENCE",
+        "previous_generated_at_utc":prev.get("generated_at_utc"),"previous_semantic_fingerprint":prev.get("semantic_fingerprint")
+      } if legacy_bootstrap else None),
       "rules":{"warning_is_sell":False,"live_exit_rule":"NONE","raw_external_output_canonical":False,"negative_results_preserved":True}}
     if material or prev is None:
         output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(state,indent=2,sort_keys=True)+"\n")
