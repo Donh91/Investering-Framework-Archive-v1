@@ -15,6 +15,7 @@ if(!['COMPLETE','PARTIAL_OR_DEGRADED'].includes(f.status))throw Error('invalid c
 if(f.protective_action_authority!=='OFFICIAL_COMPASS_ONLY')throw Error('official action boundary changed');
 if(f.shadow?.authority!=='RESEARCH_ONLY_NO_ACTION_PERMISSION')throw Error('model authority boundary changed');
 if(f.official_data_status!==compass.data_status)throw Error('official status discrepancy');
+if(f.source_status?.cycle_navigator!=='WEEKLY_POINTER_ALIGNED'&&f.weekly?.direction_2_3w!=='UNAVAILABLE')throw Error('unverified 2-3w direction leaked');
 if(compass.data_status!=='OK'&&f.official_action!=='UNAVAILABLE')throw Error('degraded action falsely promoted');
 if(f.shadow?.status==='ALIGNED_RESEARCH'||f.shadow?.status==='STALE_RESEARCH'){
  for(const key of ['12h','1_3d','5_7d']) if(!f.shadow.horizons?.[key])throw Error('missing independent horizon');
