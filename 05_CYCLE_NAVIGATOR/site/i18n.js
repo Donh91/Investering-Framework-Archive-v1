@@ -54,7 +54,7 @@
     const toggle=document.createElement('div');toggle.className='language-toggle';toggle.setAttribute('role','group');toggle.setAttribute('aria-label','Language / Sprog');
     toggle.innerHTML='<button type="button" data-language="da" lang="da" aria-label="Dansk">DA</button><button type="button" data-language="en" lang="en" aria-label="English">ENG</button>';
     head.append(toggle);toggle.querySelectorAll('button').forEach(b=>b.onclick=()=>setLanguage(b.dataset.language));
-    observer=new MutationObserver(schedule);apply();
+    observer=new MutationObserver(records=>{if(records.some(r=>{const el=r.target.nodeType===1?r.target:r.target.parentElement;return !el?.closest('.fw-canvas,[data-no-translate],.language-toggle');}))schedule();});apply();
     fetch('./i18n-da.json').then(r=>{if(!r.ok)throw new Error(r.status);return r.json();}).then(data=>{
       baseCatalog=data.exact||{};catalog={...dynamicCatalog,...baseCatalog};phrases=Object.entries(data.phrases||{}).sort((a,b)=>b[0].length-a[0].length).map(([en,da])=>[en,da,new RegExp('(?<![A-Za-z])'+en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![A-Za-z])','g')]);apply();document.dispatchEvent(new CustomEvent('cn-language-change',{detail:{language}}));
     }).catch(e=>console.warn('CN translation catalog unavailable',e));

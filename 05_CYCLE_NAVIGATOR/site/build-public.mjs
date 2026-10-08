@@ -209,8 +209,9 @@ function publicTranslations(source){
   const walk=v=>{if(typeof v==="string")allowed.add(v);else if(Array.isArray(v))v.forEach(walk);else if(v&&typeof v==="object")Object.values(v).forEach(walk);};
   const safe=sanitizePackage(source);walk(safe);
   // Only already public forecast/evaluation prose can be a translation source.
-  walk(publicStructureAnalysis(standaloneFreeze));walk(standaloneFreeze?.intraday_map);walk(standaloneFreeze?.bull_bear_scale);walk(source?.decision_projection?.protection?.public_explanation);
-  const digits=t=>JSON.stringify(t.match(/\d+(?:[.,]\d+)*/g)||[]);
+  walk(publicStructureAnalysis(standaloneFreeze));walk(standaloneFreeze?.intraday_map);walk(standaloneFreeze?.bull_bear_scale);const copy=source?.decision_projection?.protection?.public_explanation;
+  if(copy?.contract==='CN_PUBLIC_PROTECTION_COPY_v1')for(const key of ['summary','watch_for','weakens_if']){const text=copy[key];if(typeof text==='string'&&text.length<=600&&!/\d/.test(text))walk(text);}
+  const digits=t=>JSON.stringify(t.match(/[+−-]?\d+(?:[.,]\d+)*(?:%)?/g)||[]);
   return (Array.isArray(source?.public_translations)?source.public_translations:[]).filter(x=>x&&typeof x.en==='string'&&typeof x.da==='string'&&x.en.length>15&&x.en.length<=3000&&x.da.length<=4000&&x.da.trim()&&allowed.has(x.en)&&digits(x.en)===digits(x.da)).map(x=>({en:x.en,da:x.da})).slice(0,160);
 }
 const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,presentation_translations:publicTranslations(pkg),pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure_analysis:publicStructureAnalysis(standaloneFreeze),public_bull_bear_scale:standaloneFreeze?.bull_bear_scale||null,since_last_cn:sinceLastCN,latest_completed_forecast:latestCompletedForecast};
