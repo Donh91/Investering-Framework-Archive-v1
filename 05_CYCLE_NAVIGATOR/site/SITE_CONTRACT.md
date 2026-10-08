@@ -99,6 +99,16 @@ Backward-compatible transition rule for an already-published Cycle Navigator iss
 
 This transition adapter is deterministic delivery logic only. It has zero authority to invent, score or promote a new market call.
 
+## Composite Compass evidence for chat and website (2026-10-08)
+
+Every standard Kompas invocation in chat and the Cycle Navigator NOW Compass share the source-selection and action-authority semantics of `07_PROMPTS_AND_AGENTS/action_compass/2026-09-16__global-action-compass-invocation-contract-v1__canonical.md` Section 3.1.
+
+The existing Pages builder attaches `PUBLIC_COMPASS_FULL_STACK_READBACK_v1` under `PUBLIC_COMPASS_PROJECTION_v1.full_stack`. It cross-reads the current Official Compass, Auto Market State, Native Handlekompas, non-binding Shadow Compass v2, current governed Master Monday and Cycle Navigator, and Strategic Compass. The site displays this as ONE cohesive Compass surface inside NOW, not another cycle/timeline inside PATH.
+
+**Non-negotiable:** Official Compass alone owns confirmed action, capitalization permissions, protection/sell/re-entry, and official Bull/Bear. Source-bound Shadow v2 offers analytical disagreement and direction but has no permission to create BUY/SELL. The weekly Cycle Navigator owns 4-8w. When official data are degraded or stale, the official view remains WAIT/UNAVAILABLE; a research view can be shown only with a visible source-age caveat. Missing/mismatched evidence is explicitly degraded or unverified.
+
+The integrated site readback is an allowlisted public presentation object, not a parallel forecast engine or a fresh model run. It must not include restricted provider values, raw source packets, internal paths, credentials or portfolio data. It must never fabricate timing, percentages, score, signal, certainty or trading permissions. The existing refresh/deployment cadence and PATH product design are preserved.
+
 ## Privacy-safe public delivery
 
 The public browser MUST NOT require direct access to the framework repository.
