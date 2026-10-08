@@ -133,7 +133,7 @@ def semantic_snapshot(root:Path):
     sol=latest_sol(root)
     blockers=[]
     if isinstance(features,dict) and features.get("integrity_revision")!="v1.1_PIT_STRICT":blockers.append("FEATURE_COLLECTOR_INTEGRITY_REVISION_NOT_STRICT")
-    if isinstance(m6,dict) and m6.get("integrity_revision")!="v1.1_STRICT_TAPE_AND_ANCHOR":blockers.append("M6_OUTCOME_INTEGRITY_REVISION_NOT_STRICT")
+    if isinstance(m6,dict) and m6.get("integrity_revision")!="v1.2_POST_KNOWLEDGE_BAR_INTEGRITY":blockers.append("M6_OUTCOME_INTEGRITY_REVISION_NOT_STRICT")
     if unverified:blockers.append("PIT_UNVERIFIED_FEATURE_ROWS")
     if m6_check["status"]!="PASS":blockers.append("M6_EVENT_CHRONOLOGY_FAMILY_OR_COHORT_INVALID")
     primary_state=tracker.get("pullback_risk_state") or "UNAVAILABLE"
