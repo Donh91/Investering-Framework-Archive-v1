@@ -34,6 +34,13 @@ const [op,ap,wp,shp,stp]=await Promise.all([
  j('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'),
  j('04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json'),
  j('04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json')]);
+// Producer preserves original numeric spellings (e.g. Python 1.0); avoid JS reserialization for Auto State.
+const rawAuto=await readFile(resolve(root,ap.packet_path),'utf8');
+const autoToken=',"packet_sha256":"'+ap.packet_sha256+'"';
+if(rawAuto.indexOf(autoToken)<0)throw Error('Auto SHA marker missing');
+const actualAutoHash=createHash('sha256').update(rawAuto.replace(autoToken,''),'utf8').digest('hex');
+if(actualAutoHash!==ap.packet_sha256)throw Error('Auto packet immutable source digest mismatch');
+if(f.source_status.auto_market_state!=='HASH_VERIFIED')throw Error('valid Auto State incorrectly declared unverified');
 const sh=await j(shp.forecast_path),st=await j(stp.anchor_path);
 const shCurrent=sh.source_bindings?.auto_market_state?.packet_sha256===ap.packet_sha256
  && ap.packet_sha256===op.source_packet_sha256
