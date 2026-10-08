@@ -50,6 +50,10 @@ const shCurrent=sh.source_bindings?.auto_market_state?.packet_sha256===ap.packet
 const shHash=digest(sh,'forecast_sha256')===shp.forecast_sha256;
 if(shCurrent&&shHash&&!['ALIGNED_RESEARCH','STALE_RESEARCH'].includes(f.shadow.status))throw Error('valid current Shadow suppressed');
 if(shCurrent&&!shHash&&f.shadow.status!=='UNVERIFIED')throw Error('tampered Shadow promoted');
+if(!shCurrent&&f.shadow?.status==='ALIGNED_RESEARCH')throw Error('historical Shadow promoted as current research');
+if(f.shadow?.status==='STALE_RESEARCH'&&f.shadow?.current_source_aligned!==false&&
+  !shCurrent)throw Error('source diverged but stale flag omitted');
+if(f.shadow?.status==='ALIGNED_RESEARCH'&&f.shadow?.current_source_aligned!==true)throw Error('aligned Shadow lacks exact source proof');
 if(shHash){const mut=structuredClone(sh);mut.model_output={...sh.model_output,tampered:true};if(digest(mut,'forecast_sha256')===shp.forecast_sha256)throw Error('tampered Shadow not detected');}
 const stBound=st.source_bindings?.cycle_navigator||{};
 const stCurrent=Number(stBound.iso_year)===Number(wp.iso_year)&&Number(stBound.iso_week)===Number(wp.iso_week)
