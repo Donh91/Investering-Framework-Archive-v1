@@ -51,6 +51,29 @@ class M6WarningEventTests(unittest.TestCase):
             self.assertEqual([x["independent_family_weight"] for x in r["events"]],[1.0,0.0])
             self.assertTrue(all(x["episode_family_status"]=="PROVISIONAL_OPEN_UNTIL_TROUGH_OBSERVED" for x in r["events"]))
 
+    def test_intrabar_extrema_before_warning_must_not_count(self):
+        start=M.parse("2026-10-06T16:14:15Z")
+        segment=[
+            {"close":M.parse("2026-10-06T17:00:00Z"),"btc":100.0,"btc_high":999.0,"btc_low":1.0},
+            {"close":M.parse("2026-10-06T18:00:00Z"),"btc":102.0,"btc_high":110.0,"btc_low":95.0}
+        ]
+        v=M.asset_view(segment,100.0,"BTC",start)
+        self.assertEqual(v["state"],"MATURED")
+        self.assertEqual(v["excluded_straddling_bar_extrema"],1)
+        self.assertAlmostEqual(v["reference_anchor"]["mae_pct"],-5.0)
+        self.assertAlmostEqual(v["reference_anchor"]["mfe_pct"],10.0)
+        self.assertFalse(v["adverse_barriers"]["-10.0"]["touched"])
+
+    def test_missing_full_post_warning_bar_ohlc_fails_closed(self):
+        start=M.parse("2026-10-06T16:14:15Z")
+        segment=[
+            {"close":M.parse("2026-10-06T17:00:00Z"),"btc":100.0,"btc_high":110.0,"btc_low":90.0},
+            {"close":M.parse("2026-10-06T18:00:00Z"),"btc":102.0,"btc_high":None,"btc_low":95.0}
+        ]
+        v=M.asset_view(segment,100.0,"BTC",start)
+        self.assertEqual(v["state"],"UNKNOWN_INCOMPLETE_ASSET_PATH")
+        self.assertEqual(v["reason"],"MISSING_FULL_BAR_OHLC")
+
     def test_spot_fail_rows_cannot_mature_horizon(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t);self.freeze(root,"ELEVATED",issued="2026-10-06T16:00:00Z")
@@ -61,5 +84,18 @@ class M6WarningEventTests(unittest.TestCase):
             self.write_hourly(root,rows)
             r=M.build(root,M.parse("2026-10-07T18:00:00Z"))
             self.assertEqual(r["events"][0]["horizons"]["24h"]["maturity_state"],"UNKNOWN_INCOMPLETE_TAPE")
+
+    def test_family_first_warning_is_earliest_knowledge_time_not_filename(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.freeze(root,"HIGH",issued="2026-10-06T09:00:00Z")
+            self.freeze(root,"ELEVATED",issued="2026-10-06T17:00:00Z")
+            report=M.build(root,M.parse("2026-10-07T00:00:00Z"))
+            self.assertEqual(report["event_count"],2)
+            events=report["events"]
+            self.assertEqual([e["compass_id"] for e in events],["CMP-HIGH","CMP-ELEVATED"])
+            self.assertEqual([e["independent_family_weight"] for e in events],[1.0,0.0])
+            self.assertEqual(events[0]["episode_family_id"],events[1]["episode_family_id"])
+            self.assertTrue(events[0]["episode_family_id"].startswith("M6F-20261006T"))
 
 if __name__=="__main__":unittest.main()

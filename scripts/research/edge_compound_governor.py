@@ -57,6 +57,48 @@ def matured_counts(m6:dict|None):
                 unknown[h]+=1
     return out,{h:len(families[h]) for h in horizons},unknown
 
+def m6_integrity(m6:dict|None, features:dict|None):
+    """Validate chronological/typed identity and 1:N feature cohort parity, fail-closed."""
+    events=(m6 or {}).get("events") if isinstance(m6,dict) else None
+    rows=(features or {}).get("rows") if isinstance(features,dict) else None
+    if not isinstance(events,list) or not isinstance(rows,list):
+        return {"status":"UNKNOWN_MISSING_OWNER","chronological":False,"family_anchor_valid":False,
+                "first_warning_weight_valid":False,"feature_cohort_parity":False,"family_lineage_fingerprint":None}
+    parsed=[]
+    for e in events:
+        if not isinstance(e,dict) or not isinstance(e.get("knowledge_timestamp"),str):
+            return {"status":"INVALID_EVENT","chronological":False,"family_anchor_valid":False,
+                    "first_warning_weight_valid":False,"feature_cohort_parity":False,"family_lineage_fingerprint":None}
+        try:
+            when=datetime.fromisoformat(e["knowledge_timestamp"].replace("Z","+00:00"))
+        except ValueError:
+            return {"status":"INVALID_TIME","chronological":False,"family_anchor_valid":False,
+                    "first_warning_weight_valid":False,"feature_cohort_parity":False,"family_lineage_fingerprint":None}
+        parsed.append((when,e))
+    chronological=all(a[0]<=b[0] for a,b in zip(parsed,parsed[1:]))
+    grouped={}
+    for when,e in parsed:
+        grouped.setdefault(e.get("episode_family_id"),[]).append((when,e))
+    anchors=True
+    weights=True
+    for family,grp in grouped.items():
+        if not isinstance(family,str) or family!=("M6F-"+min(ts for ts,_ in grp).strftime("%Y%m%dT%H%M%SZ")):
+            anchors=False
+        ordered=sorted(grp,key=lambda item:(item[0],str(item[1].get("compass_id") or "")))
+        if [r.get("independent_family_weight") for _,r in ordered]!=[1.0]+[0.0]*(len(ordered)-1):
+            weights=False
+    event_cohort=[(e.get("compass_id"),e.get("knowledge_timestamp")) for _,e in parsed]
+    feature_cohort=[(r.get("compass_id"),r.get("knowledge_timestamp")) for r in rows if isinstance(r,dict)]
+    # Reject malformed IDs deterministically; never crash on mixed/null types.
+    valid_ids=all(isinstance(a,str) and a and isinstance(b,str) and b for a,b in event_cohort+feature_cohort)
+    parity=(valid_ids and len(event_cohort)==len(feature_cohort) and
+            sorted(event_cohort)==sorted(feature_cohort))
+    lineage=[(e.get("compass_id"),e.get("knowledge_timestamp"),e.get("episode_family_id"),e.get("independent_family_weight")) for _,e in parsed]
+    return {"status":"PASS" if chronological and anchors and weights and parity else "BLOCKED",
+            "chronological":chronological,"family_anchor_valid":anchors,
+            "first_warning_weight_valid":weights,"feature_cohort_parity":parity,
+            "family_lineage_fingerprint":digest(sorted(lineage,key=lambda x:(str(x[0]),str(x[1]))))}
+
 def feature_counts(features:dict|None):
     rows=(features or {}).get("rows") if isinstance(features,dict) else []
     rows=rows if isinstance(rows,list) else []
@@ -87,18 +129,25 @@ def semantic_snapshot(root:Path):
     tracker=tracker if isinstance(tracker,dict) else {}
     maturity,families,unknown=matured_counts(m6)
     fcount,pit,unverified=feature_counts(features)
+    m6_check=m6_integrity(m6,features)
     sol=latest_sol(root)
     blockers=[]
     if isinstance(features,dict) and features.get("integrity_revision")!="v1.1_PIT_STRICT":blockers.append("FEATURE_COLLECTOR_INTEGRITY_REVISION_NOT_STRICT")
-    if isinstance(m6,dict) and m6.get("integrity_revision")!="v1.1_STRICT_TAPE_AND_ANCHOR":blockers.append("M6_OUTCOME_INTEGRITY_REVISION_NOT_STRICT")
+    if isinstance(m6,dict) and m6.get("integrity_revision")!="v1.2_POST_KNOWLEDGE_BAR_INTEGRITY":blockers.append("M6_OUTCOME_INTEGRITY_REVISION_NOT_STRICT")
     if unverified:blockers.append("PIT_UNVERIFIED_FEATURE_ROWS")
+    if m6_check["status"]!="PASS":blockers.append("M6_EVENT_CHRONOLOGY_FAMILY_OR_COHORT_INVALID")
     primary_state=tracker.get("pullback_risk_state") or "UNAVAILABLE"
     if primary_state in {"ELEVATED","HIGH","CONFIRMED"} and fcount==0:blockers.append("PRIMARY_WARNING_WITHOUT_EDGE_FEATURE_ROW")
     semantic={
       "pullback_risk_state":primary_state,
       "distribution_risk":tracker.get("distribution_risk") or "UNKNOWN",
+      "m6_integrity":m6_check,
       "m6_event_count":int((m6 or {}).get("event_count") or 0) if isinstance(m6,dict) else 0,
       "m6_provisional_family_count":int((m6 or {}).get("provisional_independent_family_count") or 0) if isinstance(m6,dict) else 0,
+      "m6_family_semantics":"PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
+      "verified_independent_adverse_family_count":None,
+      "information_edge_claim":"NOT_ESTABLISHED",
+      "economic_action_edge_claim":"NOT_ESTABLISHED",
       "matured_event_counts":maturity,"matured_family_counts":families,"unknown_horizon_counts":unknown,
       "feature_row_count":fcount,"pit_verified_feature_rows":pit,"pit_unverified_feature_rows":unverified,
       "calibration_eligible_rows":int((cal or {}).get("eligible_series_row_count") or 0) if isinstance(cal,dict) else 0,
@@ -125,6 +174,7 @@ def deltas(prev:dict|None,current:dict):
         for k in sorted(set(a)|set(b)):
             if a.get(k)!=b.get(k):d.append(f"{group}.{k}:{a.get(k)}->{b.get(k)}")
     if old.get("blockers")!=current.get("blockers"):d.append("BLOCKER_SET_CHANGED")
+    if old.get("m6_integrity")!=current.get("m6_integrity"):d.append("M6_FAMILY_OR_COHORT_LINEAGE_CHANGED")
     if old.get("feature_integrity_revision")!=current.get("feature_integrity_revision"):d.append("FEATURE_INTEGRITY_REVISION_CHANGED")
     if old.get("m6_integrity_revision")!=current.get("m6_integrity_revision"):d.append("M6_INTEGRITY_REVISION_CHANGED")
     return d
@@ -143,10 +193,11 @@ def choose(prev:dict|None,s:dict,d:list[str]):
     new7=s["matured_family_counts"]["7d"]>int(prevfam.get("7d") or 0)
     new14=s["matured_family_counts"]["14d"]>int(prevfam.get("14d") or 0)
     new30=s["matured_family_counts"]["30d"]>int(prevfam.get("30d") or 0)
-    if new30 or new14:
-        return "CONCLUSION_REVIEW",True,True,"New independent-family long-horizon maturity merits separate adjudication plus independent review."
-    if new7:
-        return "CONCLUSION_REVIEW",True,False,"New 7d independent-family maturity merits bounded Sol economic/falsification review; Claude not yet necessary by default."
+    # M6 warning-observation clusters are not independently confirmed adverse
+    # peak-to-trough families. Maturity of warning clusters alone cannot open
+    # an Edge conclusion gate or justify automatic paid external review.
+    if new30 or new14 or new7:
+        return "COLLECT",False,False,"New matured WARNING-CLUSTER data are descriptive controls, not independent adverse-family proof; await separately frozen conclusion-candidate admission."
     if s["pullback_risk_state"] in {"ELEVATED","HIGH","CONFIRMED"} or s["feature_row_count"]>int(prevsem.get("feature_row_count") or 0):
         return "COLLECT",False,False,"Natural warning evidence is accumulating; preserve pre-outcome features and await maturation."
     if s["pullback_risk_state"]=="BUILDING":
@@ -155,16 +206,35 @@ def choose(prev:dict|None,s:dict,d:list[str]):
 
 def build(root:Path,output:Path,history_root:Path,now:datetime):
     current,bindings=semantic_snapshot(root);prev=previous_state(output);d=deltas(prev,current)
-    material=bool(d);decision,sol,claude,reason=choose(prev,current,d)
+    # Earlier v1 bootstrap treated a first snapshot's already-matured families as
+    # new discoveries and emitted a false CONCLUSION_REVIEW. Reconcile LATEST
+    # without silently mutating its immutable archived historical copy.
+    legacy_bootstrap=bool(
+        prev and prev.get("deltas")==["INITIAL_GOVERNOR_SNAPSHOT"]
+        and prev.get("decision")=="CONCLUSION_REVIEW"
+    )
+    if legacy_bootstrap:
+        # A repaired producer legitimately changes the semantic fingerprint;
+        # the old false escalation must still be superseded explicitly.
+        d=["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED"]+d
+    material=bool(d)
+    decision,sol,claude,reason=choose(prev,current,d)
     state={"contract":CONTRACT,"generated_at_utc":now.astimezone(timezone.utc).isoformat().replace("+00:00","Z"),
       "semantic_fingerprint":digest(current),"material_delta":material,"deltas":d,"decision":decision,"decision_reason":reason,
       "external_routing":{"sol_recommended":sol,"claude_recommended":claude,"automatic_dispatch":False},
       "conclusion_layer":{"separate_from_collection":True,"review_due":decision=="CONCLUSION_REVIEW","automatic_promotion":False},
       "semantic_state":current,"source_bindings":bindings,"authority":AUTHORITY,
+      "prior_false_bootstrap_supersession":({
+        "previous_decision":"CONCLUSION_REVIEW","reason":"INITIAL_EXISTING_MATURITY_IS_NOT_NEW_EVIDENCE",
+        "previous_generated_at_utc":prev.get("generated_at_utc"),"previous_semantic_fingerprint":prev.get("semantic_fingerprint")
+      } if legacy_bootstrap else None),
       "rules":{"warning_is_sell":False,"live_exit_rule":"NONE","raw_external_output_canonical":False,"negative_results_preserved":True}}
     if material or prev is None:
         output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(state,indent=2,sort_keys=True)+"\n")
-        hp=history_root/f"{now:%Y/%m/%d}"/f"{state['semantic_fingerprint'][:16]}.json";hp.parent.mkdir(parents=True,exist_ok=True)
+        # An explicit correction must not overwrite or disappear behind the
+        # same-fingerprint original bootstrap history receipt.
+        historical_key=state['semantic_fingerprint'][:16]+("-bootstrap-supersession" if legacy_bootstrap else "")
+        hp=history_root/f"{now:%Y/%m/%d}"/f"{historical_key}.json";hp.parent.mkdir(parents=True,exist_ok=True)
         if not hp.exists():hp.write_text(json.dumps(state,indent=2,sort_keys=True)+"\n")
     return state
 
