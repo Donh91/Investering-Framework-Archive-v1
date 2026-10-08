@@ -231,7 +231,10 @@ def build(root:Path,output:Path,history_root:Path,now:datetime):
       "rules":{"warning_is_sell":False,"live_exit_rule":"NONE","raw_external_output_canonical":False,"negative_results_preserved":True}}
     if material or prev is None:
         output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(state,indent=2,sort_keys=True)+"\n")
-        hp=history_root/f"{now:%Y/%m/%d}"/f"{state['semantic_fingerprint'][:16]}.json";hp.parent.mkdir(parents=True,exist_ok=True)
+        # An explicit correction must not overwrite or disappear behind the
+        # same-fingerprint original bootstrap history receipt.
+        historical_key=state['semantic_fingerprint'][:16]+("-bootstrap-supersession" if legacy_bootstrap else "")
+        hp=history_root/f"{now:%Y/%m/%d}"/f"{historical_key}.json";hp.parent.mkdir(parents=True,exist_ok=True)
         if not hp.exists():hp.write_text(json.dumps(state,indent=2,sort_keys=True)+"\n")
     return state
 
