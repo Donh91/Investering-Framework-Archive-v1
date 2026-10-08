@@ -7,6 +7,17 @@ const compass=JSON.parse(await readFile(resolve(dist,'data/compass.json'),'utf8'
 const index=await readFile(resolve(dist,'index.html'),'utf8');
 const renderer=await readFile(resolve(dist,'compass-product-v5.js'),'utf8');
 const event=JSON.parse(await readFile(resolve(dist,'data/compass-event.json'),'utf8'));
+const f=compass.full_stack;
+if(f?.contract!=='PUBLIC_COMPASS_FULL_STACK_READBACK_v1')throw Error('missing combined Compass');
+if(!['COMPLETE','PARTIAL_OR_DEGRADED'].includes(f.status))throw Error('invalid combined status');
+if(f.protective_action_authority!=='OFFICIAL_COMPASS_ONLY')throw Error('official action boundary changed');
+if(f.shadow?.authority!=='RESEARCH_ONLY_NO_ACTION_PERMISSION')throw Error('model authority boundary changed');
+if(f.official_data_status!==compass.data_status)throw Error('official status discrepancy');
+if(compass.data_status!=='OK'&&f.official_action!=='UNAVAILABLE')throw Error('degraded action falsely promoted');
+if(f.shadow?.status==='ALIGNED_RESEARCH'||f.shadow?.status==='STALE_RESEARCH'){
+ for(const key of ['12h','1_3d','5_7d']) if(!f.shadow.horizons?.[key])throw Error('missing independent horizon');
+}
+if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined renderer');
 if(compass.contract!=='PUBLIC_COMPASS_PROJECTION_v1') throw Error('wrong Compass contract');
 if(event.contract!=='PUBLIC_COMPASS_EVENT_STATUS_v1') throw Error('wrong Compass event status contract');
 if(!['IDLE','REASSESSMENT_REQUESTED'].includes(event.status)) throw Error('wrong Compass event status');
