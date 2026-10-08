@@ -1,0 +1,86 @@
+name: One-off source-scoped Compass release #1549
+on:
+  push:
+    branches:
+      - agent/task-20261008-compass-source-only-release
+    paths:
+      - .github/workflows/2026-10-08-compass-source-scoped-release.yml
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  actions: write
+concurrency:
+  group: source-scoped-compass-pr1549-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_PR_HEAD: 625dd2fa9b721d15a5ae34112a088a53d182707b
+      FROZEN_PRECHANGE_SOURCE: fc85427a98961252b07a23241405807659cd626a
+      VERIFIED_VAULT_MERGE: deedc769f62d6468a0c2cf56ff0416c060134b5b
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/task-20261008-compass-source-only-release
+          persist-credentials: false
+      - name: Reconfirm exact PR head and mandatory successful independent checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/1549" --jq .head.sha)
+          [[ "$actual" == "$EXPECTED_PR_HEAD" ]]
+          [[ "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/1549" --jq .draft)" == false ]]
+          [[ "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/1549" --jq .mergeable)" == true ]]
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${EXPECTED_PR_HEAD}/check-runs?per_page=100" > /tmp/compass_release_checks.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/compass_release_checks.json'))
+          expected={'Official Daily Compass','Compass Event Refresh','Data Architecture Gate',
+            'Cycle Navigator Public Product Gate','Cycle Navigator Public Contract Gate',
+            'Storage Health Gate','Cross Repo Agent Context Gate','Full Architecture 1-7 Gate',
+            'Automation Production Health Gate','Shadow Compass v2'}
+          checks={}
+          for row in x.get('check_runs',[]):
+              checks.setdefault(row['name'],[]).append(row)
+          missing=sorted(expected-set(checks))
+          bad={name:[(r['status'],r['conclusion']) for r in checks.get(name,[]) if r['status']!='completed' or r['conclusion']!='success'] for name in expected}
+          bad={k:v for k,v in bad.items() if v}
+          assert not missing and not bad, f'CI_NOT_GREEN missing={missing} bad={bad}'
+          print('EXACT_HEAD_TEN_REQUIRED_CHECKS_PASS', sorted(expected))
+          PY
+      - name: Reconcile source delta against frozen independent Vault snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/compare/${FROZEN_PRECHANGE_SOURCE}...main" > /tmp/compass_release_delta.json
+          python3 - <<'PY'
+          import json
+          c=json.load(open('/tmp/compass_release_delta.json'))
+          allow=('04_MARKET_LEARNING/entry_signals/','04_MARKET_LEARNING/handlekompas/runs/',
+              '04_MARKET_LEARNING/pullback_learning/')
+          exact=('04_MARKET_LEARNING/handlekompas/LATEST.json',)
+          unexpected=[x['filename'] for x in c.get('files',[]) if not x['filename'].startswith(allow) and x['filename'] not in exact]
+          assert c.get('status') in ('ahead','identical'), c.get('status')
+          assert not unexpected, 'FROZEN_BACKUP_SOURCE_DRIFT_OUTSIDE_MARKET_RUNTIME: '+repr(unexpected)
+          assert not c.get('files_truncated'), 'TRUNCATED_COMPARE_FAIL_CLOSED'
+          print('FROZEN_BACKUP_SAFE_RUNTIME_DELTA_ONLY', len(c.get('files',[])))
+          PY
+          echo "VAULT_PROOF_CONFIRMED_BY_SEPARATE_READBACK ${VERIFIED_VAULT_MERGE}"
+      - name: Merge reviewed Compass PR by exact head only
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh pr merge 1549 --repo "${GITHUB_REPOSITORY}" --squash --match-head-commit "${EXPECTED_PR_HEAD}"
+          state=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/1549" --jq .merged)
+          [[ "$state" == true ]]
+          echo 'COMPASS_PR1549_MERGED_SOURCE_ONLY_TOKEN'
+      - name: Request actual Pages publish after GITHUB_TOKEN PR merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run cycle-navigator-pages.yml --repo "${GITHUB_REPOSITORY}" --ref main
+          echo 'CYCLE_NAVIGATOR_PAGES_DISPATCHED'
