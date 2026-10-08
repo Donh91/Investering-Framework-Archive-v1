@@ -51,4 +51,29 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             self.assertFalse(second["external_routing"]["claude_recommended"])
             self.assertFalse(second["conclusion_layer"]["automatic_promotion"])
 
+    def test_reconcile_stale_bootstrap_does_not_trigger_expensive_review(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            m6=root/"research/framework_memory/m6_warning_events/LATEST.json";m6.parent.mkdir(parents=True)
+            f=root/"research/framework_memory/edge001_tsunami_features/LATEST.json";f.parent.mkdir(parents=True)
+            m6.write_text(json.dumps({"integrity_revision":"v1.1_STRICT_TAPE_AND_ANCHOR","event_count":1,
+                "events":[{"episode_family_id":"ONE","horizons":{"7d":{"maturity_state":"MATURED"},"14d":{"maturity_state":"MATURED"}}}]}))
+            f.write_text(json.dumps({"integrity_revision":"v1.1_PIT_STRICT","rows":[]}))
+            out=root/"LATEST.json";history=root/"history";now=datetime(2026,10,8,tzinfo=timezone.utc)
+            original=build(root,out,history,now)
+            legacy=dict(original)
+            legacy["decision"]="CONCLUSION_REVIEW"
+            legacy["deltas"]=["INITIAL_GOVERNOR_SNAPSHOT"]
+            legacy["external_routing"]={"sol_recommended":True,"claude_recommended":True,"automatic_dispatch":False}
+            out.write_text(json.dumps(legacy))
+            repaired=build(root,out,history,now)
+            self.assertEqual(repaired["decision"],"COLLECT")
+            self.assertEqual(repaired["deltas"],["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED_NO_NEW_EVIDENCE"])
+            self.assertFalse(repaired["external_routing"]["sol_recommended"])
+            self.assertFalse(repaired["external_routing"]["claude_recommended"])
+            self.assertFalse(repaired["conclusion_layer"]["review_due"])
+            self.assertEqual(repaired["prior_false_bootstrap_supersession"]["previous_decision"],"CONCLUSION_REVIEW")
+            self.assertTrue(any(history.rglob("*.json")))
+            self.assertFalse(build(root,out,history,now)["material_delta"])
+
 if __name__=="__main__":unittest.main()
