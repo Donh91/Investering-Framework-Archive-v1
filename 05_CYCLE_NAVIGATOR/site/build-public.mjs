@@ -119,7 +119,9 @@ async function buildCompassSnapshot(weeklyPointer){
 function verifiedRelative(p,prefix){
   if(typeof p!=="string"||!p.startsWith(prefix))return null;
   const resolved=resolve(repoRoot,p);
-  return relative(repoRoot,resolved).startsWith("..")?null:resolved;
+  const allowed=resolve(repoRoot,prefix);
+  const within=relative(allowed,resolved);
+  return within&&within!==".."&&!within.startsWith("../")&&!within.startsWith("..\\")?resolved:null;
 }
 function publicNarrative(s){
   if(typeof s!=="string"||s.length>650||/[0-9\\$%]|0x[0-9a-f]{8}|https?:|wallet|address|secret|token[-_ ]?key/i.test(s))return null;
@@ -161,7 +163,21 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
   ]);
   const officialSource=official?.source_packet_sha256;
   const autoSource=auto?.packet_sha256;
-  const nativeAligned=Boolean(officialSource&&officialSource===autoSource&&native?.source_packet_sha256===autoSource);
+  let autoValidated=false,nativeAligned=false;
+  try{
+    const p=verifiedRelative(auto?.packet_path,"04_MARKET_LEARNING/entry_signals/auto_market_state/runs/");
+    const packet=p?await readJson(p):null;
+    autoValidated=Boolean(packet?.contract==="AUTO_MARKET_STATE_PACKET_v1"&&
+      verifiedModelDigest(packet,"packet_sha256",autoSource));
+  }catch{}
+  try{
+    const p=verifiedRelative(native?.handlekompas_path,"04_MARKET_LEARNING/handlekompas/runs/");
+    const run=p?await readJson(p):null;
+    nativeAligned=Boolean(autoValidated&&officialSource&&officialSource===autoSource&&
+      native?.source_packet_sha256===autoSource&&run?.contract==="NATIVE_HANDLEKOMPAS_v1"&&
+      verifiedModelDigest(run,"handlekompas_sha256",native?.handlekompas_sha256)&&
+      run?.source?.packet_sha256===autoSource&&run?.action?.NOW===native?.NOW);
+  }catch{}
   let weeklyAligned=false;
   try{
     const p=verifiedRelative(String(weeklyPointer?.week_dir||"")+"/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json","05_CYCLE_NAVIGATOR/weekly/");
@@ -179,7 +195,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       const p=verifiedRelative(shadowPtr.forecast_path,"04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/");
       if(p){
         const x=await readJson(p);
-        shadowAligned=x?.contract==="SHADOW_COMPASS_V2_FORECAST_v1"&&
+        shadowAligned=autoValidated&&weeklyAligned&&x?.contract==="SHADOW_COMPASS_V2_FORECAST_v1"&&
           x?.forecast_id===shadowPtr.forecast_id&&
           verifiedModelDigest(x,"forecast_sha256",shadowPtr.forecast_sha256)&&
           x?.source_fingerprint===shadowPtr?.source_fingerprint&&
@@ -242,6 +258,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     generated_at_utc:new Date().toISOString(),
     source_status:{
       official:officialValid?"VERIFIED":"DEGRADED",
+      auto_market_state:autoValidated?"HASH_VERIFIED":"UNVERIFIED",
       native:nativeAligned?"SOURCE_ALIGNED":"UNVERIFIED",
       shadow:shadow?.status||"UNVERIFIED",
       strategic:strategic?.status||"UNVERIFIED",
