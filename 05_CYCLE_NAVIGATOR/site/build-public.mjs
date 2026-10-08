@@ -222,7 +222,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
           x?.source_bindings?.cycle_navigator?.machine_package_sha256===weeklyPointer?.machine_package_sha256&&
           x?.source_bindings?.auto_market_state?.packet_sha256===autoSource&&
           x?.source_bindings?.auto_market_state?.packet_sha256===officialSource;
-        if(shadowAligned){
+        if(historicalVerified&&checked.valid&&weeklyAligned&&x?.forecast_id===shadowPtr.forecast_id&&x?.source_fingerprint===shadowPtr.source_fingerprint&&x?.authority?.automatic_promotion===false){
           const ageHours=(Date.now()-Date.parse(x.issued_at_utc))/3600000;
           const sourceAgeHours=(Date.now()-Date.parse(auto?.packet_generated_at_utc))/3600000;
           const aged=!Number.isFinite(ageHours)||ageHours<0||ageHours>12||
