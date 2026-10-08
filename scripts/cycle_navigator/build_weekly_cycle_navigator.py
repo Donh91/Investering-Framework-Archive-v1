@@ -261,9 +261,16 @@ def output_schema() -> dict[str, Any]:
             "status", "status_reason_codes", "issue_number", "previous_issue_number", "market_state",
             "evaluation", "base_case_this_week", "base_case_2_3_weeks", "base_case_4_8_weeks",
             "altseason_countdown", "rotation_ladder", "market_cycle_context", "forecast_freeze", "decision_projection",
-            "readable_markdown", "x_ready_markdown", "uncertainties"
+            "readable_markdown", "x_ready_markdown", "uncertainties", "public_translations"
         ],
         "properties": {
+            "public_translations": {
+                "type": "array", "maxItems": 160,
+                "items": {"type": "object", "additionalProperties": False,
+                          "required": ["en", "da"],
+                          "properties": {"en": {"type": "string", "maxLength": 3000},
+                                         "da": {"type": "string", "maxLength": 4000}}},
+            },
             "status": {"type": "string", "enum": ["READY", "DEGRADED", "BLOCKED"]},
             "status_reason_codes": {
                 "type": "array",
@@ -530,6 +537,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Use NO_EDGE or UNAVAILABLE rather than forcing direction. Protection fields must be evidence-bounded, and warnings must not be manufactured from wording alone. "
         "The readable output is for the owner and the X-ready output is public-facing. Keep X prose compact with cohesive sections, not excessive one-line spacing. "
         "Include one base case for this week, one base case for the next 2-3 weeks, one base case for 4-8 weeks, plus a clear altseason countdown table. "
+        "Provide public_translations as exact English/Danish pairs for every public narrative you generated: market_state, all base cases, market_cycle_context why/next_gate, rotation/altseason explanations, public decision-projection summaries and expected paths, protection public_explanation, public Bull/Bear summaries, intraday_map, market_structure_analysis and evaluation strengths/misses/uncertainties. en must match the exact emitted public text; da must be professional plain Danish with identical meaning, uncertainty and all numeric tokens exactly unchanged. Do not add recommendations, probabilities or facts. Do not translate identifiers, private scenarios, thresholds, prompts, readable_markdown or x_ready_markdown. This is presentation metadata only, with no market/scoring authority and no additional model call. "
         "This publication has no authority to change Master Monday, thresholds, model weights or portfolio execution."
     )
     budget = max_output_tokens

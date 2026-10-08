@@ -117,3 +117,10 @@ Do not regress toward:
 ## Design review standard
 
 Use Apple-style restraint and design-engineering review principles: remove before adding, make interaction feedback immediate, keep animations purposeful, and judge polish on a real narrow mobile viewport before declaring a redesign complete.
+
+
+## Frozen weekly chart / language control
+
+The weekly price instrument is a restrained dark navy exception inside the existing light page: one BTC/ETH selector, fine grid, right price scale, blue immutable corridors/forecast, green observed path, explicit observation cutoff and a single day readout. TradingView Lightweight Charts supplies the financial-chart interaction and typography geometry. No fabricated candles or decorative market movement.
+
+The DA/ENG control is a compact upper-right segmented button, with a navy active state and a saved language preference. Keep both controls readable and operable on narrow iPhone screens. Technical validation is separate from Morten's visual acceptance.

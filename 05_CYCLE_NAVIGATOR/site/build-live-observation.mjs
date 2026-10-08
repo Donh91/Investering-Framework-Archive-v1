@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { copyFile, readFile, writeFile } from "node:fs/promises";
+import { copyFile, readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 const siteDir=dirname(fileURLToPath(import.meta.url)),repoRoot=resolve(siteDir,"../.."),distDir=resolve(siteDir,"dist");const pointerPath=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"),snapshotPath=resolve(distDir,"data/latest.json"),indexPath=resolve(distDir,"index.html");const readJson=async(path,fallback=null)=>{try{return JSON.parse(await readFile(path,"utf8"));}catch{return fallback;}};const sha256=bytes=>createHash("sha256").update(bytes).digest("hex"),numeric=v=>v!=null&&v!==""&&Number.isFinite(Number(v)),clean=v=>typeof v==="string"&&v.trim()?v.trim():null;
@@ -13,5 +13,14 @@ for(const match of [...index.matchAll(/(src|href)="(\.\/([a-zA-Z0-9._-]+\.(?:js|
   index=index.replace(match[0],match[1]+'="'+match[2]+'?v='+digest+'"');
 }
 await writeFile(indexPath,index,"utf8");console.log(JSON.stringify({status:"PASS",issue_number:pointer.issue_number,frozen_claim_count:unique.length,claims_due_this_week:due.length,measurable_claims:measurable.length,provisional_score:score,frozen_numeric_range_count:ranges.length,current_action:action?.stance||null}));}
-main().catch(e=>{console.error(e);process.exit(1);});
+await main().catch(e=>{console.error(e);process.exit(1);});
 
+
+// Self-host chart and bilingual presentation; no third-party runtime/CDN dependency.
+await mkdir(resolve(distDir,"vendor"),{recursive:true});
+for(const f of ["frozen-week-chart.js","frozen-week-chart.css","i18n.js","i18n.css","i18n-da.json","vendor/lightweight-charts-5.2.0.js","vendor/lightweight-charts-LICENSE.txt","vendor/lightweight-charts-NOTICE.txt"])await copyFile(resolve(siteDir,f),resolve(distDir,f));
+let localized=await readFile(indexPath,"utf8");
+if(!localized.includes('./frozen-week-chart.css'))localized=localized.replace("</head>",'<link rel="stylesheet" href="./frozen-week-chart.css"/><link rel="stylesheet" href="./i18n.css"/></head>');
+if(!localized.includes('./frozen-week-chart.js'))localized=localized.replace('<script src="./public-product.js', '<script src="./i18n.js" defer></script><script src="./vendor/lightweight-charts-5.2.0.js" defer></script><script src="./frozen-week-chart.js" defer></script><script src="./public-product.js');
+for(const f of ["frozen-week-chart.js","frozen-week-chart.css","i18n.js","i18n.css"]){const hash=sha256(await readFile(resolve(distDir,f))).slice(0,12);localized=localized.replace(new RegExp('\\./'+f.replace('.', '\\.')+'(?:\\?v=[a-f0-9]+)?','g'),'./'+f+'?v='+hash);}
+await writeFile(indexPath,localized);
