@@ -284,7 +284,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     native:nativeValidated?{now:researchEnum(native.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:native.data_health||"UNAVAILABLE",checked_at_utc:native.generated_at_utc,official_source_aligned:nativeAligned}:{now:"UNAVAILABLE",data_health:"UNVERIFIED",official_source_aligned:false},
     shadow:shadow||{status:"UNVERIFIED",authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons:{}},
     strategic:strategic||{status:"UNVERIFIED",authority:"CYCLE_NAVIGATOR_ONLY"},
-    weekly:{status:String(weeklyPointer?.status||"UNAVAILABLE"),iso_week:weeklyPointer?.iso_week||null,iso_year:weeklyPointer?.iso_year||null,direction_2_3w:researchEnum(weeklyPackage?.decision_projection?.next_2_3w?.direction,directionValues)},
+    weekly:{status:String(weeklyPointer?.status||"UNAVAILABLE"),iso_week:weeklyPointer?.iso_week||null,iso_year:weeklyPointer?.iso_year||null,direction_2_3w:weeklyAligned?researchEnum(weeklyPackage?.decision_projection?.next_2_3w?.direction,directionValues):"UNAVAILABLE"},
     protective_action_authority:"OFFICIAL_COMPASS_ONLY",
     conclusion:"Official decisions stay source-owned. Model research is context, not a confirmed buy/sell or an altseason trigger."
   };
