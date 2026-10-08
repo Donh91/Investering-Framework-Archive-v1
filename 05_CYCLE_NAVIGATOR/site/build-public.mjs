@@ -210,7 +210,11 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       if(p){
         const checked=await readVerifiedArtifact(p,"forecast_sha256",shadowPtr.forecast_sha256);
         const x=checked.data;
-        shadowAligned=checked.valid&&autoValidated&&weeklyAligned&&x?.contract==="SHADOW_COMPASS_V2_FORECAST_v1"&&
+        const historicalPath=verifiedRelative(x?.source_bindings?.auto_market_state?.packet_path,"04_MARKET_LEARNING/entry_signals/auto_market_state/runs/");
+        const historicalPacket=historicalPath?await readVerifiedArtifact(historicalPath,"packet_sha256",x?.source_bindings?.auto_market_state?.packet_sha256):null;
+        const historicalVerified=Boolean(historicalPacket?.valid&&historicalPacket?.data?.contract==="AUTO_MARKET_STATE_PACKET_v1"&&
+          historicalPacket?.data?.packet_generated_at_utc===x?.source_bindings?.auto_market_state?.packet_generated_at_utc);
+        shadowAligned=historicalVerified&&checked.valid&&autoValidated&&weeklyAligned&&x?.contract==="SHADOW_COMPASS_V2_FORECAST_v1"&&
           x?.forecast_id===shadowPtr.forecast_id&&
           x?.source_fingerprint===shadowPtr?.source_fingerprint&&
           Number(x?.source_bindings?.cycle_navigator?.iso_week)===Number(weeklyPointer?.iso_week)&&
