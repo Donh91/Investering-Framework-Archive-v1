@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=37608409123:success,37527269668:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=37684537742:success,37608409123:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=37684340716:success,37681820688:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=37766167189:success,37686364288:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,7 +54,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=37683920612,37607355677 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=37765709715,37683920612 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -69,7 +69,7 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=37683920612,37607355677 checks=PASS",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=37765709715,37683920612 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -104,8 +104,8 @@
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
     "machine_spec_configured": 5,
-    "machine_spec_unconfigured": 28,
-    "post_fix_total": 33
+    "machine_spec_unconfigured": 29,
+    "post_fix_total": 34
   },
   "skipped": [
     {
@@ -147,6 +147,11 @@
     {
       "candidate_id": "codex-research-confidence-binding-calibration-v1",
       "post_fix_gate": "CONFIDENCE_BINDING_FIXTURE_PASS_PLUS_MINIMUM_SAMPLE_REMAINS_LOW_SAMPLE_UNTIL_NATURAL_OUTCOMES",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-convergence-hash-supersession-v2",
+      "post_fix_gate": "FOCUSED_SUPERSESSION_TESTS_PASS_PLUS_APPEND_ONLY_GATE_PASS_PLUS_ADVERSARIAL_RUNTIME_POST_FIX_VERIFIER_ACCEPTS_CONVERGENCE_WITH_ORIGINAL_BASE_RECEIPT_UNCHANGED",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     },
     {
