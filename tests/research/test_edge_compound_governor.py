@@ -47,7 +47,7 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             self.assertFalse(r["external_routing"]["sol_recommended"])
             self.assertFalse(r["external_routing"]["claude_recommended"])
 
-    def test_strict_collectors_with_new_7d_family_recommend_sol_only(self):
+    def test_new_7d_warning_family_never_implies_adverse_conclusion(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t)
             self.seed_owner_pair(root,{"7d":{"maturity_state":"MATURED"}})
@@ -64,10 +64,13 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             prior=json.loads(out.read_text());prior["semantic_state"]["matured_family_counts"]["7d"]=0
             out.write_text(json.dumps(prior))
             second=build(root,out,hist,datetime(2026,10,8,tzinfo=timezone.utc))
-            self.assertEqual(second["decision"],"CONCLUSION_REVIEW")
-            self.assertTrue(second["external_routing"]["sol_recommended"])
+            self.assertEqual(second["decision"],"COLLECT")
+            self.assertFalse(second["external_routing"]["sol_recommended"])
             self.assertFalse(second["external_routing"]["claude_recommended"])
             self.assertFalse(second["conclusion_layer"]["automatic_promotion"])
+            self.assertFalse(second["conclusion_layer"]["review_due"])
+            self.assertEqual(second["semantic_state"]["m6_family_semantics"],
+                "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES")
 
     def test_out_of_order_m6_owner_blocks_fresh_governor(self):
         with tempfile.TemporaryDirectory() as t:
