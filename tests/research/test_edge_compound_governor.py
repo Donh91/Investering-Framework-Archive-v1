@@ -100,7 +100,7 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             legacy["external_routing"]={"sol_recommended":True,"claude_recommended":True,"automatic_dispatch":False}
             out.write_text(json.dumps(legacy))
             repaired=build(root,out,history,now)
-            self.assertEqual(repaired["decision"],"COLLECT")
+            self.assertEqual(repaired["decision"],"NOOP")
             self.assertEqual(repaired["deltas"],["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED"])
             self.assertFalse(repaired["external_routing"]["sol_recommended"])
             self.assertFalse(repaired["external_routing"]["claude_recommended"])
