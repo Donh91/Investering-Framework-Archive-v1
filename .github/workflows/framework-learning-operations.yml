@@ -7,6 +7,15 @@ on:
     - cron: '20 3 * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/learning/m6_warning_event_outcomes.py'
+      - 'scripts/learning/edge001_tsunami_feature_ledger.py'
+      - 'scripts/research/edge_compound_governor.py'
+      - 'tests/learning/test_m6_warning_event_outcomes.py'
+      - 'tests/learning/test_edge001_tsunami_feature_ledger.py'
+      - 'tests/research/test_edge_compound_governor.py'
+      - '.github/workflows/framework-learning-operations.yml'
 
 permissions:
   contents: write
@@ -17,6 +26,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate_edge:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Edge deterministic owners
+        run: |
+          python -m py_compile scripts/learning/m6_warning_event_outcomes.py scripts/learning/edge001_tsunami_feature_ledger.py scripts/research/edge_compound_governor.py
+      - name: Run EDGE-001 and M6 integrity regressions
+        run: |
+          python -m unittest tests.learning.test_m6_warning_event_outcomes tests.learning.test_edge001_tsunami_feature_ledger tests.research.test_edge_compound_governor -v
   operate:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
