@@ -89,7 +89,10 @@ def m6_integrity(m6:dict|None, features:dict|None):
             weights=False
     event_cohort=[(e.get("compass_id"),e.get("knowledge_timestamp")) for _,e in parsed]
     feature_cohort=[(r.get("compass_id"),r.get("knowledge_timestamp")) for r in rows if isinstance(r,dict)]
-    parity=(len(event_cohort)==len(feature_cohort) and sorted(event_cohort)==sorted(feature_cohort))
+    # Reject malformed IDs deterministically; never crash on mixed/null types.
+    valid_ids=all(isinstance(a,str) and a and isinstance(b,str) and b for a,b in event_cohort+feature_cohort)
+    parity=(valid_ids and len(event_cohort)==len(feature_cohort) and
+            sorted(event_cohort)==sorted(feature_cohort))
     lineage=[(e.get("compass_id"),e.get("knowledge_timestamp"),e.get("episode_family_id"),e.get("independent_family_weight")) for _,e in parsed]
     return {"status":"PASS" if chronological and anchors and weights and parity else "BLOCKED",
             "chronological":chronological,"family_anchor_valid":anchors,
