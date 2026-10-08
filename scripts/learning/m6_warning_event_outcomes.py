@@ -8,7 +8,7 @@ from typing import Any
 
 CONTRACT="M6_WARNING_EVENT_OUTCOME_v1"
 INDEX_CONTRACT="M6_WARNING_EVENT_INDEX_v1"
-INTEGRITY_REVISION="v1.1_STRICT_TAPE_AND_ANCHOR"
+INTEGRITY_REVISION="v1.2_POST_KNOWLEDGE_BAR_INTEGRITY"
 FREEZE_CONTRACT="OFFICIAL_DAILY_COMPASS_v1"
 PROTECTION_CONTRACT="COMPASS_PROTECTION_TRACKER_v1"
 PRIMARY={"ELEVATED","HIGH","CONFIRMED"}
@@ -102,29 +102,51 @@ def complete_tape(seg,start,end):
     if max_gap>1.01:return False,{"reason":"INTERIOR_GAP","max_gap_hours":max_gap}
     return True,{"reason":"COMPLETE_HOURLY_CLOSE_GRID","first_close":z(closes[0]),"last_close":z(closes[-1]),"max_gap_hours":max_gap,"row_count":len(seg)}
 
-def barrier_view(start,seg,low_key,levels):
-    vals=[(r["close"],r.get(low_key)) for r in seg if isinstance(r.get(low_key),(int,float))]
+def barrier_view(start,post_knowledge_low_observations,levels):
+    """Low observations exclude any intrahour segment before warning knowledge."""
     out={}
     for level in levels:
-        hit=next(((ts,pct(start,v)) for ts,v in vals if pct(start,v) is not None and pct(start,v)<=level),None)
-        out[str(level)]={"touched":bool(hit),"first_touch_timestamp":z(hit[0]) if hit else None,"basis":"INTRAHOUR_LOW"}
+        hit=next(((ts,pct(start,v)) for ts,v in post_knowledge_low_observations
+            if pct(start,v) is not None and pct(start,v)<=level),None)
+        out[str(level)]={"touched":bool(hit),"first_touch_timestamp":z(hit[0]) if hit else None,
+            "basis":"FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+            "touch_time_semantics":"HOURLY_BAR_END_NOT_EXACT_LOW_TIME"}
     return out
 
 def asset_view(seg,start_price,label,start):
     key="btc" if label=="BTC" else "eth";high_key=key+"_high";low_key=key+"_low"
     closes=[(r["close"],r.get(key)) for r in seg if isinstance(r.get(key),(int,float))]
-    highs=[(r["close"],r.get(high_key)) for r in seg if isinstance(r.get(high_key),(int,float))]
-    lows=[(r["close"],r.get(low_key)) for r in seg if isinstance(r.get(low_key),(int,float))]
-    if not closes or not highs or not lows:return {"state":"UNKNOWN_INCOMPLETE_ASSET_PATH"}
+    if len(closes)!=len(seg) or not closes:
+        return {"state":"UNKNOWN_INCOMPLETE_ASSET_PATH","reason":"MISSING_ASSET_CLOSE"}
+    # A bar ending after the warning can nevertheless contain its pre-warning
+    # high/low. Use that bar's known closing price, but never its intrabar extrema.
+    full_rows=[r for r in seg if r["close"]-timedelta(hours=1)>=start]
+    if not full_rows:
+        return {"state":"UNKNOWN_INCOMPLETE_ASSET_PATH","reason":"NO_FULL_POST_KNOWLEDGE_BAR"}
+    for r in full_rows:
+        c=r.get(key);hi=r.get(high_key);lo=r.get(low_key)
+        if not all(isinstance(v,(int,float)) and math.isfinite(v) and v>0 for v in (c,hi,lo)):
+            return {"state":"UNKNOWN_INCOMPLETE_ASSET_PATH","reason":"MISSING_FULL_BAR_OHLC"}
+        if not (lo<=c<=hi):
+            return {"state":"UNKNOWN_INCOMPLETE_ASSET_PATH","reason":"INCONSISTENT_FULL_BAR_OHLC"}
+    # The close for the warning-straddling candle is a valid later observation.
+    # Each full post-warning bar contributes its intrabar high and low.
+    highs=closes+[(r["close"],r[high_key]) for r in full_rows]
+    lows=closes+[(r["close"],r[low_key]) for r in full_rows]
     terminal=closes[-1];lo=min(lows,key=lambda x:x[1]);hi=max(highs,key=lambda x:x[1])
     post_anchor=closes[0]
     return {"state":"MATURED","reference_anchor":{"price":start_price,"semantics":"FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
             "terminal_return_pct":pct(start_price,terminal[1]),"mae_pct":pct(start_price,lo[1]),"mfe_pct":pct(start_price,hi[1]),
-            "time_to_mae_hours":(lo[0]-start).total_seconds()/3600,"time_to_mfe_hours":(hi[0]-start).total_seconds()/3600},
-        "post_knowledge_close_anchor":{"timestamp":z(post_anchor[0]),"price":post_anchor[1],"semantics":"FIRST_COMPLETE_HOURLY_CLOSE_AFTER_KNOWLEDGE",
-            "terminal_return_pct":pct(post_anchor[1],terminal[1]),"mae_pct":pct(post_anchor[1],lo[1]),"mfe_pct":pct(post_anchor[1],hi[1])},
-        "terminal":{"timestamp":z(terminal[0]),"close":terminal[1]},"extrema_basis":"INTRAHOUR_HIGH_LOW",
-        "adverse_barriers":barrier_view(start_price,seg,low_key,BARRIERS[label])}
+            "time_to_mae_hours":(lo[0]-start).total_seconds()/3600,"time_to_mfe_hours":(hi[0]-start).total_seconds()/3600,
+            "extremum_timestamp_semantics":"HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME"},
+        "post_knowledge_close_anchor":{"timestamp":z(post_anchor[0]),"price":post_anchor[1],
+            "semantics":"FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+            "terminal_return_pct":pct(post_anchor[1],terminal[1]),"mae_pct":pct(post_anchor[1],lo[1]),
+            "mfe_pct":pct(post_anchor[1],hi[1])},
+        "terminal":{"timestamp":z(terminal[0]),"close":terminal[1]},
+        "extrema_basis":"FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+        "excluded_straddling_bar_extrema":len(seg)-len(full_rows),
+        "adverse_barriers":barrier_view(start_price,lows,BARRIERS[label])}
 
 def build(root,now):
     warnings=cluster(eligible_freezes(root));events=[]
