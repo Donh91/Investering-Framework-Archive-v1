@@ -26,11 +26,9 @@ on:
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
       - "04_MARKET_LEARNING/entry_signals/LATEST.json"
       - ".github/workflows/cycle-navigator-pages.yml"
-  workflow_run:
-    # Actions GITHUB_TOKEN pushes do not trigger another push workflow.
-    # Refresh Pages when the existing Shadow Compass owner completes.
-    workflows: ["Shadow Compass v2"]
-    types: [completed]
+  repository_dispatch:
+    # Existing Shadow writer sends this only after verified publication.
+    types: [shadow-compass-v2-published]
   workflow_dispatch:
 
 permissions:
@@ -42,8 +40,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
-    # Never accept a workflow_run from a PR or a failed/untrusted Shadow run.
-    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository) }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
