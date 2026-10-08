@@ -27,7 +27,7 @@ if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model 
 const root=resolve(site,'../..');
 const j=async p=>JSON.parse(await readFile(resolve(root,p),'utf8'));
 const sortKeys=v=>Array.isArray(v)?v.map(sortKeys):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,sortKeys(v[k])])):v;
-const digest=(o,key)=>{const value={...o};delete value[key];return createHash('sha256').update(JSON.stringify(sortKeys(value))+'\\n').digest('hex');};
+const digest=(o,key)=>{const value={...o};delete value[key];return createHash('sha256').update(JSON.stringify(sortKeys(value))+'\n').digest('hex');};
 const [op,ap,wp,shp,stp]=await Promise.all([
  j('04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json'),
  j('04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json'),
