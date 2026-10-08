@@ -212,12 +212,13 @@ def build(root:Path,output:Path,history_root:Path,now:datetime):
     legacy_bootstrap=bool(
         prev and prev.get("deltas")==["INITIAL_GOVERNOR_SNAPSHOT"]
         and prev.get("decision")=="CONCLUSION_REVIEW"
-        and prev.get("semantic_fingerprint")==digest(current)
     )
     if legacy_bootstrap:
-        d=["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED_NO_NEW_EVIDENCE"]
+        # A repaired producer legitimately changes the semantic fingerprint;
+        # the old false escalation must still be superseded explicitly.
+        d=["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED"]+d
     material=bool(d)
-    decision,sol,claude,reason=choose(None if legacy_bootstrap else prev,current,d)
+    decision,sol,claude,reason=choose(prev,current,d)
     state={"contract":CONTRACT,"generated_at_utc":now.astimezone(timezone.utc).isoformat().replace("+00:00","Z"),
       "semantic_fingerprint":digest(current),"material_delta":material,"deltas":d,"decision":decision,"decision_reason":reason,
       "external_routing":{"sol_recommended":sol,"claude_recommended":claude,"automatic_dispatch":False},
