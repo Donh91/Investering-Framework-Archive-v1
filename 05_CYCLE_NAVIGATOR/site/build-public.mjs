@@ -9,6 +9,10 @@ const INTERNAL_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlek
 const COMPASS_EVENT_STATUS_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json");
 const HOURLY_POINTER_PATH=resolve(repoRoot,"03_DAILY_CAPTURE_LOGS/hourly/LATEST.json");
 const NATIVE_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/LATEST.json");
+const AUTO_MARKET_STATE_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json");
+const SHADOW_COMPASS_V2_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json");
+const STRATEGIC_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json");
+const MASTER_MONDAY_POINTER_PATH=resolve(repoRoot,"research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json");
 const RANGE_SCORE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json");
 const PROSPECTIVE_RANGE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json");
 const PUBLIC_SERIES_INDEX_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json");
@@ -110,6 +114,116 @@ async function buildCompassSnapshot(weeklyPointer){
     return {contract:"PUBLIC_COMPASS_PROJECTION_v1",compass_id:null,issued_at_utc:null,data_status:"NOT_PUBLISHED",weekly_context:{contract:"CN_COMPASS_WEEKLY_ALIGNMENT_v1",status:"UNVERIFIED",forecast_week:null,public_issue_number:null,authority:false,semantics:"DELIVERY_ALIGNMENT_ONLY"},market_now:{directional_state:"UNAVAILABLE",regime:"NOT_PUBLISHED",summary:"The official daily Compass has not been published yet."},horizons:{},capitalization_ladder:[],protection_tracker:{contract:"COMPASS_PROTECTION_TRACKER_v1",pullback_risk_state:"UNAVAILABLE",pullback_class:"UNKNOWN",distribution_risk:"UNKNOWN",eta_window:"UNKNOWN",confidence_quality:"LOW",decisive_public_drivers:[],invalidation:"Fresh Official Compass evidence is required.",last_material_change_at:null,data_quality:"DEGRADED",reentry_state:"UNAVAILABLE",reentry_message:"Re-entry review is unavailable.",authority:{portfolio_execution:false,wallet_specific:false,new_market_classifier:false}},sell_assessment:{contract:"COMPASS_SELL_ASSESSMENT_v1",state:"UNAVAILABLE",horizon:"UNKNOWN",eta:"UNKNOWN",reason:"A fresh governed sell/trim decision owner is not available.",protection_context:{pullback_risk_state:"UNAVAILABLE",distribution_risk:"UNKNOWN"},authority:{portfolio_execution:false,new_sell_rule:false,automatic_action:false,protection_is_sell_authority:false}},action_now:"UNAVAILABLE",next_meaningful_change_eta:null,conclusion:"Official daily Compass unavailable. No short-horizon signal is synthesized by the site.",authority:{official_navigation_output:true,portfolio_execution:false,source_override:false},failure_state:String(error?.message||error)};
   }
 }
+// PUBLIC_COMPASS_FULL_STACK_READBACK_v1: one safe, source-bound interpretation surface
+// over the existing official decision + independent non-binding model research.
+function verifiedRelative(p,prefix){
+  if(typeof p!=="string"||!p.startsWith(prefix))return null;
+  const resolved=resolve(repoRoot,p);
+  return relative(repoRoot,resolved).startsWith("..")?null:resolved;
+}
+function publicNarrative(s){
+  if(typeof s!=="string"||s.length>650||/[\\$%]|0x[0-9a-f]{8}|https?:|wallet|address|secret|token[-_ ]?key/i.test(s))return null;
+  return s.trim()||null;
+}
+const researchEnum=(v,allowed,fallback="UNAVAILABLE")=>allowed.includes(v)?v:fallback;
+const directionValues=["UP","DOWN","SIDEWAYS","MIXED","NO_EDGE","UNAVAILABLE"];
+async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
+  const [official,auto,native,shadowPtr,strategicPtr,master]=await Promise.all([
+    readJson(INTERNAL_COMPASS_POINTER_PATH).catch(()=>null),
+    readJson(AUTO_MARKET_STATE_POINTER_PATH).catch(()=>null),
+    readJson(NATIVE_COMPASS_POINTER_PATH).catch(()=>null),
+    readJson(SHADOW_COMPASS_V2_POINTER_PATH).catch(()=>null),
+    readJson(STRATEGIC_COMPASS_POINTER_PATH).catch(()=>null),
+    readJson(MASTER_MONDAY_POINTER_PATH).catch(()=>null)
+  ]);
+  const officialSource=official?.source_packet_sha256;
+  const autoSource=auto?.packet_sha256;
+  const nativeAligned=Boolean(officialSource&&officialSource===autoSource&&native?.source_packet_sha256===autoSource);
+  const weeklyAligned=weeklyPointer?.iso_week===weeklyPackage?.iso_week
+      || (Number(weeklyPointer?.issue_number)===Number(weeklyPackage?.issue_number));
+  let masterAligned=false;
+  if(master?.contract==="MASTER_MONDAY_DELIVERY_POINTER_v1"&&master?.status==="READY"&&
+     master?.iso_week===weeklyPointer?.completed_source_week&&master?.iso_year===weeklyPointer?.completed_source_year){
+    try{
+      const bytes=await readFile(MASTER_MONDAY_POINTER_PATH);
+      masterAligned=createHash("sha256").update(bytes).digest("hex")===weeklyPointer?.master_monday_pointer_sha256;
+    }catch{}
+  }
+  let shadow=null,shadowAligned=false;
+  try{
+    if(shadowPtr?.contract==="SHADOW_COMPASS_V2_LATEST_POINTER_v1"){
+      const p=verifiedRelative(shadowPtr.forecast_path,"04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/");
+      if(p){
+        const x=await readJson(p);
+        shadowAligned=x?.contract==="SHADOW_COMPASS_V2_FORECAST_v1"&&
+          x?.forecast_id===shadowPtr.forecast_id&&x?.forecast_sha256===shadowPtr.forecast_sha256&&
+          x?.source_bindings?.auto_market_state?.packet_sha256===autoSource&&
+          x?.source_bindings?.auto_market_state?.packet_sha256===officialSource;
+        if(shadowAligned){
+          const ageHours=(Date.now()-Date.parse(x.issued_at_utc))/3600000;
+          const sourceAgeHours=(Date.now()-Date.parse(auto?.packet_generated_at_utc))/3600000;
+          const aged=!Number.isFinite(ageHours)||ageHours<0||ageHours>12||
+                       !Number.isFinite(sourceAgeHours)||sourceAgeHours<0||sourceAgeHours>3;
+          const horizons={};
+          for(const [publicKey,sourceKey] of [["12h","12h"],["1_3d","72h"],["5_7d","168h"]]){
+            const h=x?.model_output?.horizons?.[sourceKey]||{};
+            horizons[publicKey]={
+              direction:researchEnum(h.direction,directionValues),
+              confidence:researchEnum(h.confidence,["LOW","MEDIUM","HIGH"],"LOW"),
+              pullback_risk:researchEnum(h.pullback_risk,["NORMAL","BUILDING","ELEVATED","HIGH","UNAVAILABLE"]),
+              transmission_state:researchEnum(h.transmission_state,["WEAK","MIXED","STRONG","UNCONFIRMED","UNAVAILABLE"]),
+              interpretation:publicNarrative(h.expected_path)
+            };
+          }
+          shadow={status:aged?"STALE_RESEARCH":"ALIGNED_RESEARCH",model:"GPT-6.1 Sol",issued_at_utc:x.issued_at_utc,
+             authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons};
+        }
+      }
+    }
+  }catch{}
+  let strategic=null;
+  try{
+    if(strategicPtr?.contract==="STRATEGIC_COMPASS_LATEST_POINTER_v1"){
+      const p=verifiedRelative(strategicPtr.anchor_path,"04_MARKET_LEARNING/handlekompas/strategic/anchors/");
+      if(p){
+        const anchor=await readJson(p);
+        if(anchor.anchor_id===strategicPtr.anchor_id&&anchor.anchor_sha256===strategicPtr.anchor_sha256){
+          strategic={status:"BOUND_WEEKLY_ANCHOR",issued_at_utc:anchor.issued_at_utc,
+            horizon_21_30d:{direction:researchEnum(anchor?.strategic_21_30d?.direction,directionValues),
+              action:researchEnum(anchor?.strategic_21_30d?.action_posture,["WAIT","HOLD","UNAVAILABLE"]),
+              summary:publicNarrative(anchor?.strategic_21_30d?.summary)},
+            horizon_4_8w:{direction:researchEnum(anchor?.cycle_4_8w?.direction,directionValues),
+              status:researchEnum(anchor?.cycle_4_8w?.state,["UNCLEAR","CONSOLIDATION","ROTATION","DISTRIBUTION","UNAVAILABLE"])},
+            authority:"CYCLE_NAVIGATOR_OWNED_NOT_NEW_SITE_FORECAST"};
+        }
+      }
+    }
+  }catch{}
+  const officialValid=compass?.data_status==="OK"&&official?.compass_id===compass?.compass_id;
+  const quality=officialValid&&nativeAligned&&shadowAligned&&masterAligned&&strategic&&weeklyAligned?"COMPLETE":"PARTIAL_OR_DEGRADED";
+  return {
+    contract:"PUBLIC_COMPASS_FULL_STACK_READBACK_v1",
+    status:quality,
+    generated_at_utc:new Date().toISOString(),
+    source_status:{
+      official:officialValid?"VERIFIED":"DEGRADED",
+      native:nativeAligned?"SOURCE_ALIGNED":"UNVERIFIED",
+      shadow:shadow?.status||"UNVERIFIED",
+      strategic:strategic?.status||"UNVERIFIED",
+      master_monday:masterAligned?"SOURCE_ALIGNED":"UNVERIFIED",
+      cycle_navigator:weeklyAligned?"WEEKLY_POINTER_ALIGNED":"UNVERIFIED"
+    },
+    official_action:officialValid?compass.action_now:"UNAVAILABLE",
+    official_data_status:String(compass?.data_status||"NOT_PUBLISHED"),
+    native:nativeAligned?{now:researchEnum(native.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:native.data_health||"UNAVAILABLE",checked_at_utc:native.generated_at_utc}:{now:"UNAVAILABLE",data_health:"UNVERIFIED"},
+    shadow:shadow||{status:"UNVERIFIED",authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons:{}},
+    strategic:strategic||{status:"UNVERIFIED",authority:"CYCLE_NAVIGATOR_ONLY"},
+    weekly:{status:String(weeklyPointer?.status||"UNAVAILABLE"),iso_week:weeklyPointer?.iso_week||null,iso_year:weeklyPointer?.iso_year||null},
+    protective_action_authority:"OFFICIAL_COMPASS_ONLY",
+    conclusion:"Official decisions stay source-owned. Model research is context, not a confirmed buy/sell or an altseason trigger."
+  };
+}
+
 async function buildCompassEventSnapshot(){
   try{
     const event=await readJson(COMPASS_EVENT_STATUS_PATH);
@@ -216,6 +330,7 @@ function publicTranslations(source){
 }
 const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,presentation_translations:publicTranslations(pkg),pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange,public_market_structure_analysis:publicStructureAnalysis(standaloneFreeze),public_bull_bear_scale:standaloneFreeze?.bull_bear_scale||null,since_last_cn:sinceLastCN,latest_completed_forecast:latestCompletedForecast};
 const compass=await buildCompassSnapshot(pointer);
+compass.full_stack=await buildFullStackReadback(compass,pointer,pkg);
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
