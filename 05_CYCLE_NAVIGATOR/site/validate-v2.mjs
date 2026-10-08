@@ -25,7 +25,13 @@ const weekIdentityText=translateCompass('W40 BTC gained 2.44%. Possible W41 rete
 const futureFixture=structuredClone(synthetic);futureFixture.public_live_precision.daily_observations.BTC[6]={day:7,date:'2026-10-11',close:110,low:100,high:120,as_of_utc:'2099-10-12T00:00:00Z',coverage_complete_to_date:true};
 const badDaily=structuredClone(dailyFixture);badDaily.public_live_precision.daily_price_path.BTC.points[3].expected_close=130;
 const badDate=structuredClone(synthetic);badDate.public_live_precision.daily_observations.BTC[0].date='2026-10-06';
+const packageSanitizer=new Function(build.slice(build.indexOf('const pick='),build.indexOf('async function readJson'))+';return sanitizePackage;')();
+const translationProjection=new Function('sanitizePackage','standaloneFreeze','publicStructureAnalysis','return '+build.slice(build.indexOf('function publicTranslations('),build.indexOf('const snapshot=')))(packageSanitizer,{},()=>null);
+const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
+const acceptedTranslations=translationProjection(bilingualFixture);
 const checks=[
+ ['Danish projection accepts public prose and rejects changed numeric signs',acceptedTranslations.length===1&&acceptedTranslations[0].da==='BTC steg +2.44% i uge 40.'],
+ ['Danish projection cannot publish untranslated private-scenario source content',!acceptedTranslations.some(x=>x.en.includes('9000'))&&translationProjection({market_state:'Legacy source without translations.'}).length===0],
  ['weekly chart rejects future timestamps and wrong UTC day identity',!chartModel(futureFixture,'BTC').days[6].actual&&!chartModel(badDate,'BTC').days[0].actual],
  ['invalid daily forecast bounds fail to published ranges without fabricated line',chartModel(badDaily,'BTC').daily.length===0&&chartModel(badDaily,'BTC').rows.length===3],
  ['TradingView weekly chart is self-hosted and overlays authentic evidence only',liveBuilder.includes('vendor/lightweight-charts-5.2.0.js')&&chartSource.includes('lineVisible:false')&&chartSource.includes('if(d.actual)run.push(d)')&&!chartSource.includes('LineType.Curved')],
