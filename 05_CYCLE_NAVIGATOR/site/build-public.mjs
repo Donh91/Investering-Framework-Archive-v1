@@ -177,7 +177,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
   ]);
   const officialSource=official?.source_packet_sha256;
   const autoSource=auto?.packet_sha256;
-  let autoValidated=false,nativeAligned=false;
+  let autoValidated=false,nativeValidated=false,nativeAligned=false;
   try{
     const p=verifiedRelative(auto?.packet_path,"04_MARKET_LEARNING/entry_signals/auto_market_state/runs/");
     const checked=p?await readVerifiedArtifact(p,"packet_sha256",autoSource):null;
@@ -187,9 +187,10 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     const p=verifiedRelative(native?.handlekompas_path,"04_MARKET_LEARNING/handlekompas/runs/");
     const checked=p?await readVerifiedArtifact(p,"handlekompas_sha256",native?.handlekompas_sha256):null;
     const run=checked?.data;
-    nativeAligned=Boolean(autoValidated&&officialSource&&officialSource===autoSource&&
-      native?.source_packet_sha256===autoSource&&run?.contract==="NATIVE_HANDLEKOMPAS_v1"&&
-      checked?.valid&&run?.source?.packet_sha256===autoSource&&run?.action?.NOW===native?.NOW);
+    nativeValidated=Boolean(autoValidated&&native?.source_packet_sha256===autoSource&&
+      run?.contract==="NATIVE_HANDLEKOMPAS_v1"&&checked?.valid&&
+      run?.source?.packet_sha256===autoSource&&run?.action?.NOW===native?.NOW);
+    nativeAligned=Boolean(nativeValidated&&officialSource&&officialSource===autoSource);
   }catch{}
   let weeklyAligned=false;
   try{
@@ -272,7 +273,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     source_status:{
       official:officialValid?"VERIFIED":"DEGRADED",
       auto_market_state:autoValidated?"HASH_VERIFIED":"UNVERIFIED",
-      native:nativeAligned?"SOURCE_ALIGNED":"UNVERIFIED",
+      native:nativeAligned?"SOURCE_ALIGNED":nativeValidated?"VERIFIED_NEWER_OR_DIFFERENT_SOURCE":"UNVERIFIED",
       shadow:shadow?.status||"UNVERIFIED",
       strategic:strategic?.status||"UNVERIFIED",
       master_monday:masterAligned?"SOURCE_ALIGNED":"UNVERIFIED",
@@ -280,7 +281,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     },
     official_action:officialValid?compass.action_now:"UNAVAILABLE",
     official_data_status:String(compass?.data_status||"NOT_PUBLISHED"),
-    native:nativeAligned?{now:researchEnum(native.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:native.data_health||"UNAVAILABLE",checked_at_utc:native.generated_at_utc}:{now:"UNAVAILABLE",data_health:"UNVERIFIED"},
+    native:nativeValidated?{now:researchEnum(native.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:native.data_health||"UNAVAILABLE",checked_at_utc:native.generated_at_utc,official_source_aligned:nativeAligned}:{now:"UNAVAILABLE",data_health:"UNVERIFIED",official_source_aligned:false},
     shadow:shadow||{status:"UNVERIFIED",authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons:{}},
     strategic:strategic||{status:"UNVERIFIED",authority:"CYCLE_NAVIGATOR_ONLY"},
     weekly:{status:String(weeklyPointer?.status||"UNAVAILABLE"),iso_week:weeklyPointer?.iso_week||null,iso_year:weeklyPointer?.iso_year||null,direction_2_3w:researchEnum(weeklyPackage?.decision_projection?.next_2_3w?.direction,directionValues)},
