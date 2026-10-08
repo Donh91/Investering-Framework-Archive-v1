@@ -12,7 +12,7 @@ const NATIVE_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekom
 const AUTO_MARKET_STATE_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json");
 const SHADOW_COMPASS_V2_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json");
 const STRATEGIC_COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json");
-const MASTER_MONDAY_POINTER_PATH=resolve(repoRoot,"research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json");
+const MASTER_MONDAY_HANDOFF_PATH=resolve(repoRoot,"LATEST_HANDOFF.json");
 const RANGE_SCORE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json");
 const PROSPECTIVE_RANGE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json");
 const PUBLIC_SERIES_INDEX_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json");
@@ -134,21 +134,28 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     readJson(NATIVE_COMPASS_POINTER_PATH).catch(()=>null),
     readJson(SHADOW_COMPASS_V2_POINTER_PATH).catch(()=>null),
     readJson(STRATEGIC_COMPASS_POINTER_PATH).catch(()=>null),
-    readJson(MASTER_MONDAY_POINTER_PATH).catch(()=>null)
+    (async()=>{
+      try{
+        const handoff=await readJson(MASTER_MONDAY_HANDOFF_PATH);
+        const meta=handoff?.pointers?.latest_weekly_output;
+        const path=verifiedRelative(meta?.path,"research/api_agent/outputs/weekly/");
+        if(!path)return null;
+        const bytes=await readFile(path);
+        const digest=createHash("sha256").update(bytes).digest("hex");
+        if(digest!==meta?.sha256)return null;
+        return {pointer:JSON.parse(bytes.toString("utf8")),digest};
+      }catch{return null;}
+    })()
   ]);
   const officialSource=official?.source_packet_sha256;
   const autoSource=auto?.packet_sha256;
   const nativeAligned=Boolean(officialSource&&officialSource===autoSource&&native?.source_packet_sha256===autoSource);
   const weeklyAligned=weeklyPointer?.iso_week===weeklyPackage?.iso_week
       || (Number(weeklyPointer?.issue_number)===Number(weeklyPackage?.issue_number));
-  let masterAligned=false;
-  if(master?.contract==="MASTER_MONDAY_DELIVERY_POINTER_v1"&&master?.status==="READY"&&
-     master?.iso_week===weeklyPointer?.completed_source_week&&master?.iso_year===weeklyPointer?.completed_source_year){
-    try{
-      const bytes=await readFile(MASTER_MONDAY_POINTER_PATH);
-      masterAligned=createHash("sha256").update(bytes).digest("hex")===weeklyPointer?.master_monday_pointer_sha256;
-    }catch{}
-  }
+  const mp=master?.pointer;
+  const masterAligned=Boolean(mp?.contract==="MASTER_MONDAY_DELIVERY_POINTER_v1"&&mp?.status==="READY"&&
+    mp?.iso_week===weeklyPointer?.completed_source_week&&mp?.iso_year===weeklyPointer?.completed_source_year&&
+    master.digest===weeklyPointer?.master_monday_pointer_sha256);
   let shadow=null,shadowAligned=false;
   try{
     if(shadowPtr?.contract==="SHADOW_COMPASS_V2_LATEST_POINTER_v1"){
