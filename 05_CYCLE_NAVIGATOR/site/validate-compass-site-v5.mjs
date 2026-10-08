@@ -6,6 +6,7 @@ const dist=resolve(site,'dist');
 const compass=JSON.parse(await readFile(resolve(dist,'data/compass.json'),'utf8'));
 const index=await readFile(resolve(dist,'index.html'),'utf8');
 const renderer=await readFile(resolve(dist,'compass-product-v5.js'),'utf8');
+const premiumRenderer=await readFile(resolve(site,'market-compass-premium.js'),'utf8');
 const event=JSON.parse(await readFile(resolve(dist,'data/compass-event.json'),'utf8'));
 const f=compass.full_stack;
 if(f?.contract!=='PUBLIC_COMPASS_FULL_STACK_READBACK_v1')throw Error('missing combined Compass');
@@ -18,6 +19,9 @@ if(f.shadow?.status==='ALIGNED_RESEARCH'||f.shadow?.status==='STALE_RESEARCH'){
  for(const key of ['12h','1_3d','5_7d']) if(!f.shadow.horizons?.[key])throw Error('missing independent horizon');
 }
 if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined renderer');
+if(!premiumRenderer.includes('compositeIntel(compass)'))throw Error('active premium renderer ignores integrated Compass');
+if(!premiumRenderer.includes('CN_PREMIUM_COMPASS_OWNER = true'))throw Error('premium owner not detected');
+if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model research')&&!premiumRenderer.includes('Research direction'))throw Error('premium research disclosure absent');
 if(compass.contract!=='PUBLIC_COMPASS_PROJECTION_v1') throw Error('wrong Compass contract');
 if(event.contract!=='PUBLIC_COMPASS_EVENT_STATUS_v1') throw Error('wrong Compass event status contract');
 if(!['IDLE','REASSESSMENT_REQUESTED'].includes(event.status)) throw Error('wrong Compass event status');
