@@ -77,6 +77,9 @@ def eligible_freezes(root):
         if (f.get("contract")==FREEZE_CONTRACT and t.get("contract")==PROTECTION_CONTRACT and t.get("data_quality")=="OK" and
             state in PRIMARY and issued and knowledge and finite_number(ref.get("btc_usdt")) is not None and finite_number(ref.get("eth_usdt")) is not None):
             rows.append({"path":p,"freeze":f,"tracker":t,"issued":issued,"knowledge":knowledge})
+    # Family identity and first-warning weight must use actual knowledge time, not
+    # filename / compass-id lexical order (which is not chronological).
+    rows.sort(key=lambda row: (row['knowledge'], str(row['freeze'].get('compass_id') or '')))
     return rows
 
 def cluster(rows):
