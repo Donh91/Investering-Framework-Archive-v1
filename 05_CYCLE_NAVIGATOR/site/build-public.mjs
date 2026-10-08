@@ -225,7 +225,8 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
         if(historicalVerified&&checked.valid&&weeklyAligned&&x?.forecast_id===shadowPtr.forecast_id&&x?.source_fingerprint===shadowPtr.source_fingerprint&&x?.authority?.automatic_promotion===false){
           const ageHours=(Date.now()-Date.parse(x.issued_at_utc))/3600000;
           const sourceAgeHours=(Date.now()-Date.parse(auto?.packet_generated_at_utc))/3600000;
-          const aged=!Number.isFinite(ageHours)||ageHours<0||ageHours>12||
+          // Source drift is stale even if both observations are only minutes old.
+          const aged=!shadowAligned||!Number.isFinite(ageHours)||ageHours<0||ageHours>12||
                        !Number.isFinite(sourceAgeHours)||sourceAgeHours<0||sourceAgeHours>3;
           const horizons={};
           for(const [publicKey,sourceKey] of [["12h","12h"],["1_3d","72h"],["5_7d","168h"]]){
@@ -239,6 +240,8 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
             };
           }
           shadow={status:aged?"STALE_RESEARCH":"ALIGNED_RESEARCH",model:"GPT-6.1 Sol",issued_at_utc:x.issued_at_utc,
+              historical_source_asof_utc:x?.source_bindings?.auto_market_state?.packet_generated_at_utc||null,
+              current_source_aligned:shadowAligned,
              authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons};
         }
       }
