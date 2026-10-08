@@ -105,7 +105,7 @@ function dataStatusLabel(value){
   return s==='UNAVAILABLE'||!s?'WAITING':'CHECKING';
 }
 function pathLegend(){
-  return '<section class="path-read-guide"><div><span>READ PATH IN 10 SECONDS</span><strong>Blue = what is known now · Amber = next watch · Grey = not confirmed</strong></div><p><b>Watch window</b> means a phase can become actionable inside that range only if confirmation arrives. <b>Review window</b> means the signal is reassessed in that period. Neither is a countdown.</p></section>';
+  return '<section class="path-read-guide"><div><span>READ PATH IN 10 SECONDS</span><strong>Blue = what is known now · Amber = next watch · Grey = not confirmed</strong></div><p><b>Time-distance dots</b>: more illuminated dots mean a shorter published ETA; none means timing is unsupported. <b>Watch windows</b> still require confirmation. Dots are not progress, probability or a countdown.</p></section>';
 }
 function publicCycleSource(source){
   const s=String(source||'');
@@ -289,6 +289,31 @@ function timingInline(value){
   const t=timingWindow(value);
   return t.supported?(t.conditional?'Watch window '+t.label+' · only if confirmed':t.label):'No reliable timing yet';
 }
+function weeklyBackstoppedEta(liveEta,weeklyWindow){
+  // PATH timing is deliberately slower than the live Compass when the frozen
+  // weekly sequence is more cautious. Missing weekly timing fails closed.
+  const weekly=pathEta(weeklyWindow),live=pathEta(liveEta);
+  if(weekly==='NO SUPPORTED ETA'||live==='NO SUPPORTED ETA')return'NO SUPPORTED ETA';
+  const horizon=value=>{
+    const label=value.replace(/\bW\d+\b/gi,''),values=[...label.matchAll(/\d+/g)].map(x=>Number(x[0])).filter(Number.isFinite),far=values.length?Math.max(...values):0;
+    if(/week|\d+\s*w\b/i.test(label))return far*7;
+    if(/day|\d+\s*d\b/i.test(label))return far;
+    if(/hour|\d+\s*h\b|\bnow\b/i.test(label))return 0;
+    return null;
+  };
+  const weeklyDays=horizon(weekly),liveDays=horizon(live);
+  return weeklyDays===null||liveDays===null||weeklyDays>=liveDays?weekly:live;
+}
+function etaDistance(value){
+  const timing=timingWindow(value);
+  if(!timing.supported)return{dots:0,timing};
+  const distanceLabel=timing.label.replace(/\bW\d+\b/gi,'');
+  const values=[...distanceLabel.matchAll(/\d+/g)].map(x=>Number(x[0])).filter(Number.isFinite);
+  const far=values.length?Math.max(...values):0;
+  const days=/week/i.test(distanceLabel)?far*7:/hour/i.test(distanceLabel)?1:/\bnow\b/i.test(distanceLabel)?0:far;
+  const dots=days<=7?5:days<=14?4:days<=21?3:days<=35?2:1;
+  return{dots,timing};
+}
 function pathStatus(value){
   const s=String(value||'').toUpperCase();
   const hit=s.match(/WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH|PARABOLIC_ALTSEASON|BROAD_ALTSEASON|PRE_ROTATION|ACTIVE WATCH|NOT CONFIRMED|UNCONFIRMED|CONSOLIDATION|DISTRIBUTION|EXIT_RISK|DEFENSIVE|ROTATION|INACTIVE|PAUSED|HARD_WAIT|HARD WAIT|BUILDING|ELEVATED|WARNING|CONFIRMED|UNAVAILABLE|UNCLEAR|UNKNOWN|REVIEW|LOCKED|ACTIVE|WAIT|HOLD|HIGH|NORMAL|NONE/);
@@ -418,10 +443,10 @@ function cycleRouteState(pkg,compass){
   const btc=compassSegment(compass,'BTC')||{},eth=compassSegment(compass,'ETH')||{},large=compassSegment(compass,'LARGE_CAPS')||{},mid=compassSegment(compass,'MID_CAPS')||{},small=compassSegment(compass,'SMALL_CAPS')||{},micro=compassSegment(compass,'MICROCAPS')||{};
   const route=[
     {key:'BTC',title:'BTC leadership',status:btc.status||btc.action||'UNAVAILABLE',eta:btc.eta,why:btc.reason},
-    {key:'ETH_UNLOCK',title:'Ethereum leadership',status:eth.status||eth.action||'UNAVAILABLE',eta:eth.eta,why:eth.reason},
-    {key:'LARGE_MID',title:'Large + mid rotation',status:conservativeStatus([large.status||large.action,mid.status||mid.action]),eta:sharedEta([large,mid]),why:[large.reason,mid.reason].filter(Boolean).join(' ')},
-    {key:'IGNITION',title:'Altseason ignition',status:small.status||small.action||'UNAVAILABLE',eta:small.eta,why:small.reason},
-    {key:'MICRO',title:'Micro acceleration',status:micro.status||micro.action||'UNAVAILABLE',eta:micro.eta,why:micro.reason},
+    {key:'ETH_UNLOCK',title:'Ethereum leadership',status:eth.status||eth.action||'UNAVAILABLE',eta:by('ETH_UNLOCK').eta,why:eth.reason},
+    {key:'LARGE_MID',title:'Large + mid rotation',status:conservativeStatus([large.status||large.action,mid.status||mid.action]),eta:by('LARGE_MID').eta,why:[large.reason,mid.reason].filter(Boolean).join(' ')},
+    {key:'IGNITION',title:'Altseason ignition',status:small.status||small.action||'UNAVAILABLE',eta:by('IGNITION').eta,why:small.reason},
+    {key:'MICRO',title:'Micro acceleration',status:micro.status||micro.action||'UNAVAILABLE',eta:by('MICRO').eta,why:micro.reason},
     {key:'BROAD',title:'Broad altseason',status:by('BROAD').status||'UNAVAILABLE',eta:by('BROAD').eta,why:by('BROAD').why},
     {key:'MANIA',title:'Mania / euphoria',status:by('MANIA').status||'LOCKED',eta:by('MANIA').eta,why:by('MANIA').why},
     {key:'DISTRIBUTION',title:'Distribution',status:by('DISTRIBUTION').status||'UNAVAILABLE',eta:by('DISTRIBUTION').eta,why:by('DISTRIBUTION').why},
@@ -446,12 +471,18 @@ function cycleRouteState(pkg,compass){
 function marketCycleTrack(pkg,compass){
   const source=pkg?.decision_projection?.weeks_4_8||{},forward=cycleForwardFromSources(pkg);
   const labels=[['PRE_ROTATION','BTC-led expansion'],['ROTATION','Broad rotation'],['BROAD_ALTSEASON','Broad altseason'],['PARABOLIC_ALTSEASON','Mania / euphoria'],['DISTRIBUTION','Distribution'],['EXIT_RISK','Protection'],['DEFENSIVE','Recovery / reset']];
+  const chapters=[
+    {no:'01',title:'Leadership',path:'Bitcoin → Ethereum',keys:['PRE_ROTATION']},
+    {no:'02',title:'Rotation',path:'Large → mid → small / micro',keys:['ROTATION']},
+    {no:'03',title:'Altseason',path:'Broad participation → euphoria',keys:['BROAD_ALTSEASON','PARABOLIC_ALTSEASON']},
+    {no:'04',title:'Protection + reset',path:'Distribution → protection → new start',keys:['DISTRIBUTION','EXIT_RISK','DEFENSIVE']}
+  ];
   // Forward scenarios are never presented as today's confirmed macro phase.
   const current=String(pkg?.market_cycle_context?.current_phase||'UNAVAILABLE').toUpperCase();
   const known=labels.some(([key])=>key===current),next=labels.find(([key])=>key===forward.key);
   return '<section class="path-track market-cycle-v4" data-path-track="market-cycle" data-contract="CN_PATH_CYCLE_ROTATION_v3"><header class="path-track-head"><div><span>1 · MARKET CYCLE</span><h3>The bigger picture.</h3><p>Market regime · separate from the live altcoin rotation below.</p></div></header>'
     +'<div class="macro-current"><span>WEEKLY REGIME</span><strong>'+esc(known?labels.find(([key])=>key===current)[1]:'Stable cycle phase not confirmed')+'</strong><p>'+esc(publicPathText(pkg?.market_cycle_context?.why||weeklySetupLabel(pkg)))+'</p></div>'
-    +'<ul class="macro-phases">'+labels.map(([key,label])=>'<li'+(known&&current===key?' class="current" aria-current="step"':'')+'><i></i><span>'+esc(label)+'</span>'+(known&&current===key?'<b>NOW</b>':'')+'</li>').join('')+'</ul>'
+    +'<div class="macro-map"><div class="macro-map-head"><span>TYPICAL ORDER</span><b>MAP · NOT A FORECAST</b></div><ol>'+chapters.map((chapter,index)=>{const active=known&&chapter.keys.includes(current);return '<li'+(active?' class="current" aria-current="step"':'')+'><span>'+chapter.no+'</span><div><strong>'+esc(chapter.title)+'</strong><small>'+esc(chapter.path)+'</small></div>'+(active?'<b>NOW</b>':'')+(index<chapters.length-1?'<i aria-hidden="true">→</i>':'')+'</li>';}).join('')+'</ol><p>One thread: leadership must broaden before altseason; protection and reset come after the risk phase.</p></div>'
     +'<div class="macro-conclusion"><span>CYCLE CONCLUSION · LONG-RANGE VIEW</span><p>'+esc(known?'A confirmed phase does not authorize the next rotation tier.':'No stable macro phase is established. Follow the live rotation gates below; tactical decisions remain on NOW.')+'</p><b>'+esc(next?'Forward scenario: '+next[1]+' · '+timingInline(forward.eta):'Next phase: no supported ETA')+'</b><small>'+esc(short(publicPathText(pkg?.market_cycle_context?.next_gate||source.summary||'Further relative strength and sustained breadth confirmation are required.'),210))+'</small></div>'
     +'<details class="path-track-detail"><summary>Why this regime? <span aria-hidden="true">↓</span></summary><p>'+esc(short(publicPathText(pkg.base_case_4_8_weeks||'No supported long-cycle view is published.'),330))+'</p><p>Tactical hold, trim and re-entry decisions are on NOW. This cycle view does not override them.</p><button type="button" data-now-link>Open current Compass →</button></details></section>';
 }
@@ -459,17 +490,18 @@ function rotationTrack(pkg,compass){
   const state=cycleRouteState(pkg,compass),currentIndex=state.route.findIndex(x=>x.key===state.currentKey),current=state.route[currentIndex],next=state.route[currentIndex+1];
   const nodes=state.route.map((row,i)=>{
     const active=i===currentIndex,watch=i===currentIndex+1,passed=currentIndex>=0&&i<currentIndex;
-    const incoming=timingWindow(row.eta),gate=cycleGateState(row.status);
-    const connector=i?'<div class="alt-transition '+(watch?'live ':'')+'gate-'+esc(gate.key)+'"><div class="alt-track-dots" role="img" aria-label="'+esc('Incoming gate: '+gate.label)+'. Progress is confirmation, not distance or elapsed time."><i></i><i></i><i></i><i></i></div><small>'+esc(passed||active?'':incoming.supported?'ARRIVAL FROM NOW\n'+incoming.label+(incoming.conditional?' · conditional':''):'ETA not confirmed')+'</small></div>':'';
+    const distance=etaDistance(row.eta),incoming=distance.timing,lit=passed||active?0:distance.dots;
+    const dots=Array.from({length:5},(_,dot)=>'<i'+(dot<lit?' class="is-lit"':'')+'></i>').join('');
+    const connector=i?'<div class="alt-transition '+(watch?'live ':'')+'distance-'+lit+'"><div class="alt-track-dots" role="img" aria-label="'+esc(incoming.supported?'Published time distance: '+incoming.label+'. '+lit+' of 5 dots. This is not progress or probability.':'No supported time distance. 0 of 5 dots. This is not progress or probability.')+'">'+dots+'</div><small>'+esc(passed||active?'':incoming.supported?'TIME DISTANCE\n'+incoming.label+(incoming.conditional?' · conditional':''):'NO SUPPORTED ETA')+'</small></div>':'';
     return connector+'<article aria-label="'+esc(active?'CURRENT CHECKPOINT':row.title)+'" class="cycle-journey-step'+(active?' current':'')+(watch?' next':'')+(passed?' passed':'')+'" data-cycle-role="'+(active?'current-checkpoint':watch?'next-checkpoint':row.key===state.targetKey?'next-watch':'reference')+'"><i>'+esc(cycleIcon(row.key))+'</i><span class="cycle-journey-name">'+esc(row.title)+'</span><b>'+esc(publicPathStatus(row.status))+'</b></article>';
   }).join('');
-  const small=compassSegment(compass,'SMALL_CAPS')||{},takeoff=statusActive(small.status||small.action),eta=timingWindow(small.eta);
+  const small=compassSegment(compass,'SMALL_CAPS')||{},takeoff=statusActive(small.status||small.action),ignition=state.route.find(x=>x.key==='IGNITION')||{},eta=timingWindow(ignition.eta);
   const gates=[['ETH','ETH relative strength'],['LARGE_CAPS','Large caps'],['MID_CAPS','Mid caps'],['SMALL_CAPS','Small-cap takeoff']].map(([key,label])=>{const r=compassSegment(compass,key)||{},confirmed=statusActive(r.status||r.action);return '<li class="'+(confirmed?'confirmed':'pending')+'"><i>'+ (confirmed?'✓':'○')+'</i>'+esc(label)+'<b>'+esc(confirmed?'CONFIRMED':publicPathStatus(r.status||r.action||'UNAVAILABLE'))+'</b></li>';}).join('');
   const memes=compassSegment(compass,'MEMES')||{};
   return '<section id="altcoinJourney" class="path-track rotation-v4" data-path-track="rotation"><header class="path-track-head"><div><span>2 · THIS WEEK’S ROTATION</span><h3>Altcoin journey. Live rotation.</h3><p>This week’s live position on the full altcoin cycle. Swipe through takeoff, altseason and protection →</p></div><aside><span>DATA STATUS</span><strong>'+esc(dataStatusLabel(compass?.data_status))+'</strong><small>'+esc(utcLabel(compass?.issued_at_utc))+'</small></aside></header><div class="alt-journey-rail cycle-journey-rail rotation-line-v3">'+nodes+'</div>'
     +'<div class="rotation-readout-v3"><article><span>CURRENT POSITION</span><strong>'+esc(current?.title||'Not confirmed')+'</strong><small>'+esc(current?publicPathStatus(current.status):'Waiting for a current signal')+'</small></article><article class="next"><span>NEXT GATE</span><strong>'+esc(next?.title||'Await fresh leadership')+'</strong><small>'+esc(next?cycleGateState(next.status).label:'No automatic reset')+'</small></article><article><span>WHAT UNLOCKS IT</span><p>'+esc(short(publicPathText(next?.why||'The next cycle begins only after a verified re-entry and renewed leadership signal.').replace(/registered confirmed signal/gi,'confirmed market signal'),180))+'</p></article></div>'
-    +'<details class="takeoff-watch"'+(takeoff?' open':'')+'><summary><span>NEXT WATCH · ALTSEASON WATCH · TAKEOFF</span><strong>'+esc(takeoff?'100% · Small-cap takeoff confirmed':'Waiting for small-cap confirmation')+'</strong><small>'+esc(takeoff?'Follow rotation and protection above.':eta.supported?'Possible arrival · '+eta.label+' · requires confirmation':'Timing not confirmed')+'</small><b>GATE STATUS · Readiness gates <span aria-hidden="true">↓</span></b></summary><div><ul>'+gates+'</ul><p>'+esc(takeoff?'This marks small-cap takeoff, not guaranteed mania.':'No source-backed readiness percentage is published. Only if confirmation arrives does takeoff open; elapsed time cannot open a gate.')+'</p><p>MEMES · '+esc(publicPathStatus(memes.status||memes.action||'UNAVAILABLE'))+'. Independent liquidity and risk gates remain required.</p><button type="button" data-now-link>View live permissions in Compass →</button></div></details>'
-    +'<details class="path-track-detail"><summary>Cycle plan and timing <span aria-hidden="true">↓</span></summary><p>Blue is the supported position; amber is the immediate next gate. Dots describe its signal status; conditional windows need confirmation and are not countdowns. Any supported ETA is shown on the route. Arrival windows are measured from the source observation, not time spent travelling between phases. A conditional ETA can expire without confirmation.</p><p>Distribution, exit and re-entry need separate verified signals. No automatic loop and no meme permission from takeoff alone.</p><p>'+esc(short(publicPathText(current?.why||'No current position is confirmed.'),260))+'</p></details></section>';
+    +'<details class="takeoff-watch"'+(takeoff?' open':'')+'><summary><span>NEXT WATCH · ALTSEASON WATCH · TAKEOFF</span><strong>'+esc(takeoff?'100% · Small-cap takeoff confirmed':'Small-cap gate not confirmed')+'</strong><small>'+esc(takeoff?'Follow rotation and protection above.':eta.supported?'Weekly and live evidence must agree before this window is actionable.':'Weekly baseline · no supported ETA')+'</small><b>GATE STATUS · Readiness gates <span aria-hidden="true">↓</span></b></summary><div><ul>'+gates+'</ul><p>'+esc(takeoff?'This marks small-cap takeoff, not guaranteed mania.':'No source-backed readiness percentage is published. A faster live Compass window cannot overrule the slower weekly sequence; elapsed time cannot open a gate.')+'</p><p>MEMES · '+esc(publicPathStatus(memes.status||memes.action||'UNAVAILABLE'))+'. Independent liquidity and risk gates remain required.</p><button type="button" data-now-link>View live permissions in Compass →</button></div></details>'
+    +'<details class="path-track-detail"><summary>Cycle plan and timing <span aria-hidden="true">↓</span></summary><p>Blue is the supported position; amber is the immediate next gate. Dots show published time distance: five means within one week, fewer dots mean farther away, and zero means no supported ETA. They are never progress or probability. PATH uses the slower weekly window when live Compass and Master Monday differ.</p><p>Any supported ETA is shown on the route; conditional windows need confirmation and are not countdowns. They can expire without confirmation. Distribution, exit and re-entry need separate verified signals. No automatic loop and no meme permission from takeoff alone.</p><p>'+esc(short(publicPathText(current?.why||'No current position is confirmed.'),260))+'</p></details></section>';
 }
 function conservativeStatus(values){
   const states=values.map(pathStatus);
@@ -493,12 +525,12 @@ function altcoinCycleStages(pkg,compass){
   const broadStatus=!valid?'UNAVAILABLE':cycleState==='BROAD_ALTSEASON'?'ACTIVE':['PARABOLIC_ALTSEASON','DISTRIBUTION','EXIT_RISK'].includes(cycleState)?'CONFIRMED':pathStatus(cycle.state||cycle.action_posture||'UNAVAILABLE');
   const unavailableWhy='Live confirmation is unavailable. The weekly baseline remains visible in the details.';
   return [
-    {key:'PARTICIPATION',title:'Participation building',status:valid?(h.NEXT_1_3D?.action_posture||h.NEXT_1_3D?.state||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?h.NEXT_1_3D?.eta:null,monday:monday(0).window,why:publicPathText(valid?h.NEXT_1_3D?.expected_path:unavailableWhy)},
-    {key:'ETH_UNLOCK',title:'Ethereum leadership',subtitle:'Relative strength must hold',status:valid?(eth.status||eth.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?eth.eta:null,monday:monday(1).window,why:publicPathText(valid?eth.reason:unavailableWhy)},
-    {key:'LARGE_MID',title:'Large + mid caps join',status:lmStatus,eta:valid?sharedEta([large,mid]):null,monday:monday(2).window,why:publicPathText(valid?[large.reason,mid.reason].filter(Boolean).join(' '):unavailableWhy)},
-    {key:'IGNITION',title:'Altseason ignition',subtitle:'Small caps begin to participate',status:valid?(small.status||small.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?small.eta:null,monday:monday(3).window,why:publicPathText(valid?small.reason:unavailableWhy)},
-    {key:'MICRO',title:'Micro acceleration',status:valid?(micro.status||micro.action||'UNAVAILABLE'):'UNAVAILABLE',eta:valid?micro.eta:null,monday:monday(3).window,why:publicPathText(valid?micro.reason:unavailableWhy)},
-    {key:'BROAD',title:'Broad altseason',status:broadStatus,eta:valid?cycle.eta:null,monday:monday(4).window,why:publicPathText(valid?(cycle.expected_path||'No public broad-altseason explanation is available.'):unavailableWhy)},
+    {key:'PARTICIPATION',title:'Participation building',status:valid?(h.NEXT_1_3D?.action_posture||h.NEXT_1_3D?.state||'UNAVAILABLE'):'UNAVAILABLE',eta:weeklyBackstoppedEta(h.NEXT_1_3D?.eta,monday(0).window),monday:monday(0).window,why:publicPathText(valid?h.NEXT_1_3D?.expected_path:unavailableWhy)},
+    {key:'ETH_UNLOCK',title:'Ethereum leadership',subtitle:'Relative strength must hold',status:valid?(eth.status||eth.action||'UNAVAILABLE'):'UNAVAILABLE',eta:weeklyBackstoppedEta(eth.eta,monday(1).window),monday:monday(1).window,why:publicPathText(valid?eth.reason:unavailableWhy)},
+    {key:'LARGE_MID',title:'Large + mid caps join',status:lmStatus,eta:weeklyBackstoppedEta(sharedEta([large,mid]),monday(2).window),monday:monday(2).window,why:publicPathText(valid?[large.reason,mid.reason].filter(Boolean).join(' '):unavailableWhy)},
+    {key:'IGNITION',title:'Altseason ignition',subtitle:'Small caps begin to participate',status:valid?(small.status||small.action||'UNAVAILABLE'):'UNAVAILABLE',eta:weeklyBackstoppedEta(small.eta,monday(3).window),monday:monday(3).window,why:publicPathText(valid?small.reason:unavailableWhy)},
+    {key:'MICRO',title:'Micro acceleration',status:valid?(micro.status||micro.action||'UNAVAILABLE'):'UNAVAILABLE',eta:weeklyBackstoppedEta(micro.eta,monday(3).window),monday:monday(3).window,why:publicPathText(valid?micro.reason:unavailableWhy)},
+    {key:'BROAD',title:'Broad altseason',status:broadStatus,eta:weeklyBackstoppedEta(cycle.eta,monday(4).window),monday:monday(4).window,why:publicPathText(valid?(cycle.expected_path||'No public broad-altseason explanation is available.'):unavailableWhy)},
     {key:'MANIA',title:'Mania / euphoria',status:maniaActive?'ACTIVE':'LOCKED',eta:maniaActive?cycle.eta:null,monday:null,why:publicPathText(maniaActive?cycle.expected_path:'This phase only becomes relevant after broad altseason is confirmed.')},
     {key:'DISTRIBUTION',title:'Distribution',status:valid?p.distribution_risk:'UNAVAILABLE',eta:null,monday:null,why:publicPathText(valid?distributionDriver(compass):'Fresh verified market data is required.')},
     {key:'EXIT',title:'Exit / protection',status:valid?sell.state:'UNAVAILABLE',eta:valid?sell.eta:null,monday:null,why:publicPathText(valid?sell.reason:'No verified sell or trim signal is currently available.')},
