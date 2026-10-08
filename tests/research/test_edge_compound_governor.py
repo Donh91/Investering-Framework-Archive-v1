@@ -95,12 +95,13 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             original=build(root,out,history,now)
             legacy=dict(original)
             legacy["decision"]="CONCLUSION_REVIEW"
+            legacy["semantic_fingerprint"]="STALE_PRE_FIX_FINGERPRINT"
             legacy["deltas"]=["INITIAL_GOVERNOR_SNAPSHOT"]
             legacy["external_routing"]={"sol_recommended":True,"claude_recommended":True,"automatic_dispatch":False}
             out.write_text(json.dumps(legacy))
             repaired=build(root,out,history,now)
             self.assertEqual(repaired["decision"],"COLLECT")
-            self.assertEqual(repaired["deltas"],["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED_NO_NEW_EVIDENCE"])
+            self.assertEqual(repaired["deltas"],["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED"])
             self.assertFalse(repaired["external_routing"]["sol_recommended"])
             self.assertFalse(repaired["external_routing"]["claude_recommended"])
             self.assertFalse(repaired["conclusion_layer"]["review_due"])
