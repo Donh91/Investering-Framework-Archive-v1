@@ -57,6 +57,45 @@ def matured_counts(m6:dict|None):
                 unknown[h]+=1
     return out,{h:len(families[h]) for h in horizons},unknown
 
+def m6_integrity(m6:dict|None, features:dict|None):
+    """Validate chronological/typed identity and 1:N feature cohort parity, fail-closed."""
+    events=(m6 or {}).get("events") if isinstance(m6,dict) else None
+    rows=(features or {}).get("rows") if isinstance(features,dict) else None
+    if not isinstance(events,list) or not isinstance(rows,list):
+        return {"status":"UNKNOWN_MISSING_OWNER","chronological":False,"family_anchor_valid":False,
+                "first_warning_weight_valid":False,"feature_cohort_parity":False,"family_lineage_fingerprint":None}
+    parsed=[]
+    for e in events:
+        if not isinstance(e,dict) or not isinstance(e.get("knowledge_timestamp"),str):
+            return {"status":"INVALID_EVENT","chronological":False,"family_anchor_valid":False,
+                    "first_warning_weight_valid":False,"feature_cohort_parity":False,"family_lineage_fingerprint":None}
+        try:
+            when=datetime.fromisoformat(e["knowledge_timestamp"].replace("Z","+00:00"))
+        except ValueError:
+            return {"status":"INVALID_TIME","chronological":False,"family_anchor_valid":False,
+                    "first_warning_weight_valid":False,"feature_cohort_parity":False,"family_lineage_fingerprint":None}
+        parsed.append((when,e))
+    chronological=all(a[0]<=b[0] for a,b in zip(parsed,parsed[1:]))
+    grouped={}
+    for when,e in parsed:
+        grouped.setdefault(e.get("episode_family_id"),[]).append((when,e))
+    anchors=True
+    weights=True
+    for family,grp in grouped.items():
+        if not isinstance(family,str) or family!=("M6F-"+min(ts for ts,_ in grp).strftime("%Y%m%dT%H%M%SZ")):
+            anchors=False
+        ordered=sorted(grp,key=lambda item:(item[0],str(item[1].get("compass_id") or "")))
+        if [r.get("independent_family_weight") for _,r in ordered]!=[1.0]+[0.0]*(len(ordered)-1):
+            weights=False
+    event_cohort=[(e.get("compass_id"),e.get("knowledge_timestamp")) for _,e in parsed]
+    feature_cohort=[(r.get("compass_id"),r.get("knowledge_timestamp")) for r in rows if isinstance(r,dict)]
+    parity=(len(event_cohort)==len(feature_cohort) and sorted(event_cohort)==sorted(feature_cohort))
+    lineage=[(e.get("compass_id"),e.get("knowledge_timestamp"),e.get("episode_family_id"),e.get("independent_family_weight")) for _,e in parsed]
+    return {"status":"PASS" if chronological and anchors and weights and parity else "BLOCKED",
+            "chronological":chronological,"family_anchor_valid":anchors,
+            "first_warning_weight_valid":weights,"feature_cohort_parity":parity,
+            "family_lineage_fingerprint":digest(sorted(lineage,key=lambda x:(str(x[0]),str(x[1]))))}
+
 def feature_counts(features:dict|None):
     rows=(features or {}).get("rows") if isinstance(features,dict) else []
     rows=rows if isinstance(rows,list) else []
@@ -87,16 +126,19 @@ def semantic_snapshot(root:Path):
     tracker=tracker if isinstance(tracker,dict) else {}
     maturity,families,unknown=matured_counts(m6)
     fcount,pit,unverified=feature_counts(features)
+    m6_check=m6_integrity(m6,features)
     sol=latest_sol(root)
     blockers=[]
     if isinstance(features,dict) and features.get("integrity_revision")!="v1.1_PIT_STRICT":blockers.append("FEATURE_COLLECTOR_INTEGRITY_REVISION_NOT_STRICT")
     if isinstance(m6,dict) and m6.get("integrity_revision")!="v1.1_STRICT_TAPE_AND_ANCHOR":blockers.append("M6_OUTCOME_INTEGRITY_REVISION_NOT_STRICT")
     if unverified:blockers.append("PIT_UNVERIFIED_FEATURE_ROWS")
+    if m6_check["status"]!="PASS":blockers.append("M6_EVENT_CHRONOLOGY_FAMILY_OR_COHORT_INVALID")
     primary_state=tracker.get("pullback_risk_state") or "UNAVAILABLE"
     if primary_state in {"ELEVATED","HIGH","CONFIRMED"} and fcount==0:blockers.append("PRIMARY_WARNING_WITHOUT_EDGE_FEATURE_ROW")
     semantic={
       "pullback_risk_state":primary_state,
       "distribution_risk":tracker.get("distribution_risk") or "UNKNOWN",
+      "m6_integrity":m6_check,
       "m6_event_count":int((m6 or {}).get("event_count") or 0) if isinstance(m6,dict) else 0,
       "m6_provisional_family_count":int((m6 or {}).get("provisional_independent_family_count") or 0) if isinstance(m6,dict) else 0,
       "matured_event_counts":maturity,"matured_family_counts":families,"unknown_horizon_counts":unknown,
@@ -125,6 +167,7 @@ def deltas(prev:dict|None,current:dict):
         for k in sorted(set(a)|set(b)):
             if a.get(k)!=b.get(k):d.append(f"{group}.{k}:{a.get(k)}->{b.get(k)}")
     if old.get("blockers")!=current.get("blockers"):d.append("BLOCKER_SET_CHANGED")
+    if old.get("m6_integrity")!=current.get("m6_integrity"):d.append("M6_FAMILY_OR_COHORT_LINEAGE_CHANGED")
     if old.get("feature_integrity_revision")!=current.get("feature_integrity_revision"):d.append("FEATURE_INTEGRITY_REVISION_CHANGED")
     if old.get("m6_integrity_revision")!=current.get("m6_integrity_revision"):d.append("M6_INTEGRITY_REVISION_CHANGED")
     return d
