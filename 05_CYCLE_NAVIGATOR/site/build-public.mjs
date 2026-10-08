@@ -129,16 +129,30 @@ function publicNarrative(s){
 }
 const researchEnum=(v,allowed,fallback="UNAVAILABLE")=>allowed.includes(v)?v:fallback;
 // Producer digests canonical sorted-key JSON, with its hash field removed.
-function sortedCanonical(v){
-  if(Array.isArray(v))return v.map(sortedCanonical);
-  if(v&&typeof v==="object")return Object.fromEntries(Object.keys(v).sort().map(k=>[k,sortedCanonical(v[k])]));
-  return v;
+// Verify producer-written canonical JSON bytes instead of JS reserialization.
+// JS may collapse Python's 1.0 to 1; the original immutable bytes must win.
+function verifiedRawDigest(raw,data,field,expected){
+  if(!data||!/^([a-f0-9]{64})$/.test(String(expected||""))||data[field]!==expected)return false;
+  const needle=JSON.stringify(field)+":"+JSON.stringify(expected);
+  let depth=0,inString=false,escaped=false,pos=-1;
+  for(let i=0;i<raw.length;i++){
+    const c=raw[i];
+    if(!inString&&depth===1&&c==='"'&&raw.startsWith(needle,i)){pos=i;break;}
+    if(inString){
+      if(escaped)escaped=false;
+      else if(c==="\\")escaped=true;
+      else if(c==='"')inString=false;
+    }else if(c==='"')inString=true;
+    else if(c==="{"||c==="[")depth++;
+    else if(c==="}"||c==="]")depth--;
+  }
+  if(pos<0||raw[pos-1]!==",")return false;
+  const withoutField=raw.slice(0,pos-1)+raw.slice(pos+needle.length);
+  return createHash("sha256").update(withoutField,"utf8").digest("hex")===expected;
 }
-function verifiedModelDigest(obj,field,expected){
-  if(!obj||typeof expected!=="string"||!/^([a-f0-9]{64})$/.test(expected)||obj[field]!==expected)return false;
-  const copy={...obj};delete copy[field];
-  const digest=createHash("sha256").update(JSON.stringify(sortedCanonical(copy))+"\n").digest("hex");
-  return digest===expected;
+async function readVerifiedArtifact(path,field,expected){
+  const raw=await readFile(path,"utf8"),data=JSON.parse(raw);
+  return {data,valid:verifiedRawDigest(raw,data,field,expected)};
 }
 const directionValues=["UP","DOWN","SIDEWAYS","MIXED","NO_EDGE","UNAVAILABLE"];
 async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
@@ -166,17 +180,16 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
   let autoValidated=false,nativeAligned=false;
   try{
     const p=verifiedRelative(auto?.packet_path,"04_MARKET_LEARNING/entry_signals/auto_market_state/runs/");
-    const packet=p?await readJson(p):null;
-    autoValidated=Boolean(packet?.contract==="AUTO_MARKET_STATE_PACKET_v1"&&
-      verifiedModelDigest(packet,"packet_sha256",autoSource));
+    const checked=p?await readVerifiedArtifact(p,"packet_sha256",autoSource):null;
+    autoValidated=Boolean(checked?.valid&&checked?.data?.contract==="AUTO_MARKET_STATE_PACKET_v1");
   }catch{}
   try{
     const p=verifiedRelative(native?.handlekompas_path,"04_MARKET_LEARNING/handlekompas/runs/");
-    const run=p?await readJson(p):null;
+    const checked=p?await readVerifiedArtifact(p,"handlekompas_sha256",native?.handlekompas_sha256):null;
+    const run=checked?.data;
     nativeAligned=Boolean(autoValidated&&officialSource&&officialSource===autoSource&&
       native?.source_packet_sha256===autoSource&&run?.contract==="NATIVE_HANDLEKOMPAS_v1"&&
-      verifiedModelDigest(run,"handlekompas_sha256",native?.handlekompas_sha256)&&
-      run?.source?.packet_sha256===autoSource&&run?.action?.NOW===native?.NOW);
+      checked?.valid&&run?.source?.packet_sha256===autoSource&&run?.action?.NOW===native?.NOW);
   }catch{}
   let weeklyAligned=false;
   try{
@@ -194,10 +207,10 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     if(shadowPtr?.contract==="SHADOW_COMPASS_V2_LATEST_POINTER_v1"){
       const p=verifiedRelative(shadowPtr.forecast_path,"04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/");
       if(p){
-        const x=await readJson(p);
-        shadowAligned=autoValidated&&weeklyAligned&&x?.contract==="SHADOW_COMPASS_V2_FORECAST_v1"&&
+        const checked=await readVerifiedArtifact(p,"forecast_sha256",shadowPtr.forecast_sha256);
+        const x=checked.data;
+        shadowAligned=checked.valid&&autoValidated&&weeklyAligned&&x?.contract==="SHADOW_COMPASS_V2_FORECAST_v1"&&
           x?.forecast_id===shadowPtr.forecast_id&&
-          verifiedModelDigest(x,"forecast_sha256",shadowPtr.forecast_sha256)&&
           x?.source_fingerprint===shadowPtr?.source_fingerprint&&
           Number(x?.source_bindings?.cycle_navigator?.iso_week)===Number(weeklyPointer?.iso_week)&&
           Number(x?.source_bindings?.cycle_navigator?.iso_year)===Number(weeklyPointer?.iso_year)&&
@@ -231,9 +244,9 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     if(strategicPtr?.contract==="STRATEGIC_COMPASS_LATEST_POINTER_v1"){
       const p=verifiedRelative(strategicPtr.anchor_path,"04_MARKET_LEARNING/handlekompas/strategic/anchors/");
       if(p){
-        const anchor=await readJson(p);
-        if(anchor.contract==="STRATEGIC_COMPASS_ANCHOR_v1"&&anchor.anchor_id===strategicPtr.anchor_id&&
-           verifiedModelDigest(anchor,"anchor_sha256",strategicPtr.anchor_sha256)&&
+        const checked=await readVerifiedArtifact(p,"anchor_sha256",strategicPtr.anchor_sha256);
+        const anchor=checked.data;
+        if(checked.valid&&anchor.contract==="STRATEGIC_COMPASS_ANCHOR_v1"&&anchor.anchor_id===strategicPtr.anchor_id&&
            anchor.source_fingerprint===strategicPtr.source_fingerprint&&
            Number(anchor?.source_bindings?.cycle_navigator?.iso_year)===Number(weeklyPointer?.iso_year)&&
            Number(anchor?.source_bindings?.cycle_navigator?.iso_week)===Number(weeklyPointer?.iso_week)&&
