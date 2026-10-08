@@ -65,12 +65,12 @@ class M6WarningEventTests(unittest.TestCase):
     def test_family_first_warning_is_earliest_knowledge_time_not_filename(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t)
-            self.freeze(root,"ZZZ-EARLY",issued="2026-10-06T09:00:00Z")
-            self.freeze(root,"AAA-LATE",issued="2026-10-06T17:00:00Z")
+            self.freeze(root,"HIGH",issued="2026-10-06T09:00:00Z")
+            self.freeze(root,"ELEVATED",issued="2026-10-06T17:00:00Z")
             report=M.build(root,M.parse("2026-10-07T00:00:00Z"))
             self.assertEqual(report["event_count"],2)
             events=report["events"]
-            self.assertEqual([e["compass_id"] for e in events],["CMP-ZZZ-EARLY","CMP-AAA-LATE"])
+            self.assertEqual([e["compass_id"] for e in events],["CMP-HIGH","CMP-ELEVATED"])
             self.assertEqual([e["independent_family_weight"] for e in events],[1.0,0.0])
             self.assertEqual(events[0]["episode_family_id"],events[1]["episode_family_id"])
             self.assertTrue(events[0]["episode_family_id"].startswith("M6F-20261006T"))
