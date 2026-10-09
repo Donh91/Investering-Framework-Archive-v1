@@ -160,6 +160,54 @@ class ProtectionCalibrationTests(unittest.TestCase):
             self.assertEqual(report["warning_series_row_count"], 0)
             self.assertIn("NO_MATURED_TYPED_WARNING_OUTCOMES", report["promotion_readiness"]["blockers"])
 
+    def test_nonwarning_drawdown_is_visible_without_hindsight_sell_or_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outcome_root = self.write_case(
+                root,
+                policy="2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+                pullback="BUILDING",
+                distribution="UNKNOWN",
+            )
+            report = MODULE.build_report(root, outcome_root, "2026-10-09T17:00:00Z")
+            self.assertEqual(report["warning_series_row_count"], 0)
+            context = report["nonwarning_downside_context"]
+            self.assertEqual(len(context), 2)
+            btc = next(row for row in context if row["series_id"] == "BTC_USDT_MARK_PRICE")
+            self.assertEqual(btc["horizon"], "72h")
+            self.assertEqual(btc["series_row_count"], 1)
+            self.assertEqual(btc["distinct_compass_freeze_count"], 1)
+            self.assertEqual(btc["mae_observed_row_count"], 1)
+            self.assertEqual(btc["worst_observed_mae_pct"], -12.0)
+            self.assertIsNone(btc["independent_adverse_event_count"])
+            self.assertEqual(btc["warning_classification"], "NO_TYPED_WARNING_IN_FROZEN_COMPASS")
+            self.assertTrue(report["interpretation_boundary"]["nonwarning_downside_context_is_descriptive"])
+            self.assertFalse(report["interpretation_boundary"]["market_rule_change"])
+            self.assertFalse(report["promotion_readiness"]["automatic_promotion"])
+
+    def test_warning_event_not_reclassified_as_nonwarning_gap(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outcome_root = self.write_case(root, pullback="HIGH", distribution="WARNING")
+            report = MODULE.build_report(root, outcome_root, "2026-10-09T17:00:00Z")
+            self.assertEqual(report["warning_series_row_count"], 2)
+            self.assertEqual(report["nonwarning_downside_context"], [])
+
+    def test_nonwarning_absent_mae_does_not_become_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outcome_root = self.write_case(root, pullback="BUILDING", distribution="UNKNOWN")
+            outcome_path = next(outcome_root.rglob("*.json"))
+            item = json.loads(outcome_path.read_text())
+            item["realized"]["btc_mae_pct"] = None
+            outcome_path.write_text(json.dumps(item))
+            report = MODULE.build_report(root, outcome_root, "2026-10-09T17:00:00Z")
+            btc = next(row for row in report["nonwarning_downside_context"] if row["series_id"] == "BTC_USDT_MARK_PRICE")
+            self.assertIsNone(btc["median_observed_mae_pct"])
+            self.assertIsNone(btc["worst_observed_mae_pct"])
+            self.assertEqual(btc["mae_missing_row_count"], 1)
+            self.assertEqual(btc["mae_observed_row_count"], 0)
+
     def test_normal_typed_state_is_calibrated_without_being_called_a_warning(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
