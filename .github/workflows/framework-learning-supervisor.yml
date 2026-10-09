@@ -144,6 +144,44 @@ jobs:
           assert audit['authority']['canonical_effect'] is False
           PY
 
+  approved-mission-intake:
+    # Explicit owner marker only. This job emits triage evidence, never grants CODEX_READY.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1552 &&
+      github.event.comment.author_association == 'OWNER' &&
+      contains(github.event.comment.body, '[SUPERVISOR_EXECUTE]')
+    permissions:
+      contents: read
+      issues: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate mission-intake policy and regression cases
+        run: |
+          python -m unittest tests.framework_intelligence.test_supervisor_mission_intake_v1 -v
+      - name: Classify owner-approved mission without granting execution
+        env:
+          EVENT_PATH: ${{ github.event_path }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          python scripts/framework_intelligence/supervisor_mission_intake_v1.py \
+            --event "$EVENT_PATH" --repo "$REPO" --head-sha "$HEAD_SHA" \
+            --output supervisor-mission-intake-receipt.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: supervisor-mission-intake-${{ github.event.comment.id }}
+          path: supervisor-mission-intake-receipt.json
+          retention-days: 30
+
   senior-repair-audit:
     if: >-
       github.event_name == 'issue_comment' &&
