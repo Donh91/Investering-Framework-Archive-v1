@@ -205,6 +205,42 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return output
 
 
+def nonwarning_downside_context(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Observe downside while no typed protection warning was issued.
+
+    Descriptive only. Overlapping freezes and horizon windows are not
+    independent adverse-event families; neither a minimum MAE nor a return
+    constitutes a retrospective alert, missed warning or sell permission.
+    """
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for row in rows:
+        if row["distribution_risk"] in {"WARNING", "CONFIRMED"}:
+            continue
+        if row["pullback_risk_state"] in {"ELEVATED", "HIGH", "CONFIRMED"}:
+            continue
+        groups.setdefault((row["horizon"], row["series_id"]), []).append(row)
+
+    context: list[dict[str, Any]] = []
+    for (horizon, series), group in sorted(groups.items()):
+        downside = [
+            value for row in group
+            if (value := finite_number(row.get("max_drawdown_after_signal_pct"))) is not None
+        ]
+        context.append({
+            "horizon": horizon,
+            "series_id": series,
+            "series_row_count": len(group),
+            "distinct_compass_freeze_count": len({row["compass_id"] for row in group}),
+            "mae_observed_row_count": len(downside),
+            "mae_missing_row_count": len(group) - len(downside),
+            "median_observed_mae_pct": median(downside),
+            "worst_observed_mae_pct": round(min(downside), 10) if downside else None,
+            "warning_classification": "NO_TYPED_WARNING_IN_FROZEN_COMPASS",
+            "independent_adverse_event_count": None,
+        })
+    return context
+
+
 def build_report(repo_root: Path, outcome_root: Path, generated_at_utc: str | None) -> dict[str, Any]:
     rows, outcome_count, excluded = collect_rows(repo_root, outcome_root)
     cohorts = summarize(rows)
@@ -228,6 +264,7 @@ def build_report(repo_root: Path, outcome_root: Path, generated_at_utc: str | No
         "source_outcome_count": outcome_count,
         "eligible_series_row_count": len(rows),
         "warning_series_row_count": len(warning_rows),
+        "nonwarning_downside_context": nonwarning_downside_context(rows),
         "excluded_outcome_counts": dict(sorted(excluded.items())),
         "cohorts": cohorts,
         "prospective_source_gate": {
@@ -251,6 +288,8 @@ def build_report(repo_root: Path, outcome_root: Path, generated_at_utc: str | No
         "interpretation_boundary": {
             "descriptive_only": True,
             "hit_miss_labels": False,
+            "nonwarning_downside_context_is_descriptive": True,
+            "overlapping_freezes_are_not_independent_events": True,
             "new_thresholds": False,
             "market_rule_change": False,
             "portfolio_action": False,
