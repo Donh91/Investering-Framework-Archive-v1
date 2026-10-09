@@ -14,6 +14,23 @@ class SupervisorMissionIntakeTests(unittest.TestCase):
         self.assertFalse(r["codex_ready"])
         self.assertEqual(r["authority"],"TRIAGE_ONLY")
 
+    def test_real_status_comment_marker_mention_rejected(self):
+        body="Supervisor update: the literal marker " + MARKER + " is in this status comment."
+        self.assertEqual(classify(self.event(comment={"id":6088518866,"author_association":"OWNER","body":body}))[0],"IGNORED")
+
+    def test_negative_and_quoted_marker_rejected(self):
+        for body in ("Do NOT " + MARKER + " yet", "> " + MARKER, "Text\\n" + MARKER):
+            self.assertEqual(classify(self.event(comment={"id":124,"author_association":"OWNER","body":body}))[0],"IGNORED")
+
+    def test_null_body_rejected(self):
+        self.assertEqual(classify(self.event(comment={"id":124,"author_association":"OWNER","body":None}))[0],"IGNORED")
+
+    def test_first_line_marker_allows_only_triage(self):
+        r=receipt(self.event(comment={"id":124,"author_association":"OWNER","body":MARKER+"\\nPlease triage."}),"repo","sha")
+        self.assertEqual(r["state"],"ACTIONABLE_UNCLAIMED")
+        self.assertFalse(r["human_approval_verified"])
+        self.assertFalse(r["execution_started"])
+
     def test_untrusted_comment_does_not_dispatch(self):
         for assoc in ("NONE","CONTRIBUTOR","MEMBER","COLLABORATOR"):
             self.assertEqual(classify(self.event(comment={"id":123,"author_association":assoc,"body":MARKER}))[0],"IGNORED")
