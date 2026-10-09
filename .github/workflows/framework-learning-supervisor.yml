@@ -12,6 +12,7 @@ on:
       - 'research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json'
       - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
+      - 'scripts/framework_intelligence/supervisor_mission_intake_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_replay_v1.py'
       - 'scripts/framework_intelligence/operational_memory_v1.py'
@@ -19,6 +20,7 @@ on:
       - 'scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
+      - 'tests/framework_intelligence/test_supervisor_mission_intake_v1.py'
       - 'tests/framework_intelligence/test_automation_orchestration_v1.py'
       - 'tests/api_agent/test_api_gateway.py'
       - 'tests/api_agent/test_fmos_mission_loop_audit_dispatch.py'
@@ -69,6 +71,7 @@ jobs:
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
+            scripts/framework_intelligence/supervisor_mission_intake_v1.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
             scripts/framework_intelligence/operational_memory_v1.py \
@@ -79,6 +82,7 @@ jobs:
         run: |
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_supervisor_mission_intake_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_fmos_mission_loop_audit_dispatch \
@@ -150,7 +154,7 @@ jobs:
       github.event_name == 'issue_comment' &&
       github.event.issue.number == 1552 &&
       github.event.comment.author_association == 'OWNER' &&
-      contains(github.event.comment.body, '[SUPERVISOR_EXECUTE]')
+      startsWith(github.event.comment.body, '[SUPERVISOR_EXECUTE]')
     permissions:
       contents: read
       issues: read
