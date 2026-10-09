@@ -98,4 +98,18 @@ class M6WarningEventTests(unittest.TestCase):
             self.assertEqual(events[0]["episode_family_id"],events[1]["episode_family_id"])
             self.assertTrue(events[0]["episode_family_id"].startswith("M6F-20261006T"))
 
+    def test_first_barrier_touch_uses_chronological_low_before_later_close(self):
+        start=M.parse("2026-10-06T16:14:15Z")
+        segment=[
+            {"close":M.parse("2026-10-06T17:00:00Z"),"btc":100.0,"btc_high":101.0,"btc_low":99.0},
+            {"close":M.parse("2026-10-06T18:00:00Z"),"btc":99.0,"btc_high":102.0,"btc_low":85.0},
+            {"close":M.parse("2026-10-06T19:00:00Z"),"btc":97.0,"btc_high":100.0,"btc_low":96.0},
+            {"close":M.parse("2026-10-06T20:00:00Z"),"btc":88.0,"btc_high":98.0,"btc_low":87.0}
+        ]
+        v=M.asset_view(segment,100.0,"BTC",start)
+        self.assertEqual(v["state"],"MATURED")
+        self.assertEqual(v["adverse_barriers"]["-10.0"]["first_touch_timestamp"],"2026-10-06T18:00:00Z")
+        self.assertEqual(v["adverse_barriers"]["-15.0"]["first_touch_timestamp"],"2026-10-06T18:00:00Z")
+        self.assertFalse(v["adverse_barriers"]["-20.0"]["touched"])
+
 if __name__=="__main__":unittest.main()

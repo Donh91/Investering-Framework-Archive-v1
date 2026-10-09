@@ -146,7 +146,7 @@ def asset_view(seg,start_price,label,start):
         "terminal":{"timestamp":z(terminal[0]),"close":terminal[1]},
         "extrema_basis":"FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
         "excluded_straddling_bar_extrema":len(seg)-len(full_rows),
-        "adverse_barriers":barrier_view(start_price,lows,BARRIERS[label])}
+        "adverse_barriers":barrier_view(start_price,sorted(lows,key=lambda observation:observation[0]),BARRIERS[label])}
 
 def build(root,now):
     warnings=cluster(eligible_freezes(root));events=[]
