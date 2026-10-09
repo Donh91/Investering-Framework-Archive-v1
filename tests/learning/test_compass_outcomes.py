@@ -7,6 +7,11 @@ from pathlib import Path
 
 from scripts.learning.compass_outcomes import action_quality, mature_one, persistence_baseline
 
+# Keep the existing Official Compass Outcomes PR gate accountable for protection
+# calibration regressions, without adding a second workflow or test scheduler.
+# unittest collects imported TestCase subclasses when this module is executed.
+from tests.learning.test_action_compass_exit_calibration import ProtectionCalibrationTests
+
 
 class CompassOutcomeTest(unittest.TestCase):
     def freeze(self):
