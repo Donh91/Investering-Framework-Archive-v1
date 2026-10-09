@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/m6_warning_event_outcomes.py",
+    "tests/learning/test_m6_warning_event_outcomes.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-3641a13fcada0bdb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "m6-chronological-first-barrier-touch-after-claude-edge",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Bounded F1 integrity fix only. Preserve all no-trade and scientific admission gates; F2-F7 remain under #1552.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/m6_warning_event_outcomes.py": "4857a36bc673c3e55fa5c187ee1889cd3154ff99",
+    "tests/learning/test_m6_warning_event_outcomes.py": "d613f3f05d3b77e64a9f8ddfa413ddc9eb6ba85e"
+  },
+  "source_commit_sha": "3641a13fcada0bdb7dd16ca8c94c976f569ee3c0",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-09T05:52:16-07:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(M6): chronological first barrier touch after Claude EDGE red-team (#1551)"
+}
