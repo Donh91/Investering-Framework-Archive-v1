@@ -5,12 +5,7 @@ This is an evidence/claim gate, NOT Codex-ready authority or an autonomous merge
 """
 import argparse
 import json
-import os
-import re
 import sys
-import urllib.error
-import urllib.request
-from datetime import datetime, timezone
 
 MARKER = "[SUPERVISOR_EXECUTE]"
 ISSUE_ALLOWLIST = {1552}
@@ -28,11 +23,12 @@ def classify(event, allowed=ISSUE_ALLOWLIST):
         return "IGNORED", "issue_not_open"
     if comment.get("author_association") != "OWNER":
         return "IGNORED", "not_owner"
-    if MARKER not in comment.get("body", ""):
-        return "IGNORED", "no_explicit_dispatch_marker"
+    body = comment.get("body")
+    if not isinstance(body, str) or not (body == MARKER or body.startswith(MARKER + "\n")):
+        return "IGNORED", "no_first_line_marker"
     if not isinstance(comment.get("id"), int):
         return "IGNORED", "missing_comment_id"
-    return "ACTIONABLE_UNCLAIMED", "owner_approved_for_supervisor_triage"
+    return "ACTIONABLE_UNCLAIMED", "owner_marker_triage_only_not_human_authentication"
 
 def receipt(event, repository, head_sha):
     state, reason = classify(event)
@@ -44,8 +40,10 @@ def receipt(event, repository, head_sha):
         "repository": repository,
         "issue_number": issue.get("number"),
         "comment_id": comment.get("id"),
-        "source_head_sha": head_sha,
-        "claim_key": f"{repository}#{issue.get('number')}:{comment.get('id')}:{head_sha}",
+        "workflow_event_sha": head_sha,
+        "code_ref": "main",
+        "human_approval_verified": False,
+        "claim_key": f"{repository}#{issue.get('number')}:{comment.get('id')}",
         "execution_started": False,
         "codex_ready": False,
         "authority": "TRIAGE_ONLY",
