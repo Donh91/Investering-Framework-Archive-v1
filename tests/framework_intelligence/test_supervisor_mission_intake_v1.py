@@ -26,7 +26,7 @@ class SupervisorMissionIntakeTests(unittest.TestCase):
         self.assertEqual(classify(self.event(comment={"id":124,"author_association":"OWNER","body":None}))[0],"IGNORED")
 
     def test_first_line_marker_allows_only_triage(self):
-        r=receipt(self.event(comment={"id":124,"author_association":"OWNER","body":MARKER+"\\nPlease triage."}),"repo","sha")
+        r=receipt(self.event(comment={"id":124,"author_association":"OWNER","body":MARKER+"\nPlease triage."}),"repo","sha")
         self.assertEqual(r["state"],"ACTIONABLE_UNCLAIMED")
         self.assertFalse(r["human_approval_verified"])
         self.assertFalse(r["execution_started"])
