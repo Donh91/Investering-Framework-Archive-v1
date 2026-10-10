@@ -7,6 +7,7 @@ must originate from an authorized retrieval path; licensed raw data stays off pu
 from __future__ import annotations
 
 import argparse
+import os
 import hashlib
 import json
 import re
@@ -194,13 +195,19 @@ def main() -> int:
         summary, candidates = compare(cg, sr, asof)
         summary["source_sha256"] = {"coingecko_snapshot": cg_hash, "situation_room_daily": sr_hash}
         if args.private_candidates_output is not None:
-            # The user of this CLI must designate a private, non-Git output directory.
-            parent = args.private_candidates_output.parent
-            if not parent.exists():
-                raise ValueError("private output parent must already exist")
-            if args.private_candidates_output.exists():
-                raise ValueError("refusing to overwrite prior candidate file")
-            with args.private_candidates_output.open("x", encoding="utf-8") as fh:
+            # Reject repo-local, relative and world/group-readable destinations.
+            target_path = args.private_candidates_output
+            if not target_path.is_absolute():
+                raise ValueError("private output path must be absolute")
+            target_path = target_path.resolve()
+            repo_root = Path(__file__).resolve().parents[2]
+            if target_path == repo_root or repo_root in target_path.parents:
+                raise ValueError("cannot persist licensed candidates inside control-plane repo")
+            parent = target_path.parent
+            if not parent.is_dir() or parent.stat().st_mode & 0o077:
+                raise ValueError("private output parent must exist with mode 0700")
+            descriptor = os.open(target_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as fh:
                 json.dump({"contract": CONTRACT, "authority": AUTHORITY, "candidates": candidates}, fh, sort_keys=True)
                 fh.write("\n")
         print(json.dumps(summary, sort_keys=True, separators=(",", ":")))
