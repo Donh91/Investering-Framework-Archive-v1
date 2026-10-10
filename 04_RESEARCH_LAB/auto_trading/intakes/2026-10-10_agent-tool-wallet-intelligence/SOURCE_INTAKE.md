@@ -21,3 +21,6 @@ All direct pages failed access (403/cache miss) in this run. Collect original te
 
 ## Decisions
 D-01 ACCEPT RESEARCH TEST DESIGN; D-02 MERGE S1 #1512; D-03 REVISE label/loss estimator; Blockscout P0 regression; bot features SHADOW; BasedBot design reference only; Trader.dev benchmark only; X UNKNOWN. Existing reverse engineering #937 is owner; no parallel agent/ledger/engine. No trade, sign, custody, Core promotion or public/private data movement.
+
+## Update for Miles, 10 October 2026
+The Miles status `2108584190979764314` content is now available as `USER_TRANSCRIBED_FULL_PROSE` (original image prompts/linked articles not provided). See `MILES_DEUTSCHER_FULL_TEXT_ADJUDICATION.md`. His linked open GARCH repo was independently inspected in `MILES_GARCH_SOURCE_CODE_AUDIT.md`; official Robinhood MCP endpoint/permissions independently checked. The other listed X posts remain `UNREAD/UNKNOWN`. Previous text that grouped Miles with unread X was a time-bound fetch log and is superseded for this one post only.
