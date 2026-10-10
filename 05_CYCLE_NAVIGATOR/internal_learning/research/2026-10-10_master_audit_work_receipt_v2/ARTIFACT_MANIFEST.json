@@ -4,8 +4,53 @@
   "files": [
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/EXECUTIVE_REPORT_AND_HANDOVER.md",
-      "bytes": 31494,
-      "sha256": "2464a8b5e5ad9e9686a797967a28274b64d8bb36a6dff8b2d117c7f86e41b2f6"
+      "bytes": 42317,
+      "sha256": "0e09e00094558234b646f40f905a85d70145f3e251737fef1f5ba5dfa0f57a70"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P2_WARNING_CHAIN_RECEIPT.json",
+      "bytes": 2889,
+      "sha256": "d399afa07f9c85a28210bea3c4cf786b7545e73d223a64cd3fe4ef0e95fe9120"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P3_PRICE_SOURCE_COVERAGE.json",
+      "bytes": 1337,
+      "sha256": "fc67d96f4649d6d05785981bf586eb509cdae82ba9abefb4e4199aa8bf4798dd"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P3_SOURCE_ADMISSION_INDEX.json",
+      "bytes": 23220,
+      "sha256": "44dc120c392d2de4172ad2f81f0ecd318e8acf3a63b32ca2acbb21daeaaa3173"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P4_ECONOMICS_AI_RECEIPT.json",
+      "bytes": 2944,
+      "sha256": "57d9345cc661e11ec751145364fcb5126a38ee7a7ce25d6ff6f9b1bdf7139bc9"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P5_DATA_ADMISSION_CONTEXT.json",
+      "bytes": 2794,
+      "sha256": "5894272fc98178d157448eacff459248b25da770b7c28dd8ee2a4cd504a0d45d"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P5_PRIVATE_SOURCE_RECEIPT.json",
+      "bytes": 6747,
+      "sha256": "50f140e9919e1c93a13b8f75a1235a55ce08cb5f52e5a2cb5a4c6c924712905a"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P5_TRIAL_ACCOUNTING_PREFLIGHT.json",
+      "bytes": 733,
+      "sha256": "334c5d625a4af26d6c988f142557c0de395bc2e04ac23550faf5a2b43858080e"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/inspect_attachment_dates.py",
+      "bytes": 3109,
+      "sha256": "4189c9e5a068d7b415f6705f91579bb005e61fab8ff71d8611653b831589ef3f"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/inspect_private_sources.py",
+      "bytes": 7863,
+      "sha256": "751bd7fd8999df497633925f9e2de411afeb8c9bec07dc2412b656e731913931"
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/m3_arithmetic_receipt.json",
@@ -38,11 +83,19 @@
     "modern_replay_two_runs": "BYTE_IDENTICAL_FROM_GIT_TREE",
     "source_tamper_negative_control": "PASS",
     "population_unique_426": "PASS",
-    "existing_regressions": "45 PASS",
-    "site_full_stack_regression": "PASS",
+    "existing_regressions": "45 PASS_HISTORICAL_AUDIT_RECEIPT_NOT_RERUN_ON_V2_3",
+    "site_full_stack_regression": "PASS_HISTORICAL_RELEASE_READBACK_NOT_NEW_DEPLOY",
     "immutable_git_tree_replay": "PASS",
     "dirty_worktree_negative_control": "PASS",
-    "invalid_commit_negative_control": "PASS"
+    "invalid_commit_negative_control": "PASS",
+    "del_foundation_existing_regressions": "17 PASS; SYNTHETIC_FIXTURES",
+    "del_proxy_metadata_negative_control": "PASS_FAIL_CLOSED_BEFORE_RETURNS_READ",
+    "private_exact_exports": "7 SHA256 MATCH",
+    "private_quality_two_runs": "BYTE_IDENTICAL",
+    "private_truncated_source_negative_control": "PASS_BEFORE_OUTPUT",
+    "attachment_hash_negative_control": "PASS_BEFORE_OUTPUT",
+    "warning_horizon_replay": "12/12 MATCH; FULL_STORED_OBJECT_MISMATCH",
+    "reattached_sources_revalidated": "25/25 BYTE_AND_SHA256_MATCH"
   },
   "production_code_change": false,
   "main_write": false,
@@ -54,5 +107,9 @@
     "reason": "P1 owner-gated prospectively versioned scoring semantics, not CODE_REMEDIATION_ONLY",
     "main_candidate_admission": false
   },
-  "handover_revision": "v2.2_self_assessment_and_warning_first"
+  "handover_revision": "v2.3_sequential_bounded_packages_no_edge_promotion",
+  "additional_source_commits": {
+    "archive_packages": "175aa330f15262e4fcca0de6b3c9aff77511325e",
+    "private_exports": "36bd008d9c08dcaa4219927cddc9f4324f8b7d8b"
+  }
 }

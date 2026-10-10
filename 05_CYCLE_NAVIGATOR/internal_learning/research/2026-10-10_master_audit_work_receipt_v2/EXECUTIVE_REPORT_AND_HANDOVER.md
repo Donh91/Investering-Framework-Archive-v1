@@ -3,41 +3,59 @@
 Dato: 10. oktober 2026. Status: RESEARCH_ONLY, PARTIAL_AUDIT, NO_EDGE_PROMOTION.
 Executor: ChatGPT Work. Ingen nye delegerede agenter, betalt markedsresearch-dispatch, schedules eller auditmotor. Eksisterende Codex PR-review er anvendt.
 
-## Review-korrektion og næste arbejdsrækkefølge, v2.2
+## Review-korrektion og sekventielle resultater, v2.3
 
-Det uafhængige Codex-review af430cfccb fandt4238629214(P1) og4238629220(P2). Et senere review af38ca49fa fandt4238751870(P2): overleveringen indeholdt stadig instruktioner om den tilbagetrukne kandidat. Denne opdatering retter både replay og alle aktuelle kandidat-/wiring-anbefalinger. Ny exact-head review er stadig nødvendig; åbne reviewtråde er ikke selvafklaret. Tidligere commits bevares som auditspor.
+Det uafhængige Codex-review af430cfccb fandt4238629214(P1) og4238629220(P2). Et senere review af38ca49fa fandt4238751870(P2): overleveringen indeholdt stadig instruktioner om den tilbagetrukne kandidat. Denne opdatering retter både replay og alle aktuelle kandidat-/wiring-anbefalinger. Seneste review af510c83d9 fandt4238774637(P2), en resterende measurement-bug-formulering, som nu også er fjernet. Ny exact-head review er stadig nødvendig; åbne reviewtråde er ikke selvafklaret. Tidligere commits bevares som auditspor.
 
-**HOLD:** SCORING_CONTRACT_v1.md foreskriver HOLD/negative-return = PROTECTIVE, ogv2 viderefører denne proxy. De23 labels er derfor kontraktkonforme, selv om ordet kan misforstås som økonomisk kapitalbeskyttelse. Min tidligere klassifikation som en to-fil kodefejl uden owner-authority var forkert. Code-only-kandidaten trækkes tilbage fra denne ikke-mergede PR; ingen historiske forecasts/outcomes slettes eller ændres. En eventuel ændring kræver owner-afgørelse, ny prospektiv scoring-version, version-aware reporting og korrekt kapital-state comparator. Der foretages ingen sådan promotion her.
+**HOLD:** SCORING_CONTRACT_v1.md foreskriver HOLD/negative-return = PROTECTIVE, ogv2 viderefører denne proxy. De23 labels er derfor kontraktkonforme, selv om ordet kan misforstås som økonomisk kapitalbeskyttelse. Min tidligere klassifikation som en to-fil kodefejl uden owner-authority var forkert. Code-only-kandidaten er trukket tilbage fra denne ikke-mergede PR; ingen historiske forecasts/outcomes slettes eller ændres. En eventuel ændring kræver owner-afgørelse, ny prospektiv scoring-version, version-aware reporting og korrekt kapital-state comparator. Der foretages ingen sådan promotion her.
 
 **Replay:** Scriptet læser nu en verificeret40-tegns source-commit via immutable Git archive. Det læser aldrig checkoutets kildefiler. Standardkilden erbaa8c30da6285066f3b25ff13d42c1dc1104441c; scriptet kan blive på audit-PR-head, mens input læses fra den gamle Git-tree. Dokumenteret kommando er fortsat gyldig, eller tilføj `--source-commit baa8c30da6285066f3b25ff13d42c1dc1104441c`. Git-objectskal være tilgængelige; en partial clone kan kræve bounded blob-fetch. CSV/JSON bruger neutral hold_protective_labels/hold_protective_label frem for at erklære en kodeafvigelse.
 
 **FNP:** Main7974efdf og M2 measurement-integrity-addendum bekræfter TO gates: EXACT_EVALUATOR_RECOVERY før OBSERVER_WIRING. Ingen automatiske ENTERED/divergence-rækker må fremstilles fra narrativ eller threshold-proximity. Min tidligere handover om wiring var utilstrækkelig uden denne afhængighed.
 
-### Fem pakker, én efter én
+### Fem pakker gennemgået i rækkefølge, med åbne owner-gates
 
-| Pakke | Afgrænset mål | Owner og afhængighed | Accept / stop |
-|---|---|---|---|
-|1 Audit-integritet | Ret reviewfindings, tilbagekald ugyldig code-only-intake, reproducer data fra immutable tree | Eksisterende1565/1558. Udføres nu, ingen runtime policy-change | To deterministiske replayoutputs; dirty-tree/invalid-commit negative controls; manifest/readback og exact-head independent review. Ingen self-merge |
-|2 P0 advarsel og levering | Trace én eksisterende warning-family fra stress til frozen warning, emission, delivery og action availability; medtag en kontrolperiode uden warning | Eksisterende1553/EDGE-001 og risikopublicerings-owner. FNP1478 har særskilt evaluator-gate | Hash/ID/timestamp ved hvert led, kilde-/policyversion og eksplicit UNKNOWN ved manglende receipt. Ingen kausal beskyttelsesclaim uden matched kapitalforløb. WARNING != SELL, LIVE_EXIT_RULE = NONE |
-|3 P1 historisk forecast-admission | Admit CN9 ogCN11-14 samt DATA PING-originaler før bred population | Eksisterende209/historisk audit og1558.25 tilgængelige attachments er ikke126/65-populationen | Originalhash, creation/publication/knowledge-time, metodeversion, frosset forecast og outcomes. UNTESTABLE ved manglende original/tid. Cases suppleres med fuld eligible kontrolpopulation |
-|4 P1 økonomisk ogAI marginalværdi | Matched Kompas/AI versus momentum, mekanisk baseline ogHOLD; medtag downside ogmistetupside | EksisterendeM3/CN owners og godkendte protokoller. FNP kræver først exact evaluator, dernæst observer-wiring | Samme information, kapital ogomkostninger; frosne baselines, chronological holdout ogepisodefamilier. Ingen promotion uden relevant kontrol ogusikkerhed. Brug eksisterende killcriteria |
-|5 P1 private data ogtrialintegritet | Valider panel/MAEVE/CFGI/BH source-bindings ogwindows; gennemfør kun admitted test | Eksisterende datasetowners og1557. Round3 analysisOFF. FNP-recovery via CLAUDE-M2-T2-EVALUATOR-RECOVERY-012, ingen konkurrerende implementering | SHA/bytes/schema/completeness føranalyse; global trialdenominator, H0/H1, holdout/purge/embargo ogrealistisk sellability. Stop ved PIT/admission-mangel |
+Dette er en afgrænset fortsættelse af samme audit. Pakkerne er gennemgået én efter én. Deres kontrolarbejde er udført; det er ikke det samme som fuldført legacy-admission, aktiveret DEL, leverede alerts eller demonstreret edge.
 
-Pakke1 er implementeret og lokalt testet på auditbranchen, men afventer exact-head independent review og merge-gates. Pakke2 er nu næste P0-pakke. En read-only preflight af aktuel governor og eksisterende automatiseringsmetadata er gennemført. Det tilgængelige automatiseringssvar indeholder ikke notifications_enabled eller delivery receipts. En registreret kørsel beviser derfor ikke levering. Historiske kommentarer om deaktiverede notifikationer er ikke en frisk verificering af indstillingen.
+| Pakke | Faktisk udført | Resterende gate og eksisterende owner |
+|---|---|---|
+| 1 Måleintegritet | Immutable replay repareret; ugyldig HOLD code-only-kandidat trukket tilbage. Også sidste wording-finding 4238774637 rettet | Exact-current-head independent review og merge-gates i #1565. Eventuel ny scoringkontrakt kræver Compass-owner |
+| 2 Advarselskæde | Owner-replay af 12 events, én foreløbig familie, to identiske kørsler; alle horisontberegninger og freeze-hashes matcher. BUILDING-kontrol dokumenteret | Hele gamle objekt matcher ikke nuværende tape-hashes. Emission, delivery og action availability UNKNOWN. #1553/EDGE-001 |
+| 3 Historiske kilder | 25 forskellige source-hashes; 17 fulde tekstlæsninger, 5 sektionslæsninger, én gennemgående claim-søgning og 2 komplette datooptællinger | Ingen nye kvalificerede originalforecasts admitted fra disse bilag. Den tidligere 126/65-population er ikke genfundet fuldt. #209/#1558 |
+| 4 Økonomi og AI | Eksisterende DEL v1.2 og return-foundation kontrolleret; 17 tests PASS. Proxy-data afvises før afkastlæsning/output. Kort signalvej gennemgået | Godkendt segment-return-owner mangler. Ingen økonomisk replay eller matched LLM-ablation udført. M3/CN/DEL-owner |
+| 5 Privat evidens og trials | Syv præcise private exports hashverificeret; MAEVE parent/fill-join, CFGI-rækker, panelmetadata og BH-receipt genberegnet. Admission/filename-preflight | Panelets store gzip og BH's 55 rå CSV-filer ikke selvstændigt genhash/replayed. Global proposal-time trial denominator ikke etableret. Datasetowners/#1557 |
 
-### Selvevaluering mod master-missionen
+### Ti nye eller skærpede fund fra fortsættelsen
 
-Jeg er ikke tilfreds med den samlede opfyldelse af prompten. Den afgrænsede replay gav nyttige resultater, men den fulde historiske forecast-population, privat rådatareplay, alle workflow-consumers og økonomisk/AI marginalværdi er ikke undersøgt tilstrækkeligt. Derfor forbliver auditten PARTIAL_AUDIT, ikke fuldført master-audit.
+1. **HOLD-labelen er kontraktkonform.** De 23 tidligere labels er en økonomisk tvetydig proxy, ikke en dokumenteret kodeafvigelse. Den oprindelige code-only-klassifikation var forkert. Den er trukket tilbage uden at ændre historiske forecasts eller outcomes.
+2. **Warning-replay reproducerer beregningen, men ikke hele det gamle kildeobjekt.** Alle 12 horisontresultater og source-freeze-hashes matcher. Alle 12 event-objekter har ændret tape-binding ved genkørsel mod den nyere immutable tree. Udvidede daglige hourly-filer ændrer helfilhash. Dette er en source-vintage-begrænsning, ikke bevis for forkert markedsaritmetik eller datakorruption. Kilde: `P2_WARNING_CHAIN_RECEIPT.json`.
+3. **12 warnings er kun én foreløbig hændelsesfamilie.** Den moderne kalibrerings-owner returnerer 160 eligible BTC/ETH-serierækker fra 80 eligible outcome-bindinger blandt 319 outcome-inputs, men nul warning-enheder. Ældre schema2-warnings er en anden policy-population og må ikke backfilles ind i den moderne population. Kilde: samme receipt og ownerens eligibility-kode.
+4. **En aktiv risikotask beviser ikke levering.** Den eksisterende Market Risk → Portfolio Action-task var enabled med seneste run 2026-10-10T18:34:37.024935Z. Det eksponerede svar indeholder hverken notification-setting eller delivery history. Dens nuværende policy filtrerer rutinealarmer og fejler lukket ved ukendt overgang. Historiske ELEVATED-events er derfor ikke automatisk leveringspligtige. Samtidig policy, emission og delivery for septemberfamilien er fortsat UNKNOWN. Ingen task ændret.
+5. **BTC-pris-PDF'en dækker ikke 2026.** Kilde 21 har 4.999 unikke datoankre fra 2010-07-18 til 2024-03-24, selv om filterheaderen slutter juni 2026. Kilde 22 har 3.749 ETH-datoankre frem til 2026-06-14. Ingen af dem dækker hele uge25. De kan ikke verificere kilde23's uge25-note. Prisfelt-joining er ikke admitted. Kilder: `P3_PRICE_SOURCE_COVERAGE.json` og `P3_SOURCE_ADMISSION_INDEX.json`.
+6. **En falsk datagap-påstand blev afvist.** En streng same-line-parser tabte 55 ETH-datoer ved PDF-sideskift. Datoankrene findes, og den korrigerede optælling har ingen interne kalenderdagshuller. Scripts hash-gate afviser forkert input før output. Ingen manglende OHLC-celler udfyldes med AI.
+7. **Den relevante økonomimotor eksisterer allerede og blokerer korrekt.** DEL v1.2 skelner mellem eksisterende ejer og ny cash, anvender eksplicit action og debiterer reelle transitions. Den afviser den nuværende research-foundation før return-series read. Foundation har 43 eligible intervaller og 41 komplette bucket-intervaller, men mangler godkendt cap-taxonomi og microcap-owner. Rank-proxies må ikke omdøbes til cap-buckets. Kilde: `P4_ECONOMICS_AI_RECEIPT.json`.
+8. **Den korte Compass-signalvej er deterministisk i det gennemgåede source-scope.** `derive_market_now` bruger samtidige BTC/ETH-deltafortegn, og `horizon_map` oversætter dette til 12h. Længere horisonter kan arve CN-context. Dette forklarer, hvorfor en LLM-merverdi ikke kan tilskrives den korte vej alene. Den gamle betingede 21-row-kontrol står ved 9 korrekte og 12 forkerte for både Compass og persistence. Det er ikke en generel AI-ablation.
+9. **MAEVE's recovery-counts er nu selvstændigt valideret.** Præcise private CSV-hashes matcher. 432 unikke parents, 426 CLOSED og 6 OPEN, joiner til 1.073 unikke fills uden orphan-parent, fill-count mismatch eller dobbelt parent/fill-index. DCA-count er 641. Kun 209 CLOSED har positivt registreret kapitalbeløb og numerisk USD-weighted entry; 417 CLOSED har post-entry-analysis-lag. Dette er coverage/tidsmetadata, ikke nettoafkast eller adgang til at bruge sub-scores som entry-features. Kilde: `P5_PRIVATE_SOURCE_RECEIPT.json`.
+10. **De store datatal skal opdeles efter deres reelle population.** Panelmetadata summerer til 851.882 rækker, 35 aktiver og 69 asset/window-grupper: 35 aktiver i 2020–2021, 34 i 2025–2026. MATIC mangler i det nyere vindue, FTM/MKR slutter tidligt; det ældre har 978 summerede manglende asset-hours inden for individuelle spans. Det er korrelerede asset-hours, ikke 978 uafhængige events. CFGI giver 478 selected-event-rækker og 1.230 bootstrap-rækker; bootstrap-cadence cirka 15m er reproduceret uden dubletter. BH-receipt matcher byte/hash og beskriver 55 filer/48 hashes/7 dubletgrupper; rå CSV'er er ikke selvstændigt genhash-verificeret. Kilder: P5-receipts.
 
-Den brugerleverede tidligere vurdering er læst fuldt ud og sammenholdt med reviewkommentar6100799652 i PR1565. Dens to centrale reviewkritikker accepteres. Min code-only klassifikation var forkert, og den oprindelige replaykildelæsning var utilstrækkeligt bundet til Git-versionen. Kandidaten er nu trukket tilbage og replayet repareret. Reviewerens uafhængige accept er fortsat udestående.
+### Testresultater og kildegrænser for de nye pakker
 
-Præcisering:168h BTC har29 scorede forecasts,27 CORRECT og2 INCORRECT; alle29 er SIDEWAYS. Det er ikke27 SIDEWAYS blandt29 korrekte. Ingen økonomisk edge følger af disse counts.
+- Eksisterende DEL/foundation-regression: 17 tests PASS på immutable Archive-source `175aa330f15262e4fcca0de6b3c9aff77511325e`. Syntetiske fixtures, ingen market-performance evidence.
+- DEL negative control: forskningsmetadata plus en bevidst ikke-eksisterende returns-sti stopper ved owner-contract-gaten, før returns læses og før output oprettes.
+- Private quality check: to byte-identiske outputs; en trunkeret parent-CSV afvises før output. Syv exact exports, ikke syv komplette private datasæt.
+- PDF check: 8.748 datoankre totalt i to hashbundne kilder; forkert kildehash afvises før output. OHLC-joining og eligible original knowledge-time er stadig ukendt.
+- Trial preflight: 508 candidate-filer repræsenterer 500 forskellige filename-ID'er; 500 admission-ID'er matcher disse. De otte ekstra filer er konsistente med registryens duplicate-file-count. Registry har 252 qualified, 239 semantic duplicate, 8 quarantined og 1 waiting. Dette er ikke en global, monotont bevaret proposal-time trial denominator. 26.023 dispatch-, 26.260 receipt- og 55.431 observation-filer må ikke tælles som uafhængige forsøg. Kilde: `P5_TRIAL_ACCOUNTING_PREFLIGHT.json`.
+- Private runtime-state: `GOVERNANCE/COLLECTION_ACTIVATION.json` har collection active for tre kilder, men hypothesis testing og outcome scoring OFF. Ældre root README/boundary-prosa er ikke en frisk inaktivitetsgaranti. Historiske MAEVE/panel/CFGI-arkiver er separate research authorities. Ingen Round3-analysis aktiveret.
 
-Den aktuelle source-preflight genoptæller25 attachments, hash-/bytebinder dem og kan udtrække ikke-tom tekst fra alle25. Det er en målrettet søgning, ikke fuld læsning eller PIT-admission. Den genfinder FT1-identitet, men ikke en admitted exact evaluator. Ingen mangel på et søgehit erklæres som dokumenteret fravær i det samlede arkiv.
+### Selvevaluering mod prompten
 
-Den tilgængelige June10-attachment beskriver FT1-identitet/freeze/deadline, men den målrettede TXT-søgning genfinder ikke exact ENTERED/persistence/reset-evaluator. Filnavn ogselvrapporteretdato er ikke originalpublication-time. Resultatet er en dækningsbegrænsning, ikke permission til at opfinde evaluator eller erklære den fraværende fra alle arkiver.
+Jeg er tilfreds med de afgrænsede falsifikationer og reproducerbare kvalitetstests, men ikke med fuld opfyldelse af master-missionen. Jeg har rettet min tidligere authority-fejl og udført fem kontroller i rækkefølge. Jeg har stadig ikke leveret fuld legacy-population, matched net economics, AI A–E-ablation eller end-to-end delivery proof. Ingen fuldførelsespåstand er berettiget.
 
-Denne v2.2-korrektion erstatter de tidligere code-only-candidate/wiring-only anbefalinger. De historiske commits bevarer tidligere påstande som auditspor. Receipt-counts er deskriptive; manifest registrerer neutral nomenklatur og withdrawn candidate.
+Ressourcearbejdet kan også forbedres: to brede filoversigter gav unødigt store metadataoutputs. Det medfører ikke evidenspromotion, men er ineffektivt. Videreførelse skal begynde med tælling/filtrering og kun hente de relevante records. Ingen nye agenter, motorer eller schedules blev oprettet.
+
+Den brugerleverede tidligere vurdering er læst fuldt og sammenholdt med reviewkommentar6100799652. Dens centrale kritik accepteres. Præcisering: BTC168h har 29 scorede forecasts, 27 CORRECT og 2 INCORRECT; alle29 er SIDEWAYS. Ikke 27 SIDEWAYS blandt29 korrekte.
+
+**Næste arbejde bør udføres, men gennem eksisterende gates:** først exact-head accept af #1565 og owner-afgørelse om prospektiv scoringsemantik; derefter #1553 delivery/source-vintage admission, #209 original-source admission, DEL segment-return-owner og #1557 proposal-time accounting. FNP#1478 kræver EXACT_EVALUATOR_RECOVERY før OBSERVER_WIRING. Bred strategy mining, flere indikatorer og ny modelresearch er ikke et begrundet næste skridt.
 
 ## READ FIRST og autoritet
 
@@ -45,7 +63,7 @@ Dette er et afgrænset evidensbilag hos den eksisterende Cycle Navigator interna
 
 Læs derefter [den eksisterende historiske rapport](../2026-10-10__legacy_to_automated_kompas_cross_archive_evidence_audit_v1.md), inkluderet gennem merged PR1560, PR1561 og PR1562. Denne Work-kørsel har læst rapporten, genlæst centrale afgørelser og tilføjet egne bounded reproduktioner. Historiske rapportudsagn er ikke automatisk uafhængigt verificerede.
 
-Alle lokale beregninger er fastlåst til Archive `baa8c30da6285066f3b25ff13d42c1dc1104441c`. Snapshot-cutoff for maturity-census: `2026-10-10T17:20:34Z`. Ingen historisk forecast- eller outcome-fil er ændret.
+Det oprindelige moderne census/M3-replay er fastlåst til Archive `baa8c30da6285066f3b25ff13d42c1dc1104441c`. De nye P2/P4/P5 control-plane checks bruger `175aa330f15262e4fcca0de6b3c9aff77511325e`, og private exports bruger `36bd008d9c08dcaa4219927cddc9f4324f8b7d8b`. Populationerne pooles ikke. Snapshot-cutoff for maturity-census: `2026-10-10T17:20:34Z`. Ingen historisk forecast- eller outcome-fil er ændret.
 
 ## Executive vurdering
 
@@ -68,9 +86,9 @@ Et vigtigt kritisk fund er en kontraktkonform, økonomisk tvetydig proxy: HOLD b
 
 ### Hvad kan vi dokumentere, og hvad er overvurderet?
 
-Demonstrated Value: immutable ledger-integritet og reproducerbar outcome-aritmetik i det afgrænsede moderne scope; fail-closed target-missing behavior; verificeret adskillelse af stale research og Official på site; faktisk fejlopdagelse i measurement layer. Der er ingen ny demonstrated økonomisk edge i denne mission.
+Demonstrated Value: immutable ledger-integritet og reproducerbar outcome-aritmetik i det afgrænsede moderne scope; fail-closed target-missing behavior; verificeret adskillelse af stale research og Official på site; identifikation af en kontraktkonform, økonomisk tvetydig action-proxy. Der er ingen ny demonstrated økonomisk edge i denne mission.
 
-Testable Potential: korrekt action-attribution, FNP-producer-forbindelse, exact publication-time admission, eksisterende prospektive native baselines og episodebaseret warning/delivery-accountability kan gøre edge-spørgsmålet testbart. En forbedring af måleevnen må ikke kaldes forbedret afkast.
+Testable Potential: korrekt action-attribution, FNP exact-evaluator-recovery og efterfølgende producer-forbindelse, exact publication-time admission, eksisterende prospektive native baselines og episodebaseret warning/delivery-accountability kan gøre edge-spørgsmålet testbart. En forbedring af måleevnen må ikke kaldes forbedret afkast.
 
 Speculative Potential: nye breadth/recovery-features, CFGI-divergenser, ekstra LLM-fortolkning og microcap alpha. Ingen af dem er afprøvet som ny edge her.
 
@@ -100,7 +118,7 @@ Dette bilag samler eksisterende ID'er uden at ændre deres registre, trial-denom
 | RL-DISTRIBUTION-SURVIVAL-META-006 / M6 | HCEL v0/v0.1,LOEO,HOLD20bps | v0 temporal invalid; v0.1 ingen robust vinder | NO_PROMOTION; behold negative resultater |
 | EDGE-001 /1530,1553 | 12 warning events,1 provisional family i governor-snapshot;0 eligible warning calibration rows | NOT_ESTABLISHED information/economics; typed prospective route findes | NEEDS_ROWS; ingen warning=>SELL |
 | T2/T2B /1553 | 94 annotation rows; PIT admission/join ikke gennemført | Claim A/B ikke testbare nu; NO_WARNING ikke legitimt assertet; policy-version gaps | Admission-repair før event recall eller økonomisk scoring |
-| Official Compass / Cycle Navigator | 142 freezes,319 outcomes; independent hashes/returns/scores | Integritet PASS;23 HOLD protection labels;knowledge-time UNKNOWN | Candidate WITHDRAWN; scoringsemantik ROUTE_TO_OWNER; ikke live fix |
+| Official Compass / Cycle Navigator | 142 freezes,319 outcomes; independent hashes/returns/scores | Integritet PASS;23 kontraktkonforme HOLD proxy-labels;knowledge-time UNKNOWN | Candidate WITHDRAWN; scoringsemantik ROUTE_TO_OWNER; ikke live fix |
 
 Kilder: `06_RESEARCH_LAB/m1_checkpoints/`, `m2_checkpoints/`, `m3_checkpoints/`, `m4_checkpoints/`, `m5_checkpoints/`, `m6_checkpoints/` final adjudications af 2026-10-05; M6 `HCEL-step5-6-final-adjudication-v1.md`; `research/framework_memory/edge_compound_governor/LATEST.json`; `06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/`; issues1478,1530,1553,1557. Nøjagtige file paths findes i den eksisterende historiske rapport.
 
@@ -109,14 +127,28 @@ Kilder: `06_RESEARCH_LAB/m1_checkpoints/`, `m2_checkpoints/`, `m3_checkpoints/`,
 Største efterprøvelige potentiale ligger i det eksisterende hourly altcoin-panel og MAEVE's executions/kapitalforløb. Det er en prioriteringshypotese, ikke et testresultat.
 
 - **Hourly altseason-panel:** manifest beskriver 851.882 rækker og35 aktiver i adskilte windows. Ingen ubrudt2020-2026-periode antages. Survivorship, cross-asset shocks og vinduesgrænser skal afgrænses før breadth/recovery-ablation.
-- **MAEVE:** eksisterende recovery tæller432 parent-positioner,1.073 executions og641 DCA-fills. Disse er dokumenterede archive-counts, ikke selvstændigt råvalideret i denne kørsel. Win-rate er ikke capital-weighted/net economic edge. Entry,exit,DCA,kapitalbinding,beta,fees og sellability kræver separat replay.
+- **MAEVE:** eksisterende recovery tæller432 parent-positioner,1.073 executions og641 DCA-fills. Disse parent/fill-counts er nu selvstændigt verificeret på exact private CSV-exports; komplet raw-ZIP/performance er ikke replayet. Win-rate er ikke capital-weighted/net economic edge. Entry,exit,DCA,kapitalbinding,beta,fees og sellability kræver separat replay.
 - **CFGI:** event-stage og PDLT-bootstrap har forskellige observationssemantikker. 15m captures af4h/1d-tidsrammer er ikke uafhængige1h samtidige observationer. MARKET-komponent mangler i dokumenteret ældre event-stage. Bridge38 er OPEN, ikke leveret forskning.
 - **BlockHorizon:** fokus på32originale CSV/29hashes er for snævert. Den offentlige CURRENT_PRIVATE_BINDING beskriver også supplements og55archive-wide CSV/48hashes. Modelprojektioner med fremtidige timestamps må aldrig blive market actuals. Ingen restricted provider-values er kopieret hertil.
 - **Alpha Lab:** eksisterende120/124 og andre specialistowners bevares. Ingen ny launch-research, wallet scoring eller sellability-claim udført.
 
-Denne kørsel genoptalte25 aktuelt monterede attachment-filer og udtrak tekst til privat midlertidig undersøgelse. De tidligere126/65 er en anden inventory-population. Ingen claim om komplet projekt/chat-historik; ingen licensbegrænsede kildetekster publiceret. Originale DATA PING V1-V3, CN9/11-14 og alle maj/juni-cases er ikke fuldt admitted/replayed her. De forbliver original-source/knowledge-time gaps, selv om den eksisterende historiske rapport omtaler dem.
+Denne kørsel genoptalte25 aktuelt monterede attachment-filer og dokumenterede læsescope pr. fil i P3_SOURCE_ADMISSION_INDEX.json. De tidligere126/65 er en anden inventory-population. Ingen claim om komplet projekt/chat-historik; ingen licensbegrænsede kildetekster publiceret. Originale DATA PING V1-V3, CN9/11-14 og alle maj/juni-cases er ikke fuldt admitted/replayed her. De forbliver original-source/knowledge-time gaps, selv om den eksisterende historiske rapport omtaler dem.
 
-## Cross-repository reconstruction
+### Nye source-pins og fresh-read state
+
+Fortsættelsens metadata-genlæsning gav følgende main-pins. Disse er separate fra det oprindelige census-snapshot nedenfor:
+
+| Repo | Visibility | Default | Fortsættelsens source SHA |
+|---|---|---|---|
+| Archive | PUBLIC | main | 175aa330f15262e4fcca0de6b3c9aff77511325e |
+| secrets | PRIVATE | main | 36bd008d9c08dcaa4219927cddc9f4324f8b7d8b |
+| Meme-Alpha-Lab | PRIVATE | main | 308674f5e849a535e3b54c8bedd59c591ae48ec4 |
+| Audit-Bridge | PRIVATE | main | c7cdefeeb74615c0d3e4e9c51c308f7736cbd45b |
+| Eksperimenter | PUBLIC | main | f8320e985ea974553663e6b9b7d25810d1047bf2 |
+
+Senere fresh read af Archive-main gav21a3aca1a561f713a52ac3cba7487297532be8d8. Pakkerne bevarer deres ovenstående immutable input-pins. #1558 er stadig OPEN/DRAFT på571025128e82b94b1879626e8bf8865125d473f8. Ingen ny Vault-adgang fundet. Lokalt Git er shallow; en lokal merge-tree-ancestry-fejl er derfor ikke bevis for faktisk unrelated history i GitHub. #1565 var OPEN/unmerged ved source-read. Endelig head/CI/review/readback dokumenteres i PR's execution-comment.
+
+## Cross-repository reconstruction: oprindeligt census-snapshot
 
 | Repo | Visibility | Default | Fastlåst SHA |
 |---|---|---|---|
@@ -145,10 +177,10 @@ Pullback-timing og købsvinduer kan forbedres som **måle- og leveringskæde**: 
 | Prioritet / handling | Problem og evidens | Baseline, test og kill criterion | Owner, omkostning, rollback og faktisk state |
 |---|---|---|---|
 | 1 EXECUTE_NOW udført på auditbranch; scoring ROUTE_TO_OWNER | Replay-sourcebinding var forkert; HOLD-kandidat overskred semantikautoritet | Immutable Git-tree replay, to ens outputs, dirty-tree og invalid-commit negative controls. Scoringændring må ikke genbruge gammel version | PR1565 og Compass-owner. Kandidat slettet fra umerged branch, bevaret i historisk commit. Ingen main/runtime-write. Rollback kun auditbranchændring |
-| 2 ROUTE_TO_OWNER, preflight udført | Advarsel er ikke leveringsbevis;12events er kun1provisional family | Én end-to-end family plus kontrolperiode; match emission/delivery/action receipts ogoutcome. Stop økonomisk claim ved manglende led |1553/EDGE-001 og eksisterende delivery-owner. Read-only audit lav risiko; senere instrumentation kræver egne gates. Ingen ny automation |
-| 3 WAIT_FOR_EVIDENCE, source-preflight udført | DATA PING/CN-originaler og knowledge-time ikke admitted | Hashbinder25attachments; admit hver original individuelt; ingen retrospektiv forecast eller selekteret case som fuld population |209/historisk audit/1558. Original126/65-population fortsat gap. Ingen frosne forecasts ændres |
-| 4 WAIT_FOR_EVIDENCE | Kompas/AI marginal forecast- ogøkonomisk værdi ikke demonstreret | Samme information/kapital/cost; momentum/mekanisk/HOLD; holdout, episodefamilier, false alarms ogmistetupside. Eksisterende killcriteria |M3/CN owners. Ingen ny model eller live autoritet. FNP1478 evaluator førwiring; ingen økonomisk test her |
-| 5 ROUTE_TO_OWNER før ny mining | Privat sourceintegritet ogglobal trialdenominator ufuldstændigt verificeret | Eksisterende1557 ogdatasetmanifestgates; alltrials/negativefindings førmodelsearch; PIT ogsellability førperformance |M4/AutoTrading1557 ogdatasetowners. Ingen privat rådata publiceret eller ny mining; rollback må aldrig slette negative trials |
+| 2 ROUTE_TO_OWNER, owner-replay udført | Advarsel er ikke leveringsbevis;12events er kun1provisional family | Én end-to-end family plus kontrolperiode; match emission/delivery/action receipts ogoutcome. Stop økonomisk claim ved manglende led |1553/EDGE-001 og eksisterende delivery-owner. Read-only audit lav risiko; senere instrumentation kræver egne gates. Ingen ny automation |
+| 3 WAIT_FOR_EVIDENCE, source-review udført | DATA PING/CN-originaler og knowledge-time ikke admitted | Hashbinder25attachments; admit hver original individuelt; ingen retrospektiv forecast eller selekteret case som fuld population |209/historisk audit/1558. Original126/65-population fortsat gap. Ingen frosne forecasts ændres |
+| 4 WAIT_FOR_EVIDENCE, DEL gate-tests udført | Kompas/AI marginal forecast- ogøkonomisk værdi ikke demonstreret | Samme information/kapital/cost; momentum/mekanisk/HOLD; holdout, episodefamilier, false alarms ogmistetupside. Eksisterende killcriteria |M3/CN owners. Ingen ny model eller live autoritet. Rank-proxy foundation er ikke DEL-owner. FNP1478 evaluator førwiring;17regressionstests,proxygatePASS;ingenmarketøkonomireplay |
+| 5 ROUTE_TO_OWNER før ny mining | Privat sourceintegritet ogglobal trialdenominator ufuldstændigt verificeret | Eksisterende1557 ogdatasetmanifestgates; alltrials/negativefindings førmodelsearch; PIT ogsellability førperformance |M4/AutoTrading1557 ogdatasetowners. 7privateexportsindependentrehashed,metadata/countchecksgennemført;ingenprivateværdierpubliceretellernymining; rollback må aldrig slette negative trials |
 
 Mulig økonomisk værdi kan ikke estimeres troværdigt nu. Prioriteringen handler om høj marginal måleværdi og lav implementeringsrisiko. Nye breadth/CFGI/MAEVE-hypoteser må kun optages gennem eksisterende scientific admission/trial accounting og have H0,H1,population,source revision,knowledge-time,comparator,primary metric,min evidence ogkill criterion før evaluering.
 
@@ -181,20 +213,20 @@ Dette er en separat selvkritisk kvalitetskontrol, ikke en review udført af en u
 |1558 existing master entry | PASS |exact571025head,read-first/queue/gaps/source/handover read |
 |1560-1562 historical report | PASS |Merged status fresh-read;report read,ikke alle legacy claims independentlyreplayed |
 |M1-M6 negatives and supersession | PASS |Latestfinaladjudications preserved;M6v0rejected |
-|Legacy DATA PINGoriginal/reconstruction | PARTIAL |25accessible attachments inventoried;full PIT admission pending |
-|Private dataset boundaries | PASS |Manifest/README/public binding scope;no restricted valuespublished;Round3untested |
-|Private raw completeness/performance | UNKNOWN |No full rawhash/replay forMAEVE,CFGI,panel,BH orAlphaLab |
+|Legacy DATA PINGoriginal/reconstruction | PARTIAL |25hashboundattachments,reviewscopesexplicit;noadmittedoriginalforecast;PITpopulationpending |
+|Private dataset boundaries | PASS |Exactprivateexportchecks;provider-value-freereceipts;Round3analysisOFF |
+|Private raw completeness/performance | PARTIAL |7exactexportsverified;MAEVE/CFGIcountchecksPASS;panelgzip/BHrawCSV/AlphaLabnotfullyreplayed |
 |Modern freeze/outcome integrity | PASS |142/319hashes,319bindings independentreplay |
 |Modern original knowledge/publication time | UNKNOWN |CSVexplicitUNKNOWN;firstcommit/sourcevintages notadmitted |
-|Source future information | PARTIAL |KnownE1X/M6gapsrespected;codecontrols45tests;fullsourcechainnotvalidated |
+|Source future information | PARTIAL |KnownE1X/M6gapsrespected;17newDEL/foundationtests;MAEVEpost-entrytimeflags;fullsourcechainnotvalidated |
 |Public score vs scientific edge | PASS |Nopooled precision;SIDEWAYS/abstentions/versionsexplicit |
-|Benchmark validity | PARTIAL |M3arithmeticpass;reconstructed comparatorsnotoriginalfreeze |
+|Benchmark validity | PARTIAL |M3arithmeticpass;DELfailsclosedand17testsPASS;governedreturnsandmatchedAIcomparisonmissing |
 |Population denominators | PARTIAL |Modern426rowscomplete;legacy/allhorizonsnotcomplete |
 |Independent eventfamilies/regimes/OOS | UNKNOWN |NoindependentN/regime/OOSclaim;correlationexplicit |
 |Multiple testing/globaltrialdenominator | FAIL |Existing1557gapremains;no newstrategymining |
 |AI incremental value | UNKNOWN |MatchedA-Eablationnotperformed |
 |Capitalprotection/opportunitycost | PARTIAL |HOLDproxy-labelreproduced,FNP/M6negatives;netcausalpolicyreplayabsent |
-|Alertemission/delivery/actionavailable | UNKNOWN |Noend-to-enddeliveryreceiptchainverifiedhere |
+|Alertemission/delivery/actionavailable | UNKNOWN |12warningpathreplaysPASS;emission/delivery/actionavailableUNKNOWN |
 |Actual executed codefixdownstream | UNKNOWN |Replayrepairbranchonly,nomergedruntimefix;prior1549site independentlyreadback |
 |No redundant architecture orauthority | PASS |Existingowners,noengine/agent/schedule/tradingchanges |
 |Durablehandover | PARTIAL |Thisbranch+PRpreservework;notcanonicalmergeduntilreview |
@@ -210,3 +242,32 @@ Dette er en separat selvkritisk kvalitetskontrol, ikke en review udført af en u
 7. Afvent1557accounting ogadmission førnye panel/MAEVE/CFGI ellerAI-ablationforsøg. Brug sammeinitialcapital,fees/slippage,sellability,re-entry ogopportunitycost;episodeblokke,holdouts,purging/embargoogalle trials.
 
 Missionens verificerede forbedring er et reproducerbart evidence-populationindex, stærkere immutable Git-sourcebinding og tilbagetrækning af en ugyldig code-only-kandidat. Production drift, forecastskill ogøkonomisk performance blev ikke ændret eller dokumenteret forbedret af denne kørsel.
+
+## Nye receipts: reproduktion og admission
+
+Alle nye filer er evidence-only bilag i den eksisterende owner-mappe. Intet register eller trial ledger erstattes.
+
+`inspect_attachment_dates.py <private-source-folder> --output /tmp/date-receipt.json` kræver de to original-PDF'er og P3_SOURCE_ADMISSION_INDEX.json. SHA mismatch stopper før parsing/output. `pdftotext -layout` kræves. Rå kilder og licensbegrænset tekst må ikke følge audit-PR'en.
+
+`inspect_private_sources.py <private-export-folder> --output /tmp/private-quality-receipt.json` kræver syv nøjagtige exports fra private commit36bd008d. Brug alias/path/bytes/SHA-bindings i P5_PRIVATE_SOURCE_RECEIPT.json; bevar originalbyteformat, herunder en BH-receipt uden ekstra trailing newline. Hash-checks sker før quality parsing. Scriptet publicerer kun counts/schema/tidsmetadata, ikke provider- eller performanceværdier. Panelets coverage-CSV er en særskilt metadata-preflight, ikke inkluderet i de syv exact exports.
+
+P2-reproduktion bruger eksisterende `scripts/learning/m6_warning_event_outcomes.py` fra source175aa330 med `--repo-root <immutable-export>` og `--now-utc 2026-10-10T07:16:20Z --output /tmp/m6-owner.json`. Exportér samme tree's official/daily, official/outcomes, hourly/2026/09, hourly/2026/10 og owner-scripts. Sammenlign event-ID/source-hash/horizons med stored research/framework_memory/m6_warning_events/LATEST.json. Hele objektet forventes ikke byte-identisk med stored LATEST, fordi outcome_tape_bindings ændrer sig; to nye owner-kørsler på samme source/time skal være identiske. Moderne calibration samles med existing `action_compass_exit_calibration.collect_rows` fra samme tree. Ingen production-output write.
+
+P4-reproduktion: exportér DEL/foundation scripts og deres eksisterende tests fra175aa330; kør `python -m unittest tests.learning.test_decision_economics_ledger tests.learning.test_segment_return_foundation`. Prøv DEL CLI med foundation-metadata og en manglende returns-sti: expected owner-contract error før returns-read og intet output. Denne negative kontrol må ikke sættes lig net economic edge.
+
+P5-trial-preflight genoptæller eksisterende tree-paths med `git ls-tree -r --name-only 175aa330f15262e4fcca0de6b3c9aff77511325e -- research/experiment_lifecycle`. Tæl fulde filstier og særskilt unique candidate/admission filename-ID'er. Læs current registry/status_counts. Ingen replay af alle26kreceipts eller global trial-stabilitet er påstået.
+
+| Slutvurdering | Status | Kildeforklaring |
+|---|---|---|
+| SCIENTIFIC READINESS | PARTIAL | M1–M6-negative fund og scoped tests bevaret;#1557 global denominator åben |
+| DATA READINESS | PARTIAL | P3/P5 hash/count metadata;original knowledge-times, panelbulk/BHrawcsv stadig gaps |
+| FORECAST ACCOUNTABILITY | PARTIAL |426modernrows;legacy originalpopulation ogpublicationadmission mangler |
+| RISK-TO-ACTION READINESS | UNKNOWN | P2 pathreplay, men emission/delivery/actionavailable ukendt;WARNING != SELL |
+| OFFENSIVE EDGE READINESS | UNKNOWN | Ingen admitted matched entry/re-entry neteconomics |
+| AUTO TRADING EVIDENCE READINESS | PARTIAL | MAEVE recoverycounts verified;E1X/time/trial/cost/exposuregates åbne |
+| ALPHA LAB EVIDENCE READINESS | UNKNOWN | Eksisterende specialistowners;ingen ny launch/sellability/outcome replay |
+| CROSS-REPO RELIABILITY | PARTIAL |Femvisiblepinsverified;bredeworkflowconsumers/privatehistory ikke fuldt auditeret |
+| AUTOMATION EFFICIENCY | UNKNOWN |Health/costmetadata er ikke målt marginal beslutningsværdi pr. ressource |
+| AUDIT COMPLETENESS | PARTIAL |Femafgrænsedepakker udført;mastermissionens bredepopulation/neteconomic/deliverytests mangler |
+
+Evidensgrundlaget blev konkret forbedret med immutable replay-repair, korrekt authority-klassifikation, source-admission-index, nye coverage-falsifikationer og direkte private hash/row/join-kontroller. To identiske private checkoutputs og tamper-controls understøtter reproduktion. Ingen trading/driftsændring, højere prognosepræcision, bedre porteføljebeskyttelse eller nettoafkast er dokumenteret forbedret. Merge, CI og downstream-status skal genlæses fra endeligt PR-head; planlagte owner-ændringer er ikke udført.

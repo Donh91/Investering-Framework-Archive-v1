@@ -1,0 +1,65 @@
+{
+  "authority_change": false,
+  "del_activation": {
+    "blockers": [
+      "CANONICAL_MARKET_CAP_BUCKET_TAXONOMY_MISSING",
+      "MICROCAP_RETURN_OWNER_MISSING",
+      "RANK_PROXIES_MUST_NOT_BE_RELABELED_AS_CAP_BUCKETS"
+    ],
+    "required_contract": "GOVERNED_SEGMENT_RETURN_SERIES_v1",
+    "required_status": "GOVERNED",
+    "satisfies_required_owner_contract": false
+  },
+  "economic_comparison_performed": false,
+  "existing_owner": "Decision Economics Ledger v1.2 / Research Lab M3-CN",
+  "focused_existing_tests": {
+    "count": 17,
+    "data": "SYNTHETIC_REGRESSION_FIXTURES_NOT_MARKET_PERFORMANCE",
+    "result": "PASS"
+  },
+  "foundation_counts": {
+    "complete_bucket_daily_row_count": 41,
+    "eligible_daily_interval_row_count": 43,
+    "row_count": 46
+  },
+  "hypothesis_trials_created": 0,
+  "limitations": [
+    "No governed market-return owner",
+    "No new economic result",
+    "Regression tests do not establish source point-in-time admission",
+    "No matched model latency/cost/quality ablation"
+  ],
+  "matched_llm_ablation": "NOT_PERFORMED",
+  "negative_control": {
+    "metadata_contract": "SEGMENT_RETURN_RESEARCH_FOUNDATION_v1",
+    "metadata_status": "RESEARCH_ONLY_NOT_DEL_OWNER",
+    "nonzero_exit": true,
+    "output_created": false,
+    "reason": "LedgerInputError: segment return metadata contract is not governed",
+    "returns_path_deliberately_absent": true,
+    "stopped_before_return_series_read": true
+  },
+  "owner_source_paths": [
+    "scripts/learning/decision_economics_ledger.py",
+    "scripts/learning/segment_return_foundation.py",
+    "research/decision_economics/DEL_PREREGISTRATION_v1_2.json",
+    "research/decision_economics/LATEST_SEGMENT_RETURN_FOUNDATION.json"
+  ],
+  "short_horizon_static_trace": {
+    "derivation": "12h direction maps deterministic contemporaneous BTC+ETH delta signs. Longer horizons can inherit governed CN context. No independent LLM effect can be inferred from this trace.",
+    "existing_21_paired_forecasts": "9 correct / 12 incorrect; identical to persistence in all21; conditional population only; source baa8c30da6285066f3b25ff13d42c1dc1104441c",
+    "functions": [
+      "derive_market_now",
+      "horizon_map"
+    ],
+    "path": "scripts/data_ping/native_handlekompas.py"
+  },
+  "source_commit": "175aa330f15262e4fcca0de6b3c9aff77511325e",
+  "source_sha256": {
+    "research/decision_economics/DEL_PREREGISTRATION_v1_2.json": "f7ffa3f725cced4ad954211108d0dc4e22d98649f4b90de5faab5ad3ecd9e36b",
+    "research/decision_economics/LATEST_SEGMENT_RETURN_FOUNDATION.json": "43f3bd894874b4595d172aaa5258c241817d8b0c89211475a8a5303a9d0ebe4c",
+    "scripts/learning/decision_economics_ledger.py": "61cf98efb8a8d95eebfd97bace5a7ff2ffbdefc54cbb46475fecf3857f9dd587",
+    "scripts/learning/segment_return_foundation.py": "c23b5964a1b21df7dbc0167fec1b3a8148a892c2eaac5c905c20db39e6cc02b0"
+  },
+  "status": "BOUND_OWNER_GATE_AND_REGRESSION_CHECK_NOT_ECONOMIC_REPLAY"
+}
