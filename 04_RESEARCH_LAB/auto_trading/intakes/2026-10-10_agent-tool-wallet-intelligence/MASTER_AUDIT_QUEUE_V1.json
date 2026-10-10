@@ -1,0 +1,229 @@
+{
+  "contract": "MASTER_AUDIT_EXTERNAL_RESEARCH_PREFLIGHT_V1",
+  "artifact_id": "RL-MASTER-PREFLIGHT-20261010-001",
+  "as_of_date_utc": "2026-10-10",
+  "owner": "Existing Research Lab and Supervisor",
+  "status": "RESEARCH_ONLY_NOT_EXECUTION_QUEUE",
+  "authority": {
+    "wallet_signing": false,
+    "trade_orders": false,
+    "core_change": false,
+    "auto_promotion": false,
+    "auto_scheduling": false,
+    "code_ready": false
+  },
+  "repo_heads_as_observed": [
+    {
+      "repo": "Donh91/Investering-Framework-Archive-v1",
+      "sha": "8bcca1a5a8e523c29ee60704332aac3096170054",
+      "visibility": "public"
+    },
+    {
+      "repo": "Donh91/secrets",
+      "sha": "4ae29ae4a5b214a8e275048b15b621b16d739607",
+      "visibility": "private"
+    },
+    {
+      "repo": "Donh91/Meme-Alpha-Lab",
+      "sha": "b24b6ec1a5f1ce9843f4030166e552c24ff2fd2c",
+      "visibility": "private"
+    },
+    {
+      "repo": "Donh91/Investering-AI-Audit-Bridge",
+      "sha": "a44a7a92138a088a5a49bcf057e4f7a10e22e8f9",
+      "visibility": "private"
+    },
+    {
+      "repo": "Donh91/Eksperimenter-framework-",
+      "sha": "169d71bbfc0735d212c573c32b534df5ed37f761",
+      "visibility": "public"
+    }
+  ],
+  "read_order": [
+    "AGENTS.md and canonical cross-repo boundary",
+    "current main SHAs / exact open PR heads and CI",
+    "04_RESEARCH_LAB/auto_trading/README.md and GOVERNANCE.md",
+    "04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json",
+    "Meme-Alpha-Lab/research/packages/RESEARCH_LAB_PACKAGE_MAP_2026-10-05.md",
+    "Bridge programs/claude_auto_trading_research RUN-001 + manifest",
+    "Archive PR #1558 files, including 00_MASTER_AUDIT_READ_FIRST.md"
+  ],
+  "active_ownership": [
+    {
+      "id": "AT_SCIENTIFIC",
+      "repo": "Archive",
+      "refs": [
+        "#1557",
+        "#937"
+      ],
+      "limits": "global trial denominator and external reverse engineering"
+    },
+    {
+      "id": "MAL_SELL",
+      "repo": "Archive/MAL",
+      "refs": [
+        "Archive #1512",
+        "MAL #98"
+      ],
+      "limits": "D-02 merge, no duplicate"
+    },
+    {
+      "id": "MAL_PONS",
+      "repo": "MAL",
+      "refs": [
+        "#120",
+        "#124"
+      ],
+      "limits": "freshness and independent baseline"
+    },
+    {
+      "id": "COMPASS_P0",
+      "repo": "Archive",
+      "refs": [
+        "#1553",
+        "#1550",
+        "PR #1549"
+      ],
+      "limits": "higher-priority production release"
+    },
+    {
+      "id": "RESEARCH_ROADMAP",
+      "repo": "Archive",
+      "refs": [
+        "PR #1519"
+      ],
+      "limits": "one-heavy-lane, not automatic new queue"
+    },
+    {
+      "id": "BRIDGE_REGISTRY",
+      "repo": "Bridge",
+      "refs": [
+        "PR #36"
+      ],
+      "limits": "11-column strict CSV repair before reliable import"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "RL-A01",
+      "owner": "existing Blockscout adapters",
+      "priority": "P0_RESEARCH",
+      "state": "TEST_DESIGN",
+      "gate": "v12 consumer compatibility fixtures/live probes",
+      "result": "no regression proven"
+    },
+    {
+      "id": "RL-A02",
+      "owner": "MAL paper-wallet v4",
+      "priority": "P1",
+      "state": "RESEARCH_DESIGN",
+      "gate": "paired as-of router quotes and costs"
+    },
+    {
+      "id": "RL-A03",
+      "owner": "Archive #1512 / MAL #98",
+      "priority": "P1",
+      "state": "MERGE_EXISTING_OWNER",
+      "gate": "real sellability negative controls"
+    },
+    {
+      "id": "RL-A04",
+      "owner": "MAL microstructure",
+      "priority": "P2",
+      "state": "REVISE",
+      "gate": "trace validated MEV loss not same-block proximity"
+    },
+    {
+      "id": "RL-A05",
+      "owner": "MAL Blockscout/SQD",
+      "priority": "P2",
+      "state": "CHALLENGER_ONLY",
+      "gate": "finalized native event vs explorer agreement"
+    },
+    {
+      "id": "RL-A06",
+      "owner": "MAL wallet/social #937",
+      "priority": "P2",
+      "state": "CANDIDATE_INTAKE",
+      "gate": "prospective matched outcomes"
+    },
+    {
+      "id": "RL-A07",
+      "owner": "Supervisor Research Lab Red Team",
+      "priority": "P2",
+      "state": "TEST_DESIGN",
+      "gate": "10 regression tasks accuracy/cost"
+    },
+    {
+      "id": "RL-A08",
+      "owner": "Archive #937",
+      "priority": "P3",
+      "state": "SOURCE_UNKNOWN",
+      "gate": "authenticated original X captures"
+    },
+    {
+      "id": "RL-A09",
+      "owner": "existing CN range backtest",
+      "priority": "P2",
+      "state": "STATIC_CODE_AUDIT",
+      "gate": "numerical GARCH recursion and costs"
+    },
+    {
+      "id": "RL-A10",
+      "owner": "existing research source registry",
+      "priority": "P2",
+      "state": "BOUNDED_CANDIDATE",
+      "gate": "Basis Desk source provenance and provider independence"
+    },
+    {
+      "id": "RL-A11",
+      "owner": "existing Data Ping crosscheck",
+      "priority": "P3",
+      "state": "BOUNDED_CANDIDATE",
+      "gate": "CoinPaprika coverage, terms, daily close parity"
+    }
+  ],
+  "known_quality_risks": [
+    {
+      "kind": "BRIDGE_CSV_INVALID",
+      "proof": "registry ARTIFACT_INDEX.csv physical lines 21,67,68,95",
+      "status": "REPRODUCED",
+      "owner": "Bridge PR #36"
+    },
+    {
+      "kind": "ZIP_MANIFEST_INCOMPLETE",
+      "proof": "one missing manifest inventory entry each ZIP",
+      "status": "REPRODUCED",
+      "owner": "immutable source / future derivative complete inventory"
+    },
+    {
+      "kind": "NEW_RESEARCH_ONLY_ON_DRAFT_BRANCH",
+      "proof": "Archive PR #1558",
+      "status": "VERIFIED",
+      "owner": "Research reviewer"
+    },
+    {
+      "kind": "PUBLIC_ARCHIVE_INTENTIONAL",
+      "proof": "Archive AGENTS.md effective 2026-09-29",
+      "status": "VERIFIED",
+      "owner": "cross-repo privacy boundary"
+    }
+  ],
+  "future_audit_acceptance": [
+    "fresh heads and branch policy/ruleset checks",
+    "no restricted values in public control",
+    "file/PR/owner status verification",
+    "referenced artifacts resolvable or UNAVAILABLE",
+    "source independent from aggregator facade",
+    "no new uncontrolled scheduler/engine/ledger",
+    "all test vs no-op decisions falsifiable",
+    "post-merge and natural consumer receipts"
+  ],
+  "sources": {
+    "claude_bridge_run_id": "RESEARCH-20261010-101034Z-CLAUDE-AT-FOUNDATION-001",
+    "claude_zip_sha256": "046bd5cf9efb6b78d97f2cd623299fcd90dcf6c7f9de3796e30f6e2e2a2f89d8",
+    "composite_zip_sha256": "872733498ee04bc1bc9c03b701d97f893c98fc42c3c573d832b19dd61c37923d",
+    "staged_pr": 1558
+  },
+  "no_core_or_secrets_writes": true
+}
