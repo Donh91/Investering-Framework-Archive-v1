@@ -22,6 +22,13 @@ class SupervisorMissionIntakeTests(unittest.TestCase):
         for body in ("Do NOT " + MARKER + " yet", "> " + MARKER, "Text\\n" + MARKER):
             self.assertEqual(classify(self.event(comment={"id":124,"author_association":"OWNER","body":body}))[0],"IGNORED")
 
+    def test_crlf_and_trailing_space_first_line_accepted_for_triage_only(self):
+        for body in (MARKER+"\\r\\nPlease triage.", MARKER+" \\nPlease triage."):
+            result=receipt(self.event(comment={"id":125,"author_association":"OWNER","body":body}),"repo","sha")
+            self.assertEqual(result["state"],"ACTIONABLE_UNCLAIMED")
+            self.assertFalse(result["human_approval_verified"])
+            self.assertFalse(result["execution_started"])
+
     def test_null_body_rejected(self):
         self.assertEqual(classify(self.event(comment={"id":124,"author_association":"OWNER","body":None}))[0],"IGNORED")
 
