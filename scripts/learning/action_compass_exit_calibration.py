@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import statistics
@@ -25,6 +26,22 @@ def read_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"object_required:{path}")
     return value
+
+
+def frozen_compass_digest(freeze: dict[str, Any]) -> str | None:
+    """Recompute the producer's frozen digest, excluding its self-hash.
+
+    Mirrors native_handlekompas.py: json.dumps(sorted, compact,
+    ensure_ascii=False, allow_nan=False) plus one trailing newline.
+    Invalid/noncanonical data fails closed instead of entering calibration.
+    """
+    try:
+        payload = {key: value for key, value in freeze.items() if key != "compass_sha256"}
+        canonical = (json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                                ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def finite_number(value: Any) -> float | None:
@@ -119,6 +136,11 @@ def collect_rows(repo_root: Path, outcome_root: Path) -> tuple[list[dict[str, An
             continue
         if freeze.get("compass_id") != outcome.get("compass_id") or freeze.get("compass_sha256") != outcome.get("compass_sha256"):
             excluded["FORECAST_BINDING_MISMATCH"] += 1
+            continue
+        # Matching declared identifiers are insufficient: historical freeze bytes
+        # might have changed while their copied claimed digests stayed identical.
+        if frozen_compass_digest(freeze) != freeze.get("compass_sha256"):
+            excluded["FORECAST_PAYLOAD_HASH_MISMATCH"] += 1
             continue
 
         tracker, reason = eligible_typed_protection(freeze)
