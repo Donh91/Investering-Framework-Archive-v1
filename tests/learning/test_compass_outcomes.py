@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import json
 import tempfile
 import unittest
@@ -10,10 +11,28 @@ from scripts.learning.compass_outcomes import action_quality, mature_one, persis
 # Keep the existing Official Compass Outcomes PR gate accountable for protection
 # calibration regressions, without adding a second workflow or test scheduler.
 # unittest collects imported TestCase subclasses when this module is executed.
-from tests.learning.test_action_compass_exit_calibration import ProtectionCalibrationTests
+from tests.learning.test_action_compass_exit_calibration import MODULE as PROTECTION_CALIBRATION, ProtectionCalibrationTests
 
 
 class CompassOutcomeTest(unittest.TestCase):
+    def test_research_freeze_digest_matches_native_canonical_json_contract(self):
+        # Cross-owner invariant: native_handlekompas computes a SHA-256 from
+        # sorted compact UTF-8 JSON plus newline, excluding the self-hash.
+        # Preserve non-ASCII values and reject changed frozen payload bytes.
+        frozen = {
+            "compass_id": "CMP-hash-parity",
+            "contract": "OFFICIAL_DAILY_COMPASS_v1",
+            "evidence": {"note": "dårlig bredde", "value": -2.5},
+        }
+        expected = hashlib.sha256(
+            (json.dumps(frozen, sort_keys=True, separators=(",", ":"),
+                        ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
+        ).hexdigest()
+        frozen["compass_sha256"] = expected
+        self.assertEqual(PROTECTION_CALIBRATION.frozen_compass_digest(frozen), expected)
+        frozen["evidence"]["value"] = -5.0
+        self.assertNotEqual(PROTECTION_CALIBRATION.frozen_compass_digest(frozen), expected)
+
     def freeze(self):
         return {
             "contract": "OFFICIAL_DAILY_COMPASS_v1",
