@@ -442,3 +442,128 @@ def freeze_clean_g3_shadow_packet(
     packet["authority"]["buy_now_promotion"] = False
     packet["observation_sha256"] = _stable_hash({k: v for k, v in packet.items() if k != "observation_sha256"})
     return packet
+
+
+def evaluate_conviction_cluster_v0(
+    *,
+    buyer_graph: dict[str, Any],
+    wallet_quality_rows: list[dict[str, Any]],
+    link_evidence: list[dict[str, Any]],
+    provenance_by_wallet: dict[str, str] | None = None,
+    liquidity_state: str = "UNKNOWN",
+    sellability_state: str = "UNKNOWN",
+) -> dict[str, Any]:
+    """Evaluate the preregistered conviction-cluster challenger at cutoff.
+
+    This is deliberately fail-closed. STRONG_CONTROLLER evidence collapses
+    addresses into one cluster. SAME_FUNDER does not prove common control, but
+    prevents those affected clusters from being asserted independent. Only
+    qualified, self-initiated buyers with PASS provenance may vote.
+    """
+    if buyer_graph.get("contract") != "MEME_ALPHA_CURRENT_TOKEN_BUYER_GRAPH_v1":
+        raise ValueError("INVALID_BUYER_GRAPH")
+    cutoff = _parse_utc(str(buyer_graph["cutoff_utc"]))
+    provenance = provenance_by_wallet or {}
+    buyer_by_wallet = {str(row["wallet"]): row for row in buyer_graph.get("buyers", [])}
+    quality_by_wallet = {str(row["wallet"]): row for row in wallet_quality_rows}
+
+    eligible = {
+        wallet for wallet, row in quality_by_wallet.items()
+        if row.get("qualified_history") is True
+        and wallet in buyer_by_wallet
+        and provenance.get(wallet, "UNKNOWN") == "PASS"
+    }
+
+    uf = _UnionFind(set(eligible))
+    same_funder: dict[str, set[str]] = defaultdict(set)
+    used_links: list[dict[str, Any]] = []
+    for item in link_evidence:
+        effective_at = item.get("effective_at_utc")
+        if not effective_at or _parse_utc(str(effective_at)) > cutoff:
+            continue
+        kind = str(item.get("kind", ""))
+        if kind == "STRONG_CONTROLLER":
+            a, b = str(item.get("wallet_a", "")), str(item.get("wallet_b", ""))
+            if a in eligible and b in eligible and a != b:
+                uf.union(a, b)
+                used_links.append(dict(item))
+        elif kind == "SAME_FUNDER":
+            wallet, funder = str(item.get("wallet", "")), str(item.get("funder", ""))
+            if wallet in eligible and funder:
+                same_funder[funder].add(wallet)
+                used_links.append(dict(item))
+
+    groups: dict[str, set[str]] = defaultdict(set)
+    for wallet in eligible:
+        groups[uf.find(wallet)].add(wallet)
+
+    cluster_rows: list[dict[str, Any]] = []
+    wallet_to_cluster: dict[str, str] = {}
+    for members in sorted((sorted(v) for v in groups.values()), key=lambda x: x[0]):
+        cluster_id = "cc-" + _stable_hash(members)[:16]
+        for wallet in members:
+            wallet_to_cluster[wallet] = cluster_id
+        cluster_rows.append({
+            "cluster_id": cluster_id,
+            "wallets": members,
+            "first_entry_utc": min(str(buyer_by_wallet[w]["first_buy_effective_at_utc"]) for w in members),
+            "repeat_buy_count": sum(int(buyer_by_wallet[w].get("buy_count", 0)) for w in members),
+            "denominator_refs": sorted({
+                str(ref)
+                for w in members
+                for ref in quality_by_wallet[w].get("source_outcome_ids", [])
+            }),
+        })
+
+    independence_state = "PASS"
+    ambiguous_pairs: set[tuple[str, str]] = set()
+    for wallets in same_funder.values():
+        cluster_ids = sorted({wallet_to_cluster[w] for w in wallets if w in wallet_to_cluster})
+        if len(cluster_ids) >= 2:
+            independence_state = "UNKNOWN"
+            for i, left in enumerate(cluster_ids):
+                for right in cluster_ids[i + 1:]:
+                    ambiguous_pairs.add((left, right))
+
+    cluster_count = len(cluster_rows)
+    required_states_pass = (
+        liquidity_state == "PASS"
+        and sellability_state == "PASS"
+        and independence_state == "PASS"
+    )
+    detected = cluster_count >= 2 and required_states_pass
+    control_class = "MULTI_CLUSTER" if detected else ("SINGLE_CLUSTER" if cluster_count == 1 else "ZERO_CLUSTER")
+    if cluster_count >= 2 and not detected:
+        control_class = "MULTI_CLUSTER_NOT_ELIGIBLE"
+
+    payload = {
+        "contract": "CONVICTION_CLUSTER_DETECTED_V0",
+        "status": "FROZEN_SHADOW_EVENT" if detected else "FROZEN_CONTROL",
+        "observed_at": str(buyer_graph["cutoff_utc"]),
+        "token_ca": str(buyer_graph["mint"]),
+        "chain": str(buyer_graph["chain"]),
+        "launch_age_seconds": int(buyer_graph["cutoff_seconds"]),
+        "cluster_count": cluster_count,
+        "clusters": cluster_rows,
+        "qualified_cluster_ids_hash": _stable_hash(sorted(row["cluster_id"] for row in cluster_rows)),
+        "funding_independence_state": independence_state,
+        "funding_ambiguity_pairs": [list(pair) for pair in sorted(ambiguous_pairs)],
+        "provenance_state": "PASS" if eligible else "UNKNOWN",
+        "liquidity_state": liquidity_state,
+        "sellability_state": sellability_state,
+        "control_class": control_class,
+        "prospective_credit": bool(detected),
+        "historical_replay_credit": 0,
+        "used_link_evidence_sha256": _stable_hash(sorted(used_links, key=lambda x: json.dumps(x, sort_keys=True))),
+        "authority": {
+            "buy_sell": False,
+            "position_size": False,
+            "portfolio_action": False,
+            "user_alert": False,
+            "champion_modification": False,
+            "automatic_trading": False,
+        },
+    }
+    payload["event_id"] = "ccv0-" + _stable_hash(payload)[:20]
+    payload["observation_sha256"] = _stable_hash(payload)
+    return payload
