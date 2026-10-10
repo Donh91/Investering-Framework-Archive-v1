@@ -94,3 +94,6 @@ Never place wallet seed, exportable private key, signing session or private wall
 - Trader.dev: https://mcp-api.trader.dev/browse and https://trader.dev/
 
 No core, framework pipeline, live trading, wallet authority, schedules, credentials or secrets were changed by this research. This page is a proposed intake for reviewer merge, not canonical proof.
+
+## Addendum, 10 Oct 2026: Miles article text supplied and independently cross-checked
+The user supplied the narrative text of the X article (status 2108584190979764314). This upgrades **content availability** for *that one article* to `USER_TRANSCRIBED`, while the original inline-image prompts and linked articles remain missing. Refer to `MILES_DEUTSCHER_FULL_TEXT_ADJUDICATION.md` and `MILES_GARCH_SOURCE_CODE_AUDIT.md` for the deduplicated source breakdown, official Robinhood MCP risk/eligibility check, and static GARCH review. **All other unread X posts remain UNKNOWN.** The main document's earlier `X direct endpoints all inaccessible` records the original fetch result, not the new user-supplied content. No trading authority, model adjustment or new research scheduler follows from this update.
