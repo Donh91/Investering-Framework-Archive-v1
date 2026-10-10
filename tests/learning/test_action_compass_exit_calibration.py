@@ -139,6 +139,29 @@ class ProtectionCalibrationTests(unittest.TestCase):
             self.assertEqual(report["eligible_series_row_count"], 0)
             self.assertEqual(report["excluded_outcome_counts"]["FORECAST_PAYLOAD_HASH_MISMATCH"], 1)
 
+    def test_nonfinite_payload_with_null_or_missing_hashes_is_rejected(self):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            for declaration in (None, "MISSING", "f" * 64):
+                with self.subTest(value=value, declaration=declaration), tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    outcome_root = self.write_case(root)
+                    forecast = next((root / "04_MARKET_LEARNING/handlekompas/official/daily").rglob("*.json"))
+                    outcome = next(outcome_root.rglob("*.json"))
+                    freeze_data = json.loads(forecast.read_text(encoding="utf-8"))
+                    outcome_data = json.loads(outcome.read_text(encoding="utf-8"))
+                    freeze_data["nonfinite_probe"] = value
+                    for payload in (freeze_data, outcome_data):
+                        if declaration == "MISSING":
+                            payload.pop("compass_sha256", None)
+                        else:
+                            payload["compass_sha256"] = declaration
+                    forecast.write_text(json.dumps(freeze_data), encoding="utf-8")
+                    outcome.write_text(json.dumps(outcome_data), encoding="utf-8")
+                    report = MODULE.build_report(root, outcome_root, "2026-10-10T00:00:00Z")
+                    self.assertEqual(report["eligible_series_row_count"], 0)
+                    self.assertEqual(report["warning_series_row_count"], 0)
+                    self.assertEqual(report["excluded_outcome_counts"]["FORECAST_PAYLOAD_HASH_MISMATCH"], 1)
+
     def test_genuine_canonical_freeze_payload_is_admitted(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
