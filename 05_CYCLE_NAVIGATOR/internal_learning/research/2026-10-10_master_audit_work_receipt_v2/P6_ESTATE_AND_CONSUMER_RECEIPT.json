@@ -1,0 +1,101 @@
+{
+  "classification": "PUBLIC_PR_METADATA_ONLY_NOT_CODE_REVIEW",
+  "queries": [
+    {
+      "field": "updated",
+      "range": "2026-07-12..2026-08-25",
+      "pages": 5,
+      "count": 447
+    },
+    {
+      "field": "updated",
+      "range": "2026-08-26..2026-10-10",
+      "pages": 9,
+      "count": 868
+    }
+  ],
+  "fetched_rows": 1315,
+  "unique_prs": 1315,
+  "merged_window": {
+    "range": "2026-08-26..2026-10-10",
+    "rows": 751,
+    "independent_search_count": 751,
+    "counts_match": true
+  },
+  "all_pages_incomplete_results_false": true,
+  "cross_page_duplicate_count": 0,
+  "metadata_inventory_complete_for_search_population": true,
+  "code_review_complete": false,
+  "private_repo_pr_population_complete": false,
+  "retrieval_window_utc": "2026-10-10T19:32Z..2026-10-10T19:36Z",
+  "current_state_snapshot_commit": "169188ec2c35e437e8a67a9a71b1ddff458a08ff",
+  "source_time_limitations": [
+    "GitHub search is mutable metadata, not an immutable transaction snapshot",
+    "All page counts and duplicate checks match at collection; later updates are not incorporated",
+    "Metadata inventory is not code review, workflow verification or scientific evidence"
+  ],
+  "source_specific_review": {
+    "claim": "AGENTS.md absent at 175aa330",
+    "finding": 4238920268,
+    "status": "COUNTEREVIDENCE_RECORDED_NOT_SELF_RESOLVED",
+    "exact_api_file_reads_succeeded_at": [
+      "175aa330f15262e4fcca0de6b3c9aff77511325e",
+      "c792546ebc684f4625bf5fa791f9bc36c5c2375d"
+    ],
+    "identical_agents_blob_sha": "2b511bbf374c1ed355913703aa50ee8a9b30b698",
+    "required_binding_line": 46,
+    "later_review_comment": 6101409192,
+    "later_reviewed_head": "c792546ebc684f4625bf5fa791f9bc36c5c2375d",
+    "later_review_verdict": "DID_NOT_FIND_MAJOR_ISSUES_NOT_FORMAL_APPROVAL"
+  },
+  "supervisor_consumer": {
+    "pr": 1555,
+    "exact_head": "5a280c179dd79931292ddfc8ed40e740166fccdb",
+    "merged": true,
+    "merge_sha": "fce7ddbbe31e8405cf9ac218e2167aab2aca20dc",
+    "current_main_checked": "169188ec2c35e437e8a67a9a71b1ddff458a08ff",
+    "intake_script_blob_sha": "d57d86aab1ffd8a2b28a59591722df78f09e18a8",
+    "current_intake_script_unchanged": true,
+    "current_workflow_blob_sha": "f295399040bc4fa0e771c239f0023c21c8dd728b",
+    "existing_tests_run": 11,
+    "existing_tests_pass": 11,
+    "scope": "Existing synthetic classifier regressions, not mission dispatch proof",
+    "allowlisted_issue": 1552,
+    "current_issue_state": "closed",
+    "marker_authority": "TRIAGE_ONLY_NOT_HUMAN_AUTHENTICATION",
+    "actual_smoke_workflow_run": 38016010824,
+    "actual_smoke_job": 114106300441,
+    "actual_smoke_artifact": 11656820631,
+    "artifact_zip_sha256": "64b7558eccd15570055e94cda6fee6842bcd604a0062104f3bd466700c3f5457",
+    "receipt_sha256": "823d976608ac2b9e2873385afd4a3dfbcd9e71418ea457c745ac411d8c2ed682",
+    "actual_receipt": {
+      "authority": "TRIAGE_ONLY",
+      "claim_key": "Donh91/Investering-Framework-Archive-v1#1552:6092565956",
+      "code_ref": "main",
+      "codex_ready": false,
+      "comment_id": 6092565956,
+      "contract": "SUPERVISOR_MISSION_INTAKE_v1",
+      "execution_started": false,
+      "human_approval_verified": false,
+      "issue_number": 1552,
+      "next_gate": "fresh cockpit, dedupe, governed CODEX_RESEARCH_CANDIDATE intake and independent review",
+      "reason": "issue_not_open",
+      "repository": "Donh91/Investering-Framework-Archive-v1",
+      "state": "IGNORED",
+      "workflow_event_sha": "fce7ddbbe31e8405cf9ac218e2167aab2aca20dc"
+    },
+    "producer_success_is_execution_success": false,
+    "existing_unresolved_review_finding": 4235983901,
+    "source_provenance_gap": "Workflow resolves ref main but stamps event github.sha; current source does not bind executed Git revision",
+    "action": "ROUTE_TO_OWNER_1156",
+    "workflow_change_high_impact_safety_gate": "NOT_EXECUTED",
+    "queue_reopening": "NOT_EXECUTED_NO_CLOSURE_OVERRIDE"
+  },
+  "merge_gate_visibility": {
+    "rulesets_read_result": [],
+    "branch_protection_read_result": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+    "effective_required_checks_and_bypass_policy": "UNKNOWN",
+    "bypass_attempted": false
+  },
+  "retrieval_window_precision": "APPROXIMATE_MINUTE_NOT_FORECAST_OBSERVATION_TIME"
+}
