@@ -12,6 +12,7 @@ on:
       - 'research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json'
       - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
+      - 'scripts/framework_intelligence/supervisor_mission_intake_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_replay_v1.py'
       - 'scripts/framework_intelligence/operational_memory_v1.py'
@@ -19,6 +20,7 @@ on:
       - 'scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
+      - 'tests/framework_intelligence/test_supervisor_mission_intake_v1.py'
       - 'tests/framework_intelligence/test_automation_orchestration_v1.py'
       - 'tests/api_agent/test_api_gateway.py'
       - 'tests/api_agent/test_fmos_mission_loop_audit_dispatch.py'
@@ -69,6 +71,7 @@ jobs:
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
+            scripts/framework_intelligence/supervisor_mission_intake_v1.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
             scripts/framework_intelligence/operational_memory_v1.py \
@@ -79,6 +82,7 @@ jobs:
         run: |
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_supervisor_mission_intake_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_fmos_mission_loop_audit_dispatch \
@@ -143,6 +147,44 @@ jobs:
           assert audit['automatic_escalation_required'] is False
           assert audit['authority']['canonical_effect'] is False
           PY
+
+  approved-mission-intake:
+    # Explicit owner marker only. This job emits triage evidence, never grants CODEX_READY.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1552 &&
+      github.event.comment.author_association == 'OWNER' &&
+      startsWith(github.event.comment.body, '[SUPERVISOR_EXECUTE]')
+    permissions:
+      contents: read
+      issues: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate mission-intake policy and regression cases
+        run: |
+          python -m unittest tests.framework_intelligence.test_supervisor_mission_intake_v1 -v
+      - name: Classify owner-approved mission without granting execution
+        env:
+          EVENT_PATH: ${{ github.event_path }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          python scripts/framework_intelligence/supervisor_mission_intake_v1.py \
+            --event "$EVENT_PATH" --repo "$REPO" --head-sha "$HEAD_SHA" \
+            --output supervisor-mission-intake-receipt.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: supervisor-mission-intake-${{ github.event.comment.id }}
+          path: supervisor-mission-intake-receipt.json
+          retention-days: 30
 
   senior-repair-audit:
     if: >-
