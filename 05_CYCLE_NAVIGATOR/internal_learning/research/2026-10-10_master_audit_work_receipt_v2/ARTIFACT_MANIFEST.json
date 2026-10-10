@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/EXECUTIVE_REPORT_AND_HANDOVER.md",
-      "bytes": 24376,
-      "sha256": "dd57b85dd8e9edb2883f48589ecefe37e8b31131bfae87fceada5e386d402ca7"
+      "bytes": 29071,
+      "sha256": "deb14ec1d4db3904d1218e7ea7f36e03594413a929876c8c4add4ed8732c0356"
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/m3_arithmetic_receipt.json",
@@ -19,35 +19,39 @@
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/modern_forecast_population.csv",
-      "bytes": 287364,
-      "sha256": "a59317398cc936c988f0632df470cd5c374667fa848ffb9c149242163c095893"
+      "bytes": 287361,
+      "sha256": "838b52e9ad18f27d73a443420f6438300773c548d2f56552072a6c823298dd80"
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/modern_population_receipt.json",
-      "bytes": 20541,
-      "sha256": "0f5a2ccdfc38c7271ffb9918cfe134a8d90a8288f1a996a10b2740d8702a402d"
+      "bytes": 20538,
+      "sha256": "6b88c5ab53e84374d966a298f16097bbd8a35ea8460c71d5e1960dc7cf9b1ecf"
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/replay_compass.py",
-      "bytes": 8927,
-      "sha256": "d6779df5c7bee1b206d72b85db06c63464267b6e42d81fb6e95d0c37fc3f43f4"
-    },
-    {
-      "path": "research/codex/intake/2026/10/codex-research-20261010-compass-hold-proxy-label.json",
-      "bytes": 4085,
-      "sha256": "f94bfcfc8bbd6bfe113ea22b2ce4338197ebb08629b99e9b3e4a0d111c947c64"
+      "bytes": 10512,
+      "sha256": "4116d1ca6f2ef850ad5211fc71a40158f8a91b0c1d646e82a60b66f55f9e647b"
     }
   ],
   "checks": {
-    "native_candidate_validation": "VALID",
-    "modern_replay_two_runs": "BYTE_IDENTICAL",
+    "native_candidate_validation": "WITHDRAWN_AUTHORITY_MISCLASSIFICATION",
+    "modern_replay_two_runs": "BYTE_IDENTICAL_FROM_GIT_TREE",
     "source_tamper_negative_control": "PASS",
     "population_unique_426": "PASS",
     "existing_regressions": "45 PASS",
-    "site_full_stack_regression": "PASS"
+    "site_full_stack_regression": "PASS",
+    "immutable_git_tree_replay": "PASS",
+    "dirty_worktree_negative_control": "PASS",
+    "invalid_commit_negative_control": "PASS"
   },
   "production_code_change": false,
   "main_write": false,
   "merged": false,
-  "downstream_runtime_fix_verified": false
+  "downstream_runtime_fix_verified": false,
+  "withdrawn_candidate": {
+    "path": "research/codex/intake/2026/10/codex-research-20261010-compass-hold-proxy-label.json",
+    "preserved_at_commit": "2ffda5ab26abff90a0a717b577036b1e7a6f6f41",
+    "reason": "P1 owner-gated prospectively versioned scoring semantics, not CODE_REMEDIATION_ONLY",
+    "main_candidate_admission": false
+  }
 }
