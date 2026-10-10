@@ -13,6 +13,10 @@ The near-term objective is collection, deduplication and disciplined hypothesis 
 
 This folder must not create a parallel market framework. It must reuse existing Investering Framework state, Research Lab governance, Forecast/Sequence accountability, data provenance standards and existing source contracts wherever possible.
 
+## Historical Kompas / DATA PING cross-archive pre-audit handover (2026-10-10)
+
+For any broad historical master audit that intersects this research vault, **read the already merged, source-bound research dossier** at `05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10__legacy_to_automated_kompas_cross_archive_evidence_audit_v1.md`, including §8–9. It indexes pre-automation ChatGPT DATA PING, CFGI/Grok/TechDev, Cycle Navigator/Master Monday, the private MAEVE/851,882-row historical panel/BlockHorizon manifests, negative E1X/M1–M6 results, cross-repo PR and Claude Bridge dependencies, source/time leakage caveats, and outstanding original-chat recovery. The **separately staged** master-audit external-source intake is Archive draft PR #1558; read its exact head and reviewer status, not only main. This is navigation and evidence hygiene, **not** a new research engine, duplication of that PR's machine queue, permission to expose restricted data, or automatic strategy promotion.
+
 ## Current prioritization — READ THIS FIRST
 
 The independent 2026-09-12 architecture audit has materially changed ordering without changing the safety boundary.
