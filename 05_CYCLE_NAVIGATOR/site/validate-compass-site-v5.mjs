@@ -1,3 +1,4 @@
+import './tests/full-stack-readback.test.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
@@ -115,3 +116,4 @@ if(!renderer.includes("c?.bull_bear_scale")||!renderer.includes("OFFICIAL_COMPAS
 if(/expected_direction[^\n]{0,160}(bull|bear)/i.test(renderer)) throw Error('client-side Bull Bear signal synthesis detected');
 console.log(JSON.stringify({full_stack:f.status,shadow:f.shadow.status,strategic:f.strategic.status,source_status:f.source_status}));
 console.log(JSON.stringify({status:'PASS',compass_id:compass.compass_id,data_status:compass.data_status,altcoin_action:compass.horizons?.CYCLE_ALTCOINS_3_8W?.action_posture||null,pullback_risk:compass.protection_tracker?.pullback_risk_state||null,reentry_state:compass.protection_tracker?.reentry_state||null,rotation_position_ui:true}));
+

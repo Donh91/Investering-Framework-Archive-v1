@@ -235,3 +235,10 @@ Acceptance remains gated on Python contract tests, public release checks, exact-
 - Compass owns live checkpoint and gate status. The frozen Master Monday altseason sequence backstops timing. Where their ETAs disagree, PATH displays the slower weekly window; a weekly `No supported ETA` cannot be replaced by a faster live review window.
 - Five connector dots express only published time-distance categories: all five within one week, four within two weeks, three within three weeks, two within five weeks, one beyond five weeks, none when unsupported. They never animate and never imply progress, odds or readiness.
 - The weekly instrument remains a pane/series-primitive presentation over self-hosted Lightweight Charts v5. Window capsules, subtle separators and corridor styling improve scanability without creating candles, midpoints or fitted movement.
+
+## Scoped #1550 release exception (2026-10-10)
+
+The repository owner explicitly deferred the current independent Vault acceptance dependency for the existing #1550 / PR #1549 release in comment [6099831222](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1550#issuecomment-6099831222). Record `VAULT_RELEASE_GATE=DEFERRED_BY_OWNER`, never a backup PASS or a claim of current recovery coverage. The remaining source safepoint, focused positive/negative tests, exact-head CI, independent non-authoring review/merge, source-byte readback, Pages deployment and live consumer verification still apply.
+
+This exception grants no recovery credentials, Vault read/write, destructive action, force operation, permission broadening, source-truth or market-rule change. Permanent separation of destructive authority remains binding. Future independent backup/restore acceptance remains a separately owned requirement; this exception applies only to this named release.
+

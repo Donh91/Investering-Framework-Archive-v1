@@ -369,25 +369,28 @@ function renderPremium(snapshot, compass) {
   const root = document.getElementById('productNow');
   if (!root) return false;
   const expanded = [...root.querySelectorAll('#premiumMarketCompass details[open][id]')].map(d=>d.id);
-  const scale = officialScale(compass);
-  const rec = recommendation(compass?.action_now || snapshot?.live_observation?.current_action?.stance);
-  const meta = decisionMeta(compass);
-  const dataOk = compass?.data_status === 'OK';
+  const dataOk = compass?.contract === 'PUBLIC_COMPASS_PROJECTION_v1' && compass?.data_status === 'OK';
+  // Keep verified weekly/research context, but remove every current Official
+  // decision field when the Official owner cannot support an actionable read.
+  const officialView = dataOk ? compass : {contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:compass?.data_status||'UNAVAILABLE',weekly_context:compass?.weekly_context,full_stack:compass?.full_stack};
+  const scale = officialScale(officialView);
+  const rec = dataOk ? recommendation(compass.action_now) : {action:'WAIT · DATA DEGRADED',copy:'A current action is unavailable. Wait for a fresh verified Market Compass reading.'};
+  const meta = decisionMeta(officialView);
   const section = document.createElement('section');
   section.id = 'premiumMarketCompass';
   section.className = 'premium-market-compass';
   section.innerHTML =
     '<div class="premium-overview">'
     + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong>' + (meta.live.includes('MIXED') ? '<p class="mixed-explanation">Conflicting signals · no clear near-term direction.</p>' : meta.live==='NO NEW READING' ? '<p class="mixed-explanation">Current action unchanged · awaiting a fresh near-term reading.</p>' : '') + '<small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong>' + (meta.weekly.includes('MIXED') ? '<p class="mixed-explanation">Mixed weekly evidence · no clear directional edge.</p>' : '') + '<small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
-    + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong><div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div><p>' + esc(rec.copy) + '</p>' + hourlyMonitor(snapshot) + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
+    + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong>' + (dataOk ? '<div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div>' : '') + '<p>' + esc(rec.copy) + '</p>' + (dataOk ? hourlyMonitor(snapshot) : '') + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
-    + decisionDetail(compass, rec, meta)
+    + (dataOk ? decisionDetail(compass, rec, meta) : '')
     + compositeIntel(compass)
-    + pullbackCard(compass)
+    + pullbackCard(officialView)
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
-    + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, compass, scale, h)).join('') + '</div>'
-    + riskCurve(compass)
-    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(publicDataStatus(compass?.data_status || 'UNAVAILABLE')) + '</b></span><span>RISK ROTATION · ' + esc(capSummary(compass)) + '</span><span>Evidence balance · not probability</span></div>';
+    + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, officialView, scale, h)).join('') + '</div>'
+    + riskCurve(officialView)
+    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(publicDataStatus(compass?.data_status || 'UNAVAILABLE')) + '</b></span><span>RISK ROTATION · ' + esc(capSummary(officialView)) + '</span><span>Evidence balance · not probability</span></div>';
 
   expanded.forEach(id=>{const d=section.querySelector('#'+id);if(d)d.open=true;});
   root.querySelector('#premiumMarketCompass')?.remove();
@@ -446,3 +449,4 @@ function boot() {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
 else boot();
 })();
+
