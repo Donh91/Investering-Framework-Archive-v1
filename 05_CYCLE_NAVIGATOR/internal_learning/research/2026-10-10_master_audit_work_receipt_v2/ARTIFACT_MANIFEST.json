@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/EXECUTIVE_REPORT_AND_HANDOVER.md",
-      "bytes": 46995,
-      "sha256": "06d4807f809b916c96367882350a184a1e7f8fbb5e75d7b959b036d8e976f03f"
+      "bytes": 50112,
+      "sha256": "16182585157f827fc0364513fb630f80d8c2ebe4bc7fe92c242c934bcedd61f9"
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P2_WARNING_CHAIN_RECEIPT.json",
@@ -86,6 +86,11 @@
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P6_ESTATE_AND_CONSUMER_RECEIPT.json",
       "bytes": 4691,
       "sha256": "6a6fc0ba8d26d7f1d772ac9bd7867da69994825a8f44c13703d1ae23a280aad7"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P7_SUPERVISOR_CODE_REPAIR_RECEIPT.json",
+      "bytes": 4009,
+      "sha256": "856b88931dd85d5bb3f077277039f00de3b518d89c8c9481fb19f8d25788c8a3"
     }
   ],
   "checks": {
@@ -93,7 +98,7 @@
     "modern_replay_two_runs": "BYTE_IDENTICAL_FROM_GIT_TREE",
     "source_tamper_negative_control": "PASS",
     "population_unique_426": "PASS",
-    "existing_regressions": "45 PASS_HISTORICAL_AUDIT_RECEIPT_NOT_RERUN_ON_V2_4",
+    "existing_regressions": "45 PASS_HISTORICAL_AUDIT_RECEIPT_NOT_RERUN_ON_V2_6",
     "site_full_stack_regression": "PASS_HISTORICAL_RELEASE_READBACK_NOT_NEW_DEPLOY",
     "immutable_git_tree_replay": "PASS",
     "dirty_worktree_negative_control": "PASS",
@@ -110,7 +115,9 @@
     "private_binding_negative_admission_control": "PASS_NO_HASH_PASS_TO_SCIENTIFIC_ADMISSION",
     "archive_pr_metadata": "1315 unique updated PRs; 751 merge count match; all 14 pages, no duplicates",
     "supervisor_intake_existing_regressions": "11 PASS; synthetic classification, not dispatch",
-    "supervisor_smoke_actual_artifact": "ZIP_HASH_MATCH; IGNORED_ISSUE_NOT_OPEN; NO_EXECUTION"
+    "supervisor_smoke_actual_artifact": "ZIP_HASH_MATCH; IGNORED_ISSUE_NOT_OPEN; NO_EXECUTION",
+    "supervisor_merged_repair": "17 targeted tests on merged Git tree; 209 CI tests; distinct event/code SHA controlled CLI PASS",
+    "main_branch_platform_enforcement": "POLICY_ONLY: protected=false, no enforced check contexts, rulesets=[]; settings unchanged"
   },
   "production_code_change": false,
   "main_write": false,
@@ -122,9 +129,16 @@
     "reason": "P1 owner-gated prospectively versioned scoring semantics, not CODE_REMEDIATION_ONLY",
     "main_candidate_admission": false
   },
-  "handover_revision": "v2.5_full_archive_pr_metadata_and_actual_supervisor_receipt",
+  "handover_revision": "v2.6_seven_bounded_packages_and_merged_supervisor_repair",
   "additional_source_commits": {
     "archive_packages": "175aa330f15262e4fcca0de6b3c9aff77511325e",
     "private_exports": "36bd008d9c08dcaa4219927cddc9f4324f8b7d8b"
+  },
+  "execution_state_fields_scope": "This additive audit PR at artifact creation, before its merge; not the separately merged P7 repair. Final audit merge state is in its execution comment.",
+  "related_runtime_repair": {
+    "pr": 1566,
+    "merged_commit": "8f56a304e323a68255c0845c7c353943cb5152a0",
+    "scope": "Two-file Supervisor code-version binding",
+    "status": "MERGED_MAIN_READBACK_CONTROLLED_CLI_PASS_NATURAL_POST_FIX_WAIT"
   }
 }

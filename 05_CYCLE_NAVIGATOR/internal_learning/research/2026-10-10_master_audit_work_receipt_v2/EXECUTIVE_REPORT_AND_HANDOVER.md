@@ -3,7 +3,7 @@
 Dato: 10. oktober 2026. Status: RESEARCH_ONLY, PARTIAL_AUDIT, NO_EDGE_PROMOTION.
 Executor: ChatGPT Work. Ingen nye delegerede agenter, betalt markedsresearch-dispatch, schedules eller auditmotor. Eksisterende Codex PR-review er anvendt.
 
-## Review-korrektion og sekventielle resultater, v2.5
+## Review-korrektion og sekventielle resultater, v2.6
 
 Det uafhængige Codex-review af430cfccb fandt4238629214(P1) og4238629220(P2). Et senere review af38ca49fa fandt4238751870(P2): overleveringen indeholdt stadig instruktioner om den tilbagetrukne kandidat. Denne opdatering retter både replay og alle aktuelle kandidat-/wiring-anbefalinger. Seneste review af510c83d9 fandt4238774637(P2), en resterende measurement-bug-formulering, som nu også er fjernet. Ny exact-head review er stadig nødvendig; åbne reviewtråde er ikke selvafklaret. Tidligere commits bevares som auditspor. Review af7283be2f fandt4238891135(P2): private bindings manglede kontrakt-, tids-, schema- og completeness-metadata. Denne version markerer alle syv bindings INCOMPLETE_REQUIRED_OWNER_METADATA, de manglende felter eksplicit UNKNOWN og scientific_analysis_eligible=false. Hash/count-checks er bevaret; governance-admission er ikke givet. Private dataset-boundary-gaten er nedgraderet til PARTIAL. Ejer-manifester har yderligere deklarationer, men deres fulde metadata er ikke bundet og valideret af dette checker-script. Frisk review af denne korrektion kræves.
 
@@ -49,7 +49,7 @@ Dette er en afgrænset fortsættelse af samme audit. Pakkerne er gennemgået én
 
 ### Selvevaluering mod prompten
 
-Jeg er tilfreds med de afgrænsede falsifikationer og reproducerbare kvalitetstests, men ikke med fuld opfyldelse af master-missionen. Det nye review har også vist, at min tidligere PASS-vurdering af private dataset-boundaries var for stærk: den er rettet til PARTIAL, adskilt fra den kontrollerede private/public value separation. Jeg har rettet min tidligere authority-fejl og udført fem kontroller i rækkefølge. Jeg har stadig ikke leveret fuld legacy-population, matched net economics, AI A–E-ablation eller end-to-end delivery proof. Ingen fuldførelsespåstand er berettiget.
+Jeg er tilfreds med de afgrænsede falsifikationer og reproducerbare kvalitetstests, men ikke med fuld opfyldelse af master-missionen. Det nye review har også vist, at min tidligere PASS-vurdering af private dataset-boundaries var for stærk: den er rettet til PARTIAL, adskilt fra den kontrollerede private/public value separation. Jeg har rettet min tidligere authority-fejl og udført de fem første kontroller i rækkefølge, fulgt afP6 metadata-inventory ogP7 merged code-version-repair. Jeg har stadig ikke leveret fuld legacy-population, matched net economics, AI A–E-ablation eller end-to-end delivery proof. Ingen fuldførelsespåstand er berettiget.
 
 Ressourcearbejdet kan også forbedres: to brede filoversigter gav unødigt store metadataoutputs. Det medfører ikke evidenspromotion, men er ineffektivt. Videreførelse skal begynde med tælling/filtrering og kun hente de relevante records. Ingen nye agenter, motorer eller schedules blev oprettet.
 
@@ -68,6 +68,18 @@ Det faktiske post-merge smoke-run38016010824, job114106300441, var SUCCESS. Arti
 Begge brugerleverede eksterne trådsvurderinger er indarbejdet. Nyere HOLD-proxy/partial-audit-beskrivelse er konsistent med kilderne. Ældre code-bug/submitted-fix-prosa er overhalet af tilbagetrækningen. Den tidligere formulering om tre CI-checks er et dateret receipt, ikke garanti for nyt head. Warning-delivery og AI/economic edge er fortsat uafklaret.
 
 Reviewfinding4238920268 hævdede, at AGENTS.md ikke findes i175aa330. Det er modsagt af exact-ref GitHub-read og lokal git show: AGENTS-blob2b511bbf er identisk i175aa330 ogc792546e; private-binding-reglen findes på linje46. Modbevis er registreret i PR-comment6101372276 uden self-resolution. Reviewer svarede derefter i6101409192: ingen major issues påc792546e. Dette er ikke formel APPROVED-review eller resolution af den gamle tråd, og dækker ikke senere audit-heads. Rulesets-read gav[], men branch-protection-read gav403; effektive required-checks/bypass-policy forbliver UNKNOWN. Ingen gate omgået eller merge forsøgt.
+
+### Pakke 7: sikker, gennemført Supervisor source-version-repair
+
+Efter P6 blev en eksisterende mechanical reliability-fejl gennemført under1156, særskilt fra scoringsemantik og markedsevidens. PR1566 ændrer kun det eksisterende intake-script og dets tests. Scriptet bevarer `workflow_event_sha`, tilføjer faktisk `executed_code_sha` fra Git-checkout og afviser manglende/untracked/dirty source før CLI-output. Legacy direkte constructor-calls har UNKNOWN binding. TRIAGE_ONLY, human_approval_verified=false, execution_started=false ogcodex_ready=false er bevaret.
+
+17 lokale tests PASS. Det præcise PR-head9854a820 fik afsluttet uafhængigt Codex-review uden fund og bot+1. Tre CI-workflows SUCCESS; Supervisor validate-job114297917624 kørte209 tests PASS. Alle syv check-run-rækker var completed: tre success og fire tilsigtet skipped. Læsbar branch-metadata afklarede den tidligere403-begrænsning: main har protected=false, protection.enabled=false og ingen enforced checkcontexts; rulesets=[]. De skrevne krav om branch, PR, tests og review er opfyldt for denne low-impact script/test-repair, men **platform enforcement er et dokumenteret governance-gap**. Ingen indstillinger eller bypass blev ændret.
+
+PR1566 blev guarded squash merged med expected head til **8f56a304e323a68255c0845c7c353943cb5152a0**. Begge mergede filer matcher reviewet exact. 17 tests PASS igen i et isoleret detached Git-worktree på den faktiske mergecommit. Eksisterende owner-CLI kørte mod et eksplicit **RECONSTRUCTED** smoke-input: eventfce7ddbb og udført kode8f56a304 registreres særskilt, BOUND_TO_EXECUTED_CHECKOUT. Receipt723bytes/SHA272f7642 er stadig IGNORED/issue_not_open, ingen worker/action/dispatch. Det er kontrolleret owner-CLI-verifikation, **ikke en ny naturlig Actions-kvittering eller dokumenteret warning delivery**. Naturligt post-fix readback forbliver POST_FIX_WAIT; hele Supervisor-missionen er ikke HEALED. Ingen queue-genåbning eller high-impact workflowændring.
+
+Fuld receipt er `P7_SUPERVISOR_CODE_REPAIR_RECEIPT.json`. Verificerbare logpunkter: PR1566comment6101558660, owner1156comment6101558795 og originalPR1555comment6101558948. Rollback er en almindelig reviewed revert af kun disse to additive filer; gamle kvitteringer bevares. Dette er en reel merged forbedring af kodeversionens efterprøvbarhed, **ingen dokumenteret forecast-, action- eller økonomisk edge**.
+
+P6's1.315-row population blev hentet før oprettelsen af1566 og bevares som dateret metadata-census; den nye repair-PR er særskilt bundet iP7. Ingen påstand om et atomisk, evigt aktuelt GitHub-snapshot.
 
 ## READ FIRST og autoritet
 
@@ -210,7 +222,7 @@ Faktisk udført i denne kørsel:
 - Live public JSON fetched from `https://donh91.github.io/Investering-Framework-Archive-v1/data/compass.json`: Compass `CMP-20261010-24036fd5eeec`, issued13:44:49Z,full_stack generated16:55:04.659Z,partial source-status som ovenfor. Ingen ny browser/UI/mobile-delivery proof påstået.
 - Temporary maturity probe39blocked/1matured,alle tempoutcomes discarded. Ingen production rewrite.
 - Historisk native candidate-validator returnerede VALID, men kunne ikke godkende owner-authority. Det uafhængige P1-review falsificerede code-only-klassifikationen; kandidaten er nu WITHDRAWN_AUTHORITY_MISCLASSIFICATION. Validatorpass var ikke scientific/governance admission.
-- Additive receipt/replay PR på isoleret `agent/task-20261010-master-audit-receipts`; exact remote readback og owner-links dokumenteres i PR. Pending independent review/CI; ingen self-merge og ingen main runtime-change.
+- Additive receipt/replay PR på isoleret `agent/task-20261010-master-audit-receipts`; exact remote readback og owner-links dokumenteres i PR. Exact-current-head independent review/CI kræves for evidens-PR. P7 er særskilt merged og kontrolleret som beskrevet ovenfor; ingen scientific/market-promotion.
 
 Rollback: luk/revert kun denne additive receipt/intake-PR, hvis evidens ugyldig eller dubleret; bevar original frozen history og negative research-resultater. En eventuel senere scoringændring kræver ny owner-ratificeret kontrakt og separat review. Audit-PR er ikke en completion-receipt for runtime-fix.
 
@@ -240,14 +252,14 @@ Dette er en separat selvkritisk kvalitetskontrol, ikke en review udført af en u
 |AI incremental value | UNKNOWN |MatchedA-Eablationnotperformed |
 |Capitalprotection/opportunitycost | PARTIAL |HOLDproxy-labelreproduced,FNP/M6negatives;netcausalpolicyreplayabsent |
 |Alertemission/delivery/actionavailable | UNKNOWN |12warningpathreplaysPASS;emission/delivery/actionavailableUNKNOWN |
-|Actual executed codefixdownstream | UNKNOWN |Replayrepairbranchonly,nomergedruntimefix;prior1549site independentlyreadback |
+|Actual executed codefixdownstream | PARTIAL |P7 merged main/code readback og17 tests/controlled ownerCLI PASS; natural producer POST_FIX_WAIT, ingen delivery/marketbenefit claim |
 |No redundant architecture orauthority | PASS |Existingowners,noengine/agent/schedule/tradingchanges |
 |Durablehandover | PARTIAL |Thisbranch+PRpreservework;notcanonicalmergeduntilreview |
 
 ## Fortsættelse, uden at genlæse hele prompten
 
 1. Fresh-read this PR head,main,1558,1553,1478,1557 and Bridge36/38/39. Hvis main flytter,bevar dette baseline og lav nyt snapshot;bland aldrig versionspopulationer.
-2. Reviewer kontrollerer immutable source-export, negative controls og tilbagetrækning af kandidaten på aktuelt PR-head. Compass-owner afgør eventuel ny prospektiv scoring-version. Ingen self-merge eller researcher-selfpromotion.
+2. Reviewer kontrollerer immutable source-export, negative controls og tilbagetrækning af kandidaten på aktuelt PR-head. Compass-owner afgør eventuel ny prospektiv scoring-version. Ingen researcher-selfpromotion eller self-review. Autonome low-impact merges er kun tilladt efter de verificerede branch-, test- og uafhængige review-gates under brugerens mandat.
 3. Prioritér1553/EDGE-001 end-to-end stress/warning/emission/delivery/action-available receipts. FNP-owner i1478 recoverer først exact FT1 evaluator, får owner-ratification og kan derefter reparere observer-wiring. Ingen synthetic ENTERED/divergence.
 4. Admit legacycases individuelt gennem eksisterende historicalreport/sourcebackedCSV. Recover original CN9,11-14 ogmaj/juni timestamps;classify ORIGINAL_FROZEN,CONTEMPORANEOUS_OBSERVATION,POST_HOC_RESEARCH,RECONSTRUCTED,DUPLICATE,UNREAD ellerUNTESTABLE. Manglende original må aldrig AI-udfyldes.
 5. Reconcile39 manglende målprisobservationer medexisting hourlycaptureowner ogén aktuelt modnbar Oct7/72h-række mednext scheduled scorer. Ingen forcedmaturity eller priceinterpolation.
@@ -281,6 +293,6 @@ P5-trial-preflight genoptæller eksisterende tree-paths med `git ls-tree -r --na
 | ALPHA LAB EVIDENCE READINESS | UNKNOWN | Eksisterende specialistowners;ingen ny launch/sellability/outcome replay |
 | CROSS-REPO RELIABILITY | PARTIAL |Femvisiblepinsverified;bredeworkflowconsumers/privatehistory ikke fuldt auditeret |
 | AUTOMATION EFFICIENCY | UNKNOWN |Health/costmetadata er ikke målt marginal beslutningsværdi pr. ressource |
-| AUDIT COMPLETENESS | PARTIAL |Fem oprindelige scoped pakker plusP6; Archive PR-metadata komplet; fuld kode-/private-/legacy-/economic-/delivery-audit mangler |
+| AUDIT COMPLETENESS | PARTIAL |Fem oprindelige scoped pakker plusP6/P7; metadata-census og bounded codefix udført; fuld kode/private/legacy/economic/delivery audit mangler |
 
-Evidensgrundlaget blev konkret forbedret med immutable replay-repair, korrekt authority-klassifikation, source-admission-index, nye coverage-falsifikationer og direkte private hash/row/join-kontroller. To identiske private checkoutputs og tamper-controls understøtter reproduktion. Ingen trading/driftsændring, højere prognosepræcision, bedre porteføljebeskyttelse eller nettoafkast er dokumenteret forbedret. Merge, CI og downstream-status skal genlæses fra endeligt PR-head; planlagte owner-ændringer er ikke udført.
+Evidensgrundlaget blev konkret forbedret med immutable replay-repair, korrekt authority-klassifikation, source-admission-index, nye coverage-falsifikationer og direkte private hash/row/join-kontroller. To identiske private checkoutputs og tamper-controls understøtter reproduktion. P7 har ændret Supervisor-kvitteringens source-version-binding på main og verificeret den med kontrolleret CLI-readback. Naturlig workflow-readback afventer. Ingen tradingændring, højere prognosepræcision, bedre porteføljebeskyttelse eller nettoafkast er dokumenteret forbedret. Merge, CI og downstream-status skal genlæses fra endeligt PR-head; planlagte owner-ændringer er ikke udført.
