@@ -5,7 +5,7 @@ Executor: ChatGPT Work. Ingen nye delegerede agenter, betalt markedsresearch-dis
 
 ## Review-korrektion og næste arbejdsrækkefølge, v2.2
 
-Det uafhængige Codex-review af430cfccb har to åbne findings,4238629214(P1) og4238629220(P2). Denne opdatering korrigerer dem; ny exact-head review er stadig nødvendig. Tidligere commits bevares som auditspor.
+Det uafhængige Codex-review af430cfccb fandt4238629214(P1) og4238629220(P2). Et senere review af38ca49fa fandt4238751870(P2): overleveringen indeholdt stadig instruktioner om den tilbagetrukne kandidat. Denne opdatering retter både replay og alle aktuelle kandidat-/wiring-anbefalinger. Ny exact-head review er stadig nødvendig; åbne reviewtråde er ikke selvafklaret. Tidligere commits bevares som auditspor.
 
 **HOLD:** SCORING_CONTRACT_v1.md foreskriver HOLD/negative-return = PROTECTIVE, ogv2 viderefører denne proxy. De23 labels er derfor kontraktkonforme, selv om ordet kan misforstås som økonomisk kapitalbeskyttelse. Min tidligere klassifikation som en to-fil kodefejl uden owner-authority var forkert. Code-only-kandidaten trækkes tilbage fra denne ikke-mergede PR; ingen historiske forecasts/outcomes slettes eller ændres. En eventuel ændring kræver owner-afgørelse, ny prospektiv scoring-version, version-aware reporting og korrekt kapital-state comparator. Der foretages ingen sådan promotion her.
 
@@ -51,7 +51,7 @@ Alle lokale beregninger er fastlåst til Archive `baa8c30da6285066f3b25ff13d42c1
 
 Frameworket har dokumenterbar styrke som evidens-, proveniens- og afvisningssystem. Det kan bevare freezes, reproducere outcome-aritmetik og holde forældet modelresearch adskilt fra Official-autoritet. Det er endnu ikke dokumenteret, at denne styrke generelt giver bedre prognoser, bedre handler eller højere nettoafkast.
 
-Den vigtigste nye fejl er en målefejl: HOLD bliver klassificeret som PROTECTIVE, når BTC falder. HOLD bevarer eksponeringen, så dette dokumenterer ikke undgået drawdown. Scoreren mærker allerede resultatet PROXY_ONLY, hvilket begrænser skaden, men betegnelsen er stadig misvisende. En ny semantik kræver owner-godkendt prospektiv scoringkontrakt. Den tidligere code-only-intake er trukket tilbage; ingen runtime-rettelse er implementeret.
+Et vigtigt kritisk fund er en kontraktkonform, økonomisk tvetydig proxy: HOLD bliver klassificeret som PROTECTIVE, når BTC falder. HOLD bevarer eksponeringen, så dette dokumenterer ikke undgået drawdown. Scoreren mærker allerede resultatet PROXY_ONLY, hvilket begrænser skaden, men betegnelsen er stadig misvisende. En ny semantik kræver owner-godkendt prospektiv scoringkontrakt. Den tidligere code-only-intake er trukket tilbage; ingen runtime-rettelse er implementeret.
 
 ### Ti vigtigste fund og kritiske læringer
 
