@@ -19,11 +19,12 @@ class SupervisorMissionIntakeTests(unittest.TestCase):
         self.assertEqual(classify(self.event(comment={"id":6088518866,"author_association":"OWNER","body":body}))[0],"IGNORED")
 
     def test_negative_and_quoted_marker_rejected(self):
-        for body in ("Do NOT " + MARKER + " yet", "> " + MARKER, "Text\\n" + MARKER):
+        for body in ("Do NOT " + MARKER + " yet", "> " + MARKER, "Text" + chr(10) + MARKER):
             self.assertEqual(classify(self.event(comment={"id":124,"author_association":"OWNER","body":body}))[0],"IGNORED")
 
     def test_crlf_and_trailing_space_first_line_accepted_for_triage_only(self):
-        for body in (MARKER+"\\r\\nPlease triage.", MARKER+" \\nPlease triage."):
+        for body in (MARKER+chr(13)+chr(10)+"Please triage.", MARKER+" "+chr(10)+"Please triage."):
+            self.assertIn(chr(10), body)
             result=receipt(self.event(comment={"id":125,"author_association":"OWNER","body":body}),"repo","sha")
             self.assertEqual(result["state"],"ACTIONABLE_UNCLAIMED")
             self.assertFalse(result["human_approval_verified"])
