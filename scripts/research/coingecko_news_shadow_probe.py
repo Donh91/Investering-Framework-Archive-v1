@@ -190,7 +190,14 @@ def main() -> int:
     args = parser.parse_args()
     try:
         asof = timestamp(args.as_of_utc)
-        cg, cg_hash = load_document(args.coingecko_snapshot)
+        repo_root = Path(__file__).resolve().parents[2]
+        provider_snapshot = args.coingecko_snapshot
+        if not provider_snapshot.is_absolute():
+            raise ValueError("CoinGecko snapshot path must be absolute")
+        provider_snapshot = provider_snapshot.resolve()
+        if provider_snapshot == repo_root or repo_root in provider_snapshot.parents:
+            raise ValueError("licensed source payload must not be stored in the public repository")
+        cg, cg_hash = load_document(provider_snapshot)
         sr, sr_hash = load_document(args.situation_room_daily)
         summary, candidates = compare(cg, sr, asof)
         summary["source_sha256"] = {"coingecko_snapshot": cg_hash, "situation_room_daily": sr_hash}
