@@ -101,6 +101,7 @@ def validate_situation(doc: dict, asof: datetime) -> list[dict]:
 
 def compare(cg: dict, sr: dict, asof: datetime, *, max_age_hours: int = 48) -> tuple[dict, list[dict]]:
     articles = validate_coingecko(cg, asof)
+    capture_time = timestamp(cg["captured_at_utc"])
     baseline = validate_situation(sr, asof)
     urls = {canonical_url(x.get("url")) for x in baseline if canonical_url(x.get("url"))}
     heads = [x.get("title", "") for x in baseline if isinstance(x.get("title"), str)]
@@ -126,16 +127,16 @@ def compare(cg: dict, sr: dict, asof: datetime, *, max_age_hours: int = 48) -> t
         except (ValueError, TypeError):
             counts["invalid_or_future"] += 1
             continue
-        if not url or not isinstance(title, str) or not title.strip() or published > asof:
+        if not url or not isinstance(title, str) or not title.strip() or published > asof or published > capture_time:
             counts["invalid_or_future"] += 1
             continue
         if url in observed:
             counts["duplicate_provider_url"] += 1
             continue
-        observed.add(url)
         if (asof - published).total_seconds() > max_age_hours * 3600:
             counts["stale"] += 1
             continue
+        observed.add(url)
         counts["news_valid"] += 1
         if url in urls:
             status = "SAME_URL_DISCOVERY_ONLY"
