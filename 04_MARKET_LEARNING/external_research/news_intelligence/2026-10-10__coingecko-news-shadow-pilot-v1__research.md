@@ -33,9 +33,9 @@ Requires three inputs:
 Example, using only private temporary paths:
 
     python scripts/research/coingecko_news_shadow_probe.py --coingecko-snapshot "$PRIVATE_TMP/coingecko_news.json" --situation-room-daily "$PRIVATE_TMP/situation_room_daily.json" --as-of-utc 2026-10-10T15:00:00Z
-    python -m unittest tests.test_coingecko_news_shadow_probe -v
+    python -m unittest discover -s tests -p 'test_coingecko_news_shadow_probe.py' -v
 
-The CLI prints an aggregate, provider-value-free, noncanonical JSON summary. The optional --private-candidates-output emits titles/URLs/details, so its output MUST be restricted to a private temporary path that is not added to Git. Never commit the snapshot, candidates, provider news text or normalized licensed data in this public control repo. Never print detailed candidates in GitHub Actions logs.
+The CLI prints an aggregate, provider-value-free, noncanonical JSON summary. The optional --private-candidates-output emits titles/URLs/details. It requires an absolute path outside this repository in a pre-existing mode-0700 private directory, and creates a mode-0600 file without overwriting prior evidence. CoinGecko snapshot input also must be an absolute path outside the public repo. Never commit the snapshot, candidates, provider news text or normalized licensed data in this public control repo. Never print detailed candidates in GitHub Actions logs.
 
 ## Interpretation
 
