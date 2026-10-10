@@ -104,3 +104,107 @@ P2-F **Grok and Claude reliability:** tag external statements as primary-source 
 ## 7. Evidence boundary / QA
 
 This is a targeted audit spanning principal existing archival and modern research owners. It is **NOT** a complete line-by-line re-evaluation of every Data Ping thread, uploaded transcript, or every historical prediction. Some original raw chat threads remain unexported or incomplete by the legacy coverage receipt. Numerical results above belong to distinct samples, owners, scoring conventions and selection designs and MUST NOT be combined into a synthetic whole-framework hit rate. Older high self-reported public scores do not establish economic edge. A new prospective test or score adjustment requires independent governance.
+
+
+---
+
+## 8. 2026-10-10 PRE-AUDIT ADDENDUM: Auto Trading, first-era DATA PING and cross-owner contradictions
+
+**Status:** AUDIT_PREPARATION / RESEARCH_ONLY. This section supplements the original cross-archive map, not a completed scientific audit. Do not declare whole-history coverage or reuse the same samples as independent corroboration.
+
+### 8.1 Quantified high-value archives ALREADY PRESENT — don't pay to reacquire
+
+| Cohort / exact owner | Count / span | Permitted research value | Must-not-assume |
+|---|---|---|---|
+| Historical hourly alt-market panel, private \`raw/HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1/2026/08/21/\` indexed via \`04_RESEARCH_LAB/auto_trading/maeve/CFGI_MAEVE_DATA_INVENTORY_V1.json\` and \`.../audit_summaries/2026-09-14__historical-market-archive-reconciliation-closure-v1.json\` | **851,882** source-linked hourly rows, **35** symbols, **2020-09-01 to 2026-07-31** | Large no-lookahead alt breadth/dispersion/volume/flow + negative-control panel. Single independent 24-hour SOLUSDT overlap checked with exact matching sampled fields; source-level raw admitted under declared coverage | Exact historical Top-100; survivorship-free membership; all derived fields valid; 851,882 independent episodes |
+| MAEVE/CFGI private action ledger \`raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/2026/09/09/\` | **432** positions (426 closed), **1,073** fills, **641** DCA legs, **318** matched posts | DCA vs first entry, no-trade matched controls, capital-weighted and fill-level timing; behavioural feature ablation | 93.19% position win = entry accuracy; full later public 1,427-position history recovered; private signals known |
+| Private CFGI historical targeted 1h stage \`raw/CFGI_HISTORICAL_1H_EVENT_STAGE_V1/2026/08/21/\` | **478** historic BTC/ETH rows, **2025-01-03 to 2025-02-09** target windows; companion **25,506** hourly free features | Historic event-time stress and reversal interaction; leakage-adjudicated source timestamp joins | Continuous full-asset CFGI; MARKET coverage in these exact windows (zero provider rows, terminal) |
+| Private CFGI PDLT bootstrap \`raw/CFGI_PDLT_HISTORICAL_BOOTSTRAP_V1/2026/08/07/\` | **1,230** observations / ~15-minute capture intervals of native **4h/1d** state | Timestamped intrastate change, regime transition, component divergence | Native 15-minute indicator series; historical breadth beyond its recorded window |
+| Historical altseason lab \`06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/\` | **46** objectively labeled pullback episodes and **25,506** free hourly feature rows | Matched pullback-vs-continuation controls and severity/timing, with 2020–21 and 2025–26 source split | 46 earlier successful predictions; survivorship-free alt universe; ready-to-trade trim/reload policy |
+| BlockHorizon private raw archive \`raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/\` | Complete private raw acquisition per Sept 14 archive-reconciliation receipt; *source-overlap equivalence not yet established* | Specific historical comparison only after same-vintage and universe join audit | A fully source-reconciled backtest owner or reason for duplicate repull |
+| Existing weekly DATA PING/CN/RAW originals, legacy \`canonical-project-archive\` and new \`03_DAILY_CAPTURE_LOGS\` owners | Original CN posts begin Mar 30, 2026; modern forward ledger and hourly/weekly outcomes have separate owner contracts | Historical forecast-as-issued vs actuals, version transition and structured action-vs-risk reconstruction | Legacy public self-scores directly comparable with modern 70% containment + 30% Jaccard |
+
+**Storage / ethics:** raw licensed, paid or restricted evidence stays in \`Donh91/secrets\`, in an approved artifact, or in its source-native location; public control plane records only pointers, sample counts, hashes, schemas, research verdicts. No wallets, credentials, provider raw exports, paid report bodies or user-private holdings in this report. Historical panel's bounded independent overlap check does not prove full-panel market-universe or derived-feature accuracy.
+
+### 8.2 Oldest ChatGPT DATA PING conversations: genuine unresolved archival population
+
+The current ChatGPT Investering project-file surface exposed **126 file records**, including **65 DATA PING-labelled files** (many have identical filenames but different attached file IDs). A targeted prior pass read **87 relevant Project-file records** (some partially through extracted-text fallback). These are valuable **documents and conversation-derived notes**, not necessarily raw frozen market packets.
+
+The prior GitHub import of **44** unique sources is a different, narrower cohort. \`04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/SOURCE_COVERAGE_STATUS_20260804.md\` and \`SOURCE_THREAD_REGISTRY.json\` explicitly state that the original ChatGPT **conversation-thread census is PARTIAL**. Do not confuse accessible Project files with full direct access to every early chat transcript.
+
+Unverified leads may be identified from prior-conversation summaries (e.g. March/April separate CFGI and Crypto State test runs, day/night DATA PING, Grok readbacks), but original message timestamps, prompt, output, availability at time and immutable proof must be recovered before a scientific forecast row is admitted. Do not manufacture 2026-03/04 historical predictions from later recollections or backfill with a reconstructed modern model state.
+
+**Required census fields**: \`source_system\`, \`original_chat_or_file_identity\`, \`source_hash\`, \`original_message_or_issue_timestamp\`, \`retrieved_timestamp\`, \`claim_type\`, \`forecast_issued_at\`, \`forecast_horizon\`, \`freeze_proof\`, \`sensor_observed_at\`, \`sensor_first_knowable_at\`, \`provider_universe\`, \`unit\`, \`actual_source\`, \`actual_settlement\`, \`source_quality\`, \`is_duplicate\`, \`is_superseded\`, \`eligible_to_score\`, \`UNTESTABLE_reason\`. Stable IDs distinguish different "DATA PING_V2.txt" attachments.
+
+### 8.3 Confirmed temporal-integrity / vintage research risks
+
+Existing owner:
+\`04_RESEARCH_LAB/auto_trading/experiments/E1X/TEMPORAL_INTEGRITY_AUDIT_REPORT.md\`.
+Its planted-leak controls **14/14** passed. Actual owner probes documented:
+- PDLT research discovery labels referenced a still-unclosed candle; label-time right truncation missed the defect. Use legally knowable completed-candle anchor.
+- An AT-E3 candidate anchored CFGI-derived features to event time although first capture came **72–879 seconds later**. Negative candidate ruling stands; future entry features must use capture time.
+- Copper/Gold historical signal events could appear before retrospective source publication time; historical signal summaries need knowledge-time reconciliation.
+- ETF session-close feature claims could anticipate real publication by hours. In separate source-vintage audit, \`research/etf_temporal_integrity/2026-09-23/ETF_TEMPORAL_INTEGRITY_REPORT.md\` observed **39 revision events in 35 sessions**, including **two sign flips**. These counts belong to that exact multi-vintage observed cohort and are NOT universal ETF revision rates.
+- Pre-remediation hourly derived return/OI features changed on a subset of persisted rows (E1X vintage probe **168/1086**, 15.5% on that probe). The bounded persistence defect was **remediated** under #941/AT-EXP-004; **source-level spot rows passed independent overlap check**, while affected **pre-fix derived history stays quarantined** for retrospectively scored alpha. Do not propagate "all DATA PING history corrupt" or "everything repaired retroactively."
+- \`06_RESEARCH_LAB/m4_checkpoints/2026-10-05__RL-AUTOTRADING-EVIDENCE-004__FINAL_ADJUDICATION_v1.md\` rules the evidence machine PARTIALLY_READY, broad autonomous hypothesis search NOT_READY, and local attempt tracking real but global cross-family proposal denominator incomplete (owner issue **#1557**).
+
+### 8.4 Important older research claims that conflict with newer evidence
+
+1. **"June 2026 ETF outflows gave best early warning"** appears in old \`DATA PING_V2.txt\` research prose. Modern Research Lab M1 \`06_RESEARCH_LAB/2026-10-06__M1-M6_EVIDENCE_IMPACT_REGISTER_v1.md\` rejects the much stronger claim that ETF persistence has demonstrated independent decision edge. **Resolution required:** distinguish one retrospectively narrated June event from a multi-event first-knowable-time, price/breadth-matched incremental lift test. Do not silently keep both as established truth.
+2. **"Defensive false-altseason calls prove profitable edge"**: some old archive identifies this as verified defensive behavior; M2 \`06_RESEARCH_LAB/m2_checkpoints/2026-10-05__RL-OFFENSIVE-FNP-002__FINAL_ADJUDICATION_v1.md\` explicitly **quarantines** FNP-001 as quantitative counterfactual evidence. Structural non-confirmation is not proven capital alpha; missed-upside and drawdown-avoided remain UNKNOWN.
+3. **"CFGI stress is leading" vs "CFGI merely confirms after price/flows"** occur across case studies. Resolve with original time-stamped CFGI component updates versus first legal price/flow deterioration, plus matched non-event controls. \`W36–W39\` weekly derived summaries support event selection only, not lead-time demonstration.
+4. **"CN public precision proves forecast edge"**: M3 rejects this as established, because high containment can result from wide bands and mechanical ATR controls perform competitively. Never call public displayed scores economic skill.
+5. **"Signal family count = independent confirmation count"**: ETHBTC, BTC.D, breadth, TOTAL3, alt index and CFGI dominance may be partially dependent; use conditional ablation/mutual information and owner universe mapping before weighting.
+
+### 8.5 Cross-owner failure example: Oct 6–8, 2026 (already owned; DO NOT DUPLICATE)
+
+Issue **#1553** is the existing P0 Compass Risk-to-Action Reliability Mission. Directly fetched immutable official Compass target files:
+- \`04_MARKET_LEARNING/handlekompas/official/daily/2026/10/06/CMP-20261006-627e461586fd.json\`: issued 14:37Z, official regime BULLISH/action HOLD_WAIT, protection BUILDING, SELL UNAVAILABLE.
+- \`.../2026/10/07/CMP-20261007-38128ce3656b.json\`: issued 20:09Z, official NOW MIXED/action HOLD_WAIT, protection still BUILDING ordinary retest, SELL UNAVAILABLE; no documented eligible risk escalation in this packet.
+- \`.../2026/10/08/CMP-20261008-59260dc1ace8.json\`: issued 13:33Z, data DEGRADED, direction UNAVAILABLE, SELL UNAVAILABLE.
+- Latest \`research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json\` read Oct 10: **150 eligible typed rows**, **zero eligible warning series** for its exact denominator. Sept warning event ledger lists 12 events in one provisional family; not 12 independent successes.
+
+This is **direct evidence of output semantics**; the proof of whether a prior P0 source warned earlier, why it did/didn't propagate, downstream delivery and actual eligible alternative action requires #1553's source-to-consumer timeline. No retrospective causal conclusion and NO free-standing automatic SELL logic. Read existing issue, don't recreate its action/notification/portfolio work.
+
+### 8.6 New audit hypothesis shortlist — rank for incremental decision value
+
+**A / HIGH — Original as-was prediction versus reality with action/reliability split.**
+Historical DATA PING + published CN + legacy RAW/MM -> eligible immutable decision snapshots -> 12h/24h/72h/7d/14d/30d matured outcomes (only originally forecast horizons for scoring). Separate regime, direction, severity, timing, action permission, signal delivery, and costs. Test what the model *actually knew*, not a modern replay.
+
+**B / HIGH — Early warning and delayed recognition of adverse *alt* tails when BTC stays healthy.**
+Compare 35-asset hourly panel ETH/BTC/breadth/volume, ETF vintages, existing historical pullback episodes, and typed Compass. Asset universe/survivorship and run-clock parity explicit. Evaluate *first observable divergence -> official risk -> downstream action readiness*. Reuse #1553 and M6 / EDGE-001; no new severity owner before admission.
+
+**C / HIGH — CFGI internal component dispersion and path-to-exit versus naïve score levels.**
+Use MAEVE 432 parent positions + DCA legs and real no-trade opportunity controls; compare score, Technical minus Social/Whales/Orders/Trends, velocity, persistence, version eras, exit choice, capital deployment, fee/liquidity costs. Work with private data in place. Most important: restrict entry features to source-knowable timestamps; remove \`analisis_hora\` post-entry lookahead suspect fields. Historical MAEVE action reconstruction is NOT an Investering-framework trade track record; assess transferability separately under external-alpha #937.
+
+**D / HIGH — Stale but good data, degraded states and source vintage as a market-signalling anti-pattern.**
+Test degraded/UNKNOWN incidence by session, source, weekend/holiday and API/provider version; estimate selection bias in *which weeks were scoreable* and false reassurance after last-known-good states. Source health is **not** itself bullish/bearish. Connect time-to-delivery in #1553.
+
+**E / MEDIUM — Hypothesis-family redundancy and confirmation delay economics.**
+Ablate 3 independent families (ETHBTC persistence, breadth survival, BTC.D path) versus full shadow stack; matched negative controls and regime splits. Relate false positive prevention to false negative opportunity cost only with qualified real decision identities, under #1478/#1557 existing owners. Do not change gates from a retrospective selected winner.
+
+**F / MEDIUM — Forecast copy-forward inertia / threshold vintage drift.**
+Audit the exact published CN #13 -> #14 repeated price map and subsequent undershoots, plus earlier April/May conservative rotation vs optimistic price-level calls. Distinguish intentional unchanged forecast from template copying; freeze document issue and actual market time before diagnosis.
+
+**G / CONDITIONAL — Historical BlockHorizon unique information.**
+Only when source basis/overlap and point-in-time availability can be compared against 35-asset panel and DefiLlama owner; no bulk reacquisition, no promotion by archive size.
+
+### 8.7 Existing-owner routing and pre-audit readiness gate
+
+- Existing **#209 Market Anticipation Research Program** owns broad historical PIT comparisons and baselines.
+- Existing **#1553** owns Oct risk-to-action and delivery.
+- Existing **M6 / EDGE-001 / #1530** owns prospective distribution-warning economics and no-warning controls.
+- Existing **#937** owns MAEVE external alpha; **#1557** owns cross-strategy trial-denominator integrity.
+- Existing **#1478** owns FNP observer production/coverage gap.
+- Existing CN precision learning and M3 benchmark own public score/freeze and baseline research. No parallel forecast/market owner.
+- Existing Data Ping source QA and Historical Research Vault own raw provenance and coverage.
+
+**Before a claimed comprehensive deep audit PASS, require:**
+1. A deterministic source census separating Project-file records, full original ChatGPT thread messages (if actually accessible), legacy import files, canonical GitHub frozen forecasts, and private raw owner manifests. Report \`UNREAD\`, \`PARTIAL\`, \`UNTESTABLE\`, \`VERIFIED\` separately.
+2. Immutable event-level freeze/outcome joins and correct owner/model version; no leaking old hindsight/reconstruction into prospective denominator.
+3. Source-frequency/source-time/availability/revision alignment and dedup of correlated, overlapping episodes.
+4. Explicit negative results, null actions, failed controls, censored right-tail cases, data outages and non-triggers; opportunity costs and false reassurance separately.
+5. Within-era proper baselines, not arithmetic average across old and new scoring systems, no outcome-selected target/horizon.
+6. Concrete owner handoff for each new falsifiable question; mark duplicates \`NOOP\`, irreproducible early sensor claims \`UNTESTABLE\`, data-restoration candidates \`SOURCE_RECOVERY\`. No new autonomous search or live threshold changes.
+
+**Readiness verdict on 2026-10-10: \`NOT_READY_FOR_COMPLETE_AUDIT_PASS\`; \`READY_FOR_BOUNDED_SOURCE_CENSUS_AND_PIT_RECONCILIATION\`.** This is an evidence inventory and next-test plan, not proof of comprehensive original-message extraction, backtest execution or independent prospective alpha.
