@@ -46,6 +46,8 @@ Rå BTC-score-counts, uden pooled succesprocent:
 | 72h | 114 | 12 | 8 | 94 |
 | 168h | 84 | 27 | 2 | 55 |
 
+**Ny bounded baseline-kontrol:** For de21 BTC UP/DOWN-outcomes med tilgængelig nonzero prior-delta i den frosne evidence-snapshot er forecast-retningen identisk med en naiv persistence-baseline i samtlige21. Begge har9 CORRECT og12 INCORRECT. Alle21 er12h/scoringv2. Der er dermed ingen incremental direction-value i netop denne betingede population. Der er ikke baseline-admission for alle øvrige rækker, uafhængig event-N, significance eller matched LLM-ablation. Parpopulation og beregning findes i receipt/script.
+
 Denne tabel er deskriptiv. Metodeversion, abstention, overlap, sideways-tolerance, regime og eligible knowledge-time forhindrer fortolkning som samlet forecast-præcision. Ingen eventfamilier eller independent N er etableret. BTC/ETH er ikke to uafhængige tests.
 
 ## Evidence registry, kompatibelt owner-resumé
