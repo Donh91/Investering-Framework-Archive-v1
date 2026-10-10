@@ -24,7 +24,10 @@ def classify(event, allowed=ISSUE_ALLOWLIST):
     if comment.get("author_association") != "OWNER":
         return "IGNORED", "not_owner"
     body = comment.get("body")
-    if not isinstance(body, str) or not (body == MARKER or body.startswith(MARKER + "\n")):
+    if not isinstance(body, str):
+        return "IGNORED", "no_first_line_marker"
+    first_line = body.replace("\r\n", "\n").split("\n", 1)[0].rstrip()
+    if first_line != MARKER:
         return "IGNORED", "no_first_line_marker"
     if not isinstance(comment.get("id"), int):
         return "IGNORED", "missing_comment_id"
