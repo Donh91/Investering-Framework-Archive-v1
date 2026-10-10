@@ -1,7 +1,33 @@
 # Master audit v2, bounded Work receipt and READ FIRST continuation
 
 Dato: 10. oktober 2026. Status: RESEARCH_ONLY, PARTIAL_AUDIT, NO_EDGE_PROMOTION.
-Executor: ChatGPT Work. Ingen delegerede agenter, paid model dispatch, nye schedules eller ny auditmotor.
+Executor: ChatGPT Work. Ingen nye delegerede agenter, betalt markedsresearch-dispatch, schedules eller auditmotor. Eksisterende Codex PR-review er anvendt.
+
+## Review-korrektion og næste arbejdsrækkefølge, v2.1
+
+Det uafhængige Codex-review af430cfccb har to åbne findings,4238629214(P1) og4238629220(P2). Denne opdatering korrigerer dem; ny exact-head review er stadig nødvendig. Tidligere commits bevares som auditspor.
+
+**HOLD:** SCORING_CONTRACT_v1.md foreskriver HOLD/negative-return = PROTECTIVE, ogv2 viderefører denne proxy. De23 labels er derfor kontraktkonforme, selv om ordet kan misforstås som økonomisk kapitalbeskyttelse. Min tidligere klassifikation som en to-fil kodefejl uden owner-authority var forkert. Code-only-kandidaten trækkes tilbage fra denne ikke-mergede PR; ingen historiske forecasts/outcomes slettes eller ændres. En eventuel ændring kræver owner-afgørelse, ny prospektiv scoring-version, version-aware reporting og korrekt kapital-state comparator. Der foretages ingen sådan promotion her.
+
+**Replay:** Scriptet læser nu en verificeret40-tegns source-commit via immutable Git archive. Det læser aldrig checkoutets kildefiler. Standardkilden erbaa8c30da6285066f3b25ff13d42c1dc1104441c; scriptet kan blive på audit-PR-head, mens input læses fra den gamle Git-tree. Dokumenteret kommando er fortsat gyldig, eller tilføj `--source-commit baa8c30da6285066f3b25ff13d42c1dc1104441c`. Git-objectskal være tilgængelige; en partial clone kan kræve bounded blob-fetch. CSV/JSON bruger neutral hold_protective_labels/hold_protective_label frem for at erklære en kodeafvigelse.
+
+**FNP:** Main7974efdf og M2 measurement-integrity-addendum bekræfter TO gates: EXACT_EVALUATOR_RECOVERY før OBSERVER_WIRING. Ingen automatiske ENTERED/divergence-rækker må fremstilles fra narrativ eller threshold-proximity. Min tidligere handover om wiring var utilstrækkelig uden denne afhængighed.
+
+### Fem pakker, én efter én
+
+| Pakke | Afgrænset mål | Owner og afhængighed | Accept / stop |
+|---|---|---|---|
+|1 Audit-integritet | Ret reviewfindings, tilbagekald ugyldig code-only-intake, reproducer data fra immutable tree | Eksisterende1565/1558. Udføres nu, ingen runtime policy-change | To deterministiske replayoutputs; dirty-tree/invalid-commit negative controls; manifest/readback og exact-head independent review. Ingen self-merge |
+|2 Historisk forecast-admission | Admit først CN9 ogCN13-14 samt relevanteDATA PING-originaler, derefter hele kvalificeret population | Eksisterende historical audit/1553. Kan udføres uafhængigt af reviewer | Originaldocumenthash,event/creation/publication/knowledge-time,methodversion,frozenrange ogactualprovider; klassifikation ogcoverage. UNTESTABLE hvisoriginal/tid mangler, aldrigAI-rekonstruktion somforecast |
+|3 FNP-evaluator ogadvarsel-til-handling | Recover FT1-exact trigger/persistence/reset; derefter owner-ratified observer+coverage. Separat emission/delivery/action-available receipts |1478/M2 og1553, eksisterendeCLAUDE-M2-T2-EVALUATOR-RECOVERY-012 | Stopwiring indtilevaluatorgodkendt. Ingen nuldivergence somperformance. WAIT/HOLD comparator medsammeinitialcapital,drawdown ogopportunitycost. Warning!=SELL |
+|4 Dataskatte, begrænset replay | Valider først private panel/MAEVE-bindings ogwindows; vælgkun eksisterende admission-godkendt test |Panel/MAEVE owners,1557trialaccounting;Round3analysefortsatOFF | SHA/bytes/schema/completeness føranalyse. H0/H1 ogglobaltrialdenominator førmodelsearch;episodefamilier,holdout,purge/embargo,fees/slippage/sellability. Stop hvisPIT/coverageikkeadmitted |
+|5 Prospektiv marginalværdi | Matched deterministiskbaseline versusAI ogwarning/re-entry beslutninger |EksisterendeM3/forecast/riskowners; pakke2-4stillerdatakrav | Sammeinformation/kapital,timing,cost,falskealarmer ogmistetupside. Følg eksisterendekillcriteria; forenklingprioriteres udenmåltincrementalværdi |
+
+Pakke1 er review-remediation, ikke dokumenteret økonomisk forbedring. Pakke2 er næste selvstændige forskningspakke. Pakke3's evaluator-recovery kan bruge samme originalkilder, men må ikke skabe en konkurrerende recovery-owner. Ingen nye schedules, skills eller agenter.
+
+Den tilgængelige June10-attachment beskriver FT1-identitet/freeze/deadline, men den målrettede TXT-søgning genfinder ikke exact ENTERED/persistence/reset-evaluator. Filnavn ogselvrapporteretdato er ikke originalpublication-time. Resultatet er en dækningsbegrænsning, ikke permission til at opfinde evaluator eller erklære den fraværende fra alle arkiver.
+
+Denne v2.1-korrektion har forrang over bilagets tidligere code-only-candidate/wiring-only anbefalinger nedenfor. De ældre receipt-counts bevares som deskriptive observationer; ny manifest registrerer neutral nomenklatur og withdrawn candidate.
 
 ## READ FIRST og autoritet
 
