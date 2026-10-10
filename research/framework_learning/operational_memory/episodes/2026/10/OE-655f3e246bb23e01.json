@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/action_compass_exit_calibration.py",
+    "tests/learning/test_action_compass_exit_calibration.py",
+    "tests/learning/test_compass_outcomes.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-655f3e246bb23e01",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Governed merge by independent non-authoring review_1556 lane after semantic PASS reviews 5478936607/5478937436 and exact-head Official Compass Outcomes run38051953807 job114212699848 (21testsOK). Recomputes native canonical payload digest and excludes nonfinite/null-hash bypass. Research eligibility integrity only; no live warning, SELL or portfolio authority. Natural merged producer population readback remains required.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/action_compass_exit_calibration.py": "da000b125d41afc059a8187d92f2939e90b8884f",
+    "tests/learning/test_action_compass_exit_calibration.py": "ad8f29518c7c3ea1dbe1c591f9bfc5c9354dee71",
+    "tests/learning/test_compass_outcomes.py": "603a185f032b8ccd898976b0d4d110fc535f1f70"
+  },
+  "source_commit_sha": "655f3e246bb23e01259216a452419d7749291487",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-10T05:28:37-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "research(compass): fail closed on invalid frozen payload hashes (#1556)"
+}
