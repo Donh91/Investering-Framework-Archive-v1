@@ -39,36 +39,56 @@ EXPORT_PATHS = {
 PRIVATE_SOURCE_COMMIT = "36bd008d9c08dcaa4219927cddc9f4324f8b7d8b"
 
 
-def export_binding(name, raw):
-    """Hash/count evidence is not a complete governance/admission binding.
+REQUIRED_PRIVATE_BINDING_FIELDS = (
+    "private_repository", "private_commit_sha_reachable_from_main", "exact_path",
+    "bytes", "sha256", "source_contract_id", "provider", "venue", "instrument_id",
+    "collector_commit_sha", "schema_id", "schema_version", "schema_sha256",
+    "retrieval_start_utc", "retrieval_end_utc", "availability_at_utc", "captured_at_utc",
+    "normalized_at_utc", "row_or_object_count", "timestamp_range", "gap_count",
+    "missingness_status", "completeness_status", "validation_status",
+)
+PRIVATE_MAIN_OBSERVED_AT_UTC = "2026-10-10T20:05:21.487Z"
 
-    Do not infer a source-contract ID from an archive ID or an acquisition time
-    from the date in a path. Required owner metadata remains explicitly unknown.
+
+def export_binding(name, raw, observed_count):
+    """Expose the complete canonical minimum; never infer owner metadata.
+
+    This public quality receipt is not the required restricted-plane owner receipt.
+    Unknown applicability (including normalized_at_utc) remains a missing field.
+    Domain contracts can impose further requirements beyond this minimum.
     """
+    fields = {key: "UNKNOWN_NOT_BOUND_BY_THIS_CHECK" for key in REQUIRED_PRIVATE_BINDING_FIELDS}
+    fields.update(private_repository="Donh91/secrets",
+                  private_commit_sha_reachable_from_main=PRIVATE_SOURCE_COMMIT,
+                  exact_path=EXPORT_PATHS[name], bytes=len(raw), sha256=HASHES[name],
+                  row_or_object_count=observed_count)
+    missing = [key for key in REQUIRED_PRIVATE_BINDING_FIELDS
+               if isinstance(fields[key], str) and fields[key].startswith("UNKNOWN")]
     return {
-        "repository": "Donh91/secrets",
-        "private_commit": PRIVATE_SOURCE_COMMIT,
+        "repository": "Donh91/secrets", "private_commit": PRIVATE_SOURCE_COMMIT,
         "path": EXPORT_PATHS[name], "bytes": len(raw), "sha256": HASHES[name],
+        "canonical_minimum_binding_fields": fields,
+        "private_commit_reachability_evidence": {
+            "basis": "EXACT_PRIVATE_MAIN_COMMIT_READ_AT_RECORDED_TIME",
+            "observed_main_sha": PRIVATE_SOURCE_COMMIT,
+            "observed_at_utc": PRIVATE_MAIN_OBSERVED_AT_UTC,
+            "original_data_knowledge_time_proven": False,
+        },
         "member_integrity_status": "EXACT_EXPORT_HASH_MATCH",
-        "source_contract_id": "UNKNOWN_NOT_ESTABLISHED_BY_THIS_CHECK",
-        "timestamps": {
-            "original_knowledge_time_utc": "UNKNOWN",
-            "retrieval_start_utc": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
-            "retrieval_end_utc": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
-            "captured_at_utc": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
-            "event_time_is_not_knowledge_time": True,
-        },
-        "schema_binding": {
-            "governed_schema_id": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
-            "governed_schema_sha256": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
-            "status": "INCOMPLETE",
-        },
+        "source_contract_id": fields["source_contract_id"],
+        "timestamps": {"original_knowledge_time_utc": "UNKNOWN",
+                       **{key: fields[key] for key in REQUIRED_PRIVATE_BINDING_FIELDS if key.endswith("_utc")},
+                       "event_time_is_not_knowledge_time": True},
+        "schema_binding": {"governed_schema_id": fields["schema_id"],
+                           "governed_schema_version": fields["schema_version"],
+                           "governed_schema_sha256": fields["schema_sha256"], "status": "INCOMPLETE"},
         "completeness_status": "EXACT_MEMBER_ONLY_DATASET_COMPLETENESS_NOT_ESTABLISHED",
         "binding_status": "INCOMPLETE_REQUIRED_OWNER_METADATA",
-        "missing_required_binding_fields": [
-            "source_contract_id", "knowledge_and_retrieval_timestamps",
-            "governed_schema_binding", "dataset_completeness_binding",
-        ],
+        "missing_required_binding_fields": missing,
+        "missing_list_scope": "EXHAUSTIVE_FOR_CITED_CANONICAL_MINIMUM_ONLY_NOT_DOMAIN_ADMISSION",
+        "required_binding_field_universe": list(REQUIRED_PRIVATE_BINDING_FIELDS),
+        "restricted_plane_owner_receipt_status": "NOT_BOUND_PUBLIC_QUALITY_RECEIPT_ONLY",
+        "domain_specific_additional_requirements": "UNKNOWN_REQUIRE_OWNER_CONTRACT_REVIEW",
         "scientific_analysis_eligible": False,
     }
 
@@ -142,15 +162,23 @@ def inspect(root):
                     "duplicate_symbol_timestamp_count": len(events)-len({(r["symbol"], r["timestamp"]) for r in events}),
                     "exact_hour_timestamps": sum(parse(r["timestamp"]).minute == 0 and parse(r["timestamp"]).second == 0 for r in events)}
     bh = json.loads(inputs["bh-reconciliation.json"])
+    observed_counts = {"parents.csv": len(parents), "fills.csv": len(fills),
+                       "cfgi-events.jsonl.gz": len(events), "bh-reconciliation.json": 1,
+                       **{f"cfgi-block-{b['block']}.json": b["actual_rows"] for b in blocks}}
     return {
         "private_source_commit": PRIVATE_SOURCE_COMMIT,
         "classification": "PROVIDER_VALUE_FREE_QUALITY_METADATA_ONLY",
         "exact_exports_sha256": HASHES, "all_exact_export_hashes_match": True,
-        "export_bindings": {name: export_binding(name, inputs[name]) for name in HASHES},
+        "export_bindings": {name: export_binding(name, inputs[name], observed_counts[name]) for name in HASHES},
         "governance_binding_status": "INCOMPLETE_REQUIRED_OWNER_METADATA",
         "binding_requirement_source": {"repository": "Donh91/Investering-Framework-Archive-v1",
                                        "commit": "175aa330f15262e4fcca0de6b3c9aff77511325e",
                                        "path": "AGENTS.md", "lines": "44-46"},
+        "canonical_minimum_binding_requirement_source": {
+            "repository": "Donh91/Investering-Framework-Archive-v1",
+            "commit": "8f56a304e323a68255c0845c7c353943cb5152a0",
+            "path": "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "lines": "63-80",
+            "blob_sha": "c8ead1b0e92c32eef4a911ad1b6bf33a09170966"},
         "member_hash_pass_is_scientific_admission": False,
         "maeve_parent_counts": parent_counts, "maeve_fill_join_counts": fill_counts,
         "cfgi_bootstrap_blocks": blocks, "cfgi_bootstrap_total_rows": sum(b["actual_rows"] for b in blocks),
