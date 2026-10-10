@@ -36,6 +36,43 @@ EXPORT_PATHS = {
 }
 
 
+PRIVATE_SOURCE_COMMIT = "36bd008d9c08dcaa4219927cddc9f4324f8b7d8b"
+
+
+def export_binding(name, raw):
+    """Hash/count evidence is not a complete governance/admission binding.
+
+    Do not infer a source-contract ID from an archive ID or an acquisition time
+    from the date in a path. Required owner metadata remains explicitly unknown.
+    """
+    return {
+        "repository": "Donh91/secrets",
+        "private_commit": PRIVATE_SOURCE_COMMIT,
+        "path": EXPORT_PATHS[name], "bytes": len(raw), "sha256": HASHES[name],
+        "member_integrity_status": "EXACT_EXPORT_HASH_MATCH",
+        "source_contract_id": "UNKNOWN_NOT_ESTABLISHED_BY_THIS_CHECK",
+        "timestamps": {
+            "original_knowledge_time_utc": "UNKNOWN",
+            "retrieval_start_utc": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
+            "retrieval_end_utc": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
+            "captured_at_utc": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
+            "event_time_is_not_knowledge_time": True,
+        },
+        "schema_binding": {
+            "governed_schema_id": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
+            "governed_schema_sha256": "UNKNOWN_NOT_BOUND_BY_THIS_CHECK",
+            "status": "INCOMPLETE",
+        },
+        "completeness_status": "EXACT_MEMBER_ONLY_DATASET_COMPLETENESS_NOT_ESTABLISHED",
+        "binding_status": "INCOMPLETE_REQUIRED_OWNER_METADATA",
+        "missing_required_binding_fields": [
+            "source_contract_id", "knowledge_and_retrieval_timestamps",
+            "governed_schema_binding", "dataset_completeness_binding",
+        ],
+        "scientific_analysis_eligible": False,
+    }
+
+
 def parse(s):
     value = datetime.fromisoformat(s.replace("Z", "+00:00"))
     if value.utcoffset() is None:
@@ -106,18 +143,24 @@ def inspect(root):
                     "exact_hour_timestamps": sum(parse(r["timestamp"]).minute == 0 and parse(r["timestamp"]).second == 0 for r in events)}
     bh = json.loads(inputs["bh-reconciliation.json"])
     return {
-        "private_source_commit": "36bd008d9c08dcaa4219927cddc9f4324f8b7d8b",
+        "private_source_commit": PRIVATE_SOURCE_COMMIT,
         "classification": "PROVIDER_VALUE_FREE_QUALITY_METADATA_ONLY",
         "exact_exports_sha256": HASHES, "all_exact_export_hashes_match": True,
-        "export_bindings": {name: {"repository": "Donh91/secrets", "path": EXPORT_PATHS[name],
-                                  "bytes": len(inputs[name]), "sha256": HASHES[name]} for name in HASHES},
+        "export_bindings": {name: export_binding(name, inputs[name]) for name in HASHES},
+        "governance_binding_status": "INCOMPLETE_REQUIRED_OWNER_METADATA",
+        "binding_requirement_source": {"repository": "Donh91/Investering-Framework-Archive-v1",
+                                       "commit": "175aa330f15262e4fcca0de6b3c9aff77511325e",
+                                       "path": "AGENTS.md", "lines": "44-46"},
+        "member_hash_pass_is_scientific_admission": False,
         "maeve_parent_counts": parent_counts, "maeve_fill_join_counts": fill_counts,
         "cfgi_bootstrap_blocks": blocks, "cfgi_bootstrap_total_rows": sum(b["actual_rows"] for b in blocks),
         "cfgi_selected_event_stage": event_counts,
         "blockhorizon_receipt_readback": {"archive_summary": bh["archive_summary"], "raw_csv_files_independently_rehashed": 0},
         "hypothesis_trials_created": 0, "economic_performance_replay": False,
         "point_in_time_admission": "NOT_ESTABLISHED_BY_HASH_OR_EVENT_TIME",
-        "limitations": ["No full altseason gzip rehash/replay", "BH receipt hash verified, not 55 raw CSV hashes",
+        "limitations": ["Required contract/time/schema/completeness bindings remain incomplete; quality checks confer no scientific admission",
+                        "Existing owner manifests contain additional declarations, but this checker has not bound and validated them",
+                        "No full altseason gzip rehash/replay", "BH receipt hash verified, not 55 raw CSV hashes",
                         "Closed MAEVE capital coverage is a subset", "Post-entry analysis fields remain look-ahead suspect",
                         "CFGI retrospective API event times are not original availability times", "No net-return, beta, drawdown or sellability claim"],
     }
@@ -132,7 +175,8 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"exact_hashes": len(HASHES), "maeve_parents": value["maeve_parent_counts"]["rows"],
-                      "maeve_fills": value["maeve_fill_join_counts"]["rows"], "economic_replay": False}))
+                      "maeve_fills": value["maeve_fill_join_counts"]["rows"], "economic_replay": False,
+                      "governance_binding_status": value["governance_binding_status"]}))
 
 
 if __name__ == "__main__":

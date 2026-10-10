@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/EXECUTIVE_REPORT_AND_HANDOVER.md",
-      "bytes": 42317,
-      "sha256": "0e09e00094558234b646f40f905a85d70145f3e251737fef1f5ba5dfa0f57a70"
+      "bytes": 43619,
+      "sha256": "f32463696f3ac75c766a68062f13ff9bc89c5d2ecb337b8f6b664859dcd3fcc8"
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P2_WARNING_CHAIN_RECEIPT.json",
@@ -34,8 +34,8 @@
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P5_PRIVATE_SOURCE_RECEIPT.json",
-      "bytes": 6747,
-      "sha256": "50f140e9919e1c93a13b8f75a1235a55ce08cb5f52e5a2cb5a4c6c924712905a"
+      "bytes": 15117,
+      "sha256": "db7d2c2a6d16ce0a961d1cd4e7c914f816ff038b836e2a6ad9ce6b70ff44e354"
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/P5_TRIAL_ACCOUNTING_PREFLIGHT.json",
@@ -49,8 +49,8 @@
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/inspect_private_sources.py",
-      "bytes": 7863,
-      "sha256": "751bd7fd8999df497633925f9e2de411afeb8c9bec07dc2412b656e731913931"
+      "bytes": 10128,
+      "sha256": "7f9a9a9f596ea20a3e9c3123ebd6f596790ec5f4c0b9f28326870e23df38cfda"
     },
     {
       "path": "05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10_master_audit_work_receipt_v2/m3_arithmetic_receipt.json",
@@ -83,7 +83,7 @@
     "modern_replay_two_runs": "BYTE_IDENTICAL_FROM_GIT_TREE",
     "source_tamper_negative_control": "PASS",
     "population_unique_426": "PASS",
-    "existing_regressions": "45 PASS_HISTORICAL_AUDIT_RECEIPT_NOT_RERUN_ON_V2_3",
+    "existing_regressions": "45 PASS_HISTORICAL_AUDIT_RECEIPT_NOT_RERUN_ON_V2_4",
     "site_full_stack_regression": "PASS_HISTORICAL_RELEASE_READBACK_NOT_NEW_DEPLOY",
     "immutable_git_tree_replay": "PASS",
     "dirty_worktree_negative_control": "PASS",
@@ -95,7 +95,9 @@
     "private_truncated_source_negative_control": "PASS_BEFORE_OUTPUT",
     "attachment_hash_negative_control": "PASS_BEFORE_OUTPUT",
     "warning_horizon_replay": "12/12 MATCH; FULL_STORED_OBJECT_MISMATCH",
-    "reattached_sources_revalidated": "25/25 BYTE_AND_SHA256_MATCH"
+    "reattached_sources_revalidated": "25/25 BYTE_AND_SHA256_MATCH",
+    "private_governance_bindings": "INCOMPLETE_REQUIRED_OWNER_METADATA; 7/7 analysis_eligible=false",
+    "private_binding_negative_admission_control": "PASS_NO_HASH_PASS_TO_SCIENTIFIC_ADMISSION"
   },
   "production_code_change": false,
   "main_write": false,
@@ -107,7 +109,7 @@
     "reason": "P1 owner-gated prospectively versioned scoring semantics, not CODE_REMEDIATION_ONLY",
     "main_candidate_admission": false
   },
-  "handover_revision": "v2.3_sequential_bounded_packages_no_edge_promotion",
+  "handover_revision": "v2.4_private_binding_incomplete_no_admission",
   "additional_source_commits": {
     "archive_packages": "175aa330f15262e4fcca0de6b3c9aff77511325e",
     "private_exports": "36bd008d9c08dcaa4219927cddc9f4324f8b7d8b"

@@ -3,9 +3,9 @@
 Dato: 10. oktober 2026. Status: RESEARCH_ONLY, PARTIAL_AUDIT, NO_EDGE_PROMOTION.
 Executor: ChatGPT Work. Ingen nye delegerede agenter, betalt markedsresearch-dispatch, schedules eller auditmotor. Eksisterende Codex PR-review er anvendt.
 
-## Review-korrektion og sekventielle resultater, v2.3
+## Review-korrektion og sekventielle resultater, v2.4
 
-Det uafhængige Codex-review af430cfccb fandt4238629214(P1) og4238629220(P2). Et senere review af38ca49fa fandt4238751870(P2): overleveringen indeholdt stadig instruktioner om den tilbagetrukne kandidat. Denne opdatering retter både replay og alle aktuelle kandidat-/wiring-anbefalinger. Seneste review af510c83d9 fandt4238774637(P2), en resterende measurement-bug-formulering, som nu også er fjernet. Ny exact-head review er stadig nødvendig; åbne reviewtråde er ikke selvafklaret. Tidligere commits bevares som auditspor.
+Det uafhængige Codex-review af430cfccb fandt4238629214(P1) og4238629220(P2). Et senere review af38ca49fa fandt4238751870(P2): overleveringen indeholdt stadig instruktioner om den tilbagetrukne kandidat. Denne opdatering retter både replay og alle aktuelle kandidat-/wiring-anbefalinger. Seneste review af510c83d9 fandt4238774637(P2), en resterende measurement-bug-formulering, som nu også er fjernet. Ny exact-head review er stadig nødvendig; åbne reviewtråde er ikke selvafklaret. Tidligere commits bevares som auditspor. Review af7283be2f fandt4238891135(P2): private bindings manglede kontrakt-, tids-, schema- og completeness-metadata. Denne version markerer alle syv bindings INCOMPLETE_REQUIRED_OWNER_METADATA, de manglende felter eksplicit UNKNOWN og scientific_analysis_eligible=false. Hash/count-checks er bevaret; governance-admission er ikke givet. Private dataset-boundary-gaten er nedgraderet til PARTIAL. Ejer-manifester har yderligere deklarationer, men deres fulde metadata er ikke bundet og valideret af dette checker-script. Frisk review af denne korrektion kræves.
 
 **HOLD:** SCORING_CONTRACT_v1.md foreskriver HOLD/negative-return = PROTECTIVE, ogv2 viderefører denne proxy. De23 labels er derfor kontraktkonforme, selv om ordet kan misforstås som økonomisk kapitalbeskyttelse. Min tidligere klassifikation som en to-fil kodefejl uden owner-authority var forkert. Code-only-kandidaten er trukket tilbage fra denne ikke-mergede PR; ingen historiske forecasts/outcomes slettes eller ændres. En eventuel ændring kræver owner-afgørelse, ny prospektiv scoring-version, version-aware reporting og korrekt kapital-state comparator. Der foretages ingen sådan promotion her.
 
@@ -23,7 +23,7 @@ Dette er en afgrænset fortsættelse af samme audit. Pakkerne er gennemgået én
 | 2 Advarselskæde | Owner-replay af 12 events, én foreløbig familie, to identiske kørsler; alle horisontberegninger og freeze-hashes matcher. BUILDING-kontrol dokumenteret | Hele gamle objekt matcher ikke nuværende tape-hashes. Emission, delivery og action availability UNKNOWN. #1553/EDGE-001 |
 | 3 Historiske kilder | 25 forskellige source-hashes; 17 fulde tekstlæsninger, 5 sektionslæsninger, én gennemgående claim-søgning og 2 komplette datooptællinger | Ingen nye kvalificerede originalforecasts admitted fra disse bilag. Den tidligere 126/65-population er ikke genfundet fuldt. #209/#1558 |
 | 4 Økonomi og AI | Eksisterende DEL v1.2 og return-foundation kontrolleret; 17 tests PASS. Proxy-data afvises før afkastlæsning/output. Kort signalvej gennemgået | Godkendt segment-return-owner mangler. Ingen økonomisk replay eller matched LLM-ablation udført. M3/CN/DEL-owner |
-| 5 Privat evidens og trials | Syv præcise private exports hashverificeret; MAEVE parent/fill-join, CFGI-rækker, panelmetadata og BH-receipt genberegnet. Admission/filename-preflight | Panelets store gzip og BH's 55 rå CSV-filer ikke selvstændigt genhash/replayed. Global proposal-time trial denominator ikke etableret. Datasetowners/#1557 |
+| 5 Privat evidens og trials | Syv præcise private exports hashverificeret; MAEVE parent/fill-join, CFGI-rækker, panelmetadata og BH-receipt genberegnet. Admission/filename-preflight | Panelets store gzip og BH's 55 rå CSV-filer ikke selvstændigt genhash/replayed. Kontrakt/tid/schema/completeness-bindings INCOMPLETE. Global proposal-time trial denominator ikke etableret. Datasetowners/#1557 |
 
 ### Ti nye eller skærpede fund fra fortsættelsen
 
@@ -42,14 +42,14 @@ Dette er en afgrænset fortsættelse af samme audit. Pakkerne er gennemgået én
 
 - Eksisterende DEL/foundation-regression: 17 tests PASS på immutable Archive-source `175aa330f15262e4fcca0de6b3c9aff77511325e`. Syntetiske fixtures, ingen market-performance evidence.
 - DEL negative control: forskningsmetadata plus en bevidst ikke-eksisterende returns-sti stopper ved owner-contract-gaten, før returns læses og før output oprettes.
-- Private quality check: to byte-identiske outputs; en trunkeret parent-CSV afvises før output. Syv exact exports, ikke syv komplette private datasæt.
+- Private quality check: to byte-identiske outputs; en trunkeret parent-CSV afvises før output. Syv exact exports, ikke syv komplette private datasæt. Alle syv governance-bindings er eksplicit INCOMPLETE og analysis_eligible=false; hash/count-pass er ikke scientific admission.
 - PDF check: 8.748 datoankre totalt i to hashbundne kilder; forkert kildehash afvises før output. OHLC-joining og eligible original knowledge-time er stadig ukendt.
 - Trial preflight: 508 candidate-filer repræsenterer 500 forskellige filename-ID'er; 500 admission-ID'er matcher disse. De otte ekstra filer er konsistente med registryens duplicate-file-count. Registry har 252 qualified, 239 semantic duplicate, 8 quarantined og 1 waiting. Dette er ikke en global, monotont bevaret proposal-time trial denominator. 26.023 dispatch-, 26.260 receipt- og 55.431 observation-filer må ikke tælles som uafhængige forsøg. Kilde: `P5_TRIAL_ACCOUNTING_PREFLIGHT.json`.
 - Private runtime-state: `GOVERNANCE/COLLECTION_ACTIVATION.json` har collection active for tre kilder, men hypothesis testing og outcome scoring OFF. Ældre root README/boundary-prosa er ikke en frisk inaktivitetsgaranti. Historiske MAEVE/panel/CFGI-arkiver er separate research authorities. Ingen Round3-analysis aktiveret.
 
 ### Selvevaluering mod prompten
 
-Jeg er tilfreds med de afgrænsede falsifikationer og reproducerbare kvalitetstests, men ikke med fuld opfyldelse af master-missionen. Jeg har rettet min tidligere authority-fejl og udført fem kontroller i rækkefølge. Jeg har stadig ikke leveret fuld legacy-population, matched net economics, AI A–E-ablation eller end-to-end delivery proof. Ingen fuldførelsespåstand er berettiget.
+Jeg er tilfreds med de afgrænsede falsifikationer og reproducerbare kvalitetstests, men ikke med fuld opfyldelse af master-missionen. Det nye review har også vist, at min tidligere PASS-vurdering af private dataset-boundaries var for stærk: den er rettet til PARTIAL, adskilt fra den kontrollerede private/public value separation. Jeg har rettet min tidligere authority-fejl og udført fem kontroller i rækkefølge. Jeg har stadig ikke leveret fuld legacy-population, matched net economics, AI A–E-ablation eller end-to-end delivery proof. Ingen fuldførelsespåstand er berettiget.
 
 Ressourcearbejdet kan også forbedres: to brede filoversigter gav unødigt store metadataoutputs. Det medfører ikke evidenspromotion, men er ineffektivt. Videreførelse skal begynde med tælling/filtrering og kun hente de relevante records. Ingen nye agenter, motorer eller schedules blev oprettet.
 
@@ -214,7 +214,8 @@ Dette er en separat selvkritisk kvalitetskontrol, ikke en review udført af en u
 |1560-1562 historical report | PASS |Merged status fresh-read;report read,ikke alle legacy claims independentlyreplayed |
 |M1-M6 negatives and supersession | PASS |Latestfinaladjudications preserved;M6v0rejected |
 |Legacy DATA PINGoriginal/reconstruction | PARTIAL |25hashboundattachments,reviewscopesexplicit;noadmittedoriginalforecast;PITpopulationpending |
-|Private dataset boundaries | PASS |Exactprivateexportchecks;provider-value-freereceipts;Round3analysisOFF |
+|Private dataset boundaries | PARTIAL |P5 hashes/counts PASS, men syv kontrakt/tid/schema/completeness-bindings INCOMPLETE; ingen scientific admission |
+|Private/public value separation | PASS |Kun provider-value-free metadata; private raw values ikke publiceret; Round3 analysis OFF |
 |Private raw completeness/performance | PARTIAL |7exactexportsverified;MAEVE/CFGIcountchecksPASS;panelgzip/BHrawCSV/AlphaLabnotfullyreplayed |
 |Modern freeze/outcome integrity | PASS |142/319hashes,319bindings independentreplay |
 |Modern original knowledge/publication time | UNKNOWN |CSVexplicitUNKNOWN;firstcommit/sourcevintages notadmitted |
@@ -249,7 +250,7 @@ Alle nye filer er evidence-only bilag i den eksisterende owner-mappe. Intet regi
 
 `inspect_attachment_dates.py <private-source-folder> --output /tmp/date-receipt.json` kræver de to original-PDF'er og P3_SOURCE_ADMISSION_INDEX.json. SHA mismatch stopper før parsing/output. `pdftotext -layout` kræves. Rå kilder og licensbegrænset tekst må ikke følge audit-PR'en.
 
-`inspect_private_sources.py <private-export-folder> --output /tmp/private-quality-receipt.json` kræver syv nøjagtige exports fra private commit36bd008d. Brug alias/path/bytes/SHA-bindings i P5_PRIVATE_SOURCE_RECEIPT.json; bevar originalbyteformat, herunder en BH-receipt uden ekstra trailing newline. Hash-checks sker før quality parsing. Scriptet publicerer kun counts/schema/tidsmetadata, ikke provider- eller performanceværdier. Panelets coverage-CSV er en særskilt metadata-preflight, ikke inkluderet i de syv exact exports.
+`inspect_private_sources.py <private-export-folder> --output /tmp/private-quality-receipt.json` kræver syv nøjagtige exports fra private commit36bd008d. Brug alias/private-commit/path/bytes/SHA-bindings i P5_PRIVATE_SOURCE_RECEIPT.json; de eksplicitte UNKNOWN-kontrakt/tid/schema/completeness-felter skal kvalificeres af eksisterende datasetowners før scientific admission; bevar originalbyteformat, herunder en BH-receipt uden ekstra trailing newline. Hash-checks sker før quality parsing. Scriptet publicerer kun counts/schema/tidsmetadata, ikke provider- eller performanceværdier. Panelets coverage-CSV er en særskilt metadata-preflight, ikke inkluderet i de syv exact exports.
 
 P2-reproduktion bruger eksisterende `scripts/learning/m6_warning_event_outcomes.py` fra source175aa330 med `--repo-root <immutable-export>` og `--now-utc 2026-10-10T07:16:20Z --output /tmp/m6-owner.json`. Exportér samme tree's official/daily, official/outcomes, hourly/2026/09, hourly/2026/10 og owner-scripts. Sammenlign event-ID/source-hash/horizons med stored research/framework_memory/m6_warning_events/LATEST.json. Hele objektet forventes ikke byte-identisk med stored LATEST, fordi outcome_tape_bindings ændrer sig; to nye owner-kørsler på samme source/time skal være identiske. Moderne calibration samles med existing `action_compass_exit_calibration.collect_rows` fra samme tree. Ingen production-output write.
 
@@ -260,7 +261,7 @@ P5-trial-preflight genoptæller eksisterende tree-paths med `git ls-tree -r --na
 | Slutvurdering | Status | Kildeforklaring |
 |---|---|---|
 | SCIENTIFIC READINESS | PARTIAL | M1–M6-negative fund og scoped tests bevaret;#1557 global denominator åben |
-| DATA READINESS | PARTIAL | P3/P5 hash/count metadata;original knowledge-times, panelbulk/BHrawcsv stadig gaps |
+| DATA READINESS | PARTIAL | P3/P5 hash/count metadata; P5 owner-binding INCOMPLETE; original knowledge-times, panelbulk/BHrawcsv stadig gaps |
 | FORECAST ACCOUNTABILITY | PARTIAL |426modernrows;legacy originalpopulation ogpublicationadmission mangler |
 | RISK-TO-ACTION READINESS | UNKNOWN | P2 pathreplay, men emission/delivery/actionavailable ukendt;WARNING != SELL |
 | OFFENSIVE EDGE READINESS | UNKNOWN | Ingen admitted matched entry/re-entry neteconomics |
