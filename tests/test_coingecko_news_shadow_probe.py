@@ -98,6 +98,24 @@ class ShadowComparisonTests(unittest.TestCase):
         self.assertEqual(rows, [])
         self.assertEqual(summary["primary_corrob_events_created"], 0)
 
+    def test_provider_article_cannot_be_published_after_capture(self):
+        item = article("Agency schedules consultations for new market regulations",
+                       "https://example.test/future-capture",
+                       "2026-10-10T14:30:00Z")
+        summary, candidates = compare(cg([item]), sr(), ASOF)
+        self.assertEqual(summary["metrics"]["invalid_or_future"], 1)
+        self.assertEqual(candidates, [])
+
+    def test_stale_first_does_not_hide_fresh_same_url(self):
+        stale = article("Older commentary", "https://example.test/same-url",
+                        "2026-10-01T10:00:00Z")
+        fresh = article("Fresh regulatory decision published", "https://example.test/same-url",
+                        "2026-10-10T12:00:00Z")
+        summary, candidates = compare(cg([stale, fresh]), sr(), ASOF)
+        self.assertEqual(summary["metrics"]["new_discoveries_unverified"], 1)
+        self.assertEqual(summary["metrics"]["stale"], 1)
+        self.assertEqual(len(candidates), 1)
+
     def test_cli_private_candidates_file_is_0600_and_repo_path_is_refused(self):
         script = Path(__file__).resolve().parents[1] / "scripts/research/coingecko_news_shadow_probe.py"
         with tempfile.TemporaryDirectory() as directory:
