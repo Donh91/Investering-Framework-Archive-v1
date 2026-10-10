@@ -1,6 +1,11 @@
 """Offline, synthetic-data-only tests for the CoinGecko Shadow comparison probe."""
 import json
+import os
+import subprocess
+import sys
+import tempfile
 import unittest
+from pathlib import Path
 from datetime import datetime, timezone
 
 from scripts.research.coingecko_news_shadow_probe import compare, timestamp, validate_coingecko, validate_situation
@@ -92,6 +97,32 @@ class ShadowComparisonTests(unittest.TestCase):
         self.assertEqual(summary["source_status"], "EMPTY_SNAPSHOT_NO_COVERAGE_INFERENCE")
         self.assertEqual(rows, [])
         self.assertEqual(summary["primary_corrob_events_created"], 0)
+
+    def test_cli_private_candidates_file_is_0600_and_repo_path_is_refused(self):
+        script = Path(__file__).resolve().parents[1] / "scripts/research/coingecko_news_shadow_probe.py"
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            input_cg, input_sr = folder / "cg.json", folder / "sr.json"
+            input_cg.write_text(json.dumps(cg([article(
+                "Regulator announces formal new custody consultation timeline",
+                "https://example.test/announcement")])) + "\n")
+            input_sr.write_text(json.dumps(sr()) + "\n")
+            cmd = [sys.executable, str(script), "--coingecko-snapshot", str(input_cg),
+                   "--situation-room-daily", str(input_sr), "--as-of-utc",
+                   "2026-10-10T15:00:00Z", "--private-candidates-output"]
+            private_result = folder / "private.json"
+            completed = subprocess.run(cmd + [str(private_result)], text=True,
+                                       capture_output=True, check=False)
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertTrue(private_result.exists())
+            self.assertEqual(os.stat(private_result).st_mode & 0o777, 0o600)
+            self.assertNotIn("Regulator announces", completed.stdout)
+            # Try to place provider-value-containing candidates in the public control repo.
+            forbidden_path = Path(__file__).resolve().parents[1] / "do-not-create-news-candidates.json"
+            blocked = subprocess.run(cmd + [str(forbidden_path)], text=True,
+                                     capture_output=True, check=False)
+            self.assertEqual(blocked.returncode, 2)
+            self.assertFalse(forbidden_path.exists())
 
 
 if __name__ == "__main__":
