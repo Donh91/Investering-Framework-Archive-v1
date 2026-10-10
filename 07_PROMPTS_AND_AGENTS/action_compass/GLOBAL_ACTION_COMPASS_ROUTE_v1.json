@@ -161,5 +161,50 @@
   "new_forecast_engine_created": false,
   "new_signal_created": false,
   "new_threshold_created": false,
-  "market_weather_source_of_truth": "05_CYCLE_NAVIGATOR/protocols/2026-09-29__market-weather-source-of-truth-v1__canonical.md"
+  "market_weather_source_of_truth": "05_CYCLE_NAVIGATOR/protocols/2026-09-29__market-weather-source-of-truth-v1__canonical.md",
+  "full_stack_compass_default": {
+    "policy": "ALL_CURRENT_RELEVANT_COMPASS_LAYERS_ANALYZED_EVERY_INVOCATION",
+    "production_owner": "OFFICIAL_DAILY_COMPASS",
+    "non_binding_intelligence": "SHADOW_COMPASS_V2_RESEARCH_ONLY",
+    "readbacks": [
+      "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json",
+      "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+      "04_MARKET_LEARNING/handlekompas/LATEST.json",
+      "04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json",
+      "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json",
+      "current_governed_master_monday",
+      "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json",
+      "eligible_current_protection_sell_swing_reentry_sources"
+    ],
+    "horizons": [
+      "12_24H",
+      "1_3D",
+      "5_7D",
+      "2_3W",
+      "21_30D",
+      "4_8W"
+    ],
+    "assets": [
+      "BTC",
+      "ETH",
+      "LARGE_CAPS",
+      "MID_CAPS",
+      "SMALL_CAPS",
+      "MICROCAPS",
+      "MEMES"
+    ],
+    "required_display": [
+      "STATUS_HANDLING_TID",
+      "OWN_MARKET_DIRECTION_SYNTHESIS",
+      "OFFICIAL_SHADOW_CONFLICTS",
+      "PULLBACK_DISTRIBUTION_REENTRY",
+      "SEPARATE_SELL_SWING",
+      "SUPPORTED_RANGES_AND_CONFIDENCE_ONLY"
+    ],
+    "site_public_projection": "PUBLIC_COMPASS_FULL_STACK_READBACK_v1",
+    "site_projection_attached_to": "PUBLIC_COMPASS_PROJECTION_v1",
+    "output_policy": "TEXT_ONLY_NO_WIDGETS",
+    "fail_closed": "SOURCE_GAPS_EXPLICIT_NO_SHADOW_PROMOTION",
+    "on_demand_render_creates_receipt": false
+  }
 }

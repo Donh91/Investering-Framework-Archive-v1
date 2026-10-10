@@ -99,6 +99,16 @@ Backward-compatible transition rule for an already-published Cycle Navigator iss
 
 This transition adapter is deterministic delivery logic only. It has zero authority to invent, score or promote a new market call.
 
+## Composite Compass evidence for chat and website (2026-10-08)
+
+Every standard Kompas invocation in chat and the Cycle Navigator NOW Compass share the source-selection and action-authority semantics of `07_PROMPTS_AND_AGENTS/action_compass/2026-09-16__global-action-compass-invocation-contract-v1__canonical.md` Section 3.1.
+
+The existing Pages builder attaches `PUBLIC_COMPASS_FULL_STACK_READBACK_v1` under `PUBLIC_COMPASS_PROJECTION_v1.full_stack`. It cross-reads the current Official Compass, Auto Market State, Native Handlekompas, non-binding Shadow Compass v2, current governed Master Monday and Cycle Navigator, and Strategic Compass. The site displays this as ONE cohesive Compass surface inside NOW, not another cycle/timeline inside PATH.
+
+**Non-negotiable:** Official Compass alone owns confirmed action, capitalization permissions, protection/sell/re-entry, and official Bull/Bear. Source-bound Shadow v2 offers analytical disagreement and direction but has no permission to create BUY/SELL. The weekly Cycle Navigator owns 4-8w. When official data are degraded or stale, the official view remains WAIT/UNAVAILABLE; a research view can be shown only with a visible source-age caveat. Missing/mismatched evidence is explicitly degraded or unverified.
+
+The integrated site readback is an allowlisted public presentation object, not a parallel forecast engine or a fresh model run. It must not include restricted provider values, raw source packets, internal paths, credentials or portfolio data. It must never fabricate timing, percentages, score, signal, certainty or trading permissions. The PATH product design and existing Official Compass deployment triggers are preserved. The existing `Shadow Compass v2` owner emits an explicit `repository_dispatch` event **only after** its immutable new forecast is committed, pushed and hash-verified on `main`. The current `GITHUB_TOKEN` Contents-write permission can send this supported event without additional scope, while its ordinary push alone does not trigger downstream Pages builds. No extra AI/model calls, PR-triggered publications or no-op rebuilds are introduced.
+
 ## Privacy-safe public delivery
 
 The public browser MUST NOT require direct access to the framework repository.
@@ -225,3 +235,10 @@ Acceptance remains gated on Python contract tests, public release checks, exact-
 - Compass owns live checkpoint and gate status. The frozen Master Monday altseason sequence backstops timing. Where their ETAs disagree, PATH displays the slower weekly window; a weekly `No supported ETA` cannot be replaced by a faster live review window.
 - Five connector dots express only published time-distance categories: all five within one week, four within two weeks, three within three weeks, two within five weeks, one beyond five weeks, none when unsupported. They never animate and never imply progress, odds or readiness.
 - The weekly instrument remains a pane/series-primitive presentation over self-hosted Lightweight Charts v5. Window capsules, subtle separators and corridor styling improve scanability without creating candles, midpoints or fitted movement.
+
+## Scoped #1550 release exception (2026-10-10)
+
+The repository owner explicitly deferred the current independent Vault acceptance dependency for the existing #1550 / PR #1549 release in comment [6099831222](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1550#issuecomment-6099831222). Record `VAULT_RELEASE_GATE=DEFERRED_BY_OWNER`, never a backup PASS or a claim of current recovery coverage. The remaining source safepoint, focused positive/negative tests, exact-head CI, independent non-authoring review/merge, source-byte readback, Pages deployment and live consumer verification still apply.
+
+This exception grants no recovery credentials, Vault read/write, destructive action, force operation, permission broadening, source-truth or market-rule change. Permanent separation of destructive authority remains binding. Future independent backup/restore acceptance remains a separately owned requirement; this exception applies only to this named release.
+

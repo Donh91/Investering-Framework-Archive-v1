@@ -21,9 +21,14 @@ on:
       - "scripts/cycle_navigator/validate_public_series.py"
       - "04_MARKET_LEARNING/handlekompas/LATEST.json"
       - "04_MARKET_LEARNING/handlekompas/official/**"
+      - "04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json"
+      - "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
       - "04_MARKET_LEARNING/entry_signals/LATEST.json"
       - ".github/workflows/cycle-navigator-pages.yml"
+  repository_dispatch:
+    # Existing Shadow writer sends this only after verified publication.
+    types: [shadow-compass-v2-published]
   workflow_dispatch:
 
 permissions:

@@ -85,6 +85,16 @@ Hard rules:
 - Material source conflict remains explicit `DATA_CONFLICT` until resolved.
 - If the current route cannot support an action horizon, that lane fails closed to `AFVENT` or `INGEN HANDLING` with `KRÆVER FRISKE DATA` or the exact blocking reason.
 
+## 3.1 Permanent complete Compass across chat and site (2026-10-08)
+
+**User mandate:** Every ordinary `Kompas` request requires one comprehensive current, critical analysis of ALL relevant Compass layers, not just the Official Daily Compass. The same evidence-selection and safety policy powers the Cycle Navigator site's public composite Compass readback.
+
+**Required source cross-read, every invocation:** canonical production Auto Market State and freshness, immutable Official Daily Compass, Native Handlekompas, Shadow Compass v2, governed weekly Master Monday/Cycle Navigator, Strategic Compass, and currently eligible pullback/distribution, SELL/Swing, re-entry, rotation, market health, Bull/Bear and outcome accountability where available. Inspect each latest source and its contract, timestamp, origin, provenance and authority; record a missing or stale source as `NOT_VERIFIED`, `UNAVAILABLE` or `DEGRADED`. Shadow is an independent NON-BINDING analytical challenge, never an owner of official action, threshold, score or site-confirmed cycle phase. Do not count common underlying source packets as multiple independent confirmations.
+
+**Default complete human output:** clear STATUS / HANDLING / TID for BTC, ETH, large, mid, small, micro and memes; horizons 12–24h, 1–3d, 5–7d, 2–3w, 21–30d and 4–8w, with source-backed direction/path/ranges, pullback/distribution and separate SELL/Swing/re-entry assessment. Mark unsupported windows and ranges as unavailable. Identify official-vs-shadow agreement/disagreement. End with `🧠 MIN FORTOLKNING — <SPECIFIC FORWARD HORIZON>`: independent, evidence-led market direction and next action without hopium. Specific narrower user windows may abbreviate presentation, NEVER the cross-read. Keep iPhone-friendly and strictly TEXT_ONLY / no widgets.
+
+**Public site consumption:** the site must consume a sanitised, reproducible full-stack Compass projection assembled from the same current verified owner evidence as chat; this is a readback/interpretation layer, never a new market engine, owner or new prospective receipt. Site may show the latest non-binding AI research outlook clearly separated from the official decision, including when official navigation is degraded; it must never turn shadow or live prices into a verified BUY/SELL or imply the official status recovered. Public snapshots must carry source-alignment, freshness and unavailable labels and must not leak private/restricted data. Site builds are not a substitute for an autonomous agent or a claim of fresh AI inference.
+
 ## 4. Decision semantics
 
 The compass reuses the controlled action vocabulary and altcoin-regime vocabulary from the active Three-Horizon Action Compass owner. Do not create synonyms that change machine meaning.
@@ -123,7 +133,7 @@ The compass may include one plain-language market-direction note such as `bull s
 
 ## 5. Required human output
 
-The default response is compact and text-only. It should normally fit on a phone screen without analytical filler.
+The default response is compact, text-only and phone-first. The short template below is abbreviated; complete cross-layer coverage remains mandatory under Section 3.1.
 
 The following block defines the minimum decision semantics for packet/legacy text renderings; user-invoked chat Kompas additionally follows the **mandatory two-table presentation** in section 5.1:
 
@@ -278,6 +288,9 @@ A compass response is incomplete if any applicable check is `NO`:
 
 ```text
 GLOBAL_TRIGGER_RESOLVED: YES/NO
+ALL_COMPASS_LAYERS_VERIFIED_OR_EXPLICITLY_UNAVAILABLE: YES/NO
+CHAT_AND_SITE_SHARED_SOURCE_SEMANTICS: YES/NO
+OWN_HORIZON_LABELED_ANALYSIS_AND_PROTECTION_COVERED: YES/NO
 CURRENT_AUTHORITY_RESOLVED: YES/NO
 CURRENT_DATA_ROUTE_USED: YES/NO
 ON_DEMAND_FRESHNESS_EVALUATED: YES/NO

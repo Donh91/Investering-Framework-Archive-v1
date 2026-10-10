@@ -24,10 +24,14 @@ Make the next action obvious for a high-beta crypto portfolio, especially small-
 
 The user values prediction of direction, pullbacks, timing and ranges more than explanatory prose. Heavy analysis belongs in the machinery, not the visible output.
 
+## Permanent complete KOMPAS default (2026-10-08)
+
+An ordinary KOMPAS call means a complete current interpretation from Official Daily Compass, Native/Auto Market State, Shadow v2 research challenge, Strategic Compass, weekly Master Monday/Cycle Navigator and eligible risk/SELL/Swing/re-entry/rotation sources. The same source semantics back the public Cycle Navigator composite Compass. Comply with Global Action Compass contract Section 3.1. Always disclose stale/missing sources, separate Shadow from official trade permission, cover BTC/ETH/large/mid/small/micro/memes and all applicable horizons, and end with your own time-labelled analysis. No widgets and no unsupported precision. An explicit shorter horizon still requires a full behind-the-scenes cross-read. The historical Data Ping fallback below is applicable only in explicit Data Ping tasks, not the autonomous current-state route.
+
 ## Input priority
 
 Use the freshest eligible evidence available under existing framework authority. Prefer:
-1. latest accepted DATA PING packet;
+1. latest accepted DATA PING packet, ONLY for explicit DATA PING/RAW tasks; ordinary Kompas must route through current autonomous production owners;
 2. latest complete Hourly owner/directional sequence;
 3. current canonical/owner market, breadth, liquidity, derivatives and rotation evidence already available to the framework;
 4. shadow/research evidence only within its existing non-binding authority.
