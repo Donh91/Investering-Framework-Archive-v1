@@ -26,7 +26,7 @@ def run(root,out):
         for d in csv.DictReader(p.open(encoding='utf-8-sig')):
             opened=stamp(d.get('timestamp_utc'))
             if opened: hourly.setdefault(opened,[]).append((stamp(d.get('source_window_end_utc')) or opened+timedelta(hours=1),d,str(p.relative_to(root))))
-    rows=[]; counts=Counter(); by_score=Counter(); mismatch=[]
+    rows=[]; counts=Counter(); by_score=Counter(); mismatch=[]; persistence_pairs=[]
     for cid,(fp,f) in freezes.items():
         hash_ok=digest(f,'compass_sha256')==f.get('compass_sha256')
         counts['freeze_hash_pass' if hash_ok else 'freeze_hash_fail']+=1
@@ -65,14 +65,21 @@ def run(root,out):
                     expected='ABSTAINED' if pred in [None,'MIXED','NO_EDGE','UNAVAILABLE'] else ('UNAVAILABLE' if realized is None else ('CORRECT' if (realized>0 if pred=='UP' else realized<0 if pred=='DOWN' else abs(realized)<={'12h':1.5,'72h':3,'168h':5}[h]) else 'INCORRECT'))
                     counts['direction_replay_pass' if result==expected else 'direction_replay_fail']+=1
                     by_score[(o.get('scoring_contract','LEGACY_UNVERSIONED'),h,asset,call.get('expected_direction'),result)]+=1
+                pred=call.get('expected_direction'); actual=o.get('realized',{}).get('btc_return_pct')
+                prior=next((x.get('value') for x in f.get('evidence_snapshot',{}).get('selected_features',[]) if x.get('feature_id')=='btc_delta_since_prior_packet_pct'),None)
+                if pred in ['UP','DOWN'] and isinstance(prior,(int,float)) and prior!=0 and actual is not None:
+                    naive='UP' if prior>0 else 'DOWN'
+                    persistence_pairs.append(dict(compass_id=cid,horizon=h,scoring_contract=o.get('scoring_contract'),method_version=f.get('decision_policy_version'),forecast_prediction=pred,baseline_prediction=naive,framework_correct=(actual>0 if pred=='UP' else actual<0),baseline_correct=(actual>0 if naive=='UP' else actual<0)))
             rows.append(row)
     out.mkdir(parents=True,exist_ok=True)
     fields=list(dict.fromkeys(k for r in rows for k in r))
     with (out/'modern_forecast_population.csv').open('w',newline='') as fh:
         w=csv.DictWriter(fh,fieldnames=fields);w.writeheader();w.writerows(rows)
     summary=dict(source_commit=subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD'],text=True).strip(),freezes=len(freezes),forecast_horizon_rows=len(rows),matured_outcomes=len(outcomes),missing_outcome_rows=len(rows)-len(outcomes),hold_protective_mislabels=sum(r['hold_protective_mislabel'] for r in rows),counts=dict(counts),score_strata=[dict(scoring_contract=k[0],horizon=k[1],asset=k[2],prediction=k[3],result=k[4],rows=v) for k,v in sorted(by_score.items(),key=lambda kv:str(kv[0]))],endpoint_mismatches=mismatch,limitations=['No publication or first-commit knowledge-time admission; self-hash is integrity not temporal proof','Rows overlap and BTC/ETH are correlated; no independent N or statistical edge claimed','Endpoint prices replayed from current pinned hourly files, not original source vintages','No position execution, fees, sellability, re-entry or economic comparator replay','Legacy forecasts and 24h/48h/2-3w/4-8w not covered'])
+    summary['direction_persistence_pairs']=persistence_pairs
+    summary['limitations'].append('Paired persistence comparison conditional on UP/DOWN and available nonzero frozen prior delta; descriptive only, not matched AI ablation or statistical edge')
     (out/'modern_population_receipt.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
-    print(json.dumps({k:v for k,v in summary.items() if k not in ['score_strata','endpoint_mismatches','limitations']}));print('endpoint_mismatches',len(mismatch))
+    print(json.dumps({k:v for k,v in summary.items() if k not in ['score_strata','endpoint_mismatches','limitations','direction_persistence_pairs']}));print('endpoint_mismatches',len(mismatch))
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('repo',type=Path);p.add_argument('out',type=Path);a=p.parse_args();run(a.repo,a.out)
