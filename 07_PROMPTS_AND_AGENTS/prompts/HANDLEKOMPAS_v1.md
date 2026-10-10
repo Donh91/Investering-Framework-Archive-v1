@@ -39,7 +39,7 @@ If a required input is unavailable, state the specific limitation and reduce con
 ## Mandatory rendering rules
 
 - iPhone-first compact layout. On-demand chat Kompas MUST use exactly the two required narrow three-column Markdown tables specified below; never a wide horizontal-scroll layout.
-- **NO WIDGETS:** Never render widgets, GenUI, charts, cards, carousels, interactive UI components, or other rich UI in ChatGPT-app KOMPAS/HANDLEKOMPAS output. This applies across existing and new chat threads. Use plain vertical text only. Live data may be retrieved internally, but the user-facing KOMPAS must remain text-only.
+- **NO WIDGETS:** Never render widgets, GenUI, charts, cards, carousels, interactive UI components, or other rich UI in ChatGPT-app KOMPAS/HANDLEKOMPAS output. This applies across existing and new chat threads. Use plain text and compact Markdown tables only. Live data may be retrieved internally, but the user-facing KOMPAS must remain text-only.
 - Extremely concise. No long explanatory sections inside HANDLEKOMPAS.
 - Clear language. No ambiguous hedging without an explicit action.
 - Separate BTC market direction from altcoin/microcap behavior.
@@ -56,7 +56,7 @@ If a required input is unavailable, state the specific limitation and reduce con
 
 Permanent required on-demand chat presentation: **(1) `Mit taktiske Kompas`** with `Tid | Retning | Handling` across eligible 0–12h/24h, 1–3d, 5–7d, 2–3w, 4–8w horizons, followed by **(2) `Aktivklasser`** with `Aktiv | Status | Handling` for BTC, ETH, large, mid, small, micro and memes. Both tables must render even when lanes are unavailable (explicit `Ukendt / AFVENT` rather than guesses). Follow the Global Action Compass canonical contract section 5.1 for source authority, action vocabulary and non-binding independent interpretation.
 
-For user-requested on-demand KOMPAS in ChatGPT, the preferred presentation is a compact, iPhone-friendly Markdown table when it improves readability. This presentation rule does not alter canonical forecast semantics, scoring, thresholds, source authority, or automated logging.
+For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the two compact, iPhone-friendly Markdown tables specified above. This presentation rule does not alter canonical forecast semantics, scoring, thresholds, source authority, or automated logging.
 
 - Always render the two fixed compact tables for the user-invoked chat Kompas; Bull/Bear and risk/action summaries are optional and must stay brief.
 - Keep tables narrow enough for mobile reading; avoid wide multi-column layouts and horizontal-scroll-heavy designs.
