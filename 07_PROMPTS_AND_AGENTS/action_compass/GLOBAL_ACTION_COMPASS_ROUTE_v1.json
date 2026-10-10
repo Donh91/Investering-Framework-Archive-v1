@@ -48,7 +48,40 @@
     "eta_required_when_actionable": true,
     "one_sentence_conclusion_required": true,
     "duplicate_rotation_sections_forbidden": true,
-    "compact_phone_first": true
+    "compact_phone_first": true,
+    "required_chat_table_sections": [
+      "MIT_TAKTISKE_KOMPAS",
+      "AKTIVKLASSER"
+    ],
+    "table_presentation": {
+      "mandatory_for_user_invoked_chat_compass": true,
+      "max_columns": 3,
+      "tactical_columns": [
+        "Tid",
+        "Retning",
+        "Handling"
+      ],
+      "asset_columns": [
+        "Aktiv",
+        "Status",
+        "Handling"
+      ],
+      "tactical_owner": "OFFICIAL_CURRENT_COMPASS_DIRECTION_AND_ACTION",
+      "asset_order": [
+        "BTC",
+        "ETH",
+        "LARGE_CAPS",
+        "MID_CAPS",
+        "SMALL_CAPS",
+        "MICROCAPS",
+        "MEMES"
+      ],
+      "memes_require_separate_owner": true,
+      "unsupported_cells": "UKENDT_OR_AFVENT_NO_INFERENCE",
+      "independent_interpretation": "EXPLICITLY_LABEL_NON_BINDING_WITH_HORIZON",
+      "markdown_tables_are_widgets": false,
+      "presentation_only_no_market_rule_change": true
+    }
   },
   "official_compass_policy": {
     "pointer_first": true,
