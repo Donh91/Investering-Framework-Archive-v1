@@ -208,3 +208,104 @@ Only when source basis/overlap and point-in-time availability can be compared ag
 6. Concrete owner handoff for each new falsifiable question; mark duplicates \`NOOP\`, irreproducible early sensor claims \`UNTESTABLE\`, data-restoration candidates \`SOURCE_RECOVERY\`. No new autonomous search or live threshold changes.
 
 **Readiness verdict on 2026-10-10: \`NOT_READY_FOR_COMPLETE_AUDIT_PASS\`; \`READY_FOR_BOUNDED_SOURCE_CENSUS_AND_PIT_RECONCILIATION\`.** This is an evidence inventory and next-test plan, not proof of comprehensive original-message extraction, backtest execution or independent prospective alpha.
+
+
+---
+
+## 9. FINAL PRE-MASTER-AUDIT HANDOVER — verified cross-repo reconciliation, 2026-10-10
+
+**Authority:** AUDIT_PREPARATION_ONLY; no automatic research dispatch, promotion, public CN rescore, model weight, market state, wallet, scheduler, trading execution, or private-data migration. **This is an additive handover to the upcoming five-repository master audit, NOT that audit's finished results.**
+
+### 9.1 Link this history dossier into the already-open master-audit intake (do NOT fork it)
+
+- **Committed** historical research baseline: merged Archive PR **#1560** (legacy DATA PING, CFGI, Grok, first-era CN failures) and **#1561** (Auto Trading restricted archive inventory, E1X, M1–M6 conflicts). These are both on \`main\` and part of *this file*. **PR #1559** (two-table Kompas default) is also merged; it changes presentation, not trading signals.
+- **Already staged, NOT merged**: Archive draft **PR #1558**, \`04_RESEARCH_LAB/auto_trading/intakes/2026-10-10_agent-tool-wallet-intelligence/00_MASTER_AUDIT_READ_FIRST.md\`, and \`MASTER_AUDIT_QUEUE_V1.json\`. Its entrypoint covers *external agent/tool/wallet-intelligence* sources, five-repo snapshot, source ZIP verification, PRs and Bridge registry defects. It DOES NOT yet link this 33k+ character historical CN/Data Ping audit as a mandatory named source. **Integration requirement:** PR #1558's reviewer / upcoming master prompt must reference the exact \`main\` path to this file and the original CN/data-ping/CFGI/Auto Trading owners below. Add a link/comment rather than editing the draft PR's independently reviewed content.
+- Active Bridge PR **#38** already stages a **CFGI-first** read-only historical downside/distribution research request, and Bridge PR **#36** remains a competing-registry-cell repair/hold registration. Neither is a delivered independent experimental verdict. **Do not create a second Claude request or assume these are merged.**
+- Draft full-stack Compass release **#1549** remains distinct and subject to independent backup/release gate **#1550**. Research-only PRs #1560/#1561 do not satisfy any #1549 release gate.
+- The first operations priority remains Archive issue **#1553** (October risk-to-action forensic) and the M6 prospective owner. Research ownership is not a reason to bypass security/vault gate, change SELL states, or overwrite frozen outcomes.
+
+### 9.2 Five directly visible GitHub repositories — exact authority boundary
+
+At the Oct 10 preflight the connected GitHub repository listing returned these FIVE, and the listed main SHAs correspond to a **point-in-time snapshot**, not automatically today's future head:
+
+| Repository / role | Snapshotted main HEAD | Visibility (connector + AGENTS) | Research authority |
+|---|---|---|---|
+| \`Donh91/Investering-Framework-Archive-v1\` / canonical control | \`8bcca1a5a8e523c29ee60704332aac3096170054\` *before this handover* | **PUBLIC** per AGENTS visibility invariant effective 2026-09-29 | Canonical contracts, forecast freeze, research scores, pointers, published control text; no restricted payload |
+| \`Donh91/secrets\` / private raw and restricted runtime | \`4ae29ae4a5b214a8e275048b15b621b16d739607\` | PRIVATE | Raw/normalized restricted provider bytes, exact immutable source manifests; NOT credentials; no market decision authority |
+| \`Donh91/Meme-Alpha-Lab\` / launch/microcap research | \`b24b6ec1a5f1ce9843f4030166e552c24ff2fd2c\` | PRIVATE | Public-safe native prospective token/launch evidence, no portfolio execution, private wallet work in restricted plane |
+| \`Donh91/Investering-AI-Audit-Bridge\` / Claude read-only exchange | \`a44a7a92138a088a5a49bcf057e4f7a10e22e8f9\` | PRIVATE | Unadjudicated reports/messages/registry; never framework market authority |
+| \`Donh91/Eksperimenter-framework-\` / independent experiment execution | \`169d71bbfc0735d212c573c32b534df5ed37f761\` | **PUBLIC** by its README | Hashed dispatch, independent replication and receipts; no self-promotion |
+
+**Missing purported sixth/Vault:** NO sixth repository was returned by current GitHub listing; this does NOT prove absence, deletion or inaccessibility of an independent recovery/Vault repository. The master prompt MUST reconcile exact vault identity/access, independent backup, restore/readback, retention and separation-of-destructive-authority gates using current authenticated source evidence. Do not invent a repository URL; do not claim recovery backup is healthy from missing listing. **Visibility conflict:** some older user/project context mentioned all repos private; the current live canonical \`AGENTS.md\`, \`secrets/README.md\` and repository listing explicitly define Archive and Experiments as PUBLIC. Do not silently flip visibility. Audit historical visibility decisions and scan public-plane privacy/security exposure independently (including old git history) before claiming safety.
+
+**Cross-repo read order:** Archive \`AGENTS.md\`; \`00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md\`; \`00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json\`; current owner/freeze/health pointer; then private \`secrets/AGENTS.md\` and \`GOVERNANCE/CROSS_REPO_DATA_BOUNDARY.md\` ONLY when restricted evidence is necessary and authorized; then MAL \`AGENTS.md\`, Experiment README, Bridge \`CLAUDE.md\`/\`AGENTS.md\`/\`governance/BRIDGE_POLICY_V1.md\`; exact changed PR files plus reviews/tests/consumer readback. Never treat a public/indexed summary as a source-substitute for restricted raw when precision matters.
+
+### 9.3 Important private source manifest refinements verified DIRECTLY, without moving raw data
+
+Private manifest READMEs in \`Donh91/secrets\` were read under authorized connector access:
+
+1. \`raw/HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1/2026/08/21/README.md\`: 851,882 rows × 35 symbols, but **TWO RESEARCH WINDOWS**, from the earliest 2020-09-01 to latest 2026-07-31; **NOT** uninterrupted, not historical Top-100 and **survivorship-limited**. Some columns are derived. Use \`metadata/COVERAGE_BY_WINDOW_SYMBOL.csv\` and source-level/derived-field validity gates; a bounded one-day independent Binance overlap proves only that sampled source-level slice.
+2. \`raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/2026/09/09/README.md\`: 1,073 fills from 432 parent positions, 641 DCA, plus **485 Kraken execution rows enriching 479 fills**, **370-day official PNL series**, and **14 later X-post trades** AFTER the dashboard capture horizon. Do NOT append 14 trades to the 432-position denominator or infer their execution/cost coverage without identity/version/reconciliation. The README's absence of an explicit stop-loss field does NOT prove the hidden strategy never had stop logic. Raw MAEVE post-entry \`analisis_hora\` fields are leakage-suspect.
+3. \`raw/CFGI_HISTORICAL_1H_EVENT_STAGE_V1/2026/08/21/README.md\`: exact archived target-window ZIP and independently derived private search copy, not a multi-year uniform 1h CFGI cube; MARKET source returned 0 rows for frozen target windows under terminal provider gate.
+4. \`raw/CFGI_PDLT_HISTORICAL_BOOTSTRAP_V1/2026/08/07/README.md\`: precise distinction between 15-minute **capture cadence** and native 4h/1d **algorithm timeframe**; do not use derived 2h or native 15m unless specifically evidenced, and do not map nine visible component fields to ten historical advertised MAEVE algorithm families without a crosswalk.
+5. \`raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/README.md\`: **32/32 original CSV retrievals** completed, **29 unique source hashes** and **three exact duplicate groups**; completion receipt outranks the historical mutable progress manifest. Existence/complete acquisition is NOT scientific overlap parity. No bulk reacquisition.
+
+These are **source-cover and usability facts**, not raw dataset recomputation or empirical alpha. All restricted raw bytes remain restricted; this document contains metadata-level references only.
+
+### 9.4 Explicit old ChatGPT conversation recovery leads — NOT newly established original forecast evidence
+
+The user specifically requires the earliest simultaneous ChatGPT DATA PING conversations to be considered. The available project attachments include \`DATA PING.txt\`, \`DATA PING_V2.txt\`, \`DATA PING_V3.txt\`, \`Cycle Navigator Arkiv.txt\`, \`Early Rotation Pre-Trigger v1.1.txt\` (dated Apr 21), \`Uddybende info-EARLY ROTATION PRE-TRIGGER (21 april 2026).txt\`, \`Shadow Layer syntese v1-v8...\`, \`Framework_Shadow_Update...\`, CFGI/CoinGecko/Grok notes, July handovers and June Research Lab transcripts. **These are separate Project-file instances, NOT a complete original-chat export**.
+
+Target original-transcript periods/identity anchors for source census (retrieval hints ONLY, not quoted frozen forecasts):
+- **March/early April 2026**: early Data Ping, Rotation Engine, shadow Sentinel and CFGI/TechDev version upgrades; distinguish contemporary raw observation, ChatGPT forecast and Grok shadow interpretation.
+- **April 21, 2026**: Early Rotation Pre-Trigger v1.1 original text lists \`stablecoin alt inflow 3D >+3%\`, \`large-cap alt volume share 3D >+4%\`, \`ETH/BTC <0.032\`, \`BTC dominance >56\`, as **historical SHADOW WATCH criteria**; never silently import those levels as contemporary approved buy thresholds or claim original forward validation.
+- **May 11, 2026**: legacy DATA PING/Master Monday v3.0, CN #7, validated range and BTC-led/rotation-shadow handover are referenced by older conversation-derived context; original chats, user corrections and freeze timestamps need recovery before scoring.
+- **June 10, 2026**: Pullback Tracker v2.0 Phase I study and historical \`E->F->G\` vs \`E->F->I\` transition research should be checked against completed experiment receipts and later falsifications, not promoted from narrative.
+- **June 2026**: original \`DATA PING_V2.txt\` contains a June-flush retrospective with \"ETF outflows best early warning, CFGI lagging\" and original \`DATA PING_V3.txt\` states \"ETF FLOW PERSISTENCE HAS THE HIGHEST DOCUMENTED DECISION VALUE.\" **These older assertions materially conflict with Oct 6 2026 M1 adjudication rejecting a strong incremental ETF-edge claim.** Require timestamped PIT baseline re-evaluation; old research is historical hypothesis, not current ratification.
+- **July 4–26, 2026**: original DATA PING v4→v5→v6→v7 handovers/accepted-log rules, user-verified weekly actuals, strict frozen horizon, V6 PREPARED_NOT_ACTIVE until full packet, and W30 H7 retrospective repair. Preserve *version activation date* rather than treating every final-looking prompt as active state. Relevant GitHub anchors \`canonical-project-archive/02_DATA_PING/\`, \`02_DATA_PING/thread_handoffs/\`, \`04_MARKET_LEARNING/data_ping/handover/\`, \`03_WEEKLY_OPERATIONS/forecast_experiments/\`.
+
+Another original project attachment \`DATA PING_V3.txt\` titled \`CYCLE NAVIGATOR RANGE SCORING CALIBRATION – JUNE 2026\` explicitly admits that early weekly high/low Jaccard scoring was too generous and mechanical baselines are mandatory. Do NOT mistake old range-score inflation for proven model skill or rewrite historical published scores.
+
+**Census rule:** recover original message/thread or original published post identity and timestamps, raw source SHA where present, accepted DATA PING schema version and actual market-time convention. Deduplicate repeated attachment names; grade \`ORIGINAL_FROZEN\`, \`CONTEMPORANEOUS_OBSERVATION\`, \`POST_HOC_SYNTHESIS\`, \`EXTRACTED_ARCHIVE_NOTE\`, \`RECONSTRUCTED\`, \`UNREAD\`, \`UNTESTABLE\`. Retrieval of memories/summaries is NOT retrieval of original source text, and no original chat-internal timestamps are fabricated.
+
+### 9.5 Changed PR/research packages now relevant to upcoming master audit
+
+**Archive:** merged \`#1559\` presentation-only, \`#1560/#1561\` historical research, \`#1554/#1556\` risk-observability and forecast-hash integrity, \`#1551/#1544\` M6 chronology; draft \`#1558\` master audit external intake, \`#1549\` Compass full-stack release, \`#1519\` research roadmap. Issue \`#1553\` remains P0; \`#1550\` vault/recovery release gate; \`#1557\` cross-strategy proposal denominator; \`#1478\` FNP observer; \`#209\` Market Anticipation Research Program; \`#1530\` EDGE governor.
+
+**Audit Bridge:** draft \`#36\` touches \`registry/ARTIFACT_INDEX.csv\` where separate research preflight has reproduced **four malformed physical lines 21, 67, 68, 95** against 11-column schema; draft \`#38\` CFGI-first pullback/distribution research request is **NOT a completed Claude result**. In addition its PR text reports this request was expanded; read exact **current head** and require independent registry check before merge. Never count Claude reports as independent evidence until source hashes and adjudication.
+
+**Meme Alpha:** open PR \`#130\` read-only weekly external GitHub tools watch under existing daily scheduler; merged recent \`#128\` mcap-vs-FDV, \`#127\` Pons/CrawlScan handover, \`#125\` CrawlScan CLI fix, \`#123\` reserve proxy, \`#122\` two frozen forward cases, \`#121\` prospective pilot; on-chain alpha research is separate from BTC/ETH CN forecast skill and must be graded under its own universe, execution clock and contract.
+
+**Restricted:** recent private \`Donh91/secrets\` PRs \`#190/#191/#192\` preserve forensic/provenance and deterministic gates (research/operational metadata). Do NOT copy private provider/case values, wallet or identity data to the public master handover. Check current completion by exact SHA and natural consumer; a merged PR alone is not runtime success.
+
+**Experiments:** \`Donh91/Eksperimenter-framework-\` PRs \`#8/#9\` merged execution receipt/incremental reuse improvements and \`#10\` closed unmerged semantic preflight. Its README defines public non-canonical independent scientific replication, not live CN/portfolio owner. Require actual frozen dispatch and downstream receipt matching before crediting experiments.
+
+**Cross-PR verification questions:** identify current head SHA, merged/open/draft, true CI/reviews, final file scope, authority boundary, direct consumers, actual persisted source/outcome, blocked release gates, conflicts/supersessions and natural post-merge evidence. \`ISSUE\`/\`PR OPEN\`/\`MERGED\`/\`CI SUCCESS\`/\`DELIVERED\`/\`MARKET EDGE\` are distinct statuses. GitHub's simple \`protected=false\` branch flag does not fully establish effective rulesets; inspect actual protections separately.
+
+### 9.6 Cross-source hypotheses not already proven by M1–M6 (keep narrowly falsifiable)
+
+H1. **Observation→risk→action latency** on historical alt-heavy stress windows. Distinguish first legal data, DATA PING report, official forecast freeze, app/site ingest, alert delivery, governed decision and market episode. Especially Oct 6–8; \`MIXED\` abstention or \`BUILDING\` watch does not count as a bearish prediction.
+H2. **Original ChatGPT early-era version activation vs model performance**: prove frozen forecast and accepted DATA PING version at each 2026 Mar–July decision time; compare CN #9 and #13→#14 risk/price mismatch to age-matched mechanical baselines.
+H3. **CFGI components versus price/breadth/derivatives**: matched same-venue, PIT knowledge-time, negative controls and chrono holdouts; separate lagging sentiment from genuinely leading stress; use restricted private raw, never fabricate unavailable MARKET.
+H4. **MAEVE behavioral transfer, not headline cloning**: parent vs DCA vs exit; add post-dashboard 14 source X trades ONLY if trade IDs and measured eligibility reconcile; include public posts' lag, 370d PNL and Kraken fills when lawful/time-valid; matched periods where MAEVE did NOT trade.
+H5. **Historical forecast skill under honest score**: public CN containment can be gamed by interval width; W22/W26/W27 old range misses, W39–40 small sample and native W41 baseline should be analyzed within frozen scoring eras; include fee/slippage and untradeable microcaps only if separately admitted.
+H6. **False alarms, source-vintage drift and outage selection**: chronology of ETF late revision sign changes, CFGI W40/W41 weekly SOURCE_UNAVAILABLE, and October DEGRADED; measure source health/delivery delay independently from directional return.
+H7. **Independent family scarcity**: ETH/BTC persistence, BTC.D path, broad-alt breadth, stablecoin deployment and ETF may be repeated views of one capital rotation shock. Compare pruned 3-family challenge with whole stack before adding score weight; count independent event families, not ticks.
+
+This shortlist is a **research index**, not a pre-selected strategy search, no new denominator or execution queue. Reuse owners \`#209\`, \`#1553\`, \`M6/#1530\`, \`#937\`, \`#1478\`, \`#1557\`, CN/M3, existing Dataset Registry and Historical Research Vault. Each requires a frozen comparator, timeline, explicit negative control, minimum evidence/power and kill criterion before expense.
+
+### 9.7 Formal next-master-audit acceptance checklist (do not shortcut)
+
+Before calling the forthcoming master audit **COMPLETE**:
+1. Locate and enumerate all actually authorized repositories including the claimed Vault/separate backup; pin all main SHAs and exact PR heads. Document missing/inaccessible repo as UNAVAILABLE, never as absent.
+2. Verify public/private boundary, old commit history and current PR diffs for restricted values. Confirm independent backup/recovery gates rather than self-declaring green.
+3. Read #1558 draft by PR-head SHA **AND** this existing merged history report; enumerate all 126 Project-file metadata records and recovered original chat threads separately; resolve originals where accessible and measure UNREAD counts.
+4. Inspect latest relevant merged/unmerged PRs, bridge report statuses, M1–M6 adjudications and owner's runnable consumers. Do not rerun completed studies without genuine scope delta.
+5. Verify source-hash, schema, vintage, timestamp availability, asset/universe/grain, full coverage windows/gaps, source license and restricted data lineage before loading/aggregating raw or calculating skill.
+6. Build frozen contemporaneous prediction / observation / later truth / action / alert joined rows, with fixed horizons, censored outcomes, no-trade controls, negative cases, simple baselines and cross-era scorer separation.
+7. Publish a falsifiable research-outcome matrix: \`SUPPORTED\`, \`WEAKENED\`, \`REJECTED\`, \`INCOMPLETE\`, \`UNTESTABLE\`, \`DUPLICATE_NOOP\`, \`BLOCKED_BY_SOURCE\`, \`READY_FOR_SEPARATE_FORWARD_TEST\`, each with input SHA, owner and exact next permitted action.
+8. Preserve all frosne published CN/MM outcomes, old DATA PING version activation, no automatic model state/portfolio/SELL promotion, no broad search until \`#1557\` trial accounting and required evidence owners are green.
+9. Include a single audit-reader **missingness report**: which old ChatGPT messages, private ZIP members, Bridge reports, raw feature vintages, screenshots and provider values were not actually read. The archive is extensive; the audit should never claim exhaustiveness unless this is proven.
+10. Return results to existing supervisors and current owner issues, with only truly new non-duplicate corrective PRs, exact-head CI and verified post-merge consumers. The master audit can be audit-ready yet implementation-blocked.
+
+**Pre-master archive preparation verdict: \`HISTORICAL_SCOPE_CROSSWALK_READY_WITH_DOCUMENTED_GAPS\`.** Not an assertion that historical alpha has been demonstrated or that the forthcoming full multi-repo audit has already run.
