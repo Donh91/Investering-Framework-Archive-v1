@@ -3,7 +3,7 @@
 Dato: 10. oktober 2026. Status: RESEARCH_ONLY, PARTIAL_AUDIT, NO_EDGE_PROMOTION.
 Executor: ChatGPT Work. Ingen nye delegerede agenter, betalt markedsresearch-dispatch, schedules eller auditmotor. Eksisterende Codex PR-review er anvendt.
 
-## Review-korrektion og sekventielle resultater, v2.4
+## Review-korrektion og sekventielle resultater, v2.5
 
 Det uafhængige Codex-review af430cfccb fandt4238629214(P1) og4238629220(P2). Et senere review af38ca49fa fandt4238751870(P2): overleveringen indeholdt stadig instruktioner om den tilbagetrukne kandidat. Denne opdatering retter både replay og alle aktuelle kandidat-/wiring-anbefalinger. Seneste review af510c83d9 fandt4238774637(P2), en resterende measurement-bug-formulering, som nu også er fjernet. Ny exact-head review er stadig nødvendig; åbne reviewtråde er ikke selvafklaret. Tidligere commits bevares som auditspor. Review af7283be2f fandt4238891135(P2): private bindings manglede kontrakt-, tids-, schema- og completeness-metadata. Denne version markerer alle syv bindings INCOMPLETE_REQUIRED_OWNER_METADATA, de manglende felter eksplicit UNKNOWN og scientific_analysis_eligible=false. Hash/count-checks er bevaret; governance-admission er ikke givet. Private dataset-boundary-gaten er nedgraderet til PARTIAL. Ejer-manifester har yderligere deklarationer, men deres fulde metadata er ikke bundet og valideret af dette checker-script. Frisk review af denne korrektion kræves.
 
@@ -56,6 +56,18 @@ Ressourcearbejdet kan også forbedres: to brede filoversigter gav unødigt store
 Den brugerleverede tidligere vurdering er læst fuldt og sammenholdt med reviewkommentar6100799652. Dens centrale kritik accepteres. Præcisering: BTC168h har 29 scorede forecasts, 27 CORRECT og 2 INCORRECT; alle29 er SIDEWAYS. Ikke 27 SIDEWAYS blandt29 korrekte.
 
 **Næste arbejde bør udføres, men gennem eksisterende gates:** først exact-head accept af #1565 og owner-afgørelse om prospektiv scoringsemantik; derefter #1553 delivery/source-vintage admission, #209 original-source admission, DEL segment-return-owner og #1557 proposal-time accounting. FNP#1478 kræver EXACT_EVALUATOR_RECOVERY før OBSERVER_WIRING. Bred strategy mining, flere indikatorer og ny modelresearch er ikke et begrundet næste skridt.
+
+### Supplerende pakke 6: bredere estate og faktisk consumer-adfærd
+
+Efter de fem første pakker blev den tidligere 100-row metadata-begrænsning lukket for Archive. To ikke-overlappende updated-partitioner, 2026-07-12..2026-08-25 og 2026-08-26..2026-10-10, returnerede henholdsvis 447 og 868 PR'er gennem alle 14 sider. Det giver **1.315 unikke PR'er**, ingen cross-page-dubletter og incomplete_results=false på alle sider. Heraf er **751 merged i 2026-08-26..2026-10-10**, identisk med en separat merged-search count. Indekset er `P6_PR_METADATA_POPULATION.json`; metoden og limits er `P6_ESTATE_AND_CONSUMER_RECEIPT.json`. Den tidligere 1.314-count var et ældre snapshot før audit-PR'en. GitHub search er mutabel metadata, ikke en transaktionelt frossen population. Dette er fuld metadatahentning i de to angivne Archive-søgninger, **ikke kodereview af alle PR'er**, alle private repo-populationer eller fuld workflow-audit.
+
+PR1555 blev dybere kontrolleret på eksakt head5a280c179d og igen på current main169188ec. Scriptet og den relevante workflowændring er læst; scriptblob d57d86aa er uændret. Alle 11 eksisterende classifier-tests PASS. Det er en **triage-only** gate, ikke worker claim eller missiondispatch. PR1555 er merged, men dens source-provenance-finding4235983901 er stadig åben: checkout løser `ref: main`, mens kvitteringen får event-time github.sha. Ingen workflowændring udført; sådan ændring kræver den gældende high-impact-sikkerhedsgate.
+
+Det faktiske post-merge smoke-run38016010824, job114106300441, var SUCCESS. Artifact11656820631 blev hentet, ZIP-hash64b7558e verificeret og receipt-hash823d9766 beregnet. Kvitteringen er **IGNORED / issue_not_open**, human_approval_verified=false, execution_started=false, codex_ready=false. Issue1552 var allerede CLOSED; classifierens eneste allowlisted issue er1552 og skal være åbent. Grøn jobstatus dokumenterer derfor artefaktproduktion og en lukket gate, **ikke** det forventede ACTIONABLE_UNCLAIMED eller eksekvering. Reopening/ændret queue-autoritet er ikke udført. Eksisterende Supervisor-owner1156 skal afgøre closure/supersession og den minimale source-binding-repair; EDGE-parent1530 bevarer scientific gates.
+
+Begge brugerleverede eksterne trådsvurderinger er indarbejdet. Nyere HOLD-proxy/partial-audit-beskrivelse er konsistent med kilderne. Ældre code-bug/submitted-fix-prosa er overhalet af tilbagetrækningen. Den tidligere formulering om tre CI-checks er et dateret receipt, ikke garanti for nyt head. Warning-delivery og AI/economic edge er fortsat uafklaret.
+
+Reviewfinding4238920268 hævdede, at AGENTS.md ikke findes i175aa330. Det er modsagt af exact-ref GitHub-read og lokal git show: AGENTS-blob2b511bbf er identisk i175aa330 ogc792546e; private-binding-reglen findes på linje46. Modbevis er registreret i PR-comment6101372276 uden self-resolution. Reviewer svarede derefter i6101409192: ingen major issues påc792546e. Dette er ikke formel APPROVED-review eller resolution af den gamle tråd, og dækker ikke senere audit-heads. Rulesets-read gav[], men branch-protection-read gav403; effektive required-checks/bypass-policy forbliver UNKNOWN. Ingen gate omgået eller merge forsøgt.
 
 ## READ FIRST og autoritet
 
@@ -160,7 +172,7 @@ Senere fresh read af Archive-main gav21a3aca1a561f713a52ac3cba7487297532be8d8. P
 
 Alle fem gav pull/push/maintain/admin metadata for denne connector. Dette beviser ikke effektive branch/ruleset-bypassrettigheder. Connectorens synlige repo-liste gav kun disse fem. Den dokumenterede Vault-route gav404, behandlet som utilgængelig, ikke bevist ikke-eksisterende. Ingen nye repos opfundet, adgang udvidet eller private data flyttet til public.
 
-Archive REST-søgning fandt751 merged PRs i45d-window fra2026-08-26 og1314 PRs updated i90d-window fra2026-07-12. Kun de første100 metadata-rækker i hver søgning blev hentet. Alle15 aktuelle åbne Archive-PR'er blev listet. **Den fulde751/1314-population er ikke kode-reviewet.** Private repos har kun bounded recent-user-PR-lister, ikke komplet PR/workflow-historik.
+Den oprindelige Archive REST-søgning fandt751 merged PRs og1314 updated PRs; kun100 metadata-rækker blev da hentet. Supplerende pakke6 henter nu alle1315 updated PRs via14 sider og genfinder alle751 merges, med et separat søge-count-match. Det aktuelle metadataindeks har16 åbne PRs inklusive denne audit-PR. **Den fulde751/1315-population er ikke kode-reviewet.** Private repos har kun bounded recent-user-PR-lister, ikke komplet PR/workflow-historik.
 
 Centrale genlæste navigationer:1558 exact head, merged1560-1562,1549 exact final-head review og1550 release-comments; issues209,937,1478,1516,1530,1553,1557. Bridge36/38 er OPEN;39 er ny eksisterende preflight-owner, OPEN. Deres åbne status må ikke rapporteres som udført downstream research. CoinGecko/Situation Room og Alpha Lab er kun delvist inventeret, ikke fuldt falsificeret.
 
@@ -209,7 +221,7 @@ Dette er en separat selvkritisk kvalitetskontrol, ikke en review udført af en u
 | Gate | Status | Begrundelse og verificerbar kilde |
 |---|---|---|
 | Visible authorized estate,SHA,visibility | PASS | Fem pinned repo metadata; Vault404 separat |
-| Complete wider45/90d code review | PARTIAL |751/1314search populations;100returned each;central changes reviewed |
+| Complete wider45/90d code review | PARTIAL |Alle1315 updated/751 merged Archive-metadata hentet iP6; ikke alle kodeændringer eller private PR-populationer reviewed |
 |1558 existing master entry | PASS |exact571025head,read-first/queue/gaps/source/handover read |
 |1560-1562 historical report | PASS |Merged status fresh-read;report read,ikke alle legacy claims independentlyreplayed |
 |M1-M6 negatives and supersession | PASS |Latestfinaladjudications preserved;M6v0rejected |
@@ -269,6 +281,6 @@ P5-trial-preflight genoptæller eksisterende tree-paths med `git ls-tree -r --na
 | ALPHA LAB EVIDENCE READINESS | UNKNOWN | Eksisterende specialistowners;ingen ny launch/sellability/outcome replay |
 | CROSS-REPO RELIABILITY | PARTIAL |Femvisiblepinsverified;bredeworkflowconsumers/privatehistory ikke fuldt auditeret |
 | AUTOMATION EFFICIENCY | UNKNOWN |Health/costmetadata er ikke målt marginal beslutningsværdi pr. ressource |
-| AUDIT COMPLETENESS | PARTIAL |Femafgrænsedepakker udført;mastermissionens bredepopulation/neteconomic/deliverytests mangler |
+| AUDIT COMPLETENESS | PARTIAL |Fem oprindelige scoped pakker plusP6; Archive PR-metadata komplet; fuld kode-/private-/legacy-/economic-/delivery-audit mangler |
 
 Evidensgrundlaget blev konkret forbedret med immutable replay-repair, korrekt authority-klassifikation, source-admission-index, nye coverage-falsifikationer og direkte private hash/row/join-kontroller. To identiske private checkoutputs og tamper-controls understøtter reproduktion. Ingen trading/driftsændring, højere prognosepræcision, bedre porteføljebeskyttelse eller nettoafkast er dokumenteret forbedret. Merge, CI og downstream-status skal genlæses fra endeligt PR-head; planlagte owner-ændringer er ikke udført.
