@@ -1,0 +1,49 @@
+{
+  "contract": "FRAMEWORK_INTELLIGENCE_PHASE0_SUMMARY_v1",
+  "authority": "RESEARCH_ONLY_SHADOW",
+  "target_weeks": ["2026-W33", "2026-W34", "2026-W35", "2026-W36", "2026-W37"],
+  "weekly_scores": {
+    "2026-W33": 17,
+    "2026-W34": 17,
+    "2026-W35": 19,
+    "2026-W36": 20,
+    "2026-W37": 20
+  },
+  "median_score": 19,
+  "minimum_score": 17,
+  "hard_gates": {
+    "zero_future_market_leakage": "PASS_ALL_WEEKS",
+    "zero_retrospective_forecast_creation": "PASS_ALL_WEEKS",
+    "zero_silent_canonical_promotion": "PASS_ALL_WEEKS",
+    "zero_duplicate_evidence_inflation": "PASS_ALL_WEEKS"
+  },
+  "acceptance_checks": {
+    "all_weeks_pass_hard_gates": true,
+    "median_at_least_16": true,
+    "no_week_below_14": true,
+    "material_improvement_or_valid_noop_in_at_least_three_weeks": true,
+    "bounded_compute_path": true,
+    "method_changes_remain_proposal_only": true
+  },
+  "key_findings": [
+    "Historical simulation requires separate market-evidence and processing cutoffs. Later processing is safe only when its complete inputs are bound to the frozen market evidence set.",
+    "W33-W34 demonstrate that unavailable historical learning state must remain unavailable rather than be reconstructed from later registries.",
+    "W35 demonstrates material value from duplicate-adjusted experiment-family context: many raw directional candidates do not equal independent confirmation.",
+    "W36 demonstrates material value from Range Lab context: supportive ETH range evidence improved interpretation of an unresolved transition without creating a forecast-skill claim.",
+    "W37 exposes a concrete integration gap: the weekly package marked experiment registry evidence unavailable even though fresh pre-cutoff experiment learning existed. A consultation/learning pointer would have improved the consolidation rationale without canonical promotion.",
+    "Exact input manifests are required for any post-freeze adjudication or learning job intended for same-Monday Master Monday consumption.",
+    "The value of the architecture is primarily calibration, contradiction handling, memory and information utilization rather than adding more raw signals."
+  ],
+  "required_before_phase1": [
+    "Keep all Phase 0 artifacts isolated from live consumers.",
+    "Phase 1 must run parallel shadow only and must not change the live Master Monday conclusion or Cycle Navigator output.",
+    "Implement provenance-bound learning/adjudication input manifests before allowing same-Monday post-freeze processing to become eligible consultation context.",
+    "Use duplicate-adjusted semantic families rather than raw candidate counts.",
+    "Keep RANGE learning explicitly research-only until relevant scientific promotion gates are satisfied.",
+    "Record consultation requests, accepted/rejected specialist advice and evidence exclusions for later process-value analysis."
+  ],
+  "final_verdict": "PASS_TO_PHASE1",
+  "live_influence_enabled": false,
+  "canonical_change": false,
+  "portfolio_change": false
+}
