@@ -139,7 +139,8 @@ def collect_rows(repo_root: Path, outcome_root: Path) -> tuple[list[dict[str, An
             continue
         # Matching declared identifiers are insufficient: historical freeze bytes
         # might have changed while their copied claimed digests stayed identical.
-        if frozen_compass_digest(freeze) != freeze.get("compass_sha256"):
+        computed_digest = frozen_compass_digest(freeze)
+        if computed_digest is None or computed_digest != freeze.get("compass_sha256"):
             excluded["FORECAST_PAYLOAD_HASH_MISMATCH"] += 1
             continue
 
