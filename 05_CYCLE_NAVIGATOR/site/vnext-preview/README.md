@@ -4,6 +4,18 @@
 
 **Status:** ISOLATED INTERACTIVE PREVIEW / CURRENT PRODUCTION UNCHANGED / NOT CONTINUOUS LIVE SIGNAL
 
+## Latest v2 result-page evolution (Sunday 2026-10-11)
+
+- **DA/EN toggle** now appears in the desktop/iPhone header and persists the selected language; the new W42 score story has bilingual catalog entries.
+- The HOME proof teaser no longer promotes the historical CN27 82.05% figure as the leading metric. It instead introduces the **new W42 forward accuracy / direction / pullback Edge era**, with explicit PENDING status.
+- RESULTS now leads with **Price Range weekly + intradays**, **Direction/Rotation claims**, and **Pullback Edge warnings**, all individually gated by prospective freeze/outcome completion.
+- A clear 12–48h / 7d / 14d / 21d / 28d / 56d claim checkpoint rail explains that longer original forecasts remain open across subsequent CN issues.
+- Pullback tape distinguishes explicit warning vs no-warning, possible onset, severity, recovery and independent altcoin basket impact. Each absent source observation is UNKNOWN / ABSTAIN, not 100 or 0.
+- The existing CN1–27 and X-era score summary, frozen-vs-actual BTC/ETH comparison chart and historical rows are preserved **behind a Legacy Scores disclosure**, not deleted.
+- Preview remains pinned to CN28/W41 and official Compass 11 Oct; **none of the v2 W42 scores or facts have yet been fabricated or graded**.
+
+Implemented and merged scoring core: https://github.com/Donh91/CycleNavigator-scores/pull/3 . Existing weekly CN now has source-bound new-era freeze step: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1577 . Neither feature creates a new scheduled worker. Work-owned integration and source-test roadmap: https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1578 .
+
 ## How to preview
 
 Open the URL on iPhone Safari or desktop. Bottom navigation on iPhone:
