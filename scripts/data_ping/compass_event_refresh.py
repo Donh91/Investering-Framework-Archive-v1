@@ -198,6 +198,20 @@ def _missing_scheduled_freeze(now: datetime, issued_at: Any) -> str | None:
     return name if original_issue < due_at.astimezone(timezone.utc) else None
 
 
+def _public_refresh_message(cause_codes: Any) -> str:
+    """Distinguish missed scheduled output from a genuine market event."""
+    causes = set(cause_codes or [])
+    if causes & {"PROTECTION_STATE_CHANGED", "REENTRY_REVIEW_OPENED"}:
+        return "Protection or re-entry state changed. Compass reassessment is in progress."
+    if causes == {"SCHEDULED_FREEZE_MISSING"}:
+        return (
+            "Scheduled Compass update missed. A fresh current-time reassessment "
+            "has been requested; this does not indicate a new market move "
+            "or a delivered forecast."
+        )
+    return "Material market move or decision-state change detected. Compass reassessment is in progress."
+
+
 def _protective_transition(
     *, latest_compass: Mapping[str, Any], current_data_status: str,
     current_action: str, current_market: Mapping[str, Any], current_ladder: Any,
@@ -501,28 +515,12 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
         run_path = run_dir / f"{now:%H%M%S}_{str(decision['source_packet_sha256'])[:12]}.json"
         run_path.write_text(json.dumps(decision, sort_keys=True, indent=2) + "\n")
         (root / "LATEST.json").write_text(json.dumps(decision, sort_keys=True, indent=2) + "\n")
-        protection_event = any(
-            code in {"PROTECTION_STATE_CHANGED", "REENTRY_REVIEW_OPENED"}
-            for code in decision.get("cause_codes", [])
-        )
-        # Schedule liveness is NOT a market move. Public messaging must not
-        # claim a new price event when only an expected issue is absent.
-        liveness_only = set(decision.get("cause_codes") or []) == {"SCHEDULED_FREEZE_MISSING"}
         public = {
             "contract": PUBLIC_CONTRACT,
             "status": "REASSESSMENT_REQUESTED",
             "detected_at_utc": decision["evaluated_at_utc"],
             "cause_codes": decision.get("cause_codes", []),
-            "message": (
-                "Protection or re-entry state changed. Compass reassessment is in progress."
-                if protection_event
-                else (
-                    "Scheduled Compass update missed. A fresh current-time reassessment has been requested; "
-                    "this does not indicate a new market move or a delivered forecast."
-                    if liveness_only else
-                    "Material market move or decision-state change detected. Compass reassessment is in progress."
-                )
-            ),
+            "message": _public_refresh_message(decision.get("cause_codes", [])),
             "authority": {
                 "official_compass_change": False,
                 "portfolio_execution": False,
