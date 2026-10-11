@@ -110,6 +110,7 @@ function bindPanels() {
     const details = $('cycle-details');
     details.hidden = !details.hidden;
     e.currentTarget.querySelector('span').textContent = details.hidden ? '＋' : '−';
+    e.currentTarget.setAttribute('aria-expanded', String(!details.hidden));
   });
   $('interpret-more')?.addEventListener('click', (e) => {
     const details = $('interpret-details');
@@ -177,7 +178,18 @@ function bindPanels() {
   $('close-source')?.addEventListener('click', closeDialog);
   dialog?.addEventListener('click', (event) => { if (event.target === dialog) closeDialog(); });
   window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !dialog.hidden) closeDialog();
+    if (dialog.hidden) return;
+    if (event.key === 'Escape') { closeDialog(); return; }
+    if (event.key !== 'Tab') return;
+    const focusable = [...dialog.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      .filter((element) => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+    if (!focusable.length) { event.preventDefault(); dialog.focus(); return; }
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      event.preventDefault(); last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      event.preventDefault(); first.focus();
+    }
   });
   $('copy-verification-prompt')?.addEventListener('click', async () => {
     const text = [
@@ -271,9 +283,7 @@ function paintTop(d) {
   setText('edition-number', 'NO. ' + w.public_issue_number);
   setText('hero-horizon', 'NÆSTE 12 TIMER');
   setText('source-health', 'WEEKLY: ' + String(w.status ?? 'UNAVAILABLE'));
-  setText('source-time', 'KILDESNAPSHOT · ' + new Intl.DateTimeFormat('da-DK', {
-    day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'
-  }).format(new Date(c.issued_at_utc)));
+  setText('source-time', 'KILDEFAST SNAPSHOT · ' + c.issued_at_utc.slice(0, 16).replace('T', ' ') + ' UTC');
   const direction = directionView(c.horizons?.NEXT_12H?.expected_direction).text;
   const next = directionView(c.horizons?.NEXT_1_3D?.expected_direction).text;
   setText('hero-now', direction + ' · 12T');
