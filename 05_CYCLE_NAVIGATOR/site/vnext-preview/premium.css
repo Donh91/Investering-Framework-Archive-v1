@@ -74,6 +74,9 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .signal-sub, .signal-mixed > span { font-size: 10px; font-weight: 660; color: #8391a1; padding-left: 3px; }
 .signal-mixed { color: #846624; }
 .hero-sep { background: #dce2e9; height: 16px; width: 1px; }
+.hero-action-line { display: none; }
+.hero-action-line span { color: #8391a1; font-size: 9px; font-weight: 780; letter-spacing: .12em; }
+.hero-action-line strong { color: var(--navy); font-size: 12px; font-weight: 800; }
 .hero-footnote { margin: 15px 0 0; font-size: 10px; color: #9ba5b2; line-height: 1.55; }
 .hero-instrument { background: #081b35; color: #e7f0ff; border: 1px solid #102947; border-radius: 18px; overflow: hidden; padding: 31px 35px 24px; display: flex; flex-direction: column; min-width: 0; position: relative; isolation: isolate; }
 .hero-instrument:before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1; background: radial-gradient(ellipse at 47% 33%, rgba(52,91,151,.25), transparent 61%); }
@@ -363,6 +366,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
   .hero-title { font-size: clamp(39px, 10.8vw, 56px); line-height: 1.095; letter-spacing: -.073em; margin: 26px 0 17px; }
   .hero-kicker { font-size: 9px; gap: 8px; }
   .hero-subtitle { font-size: 13px; line-height: 1.65; }
+  .hero-action-line { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 12px; border: 1px solid #e3e8ef; border-radius: 10px; background: #f9fafb; }
   .hero-status-line { gap: 12px; padding-top: 26px; }
   .signal-up, .signal-mixed { font-size: 10px; }
   .signal-sub,.signal-mixed>span { font-size: 8px; }
