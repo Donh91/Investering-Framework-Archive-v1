@@ -254,6 +254,53 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertFalse(missed["authority"]["portfolio_execution"])
         self.assertFalse(missed["authority"]["forecast_change"])
 
+    def test_same_source_missed_slot_tracks_inflight_and_retries_after_20m(self):
+        # Temporal replay: source 08:14 CPH, issued 08:16, 08:17 scheduled
+        # slot missing, 09:05 current-time refresh request never bound.
+        a = auto_state(source_sha="same")
+        original = "2026-09-18T06:14:00Z"
+        a["packet_generated_at_utc"] = original
+        for value in a["source_health"]["hourly_market"]["freshness"].values():
+            if isinstance(value, dict):
+                value["timestamp"] = original
+        a["normalized_state"]["live_market"]["observation_open_utc"] = "2026-09-18T06:00:00Z"
+        a["predecessor"]["market_observation_open_utc"] = "2026-09-18T05:00:00Z"
+        kw = dict(
+            auto_state=a,
+            auto_pointer={"packet_sha256": "same"},
+            latest_compass=compass(source_sha="same", issued_at="2026-09-18T06:16:00Z"),
+            entry_latest=entry(),
+            prior_state={
+                "last_heat_state": "NORMAL",
+                "last_requested_source_sha": "same",
+                "last_request_at_utc": "2026-09-18T07:05:00Z",
+            },
+            cn_package=cn_package(), cn_binding={"status": "PASS"},
+        )
+        in_flight = evaluate(**kw, now=datetime(2026, 9, 18, 7, 15, tzinfo=timezone.utc))
+        self.assertFalse(in_flight["dispatch"])
+        self.assertEqual(in_flight["reason"], "REQUEST_IN_FLIGHT")
+        self.assertIn("SCHEDULED_FREEZE_MISSING", in_flight["suppressed_cause_codes"])
+
+        retry = evaluate(**kw, now=datetime(2026, 9, 18, 7, 25, tzinfo=timezone.utc))
+        self.assertTrue(retry["dispatch"])
+        self.assertEqual(retry["reason"], "MATERIAL_REASSESSMENT_REQUIRED")
+        self.assertIn("PRIOR_REQUEST_NOT_BOUND_RETRY", retry["cause_codes"])
+        self.assertIn("SCHEDULED_FREEZE_MISSING", retry["cause_codes"])
+        self.assertFalse(retry["authority"]["portfolio_execution"])
+        self.assertIn("Scheduled Compass update missed",
+                      _public_refresh_message(retry["cause_codes"]))
+
+        # Requests for other source identities cannot create false same-SHA
+        # retry evidence against the unchanged current packet.
+        unrelated = dict(kw, prior_state={
+            "last_heat_state": "NORMAL",
+            "last_requested_source_sha": "different-source",
+            "last_request_at_utc": "2026-09-18T07:05:00Z",
+        })
+        fresh = evaluate(**unrelated, now=datetime(2026, 9, 18, 7, 25, tzinfo=timezone.utc))
+        self.assertNotIn("PRIOR_REQUEST_NOT_BOUND_RETRY", fresh.get("cause_codes", []))
+
     def test_same_source_never_dispatches(self):
         a=auto_state(source_sha="same")
         out=decision(auto=a, latest=compass(source_sha="same"), entry_latest=entry(temp="HOT", btc=9))
