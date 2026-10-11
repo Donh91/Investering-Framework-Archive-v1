@@ -65,6 +65,46 @@ function bindNavigation() {
   if (routes.includes(initial)) navigate(initial, { updateHash: false });
 }
 
+// Presentation-only score reveal. No price interpolation, market prediction or scorer logic.
+let rangeRevealTimers = [];
+function cancelRangeReveal({ complete = true } = {}) {
+  rangeRevealTimers.forEach(clearTimeout);
+  rangeRevealTimers = [];
+  const panel = document.querySelector('.range-compare-panel');
+  if (panel && complete) panel.dataset.revealPhase = 'score';
+}
+function setRangeRevealPhase(phase) {
+  const panel = document.querySelector('.range-compare-panel');
+  if (!panel) return;
+  panel.dataset.revealPhase = phase;
+  for (const step of document.querySelectorAll('[data-motion-step]')) {
+    step.classList.toggle('is-current', step.dataset.motionStep === phase);
+  }
+}
+function playRangeComparison() {
+  cancelRangeReveal();
+  const rows = data?.completed_score?.price_range_precision?.rows;
+  const available = Array.isArray(rows) && rows.filter((r) =>
+    r.asset === selectedAsset && ['forecast_low','forecast_high','actual_low','actual_high'].every((key) => safeNumber(r[key]))
+  ).length === 3;
+  const button = $('range-replay');
+  if (button) button.disabled = !available;
+  if (!available) {
+    setRangeRevealPhase('score');
+    return;
+  }
+  // Do not hide information from users who request less movement or on legacy browsers.
+  const reduce = typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) {
+    setRangeRevealPhase('score');
+    return;
+  }
+  setRangeRevealPhase('frozen');
+  rangeRevealTimers.push(setTimeout(() => setRangeRevealPhase('actual'), 350));
+  rangeRevealTimers.push(setTimeout(() => setRangeRevealPhase('score'), 880));
+}
+
 function bindPanels() {
   $('expand-cycle')?.addEventListener('click', (e) => {
     const details = $('cycle-details');
@@ -97,7 +137,13 @@ function bindPanels() {
       b.setAttribute('aria-pressed', String(active));
     });
     renderRangeChart();
+    playRangeComparison();
   }));
+  $('range-replay')?.addEventListener('click', playRangeComparison);
+  document.querySelector('.edge-legacy-fold')?.addEventListener('toggle', (event) => {
+    if (event.currentTarget.open && data) playRangeComparison();
+    else cancelRangeReveal();
+  });
 
   const dialog = $('source-dialog');
   const sourceButton = $('source-button');
@@ -387,6 +433,7 @@ async function initialize() {
     paintTop(data);
     paintCompass(data);
     renderRangeChart();
+    setRangeRevealPhase('score');
     paintHistory(data);
     paintSource(data);
   } catch (err) {
