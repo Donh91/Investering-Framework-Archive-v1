@@ -49,7 +49,7 @@ def validated_rows(rows):
         if not FIELDS.issubset(row):
             raise ValueError("required PIT columns absent")
         asset = row["asset"].strip()
-        if not asset or not row["continuity_segment_id"] or not row["decision_policy_version"].strip():
+        if not asset or not row["continuity_segment_id"] or not isinstance(row["decision_policy_version"], str) or not row["decision_policy_version"].strip():
             raise ValueError("asset/continuity identity missing")
         observation = parse_time(row["timestamp_utc"])
         known = parse_time(row["knowledge_time_utc"])
@@ -95,6 +95,10 @@ def run_variant(series, variant):
             if not contiguous:
                 streak = 0
                 first_ready = None
+            if last_policy is not None and policy != last_policy:
+                # Changed policy is a distinct research stratum; do not
+                # transport previous-version refractory state across it.
+                last_fire = None
             usable = status in ALLOWED_STATUS and state in RANK
             if not usable or RANK.get(state, -1) < threshold:
                 streak = 0
