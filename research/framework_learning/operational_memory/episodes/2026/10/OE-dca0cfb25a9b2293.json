@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/daily_capture/build_weekly_cfgi_summary.py",
+    "tests/daily_capture/test_weekly_cfgi_final_week_binding.py",
+    "tests/daily_capture/test_weekly_market_close_endpoint.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-dca0cfb25a9b2293",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cfgi-weekly-final-completed-iso-week",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(cfgi): use explicit closed UTC ISO week in FINAL summary * fix(cfgi): pass weekly market-close mode to zero-cost CFGI builder * test(cfgi): Sunday preclose/Monday final week and cross-year controls * test(cfgi): exercise FINAL week regression in existing Daily Capture CI * refactor(cfgi): avoid any production workflow changes and high-impact release * refactor(cfgi): keep architecture gate untouched, reuse existing unit test loader * fix(cfgi): route existing weekly trigger through immutable event mode * test(cfgi): immutable schedule and manual event-mode routing, no YAML edit * test(cf",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/daily_capture/build_weekly_cfgi_summary.py": "151cb823c0962aa294eddc44dbf185762c12a681",
+    "tests/daily_capture/test_weekly_cfgi_final_week_binding.py": "d4b91b550f4c27d9faaf5145ae75133e8c3c26cd",
+    "tests/daily_capture/test_weekly_market_close_endpoint.py": "799e087c71ad69f40bb642158d844bae6ea33e25"
+  },
+  "source_commit_sha": "dca0cfb25a9b2293565cee298c1a6461e6de2bde",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-11T04:47:40-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(cfgi): bind weekly FINAL to completed ISO week"
+}
