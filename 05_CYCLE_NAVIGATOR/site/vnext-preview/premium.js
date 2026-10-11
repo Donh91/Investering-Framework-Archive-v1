@@ -140,6 +140,22 @@ function bindPanels() {
     playRangeComparison();
   }));
   $('range-replay')?.addEventListener('click', playRangeComparison);
+  $('edge-open-comparison')?.addEventListener('click', () => {
+    // The modern Edge chapter links to a genuine, older frozen comparison.
+    // It is not promoted into a new scored outcome.
+    const archive = document.querySelector('.edge-legacy-fold');
+    if (!archive) return;
+    const wasOpen = archive.open;
+    archive.open = true;
+    if (wasOpen && data) playRangeComparison();
+    const panel = document.querySelector('.range-compare-panel');
+    if (panel) {
+      const reduce = typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      panel.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    }
+  });
+
   document.querySelector('.edge-legacy-fold')?.addEventListener('toggle', (event) => {
     if (event.currentTarget.open && data) playRangeComparison();
     else cancelRangeReveal();
