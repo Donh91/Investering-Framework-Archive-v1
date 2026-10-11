@@ -6,6 +6,7 @@ window.CN_PREMIUM_COMPASS_OWNER = true;
 
 const COMPASS_URL = './data/compass.json';
 const SNAPSHOT_URL = './data/latest.json';
+const EVENT_URL = './data/compass-event.json';
 const HORIZONS = [
   { scale: '1_3d', lane: 'NEXT_1_3D', label: '1–3 DAYS', title: 'Near term' },
   { scale: '5_7d', lane: 'NEXT_5_7D', label: '5–7 DAYS', title: 'This week' },
@@ -365,7 +366,28 @@ function compositeIntel(compass){
  +'<p class="synthesis-analysis">'+esc(analysis)+'</p>'
  +'<small class="synthesis-boundary">Research direction is not a BUY / SELL instruction. Approved action and market-cycle phase remain governed by the official signals.</small></section>';
 }
-function renderPremium(snapshot, compass) {
+function refreshStatusBanner(compass, event) {
+  // The premium renderer is the active NOW owner; the legacy Compass banner
+  // is not rendered when CN_PREMIUM_COMPASS_OWNER is true.
+  if (event?.contract !== 'PUBLIC_COMPASS_EVENT_STATUS_v1' ||
+      event?.status !== 'REASSESSMENT_REQUESTED') return '';
+  const detected = Date.parse(event.detected_at_utc || '');
+  const issued = Date.parse(compass?.issued_at_utc || '');
+  if (!Number.isFinite(detected) || !Number.isFinite(issued) || detected <= issued) return '';
+  const causes = Array.isArray(event.cause_codes) ? event.cause_codes : [];
+  const livenessOnly = causes.length === 1 && causes[0] === 'SCHEDULED_FREEZE_MISSING';
+  const marketChange = causes.some(c => c === 'MARKET_STATE_CHANGED' || c === 'MARKET_HEAT_ENTERED');
+  const label = livenessOnly ? 'SCHEDULED UPDATE DELAYED' :
+    marketChange ? 'MARKET MOVE DETECTED' : 'COMPASS REASSESSMENT';
+  const title = livenessOnly ? 'Fresh Compass update requested' : 'Compass reassessment in progress';
+  const note = livenessOnly
+    ? 'The scheduled issue was missed. No new market move is implied; the last verified Compass remains in place.'
+    : 'The existing Compass remains in place until the current-time reassessment is verified.';
+  return '<section class="market-move-banner" aria-live="polite"><span>' + esc(label) +
+    '</span><strong>' + esc(title) + '</strong><small>' + esc(note) + '</small></section>';
+}
+
+function renderPremium(snapshot, compass, event) {
   const root = document.getElementById('productNow');
   if (!root) return false;
   const expanded = [...root.querySelectorAll('#premiumMarketCompass details[open][id]')].map(d=>d.id);
@@ -384,6 +406,7 @@ function renderPremium(snapshot, compass) {
     + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong>' + (meta.live.includes('MIXED') ? '<p class="mixed-explanation">Conflicting signals · no clear near-term direction.</p>' : meta.live==='NO NEW READING' ? '<p class="mixed-explanation">Current action unchanged · awaiting a fresh near-term reading.</p>' : '') + '<small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong>' + (meta.weekly.includes('MIXED') ? '<p class="mixed-explanation">Mixed weekly evidence · no clear directional edge.</p>' : '') + '<small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
     + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong>' + (dataOk ? '<div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div>' : '') + '<p>' + esc(rec.copy) + '</p>' + (dataOk ? hourlyMonitor(snapshot) : '') + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
+    + refreshStatusBanner(compass, event)
     + (dataOk ? decisionDetail(compass, rec, meta) : '')
     + compositeIntel(compass)
     + pullbackCard(officialView)
@@ -410,6 +433,7 @@ function renderPremium(snapshot, compass) {
 
 let latestSnapshot = null;
 let latestCompass = null;
+let latestEvent = null;
 let observer = null;
 
 function install() {
@@ -418,23 +442,25 @@ function install() {
   if (!root) return;
   if (!observer) {
     observer = new MutationObserver(() => {
-      if (!document.getElementById('premiumMarketCompass')) queueMicrotask(() => renderPremium(latestSnapshot, latestCompass));
+      if (!document.getElementById('premiumMarketCompass')) queueMicrotask(() => renderPremium(latestSnapshot, latestCompass, latestEvent));
     });
     observer.observe(root, { childList: true, subtree: false });
   }
-  renderPremium(latestSnapshot, latestCompass);
+  renderPremium(latestSnapshot, latestCompass, latestEvent);
 }
 
 async function load() {
   try {
     const stamp = Date.now();
-    const [s, c] = await Promise.all([
+    const [s, c, e] = await Promise.all([
       fetch(SNAPSHOT_URL + '?premium=' + stamp, { cache: 'no-store' }),
-      fetch(COMPASS_URL + '?premium=' + stamp, { cache: 'no-store' })
+      fetch(COMPASS_URL + '?premium=' + stamp, { cache: 'no-store' }),
+      fetch(EVENT_URL + '?premium=' + stamp, { cache: 'no-store' }).catch(() => null)
     ]);
     if (!s.ok || !c.ok) throw new Error('Premium Compass source unavailable');
     latestSnapshot = await s.json();
     latestCompass = await c.json();
+    latestEvent = e?.ok ? await e.json().catch(() => null) : null;
     install();
   } catch (error) {
     console.warn('Premium Market Compass unavailable', error);
