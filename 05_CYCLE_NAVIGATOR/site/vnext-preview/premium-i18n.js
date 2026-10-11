@@ -231,6 +231,19 @@ Object.assign(translations, {
   "Historiske X-scores bevaret under Legacy Archive": "Historic X scores retained under Legacy Archive",
   "Udforsk det nye scorekapitel": "Explore the new scoring chapter"
 });
+Object.assign(translations, {
+  "01 · Frosset prognose": "01 · Frozen forecast",
+  "02 · Virkeligheden": "02 · Actual result",
+  "03 · Score": "03 · Score",
+  "Afspil sammenligning": "Replay comparison",
+  "Afspil prisinterval sammenligning igen": "Replay the frozen-versus-realized price range comparison",
+  "Sammenligningsanimationens stadier": "Price range comparison reveal stages",
+  "Frosset prognose": "Frozen forecast",
+  "Observeret": "Observed",
+  "Vælg aktiv": "Choose asset",
+  "Frossen prognose: ": "Frozen forecast: ",
+  "Observeret lav-høj: ": "Observed low–high: "
+});
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
