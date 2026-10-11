@@ -46,6 +46,13 @@ assert.equal(source.history.policy.cross_era_aggregate, false);
 assert.deepEqual(source.history.records.map((x) => x.cn), Array.from({length:27}, (_,i)=>i+1));
 assert.equal(source.compass.horizons.NEXT_12H.expected_direction, 'UP');
 assert.equal(source.compass.action_now, 'HOLD_WAIT');
+assert.equal(source.compass.protection_tracker.pullback_risk_state, 'BUILDING');
+assert.equal(source.compass.protection_tracker.distribution_risk, 'UNKNOWN');
+assert.equal(source.compass.sell_assessment.state, 'UNAVAILABLE');
+assert.equal(source.compass.protection_tracker.reentry_state, 'INACTIVE');
+assert.equal(source.compass.capitalization_ladder.find((x) => x.segment === 'MEMES')?.action, 'UNAVAILABLE');
+assert.equal(source.compass.compass_id, 'CMP-20261011-7d14a9ee5914');
+assert.equal(source.compass.issued_at_utc, '2026-10-11T13:15:27Z');
 assert.equal(source.compass.sell_assessment.state, 'UNAVAILABLE');
 assert.match(html, /data-lang="da"/);
 assert.match(html, /data-lang="en"/);
@@ -69,5 +76,53 @@ assert.equal([...motionLibrary.matchAll(/^\| (?:0[1-9]|1[0-9]|20) \|/gm)].length
 
 new Script(js.replace(/^import .*from .*;\s*$/m, ''), { filename: 'premium.js' });
 new Script(i18n.replace(/export (?=function)/g, ''), { filename: 'premium-i18n.js' });
-console.log('PASS: premium CN source lineage, forecast/score semantics, UI IDs, safe DOM rendering, mobile CSS, JavaScript syntax');
+
+assert.match(html, /aria-controls="cycle-details"/);
+assert.match(html, /NEXT SERIES · ISSUE ID PENDING · 2026-W42/);
+assert.doesNotMatch(html, /Public CN #29/);
+assert.match(js, /KILDEFAST SNAPSHOT · ' \+ c\.issued_at_utc\.slice\(0, 16\)/);
+assert.match(js, /compass\.compass_id !== 'CMP-20261011-7d14a9ee5914'/);
+assert.match(js, /compass\.issued_at_utc !== '2026-10-11T13:15:27Z'/);
+assert.match(js, /if \(dialog\.hidden\) return;/);
+assert.match(js, /event\.key !== 'Tab'/);
+assert.match(js, /e\.currentTarget\.setAttribute\('aria-expanded', String\(!details\.hidden\)\)/);
+const requiredLocalizedText = [
+  'The near-term market direction is positive, but expanding broad altcoin exposure is not authorized.',
+  'ORDINARY RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED. · Possible W41 retest, particularly Day 3–7; timing and occurrence unconfirmed.',
+  'No governed sell/trim decision owner is bound. Protection and distribution risk are not sell instructions.',
+  'THE NEW CN TRACK RECORD',
+  'NEXT SERIES · ISSUE ID PENDING · 2026-W42'
+];
+for (const phrase of requiredLocalizedText) assert.ok(i18n.includes(JSON.stringify(phrase) + ':'), 'Missing Danish translation: ' + phrase);
+
+
+const sourceFn = js.match(/function getTrustedSeed\(raw\) \{[\s\S]*?\n\}/)?.[0];
+const rangeFn = js.match(/function completePriceRows\(score, asset\) \{[\s\S]*?\n\}/)?.[0];
+assert.ok(sourceFn, 'Trusted-source validation function exists');
+assert.ok(rangeFn, 'Price-range eligibility function exists');
+const getTrustedSeed = new Function(sourceFn + '; return getTrustedSeed;')();
+const completePriceRows = new Function('safeNumber', rangeFn + '; return completePriceRows;')((n) => typeof n === 'number' && Number.isFinite(n));
+assert.equal(getTrustedSeed(source), source);
+for (const mutate of [
+  (x) => { x.source_status = 'LIVE'; },
+  (x) => { x.weekly.public_issue_number = 29; },
+  (x) => { x.compass.compass_id = 'CMP-WRONG-WEEK'; },
+  (x) => { x.compass.issued_at_utc = '2026-10-11T20:19:43Z'; },
+  (x) => { x.completed_score.combined_score = 100; },
+  (x) => { x.history.records.pop(); }
+]) {
+  const invalid = structuredClone(source);
+  mutate(invalid);
+  assert.throws(() => getTrustedSeed(invalid), 'Invalid or misaligned source must fail closed');
+}
+const priceScore = structuredClone(source.completed_score);
+const btcRows = priceScore.price_range_precision.rows.filter((row) => row.asset === 'BTC');
+assert.equal(completePriceRows(priceScore, 'BTC').length, 3, 'Valid BTC intervals remain eligible');
+assert.equal(completePriceRows({ price_range_precision: { rows: [] } }, 'BTC').length, 0, 'Missing price rows fail closed');
+assert.equal(completePriceRows({ price_range_precision: { rows: [btcRows[0]] } }, 'BTC').length, 1, 'Partial intervals remain incomplete');
+const damaged = structuredClone(priceScore);
+damaged.price_range_precision.rows[0].actual_high = null;
+assert.equal(completePriceRows(damaged, 'BTC').length, 2, 'Missing actual bar is excluded');
+
+console.log('PASS: premium CN source lineage, fail-closed fixtures, bilingual copy, score semantics, modal keyboard and JavaScript syntax');
 console.log('Reminder: this is static smoke/contract QA. It does not certify iPhone visual quality or ex-ante cryptographic score proof.');
