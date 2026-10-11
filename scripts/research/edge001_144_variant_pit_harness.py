@@ -15,7 +15,7 @@ from pathlib import Path
 CONTRACT = "EDGE001_PIT_SENSITIVITY_144_v1"
 RANK = {"NORMAL": 0, "BUILDING": 1, "ELEVATED": 2, "HIGH": 3, "CONFIRMED": 4}
 FIELDS = {"asset", "timestamp_utc", "knowledge_time_utc", "pullback_risk_state",
-          "source_status", "continuity_segment_id"}
+          "source_status", "continuity_segment_id", "decision_policy_version"}
 ALLOWED_STATUS = {"PASS", "OK"}
 
 
@@ -49,7 +49,7 @@ def validated_rows(rows):
         if not FIELDS.issubset(row):
             raise ValueError("required PIT columns absent")
         asset = row["asset"].strip()
-        if not asset or not row["continuity_segment_id"]:
+        if not asset or not row["continuity_segment_id"] or not row["decision_policy_version"].strip():
             raise ValueError("asset/continuity identity missing")
         observation = parse_time(row["timestamp_utc"])
         known = parse_time(row["knowledge_time_utc"])
@@ -65,7 +65,7 @@ def validated_rows(rows):
         if status in ALLOWED_STATUS and state not in RANK:
             raise ValueError("unknown state cannot be treated as warning")
         result[asset].append((observation, known, state, status,
-                              row["continuity_segment_id"]))
+                              row["continuity_segment_id"], row["decision_policy_version"]))
     return result
 
 
@@ -77,12 +77,21 @@ def run_variant(series, variant):
     cooldown = timedelta(hours=variant["cooldown_hours"])
     alerts = []
     for asset, rows in sorted(series.items()):
+        # A historical batch first knowable at ONE decision instant cannot
+        # create multiple alerts or multiple hourly persistence confirmations.
+        decision_rows = []
+        for row in rows:
+            if decision_rows and decision_rows[-1][1] == row[1]:
+                decision_rows[-1] = row
+            else:
+                decision_rows.append(row)
         streak = 0
-        last_obs = last_segment = first_ready = last_fire = None
-        for observed, known, state, status, segment in rows:
+        last_obs = last_segment = last_policy = first_ready = last_fire = None
+        for observed, known, state, status, segment, policy in decision_rows:
             contiguous = (last_obs is not None and
                           observed - last_obs == timedelta(hours=1) and
-                          segment == last_segment)
+                          segment == last_segment and
+                          policy == last_policy)
             if not contiguous:
                 streak = 0
                 first_ready = None
@@ -99,19 +108,20 @@ def run_variant(series, variant):
                     alerts.append({"asset": asset, "observation_utc": observed.isoformat(),
                                    "decision_utc": known.isoformat(), "segment": segment})
                     last_fire = known
-            last_obs, last_segment = observed, segment
+            last_obs, last_segment, last_policy = observed, segment, policy
     return alerts
 
 
 def self_test():
     vs = variants()
     base = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    def row(i, state, status="PASS", segment="s1"):
+    def row(i, state, status="PASS", segment="s1", policy="v1"):
         t = base + timedelta(hours=i)
         return {"asset": "BTCUSDT", "timestamp_utc": t.isoformat().replace("+00:00", "Z"),
                 "knowledge_time_utc": (t + timedelta(minutes=5)).isoformat().replace("+00:00", "Z"),
                 "pullback_risk_state": state, "source_status": status,
-                "continuity_segment_id": segment}
+                "continuity_segment_id": segment,
+                "decision_policy_version": policy}
     rows = [row(0, "NORMAL"), row(1, "ELEVATED"), row(2, "HIGH"),
             row(3, "HIGH"), row(4, "HIGH"), row(5, "NORMAL")]
     series = validated_rows(rows)
@@ -135,36 +145,43 @@ def self_test():
         pass
     else:
         raise AssertionError("future data must fail")
+    # A streak may never cross an explicit policy-version boundary.
+    assert not run_variant(validated_rows([
+        row(0, "HIGH", policy="v1"), row(1, "HIGH", policy="v2")]), v)
+    # Three hourly observations released at one knowledge instant count as
+    # one available decision opportunity, not three historical warnings.
+    batched = [row(i, "HIGH") for i in (0, 1, 2)]
+    for item in batched:
+        item["knowledge_time_utc"] = "2026-01-01T03:05:00Z"
+    assert not run_variant(validated_rows(batched), v)
+    try:
+        bad = row(0, "HIGH")
+        del bad["decision_policy_version"]
+        validated_rows([bad])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("missing policy version must fail")
+    # Reviewer-name strings and self-supplied file hashes cannot prove PIT.
+    try:
+        guarded_replay(Path("untrusted.csv"), Path("self_asserted.json"))
+    except ValueError as error:
+        assert "ATTESTATION_UNVERIFIED" in str(error)
+    else:
+        raise AssertionError("replay must fail closed without independent verifier")
     assert len(vs) == 144
     return {"status": "SYNTHETIC_TEST_PASS", "variant_count": len(vs),
             "historical_edge_tested": False, "live_authority": False}
 
 
 def guarded_replay(csv_path, receipt_path):
-    source = Path(csv_path).read_bytes()
-    digest = hashlib.sha256(source).hexdigest()
-    receipt = json.loads(Path(receipt_path).read_text(encoding="utf-8"))
-    if not (receipt.get("source_sha256") == digest and
-            receipt.get("evidence_class") == "A_PIT_VERIFIED" and
-            receipt.get("review_status") == "APPROVED_PIT" and
-            receipt.get("independent_reviewer") and
-            receipt.get("review_evidence_url") and
-            receipt.get("contract") == CONTRACT):
-        raise ValueError("PIT provenance receipt not independently approved/bound")
-    with Path(csv_path).open(newline="", encoding="utf-8") as stream:
-        reader = csv.DictReader(stream)
-        if not FIELDS.issubset(set(reader.fieldnames or [])):
-            raise ValueError("missing PIT columns")
-        series = validated_rows(reader)
-    output = []
-    for v in variants():
-        alerts = run_variant(series, v)
-        output.append({"variant": v, "descriptive_alert_count": len(alerts),
-                       "alerts": alerts})
-    return {"contract": CONTRACT, "source_sha256": digest,
-            "status": "RESEARCH_ONLY_DESCRIPTIVE_NOT_SCORED",
-            "historical_edge_tested": False, "independent_episode_n": None,
-            "warning_is_sell": False, "variants": output}
+    """Do not trust self-asserted PIT approval in a caller-written JSON file.
+
+    A URL, reviewer name, and source hash alone are not a verifiable owner
+    signature. Preserve the manifest/synthetic harness, but prohibit replay
+    until an independently checkable owner-issued attestation is implemented.
+    """
+    raise ValueError("INDEPENDENT_PIT_ATTESTATION_UNVERIFIED_FAIL_CLOSED")
 
 
 def main():
