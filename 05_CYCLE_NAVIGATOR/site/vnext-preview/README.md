@@ -76,3 +76,7 @@ No keys, wallets, private holdings, hidden repo data or non-public research incl
 - Programmatic source contract and motion smoke tests are included in `check-premium.mjs`, checked on PR #1576. Standalone AppDeploy reports ready and no frontend/network errors as of the last deployment. Native iPhone Safari visual/manual sign-off and production owner mapping remain pending.
 
 **Guardrails**: This animation is historical educational visualization, not a simulated market progression, forecast path, trading signal, independent cryptographic attestation or demonstration of statistically significant profitable Edge.
+
+## Single Work handover packet
+
+**START HERE:** [WORK_EXECUTION_PACKET_2026-10-11.md](WORK_EXECUTION_PACKET_2026-10-11.md) — step-by-step Work browser/Safari UI audit, original-vs-new IA inventory, source parity, proof/risk semantics, exact screenshot/CI gates, production safety and complete ready-to-copy launch prompt. Coordinates with [Archive issue #1578](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1578). **Prepared, not independently run yet.**
