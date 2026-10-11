@@ -1,4 +1,13 @@
 # CN site design reference repos
+
+## NEW · Full 20-repository source index (11 October 2026)
+
+The user's second motion-design post adds 20 more GitHub projects across Remotion, Motion Canvas, Motion, GSAP, Rive, Lottie, Three.js, SVG, web sound and media/video export.
+
+**Open the exact complete numbered list and scored product recommendation:**
+[20 Motion Design Repos — CN Adoption Decision](vnext-preview/MOTION_TOOLKIT_20_REPOS_AND_CN_DECISION.md).
+
+The **only runtime implementation adopted** is a tiny library-free, source-exact 3-act frozen → realized → score reveal inside the existing CN vNext prototype, plus an accessible replay control and reduced-motion fallback. No 3D or audio dependency was added.
 Reference notes from https://x.com/flxrnc/status/2105311836190978392
 Design authority remains DESIGN.md and skills/visual-motion-design/SKILL.md. Do not automatically install dependencies.
 
