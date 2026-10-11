@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.daily_capture.freeze_capture_execution_plan import validate_plan
 
@@ -225,7 +229,9 @@ def main():
     ages={'capture':age_hours(now,cap_ts),'daily_director':age_hours(now,daily_ts),'weekly_calibration':age_hours(now,weekly_ts),'etf_owner':age_hours(now,etf_ts),'experiment_registry':age_hours(now,experiment_ts),'experiment_receipt_sync':age_hours(now,sync_ts),'remediation_queue':age_hours(now,remediation_ts)}
     if cap is None:add('NO_DAILY_CAPTURE',2)
     elif ages['capture'] is None or ages['capture']>8:add('DAILY_CAPTURE_STALE',2)
-    owner_finding=owner_population_finding(cap,owners)
+    # Validate the complete evidence records, not the display-only projection.
+    owner_evidence=[row for row in (cap or {}).get('owners',[]) if isinstance(row,dict)]
+    owner_finding=owner_population_finding(cap,owner_evidence)
     if owner_finding:add(*owner_finding)
     if daily is None:add('NO_DAILY_DIRECTOR_OUTPUT',1)
     elif ages['daily_director'] is None or ages['daily_director']>36:add('DAILY_DIRECTOR_STALE',1)

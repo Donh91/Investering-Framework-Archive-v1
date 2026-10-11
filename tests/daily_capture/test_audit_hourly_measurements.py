@@ -27,6 +27,7 @@ def load(name):
 weekly = load('build_weekly_market_close_package')
 hourly = load('build_hourly_sequence')
 capture = load('build_capture_index')
+execution_plan = load('freeze_capture_execution_plan')
 START = datetime(2026, 8, 24, tzinfo=timezone.utc)
 HOUR = 3_600_000
 
@@ -149,16 +150,23 @@ class HourlyIntegrityTests(unittest.TestCase):
         self.assertIsNone(parsed[rows[1][0]]['taker_buy_quote_share'])
 
     def check_owner_inventory(self, sequence_disabled):
+        plan = execution_plan.build_plan(
+            run_id='synthetic-audit', trigger='test', schedule_id='',
+            slow_macro_planned=True, slow_macro_reason='SYNTHETIC_OWNER_INVENTORY',
+        )
+        plan_path = self.root / 'execution-plan.json'
+        plan_path.write_bytes(execution_plan.canonical_bytes(plan))
         for name in capture.OWNER_DIRS.values():
             d = self.root / name; d.mkdir(); (d/'receipt.json').write_text('{"status":"PASS"}')
         codes = {owner: 0 for owner in capture.OWNER_DIRS}
         if sequence_disabled: codes['binance_spot'] = 78
         status = self.root/'status.json'; status.write_text(json.dumps(codes))
         output = self.root/'captures'
-        args = ['capture', '--root', str(self.root), '--status-file', str(status), '--output-root', str(output), '--run-id', 'synthetic-audit', '--trigger', 'test']
+        args = ['capture', '--root', str(self.root), '--status-file', str(status), '--output-root', str(output), '--run-id', 'synthetic-audit', '--trigger', 'test', '--execution-plan-file', str(plan_path)]
         with patch('sys.argv', args), patch.object(capture, 'extract_metrics', return_value={}), contextlib.redirect_stdout(io.StringIO()):
             capture.main()
         p = json.loads(next(p for p in output.rglob('*.json') if p.name != 'LATEST.json').read_text())
+        self.assertEqual(p['execution_plan'], plan)
         self.assertEqual(p['owners_passed'], sum(o['status']=='PASS' for o in p['owners']))
         self.assertEqual(p['owners_planned'], len(p['owners']))
         self.assertEqual(p['owners_disabled'], int(sequence_disabled))

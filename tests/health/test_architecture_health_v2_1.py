@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -144,10 +146,45 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
         )
 
     def test_completion_time_cannot_change_owner_topology(self):
-        before = self.capture(captured_at='2026-09-27T04:58:00Z')
+        before = self.capture(captured_at='2026-09-27T05:01:00Z')
         delayed = self.capture(captured_at='2026-09-27T07:05:00Z')
         self.assertIsNone(module.owner_population_finding(before, self.owner_rows()))
         self.assertIsNone(module.owner_population_finding(delayed, self.owner_rows()))
+
+    def test_direct_scripts_are_importable_outside_repository(self):
+        repo = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as tmp:
+            for relative in ('scripts/daily_capture/build_capture_index.py', 'scripts/health/build_architecture_health.py'):
+                result = subprocess.run(
+                    [sys.executable, '-I', str(repo / relative), '--help'],
+                    cwd=tmp, capture_output=True, text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_main_validates_complete_artifact_records_not_display_projection(self):
+        repo = Path(__file__).resolve().parents[2]
+        for missing_metadata in (False, True):
+            with self.subTest(missing_metadata=missing_metadata), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                capture = self.capture()
+                capture['owners'] = self.owner_rows()
+                if missing_metadata:
+                    owner = next(row for row in capture['owners'] if row['owner_id'] == 'binance_microstructure')
+                    owner.pop('files')
+                source = root / '03_DAILY_CAPTURE_LOGS/captures/2026/09/capture.json'
+                source.parent.mkdir(parents=True)
+                source.write_text(json.dumps(capture))
+                output = root / 'health.json'
+                result = subprocess.run(
+                    [sys.executable, '-I', str(repo / 'scripts/health/build_architecture_health.py'),
+                     '--repo-root', str(root), '--json-output', str(output),
+                     '--md-output', str(root / 'health.md'), '--now-utc', '2026-09-27T05:25:00Z'],
+                    cwd=tmp, capture_output=True, text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                health = json.loads(output.read_text())
+                self.assertEqual('OWNER_ARTIFACT_EVIDENCE_INVALID' in health['blockers'], missing_metadata)
+                self.assertTrue(all(set(row) == {'owner_id', 'status'} for row in health['owners']['rows']))
 
     def test_matching_statuses_without_artifact_evidence_fail_closed(self):
         rows = self.owner_rows()
