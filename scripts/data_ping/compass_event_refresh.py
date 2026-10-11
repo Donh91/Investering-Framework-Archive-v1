@@ -284,7 +284,13 @@ def evaluate(
             },
         }
 
-    if source_sha == compass_source_sha:
+    # Matching source hashes normally suppress duplicate work. Exception:
+    # a genuinely missed scheduled publication is a separate liveness event,
+    # even when its last source packet remains time-valid. Freshness and CN
+    # admission gates still apply below; no source/forecast is backdated.
+    if source_sha == compass_source_sha and _missing_scheduled_freeze(
+        now, latest_compass.get("issued_at_utc")
+    ) is None:
         return {
             "contract": CONTRACT,
             "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
