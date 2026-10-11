@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, evaluate, heat_state
+from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, _missing_scheduled_freeze, evaluate, heat_state
 
 
 NOW = datetime(2026, 9, 18, 16, 0, tzinfo=timezone.utc)
@@ -133,6 +133,70 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertFalse(_ladder_materially_changed(previous, current))
         promoted = previous + [{"segment": "MEMES", "status": "PREPARE"}]
         self.assertTrue(_ladder_materially_changed(previous, promoted))
+
+    def test_missed_morning_freeze_triggers_current_time_recovery_not_sell(self):
+        zeros = {k: {"pct": 0.0} for k in ("btc_usdt", "eth_usdt", "ethbtc")}
+        a = auto_state(
+            observation_open="2026-09-18T15:00:00Z",
+            predecessor_observation="2026-09-18T15:00:00Z",
+            deltas=zeros,
+        )
+        latest = compass(
+            issued_at=(NOW - timedelta(hours=14)).isoformat().replace("+00:00", "Z")
+        )
+        result = decision(auto=a, latest=latest)
+        self.assertTrue(result["dispatch"])
+        self.assertIn("SCHEDULED_FREEZE_MISSING", result["cause_codes"])
+        self.assertEqual(result["missing_scheduled_freeze"], "MORNING")
+        self.assertFalse(result["authority"]["portfolio_execution"])
+        self.assertFalse(result["authority"]["forecast_change"])
+
+    def test_latest_issue_after_slot_does_not_trigger_recovery(self):
+        a = auto_state(
+            observation_open="2026-09-18T15:00:00Z",
+            predecessor_observation="2026-09-18T15:00:00Z",
+            deltas={k: {"pct": 0.0} for k in ("btc_usdt", "eth_usdt", "ethbtc")},
+        )
+        result = decision(auto=a, latest=compass(
+            issued_at=(NOW - timedelta(hours=6)).isoformat().replace("+00:00", "Z")
+        ))
+        self.assertFalse(result["dispatch"])
+        self.assertIsNone(result["missing_scheduled_freeze"])
+        self.assertEqual(result["reason"], "NO_MATERIAL_CHANGE")
+
+    def test_missed_freeze_respects_existing_inflight_request(self):
+        old = (NOW-timedelta(hours=14)).isoformat().replace("+00:00","Z")
+        result = decision(latest=compass(issued_at=old), prior_state={
+            "last_heat_state": "NORMAL",
+            "last_requested_source_sha": "new-source",
+            "last_request_at_utc": (NOW - timedelta(minutes=5)).isoformat().replace("+00:00", "Z"),
+        })
+        self.assertFalse(result["dispatch"])
+        self.assertEqual(result["reason"], "REQUEST_IN_FLIGHT")
+        self.assertIn("SCHEDULED_FREEZE_MISSING", result["suppressed_cause_codes"])
+
+    def test_missed_freeze_grace_and_dst_boundary(self):
+        issue = "2026-03-29T06:16:00Z"  # 08:16 Europe/Copenhagen CEST
+        self.assertIsNone(_missing_scheduled_freeze(
+            datetime(2026, 3, 29, 6, 59, tzinfo=timezone.utc), issue))
+        self.assertEqual(_missing_scheduled_freeze(
+            datetime(2026, 3, 29, 7, 3, tzinfo=timezone.utc), issue), "MORNING")
+        self.assertIsNone(_missing_scheduled_freeze(
+            datetime(2026, 3, 29, 7, 3, tzinfo=timezone.utc),
+            "2026-03-29T06:17:00Z"
+        ))
+        # After transition to CET, 08:17 local is 07:17 UTC.
+        self.assertEqual(_missing_scheduled_freeze(
+            datetime(2026, 10, 25, 8, 3, tzinfo=timezone.utc),
+            "2026-10-25T07:16:00Z"), "MORNING")
+        self.assertIsNone(_missing_scheduled_freeze(
+            datetime(2026, 10, 25, 7, 59, tzinfo=timezone.utc),
+            "2026-10-25T07:16:00Z"))
+
+    def test_no_recovery_without_verifiable_original_issue_time(self):
+        self.assertIsNone(_missing_scheduled_freeze(NOW, None))
+        self.assertIsNone(_missing_scheduled_freeze(NOW, "not-utc"))
+        self.assertIsNone(_missing_scheduled_freeze(NOW, "2099-01-01T00:00:00Z"))
 
     def test_same_source_never_dispatches(self):
         a=auto_state(source_sha="same")
