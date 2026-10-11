@@ -69,14 +69,33 @@ def cfgi_from_capture(packet: dict[str, Any]) -> tuple[list[dict[str, Any]], dic
     return current_rows, billing
 
 
+def target_week_window(now: datetime, mode: str) -> tuple[datetime, datetime]:
+    """Return a strictly bounded UTC ISO week for preclose or prior-week final.
+
+    On Monday the FINAL market-close job settles the *previous* completed week;
+    computing the ISO week from the execution clock silently points at the new
+    (often empty) week. Keep the collector/observation timestamp unchanged.
+    """
+    if mode not in {"preclose", "final"}:
+        raise ValueError("Unsupported weekly close mode")
+    utc_now = now.astimezone(timezone.utc)
+    monday = (utc_now - timedelta(days=utc_now.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    if mode == "final":
+        monday -= timedelta(days=7)
+    return monday, monday + timedelta(days=7)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--capture-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--mode", choices=("preclose", "final"), default="preclose")
     args = parser.parse_args()
 
     now = datetime.now(timezone.utc)
-    monday = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    monday, week_end = target_week_window(now, args.mode)
     observations: list[dict[str, Any]] = []
     credits_used = 0
     latest_remaining: int | None = None
@@ -89,7 +108,7 @@ def main() -> None:
             captured = datetime.fromisoformat(str(packet["captured_at_utc"]).replace("Z", "+00:00"))
         except Exception:
             continue
-        if captured < monday:
+        if not monday <= captured < week_end:
             continue
         rows, billing = cfgi_from_capture(packet)
         if not rows:
