@@ -1,0 +1,24 @@
+name: CN vNext draft preview smoke check
+
+on:
+  pull_request:
+    paths:
+      - '05_CYCLE_NAVIGATOR/site/vnext-preview/**'
+      - '.github/workflows/cn-vnext-preview-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect isolated mobile prototype and compile inline JavaScript
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/check-preview.mjs
+      - name: No production deployment
+        run: echo 'Design smoke test only; no published CN site or official signal is changed.'
