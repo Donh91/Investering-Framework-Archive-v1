@@ -299,6 +299,7 @@ function paintTop(d) {
   setText('instrument-action', actionView(c.action_now).text);
   setText('instrument-long', directionView(c.horizons?.CYCLE_ALTCOINS_3_8W?.expected_direction).text === '—' ? 'UNCONFIRMED' : directionView(c.horizons?.CYCLE_ALTCOINS_3_8W?.expected_direction).text);
   setText('overview-action', actionView(c.action_now).text);
+  setText('hero-action-summary', actionView(c.action_now).text);
   setText('overview-action-note', localizedPulse(c));
   setText('overview-risk', clean(c.protection_tracker?.pullback_risk_state, 'UNAVAILABLE'));
   setText('overview-risk-desc', c.protection_tracker?.pullback_risk_state === 'BUILDING' ?
