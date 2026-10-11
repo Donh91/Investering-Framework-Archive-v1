@@ -251,6 +251,9 @@ Object.assign(translations, {
   "Se animeret sammenligning": "View animated comparison"
 });
 Object.assign(translations, {
+  "DEN FØRSTE NYE SERIE": "THE FIRST NEW SERIES",
+  "WEEK 42 → NEXT 8 WEEKS": "UGE 42 → NÆSTE 8 UGER",
+  "NEXT SERIES · ISSUE ID PENDING · 2026-W42": "NÆSTE SERIE · AFVENTER UDGAVENUMMER · 2026-W42",
   "PUBLIC FORECAST": "OFFENTLIG PROGNOSE",
   "THE NEW CN TRACK RECORD": "CN'S NYE SCOREHISTORIK",
   "NEW SCORE ERA · FROM OCTOBER 12, 2026": "NY SCOREÆRA · FRA 12. OKTOBER 2026",
