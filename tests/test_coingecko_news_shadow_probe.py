@@ -19,10 +19,21 @@ def cg(items, **extra):
 
 
 def sr(events=None, unverified=None):
+    # Synthetic owner-shaped receipts, not real provider evidence. The owner's
+    # run-start detection stamp predates these source retrievals.
+    events = events or []
+    unverified = unverified or []
+    for event in events:
+        receipts = event.setdefault("source_receipts", [{"url": event.get("url", "https://example.test/event")}])
+        for receipt in receipts:
+            receipt.setdefault("fetched_at_utc", "2026-10-10T13:05:00Z")
+    for item in unverified:
+        item.setdefault("source_receipt", {"url": item.get("url"), "fetched_at_utc": "2026-10-10T13:05:00Z"})
     return {"contract": "SITUATION_ROOM_DAILY_OWNER_v1",
             "observation_date_utc": "2026-10-10", "daily_result": "NO_NEW_MATERIAL_CATALYST",
             "run_status": "PASS", "detection_time_utc": "2026-10-10T13:00:00Z",
-            "events": events or [], "current_unverified_discoveries": unverified or []}
+            "source_coverage": {"receipts": [{"url": "https://example.test/landing", "fetched_at_utc": "2026-10-10T13:05:00Z"}]},
+            "events": events, "current_unverified_discoveries": unverified}
 
 
 def article(title, url, time="2026-10-10T12:00:00Z", kind="news"):
@@ -31,6 +42,41 @@ def article(title, url, time="2026-10-10T12:00:00Z", kind="news"):
 
 
 class ShadowComparisonTests(unittest.TestCase):
+    def test_future_baseline_receipts_block_despite_earlier_detection(self):
+        for lane in ("coverage", "event", "discovery"):
+            baseline = sr(events=[{"title": "Synthetic event", "url": "https://example.test/primary"}],
+                          unverified=[{"title": "Synthetic discovery", "url": "https://example.test/discovery"}])
+            receipt = {"coverage": baseline["source_coverage"]["receipts"][0],
+                       "event": baseline["events"][0]["source_receipts"][0],
+                       "discovery": baseline["current_unverified_discoveries"][0]["source_receipt"]}[lane]
+            receipt["fetched_at_utc"] = "2026-10-10T16:00:00Z"
+            with self.subTest(lane=lane), self.assertRaises(ValueError):
+                compare(cg([article("Synthetic primary event", "https://example.test/primary")]), baseline, ASOF)
+
+    def test_missing_baseline_receipt_time_blocks_pit_comparison(self):
+        for lane in ("coverage", "event", "discovery"):
+            baseline = sr(events=[{"title": "Synthetic event", "url": "https://example.test/primary"}],
+                          unverified=[{"title": "Synthetic discovery", "url": "https://example.test/discovery"}])
+            receipt = {"coverage": baseline["source_coverage"]["receipts"][0],
+                       "event": baseline["events"][0]["source_receipts"][0],
+                       "discovery": baseline["current_unverified_discoveries"][0]["source_receipt"]}[lane]
+            del receipt["fetched_at_utc"]
+            with self.subTest(lane=lane), self.assertRaises(ValueError):
+                compare(cg([]), baseline, ASOF)
+
+    def test_missing_baseline_availability_receipts_block(self):
+        for lane in ("coverage", "event", "discovery"):
+            baseline = sr(events=[{"title": "Synthetic event", "url": "https://example.test/primary"}],
+                          unverified=[{"title": "Synthetic discovery", "url": "https://example.test/discovery"}])
+            if lane == "coverage":
+                del baseline["source_coverage"]
+            elif lane == "event":
+                baseline["events"][0]["source_receipts"] = []
+            else:
+                del baseline["current_unverified_discoveries"][0]["source_receipt"]
+            with self.subTest(lane=lane), self.assertRaises(ValueError):
+                compare(cg([]), baseline, ASOF)
+
     def test_failed_baselines_cannot_create_incremental_coverage(self):
         for state in ("COLLECTOR_FAILURE", "UNKNOWN_DUE_TO_SOURCE_FAILURE", None, "UNKNOWN"):
             baseline = sr()

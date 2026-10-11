@@ -99,6 +99,23 @@ def validate_situation(doc: dict, asof: datetime) -> list[dict]:
         "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES", "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
     }:
         raise ValueError("Situation Room baseline is unavailable or source-failed")
+    # The daily owner's detection_time is assigned at run start. Receipts are
+    # fetched later, so it is not an availability timestamp for the completed
+    # baseline. Validate the receipts supporting run coverage and every row
+    # actually consumed below; never infer missing knowledge times.
+    def available_receipt(receipt: dict) -> None:
+        if not isinstance(receipt, dict):
+            raise ValueError("invalid Situation Room availability receipt")
+        fetched = timestamp(receipt.get("fetched_at_utc"))
+        if fetched > asof:
+            raise ValueError("Situation Room receipt is later than the comparison cutoff")
+
+    coverage = doc.get("source_coverage")
+    coverage_receipts = coverage.get("receipts") if isinstance(coverage, dict) else None
+    if not isinstance(coverage_receipts, list) or not coverage_receipts:
+        raise ValueError("Situation Room source coverage availability is unknown")
+    for receipt in coverage_receipts:
+        available_receipt(receipt)
     output = []
     # The broader archive list may include prior-day rows. Only the owner's
     # same-day lists are eligible for this daily discovery comparison.
@@ -106,7 +123,18 @@ def validate_situation(doc: dict, asof: datetime) -> list[dict]:
         values = doc.get(key)
         if not isinstance(values, list):
             raise ValueError("invalid Situation Room events list")
-        output.extend(item for item in values if isinstance(item, dict))
+        for item in values:
+            if not isinstance(item, dict):
+                raise ValueError("invalid Situation Room baseline row")
+            if key == "events":
+                receipts = item.get("source_receipts")
+                if not isinstance(receipts, list) or not receipts:
+                    raise ValueError("Situation Room event availability is unknown")
+                for receipt in receipts:
+                    available_receipt(receipt)
+            else:
+                available_receipt(item.get("source_receipt"))
+            output.append(item)
     return output
 
 
