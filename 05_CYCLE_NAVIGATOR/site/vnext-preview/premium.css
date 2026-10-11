@@ -494,6 +494,17 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .range-motion-steps span{transition:none!important}
 }
 
+/* Current Score Era keeps legacy numbers folded, but offers a single inspectable real example. */
+.edge-real-example{display:flex;align-items:center;justify-content:space-between;gap:22px;border:1px solid #dce7f3;background:linear-gradient(100deg,#f2f6fc,#fff);border-radius:12px;margin-top:13px;padding:20px 23px}
+.edge-real-example>div{display:flex;flex-direction:column;gap:7px;min-width:0}
+.edge-real-example>div>span{font-size:9px;font-weight:760;letter-spacing:.12em;color:#4a75aa}
+.edge-real-example strong{font-size:16px;letter-spacing:-.035em;color:#15344f}
+.edge-real-example small{font-size:10px;color:#8999ad}
+.edge-real-example button{flex-shrink:0;min-height:44px;padding:11px 15px;border:1px solid #bcd0e8;border-radius:8px;background:#fff;font-size:11px;font-weight:720;color:#215c9f;white-space:nowrap}
+.edge-real-example button:hover{background:#e7f1ff}
+.edge-real-example button span{font-size:14px;margin-left:9px}
+@media(max-width:580px){.edge-real-example{flex-direction:column;align-items:stretch;padding:18px 19px;gap:16px}.edge-real-example button{width:100%;text-align:center}}
+
 /* CN v2 public edge scoring chapter — new primary score story, historic scores behind disclosure */
 .edge-era{margin-top:28px}
 .edge-head{display:flex;align-items:flex-start;justify-content:space-between;gap:25px;margin-bottom:26px}
