@@ -226,6 +226,33 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertIsNone(_missing_scheduled_freeze(NOW, "not-utc"))
         self.assertIsNone(_missing_scheduled_freeze(NOW, "2099-01-01T00:00:00Z"))
 
+    def test_same_fresh_source_does_not_hide_missed_scheduled_publication(self):
+        # As-of clocks are internally consistent: this SAME immutable packet
+        # existed BEFORE the 08:17 CPH slot, is still fresh at 09:05 CPH,
+        # but the last issued forecast was 08:16 CPH. A missed publication
+        # is a different event from new market-data materiality.
+        a = auto_state(source_sha="same")
+        src = "2026-09-18T06:14:00Z"
+        a["packet_generated_at_utc"] = src
+        for status in a["source_health"]["hourly_market"]["freshness"].values():
+            status["timestamp"] = src
+        a["normalized_state"]["live_market"]["observation_open_utc"] = "2026-09-18T06:00:00Z"
+        a["predecessor"]["market_observation_open_utc"] = "2026-09-18T05:00:00Z"
+        kw = dict(auto_state=a, auto_pointer={"packet_sha256": "same"},
+                  latest_compass=compass(source_sha="same",
+                                        issued_at="2026-09-18T06:16:00Z"),
+                  entry_latest=entry(), prior_state={"last_heat_state": "NORMAL"},
+                  cn_package=cn_package(), cn_binding={"status": "PASS"})
+        before_grace = evaluate(**kw, now=datetime(2026, 9, 18, 7, 0, tzinfo=timezone.utc))
+        self.assertFalse(before_grace["dispatch"])
+        self.assertEqual(before_grace["reason"], "LATEST_COMPASS_ALREADY_BINDS_CURRENT_OWNER_PACKET")
+        missed = evaluate(**kw, now=datetime(2026, 9, 18, 7, 5, tzinfo=timezone.utc))
+        self.assertTrue(missed["dispatch"])
+        self.assertEqual(missed["missing_scheduled_freeze"], "MORNING")
+        self.assertIn("SCHEDULED_FREEZE_MISSING", missed["cause_codes"])
+        self.assertFalse(missed["authority"]["portfolio_execution"])
+        self.assertFalse(missed["authority"]["forecast_change"])
+
     def test_same_source_never_dispatches(self):
         a=auto_state(source_sha="same")
         out=decision(auto=a, latest=compass(source_sha="same"), entry_latest=entry(temp="HOT", btc=9))
