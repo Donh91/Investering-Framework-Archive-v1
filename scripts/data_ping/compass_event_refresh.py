@@ -215,7 +215,7 @@ def _public_refresh_message(cause_codes: Any) -> str:
 def _protective_transition(
     *, latest_compass: Mapping[str, Any], current_data_status: str,
     current_action: str, current_market: Mapping[str, Any], current_ladder: Any,
-    heat: str,
+    heat: str, last_heat: str,
 ) -> bool:
     previous_status = str(latest_compass.get("data_status") or "")
     if previous_status != current_data_status:
@@ -228,7 +228,9 @@ def _protective_transition(
         return True
     if _ladder_more_defensive(latest_compass.get("capitalization_ladder"), current_ladder):
         return True
-    if heat == "HOT_DOWNSIDE_REASSESSMENT":
+    # Persistent downside heat is not a new protective transition: an
+    # accepted same-source missed-slot request must retain in-flight dedupe.
+    if heat == "HOT_DOWNSIDE_REASSESSMENT" and heat != last_heat:
         return True
     return False
 
@@ -395,6 +397,7 @@ def evaluate(
         current_market=market,
         current_ladder=ladder,
         heat=heat,
+        last_heat=last_heat,
     )
     if isinstance(previous_protection, Mapping):
         old_risk = str(previous_protection.get("pullback_risk_state") or "NORMAL")
