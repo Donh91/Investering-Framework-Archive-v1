@@ -11,6 +11,14 @@ let toastTimer = null;
 
 const clean = (s, fallback = 'Ukendt') => typeof s === 'string' && s.trim() ? s.trim() : fallback;
 const safeNumber = (n) => typeof n === 'number' && Number.isFinite(n);
+function completePriceRows(score, asset) {
+  const rows = score?.price_range_precision?.rows;
+  if (!Array.isArray(rows)) return [];
+  return rows.filter((r) =>
+    r.asset === asset && ['forecast_low', 'forecast_high', 'actual_low', 'actual_high'].every((key) => safeNumber(r[key])) &&
+    r.forecast_high > r.forecast_low && r.actual_high >= r.actual_low
+  );
+}
 const formatPct = (n) => safeNumber(n) ? n.toLocaleString('da-DK', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' %' : 'Ikke scoret';
 const formatUSD = (n) => safeNumber(n) ? '$' + n.toLocaleString('da-DK', { maximumFractionDigits: 2 }) : '—';
 const setText = (id, value) => { const el = $(id); if (el) el.textContent = String(value ?? '—'); };
@@ -364,11 +372,7 @@ function renderRangeChart() {
     root.append(make('p', 'method-disclaimer', 'Ingen fuldførte offentlige målevinduer tilgængelige.'));
     return;
   }
-  const eligible = rows.filter((r) =>
-    r.asset === selectedAsset &&
-    ['forecast_low', 'forecast_high', 'actual_low', 'actual_high'].every((key) => safeNumber(r[key])) &&
-    r.forecast_high > r.forecast_low && r.actual_high >= r.actual_low
-  );
+  const eligible = completePriceRows(data?.completed_score, selectedAsset);
   if (eligible.length !== 3) {
     root.append(make('p', 'method-disclaimer', 'Det frosne scorekort mangler komplette prisvinduer.'));
     return;
