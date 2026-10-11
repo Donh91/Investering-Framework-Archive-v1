@@ -347,6 +347,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
   .toast { bottom: calc(86px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 580px) {
+  .hero-action-line { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 12px; border: 1px solid #e3e8ef; border-radius: 10px; background: #f9fafb; }
   .shell { width: calc(100% - 32px); }
   .preview-ribbon { font-size: 7px; letter-spacing: .11em; gap: 7px; min-height: 25px; }
   .masthead-inner { min-height: 66px; }
@@ -366,7 +367,6 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
   .hero-title { font-size: clamp(39px, 10.8vw, 56px); line-height: 1.095; letter-spacing: -.073em; margin: 26px 0 17px; }
   .hero-kicker { font-size: 9px; gap: 8px; }
   .hero-subtitle { font-size: 13px; line-height: 1.65; }
-  .hero-action-line { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 12px; border: 1px solid #e3e8ef; border-radius: 10px; background: #f9fafb; }
   .hero-status-line { gap: 12px; padding-top: 26px; }
   .signal-up, .signal-mixed { font-size: 10px; }
   .signal-sub,.signal-mixed>span { font-size: 8px; }
