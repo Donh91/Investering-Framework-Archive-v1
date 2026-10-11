@@ -398,6 +398,11 @@ async function initialize() {
     $('horizon-body')?.replaceChildren(make('tr'));
     $('asset-body')?.replaceChildren(make('tr'));
     $('range-visualization')?.replaceChildren(make('p', 'method-disclaimer', 'Ingen verificeret kilde tilgængelig.'));
+    // Never show pre-filled demo numbers after source validation fails.
+    for (const target of document.querySelectorAll('.hero-grid, .decision-grid, .path-panel, .forecast-grid, .teaser-shell, .compass-summary, .table-frame, .compass-two-up, .proof-summary-grid, .range-compare-panel, .history-panel')) {
+      target.hidden = true;
+    }
+    setText('source-detail', 'Kilden kunne ikke indlæses eller bestod ikke integritetskontrollen. Der vises ingen markeds- eller scorepåstande.');
     showToast('Kildedata kunne ikke indlæses.');
   }
 }
