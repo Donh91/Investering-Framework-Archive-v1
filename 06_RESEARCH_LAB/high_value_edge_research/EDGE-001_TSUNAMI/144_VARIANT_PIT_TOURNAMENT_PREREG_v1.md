@@ -1,0 +1,35 @@
+# EDGE-001 | 144-variant point-in-time sensitivity tournament (proposal v1)
+
+Date: 2026-10-11. Status: PROPOSED_PREREGISTRATION / RESEARCH_ONLY / NO SCORING AUTHORITY.
+Owner: existing EDGE-001 / #1530, not a new research owner. This proposal does NOT supersede the frozen EDGE-001 charter, T2 v1.2, T2B, M6, HCEL or scientific admission. No new GitHub Action, API calls or paid service.
+
+## Why 144 trials are useful and dangerous
+A broad, *fully declared* surface can show whether a purported pullback warning is robust to small, causal interpretation changes. It cannot manufacture 144 independent episodes, nor convert an ex-post optimized winner into genuine edge. The **primary unchanged Framework warning** and frozen P1 5% / P2 3% price-only comparators remain primary; 144 variants are exploratory sensitivity, never 144 competing live policies.
+
+## Freeze the 144-variant surface BEFORE outcomes
+Cross product 3 minimum typed states (ELEVATED, HIGH, CONFIRMED) x 4 consecutive eligible hourly confirmations (1, 2, 3, 6) x 3 *additional* knowledge-time delays (0, 1, 3 hours) x 4 refractory/cooldown windows (0, 6, 24, 72 hours) = 144. A variant is deterministic and identified by its parameter tuple and contract version. An eligible warning row must be point-in-time knowable at the decision time; UNKNOWN/UNAVAILABLE/DEGRADED reset confirmation, never mean bearish. A delay never moves an alert into the past. Cooldown only suppresses repeats, never hides an episode for scoring. Do not substitute post-hoc proxies for native typed states.
+
+### Causal event clock
+The decision clock is hourly. A row is usable only if: its timestamp, original knowledge time, source vintage and state are immutable and bound to a verifiable receipt; knowledge_time <= decision time; original observation is not future relative to its knowledge time; continuity is intact. Repeated captures/duplicate timestamps fail closed. Missing hours break confirmation. A delayed alert must still have an eligible state at the firing time. Different assets/regimes are not silently pooled.
+
+## Research stages and locks
+0. T0/T1/T2/T2B: verify original artifact hashes, native state mapping, legal as-of times, right censoring and independent episode families. T2 v1.2 is outcome-only and cannot be joined to signals until T2B independently admits it.
+1. T3 INFORMATION edge: run unchanged primary Framework and frozen P1/P2 first, then all 144 variants on identical PIT source, clock and eligible episode/control universe. Measure lead time, false warnings on pump/V controls, no-warning episodes, alert burden and availability. All 144 cells, including null/method-invalid, must be retained. No selecting a 'winner' for inference.
+2. Only after independent T3 adjudication, T4 ACTION edge: separately freeze trim sizes, execution at NEXT eligible observation, fees/slippage, re-entry logic and false-exit opportunity costs; compare HOLD and P1/P2 on the same exact tape. Never equate WARNING with SELL.
+3. T5: blocked chronological walk-forward with purge/embargo >= max outcome horizon and cross-asset family clusters, frozen 2025-26 holdout not touched during parameter choice; 2020-21 and 2025-26 reported separately. Cluster uncertainty by independent shock families, not row counts. Include delayed-feature placebo, within-segment timestamp permutations, negative continuation/V controls, alternate 7/14/30d family rules and missingness sensitivity.
+4. T6/T7: independent Claude adversarial review and Framework adjudication. T8: prospective M6 Lane C confirmation. No rule promotion from a retrospective best cell.
+
+## Metrics and failure accounting
+Report eligible rows, original PIT rows, no-data rows, number of distinct BTC/ETH joint shock families, actual independent control families, warning onset, lead vs P1/P2, precision/recall *only where denominator is legitimate*, false-exit/pump opportunity cost, upside surrendered, max adverse excursion, terminal return, turnover, total fees/slippage, time-out, re-entry drag, drawdown and CVaR where sample geometry supports. Report median, dispersion, worst regime and entire variant surface. Always report unmodified Framework baseline separately.
+
+## Hard BLOCKERS as of 2026-10-11
+- T2B provenance preflight: 94 annotations, 0 eligible historical typed warning joins; typed historical Claim A = NOT_TESTABLE_AT_PIT, Claim B = NOT_TESTABLE_NOW.
+- Native July 2026 ledgers are one dependence group and mandatory recovered-warning false-exit control, not a population.
+- Historical CFGI modern pullback/control comparison has N=1 vs N=1, 478 as-of hourly matches are not 478 episodes.
+- 180 prospective calibration series rows currently have 0 mature typed warning rows.
+- No current historical typed 144-variant performance, statistical advantage or sell authority is justified. The associated script is a manifest/synthetic and gated PIT-replay readiness harness, not a backtest result.
+
+## Deterministic implementation and handoff
+Script: scripts/research/edge001_144_variant_pit_harness.py. Stdlib only, zero provider calls, output to stdout. `--self-test` checks synthetic causal behavior and 144 unique variants; `--manifest` enumerates full surface; `--replay` requires independently approved PIT receipt and source SHA, fails closed otherwise. Replay emits **descriptive alert counts only**, not outcome skill or action P&L. Future scoring must be separate and cannot occur until T2B and independent scientific gate permit it.
+
+Accept only if independent EDGE-001 owner approves protocol *before* unblinding outcomes. PR remains draft until adjudicated.
