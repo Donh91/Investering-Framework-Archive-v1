@@ -375,7 +375,7 @@ function refreshStatusBanner(compass, event) {
   const issued = Date.parse(compass?.issued_at_utc || '');
   if (!Number.isFinite(detected) || !Number.isFinite(issued) || detected <= issued) return '';
   const causes = Array.isArray(event.cause_codes) ? event.cause_codes : [];
-  const livenessOnly = causes.length === 1 && causes[0] === 'SCHEDULED_FREEZE_MISSING';
+  const livenessOnly = causes.includes('SCHEDULED_FREEZE_MISSING') && causes.every(c => c === 'SCHEDULED_FREEZE_MISSING' || c === 'PRIOR_REQUEST_NOT_BOUND_RETRY');
   const marketChange = causes.some(c => c === 'MARKET_STATE_CHANGED' || c === 'MARKET_HEAT_ENTERED');
   const label = livenessOnly ? 'SCHEDULED UPDATE DELAYED' :
     marketChange ? 'MARKET MOVE DETECTED' : 'COMPASS REASSESSMENT';
