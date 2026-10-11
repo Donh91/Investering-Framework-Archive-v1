@@ -301,6 +301,50 @@ class CompassEventRefreshTests(unittest.TestCase):
         fresh = evaluate(**unrelated, now=datetime(2026, 9, 18, 7, 25, tzinfo=timezone.utc))
         self.assertNotIn("PRIOR_REQUEST_NOT_BOUND_RETRY", fresh.get("cause_codes", []))
 
+    def test_persistent_downside_heat_does_not_duplicate_missed_slot_recovery(self):
+        # Accepted same-source recovery at 09:05 CPH; a persistent HOT
+        # downside episode is NOT a new protection deterioration.
+        a = auto_state(source_sha="same")
+        original = "2026-09-18T06:14:00Z"
+        a["packet_generated_at_utc"] = original
+        for value in a["source_health"]["hourly_market"]["freshness"].values():
+            if isinstance(value, dict):
+                value["timestamp"] = original
+        a["normalized_state"]["live_market"]["observation_open_utc"] = "2026-09-18T06:00:00Z"
+        a["predecessor"]["market_observation_open_utc"] = "2026-09-18T05:00:00Z"
+        prior = {
+            "last_heat_state": "HOT_DOWNSIDE_REASSESSMENT",
+            "last_requested_source_sha": "same",
+            "last_request_at_utc": "2026-09-18T07:05:00Z",
+        }
+        kw = dict(
+            auto_state=a, auto_pointer={"packet_sha256": "same"},
+            latest_compass=compass(source_sha="same", issued_at="2026-09-18T06:16:00Z"),
+            entry_latest=entry(temp="NORMAL", btc=-8.5, eth=-5, median=-2),
+            prior_state=prior, cn_package=cn_package(), cn_binding={"status": "PASS"},
+        )
+        in_flight = evaluate(**kw, now=datetime(2026, 9, 18, 7, 10, tzinfo=timezone.utc))
+        self.assertFalse(in_flight["dispatch"])
+        self.assertEqual(in_flight["reason"], "REQUEST_IN_FLIGHT")
+        self.assertFalse(in_flight["protective_bypass"])
+        self.assertIn("SCHEDULED_FREEZE_MISSING", in_flight["suppressed_cause_codes"])
+
+        retry = evaluate(**kw, now=datetime(2026, 9, 18, 7, 26, tzinfo=timezone.utc))
+        self.assertTrue(retry["dispatch"])
+        self.assertIn("PRIOR_REQUEST_NOT_BOUND_RETRY", retry["cause_codes"])
+        self.assertIn("SCHEDULED_FREEZE_MISSING", retry["cause_codes"])
+        self.assertFalse(retry["protective_bypass"])
+
+        # A genuinely NEW downside episode still bypasses the in-flight
+        # cooldown so urgent protective reassessment remains possible.
+        newly_hot = evaluate(
+            **dict(kw, prior_state=dict(prior, last_heat_state="NORMAL")),
+            now=datetime(2026, 9, 18, 7, 10, tzinfo=timezone.utc),
+        )
+        self.assertTrue(newly_hot["dispatch"])
+        self.assertTrue(newly_hot["protective_bypass"])
+        self.assertIn("MARKET_HEAT_ENTERED", newly_hot["cause_codes"])
+
     def test_same_source_never_dispatches(self):
         a=auto_state(source_sha="same")
         out=decision(auto=a, latest=compass(source_sha="same"), entry_latest=entry(temp="HOT", btc=9))
