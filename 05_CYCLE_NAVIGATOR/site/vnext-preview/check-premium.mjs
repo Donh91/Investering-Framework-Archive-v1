@@ -78,6 +78,10 @@ new Script(js.replace(/^import .*from .*;\s*$/m, ''), { filename: 'premium.js' }
 new Script(i18n.replace(/export (?=function)/g, ''), { filename: 'premium-i18n.js' });
 
 assert.match(html, /aria-controls="cycle-details"/);
+assert.match(html, /hero-action-line[^
+]*OFFICIAL ACTION/);
+assert.match(css, /\.hero-action-line \{ display: flex/);
+assert.match(js, /setText\('hero-action-summary', actionView\(c\.action_now\)\.text\)/);
 assert.match(html, /NEXT SERIES · ISSUE ID PENDING · 2026-W42/);
 assert.doesNotMatch(html, /Public CN #29/);
 assert.match(js, /KILDEFAST SNAPSHOT · ' \+ c\.issued_at_utc\.slice\(0, 16\)/);
@@ -91,6 +95,7 @@ const requiredLocalizedText = [
   'ORDINARY RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED. · Possible W41 retest, particularly Day 3–7; timing and occurrence unconfirmed.',
   'No governed sell/trim decision owner is bound. Protection and distribution risk are not sell instructions.',
   'THE NEW CN TRACK RECORD',
+  'OFFICIAL ACTION',
   'NEXT SERIES · ISSUE ID PENDING · 2026-W42'
 ];
 for (const phrase of requiredLocalizedText) assert.ok(i18n.includes(JSON.stringify(phrase) + ':'), 'Missing Danish translation: ' + phrase);
