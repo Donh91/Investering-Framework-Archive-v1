@@ -137,6 +137,7 @@ function bindPanels() {
       b.setAttribute('aria-pressed', String(active));
     });
     renderRangeChart();
+    translateInterface();
     playRangeComparison();
   }));
   $('range-replay')?.addEventListener('click', playRangeComparison);
