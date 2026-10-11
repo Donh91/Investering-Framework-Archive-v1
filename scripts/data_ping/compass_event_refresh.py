@@ -203,7 +203,7 @@ def _public_refresh_message(cause_codes: Any) -> str:
     causes = set(cause_codes or [])
     if causes & {"PROTECTION_STATE_CHANGED", "REENTRY_REVIEW_OPENED"}:
         return "Protection or re-entry state changed. Compass reassessment is in progress."
-    if causes == {"SCHEDULED_FREEZE_MISSING"}:
+    if causes - {"PRIOR_REQUEST_NOT_BOUND_RETRY"} == {"SCHEDULED_FREEZE_MISSING"}:
         return (
             "Scheduled Compass update missed. A fresh current-time reassessment "
             "has been requested; this does not indicate a new market move "
