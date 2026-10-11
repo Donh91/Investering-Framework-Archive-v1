@@ -27,12 +27,14 @@ def sr(events=None, unverified=None):
         receipts = event.setdefault("source_receipts", [{"url": event.get("url", "https://example.test/event")}])
         for receipt in receipts:
             receipt.setdefault("fetched_at_utc", "2026-10-10T13:05:00Z")
+            receipt.setdefault("retrieval_end_utc", "2026-10-10T13:06:00Z")
+            receipt.setdefault("status", "PASS")
     for item in unverified:
-        item.setdefault("source_receipt", {"url": item.get("url"), "fetched_at_utc": "2026-10-10T13:05:00Z"})
+        item.setdefault("source_receipt", {"url": item.get("url"), "fetched_at_utc": "2026-10-10T13:05:00Z", "retrieval_end_utc": "2026-10-10T13:06:00Z", "status": "PASS"})
     return {"contract": "SITUATION_ROOM_DAILY_OWNER_v1",
             "observation_date_utc": "2026-10-10", "daily_result": "NO_NEW_MATERIAL_CATALYST",
             "run_status": "PASS", "detection_time_utc": "2026-10-10T13:00:00Z",
-            "source_coverage": {"receipts": [{"url": "https://example.test/landing", "fetched_at_utc": "2026-10-10T13:05:00Z"}]},
+            "source_coverage": {"receipts": [{"url": "https://example.test/landing", "fetched_at_utc": "2026-10-10T13:05:00Z", "retrieval_end_utc": "2026-10-10T13:06:00Z", "status": "PASS"}]},
             "events": events, "current_unverified_discoveries": unverified}
 
 
@@ -42,6 +44,65 @@ def article(title, url, time="2026-10-10T12:00:00Z", kind="news"):
 
 
 class ShadowComparisonTests(unittest.TestCase):
+    def test_cli_legacy_start_only_receipts_are_explicitly_unavailable(self):
+        script = Path(__file__).resolve().parents[1] / "scripts/research/coingecko_news_shadow_probe.py"
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            input_cg, input_sr, candidate_output = folder / "cg.json", folder / "sr.json", folder / "candidates.json"
+            baseline = sr()
+            del baseline["source_coverage"]["receipts"][0]["retrieval_end_utc"]
+            input_cg.write_text(json.dumps(cg([])))
+            input_sr.write_text(json.dumps(baseline))
+            result = subprocess.run([sys.executable, str(script), "--coingecko-snapshot", str(input_cg),
+                                     "--situation-room-daily", str(input_sr), "--as-of-utc",
+                                     "2026-10-10T15:00:00Z", "--private-candidates-output", str(candidate_output)],
+                                    text=True, capture_output=True, check=False)
+            self.assertEqual(result.returncode, 2)
+            output = json.loads(result.stdout)
+            self.assertEqual(output["status"], "UNAVAILABLE_FOR_POINT_IN_TIME_COMPARISON")
+            self.assertNotIn("metrics", output)
+            self.assertFalse(candidate_output.exists())
+
+    def test_receipt_completion_is_required_and_bound_to_cutoff(self):
+        for lane in ("coverage", "event", "discovery"):
+            for completion in (None, "2026-10-10T16:00:00Z", "2026-10-10T13:04:00Z"):
+                baseline = sr(events=[{"title": "Synthetic event", "url": "https://example.test/primary"}],
+                              unverified=[{"title": "Synthetic discovery", "url": "https://example.test/discovery"}])
+                receipt = {"coverage": baseline["source_coverage"]["receipts"][0],
+                           "event": baseline["events"][0]["source_receipts"][0],
+                           "discovery": baseline["current_unverified_discoveries"][0]["source_receipt"]}[lane]
+                if completion is None:
+                    del receipt["retrieval_end_utc"]
+                else:
+                    receipt["retrieval_end_utc"] = completion
+                with self.subTest(lane=lane, completion=completion), self.assertRaises(ValueError):
+                    compare(cg([]), baseline, ASOF)
+
+    def test_failed_consumed_receipts_block_but_coverage_failure_is_metadata(self):
+        for lane in ("event", "discovery"):
+            for status in ("FAIL", None):
+                baseline = sr(events=[{"title": "Synthetic event", "url": "https://example.test/primary"}],
+                              unverified=[{"title": "Synthetic discovery", "url": "https://example.test/discovery"}])
+                receipt = (baseline["events"][0]["source_receipts"][0] if lane == "event"
+                           else baseline["current_unverified_discoveries"][0]["source_receipt"])
+                receipt["status"] = status
+                with self.subTest(lane=lane, status=status), self.assertRaises(ValueError):
+                    compare(cg([]), baseline, ASOF)
+        baseline = sr()
+        baseline["source_coverage"]["receipts"][0]["status"] = "FAIL"
+        result, _ = compare(cg([]), baseline, ASOF)
+        self.assertEqual(result["situation_room_coverage_scope"],
+                         "OWNER_REPORTED_PARTIAL_COVERAGE_NOT_COMPLETE_EVENT_UNIVERSE")
+
+    def test_future_consumed_event_time_blocks(self):
+        for lane in ("event", "discovery"):
+            baseline = sr(events=[{"title": "Synthetic event", "url": "https://example.test/primary"}],
+                          unverified=[{"title": "Synthetic discovery", "url": "https://example.test/discovery"}])
+            row = baseline["events"][0] if lane == "event" else baseline["current_unverified_discoveries"][0]
+            row["event_time_utc"] = "2026-10-10T16:00:00Z"
+            with self.subTest(lane=lane), self.assertRaises(ValueError):
+                compare(cg([]), baseline, ASOF)
+
     def test_future_baseline_receipts_block_despite_earlier_detection(self):
         for lane in ("coverage", "event", "discovery"):
             baseline = sr(events=[{"title": "Synthetic event", "url": "https://example.test/primary"}],

@@ -21,6 +21,10 @@ STOP = frozenset("a an and are as at by for from in is of on or the to with afte
 TRACKING = frozenset({"fbclid", "gclid", "ref", "source", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"})
 
 
+class PointInTimeAvailabilityUnavailable(ValueError):
+    """Source receipt lacks proof of completed retrieval availability."""
+
+
 def timestamp(value: str) -> datetime:
     if not isinstance(value, str):
         raise ValueError("timestamp must be an ISO-8601 string")
@@ -99,16 +103,20 @@ def validate_situation(doc: dict, asof: datetime) -> list[dict]:
         "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES", "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
     }:
         raise ValueError("Situation Room baseline is unavailable or source-failed")
-    # The daily owner's detection_time is assigned at run start. Receipts are
-    # fetched later, so it is not an availability timestamp for the completed
-    # baseline. Validate the receipts supporting run coverage and every row
-    # actually consumed below; never infer missing knowledge times.
-    def available_receipt(receipt: dict) -> None:
+    # Legacy detection_time and fetched_at are request-start stamps, not proof
+    # that a response was available. Require separately bound retrieval-end
+    # times; legacy receipts without completion remain ineligible for PIT.
+    def available_receipt(receipt: dict, *, consumed: bool = False) -> None:
         if not isinstance(receipt, dict):
             raise ValueError("invalid Situation Room availability receipt")
         fetched = timestamp(receipt.get("fetched_at_utc"))
-        if fetched > asof:
+        if receipt.get("retrieval_end_utc") is None:
+            raise PointInTimeAvailabilityUnavailable("Situation Room completion availability is unknown")
+        completed = timestamp(receipt.get("retrieval_end_utc"))
+        if completed < fetched or completed > asof:
             raise ValueError("Situation Room receipt is later than the comparison cutoff")
+        if consumed and receipt.get("status") != "PASS":
+            raise ValueError("Situation Room consumed receipt did not pass source retrieval")
 
     coverage = doc.get("source_coverage")
     coverage_receipts = coverage.get("receipts") if isinstance(coverage, dict) else None
@@ -126,14 +134,16 @@ def validate_situation(doc: dict, asof: datetime) -> list[dict]:
         for item in values:
             if not isinstance(item, dict):
                 raise ValueError("invalid Situation Room baseline row")
+            if item.get("event_time_utc") is not None and timestamp(item["event_time_utc"]) > asof:
+                raise ValueError("Situation Room event is later than the comparison cutoff")
             if key == "events":
                 receipts = item.get("source_receipts")
                 if not isinstance(receipts, list) or not receipts:
                     raise ValueError("Situation Room event availability is unknown")
                 for receipt in receipts:
-                    available_receipt(receipt)
+                    available_receipt(receipt, consumed=True)
             else:
-                available_receipt(item.get("source_receipt"))
+                available_receipt(item.get("source_receipt"), consumed=True)
             output.append(item)
     return output
 
@@ -219,6 +229,7 @@ def compare(cg: dict, sr: dict, asof: datetime, *, max_age_hours: int = 48) -> t
         "as_of_utc": utc_iso(asof),
         "source_status": "PASS" if articles else "EMPTY_SNAPSHOT_NO_COVERAGE_INFERENCE",
         "situation_room_run_status": sr.get("run_status", "UNKNOWN"),
+        "situation_room_coverage_scope": "OWNER_REPORTED_PARTIAL_COVERAGE_NOT_COMPLETE_EVENT_UNIVERSE",
         "latency_evidence_status": "UNKNOWN_NO_PRIOR_CAPTURE_POPULATION",
         "metrics": counts,
         "primary_corrob_events_created": 0,
@@ -273,7 +284,9 @@ def main() -> int:
         return 0
     except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
         # Do not expose provider inputs or paths in error messages.
-        print(json.dumps({"contract": CONTRACT, "status": "BLOCKED_SOURCE_OR_SCHEMA_UNAVAILABLE",
+        status = ("UNAVAILABLE_FOR_POINT_IN_TIME_COMPARISON" if isinstance(exc, PointInTimeAvailabilityUnavailable)
+                  else "BLOCKED_SOURCE_OR_SCHEMA_UNAVAILABLE")
+        print(json.dumps({"contract": CONTRACT, "status": status,
                           "reason_class": type(exc).__name__, "canonical_effect": False, "portfolio_effect": False}))
         return 2
 
