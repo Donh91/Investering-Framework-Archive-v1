@@ -23,7 +23,7 @@ function eventBanner(c,e){
   if(Number.isNaN(+detected)||(!Number.isNaN(+issued)&&detected<=issued))return'';
   const codes=Array.isArray(e.cause_codes)?e.cause_codes:[];
   // A scheduled publishing miss is a liveness problem, NOT a market event.
-  const livenessOnly=codes.length===1&&codes[0]==='SCHEDULED_FREEZE_MISSING';
+  const livenessOnly=codes.includes('SCHEDULED_FREEZE_MISSING')&&codes.every(x=>x==='SCHEDULED_FREEZE_MISSING'||x==='PRIOR_REQUEST_NOT_BOUND_RETRY');
   const marketMove=codes.some(x=>x==='MARKET_STATE_CHANGED'||x==='MARKET_HEAT_ENTERED');
   const label=livenessOnly?'SCHEDULED UPDATE DELAYED':marketMove?'MARKET MOVE DETECTED':'COMPASS REASSESSMENT';
   const headline=livenessOnly?'Fresh Compass update requested':'Compass reassessment in progress';
