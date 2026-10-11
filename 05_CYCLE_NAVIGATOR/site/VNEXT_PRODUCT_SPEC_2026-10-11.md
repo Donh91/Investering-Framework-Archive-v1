@@ -1,3 +1,18 @@
+# SCORE v2 / i18n SUPERSEDING ADDENDUM — 2026-10-11 evening
+
+**This addendum overrides the earlier "latest score footer" and "old score at top of documentation" presentation below; it does NOT rewrite any historic score, its original method or authority.** The user approved the evolution toward a new **CN public score generation starting W42 (Monday 2026-10-12)**:
+
+1. The public **HOME** is decision-first and shows the W42 new scoring era only in a concise credibility teaser, not a giant old CN27 82% headline.
+2. The public **RESULTATER / RESULTS** page must prioritize three independently scored forward tracks: **PRICE RANGE weekly + three intraday windows**, **DIRECTION / FLOW / ROTATION 7d+14/21/28/56d binary claims**, **PULLBACK EDGE warnings or explicit no-warning, predicted vs observed start/end, severity, altcoin impact**. Honest denominators, misses, false positives, censored outcomes and baseline comparison must accompany any reported score.
+3. **Legacy CN1–28 / X scores** are preserved only in an expandable archive. Historic scores remain individually accessible/traceable; do not blend measurement eras. New W42 Score values show **PENDING / ABSTAIN** until a genuine prospective freeze and maturity exist.
+4. Prospective Score v2 freeze protocol is in https://github.com/Donh91/CycleNavigator-scores/blob/main/CN_V2_EDGE_SCOREBOOK_PROTOCOL_2026-W42.md; its scorer is merged. Existing Monday CN owner gains a safe, nonblocking source freeze extension via Archive PR #1577 (merged), with qualitative 2–8w descriptions stored as **ABSTAIN** until they have objective typed evaluable predicates. No new Market/Structure legacy percentage from CN27 onward.
+5. A new **DA/EN language toggle** must persist throughout Overblik, Kompas, Results and evidence captions; labels are translated, never the underlying numeric signal or timestamps. Current isolated preview has the toggle and results v2 layout.
+6. The existing site design owner remains site PR #1576. Independent publication proof gate is scores issue #2; master Work coordination issue #1578 controls source predicate, private/public release attestation and production migration. **No new scheduled supervisor or unreviewed market engine.**
+
+See `site/vnext-preview/README.md` for the actual interactive preview, source records, status and remaining QA gates.
+
+---
+
 # Cycle Navigator vNext — Product Redesign and Public Proof Handover
 
 Date: 2026-10-11. Status: DESIGN/PROTOTYPE ONLY; no automatic production deployment.
