@@ -56,12 +56,16 @@ class WeeklyCfgiFinalWeekBindingTests(unittest.TestCase):
                 path.write_text(json.dumps({"schedule": trigger}))
                 self.assertEqual(resolve_close_mode("auto", event_name="schedule", event_path=str(path)), expected)
 
-    def test_auto_mode_supports_dispatch_payload(self):
+    def test_queued_dispatch_without_original_week_fails_closed(self):
+        # A workflow_dispatch request only pins "mode", not the event ISO week.
+        # Queued first-attempt jobs can start after Monday's UTC rollover.
         for mode in ("preclose", "final"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as d:
                 path = Path(d) / "event.json"
                 path.write_text(json.dumps({"inputs": {"mode": mode}}))
-                self.assertEqual(resolve_close_mode("auto", event_name="workflow_dispatch", event_path=str(path)), mode)
+                for flag in ("auto", "preclose", "final"):
+                    with self.subTest(flag=flag), self.assertRaisesRegex(ValueError, "DISPATCH_ORIGINAL_WEEK"):
+                        resolve_close_mode(flag, event_name="workflow_dispatch", event_path=str(path), run_attempt="1")
 
     def test_actions_retry_after_week_rollover_fails_closed(self):
         # Neither immutable schedule nor an explicit CLI mode proves
@@ -70,8 +74,10 @@ class WeeklyCfgiFinalWeekBindingTests(unittest.TestCase):
             with self.subTest(mode=mode), self.assertRaisesRegex(ValueError, "RERUN_ORIGINAL_WEEK"):
                 resolve_close_mode(mode, event_name="schedule", event_path="not-read-on-rerun.json", run_attempt="2")
 
-    def test_first_attempt_explicit_mode_remains_supported(self):
-        self.assertEqual(resolve_close_mode("final", event_name="workflow_dispatch", event_path="", run_attempt="1"), "final")
+    def test_offline_explicit_mode_remains_supported(self):
+        # Offline maintenance/tests can explicitly request a mode; the
+        # existing GitHub workflow_dispatch is blocked without a week anchor.
+        self.assertEqual(resolve_close_mode("final", event_name="", event_path="", run_attempt=""), "final")
 
     def test_unknown_triggers_fail_closed_without_wrong_week_write(self):
         with self.assertRaises(ValueError):
@@ -82,7 +88,7 @@ class WeeklyCfgiFinalWeekBindingTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 resolve_close_mode("auto", event_name="schedule", event_path=str(path))
             path.write_text(json.dumps({"inputs": {"mode": "unknown"}}))
-            with self.assertRaises(ValueError):
+            with self.assertRaisesRegex(ValueError, "DISPATCH_ORIGINAL_WEEK"):
                 resolve_close_mode("auto", event_name="workflow_dispatch", event_path=str(path))
         self.assertEqual(resolve_close_mode("final", event_name="", event_path=""), "final")
 
