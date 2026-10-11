@@ -252,8 +252,9 @@ Object.assign(translations, {
 });
 Object.assign(translations, {
   "DEN FØRSTE NYE SERIE": "THE FIRST NEW SERIES",
-  "WEEK 42 → NEXT 8 WEEKS": "UGE 42 → NÆSTE 8 UGER",
-  "NEXT SERIES · ISSUE ID PENDING · 2026-W42": "NÆSTE SERIE · AFVENTER UDGAVENUMMER · 2026-W42",
+  "KILDEFAST SNAPSHOT · 2026-10-11 13:15 UTC": "PINNED SOURCE SNAPSHOT · 2026-10-11 13:15 UTC"
+});
+const sourceEnglishToDanish = {
   "PUBLIC FORECAST": "OFFENTLIG PROGNOSE",
   "THE NEW CN TRACK RECORD": "CN'S NYE SCOREHISTORIK",
   "NEW SCORE ERA · FROM OCTOBER 12, 2026": "NY SCOREÆRA · FRA 12. OKTOBER 2026",
@@ -275,12 +276,6 @@ Object.assign(translations, {
   "DIRECTION GATE": "RETNINGSGATE",
   "STRUCTURE": "STRUKTUR",
   "CYCLE THESIS": "CYKLUSTESE",
-  "12–48H": "12–48T",
-  "7D": "7D",
-  "14D": "14D",
-  "21D": "21D",
-  "28D": "28D",
-  "56D": "56D",
   "THE PULLBACK TAPE": "PULLBACK-FORLØBET",
   "INCL. NO-WARNING CASES": "INKL. PERIODER UDEN ADVARSEL",
   "PROSPEKTIV PULLBACK SCORE": "FREMADRETTET PULLBACK-SCORE",
@@ -291,10 +286,6 @@ Object.assign(translations, {
   "04 · RECOVERY": "04 · GENOPRETNING",
   "PUBLIC · MACHINE READABLE OPEN SOURCE PROOF INITIATIVE": "OFFENTLIGT · MASKINLÆSBART OPEN-SOURCE-BEVIS",
   "LEGACY / PROVISIONAL": "LEGACY / FORELØBIG",
-  "KILDESNAPSHOT": "KILDEFAST SNAPSHOT",
-  "KILDEFAST SNAPSHOT · 2026-10-11 13:15 UTC": "KILDEFAST SNAPSHOT · 2026-10-11 13:15 UTC",
-  "KILDEFAST SNAPSHOT · ": "PINNED SOURCE SNAPSHOT · ",
-  "KILDESNAPSHOT · ": "SOURCE SNAPSHOT · ",
   "THE RECEIPTS, NOT THE HYPE": "DOKUMENTATION, IKKE HYPE",
   "YOUR TACTICAL EDGE, NO GUESSWORK": "DIT TACTISKE OVERBLIK, UDEN GÆTTERIER",
   "YOUR ACTION NOW": "DIN HANDLING NU",
@@ -309,9 +300,9 @@ Object.assign(translations, {
   "VERIFIED METHOD, EXPLICIT ERA": "VERIFICERET METODE, TYDELIG PERIODE",
   "FROZEN → REALITY": "FRYSNING → FAKTISK UDFALD",
   "PULLBACK WATCH": "PULLBACK-OBSERVATION",
-  "PROTECTION TRACKER · EVIDENCE: LOW": "BESKYTTELSESSPOR · EVIDENS: LAV"
-});
-const sourceEnglishToDanish = {
+  "PROTECTION TRACKER · EVIDENCE: LOW": "BESKYTTELSESSPOR · EVIDENS: LAV",
+  "NEXT SERIES · ISSUE ID PENDING · 2026-W42": "NÆSTE SERIE · AFVENTER UDGAVENUMMER · 2026-W42",
+  "WEEK 42 → NEXT 8 WEEKS": "UGE 42 → NÆSTE 8 UGER",
   "BTC and ETH rose in the latest official comparison window. Direction and action permission are separate signals.": "BTC og ETH steg i det seneste officielle sammenligningsvindue. Retning og handletilladelse er separate signaler.",
   "The near-term market direction is positive, but expanding broad altcoin exposure is not authorized.": "Den korte markedsretning er positiv, men der er endnu ikke godkendelse til at øge bred alt-eksponering.",
   "ETH relative strength and broader participation must confirm before market rotation can be treated as established.": "Stabil relativ ETH-styrke og bredere deltagelse skal bekræfte, før kapitalrotationen kan kaldes reel.",
@@ -322,8 +313,7 @@ const sourceEnglishToDanish = {
   "Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap.": "Den korte horisont krydstjekkes mod den aktuelle ugentlige struktur. Deltagelsen skal styrkes, før risiko flyttes længere ned i aktivklasserne.",
   "Selective, volatile participation rather than confirmed broad rotation or a clear decline. BTC-relative resilience is possible, but ETH/BTC, pullback-resistant 30d breadth and 90d/365d confirmation must improve before an alt-led direction can be called.": "Deltagelsen er selektiv og volatil, uden bekræftet bred rotation eller tydeligt fald. BTC kan forblive relativt stærk, men ETH/BTC, 30-dages bredde gennem pullbacks og 90/365-dages bekræftelse skal forbedres, før en alt-ledet retning kan fastslås.",
   "No evidence-supported 4–8-week cycle direction or action posture. A conditional 21–30-day scenario does not fill the missing longer-window confirmation.": "Der er ikke evidens for en 4–8-ugers cyklusretning eller handlingstilladelse. Et betinget 21–30-dages scenarie erstatter ikke den manglende bekræftelse på længere sigt.",
-  "BUILDING / WATCH": "UNDER OPBYGNING / OBSERVATION",
-  "DATA SOURCE COULD NOT BE VERIFIED": "KILDEDATA KUNNE IKKE VERIFICERES"
+  "BUILDING / WATCH": "UNDER OPBYGNING / OBSERVATION"
 };
 let language = 'da';
 const original = new WeakMap();
