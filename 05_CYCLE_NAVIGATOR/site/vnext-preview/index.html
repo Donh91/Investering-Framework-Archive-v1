@@ -73,8 +73,9 @@ function loadJSON(file){return fetch(DATA_ROOT+file,{cache:"no-store"}).then(fun
 document.querySelectorAll("nav button").forEach(function(btn){btn.addEventListener("click",function(){document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("active",b===btn)});document.querySelectorAll(".view").forEach(function(v){v.hidden=v.id!=="view-"+btn.dataset.view});});});
 var assets=["BTC","ETH","Large","Mid","Small","Micro","Memes"];var aroot=byId("assetRows");assets.forEach(function(x){addRow(aroot,[x,"Ukendt","AFVENT"])});
 var troot=byId("horizonRows");
-Promise.all([loadJSON("latest.json"),loadJSON("compass.json")]).then(function(values){
-var cn=values[0],c=values[1]; if(cn.schema!=="CN_PUBLIC_SNAPSHOT_V2"||c.contract!=="PUBLIC_COMPASS_PROJECTION_v1")throw Error("Wrong public source contracts");
+Promise.all([loadJSON("latest.json"),loadJSON("compass.json").catch(function(){return {contract:"PUBLIC_COMPASS_PROJECTION_v1",data_status:"UNAVAILABLE"};})]).then(function(values){
+var cn=values[0],c=values[1]; if(cn.schema!=="CN_PUBLIC_SNAPSHOT_V2")throw Error("Wrong weekly public source contract");
+if(c.contract!=="PUBLIC_COMPASS_PROJECTION_v1")c={contract:"PUBLIC_COMPASS_PROJECTION_v1",data_status:"UNAVAILABLE"};
 var p=cn.package||{},series=cn.public_series||{},quality=String(p.status||cn.pointer&&cn.pointer.status||"").toUpperCase();
 set("state",safe(p.market_state)||"Officiel markedsstatus ikke tilgængelig");
 set("summary",safe(p.base_case_this_week)||"Offentlig vurdering er ikke tilgængelig.");
