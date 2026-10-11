@@ -1,6 +1,6 @@
 # Motion Design Toolkit — X article full 20-repo index and CN adoption decision
 
-**Captured:** 2026-10-11 from the user's 3 screenshot excerpts of a motion-design resources post by @beamnxw; image descriptions were provided by the user. This is a **reference index**, not an instruction to install 20 dependencies. Also see [DESIGN_MOTION_REFERENCE_LIBRARY.md](../DESIGN_MOTION_REFERENCE_LIBRARY.md) and [Quiet Precision authority](../../DESIGN.md). Screenshots show all 20 numbered entries; snippets with truncated URLs have been normalized to official GitHub repository names only when verifiable or unambiguous. Not every project has been individually security-reviewed.
+**Captured:** 2026-10-11 from the user's 3 screenshot excerpts of a motion-design resources post by @beamnxw; image descriptions were provided by the user. This is a **reference index**, not an instruction to install 20 dependencies. Also see [DESIGN_MOTION_REFERENCE_LIBRARY.md](../DESIGN_MOTION_REFERENCE_LIBRARY.md) and [Quiet Precision authority](../DESIGN.md). Screenshots show all 20 numbered entries; snippets with truncated URLs have been normalized to official GitHub repository names only when verifiable or unambiguous. Not every project has been individually security-reviewed.
 
 ## Complete article index
 
@@ -57,5 +57,5 @@ If future CN weekly recap / X post needs a 5–12 second scoreproof clip, use Sa
 ## Parallel investigation references
 
 - [Existing design source library](../DESIGN_MOTION_REFERENCE_LIBRARY.md)
-- [CN vNext source and prototype contract](../README.md)
+- [CN vNext source and prototype contract](README.md)
 - [Public score evidence repo](https://github.com/Donh91/CycleNavigator-scores)
