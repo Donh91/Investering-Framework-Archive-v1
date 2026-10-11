@@ -98,6 +98,11 @@ def resolve_close_mode(mode: str, *, event_name: str, event_path: str, run_attem
     """
     if run_attempt and run_attempt != "1":
         raise ValueError("RERUN_ORIGINAL_WEEK_UNBOUND_FAIL_CLOSED")
+    if event_name == "workflow_dispatch":
+        # The existing workflow_dispatch payload specifies a mode, but it
+        # does not bind the original ISO week. A queued first attempt may
+        # execute across Monday UTC rollover; do not write a different week.
+        raise ValueError("DISPATCH_ORIGINAL_WEEK_UNBOUND_FAIL_CLOSED")
     if mode in ("preclose", "final"):
         return mode
     if mode != "auto" or event_name not in ("schedule", "workflow_dispatch") or not event_path:
@@ -110,11 +115,7 @@ def resolve_close_mode(mode: str, *, event_name: str, event_path: str, run_attem
         if payload.get("schedule") not in schedules:
             raise ValueError("UNKNOWN_SCHEDULE")
         return schedules[payload["schedule"]]
-    inputs = payload.get("inputs", {})
-    selected = inputs.get("mode") if isinstance(inputs, dict) else None
-    if selected not in ("preclose", "final"):
-        raise ValueError("UNKNOWN_DISPATCH_MODE")
-    return selected
+    raise ValueError("WEEKLY_MODE_UNAVAILABLE")
 
 
 def main() -> None:
