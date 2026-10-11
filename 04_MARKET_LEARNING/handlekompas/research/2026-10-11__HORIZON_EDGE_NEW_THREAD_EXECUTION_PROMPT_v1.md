@@ -1,0 +1,22 @@
+# Paste into a new Work research thread: COMPASS-HORIZON-EDGE-20261011
+
+Du har fuldt mandat til at gennemføre den allerede designede forskningsmission i flere selvstændige, dokumenterede omgange. Start NU med GitHub som autoritativ kilde. Arbejd udførende, ikke kun rådgivende.
+
+**Repo:** Donh91/Investering-Framework-Archive-v1
+**Research-PR:** https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1573 (Draft; dette er design, ikke bevis for udført forskning)
+**READ FIRST on latest PR head:** `04_MARKET_LEARNING/handlekompas/research/2026-10-11__HORIZON_EDGE_EXTREME_MULTI_RUN_MASTER_MISSION_v1.md`
+**Machine execution manifest:** `04_MARKET_LEARNING/handlekompas/research/2026-10-11__HORIZON_EDGE_MULTI_RUN_MACHINE_MANIFEST_v1.json`
+**Source adjudication:** `04_MARKET_LEARNING/handlekompas/research/2026-10-11__weekly_vs_2_3w_horizon_edge_and_portfolio_utility__shadow.md`
+**Existing owners:** #1516 (Forward Path), #1553 (risk-to-action/portfolio warnings), #1530 (EDGE governor), plus CN/M3/Strategic Compass/AATA/DEL/M6.
+
+MISSION: Find ud af om 5–7-dages prisintervaller, 2–3-ugers retning/markedsforløb eller en kombination med 12–72 timers handlingsbekræftelse giver den største **reelle, uafhængige og efter-omkostninger dokumenterede Edge**. Mål prisintervalkvalitet, retningsskift, falske signaler, pullback-leadtime, re-entry, drawdown, mistet upside og separat økonomisk værdi for eksisterende beholdninger og ny kapital. Sammenlign alle kandidater mod simple identisk tidsforankrede benchmarks.
+
+START med at fresh-read main, AGENTS, cross-repo privacy, governance, den aktuelle Kompas-autoritet og aktuelle PR/issue-ejere. Afgør hvilke komponenter der allerede eksisterer. Brug kun point-in-time kildebevis, frosne før-outcome prognoser og uafhængige episodefamilier. Det er FORBUDT at tolke 7D SIDEWAYS-hits, brede prisintervaller, efterrationaliserede 2–3-ugers historier eller gamle scoreprocenter som dokumenteret profitabel Edge. Bevar hele det negative M3/audit-resultat, UNKNOWN, censurering, fravalg, trial denominator og ingen hindsight. Opret ingen parallel prognosemotor, automatisk trading, ny cron eller unødvendig agentkø.
+
+**Kør i strukturerede mission-runder A–D** efter manifestets afhængigheder. I dette run: gennemfør R0 + så meget som muligt af R1 og UX0. Fortsæt derefter til næste uafhængige, sikkert udførbare stadier hvis tools/kreditter/gates tillader det. R2 benchmark; R3 14/21D direction/path; R4 reel risk-to-action økonomi kun hvis data og execution clocks er admitted; R5 adversarial red-team; R6 frosset forward-score + Master Monday-læring gennem eksisterende ejere; R7 uafhængig review og afslutning.
+
+**Brugerens ekstra godkendelse:** Gør den nuværende on-demand `Kompas` lidt tydeligere: forklar i en ultrakompakt tekstblok, at 2–3 uger er strukturelt scenarie/kapitalrisiko, 5–7 dage er taktiske prisområder, og 12–72 timer er aktuel bekræftelse. Udfør dette i en **separat minimal præsentations-PR** efter owner-gate. Bevar præcis de to iPhone-venlige trekolonnetabeller, alle aktivklasser, eksisterende STATUS/HANDLING/TID og SELL/Swing-sektionen. Ingen widgets. **Ingen ændring af officielle signaler, handlingstilladelser, datakontrakter, price scores, thresholds, model weights eller porteføljeeksekvering.** Ukendte horisonter og prisranges forbliver UKENDT. Kun dokumenteret kildeinformation vises som officiel.
+
+Brug flere specialister kun til *forskellige* velafgrænsede læse/review-opgaver; én ejer skriver hver enkelt integreret ændring. Respekter aktuelle budget- og GitHub-gates, adgangsrettigheder og high-impact safeties. Dokumentér alt i GitHub med eksakt commit, PR, test/CI og checkpoint, også fejl og blocker, så næste run kan fortsætte fra seneste verificerede stage. Ingen falsk PASS eller løfte om baggrundskørsel.
+
+**Aflever for hvert run:** 1) hvilke stadier der faktisk blev udført, 2) kilde- og QA-resultat, 3) præcis målt eller endnu ukendt Edge, 4) aktuelle PR’er/commits/tests, 5) hvad der forbliver helt uændret i Kompas, 6) næste præcise ejer/gate. Stop ikke ved en plan hvis en konkret sikker implementering kan udføres nu. Første handling: åbn ovenstående MASTER-protokol fra PR #1573 og start R0.
