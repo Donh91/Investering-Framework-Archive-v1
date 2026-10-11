@@ -46,6 +46,8 @@ def load_tests(loader, tests, pattern):
     # source-integrity regressions without changing workflows or dependencies.
     from tests.daily_capture import test_audit_hourly_measurements
     tests.addTests(loader.loadTestsFromModule(test_audit_hourly_measurements))
+    from tests.daily_capture import test_weekly_cfgi_final_week_binding
+    tests.addTests(loader.loadTestsFromModule(test_weekly_cfgi_final_week_binding))
     return tests
 
 
