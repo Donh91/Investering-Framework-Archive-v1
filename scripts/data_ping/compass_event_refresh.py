@@ -284,13 +284,12 @@ def evaluate(
             },
         }
 
+    missing_freeze = _missing_scheduled_freeze(now, latest_compass.get("issued_at_utc"))
     # Matching source hashes normally suppress duplicate work. Exception:
     # a genuinely missed scheduled publication is a separate liveness event,
     # even when its last source packet remains time-valid. Freshness and CN
     # admission gates still apply below; no source/forecast is backdated.
-    if source_sha == compass_source_sha and _missing_scheduled_freeze(
-        now, latest_compass.get("issued_at_utc")
-    ) is None:
+    if source_sha == compass_source_sha and missing_freeze is None:
         return {
             "contract": CONTRACT,
             "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
@@ -310,10 +309,21 @@ def evaluate(
         or ""
     )
     latest_issued = parse_utc(latest_compass.get("issued_at_utc"))
+    # A source hash can legitimately stay identical between a pre-slot issue
+    # and the overdue investor-facing freeze. Missing scheduled publication is
+    # an independent liveness reason, so an accepted recovery request must be
+    # tracked as in-flight/retry even if source bytes have not changed.
+    # Bind the same-source exception to THIS source's recorded request so an
+    # unrelated older request cannot manufacture a retry.
+    same_source_missed_request = (
+        source_sha == compass_source_sha
+        and missing_freeze is not None
+        and last_requested_source == source_sha
+    )
     request_unbound = bool(
         last_request_age is not None
         and (latest_issued is None or latest_issued < parse_utc(last_request_at))
-        and source_sha != compass_source_sha
+        and (source_sha != compass_source_sha or same_source_missed_request)
     )
     request_in_flight = bool(request_unbound and last_request_age < REQUEST_RETRY_SECONDS)
     request_retry_due = bool(request_unbound and last_request_age >= REQUEST_RETRY_SECONDS)
@@ -367,7 +377,6 @@ def evaluate(
     if current_data_status == "OK" and heat != "NORMAL" and heat != last_heat:
         causes.append("MARKET_HEAT_ENTERED")
 
-    missing_freeze = _missing_scheduled_freeze(now, latest_compass.get("issued_at_utc"))
     # A delayed GitHub cron job may terminate SUCCESS while its own slot gate
     # skips the freeze. The EXISTING hourly event watcher can request a fresh
     # current-time issue without pretending it was published at the missed slot.
