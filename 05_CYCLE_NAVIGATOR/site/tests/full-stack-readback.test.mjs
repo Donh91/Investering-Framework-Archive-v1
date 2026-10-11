@@ -68,6 +68,10 @@ const late=render('OK','PUBLIC_COMPASS_PROJECTION_v1',scheduled);
 assert.match(late,/SCHEDULED UPDATE DELAYED/);
 assert.match(late,/Fresh Compass update requested/);
 assert.doesNotMatch(late,/MARKET MOVE DETECTED/);
+const retryLate=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
+  ...scheduled,cause_codes:['PRIOR_REQUEST_NOT_BOUND_RETRY','SCHEDULED_FREEZE_MISSING']});
+assert.match(retryLate,/SCHEDULED UPDATE DELAYED/);
+assert.doesNotMatch(retryLate,/MARKET MOVE DETECTED/);
 const trueMove=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
   ...scheduled,cause_codes:['MARKET_STATE_CHANGED']});
 assert.match(trueMove,/MARKET MOVE DETECTED/);
