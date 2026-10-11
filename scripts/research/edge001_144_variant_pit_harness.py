@@ -86,10 +86,15 @@ def run_variant(series, variant):
             else:
                 decision_rows.append(row)
         streak = 0
-        last_obs = last_segment = last_policy = first_ready = last_fire = None
+        last_obs = last_known_slot = last_segment = last_policy = first_ready = last_fire = None
         for observed, known, state, status, segment, policy in decision_rows:
+            # Two consecutive source candles cannot be treated as continuous
+            # availability when the decision/knowledge clock has a gap.
+            known_slot = known.replace(minute=0, second=0, microsecond=0)
             contiguous = (last_obs is not None and
                           observed - last_obs == timedelta(hours=1) and
+                          last_known_slot is not None and
+                          known_slot - last_known_slot == timedelta(hours=1) and
                           segment == last_segment and
                           policy == last_policy)
             if not contiguous:
@@ -112,7 +117,7 @@ def run_variant(series, variant):
                     alerts.append({"asset": asset, "observation_utc": observed.isoformat(),
                                    "decision_utc": known.isoformat(), "segment": segment})
                     last_fire = known
-            last_obs, last_segment, last_policy = observed, segment, policy
+            last_obs, last_known_slot, last_segment, last_policy = observed, known_slot, segment, policy
     return alerts
 
 
@@ -158,6 +163,17 @@ def self_test():
     for item in batched:
         item["knowledge_time_utc"] = "2026-01-01T03:05:00Z"
     assert not run_variant(validated_rows(batched), v)
+    # Codex P2: one-hour observation succession with a 23-hour
+    # knowledge gap does not establish two-hour warning persistence.
+    delayed = [row(0, "HIGH"), row(1, "HIGH")]
+    delayed[1]["knowledge_time_utc"] = "2026-01-01T23:00:00Z"
+    assert not run_variant(validated_rows(delayed), v)
+    # Separate arrivals inside one hourly decision slot also cannot
+    # count as two distinct hourly confirmations.
+    same_hour = [row(0, "HIGH"), row(1, "HIGH")]
+    same_hour[0]["knowledge_time_utc"] = "2026-01-01T01:00:00Z"
+    same_hour[1]["knowledge_time_utc"] = "2026-01-01T01:05:00Z"
+    assert not run_variant(validated_rows(same_hour), v)
     try:
         bad = row(0, "HIGH")
         del bad["decision_policy_version"]
