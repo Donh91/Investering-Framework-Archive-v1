@@ -244,6 +244,12 @@ Object.assign(translations, {
   "Frossen prognose: ": "Frozen forecast: ",
   "Observeret lav-høj: ": "Observed low–high: "
 });
+Object.assign(translations, {
+  "GÅ TIL ET VIRKELIGT EKSEMPEL": "EXPLORE A REAL SCORE EXAMPLE",
+  "Se hvordan en frossen prognose møder virkeligheden.": "See a frozen forecast meet the actual market.",
+  "CN #27 · W40 · Historisk Price Range-resultat, ikke en ny v2-score": "CN #27 · W40 · Historical Price Range result, not a new v2 score",
+  "Se animeret sammenligning": "View animated comparison"
+});
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
