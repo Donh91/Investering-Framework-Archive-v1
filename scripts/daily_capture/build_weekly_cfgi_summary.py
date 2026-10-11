@@ -88,8 +88,16 @@ def target_week_window(now: datetime, mode: str) -> tuple[datetime, datetime]:
     return monday, monday + timedelta(days=7)
 
 
-def resolve_close_mode(mode: str, *, event_name: str, event_path: str) -> str:
-    """Resolve by immutable event trigger, never the time a job is rerun."""
+def resolve_close_mode(mode: str, *, event_name: str, event_path: str, run_attempt: str = "") -> str:
+    """Resolve trigger mode; reject reruns without immutable original-week anchor.
+
+    A GitHub rerun retains the original event payload and RUN_ID, but its
+    datetime.now() is a new clock. Without the original ISO-week anchor a
+    rerun after rollover could corrupt another weekly summary. Refuse every
+    Actions retry until the independent original-run clock is available.
+    """
+    if run_attempt and run_attempt != "1":
+        raise ValueError("RERUN_ORIGINAL_WEEK_UNBOUND_FAIL_CLOSED")
     if mode in ("preclose", "final"):
         return mode
     if mode != "auto" or event_name not in ("schedule", "workflow_dispatch") or not event_path:
@@ -117,7 +125,13 @@ def main() -> None:
     args = parser.parse_args()
 
     now = datetime.now(timezone.utc)
-    mode = resolve_close_mode(args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''))
+    mode = resolve_close_mode(args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''), run_attempt=os.getenv('GITHUB_RUN_ATTEMPT', ''))
+    if os.getenv('GITHUB_EVENT_NAME') == 'schedule':
+        # A delayed first attempt after UTC week rollover cannot safely
+        # reconstruct the event's original ISO week from wall clock alone.
+        expected_utc_weekday = 6 if mode == "preclose" else 0
+        if now.weekday() != expected_utc_weekday:
+            raise ValueError("SCHEDULED_WEEK_ROLLOVER_UNBOUND_FAIL_CLOSED")
     monday, week_end = target_week_window(now, mode)
     observations: list[dict[str, Any]] = []
     credits_used = 0
