@@ -69,8 +69,10 @@ def validated_rows(rows):
     return result
 
 
-def run_variant(series, variant):
-    """Counts alerts, not independent episodes or successful predictions."""
+def run_variant(series, variant, *, max_source_age=None):
+    """Counts research alerts only; independent source-freshness rule required."""
+    if not isinstance(max_source_age, timedelta) or max_source_age <= timedelta(0):
+        raise ValueError("SOURCE_SPECIFIC_FRESHNESS_CONTRACT_UNRATIFIED")
     threshold = RANK[variant["minimum_state"]]
     persistence = variant["persistence_hours"]
     delay = timedelta(hours=variant["delay_hours"])
@@ -81,7 +83,9 @@ def run_variant(series, variant):
         # create multiple alerts or multiple hourly persistence confirmations.
         decision_rows = []
         for row in rows:
-            if decision_rows and decision_rows[-1][1] == row[1]:
+            if (decision_rows and
+                    decision_rows[-1][1].replace(minute=0, second=0, microsecond=0) ==
+                    row[1].replace(minute=0, second=0, microsecond=0)):
                 decision_rows[-1] = row
             else:
                 decision_rows.append(row)
@@ -104,7 +108,10 @@ def run_variant(series, variant):
                 # Changed policy is a distinct research stratum; do not
                 # transport previous-version refractory state across it.
                 last_fire = None
-            usable = status in ALLOWED_STATUS and state in RANK
+            # The source owner must freeze a source-specific admissible age;
+            # stale trickles cannot be promoted into current warning events.
+            usable = (status in ALLOWED_STATUS and state in RANK and
+                      timedelta(0) <= known - observed <= max_source_age)
             if not usable or RANK.get(state, -1) < threshold:
                 streak = 0
                 first_ready = None
@@ -131,15 +138,27 @@ def self_test():
                 "pullback_risk_state": state, "source_status": status,
                 "continuity_segment_id": segment,
                 "decision_policy_version": policy}
+    # 15-minute age allowance is a SYNTHETIC FIXTURE only, never
+    # a production/PIT owner SLA or canonical alert threshold.
+    def checked(series, variant, *, age_minutes=15):
+        return run_variant(series, variant, max_source_age=timedelta(minutes=age_minutes))
+    try:
+        run_variant(validated_rows([row(0, "HIGH")]),
+                    {"minimum_state": "HIGH", "persistence_hours": 1,
+                     "delay_hours": 0, "cooldown_hours": 0})
+    except ValueError as error:
+        assert "FRESHNESS_CONTRACT_UNRATIFIED" in str(error)
+    else:
+        raise AssertionError("a missing source freshness contract must block replay")
     rows = [row(0, "NORMAL"), row(1, "ELEVATED"), row(2, "HIGH"),
             row(3, "HIGH"), row(4, "HIGH"), row(5, "NORMAL")]
     series = validated_rows(rows)
     v = {"minimum_state": "HIGH", "persistence_hours": 2, "delay_hours": 1,
          "cooldown_hours": 24}
-    got = run_variant(series, v)
+    got = checked(series, v)
     assert len(got) == 1 and got[0]["decision_utc"].startswith("2026-01-01T04:05")
-    assert not run_variant(validated_rows([row(0, "HIGH"), row(1, "HIGH", "DEGRADED")]), v)
-    assert not run_variant(validated_rows([row(0, "HIGH"), row(2, "HIGH")]), v)
+    assert not checked(validated_rows([row(0, "HIGH"), row(1, "HIGH", "DEGRADED")]), v)
+    assert not checked(validated_rows([row(0, "HIGH"), row(2, "HIGH")]), v)
     try:
         validated_rows([row(0, "HIGH"), row(0, "HIGH")])
     except ValueError:
@@ -155,25 +174,38 @@ def self_test():
     else:
         raise AssertionError("future data must fail")
     # A streak may never cross an explicit policy-version boundary.
-    assert not run_variant(validated_rows([
+    assert not checked(validated_rows([
         row(0, "HIGH", policy="v1"), row(1, "HIGH", policy="v2")]), v)
     # Three hourly observations released at one knowledge instant count as
     # one available decision opportunity, not three historical warnings.
     batched = [row(i, "HIGH") for i in (0, 1, 2)]
     for item in batched:
         item["knowledge_time_utc"] = "2026-01-01T03:05:00Z"
-    assert not run_variant(validated_rows(batched), v)
+    assert not checked(validated_rows(batched), v)
     # Codex P2: one-hour observation succession with a 23-hour
     # knowledge gap does not establish two-hour warning persistence.
     delayed = [row(0, "HIGH"), row(1, "HIGH")]
     delayed[1]["knowledge_time_utc"] = "2026-01-01T23:00:00Z"
-    assert not run_variant(validated_rows(delayed), v)
+    assert not checked(validated_rows(delayed), v)
     # Separate arrivals inside one hourly decision slot also cannot
     # count as two distinct hourly confirmations.
     same_hour = [row(0, "HIGH"), row(1, "HIGH")]
     same_hour[0]["knowledge_time_utc"] = "2026-01-01T01:00:00Z"
     same_hour[1]["knowledge_time_utc"] = "2026-01-01T01:05:00Z"
-    assert not run_variant(validated_rows(same_hour), v)
+    assert not checked(validated_rows(same_hour), v)
+    p1 = {"minimum_state": "HIGH", "persistence_hours": 1,
+          "delay_hours": 0, "cooldown_hours": 0}
+    # Two arrivals at 01:00 and 01:05 are one KNOWABLE decision hour.
+    assert len(checked(validated_rows(same_hour), p1, age_minutes=120)) == 1
+    # Three distinct old observations known together are one hour/alert,
+    # even with permissive synthetic source age for this test.
+    assert len(checked(validated_rows(batched), p1, age_minutes=240)) == 1
+    # 23-hour stale source data trickling one row per successive knowledge
+    # hour must not manufacture a persistent current warning.
+    trickle = [row(0, "HIGH"), row(1, "HIGH")]
+    trickle[0]["knowledge_time_utc"] = "2026-01-01T23:05:00Z"
+    trickle[1]["knowledge_time_utc"] = "2026-01-02T00:05:00Z"
+    assert not checked(validated_rows(trickle), v)
     try:
         bad = row(0, "HIGH")
         del bad["decision_policy_version"]
