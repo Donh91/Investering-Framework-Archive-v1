@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -87,15 +88,37 @@ def target_week_window(now: datetime, mode: str) -> tuple[datetime, datetime]:
     return monday, monday + timedelta(days=7)
 
 
+def resolve_close_mode(mode: str, *, event_name: str, event_path: str) -> str:
+    """Resolve by immutable event trigger, never the time a job is rerun."""
+    if mode in ("preclose", "final"):
+        return mode
+    if mode != "auto" or event_name not in ("schedule", "workflow_dispatch") or not event_path:
+        raise ValueError("WEEKLY_MODE_UNAVAILABLE")
+    payload = json.loads(Path(event_path).read_text())
+    if not isinstance(payload, dict):
+        raise ValueError("INVALID_GITHUB_EVENT")
+    if event_name == "schedule":
+        schedules = {"35 23 * * 0": "preclose", "5 2 * * 1": "final"}
+        if payload.get("schedule") not in schedules:
+            raise ValueError("UNKNOWN_SCHEDULE")
+        return schedules[payload["schedule"]]
+    inputs = payload.get("inputs", {})
+    selected = inputs.get("mode") if isinstance(inputs, dict) else None
+    if selected not in ("preclose", "final"):
+        raise ValueError("UNKNOWN_DISPATCH_MODE")
+    return selected
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--capture-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
-    parser.add_argument("--mode", choices=("preclose", "final"), default="preclose")
+    parser.add_argument("--mode", choices=("auto", "preclose", "final"), default="auto")
     args = parser.parse_args()
 
     now = datetime.now(timezone.utc)
-    monday, week_end = target_week_window(now, args.mode)
+    mode = resolve_close_mode(args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''))
+    monday, week_end = target_week_window(now, mode)
     observations: list[dict[str, Any]] = []
     credits_used = 0
     latest_remaining: int | None = None
