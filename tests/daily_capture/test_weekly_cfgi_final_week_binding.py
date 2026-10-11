@@ -63,6 +63,16 @@ class WeeklyCfgiFinalWeekBindingTests(unittest.TestCase):
                 path.write_text(json.dumps({"inputs": {"mode": mode}}))
                 self.assertEqual(resolve_close_mode("auto", event_name="workflow_dispatch", event_path=str(path)), mode)
 
+    def test_actions_retry_after_week_rollover_fails_closed(self):
+        # Neither immutable schedule nor an explicit CLI mode proves
+        # which ISO week an old GitHub run originally belonged to.
+        for mode in ("auto", "preclose", "final"):
+            with self.subTest(mode=mode), self.assertRaisesRegex(ValueError, "RERUN_ORIGINAL_WEEK"):
+                resolve_close_mode(mode, event_name="schedule", event_path="not-read-on-rerun.json", run_attempt="2")
+
+    def test_first_attempt_explicit_mode_remains_supported(self):
+        self.assertEqual(resolve_close_mode("final", event_name="workflow_dispatch", event_path="", run_attempt="1"), "final")
+
     def test_unknown_triggers_fail_closed_without_wrong_week_write(self):
         with self.assertRaises(ValueError):
             resolve_close_mode("auto", event_name="", event_path="")
