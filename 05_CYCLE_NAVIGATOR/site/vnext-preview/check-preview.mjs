@@ -20,7 +20,9 @@ assert.match(html, /CycleNavigator-scores/, 'Independent proof navigation missin
 assert.match(html, /CN_PUBLIC_SNAPSHOT_V2/, 'Public snapshot contract missing');
 assert.match(html, /PUBLIC_COMPASS_PROJECTION_v1/, 'Public Compass contract missing');
 assert.match(html, /status==="ALIGNED"/, 'Compass/CN binding guard missing');
-assert.doesNotMatch(html, /<div class="step present">/, 'Illustrative timeline cannot pretend a current market checkpoint');
+const marketPath = html.match(/id="phase"[\s\S]*?<div class="rule"/)?.[0] || '';
+assert.ok(marketPath, 'Missing market timeline section');
+assert.doesNotMatch(marketPath, /<div class="step present">/, 'Market timeline cannot pretend a current checkpoint');
 assert.doesNotMatch(html, /\bMath\.random\(/, 'No fictitious motion/random signal');
 assert.doesNotMatch(html, /<script[^>]+src=/, 'Prototype must remain self-contained');
 const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
