@@ -60,3 +60,29 @@ The July 6 archived CN15 describes a user-published public post, while the July 
 - NO_NEW_ENGINE / NO_TRADE_OR_PORTFOLIO_AUTHORITY
 
 This is public-source text verification only. No private raw/provider values, wallet, restricted repository source identifiers or restricted data have been included.
+
+
+## 2026-10-11 wider archived-public text screen: ten source→recap BTC pairs
+
+In addition to the initial four-link June control, the same manual public-text comparison now covers all *adjacent pairs with both exact archived issues visible* from CN #1 through #15:
+
+| Original issue → next issue | BTC expected in original, K | BTC forecast recapped next week, K | Status |
+|---|---:|---:|---|
+| #1 → #2 | 63–71 | 63–71 | TEXT_MATCH; #1 week dates INFERRED |
+| #2 → #3 | 65–72 | 65–72 | TEXT_MATCH |
+| #3 → #4 | 66–73 | 66–73 | TEXT_MATCH |
+| #4 → #5 | 73–79 | 73–79 | TEXT_MATCH |
+| #7 → #8 | 79.5–84 | 79.5–84 | TEXT_MATCH |
+| #8 → #9 | 76–84 | 76–84 | TEXT_MATCH |
+| #11 → #12 | 61–69 | 61–69 | TEXT_MATCH |
+| #12 → #13 | 63–71 | 63–71 | TEXT_MATCH |
+| #13 → #14 | 62.8–67.2 | 62.8–67.2 | TEXT_MATCH |
+| **#14 → #15** | **62.8–67.2** | **58.5–64.2** | **TEXT_MISMATCH** |
+
+Additional exact public Git blob SHAs: CN #1 `203268f206612647209e4fc1653fedf6e02fdafd`, #2 `59544079fa1a16c513ecf8fe8052e472c2f02d94`, #3 chunk 01 `33aba8788f8a244fa985e78ff742a602da874a6c` and chunk 03 `f1b27604d0e9b20f456a6dc56fd6ca9db729fc96`, #4 `da21d70d37f4c5be9c1590497233b3cac44fe186`, #5 `63a73fa9d6cdba8aa86fb5cdcb26930c881b7ca1`, #7 `1b6b96f0ed4bd4abd6eb10761c9a3bb4e067f550`, #8 `3d2fdf816d646a258c82ba48616ea72042da9cec`, #9 `ed38075ab6d07668661ba1071694619a4862e242`. Paths follow the register under `canonical-project-archive/06_CYCLE_NAVIGATOR/published-x-posts/`; #3 has CHUNK_01..03.
+
+The source archive's explicit gap tracker records #6 and #10 complete published texts as missing. Thus #5→#6, #6→#7, #9→#10, #10→#11 have **UNTESTABLE_ORIGINAL_SOURCE**, not score validity. The review does NOT imply the other nine matching pairs were prospectively published or correctly scored; it only establishes text identity across imported archive artifacts.
+
+**Separate early chronology caveat:** archived CN #1 carries a numerical completed-week precision line in its same issue while its stated week range was inferred post hoc by sequence; no original first-availability time or before/after week mapping is established. Do not classify CN #1's self-reported 92% as an eligible prospective score solely from this archive.
+
+Broader screen status: `ARCHIVE_TEXT_PARITY=9_MATCH/1_MISMATCH/4_GAP_LINKS` for the #1–#15 adjacent positions, where ten comparisons have both source texts. No confidence interval, signal significance, X publication authentication or price-vintage validation is asserted; this is a **provenance census of accessible artifacts**, not a market performance backtest.
