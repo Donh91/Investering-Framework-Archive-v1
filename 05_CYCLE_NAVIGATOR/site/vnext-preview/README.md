@@ -64,3 +64,15 @@ No keys, wallets, private holdings, hidden repo data or non-public research incl
 5. Merge any bounded site production work only after fresh-main contract review and product/visual acceptance, independent of any other running Work/Codex missions.
 
 **Scored historical public claims are not investment returns or a demonstrated profit-making trading edge.**
+
+## vNext Motion QA update · 2026-10-11
+
+- A second X article supplied a complete list of 20 motion-design repositories. The complete links, product fit and future adoption decisions are frozen in [MOTION_TOOLKIT_20_REPOS_AND_CN_DECISION.md](MOTION_TOOLKIT_20_REPOS_AND_CN_DECISION.md) and cross-linked from the canonical site design reference library.
+- The **Resultater** page now provides a source-honest `Se animeret sammenligning` action, opening the older CN #27 source comparison inside the Legacy section without promoting that historical result as a new v2 Edge metric.
+- Animation is deterministic and **data-invariant**: frozen range bars (source scorecard) are revealed, then observed low–high bars, then the precomputed score. Existing endpoints, price scales, grade formula and 6 source rows never change.
+- A small in-place `Afspil sammenligning` button makes it repeatable; BTC/ETH switch and DA/EN switch remain source-driven. No sound, 3D, vendor CDN or new framework/dependency.
+- All historical data and score metrics are fully visible when `prefers-reduced-motion: reduce` is active; default motion finishes after ~880ms and does not loop.
+- The score visual stays folded in the Legacy disclosure as required by the new Score Era product concept. One tasteful direct link in the v2 section makes it discoverable when desired.
+- Programmatic source contract and motion smoke tests are included in `check-premium.mjs`, checked on PR #1576. Standalone AppDeploy reports ready and no frontend/network errors as of the last deployment. Native iPhone Safari visual/manual sign-off and production owner mapping remain pending.
+
+**Guardrails**: This animation is historical educational visualization, not a simulated market progression, forecast path, trading signal, independent cryptographic attestation or demonstration of statistically significant profitable Edge.
