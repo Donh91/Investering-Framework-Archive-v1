@@ -217,7 +217,7 @@ function getTrustedSeed(raw) {
   if (!weekly || !compass || !score || !history || !Array.isArray(history.records)) throw new Error('Incomplete source');
   if (weekly.public_issue_number !== 28 || weekly.forecast_week !== '2026-W41') throw new Error('Unexpected frozen forecast identity');
   if (score.public_issue_number !== 27 || score.forecast_week !== '2026-W40' || score.market_structure_precision !== null || score.combined_score !== null) throw new Error('Invalid scoring-era contract');
-  if (compass.data_status !== 'OK' || !compass.compass_id || !compass.issued_at_utc) throw new Error('Invalid Compass point-in-time source');
+  if (compass.data_status !== 'OK' || compass.compass_id !== 'CMP-20261011-7d14a9ee5914' || compass.issued_at_utc !== '2026-10-11T13:15:27Z') throw new Error('Compass source does not match the archived W41 preview identity');
   if (history.contract !== 'CN_PUBLIC_HISTORY_SCOREBOARD_V2' || history.policy?.cross_era_aggregate !== false ||
       history.records.length !== 27 || history.records.some((item, i) => item.cn !== i + 1)) throw new Error('Historical score records failed the original-series check');
   return raw;
