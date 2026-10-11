@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, _missing_scheduled_freeze, evaluate, heat_state
+from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, _missing_scheduled_freeze, _public_refresh_message, evaluate, heat_state
 
 
 NOW = datetime(2026, 9, 18, 16, 0, tzinfo=timezone.utc)
@@ -192,6 +192,30 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertIsNone(_missing_scheduled_freeze(
             datetime(2026, 10, 25, 7, 59, tzinfo=timezone.utc),
             "2026-10-25T07:16:00Z"))
+
+    def test_previous_evening_miss_survives_midnight(self):
+        # Oct 11 02:55 CPH is Oct 11 00:55Z: yesterday's 20:17 slot
+        # was missed, even though today's 08:17 slot is not due.
+        now = datetime(2026, 10, 11, 0, 55, tzinfo=timezone.utc)
+        morning_only = "2026-10-10T06:20:00Z"
+        self.assertEqual(
+            _missing_scheduled_freeze(now, morning_only), "PREVIOUS_EVENING")
+        # Genuine late evening/current-time issue supersedes missed slot.
+        self.assertIsNone(_missing_scheduled_freeze(
+            now, "2026-10-10T22:35:49Z"))
+        # A short delay before the 20:17+45m grace should not alarm.
+        before_grace = datetime(2026, 10, 10, 18, 45, tzinfo=timezone.utc)
+        self.assertIsNone(_missing_scheduled_freeze(before_grace, morning_only))
+
+    def test_missed_publication_message_is_not_fake_market_move(self):
+        text = _public_refresh_message(["SCHEDULED_FREEZE_MISSING"])
+        self.assertIn("Scheduled Compass update missed", text)
+        self.assertIn("does not indicate a new market move", text)
+        self.assertNotIn("Material market move or decision-state", text)
+        market = _public_refresh_message(["MARKET_STATE_CHANGED"])
+        self.assertIn("reassessment", market)
+        protective = _public_refresh_message(["PROTECTION_STATE_CHANGED"])
+        self.assertIn("Protection or re-entry", protective)
 
     def test_no_recovery_without_verifiable_original_issue_time(self):
         self.assertIsNone(_missing_scheduled_freeze(NOW, None))
