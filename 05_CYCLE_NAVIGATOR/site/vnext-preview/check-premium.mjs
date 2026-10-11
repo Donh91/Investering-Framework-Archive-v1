@@ -78,9 +78,9 @@ new Script(js.replace(/^import .*from .*;\s*$/m, ''), { filename: 'premium.js' }
 new Script(i18n.replace(/export (?=function)/g, ''), { filename: 'premium-i18n.js' });
 
 assert.match(html, /aria-controls="cycle-details"/);
-assert.match(html, /hero-action-line[^
+assert.ok(html.includes('<div class="hero-action-line"><span>OFFICIAL ACTION</span>'));
 ]*OFFICIAL ACTION/);
-assert.match(css, /\.hero-action-line \{ display: flex/);
+assert.ok(css.indexOf('.hero-action-line { display: flex') > css.indexOf('@media (max-width: 580px)'), 'Action summary must remain mobile-only');
 assert.match(js, /setText\('hero-action-summary', actionView\(c\.action_now\)\.text\)/);
 assert.match(html, /NEXT SERIES · ISSUE ID PENDING · 2026-W42/);
 assert.doesNotMatch(html, /Public CN #29/);
