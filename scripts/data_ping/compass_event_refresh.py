@@ -180,7 +180,11 @@ def _missing_scheduled_freeze(now: datetime, issued_at: Any) -> str | None:
     if original_issue is None:
         return None  # Missing/invalid immutable time cannot prove a miss.
     cph = now.astimezone(ZoneInfo("Europe/Copenhagen"))
+    # The first post-midnight watcher must still notice yesterday's
+    # missed evening slot; otherwise the date rollover masks a real outage.
+    previous_day = cph - timedelta(days=1)
     slots = (
+        ("PREVIOUS_EVENING", previous_day.replace(hour=20, minute=17, second=0, microsecond=0)),
         ("MORNING", cph.replace(hour=8, minute=17, second=0, microsecond=0)),
         ("EVENING", cph.replace(hour=20, minute=17, second=0, microsecond=0)),
     )
@@ -501,6 +505,9 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
             code in {"PROTECTION_STATE_CHANGED", "REENTRY_REVIEW_OPENED"}
             for code in decision.get("cause_codes", [])
         )
+        # Schedule liveness is NOT a market move. Public messaging must not
+        # claim a new price event when only an expected issue is absent.
+        liveness_only = set(decision.get("cause_codes") or []) == {"SCHEDULED_FREEZE_MISSING"}
         public = {
             "contract": PUBLIC_CONTRACT,
             "status": "REASSESSMENT_REQUESTED",
@@ -509,7 +516,12 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
             "message": (
                 "Protection or re-entry state changed. Compass reassessment is in progress."
                 if protection_event
-                else "Material market move or decision-state change detected. Compass reassessment is in progress."
+                else (
+                    "Scheduled Compass update missed. A fresh current-time reassessment has been requested; "
+                    "this does not indicate a new market move or a delivered forecast."
+                    if liveness_only else
+                    "Material market move or decision-state change detected. Compass reassessment is in progress."
+                )
             ),
             "authority": {
                 "official_compass_change": False,
