@@ -59,8 +59,7 @@ jobs:
         run: |
           python scripts/daily_capture/build_weekly_cfgi_summary.py \
             --capture-root 03_DAILY_CAPTURE_LOGS/captures \
-            --output-root 03_DAILY_CAPTURE_LOGS/cfgi_weekly \
-            --mode "${{ steps.mode.outputs.mode }}"
+            --output-root 03_DAILY_CAPTURE_LOGS/cfgi_weekly
       - name: Build preliminary weekly forensics after pre-close capture
         if: steps.mode.outputs.mode == 'preclose'
         run: |
