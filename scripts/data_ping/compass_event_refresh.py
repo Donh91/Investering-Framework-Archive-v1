@@ -45,6 +45,8 @@ STATE_CONTRACT = "COMPASS_EVENT_REFRESH_STATE_v1"
 REQUEST_RETRY_SECONDS = 20 * 60
 NON_PROTECTIVE_COOLDOWN_SECONDS = 3 * 60 * 60
 SCHEDULE_PROXIMITY_SECONDS = 30 * 60
+# Delay window is a dispatch-liveness grace period, NOT a forecast backdate.
+MISSING_SLOT_GRACE_SECONDS = 45 * 60
 ACTION_RANK = {
     "HOLD_WAIT_DATA_DEGRADED": 0,
     "HOLD_DEFENSIVE_WAIT": 1,
@@ -165,6 +167,31 @@ def _seconds_to_next_scheduled_compass(now: datetime) -> float:
             return (candidate - local).total_seconds()
     tomorrow = (local + timedelta(days=1)).replace(hour=8, minute=17, second=0, microsecond=0)
     return (tomorrow - local).total_seconds()
+
+
+def _missing_scheduled_freeze(now: datetime, issued_at: Any) -> str | None:
+    """Return a missed local scheduled slot using only source issue time.
+
+    This is NOT verification of GitHub workflow execution, user delivery or
+    historical publication. It only admits a current-time refresh request when
+    the latest immutable Compass issue predates a due investor-facing slot.
+    """
+    original_issue = parse_utc(issued_at)
+    if original_issue is None:
+        return None  # Missing/invalid immutable time cannot prove a miss.
+    cph = now.astimezone(ZoneInfo("Europe/Copenhagen"))
+    slots = (
+        ("MORNING", cph.replace(hour=8, minute=17, second=0, microsecond=0)),
+        ("EVENING", cph.replace(hour=20, minute=17, second=0, microsecond=0)),
+    )
+    overdue = [
+        (name, slot) for name, slot in slots
+        if cph >= slot + timedelta(seconds=MISSING_SLOT_GRACE_SECONDS)
+    ]
+    if not overdue:
+        return None
+    name, due_at = overdue[-1]
+    return name if original_issue < due_at.astimezone(timezone.utc) else None
 
 
 def _protective_transition(
@@ -316,6 +343,14 @@ def evaluate(
     if current_data_status == "OK" and heat != "NORMAL" and heat != last_heat:
         causes.append("MARKET_HEAT_ENTERED")
 
+    missing_freeze = _missing_scheduled_freeze(now, latest_compass.get("issued_at_utc"))
+    # A delayed GitHub cron job may terminate SUCCESS while its own slot gate
+    # skips the freeze. The EXISTING hourly event watcher can request a fresh
+    # current-time issue without pretending it was published at the missed slot.
+    # Never manufacture a new release from unverified/stale owner data.
+    if missing_freeze is not None and current_data_status == "OK":
+        causes.append("SCHEDULED_FREEZE_MISSING")
+
     if request_retry_due and causes:
         causes.insert(0, "PRIOR_REQUEST_NOT_BOUND_RETRY")
 
@@ -382,6 +417,8 @@ def evaluate(
         "request_retry_seconds": REQUEST_RETRY_SECONDS,
         "scheduled_slot_proximity_seconds": SCHEDULE_PROXIMITY_SECONDS,
         "seconds_to_next_scheduled_compass": seconds_to_scheduled,
+        "missing_scheduled_freeze": missing_freeze,
+        "missing_freeze_observation_only": True,
         "last_request_age_seconds": cooldown_age,
         "last_requested_source_sha": last_requested_source or None,
         "source_packet_sha256": source_sha,
