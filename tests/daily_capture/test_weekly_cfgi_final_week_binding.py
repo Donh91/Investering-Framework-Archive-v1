@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import unittest
+import json
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.daily_capture.build_weekly_cfgi_summary import cfgi_from_capture, target_week_window
+from scripts.daily_capture.build_weekly_cfgi_summary import cfgi_from_capture, resolve_close_mode, target_week_window
 
 
 class WeeklyCfgiFinalWeekBindingTests(unittest.TestCase):
@@ -40,11 +42,39 @@ class WeeklyCfgiFinalWeekBindingTests(unittest.TestCase):
         self.assertEqual({row["symbol"] for row in rows}, {"BTC", "ETH", "MARKET"})
         self.assertEqual(billing, {})
 
-    def test_actual_workflow_passes_resolved_preclose_or_final_mode(self):
+    def test_existing_workflow_untouched_and_resolves_preclose_final(self):
         workflow = Path(".github/workflows/sunday-market-close-and-cfgi.yml").read_text()
-        self.assertIn('--mode "${{ steps.mode.outputs.mode }}"', workflow)
-        self.assertIn('cron: \'5 2 * * 1\'', workflow)
-        self.assertIn("build_weekly_cfgi_summary.py", workflow)
+        self.assertIn("cron: '35 23 * * 0'", workflow)
+        self.assertIn("cron: '5 2 * * 1'", workflow)
+        self.assertIn("python scripts/daily_capture/build_weekly_cfgi_summary.py", workflow)
+        self.assertNotIn('--mode "${{ steps.mode.outputs.mode }}"', workflow.partition("Build zero-cost weekly CFGI summary from daily owner captures")[2].partition("Build preliminary weekly forensics")[0])
+
+    def test_auto_mode_uses_schedule_payload_not_execution_date(self):
+        for trigger, expected in (("35 23 * * 0", "preclose"), ("5 2 * * 1", "final")):
+            with self.subTest(trigger=trigger), tempfile.TemporaryDirectory() as d:
+                path = Path(d) / "event.json"
+                path.write_text(json.dumps({"schedule": trigger}))
+                self.assertEqual(resolve_close_mode("auto", event_name="schedule", event_path=str(path)), expected)
+
+    def test_auto_mode_supports_dispatch_payload(self):
+        for mode in ("preclose", "final"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as d:
+                path = Path(d) / "event.json"
+                path.write_text(json.dumps({"inputs": {"mode": mode}}))
+                self.assertEqual(resolve_close_mode("auto", event_name="workflow_dispatch", event_path=str(path)), mode)
+
+    def test_unknown_triggers_fail_closed_without_wrong_week_write(self):
+        with self.assertRaises(ValueError):
+            resolve_close_mode("auto", event_name="", event_path="")
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "event.json"
+            path.write_text(json.dumps({"schedule": "10 10 * * 3"}))
+            with self.assertRaises(ValueError):
+                resolve_close_mode("auto", event_name="schedule", event_path=str(path))
+            path.write_text(json.dumps({"inputs": {"mode": "unknown"}}))
+            with self.assertRaises(ValueError):
+                resolve_close_mode("auto", event_name="workflow_dispatch", event_path=str(path))
+        self.assertEqual(resolve_close_mode("final", event_name="", event_path=""), "final")
 
 
 if __name__ == "__main__":
