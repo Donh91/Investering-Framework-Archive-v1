@@ -1,4 +1,5 @@
 /* Cycle Navigator — source-bound interactive preview. Read-only. No signal ownership. */
+import { initializeLanguage, translateInterface, selectLanguage } from './premium-i18n.js';
 'use strict';
 
 const SOURCE_FILE = './seed.json';
@@ -372,6 +373,10 @@ function paintSource(d) {
 }
 
 async function initialize() {
+  initializeLanguage();
+  document.querySelectorAll('[data-lang]').forEach((button) => {
+    button.addEventListener('click', () => selectLanguage(button.dataset.lang));
+  });
   bindNavigation();
   bindPanels();
   try {
@@ -404,6 +409,8 @@ async function initialize() {
     }
     setText('source-detail', 'Kilden kunne ikke indlæses eller bestod ikke integritetskontrollen. Der vises ingen markeds- eller scorepåstande.');
     showToast('Kildedata kunne ikke indlæses.');
+  } finally {
+    translateInterface();
   }
 }
 
