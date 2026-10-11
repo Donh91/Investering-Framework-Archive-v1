@@ -177,6 +177,30 @@ function strongText(parent, label, text) {
   parent.append(line);
 }
 
+// Danish editorial translations are locked to this exact archived source identity.
+// If the public Compass changes, present its original source text instead.
+const previewDa = {
+  NEXT_12H: 'Kortfristet fortsættelse er udgangspunktet, medmindre den officielle bekræftelses- eller forværringsbetingelse ændrer status.',
+  NEXT_1_3D: 'Det korte markedssignal er blandet og vurderes op imod ugens struktur. Bredere kapitalrotation skal bekræftes, før risiko kan flyttes længere ned i aktivklasserne.',
+  NEXT_5_7D: 'Uge 41 begyndte med en BTC-ledet dollarstigning og uafklaret rotation. Både fortsættelse og senere retest blev vurderet som mulige. Svag relativ ETH-styrke og blandede flows begrænsede overbevisningen. Hverken distribution eller bred altseason var bekræftet.',
+  NEXT_2_3W: 'Selektiv og volatil deltagelse uden bekræftet bred alt-rotation eller tydelig faldretning. BTC kan forblive relativt stærk, men ETH/BTC, 30-dages deltagelse gennem pullbacks og 90/365-dages bredde skal styrkes.',
+  CYCLE_ALTCOINS_3_8W: 'Ingen evidensstøttet 4–8-ugers retning eller handletilladelse. Et betinget 21–30-dages scenarie kan ikke erstatte den manglende længere bekræftelse.'
+};
+function localizedHorizon(c, key) {
+  const original = clean(c.horizons?.[key]?.expected_path);
+  if (data?.weekly?.forecast_week === '2026-W41' &&
+      c.compass_id === 'CMP-20261011-7d14a9ee5914' &&
+      previewDa[key]) return previewDa[key];
+  return original;
+}
+function localizedPulse(c) {
+  if (data?.weekly?.forecast_week === '2026-W41' &&
+      c.compass_id === 'CMP-20261011-7d14a9ee5914') {
+    return 'BTC og ETH steg i det seneste officielle sammenligningsvindue. Retning og handletilladelse er separate signaler.';
+  }
+  return clean(c.market_now?.summary);
+}
+
 function paintTop(d) {
   const { weekly: w, compass: c } = d;
   setText('header-issue', 'CN #' + w.public_issue_number + ' · ' + w.forecast_week);
@@ -193,7 +217,7 @@ function paintTop(d) {
   setText('instrument-action', actionView(c.action_now).text);
   setText('instrument-long', directionView(c.horizons?.CYCLE_ALTCOINS_3_8W?.expected_direction).text === '—' ? 'UNCONFIRMED' : directionView(c.horizons?.CYCLE_ALTCOINS_3_8W?.expected_direction).text);
   setText('overview-action', actionView(c.action_now).text);
-  setText('overview-action-note', clean(c.market_now?.summary, 'Ingen detaljer fra Official Compass.'));
+  setText('overview-action-note', localizedPulse(c));
   setText('overview-risk', clean(c.protection_tracker?.pullback_risk_state, 'UNAVAILABLE'));
   setText('overview-risk-desc', c.protection_tracker?.pullback_risk_state === 'BUILDING' ?
     'Retest-watch under opbygning. Dybde og varighed er ikke kvantificeret. Ikke en SELL-instruktion.' :
@@ -201,7 +225,7 @@ function paintTop(d) {
   setText('compass-updated', 'OFFICIAL SNAPSHOT · ' + c.issued_at_utc.slice(0, 16).replace('T', ' ') + ' UTC');
   setText('compass-primary-action', actionView(c.action_now).text);
   setText('compass-primary-direction', direction);
-  setText('compass-primary-copy', clean(c.market_now?.summary));
+  setText('compass-primary-copy', localizedPulse(c));
 }
 
 function paintCompass(d) {
@@ -234,12 +258,12 @@ function paintCompass(d) {
     assetBody.append(tr);
   });
 
-  setText('interpretation-copy', clean(c.horizons?.NEXT_1_3D?.expected_path, 'Ingen offentlig fortolkning for denne horisont.'));
+  setText('interpretation-copy', localizedHorizon(c, 'NEXT_1_3D'));
   const details = $('interpret-details'); clear(details);
-  strongText(details, 'Næste 12 timer', clean(c.horizons?.NEXT_12H?.expected_path));
-  strongText(details, 'Næste 5–7 dage', clean(c.horizons?.NEXT_5_7D?.expected_path));
-  strongText(details, 'Næste 2–3 uger', clean(c.horizons?.NEXT_2_3W?.expected_path));
-  strongText(details, '4–8 uger', clean(c.horizons?.CYCLE_ALTCOINS_3_8W?.expected_path));
+  strongText(details, 'Næste 12 timer', localizedHorizon(c, 'NEXT_12H'));
+  strongText(details, 'Næste 5–7 dage', localizedHorizon(c, 'NEXT_5_7D'));
+  strongText(details, 'Næste 2–3 uger', localizedHorizon(c, 'NEXT_2_3W'));
+  strongText(details, '4–8 uger', localizedHorizon(c, 'CYCLE_ALTCOINS_3_8W'));
 
   const risk = c.protection_tracker ?? {};
   setText('risk-large', clean(risk.pullback_risk_state, 'UNAVAILABLE') + ' / WATCH');
