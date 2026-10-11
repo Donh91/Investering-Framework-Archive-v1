@@ -40,6 +40,12 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .nav-link.is-active { color: var(--ink); font-weight: 720; border-bottom-color: var(--blue); }
 .nav-arrow { font-size: 11px; margin-left: 3px; }
 .header-actions { display: flex; gap: 14px; align-items: center; border-left: 1px solid var(--line); padding-left: 27px; margin-left: 20px; }
+.language-switch {display:inline-flex;align-items:center;gap:2px;border:1px solid #dce5ef;background:#f3f6fa;border-radius:9px;padding:3px;white-space:nowrap;flex-shrink:0;}
+.language-switch button {border:0;background:transparent;color:#7f8a98;min-width:36px;min-height:35px;padding:7px 9px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.07em;}
+.language-switch button.is-selected {background:#fff;color:#2459a2;box-shadow:0 1px 5px rgba(22,47,82,.09);}
+.language-switch button:hover:not(.is-selected) {color:#174c8a;}
+.language-switch span {display:none;}
+
 .header-issue { color: #47576d; font-weight: 660; font-size: 12px; white-space: nowrap; }
 .icon-button { border: none; width: 35px; height: 35px; display: grid; place-items: center; color: #57708e; background: #f3f6fa; border-radius: 50%; transition: background .2s; }
 .icon-button:hover { background: #e8f0fa; }
