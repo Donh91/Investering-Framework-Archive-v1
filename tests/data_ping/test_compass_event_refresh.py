@@ -235,7 +235,8 @@ class CompassEventRefreshTests(unittest.TestCase):
         src = "2026-09-18T06:14:00Z"
         a["packet_generated_at_utc"] = src
         for status in a["source_health"]["hourly_market"]["freshness"].values():
-            status["timestamp"] = src
+            if isinstance(status, dict):
+                status["timestamp"] = src
         a["normalized_state"]["live_market"]["observation_open_utc"] = "2026-09-18T06:00:00Z"
         a["predecessor"]["market_observation_open_utc"] = "2026-09-18T05:00:00Z"
         kw = dict(auto_state=a, auto_pointer={"packet_sha256": "same"},
