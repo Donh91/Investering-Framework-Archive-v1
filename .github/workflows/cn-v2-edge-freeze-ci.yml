@@ -1,0 +1,30 @@
+name: CN v2 prospective Edge Freeze (nonproduction PR validation)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/cycle_navigator/build_v2_edge_forecast_freeze.py'
+      - 'tests/cycle_navigator/test_v2_edge_forecast_freeze.py'
+      - '.github/workflows/cycle-navigator-weekly-publication.yml'
+      - '.github/workflows/cn-v2-edge-freeze-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-only-edge-freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify syntax and no runtime dependencies
+        run: python -m py_compile scripts/cycle_navigator/build_v2_edge_forecast_freeze.py
+      - name: Test W42 source-identity, no-warning, risk-watch and long-run immutability
+        run: python -m unittest discover -s tests/cycle_navigator -p test_v2_edge_forecast_freeze.py -v
+      - name: Source capture is not a proof-sealed release or active extra cron
+        run: |
+          echo 'Source-owned CN Monday flow only; risk BUILDING is not a material pullback forecast.'
+          echo 'Site must show PROVISIONAL/ABSTAIN until independent proof and outcome evaluation.'
