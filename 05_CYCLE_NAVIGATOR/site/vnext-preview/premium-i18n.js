@@ -217,6 +217,20 @@ Object.assign(translations, {
   "Price Range + intradays": "Price Range + intradays",
   "Retningsudsagn": "Directional claims"
 });
+Object.assign(translations, {
+  "Vi måler vores": "We measure our",
+  "markedsforståelse.": "market understanding.",
+  "NEW SCORE ERA · FRA 12. OKTOBER 2026": "NEW SCORE ERA · FROM OCTOBER 12, 2026",
+  "Første nye scores kommer først efter faktisk frysning og en afsluttet måleperiode.": "The first new scores will only appear after the forecast has been frozen and its measurement window has closed.",
+  "Kunne vi forudsige": "Could we forecast",
+  "bevægelsen": "the move",
+  ", ikke bare prisniveauet? Og advare om et pullback, før det ramte altcoins?": ", not merely the price level? And warn of a pullback before it hit altcoins?",
+  "Ugentlige og intradag prisintervaller · separat score": "Weekly and intraday price ranges · separately scored",
+  "Flow, rotation og 14–56-dages checkpoints": "Flows, rotation and 14–56-day checkpoints",
+  "Pullback onset / recovery / størrelse / altcoin-impact": "Pullback onset / recovery / severity / altcoin impact",
+  "Historiske X-scores bevaret under Legacy Archive": "Historic X scores retained under Legacy Archive",
+  "Udforsk det nye scorekapitel": "Explore the new scoring chapter"
+});
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
