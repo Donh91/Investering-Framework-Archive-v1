@@ -17,7 +17,21 @@ function nextCompassAt(now=new Date()){const p=cphParts(now);const morning=cphIn
 function countdownLabel(target,now=new Date()){let s=Math.max(0,Math.floor((target-now)/1000));const h=Math.floor(s/3600);s%=3600;const m=Math.floor(s/60),sec=s%60;return `${h}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;}
 function nextCompassLabel(target){return new Intl.DateTimeFormat(window.CNI18n?.language==='da'?'da-DK':'en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(target)+' CPH';}
 function tickNextCompass(){const target=nextCompassAt();const count=document.getElementById('next-compass-countdown'),at=document.getElementById('next-compass-at');if(count)count.textContent=countdownLabel(target);if(at)at.textContent=`Scheduled · ${nextCompassLabel(target)}`;const issued=document.getElementById('compass-issued-at');if(issued?.dataset.issuedAt)issued.textContent=nextCompassLabel(new Date(issued.dataset.issuedAt));}
-function eventBanner(c,e){if(e?.contract!=='PUBLIC_COMPASS_EVENT_STATUS_v1'||e?.status!=='REASSESSMENT_REQUESTED')return'';const detected=new Date(e.detected_at_utc),issued=new Date(c?.issued_at_utc||0);if(Number.isNaN(+detected)||(!Number.isNaN(+issued)&&detected<=issued))return'';return `<section class="market-move-banner"><span>MARKET MOVE DETECTED</span><strong>Compass reassessment in progress</strong><small>The current Compass stays in place until the new reading is confirmed.</small></section>`;}
+function eventBanner(c,e){
+  if(e?.contract!=='PUBLIC_COMPASS_EVENT_STATUS_v1'||e?.status!=='REASSESSMENT_REQUESTED')return'';
+  const detected=new Date(e.detected_at_utc),issued=new Date(c?.issued_at_utc||0);
+  if(Number.isNaN(+detected)||(!Number.isNaN(+issued)&&detected<=issued))return'';
+  const codes=Array.isArray(e.cause_codes)?e.cause_codes:[];
+  // A scheduled publishing miss is a liveness problem, NOT a market event.
+  const livenessOnly=codes.length===1&&codes[0]==='SCHEDULED_FREEZE_MISSING';
+  const marketMove=codes.some(x=>x==='MARKET_STATE_CHANGED'||x==='MARKET_HEAT_ENTERED');
+  const label=livenessOnly?'SCHEDULED UPDATE DELAYED':marketMove?'MARKET MOVE DETECTED':'COMPASS REASSESSMENT';
+  const headline=livenessOnly?'Fresh Compass update requested':'Compass reassessment in progress';
+  const detail=livenessOnly?
+    'The scheduled reading was missed. The existing Compass remains until a fresh current-time issue is verified.':
+    'The current Compass stays in place until the new reading is confirmed.';
+  return `<section class="market-move-banner"><span>${label}</span><strong>${headline}</strong><small>${detail}</small></section>`;
+}
 function segmentName(v){return words(v).replace('LARGE CAPS','Large caps').replace('MID CAPS','Mid caps').replace('SMALL CAPS','Small caps').replace('MICROCAPS','Microcaps');}
 function horizon(c,key,label){const h=c.horizons?.[key]||{};return `<article><span>${esc(label)}</span><strong>${esc(h.label||words(h.expected_direction)||'Pending')}</strong><p>${esc(copy(h.expected_path))}</p><small>ETA · ${esc(eta(h.eta))}</small></article>`;}
 function marketWeather(c){
