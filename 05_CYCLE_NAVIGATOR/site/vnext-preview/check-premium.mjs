@@ -79,7 +79,6 @@ new Script(i18n.replace(/export (?=function)/g, ''), { filename: 'premium-i18n.j
 
 assert.match(html, /aria-controls="cycle-details"/);
 assert.ok(html.includes('<div class="hero-action-line"><span>OFFICIAL ACTION</span>'));
-]*OFFICIAL ACTION/);
 assert.ok(css.indexOf('.hero-action-line { display: flex') > css.indexOf('@media (max-width: 580px)'), 'Action summary must remain mobile-only');
 assert.match(js, /setText\('hero-action-summary', actionView\(c\.action_now\)\.text\)/);
 assert.match(html, /NEXT SERIES · ISSUE ID PENDING · 2026-W42/);
