@@ -199,7 +199,7 @@ def pair_outcomes(
                 "integrity": {
                     "status": "FAIL" if not realized_match else ("PASS" if clock_validated else "LEGACY_TIME_BASIS_UNVERIFIED"),
                     "scoring_revision": _scoring_revision(srow),
-                    "source_clock_verified_by_v3": clock_validated,
+                    "candle_close_semantics_v3": clock_validated,
                     "same_frozen_window": True,
                     "realized_path_matches": realized_match,
                     "selection_used_outcome_correctness": False,
