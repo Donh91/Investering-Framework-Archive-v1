@@ -311,5 +311,27 @@ it('valid Normal source is quiet and cannot be converted into automatic crash al
  assert.equal(o.compass.pullback_window.window_kind,'NO_ACTIVE_WATCH');
  assert.equal(o.compass.pullback_stage.sell_permission,false);
 });
-console.log('SUCCESS: 39 public-feed source parity/lineage/freshness/score/stages proof tests — NO SITE SIGNAL AUTHORITY.');
+it('fresh official Pullback investor view rejects fake 1–10 odds and alt damage while preserving 2–3w',()=>{
+ const o=mutate(validW42);
+ const p=o.compass.pullback_investor_facts;
+ assert.equal(p.authority,'SOURCE_ONLY_UI');
+ assert.equal(p.risk_state,'ELEVATED');
+ assert.equal(p.items.length,10);
+ assert.equal(p.items.find(x=>x.id==='likelihood').source,'NOT_CALIBRATED');
+ assert.equal(p.items.find(x=>x.id==='alt_impact').source,'UNQUANTIFIED');
+ assert.equal(p.items.find(x=>x.id==='duration').source,'UNASSESSED');
+ assert.match(p.items.find(x=>x.id==='eta').value,/uge 42.*ingen præcis ETA/);
+ assert.equal(o.compass.sell_assessment_state,'UNAVAILABLE');
+});
+it('stale, misaligned or invalid typed window never promotes investor drilldown',()=>{
+ for(const alter of [
+  (l,c)=>{validW42(l,c);l.generated_at='2026-10-09T00:00:00Z';},
+  (l,c)=>{validW42(l,c);c.weekly_context.public_issue_number=28;},
+  (l,c)=>{validW42(l,c);c.protection_tracker.public_explanation.onset_start_utc='2026-10-14T03:00:00Z';}
+ ]) {
+  const o=mutate(alter);
+  assert.equal(o.compass.pullback_investor_facts,null);
+ }
+});
+console.log('SUCCESS: 41 public-feed source parity/lineage/freshness/score/investor facts proof tests — NO SITE SIGNAL AUTHORITY.');
 
