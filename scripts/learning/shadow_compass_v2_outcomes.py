@@ -95,6 +95,15 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     issued = parse_utc(forecast.get("issued_at_utc"))
     if issued is None:
         return None
+    if forecast.get("scoring_contract") != SCORING_CONTRACT:
+        return {
+            "status": "PENDING_SCORING_CONTRACT_MISMATCH",
+            "forecast_id": forecast.get("forecast_id"),
+            "horizon": horizon,
+            "frozen_scoring_contract": forecast.get("scoring_contract"),
+            "required_scoring_contract": SCORING_CONTRACT,
+            "reason": "PROSPECTIVE_V3_ONLY_LEGACY_REQUIRES_SEPARATE_GOVERNED_SCORER",
+        }
 
     auto_state, auto_binding = _source_auto_state(repo, forecast)
     if auto_state is None:
