@@ -124,6 +124,20 @@ run('No source + invalid authority fail closed',()=>{
   assert.equal(p.riskState,'UNAVAILABLE');
  }
 });
+run('Official NORMAL state is NO ACTIVE WARNING and may not infer weekly downside',()=>{
+ const p=view(x=>{x.compass.protection_tracker.pullback_risk_state='NORMAL';x.compass.protection_tracker.eta_window='UNKNOWN'});
+ assert.equal(p.state,'VALID');
+ assert.equal(p.windowKind,'NO_ACTIVE_WATCH');
+ assert.match(p.headline,/Ingen aktiv pullback-watch/);
+ assert.equal(p.windowStartUtc,null);
+ assert.equal(p.windowEndUtc,null);
+});
+run('Official UNAVAILABLE risk state cannot be promoted to an ETA or an active warning',()=>{
+ const p=view(x=>{x.compass.protection_tracker.pullback_risk_state='UNAVAILABLE'});
+ assert.equal(p.state,'UNAVAILABLE');
+ assert.equal(p.windowStartUtc,null);
+ assert.equal(p.windowKind,'UNAVAILABLE');
+});
 run('Forecast week input/official Compass remains immutable',()=>{
  const before=JSON.stringify(seed);
  view();
