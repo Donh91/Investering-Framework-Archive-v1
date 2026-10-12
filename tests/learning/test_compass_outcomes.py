@@ -63,6 +63,26 @@ class CompassOutcomeTest(unittest.TestCase):
             writer.writeheader()
             writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z", "btc_close": "95", "eth_close": "47", "ethbtc_close": "0.4947"})
 
+    def test_existing_legacy_outcome_remains_already_matured_without_rewrite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            freeze_path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            freeze_path.parent.mkdir(parents=True, exist_ok=True)
+            frozen = self.freeze()
+            frozen["scoring_contract"] = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
+            freeze_path.write_text(json.dumps(frozen))
+            out = root / "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/09/16/CMP-20260916-test_12h.json"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text('{"immutable":"legacy-v2"}')
+            original = out.read_bytes()
+            result = mature_one(root, freeze_path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "ALREADY_MATURED")
+            self.assertEqual(out.read_bytes(), original)
+            out.unlink()
+            result = mature_one(root, freeze_path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
+            self.assertFalse(out.exists())
+
     def test_legacy_frozen_v2_cannot_be_silently_matured_under_v3(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
