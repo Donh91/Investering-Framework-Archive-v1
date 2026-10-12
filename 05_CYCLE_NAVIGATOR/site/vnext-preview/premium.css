@@ -617,3 +617,99 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .hero-direction[data-direction="DOWN"],.hero-direction[data-direction="BEARISH"]{color:#9d554c}
 .hero-direction[data-direction="MIXED"],.hero-direction[data-direction="SIDEWAYS"],.hero-direction[data-direction="NEUTRAL"]{color:#866a37}
 .hero-direction[data-direction="UNAVAILABLE"],.hero-direction[data-direction="UNKNOWN"]{color:#7d8a99}
+
+/* Kompas vNext · current ChatGPT Compass decision logic, quiet editorial presentation.
+   Important signals ABOVE THE FOLD; analytical explanations BELOW in native details. */
+#page-kompas { max-width: 940px; margin-inline: auto; }
+.compass-page-head { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin:8px 0 18px; }
+.compass-eyebrow { display:block; color:#567596; font-size:10px; font-weight:780; letter-spacing:.115em; }
+.compass-eyebrow span { color:#9aa5b2; font-weight:590; }
+.compass-page-head h1 { margin:9px 0 0; font-size:clamp(35px,4vw,49px); letter-spacing:-.07em; font-weight:750; line-height:1.1; }
+.compass-period { color:#376fae; }
+.compass-source-mini { margin:0 0 3px; font-size:10px; color:#8291a2; line-height:1.5; text-align:right; }
+#page-kompas .compass-summary { display:grid; grid-template-columns:1.08fr .92fr; background:#fff; color:#142a42; border:1px solid #dfe6ee; border-radius:12px; padding:25px 27px; gap:0; align-items:stretch; box-shadow:none; }
+#page-kompas .summary-action,#page-kompas .summary-timer { display:flex; flex-direction:column; align-items:flex-start; gap:8px; min-width:0; }
+#page-kompas .summary-timer { border:0; border-left:1px solid #e7ecf2; padding:0 0 0 clamp(16px,4vw,40px); }
+#page-kompas .summary-action>span,#page-kompas .summary-timer>span { color:#7f8c9c; font-size:10px; letter-spacing:.1em; font-weight:760; }
+#page-kompas .summary-action strong { color:#1b416c; display:block; font-size:clamp(26px,3vw,34px); line-height:1.1; margin:0; letter-spacing:-.06em; font-weight:780; }
+#page-kompas .summary-timer strong { color:#245d50; display:block; font-size:clamp(18px,2.3vw,24px); line-height:1.18; margin:0; letter-spacing:-.035em; font-weight:730; }
+#page-kompas .summary-action small,#page-kompas .summary-timer small { color:#8d9ba9; font-size:10px; line-height:1.35; margin:0; letter-spacing:0; }
+.compass-urgent { margin-top:10px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border:1px solid #e4eaf0; border-radius:10px; overflow:hidden; background:#fff; }
+.compass-urgent>div { padding:13px 19px 14px; display:flex; flex-direction:column; gap:6px; min-width:0; }
+.compass-urgent>div+div { border-left:1px solid #e8ecf1; }
+.compass-urgent span { color:#7f8b99; font-size:9px; font-weight:770; letter-spacing:.075em; }
+.compass-urgent strong { color:#546578; font-size:13px; font-weight:780; letter-spacing:-.014em; line-height:1.25; overflow-wrap:anywhere; }
+#compass-risk-inline[data-state="BUILDING"],#compass-risk-inline[data-state="ELEVATED"] { color:#92672f; }
+#compass-risk-inline[data-state="HIGH"],#compass-risk-inline[data-state="CONFIRMED"],#compass-sell-inline[data-state="SELL"] { color:#a24740; }
+#compass-risk-inline[data-state="NORMAL"] { color:#2e7660; }
+.compass-table-block { margin-top:25px; }
+.compass-table-heading { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.compass-table-heading h2 { margin:0; font-size:21px; letter-spacing:-.044em; font-weight:725; }
+.compass-table-heading>span { font-size:9px; color:#8392a4; letter-spacing:.08em; font-weight:690; white-space:nowrap; }
+#page-kompas .table-frame { border-radius:11px; padding:0 15px; background:#fff; box-shadow:none; }
+#page-kompas .data-table th { padding:12px 11px; font-size:9px; letter-spacing:.07em; }
+#page-kompas .data-table td { padding:13px 11px; font-size:12px; line-height:1.3; }
+#page-kompas .data-table td:first-child { font-weight:690; }
+#page-kompas .data-table td:nth-child(2) { font-size:12px; }
+#page-kompas .asset-table th:first-child { width:32%; }
+#page-kompas .asset-table th:nth-child(2) { width:30%; }
+#page-kompas .action-tag { font-size:10px; letter-spacing:0; font-weight:740; padding:5px 9px; }
+.compass-disclosure-group { margin-top:32px; }
+.compass-disclosure-eyebrow { margin:0 0 11px; color:#7b8ba0; font-size:10px; letter-spacing:.11em; font-weight:780; }
+.compass-disclosure { margin:0 0 9px; border:1px solid #e0e7ee; border-radius:10px; background:#fff; overflow:hidden; }
+.compass-disclosure summary { list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:17px 19px; }
+.compass-disclosure summary::-webkit-details-marker { display:none; }
+.compass-disclosure summary>span:first-child { display:flex; flex-direction:column; gap:5px; }
+.compass-disclosure summary strong { font-size:13px; font-weight:760; color:#213a56; }
+.compass-disclosure summary small { font-size:11px; line-height:1.45; color:#8b99a9; }
+.compass-chevron { color:#627c9b; font-size:19px; line-height:1; transition:transform .18s ease; }
+.compass-disclosure[open] .compass-chevron { transform:rotate(180deg); }
+.compass-disclosure-content { padding:17px 20px 21px; border-top:1px solid #eaf0f5; }
+.compass-disclosure-content>p { margin:0 0 15px; color:#58697d; font-size:12px; line-height:1.7; }
+.compass-source-explanation p,.compass-disclosure-content .risk-detail-list { color:#6b7d90; font-size:12px; line-height:1.68; }
+.compass-source-explanation p { margin:12px 0; }
+.compass-source-explanation strong,.risk-detail-list strong { color:#2c4660; }
+.compass-risk-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:10px; margin-bottom:13px; }
+.compass-risk-heading>span { color:#8191a3; font-size:9px; letter-spacing:.09em; font-weight:730; }
+.compass-risk-heading strong { color:#966e36; font-size:17px; letter-spacing:-.03em; }
+#page-kompas .risk-state-grid { margin:0; padding:15px 0; gap:12px; }
+#page-kompas .risk-state-grid strong { font-size:11px; }
+#page-kompas .risk-detail-list { margin-top:15px; }
+.compass-bottom-note { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:15px 2px; }
+.compass-bottom-note p { margin:0; color:#8794a4; font-size:10px; line-height:1.5; }
+.compass-bottom-note button { white-space:nowrap; font-size:11px; }
+@media (max-width: 580px) {
+  #page-kompas { max-width:100%; }
+  .compass-page-head { align-items:flex-start; flex-direction:column; gap:9px; margin:0 0 14px; }
+  .compass-eyebrow { font-size:9px; }
+  .compass-page-head h1 { font-size:37px; margin-top:8px; }
+  .compass-source-mini { text-align:left; font-size:9px; }
+  #page-kompas .compass-summary { display:grid; grid-template-columns:1.05fr .95fr; flex-direction:row; padding:20px 18px; gap:0; }
+  #page-kompas .summary-action,#page-kompas .summary-timer { gap:8px; }
+  #page-kompas .summary-timer { border-top:0; border-left:1px solid #e7ecf2; padding:0 0 0 14px; min-width:0; }
+  #page-kompas .summary-action>span,#page-kompas .summary-timer>span { font-size:8.5px; letter-spacing:.035em; }
+  #page-kompas .summary-action strong { font-size:clamp(18px,5.5vw,24px); overflow-wrap:anywhere; margin:0; }
+  #page-kompas .summary-timer strong { font-size:clamp(16px,4.4vw,19px); margin:0; }
+  #page-kompas .summary-action small,#page-kompas .summary-timer small { font-size:9px; }
+  .compass-urgent { grid-template-columns:1fr 1fr; }
+  .compass-urgent>div { padding:11px 14px 12px; }
+  .compass-urgent>div:nth-child(3) { grid-column:1/-1; border:0; border-top:1px solid #e8ecf1; padding:10px 14px; display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:12px; }
+  .compass-urgent span { font-size:8.5px; }
+  .compass-urgent strong { font-size:12px; }
+  .compass-table-block { margin-top:23px; }
+  .compass-table-heading h2 { font-size:19px; }
+  .compass-table-heading>span { font-size:8px; letter-spacing:0; }
+  #page-kompas .table-frame { padding:0 7px; }
+  #page-kompas .data-table th { padding:11px 7px 10px; font-size:8.5px; }
+  #page-kompas .data-table td,#page-kompas .data-table td:nth-child(2) { padding:12px 7px; font-size:11px; }
+  #page-kompas .action-tag { padding:5px 7px; font-size:9px; }
+  #page-kompas .asset-table th:first-child { width:31%; }
+  .compass-disclosure-group { margin-top:29px; }
+  .compass-disclosure summary { padding:15px 15px; }
+  .compass-disclosure-content { padding:14px 16px 18px; }
+  .compass-bottom-note { flex-direction:column; align-items:flex-start; padding:14px 2px; }
+  .compass-bottom-note button { padding:6px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .compass-chevron { transition:none !important; }
+}
