@@ -251,6 +251,7 @@ function strongText(parent, label, text) {
   const line = make('p');
   line.append(make('strong', null, label + ': '), document.createTextNode(text));
   parent.append(line);
+  return line;
 }
 
 // Danish editorial translations are locked to this exact archived source identity.
@@ -288,6 +289,12 @@ function paintPullback(d, lang = 'da') {
   setText('overview-risk-window', p.headline);
   setText('compass-risk-window', p.headline);
   setText('overview-risk-desc', p.note + ' · ' + stage.proximityLabel);
+  setText('risk-main-copy', stage.stageLabel + ' · ' + stage.etaLabel + ' · ' + stage.proximityLabel);
+  const qualityEl = $('risk-evidence-quality');
+  if (qualityEl) {
+    const prefix = lang === 'en' ? 'Evidence quality (not probability): ' : 'Evidenskvalitet (ikke sandsynlighed): ';
+    qualityEl.replaceChildren(make('strong', null, prefix), document.createTextNode(stage.qualityLabel));
+  }
   for (const id of ['overview-risk-window','compass-risk-window']) {
     const el = $(id);
     if (el) el.dataset.windowKind = p.windowKind;
@@ -397,7 +404,7 @@ function paintCompass(d) {
   setText('sell-label', clean(c.sell_assessment?.state));
   setText('reentry-label', clean(risk.reentry_state));
   const riskDetails = $('risk-details'); clear(riskDetails);
-  strongText(riskDetails, 'Evidenskvalitet (ikke sandsynlighed)', stage.qualityLabel);
+  strongText(riskDetails, 'Evidenskvalitet (ikke sandsynlighed)', stage.qualityLabel).id = 'risk-evidence-quality';
   strongText(riskDetails, 'SELL-adskillelse', clean(c.sell_assessment?.reason));
   strongText(riskDetails, 'Re-entry', clean(risk.reentry_message));
   strongText(riskDetails, 'Hvad svækker risikovurderingen', clean(risk.invalidation));
