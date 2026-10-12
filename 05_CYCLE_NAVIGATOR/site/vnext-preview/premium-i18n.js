@@ -398,6 +398,20 @@ Object.assign(translations, {
   "Start og slut ikke bekræftet · ikke et SELL-signal.": "Start and end unconfirmed · not a SELL signal."
 });
 
+Object.assign(translations, {
+  "Officielle pullback-risikoklasser; ikke sandsynlighed eller nedtælling": "Official pullback risk classes; not probability or countdown",
+  "RISIKOSTADIER": "RISK CATEGORIES",
+  "Risikoklasse · ikke en 1–10 sandsynlighed": "Risk category · not a 1–10 likelihood",
+  "Ro": "Quiet",
+  "Opbygning": "Building",
+  "Forhøjet": "Elevated",
+  "Høj": "High",
+  "Bekræftet": "Confirmed",
+  "Pullback scenarie og tidshorisonter": "Pullback scenario and time horizons",
+  "Hvad betyder advarslen for en investor?": "What does this warning mean for an investor?",
+  "Kvalitet af evidens er ikke sandsynlighed. Risikostadie giver ikke i sig selv et SELL-signal.": "Evidence quality is not likelihood. The risk category alone is not a SELL signal."
+});
+
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
