@@ -1,5 +1,6 @@
 /* Cycle Navigator — source-bound interactive preview. Read-only. No signal ownership. */
-import { initializeLanguage, translateInterface, selectLanguage } from './premium-i18n.js';
+import { initializeLanguage, translateInterface, selectLanguage, currentLanguage } from './premium-i18n.js';
+import { officialPullbackDisplay } from './official-pullback-eta.mjs';
 import { officialBullBear } from './official-bullbear.mjs';
 'use strict';
 
@@ -275,6 +276,20 @@ function localizedPulse(c) {
   return clean(c.market_now?.summary);
 }
 
+function paintPullback(d, lang = 'da') {
+  // Independent governed risk-state and week/ETA readback, never an in-browser
+  // early warning, synthetic time forecast, or authorization to SELL.
+  const p = officialPullbackDisplay(d.compass, d.weekly, lang);
+  setText('overview-risk', p.riskState);
+  setText('overview-risk-window', p.headline);
+  setText('compass-risk-window', p.headline);
+  setText('overview-risk-desc', p.note);
+  for (const id of ['overview-risk-window','compass-risk-window']) {
+    const el = $(id);
+    if (el) el.dataset.windowKind = p.windowKind;
+  }
+}
+
 function paintTop(d) {
   const { weekly: w, compass: c } = d;
   setText('header-issue', 'CN #' + w.public_issue_number + ' · ' + w.forecast_week);
@@ -290,10 +305,7 @@ function paintTop(d) {
   if ($('hero-now')) $('hero-now').dataset.direction = currentDirection;
   setText('hero-action-summary', actionView(c.action_now).text);
   setText('hero-deck', localizedPulse(c));
-  setText('overview-risk', clean(c.protection_tracker?.pullback_risk_state, 'UNAVAILABLE'));
-  setText('overview-risk-desc', c.protection_tracker?.pullback_risk_state === 'BUILDING' ?
-    'Retest-watch under opbygning. Dybde og varighed er ikke kvantificeret. Ikke en SELL-instruktion.' :
-    clean(c.protection_tracker?.pullback_class, 'Ingen verificeret risikoklasse.'));
+  paintPullback(d, currentLanguage());
   setText('compass-updated', 'KILDEFAST SNAPSHOT · ' + c.issued_at_utc.slice(0, 16).replace('T', ' ') + ' UTC');
   setText('compass-primary-action', actionView(c.action_now).text);
   setText('compass-primary-direction', direction);
@@ -478,7 +490,9 @@ function paintSource(d) {
 async function initialize() {
   initializeLanguage();
   document.querySelectorAll('[data-lang]').forEach((button) => {
-    button.addEventListener('click', () => selectLanguage(button.dataset.lang));
+    button.addEventListener('click', () => selectLanguage(button.dataset.lang, () => {
+      if (data) paintPullback(data, button.dataset.lang);
+    }));
   });
   bindNavigation();
   bindPanels();
@@ -502,6 +516,9 @@ async function initialize() {
     setText('hero-forward', '— / UNAVAILABLE');
     setText('hero-action-summary', 'UTILGÆNGELIG');
     setText('overview-risk', 'UTILGÆNGELIG');
+    setText('overview-risk-window', 'ETA ikke tilgængelig');
+    setText('compass-risk-window', 'ETA ikke tilgængelig');
+    setText('overview-risk-desc', 'Ingen verificeret kilde eller start/slut.');
     setText('compass-primary-direction', 'UKENDT');
     setText('compass-primary-action', 'UTILGÆNGELIG');
     setText('bullbear-bull', '—');
