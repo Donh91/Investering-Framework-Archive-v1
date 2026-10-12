@@ -48,6 +48,6 @@ At most five simultaneously enabled tasks. No routine new tasks. Every task's ch
 ## Acceptance checklist
 - Governed documentation PR reviewed and merged, main-byte readback verified.
 - Existing host tasks have safety-complete bootstraps, correct IDs, schedules and domain boundaries; notification settings checked.
-- Master Audit terminal handover is verifiably received by #1156; exact audit task disabled; successor S5 enabled only if slot free and acceptance gates pass.
+- Master Audit terminal handover is verifiably received by #1156; exact audit task disabled; successor S5 enabled only if slot free and host/governance acceptance gates pass. A pending documentation PR is NOT a reason to keep a completed hourly audit alive: existing successor host prompt remains the safe fallback, with DOC_PENDING and no new README-derived authority.
 - At least one normal natural run and GitHub/source readback for successor, with no false live-alert claim.
 - Future temporary lease is rehearsed with host readback and restoration, no overlap and no lost permanent instructions.
