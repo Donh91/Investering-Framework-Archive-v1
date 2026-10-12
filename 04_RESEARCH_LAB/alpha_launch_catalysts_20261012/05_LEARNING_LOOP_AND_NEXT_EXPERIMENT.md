@@ -62,3 +62,11 @@
 - **Not supported:** 10x achievable from launch price, nine tokens organic/no cabal, nine tokens cabal coordinated, successful onchain issuer team == token buys, backfilled win rates as early detection proof.
 
 **Decision:** Park alpha claims; promote only *testable research hypotheses* and source evidence provenance. Independent PR review required before any operational integration.
+
+## Additional post-freeze adversarial benchmark — DO NOT copy outside cohort
+
+The later independent baseline in [07_EXTERNAL_POPULATION_BASELINES.md](./07_EXTERNAL_POPULATION_BASELINES.md) adds a **high-priority failure mode for the existing P4 independent-buyer hypothesis**: a buyer may purchase a token, immediately transfer it to a separate never-buying seller, and send the freed ETH to another one-way buyer. The Robinhood Bitquery investigation identified such relays in eight sampled memecoins; counting EOAs or excluding only wallets that both BUY and SELL therefore **does not establish wallet independence**. Future prospective `independent_net_new_buyers` must include transfer/seller and ETH-recycling exclusions, as well as explicit UNKNOWN if ancestry unavailable. Mere match of amount and timestamp never proves identity.
+
+Bitquery's separate 8.2m-Pump.fun launch cohort in 2025–26 also reports that bundled same-block buys can be creator-adjacent, but position in a bundle may reflect an unrelated submission service; ownership verdict remains UNPROVEN absent wallet funding/other authenticated links. The paper's 2025/26 base rates must not be retrofitted onto 2022–24 winners.
+
+**New negative unit-test candidate:** Synthetic three-wallet relay A(buy)→B(sell)→C(rebuy) with token transfers and original ETH recycled must fail `INDEPENDENT_BUYER_VERIFIED`, while a legitimate airdrop-to-market transfer and a CEX-withdrawal-funded public purchase must stay `PROVENANCE_UNRESOLVED` until supporting evidence; do not label innocent market participants a cabal. Check false-rejection of eventual right-tail winners with deterministic matched controls and prospectively frozen thresholds. This is a suggested research test case, not proof code exists or has passed.
