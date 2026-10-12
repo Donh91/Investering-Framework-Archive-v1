@@ -96,7 +96,8 @@ class TemporaryBridgeTests(unittest.TestCase):
             p.write_text(json.dumps(EVENT))
             with patch.object(bridge, "check_window", return_value="2026-10-12"), \
                  patch.object(bridge, "pr_info", return_value=info()), \
-                 patch.object(bridge, "gh", return_value="diff --git a/x.py b/x.py\n" + "\\" * 39_000):
+                 patch.object(bridge, "gh", return_value="diff --git a/x.py b/x.py\n" + "\\" * 39_000), \
+                 patch.object(bridge, "RESERVATION_USD", 0.10):
                 with self.assertRaisesRegex(ValueError, "COST_BOUND_UNPROVEN"):
                     bridge.build(p, Path(d) / "review")
 
