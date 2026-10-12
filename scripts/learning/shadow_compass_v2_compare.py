@@ -43,13 +43,62 @@ def _pair_key(row: dict[str, Any]) -> tuple[Any, Any, Any, Any]:
     )
 
 
-def _scoring_revision(row: dict[str, Any]) -> str | None:
-    # A batch-clock v2 outcome cannot be paired as if it used v3 candle clocks.
-    value = row.get("scoring_contract")
-    if not isinstance(value, str) or "_v" not in value:
-        return None
-    revision = value.rsplit("_v", 1)[-1]
-    return revision if revision.isdigit() else None
+def _scoring_revision(row: dict[str, Any], *, shadow: bool) -> str | None:
+    # Only exact owner contracts are eligible. A foreign "_v3" suffix is not proof.
+    prefix = "SHADOW_COMPASS_V2_SCORING_v" if shadow else "OFFICIAL_DAILY_COMPASS_SCORING_v"
+    for revision in ("2", "3"):
+        if row.get("scoring_contract") == prefix + revision:
+            return revision
+    return None
+
+
+def _v3_time_basis_valid(row: dict[str, Any], *, shadow: bool) -> bool:
+    """Validate the outcome's recorded candle clock, not unproven source PIT."""
+    if _scoring_revision(row, shadow=shadow) != "3":
+        return False
+    tb = row.get("time_basis")
+    if not isinstance(tb, dict):
+        return False
+    if (
+        tb.get("status") != "PASS"
+        or tb.get("endpoint_semantics") != "HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON"
+        or tb.get("source_window_end_semantics") != "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE"
+        or tb.get("source_first_knowledge_status") != "UNKNOWN_NOT_PROVEN_BY_BATCH_END"
+    ):
+        return False
+    opened = parse_utc(row.get("target_observation_open_at_utc"))
+    closed = parse_utc(row.get("target_observation_at_utc"))
+    collected = parse_utc(row.get("target_source_window_end_utc"))
+    reference = parse_utc(tb.get("start_reference_at_utc"))
+    target = parse_utc(row.get("target_at_utc"))
+    if None in (opened, closed, collected, reference, target):
+        return False
+    if opened.minute or opened.second or opened.microsecond:
+        return False
+    if (closed - opened).total_seconds() != 3600:
+        return False
+    if collected < closed:
+        return False
+    horizon_hours = {"12h": 12, "72h": 72, "168h": 168}.get(row.get("horizon"))
+    if horizon_hours is None:
+        return False
+    if abs((target - reference).total_seconds() / 3600 - horizon_hours) > 1e-6:
+        return False
+    effective = (closed - reference).total_seconds() / 3600
+    deviation = abs(effective - horizon_hours)
+    if deviation > 1.0:
+        return False
+    for key, expected in (
+        ("nominal_horizon_hours", horizon_hours),
+        ("effective_window_hours", effective),
+        ("window_deviation_hours", deviation),
+    ):
+        value = tb.get(key)
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            return False
+        if not math.isfinite(value) or not math.isclose(value, expected, rel_tol=0, abs_tol=1e-5):
+            return False
+    return True
 
 
 def _row_id(row: dict[str, Any], shadow: bool) -> str:
@@ -125,7 +174,7 @@ def pair_outcomes(
             o_issue = parse_utc(orow.get("issued_at_utc"))
             if o_issue is None or _pair_key(srow) != _pair_key(orow):
                 continue
-            if _scoring_revision(srow) is None or _scoring_revision(srow) != _scoring_revision(orow):
+            if _scoring_revision(srow, shadow=True) is None or _scoring_revision(srow, shadow=True) != _scoring_revision(orow, shadow=False):
                 continue  # Fail closed across incompatible/unknown scoring versions.
             distance = abs((s_issue - o_issue).total_seconds())
             candidates.append(
@@ -156,7 +205,7 @@ def pair_outcomes(
         srow, orow = shadow[si], official[oi]
         s_issue, o_issue = parse_utc(srow.get("issued_at_utc")), parse_utc(orow.get("issued_at_utc"))
         realized_match = _realized_match(srow, orow)
-        clock_validated = _scoring_revision(srow) == "3"
+        clock_validated = _v3_time_basis_valid(srow, shadow=True) and _v3_time_basis_valid(orow, shadow=False)
         asset_comparisons: dict[str, Any] = {}
         for asset in ("btc", "eth"):
             s_acc = ((srow.get("direction_accuracy") or {}).get(asset) or {})
@@ -198,7 +247,7 @@ def pair_outcomes(
                 },
                 "integrity": {
                     "status": "FAIL" if not realized_match else ("PASS" if clock_validated else "LEGACY_TIME_BASIS_UNVERIFIED"),
-                    "scoring_revision": _scoring_revision(srow),
+                    "scoring_revision": _scoring_revision(srow, shadow=True),
                     "candle_close_semantics_v3": clock_validated,
                     "same_frozen_window": True,
                     "realized_path_matches": realized_match,
