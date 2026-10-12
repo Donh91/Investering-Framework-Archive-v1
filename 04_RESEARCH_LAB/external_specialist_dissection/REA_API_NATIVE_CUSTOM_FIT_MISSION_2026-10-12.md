@@ -157,6 +157,21 @@ Duplicate existing capability; no independent ground truth; data rights unresolv
 
 Expected user report: **technical value proved? predictive edge proved? budget used? what was built vs only proposed? what blocks deployment? what is next cheapest falsifier?**
 
+## 8A. New M6 evidence dependency, 2026-10-12
+
+The **real** GPT-6.1 Sol API call for M6 completed at #1476 comment 6124185871 (trigger 6124130988), estimated $0.096610, verdict **WEAKENED**, not final economic acceptance. At inspection, current-main queue still marks M6 `ACTIVE_RELEASED`. This is a **material source update**, not an excuse to release 007 or overwrite M6 ownership.
+
+Add the following exact prospective integrity admission checks to 007 and to all owner handoffs:
+- **Exact-version proof**: prove the warning/signal's precise content hash existed in the accessible production path by cutoff, not just embedded `issued_at_utc`, `observation_open_utc`, a mutable current file, or unauthenticated Git committer date.
+- **Source delivery proof**: a candle's exchange/collector availability cannot be inferred from candle-close time when `source_window_end_utc` is absent. `PIT_UNVERIFIED` cannot silently count as an admissible `OBSERVED` predictive feature.
+- **Pre-outcome proof**: preregister start and immutable observation capture; `outcome_joined=false` in a generated table does not prove the feature was frozen before outcomes.
+- **Endpoint proof**: at an exact-hour horizon, the terminal close must exist at the horizon endpoint, not one bar early. For partial-hour intervals, distinguish missing intra-bar/post-warning extremes from observed no-touch. A censored segment is `UNKNOWN`, not a clean negative.
+- **Independence proof**: 13 warnings across two provisional clusters are not 13 independent adverse-event families; warnings-only sample cannot prove population precision. No transfer of July thresholds or noncanonical breadth proxies.
+
+Source: https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1476#issuecomment-6124185871
+
+**Adjudication rule:** If M6 remains active or its newly identified PIT/endpoint defects are unresolved, 007 may still undertake strictly technical REA/contract work *after valid owner release*, but must label all economic/lead-time conclusions `INSUFFICIENT_EVIDENCE`. Do not conflate completion of the M6 API request with its final scientific adjudication.
+
 ## 9. Important execution boundary
 
 This packet is implementation-ready routing and a frozen scientific design, **not** evidence that REA succeeded, that an API call executed, that a Pons forward case exists, or that auto-trading is funded/executable. Release, cost verification, tests and independent review must be observed and linked, not merely promised.
