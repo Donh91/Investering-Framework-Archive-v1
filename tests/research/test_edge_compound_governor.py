@@ -122,6 +122,20 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",result["semantic_state"]["blockers"])
             self.assertFalse(result["external_routing"]["automatic_dispatch"])
 
+    def test_malformed_asset_containers_block_without_crashing(self):
+        for field,value in (("BTC",["not an asset"]),("ETH",{"state":"MATURED","reference_anchor":["bad"]})):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                owner["events"][0]["horizons"]["24h"][field]=value
+                path.write_text(json.dumps(owner))
+                result=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(result["decision"],"FALSIFY")
+                self.assertEqual(result["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+                self.assertFalse(result["external_routing"]["automatic_dispatch"])
+
     def test_false_full_grid_is_not_matured_payload_pass(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t)
