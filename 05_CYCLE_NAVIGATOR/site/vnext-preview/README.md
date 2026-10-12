@@ -86,3 +86,9 @@ No keys, wallets, private holdings, hidden repo data or non-public research incl
 [Read the new Kompas Minimal UI Contract](KOMPAS_MINIMAL_UI_CONTRACT_2026-10-12.md): retain the current ChatGPT Kompas decision logic with **official action + 0–12h direction and immediate pullback/SELL/distribution visible**, exactly two compact decision tables (5 horizons + 7 asset classes), and only two **closed-by-default** native disclosures for market reasoning and detailed protection/re-entry. Nothing decorative or nonactionable remains above the tables. Source / forecast / scoring ownership remains unchanged.
 
 The currently published [isolated preview Kompas](https://cycle-navigator-vnext-preview-l1nbkq.v2.appdeploy.ai/#kompas) contains this source-bound, bilingual implementation; production is not changed. Independent desktop browser interaction QA passed but native 390px iPhone acceptance still needs to be completed by Work.
+
+## Pullback ETA contextualization and deploy gate · 2026-10-12
+
+The user has approved the minimalist site but requests that **Pullback status always includes an ETA/time-window qualification**. [Read the Pullback ETA release note, source guardrails and exact post-quota deployment instructions](PULLBACK_ETA_RELEASE_NOTE_2026-10-12.md).
+
+**Status:** Code, 13 strict ETA tests, 35 live feed parity tests and Vite production bundle PASSED in PR #1576. The archived W41 preview source supports only a *possible* 7–11 October window, not a verified downturn. The latest W42 Official Compass has a possible retest this week with **no supported specific start/end**. Risk is not SELL authority. The app hosting credits are temporarily exhausted until **2026-10-13 00:00 UTC**, so the ETA changes are **not deployed** to preview yet. The previous stable AppDeploy v12 remains READY. The existing supervisor issue #1578 owns the retry after reset; no extra automation or paid upgrade is necessary.
