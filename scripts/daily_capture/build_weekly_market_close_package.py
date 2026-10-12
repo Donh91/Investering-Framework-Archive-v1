@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -95,6 +96,32 @@ def resolve_window(now: datetime, mode: str) -> tuple[datetime, datetime, bool, 
     return start, end, False, "PRE_CLOSE_CURRENT_ISO_WEEK"
 
 
+def validate_actions_week_binding(now: datetime, mode: str, *, event_name: str, event_path: str, run_attempt: str) -> None:
+    """Reject wrong-week scheduled PRE-CLOSE / FINAL before any network or writes.
+
+    GitHub's schedule payload identifies the cron but does NOT bind the original
+    ISO week. A delayed run after the UTC week/day rollover or a rerun cannot
+    safely infer that week from datetime.now(). Never silently backdate it.
+    """
+    if event_name not in {"schedule", "workflow_dispatch"}:
+        return  # Offline/tests; production workflow uses schedule/dispatch.
+    if run_attempt != "1":
+        raise ValueError("WEEKLY_CLOSE_RERUN_ORIGINAL_WEEK_UNBOUND")
+    if event_name == "workflow_dispatch":
+        raise ValueError("WEEKLY_CLOSE_DISPATCH_ORIGINAL_WEEK_UNBOUND")
+    if not event_path:
+        raise ValueError("WEEKLY_CLOSE_SCHEDULE_EVENT_UNAVAILABLE")
+    try:
+        payload = json.loads(Path(event_path).read_text())
+    except (OSError, ValueError) as exc:
+        raise ValueError("WEEKLY_CLOSE_SCHEDULE_EVENT_UNAVAILABLE") from exc
+    schedules = {"35 23 * * 0": "preclose", "5 2 * * 1": "final"}
+    if not isinstance(payload, dict) or schedules.get(payload.get("schedule")) != mode:
+        raise ValueError("WEEKLY_CLOSE_SCHEDULE_MODE_MISMATCH")
+    if now.astimezone(timezone.utc).weekday() != (6 if mode == "preclose" else 0):
+        raise ValueError("WEEKLY_CLOSE_SCHEDULED_WEEK_ROLLOVER_UNBOUND")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, required=True)
@@ -107,6 +134,7 @@ def main() -> None:
     if now.tzinfo is None:
         now = now.replace(tzinfo=timezone.utc)
     now = now.astimezone(timezone.utc)
+    validate_actions_week_binding(now, args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''), run_attempt=os.getenv('GITHUB_RUN_ATTEMPT', ''))
     start, end, final, close_mode = resolve_window(now, args.mode)
     if final and now < end:
         raise SystemExit("FINAL_WINDOW_NOT_YET_CLOSED")
