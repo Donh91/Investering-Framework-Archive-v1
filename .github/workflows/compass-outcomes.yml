@@ -95,8 +95,6 @@ jobs:
           from scripts.learning.shadow_compass_v2_outcomes import SCORING_CONTRACT as shadow_id
           assert official_id == 'OFFICIAL_DAILY_COMPASS_SCORING_v3'
           assert shadow_id == 'SHADOW_COMPASS_V2_SCORING_v3'
-          from scripts.data_ping.native_handlekompas import build_packet
-          from scripts.learning.shadow_compass_v2 import build_forecast
           from pathlib import Path
           native_source=Path('scripts/data_ping/native_handlekompas.py').read_text()
           shadow_source=Path('scripts/learning/shadow_compass_v2.py').read_text()
