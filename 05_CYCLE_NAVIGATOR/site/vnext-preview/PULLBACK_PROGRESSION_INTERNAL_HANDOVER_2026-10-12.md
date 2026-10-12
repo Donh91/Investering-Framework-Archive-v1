@@ -6,7 +6,7 @@
 
 ## Verified current repo facts
 
-1. The production [protection contract](../../../../04_MARKET_LEARNING/handlekompas/PROTECTION_TRACKER_CONTRACT_v1.md) already permits `NORMAL / BUILDING / ELEVATED / HIGH / CONFIRMED / UNAVAILABLE`. Quality is `LOW / MEDIUM / HIGH` **evidence quality**, not calibrated odds.
+1. The production [protection contract](../../../04_MARKET_LEARNING/handlekompas/PROTECTION_TRACKER_CONTRACT_v1.md) already permits `NORMAL / BUILDING / ELEVATED / HIGH / CONFIRMED / UNAVAILABLE`. Quality is `LOW / MEDIUM / HIGH` **evidence quality**, not calibrated odds.
 2. `scripts/data_ping/native_handlekompas.py::protection_tracker` reads the **structured CN decision_projection.protection**, i.e. predominantly the frozen **weekly** baseline. New hourly price/breadth can change `market_now` and trigger event refresh **without updating official pullback severity**. This is a genuine information cadence gap.
 3. `scripts/data_ping/compass_event_refresh.py` can request early fresh Compass on canonical material transitions or downside heat. It does **not** have license to produce a more severe risk state or a new ETA. Existing 08:17 and 20:17 Copenhagen Compass schedule must remain.
 4. Latest inspected actual source `CMP-20261012-3f1e99c2868e` / 2026-W42: `pullback_risk_state=ELEVATED`, `confidence_quality=LOW`, `onset_start_utc=null`, `onset_end_utc=null`, `SELL=UNAVAILABLE`, `distribution_risk=UNKNOWN`. Hence **NO imminent / probability claim** today.
