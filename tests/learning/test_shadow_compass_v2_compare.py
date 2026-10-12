@@ -16,6 +16,7 @@ def outcome(
     start: str = "2026-10-01T05:00:00Z",
 ) -> dict:
     row = {
+        "scoring_contract": "SHADOW_COMPASS_V2_SCORING_v3" if shadow else "OFFICIAL_DAILY_COMPASS_SCORING_v3",
         "horizon": "12h",
         "issued_at_utc": issued,
         "target_at_utc": "2026-10-01T17:00:00Z",
