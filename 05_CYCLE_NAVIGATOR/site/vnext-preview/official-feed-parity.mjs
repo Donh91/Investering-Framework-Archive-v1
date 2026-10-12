@@ -1,0 +1,199 @@
+/**
+ * Read-only Cycle Navigator vNext adapter for the EXISTING production site feeds.
+ *
+ * Inputs MUST be the official site/build-public.mjs outputs:
+ *   dist/data/latest.json  (CN_PUBLIC_SNAPSHOT_V2)
+ *   dist/data/compass.json (PUBLIC_COMPASS_PROJECTION_v1)
+ *
+ * This module does not fetch secrets, publish a forecast, score prices,
+ * change official actions, or generate any production HTML.
+ * Keep it on the isolated design branch until source parity is accepted.
+ */
+
+const RANGE_FORMULA = '70pct_containment_plus_30pct_jaccard';
+const SCORE_CONTRACT = 'CN_PUBLIC_WEEKLY_SCORECARD_v1';
+const VALID_WEEKLY_HEALTH = new Set(['OK', 'PASS', 'DEGRADED']);
+const HOUR_MS = 3600000;
+
+function finite(value) {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function validUtc(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(value)) return null;
+  const unix = Date.parse(value);
+  return Number.isFinite(unix) ? unix : null;
+}
+
+function normalizeAge(value, nowEpochMs, maxHours) {
+  const issued = validUtc(value);
+  if (issued === null) return 'NO_TIMESTAMP';
+  const diff = nowEpochMs - issued;
+  if (diff < -5 * 60000) return 'FUTURE_TIMESTAMP';
+  if (diff > maxHours * HOUR_MS) return 'STALE';
+  return 'FRESH';
+}
+
+function sourceRange(low, high) {
+  return finite(low) && finite(high) && low > 0 && high > low ? { low, high } : null;
+}
+
+function scoreRowEligible(row) {
+  return row && ['forecast_low', 'forecast_high', 'actual_low', 'actual_high', 'score'].every((field) => finite(row[field])) &&
+    row.forecast_low > 0 && row.forecast_low < row.forecast_high &&
+    row.actual_low > 0 && row.actual_low <= row.actual_high &&
+    row.score >= 0 && row.score <= 100 &&
+    ['BTC', 'ETH'].includes(row.asset) &&
+    ['day_1_2', 'day_3_4', 'day_5_7'].includes(row.window);
+}
+
+/**
+ * @param {object} latest official generated latest.json
+ * @param {object} compass official generated compass.json
+ * @param {object} options for deterministic tests: {nowUtc, compassMaxAgeHours, deliveryMaxAgeHours}
+ * @returns {object} source-bounded public presentation state only
+ */
+export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
+  const {
+    nowUtc = new Date().toISOString(),
+    compassMaxAgeHours = 24,
+    deliveryMaxAgeHours = 24
+  } = options;
+  const nowEpochMs = validUtc(nowUtc);
+  if (nowEpochMs === null || !finite(compassMaxAgeHours) || compassMaxAgeHours <= 0 ||
+      !finite(deliveryMaxAgeHours) || deliveryMaxAgeHours <= 0) {
+    throw new Error('INVALID_READBACK_CLOCK_POLICY');
+  }
+  const result = {
+    contract: 'CN_VNEXT_PUBLIC_FEED_PARITY_v1',
+    source_authority: 'READ_ONLY_PRESENTATION',
+    generated_at: latest?.generated_at ?? null,
+    delivery_health: 'UNAVAILABLE',
+    weekly: {
+      state: 'UNAVAILABLE', public_issue_number: null, machine_issue_number: null,
+      forecast_week: null, btc_range: null, eth_range: null, path_state: 'UNAVAILABLE'
+    },
+    compass: {
+      state: 'UNAVAILABLE', compass_id: null, issued_at_utc: null,
+      weekly_alignment: 'UNVERIFIED', action_now: 'UNAVAILABLE',
+      pullback_risk_state: 'UNAVAILABLE', distribution_risk: 'UNKNOWN',
+      sell_assessment_state: 'UNAVAILABLE', reentry_state: 'UNAVAILABLE',
+      permit_path_live_gates: false
+    },
+    completed_score: {
+      state: 'UNAVAILABLE', public_issue_number: null, forecast_week: null,
+      price_range_precision: null, btc_score: null, eth_score: null,
+      intraday_window_scores: null, rows: [],
+      market_structure_precision: null, combined_score: null,
+      proof_state: 'NOT_INDEPENDENTLY_SEALED'
+    },
+    edge_claims: { status: 'NO_AUTHENTICATED_FEED', score: null, source: null },
+    restrictions: ['NO_SITE_GENERATED_SIGNAL', 'NO_SELL_FROM_PULLBACK',
+      'NO_GUESSED_ETA', 'NO_PRICE_SCORE_RECALCULATION', 'NO_CROSS_ERA_AGGREGATE']
+  };
+
+  if (latest?.schema !== 'CN_PUBLIC_SNAPSHOT_V2' ||
+      compass?.contract !== 'PUBLIC_COMPASS_PROJECTION_v1') return result;
+
+  result.delivery_health = normalizeAge(latest.generated_at, nowEpochMs, deliveryMaxAgeHours);
+
+  const publicProjection = latest.public_series?.current_public_projection;
+  const wk = latest.pointer;
+  const pkg = latest.package;
+  const issue = publicProjection?.public_issue_number;
+  const forecastWeek = publicProjection?.forecast_week;
+  const machineIssue = wk?.issue_number;
+  const isoWeek = Number(wk?.iso_week), isoYear = Number(wk?.iso_year);
+  const expectedWeek = Number.isInteger(isoYear) && Number.isInteger(isoWeek) &&
+    isoWeek >= 1 && isoWeek <= 53 ? isoYear + '-W' + String(isoWeek).padStart(2, '0') : null;
+  const weeklyAligned = Number.isInteger(issue) && issue > 0 &&
+    Number.isInteger(machineIssue) && Number.isInteger(pkg?.issue_number) &&
+    machineIssue === pkg.issue_number && typeof forecastWeek === 'string' &&
+    forecastWeek === expectedWeek && VALID_WEEKLY_HEALTH.has(pkg?.status) &&
+    pkg.status === wk.status;
+  if (weeklyAligned) {
+    const freeze = pkg.forecast_freeze || {};
+    result.weekly = {
+      state: pkg.status === 'DEGRADED' ? 'DEGRADED' : 'OK',
+      public_issue_number: issue,
+      machine_issue_number: machineIssue,
+      forecast_week: forecastWeek,
+      btc_range: sourceRange(freeze.btc_range_low, freeze.btc_range_high),
+      eth_range: sourceRange(freeze.eth_range_low, freeze.eth_range_high),
+      path_state: 'WEEKLY_CONTEXT_ONLY'
+    };
+  } else {
+    result.weekly.state = 'MISMATCH';
+  }
+
+  const compassAge = normalizeAge(compass.issued_at_utc, nowEpochMs, compassMaxAgeHours);
+  const cOK = compass.data_status === 'OK' && typeof compass.compass_id === 'string' &&
+    compass.compass_id.trim().length > 0 && compassAge === 'FRESH';
+  const alignedContext = compass.weekly_context;
+  const cnJoined = weeklyAligned &&
+    alignedContext?.status === 'ALIGNED' &&
+    alignedContext?.forecast_week === forecastWeek &&
+    alignedContext?.public_issue_number === issue;
+  result.compass = {
+    state: cOK ? 'FRESH' : compassAge === 'STALE' ? 'STALE' : 'UNAVAILABLE',
+    compass_id: typeof compass.compass_id === 'string' ? compass.compass_id : null,
+    issued_at_utc: compass.issued_at_utc ?? null,
+    weekly_alignment: cnJoined ? 'ALIGNED' :
+      alignedContext?.status === 'MISMATCH' ? 'MISMATCH' : 'UNVERIFIED',
+    action_now: cOK && typeof compass.action_now === 'string' ? compass.action_now : 'UNAVAILABLE',
+    pullback_risk_state: cOK ? (compass.protection_tracker?.pullback_risk_state || 'UNAVAILABLE') : 'UNAVAILABLE',
+    distribution_risk: cOK ? (compass.protection_tracker?.distribution_risk || 'UNKNOWN') : 'UNKNOWN',
+    sell_assessment_state: cOK ? (compass.sell_assessment?.state || 'UNAVAILABLE') : 'UNAVAILABLE',
+    reentry_state: cOK ? (compass.protection_tracker?.reentry_state || 'UNAVAILABLE') : 'UNAVAILABLE',
+    permit_path_live_gates: cOK && cnJoined
+  };
+
+  // Current public score is deliberately *last completed*, never current week.
+  // No concatenation of Machine Scorecard or old Market/Structure scores.
+  const scoreRef = latest.public_series?.latest_completed_score;
+  const card = latest.public_scorecard;
+  const range = card?.price_range_precision;
+  const coverage = range?.actuals_hourly_coverage;
+  const sixRows = range?.rows;
+  const scoreMatches = card?.contract === SCORE_CONTRACT &&
+    Number.isInteger(scoreRef?.public_issue_number) &&
+    card.public_issue_number === scoreRef.public_issue_number &&
+    card.forecast_week === scoreRef.forecast_week &&
+    card.public_issue_number < issue &&
+    card.market_structure_precision === null &&
+    card.combined_score === null &&
+    range?.formula === RANGE_FORMULA &&
+    finite(range.score) && range.score >= 0 && range.score <= 100 &&
+    finite(scoreRef.price_range_score) &&
+    Math.abs(scoreRef.price_range_score - range.score) <= 0.000001 &&
+    coverage === 168 &&
+    Array.isArray(sixRows) && sixRows.length === 6 &&
+    sixRows.every(scoreRowEligible) &&
+    new Set(sixRows.map((r) => r.asset + ':' + r.window)).size === 6;
+  if (scoreMatches) {
+    result.completed_score = {
+      state: 'FINAL_PUBLIC_SCORECARD',
+      public_issue_number: card.public_issue_number,
+      forecast_week: card.forecast_week,
+      price_range_precision: range.score,
+      btc_score: finite(range.btc_score) ? range.btc_score : null,
+      eth_score: finite(range.eth_score) ? range.eth_score : null,
+      intraday_window_scores: range.intraday_window_scores ?? null,
+      rows: sixRows.map((row) => ({
+        asset: row.asset, window: row.window,
+        forecast_low: row.forecast_low, forecast_high: row.forecast_high,
+        actual_low: row.actual_low, actual_high: row.actual_high,
+        score: row.score
+      })),
+      market_structure_precision: null,
+      combined_score: null,
+      proof_state: 'LEGACY_OR_PROVISIONAL_NOT_INDEPENDENTLY_SEALED'
+    };
+  } else {
+    result.completed_score.state = card || scoreRef ? 'MISMATCH_OR_INCOMPLETE' : 'UNAVAILABLE';
+  }
+
+  // The existing generated site feeds do not include authenticated v2 typed
+  // claim settlements. Never promote a W42 qualitative ABSTAIN into 100.
+  return result;
+}
