@@ -101,7 +101,7 @@ def m6_integrity(m6:dict|None, features:dict|None):
 
 HORIZON_HOURS={"24h":24,"72h":72,"7d":168,"14d":336,"30d":720}
 
-def matured_payload_integrity(m6:dict|None):
+def matured_payload_integrity(m6:dict|None,now:datetime):
     """Independently fail-close malformed 'MATURED' rows before any Edge replay.
 
     This is structural validation, NOT source vintage attestation, independent
@@ -124,7 +124,7 @@ def matured_payload_integrity(m6:dict|None):
         try:
             t=datetime.fromisoformat(v.replace("Z","+00:00"))
             return t.astimezone(timezone.utc) if t.tzinfo is not None else None
-        except ValueError:return None
+        except (ValueError,OverflowError):return None
     for index,event in enumerate(events):
         if not isinstance(event,dict):
             mark("INVALID_EVENT_ROW");continue
@@ -143,14 +143,17 @@ def matured_payload_integrity(m6:dict|None):
             first_close=clock(coverage.get("first_close")) if isinstance(coverage,dict) else None
             last_close=clock(coverage.get("last_close")) if isinstance(coverage,dict) else None
             valid=(hours is not None and knowledge is not None and target is not None and
-                target==knowledge+timedelta(hours=hours) and
+                target==knowledge+timedelta(hours=hours) and target<=now and
                 isinstance(coverage,dict) and coverage.get("reason")=="COMPLETE_HOURLY_CLOSE_GRID" and
                 number(coverage.get("row_count")) and
                 coverage["row_count"] in (hours,hours+1) and
-                number(coverage.get("max_gap_hours")) and 0<coverage["max_gap_hours"]<=1.01 and
+                number(coverage.get("max_gap_hours")) and
+                math.isclose(coverage["max_gap_hours"],1.0,rel_tol=0.0,abs_tol=1e-9) and
                 first_close is not None and last_close is not None and
                 knowledge<=first_close<=knowledge+timedelta(hours=1) and
+                first_close.minute==0 and first_close.second==0 and first_close.microsecond==0 and
                 target-timedelta(hours=1)<=last_close<=target and
+                last_close.minute==0 and last_close.second==0 and last_close.microsecond==0 and
                 last_close>=first_close and
                 last_close-first_close==timedelta(hours=coverage["row_count"]-1))
             if valid:
@@ -186,7 +189,8 @@ def matured_payload_integrity(m6:dict|None):
                             valid=False;break
                         when=clock(row.get("first_touch_timestamp"))
                         if row["touched"]:
-                            if when is None or not start_close<=when<=end_close:
+                            if (when is None or not start_close<=when<=end_close or
+                                (when-start_close).total_seconds()%3600!=0):
                                 valid=False;break
                         elif row.get("first_touch_timestamp") is not None:
                             valid=False;break
@@ -218,7 +222,7 @@ def latest_sol(root:Path):
     if summary.startswith("VERDICT="):verdict=summary.split(";",1)[0].split("=",1)[1]
     return {"status":"PASS","comment_id":cid,"path":p.relative_to(root).as_posix(),"sha256":file_sha(p),"verdict":verdict}
 
-def semantic_snapshot(root:Path):
+def semantic_snapshot(root:Path,now:datetime):
     pointer,pb=load(root,"compass_pointer");freeze,fb=freeze_from_pointer(root,pointer)
     m6,mb=load(root,"m6_events");features,xb=load(root,"edge_features");cal,cb=load(root,"calibration")
     tracker=(freeze or {}).get("protection_tracker") if isinstance(freeze,dict) else {}
@@ -226,7 +230,7 @@ def semantic_snapshot(root:Path):
     maturity,families,unknown=matured_counts(m6)
     fcount,pit,unverified=feature_counts(features)
     m6_check=m6_integrity(m6,features)
-    payload_check=matured_payload_integrity(m6)
+    payload_check=matured_payload_integrity(m6,now)
     sol=latest_sol(root)
     blockers=[]
     if isinstance(features,dict) and features.get("integrity_revision")!="v1.1_PIT_STRICT":blockers.append("FEATURE_COLLECTOR_INTEGRITY_REVISION_NOT_STRICT")
@@ -304,7 +308,7 @@ def choose(prev:dict|None,s:dict,d:list[str]):
     return "NOOP",False,False,"No material Edge evidence requiring action beyond existing collectors."
 
 def build(root:Path,output:Path,history_root:Path,now:datetime):
-    current,bindings=semantic_snapshot(root);prev=previous_state(output);d=deltas(prev,current)
+    current,bindings=semantic_snapshot(root,now);prev=previous_state(output);d=deltas(prev,current)
     # Earlier v1 bootstrap treated a first snapshot's already-matured families as
     # new discoveries and emitted a false CONCLUSION_REVIEW. Reconcile LATEST
     # without silently mutating its immutable archived historical copy.
