@@ -186,7 +186,9 @@ class ShadowOfficialPairingTests(unittest.TestCase):
         )
         official["realized"]["btc_return_pct"] = 9.0
         report = pair_outcomes([official], [shadow])
-        pair = report["pairs"][0]
+        self.assertEqual(report["pair_count"], 0)
+        self.assertEqual(report["quarantined_pair_count"], 1)
+        pair = report["quarantined_pairs"][0]
         self.assertEqual(pair["integrity"]["status"], "FAIL")
         self.assertEqual(
             pair["asset_comparisons"]["btc"]["comparison_state"],
