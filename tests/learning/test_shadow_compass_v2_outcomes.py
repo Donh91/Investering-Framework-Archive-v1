@@ -96,6 +96,29 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             self.assertFalse(value["authority"]["automatic_promotion"])
             self.assertEqual(value["baselines"]["persistence"]["prediction"], "UP")
 
+    def test_shadow_uses_candle_close_not_shared_batch_end(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            forecast = self.fixture(root)
+            day = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-01.csv"
+            with day.open(newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            for row in rows:
+                row["source_window_end_utc"] = "2026-09-01T13:00:00Z" if int(row["timestamp_utc"][11:13]) in (8, 9, 10, 11) else ""
+            with day.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+                writer.writeheader()
+                writer.writerows(rows)
+            early = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 12, 30, tzinfo=timezone.utc))
+            self.assertEqual(early["status"], "PENDING_TARGET_EVIDENCE")
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 13, 30, tzinfo=timezone.utc))
+            self.assertEqual(result["status"], "MATURED")
+            value = json.loads((root / result["path"]).read_text())
+            self.assertEqual(value["target_observation_open_at_utc"], "2026-09-01T11:00:00Z")
+            self.assertEqual(value["target_observation_at_utc"], "2026-09-01T12:00:00Z")
+            self.assertAlmostEqual(value["realized"]["btc_return_pct"], 11.0)
+            self.assertEqual(value["scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v3")
+
     def test_sideways_uses_official_tolerance(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
