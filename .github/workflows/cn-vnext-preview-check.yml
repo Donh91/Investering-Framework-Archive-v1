@@ -28,5 +28,7 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-bullbear.mjs
       - name: Verify Pullback source week, exact onset evidence and fail-closed ETA
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-pullback-eta.mjs
+      - name: Bundle production-style Vite preview (development tool only)
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/verify-vite-bundle.mjs
       - name: No production deployment
         run: echo 'Design smoke test only; no published CN site or official signal is changed.'
