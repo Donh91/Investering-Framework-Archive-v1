@@ -13,7 +13,9 @@ Five scarce ChatGPT automation slots should contain **five complementary user-fa
 | S3 | Market Risk -> Portfolio Action | `6aae4e2aa6088191aacf5ec5caa6cb6c` | [risk](MARKET_RISK.md) | PERMANENT / hourly silent condition watch |
 | S4 | Alpha Lab - Outcome Learning | `6acbfb98f548819181e783607e69f58f` | [outcomes](ALPHA_OUTCOMES.md), MAL PR #143 runbook after merge | PERMANENT / daily 22:15 |
 | S5 | Project->CA Research Watch (Alpha Alerts gated) | `6ab38b90cfe4819193b0d9ccdf4e4e21` | [early-alpha](PROJECT_CA.md) | PERMANENT SUCCESSOR / hourly silent research condition watch; **currently disabled; Project→CA alerts forbidden under SHADOW_ONLY** |
-| TEMP | Master Audit - Timevis mission | `6acb8ced403081919d5ecc197b186eac` | [temporary](TEMPORARY_MISSIONS.md) | ACTIVE LEASE of S5; must close and disable before S5 is enabled |
+| TEMP | Master Audit - Timevis mission | `6acb8ced403081919d5ecc197b186eac` | [temporary](TEMPORARY_MISSIONS.md) | **PAUSED_BY_OWNER 2026-10-12 11:42 UTC** to conserve Work quota; NOT complete; S5 remains disabled |
+
+**Resource-saving pause exception (2026-10-12):** Direct user approval paused the pre-existing hourly Master Audit via a verified host disable/readback, without terminal acceptance in #1156. There are temporarily four enabled permanent tasks and one intentionally unused fifth slot. **Do not auto-enable the Project→CA successor merely because the audit is disabled or a slot is free.** Do not auto-resume hourly Work auditing before explicit user authorization and current resource review. #1156 user-instruction receipt: issue comment `6123586298`. This dated observation does not override newer host truth.
 
 **Current truth:** host automation list/peek and actual GitHub main, not this table. If host schedule, enabled, notifications or prompt differ from this proposed plan, report DRIFT. Do not mutate automatically based on this document alone. Do not infer available task slots by counting files or stale task entries.
 
