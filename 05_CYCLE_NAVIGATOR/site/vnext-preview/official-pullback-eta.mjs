@@ -49,6 +49,18 @@ export function officialPullbackDisplay(compass, weekly, language='da') {
       !monday) return unknown;
 
   const base={...unknown,state:'VALID',riskState:r.pullback_risk_state,sourceWeek:forecastWeek};
+  // A risk owner may explicitly publish NO warning. This must not become
+  // "possible this week" merely because a forecast week exists.
+  if (r.pullback_risk_state==='NORMAL') {
+    return {...base,windowKind:'NO_ACTIVE_WATCH',
+      headline:lang==='da'?'Ingen aktiv pullback-watch':'No active pullback watch',
+      note:lang==='da'?
+        'Ingen varslet start/slut. Sælgesignal skal komme separat.':
+        'No forecast onset/end. SELL authority remains separate.'};
+  }
+  if (r.pullback_risk_state==='UNAVAILABLE') {
+    return {...unknown,sourceWeek:forecastWeek};
+  }
   const extended=r.public_explanation;
   if (extended!==null && extended!==undefined) {
     if (extended.contract!=='CN_PUBLIC_PROTECTION_COPY_v1' ||
