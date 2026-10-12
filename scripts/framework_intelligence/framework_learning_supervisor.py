@@ -262,6 +262,11 @@ def main():
         "changes": deltas, "change_counts": dict(sorted(change_counts.items())), "negative_memory_count": len(negative), "semantic_family_count": len(memory_rows),
         "source_compounding_delta": src["compounding_state"].get("learning_delta"),
     }
+    # No new cron/API job: existing Framework Learning Supervisor already runs
+    # daily and Monday. A weekly snapshot becomes visible ONLY after PR merge.
+    shadow_weekly_advisory = admit_cross_domain_shadow_weekly(
+        src.get("shadow_registry_weekly"), week_label
+    )
     packet = {
         "contract": "MASTER_MONDAY_LEARNING_PACKET_v1", "authority": "ADVISORY_ONLY", "generated_at_utc": generated, "iso_year": year, "iso_week": week,
         "live_consumption_allowed": False, "current_phase_gate": "PHASE1_SHADOW_UNLESS_SEPARATELY_PROMOTED",
@@ -277,11 +282,6 @@ def main():
         "weekly_forensics_delta": src["weekly_forensics"].get("master_monday_delta") if src["weekly_forensics"].get("contract") == "WEEKLY_FORENSICS_PACK_v1" and src["weekly_forensics"].get("mode") == "FINAL" else None,
         "weekly_forensics_authority": "ADVISORY_ONLY",
     }
-    # No new cron/API job: existing Framework Learning Supervisor already runs
-    # daily and Monday. A weekly snapshot becomes visible ONLY after PR merge.
-    shadow_weekly_advisory = admit_cross_domain_shadow_weekly(
-        src.get("shadow_registry_weekly"), week_label
-    )
     orchestration = src.get("automation_orchestration") or {}
     orchestration_summary = orchestration.get("routing_summary") if orchestration.get("contract") == "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1" else None
     supervisor = {
