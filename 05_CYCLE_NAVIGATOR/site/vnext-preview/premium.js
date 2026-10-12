@@ -305,8 +305,62 @@ function paintTop(d) {
   if ($('compass-sell-inline')) $('compass-sell-inline').dataset.state = String(sellState).toUpperCase();
 }
 
+// Official Market Weather display only. Never infer Bull/Bear from a UI
+// direction, risk warnings, price action, or any browser-side estimate.
+function officialBullBear(c, horizon) {
+  const scale = c?.bull_bear_scale;
+  if (scale?.contract !== 'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1' ||
+      scale.semantics !== 'EVIDENCE_BALANCE_NOT_PROBABILITY' ||
+      scale.resolution !== 'COARSE_CATEGORICAL_DIRECTION' ||
+      scale.mapping_version !== 'DIRECTION_ONLY_COARSE_v1' ||
+      scale.owner !== 'OFFICIAL_COMPASS' ||
+      scale.source_of_truth_contract !== 'MARKET_WEATHER_SOURCE_OF_TRUTH_v1' ||
+      scale.authority?.site_synthesis_allowed !== false ||
+      scale.authority?.new_market_classifier !== false ||
+      scale.authority?.probability_model !== false ||
+      scale.authority?.portfolio_execution !== false) return null;
+  const row = scale.horizons?.[horizon];
+  if (row?.status !== 'OK' ||
+      !Number.isInteger(row.bull) || !Number.isInteger(row.bear) ||
+      row.bull < 0 || row.bull > 10 ||
+      row.bear < 0 || row.bear > 10 ||
+      row.bull + row.bear !== 10 ||
+      !['BULLISH', 'LEAN_BULLISH', 'NEUTRAL', 'LEAN_BEARISH', 'BEARISH'].includes(row.bias)) return null;
+  return { bull: row.bull, bear: row.bear, bias: row.bias };
+}
+
+function paintBullBear(c) {
+  const main = officialBullBear(c, '1_3d');
+  const panel = $('compass-bullbear');
+  setText('bullbear-bull', main?.bull ?? '—');
+  setText('bullbear-bear', main?.bear ?? '—');
+  setText('bullbear-bias', main?.bias ?? 'UTILGÆNGELIG');
+  if (panel) {
+    panel.dataset.state = main?.bias || 'UNAVAILABLE';
+    panel.setAttribute('aria-label', main ?
+      'Official Compass Bull ' + main.bull + ' / Bear ' + main.bear +
+      ', 1–3 dage, ' + main.bias + '. Evidensbalance, ikke sandsynlighed.' :
+      'Official Compass Bull/Bear 1–3 dage: utilgængelig.');
+  }
+  const meter = $('bullbear-track');
+  if (meter) meter.hidden = !main;
+  for (const [key, value] of [['bullbear-bear-fill', main?.bear], ['bullbear-bull-fill', main?.bull]]) {
+    const segment = $(key);
+    if (segment) segment.style.width = Number.isInteger(value) ? value * 10 + '%' : '0%';
+  }
+  const extra = $('bullbear-other-horizons');
+  clear(extra);
+  for (const [key, name] of [['5_7d', 'Bull/Bear · 5–7 dage'], ['2_3w', 'Bull/Bear · 2–3 uger']]) {
+    const row = officialBullBear(c, key);
+    strongText(extra, name, row ?
+      'BULL ' + row.bull + ' / BEAR ' + row.bear + ' · ' + row.bias :
+      'UTILGÆNGELIG');
+  }
+}
+
 function paintCompass(d) {
   const { compass: c } = d;
+  paintBullBear(c);
   const horizonRows = [
     ['0–12 timer', 'NEXT_12H'], ['1–3 dage', 'NEXT_1_3D'], ['5–7 dage', 'NEXT_5_7D'],
     ['2–3 uger', 'NEXT_2_3W'], ['4–8 uger', 'CYCLE_ALTCOINS_3_8W']
@@ -473,6 +527,10 @@ async function initialize() {
     setText('overview-risk', 'UTILGÆNGELIG');
     setText('compass-primary-direction', 'UKENDT');
     setText('compass-primary-action', 'UTILGÆNGELIG');
+    setText('bullbear-bull', '—');
+    setText('bullbear-bear', '—');
+    setText('bullbear-bias', 'UTILGÆNGELIG');
+    if ($('bullbear-track')) $('bullbear-track').hidden = true;
     setText('compass-risk-inline', 'UTILGÆNGELIG');
     setText('compass-sell-inline', 'UTILGÆNGELIG');
     setText('compass-distribution-inline', 'UTILGÆNGELIG');
@@ -480,7 +538,7 @@ async function initialize() {
     $('asset-body')?.replaceChildren(make('tr'));
     $('range-visualization')?.replaceChildren(make('p', 'method-disclaimer', 'Ingen verificeret kilde tilgængelig.'));
     // Never show pre-filled demo numbers after source validation fails.
-    for (const target of document.querySelectorAll('.hero-grid, .path-panel, .forecast-grid, .teaser-shell, .compass-summary, .compass-urgent, .compass-table-block, .compass-disclosure-group, .table-frame, .proof-summary-grid, .range-compare-panel, .history-panel')) {
+    for (const target of document.querySelectorAll('.hero-grid, .path-panel, .forecast-grid, .teaser-shell, .compass-summary, .compass-weather, .compass-urgent, .compass-table-block, .compass-disclosure-group, .table-frame, .proof-summary-grid, .range-compare-panel, .history-panel')) {
       target.hidden = true;
     }
     setText('source-detail', 'Kilden kunne ikke indlæses eller bestod ikke integritetskontrollen. Der vises ingen markeds- eller scorepåstande.');
