@@ -120,18 +120,7 @@ function bindPanels() {
     e.currentTarget.querySelector('span').textContent = details.hidden ? '＋' : '−';
     e.currentTarget.setAttribute('aria-expanded', String(!details.hidden));
   });
-  $('interpret-more')?.addEventListener('click', (e) => {
-    const details = $('interpret-details');
-    details.hidden = !details.hidden;
-    e.currentTarget.setAttribute('aria-expanded', String(!details.hidden));
-    e.currentTarget.querySelector('span').textContent = details.hidden ? '＋' : '−';
-  });
-  $('risk-more')?.addEventListener('click', (e) => {
-    const details = $('risk-details');
-    details.hidden = !details.hidden;
-    e.currentTarget.setAttribute('aria-expanded', String(!details.hidden));
-    e.currentTarget.querySelector('span').textContent = details.hidden ? '＋' : '−';
-  });
+  // Kompas explanations now use native <details>/<summary> for accessible disclosure.
   $('history-toggle')?.addEventListener('click', (e) => {
     const details = $('history-full');
     details.hidden = !details.hidden;
@@ -307,7 +296,13 @@ function paintTop(d) {
   setText('compass-updated', 'OFFICIAL SNAPSHOT · ' + c.issued_at_utc.slice(0, 16).replace('T', ' ') + ' UTC');
   setText('compass-primary-action', actionView(c.action_now).text);
   setText('compass-primary-direction', direction);
-  setText('compass-primary-copy', localizedPulse(c));
+  const riskState = clean(c.protection_tracker?.pullback_risk_state, 'UNAVAILABLE');
+  const sellState = clean(c.sell_assessment?.state, 'UNAVAILABLE');
+  setText('compass-risk-inline', riskState);
+  setText('compass-sell-inline', sellState);
+  setText('compass-distribution-inline', clean(c.protection_tracker?.distribution_risk, 'UNKNOWN'));
+  if ($('compass-risk-inline')) $('compass-risk-inline').dataset.state = String(riskState).toUpperCase();
+  if ($('compass-sell-inline')) $('compass-sell-inline').dataset.state = String(sellState).toUpperCase();
 }
 
 function paintCompass(d) {
@@ -348,7 +343,7 @@ function paintCompass(d) {
   strongText(details, '4–8 uger', localizedHorizon(c, 'CYCLE_ALTCOINS_3_8W'));
 
   const risk = c.protection_tracker ?? {};
-  setText('risk-large', clean(risk.pullback_risk_state, 'UNAVAILABLE') + ' / WATCH');
+  setText('risk-large', clean(risk.pullback_risk_state, 'UNAVAILABLE'));
   setText('risk-main-copy', clean(risk.pullback_class) + ' · ' + clean(risk.eta_window, 'Ingen pålidelig ETA'));
   setText('distribution-label', clean(risk.distribution_risk));
   setText('sell-label', clean(c.sell_assessment?.state));
@@ -478,11 +473,14 @@ async function initialize() {
     setText('overview-risk', 'UTILGÆNGELIG');
     setText('compass-primary-direction', 'UKENDT');
     setText('compass-primary-action', 'UTILGÆNGELIG');
+    setText('compass-risk-inline', 'UTILGÆNGELIG');
+    setText('compass-sell-inline', 'UTILGÆNGELIG');
+    setText('compass-distribution-inline', 'UTILGÆNGELIG');
     $('horizon-body')?.replaceChildren(make('tr'));
     $('asset-body')?.replaceChildren(make('tr'));
     $('range-visualization')?.replaceChildren(make('p', 'method-disclaimer', 'Ingen verificeret kilde tilgængelig.'));
     // Never show pre-filled demo numbers after source validation fails.
-    for (const target of document.querySelectorAll('.hero-grid, .decision-grid, .path-panel, .forecast-grid, .teaser-shell, .compass-summary, .table-frame, .compass-two-up, .proof-summary-grid, .range-compare-panel, .history-panel')) {
+    for (const target of document.querySelectorAll('.hero-grid, .path-panel, .forecast-grid, .teaser-shell, .compass-summary, .compass-urgent, .compass-table-block, .compass-disclosure-group, .table-frame, .proof-summary-grid, .range-compare-panel, .history-panel')) {
       target.hidden = true;
     }
     setText('source-detail', 'Kilden kunne ikke indlæses eller bestod ikke integritetskontrollen. Der vises ingen markeds- eller scorepåstande.');
