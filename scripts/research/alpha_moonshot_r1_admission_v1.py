@@ -25,7 +25,7 @@ def result(case):
     missing=[]
     for k in ("chain_id","token_id","pool_id","source_refs","source_exact_version_hash","source_delivery_verified","matched_control_id"):
         v=case.get(k)
-        if v in (None,"",[],{}) or (k=="source_delivery_verified" and v is not True):
+        if (v is None or v == "" or v == [] or v == {}) or (k=="source_delivery_verified" and v is not True):
             missing.append(k)
     if type(case.get("chain_id")) is not int or case.get("chain_id",0)<=0:
         if "chain_id" not in missing:missing.append("chain_id")
