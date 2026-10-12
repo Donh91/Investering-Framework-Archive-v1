@@ -151,6 +151,19 @@
         <div><span>DISTRIBUTION</span><strong id="compass-distribution-inline">UNKNOWN</strong></div>
       </div>
 
+      <div class="pullback-stage-ruler" id="pullback-stage-ruler" role="group" aria-label="Officielle pullback-risikoklasser; ikke sandsynlighed eller nedtælling">
+        <div class="pullback-stage-ruler-head">
+          <span>RISIKOSTADIER</span><small>Risikoklasse · ikke en 1–10 sandsynlighed</small>
+        </div>
+        <div class="pullback-stage-ruler-steps" aria-hidden="true">
+          <span class="pullback-stage-unit" data-risk-stage="NORMAL"><span class="risk-stage-mark"></span><small>Ro</small></span>
+          <span class="pullback-stage-unit" data-risk-stage="BUILDING"><span class="risk-stage-mark"></span><small>Opbygning</small></span>
+          <span class="pullback-stage-unit" data-risk-stage="ELEVATED"><span class="risk-stage-mark"></span><small>Forhøjet</small></span>
+          <span class="pullback-stage-unit" data-risk-stage="HIGH"><span class="risk-stage-mark"></span><small>Høj</small></span>
+          <span class="pullback-stage-unit" data-risk-stage="CONFIRMED"><span class="risk-stage-mark"></span><small>Bekræftet</small></span>
+        </div>
+      </div>
+
       <section class="compass-table-block" aria-labelledby="compass-horizon-title">
         <div class="compass-table-heading">
           <h2 id="compass-horizon-title">Tidshorisonter</h2>
@@ -190,6 +203,11 @@
               <div><span>DISTRIBUTION</span><strong id="distribution-label">UNKNOWN</strong></div>
               <div><span>SELL / TRIM</span><strong id="sell-label">UNAVAILABLE</strong></div>
               <div><span>RE-ENTRY</span><strong id="reentry-label">INACTIVE</strong></div>
+            </div>
+            <div class="pullback-investor-details" aria-label="Pullback scenarie og tidshorisonter">
+              <p class="pullback-details-intro">Hvad betyder advarslen for en investor?</p>
+              <div class="pullback-facts-grid" id="pullback-investor-facts" aria-live="polite"></div>
+              <p class="pullback-details-foot">Kvalitet af evidens er ikke sandsynlighed. Risikostadie giver ikke i sig selv et SELL-signal.</p>
             </div>
             <div id="risk-details" class="risk-detail-list"><p id="risk-evidence-quality" hidden></p></div>
           </div>
