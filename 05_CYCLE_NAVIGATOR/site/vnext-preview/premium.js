@@ -316,10 +316,8 @@ function paintBullBear(c) {
   setText('bullbear-bias', main?.bias ?? 'UTILGÆNGELIG');
   if (panel) {
     panel.dataset.state = main?.bias || 'UNAVAILABLE';
-    panel.setAttribute('aria-label', main ?
-      'Official Compass Bull ' + main.bull + ' / Bear ' + main.bear +
-      ', 1–3 dage, ' + main.bias + '. Evidensbalance, ikke sandsynlighed.' :
-      'Official Compass Bull/Bear 1–3 dage: utilgængelig.');
+    // Static translated group label + visible Bull/Bear values remain accessible.
+    // Never mutate language-dependent aria copy from a market data refresh.
   }
   const meter = $('bullbear-track');
   if (meter) meter.hidden = !main;
