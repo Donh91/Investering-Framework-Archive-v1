@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-v2-edge-freeze-ci.yml",
+    ".github/workflows/cycle-navigator-weekly-publication.yml",
+    "scripts/cycle_navigator/build_v2_edge_forecast_freeze.py",
+    "tests/cycle_navigator/test_v2_edge_forecast_freeze.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-dd8dd825fe08b0bb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(CN): add safe prospective W42 source-bound CN v2 thesis and Compass-risk freeze, without new signal ownership * test(CN): check Monday prospective source hashes, no-warning vs watch, 56d maturity and invalid Compass/forecast gates * feat(CN): append optional source-bound v2 statement freeze to existing Monday owner with nonblocking isolation * ci(CN): protect existing Monday owner with deterministic prospective forecast freeze test matrix",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-v2-edge-freeze-ci.yml": "c167502f862ad7e51e996210d8e12e1b2e82b634",
+    ".github/workflows/cycle-navigator-weekly-publication.yml": "d0bdce27438a4b55ef4d679a8e8e2ce6a516236d",
+    "scripts/cycle_navigator/build_v2_edge_forecast_freeze.py": "ff639d655fc060abc4958d135ba7851e89290567",
+    "tests/cycle_navigator/test_v2_edge_forecast_freeze.py": "a8fdfab0683b2f44946c8a1851eb18acb857e126"
+  },
+  "source_commit_sha": "dd8dd825fe08b0bbb0e4fa23ec7a53a5d74c3117",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-11T13:36:15-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "CN W42 prospective Edge source-freeze opt-in via existing Monday owner"
+}
