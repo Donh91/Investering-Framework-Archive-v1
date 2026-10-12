@@ -302,6 +302,8 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
             end = datetime(2026, 10, 2, 0, 0, tzinfo=timezone.utc)
             data = module.load_compass_learning(root, start, end)
             self.assertEqual(data['shadow_official_pair_count'], 1)
+            self.assertEqual(data['tactical_outcomes'][0]['matured_at_utc'], '2026-10-01T17:30:00Z')
+            self.assertEqual(data['shadow_v2_outcomes'][0]['matured_at_utc'], '2026-10-01T17:30:00Z')
             self.assertEqual(data['tactical_outcomes'][0]['scoring_contract'], 'OFFICIAL_DAILY_COMPASS_SCORING_v3')
             self.assertEqual(data['shadow_v2_outcomes'][0]['scoring_contract'], 'SHADOW_COMPASS_V2_SCORING_v3')
             self.assertEqual(data['shadow_official_comparison']['quarantined_pair_count'], 0)
