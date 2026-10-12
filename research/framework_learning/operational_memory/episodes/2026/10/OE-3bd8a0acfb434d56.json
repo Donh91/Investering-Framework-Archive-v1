@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/API_TASK_REGISTRY_v1.json",
+    "scripts/api_agent/api_gateway.py",
+    "tests/api_agent/test_api_gateway.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-3bd8a0acfb434d56",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-bounded-sol-timeout-broadening-other-api-lanes",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(api): bound senior Sol read timeout per task, preserve default 180s * research(api): extend only gpt-6.1-sol lab task timeout to 420 seconds * test(api): verify bounded 420s Sol-only timeout and unchanged cheap lanes",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/API_TASK_REGISTRY_v1.json": "3a22a4c7df045f6effeaa84f8e170bb1f5b3bcda",
+    "scripts/api_agent/api_gateway.py": "293c74baddccc8635bb812541f5b89b4b3a8f611",
+    "tests/api_agent/test_api_gateway.py": "0c6f0ee912080940b8665804fd5c8773d0a51091"
+  },
+  "source_commit_sha": "3bd8a0acfb434d5689c28baf483a22f03c1bbb64",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-12T05:18:25-07:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(api): bounded Sol research timeout without broadening other API lanes"
+}
