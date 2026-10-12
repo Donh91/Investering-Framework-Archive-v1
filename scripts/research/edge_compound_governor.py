@@ -2,7 +2,7 @@
 """Deterministic EDGE Compound Governor. Research-routing only, zero market authority."""
 from __future__ import annotations
 import argparse,hashlib,json,math
-from datetime import datetime,timezone
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from typing import Any
 
@@ -141,10 +141,10 @@ def matured_payload_integrity(m6:dict|None):
             coverage=horizon.get("coverage") or {}
             target=clock(horizon.get("target_at_utc"))
             valid=(hours is not None and knowledge is not None and target is not None and
-                target==knowledge.replace(microsecond=knowledge.microsecond)+__import__("datetime").timedelta(hours=hours) and
+                target==knowledge+timedelta(hours=hours) and
                 isinstance(coverage,dict) and coverage.get("reason")=="COMPLETE_HOURLY_CLOSE_GRID" and
                 number(coverage.get("row_count")) and
-                int(coverage["row_count"]) in (hours,hours+1) and
+                coverage["row_count"] in (hours,hours+1) and
                 number(coverage.get("max_gap_hours")) and 0<coverage["max_gap_hours"]<=1.01)
             if valid:
                 for symbol in ("BTC","ETH"):
@@ -159,7 +159,7 @@ def matured_payload_integrity(m6:dict|None):
                             positive(post.get("price")) and positive(terminal.get("close")) and
                             all(number(reference.get(k)) for k in ("mae_pct","mfe_pct","terminal_return_pct")) and
                             all(number(post.get(k)) for k in ("mae_pct","mfe_pct","terminal_return_pct")) and
-                            knowledge<=start_close<=end_close<=target if start_close and end_close else False):
+                            (knowledge<=start_close<=end_close<=target if start_close and end_close else False)):
                         valid=False;break
                     if not isinstance(asset.get("adverse_barriers"),dict):
                         valid=False;break
