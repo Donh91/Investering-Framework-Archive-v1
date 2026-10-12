@@ -166,6 +166,7 @@ def pair_outcomes(
     ]
 
     candidates: list[tuple[float, str, str, int, int]] = []
+    quarantined_candidates: list[dict[str, Any]] = []
     for si, srow in enumerate(shadow):
         s_issue = parse_utc(srow.get("issued_at_utc"))
         if s_issue is None or any(value in (None, "") for value in _pair_key(srow)):
@@ -174,8 +175,24 @@ def pair_outcomes(
             o_issue = parse_utc(orow.get("issued_at_utc"))
             if o_issue is None or _pair_key(srow) != _pair_key(orow):
                 continue
-            if _scoring_revision(srow, shadow=True) is None or _scoring_revision(srow, shadow=True) != _scoring_revision(orow, shadow=False):
+            revision = _scoring_revision(srow, shadow=True)
+            if revision is None or revision != _scoring_revision(orow, shadow=False):
                 continue  # Fail closed across incompatible/unknown scoring versions.
+            if revision == "3" and not (
+                _v3_time_basis_valid(srow, shadow=True)
+                and _v3_time_basis_valid(orow, shadow=False)
+            ):
+                # Exclude invalid clocks BEFORE greedy matching. Otherwise a
+                # malformed nearest candidate steals the only valid slot.
+                quarantined_candidates.append({
+                    "shadow_forecast_id": _row_id(srow, True),
+                    "official_compass_id": _row_id(orow, False),
+                    "horizon": srow.get("horizon"),
+                    "reason": "V3_TIME_BASIS_INVALID_PRE_SELECTION",
+                    "selection_used_outcome_correctness": False,
+                    "selection_used_realized_return": False,
+                })
+                continue
             distance = abs((s_issue - o_issue).total_seconds())
             candidates.append(
                 (
@@ -298,6 +315,8 @@ def pair_outcomes(
         "pair_count": len(admitted_pairs),
         "quarantined_pair_count": len(quarantined_pairs),
         "quarantined_pairs": quarantined_pairs,
+        "quarantined_candidate_count": len(quarantined_candidates),
+        "quarantined_candidates": quarantined_candidates,
         "eligible_shadow_count": len(shadow),
         "official_outcome_count": len(official),
         "unpaired_shadow_count": len(unpaired_shadow),
