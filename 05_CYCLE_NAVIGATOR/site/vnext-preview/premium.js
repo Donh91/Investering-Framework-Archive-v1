@@ -2,6 +2,7 @@
 import { initializeLanguage, translateInterface, selectLanguage, currentLanguage } from './premium-i18n.js';
 import { officialPullbackDisplay } from './official-pullback-eta.mjs';
 import { officialPullbackStage } from './official-pullback-stage.mjs';
+import { officialPullbackInvestorView } from './official-pullback-investor-view.mjs';
 import { officialBullBear } from './official-bullbear.mjs';
 'use strict';
 
@@ -278,11 +279,41 @@ function localizedPulse(c) {
   return clean(c.market_now?.summary);
 }
 
+function paintPullbackEscalator(stage, language) {
+  const ruler = $('pullback-stage-ruler');
+  if (!ruler) return;
+  const active = stage.status === 'SOURCE_VALID' ? stage.sourceRiskState : null;
+  ruler.dataset.risk = active || 'UNAVAILABLE';
+  const label = language === 'en'
+    ? 'Official source risk category: ' + (active || 'unavailable') + '. Not a probability, timeline or SELL permission.'
+    : 'Officiel kildebaseret risikoklasse: ' + (active || 'utilgængelig') + '. Ikke sandsynlighed, tidslinje eller SELL-tilladelse.';
+  ruler.setAttribute('aria-label', label);
+  for (const segment of ruler.querySelectorAll('[data-risk-stage]')) {
+    segment.classList.toggle('is-current', !!active && segment.dataset.riskStage === active);
+  }
+}
+
+function paintPullbackInvestorFacts(d, language) {
+  const root = $('pullback-investor-facts');
+  if (!root) return;
+  const facts = officialPullbackInvestorView(d.compass, d.weekly, language);
+  clear(root);
+  for (const entry of facts.rows) {
+    const div = make('div', 'pullback-fact');
+    div.dataset.source = entry.source;
+    div.dataset.fact = entry.id;
+    div.append(make('span', null, entry.label), make('p', null, entry.value));
+    root.append(div);
+  }
+}
+
 function paintPullback(d, lang = 'da') {
   // Independent governed risk-state and week/ETA readback, never an in-browser
   // early warning, synthetic time forecast, or authorization to SELL.
   const p = officialPullbackDisplay(d.compass, d.weekly, lang);
   const stage = officialPullbackStage(d.compass, d.weekly, lang);
+  paintPullbackEscalator(stage, lang);
+  paintPullbackInvestorFacts(d, lang);
   setText('overview-risk', stage.sourceRiskState);
   setText('overview-risk-stage', stage.stageLabel);
   setText('compass-risk-stage', stage.stageLabel);
