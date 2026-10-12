@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/framework-learning-supervisor.yml'
       - 'scripts/api_agent/senior_repair_audit_dispatch.py'
+      - 'scripts/api_agent/temporary_bridge_pr_review.py'
+      - 'tests/api_agent/test_temporary_bridge_pr_review.py'
       - 'scripts/api_agent/fmos_mission_loop_audit_dispatch.py'
       - 'scripts/api_agent/api_gateway.py'
       - 'scripts/framework_intelligence/automation_orchestration_v1.py'
@@ -67,6 +69,7 @@ jobs:
         run: |
           python -m py_compile \
             scripts/api_agent/senior_repair_audit_dispatch.py \
+            scripts/api_agent/temporary_bridge_pr_review.py \
             scripts/api_agent/fmos_mission_loop_audit_dispatch.py \
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
@@ -185,6 +188,120 @@ jobs:
           name: supervisor-mission-intake-${{ github.event.comment.id }}
           path: supervisor-mission-intake-receipt.json
           retention-days: 30
+
+  temp-sol-pr-review:
+    # Single existing control plane, owner and exact PR head; no new cron.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1156 &&
+      github.event.comment.author_association == 'OWNER' &&
+      startsWith(github.event.comment.body, '[TEMP_SOL_PR_REVIEW] PR=')
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run negative and positive tests for budget and head gates
+        run: |
+          python -m unittest tests.api_agent.test_temporary_bridge_pr_review -v
+          python -m py_compile scripts/api_agent/temporary_bridge_pr_review.py scripts/api_agent/api_gateway.py
+      - name: Freeze exact fresh PR diff and context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/temporary_bridge_pr_review.py build \
+            --event "$GITHUB_EVENT_PATH" --output-dir runtime/temporary-bridge-review
+      - name: Respect existing global and lane budgets
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task TEMP_SOL_PR_REVIEW --cap-usd 5.0 --reserve-usd 0.75
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 40 --reserve-usd 4.0
+      - name: Durably reserve worst-case cost BEFORE payment
+        id: reserve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/temporary_bridge_pr_review.py reserve \
+            --manifest runtime/temporary-bridge-review/manifest.json
+      - name: Run bounded GPT-6.1 Sol API advisory review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task TEMP_SOL_PR_REVIEW \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/temporary-bridge-review/prompt.txt \
+            --context-file runtime/temporary-bridge-review/context.json \
+            --output-dir runtime/temporary-bridge-review/output \
+            --intended-write-prefix research/api_agent/outputs/temporary_bridge/
+      - name: Require valid receipt and unchanged exact head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/temporary_bridge_pr_review.py validate \
+            --output-dir runtime/temporary-bridge-review
+      - name: Persist immutable paid-call receipt to main with readback
+        if: always() && steps.reserve.outcome == 'success'
+        run: |
+          set -euo pipefail
+          src=runtime/temporary-bridge-review
+          if [ ! -f "$src/output/receipt.json" ]; then
+            echo "No receipt; pre-call reservation retained; provider billing UNKNOWN"
+            exit 0
+          fi
+          pr=$(python -c "import json;print(json.load(open('$src/manifest.json'))['pr_number'])")
+          trigger=$(python -c "import json;print(json.load(open('$src/manifest.json'))['trigger_comment_id'])")
+          dest="research/api_agent/outputs/temporary_bridge/pr-$pr/comment-$trigger"
+          mkdir -p "$dest"
+          cp "$src/output/receipt.json" "$dest/receipt.json"
+          cp "$src/output/output.json" "$dest/output.json"
+          cp "$src/manifest.json" "$dest/manifest.json"
+          if [ -f "$src/review_report.md" ]; then cp "$src/review_report.md" "$dest/review_report.md"; fi
+          git config user.name 'framework-learning-supervisor[bot]'
+          git config user.email 'framework-learning-supervisor@users.noreply.github.com'
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m "audit: exact-head Sol PR review receipt $pr/$trigger"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt * 5))
+            done
+            [ "$pushed" = true ]
+          fi
+          git fetch origin main
+          for rel in receipt.json output.json manifest.json; do
+            git show "origin/main:$dest/$rel" > "/tmp/bridge-$rel"
+            cmp -s "$dest/$rel" "/tmp/bridge-$rel" || exit 1
+          done
+      - name: Publish advisory findings on PR, not a GitHub approval
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr=$(python -c "import json;print(json.load(open('runtime/temporary-bridge-review/manifest.json'))['pr_number'])")
+          gh pr comment "$pr" --repo "$GITHUB_REPOSITORY" \
+            --body-file runtime/temporary-bridge-review/review_report.md
+      - name: Report uncertain paid-call failure, never silently retry
+        if: failure() && steps.reserve.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
+            --body "TEMP_SOL_PR_REVIEW failed with USD 0.75 durable reservation. Provider-side charges may be UNKNOWN after timeout. No automatic retry or formal GitHub approval."
 
   senior-repair-audit:
     if: >-
