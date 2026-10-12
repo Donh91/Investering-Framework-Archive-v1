@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 3667,
-  "generated_at_utc": "2026-10-12T09:41:51.942508Z",
+  "episode_count": 3670,
+  "generated_at_utc": "2026-10-12T11:11:57.324698Z",
   "rows": [
     {
       "changed_paths": [
@@ -99956,10 +99956,10 @@
         "research/architecture_health/history/38168779377-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 5,
         "checked": 6,
         "removed": 0,
-        "same": 4,
+        "same": 1,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -100047,11 +100047,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 4,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-4da95990af121b2c",
@@ -100059,7 +100059,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "4da95990af121b2cb241559afcdb2fa6d82dd20c",
       "source_timestamp": "2026-10-11T19:56:05Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -101353,11 +101353,11 @@
         "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-9bd3042ece043576",
@@ -102590,11 +102590,11 @@
         "research/framework_memory/rotation_survival_forward_rows/observations/2026-10-12_df2c0e463e373b62679b.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 18,
         "removed": 0,
-        "same": 18,
-        "status": "EXACT"
+        "same": 15,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-37cc050054400f2a",
@@ -102882,7 +102882,89 @@
       "source_timestamp": "2026-10-12T09:35:11Z",
       "task_class": "MARKET_STATE",
       "task_summary": "learning: official daily Compass 38230785779"
+    },
+    {
+      "changed_paths": [
+        "research/api_agent/outputs/weekly_red_team/2026/W41/104406/WEEKLY_ADVERSARIAL_RECEIPT.json",
+        "research/api_agent/outputs/weekly_red_team/2026/W41/104406/WEEKLY_ADVERSARIAL_REVIEW.json",
+        "research/api_agent/outputs/weekly_red_team/2026/W41/104406/context.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-12f825716f13b3bb",
+      "episode_path": "episodes/2026/10/OE-12f825716f13b3bb.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "12f825716f13b3bb1d04e36d73b27b7f6917d3bf",
+      "source_timestamp": "2026-10-12T10:44:07Z",
+      "task_class": "API_AGENT",
+      "task_summary": "ai: weekly Sol adversarial review 38238074487"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/history/38240699981-attempt-1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 6,
+        "removed": 0,
+        "same": 6,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-09c8ac70b19e8e33",
+      "episode_path": "episodes/2026/10/OE-09c8ac70b19e8e33.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "09c8ac70b19e8e3312d0cc29d14d916192b54f04",
+      "source_timestamp": "2026-10-12T11:10:41Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 38240699981"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-9e6129d07a07a453",
+      "episode_path": "episodes/2026/10/OE-9e6129d07a07a453.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "9e6129d07a07a453f63479f1d504f426ce2e6490",
+      "source_timestamp": "2026-10-12T11:11:18Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 38240989228"
     }
   ],
-  "source_head_sha": "deb56a028ccccdbc96d48e7286ff01f7a4ac3d68"
+  "source_head_sha": "9e6129d07a07a453f63479f1d504f426ce2e6490"
 }
