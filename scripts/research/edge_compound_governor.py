@@ -138,14 +138,21 @@ def matured_payload_integrity(m6:dict|None):
             if horizon.get("maturity_state")!="MATURED":continue
             checked+=1
             hours=HORIZON_HOURS.get(name)
-            coverage=horizon.get("coverage") or {}
+            coverage=horizon.get("coverage")
             target=clock(horizon.get("target_at_utc"))
+            first_close=clock(coverage.get("first_close")) if isinstance(coverage,dict) else None
+            last_close=clock(coverage.get("last_close")) if isinstance(coverage,dict) else None
             valid=(hours is not None and knowledge is not None and target is not None and
                 target==knowledge+timedelta(hours=hours) and
                 isinstance(coverage,dict) and coverage.get("reason")=="COMPLETE_HOURLY_CLOSE_GRID" and
                 number(coverage.get("row_count")) and
                 coverage["row_count"] in (hours,hours+1) and
-                number(coverage.get("max_gap_hours")) and 0<coverage["max_gap_hours"]<=1.01)
+                number(coverage.get("max_gap_hours")) and 0<coverage["max_gap_hours"]<=1.01 and
+                first_close is not None and last_close is not None and
+                knowledge<=first_close<=knowledge+timedelta(hours=1) and
+                target-timedelta(hours=1)<=last_close<=target and
+                last_close>=first_close and
+                last_close-first_close==timedelta(hours=coverage["row_count"]-1))
             if valid:
                 for symbol in ("BTC","ETH"):
                     asset=horizon.get(symbol)
@@ -163,10 +170,27 @@ def matured_payload_integrity(m6:dict|None):
                             positive(post.get("price")) and positive(terminal.get("close")) and
                             all(number(reference.get(k)) for k in ("mae_pct","mfe_pct","terminal_return_pct")) and
                             all(number(post.get(k)) for k in ("mae_pct","mfe_pct","terminal_return_pct")) and
-                            (knowledge<=start_close<=end_close<=target if start_close and end_close else False)):
+                            (start_close==first_close and end_close==last_close)):
                         valid=False;break
-                    if not isinstance(asset.get("adverse_barriers"),dict):
+                    barriers=asset.get("adverse_barriers")
+                    expected=("-10.0","-15.0","-20.0") if symbol=="BTC" else ("-15.0","-20.0","-30.0")
+                    if not isinstance(barriers,dict) or set(barriers)!=set(expected):
                         valid=False;break
+                    # The immutable owner contract supplies three fixed adverse
+                    # barriers per asset, including explicit untouched outcomes.
+                    for row in barriers.values():
+                        if not isinstance(row,dict) or type(row.get("touched")) is not bool:
+                            valid=False;break
+                        if (row.get("basis")!="FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS" or
+                            row.get("touch_time_semantics")!="HOURLY_BAR_END_NOT_EXACT_LOW_TIME"):
+                            valid=False;break
+                        when=clock(row.get("first_touch_timestamp"))
+                        if row["touched"]:
+                            if when is None or not start_close<=when<=end_close:
+                                valid=False;break
+                        elif row.get("first_touch_timestamp") is not None:
+                            valid=False;break
+                    if not valid:break
             if not valid:mark(f"INVALID_MATURED_HORIZON_{name}")
     return {"status":"BLOCKED" if invalid else ("PASS" if checked else "PASS_NO_MATURED_YET"),
             "checked":checked,"invalid":invalid,"reasons":reasons}
