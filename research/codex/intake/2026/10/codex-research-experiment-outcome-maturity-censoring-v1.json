@@ -1,0 +1,101 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-experiment-outcome-maturity-censoring-v1",
+  "submitted_at_utc": "2026-10-12T11:24:06Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "MASTER_AUDIT_PARALLEL_SCIENCE_READ_ONLY_ROUND_2",
+    "source_paths": [
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1557#issuecomment-6123282987",
+      "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+      "scripts/experiments/experiment_lifecycle.py"
+    ]
+  },
+  "title": "Correct censored outcome maturity count and false-positive prospective validation flag",
+  "finding_key": "EXPERIMENT_CENSORED_RECEIPT_MISCOUNTED_AS_MATURED_PROSPECTIVE_VALIDATION",
+  "primary_target": "scripts/experiments/experiment_lifecycle.py",
+  "objective": "Under existing Experiment Lifecycle ownership, correct the verified code-level miscount whereby registry.matured_outcome_count includes ANY outcome receipt including CENSORED; preserve all immutable source/outcome files and statuses, expose true status-separated, score-eligibility-aware research metrics with backward-compatible fail-closed contract semantics and repair consumer sensor_relationship_compression.current_prospective_validation to NEVER claim validation from censored-only receipts. Prefer a minimal existing-owner repair, not a new scorer, forecast engine, mutable historical backfill, portfolio change or independent admission. The existing build_calibration_population_census.py is the known status-filtered reference. Owner decides on schema version / consumer compatibility; no automatic promotion and no output claim of edge.",
+  "allowed_change_scope": [
+    "scripts/experiments/experiment_lifecycle.py",
+    "tests/experiments/test_experiment_lifecycle.py",
+    "scripts/experiments/sensor_relationship_compression.py",
+    "tests/experiments/test_sensor_relationship_compression.py",
+    "tests/experiments/test_scientific_admission_lifecycle.py"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/experiments/experiment_lifecycle.py@7a0e32380cd5fc724a37fe14f592c62a0c1a9d8a",
+      "summary": "registry uses matured=[outcomes[id]...] followed by len(matured) without status filter; sets MATURED_INCONCLUSIVE if censored-only"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/experiments/sensor_relationship_compression.py@76d7afaed6e9980c7748196792cb90aec3395e1e",
+      "summary": "prospective_row marks current_prospective_validation=bool(matured_outcome_count), conflating censored-only with valid maturity"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/learning/build_calibration_population_census.py@517c091d307a507025a51210ed8520a467d4beb0",
+      "summary": "reference distinct outcome status count, computes actual matured only when status=MATURED"
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1557#issuecomment-6123282987",
+      "summary": "Direct public-blob census of 32 MATURED_INCONCLUSIVE all CENSORED, 28 historical nonqualified all CENSORED, 50 distinct CENSORED; 20 SENSOR_COMBINATION false positives"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/framework_memory/outcome_memory/EXP-FC-40f5d94a716bbd284cd7.json@d8a7fd1e8db7aa49211e85b151870058650fd15a",
+      "summary": "original CENSORED outcome that registry currently counts as matured for EC-01d8e20aee64058a00b7"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json@d05ec1911d15c9270db70bb3efd1accd51b25d49",
+      "summary": "pinned baseline 509 candidates, 1004 raw outcome refs, 32 MATURED_INCONCLUSIVE"
+    },
+    {
+      "kind": "OTHER",
+      "ref": "GitHub main 2e7ea6c4074e0dd6a03cee0668dbdf5d403721bb",
+      "summary": "fresh main readback for intake, same target script Git blob SHA as prior forensic baseline"
+    }
+  ],
+  "reproduction": "On current exact main, read scripts/experiments/experiment_lifecycle.py registry(): it maps ANY outcome object by forecast_id then constructs matured as ALL joined outcomes, regardless of status, and writes len(matured). Independent direct GitHub file inspection verified all 32 candidates with current registry state MATURED_INCONCLUSIVE have one outcome file with status CENSORED and nevertheless matured_outcome_count=1. For a concrete deterministic fixture, create one admitted SENSOR_COMBINATION candidate with a frozen forecast and an outcome record {forecast_id: F, status:'CENSORED'} and call existing registry() and prospective_row(); observed bug expected from current source: matured_outcome_count=1, state=MATURED_INCONCLUSIVE, current_prospective_validation=True. True MATURED, score-eligible HIT/MISS outcomes are a separate positive fixture. Confirm 20 censored-only sensor candidates currently trigger a true prospective flag. Do not rewrite existing outcome files.",
+  "acceptance_tests": {
+    "positive": [
+      "Exactly one immutable outcome with status=MATURED, result=HIT, scientifically score eligible yields true matured count=1, correctly recorded HIT, proper supported lifecycle and prospective validation only where contract and admission permit.",
+      "Exactly one eligible MATURED/MISS yields correct negative maturity state and no unsupported promotion; keep negative controls and research-only authority.",
+      "Mixed records (one eligible MATURED plus one CENSORED) retain 2 total outcome records, 1 truly matured, 1 censored; stable immutable IDs and deterministic rebuild independent of enumeration order.",
+      "Existing registry consumers and monthly council/yield/weekly adjudication retain explicit compatibility or versioned failure-closed behavior; focused test suites pass on exact branch then verified main after governed merge."
+    ],
+    "negative": [
+      "One CENSORED-only outcome yields 1 retained outcome record and 1 censored count, ZERO actual matured and ZERO score eligible; prospectively validated=false. Do not incorrectly erase or rewrite censored historical record.",
+      "All 32 present MATURED_INCONCLUSIVE cases remain documented as censored/UNKNOWN, not MATURED HIT/MISS; all 20 affected SENSOR_COMBINATION rows must not claim current_prospective_validation=true; preserve historical evidence without prospective retrofit.",
+      "A semantic duplicate, historically requalified, target-unit-quarantined or unadmitted candidate cannot become current prospective validated merely from a positive raw outcome_record_count or current admission status.",
+      "A malformed, unknown, conflicting, missing or duplicate outcome status cannot silently become MATURED/eligible; explicit error/UNKNOWN where evidence unavailable. No clock backdating or creation of new outcome files.",
+      "Reject counting an outcome with status=MATURED but scientific_score_eligible=false/null as an eligible scored forward test; separate MATURED physical status from eligible score.",
+      "Reproducibility under rerun, unchanged raw outcome SHA; no trades, market threshold changes, API calls, new workflow or auto-promotions."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical outcome or frozen forecast rewrites",
+    "new experiment engine/ledger",
+    "market thresholds",
+    "cross-repo private data",
+    "trading or SELL action semantics",
+    "new workflow or scheduler",
+    "independent self merge",
+    "automatic scientific admission",
+    "automatic Codex readiness"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "Owner chooses versioned compatibility with downstream weekly/yearly consumers; focused positive/negative tests and exact-head CI; independent nonauthoring review; governed merge; main SHA and unchanged immutable outcome SHA readback; later natural regenerated registry and sensor readout verified with no false prospective flag, no scientific edge promotion. Remediation maturation controller alone owns CODEX_READY, not the research thread."
+}
