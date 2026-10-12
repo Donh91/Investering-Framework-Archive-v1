@@ -218,4 +218,58 @@ it('invalid time policy rejects unsafe freshness inputs',()=>{
  assert.throws(()=>read(latest,compass,{nowUtc:'yesterday'}),/INVALID_READBACK_CLOCK_POLICY/);
  assert.throws(()=>read(latest,compass,{compassMaxAgeHours:-1}),/INVALID_READBACK_CLOCK_POLICY/);
 });
-console.log('SUCCESS: 30 public-feed source parity/lineage/freshness/score proof tests — NO SITE SIGNAL AUTHORITY.');
+const validW42 = (l,c) => {
+ c.protection_tracker.contract='COMPASS_PROTECTION_TRACKER_v1';
+ c.protection_tracker.authority={new_market_classifier:false,portfolio_execution:false};
+ c.protection_tracker.pullback_risk_state='ELEVATED';
+ c.protection_tracker.public_explanation={
+   contract:'CN_PUBLIC_PROTECTION_COPY_v1',forecast_week:'2026-W42',
+   risk_state:'ELEVATED',onset_start_utc:null,onset_end_utc:null
+ };
+ c.bull_bear_scale={
+   contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',
+   semantics:'EVIDENCE_BALANCE_NOT_PROBABILITY',
+   resolution:'COARSE_CATEGORICAL_DIRECTION',
+   mapping_version:'DIRECTION_ONLY_COARSE_v1',
+   owner:'OFFICIAL_COMPASS',
+   source_of_truth_contract:'MARKET_WEATHER_SOURCE_OF_TRUTH_v1',
+   authority:{site_synthesis_allowed:false,new_market_classifier:false,probability_model:false,portfolio_execution:false},
+   horizons:{'1_3d':{status:'OK',bull:5,bear:5,bias:'NEUTRAL'}}
+ };
+};
+it('live public feed transfers W42 official possible WEEK with no precise onset/SELL',()=>{
+ const o=mutate(validW42);
+ assert.equal(o.compass.state,'FRESH');
+ assert.equal(o.compass.action_now,'HOLD_WAIT');
+ assert.equal(o.compass.pullback_window.window_kind,'WEEK_ONLY');
+ assert.equal(o.compass.pullback_window.window_start_utc,null);
+ assert.equal(o.compass.pullback_window.window_end_utc,null);
+ assert.match(o.compass.pullback_window.headline,/uge 42.*ingen præcis ETA/);
+ assert.equal(o.compass.bull_bear_1_3d.bull,5);
+ assert.equal(o.compass.bull_bear_1_3d.bear,5);
+ assert.equal(o.compass.sell_assessment_state,'UNAVAILABLE');
+});
+it('stale weekly delivery blocks risk ETA and Bull/Bear even when Compass object looks fresh',()=>{
+ const o=mutate((l,c)=>{validW42(l,c);l.generated_at='2026-10-09T00:00:00Z'});
+ assert.equal(o.compass.pullback_window,null);
+ assert.equal(o.compass.bull_bear_1_3d,null);
+ assert.equal(o.compass.action_now,'UNAVAILABLE');
+});
+it('misaligned public CN week blocks risk ETA but does not rewrite Compass action',()=>{
+ const o=mutate((l,c)=>{validW42(l,c);c.weekly_context.public_issue_number=28});
+ assert.equal(o.compass.pullback_window,null);
+ assert.equal(o.compass.permit_path_live_gates,false);
+ assert.equal(o.compass.action_now,'HOLD_WAIT');
+});
+it('malformed governed W42 window does not create dates',()=>{
+ const o=mutate((l,c)=>{validW42(l,c);c.protection_tracker.public_explanation.onset_start_utc='2026-10-14T02:00:00Z'});
+ assert.equal(o.compass.pullback_window.window_kind,'INVALID_DATE_PAIR');
+ assert.equal(o.compass.pullback_window.window_start_utc,null);
+});
+it('legacy or incomplete protection contract yields unavailable ETA but no fabricated action',()=>{
+ const o=mutate((l,c)=>{validW42(l,c);c.protection_tracker.contract='SOME_UNKNOWN_OWNER'});
+ assert.equal(o.compass.pullback_window,null);
+ assert.equal(o.compass.action_now,'HOLD_WAIT');
+});
+console.log('SUCCESS: 35 public-feed source parity/lineage/freshness/score/ETA proof tests — NO SITE SIGNAL AUTHORITY.');
+
