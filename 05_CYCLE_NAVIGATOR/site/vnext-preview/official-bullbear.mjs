@@ -24,5 +24,11 @@ export function officialBullBear(c, horizon) {
       row.bull < 0 || row.bull > 10 || row.bear < 0 || row.bear > 10 ||
       row.bull + row.bear !== 10 ||
       !['BULLISH', 'LEAN_BULLISH', 'NEUTRAL', 'LEAN_BEARISH', 'BEARISH'].includes(row.bias)) return null;
+  // Check the upstream published bias is internally consistent. This is
+  // validation, not creation of a browser-side market classification.
+  const delta = row.bull - row.bear;
+  const expectedBias = delta >= 4 ? 'BULLISH' : delta >= 2 ? 'LEAN_BULLISH'
+    : delta <= -4 ? 'BEARISH' : delta <= -2 ? 'LEAN_BEARISH' : 'NEUTRAL';
+  if (row.bias !== expectedBias) return null;
   return { bull: row.bull, bear: row.bear, bias: row.bias };
 }
