@@ -458,8 +458,6 @@ export function translateInterface() {
   }
 }
 
-export function currentLanguage() { return language; }
-
 export function selectLanguage(next, onChange) {
   if (!['da','en'].includes(next)) return;
   language = next;
