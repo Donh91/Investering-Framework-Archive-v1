@@ -324,6 +324,20 @@ const sourceEnglishToDanish = {
   "No re-entry review is active.": "Der er ingen aktiv vurdering af genindtræden.",
   "No governed sell/trim decision owner is bound. Protection and distribution risk are not sell instructions.": "Der er ingen godkendt beslutningsejer for salg eller trimning. Beskyttelse og distributionsrisiko er ikke salgsinstrukser."
 };
+Object.assign(translations, {
+  "OFFICIELT MARKEDSBILLEDE": "OFFICIAL MARKET OUTLOOK",
+  "Markedet lige nu": "The market right now",
+  "MARKEDSRETNING · 12 TIMER": "MARKET DIRECTION · 12 HOURS",
+  "OFFICIEL HANDLING": "OFFICIAL ACTION",
+  "NÆSTE 1–3 DAGE": "NEXT 1–3 DAYS",
+  "ETH/BTC + markedsbredde": "ETH/BTC + market breadth",
+  "PULLBACK-WATCH": "PULLBACK WATCH",
+  "Retest under observation. Størrelse og tidspunkt er ikke bekræftet; ikke et SELL-signal.": "Potential retest under observation. Size and timing are unconfirmed; not a SELL signal.",
+  "Se kilder": "Inspect sources",
+  "KILDEFAST SNAPSHOT": "PINNED SOURCE SNAPSHOT",
+  "Ikke en handelstilladelse": "Not trading permission",
+});
+
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
