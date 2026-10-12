@@ -244,6 +244,7 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
                 'target_observation_at_utc': '2026-10-01T16:00:00Z',
                 'target_observation_open_at_utc': '2026-10-01T15:00:00Z',
                 'target_source_window_end_utc': '2026-10-01T17:00:00Z',
+                'matured_at_utc': '2026-10-01T17:30:00Z',
                 'time_basis': {
                     'status': 'PASS',
                     'start_reference_at_utc': '2026-10-01T05:00:00Z',
@@ -275,6 +276,7 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
                 'target_observation_at_utc': '2026-10-01T16:00:00Z',
                 'target_observation_open_at_utc': '2026-10-01T15:00:00Z',
                 'target_source_window_end_utc': '2026-10-01T17:00:00Z',
+                'matured_at_utc': '2026-10-01T17:30:00Z',
                 'time_basis': {
                     'status': 'PASS',
                     'start_reference_at_utc': '2026-10-01T05:00:00Z',
