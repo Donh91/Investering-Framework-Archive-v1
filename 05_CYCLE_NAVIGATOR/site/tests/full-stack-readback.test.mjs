@@ -52,12 +52,32 @@ for(const mode of ['valid','health','time']){
 }
 // Preserve Python integral-float bytes rather than parse/stringify reconstruction.
 f=fixture();const raw='{"contract":"FLOAT_TEST","number":1.0}';const digest=hash(raw),withDigest='{"contract":"FLOAT_TEST","number":1.0,"z_sha256":"'+digest+'"}';assert.equal(f.context.digest(withDigest,JSON.parse(withDigest),'z_sha256',digest),true);assert.equal(f.context.digest(withDigest.replace('1.0','2.0'),JSON.parse(withDigest.replace('1.0','2.0')),'z_sha256',digest),false);
-function render(status,contract='PUBLIC_COMPASS_PROJECTION_v1'){
+function render(status,contract='PUBLIC_COMPASS_PROJECTION_v1',event=null){
  let html='';const root={querySelectorAll:()=>[],querySelector:()=>null,classList:{add:()=>{}},prepend:s=>{html=s.innerHTML}};
  const ctx={document:{getElementById:()=>root,createElement:()=>({querySelector:()=>null,querySelectorAll:()=>[]})},esc:String,HORIZONS:[],officialScale:()=>null,decisionMeta:()=>({live:'UNAVAILABLE',liveEta:'UNKNOWN',weekly:'UNAVAILABLE',weeklyEta:'UNKNOWN'}),cnConclusion:()=>'',recommendationWindow:()=>'',hourlyMonitor:()=>'',decisionDetail:()=>'<p>INVESTOR_DETAIL</p>',compositeIntel:()=>'',pullbackCard:()=>'',riskCurve:()=>'',publicDataStatus:String,capSummary:()=>''};
- vm.createContext(ctx);vm.runInContext(premium.slice(premium.indexOf('function publicAction'),premium.indexOf('\nfunction cnConclusion'))+premium.slice(premium.indexOf('function renderPremium('),premium.indexOf('\nlet latestSnapshot'))+';globalThis.run=renderPremium;',ctx);
- ctx.run({live_observation:{current_action:{stance:'BUY'}}},{contract,data_status:status,action_now:'HOLD_WAIT_DATA_DEGRADED',bull_bear_scale:{}});return html;
+ vm.createContext(ctx);vm.runInContext(premium.slice(premium.indexOf('function publicAction'),premium.indexOf('\nfunction cnConclusion'))+premium.slice(premium.indexOf('function refreshStatusBanner('),premium.indexOf('\nlet latestSnapshot'))+';globalThis.run=renderPremium;',ctx);
+ ctx.run({live_observation:{current_action:{stance:'BUY'}}},{contract,data_status:status,action_now:'HOLD_WAIT_DATA_DEGRADED',issued_at_utc:'2026-10-11T06:30:00Z',bull_bear_scale:{}},event);return html;
 }
 for(const status of ['DEGRADED','NOT_PUBLISHED','STALE',undefined]){const html=render(status);assert.match(html,/WAIT · DATA DEGRADED/);assert.doesNotMatch(html,/Keep current positioning|INVESTOR_DETAIL|APPLIES NOW/);}
 assert.match(render('OK'),/CURRENT ACTION<\/span><strong>HOLD<\/strong>/);assert.match(render('OK'),/INVESTOR_DETAIL/);assert.doesNotMatch(render('OK','WRONG_CONTRACT'),/INVESTOR_DETAIL/);
+// The premium NOW renderer is the real current site owner. It must NOT
+// label an operations/scheduling outage as a live market-move detection.
+const scheduled={contract:'PUBLIC_COMPASS_EVENT_STATUS_v1',status:'REASSESSMENT_REQUESTED',
+  detected_at_utc:'2026-10-11T07:45:00Z',cause_codes:['SCHEDULED_FREEZE_MISSING']};
+const late=render('OK','PUBLIC_COMPASS_PROJECTION_v1',scheduled);
+assert.match(late,/SCHEDULED UPDATE DELAYED/);
+assert.match(late,/Fresh Compass update requested/);
+assert.doesNotMatch(late,/MARKET MOVE DETECTED/);
+const retryLate=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
+  ...scheduled,cause_codes:['PRIOR_REQUEST_NOT_BOUND_RETRY','SCHEDULED_FREEZE_MISSING']});
+assert.match(retryLate,/SCHEDULED UPDATE DELAYED/);
+assert.doesNotMatch(retryLate,/MARKET MOVE DETECTED/);
+const trueMove=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
+  ...scheduled,cause_codes:['MARKET_STATE_CHANGED']});
+assert.match(trueMove,/MARKET MOVE DETECTED/);
+assert.doesNotMatch(trueMove,/SCHEDULED UPDATE DELAYED/);
+const oldEvent=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
+  ...scheduled,detected_at_utc:'2026-10-11T06:30:00Z'});
+assert.doesNotMatch(oldEvent,/SCHEDULED UPDATE DELAYED/);
+assert.doesNotMatch(render('OK'),/SCHEDULED UPDATE DELAYED/);
 console.log('FULL_STACK_READBACK_REGRESSION_PASS');

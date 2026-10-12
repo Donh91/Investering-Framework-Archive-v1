@@ -45,6 +45,8 @@ STATE_CONTRACT = "COMPASS_EVENT_REFRESH_STATE_v1"
 REQUEST_RETRY_SECONDS = 20 * 60
 NON_PROTECTIVE_COOLDOWN_SECONDS = 3 * 60 * 60
 SCHEDULE_PROXIMITY_SECONDS = 30 * 60
+# Delay window is a dispatch-liveness grace period, NOT a forecast backdate.
+MISSING_SLOT_GRACE_SECONDS = 45 * 60
 ACTION_RANK = {
     "HOLD_WAIT_DATA_DEGRADED": 0,
     "HOLD_DEFENSIVE_WAIT": 1,
@@ -167,10 +169,53 @@ def _seconds_to_next_scheduled_compass(now: datetime) -> float:
     return (tomorrow - local).total_seconds()
 
 
+def _missing_scheduled_freeze(now: datetime, issued_at: Any) -> str | None:
+    """Return a missed local scheduled slot using only source issue time.
+
+    This is NOT verification of GitHub workflow execution, user delivery or
+    historical publication. It only admits a current-time refresh request when
+    the latest immutable Compass issue predates a due investor-facing slot.
+    """
+    original_issue = parse_utc(issued_at)
+    if original_issue is None:
+        return None  # Missing/invalid immutable time cannot prove a miss.
+    cph = now.astimezone(ZoneInfo("Europe/Copenhagen"))
+    # The first post-midnight watcher must still notice yesterday's
+    # missed evening slot; otherwise the date rollover masks a real outage.
+    previous_day = cph - timedelta(days=1)
+    slots = (
+        ("PREVIOUS_EVENING", previous_day.replace(hour=20, minute=17, second=0, microsecond=0)),
+        ("MORNING", cph.replace(hour=8, minute=17, second=0, microsecond=0)),
+        ("EVENING", cph.replace(hour=20, minute=17, second=0, microsecond=0)),
+    )
+    overdue = [
+        (name, slot) for name, slot in slots
+        if cph >= slot + timedelta(seconds=MISSING_SLOT_GRACE_SECONDS)
+    ]
+    if not overdue:
+        return None
+    name, due_at = overdue[-1]
+    return name if original_issue < due_at.astimezone(timezone.utc) else None
+
+
+def _public_refresh_message(cause_codes: Any) -> str:
+    """Distinguish missed scheduled output from a genuine market event."""
+    causes = set(cause_codes or [])
+    if causes & {"PROTECTION_STATE_CHANGED", "REENTRY_REVIEW_OPENED"}:
+        return "Protection or re-entry state changed. Compass reassessment is in progress."
+    if causes - {"PRIOR_REQUEST_NOT_BOUND_RETRY"} == {"SCHEDULED_FREEZE_MISSING"}:
+        return (
+            "Scheduled Compass update missed. A fresh current-time reassessment "
+            "has been requested; this does not indicate a new market move "
+            "or a delivered forecast."
+        )
+    return "Material market move or decision-state change detected. Compass reassessment is in progress."
+
+
 def _protective_transition(
     *, latest_compass: Mapping[str, Any], current_data_status: str,
     current_action: str, current_market: Mapping[str, Any], current_ladder: Any,
-    heat: str,
+    heat: str, last_heat: str,
 ) -> bool:
     previous_status = str(latest_compass.get("data_status") or "")
     if previous_status != current_data_status:
@@ -183,7 +228,9 @@ def _protective_transition(
         return True
     if _ladder_more_defensive(latest_compass.get("capitalization_ladder"), current_ladder):
         return True
-    if heat == "HOT_DOWNSIDE_REASSESSMENT":
+    # Persistent downside heat is not a new protective transition: an
+    # accepted same-source missed-slot request must retain in-flight dedupe.
+    if heat == "HOT_DOWNSIDE_REASSESSMENT" and heat != last_heat:
         return True
     return False
 
@@ -239,7 +286,12 @@ def evaluate(
             },
         }
 
-    if source_sha == compass_source_sha:
+    missing_freeze = _missing_scheduled_freeze(now, latest_compass.get("issued_at_utc"))
+    # Matching source hashes normally suppress duplicate work. Exception:
+    # a genuinely missed scheduled publication is a separate liveness event,
+    # even when its last source packet remains time-valid. Freshness and CN
+    # admission gates still apply below; no source/forecast is backdated.
+    if source_sha == compass_source_sha and missing_freeze is None:
         return {
             "contract": CONTRACT,
             "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
@@ -259,10 +311,21 @@ def evaluate(
         or ""
     )
     latest_issued = parse_utc(latest_compass.get("issued_at_utc"))
+    # A source hash can legitimately stay identical between a pre-slot issue
+    # and the overdue investor-facing freeze. Missing scheduled publication is
+    # an independent liveness reason, so an accepted recovery request must be
+    # tracked as in-flight/retry even if source bytes have not changed.
+    # Bind the same-source exception to THIS source's recorded request so an
+    # unrelated older request cannot manufacture a retry.
+    same_source_missed_request = (
+        source_sha == compass_source_sha
+        and missing_freeze is not None
+        and last_requested_source == source_sha
+    )
     request_unbound = bool(
         last_request_age is not None
         and (latest_issued is None or latest_issued < parse_utc(last_request_at))
-        and source_sha != compass_source_sha
+        and (source_sha != compass_source_sha or same_source_missed_request)
     )
     request_in_flight = bool(request_unbound and last_request_age < REQUEST_RETRY_SECONDS)
     request_retry_due = bool(request_unbound and last_request_age >= REQUEST_RETRY_SECONDS)
@@ -316,6 +379,13 @@ def evaluate(
     if current_data_status == "OK" and heat != "NORMAL" and heat != last_heat:
         causes.append("MARKET_HEAT_ENTERED")
 
+    # A delayed GitHub cron job may terminate SUCCESS while its own slot gate
+    # skips the freeze. The EXISTING hourly event watcher can request a fresh
+    # current-time issue without pretending it was published at the missed slot.
+    # Never manufacture a new release from unverified/stale owner data.
+    if missing_freeze is not None and current_data_status == "OK":
+        causes.append("SCHEDULED_FREEZE_MISSING")
+
     if request_retry_due and causes:
         causes.insert(0, "PRIOR_REQUEST_NOT_BOUND_RETRY")
 
@@ -327,6 +397,7 @@ def evaluate(
         current_market=market,
         current_ladder=ladder,
         heat=heat,
+        last_heat=last_heat,
     )
     if isinstance(previous_protection, Mapping):
         old_risk = str(previous_protection.get("pullback_risk_state") or "NORMAL")
@@ -382,6 +453,8 @@ def evaluate(
         "request_retry_seconds": REQUEST_RETRY_SECONDS,
         "scheduled_slot_proximity_seconds": SCHEDULE_PROXIMITY_SECONDS,
         "seconds_to_next_scheduled_compass": seconds_to_scheduled,
+        "missing_scheduled_freeze": missing_freeze,
+        "missing_freeze_observation_only": True,
         "last_request_age_seconds": cooldown_age,
         "last_requested_source_sha": last_requested_source or None,
         "source_packet_sha256": source_sha,
@@ -460,20 +533,12 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
         run_path = run_dir / f"{now:%H%M%S}_{str(decision['source_packet_sha256'])[:12]}.json"
         run_path.write_text(json.dumps(decision, sort_keys=True, indent=2) + "\n")
         (root / "LATEST.json").write_text(json.dumps(decision, sort_keys=True, indent=2) + "\n")
-        protection_event = any(
-            code in {"PROTECTION_STATE_CHANGED", "REENTRY_REVIEW_OPENED"}
-            for code in decision.get("cause_codes", [])
-        )
         public = {
             "contract": PUBLIC_CONTRACT,
             "status": "REASSESSMENT_REQUESTED",
             "detected_at_utc": decision["evaluated_at_utc"],
             "cause_codes": decision.get("cause_codes", []),
-            "message": (
-                "Protection or re-entry state changed. Compass reassessment is in progress."
-                if protection_event
-                else "Material market move or decision-state change detected. Compass reassessment is in progress."
-            ),
+            "message": _public_refresh_message(decision.get("cause_codes", [])),
             "authority": {
                 "official_compass_change": False,
                 "portfolio_execution": False,
