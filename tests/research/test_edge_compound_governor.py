@@ -262,6 +262,8 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
                 owner=json.loads(path.read_text())
                 barrier=owner["events"][0]["horizons"]["24h"]["BTC"]["adverse_barriers"]["-10.0"]
                 barrier.update(touched=True,first_touch_timestamp=timestamp)
+                # A touched -10% reference-price barrier requires recorded MAE.
+                owner["events"][0]["horizons"]["24h"]["BTC"]["reference_anchor"]["mae_pct"]=-10.5
                 path.write_text(json.dumps(owner))
                 report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
                 self.assertEqual(report["decision"],expected)
@@ -277,6 +279,86 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
             self.assertEqual(report["decision"],"FALSIFY")
             self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+
+    def test_extreme_knowledge_time_cannot_overflow_maturity_deadline(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            event=owner["events"][0]
+            event["knowledge_timestamp"]="9999-12-31T23:00:00Z"
+            event["horizons"]["24h"]["target_at_utc"]="9999-12-31T23:59:59Z"
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",report["semantic_state"]["blockers"])
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_malformed_horizon_containers_fail_closed_before_counting(self):
+        for shape in ("list_horizons","list_horizon","string_horizons"):
+            with self.subTest(shape=shape),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                event=owner["events"][0]
+                if shape=="list_horizons":event["horizons"]=["malformed"]
+                elif shape=="string_horizons":event["horizons"]="malformed"
+                else:event["horizons"]["24h"]=["malformed"]
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],"FALSIFY")
+                self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",report["semantic_state"]["blockers"])
+                self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_mae_and_barrier_touch_labels_cannot_contradict(self):
+        for symbol in ("BTC","ETH"):
+            with self.subTest(symbol=symbol),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                asset=owner["events"][0]["horizons"]["24h"][symbol]
+                asset["reference_anchor"]["mae_pct"]=-35.0
+                # All three fixed downside barriers are recorded untouched.
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],"FALSIFY")
+                self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+                self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_earlier_shallow_touch_required_before_later_deep_touch(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            asset=owner["events"][0]["horizons"]["24h"]["BTC"]
+            asset["reference_anchor"]["mae_pct"]=-25.0
+            for level,ts in (("-10.0","2026-10-07T04:00:00Z"),("-15.0","2026-10-07T03:00:00Z"),("-20.0","2026-10-07T05:00:00Z")):
+                asset["adverse_barriers"][level].update(touched=True,first_touch_timestamp=ts)
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_coherent_touched_barrier_depth_stays_collect_only(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            asset=owner["events"][0]["horizons"]["24h"]["BTC"]
+            asset["reference_anchor"]["mae_pct"]=-25.0
+            for level,ts in (("-10.0","2026-10-07T03:00:00Z"),("-15.0","2026-10-07T04:00:00Z"),("-20.0","2026-10-07T05:00:00Z")):
+                asset["adverse_barriers"][level].update(touched=True,first_touch_timestamp=ts)
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"COLLECT")
+            self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["status"],"PASS")
             self.assertFalse(report["external_routing"]["automatic_dispatch"])
 
     def test_out_of_order_m6_owner_blocks_fresh_governor(self):
