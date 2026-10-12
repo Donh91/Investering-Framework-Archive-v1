@@ -81,3 +81,16 @@ Run the R1 **source eligibility and controls audit** against existing ASKR and P
 - Regression tests: `tests/research/test_alpha_moonshot_r1_admission_v1.py` (13 defined test cases; CI not yet independently verified on current PR head).
 - Historical case census with explicit unresolved evidence: `06_RESEARCH_LAB/alpha_lab/2026-10-12__top10_r1_askr_pepe_source_admission.json`. ASKR and PEPE marked `DATA_BLOCKED` pending verified token/pool/first-source/route and matched controls; FARTCOIN optional blocked. **This is a deliberate truthful result, not evidence that these cases were untradeable.**
 - Gate performs only source/clock/route *admission*. It does not calculate fills, infer CA, fetch market data, make trades, create model/API calls, or certify economic edge. A self-declared route proof remains a technical candidate until independent raw verification.
+
+## Automatic Alpha Lab conclusion → next research handoff (existing supervisor only)
+
+**User should never need to remember to ask for the next round.** On every completed or blocked research round, the **existing** Alpha Lab supervisor / #1340 owner consumes its durable receipt on its next normal run; this is a handoff contract, not a new cron, queue or unbounded model loop.
+
+Required deterministic `ALPHA_RESEARCH_ROUND_HANDOFF_V1` receipt fields:
+- `round_id`, `prereg_sha`, `source_snapshot_sha`, `observed_at_utc`, `owner_issue`, `verdict` (`PASS|FAIL|INCONCLUSIVE|DATA_BLOCKED`), `evidence_paths`, `negative_controls_covered`, `prospective_credit`, `economic_edge`, `lesson`, `recommended_next_round`, `next_action`, `next_action_owner`, `next_action_gate`, `actionable_now`, `trading_authority:false`, `promotion_authority:false`.
+- Receipt is **append-only** and source-addressed; historical seed cannot earn prospective credit. Unknown source or no route => `DATA_BLOCKED`, not negative alpha. API prose alone cannot set PASS.
+- Existing supervisor consumes one **new** receipt once (dedupe by immutable round/receipt SHA), updates the **existing** #1340 research issue/learning log with verdict, strongest falsifier, lessons and next cheapest bounded action, and assigns the next action to existing S1–S9/Project→CA/#1339 owner. The next action must be explicit even for FAIL/INCONCLUSIVE/DATA_BLOCKED: source collection, a narrow falsifier, or `NO_ACTION_JUSTIFIED`.
+- If gate PASS and owner prerequisites hold, recommend next sequential research round; if blocked, keep dependent rounds blocked but allow passive prospective capture in existing lanes. **Never auto-launch paid API or trading** without existing #1476 budget/owner/one-heavy-lane controls.
+- Publish concise status to existing Alpha Lab owner thread; no new notification automation, no parallel data store and no claims that a scheduled run is active until owner code/CI proves consumption.
+
+First handoff receipt: `06_RESEARCH_LAB/alpha_lab/2026-10-12__top10_r1_owner_handoff.json`. Its initial verdict is `DATA_BLOCKED`, with concrete raw-source follow-up. The supervisor should pick it up through its **existing** normal cycle after this PR is reviewed/merged.
