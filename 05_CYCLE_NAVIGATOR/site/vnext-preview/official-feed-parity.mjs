@@ -20,7 +20,7 @@ function finite(value) {
 }
 
 function validUtc(value) {
-  if (typeof value !== 'string' || !/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(value)) return null;
+  if (typeof value !== 'string' || !/^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?(?:Z|[+-]\d\d:\d\d)$/.test(value)) return null;
   const unix = Date.parse(value);
   return Number.isFinite(unix) ? unix : null;
 }
@@ -127,7 +127,14 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
   }
 
   const compassAge = normalizeAge(compass.issued_at_utc, nowEpochMs, compassMaxAgeHours);
-  const cOK = compass.data_status === 'OK' && typeof compass.compass_id === 'string' &&
+  // A separate Compass may remain authoritative in the weekly sense, but
+  // stale or self-contradictory DELIVERY bytes must never be shown as live NOW.
+  const bundleTime = validUtc(latest.generated_at);
+  const compassTime = validUtc(compass.issued_at_utc);
+  const chronologyAligned = bundleTime !== null && compassTime !== null &&
+    compassTime <= bundleTime + 5 * 60000;
+  const cOK = result.delivery_health === 'FRESH' && chronologyAligned &&
+    compass.data_status === 'OK' && typeof compass.compass_id === 'string' &&
     compass.compass_id.trim().length > 0 && compassAge === 'FRESH';
   const alignedContext = compass.weekly_context;
   const cnJoined = weeklyAligned &&
