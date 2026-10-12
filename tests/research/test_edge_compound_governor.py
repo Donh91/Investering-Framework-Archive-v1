@@ -24,12 +24,18 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
                     "reference_anchor":{"price":100.0,"mae_pct":-1.0,"mfe_pct":2.0,"terminal_return_pct":0.0},
                     "post_knowledge_close_anchor":{"timestamp":first,"price":100.0,
                         "mae_pct":-1.0,"mfe_pct":2.0,"terminal_return_pct":0.0},
-                    "terminal":{"timestamp":target,"close":100.0},
-                    "adverse_barriers":{"-10.0":{"touched":False}}}
+                    "terminal":{"timestamp":target,"close":100.0}}
+                barrier={"touched":False,"first_touch_timestamp":None,
+                    "basis":"FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                    "touch_time_semantics":"HOURLY_BAR_END_NOT_EXACT_LOW_TIME"}
+                outcome["adverse_barriers"]={key:dict(barrier) for key in ("-10.0","-15.0","-20.0")}
+                eth=json.loads(json.dumps(outcome))
+                eth["adverse_barriers"]={key:dict(barrier) for key in ("-15.0","-20.0","-30.0")}
                 h.update({"target_at_utc":target,
                     "coverage":{"reason":"COMPLETE_HOURLY_CLOSE_GRID",
-                        "row_count":hours,"max_gap_hours":1.0},
-                    "BTC":outcome,"ETH":json.loads(json.dumps(outcome))})
+                        "row_count":hours,"max_gap_hours":1.0,
+                        "first_close":first,"last_close":target},
+                    "BTC":outcome,"ETH":eth})
             expanded[name]=h
         horizons=expanded
         event={"compass_id":"CMP-TEST","knowledge_timestamp":when,
@@ -159,6 +165,69 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             self.assertEqual(integrity["checked"],0)
             self.assertEqual(result["semantic_state"]["information_edge_claim"],"NOT_ESTABLISHED")
             self.assertEqual(result["semantic_state"]["economic_action_edge_claim"],"NOT_ESTABLISHED")
+
+
+    def test_matured_terminal_must_reach_horizon_not_just_any_pre_target_close(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"7d":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            horizon=owner["events"][0]["horizons"]["7d"]
+            for symbol in ("BTC","ETH"):
+                horizon[symbol]["terminal"]["timestamp"]="2026-10-07T01:00:00Z"
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,15,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_matured_grid_must_have_credible_last_close_and_row_count(self):
+        for mode in ("early_last","missing_last","discordant_count"):
+            with self.subTest(mode=mode),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                coverage=owner["events"][0]["horizons"]["24h"]["coverage"]
+                if mode=="early_last":
+                    coverage["last_close"]="2026-10-07T01:00:00Z"
+                elif mode=="missing_last":
+                    coverage.pop("last_close")
+                else:
+                    coverage["row_count"]=25
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],"FALSIFY")
+                self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+
+    def test_symbol_specific_barriers_must_be_complete_and_typed(self):
+        variants=("empty_btc","wrong_eth_keys","missing_touched","fake_touch","false_with_timestamp")
+        for mode in variants:
+            with self.subTest(mode=mode),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                horizon=owner["events"][0]["horizons"]["24h"]
+                if mode=="empty_btc":
+                    horizon["BTC"]["adverse_barriers"]={}
+                elif mode=="wrong_eth_keys":
+                    horizon["ETH"]["adverse_barriers"]=dict(horizon["BTC"]["adverse_barriers"])
+                elif mode=="missing_touched":
+                    horizon["BTC"]["adverse_barriers"]["-10.0"].pop("touched")
+                elif mode=="fake_touch":
+                    barrier=horizon["BTC"]["adverse_barriers"]["-10.0"]
+                    barrier["touched"]=True
+                    barrier["first_touch_timestamp"]="2026-10-06T23:00:00Z"
+                else:
+                    barrier=horizon["ETH"]["adverse_barriers"]["-15.0"]
+                    barrier["first_touch_timestamp"]="2026-10-07T03:00:00Z"
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],"FALSIFY")
+                self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+                self.assertFalse(report["external_routing"]["automatic_dispatch"])
 
     def test_out_of_order_m6_owner_blocks_fresh_governor(self):
         with tempfile.TemporaryDirectory() as t:
