@@ -225,10 +225,17 @@ def retry_output_token_limit(task_cfg: dict[str, Any]) -> int:
     return configured
 
 
-def call_api(api_key: str, payload: dict[str, Any]) -> dict[str, Any]:
+def request_timeout_seconds(task_cfg: dict[str, Any]) -> int:
+    """Keep existing default; allow bounded task-local time for senior research."""
+    timeout = task_cfg.get("request_timeout_seconds", 180)
+    if type(timeout) is not int or not 30 <= timeout <= 480:
+        raise ValueError("invalid_request_timeout_seconds")
+    return timeout
+
+def call_api(api_key: str, payload: dict[str, Any], timeout_seconds: int = 180) -> dict[str, Any]:
     request = urllib.request.Request("https://api.openai.com/v1/responses", data=canonical_bytes(payload), headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(request, timeout=180) as response:
+        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
             return json.loads(response.read())
     except urllib.error.HTTPError as exc:
         body = exc.read().decode(errors="replace")
@@ -293,7 +300,7 @@ def main() -> None:
             payload = dict(request_payload)
             if attempt == 1:
                 payload["max_output_tokens"] = retry_output_token_limit(task_cfg)
-            response = call_api(api_key, payload)
+            response = call_api(api_key, payload, timeout_seconds=request_timeout_seconds(task_cfg))
             responses.append(response)
             try:
                 output = extract_output(response)
