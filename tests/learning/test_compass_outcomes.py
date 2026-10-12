@@ -93,6 +93,31 @@ class CompassOutcomeTest(unittest.TestCase):
             self.assertEqual(outcome["target_observation_at_utc"], "2026-09-17T00:00:00Z")
             self.assertEqual(original, freeze_path.read_bytes())
 
+    def test_batch_end_is_not_candle_close(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            forecast = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            forecast.parent.mkdir(parents=True, exist_ok=True)
+            forecast.write_text(json.dumps(self.freeze()))
+            path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-16.csv"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["timestamp_utc", "source_window_end_utc", "btc_close"])
+                writer.writeheader()
+                for hour, price in [(20, 90), (21, 92), (22, 95), (23, 110)]:
+                    writer.writerow({"timestamp_utc": f"2026-09-16T{hour:02d}:00:00Z",
+                                     "source_window_end_utc": "2026-09-17T01:00:00Z", "btc_close": price})
+            early = mature_one(root, forecast, "12h", datetime(2026, 9, 17, 0, 30, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(early["status"], "PENDING_TARGET_EVIDENCE")
+            self.assertFalse((root / early["path"]).exists())
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 17, 1, 30, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "MATURED")
+            outcome = json.loads((root / result["path"]).read_text())
+            self.assertEqual(outcome["target_observation_open_at_utc"], "2026-09-16T23:00:00Z")
+            self.assertEqual(outcome["target_observation_at_utc"], "2026-09-17T00:00:00Z")
+            self.assertAlmostEqual(outcome["realized"]["btc_return_pct"], 10.0)
+            self.assertEqual(outcome["scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v3")
+
     def test_action_quality_is_horizon_action_not_hardwired_to_12h(self):
         self.assertEqual(action_quality("WAIT", -2.0, -3.0)["action"], "WAIT")
         self.assertEqual(action_quality("PREPARE", 2.0, -1.0)["action"], "PREPARE")
