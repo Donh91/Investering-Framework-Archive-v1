@@ -13,6 +13,8 @@ Nine known-win candidate launch cases across Robinhood Chain, Solana and Ethereu
 6. [05_LEARNING_LOOP_AND_NEXT_EXPERIMENT.md](./05_LEARNING_LOOP_AND_NEXT_EXPERIMENT.md) — bounded existing-owner improvements, 2-wave recognition / independent buyers / first-party project root matching, 200 forward case shadow trial, kill checks.
 7. [06_LEARNING_CASES_V1.jsonl](./06_LEARNING_CASES_V1.jsonl) — machine-readable chain-namespaced case contracts with identity, evidence states, linked sources, key lessons and explicit lack of early buyer, matched control, or exit proof.
 
+8. [07_EXTERNAL_POPULATION_BASELINES.md](./07_EXTERNAL_POPULATION_BASELINES.md) — independent crosschain/Bitquery/Pine research added AFTER the freeze: 34,988 token study, 8.2m Pump.fun launch cohort and Robinhood buyer-transfer-seller ring, with strict period and attribution limits.
+
 ## Most actionable—not yet live alpha—observations
 - **ASKR:** issuer-disclosed bundled first purchase exempted from first-3s 99% tax means first buys cannot be called ordinary accessible demand.
 - **MINTFOLIO:** protocol works and creators receive fee splits; listed token's claim on fees/revenue not documented, so app utility != investible token cashflow.
