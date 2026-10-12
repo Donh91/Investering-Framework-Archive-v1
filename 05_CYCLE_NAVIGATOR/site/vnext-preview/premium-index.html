@@ -129,6 +129,22 @@
         </div>
       </section>
 
+      <div class="compass-weather" id="compass-bullbear" aria-label="Officiel Bull/Bear-evidensbalance">
+        <div class="compass-weather-title">
+          <span><strong>Bull / Bear</strong><small>1–3 dage</small></span>
+          <strong id="bullbear-bias">UTILGÆNGELIG</strong>
+        </div>
+        <div class="compass-weather-line">
+          <span class="compass-weather-side bear">BEAR <strong id="bullbear-bear">—</strong></span>
+          <div class="compass-weather-track" id="bullbear-track" aria-hidden="true">
+            <span class="compass-weather-fill bear" id="bullbear-bear-fill"></span>
+            <span class="compass-weather-fill bull" id="bullbear-bull-fill"></span>
+          </div>
+          <span class="compass-weather-side bull">BULL <strong id="bullbear-bull">—</strong></span>
+        </div>
+        <p>Evidensbalance · ikke sandsynlighed eller købssignal.</p>
+      </div>
+
       <div class="compass-urgent" aria-label="Vigtige risiko- og salgssignaler">
         <div><span>PULLBACK</span><strong id="compass-risk-inline">BUILDING</strong></div>
         <div><span>SELL / TRIM</span><strong id="compass-sell-inline">UNAVAILABLE</strong></div>
@@ -161,6 +177,7 @@
           <summary><span><strong>Min fortolkning</strong><small>1–3 dage · betingelser og længere horisonter</small></span><span class="compass-chevron" aria-hidden="true">⌄</span></summary>
           <div class="compass-disclosure-content">
             <p id="interpretation-copy">Blandet og selektiv deltagelse. Bred rotation er endnu ikke bekræftet.</p>
+            <div id="bullbear-other-horizons" class="compass-weather-explainer"></div>
             <div id="interpret-details" class="compass-source-explanation"></div>
           </div>
         </details>
