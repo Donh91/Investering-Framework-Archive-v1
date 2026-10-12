@@ -40,11 +40,12 @@ Official public Compass `CMP-20261012-3f1e99c2868e` issued 2026-10-12T16:18:05Z:
 6. Exactly one historical canonical W41 string is recognized for source day ordinals 3–7; all other free prose remains `NO SUPPORTED ONSET`.
 7. Risk state, separate SELL and distribution never gain authority from the time display. An unverified/unavailable source hides or explicitly marks ETA unavailable.
 8. Source snapshot time + public CN identity must remain visible; no freshness/real-time claim for Sunday seed.
+9. `NORMAL` means **NO ACTIVE PULLBACK WATCH**; `UNAVAILABLE` means **NO VERIFIED RISK STATE**. Never infer a possible downside event from a forecast week alone. A missing warning is an explicit governed statement, not a hidden favorable score.
 
 ## CI and deploy audit
 
 - Existing exact-head static contract / score lineage / DA/EN / 30 feed parity / Official Bull/Bear tests passed.
-- `test-official-pullback-eta.mjs`: **13/13 pass** for historic W41, W42 null starts, valid typed dates, partial/end-before-start, invalid Z, wrong contract/week/state, noncanonical prose, source authority fail-closed.
+- `test-official-pullback-eta.mjs`: **15/15 pass** for historic W41, W42 null starts, valid typed dates, partial/end-before-start, invalid Z, wrong contract/week/state, noncanonical prose, source authority fail-closed.
 - Production-style `verify-vite-bundle.mjs`: uses an ephemeral Vite installation **only inside PR CI**. This caught a real duplicate `currentLanguage()` export that the old script VM smoke test missed. The duplicate was fixed. Vite bundle then **PASSED** on GitHub PR head `1d516168c505be81f89b2c3640da4c929f054e8b`.
 - AppDeploy initial two builds failed before the Vite root cause was known. Rolled back to last stable **v12** snapshot `1791825108854`, which redeployed READY with no frontend/network errors.
 - New GitHub source is corrected, but the final AppDeploy redeployment was BLOCKED BY **CREDITS_USAGE_LIMIT_REACHED**, free tier reset at **2026-10-13T00:00:00Z**. DO NOT claim ETA code is live before a new READY receipt.
