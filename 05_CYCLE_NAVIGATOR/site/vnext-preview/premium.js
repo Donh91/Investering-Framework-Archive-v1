@@ -1,6 +1,7 @@
 /* Cycle Navigator — source-bound interactive preview. Read-only. No signal ownership. */
 import { initializeLanguage, translateInterface, selectLanguage, currentLanguage } from './premium-i18n.js';
 import { officialPullbackDisplay } from './official-pullback-eta.mjs';
+import { officialPullbackStage } from './official-pullback-stage.mjs';
 import { officialBullBear } from './official-bullbear.mjs';
 'use strict';
 
@@ -280,10 +281,13 @@ function paintPullback(d, lang = 'da') {
   // Independent governed risk-state and week/ETA readback, never an in-browser
   // early warning, synthetic time forecast, or authorization to SELL.
   const p = officialPullbackDisplay(d.compass, d.weekly, lang);
-  setText('overview-risk', p.riskState);
+  const stage = officialPullbackStage(d.compass, d.weekly, lang);
+  setText('overview-risk', stage.sourceRiskState);
+  setText('overview-risk-stage', stage.stageLabel);
+  setText('compass-risk-stage', stage.stageLabel);
   setText('overview-risk-window', p.headline);
   setText('compass-risk-window', p.headline);
-  setText('overview-risk-desc', p.note);
+  setText('overview-risk-desc', p.note + ' · ' + stage.proximityLabel);
   for (const id of ['overview-risk-window','compass-risk-window']) {
     const el = $(id);
     if (el) el.dataset.windowKind = p.windowKind;
@@ -387,12 +391,13 @@ function paintCompass(d) {
 
   const risk = c.protection_tracker ?? {};
   setText('risk-large', clean(risk.pullback_risk_state, 'UNAVAILABLE'));
-  setText('risk-main-copy', clean(risk.pullback_class) + ' · ' + clean(risk.eta_window, 'Ingen pålidelig ETA'));
+  const stage = officialPullbackStage(c, d.weekly, currentLanguage());
+  setText('risk-main-copy', stage.stageLabel + ' · ' + stage.etaLabel + ' · ' + stage.proximityLabel);
   setText('distribution-label', clean(risk.distribution_risk));
   setText('sell-label', clean(c.sell_assessment?.state));
   setText('reentry-label', clean(risk.reentry_state));
   const riskDetails = $('risk-details'); clear(riskDetails);
-  strongText(riskDetails, 'Risikokvalitet', clean(risk.confidence_quality));
+  strongText(riskDetails, 'Evidenskvalitet (ikke sandsynlighed)', stage.qualityLabel);
   strongText(riskDetails, 'SELL-adskillelse', clean(c.sell_assessment?.reason));
   strongText(riskDetails, 'Re-entry', clean(risk.reentry_message));
   strongText(riskDetails, 'Hvad svækker risikovurderingen', clean(risk.invalidation));
@@ -521,6 +526,8 @@ async function initialize() {
     setText('overview-risk', 'UTILGÆNGELIG');
     setText('overview-risk-window', 'ETA ikke tilgængelig');
     setText('compass-risk-window', 'ETA ikke tilgængelig');
+    setText('overview-risk-stage', 'Stadie ikke tilgængeligt');
+    setText('compass-risk-stage', 'Stadie ikke tilgængeligt');
     setText('overview-risk-desc', 'Ingen verificeret kilde eller start/slut.');
     setText('compass-primary-direction', 'UKENDT');
     setText('compass-primary-action', 'UTILGÆNGELIG');
