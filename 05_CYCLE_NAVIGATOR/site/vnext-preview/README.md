@@ -80,3 +80,9 @@ No keys, wallets, private holdings, hidden repo data or non-public research incl
 ## Single Work handover packet
 
 **START HERE:** [WORK_EXECUTION_PACKET_2026-10-11.md](WORK_EXECUTION_PACKET_2026-10-11.md) — step-by-step Work browser/Safari UI audit, original-vs-new IA inventory, source parity, proof/risk semantics, exact screenshot/CI gates, production safety and complete ready-to-copy launch prompt. Coordinates with [Archive issue #1578](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1578). **Prepared, not independently run yet.**
+
+## Kompas minimal interface · user-approved direction (12 October 2026)
+
+[Read the new Kompas Minimal UI Contract](KOMPAS_MINIMAL_UI_CONTRACT_2026-10-12.md): retain the current ChatGPT Kompas decision logic with **official action + 0–12h direction and immediate pullback/SELL/distribution visible**, exactly two compact decision tables (5 horizons + 7 asset classes), and only two **closed-by-default** native disclosures for market reasoning and detailed protection/re-entry. Nothing decorative or nonactionable remains above the tables. Source / forecast / scoring ownership remains unchanged.
+
+The currently published [isolated preview Kompas](https://cycle-navigator-vnext-preview-l1nbkq.v2.appdeploy.ai/#kompas) contains this source-bound, bilingual implementation; production is not changed. Independent desktop browser interaction QA passed but native 390px iPhone acceptance still needs to be completed by Work.
