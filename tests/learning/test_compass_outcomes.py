@@ -38,6 +38,7 @@ class CompassOutcomeTest(unittest.TestCase):
             "contract": "OFFICIAL_DAILY_COMPASS_v1",
             "compass_id": "CMP-20260916-test",
             "compass_sha256": "frozen-sha",
+            "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
             "issued_at_utc": "2026-09-16T12:00:00Z",
             "market_reference": {"btc_usdt": 100.0, "eth_usdt": 50.0, "ethbtc": 0.5, "observation_open_utc": "2026-09-16T11:00:00Z"},
             "horizons": {
@@ -61,6 +62,46 @@ class CompassOutcomeTest(unittest.TestCase):
             writer = csv.DictWriter(handle, fieldnames=["timestamp_utc", "btc_close", "eth_close", "ethbtc_close"])
             writer.writeheader()
             writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z", "btc_close": "95", "eth_close": "47", "ethbtc_close": "0.4947"})
+
+    def test_existing_legacy_outcome_remains_already_matured_without_rewrite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            freeze_path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            freeze_path.parent.mkdir(parents=True, exist_ok=True)
+            frozen = self.freeze()
+            frozen["scoring_contract"] = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
+            freeze_path.write_text(json.dumps(frozen))
+            out = root / "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/09/16/CMP-20260916-test_12h.json"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text('{"immutable":"legacy-v2"}')
+            original = out.read_bytes()
+            result = mature_one(root, freeze_path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "ALREADY_MATURED")
+            self.assertEqual(out.read_bytes(), original)
+            out.unlink()
+            result = mature_one(root, freeze_path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
+            self.assertFalse(out.exists())
+
+    def test_legacy_frozen_v2_cannot_be_silently_matured_under_v3(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/legacy.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            frozen = self.freeze()
+            frozen["scoring_contract"] = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
+            path.write_text(json.dumps(frozen))
+            original = path.read_bytes()
+            self.write_hourly(root)
+            result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
+            self.assertEqual(result["frozen_scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v2")
+            self.assertEqual(original, path.read_bytes())
+            self.assertFalse((root / "04_MARKET_LEARNING/handlekompas/official/outcomes").exists())
+            frozen.pop("scoring_contract")
+            path.write_text(json.dumps(frozen))
+            result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
 
     def test_cannot_score_before_maturity(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -87,11 +128,57 @@ class CompassOutcomeTest(unittest.TestCase):
             outcome = json.loads(outcome_path.read_text())
             self.assertEqual(outcome["direction_accuracy"]["btc"]["result"], "CORRECT")
             self.assertEqual(outcome["action_utility"]["action"], "HOLD")
-            self.assertEqual(outcome["scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v2")
+            self.assertEqual(outcome["scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v3")
             self.assertEqual(outcome["time_basis"]["effective_window_hours"], 12.0)
             self.assertEqual(outcome["time_basis"]["start_reference_age_hours"], 0.0)
             self.assertEqual(outcome["target_observation_at_utc"], "2026-09-17T00:00:00Z")
             self.assertEqual(original, freeze_path.read_bytes())
+
+    def test_batch_end_is_not_candle_close(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            forecast = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            forecast.parent.mkdir(parents=True, exist_ok=True)
+            forecast.write_text(json.dumps(self.freeze()))
+            path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-16.csv"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["timestamp_utc", "source_window_end_utc", "btc_close"])
+                writer.writeheader()
+                for hour, price in [(20, 90), (21, 92), (22, 95), (23, 110)]:
+                    writer.writerow({"timestamp_utc": f"2026-09-16T{hour:02d}:00:00Z",
+                                     "source_window_end_utc": "2026-09-17T01:00:00Z", "btc_close": price})
+            early = mature_one(root, forecast, "12h", datetime(2026, 9, 17, 0, 30, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(early["status"], "PENDING_TARGET_EVIDENCE")
+            self.assertFalse((root / early["path"]).exists())
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 17, 1, 30, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "MATURED")
+            outcome = json.loads((root / result["path"]).read_text())
+            self.assertEqual(outcome["target_observation_open_at_utc"], "2026-09-16T23:00:00Z")
+            self.assertEqual(outcome["target_observation_at_utc"], "2026-09-17T00:00:00Z")
+            self.assertAlmostEqual(outcome["realized"]["btc_return_pct"], 10.0)
+            self.assertEqual(outcome["scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v3")
+
+    def test_collection_boundary_before_candle_close_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            forecast = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            forecast.parent.mkdir(parents=True, exist_ok=True)
+            forecast.write_text(json.dumps(self.freeze()))
+            path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-16.csv"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["timestamp_utc", "source_window_end_utc", "btc_close"])
+                writer.writeheader()
+                writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z",
+                                 "source_window_end_utc": "2026-09-16T23:30:00Z", "btc_close": "110"})
+                writer.writerow({"timestamp_utc": "2026-09-16T22:00:00Z",
+                                 "source_window_end_utc": "invalid", "btc_close": "120"})
+                writer.writerow({"timestamp_utc": "2026-09-16T23:30:00Z",
+                                 "source_window_end_utc": "2026-09-17T02:00:00Z", "btc_close": "130"})
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "PENDING_TARGET_EVIDENCE")
+            self.assertFalse((root / result["path"]).exists())
 
     def test_action_quality_is_horizon_action_not_hardwired_to_12h(self):
         self.assertEqual(action_quality("WAIT", -2.0, -3.0)["action"], "WAIT")
