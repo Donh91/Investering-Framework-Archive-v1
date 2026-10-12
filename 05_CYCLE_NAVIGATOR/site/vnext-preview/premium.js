@@ -296,11 +296,10 @@ function paintTop(d) {
   const next = directionView(c.horizons?.NEXT_1_3D?.expected_direction).text;
   setText('hero-now', direction + ' · 12T');
   setText('hero-forward', next + ' · 1–3D');
-  setText('instrument-action', actionView(c.action_now).text);
-  setText('instrument-long', directionView(c.horizons?.CYCLE_ALTCOINS_3_8W?.expected_direction).text === '—' ? 'UNCONFIRMED' : directionView(c.horizons?.CYCLE_ALTCOINS_3_8W?.expected_direction).text);
-  setText('overview-action', actionView(c.action_now).text);
+  const currentDirection = String(c.horizons?.NEXT_12H?.expected_direction || 'UNAVAILABLE').toUpperCase();
+  if ($('hero-now')) $('hero-now').dataset.direction = currentDirection;
   setText('hero-action-summary', actionView(c.action_now).text);
-  setText('overview-action-note', localizedPulse(c));
+  setText('hero-deck', localizedPulse(c));
   setText('overview-risk', clean(c.protection_tracker?.pullback_risk_state, 'UNAVAILABLE'));
   setText('overview-risk-desc', c.protection_tracker?.pullback_risk_state === 'BUILDING' ?
     'Retest-watch under opbygning. Dybde og varighed er ikke kvantificeret. Ikke en SELL-instruktion.' :
@@ -475,7 +474,7 @@ async function initialize() {
     setText('hero-deck', 'Previewen kan ikke verificere datakilden. Ingen aktuelle markedskonklusioner kan udledes.');
     setText('hero-now', '— / UNAVAILABLE');
     setText('hero-forward', '— / UNAVAILABLE');
-    setText('overview-action', 'UTILGÆNGELIG');
+    setText('hero-action-summary', 'UTILGÆNGELIG');
     setText('overview-risk', 'UTILGÆNGELIG');
     setText('compass-primary-direction', 'UKENDT');
     setText('compass-primary-action', 'UTILGÆNGELIG');
