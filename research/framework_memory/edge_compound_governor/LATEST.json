@@ -15,18 +15,21 @@
   },
   "contract": "EDGE_COMPOUND_GOVERNOR_v1",
   "decision": "COLLECT",
-  "decision_reason": "BUILDING remains watch/control only; continue collection without expensive external review.",
+  "decision_reason": "Natural warning evidence is accumulating; preserve pre-outcome features and await maturation.",
   "deltas": [
-    "pullback_risk_state:UNAVAILABLE->BUILDING",
-    "matured_event_counts.14d:11->12",
-    "unknown_horizon_counts.14d:1->0"
+    "pullback_risk_state:BUILDING->ELEVATED",
+    "m6_event_count:12->13",
+    "m6_provisional_family_count:1->2",
+    "feature_row_count:12->13",
+    "pit_verified_feature_rows:12->13",
+    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED"
   ],
   "external_routing": {
     "automatic_dispatch": false,
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-10-09T07:22:43.430968Z",
+  "generated_at_utc": "2026-10-12T07:20:27.790650Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -35,29 +38,29 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "864c5a7af82a628084c92fd65e3dcd9fecf9872952df2cc381572c1ff54c5293",
+  "semantic_fingerprint": "c09320ec92e7c9f4931ed1bd1ea11561ac0edd1e0ba448141b75b1b2a64546b8",
   "semantic_state": {
     "blockers": [],
-    "calibration_eligible_rows": 126,
+    "calibration_eligible_rows": 200,
     "calibration_warning_rows": 0,
     "distribution_risk": "UNKNOWN",
     "economic_action_edge_claim": "NOT_ESTABLISHED",
     "feature_integrity_revision": "v1.1_PIT_STRICT",
-    "feature_row_count": 12,
+    "feature_row_count": 13,
     "information_edge_claim": "NOT_ESTABLISHED",
     "latest_sol_verdict": "WEAKENED",
-    "m6_event_count": 12,
+    "m6_event_count": 13,
     "m6_family_semantics": "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
     "m6_integrity": {
       "chronological": true,
       "family_anchor_valid": true,
-      "family_lineage_fingerprint": "388c0f7612ccf6fd45bdc36afd4afbddf97b23f6b2bf708dafadd6147a68212e",
+      "family_lineage_fingerprint": "2c27bd9e4935f56d1f3747e0f0d92c72d5476ecf70b58aef57431c89d6faae1d",
       "feature_cohort_parity": true,
       "first_warning_weight_valid": true,
       "status": "PASS"
     },
     "m6_integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
-    "m6_provisional_family_count": 1,
+    "m6_provisional_family_count": 2,
     "matured_event_counts": {
       "14d": 12,
       "24h": 12,
@@ -73,8 +76,8 @@
       "7d": 1
     },
     "pit_unverified_feature_rows": 0,
-    "pit_verified_feature_rows": 12,
-    "pullback_risk_state": "BUILDING",
+    "pit_verified_feature_rows": 13,
+    "pullback_risk_state": "ELEVATED",
     "unknown_horizon_counts": {
       "14d": 0,
       "24h": 0,
@@ -87,22 +90,22 @@
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "328c10abe5a0bcc33f8e2c1639acd98b28fced001365946d8bde893ff36165c1",
+      "sha256": "90d3cbe7134c68d5112442bd5ce709bd31f8a7bd55d67b5fe547b9447f5ee2ac",
       "status": "PASS"
     },
     "compass_freeze": {
-      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/09/CMP-20261009-7b2cbc6ac370.json",
-      "sha256": "aabb93cdaa08e12585675dd34b931ca9cd83477e1b521502057231cf0a4710ff",
+      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-5edb3c548e12.json",
+      "sha256": "256e22ab30ee3f1bf1c7c96b15880950601031ac9950c05b0f32e65b9efc6d05",
       "status": "PASS"
     },
     "compass_pointer": {
       "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
-      "sha256": "bf5f2984fdc275a242e116b517cf48ea23241255b9d62f45c6f283c01d11ccba",
+      "sha256": "13c17e0714ee5c9439aa21ae049e4d1ba963ade2c84fb7984e6e4482ff291d6c",
       "status": "PASS"
     },
     "edge_features": {
       "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
-      "sha256": "fbcee9145f69691d20e27f2cde0271d174d2aab1334174ab359719619c13b8ae",
+      "sha256": "09e61f665b14a6613fc25eaf47ca5e0219a0f4b537fd7209c872d85c4a0a5e6c",
       "status": "PASS"
     },
     "latest_sol": {
@@ -114,7 +117,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "37c4e810de8fe785df70f2b2151632f3f42096bd5a35c639f3b55ea246f9dcfc",
+      "sha256": "88362acd1d19a94723361ff46fa9125e72c585cbca024e2d0693e6757505fcc1",
       "status": "PASS"
     }
   }
