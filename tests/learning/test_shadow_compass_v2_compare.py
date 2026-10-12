@@ -189,8 +189,27 @@ class ShadowOfficialPairingTests(unittest.TestCase):
                 report = pair_outcomes([official], [shadow])
                 self.assertEqual(report["pair_count"], 0)
                 if defect != "foreign_official":
-                    self.assertEqual(report["quarantined_pair_count"], 1)
-                    self.assertEqual(report["quarantined_pairs"][0]["integrity"]["status"], "LEGACY_TIME_BASIS_UNVERIFIED")
+                    self.assertEqual(report["quarantined_pair_count"], 0)
+                    self.assertEqual(report["quarantined_candidate_count"], 1)
+                    self.assertEqual(report["quarantined_candidates"][0]["reason"], "V3_TIME_BASIS_INVALID_PRE_SELECTION")
+
+    def test_malformed_nearest_v3_cannot_steal_valid_pair_slot(self):
+        near_invalid = outcome(shadow=True, ident="Sbad", issued="2026-10-01T06:01:00Z", result="CORRECT")
+        near_invalid.pop("target_observation_open_at_utc")
+        farther_valid = outcome(shadow=True, ident="Sgood", issued="2026-10-01T07:00:00Z", result="INCORRECT")
+        official = outcome(shadow=False, ident="O1", issued="2026-10-01T06:00:00Z", result="CORRECT")
+        report = pair_outcomes([official], [near_invalid, farther_valid])
+        self.assertEqual(report["pair_count"], 1)
+        self.assertEqual(report["pairs"][0]["shadow_forecast_id"], "Sgood")
+        self.assertEqual(report["pairs"][0]["integrity"]["status"], "PASS")
+        self.assertEqual(report["quarantined_candidate_count"], 1)
+        self.assertEqual(report["quarantined_candidates"][0]["shadow_forecast_id"], "Sbad")
+        self.assertEqual(report["unpaired_shadow_count"], 1)
+        # Outcome-blind selection: changing correctness cannot promote Sbad.
+        near_invalid["direction_accuracy"]["btc"]["result"] = "INCORRECT"
+        farther_valid["direction_accuracy"]["btc"]["result"] = "CORRECT"
+        repeat = pair_outcomes([official], [near_invalid, farther_valid])
+        self.assertEqual(repeat["pairs"][0]["shadow_forecast_id"], "Sgood")
 
     def test_one_to_one_pairing_prevents_reusing_same_official(self):
         s1 = outcome(
