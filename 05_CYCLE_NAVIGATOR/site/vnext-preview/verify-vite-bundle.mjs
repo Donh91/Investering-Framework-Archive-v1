@@ -24,6 +24,7 @@ for (const [src,target] of [
   ['premium-i18n.js','src/i18n.js'],
   ['official-bullbear.mjs','src/official-bullbear.mjs'],
   ['official-pullback-eta.mjs','src/official-pullback-eta.mjs'],
+  ['official-pullback-stage.mjs','src/official-pullback-stage.mjs'],
   ['seed.json','public/seed.json']
 ]) cpSync(resolve(base,src),join(root,target));
 
