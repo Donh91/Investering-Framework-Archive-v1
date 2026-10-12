@@ -82,7 +82,7 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             cal=root/"research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json";cal.parent.mkdir(parents=True)
             cal.write_text(json.dumps({"eligible_series_row_count":0,"warning_series_row_count":0}))
             out=root/"out.json";hist=root/"hist"
-            first=build(root,out,hist,datetime(2026,10,7,tzinfo=timezone.utc))
+            first=build(root,out,hist,datetime(2026,10,16,tzinfo=timezone.utc))
             self.assertEqual(first["deltas"],["INITIAL_GOVERNOR_SNAPSHOT"])
             self.assertEqual(first["decision"],"COLLECT")
             self.assertFalse(first["external_routing"]["sol_recommended"])
@@ -91,7 +91,7 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             # establish prior state with zero 7d family
             prior=json.loads(out.read_text());prior["semantic_state"]["matured_family_counts"]["7d"]=0
             out.write_text(json.dumps(prior))
-            second=build(root,out,hist,datetime(2026,10,8,tzinfo=timezone.utc))
+            second=build(root,out,hist,datetime(2026,10,17,tzinfo=timezone.utc))
             self.assertEqual(second["decision"],"COLLECT")
             self.assertFalse(second["external_routing"]["sol_recommended"])
             self.assertFalse(second["external_routing"]["claude_recommended"])
@@ -229,6 +229,56 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
                 self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
                 self.assertFalse(report["external_routing"]["automatic_dispatch"])
 
+
+    def test_matured_row_before_its_target_time_fails_closed(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            # The frozen target is October 8 midnight; this evaluation is Oct 7 noon.
+            early=datetime(2026,10,7,12,tzinfo=timezone.utc)
+            report=build(root,root/"out.json",root/"hist",early)
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",report["semantic_state"]["blockers"])
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_hourly_grid_impossible_subhour_max_gap_fails_closed(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            owner["events"][0]["horizons"]["24h"]["coverage"]["max_gap_hours"]=0.5
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["status"],"BLOCKED")
+
+    def test_barrier_first_touch_must_be_a_real_hour_end(self):
+        for timestamp,expected in (("2026-10-07T03:30:00Z","FALSIFY"),
+                                   ("2026-10-07T03:00:00Z","COLLECT")):
+            with self.subTest(timestamp=timestamp),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                barrier=owner["events"][0]["horizons"]["24h"]["BTC"]["adverse_barriers"]["-10.0"]
+                barrier.update(touched=True,first_touch_timestamp=timestamp)
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],expected)
+
+    def test_overflowing_utc_offset_fails_closed_without_crash(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            owner["events"][0]["horizons"]["24h"]["target_at_utc"]="9999-12-31T23:59:59-23:59"
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
     def test_out_of_order_m6_owner_blocks_fresh_governor(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t)
@@ -248,7 +298,7 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t)
             self.seed_owner_pair(root,{"7d":{"maturity_state":"MATURED"},"14d":{"maturity_state":"MATURED"}})
-            out=root/"LATEST.json";history=root/"history";now=datetime(2026,10,8,tzinfo=timezone.utc)
+            out=root/"LATEST.json";history=root/"history";now=datetime(2026,10,22,tzinfo=timezone.utc)
             original=build(root,out,history,now)
             legacy=dict(original)
             legacy["decision"]="CONCLUSION_REVIEW"
