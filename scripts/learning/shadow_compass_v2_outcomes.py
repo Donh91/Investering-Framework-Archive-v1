@@ -174,6 +174,7 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
         "model_id": forecast.get("model_id"),
         "reasoner_version": forecast.get("reasoner_version"),
         "horizon": horizon,
+        "matured_at_utc": now.isoformat().replace("+00:00", "Z"),
         "issued_at_utc": issued.isoformat().replace("+00:00", "Z"),
         "target_at_utc": target.isoformat().replace("+00:00", "Z"),
         "target_observation_at_utc": endpoint_close.isoformat().replace("+00:00", "Z") if endpoint_close else None,
