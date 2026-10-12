@@ -13,6 +13,7 @@ The hourly CSV uses `timestamp_utc` for an individual candle OPEN. Its `source_w
 - If the collection boundary exists and predates the candle close, quarantine the row. If candle close or collection boundary is later than evaluation `now`, do not score from that row.
 - Choose the nearest completed candle close within existing ±1h tolerance; otherwise keep `PENDING_TARGET_EVIDENCE`. No interpolation or future candle.
 - Preserve v2 direction thresholds, event triggers, action utility proxy, frozen input, and portfolio authority. The output explicitly records target candle open/close, collection boundary, and the fact that first-knowledge time is **UNKNOWN**; batch end is not proof of point-in-time availability.
+- New v3 outcome pair admission requires a recorded `matured_at_utc` for **each** Official and Shadow outcome, with `target_source_window_end_utc <= matured_at_utc` and maturation no earlier than the nominal target. Future-dated, missing or contradictory collection/maturation clocks must be quarantined before pair selection; the existence of this field is internal chronological consistency, **not** external source-first-knowledge attestation.
 - This is an outcome measurement correction, not an investment signal, execution recommendation or proof of trading edge.
 
 ## Scientific firewall
