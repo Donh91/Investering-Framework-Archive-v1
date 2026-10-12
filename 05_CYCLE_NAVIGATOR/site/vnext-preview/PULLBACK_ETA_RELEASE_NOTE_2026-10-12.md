@@ -62,10 +62,19 @@ After the reset, read this source file and current main/branch state, then synch
 | `premium.js` | `src/main.ts` (rewrite `./premium-i18n.js` → `./i18n.js`; other `.mjs` imports remain relative in `src/`) |
 | `premium-i18n.js` | `src/i18n.js` |
 | `official-pullback-eta.mjs` | `src/official-pullback-eta.mjs` |
+| `official-pullback-stage.mjs` | `src/official-pullback-stage.mjs` |
 | Existing `seed.json` | `public/seed.json` stays pinned and unchanged |
 
 Keep `src/official-bullbear.mjs` unchanged. Preserve existing AppDeploy E2E test suite and append risk-ETA functional test if not present.
 
-**Verify**: AppDeploy deployment READY / no frontend-network errors, 390×844 and 430×932 actual mobile-width QA, desktop, DA→EN→DA, source week W41 contextualized as historic, exact risk/SELL separation, both pages time line, collapsed explanations, Bull/Bear and 5+7 rows, no overflow. Screenshot after-fix. Also verify all 9 GitHub Actions checks on the exact latest PR head, then retain PR #1576 Draft until separate production-source parity and rollback gates pass.
+**Verify**: AppDeploy deployment READY / no frontend-network errors, 390×844 and 430×932 actual mobile-width QA, desktop, DA→EN→DA, source week W41 contextualized as historic, exact risk/SELL separation, **risk-stage line on both Overblik and Kompas**, evidence-quality meaning, no invented 'imminent' 24h call, same time window, collapsed explanations, Bull/Bear and 5+7 rows, no overflow. Screenshot after-fix. Also verify all 9 GitHub Actions checks on the exact latest PR head, then retain PR #1576 Draft until separate production-source parity and rollback gates pass.
 
 **Release boundary**: Product design approval ≠ retroactive proof of forecast, W42 scoring, independent time anchoring or permission to change current production Pages.
+
+## Incremental source-only progression · user request 2026-10-12
+
+The user requires the Pullback watch to progress through meaningful **official** risk stages instead of stagnating at a generic warning. Existing `COMPASS_PROTECTION_TRACKER_v1` already has NORMAL→BUILDING→ELEVATED→HIGH→CONFIRMED, but that **risk order is not an inevitable timeline**, and high risk is not automatically imminent. A source-only read-only `official-pullback-stage.mjs` now reports a concise stage description and qualitative evidence quality alongside the existing ETA in both pages. This visual patch is coded on the SAME design Draft PR #1576 and has independent tests; **it is not yet in the deployed stable preview**.
+
+The first-party live feed adapter `official-feed-parity.mjs` is also extended to expose `pullback_stage` only for valid fresh owner/weekly identity. **Merely adding this adapter does not activate the new vNext production site or guarantee the original upstream owner will produce new intraday stages.** The original source is predominantly a weekly risk projection. The required internal risk-to-action shadow research / prospective escalation mission, including lawful market clocks, independent evidence families, falsifiers, ETA calibration, missed cases, and future versioned admission, is owned by existing #1553 and documented in [PULLBACK_PROGRESSION_INTERNAL_HANDOVER_2026-10-12.md](PULLBACK_PROGRESSION_INTERNAL_HANDOVER_2026-10-12.md), with site/release coordination at #1578.
+
+The proper statement remains: **Current W42 Official Compass says ELEVATED, LOW evidence quality, no onset/end and SELL UNAVAILABLE; there is no owner-qualified 'imminent' signal.** Missingness never becomes certainty, and W42 site preview must not copy these live values into a frozen W41 seed.
