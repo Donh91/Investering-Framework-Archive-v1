@@ -74,7 +74,7 @@ assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
 assert.match(i18n, /Replay comparison/);
 assert.equal([...motionLibrary.matchAll(/^\| (?:0[1-9]|1[0-9]|20) \|/gm)].length, 20, 'All 20 image-sourced design repositories must be preserved');
 
-new Script(js.replace(/^import .*from .*;\s*$/m, ''), { filename: 'premium.js' });
+new Script(js.replace(/^import .*from .*;\s*$/gm, ''), { filename: 'premium.js' });
 new Script(i18n.replace(/export (?=function)/g, ''), { filename: 'premium-i18n.js' });
 
 assert.match(html, /aria-controls="cycle-details"/);
@@ -144,6 +144,28 @@ for (const [danish, english] of [
 ]) {
   assert.ok(i18n.includes(JSON.stringify(danish) + ': ' + JSON.stringify(english)), 'DA/EN glossary missing '+danish);
 }
+
+// Bull/Bear stays a tiny source-governed evidence display, never a probability.
+assert.match(js, /import \{ officialBullBear \} from '\.\/official-bullbear\.mjs'/);
+assert.match(js, /officialBullBear\(c, '1_3d'\)/);
+assert.match(js, /officialBullBear\(c, key\)/);
+assert.match(js, /paintBullBear\(c\)/);
+assert.match(js, /\.compass-weather, \.compass-urgent/);
+assert.match(css, /\.compass-weather-track \{height:5px/);
+assert.match(css, /\.compass-weather-track\[hidden\] \{display:none!important\}/);
+assert.match(i18n, /Evidensbalance · ikke sandsynlighed eller købssignal\./);
+assert.ok(compassHtml.includes('id="compass-bullbear"'), 'Compact scale must remain in Compass');
+assert.ok(compassHtml.includes('id="bullbear-bull"'));
+assert.ok(compassHtml.includes('id="bullbear-bear"'));
+assert.ok(compassHtml.includes('id="bullbear-bias"'));
+assert.ok(compassHtml.includes('id="bullbear-track"'));
+assert.ok(compassHtml.indexOf('id="compass-primary-action"') < compassHtml.indexOf('id="compass-bullbear"'));
+assert.ok(compassHtml.indexOf('id="compass-bullbear"') < compassHtml.indexOf('id="compass-risk-inline"'));
+assert.ok(compassHtml.indexOf('id="bullbear-other-horizons"') > compassHtml.indexOf('<details class="compass-disclosure">'));
+assert.equal(source.compass.bull_bear_scale.contract, 'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1');
+assert.equal(source.compass.bull_bear_scale.semantics, 'EVIDENCE_BALANCE_NOT_PROBABILITY');
+assert.equal(source.compass.bull_bear_scale.horizons['1_3d'].bull, 5);
+assert.equal(source.compass.bull_bear_scale.horizons['1_3d'].bear, 5);
 
 const requiredLocalizedText = [
   'The near-term market direction is positive, but expanding broad altcoin exposure is not authorized.',
