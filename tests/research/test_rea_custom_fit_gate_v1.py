@@ -9,7 +9,7 @@ HASH = hashlib.sha256(DATA).hexdigest()
 
 def queue_packet():
     q={"contract":"RESEARCH_LAB_SOL_QUEUE_v1","task_name":"RESEARCH_LAB_SOL_ANALYSIS", "max_active_missions":1,"trigger_issue":1476,"active_mission":"RL-DISTRIBUTION-SURVIVAL-META-006","authority":{"automatic_merge":False},"missions":[{"mission_id":"RL-DISTRIBUTION-SURVIVAL-META-006","state":"ACTIVE_RELEASED"},{"mission_id":MISSION,"state":"WAITING_PREDECESSOR","mission_packet":"06_RESEARCH_LAB/mission_packets/2026-10-12__RL-REA-CUSTOM-FIT-007__sol-api.json"}]}
-    p={"contract":"RESEARCH_LAB_SOL_MISSION_PACKET_v1","mission_id":MISSION,"task":"RESEARCH_LAB_SOL_ANALYSIS","status":"DESIGN_FROZEN_WAITING_PREDECESSOR_M6","authority":{"automatic_merge":False,"trading_instruction":False}}
+    p={"contract":"RESEARCH_LAB_SOL_API_MISSION_PACKET_v1","mission_id":MISSION,"task":"RESEARCH_LAB_SOL_ANALYSIS","status":"DESIGN_FROZEN_WAITING_PREDECESSOR_M6","authority":{"automatic_merge":False,"trading_instruction":False}}
     return q,p
 
 def trial():
