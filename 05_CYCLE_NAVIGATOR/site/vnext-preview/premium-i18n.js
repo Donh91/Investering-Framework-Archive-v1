@@ -342,6 +342,47 @@ Object.assign(translations, {
   "BTC og ETH steg i det seneste officielle sammenligningsvindue. Retning og handletilladelse er separate signaler.": "BTC and ETH rose in the latest governed observation. Market direction and trading permission are separate signals.",
   "Retest-watch under opbygning. Dybde og varighed er ikke kvantificeret. Ikke en SELL-instruktion.": "A potential retest is being watched. Depth and duration are unquantified. This is not a SELL instruction.",
 });
+Object.assign(translations, {
+  "ARKIVERET PREVIEW": "ARCHIVED PREVIEW",
+  "Kompas": "Compass",
+  "HANDLING NU": "ACTION NOW",
+  "Officiel handletilladelse": "Official action authorization",
+  "MARKEDSRETNING · 0–12 TIMER": "MARKET DIRECTION · 0–12 HOURS",
+  "Retning er ikke en købsgodkendelse": "Direction is not buy authorization",
+  "Vigtige risiko- og salgssignaler": "Important risk and sell signals",
+  "Handling og markedsretning nu": "Action now and market direction",
+  "Tidshorisonter": "Time horizons",
+  "STATUS · HANDLING · TID": "STATUS · ACTION · TIME",
+  "Aktivklasser": "Asset classes",
+  "UDDYBNING & KILDER": "MORE CONTEXT & SOURCES",
+  "Min fortolkning": "My interpretation",
+  "1–3 dage · betingelser og længere horisonter": "1–3 days · conditions and longer horizons",
+  "Blandet og selektiv deltagelse. Bred rotation er endnu ikke bekræftet.": "Mixed and selective participation. Broad rotation remains unconfirmed.",
+  "Pullback, beskyttelse & re-entry": "Pullback, protection & re-entry",
+  "Begrundelse, distribution og SELL-adskillelse": "Rationale, distribution and separate SELL assessment",
+  "OFFICIEL RISIKOTILSTAND": "OFFICIAL RISK STATE",
+  "Muligt retest. Dybde og tidspunkt er ikke bekræftet.": "Possible retest. Depth and timing remain unconfirmed.",
+  "Kun officielle Kompas-signaler. Ingen beregnet BUY/SELL fra grafikken.": "Official Compass signals only. No BUY/SELL inferred by the UI.",
+  "Se resultater og metode": "See results and methodology",
+  "Uddybende kompasinformation": "Additional Compass context",
+  "TID": "TIME",
+  "RETNING": "DIRECTION",
+  "HANDLING": "ACTION",
+  "AKTIV": "ASSET",
+  "0–12 timer": "0–12 hours",
+  "1–3 dage": "1–3 days",
+  "5–7 dage": "5–7 days",
+  "2–3 uger": "2–3 weeks",
+  "4–8 uger": "4–8 weeks",
+  "Næste 12 timer": "Next 12 hours",
+  "Næste 5–7 dage": "Next 5–7 days",
+  "Næste 2–3 uger": "Next 2–3 weeks",
+  "Risikokvalitet": "Risk confidence",
+  "SELL-adskillelse": "Separate SELL authority",
+  "Re-entry": "Re-entry",
+  "Hvad svækker risikovurderingen": "What would weaken the risk assessment"
+});
+
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
