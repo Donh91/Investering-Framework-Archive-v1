@@ -1,5 +1,6 @@
 /* Cycle Navigator — source-bound interactive preview. Read-only. No signal ownership. */
 import { initializeLanguage, translateInterface, selectLanguage } from './premium-i18n.js';
+import { officialBullBear } from './official-bullbear.mjs';
 'use strict';
 
 const SOURCE_FILE = './seed.json';
@@ -307,28 +308,6 @@ function paintTop(d) {
 
 // Official Market Weather display only. Never infer Bull/Bear from a UI
 // direction, risk warnings, price action, or any browser-side estimate.
-function officialBullBear(c, horizon) {
-  const scale = c?.bull_bear_scale;
-  if (scale?.contract !== 'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1' ||
-      scale.semantics !== 'EVIDENCE_BALANCE_NOT_PROBABILITY' ||
-      scale.resolution !== 'COARSE_CATEGORICAL_DIRECTION' ||
-      scale.mapping_version !== 'DIRECTION_ONLY_COARSE_v1' ||
-      scale.owner !== 'OFFICIAL_COMPASS' ||
-      scale.source_of_truth_contract !== 'MARKET_WEATHER_SOURCE_OF_TRUTH_v1' ||
-      scale.authority?.site_synthesis_allowed !== false ||
-      scale.authority?.new_market_classifier !== false ||
-      scale.authority?.probability_model !== false ||
-      scale.authority?.portfolio_execution !== false) return null;
-  const row = scale.horizons?.[horizon];
-  if (row?.status !== 'OK' ||
-      !Number.isInteger(row.bull) || !Number.isInteger(row.bear) ||
-      row.bull < 0 || row.bull > 10 ||
-      row.bear < 0 || row.bear > 10 ||
-      row.bull + row.bear !== 10 ||
-      !['BULLISH', 'LEAN_BULLISH', 'NEUTRAL', 'LEAN_BEARISH', 'BEARISH'].includes(row.bias)) return null;
-  return { bull: row.bull, bear: row.bear, bias: row.bias };
-}
-
 function paintBullBear(c) {
   const main = officialBullBear(c, '1_3d');
   const panel = $('compass-bullbear');
