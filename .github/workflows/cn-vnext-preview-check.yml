@@ -22,5 +22,7 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/check-preview.mjs
       - name: Validate premium interactive preview, source bundle and contracts
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/check-premium.mjs
+      - name: Verify official public feed parity and negative source/risk/score scenarios
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-feed-parity.mjs
       - name: No production deployment
         run: echo 'Design smoke test only; no published CN site or official signal is changed.'
