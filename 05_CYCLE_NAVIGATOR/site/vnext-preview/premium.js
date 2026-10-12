@@ -490,9 +490,12 @@ function paintSource(d) {
 async function initialize() {
   initializeLanguage();
   document.querySelectorAll('[data-lang]').forEach((button) => {
-    button.addEventListener('click', () => selectLanguage(button.dataset.lang, () => {
+    button.addEventListener('click', () => {
+      // Translate static content first. The source-owned ETA text is dynamic
+      // and must be painted LAST; i18n keeps the original text node baseline.
+      selectLanguage(button.dataset.lang);
       if (data) paintPullback(data, button.dataset.lang);
-    }));
+    });
   });
   bindNavigation();
   bindPanels();
