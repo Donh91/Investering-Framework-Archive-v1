@@ -23,6 +23,7 @@ def outcome(
         "target_observation_at_utc": "2026-10-01T16:00:00Z",
         "target_observation_open_at_utc": "2026-10-01T15:00:00Z",
         "target_source_window_end_utc": "2026-10-01T17:00:00Z",
+        "matured_at_utc": "2026-10-01T17:30:00Z",
         "time_basis": {
             "status": "PASS",
             "start_reference_at_utc": start,
@@ -168,7 +169,7 @@ class ShadowOfficialPairingTests(unittest.TestCase):
         self.assertEqual(report["quarantined_pair_count"], 0)
 
     def test_v3_time_basis_missing_or_malformed_is_quarantined(self):
-        for defect in ("missing_open", "wrong_close", "missing_batch", "bad_status", "wrong_semantics", "bad_effective", "foreign_official"):
+        for defect in ("missing_open", "wrong_close", "missing_batch", "future_batch", "missing_matured", "early_matured", "bad_status", "wrong_semantics", "bad_effective", "foreign_official"):
             with self.subTest(defect=defect):
                 shadow = outcome(shadow=True, ident="S1", issued="2026-10-01T06:12:00Z", result="CORRECT")
                 official = outcome(shadow=False, ident="O1", issued="2026-10-01T06:10:00Z", result="CORRECT")
@@ -178,6 +179,12 @@ class ShadowOfficialPairingTests(unittest.TestCase):
                     shadow["target_observation_open_at_utc"] = "2026-10-01T14:00:00Z"
                 elif defect == "missing_batch":
                     shadow["target_source_window_end_utc"] = None
+                elif defect == "future_batch":
+                    shadow["target_source_window_end_utc"] = "2099-01-01T00:00:00Z"
+                elif defect == "missing_matured":
+                    shadow.pop("matured_at_utc")
+                elif defect == "early_matured":
+                    shadow["matured_at_utc"] = "2026-10-01T16:30:00Z"
                 elif defect == "bad_status":
                     shadow["time_basis"]["status"] = "FAIL"
                 elif defect == "wrong_semantics":
@@ -192,6 +199,16 @@ class ShadowOfficialPairingTests(unittest.TestCase):
                     self.assertEqual(report["quarantined_pair_count"], 0)
                     self.assertEqual(report["quarantined_candidate_count"], 1)
                     self.assertEqual(report["quarantined_candidates"][0]["reason"], "V3_TIME_BASIS_INVALID_PRE_SELECTION")
+
+    def test_future_batch_cannot_steal_valid_pair_slot(self):
+        closer = outcome(shadow=True, ident="Sfuture", issued="2026-10-01T06:01:00Z", result="CORRECT")
+        closer["target_source_window_end_utc"] = "2099-01-01T00:00:00Z"
+        eligible = outcome(shadow=True, ident="Svalid", issued="2026-10-01T06:30:00Z", result="INCORRECT")
+        official = outcome(shadow=False, ident="O1", issued="2026-10-01T06:00:00Z", result="CORRECT")
+        result = pair_outcomes([official], [closer, eligible])
+        self.assertEqual(result["pair_count"], 1)
+        self.assertEqual(result["pairs"][0]["shadow_forecast_id"], "Svalid")
+        self.assertEqual(result["quarantined_candidate_count"], 1)
 
     def test_malformed_nearest_v3_cannot_steal_valid_pair_slot(self):
         near_invalid = outcome(shadow=True, ident="Sbad", issued="2026-10-01T06:01:00Z", result="CORRECT")
