@@ -283,5 +283,33 @@ it('W42 official NORMAL must remain no active warning, not a timed pullback alar
  assert.equal(o.compass.pullback_window.window_start_utc,null);
  assert.equal(o.compass.sell_assessment_state,'UNAVAILABLE');
 });
-console.log('SUCCESS: 36 public-feed source parity/lineage/freshness/score/ETA proof tests — NO SITE SIGNAL AUTHORITY.');
+it('fresh aligned Official Compass supplies descriptive staged risk without implicit imminence',()=>{
+ const o=mutate(validW42);
+ assert.equal(o.compass.pullback_stage.source_risk_state,'ELEVATED');
+ assert.equal(o.compass.pullback_stage.ordinal_risk_class,2);
+ assert.match(o.compass.pullback_stage.stage_label,/Forhøjet/);
+ assert.match(o.compass.pullback_stage.proximity_label,/ikke dokumenteret/);
+ assert.equal(o.compass.pullback_stage.evidence_quality,'Evidenskvalitet ukendt');
+ assert.equal(o.compass.pullback_stage.quality_semantics,'EVIDENCE_QUALITY_NOT_PROBABILITY');
+ assert.equal(o.compass.pullback_stage.sell_permission,false);
+ assert.equal(o.compass.pullback_stage.confirmed_market_decline,false);
+});
+it('stale/misaligned official weekly context cannot expose Pullback stage',()=>{
+ for (const alter of [
+  (l,c)=>{validW42(l,c);l.generated_at='2026-10-10T00:00:00Z'},
+  (l,c)=>{validW42(l,c);c.weekly_context.status='MISMATCH'},
+  (l,c)=>{validW42(l,c);c.data_status='DEGRADED'}
+ ]) {
+  const o=mutate(alter);
+  assert.equal(o.compass.pullback_stage,null);
+ }
+});
+it('valid Normal source is quiet and cannot be converted into automatic crash alert',()=>{
+ const o=mutate((l,c)=>{validW42(l,c);c.protection_tracker.pullback_risk_state='NORMAL';c.protection_tracker.public_explanation.risk_state='NORMAL'});
+ assert.equal(o.compass.pullback_stage.source_risk_state,'NORMAL');
+ assert.equal(o.compass.pullback_stage.ordinal_risk_class,0);
+ assert.equal(o.compass.pullback_window.window_kind,'NO_ACTIVE_WATCH');
+ assert.equal(o.compass.pullback_stage.sell_permission,false);
+});
+console.log('SUCCESS: 39 public-feed source parity/lineage/freshness/score/stages proof tests — NO SITE SIGNAL AUTHORITY.');
 
