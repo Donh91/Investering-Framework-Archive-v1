@@ -96,7 +96,7 @@ def resolve_window(now: datetime, mode: str) -> tuple[datetime, datetime, bool, 
     return start, end, False, "PRE_CLOSE_CURRENT_ISO_WEEK"
 
 
-def validate_actions_week_binding(now: datetime, mode: str, *, event_name: str, event_path: str, run_attempt: str) -> None:
+def validate_actions_week_binding(now: datetime, mode: str, *, event_name: str, event_path: str, run_attempt: str, consumer: bool = False) -> None:
     """Reject wrong-week scheduled PRE-CLOSE / FINAL before any network or writes.
 
     GitHub's schedule payload identifies the cron but does NOT bind the original
@@ -116,6 +116,9 @@ def validate_actions_week_binding(now: datetime, mode: str, *, event_name: str, 
     except (OSError, ValueError) as exc:
         raise ValueError("WEEKLY_CLOSE_SCHEDULE_EVENT_UNAVAILABLE") from exc
     schedules = {"35 23 * * 0": "preclose", "5 2 * * 1": "final"}
+    if consumer:
+        # Master Monday consumes, but never produces, the settled FINAL week.
+        schedules["40 2 * * 1"] = "final"
     if not isinstance(payload, dict) or schedules.get(payload.get("schedule")) != mode:
         raise ValueError("WEEKLY_CLOSE_SCHEDULE_MODE_MISMATCH")
     if now.astimezone(timezone.utc).weekday() != (6 if mode == "preclose" else 0):
@@ -197,7 +200,7 @@ def main() -> None:
     if now.tzinfo is None:
         now = now.replace(tzinfo=timezone.utc)
     now = now.astimezone(timezone.utc)
-    validate_actions_week_binding(now, args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''), run_attempt=os.getenv('GITHUB_RUN_ATTEMPT', ''))
+    validate_actions_week_binding(now, args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''), run_attempt=os.getenv('GITHUB_RUN_ATTEMPT', ''), consumer=args.require_existing_final)
     if args.require_existing_final:
         if args.mode != "final":
             raise SystemExit("EXISTING_FINAL_REQUIRES_FINAL_MODE")
