@@ -17,19 +17,18 @@
   "decision": "COLLECT",
   "decision_reason": "Natural warning evidence is accumulating; preserve pre-outcome features and await maturation.",
   "deltas": [
-    "pullback_risk_state:BUILDING->ELEVATED",
-    "m6_event_count:12->13",
-    "m6_provisional_family_count:1->2",
-    "feature_row_count:12->13",
-    "pit_verified_feature_rows:12->13",
-    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED"
+    "m6_event_count:13->16",
+    "feature_row_count:13->16",
+    "pit_verified_feature_rows:13->16",
+    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
+    "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
   ],
   "external_routing": {
     "automatic_dispatch": false,
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-10-12T07:20:27.790650Z",
+  "generated_at_utc": "2026-10-12T20:30:56.412636Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -38,28 +37,34 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "c09320ec92e7c9f4931ed1bd1ea11561ac0edd1e0ba448141b75b1b2a64546b8",
+  "semantic_fingerprint": "4eb82a5ea534efaf69ce0bc5f9be67d4151403abb2c3259914fbcdb2a0665354",
   "semantic_state": {
     "blockers": [],
-    "calibration_eligible_rows": 200,
+    "calibration_eligible_rows": 212,
     "calibration_warning_rows": 0,
     "distribution_risk": "UNKNOWN",
     "economic_action_edge_claim": "NOT_ESTABLISHED",
     "feature_integrity_revision": "v1.1_PIT_STRICT",
-    "feature_row_count": 13,
+    "feature_row_count": 16,
     "information_edge_claim": "NOT_ESTABLISHED",
     "latest_sol_verdict": "WEAKENED",
-    "m6_event_count": 13,
+    "m6_event_count": 16,
     "m6_family_semantics": "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
     "m6_integrity": {
       "chronological": true,
       "family_anchor_valid": true,
-      "family_lineage_fingerprint": "2c27bd9e4935f56d1f3747e0f0d92c72d5476ecf70b58aef57431c89d6faae1d",
+      "family_lineage_fingerprint": "3629554764d7be178e60aa42789645d73a56d8f03ddbec1cf71f9601f7d649f5",
       "feature_cohort_parity": true,
       "first_warning_weight_valid": true,
       "status": "PASS"
     },
     "m6_integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
+    "m6_matured_payload_integrity": {
+      "checked": 48,
+      "invalid": 0,
+      "reasons": [],
+      "status": "PASS"
+    },
     "m6_provisional_family_count": 2,
     "matured_event_counts": {
       "14d": 12,
@@ -76,7 +81,7 @@
       "7d": 1
     },
     "pit_unverified_feature_rows": 0,
-    "pit_verified_feature_rows": 13,
+    "pit_verified_feature_rows": 16,
     "pullback_risk_state": "ELEVATED",
     "unknown_horizon_counts": {
       "14d": 0,
@@ -90,34 +95,34 @@
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "90d3cbe7134c68d5112442bd5ce709bd31f8a7bd55d67b5fe547b9447f5ee2ac",
+      "sha256": "bf80862198c402302eab3d6c89c828db6412aef13157d3e7693b6a9bdee2ea89",
       "status": "PASS"
     },
     "compass_freeze": {
-      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-5edb3c548e12.json",
-      "sha256": "256e22ab30ee3f1bf1c7c96b15880950601031ac9950c05b0f32e65b9efc6d05",
+      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-904299b09eca.json",
+      "sha256": "9dcbf8df5e9f227cd1043741139a683e9e02fca4e244691e4a5aa29c88d749da",
       "status": "PASS"
     },
     "compass_pointer": {
       "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
-      "sha256": "13c17e0714ee5c9439aa21ae049e4d1ba963ade2c84fb7984e6e4482ff291d6c",
+      "sha256": "89465c0acd00ecd7fcd789f28b9cd0ae3b37ae790c7a90e28c592db49a77e649",
       "status": "PASS"
     },
     "edge_features": {
       "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
-      "sha256": "09e61f665b14a6613fc25eaf47ca5e0219a0f4b537fd7209c872d85c4a0a5e6c",
+      "sha256": "a057853e33907bbff80e40c4e1288ba16295732795a499f11dd2c5f829cb4861",
       "status": "PASS"
     },
     "latest_sol": {
-      "comment_id": 6027394815,
-      "path": "research/api_agent/outputs/research_lab_sol/RL-DISTRIBUTION-SURVIVAL-META-006/issue-1476/comment-6027394815/RESEARCH_LAB_SOL_ANALYSIS.json",
-      "sha256": "2b7e75b8d9d92cb6417f94d31e4c79c2ef5abc84b537cb1bb3f07c809a777a25",
+      "comment_id": 6124130988,
+      "path": "research/api_agent/outputs/research_lab_sol/RL-DISTRIBUTION-SURVIVAL-META-006/issue-1476/comment-6124130988/RESEARCH_LAB_SOL_ANALYSIS.json",
+      "sha256": "dbe5c27b308f10991699d140965c403a10d6f5ccb86cdcd95664fa4977fbc011",
       "status": "PASS",
       "verdict": "WEAKENED"
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "88362acd1d19a94723361ff46fa9125e72c585cbca024e2d0693e6757505fcc1",
+      "sha256": "25587285bf13bf89c8021552ce57d1a94a243dea0a7b741ba5897af30afef7ae",
       "status": "PASS"
     }
   }
