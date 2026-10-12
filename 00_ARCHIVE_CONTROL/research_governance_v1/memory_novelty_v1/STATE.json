@@ -3,37 +3,11 @@
   "canonical_effect": false,
   "contract": "RESEARCH_MEMORY_NOVELTY_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "aa4245120c3bbc58334f24ce7f0869ba849e55f6711e1627d126c2fe88d73f78",
+  "evidence_fingerprint": "4df633a3329f802090202aba2f1a7b67208a3b8777ca399642cdb09c8bee6d4b",
   "paid_data_authorized": false,
   "portfolio_execution": false,
-  "proposal_n": 3,
+  "proposal_n": 2,
   "proposal_results": [
-    {
-      "action": "RESEARCH_NEW_HYPOTHESIS",
-      "authority": "RESEARCH_ONLY_NON_CANONICAL",
-      "canonical_effect": false,
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "048f57bc5ddac62c990690d4c77e593157eb119b4fadbf0f8369ba68cdc23948",
-      "external_provider_calls_authorized": false,
-      "family": "rotation",
-      "matched_record": {
-        "action": "RESEARCH_NEW_HYPOTHESIS",
-        "evidence_fingerprint": "048f57bc5ddac62c990690d4c77e593157eb119b4fadbf0f8369ba68cdc23948",
-        "novelty_verdict": "NOVEL",
-        "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=58.33 weak_weeks=2 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized. Deep review: The supplied four settlements support a research-only concern about claim rigidity and timing responsiveness, with rotation as the checkpoint trigger. However, the rotation pattern is materially weakened by only three valid observations, an improving final observed score, W40 missingness, changing parameter coverage, and no prior four-week comparator. The stronger provisional finding is therefore not a confirmed rotation-specific defect, but a bounded candidate blind spot: frozen or slow-to-update framing may miss short-horizon transitions, potentially concentrated around midweek paths. This remains unconfirmed under sparse, staggered family coverage. First bounded hypothesis: H1 (frozen-claim responsiveness): In the next four settled issues that contain a directional or state framing plus a realized within-week reversal or acceleration, precision failures will be more frequent for claims expressed as unqualified frozen directional/state assertions than for claims that explicitly delimit an invalidation condition or near-term alternative path. Falsification: no excess failure frequency is observed, or the eligible sample has fewer than four settled comparisons.",
-        "record_type": "NOVELTY_LEDGER",
-        "source": "CN_PRECISION_META_LEARNING",
-        "target": "CN_PRECISION::rotation"
-      },
-      "novelty_reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=58.33 weak_weeks=2 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized. Deep review: The supplied four settlements support a research-only concern about claim rigidity and timing responsiveness, with rotation as the checkpoint trigger. However, the rotation pattern is materially weakened by only three valid observations, an improving final observed score, W40 missingness, changing parameter coverage, and no prior four-week comparator. The stronger provisional finding is therefore not a confirmed rotation-specific defect, but a bounded candidate blind spot: frozen or slow-to-update framing may miss short-horizon transitions, potentially concentrated around midweek paths. This remains unconfirmed under sparse, staggered family coverage. First bounded hypothesis: H1 (frozen-claim responsiveness): In the next four settled issues that contain a directional or state framing plus a realized within-week reversal or acceleration, precision failures will be more frequent for claims expressed as unqualified frozen directional/state assertions than for claims that explicitly delimit an invalidation condition or near-term alternative path. Falsification: no excess failure frequency is observed, or the eligible sample has fewer than four settled comparisons.",
-      "similarity": 1.0,
-      "source": "CN_PRECISION_META_LEARNING",
-      "target": "CN_PRECISION::rotation"
-    },
     {
       "action": "STRESS_TEST_REGIME_SPECIFICITY",
       "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -65,7 +39,7 @@
       "authority": "RESEARCH_ONLY_NON_CANONICAL",
       "canonical_effect": false,
       "deep_research_authorized": false,
-      "evidence_fingerprint": "0de4c02dfd04121fe0d51000bed1ebf2cb6cd0250ba47059ab6999bd341f87c9",
+      "evidence_fingerprint": "b538b50adaa6ea71cfbaa73786bf5fe1ff68264063334225d071395297b303b2",
       "external_provider_calls_authorized": false,
       "family": "",
       "matched_record": {
@@ -77,8 +51,8 @@
         "source": "MONTHLY_COUNCIL",
         "target": "EC-0258e3807909a4d1987f"
       },
-      "novelty_reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
-      "novelty_verdict": "DUPLICATE_EXACT",
+      "novelty_reason": "same research target is recurring, but the evidence fingerprint changed",
+      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
       "paid_data_authorized": false,
       "portfolio_execution": false,
       "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
@@ -87,9 +61,9 @@
       "target": "EC-0258e3807909a4d1987f"
     }
   ],
-  "reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
-  "selected_action": "RESEARCH_NEW_HYPOTHESIS",
-  "selected_source": "CN_PRECISION_META_LEARNING",
-  "selected_target": "CN_PRECISION::rotation",
-  "selected_verdict": "DUPLICATE_EXACT"
+  "reason": "same research target is recurring, but the evidence fingerprint changed",
+  "selected_action": "RUN_INCREMENTAL_VALUE_TEST",
+  "selected_source": "MONTHLY_COUNCIL",
+  "selected_target": "EC-0258e3807909a4d1987f",
+  "selected_verdict": "REOPEN_WITH_NEW_EVIDENCE"
 }

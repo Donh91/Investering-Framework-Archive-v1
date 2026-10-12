@@ -3,17 +3,17 @@
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
+      "evidence_fingerprint": "b538b50adaa6ea71cfbaa73786bf5fe1ff68264063334225d071395297b303b2",
       "execution_mode": "AUTO_LOCAL_RESEARCH",
       "impact_tier": "MEDIUM",
-      "novelty_verdict": null,
+      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
       "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "registered source material exists but exact evaluator recovery is still required",
-      "source": "SHADOW_REGISTRY",
-      "specialist_action": "RECOVER_EVALUATOR",
-      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
+      "target": "EC-0258e3807909a4d1987f"
     }
   ],
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -21,6 +21,21 @@
   "canonical_effect": false,
   "contract": "RESEARCH_META_EXECUTION_QUEUE_v1",
   "queue": [
+    {
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "b538b50adaa6ea71cfbaa73786bf5fe1ff68264063334225d071395297b303b2",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
+      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
+      "target": "EC-0258e3807909a4d1987f"
+    },
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
@@ -35,21 +50,6 @@
       "source": "SHADOW_REGISTRY",
       "specialist_action": "RECOVER_EVALUATOR",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
-    },
-    {
-      "canonical_effect": false,
-      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
-      "evidence_fingerprint": "048f57bc5ddac62c990690d4c77e593157eb119b4fadbf0f8369ba68cdc23948",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "CN_PRECISION_META_LEARNING",
-      "specialist_action": "RESEARCH_NEW_HYPOTHESIS",
-      "target": "CN_PRECISION::rotation"
     },
     {
       "canonical_effect": false,
@@ -68,18 +68,18 @@
     },
     {
       "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "0de4c02dfd04121fe0d51000bed1ebf2cb6cd0250ba47059ab6999bd341f87c9",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
+      "decision_surface": "RESEARCH_OPERATIONS",
+      "evidence_fingerprint": "1d849353bc3a9513be496ba03e2563288b125c0c55efe19e26070557c5b91af5",
+      "execution_mode": "AUTO_OBSERVE",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "orchestrator_action": "WAIT_FOR_EVIDENCE",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "MONTHLY_COUNCIL",
-      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
-      "target": "EC-0258e3807909a4d1987f"
+      "reason": "Persistent weakness is visible in intraday_day_3_4 but the next four-settlement checkpoint has not matured. Continue observing without research escalation.",
+      "source": "CN_PRECISION_META_LEARNING",
+      "specialist_action": "WAIT_FOR_MORE_EVIDENCE",
+      "target": ""
     },
     {
       "canonical_effect": false,
