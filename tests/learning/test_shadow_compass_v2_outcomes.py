@@ -120,6 +120,7 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             value = json.loads((root / out["path"]).read_text())
             self.assertEqual(value["contract"], "SHADOW_COMPASS_V2_OUTCOME_v1")
             self.assertEqual(value["scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v3")
+            self.assertEqual(value["matured_at_utc"], "2026-09-01T13:00:00Z")
             self.assertEqual(value["time_basis"]["effective_window_hours"], 12.0)
             self.assertEqual(value["time_basis"]["start_reference_age_hours"], 0.0)
             self.assertEqual(value["target_observation_at_utc"], "2026-09-01T12:00:00Z")
