@@ -55,7 +55,11 @@ function alignedExplanation(compass,weekly,stage) {
 export function officialPullbackInvestorView(compass,weekly,lang='da') {
   const locale=lang==='en'?'en':'da',t=LANG[locale];
   const stage=officialPullbackStage(compass,weekly,locale);
-  const valid=stage.status==='SOURCE_VALID';
+  // Preserve the upstream risk class elsewhere, but no detailed investor
+  // ETA/bear-context claims may be displayed if typed timing metadata
+  // contradicts the official public risk source.
+  const valid=stage.status==='SOURCE_VALID' &&
+    !['SOURCE_MISMATCH','INVALID_DATE_PAIR'].includes(stage.windowKind);
   const explanation=valid?alignedExplanation(compass,weekly,stage):null;
   const plain=(value)=>(typeof value==='string'&&value.trim()&&value.length<=1200)?value.trim():null;
   const risk=compass?.protection_tracker;
