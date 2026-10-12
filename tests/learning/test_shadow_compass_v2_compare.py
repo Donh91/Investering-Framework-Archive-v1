@@ -142,8 +142,9 @@ class ShadowOfficialPairingTests(unittest.TestCase):
         shadow["scoring_contract"] = "SHADOW_COMPASS_V2_SCORING_v2"
         official["scoring_contract"] = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
         report = pair_outcomes([official], [shadow])
-        self.assertEqual(report["pair_count"], 1)
-        pair = report["pairs"][0]
+        self.assertEqual(report["pair_count"], 0)
+        self.assertEqual(report["quarantined_pair_count"], 1)
+        pair = report["quarantined_pairs"][0]
         self.assertEqual(pair["integrity"]["status"], "LEGACY_TIME_BASIS_UNVERIFIED")
         self.assertEqual(pair["asset_comparisons"]["btc"]["comparison_state"], "PAIR_TIME_BASIS_UNVERIFIED")
 
