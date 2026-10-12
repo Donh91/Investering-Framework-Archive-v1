@@ -154,7 +154,11 @@ class WeeklyCloseArchitectureTests(unittest.TestCase):
             before = {str(p): p.read_bytes() for p in paths}
             argv = ['weekly', '--output-root', str(root), '--mode', 'final',
                     '--now-utc', '2026-08-31T06:27:00Z', '--require-existing-final']
-            with patch('sys.argv', argv), patch.object(weekly, 'fetch_klines') as fetch, contextlib.redirect_stdout(io.StringIO()) as output:
+            event = Path(tmp) / 'master-monday-event.json'
+            event.write_text(json.dumps({'schedule': '40 2 * * 1'}))
+            env = {'GITHUB_EVENT_NAME': 'schedule', 'GITHUB_EVENT_PATH': str(event),
+                   'GITHUB_RUN_ATTEMPT': '1'}
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env), patch.object(weekly, 'fetch_klines') as fetch, contextlib.redirect_stdout(io.StringIO()) as output:
                 weekly.main()
             fetch.assert_not_called()
             receipt = json.loads(output.getvalue())
@@ -162,6 +166,10 @@ class WeeklyCloseArchitectureTests(unittest.TestCase):
             self.assertEqual(receipt['mode'], 'REUSE_VERIFIED_FINAL_NO_SOURCE_MUTATION')
             self.assertEqual(before, {str(p): p.read_bytes() for p in paths})
             self.assertIn('--require-existing-final', Path('.github/workflows/weekly-api-calibration-shadow.yml').read_text())
+            with self.assertRaisesRegex(ValueError, 'SCHEDULE_MODE_MISMATCH'):
+                weekly.validate_actions_week_binding(datetime(2026, 8, 31, 6, 27, tzinfo=timezone.utc),
+                                                      'final', event_name='schedule', event_path=str(event),
+                                                      run_attempt='1', consumer=False)
 
     def test_master_monday_missing_or_corrupt_final_source_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
