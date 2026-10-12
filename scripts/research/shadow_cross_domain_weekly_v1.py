@@ -258,8 +258,24 @@ def validate(review: dict) -> bool:
                 any(c not in "0123456789abcdef" for c in entry["sha256"])
             ):
                 raise ValueError("cross-domain invalid source digest")
-        if not isinstance(lane.get("metrics"), dict):
+        metrics = lane.get("metrics")
+        if not isinstance(metrics, dict):
             raise ValueError("cross-domain metrics invalid")
+        if lane["lane_id"] == "COMPASS":
+            if metrics.get("qualified_buy_sell_net_return") is not None:
+                raise ValueError("no verified executable Compass ROI source")
+            for k in ("calibration_eligible_rows_not_independent_forecasts",
+                      "calibration_warning_rows_not_proven_alerts"):
+                if metrics.get(k) is not None and _nonnegative_int(metrics[k]) is None:
+                    raise ValueError("calibration count invalid")
+        if lane["lane_id"] == "AUTO_TRADING":
+            if metrics.get("global_proposal_time_trial_denominator") is not None or (
+                metrics.get("verified_paper_trade_net_return") is not None
+            ):
+                raise ValueError("auto trading evidence not independently admitted")
+            count = metrics.get("research_candidate_count_NOT_GLOBAL_TRIAL_DENOMINATOR")
+            if count is not None and _nonnegative_int(count) is None:
+                raise ValueError("experimental candidate count invalid")
         if lane["lane_id"] == "ALPHA_LAB":
             if lane["source_status"] != "PRIVATE_REPO_SOURCE_NOT_IMPORTED":
                 raise ValueError("private data boundary invalid")
