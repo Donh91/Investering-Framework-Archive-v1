@@ -136,6 +136,17 @@ class ShadowOfficialPairingTests(unittest.TestCase):
         missing.pop("scoring_contract")
         self.assertEqual(pair_outcomes([missing], [shadow])["pair_count"], 0)
 
+    def test_legacy_v2_pair_cannot_report_verified_time_basis(self):
+        shadow = outcome(shadow=True, ident="S1", issued="2026-10-01T06:12:00Z", result="CORRECT")
+        official = outcome(shadow=False, ident="O1", issued="2026-10-01T06:10:00Z", result="CORRECT")
+        shadow["scoring_contract"] = "SHADOW_COMPASS_V2_SCORING_v2"
+        official["scoring_contract"] = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
+        report = pair_outcomes([official], [shadow])
+        self.assertEqual(report["pair_count"], 1)
+        pair = report["pairs"][0]
+        self.assertEqual(pair["integrity"]["status"], "LEGACY_TIME_BASIS_UNVERIFIED")
+        self.assertEqual(pair["asset_comparisons"]["btc"]["comparison_state"], "PAIR_TIME_BASIS_UNVERIFIED")
+
     def test_one_to_one_pairing_prevents_reusing_same_official(self):
         s1 = outcome(
             shadow=True,
