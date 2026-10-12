@@ -95,6 +95,10 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     issued = parse_utc(forecast.get("issued_at_utc"))
     if issued is None:
         return None
+    rel = OUTPUT_ROOT / issued.strftime("%Y/%m/%d") / f"{forecast.get('forecast_id')}_{horizon}.json"
+    out = repo / rel
+    if out.exists():
+        return {"status": "ALREADY_MATURED", "path": rel.as_posix()}
     if forecast.get("scoring_contract") != SCORING_CONTRACT:
         return {
             "status": "PENDING_SCORING_CONTRACT_MISMATCH",
@@ -127,10 +131,6 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     if now < target:
         return None
 
-    rel = OUTPUT_ROOT / issued.strftime("%Y/%m/%d") / f"{forecast.get('forecast_id')}_{horizon}.json"
-    out = repo / rel
-    if out.exists():
-        return {"status": "ALREADY_MATURED", "path": rel.as_posix()}
 
     rows = load_hourly(repo, start_reference, target + TARGET_TOLERANCE, as_of=now)
     endpoint = closest_target(rows, target)
