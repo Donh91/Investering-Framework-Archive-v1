@@ -1,11 +1,14 @@
 # Temporary missions and five-slot lease protocol
 **Status:** PROPOSED; host task operations require actual host action/receipt. GitHub documentation is not a scheduling service.
 
-## Master Audit currently leases S5
+## Master Audit S5 lease: currently paused by explicit user instruction
+
+**Owner-directed suspension 2026-10-12:** Host task `6acb8ced403081919d5ecc197b186eac` was explicitly disabled, read back disabled, and its other four permanent tasks were kept enabled while S5 successor `6ab38b90cfe4819193b0d9ccdf4e4e21` stayed disabled. Reason: preserve remaining scarce Work allowance, manual ordinary ChatGPT takes over bounded code/research. This is `PAUSED_BY_OWNER`, **not** an accepted terminal handover and not `HANDOFF_VERIFIED`. Do not auto-start the hourly audit or the successor while paused merely because enabled_count=4. Owner-approved resume or separately reviewed accepted terminal handover is required to change host topology; current host readback always wins over this dated snapshot. See #1156 comment 6123586298.
+
 Temporary task ID `6acb8ced403081919d5ecc197b186eac`; permanent successor ID `6ab38b90cfe4819193b0d9ccdf4e4e21`. Audit is **not** permanent. It must finish or hand off unique verified work to permanent Supervisor #1156, with owner acceptance/next gates and no orphaned due P0. Do not confuse a green PR with terminal completion.
 
 **Atomic-ish two-phase handback (host API is NOT atomic):**
-1. Fresh-read host state, current GitHub main/governance, audit mission owner, #1156, exact active count and successor readiness. Confirm there is exactly one valid active audit and successor is disabled; any conflict => STOP / HOST_STATE_CONFLICT.
+1. Fresh-read host state, current GitHub main/governance, audit mission owner, #1156, exact active count and successor readiness. If audit is **PAUSED_BY_OWNER** (disabled without accepted terminal handoff), STOP: preserve both audit and successor disabled and treat the vacancy as intentional. Otherwise confirm exactly one active audit and disabled successor; conflict => STOP / HOST_STATE_CONFLICT.
 2. Prepare one durable, privacy-safe terminal handover to existing #1156, dedupe by mission ID+evidence fingerprint; verify comment/readback. Record verified completed vs delegated open gates, owner, source heads, and explicit noncompletion caveats.
 3. Mark mission `HANDOFF_VERIFIED` only if #1156 has acknowledged/accepted the remaining responsibility in current evidence; posting a comment alone does not prove owner execution. If owner acceptance cannot be proven, classify `HANDOFF_PENDING`, continue temporary mission until a legitimate terminal contract is met.
 4. **Disable the temporary task first**, using exact host ID and host update. **Read host state back**; must show audit disabled, and <=4 active tasks. If disable or readback fails, STOP: never enable successor, report `LEASE_RELEASE_UNVERIFIED`.
