@@ -12,7 +12,7 @@ Five scarce ChatGPT automation slots should contain **five complementary user-fa
 | S2 | Ugentlig Master Monday + CN | `6a5515c4a5448191b3f6607fc568927f` | [weekly](MASTER_MONDAY.md) | PERMANENT / Monday 10:00 |
 | S3 | Market Risk -> Portfolio Action | `6aae4e2aa6088191aacf5ec5caa6cb6c` | [risk](MARKET_RISK.md) | PERMANENT / hourly silent condition watch |
 | S4 | Alpha Lab - Outcome Learning | `6acbfb98f548819181e783607e69f58f` | [outcomes](ALPHA_OUTCOMES.md), MAL PR #143 runbook after merge | PERMANENT / daily 22:15 |
-| S5 | Project->CA + Alpha Buy Alerts | `6ab38b90cfe4819193b0d9ccdf4e4e21` | [early-alpha](PROJECT_CA.md) | PERMANENT SUCCESSOR / hourly silent condition watch; **currently disabled** |
+| S5 | Project->CA Research Watch (Alpha Alerts gated) | `6ab38b90cfe4819193b0d9ccdf4e4e21` | [early-alpha](PROJECT_CA.md) | PERMANENT SUCCESSOR / hourly silent research condition watch; **currently disabled; Project→CA alerts forbidden under SHADOW_ONLY** |
 | TEMP | Master Audit - Timevis mission | `6acb8ced403081919d5ecc197b186eac` | [temporary](TEMPORARY_MISSIONS.md) | ACTIVE LEASE of S5; must close and disable before S5 is enabled |
 
 **Current truth:** host automation list/peek and actual GitHub main, not this table. If host schedule, enabled, notifications or prompt differ from this proposed plan, report DRIFT. Do not mutate automatically based on this document alone. Do not infer available task slots by counting files or stale task entries.
@@ -48,6 +48,6 @@ At most five simultaneously enabled tasks. No routine new tasks. Every task's ch
 ## Acceptance checklist
 - Governed documentation PR reviewed and merged, main-byte readback verified.
 - Existing host tasks have safety-complete bootstraps, correct IDs, schedules and domain boundaries; notification settings checked.
-- Master Audit terminal handover is verifiably received by #1156; exact audit task disabled; successor S5 enabled only if slot free and host/governance acceptance gates pass. A pending documentation PR is NOT a reason to keep a completed hourly audit alive: existing successor host prompt remains the safe fallback, with DOC_PENDING and no new README-derived authority.
+- Master Audit terminal handover is verifiably received by #1156; exact audit task disabled; successor S5 enabled only if slot free and host/governance acceptance gates pass. Before enabling, harden successor host prompt to match #1087 SHADOW_ONLY / NO_USER_ALERTS; do not treat host activation as production bridge activation. A pending documentation PR is NOT a reason to keep a completed hourly audit alive: existing successor host prompt remains the safe fallback, with DOC_PENDING and no new README-derived authority.
 - At least one normal natural run and GitHub/source readback for successor, with no false live-alert claim.
 - Future temporary lease is rehearsed with host readback and restoration, no overlap and no lost permanent instructions.
