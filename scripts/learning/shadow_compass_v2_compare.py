@@ -69,15 +69,16 @@ def _v3_time_basis_valid(row: dict[str, Any], *, shadow: bool) -> bool:
     opened = parse_utc(row.get("target_observation_open_at_utc"))
     closed = parse_utc(row.get("target_observation_at_utc"))
     collected = parse_utc(row.get("target_source_window_end_utc"))
+    matured = parse_utc(row.get("matured_at_utc"))
     reference = parse_utc(tb.get("start_reference_at_utc"))
     target = parse_utc(row.get("target_at_utc"))
-    if None in (opened, closed, collected, reference, target):
+    if None in (opened, closed, collected, matured, reference, target):
         return False
     if opened.minute or opened.second or opened.microsecond:
         return False
     if (closed - opened).total_seconds() != 3600:
         return False
-    if collected < closed:
+    if collected < closed or collected > matured or matured < target:
         return False
     horizon_hours = {"12h": 12, "72h": 72, "168h": 168}.get(row.get("horizon"))
     if horizon_hours is None:
