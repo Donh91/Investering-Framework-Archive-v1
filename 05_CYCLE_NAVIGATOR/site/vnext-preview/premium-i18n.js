@@ -338,6 +338,10 @@ Object.assign(translations, {
   "Ikke en handelstilladelse": "Not trading permission",
 });
 
+Object.assign(translations, {
+  "BTC og ETH steg i det seneste officielle sammenligningsvindue. Retning og handletilladelse er separate signaler.": "BTC and ETH rose in the latest governed observation. Market direction and trading permission are separate signals.",
+  "Retest-watch under opbygning. Dybde og varighed er ikke kvantificeret. Ikke en SELL-instruktion.": "A potential retest is being watched. Depth and duration are unquantified. This is not a SELL instruction.",
+});
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
@@ -358,7 +362,18 @@ function translateNode(node) {
   const baseline = original.get(node);
   const content = baseline.trim();
   if (!content) return;
-  const translated = language === 'en' ? (translations[content] || content) : (sourceEnglishToDanish[content] || content);
+  let translated = language === 'en' ? (translations[content] || content) : (sourceEnglishToDanish[content] || content);
+  // Dynamically generated source timestamps and horizons have variable
+  // values: translate ONLY presentation labels, never source UTC or direction.
+  if (language === 'en' && content.startsWith('KILDEFAST SNAPSHOT · ')) {
+    translated = 'PINNED SOURCE SNAPSHOT · ' + content.slice('KILDEFAST SNAPSHOT · '.length);
+  }
+  if (language === 'en' && / · 12T$/.test(content)) {
+    translated = translated.replace(/ · 12T$/, ' · 12H');
+  }
+  if (language === 'da' && content.startsWith('WEEKLY: ')) {
+    translated = 'UGESTATUS: ' + content.slice('WEEKLY: '.length);
+  }
   node.nodeValue = baseline.slice(0,baseline.indexOf(content)) + translated + baseline.slice(baseline.indexOf(content)+content.length);
 }
 
