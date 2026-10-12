@@ -108,7 +108,12 @@ def hourly_row(root,k):
             if o is None:continue
             candle_close=o+timedelta(hours=1)
             source_end=parse(r.get("source_window_end_utc"))
-            available=max(candle_close,source_end) if source_end else candle_close
+            # Missing, malformed, or pre-close window-end clocks are not legal
+            # source-availability evidence. Never infer availability from the
+            # candle close when the owner did not supply an actual source clock.
+            if source_end is None or source_end<candle_close:
+                continue
+            available=source_end
             if available<=k:
                 candidates.append((candle_close,available,p,r))
     if not candidates:return None,None,{"status":"UNKNOWN_NO_LEGAL_HOURLY_ROW"}
