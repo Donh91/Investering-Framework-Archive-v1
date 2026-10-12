@@ -293,7 +293,7 @@ function paintTop(d) {
   setText('overview-risk-desc', c.protection_tracker?.pullback_risk_state === 'BUILDING' ?
     'Retest-watch under opbygning. Dybde og varighed er ikke kvantificeret. Ikke en SELL-instruktion.' :
     clean(c.protection_tracker?.pullback_class, 'Ingen verificeret risikoklasse.'));
-  setText('compass-updated', 'OFFICIAL SNAPSHOT · ' + c.issued_at_utc.slice(0, 16).replace('T', ' ') + ' UTC');
+  setText('compass-updated', 'KILDEFAST SNAPSHOT · ' + c.issued_at_utc.slice(0, 16).replace('T', ' ') + ' UTC');
   setText('compass-primary-action', actionView(c.action_now).text);
   setText('compass-primary-direction', direction);
   const riskState = clean(c.protection_tracker?.pullback_risk_state, 'UNAVAILABLE');
