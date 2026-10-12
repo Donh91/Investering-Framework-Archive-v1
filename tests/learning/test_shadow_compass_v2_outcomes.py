@@ -43,6 +43,7 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             "contract": "SHADOW_COMPASS_V2_FORECAST_v1",
             "forecast_id": "SCV2-test",
             "forecast_sha256": "forecast-sha",
+            "scoring_contract": "SHADOW_COMPASS_V2_SCORING_v3",
             "issued_at_utc": issued.isoformat().replace("+00:00", "Z"),
             "model_id": "gpt-6.1-sol",
             "reasoner_version": "test-v1",
@@ -77,6 +78,20 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             forecast = self.fixture(root)
             out = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 11, 59, tzinfo=timezone.utc))
             self.assertIsNone(out)
+
+    def test_legacy_shadow_forecast_cannot_mature_under_v3(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            path = self.fixture(root)
+            frozen = json.loads(path.read_text())
+            frozen["scoring_contract"] = "SHADOW_COMPASS_V2_SCORING_v2"
+            path.write_text(json.dumps(frozen))
+            original = path.read_bytes()
+            result = mature_one(root, path, "12h", datetime(2026, 9, 1, 13, tzinfo=timezone.utc))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
+            self.assertEqual(result["frozen_scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v2")
+            self.assertEqual(path.read_bytes(), original)
+            self.assertFalse((root / "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes").exists())
 
     def test_matured_shadow_uses_same_direction_tolerance_contract(self):
         with tempfile.TemporaryDirectory() as td:
