@@ -231,6 +231,17 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     issued = parse_utc(freeze.get("issued_at_utc"))
     if issued is None:
         return None
+    # A forecast's frozen scoring contract is immutable. Never silently score
+    # v1/v2 forecasts under new v3 candle semantics after deployment.
+    if freeze.get("scoring_contract") != SCORING_CONTRACT:
+        return {
+            "status": "PENDING_SCORING_CONTRACT_MISMATCH",
+            "horizon": horizon,
+            "compass_id": freeze.get("compass_id"),
+            "frozen_scoring_contract": freeze.get("scoring_contract"),
+            "required_scoring_contract": SCORING_CONTRACT,
+            "reason": "PROSPECTIVE_V3_ONLY_LEGACY_REQUIRES_SEPARATE_GOVERNED_SCORER",
+        }
     hours = HORIZONS[horizon]
     ref = freeze.get("market_reference") or {}
     start_reference = reference_close_time(ref)
