@@ -131,6 +131,10 @@ class CompassOutcomeTest(unittest.TestCase):
                 writer.writeheader()
                 writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z",
                                  "source_window_end_utc": "2026-09-16T23:30:00Z", "btc_close": "110"})
+                writer.writerow({"timestamp_utc": "2026-09-16T22:00:00Z",
+                                 "source_window_end_utc": "invalid", "btc_close": "120"})
+                writer.writerow({"timestamp_utc": "2026-09-16T23:30:00Z",
+                                 "source_window_end_utc": "2026-09-17T02:00:00Z", "btc_close": "130"})
             result = mature_one(root, forecast, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
             self.assertEqual(result["status"], "PENDING_TARGET_EVIDENCE")
             self.assertFalse((root / result["path"]).exists())
