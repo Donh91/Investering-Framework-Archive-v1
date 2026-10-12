@@ -10,6 +10,9 @@
  * Keep it on the isolated design branch until source parity is accepted.
  */
 
+import { officialPullbackDisplay } from './official-pullback-eta.mjs';
+import { officialBullBear } from './official-bullbear.mjs';
+
 const RANGE_FORMULA = '70pct_containment_plus_30pct_jaccard';
 const SCORE_CONTRACT = 'CN_PUBLIC_WEEKLY_SCORECARD_v1';
 const VALID_WEEKLY_HEALTH = new Set(['OK', 'PASS', 'DEGRADED']);
@@ -78,6 +81,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
       weekly_alignment: 'UNVERIFIED', action_now: 'UNAVAILABLE',
       pullback_risk_state: 'UNAVAILABLE', distribution_risk: 'UNKNOWN',
       sell_assessment_state: 'UNAVAILABLE', reentry_state: 'UNAVAILABLE',
+      pullback_window: null, bull_bear_1_3d: null,
       permit_path_live_gates: false
     },
     completed_score: {
@@ -152,6 +156,22 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
     distribution_risk: cOK ? (compass.protection_tracker?.distribution_risk || 'UNKNOWN') : 'UNKNOWN',
     sell_assessment_state: cOK ? (compass.sell_assessment?.state || 'UNAVAILABLE') : 'UNAVAILABLE',
     reentry_state: cOK ? (compass.protection_tracker?.reentry_state || 'UNAVAILABLE') : 'UNAVAILABLE',
+    // A source week is not by itself an event onset. Public ETA is permitted
+    // ONLY if verified Compass and weekly public CN identities are aligned.
+    pullback_window: cOK && cnJoined ?
+      (() => {
+        const p = officialPullbackDisplay(compass, { forecast_week: forecastWeek }, 'da');
+        return p.state === 'VALID' ? {
+          window_kind: p.windowKind,
+          risk_state: p.riskState,
+          window_start_utc: p.windowStartUtc,
+          window_end_utc: p.windowEndUtc,
+          exact_onset: false,
+          headline: p.headline,
+          caution: p.note
+        } : null;
+      })() : null,
+    bull_bear_1_3d: cOK ? officialBullBear(compass, '1_3d') : null,
     permit_path_live_gates: cOK && cnJoined
   };
 
