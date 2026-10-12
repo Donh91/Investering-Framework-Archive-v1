@@ -44,11 +44,17 @@ def matured_counts(m6:dict|None):
     out={h:0 for h in horizons};families={h:set() for h in horizons}
     unknown={h:0 for h in horizons}
     if not isinstance(m6,dict):return out,{h:0 for h in horizons},unknown
-    for e in m6.get("events") or []:
+    events=m6.get("events")
+    if not isinstance(events,list):
+        return out,{h:0 for h in horizons},unknown
+    for e in events:
         if not isinstance(e,dict):continue
         fid=e.get("episode_family_id")
+        payload=e.get("horizons")
+        if not isinstance(payload,dict):continue
         for h in horizons:
-            row=(e.get("horizons") or {}).get(h) or {}
+            row=payload.get(h)
+            if not isinstance(row,dict):continue
             state=row.get("maturity_state")
             if state=="MATURED":
                 out[h]+=1
@@ -125,6 +131,10 @@ def matured_payload_integrity(m6:dict|None,now:datetime):
             t=datetime.fromisoformat(v.replace("Z","+00:00"))
             return t.astimezone(timezone.utc) if t.tzinfo is not None else None
         except (ValueError,OverflowError):return None
+    def shifted_clock(dt,hours):
+        if dt is None or hours is None:return None
+        try:return dt+timedelta(hours=hours)
+        except OverflowError:return None
     for index,event in enumerate(events):
         if not isinstance(event,dict):
             mark("INVALID_EVENT_ROW");continue
@@ -142,17 +152,21 @@ def matured_payload_integrity(m6:dict|None,now:datetime):
             target=clock(horizon.get("target_at_utc"))
             first_close=clock(coverage.get("first_close")) if isinstance(coverage,dict) else None
             last_close=clock(coverage.get("last_close")) if isinstance(coverage,dict) else None
+            expected_target=shifted_clock(knowledge,hours)
+            max_first_close=shifted_clock(knowledge,1)
+            min_last_close=shifted_clock(target,-1)
             valid=(hours is not None and knowledge is not None and target is not None and
-                target==knowledge+timedelta(hours=hours) and target<=now and
+                expected_target is not None and max_first_close is not None and min_last_close is not None and
+                target==expected_target and target<=now and
                 isinstance(coverage,dict) and coverage.get("reason")=="COMPLETE_HOURLY_CLOSE_GRID" and
                 number(coverage.get("row_count")) and
                 coverage["row_count"] in (hours,hours+1) and
                 number(coverage.get("max_gap_hours")) and
                 math.isclose(coverage["max_gap_hours"],1.0,rel_tol=0.0,abs_tol=1e-9) and
                 first_close is not None and last_close is not None and
-                knowledge<=first_close<=knowledge+timedelta(hours=1) and
+                knowledge<=first_close<=max_first_close and
                 first_close.minute==0 and first_close.second==0 and first_close.microsecond==0 and
-                target-timedelta(hours=1)<=last_close<=target and
+                min_last_close<=last_close<=target and
                 last_close.minute==0 and last_close.second==0 and last_close.microsecond==0 and
                 last_close>=first_close and
                 last_close-first_close==timedelta(hours=coverage["row_count"]-1))
@@ -181,8 +195,16 @@ def matured_payload_integrity(m6:dict|None,now:datetime):
                         valid=False;break
                     # The immutable owner contract supplies three fixed adverse
                     # barriers per asset, including explicit untouched outcomes.
-                    for row in barriers.values():
+                    previous_touch=None
+                    for barrier_level in expected:
+                        row=barriers[barrier_level]
                         if not isinstance(row,dict) or type(row.get("touched")) is not bool:
+                            valid=False;break
+                        # Owner barrier_view compares FIRST reference price with
+                        # the same full-post-knowledge low series as the MAE.
+                        # Threshold crossing and first-touch order must agree.
+                        should_touch=reference["mae_pct"]<=float(barrier_level)
+                        if row["touched"] is not should_touch:
                             valid=False;break
                         if (row.get("basis")!="FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS" or
                             row.get("touch_time_semantics")!="HOURLY_BAR_END_NOT_EXACT_LOW_TIME"):
@@ -190,8 +212,10 @@ def matured_payload_integrity(m6:dict|None,now:datetime):
                         when=clock(row.get("first_touch_timestamp"))
                         if row["touched"]:
                             if (when is None or not start_close<=when<=end_close or
-                                (when-start_close).total_seconds()%3600!=0):
+                                (when-start_close).total_seconds()%3600!=0 or
+                                (previous_touch is not None and when<previous_touch)):
                                 valid=False;break
+                            previous_touch=when
                         elif row.get("first_touch_timestamp") is not None:
                             valid=False;break
                     if not valid:break
