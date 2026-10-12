@@ -108,19 +108,80 @@
     </section>
 
     <section class="page" id="page-kompas" aria-label="Mit Kompas" hidden>
-      <div class="secondary-heading"><span class="eyebrow"><span class="eyebrow-line"></span>YOUR TACTICAL EDGE, NO GUESSWORK</span><h1>Mit <em>Kompas.</em></h1><p>Samme klare beslutningslogik som i ChatGPT. Kilden afgør handlingen. Designet gør den let at forstå.</p></div>
-      <div class="compass-summary">
-        <div class="summary-action"><span>OFFICIEL HANDLING · NU</span><strong id="compass-primary-action">HOLD / AFVENT</strong><p id="compass-primary-copy">Den korte retning og den praktiske tilladelse er to forskellige ting.</p></div>
-        <div class="summary-timer"><span>MARKEDSRETNING</span><strong id="compass-primary-direction">↗ BULLISH</strong><small>NÆSTE 0–12 TIMER · OFFICIAL COMPASS</small></div>
+      <header class="compass-page-head">
+        <div>
+          <span class="compass-eyebrow">OFFICIAL COMPASS <span>· ARKIVERET PREVIEW</span></span>
+          <h1>Kompas<span class="compass-period">.</span></h1>
+        </div>
+        <p class="compass-source-mini" id="compass-updated">OFFICIAL SNAPSHOT · KILDETID UKENDT</p>
+      </header>
+
+      <section class="compass-summary" aria-label="Handling og markedsretning nu">
+        <div class="summary-action">
+          <span>HANDLING NU</span>
+          <strong id="compass-primary-action" aria-live="polite">HOLD / AFVENT</strong>
+          <small>Officiel handletilladelse</small>
+        </div>
+        <div class="summary-timer">
+          <span>MARKEDSRETNING · 0–12 TIMER</span>
+          <strong id="compass-primary-direction">↗ BULLISH</strong>
+          <small>Retning er ikke en købsgodkendelse</small>
+        </div>
+      </section>
+
+      <div class="compass-urgent" aria-label="Vigtige risiko- og salgssignaler">
+        <div><span>PULLBACK</span><strong id="compass-risk-inline">BUILDING</strong></div>
+        <div><span>SELL / TRIM</span><strong id="compass-sell-inline">UNAVAILABLE</strong></div>
+        <div><span>DISTRIBUTION</span><strong id="compass-distribution-inline">UNKNOWN</strong></div>
       </div>
-      <div class="section-heading compact-heading"><div><span class="section-index">01 / TIME HORIZONS</span><h2>Mit taktiske Kompas</h2></div><span class="section-aside" id="compass-updated">SOURCE SNAPSHOT</span></div>
-      <div class="table-frame"><table class="data-table" id="horizon-table"><thead><tr><th>TID</th><th>RETNING</th><th>HANDLING</th></tr></thead><tbody id="horizon-body"></tbody></table><div class="table-footnote"><span class="mini-dot blue"></span>Retning er ikke det samme som købsgodkendelse. Manglende horisonter vises som utilgængelige.</div></div>
-      <div class="section-heading compact-heading"><div><span class="section-index">02 / CAPITALIZATION</span><h2>Aktivklasser</h2></div><span class="section-aside">BTC → MEMES</span></div>
-      <div class="table-frame"><table class="data-table asset-table"><thead><tr><th>AKTIV</th><th>STATUS</th><th>HANDLING</th></tr></thead><tbody id="asset-body"></tbody></table><div class="table-footnote">Microcaps og memes har hver deres tilladelse. Den ene kategori fungerer aldrig som proxy for den anden.</div></div>
-      <div class="compass-two-up">
-        <article class="interpretation-panel"><span class="section-index">03 / THE READ</span><h3>Min fortolkning <span>· 1–3 dage</span></h3><p id="interpretation-copy">Blandet og selektiv markedsbevægelse. Den positive intradag-retning giver ikke automatisk grøn tilladelse længere ude i risikokurven.</p><button class="plain-link" type="button" id="interpret-more" aria-expanded="false">Flere horisonter <span>＋</span></button><div id="interpret-details" hidden></div></article>
-        <article class="protection-panel"><span class="section-index">04 / RISK DESK</span><h3>Pullback & protection</h3><div class="risk-value" id="risk-large">BUILDING <small>WATCH</small></div><p id="risk-main-copy">Retest-watch er aktiv. Dybde, sværhedsgrad og præcis dato er ikke bekræftet.</p><div class="risk-state-grid"><div><span>DISTRIBUTION</span><strong id="distribution-label">UNKNOWN</strong></div><div><span>SELL / TRIM</span><strong id="sell-label">UNAVAILABLE</strong></div><div><span>RE-ENTRY</span><strong id="reentry-label">INACTIVE</strong></div></div><button class="plain-link" type="button" id="risk-more" aria-expanded="false">Hvorfor dette signal? <span>＋</span></button><div id="risk-details" class="risk-detail-list" hidden></div></article>
-      </div>
+
+      <section class="compass-table-block" aria-labelledby="compass-horizon-title">
+        <div class="compass-table-heading">
+          <h2 id="compass-horizon-title">Tidshorisonter</h2>
+          <span>STATUS · HANDLING · TID</span>
+        </div>
+        <div class="table-frame">
+          <table class="data-table" id="horizon-table"><thead><tr><th scope="col">TID</th><th scope="col">RETNING</th><th scope="col">HANDLING</th></tr></thead><tbody id="horizon-body"></tbody></table>
+        </div>
+      </section>
+
+      <section class="compass-table-block" aria-labelledby="compass-assets-title">
+        <div class="compass-table-heading">
+          <h2 id="compass-assets-title">Aktivklasser</h2>
+          <span>BTC → MEMES</span>
+        </div>
+        <div class="table-frame">
+          <table class="data-table asset-table"><thead><tr><th scope="col">AKTIV</th><th scope="col">STATUS</th><th scope="col">HANDLING</th></tr></thead><tbody id="asset-body"></tbody></table>
+        </div>
+      </section>
+
+      <section class="compass-disclosure-group" aria-label="Uddybende kompasinformation">
+        <p class="compass-disclosure-eyebrow">UDDYBNING & KILDER</p>
+        <details class="compass-disclosure">
+          <summary><span><strong>Min fortolkning</strong><small>1–3 dage · betingelser og længere horisonter</small></span><span class="compass-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="compass-disclosure-content">
+            <p id="interpretation-copy">Blandet og selektiv deltagelse. Bred rotation er endnu ikke bekræftet.</p>
+            <div id="interpret-details" class="compass-source-explanation"></div>
+          </div>
+        </details>
+        <details class="compass-disclosure">
+          <summary><span><strong>Pullback, beskyttelse & re-entry</strong><small>Begrundelse, distribution og SELL-adskillelse</small></span><span class="compass-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="compass-disclosure-content">
+            <div class="compass-risk-heading"><span>OFFICIEL RISIKOTILSTAND</span><strong id="risk-large">BUILDING</strong></div>
+            <p id="risk-main-copy">Muligt retest. Dybde og tidspunkt er ikke bekræftet.</p>
+            <div class="risk-state-grid">
+              <div><span>DISTRIBUTION</span><strong id="distribution-label">UNKNOWN</strong></div>
+              <div><span>SELL / TRIM</span><strong id="sell-label">UNAVAILABLE</strong></div>
+              <div><span>RE-ENTRY</span><strong id="reentry-label">INACTIVE</strong></div>
+            </div>
+            <div id="risk-details" class="risk-detail-list"></div>
+          </div>
+        </details>
+        <div class="compass-bottom-note">
+          <p>Kun officielle Kompas-signaler. Ingen beregnet BUY/SELL fra grafikken.</p>
+          <button type="button" class="plain-link" data-go="dokumentation">Se resultater og metode <span aria-hidden="true">↗</span></button>
+        </div>
+      </section>
     </section>
 
     <section class="page" id="page-dokumentation" aria-label="Dokumentation og historiske scores" hidden>
