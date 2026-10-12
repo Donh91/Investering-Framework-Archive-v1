@@ -83,6 +83,17 @@ assert.match(html, /id="hero-action-summary"/);
 assert.match(html, /id="hero-now"/);
 assert.match(html, /id="overview-risk"/);
 assert.match(html, /id="overview-risk-window"/);
+assert.match(html, /id="overview-risk-stage"/);
+assert.match(html, /id="compass-risk-stage"/);
+assert.match(js, /import \{ officialPullbackStage \} from '\.\/official-pullback-stage\.mjs'/);
+assert.match(js, /const stage = officialPullbackStage\(d\.compass, d\.weekly, lang\);/);
+assert.match(js, /setText\('overview-risk-stage', stage\.stageLabel\)/);
+assert.match(js, /setText\('compass-risk-stage', stage\.stageLabel\)/);
+assert.match(js, /stage\.proximityLabel/);
+assert.match(js, /stage\.qualityLabel/);
+assert.match(js, /id = 'risk-evidence-quality'/);
+assert.match(css, /Progressive risk is one factual line, NOT a progress bar or probability/);
+
 assert.match(html, /id="compass-risk-window"/);
 assert.match(html, /PULLBACK · TID/);
 assert.match(js, /import \{ officialPullbackDisplay \} from '\.\/official-pullback-eta\.mjs'/);
