@@ -41,76 +41,31 @@
       </div>
 
       <div class="hero-grid">
-        <div class="hero-main">
-          <div class="hero-kicker"><span class="small-round"></span> MARKEDSPULS <span class="subtle-spacer">/</span> <span id="hero-horizon">NÆSTE 12 TIMER</span></div>
-          <h1 class="hero-title">Styrke på<br><em>overfladen.</em><br><span>Afvent rotationen.</span></h1>
-          <p class="hero-subtitle" id="hero-deck">BTC og ETH avancerer i den seneste officielle observation. Men den bredere bevægelse er stadig blandet, og kapitalrotation til mindre aktiver er ikke bekræftet.</p>
-          <div class="hero-status-line">
-            <span class="signal-up" id="hero-now"><span class="signal-arrow">↗</span> BULLISH <span class="signal-sub">12H</span></span>
-            <span class="hero-sep"></span>
-            <span class="signal-mixed" id="hero-forward">MIXED <span>1–7 DAGE</span></span>
+        <article class="hero-main" aria-labelledby="overview-title">
+          <div class="hero-context"><span>OFFICIELT MARKEDSBILLEDE</span><span id="hero-horizon">NÆSTE 12 TIMER</span></div>
+          <h1 class="hero-title" id="overview-title">Markedet lige nu<span>.</span></h1>
+          <div class="hero-key-metrics">
+            <div class="hero-key-signal"><span class="metric-label">MARKEDSRETNING · 12 TIMER</span><strong id="hero-now" class="hero-direction" aria-live="polite">↗ BULLISH · 12T</strong></div>
+            <div class="hero-action-line"><span class="metric-label">OFFICIEL HANDLING</span><strong id="hero-action-summary" aria-live="polite">HOLD / AFVENT</strong></div>
           </div>
-          <div class="hero-action-line"><span>OFFICIAL ACTION</span><strong id="hero-action-summary">HOLD / AFVENT</strong></div>
-          <p class="hero-footnote">Kilde: Official Compass · Markedsobservation og handletilladelse er separate signaler.</p>
-        </div>
-        <div class="hero-instrument" aria-label="Visuel markedsstatus for taktisk retning og rotationsbekræftelse">
-          <div class="instrument-top"><span>CN / MARKET INSTRUMENT</span><span class="instrument-sun">◌</span></div>
-          <div class="instrument-geometry">
-            <svg viewBox="0 0 380 298" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-              <circle cx="190" cy="146" r="125" stroke="white" stroke-opacity=".08" />
-              <circle cx="190" cy="146" r="100" stroke="white" stroke-opacity=".11" />
-              <circle cx="190" cy="146" r="72" stroke="white" stroke-opacity=".13" />
-              <circle cx="190" cy="146" r="46" stroke="white" stroke-opacity=".12" />
-              <path d="M190 4v284M48 146h284" stroke="white" stroke-opacity=".11" stroke-dasharray="2 8"/>
-              <path d="M190 146 254 82" stroke="#9BBDFF" stroke-width="2.5" stroke-linecap="round"/>
-              <path d="m247 83 15-10-10 15" fill="#9BBDFF"/>
-              <circle cx="190" cy="146" r="6" fill="#CBE0FF"/>
-              <circle cx="190" cy="146" r="13" stroke="#CBE0FF" stroke-opacity=".35"/>
-              <path d="M86 209 A119 119 0 0 1 292 82" stroke="#90B5FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 7"/>
-              <circle cx="292" cy="82" r="4.5" fill="#90B5FF"/>
-              <text x="204" y="154" fill="#D6E4FB" font-size="11" letter-spacing="1.4">NOW</text>
-              <text x="264" y="56" fill="#92AFE1" font-size="9" letter-spacing="1.7">CONFIRM</text>
-              <text x="55" y="253" fill="#829ABA" font-size="8.7" letter-spacing="1.5">CYCLE MONITOR</text>
-              <text x="295" y="253" fill="#829ABA" font-size="8.7" text-anchor="end" letter-spacing="1.5">NO IMPLIED ETA</text>
-            </svg>
+          <p class="hero-subtitle" id="hero-deck">BTC og ETH steg i den seneste officielle observation. Den bredere kapitalrotation er dog ikke bekræftet.</p>
+          <div class="hero-detail-list">
+            <div class="hero-detail"><span>NÆSTE 1–3 DAGE</span><strong id="hero-forward">MIXED · 1–3D</strong></div>
+            <div class="hero-detail"><span>NÆSTE BEKRÆFTELSE</span><strong>ETH/BTC + markedsbredde</strong></div>
+            <div class="hero-detail"><span>PULLBACK-WATCH</span><strong id="overview-risk">BUILDING</strong></div>
           </div>
-          <div class="instrument-bottom"><div><span>OFFICIAL ACTION</span><strong id="instrument-action">HOLD / WAIT</strong></div><div><span>LONG HORIZON</span><strong id="instrument-long">UNCONFIRMED</strong></div></div>
-        </div>
+          <p class="hero-risk-note" id="overview-risk-desc">Retest under observation. Størrelse og tidspunkt er ikke bekræftet; ikke et SELL-signal.</p>
+          <div class="source-strip" role="status">
+            <div><span class="status-lamp degraded" aria-hidden="true"></span><strong id="source-health">WEEKLY: DEGRADED</strong><span id="source-time">KILDEFAST SNAPSHOT · 2026-10-11 13:15 UTC</span></div>
+            <button class="text-button" type="button" data-go="dokumentation">Se kilder <span aria-hidden="true">↗</span></button>
+          </div>
+        </article>
       </div>
-
-      <div class="source-strip" role="status">
-        <div><span class="status-lamp degraded"></span><strong id="source-health">WEEKLY: DEGRADED</strong><span class="source-slim-divider"></span><span id="source-time">SOURCE SNAPSHOT · 11 OKT 2026</span></div>
-        <button class="text-button" type="button" data-go="dokumentation">Vis dokumentation <span>↗</span></button>
-      </div>
-
-      <section class="section-block">
-        <div class="section-heading"><div><span class="section-index">01 / DECISION DESK</span><h2>Det vigtigste. <span>På én skærm.</span></h2></div><span class="section-aside">INTET OVERFLØDIGT</span></div>
-        <div class="decision-grid">
-          <article class="decision-card">
-            <div class="card-heading"><span>DIN HANDLING NU</span><span class="card-glyph">↗</span></div>
-            <div class="card-value" id="overview-action">HOLD / AFVENT</div>
-            <div class="card-desc" id="overview-action-note">Den korte markedsretning er positiv, men der er endnu ikke godkendelse til at øge bred alt-eksponering.</div>
-            <div class="card-bottom"><span class="mini-dot blue"></span>OFFICIAL COMPASS <span id="overview-action-horizon">· NÆSTE 12T</span></div>
-          </article>
-          <article class="decision-card">
-            <div class="card-heading"><span>NÆSTE BEKRÆFTELSE</span><span class="card-glyph">⌁</span></div>
-            <div class="card-value card-value-small">ETH/BTC + breadth</div>
-            <div class="card-desc">Stabil relativ ETH-styrke og bredere deltagelse skal bekræfte, før kapitalrotationen kan kaldes reel.</div>
-            <div class="card-bottom"><span class="mini-dot amber"></span>CONDITIONAL GATE <span>· INGEN SIKKER ETA</span></div>
-          </article>
-          <article class="decision-card">
-            <div class="card-heading"><span>PULLBACK WATCH</span><span class="card-glyph">⌄</span></div>
-            <div class="card-value card-value-small" id="overview-risk">BUILDING</div>
-            <div class="card-desc" id="overview-risk-desc">Retest under observation. Varighed og dybde er ikke kvantificeret; ingen selvstændig SELL-instruktion.</div>
-            <div class="card-bottom"><span class="mini-dot amber"></span>PROTECTION TRACKER <span>· EVIDENS: LAV</span></div>
-          </article>
-        </div>
-      </section>
 
       <section class="section-block section-path">
-        <div class="section-heading"><div><span class="section-index">02 / THE BIG PICTURE</span><h2>Hvor bevæger vi os <span>hen?</span></h2></div><span class="section-aside">MARKET CYCLE</span></div>
+        <div class="section-heading"><div><span class="section-index">01 / MARKET CYCLE</span><h2>Hvor bevæger vi os <span>hen?</span></h2></div><span class="section-aside">MARKET CYCLE</span></div>
         <div class="path-panel">
-          <div class="path-head"><div><span class="label-light">KENDT MARKEDSKONTEKST</span><h3>BTC leder. <span>Den næste overlevering mangler.</span></h3><p>Markedsrejsen styres af bekræftelser, ikke af en kalender. Den viste rækkefølge er strukturel - ikke en automatisk prognose.</p></div><div class="path-compass" aria-hidden="true"><svg width="76" height="76" viewBox="0 0 76 76" fill="none"><circle cx="38" cy="38" r="32" stroke="currentColor" stroke-opacity=".2"/><circle cx="38" cy="38" r="22" stroke="currentColor" stroke-opacity=".18"/><path d="M23 53 45 27l8-4-4 8-26 22Z" stroke="currentColor" fill="none"/><circle cx="38" cy="38" r="3" fill="currentColor"/></svg></div></div>
+          <div class="path-head"><div><span class="label-light">KENDT MARKEDSKONTEKST</span><h3>BTC leder. <span>Den næste overlevering mangler.</span></h3><p>Markedsrejsen styres af bekræftelser, ikke af en kalender. Den viste rækkefølge er strukturel - ikke en automatisk prognose.</p></div></div>
           <div class="path-route" aria-label="Markedsfaser i kildebunden rækkefølge">
             <div class="path-phase phase-observed"><div class="path-pin"><span>01</span></div><h4>BTC leder</h4><p>Observeret W40</p></div>
             <div class="path-phase"><div class="path-pin"><span>02</span></div><h4>ETH styrkes</h4><p>Afventer bekræftelse</p></div>
@@ -124,18 +79,18 @@
       </section>
 
       <section class="section-block">
-        <div class="section-heading"><div><span class="section-index">03 / WEEKLY FORECAST</span><h2>Den kommende uge. <span>Uden gætterier.</span></h2></div><span class="section-aside">FRYSNING · 2026-W41</span></div>
+        <div class="section-heading"><div><span class="section-index">02 / WEEKLY FORECAST</span><h2>Den kommende uge. <span>Uden gætterier.</span></h2></div><span class="section-aside">FRYSNING · 2026-W41</span></div>
         <div class="forecast-grid">
           <div class="forecast-surface">
             <div class="forecast-title"><span>BITCOIN <small>BTC / USD</small></span><span class="forecast-tag">7D SCENARIO</span></div>
             <div class="forecast-large">$82.000 <span>—</span> $92.000</div>
-            <div class="corridor-track" aria-label="Officielt frosset BTC-interval, ingen prisprognosekurve"><div class="corridor-fill"></div><span class="corridor-tick t0"></span><span class="corridor-tick t1"></span><span class="corridor-tick t2"></span></div>
+            
             <p class="forecast-hint">Kildeafledt scenarieinterval. Ikke en sandsynlighed eller et aktuelt spotniveau.</p>
           </div>
           <div class="forecast-surface">
             <div class="forecast-title"><span>ETHEREUM <small>ETH / USD</small></span><span class="forecast-tag">7D SCENARIO</span></div>
             <div class="forecast-large">$2.560 <span>—</span> $2.960</div>
-            <div class="corridor-track" aria-label="Officielt frosset ETH-interval, ingen prisprognosekurve"><div class="corridor-fill alt"></div><span class="corridor-tick t0"></span><span class="corridor-tick t1"></span><span class="corridor-tick t2"></span></div>
+            
             <p class="forecast-hint">Prisintervallet er frosset for ugen, ikke genberegnet ud fra efterfølgende kurser.</p>
           </div>
         </div>
@@ -143,7 +98,7 @@
       </section>
 
       <section class="section-block proof-teaser">
-        <div class="section-heading"><div><span class="section-index">04 / PUBLIC ACCOUNTABILITY</span><h2>Vi måler vores <span>markedsforståelse.</span></h2></div><span class="section-aside">THE NEW CN TRACK RECORD</span></div>
+        <div class="section-heading"><div><span class="section-index">03 / PUBLIC ACCOUNTABILITY</span><h2>Vi måler vores <span>markedsforståelse.</span></h2></div><span class="section-aside">THE NEW CN TRACK RECORD</span></div>
         <div class="teaser-shell">
           <div><span class="teaser-caption">NEW SCORE ERA · FRA 12. OKTOBER 2026</span><div class="teaser-score">W<span>42</span><sup>↗</sup></div><div class="teaser-label">Price Range <span>+ Direction + Pullback Edge</span></div><p class="caption" style="font-size:11px;color:#8899ab;margin:16px 0 0">Første nye scores kommer først efter faktisk frysning og en afsluttet måleperiode.</p></div>
           <div class="teaser-divider"></div>
