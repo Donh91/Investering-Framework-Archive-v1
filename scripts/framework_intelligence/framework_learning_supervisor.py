@@ -30,6 +30,74 @@ def week_id(now: datetime):
     return int(y), int(w), f"{int(y)}-W{int(w):02d}"
 
 
+def admit_cross_domain_shadow_weekly(snapshot, expected_week):
+    """Consume *reviewed main* Shadow Registry only, as optional advisory.
+
+    A weekly PR candidate is NOT an accepted/merged source. Missing or stale
+    report remains pending, never converted into profitable strategy evidence.
+    This function cannot enqueue paid calls, orders or canonical signals.
+    """
+    pending = {
+        "status": "PENDING_REVIEWED_WEEKLY_SNAPSHOT",
+        "week": expected_week,
+        "authority": "ADVISORY_ONLY",
+        "automatic_model_calls": False,
+        "portfolio_execution": False,
+        "reason": "NO_CURRENT_REVIEWED_CROSS_DOMAIN_SHADOW_RECEIPT",
+        "lanes": [],
+    }
+    if not isinstance(snapshot, dict) or snapshot.get("contract") != "SHADOW_WEEKLY_RELEVANCE_SNAPSHOT_v1":
+        return pending
+    if snapshot.get("authority") != "RESEARCH_ONLY_NON_CANONICAL" or snapshot.get("portfolio_execution") is not False:
+        return {**pending, "reason": "INVALID_REGISTRY_AUTHORITY"}
+    if snapshot.get("week") != expected_week:
+        return {**pending, "reason": "WEEKLY_REVIEW_NOT_MERGED_OR_STALE"}
+    review = snapshot.get("cross_domain_review")
+    if not isinstance(review, dict) or review.get("contract") != "SHADOW_CROSS_DOMAIN_WEEKLY_REVIEW_v1":
+        return {**pending, "reason": "CROSS_DOMAIN_REVIEW_NOT_IN_MERGED_SNAPSHOT"}
+    cost = review.get("cost_and_execution")
+    if (review.get("week") != expected_week or
+        review.get("authority") != "RESEARCH_ONLY_NON_CANONICAL" or
+        not isinstance(cost, dict) or
+        any(cost.get(x) != 0 for x in (
+            "external_llm_calls", "incremental_paid_api_usd",
+            "incremental_provider_calls", "new_schedulers"
+        )) or
+        any(cost.get(x) is not False for x in (
+            "automatic_execution", "automatic_market_rule_change",
+            "automatic_model_promotion", "wallet_signing"
+        ))):
+        return {**pending, "reason": "INVALID_COST_OR_AUTHORITY_BOUNDARY"}
+    lanes = review.get("lanes")
+    if not isinstance(lanes, list) or [r.get("lane_id") for r in lanes if isinstance(r, dict)] != [
+        "COMPASS", "AUTO_TRADING", "ALPHA_LAB"
+    ] or len(lanes) != 3:
+        return {**pending, "reason": "INVALID_CROSS_DOMAIN_LANES"}
+    if any(r.get("scientific_edge") != "UNPROVEN" or
+           r.get("paper_or_live_trading_authorized") is not False for r in lanes):
+        return {**pending, "reason": "UNAPPROVED_TRADING_OR_EDGE_PROMOTION"}
+    # Only compact source status/owner/research task; never expose payload,
+    # holdings, addresses, market data or inferred trader identity.
+    return {
+        "status": "WEEKLY_RESEARCH_ADVISORY_ONLY",
+        "week": expected_week,
+        "authority": "ADVISORY_ONLY",
+        "automatic_model_calls": False,
+        "portfolio_execution": False,
+        "reason": "OWNER_REVIEW_AND_INDEPENDENT_ACCEPTANCE_REQUIRED",
+        "lanes": [
+            {
+                "lane_id": row["lane_id"],
+                "source_status": row.get("source_status"),
+                "scientific_edge": "UNPROVEN",
+                "owner": row.get("owner"),
+                "next_review_question": row.get("review_question"),
+            }
+            for row in lanes
+        ],
+    }
+
+
 def normalize_compounding_families(state):
     if not state:
         return []
@@ -140,6 +208,7 @@ def main():
         "weekly_forensics": root / "research/framework_learning/weekly_forensics/LATEST.json",
         "weekly_forensics_replay": root / "research/framework_learning/weekly_forensics/replay/LATEST_REPLAY_BASELINE.json",
         "automation_orchestration": root / "research/framework_learning/automation_orchestration/LATEST_PLAN.json",
+        "shadow_registry_weekly": root / "04_MARKET_LEARNING/shadow_registry/LATEST.json",
     }
     src = {name: load_json(path, {}) or {} for name, path in paths.items()}
     families = normalize_compounding_families(src["compounding_state"])
@@ -203,16 +272,23 @@ def main():
         "contradictions": phase1.get("contradictions", []) or [],
         "range_context": [{"semantic_identity": x["semantic_identity"], "titles": x["titles"][:2], "matured_outcome_count": x["matured_outcome_count"], "status": x["family_status"]} for x in ranges[:5]],
         "method_improvement_candidates": [x for x in staleness if x["status"] == "METHOD_AUDIT_DUE"],
+        "cross_domain_shadow_weekly": shadow_weekly_advisory,
         "scientific_status": "FORECAST_SKILL_UNPROVEN",
         "weekly_forensics_delta": src["weekly_forensics"].get("master_monday_delta") if src["weekly_forensics"].get("contract") == "WEEKLY_FORENSICS_PACK_v1" and src["weekly_forensics"].get("mode") == "FINAL" else None,
         "weekly_forensics_authority": "ADVISORY_ONLY",
     }
+    # No new cron/API job: existing Framework Learning Supervisor already runs
+    # daily and Monday. A weekly snapshot becomes visible ONLY after PR merge.
+    shadow_weekly_advisory = admit_cross_domain_shadow_weekly(
+        src.get("shadow_registry_weekly"), week_label
+    )
     orchestration = src.get("automation_orchestration") or {}
     orchestration_summary = orchestration.get("routing_summary") if orchestration.get("contract") == "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1" else None
     supervisor = {
         "contract": "FRAMEWORK_LEARNING_SUPERVISOR_STATE_v1", "authority": "ORCHESTRATION_ONLY", "generated_at_utc": generated, "iso_year": year, "iso_week": week,
         "semantic_family_owner": "COMPOUNDING_LEARNING_CONTROLLER_STATE_v1", "family_count": len(memory_rows), "material_delta_count": len(deltas),
         "unconsumed_information_count": len(unconsumed), "method_audit_due_count": sum(1 for x in staleness if x["status"] == "METHOD_AUDIT_DUE"), "delegation_queue_count": len(queue),
+        "cross_domain_shadow_weekly": shadow_weekly_advisory,
         "next_best_existing_experiment": src["next_best"], "compounding_learning_backlog_reference": "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/LEARNING_BACKLOG.json",
         "compute_policy": "DETERMINISTIC_FIRST_LUNA_FOR_ROUTINE_GPT6_1_SOL_FOR_DIFFICULT_ASTRA_FOR_AGENTIC_EXTREME", "automation_orchestration": orchestration_summary, "canonical_effect": False, "portfolio_execution": False, "master_monday_live_influence": False,
     }
