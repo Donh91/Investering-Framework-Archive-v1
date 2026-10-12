@@ -87,7 +87,7 @@ class CompassOutcomeTest(unittest.TestCase):
             outcome = json.loads(outcome_path.read_text())
             self.assertEqual(outcome["direction_accuracy"]["btc"]["result"], "CORRECT")
             self.assertEqual(outcome["action_utility"]["action"], "HOLD")
-            self.assertEqual(outcome["scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v2")
+            self.assertEqual(outcome["scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v3")
             self.assertEqual(outcome["time_basis"]["effective_window_hours"], 12.0)
             self.assertEqual(outcome["time_basis"]["start_reference_age_hours"], 0.0)
             self.assertEqual(outcome["target_observation_at_utc"], "2026-09-17T00:00:00Z")
