@@ -231,6 +231,10 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     issued = parse_utc(freeze.get("issued_at_utc"))
     if issued is None:
         return None
+    outcome_rel = output_root / "outcomes" / issued.strftime("%Y/%m/%d") / f"{freeze.get('compass_id')}_{horizon}.json"
+    outcome_path = repo_root / outcome_rel
+    if outcome_path.exists():
+        return {"status": "ALREADY_MATURED", "path": outcome_rel.as_posix()}
     # A forecast's frozen scoring contract is immutable. Never silently score
     # v1/v2 forecasts under new v3 candle semantics after deployment.
     if freeze.get("scoring_contract") != SCORING_CONTRACT:
@@ -256,10 +260,6 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     if now < target:
         return None
 
-    outcome_rel = output_root / "outcomes" / issued.strftime("%Y/%m/%d") / f"{freeze.get('compass_id')}_{horizon}.json"
-    outcome_path = repo_root / outcome_rel
-    if outcome_path.exists():
-        return {"status": "ALREADY_MATURED", "path": outcome_rel.as_posix()}
 
     rows = load_hourly(repo_root, start_reference, target + TARGET_TOLERANCE, as_of=now)
     target_row = closest_target(rows, target)
