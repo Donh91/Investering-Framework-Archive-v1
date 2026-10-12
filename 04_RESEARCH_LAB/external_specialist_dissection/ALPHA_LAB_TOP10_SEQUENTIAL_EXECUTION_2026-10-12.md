@@ -75,3 +75,9 @@ REAs browser and EVM analysis may help identify authorized observable data contr
 
 ## First next action
 Run the R1 **source eligibility and controls audit** against existing ASKR and PEPE owner evidence, before simulating returns. If exact CA/pool/availability/reserve source is missing, emit DATA_BLOCKED and a narrow owner-owned collection request. Proceed to R2 only when R1's **technical** result is frozen as PASS/FAIL/INCONCLUSIVE/DATA_BLOCKED, not because a model predicts an edge.
+
+## First R1 implementation receipt (2026-10-12)
+- Deterministic read-only admission gate: `scripts/research/alpha_moonshot_r1_admission_v1.py`.
+- Regression tests: `tests/research/test_alpha_moonshot_r1_admission_v1.py` (13 defined test cases; CI not yet independently verified on current PR head).
+- Historical case census with explicit unresolved evidence: `06_RESEARCH_LAB/alpha_lab/2026-10-12__top10_r1_askr_pepe_source_admission.json`. ASKR and PEPE marked `DATA_BLOCKED` pending verified token/pool/first-source/route and matched controls; FARTCOIN optional blocked. **This is a deliberate truthful result, not evidence that these cases were untradeable.**
+- Gate performs only source/clock/route *admission*. It does not calculate fills, infer CA, fetch market data, make trades, create model/API calls, or certify economic edge. A self-declared route proof remains a technical candidate until independent raw verification.
