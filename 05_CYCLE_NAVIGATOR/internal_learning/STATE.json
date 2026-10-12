@@ -1,5 +1,5 @@
 {
-  "api_review_status": "DEGRADED",
+  "api_review_status": "NOT_REQUIRED",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "automatic_promotion": false,
   "automatic_threshold_change": false,
@@ -8,45 +8,45 @@
   "checkpoint_sequence": 1,
   "contract": "CN_PRECISION_LEARNING_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "048f57bc5ddac62c990690d4c77e593157eb119b4fadbf0f8369ba68cdc23948",
+  "evidence_fingerprint": "1d849353bc3a9513be496ba03e2563288b125c0c55efe19e26070557c5b91af5",
   "external_provider_calls_authorized": false,
-  "family": "rotation",
+  "family": "",
   "family_states": {
     "altseason": {
-      "change_vs_previous_4w_pp": null,
+      "change_vs_previous_4w_pp": -25.0,
       "family": "altseason",
       "low_score_streak": 1,
-      "mean_4w": 83.33,
-      "median_4w": 100.0,
-      "previous_4w_mean": null,
+      "mean_4w": 75.0,
+      "median_4w": 75.0,
+      "previous_4w_mean": 100.0,
       "raw_state": "NORMAL",
       "recent_scores": [
         100.0,
-        100.0,
         50.0,
+        null,
         null
       ],
       "recovery_ready": false,
       "state": "NORMAL",
-      "valid_observations_4w": 3,
+      "valid_observations_4w": 2,
       "weak_weeks_4w": 1,
       "zero_weeks_4w": 0
     },
     "breadth": {
-      "change_vs_previous_4w_pp": null,
+      "change_vs_previous_4w_pp": -25.0,
       "family": "breadth",
       "low_score_streak": 0,
       "mean_4w": 75.0,
       "median_4w": 75.0,
-      "previous_4w_mean": null,
+      "previous_4w_mean": 100.0,
       "raw_state": "WATCH",
       "recent_scores": [
+        50.0,
+        50.0,
         100.0,
-        50.0,
-        50.0,
         100.0
       ],
-      "recovery_ready": false,
+      "recovery_ready": true,
       "state": "WATCH",
       "valid_observations_4w": 4,
       "weak_weeks_4w": 2,
@@ -63,26 +63,6 @@
       "recent_scores": [
         null,
         null,
-        null,
-        100.0
-      ],
-      "recovery_ready": false,
-      "state": "NORMAL",
-      "valid_observations_4w": 1,
-      "weak_weeks_4w": 0,
-      "zero_weeks_4w": 0
-    },
-    "btc_range": {
-      "change_vs_previous_4w_pp": null,
-      "family": "btc_range",
-      "low_score_streak": 0,
-      "mean_4w": 100.0,
-      "median_4w": 100.0,
-      "previous_4w_mean": null,
-      "raw_state": "NORMAL",
-      "recent_scores": [
-        null,
-        null,
         100.0,
         100.0
       ],
@@ -91,6 +71,26 @@
       "valid_observations_4w": 2,
       "weak_weeks_4w": 0,
       "zero_weeks_4w": 0
+    },
+    "btc_range": {
+      "change_vs_previous_4w_pp": null,
+      "family": "btc_range",
+      "low_score_streak": 1,
+      "mean_4w": 66.67,
+      "median_4w": 100.0,
+      "previous_4w_mean": null,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        null,
+        100.0,
+        100.0,
+        0.0
+      ],
+      "recovery_ready": false,
+      "state": "NORMAL",
+      "valid_observations_4w": 3,
+      "weak_weeks_4w": 1,
+      "zero_weeks_4w": 1
     },
     "deeper_transmission": {
       "change_vs_previous_4w_pp": null,
@@ -103,8 +103,8 @@
       "recent_scores": [
         null,
         null,
-        null,
-        50.0
+        50.0,
+        null
       ],
       "recovery_ready": false,
       "state": "NORMAL",
@@ -115,39 +115,39 @@
     "eth_range": {
       "change_vs_previous_4w_pp": null,
       "family": "eth_range",
-      "low_score_streak": 0,
-      "mean_4w": 100.0,
+      "low_score_streak": 1,
+      "mean_4w": 66.67,
       "median_4w": 100.0,
       "previous_4w_mean": null,
       "raw_state": "NORMAL",
       "recent_scores": [
         null,
-        null,
         100.0,
-        100.0
+        100.0,
+        0.0
       ],
-      "recovery_ready": true,
+      "recovery_ready": false,
       "state": "NORMAL",
-      "valid_observations_4w": 2,
-      "weak_weeks_4w": 0,
-      "zero_weeks_4w": 0
+      "valid_observations_4w": 3,
+      "weak_weeks_4w": 1,
+      "zero_weeks_4w": 1
     },
     "ethbtc": {
-      "change_vs_previous_4w_pp": null,
+      "change_vs_previous_4w_pp": -25.0,
       "family": "ethbtc",
       "low_score_streak": 0,
       "mean_4w": 75.0,
       "median_4w": 100.0,
-      "previous_4w_mean": null,
-      "raw_state": "NORMAL",
+      "previous_4w_mean": 100.0,
+      "raw_state": "WATCH",
       "recent_scores": [
         100.0,
-        100.0,
         0.0,
+        100.0,
         100.0
       ],
-      "recovery_ready": false,
-      "state": "NORMAL",
+      "recovery_ready": true,
+      "state": "WATCH",
       "valid_observations_4w": 4,
       "weak_weeks_4w": 1,
       "zero_weeks_4w": 1
@@ -163,8 +163,8 @@
       "recent_scores": [
         null,
         null,
-        null,
-        50.0
+        50.0,
+        null
       ],
       "recovery_ready": false,
       "state": "NORMAL",
@@ -176,132 +176,152 @@
       "change_vs_previous_4w_pp": null,
       "family": "intraday_day_1_2",
       "low_score_streak": 0,
-      "mean_4w": 75.0,
-      "median_4w": 75.0,
+      "mean_4w": 83.33,
+      "median_4w": 100.0,
       "previous_4w_mean": null,
       "raw_state": "NORMAL",
       "recent_scores": [
         null,
-        null,
         50.0,
+        100.0,
         100.0
       ],
-      "recovery_ready": false,
+      "recovery_ready": true,
       "state": "NORMAL",
-      "valid_observations_4w": 2,
+      "valid_observations_4w": 3,
       "weak_weeks_4w": 1,
       "zero_weeks_4w": 0
     },
     "intraday_day_3_4": {
       "change_vs_previous_4w_pp": null,
       "family": "intraday_day_3_4",
-      "low_score_streak": 2,
+      "low_score_streak": 3,
       "mean_4w": 50.0,
       "median_4w": 50.0,
       "previous_4w_mean": null,
-      "raw_state": "NORMAL",
+      "raw_state": "PERSISTENT_WEAKNESS",
       "recent_scores": [
         null,
-        null,
+        50.0,
         50.0,
         50.0
       ],
       "recovery_ready": false,
-      "state": "NORMAL",
-      "valid_observations_4w": 2,
-      "weak_weeks_4w": 2,
+      "state": "PERSISTENT_WEAKNESS",
+      "valid_observations_4w": 3,
+      "weak_weeks_4w": 3,
       "zero_weeks_4w": 0
     },
     "intraday_day_5_7": {
       "change_vs_previous_4w_pp": null,
       "family": "intraday_day_5_7",
-      "low_score_streak": 0,
-      "mean_4w": 75.0,
-      "median_4w": 75.0,
+      "low_score_streak": 1,
+      "mean_4w": 66.67,
+      "median_4w": 50.0,
       "previous_4w_mean": null,
-      "raw_state": "NORMAL",
+      "raw_state": "WATCH",
       "recent_scores": [
-        null,
         null,
         50.0,
-        100.0
-      ],
-      "recovery_ready": false,
-      "state": "NORMAL",
-      "valid_observations_4w": 2,
-      "weak_weeks_4w": 1,
-      "zero_weeks_4w": 0
-    },
-    "leadership": {
-      "change_vs_previous_4w_pp": null,
-      "family": "leadership",
-      "low_score_streak": 1,
-      "mean_4w": 75.0,
-      "median_4w": 75.0,
-      "previous_4w_mean": null,
-      "raw_state": "NORMAL",
-      "recent_scores": [
-        100.0,
-        50.0,
-        null,
-        null
-      ],
-      "recovery_ready": false,
-      "state": "NORMAL",
-      "valid_observations_4w": 2,
-      "weak_weeks_4w": 1,
-      "zero_weeks_4w": 0
-    },
-    "regime": {
-      "change_vs_previous_4w_pp": null,
-      "family": "regime",
-      "low_score_streak": 1,
-      "mean_4w": 87.5,
-      "median_4w": 100.0,
-      "previous_4w_mean": null,
-      "raw_state": "NORMAL",
-      "recent_scores": [
-        100.0,
-        100.0,
         100.0,
         50.0
       ],
       "recovery_ready": false,
+      "state": "WATCH",
+      "valid_observations_4w": 3,
+      "weak_weeks_4w": 2,
+      "zero_weeks_4w": 0
+    },
+    "leadership": {
+      "change_vs_previous_4w_pp": -50.0,
+      "family": "leadership",
+      "low_score_streak": 1,
+      "mean_4w": 50.0,
+      "median_4w": 50.0,
+      "previous_4w_mean": 100.0,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        50.0,
+        null,
+        null,
+        null
+      ],
+      "recovery_ready": false,
       "state": "NORMAL",
-      "valid_observations_4w": 4,
+      "valid_observations_4w": 1,
       "weak_weeks_4w": 1,
       "zero_weeks_4w": 0
     },
+    "regime": {
+      "change_vs_previous_4w_pp": -25.0,
+      "family": "regime",
+      "low_score_streak": 2,
+      "mean_4w": 75.0,
+      "median_4w": 75.0,
+      "previous_4w_mean": 100.0,
+      "raw_state": "WATCH",
+      "recent_scores": [
+        100.0,
+        100.0,
+        50.0,
+        50.0
+      ],
+      "recovery_ready": false,
+      "state": "WATCH",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 2,
+      "zero_weeks_4w": 0
+    },
     "rotation": {
-      "change_vs_previous_4w_pp": null,
+      "change_vs_previous_4w_pp": 8.33,
       "family": "rotation",
-      "low_score_streak": 0,
+      "low_score_streak": 1,
       "mean_4w": 58.33,
       "median_4w": 50.0,
-      "previous_4w_mean": null,
+      "previous_4w_mean": 50.0,
       "raw_state": "PERSISTENT_WEAKNESS",
       "recent_scores": [
         50.0,
-        50.0,
         75.0,
-        null
+        null,
+        50.0
       ],
       "recovery_ready": false,
       "state": "PERSISTENT_WEAKNESS",
       "valid_observations_4w": 3,
       "weak_weeks_4w": 2,
       "zero_weeks_4w": 0
+    },
+    "structural_call_5": {
+      "change_vs_previous_4w_pp": null,
+      "family": "structural_call_5",
+      "low_score_streak": 0,
+      "mean_4w": 100.0,
+      "median_4w": 100.0,
+      "previous_4w_mean": null,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        null,
+        null,
+        null,
+        100.0
+      ],
+      "recovery_ready": false,
+      "state": "NORMAL",
+      "valid_observations_4w": 1,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
     }
   },
   "last_checkpoint_settled_count": 4,
-  "last_settled_score_key": "Y2026-W40-CN28",
+  "last_settled_score_key": "Y2026-W41-CN29",
   "latest_checkpoint": "05_CYCLE_NAVIGATOR/internal_learning/checkpoints/2026/W40_C001.json",
-  "latest_weekly_snapshot": "05_CYCLE_NAVIGATOR/internal_learning/weekly/2026/W40.json",
+  "latest_weekly_snapshot": "05_CYCLE_NAVIGATOR/internal_learning/weekly/2026/W41.json",
   "paid_data_authorized": false,
   "portfolio_execution": false,
-  "primary_action": "RESEARCH_NEW_HYPOTHESIS",
+  "primary_action": "WAIT_FOR_MORE_EVIDENCE",
   "public_surface_effect": false,
-  "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=58.33 weak_weeks=2 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized. Deep review: The supplied four settlements support a research-only concern about claim rigidity and timing responsiveness, with rotation as the checkpoint trigger. However, the rotation pattern is materially weakened by only three valid observations, an improving final observed score, W40 missingness, changing parameter coverage, and no prior four-week comparator. The stronger provisional finding is therefore not a confirmed rotation-specific defect, but a bounded candidate blind spot: frozen or slow-to-update framing may miss short-horizon transitions, potentially concentrated around midweek paths. This remains unconfirmed under sparse, staggered family coverage. First bounded hypothesis: H1 (frozen-claim responsiveness): In the next four settled issues that contain a directional or state framing plus a realized within-week reversal or acceleration, precision failures will be more frequent for claims expressed as unqualified frozen directional/state assertions than for claims that explicitly delimit an invalidation condition or near-term alternative path. Falsification: no excess failure frequency is observed, or the eligible sample has fewer than four settled comparisons.",
-  "settled_week_count": 4,
-  "target": "CN_PRECISION::rotation"
+  "reason": "Persistent weakness is visible in intraday_day_3_4 but the next four-settlement checkpoint has not matured. Continue observing without research escalation.",
+  "settled_week_count": 5,
+  "target": ""
 }
