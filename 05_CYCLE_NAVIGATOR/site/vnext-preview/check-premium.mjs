@@ -105,6 +105,46 @@ assert.match(js, /compass\.issued_at_utc !== '2026-10-11T13:15:27Z'/);
 assert.match(js, /if \(dialog\.hidden\) return;/);
 assert.match(js, /event\.key !== 'Tab'/);
 assert.match(js, /e\.currentTarget\.setAttribute\('aria-expanded', String\(!details\.hidden\)\)/);
+// Kompas vNext must keep immediate decisions above the fold while all explanatory
+// source prose starts behind native, keyboard-accessible closed <details> controls.
+const compassStart = html.indexOf('<section class="page" id="page-kompas"');
+const compassEnd = html.indexOf('<section class="page" id="page-dokumentation"', compassStart);
+assert.ok(compassStart >= 0 && compassEnd > compassStart, 'Kompas navigation must remain its own page');
+const compassHtml = html.slice(compassStart, compassEnd);
+assert.match(compassHtml, /id="compass-primary-action"/);
+assert.match(compassHtml, /id="compass-primary-direction"/);
+assert.match(compassHtml, /id="compass-risk-inline"/);
+assert.match(compassHtml, /id="compass-sell-inline"/);
+assert.match(compassHtml, /id="compass-distribution-inline"/);
+assert.match(compassHtml, /id="compass-updated"/);
+assert.match(compassHtml, /id="horizon-body"/);
+assert.match(compassHtml, /id="asset-body"/);
+assert.equal((compassHtml.match(/<details class="compass-disclosure">/g) || []).length, 2, 'Exactly two closed, accessible contextual disclosures');
+assert.equal((compassHtml.match(/<summary>/g) || []).length, 2, 'Use native summary instead of custom JS toggle');
+assert.doesNotMatch(compassHtml, /<details[^>]*open(?:\s|>)/, 'Analytical details remain folded by default');
+assert.doesNotMatch(compassHtml, /compass-two-up|compass-primary-copy|interpret-more|risk-more|compass-summary.*#0b1f39/, 'No old giant interpretation and risk cards');
+assert.ok(compassHtml.indexOf('id="compass-primary-action"') < compassHtml.indexOf('id="horizon-body"'), 'Action first');
+assert.ok(compassHtml.indexOf('id="compass-risk-inline"') < compassHtml.indexOf('id="horizon-body"'), 'Time-critical risk visible before tables');
+assert.ok(compassHtml.indexOf('id="asset-body"') < compassHtml.indexOf('<details class="compass-disclosure">'), 'Detailed analysis moved beneath both decision tables');
+assert.match(js, /setText\('compass-risk-inline', riskState\)/);
+assert.match(js, /setText\('compass-sell-inline', sellState\)/);
+assert.match(js, /setText\('compass-distribution-inline', clean\(c\.protection_tracker\?\.distribution_risk/);
+assert.match(js, /c\.sell_assessment\?\.state/);
+assert.match(js, /\.compass-urgent, \.compass-table-block, \.compass-disclosure-group/);
+assert.doesNotMatch(js, /\$\('interpret-more'\)|\$\('risk-more'\)/, 'Native disclosure requires no extra click handler');
+assert.match(css, /#page-kompas \.compass-summary \{ display:grid/);
+assert.match(css, /\.compass-disclosure\[open\] \.compass-chevron/);
+assert.match(css, /\.compass-urgent \{ margin-top:/);
+for (const [danish, english] of [
+  ['HANDLING NU','ACTION NOW'],
+  ['Tidshorisonter','Time horizons'],
+  ['Aktivklasser','Asset classes'],
+  ['Min fortolkning','My interpretation'],
+  ['Pullback, beskyttelse & re-entry','Pullback, protection & re-entry']
+]) {
+  assert.ok(i18n.includes(JSON.stringify(danish) + ': ' + JSON.stringify(english)), 'DA/EN glossary missing '+danish);
+}
+
 const requiredLocalizedText = [
   'The near-term market direction is positive, but expanding broad altcoin exposure is not authorized.',
   'ORDINARY RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED. · Possible W41 retest, particularly Day 3–7; timing and occurrence unconfirmed.',
