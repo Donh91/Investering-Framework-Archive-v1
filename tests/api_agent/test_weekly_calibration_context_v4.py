@@ -234,6 +234,7 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
             }
             official = {
                 'contract': 'OFFICIAL_DAILY_COMPASS_OUTCOME_v1',
+                'scoring_contract': 'OFFICIAL_DAILY_COMPASS_SCORING_v3',
                 'compass_id': 'CMP-test',
                 'outcome_sha256': 'a' * 64,
                 'forecast_path': '04_MARKET_LEARNING/handlekompas/official/daily/2026/10/01/CMP-test.json',
@@ -241,7 +242,18 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
                 'horizon': '12h',
                 'target_at_utc': '2026-10-01T17:00:00Z',
                 'target_observation_at_utc': '2026-10-01T16:00:00Z',
-                'time_basis': {'start_reference_at_utc': '2026-10-01T05:00:00Z'},
+                'target_observation_open_at_utc': '2026-10-01T15:00:00Z',
+                'target_source_window_end_utc': '2026-10-01T17:00:00Z',
+                'time_basis': {
+                    'status': 'PASS',
+                    'start_reference_at_utc': '2026-10-01T05:00:00Z',
+                    'nominal_horizon_hours': 12,
+                    'effective_window_hours': 11,
+                    'window_deviation_hours': 1,
+                    'endpoint_semantics': 'HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON',
+                    'source_window_end_semantics': 'COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE',
+                    'source_first_knowledge_status': 'UNKNOWN_NOT_PROVEN_BY_BATCH_END',
+                },
                 'realized': realized,
                 'direction_accuracy': {
                     'btc': {'result': 'ABSTAINED', 'predicted': 'UNAVAILABLE'},
@@ -251,6 +263,7 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
             }
             shadow = {
                 'contract': 'SHADOW_COMPASS_V2_OUTCOME_v1',
+                'scoring_contract': 'SHADOW_COMPASS_V2_SCORING_v3',
                 'forecast_id': 'SCV2-test',
                 'outcome_sha256': 'b' * 64,
                 'forecast_path': '04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/2026/10/01/SCV2-test.json',
@@ -260,7 +273,18 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
                 'horizon': '12h',
                 'target_at_utc': '2026-10-01T17:00:00Z',
                 'target_observation_at_utc': '2026-10-01T16:00:00Z',
-                'time_basis': {'start_reference_at_utc': '2026-10-01T05:00:00Z'},
+                'target_observation_open_at_utc': '2026-10-01T15:00:00Z',
+                'target_source_window_end_utc': '2026-10-01T17:00:00Z',
+                'time_basis': {
+                    'status': 'PASS',
+                    'start_reference_at_utc': '2026-10-01T05:00:00Z',
+                    'nominal_horizon_hours': 12,
+                    'effective_window_hours': 11,
+                    'window_deviation_hours': 1,
+                    'endpoint_semantics': 'HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON',
+                    'source_window_end_semantics': 'COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE',
+                    'source_first_knowledge_status': 'UNKNOWN_NOT_PROVEN_BY_BATCH_END',
+                },
                 'realized': realized,
                 'direction_accuracy': {
                     'btc': {'result': 'CORRECT', 'predicted': 'DOWN'},
@@ -276,6 +300,9 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
             end = datetime(2026, 10, 2, 0, 0, tzinfo=timezone.utc)
             data = module.load_compass_learning(root, start, end)
             self.assertEqual(data['shadow_official_pair_count'], 1)
+            self.assertEqual(data['tactical_outcomes'][0]['scoring_contract'], 'OFFICIAL_DAILY_COMPASS_SCORING_v3')
+            self.assertEqual(data['shadow_v2_outcomes'][0]['scoring_contract'], 'SHADOW_COMPASS_V2_SCORING_v3')
+            self.assertEqual(data['shadow_official_comparison']['quarantined_pair_count'], 0)
             pair = data['shadow_official_comparison']['pairs'][0]
             self.assertEqual(pair['shadow_forecast_id'], 'SCV2-test')
             self.assertEqual(pair['official_compass_id'], 'CMP-test')
