@@ -56,7 +56,7 @@ assert.equal(source.compass.issued_at_utc, '2026-10-11T13:15:27Z');
 assert.equal(source.compass.sell_assessment.state, 'UNAVAILABLE');
 assert.match(html, /data-lang="da"/);
 assert.match(html, /data-lang="en"/);
-assert.match(js, /import \{ initializeLanguage, translateInterface, selectLanguage \} from '\.\/premium-i18n\.js'/);
+assert.match(js, /import \{ initializeLanguage, translateInterface, selectLanguage, currentLanguage \} from '\.\/premium-i18n\.js'/);
 assert.match(i18n, /document\.documentElement\.lang = language/);
 assert.match(html, /id="range-replay"/);
 assert.match(html, /data-motion-step="frozen"/);
