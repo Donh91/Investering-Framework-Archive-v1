@@ -76,6 +76,7 @@ class TemporaryBridgeTests(unittest.TestCase):
                  patch.object(bridge, "gh", return_value="diff --git a/x.py b/x.py\n+assert True\n"):
                 manifest = bridge.build(p, dst)
                 self.assertEqual(manifest["head_sha"], HEAD)
+                self.assertLessEqual(manifest["estimated_upper_cost_usd"], bridge.RESERVATION_USD)
                 self.assertEqual(json.loads((dst / "context.json").read_text())["changed_files"], 1)
                 self.assertNotIn("OPENAI_API_KEY", (dst / "context.json").read_text())
             with patch.object(bridge, "check_window", return_value="2026-10-12"), \
@@ -88,6 +89,16 @@ class TemporaryBridgeTests(unittest.TestCase):
                  patch.object(bridge, "gh", return_value="diff --git a/a b/a\n" + "x" * 70000):
                 with self.assertRaisesRegex(ValueError, "TOO_LARGE"):
                     bridge.build(p, dst)
+
+    def test_escaped_patch_must_fit_reserved_worst_case_cost(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "event.json"
+            p.write_text(json.dumps(EVENT))
+            with patch.object(bridge, "check_window", return_value="2026-10-12"), \
+                 patch.object(bridge, "pr_info", return_value=info()), \
+                 patch.object(bridge, "gh", return_value="diff --git a/x.py b/x.py\n" + "\\" * 39_000):
+                with self.assertRaisesRegex(ValueError, "COST_BOUND_UNPROVEN"):
+                    bridge.build(p, Path(d) / "review")
 
     def test_reservation_is_durable_before_payment_and_single_flight(self):
         with tempfile.TemporaryDirectory() as d:
