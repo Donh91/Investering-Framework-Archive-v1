@@ -32,7 +32,7 @@ from scripts.learning.compass_outcomes import (
 FORECAST_ROOT = Path("04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts")
 OUTPUT_ROOT = Path("04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes")
 CONTRACT = "SHADOW_COMPASS_V2_OUTCOME_v1"
-SCORING_CONTRACT = "SHADOW_COMPASS_V2_SCORING_v2"
+SCORING_CONTRACT = "SHADOW_COMPASS_V2_SCORING_v3"
 
 
 def _source_auto_state(repo: Path, forecast: Mapping[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any]]:
@@ -123,7 +123,7 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     if out.exists():
         return {"status": "ALREADY_MATURED", "path": rel.as_posix()}
 
-    rows = load_hourly(repo, start_reference, target + TARGET_TOLERANCE)
+    rows = load_hourly(repo, start_reference, target + TARGET_TOLERANCE, as_of=now)
     endpoint = closest_target(rows, target)
     if endpoint is None:
         return {
@@ -169,6 +169,7 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
         "target_at_utc": target.isoformat().replace("+00:00", "Z"),
         "target_observation_at_utc": endpoint_close.isoformat().replace("+00:00", "Z") if endpoint_close else None,
         "target_observation_open_at_utc": endpoint["timestamp_utc"].isoformat().replace("+00:00", "Z"),
+        "target_source_window_end_utc": endpoint["source_window_end_utc"].isoformat().replace("+00:00", "Z") if endpoint.get("source_window_end_utc") else None,
         "time_basis": {
             "status": "PASS",
             "nominal_horizon_hours": HORIZONS[horizon],
@@ -177,6 +178,8 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
             "effective_window_hours": round(effective_window_hours, 6),
             "window_deviation_hours": round(window_deviation_hours, 6),
             "endpoint_semantics": "HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON",
+            "source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE",
+            "source_first_knowledge_status": "UNKNOWN_NOT_PROVEN_BY_BATCH_END",
         },
         "frozen_forecast": {
             "direction": predicted,
