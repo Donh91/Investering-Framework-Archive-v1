@@ -239,14 +239,20 @@ def pair_outcomes(
         if i not in used_shadow
     ]
 
+    # Existing CI and consumers require every published pair to be fully
+    # admitted. Preserve legacy/mismatched evidence separately, not as PASS.
+    quarantined_pairs = [pair for pair in pairs if pair["integrity"]["status"] != "PASS"]
+    admitted_pairs = [pair for pair in pairs if pair["integrity"]["status"] == "PASS"]
     return {
         "contract": REPORT_CONTRACT,
         "pairing_contract": PAIRING_CONTRACT,
-        "pair_count": len(pairs),
+        "pair_count": len(admitted_pairs),
+        "quarantined_pair_count": len(quarantined_pairs),
+        "quarantined_pairs": quarantined_pairs,
         "eligible_shadow_count": len(shadow),
         "official_outcome_count": len(official),
         "unpaired_shadow_count": len(unpaired_shadow),
-        "pairs": pairs,
+        "pairs": admitted_pairs,
         "unpaired_shadow": unpaired_shadow,
         "rules": [
             "Pair selection is outcome-blind.",
