@@ -13,9 +13,10 @@ This supersedes previous oversized narrative Kompas hero panels, duplicate callo
 
 1. **HANDLING NU** — authoritative `Official Compass.action_now`, unaltered by any direction/pullback inference. Never manufacture BUY/SELL.
 2. **MARKEDSRETNING · 0–12T** — authoritative `Official Compass.horizons.NEXT_12H.expected_direction`, clearly distinct from action.
-3. **PULLBACK / SELL / DISTRIBUTION** — source-bound `protection_tracker.pullback_risk_state`, `sell_assessment.state`, and `protection_tracker.distribution_risk` respectively. Must remain visible immediately, including UNKNOWN/UNAVAILABLE values. A pullback watch does not authorize SELL.
-4. **Two tables** — `Tid | Retning | Handling` for 0–12h, 1–3d, 5–7d, 2–3w, 4–8w; and `Aktiv | Status | Handling` for BTC, ETH, large caps, mid caps, small caps, microcaps and memes. Memes must never inherit microcaps permission.
-5. **All non-immediate exposition below** — exactly two **native `<details>/<summary>` disclosures**, both closed by default: `Min fortolkning` (1–3d synopsis plus other horizon rationale), and `Pullback, beskyttelse & re-entry` (risk class, ETA limitations, invalidation, underlying evidence, SELL authority and recovery context). An understated source/method link sits at the bottom.
+3. **BULL / BEAR · 1–3d** — a tiny split evidence meter directly from the existing Official Compass `bull_bear_scale.horizons.1_3d` (status OK, total 10, exact source owner and contract). The archived source is **Bull 5 / Bear 5 (NEUTRAL)**; no probability or additional trade permission is implied. Missing, degraded or invalid source data show unavailable rather than a synthesized number. Original **5–7d** and **2–3w** evidence rows are located only in the folded `Min fortolkning` details. Authority: `MARKET_WEATHER_SOURCE_OF_TRUTH_v1`, `EVIDENCE_BALANCE_NOT_PROBABILITY`, `DIRECTION_ONLY_COARSE_v1`.
+4. **PULLBACK / SELL / DISTRIBUTION** — source-bound `protection_tracker.pullback_risk_state`, `sell_assessment.state`, and `protection_tracker.distribution_risk` respectively. Must remain visible immediately, including UNKNOWN/UNAVAILABLE values. A pullback watch does not authorize SELL.
+5. **Two tables** — `Tid | Retning | Handling` for 0–12h, 1–3d, 5–7d, 2–3w, 4–8w; and `Aktiv | Status | Handling` for BTC, ETH, large caps, mid caps, small caps, microcaps and memes. Memes must never inherit microcaps permission.
+6. **All non-immediate exposition below** — exactly two **native `<details>/<summary>` disclosures**, both closed by default: `Min fortolkning` (1–3d synopsis plus other horizon rationale), and `Pullback, beskyttelse & re-entry` (risk class, ETA limitations, invalidation, underlying evidence, SELL authority and recovery context). An understated source/method link sits at the bottom.
 
 ## Implementation inventory
 
@@ -35,3 +36,11 @@ This supersedes previous oversized narrative Kompas hero panels, duplicate callo
 - Existing live GitHub Pages site **must not** be modified without verified rollback, data-parity map and final release approval.
 
 **Visual policy:** source-action first; maximum two readily visible tables; elaborate research belongs in disclosures or the Resultater page. Re-evaluate every new UI surface by whether it shortens the user's time to a safe decision, not whether it looks technologically impressive.
+
+## Bull/Bear micro-scale acceptance · 2026-10-12
+
+- `official-bullbear.mjs` is the pure source-only adapter. It requires the exact approved contract, source owner, integer Bull/Bear values totaling 10, matching published bias and authority flags. Unsupported claims fail closed.
+- `test-official-bullbear.mjs` covers exact archived 5/5 values, three governed horizons, optional positive source fixtures, missing/malformed/mismatched fields and source immutability.
+- `premium-index.html` and `premium.css` present a restrained five-pixel split bar with textual values and an explicit non-probability disclaimer. Other horizons remain inside the existing `Min fortolkning` accordion.
+- DA/EN strings are defined in `premium-i18n.js`. Official action, risk, SELL/distribution, five time horizons and seven asset tiers remain separately governed.
+- This is a design-preview feature only; GitHub Pages production is unchanged. The archived 2026-W41 seed is not a live October 12 market signal.
