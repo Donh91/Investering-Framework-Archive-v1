@@ -123,6 +123,19 @@ class ShadowOfficialPairingTests(unittest.TestCase):
         self.assertEqual(report["pair_count"], 0)
         self.assertEqual(report["unpaired_shadow_count"], 1)
 
+    def test_cross_version_pair_is_excluded_before_selection(self):
+        shadow = outcome(shadow=True, ident="S1", issued="2026-10-01T06:12:00Z", result="CORRECT")
+        near_legacy = outcome(shadow=False, ident="O1", issued="2026-10-01T06:10:00Z", result="CORRECT")
+        near_legacy["scoring_contract"] = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
+        valid_v3 = outcome(shadow=False, ident="O2", issued="2026-10-01T07:00:00Z", result="ABSTAINED")
+        report = pair_outcomes([near_legacy, valid_v3], [shadow])
+        self.assertEqual(report["pair_count"], 1)
+        self.assertEqual(report["pairs"][0]["official_compass_id"], "O2")
+        self.assertEqual(report["pairs"][0]["integrity"]["status"], "PASS")
+        missing = outcome(shadow=False, ident="O3", issued="2026-10-01T06:11:00Z", result="CORRECT")
+        missing.pop("scoring_contract")
+        self.assertEqual(pair_outcomes([missing], [shadow])["pair_count"], 0)
+
     def test_one_to_one_pairing_prevents_reusing_same_official(self):
         s1 = outcome(
             shadow=True,
