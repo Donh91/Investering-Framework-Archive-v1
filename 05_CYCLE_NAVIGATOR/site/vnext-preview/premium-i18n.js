@@ -383,6 +383,15 @@ Object.assign(translations, {
   "Hvad svækker risikovurderingen": "What would weaken the risk assessment"
 });
 
+Object.assign(translations, {
+  "Officiel Bull/Bear-evidensbalance": "Official Bull/Bear evidence balance",
+  "Bull / Bear": "Bull / Bear",
+  "Evidensbalance · ikke sandsynlighed eller købssignal.": "Evidence balance · not a probability or buy signal.",
+  "Bull/Bear · 5–7 dage": "Bull/Bear · 5–7 days",
+  "Bull/Bear · 2–3 uger": "Bull/Bear · 2–3 weeks",
+  "UTILGÆNGELIG": "UNAVAILABLE"
+});
+
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
