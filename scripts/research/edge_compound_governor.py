@@ -2,7 +2,7 @@
 """Deterministic EDGE Compound Governor. Research-routing only, zero market authority."""
 from __future__ import annotations
 import argparse,hashlib,json,math
-from datetime import datetime,timezone
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from typing import Any
 
@@ -44,11 +44,17 @@ def matured_counts(m6:dict|None):
     out={h:0 for h in horizons};families={h:set() for h in horizons}
     unknown={h:0 for h in horizons}
     if not isinstance(m6,dict):return out,{h:0 for h in horizons},unknown
-    for e in m6.get("events") or []:
+    events=m6.get("events")
+    if not isinstance(events,list):
+        return out,{h:0 for h in horizons},unknown
+    for e in events:
         if not isinstance(e,dict):continue
         fid=e.get("episode_family_id")
+        payload=e.get("horizons")
+        if not isinstance(payload,dict):continue
         for h in horizons:
-            row=(e.get("horizons") or {}).get(h) or {}
+            row=payload.get(h)
+            if not isinstance(row,dict):continue
             state=row.get("maturity_state")
             if state=="MATURED":
                 out[h]+=1
@@ -99,6 +105,124 @@ def m6_integrity(m6:dict|None, features:dict|None):
             "first_warning_weight_valid":weights,"feature_cohort_parity":parity,
             "family_lineage_fingerprint":digest(sorted(lineage,key=lambda x:(str(x[0]),str(x[1]))))}
 
+HORIZON_HOURS={"24h":24,"72h":72,"7d":168,"14d":336,"30d":720}
+
+def matured_payload_integrity(m6:dict|None,now:datetime):
+    """Independently fail-close malformed 'MATURED' rows before any Edge replay.
+
+    This is structural validation, NOT source vintage attestation, independent
+    adverse-family proof, scientific scoring, or trading permission.
+    """
+    events=(m6 or {}).get("events") if isinstance(m6,dict) else None
+    if not isinstance(events,list):
+        return {"status":"UNKNOWN_MISSING_OWNER","checked":0,"invalid":0,"reasons":[]}
+    checked=0;invalid=0;reasons=[]
+    def mark(code:str):
+        nonlocal invalid
+        invalid+=1
+        if len(reasons)<8:reasons.append(code)
+    def number(v):
+        return isinstance(v,(float,int)) and not isinstance(v,bool) and math.isfinite(v)
+    def positive(v):
+        return number(v) and v>0
+    def clock(v):
+        if not isinstance(v,str):return None
+        try:
+            t=datetime.fromisoformat(v.replace("Z","+00:00"))
+            return t.astimezone(timezone.utc) if t.tzinfo is not None else None
+        except (ValueError,OverflowError):return None
+    def shifted_clock(dt,hours):
+        if dt is None or hours is None:return None
+        try:return dt+timedelta(hours=hours)
+        except OverflowError:return None
+    for index,event in enumerate(events):
+        if not isinstance(event,dict):
+            mark("INVALID_EVENT_ROW");continue
+        knowledge=clock(event.get("knowledge_timestamp"))
+        horizons=event.get("horizons")
+        if not isinstance(horizons,dict):
+            mark("MISSING_HORIZONS");continue
+        for name,horizon in horizons.items():
+            if not isinstance(horizon,dict):
+                mark("MALFORMED_HORIZON");continue
+            if horizon.get("maturity_state")!="MATURED":continue
+            checked+=1
+            hours=HORIZON_HOURS.get(name)
+            coverage=horizon.get("coverage")
+            target=clock(horizon.get("target_at_utc"))
+            first_close=clock(coverage.get("first_close")) if isinstance(coverage,dict) else None
+            last_close=clock(coverage.get("last_close")) if isinstance(coverage,dict) else None
+            expected_target=shifted_clock(knowledge,hours)
+            max_first_close=shifted_clock(knowledge,1)
+            min_last_close=shifted_clock(target,-1)
+            valid=(hours is not None and knowledge is not None and target is not None and
+                expected_target is not None and max_first_close is not None and min_last_close is not None and
+                target==expected_target and target<=now and
+                isinstance(coverage,dict) and coverage.get("reason")=="COMPLETE_HOURLY_CLOSE_GRID" and
+                number(coverage.get("row_count")) and
+                coverage["row_count"] in (hours,hours+1) and
+                number(coverage.get("max_gap_hours")) and
+                math.isclose(coverage["max_gap_hours"],1.0,rel_tol=0.0,abs_tol=1e-9) and
+                first_close is not None and last_close is not None and
+                knowledge<=first_close<=max_first_close and
+                first_close.minute==0 and first_close.second==0 and first_close.microsecond==0 and
+                min_last_close<=last_close<=target and
+                last_close.minute==0 and last_close.second==0 and last_close.microsecond==0 and
+                last_close>=first_close and
+                last_close-first_close==timedelta(hours=coverage["row_count"]-1))
+            if valid:
+                for symbol in ("BTC","ETH"):
+                    asset=horizon.get(symbol)
+                    if not isinstance(asset,dict):
+                        valid=False;break
+                    reference=asset.get("reference_anchor")
+                    post=asset.get("post_knowledge_close_anchor")
+                    terminal=asset.get("terminal")
+                    if not all(isinstance(item,dict) for item in (reference,post,terminal)):
+                        valid=False;break
+                    start_close=clock(post.get("timestamp"))
+                    end_close=clock(terminal.get("timestamp"))
+                    if not (asset.get("state")=="MATURED" and
+                            positive(reference.get("price")) and
+                            positive(post.get("price")) and positive(terminal.get("close")) and
+                            all(number(reference.get(k)) for k in ("mae_pct","mfe_pct","terminal_return_pct")) and
+                            all(number(post.get(k)) for k in ("mae_pct","mfe_pct","terminal_return_pct")) and
+                            (start_close==first_close and end_close==last_close)):
+                        valid=False;break
+                    barriers=asset.get("adverse_barriers")
+                    expected=("-10.0","-15.0","-20.0") if symbol=="BTC" else ("-15.0","-20.0","-30.0")
+                    if not isinstance(barriers,dict) or set(barriers)!=set(expected):
+                        valid=False;break
+                    # The immutable owner contract supplies three fixed adverse
+                    # barriers per asset, including explicit untouched outcomes.
+                    previous_touch=None
+                    for barrier_level in expected:
+                        row=barriers[barrier_level]
+                        if not isinstance(row,dict) or type(row.get("touched")) is not bool:
+                            valid=False;break
+                        # Owner barrier_view compares FIRST reference price with
+                        # the same full-post-knowledge low series as the MAE.
+                        # Threshold crossing and first-touch order must agree.
+                        should_touch=reference["mae_pct"]<=float(barrier_level)
+                        if row["touched"] is not should_touch:
+                            valid=False;break
+                        if (row.get("basis")!="FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS" or
+                            row.get("touch_time_semantics")!="HOURLY_BAR_END_NOT_EXACT_LOW_TIME"):
+                            valid=False;break
+                        when=clock(row.get("first_touch_timestamp"))
+                        if row["touched"]:
+                            if (when is None or not start_close<=when<=end_close or
+                                (when-start_close).total_seconds()%3600!=0 or
+                                (previous_touch is not None and when<previous_touch)):
+                                valid=False;break
+                            previous_touch=when
+                        elif row.get("first_touch_timestamp") is not None:
+                            valid=False;break
+                    if not valid:break
+            if not valid:mark(f"INVALID_MATURED_HORIZON_{name}")
+    return {"status":"BLOCKED" if invalid else ("PASS" if checked else "PASS_NO_MATURED_YET"),
+            "checked":checked,"invalid":invalid,"reasons":reasons}
+
 def feature_counts(features:dict|None):
     rows=(features or {}).get("rows") if isinstance(features,dict) else []
     rows=rows if isinstance(rows,list) else []
@@ -122,7 +246,7 @@ def latest_sol(root:Path):
     if summary.startswith("VERDICT="):verdict=summary.split(";",1)[0].split("=",1)[1]
     return {"status":"PASS","comment_id":cid,"path":p.relative_to(root).as_posix(),"sha256":file_sha(p),"verdict":verdict}
 
-def semantic_snapshot(root:Path):
+def semantic_snapshot(root:Path,now:datetime):
     pointer,pb=load(root,"compass_pointer");freeze,fb=freeze_from_pointer(root,pointer)
     m6,mb=load(root,"m6_events");features,xb=load(root,"edge_features");cal,cb=load(root,"calibration")
     tracker=(freeze or {}).get("protection_tracker") if isinstance(freeze,dict) else {}
@@ -130,18 +254,20 @@ def semantic_snapshot(root:Path):
     maturity,families,unknown=matured_counts(m6)
     fcount,pit,unverified=feature_counts(features)
     m6_check=m6_integrity(m6,features)
+    payload_check=matured_payload_integrity(m6,now)
     sol=latest_sol(root)
     blockers=[]
     if isinstance(features,dict) and features.get("integrity_revision")!="v1.1_PIT_STRICT":blockers.append("FEATURE_COLLECTOR_INTEGRITY_REVISION_NOT_STRICT")
     if isinstance(m6,dict) and m6.get("integrity_revision")!="v1.2_POST_KNOWLEDGE_BAR_INTEGRITY":blockers.append("M6_OUTCOME_INTEGRITY_REVISION_NOT_STRICT")
     if unverified:blockers.append("PIT_UNVERIFIED_FEATURE_ROWS")
     if m6_check["status"]!="PASS":blockers.append("M6_EVENT_CHRONOLOGY_FAMILY_OR_COHORT_INVALID")
+    if payload_check["status"]=="BLOCKED":blockers.append("M6_MATURED_OUTCOME_PAYLOAD_INVALID")
     primary_state=tracker.get("pullback_risk_state") or "UNAVAILABLE"
     if primary_state in {"ELEVATED","HIGH","CONFIRMED"} and fcount==0:blockers.append("PRIMARY_WARNING_WITHOUT_EDGE_FEATURE_ROW")
     semantic={
       "pullback_risk_state":primary_state,
       "distribution_risk":tracker.get("distribution_risk") or "UNKNOWN",
-      "m6_integrity":m6_check,
+      "m6_integrity":m6_check,"m6_matured_payload_integrity":payload_check,
       "m6_event_count":int((m6 or {}).get("event_count") or 0) if isinstance(m6,dict) else 0,
       "m6_provisional_family_count":int((m6 or {}).get("provisional_independent_family_count") or 0) if isinstance(m6,dict) else 0,
       "m6_family_semantics":"PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
@@ -175,6 +301,7 @@ def deltas(prev:dict|None,current:dict):
             if a.get(k)!=b.get(k):d.append(f"{group}.{k}:{a.get(k)}->{b.get(k)}")
     if old.get("blockers")!=current.get("blockers"):d.append("BLOCKER_SET_CHANGED")
     if old.get("m6_integrity")!=current.get("m6_integrity"):d.append("M6_FAMILY_OR_COHORT_LINEAGE_CHANGED")
+    if old.get("m6_matured_payload_integrity")!=current.get("m6_matured_payload_integrity"):d.append("M6_MATURED_PAYLOAD_INTEGRITY_CHANGED")
     if old.get("feature_integrity_revision")!=current.get("feature_integrity_revision"):d.append("FEATURE_INTEGRITY_REVISION_CHANGED")
     if old.get("m6_integrity_revision")!=current.get("m6_integrity_revision"):d.append("M6_INTEGRITY_REVISION_CHANGED")
     return d
@@ -205,7 +332,7 @@ def choose(prev:dict|None,s:dict,d:list[str]):
     return "NOOP",False,False,"No material Edge evidence requiring action beyond existing collectors."
 
 def build(root:Path,output:Path,history_root:Path,now:datetime):
-    current,bindings=semantic_snapshot(root);prev=previous_state(output);d=deltas(prev,current)
+    current,bindings=semantic_snapshot(root,now);prev=previous_state(output);d=deltas(prev,current)
     # Earlier v1 bootstrap treated a first snapshot's already-matured families as
     # new discoveries and emitted a false CONCLUSION_REVIEW. Reconcile LATEST
     # without silently mutating its immutable archived historical copy.
