@@ -38,6 +38,7 @@ class CompassOutcomeTest(unittest.TestCase):
             "contract": "OFFICIAL_DAILY_COMPASS_v1",
             "compass_id": "CMP-20260916-test",
             "compass_sha256": "frozen-sha",
+            "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
             "issued_at_utc": "2026-09-16T12:00:00Z",
             "market_reference": {"btc_usdt": 100.0, "eth_usdt": 50.0, "ethbtc": 0.5, "observation_open_utc": "2026-09-16T11:00:00Z"},
             "horizons": {
@@ -61,6 +62,26 @@ class CompassOutcomeTest(unittest.TestCase):
             writer = csv.DictWriter(handle, fieldnames=["timestamp_utc", "btc_close", "eth_close", "ethbtc_close"])
             writer.writeheader()
             writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z", "btc_close": "95", "eth_close": "47", "ethbtc_close": "0.4947"})
+
+    def test_legacy_frozen_v2_cannot_be_silently_matured_under_v3(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/legacy.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            frozen = self.freeze()
+            frozen["scoring_contract"] = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
+            path.write_text(json.dumps(frozen))
+            original = path.read_bytes()
+            self.write_hourly(root)
+            result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
+            self.assertEqual(result["frozen_scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v2")
+            self.assertEqual(original, path.read_bytes())
+            self.assertFalse((root / "04_MARKET_LEARNING/handlekompas/official/outcomes").exists())
+            frozen.pop("scoring_contract")
+            path.write_text(json.dumps(frozen))
+            result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
 
     def test_cannot_score_before_maturity(self):
         with tempfile.TemporaryDirectory() as tmp:
