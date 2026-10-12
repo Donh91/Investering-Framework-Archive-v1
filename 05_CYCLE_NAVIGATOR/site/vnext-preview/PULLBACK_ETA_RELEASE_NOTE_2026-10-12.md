@@ -63,6 +63,7 @@ After the reset, read this source file and current main/branch state, then synch
 | `premium-i18n.js` | `src/i18n.js` |
 | `official-pullback-eta.mjs` | `src/official-pullback-eta.mjs` |
 | `official-pullback-stage.mjs` | `src/official-pullback-stage.mjs` |
+| `official-pullback-investor-view.mjs` | `src/official-pullback-investor-view.mjs` |
 | Existing `seed.json` | `public/seed.json` stays pinned and unchanged |
 
 Keep `src/official-bullbear.mjs` unchanged. Preserve existing AppDeploy E2E test suite and append risk-ETA functional test if not present.
@@ -78,3 +79,15 @@ The user requires the Pullback watch to progress through meaningful **official**
 The first-party live feed adapter `official-feed-parity.mjs` is also extended to expose `pullback_stage` only for valid fresh owner/weekly identity. **Merely adding this adapter does not activate the new vNext production site or guarantee the original upstream owner will produce new intraday stages.** The original source is predominantly a weekly risk projection. The required internal risk-to-action shadow research / prospective escalation mission, including lawful market clocks, independent evidence families, falsifiers, ETA calibration, missed cases, and future versioned admission, is owned by existing #1553 and documented in [PULLBACK_PROGRESSION_INTERNAL_HANDOVER_2026-10-12.md](PULLBACK_PROGRESSION_INTERNAL_HANDOVER_2026-10-12.md), with site/release coordination at #1578.
 
 The proper statement remains: **Current W42 Official Compass says ELEVATED, LOW evidence quality, no onset/end and SELL UNAVAILABLE; there is no owner-qualified 'imminent' signal.** Missingness never becomes certainty, and W42 site preview must not copy these live values into a frozen W41 seed.
+
+## 12 October investor escalation / quantified odds blocker (same design, no new page)
+
+The user's investor-facing R4P Edge request is attached to [the same Compass Horizon Edge PR #1573](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1573) via `R4P_PULLBACK_INVESTOR_DECISION_EDGE_20261012`, not a separate API runner. The site-specific acceptance contract is [PULLBACK_ESCALATOR_INVESTOR_UX_ACCEPTANCE_2026-10-12.md](PULLBACK_ESCALATOR_INVESTOR_UX_ACCEPTANCE_2026-10-12.md).
+
+**New existing Kompas UI assets staged on PR #1576:**
+- Five **discrete** `NORMAL/BUILDING/ELEVATED/HIGH/CONFIRMED` risk-stage marks (only the current owner value marked). Not a smooth bar, likelihood number or countdown. Missing source clears all highlights.
+- Extended the SAME originally collapsed `Pullback, beskyttelse & re-entry` native dropdown with 10 very small investor facts (ETA, 1–10 probability **NOT CALIBRATED**, BTC/ETH size, cap-tier alt impact, duration/re-entry, 2–3w source direction, 4–8w cycle direction, bear regime **NOT CLASSIFIED**, source drivers/falsification). Unavailable stays explicit. Nothing is put into the user's existing fixed decision tables.
+- Added the `official-pullback-investor-view.mjs` pure module and 10 dedicated tests, scoped static checks, and 2 public-aligned-feed/negative tests; synced Vite source copy. Frontend does not invent asset beta, BTC size, portfolio-specific stablecoin transfers, Sell or numerical likelihood.
+- Current Pullback Learning eligibility is `SUSPENDED_NO_ELIGIBILITY_CONTRACT`, **zero closed episodes**, so its descriptive snapshots cannot justify 1–10 confidence or realistic sell→reload benefits yet. All new research belongs to existing #1553/#1530/#1516 / #1573; never auto-promote experimental edge.
+
+**Release boundary**: GitHub CI review of this source does NOT mean AppDeploy's hosted preview already includes new stages/dropdown. Existing stable preview remains on earlier version; quota/reset and truly small-device QA still separate. Original public Pages production site unchanged. Preserve this honest state in next handover.
