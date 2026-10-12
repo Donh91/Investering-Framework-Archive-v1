@@ -122,12 +122,75 @@ def validate_actions_week_binding(now: datetime, mode: str, *, event_name: str, 
         raise ValueError("WEEKLY_CLOSE_SCHEDULED_WEEK_ROLLOVER_UNBOUND")
 
 
+def verify_existing_final(now: datetime, output_root: Path) -> dict[str, object]:
+    """Consume a settled producer package without fetching or rewriting source."""
+    start, end, final, mode = resolve_window(now, "final")
+    week = start.isocalendar()
+    folder = output_root / str(week.year) / f"W{week.week:02d}"
+    package_path = folder / "WEEKLY_MARKET_CLOSE_PACKAGE.json"
+    receipt_path = folder / "WEEKLY_MARKET_CLOSE_RECEIPT.json"
+    pointer_path = output_root / "LATEST_WEEKLY_MARKET_CLOSE.json"
+    try:
+        package_bytes = package_path.read_bytes()
+        package = json.loads(package_bytes)
+        receipt = json.loads(receipt_path.read_bytes())
+        pointer = json.loads(pointer_path.read_bytes())
+        digest = hashlib.sha256(package_bytes).hexdigest()
+        expected_hours = int((end - start).total_seconds() // 3600)
+        def match(obj: object, contract: str) -> bool:
+            return (
+                isinstance(obj, dict)
+                and obj.get("contract") == contract
+                and obj.get("iso_year") == week.year
+                and obj.get("iso_week") == week.week
+                and obj.get("final") is True
+                and obj.get("close_mode") == mode
+                and obj.get("completeness") == "COMPLETE"
+            )
+        symbols = package.get("symbols", {})
+        valid = (
+            match(package, "WEEKLY_MARKET_CLOSE_PACKAGE_v3")
+            and match(receipt, "WEEKLY_MARKET_CLOSE_RECEIPT_v3")
+            and match(pointer, "WEEKLY_MARKET_CLOSE_POINTER_v3")
+            and package.get("window_start_utc") == start.isoformat().replace("+00:00", "Z")
+            and package.get("window_end_utc") == end.isoformat().replace("+00:00", "Z")
+            and pointer.get("window_end_utc") == package.get("window_end_utc")
+            and receipt.get("status") == pointer.get("status") == "PASS"
+            and receipt.get("sha256") == pointer.get("sha256") == digest
+            and receipt.get("generated_at_utc") == package.get("generated_at_utc")
+            and set(receipt.get("symbols", [])) == set(SYMBOLS)
+            and pointer.get("path") == str(package_path.relative_to(output_root.parent))
+            and isinstance(symbols, dict)
+            and set(symbols) == set(SYMBOLS)
+            and all(
+                isinstance(symbols[name], dict)
+                and symbols[name].get("hour_count") == expected_hours
+                and symbols[name].get("expected_hour_count") == expected_hours
+                and symbols[name].get("completeness") == "PASS"
+                for name in SYMBOLS
+            )
+        )
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        valid = False
+    if not valid:
+        raise SystemExit("EXISTING_FINAL_MARKET_CLOSE_INTEGRITY_FAIL_CLOSED")
+    return {
+        "status": "PASS",
+        "mode": "REUSE_VERIFIED_FINAL_NO_SOURCE_MUTATION",
+        "iso_year": week.year,
+        "iso_week": week.week,
+        "sha256": digest,
+        "source_path": str(package_path),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--mode", choices=["preclose", "final"], required=True)
     parser.add_argument("--now-utc", help="Test-only ISO timestamp")
     parser.add_argument("--base-url", default=BINANCE_MARKET_DATA_BASE, help="Test override; production uses Binance market-data-only endpoint")
+    parser.add_argument("--require-existing-final", action="store_true", help="Consumer mode: verify immutable FINAL package and receipt, never fetch or rewrite")
     args = parser.parse_args()
 
     now = datetime.fromisoformat(args.now_utc.replace("Z", "+00:00")) if args.now_utc else datetime.now(timezone.utc)
@@ -135,6 +198,11 @@ def main() -> None:
         now = now.replace(tzinfo=timezone.utc)
     now = now.astimezone(timezone.utc)
     validate_actions_week_binding(now, args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''), run_attempt=os.getenv('GITHUB_RUN_ATTEMPT', ''))
+    if args.require_existing_final:
+        if args.mode != "final":
+            raise SystemExit("EXISTING_FINAL_REQUIRES_FINAL_MODE")
+        print(json.dumps(verify_existing_final(now, args.output_root), sort_keys=True))
+        return
     start, end, final, close_mode = resolve_window(now, args.mode)
     if final and now < end:
         raise SystemExit("FINAL_WINDOW_NOT_YET_CLOSED")
