@@ -167,3 +167,15 @@ Publish separated families, effective N, coverage, abstentions, raw misses, fals
 Each run must use the **same mission ID**, existing research artifacts and receipt format; `EXECUTED` only upon an actual source/PIT run with exact results, not this staged plan. R4-P value may be `ECONOMIC_EDGE_NOT_MEASURABLE` and numeric confidence `NOT_CALIBRATED`; that is a valid finding.
 
 **Routing note:** The user referred to an API Edge audit "already running". This document is queued via the existing PR/issue source of truth. An API executor that is ALREADY active must fresh-read this addendum and explicitly acknowledge it in its next stage receipt; **creating this file/comment alone does not inject instructions into a currently-running external model session**. Do not claim API run started or modified without a concrete run receipt.
+
+## 9. Newly verified first-party Pullback Learning eligibility blocker (2026-10-12)
+
+Direct fresh-main readback (not a subjective estimate):
+
+- `04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json` git blob `84053fac2da1800d01d5a13b24e0371152c43339`: `SUSPENDED_NO_ELIGIBILITY_CONTRACT`. `observation_collection=true` and `adaptive_descriptive_statistics=true` are permitted; **mechanical_research_classification=false, new_episode_creation=false, existing_episode_maturation=false, canonical_market_state=false, portfolio_execution=false, rebuy_permission=false**. Must be independently governed for future eligibility.
+- `04_MARKET_LEARNING/pullback_learning/LATEST.json` git blob `9d28a17a9256be1c7d31d8d3354156b9b9ba7a87`, generated 2026-10-12T16:11:36Z: `sample=181` accumulated descriptive readings (adaptive observation_count 180), but `REGIME_NOT_ACTIVE`, `ELIGIBILITY_CONTRACT_UNAVAILABLE`. This is **NOT 181 independent timed predictions**.
+- `04_MARKET_LEARNING/pullback_learning/PERFORMANCE_SUMMARY.json` git blob `5007dc1ff593d585df210ac3f3f524856967b9b5`: **closed_episode_count=0**, `INSUFFICIENT_SAMPLE`, hypothetical 10% trim/reload uplift and hit-rate are **NULL**. The mentioned 10/30 episode descriptive floors are not prospective out-of-sample evidence, and do not lift suspension.
+
+**R4P gating:** Current Pullback Learning itself cannot supply calibrated 1–10 odds, active intraday event classification, portfolio trim/re-entry economics or a convincing bear-regime transition. Do not bypass its eligibility suspension using an EDGE/M6 shadow score or retired breadth proxies. Existing M6/EDGE-001 may continue bounded research **independently** under #1530/#1553; canonical risk escalation requires separate promotion acceptance. All present investor dropdown outputs must fail closed on unsupported likelihood/magnitude/duration/alt-tier data.
+
+**Source-vintage:** These exact blobs are a 12 Oct 2026 audit snapshot; each executing API stage must fresh-read latest main and report when the source has changed.
