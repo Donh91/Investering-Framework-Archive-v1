@@ -21,7 +21,18 @@ def outcome(
         "issued_at_utc": issued,
         "target_at_utc": "2026-10-01T17:00:00Z",
         "target_observation_at_utc": "2026-10-01T16:00:00Z",
-        "time_basis": {"start_reference_at_utc": start},
+        "target_observation_open_at_utc": "2026-10-01T15:00:00Z",
+        "target_source_window_end_utc": "2026-10-01T17:00:00Z",
+        "time_basis": {
+            "status": "PASS",
+            "start_reference_at_utc": start,
+            "nominal_horizon_hours": 12,
+            "effective_window_hours": 11,
+            "window_deviation_hours": 1,
+            "endpoint_semantics": "HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON",
+            "source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE",
+            "source_first_knowledge_status": "UNKNOWN_NOT_PROVEN_BY_BATCH_END",
+        },
         "realized": {
             "btc_return_pct": -0.2,
             "eth_return_pct": -0.3,
@@ -147,6 +158,39 @@ class ShadowOfficialPairingTests(unittest.TestCase):
         pair = report["quarantined_pairs"][0]
         self.assertEqual(pair["integrity"]["status"], "LEGACY_TIME_BASIS_UNVERIFIED")
         self.assertEqual(pair["asset_comparisons"]["btc"]["comparison_state"], "PAIR_TIME_BASIS_UNVERIFIED")
+
+    def test_foreign_v3_suffix_never_admitted(self):
+        shadow = outcome(shadow=True, ident="S1", issued="2026-10-01T06:12:00Z", result="CORRECT")
+        official = outcome(shadow=False, ident="O1", issued="2026-10-01T06:10:00Z", result="CORRECT")
+        shadow["scoring_contract"] = "FOREIGN_SCORING_v3"
+        report = pair_outcomes([official], [shadow])
+        self.assertEqual(report["pair_count"], 0)
+        self.assertEqual(report["quarantined_pair_count"], 0)
+
+    def test_v3_time_basis_missing_or_malformed_is_quarantined(self):
+        for defect in ("missing_open", "wrong_close", "missing_batch", "bad_status", "wrong_semantics", "bad_effective", "foreign_official"):
+            with self.subTest(defect=defect):
+                shadow = outcome(shadow=True, ident="S1", issued="2026-10-01T06:12:00Z", result="CORRECT")
+                official = outcome(shadow=False, ident="O1", issued="2026-10-01T06:10:00Z", result="CORRECT")
+                if defect == "missing_open":
+                    shadow.pop("target_observation_open_at_utc")
+                elif defect == "wrong_close":
+                    shadow["target_observation_open_at_utc"] = "2026-10-01T14:00:00Z"
+                elif defect == "missing_batch":
+                    shadow["target_source_window_end_utc"] = None
+                elif defect == "bad_status":
+                    shadow["time_basis"]["status"] = "FAIL"
+                elif defect == "wrong_semantics":
+                    shadow["time_basis"]["source_window_end_semantics"] = "BATCH_IS_CANDLE"
+                elif defect == "bad_effective":
+                    shadow["time_basis"]["effective_window_hours"] = 12
+                else:
+                    official["scoring_contract"] = "OTHER_OFFICIAL_SCORING_v3"
+                report = pair_outcomes([official], [shadow])
+                self.assertEqual(report["pair_count"], 0)
+                if defect != "foreign_official":
+                    self.assertEqual(report["quarantined_pair_count"], 1)
+                    self.assertEqual(report["quarantined_pairs"][0]["integrity"]["status"], "LEGACY_TIME_BASIS_UNVERIFIED")
 
     def test_one_to_one_pairing_prevents_reusing_same_official(self):
         s1 = outcome(
