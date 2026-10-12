@@ -79,6 +79,24 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             out = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 11, 59, tzinfo=timezone.utc))
             self.assertIsNone(out)
 
+    def test_existing_legacy_outcome_remains_already_matured_without_rewrite(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            forecast = self.fixture(root)
+            frozen = json.loads(forecast.read_text())
+            frozen["scoring_contract"] = "SHADOW_COMPASS_V2_SCORING_v2"
+            forecast.write_text(json.dumps(frozen))
+            out = root / "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes/2026/09/01/SCV2-test_12h.json"
+            write_json(out, {"immutable": "legacy-v2"})
+            original = out.read_bytes()
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 13, tzinfo=timezone.utc))
+            self.assertEqual(result["status"], "ALREADY_MATURED")
+            self.assertEqual(out.read_bytes(), original)
+            out.unlink()
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 13, tzinfo=timezone.utc))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
+            self.assertFalse(out.exists())
+
     def test_legacy_shadow_forecast_cannot_mature_under_v3(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
