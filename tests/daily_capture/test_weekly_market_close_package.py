@@ -146,6 +146,44 @@ class WeeklyCloseArchitectureTests(unittest.TestCase):
                                                       'preclose', event_name='schedule',
                                                       event_path=str(event), run_attempt='1')
 
+    def test_master_monday_reuses_final_source_without_mutation_or_api_call(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'weekly_close'
+            self.run_weekly(root, mode='final')
+            paths = sorted(root.rglob('*.json'))
+            before = {str(p): p.read_bytes() for p in paths}
+            argv = ['weekly', '--output-root', str(root), '--mode', 'final',
+                    '--now-utc', '2026-08-31T06:27:00Z', '--require-existing-final']
+            with patch('sys.argv', argv), patch.object(weekly, 'fetch_klines') as fetch, contextlib.redirect_stdout(io.StringIO()) as output:
+                weekly.main()
+            fetch.assert_not_called()
+            receipt = json.loads(output.getvalue())
+            self.assertEqual(receipt['status'], 'PASS')
+            self.assertEqual(receipt['mode'], 'REUSE_VERIFIED_FINAL_NO_SOURCE_MUTATION')
+            self.assertEqual(before, {str(p): p.read_bytes() for p in paths})
+            self.assertIn('--require-existing-final', Path('.github/workflows/weekly-api-calibration-shadow.yml').read_text())
+
+    def test_master_monday_missing_or_corrupt_final_source_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'weekly_close'
+            with self.assertRaisesRegex(SystemExit, 'EXISTING_FINAL_MARKET_CLOSE_INTEGRITY_FAIL_CLOSED'):
+                weekly.verify_existing_final(datetime(2026, 8, 31, 6, 27, tzinfo=timezone.utc), root)
+            self.assertFalse(root.exists())
+            self.run_weekly(root, mode='final')
+            receipt_path = root / '2026/W35/WEEKLY_MARKET_CLOSE_RECEIPT.json'
+            original = receipt_path.read_bytes()
+            bad = json.loads(original)
+            bad['sha256'] = '0' * 64
+            receipt_path.write_text(json.dumps(bad))
+            with patch.object(weekly, 'fetch_klines') as fetch:
+                with self.assertRaisesRegex(SystemExit, 'EXISTING_FINAL_MARKET_CLOSE_INTEGRITY_FAIL_CLOSED'):
+                    weekly.verify_existing_final(datetime(2026, 8, 31, 6, 27, tzinfo=timezone.utc), root)
+                fetch.assert_not_called()
+            self.assertEqual(json.loads(receipt_path.read_text())['sha256'], '0' * 64)
+            receipt_path.write_bytes(original)
+            with self.assertRaisesRegex(SystemExit, 'EXISTING_FINAL_MARKET_CLOSE_INTEGRITY_FAIL_CLOSED'):
+                weekly.verify_existing_final(datetime(2026, 9, 7, 6, 27, tzinfo=timezone.utc), root)
+
     def test_preclose_is_partial_and_non_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / 'weekly_close'
