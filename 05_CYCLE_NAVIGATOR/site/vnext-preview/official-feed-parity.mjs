@@ -11,6 +11,7 @@
  */
 
 import { officialPullbackDisplay } from './official-pullback-eta.mjs';
+import { officialPullbackStage } from './official-pullback-stage.mjs';
 import { officialBullBear } from './official-bullbear.mjs';
 
 const RANGE_FORMULA = '70pct_containment_plus_30pct_jaccard';
@@ -81,7 +82,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
       weekly_alignment: 'UNVERIFIED', action_now: 'UNAVAILABLE',
       pullback_risk_state: 'UNAVAILABLE', distribution_risk: 'UNKNOWN',
       sell_assessment_state: 'UNAVAILABLE', reentry_state: 'UNAVAILABLE',
-      pullback_window: null, bull_bear_1_3d: null,
+      pullback_window: null, pullback_stage: null, bull_bear_1_3d: null,
       permit_path_live_gates: false
     },
     completed_score: {
@@ -171,6 +172,16 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
           caution: p.note
         } : null;
       })() : null,
+    pullback_stage: cOK && cnJoined ? (() => {
+      const p=officialPullbackStage(compass, {forecast_week: forecastWeek}, 'da');
+      return p.status==='SOURCE_VALID' ? {
+        source_risk_state:p.sourceRiskState, stage_label:p.stageLabel,
+        ordinal_risk_class:p.ordinalRiskClass, proximity_label:p.proximityLabel,
+        evidence_quality:p.qualityLabel, quality_semantics:p.qualitySemantics,
+        source_week:p.sourceWeek, authority:'PRESENTATION_ONLY',
+        sell_permission:false, confirmed_market_decline:false
+      } : null;
+    })() : null,
     bull_bear_1_3d: cOK ? officialBullBear(compass, '1_3d') : null,
     permit_path_live_gates: cOK && cnJoined
   };
