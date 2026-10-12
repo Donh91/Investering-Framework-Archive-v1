@@ -1,0 +1,10 @@
+# S5: Project -> CA + Alpha Buy Alerts (successor)
+**Host:** `6ab38b90cfe4819193b0d9ccdf4e4e21`. **Initial state:** DISABLED pending Master Audit verified terminal closure and slot handback. This README alone NEVER enables it.
+
+**Unique domain:** prelaunch source-first radar, early exact CA binding, bounded qualified Alpha candidate presentation, and missed-discovery receipts. Not the main Alpha scanner runtime, not outcome-scoring, not portfolio-market warning and not a second supervisor.
+
+Read fresh Archive main AGENTS, current #1087/#1339/#1340, MAL AGENTS/authority map and existing Pons/project-to-CA/Moonshot/Phoenix outputs. Reuse the prior Project->CA task's strict launch/identity/sellability/convexity gates, but require prospective source and on-chain first-seen receipts before credit. Broad first-party discovery <=1/day, lightweight existing-project CA status on qualified candidates only, avoid repeated paid source calls. Existing on-chain scanners/GitHub Actions own source acquisition. Exact chain+CA or UNKNOWN; no ticker-based guess; user-before-machine = MISS. WATCH/PRELAUNCH is NOT BUY. CA_PUBLISHED is VERIFY_NOW; NEAR_BUY/BUY_REVIEW only after existing mandatory market, wallet, liquidity, safety and independent evidence gates. No auto-trade.
+
+Alert only on material qualified transition; no filler Top 10 when zero candidates. Hand off matured outcomes to S4 via existing #77/#126, not a second outcome ledger. High-severity system/market alert remains S3. Fail closed on missing source, issuer conflict, stale data, unverifiable sell route or provider failure. **Current notification state may be off; no promise of push without host/recipient verification.**
+
+**Activation acceptance:** Audit task actually disabled and host active count <=4, terminal #1156 receipt exists, task prompt revalidated against fresh owner governance, current main runbook merged and read back, host task enabled and read back, one natural source-backed run. If any fail: leave successor disabled, report the exact blocker; do not steal S1/S2/S3/S4.
