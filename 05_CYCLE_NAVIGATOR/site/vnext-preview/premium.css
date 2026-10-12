@@ -672,3 +672,9 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
  .path-phase:before{background:repeating-linear-gradient(180deg,#cbd6e3 0,#cbd6e3 5px,transparent 5px,transparent 11px)}
  .path-lower{padding:15px 20px}
 }
+
+/* Status tones are tied to official direction codes; never a browser-derived forecast. */
+.hero-direction[data-direction="UP"],.hero-direction[data-direction="BULLISH"]{color:#246b55}
+.hero-direction[data-direction="DOWN"],.hero-direction[data-direction="BEARISH"]{color:#9d554c}
+.hero-direction[data-direction="MIXED"],.hero-direction[data-direction="SIDEWAYS"],.hero-direction[data-direction="NEUTRAL"]{color:#866a37}
+.hero-direction[data-direction="UNAVAILABLE"],.hero-direction[data-direction="UNKNOWN"]{color:#7d8a99}
