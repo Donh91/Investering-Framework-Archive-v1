@@ -1,5 +1,5 @@
 import json,tempfile,unittest
-from datetime import datetime,timezone
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from scripts.research.edge_compound_governor import build
 
@@ -10,6 +10,28 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
         m6=root/"research/framework_memory/m6_warning_events/LATEST.json";m6.parent.mkdir(parents=True,exist_ok=True)
         f=root/"research/framework_memory/edge001_tsunami_features/LATEST.json";f.parent.mkdir(parents=True,exist_ok=True)
         when="2026-10-07T00:00:00Z"
+        # A synthetic MATURED outcome must include the frozen complete path
+        # contract. A bare maturity string is deliberately insufficient.
+        start=datetime.fromisoformat(when.replace("Z","+00:00"))
+        expanded={}
+        for name,row in horizons.items():
+            h=dict(row)
+            if h.get("maturity_state")=="MATURED":
+                hours={"24h":24,"72h":72,"7d":168,"14d":336,"30d":720}[name]
+                target=(start+timedelta(hours=hours)).isoformat().replace("+00:00","Z")
+                first=(start+timedelta(hours=1)).isoformat().replace("+00:00","Z")
+                outcome={"state":"MATURED",
+                    "reference_anchor":{"price":100.0,"mae_pct":-1.0,"mfe_pct":2.0,"terminal_return_pct":0.0},
+                    "post_knowledge_close_anchor":{"timestamp":first,"price":100.0,
+                        "mae_pct":-1.0,"mfe_pct":2.0,"terminal_return_pct":0.0},
+                    "terminal":{"timestamp":target,"close":100.0},
+                    "adverse_barriers":{"-10.0":{"touched":False}}}
+                h.update({"target_at_utc":target,
+                    "coverage":{"reason":"COMPLETE_HOURLY_CLOSE_GRID",
+                        "row_count":hours,"max_gap_hours":1.0},
+                    "BTC":outcome,"ETH":json.loads(json.dumps(outcome))})
+            expanded[name]=h
+        horizons=expanded
         event={"compass_id":"CMP-TEST","knowledge_timestamp":when,
             "episode_family_id":"M6F-20261007T000000Z","independent_family_weight":1.0,
             "horizons":horizons}
@@ -71,6 +93,58 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             self.assertFalse(second["conclusion_layer"]["review_due"])
             self.assertEqual(second["semantic_state"]["m6_family_semantics"],
                 "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES")
+
+    def test_complete_matured_outcome_evidence_is_structurally_valid(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"},
+                                       "72h":{"maturity_state":"PENDING"}})
+            result=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+            integrity=result["semantic_state"]["m6_matured_payload_integrity"]
+            self.assertEqual(integrity["status"],"PASS")
+            self.assertEqual(integrity["checked"],1)
+            self.assertEqual(integrity["invalid"],0)
+            self.assertNotIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",result["semantic_state"]["blockers"])
+            self.assertEqual(result["decision"],"COLLECT")
+            self.assertFalse(result["external_routing"]["automatic_dispatch"])
+
+    def test_malformed_matured_asset_path_fails_closed(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"7d":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            del owner["events"][0]["horizons"]["7d"]["ETH"]["post_knowledge_close_anchor"]
+            path.write_text(json.dumps(owner))
+            result=build(root,root/"out.json",root/"history",datetime(2026,10,15,tzinfo=timezone.utc))
+            self.assertEqual(result["decision"],"FALSIFY")
+            self.assertEqual(result["semantic_state"]["m6_matured_payload_integrity"]["status"],"BLOCKED")
+            self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",result["semantic_state"]["blockers"])
+            self.assertFalse(result["external_routing"]["automatic_dispatch"])
+
+    def test_false_full_grid_is_not_matured_payload_pass(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            owner["events"][0]["horizons"]["24h"]["coverage"]["row_count"]=5
+            path.write_text(json.dumps(owner))
+            result=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(result["decision"],"FALSIFY")
+            self.assertEqual(result["semantic_state"]["m6_matured_payload_integrity"]["checked"],1)
+            self.assertEqual(result["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+
+    def test_no_matured_horizons_are_not_evidence_of_edge(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"30d":{"maturity_state":"PENDING"}})
+            result=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+            integrity=result["semantic_state"]["m6_matured_payload_integrity"]
+            self.assertEqual(integrity["status"],"PASS_NO_MATURED_YET")
+            self.assertEqual(integrity["checked"],0)
+            self.assertEqual(result["semantic_state"]["information_edge_claim"],"NOT_ESTABLISHED")
+            self.assertEqual(result["semantic_state"]["economic_action_edge_claim"],"NOT_ESTABLISHED")
 
     def test_out_of_order_m6_owner_blocks_fresh_governor(self):
         with tempfile.TemporaryDirectory() as t:
