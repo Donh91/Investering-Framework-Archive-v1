@@ -30,7 +30,7 @@ for (const [src,target] of [
 writeFileSync(join(root,'package.json'),JSON.stringify({
   name:'cn-vnext-vite-source-parity',private:true,type:'module',
   scripts:{build:'vite build'},
-  devDependencies:{vite:'6.0.0',typescript:'5.7.0'}
+  devDependencies:{vite:'^6.0.0',typescript:'^5.7.0'}
 },null,2));
 writeFileSync(join(root,'vite.config.js'),"import { defineConfig } from 'vite';\nexport default defineConfig({base:'./',build:{outDir:'dist'}});\n");
 try {
