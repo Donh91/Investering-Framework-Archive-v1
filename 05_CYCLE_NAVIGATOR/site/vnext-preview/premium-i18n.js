@@ -392,6 +392,12 @@ Object.assign(translations, {
   "UTILGÆNGELIG": "UNAVAILABLE"
 });
 
+Object.assign(translations, {
+  "PULLBACK · TID": "PULLBACK · TIMING",
+  "ETA afventer kilde": "ETA awaiting source",
+  "Start og slut ikke bekræftet · ikke et SELL-signal.": "Start and end unconfirmed · not a SELL signal."
+});
+
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
@@ -451,6 +457,8 @@ export function translateInterface() {
     button.setAttribute('aria-pressed',String(selected));
   }
 }
+
+export function currentLanguage() { return language; }
 
 export function selectLanguage(next, onChange) {
   if (!['da','en'].includes(next)) return;
