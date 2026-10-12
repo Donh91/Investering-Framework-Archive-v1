@@ -156,6 +156,7 @@ def pair_outcomes(
         srow, orow = shadow[si], official[oi]
         s_issue, o_issue = parse_utc(srow.get("issued_at_utc")), parse_utc(orow.get("issued_at_utc"))
         realized_match = _realized_match(srow, orow)
+        clock_validated = _scoring_revision(srow) == "3"
         asset_comparisons: dict[str, Any] = {}
         for asset in ("btc", "eth"):
             s_acc = ((srow.get("direction_accuracy") or {}).get(asset) or {})
@@ -165,9 +166,10 @@ def pair_outcomes(
                 "shadow_result": s_result,
                 "official_result": o_result,
                 "comparison_state": (
-                    _result_category(s_result, o_result)
-                    if realized_match
-                    else "PAIR_INTEGRITY_FAIL"
+                    "PAIR_INTEGRITY_FAIL"
+                    if not realized_match
+                    else "PAIR_TIME_BASIS_UNVERIFIED" if not clock_validated
+                    else _result_category(s_result, o_result)
                 ),
                 "shadow_predicted": s_acc.get("predicted"),
                 "official_predicted": o_acc.get("predicted"),
@@ -195,7 +197,9 @@ def pair_outcomes(
                     "absolute_issue_delta_minutes": round(distance / 60.0, 6),
                 },
                 "integrity": {
-                    "status": "PASS" if realized_match else "FAIL",
+                    "status": "FAIL" if not realized_match else ("PASS" if clock_validated else "LEGACY_TIME_BASIS_UNVERIFIED"),
+                    "scoring_revision": _scoring_revision(srow),
+                    "source_clock_verified_by_v3": clock_validated,
                     "same_frozen_window": True,
                     "realized_path_matches": realized_match,
                     "selection_used_outcome_correctness": False,
