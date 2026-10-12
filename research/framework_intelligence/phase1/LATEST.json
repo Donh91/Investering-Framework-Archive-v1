@@ -3,11 +3,11 @@
   "canonical_promotion": false,
   "consultation": [
     {
-      "note": "8 qualified RANGE candidate(s) are MATURED_SUPPORTED; remain shadow-only and replication/adversarial gates still apply.",
+      "note": "9 qualified RANGE candidate(s) are MATURED_SUPPORTED; remain shadow-only and replication/adversarial gates still apply.",
       "type": "RANGE_CONTEXT"
     },
     {
-      "note": "207 semantic duplicates excluded from independent-support interpretation.",
+      "note": "215 semantic duplicates excluded from independent-support interpretation.",
       "type": "WEEKLY_ANALYSIS_CONTEXT"
     }
   ],
@@ -15,37 +15,37 @@
   "contradictions": [],
   "cycle_navigator_influence": false,
   "experiment_memory": {
-    "duplicate_adjusted_qualified_count": 207,
+    "duplicate_adjusted_qualified_count": 240,
     "lifecycle_counts": {
-      "INCUBATING": 336,
+      "INCUBATING": 374,
       "MATURED_INCONCLUSIVE": 32,
       "MATURED_NOT_SUPPORTED": 6,
-      "MATURED_SUPPORTED": 15,
+      "MATURED_SUPPORTED": 16,
       "PROPOSED": 2,
       "TARGET_UNIT_QUARANTINED": 8,
       "WAITING_FOR_DATA": 7,
       "WAITING_FOR_MAPPING": 16,
-      "WAITING_FOR_MATURITY": 1
+      "WAITING_FOR_MATURITY": 3
     },
-    "raw_candidate_count": 423,
+    "raw_candidate_count": 464,
     "scientific_admission_counts": {
-      "QUALIFIED_FOR_FORWARD_TEST": 207,
-      "SEMANTIC_DUPLICATE_KEEP_SHADOW": 207,
+      "QUALIFIED_FOR_FORWARD_TEST": 240,
+      "SEMANTIC_DUPLICATE_KEEP_SHADOW": 215,
       "TARGET_UNIT_QUARANTINED": 8,
       "WAITING_FOR_MAPPING": 1
     },
     "selected_action_counts": {
-      "ARCHIVE_ONLY_DUPLICATE": 207,
+      "ARCHIVE_ONLY_DUPLICATE": 215,
       "KEEP_QUARANTINED": 8,
       "KEEP_SHADOW_INCONCLUSIVE": 22,
       "RUN_FAILURE_AND_RETIREMENT_REVIEW": 6,
-      "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW": 15,
+      "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW": 16,
       "WAIT_FOR_MAPPING": 1,
-      "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE": 164
+      "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE": 196
     },
-    "semantic_duplicate_count": 207
+    "semantic_duplicate_count": 215
   },
-  "iso_week": 40,
+  "iso_week": 41,
   "iso_year": 2026,
   "live_consumed": false,
   "live_master_monday_influence": false,
@@ -54,12 +54,20 @@
   "range_lab": {
     "canonical_effect": false,
     "forecast_skill_claim": "UNPROVEN",
-    "matured_supported_range_count": 8,
-    "qualified_range_family_count": 89,
+    "matured_supported_range_count": 9,
+    "qualified_range_family_count": 120,
     "supported_range_candidates": [
       {
+        "candidate_id": "EC-0258e3807909a4d1987f",
+        "matured_outcome_count": 19,
+        "replication_receipts": [
+          "REPLICATION_UNVERIFIED"
+        ],
+        "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price RANGE"
+      },
+      {
         "candidate_id": "EC-03d0c1a48139b386534c",
-        "matured_outcome_count": 21,
+        "matured_outcome_count": 45,
         "replication_receipts": [
           "REPLICATION_UNVERIFIED"
         ],
@@ -67,7 +75,7 @@
       },
       {
         "candidate_id": "EC-065c78e4af0270a9d365",
-        "matured_outcome_count": 77,
+        "matured_outcome_count": 102,
         "replication_receipts": [
           "REPLICATION_UNVERIFIED"
         ],
@@ -75,7 +83,7 @@
       },
       {
         "candidate_id": "EC-0dc8abd903144198e36e",
-        "matured_outcome_count": 148,
+        "matured_outcome_count": 173,
         "replication_receipts": [
           "REPLICATED_FIRED",
           "REPLICATION_UNVERIFIED"
@@ -135,16 +143,16 @@
   "sources": {
     "matching_weekly_adjudication": {
       "available": true,
-      "generated_at_utc": "2026-09-28T15:07:30Z",
-      "path": "research/experiment_lifecycle/weekly_adjudication/2026/W40.json",
-      "sha256": "f4abf9061abe638d81cc83fb3482ba057cc903d453c5f1a13a4184e3b6173469"
+      "generated_at_utc": "2026-10-05T15:41:32Z",
+      "path": "research/experiment_lifecycle/weekly_adjudication/2026/W41.json",
+      "sha256": "cd8a2b5ec472f04ee0597573f550ed4f27e60218aae3a6918cbb3323dbc5abc5"
     },
     "weekly_machine_package": {
-      "created_at_utc": "2026-10-05T06:11:02.646092Z",
-      "freeze_sha256": "c5a07ea3b8cb553ea7cd7c21c28345dacd75812661f3bab5c4711376fd7b6429",
-      "package_sha256": "273908b93ce77ef057ec45f9a4bc5278e2a10338ced99cde0861fe9c58b7becc",
-      "path": "research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_MACHINE_PACKAGE.json",
-      "sha256": "b332336f52b1b78aa3526e9fbb09c233e8f7720d815e17437826421b6dc22cda"
+      "created_at_utc": "2026-10-12T06:28:28.396618Z",
+      "freeze_sha256": "2ac43937b444b07703df68617e90fed98b0d5d2d83f1b7bb84961e6234bc596b",
+      "package_sha256": "c430bbd2d2ce128f9e5cfb5d2f22da97f8037d493bfe81a6ae49ec3fffa13a5a",
+      "path": "research/api_agent/outputs/weekly/2026/W41/MASTER_MONDAY_MACHINE_PACKAGE.json",
+      "sha256": "215d065c0589d767c6037723dedc531da180a1b8c8361a98dd5a5ffeb1cb4e11"
     }
   },
   "weekly_package_registry_report": {
