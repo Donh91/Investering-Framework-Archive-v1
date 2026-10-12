@@ -9,15 +9,19 @@ on:
       - 'scripts/learning/strategic_compass_outcomes.py'
       - 'scripts/learning/shadow_compass_v2_outcomes.py'
       - 'scripts/learning/shadow_compass_v2_compare.py'
+      - 'scripts/api_agent/build_weekly_calibration_context.py'
+      - 'tests/api_agent/test_weekly_calibration_context_v4.py'
       - 'tests/learning/test_compass_outcomes.py'
       - 'tests/learning/test_strategic_compass.py'
       - 'tests/learning/test_strategic_compass_outcomes.py'
       - 'tests/learning/test_shadow_compass_v2_outcomes.py'
       - 'tests/learning/test_shadow_compass_v2_compare.py'
       - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v1.md'
+      - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v3.md'
       - '04_MARKET_LEARNING/handlekompas/STRATEGIC_COMPASS_SCORING_CONTRACT_v1_1.md'
       - '04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v1.md'
       - '04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v2.md'
+      - '04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v3.md'
   schedule:
     # Mature eligible 12h/72h/168h outcomes after the hourly owner sequence settles.
     - cron: '27 * * * *'
@@ -51,6 +55,7 @@ jobs:
           python -m unittest tests.learning.test_strategic_compass_outcomes -v
           python -m unittest tests.learning.test_shadow_compass_v2_outcomes -v
           python -m unittest tests.learning.test_shadow_compass_v2_compare -v
+          python -m unittest tests.api_agent.test_weekly_calibration_context_v4 -v
           python scripts/learning/compass_outcomes.py --dry-run > /tmp/compass-maturity.json
           python scripts/learning/shadow_compass_v2_outcomes.py --now-utc 1970-01-01T00:00:00Z > /tmp/shadow-direct-exec.json
           python scripts/learning/shadow_compass_v2_compare.py > /tmp/shadow-official-compare-pr.json
@@ -73,6 +78,19 @@ jobs:
           assert 'SHADOW_COMPASS_V2_SCORING_v2' in shadow_v2
           assert 'closest completed hourly close within one hour of target' in shadow_v2
           assert 'No automatic promotion.' in shadow_v2
+          official_v3=Path('04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v3.md').read_text()
+          shadow_v3=Path('04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v3.md').read_text()
+          assert 'OFFICIAL_DAILY_COMPASS_SCORING_v3' in official_v3
+          assert 'SHADOW_COMPASS_V2_SCORING_v3' in shadow_v3
+          for document in (official_v3, shadow_v3):
+              assert 'timestamp_utc + 1h' in document
+              assert 'source_window_end_utc' in document
+              assert 'batch' in document.lower()
+              assert 'first-knowledge' in document.lower()
+          from scripts.learning.compass_outcomes import SCORING_CONTRACT as official_id
+          from scripts.learning.shadow_compass_v2_outcomes import SCORING_CONTRACT as shadow_id
+          assert official_id == 'OFFICIAL_DAILY_COMPASS_SCORING_v3'
+          assert shadow_id == 'SHADOW_COMPASS_V2_SCORING_v3'
           PY
 
   mature:
