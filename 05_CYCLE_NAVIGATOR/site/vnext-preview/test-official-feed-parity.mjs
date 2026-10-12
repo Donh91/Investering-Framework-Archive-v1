@@ -151,6 +151,26 @@ it('stale site delivery reports STALE independently of weekly freeze validity',(
  assert.equal(o.delivery_health,'STALE');
  assert.equal(o.weekly.state,'DEGRADED');
 });
+it('stale delivery cannot preserve an apparently fresh NOW action',()=>{
+ const o=mutate(l=>{l.generated_at='2026-10-09T00:00:00Z'});
+ assert.equal(o.delivery_health,'STALE');
+ assert.equal(o.compass.action_now,'UNAVAILABLE');
+ assert.equal(o.compass.pullback_risk_state,'UNAVAILABLE');
+ assert.equal(o.compass.permit_path_live_gates,false);
+});
+it('public Compass time after its builder snapshot cannot be presented as live',()=>{
+ const o=mutate((l,c)=>{
+   l.generated_at='2026-10-12T09:05:00Z';
+   c.issued_at_utc='2026-10-12T09:35:11Z';
+ });
+ assert.equal(o.compass.action_now,'UNAVAILABLE');
+ assert.equal(o.compass.permit_path_live_gates,false);
+});
+it('timestamps without explicit timezone cannot bypass UTC comparison',()=>{
+ const o=mutate((l,c)=>{c.issued_at_utc='2026-10-12T09:35:11'});
+ assert.equal(o.compass.action_now,'UNAVAILABLE');
+ assert.equal(o.compass.state,'UNAVAILABLE');
+});
 it('scorecard different public number cannot be credited',()=>{
  const o=mutate(l=>{l.public_scorecard.public_issue_number=27});
  assert.equal(o.completed_score.state,'MISMATCH_OR_INCOMPLETE');
@@ -198,4 +218,4 @@ it('invalid time policy rejects unsafe freshness inputs',()=>{
  assert.throws(()=>read(latest,compass,{nowUtc:'yesterday'}),/INVALID_READBACK_CLOCK_POLICY/);
  assert.throws(()=>read(latest,compass,{compassMaxAgeHours:-1}),/INVALID_READBACK_CLOCK_POLICY/);
 });
-console.log('SUCCESS: 27 public-feed source parity/lineage/freshness/score proof tests — NO SITE SIGNAL AUTHORITY.');
+console.log('SUCCESS: 30 public-feed source parity/lineage/freshness/score proof tests — NO SITE SIGNAL AUTHORITY.');
