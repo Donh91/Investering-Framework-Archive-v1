@@ -118,6 +118,23 @@ class CompassOutcomeTest(unittest.TestCase):
             self.assertAlmostEqual(outcome["realized"]["btc_return_pct"], 10.0)
             self.assertEqual(outcome["scoring_contract"], "OFFICIAL_DAILY_COMPASS_SCORING_v3")
 
+    def test_collection_boundary_before_candle_close_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            forecast = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            forecast.parent.mkdir(parents=True, exist_ok=True)
+            forecast.write_text(json.dumps(self.freeze()))
+            path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-16.csv"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["timestamp_utc", "source_window_end_utc", "btc_close"])
+                writer.writeheader()
+                writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z",
+                                 "source_window_end_utc": "2026-09-16T23:30:00Z", "btc_close": "110"})
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "PENDING_TARGET_EVIDENCE")
+            self.assertFalse((root / result["path"]).exists())
+
     def test_action_quality_is_horizon_action_not_hardwired_to_12h(self):
         self.assertEqual(action_quality("WAIT", -2.0, -3.0)["action"], "WAIT")
         self.assertEqual(action_quality("PREPARE", 2.0, -1.0)["action"], "PREPARE")
