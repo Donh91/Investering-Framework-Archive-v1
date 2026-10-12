@@ -755,3 +755,16 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
  .compass-weather-side strong {font-size:13px}
  .compass-weather>p {font-size:9px;margin-top:10px}
 }
+
+/* Pullback is a time-qualified watch, never a standalone implied warning. */
+.pullback-brief{display:flex;flex-direction:column;gap:5px;min-width:0}
+.pullback-brief strong{line-height:1.2}
+.pullback-brief small{display:block;color:#566d85;font-size:10px;line-height:1.48;font-weight:550;max-width:28ch;overflow-wrap:break-word}
+#page-kompas .compass-urgent>div:first-child small{
+  display:block;color:#74869b;font-size:9.5px;line-height:1.45;font-weight:550;overflow-wrap:break-word;
+}
+.hero-risk-note{color:#7c8998!important}
+@media(max-width:580px){
+ .pullback-brief small{max-width:none;font-size:10px}
+ #page-kompas .compass-urgent>div:first-child small{font-size:9px;line-height:1.45}
+}
