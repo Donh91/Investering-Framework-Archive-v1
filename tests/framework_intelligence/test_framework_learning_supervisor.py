@@ -142,5 +142,85 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertIn('automatic rule change', text)
 
 
+    def _current_cross_domain_fixture(self):
+        return {
+            "contract": "SHADOW_WEEKLY_RELEVANCE_SNAPSHOT_v1",
+            "authority": "RESEARCH_ONLY_NON_CANONICAL",
+            "portfolio_execution": False,
+            "week": "2026-W42",
+            "cross_domain_review": {
+                "contract": "SHADOW_CROSS_DOMAIN_WEEKLY_REVIEW_v1",
+                "week": "2026-W42",
+                "authority": "RESEARCH_ONLY_NON_CANONICAL",
+                "cost_and_execution": {
+                    "external_llm_calls": 0,
+                    "incremental_paid_api_usd": 0,
+                    "incremental_provider_calls": 0,
+                    "new_schedulers": 0,
+                    "automatic_execution": False,
+                    "automatic_market_rule_change": False,
+                    "automatic_model_promotion": False,
+                    "wallet_signing": False,
+                },
+                "lanes": [
+                    {"lane_id": "COMPASS", "source_status": "SOURCE_OBSERVED",
+                     "scientific_edge": "UNPROVEN", "paper_or_live_trading_authorized": False,
+                     "owner": "Official Compass #1530",
+                     "review_question": "WAIT_FOR_MATURATION"},
+                    {"lane_id": "AUTO_TRADING", "source_status": "SOURCE_OBSERVED",
+                     "scientific_edge": "UNPROVEN", "paper_or_live_trading_authorized": False,
+                     "owner": "AUTO_TRADING #1557",
+                     "review_question": "GLOBAL_N_PENDING"},
+                    {"lane_id": "ALPHA_LAB", "source_status": "PRIVATE_REPO_SOURCE_NOT_IMPORTED",
+                     "scientific_edge": "UNPROVEN", "paper_or_live_trading_authorized": False,
+                     "owner": "MAL #88", "review_question": "SOURCE_PENDING"}
+                ],
+            },
+        }
+
+    def test_weekly_shadow_supervisor_reuses_reviewed_main_only(self):
+        x = mod.admit_cross_domain_shadow_weekly(self._current_cross_domain_fixture(), "2026-W42")
+        self.assertEqual(x["status"], "WEEKLY_RESEARCH_ADVISORY_ONLY")
+        self.assertEqual(len(x["lanes"]), 3)
+        self.assertFalse(x["automatic_model_calls"])
+        self.assertFalse(x["portfolio_execution"])
+        self.assertEqual(x["lanes"][2]["source_status"], "PRIVATE_REPO_SOURCE_NOT_IMPORTED")
+
+    def test_weekly_shadow_old_or_unmerged_candidate_stays_pending(self):
+        x = mod.admit_cross_domain_shadow_weekly(self._current_cross_domain_fixture(), "2026-W43")
+        self.assertEqual(x["status"], "PENDING_REVIEWED_WEEKLY_SNAPSHOT")
+        self.assertEqual(x["reason"], "WEEKLY_REVIEW_NOT_MERGED_OR_STALE")
+        snapshot = self._current_cross_domain_fixture()
+        snapshot.pop("cross_domain_review")
+        y = mod.admit_cross_domain_shadow_weekly(snapshot, "2026-W42")
+        self.assertEqual(y["reason"], "CROSS_DOMAIN_REVIEW_NOT_IN_MERGED_SNAPSHOT")
+
+    def test_weekly_shadow_fails_closed_if_model_calls_or_trading_added(self):
+        x = self._current_cross_domain_fixture()
+        x["cross_domain_review"]["cost_and_execution"]["external_llm_calls"] = 1
+        self.assertEqual(
+            mod.admit_cross_domain_shadow_weekly(x, "2026-W42")["reason"],
+            "INVALID_COST_OR_AUTHORITY_BOUNDARY"
+        )
+        x = self._current_cross_domain_fixture()
+        x["cross_domain_review"]["lanes"][1]["paper_or_live_trading_authorized"] = True
+        self.assertEqual(
+            mod.admit_cross_domain_shadow_weekly(x, "2026-W42")["reason"],
+            "UNAPPROVED_TRADING_OR_EDGE_PROMOTION"
+        )
+
+    def test_weekly_shadow_never_promotes_missing_private_evidence(self):
+        x = self._current_cross_domain_fixture()
+        x["authority"] = "CANONICAL"
+        self.assertEqual(
+            mod.admit_cross_domain_shadow_weekly(x, "2026-W42")["reason"],
+            "INVALID_REGISTRY_AUTHORITY"
+        )
+        self.assertEqual(
+            mod.admit_cross_domain_shadow_weekly({}, "2026-W42")["status"],
+            "PENDING_REVIEWED_WEEKLY_SNAPSHOT"
+        )
+
+
 if __name__ == '__main__':
     unittest.main()
