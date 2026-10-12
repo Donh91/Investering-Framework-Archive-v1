@@ -271,5 +271,17 @@ it('legacy or incomplete protection contract yields unavailable ETA but no fabri
  assert.equal(o.compass.pullback_window,null);
  assert.equal(o.compass.action_now,'HOLD_WAIT');
 });
-console.log('SUCCESS: 35 public-feed source parity/lineage/freshness/score/ETA proof tests — NO SITE SIGNAL AUTHORITY.');
+it('W42 official NORMAL must remain no active warning, not a timed pullback alarm',()=>{
+ const o=mutate((l,c)=>{
+   validW42(l,c);
+   c.protection_tracker.pullback_risk_state='NORMAL';
+   c.protection_tracker.public_explanation.risk_state='NORMAL';
+ });
+ assert.equal(o.compass.pullback_risk_state,'NORMAL');
+ assert.equal(o.compass.pullback_window.window_kind,'NO_ACTIVE_WATCH');
+ assert.match(o.compass.pullback_window.headline,/Ingen aktiv pullback-watch/);
+ assert.equal(o.compass.pullback_window.window_start_utc,null);
+ assert.equal(o.compass.sell_assessment_state,'UNAVAILABLE');
+});
+console.log('SUCCESS: 36 public-feed source parity/lineage/freshness/score/ETA proof tests — NO SITE SIGNAL AUTHORITY.');
 
