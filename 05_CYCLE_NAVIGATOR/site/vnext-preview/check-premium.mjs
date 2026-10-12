@@ -82,6 +82,16 @@ assert.match(html, /<article class="hero-main" aria-labelledby="overview-title">
 assert.match(html, /id="hero-action-summary"/);
 assert.match(html, /id="hero-now"/);
 assert.match(html, /id="overview-risk"/);
+assert.match(html, /id="overview-risk-window"/);
+assert.match(html, /id="compass-risk-window"/);
+assert.match(html, /PULLBACK · TID/);
+assert.match(js, /import \{ officialPullbackDisplay \} from '\.\/official-pullback-eta\.mjs'/);
+assert.match(js, /paintPullback\(d, currentLanguage\(\)\)/);
+assert.match(js, /setText\('overview-risk-window', p\.headline\)/);
+assert.match(js, /setText\('compass-risk-window', p\.headline\)/);
+assert.match(js, /button\.dataset\.lang, \(\) => \{/);
+assert.match(css, /\.pullback-brief\{display:flex/);
+
 assert.match(html, /id="source-time"/);
 assert.doesNotMatch(html, /CN \/ MARKET INSTRUMENT|hero-instrument|instrument-geometry|path-compass|corridor-track|01 \/ DECISION DESK/, 'Ornamental radar, duplicate action cards and fabricated price corridors must not return');
 assert.match(css, /\.hero-key-metrics\s*\{display:grid/);
