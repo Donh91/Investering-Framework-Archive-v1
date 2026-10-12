@@ -30,6 +30,8 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-pullback-eta.mjs
       - name: Verify progressive official Pullback stages without fabricated imminent risk
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-pullback-stage.mjs
+      - name: Verify source-only investor Pullback horizons, impact and uncalibrated odds
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-pullback-investor-view.mjs
       - name: Bundle production-style Vite preview (development tool only)
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/verify-vite-bundle.mjs
       - name: No production deployment
