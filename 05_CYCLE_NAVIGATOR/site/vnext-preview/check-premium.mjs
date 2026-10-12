@@ -78,8 +78,19 @@ new Script(js.replace(/^import .*from .*;\s*$/m, ''), { filename: 'premium.js' }
 new Script(i18n.replace(/export (?=function)/g, ''), { filename: 'premium-i18n.js' });
 
 assert.match(html, /aria-controls="cycle-details"/);
-assert.ok(html.includes('<div class="hero-action-line"><span>OFFICIAL ACTION</span>'));
-assert.ok(css.indexOf('.hero-action-line { display: flex') > css.indexOf('@media (max-width: 580px)'), 'Action summary must remain mobile-only');
+assert.match(html, /<article class="hero-main" aria-labelledby="overview-title">/);
+assert.match(html, /id="hero-action-summary"/);
+assert.match(html, /id="hero-now"/);
+assert.match(html, /id="overview-risk"/);
+assert.match(html, /id="source-time"/);
+assert.doesNotMatch(html, /CN \/ MARKET INSTRUMENT|hero-instrument|instrument-geometry|path-compass|corridor-track|01 \/ DECISION DESK/, 'Ornamental radar, duplicate action cards and fabricated price corridors must not return');
+assert.match(css, /\.hero-key-metrics\s*\{display:grid/);
+assert.match(css, /\.hero-detail-list\s*\{display:grid/);
+assert.match(css, /\.hero-action-line\s*\{display:flex/);
+assert.match(js, /setText\('hero-deck', localizedPulse\(c\)\)/);
+assert.match(js, /\.dataset\.direction = currentDirection/);
+assert.match(i18n, /"OFFICIELT MARKEDSBILLEDE": "OFFICIAL MARKET OUTLOOK"/);
+assert.match(i18n, /"Markedet lige nu": "The market right now"/);
 assert.match(js, /setText\('hero-action-summary', actionView\(c\.action_now\)\.text\)/);
 assert.match(html, /NEXT SERIES · ISSUE ID PENDING · 2026-W42/);
 assert.doesNotMatch(html, /Public CN #29/);
