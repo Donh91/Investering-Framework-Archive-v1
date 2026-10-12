@@ -774,3 +774,44 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 #page-kompas .compass-urgent>div:first-child small.risk-stage-label{
  font-weight:675;color:#4a5e73;line-height:1.4
 }
+
+/* Five discrete OFFICIAL risk classes, NOT time/probability or an inevitable waterfall. */
+.pullback-stage-ruler {
+  padding:13px 17px 11px;
+  margin:9px 0 0;
+  background:#fff;
+  border:1px solid #e5ebf0;
+  border-radius:10px;
+}
+.pullback-stage-ruler-head {display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pullback-stage-ruler-head>span{font-size:9px;letter-spacing:.08em;font-weight:760;color:#5e7085}
+.pullback-stage-ruler-head small{font-size:9px;line-height:1.3;color:#8998a7;text-align:right}
+.pullback-stage-ruler-steps {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:11px}
+.pullback-stage-unit {display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.risk-stage-mark {width:100%;height:5px;border-radius:5px;background:#e7ecf1;display:block}
+.pullback-stage-unit small{font-size:9px;color:#9ba7b3;line-height:1.2;text-align:center;white-space:nowrap}
+.pullback-stage-unit.is-current .risk-stage-mark{background:#2d7767}
+.pullback-stage-unit.is-current small{font-weight:760;color:#2d4b66}
+.pullback-stage-unit.is-current[data-risk-stage="BUILDING"] .risk-stage-mark {background:#b49a62}
+.pullback-stage-unit.is-current[data-risk-stage="ELEVATED"] .risk-stage-mark {background:#bd884a}
+.pullback-stage-unit.is-current[data-risk-stage="HIGH"] .risk-stage-mark {background:#b65e4c}
+.pullback-stage-unit.is-current[data-risk-stage="CONFIRMED"] .risk-stage-mark {background:#944139}
+.pullback-investor-details {margin:15px 0 3px}
+.pullback-details-intro {font-size:12px;font-weight:720;color:#29415c;line-height:1.4;margin:0 0 12px}
+.pullback-facts-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pullback-fact {background:#f8fafc;border:1px solid #edf0f4;border-radius:8px;padding:11px 13px;min-width:0}
+.pullback-fact span {font-size:9px;letter-spacing:.045em;color:#8091a3;font-weight:680;line-height:1.4;display:block}
+.pullback-fact p{font-size:11px;font-weight:580;color:#3d536b;margin:5px 0 0;line-height:1.5;overflow-wrap:break-word}
+.pullback-fact[data-source="NOT_CALIBRATED"] p,.pullback-fact[data-source="UNQUANTIFIED"] p,
+.pullback-fact[data-source="UNASSESSED"] p,.pullback-fact[data-source="NOT_CLASSIFIED"] p{color:#798898}
+.pullback-details-foot{font-size:10px!important;color:#8291a1!important;margin:15px 0 2px!important;line-height:1.6!important}
+@media(max-width:580px) {
+  .pullback-stage-ruler{padding:11px 12px 10px}
+  .pullback-stage-ruler-head>span,.pullback-stage-ruler-head small{font-size:8px}
+  .pullback-stage-ruler-steps{gap:5px}
+  .pullback-stage-unit small{font-size:8px}
+  .pullback-facts-grid{grid-template-columns:1fr;gap:7px}
+  .pullback-fact{padding:10px 11px}
+  .pullback-fact p{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){.risk-stage-mark{transition:none!important}}
