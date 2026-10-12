@@ -99,6 +99,74 @@ def m6_integrity(m6:dict|None, features:dict|None):
             "first_warning_weight_valid":weights,"feature_cohort_parity":parity,
             "family_lineage_fingerprint":digest(sorted(lineage,key=lambda x:(str(x[0]),str(x[1]))))}
 
+HORIZON_HOURS={"24h":24,"72h":72,"7d":168,"14d":336,"30d":720}
+
+def matured_payload_integrity(m6:dict|None):
+    """Independently fail-close malformed 'MATURED' rows before any Edge replay.
+
+    This is structural validation, NOT source vintage attestation, independent
+    adverse-family proof, scientific scoring, or trading permission.
+    """
+    events=(m6 or {}).get("events") if isinstance(m6,dict) else None
+    if not isinstance(events,list):
+        return {"status":"UNKNOWN_MISSING_OWNER","checked":0,"invalid":0,"reasons":[]}
+    checked=0;invalid=0;reasons=[]
+    def mark(code:str):
+        nonlocal invalid
+        invalid+=1
+        if len(reasons)<8:reasons.append(code)
+    def number(v):
+        return isinstance(v,(float,int)) and not isinstance(v,bool) and math.isfinite(v)
+    def positive(v):
+        return number(v) and v>0
+    def clock(v):
+        if not isinstance(v,str):return None
+        try:
+            t=datetime.fromisoformat(v.replace("Z","+00:00"))
+            return t.astimezone(timezone.utc) if t.tzinfo is not None else None
+        except ValueError:return None
+    for index,event in enumerate(events):
+        if not isinstance(event,dict):
+            mark("INVALID_EVENT_ROW");continue
+        knowledge=clock(event.get("knowledge_timestamp"))
+        horizons=event.get("horizons")
+        if not isinstance(horizons,dict):
+            mark("MISSING_HORIZONS");continue
+        for name,horizon in horizons.items():
+            if not isinstance(horizon,dict):
+                mark("MALFORMED_HORIZON");continue
+            if horizon.get("maturity_state")!="MATURED":continue
+            checked+=1
+            hours=HORIZON_HOURS.get(name)
+            coverage=horizon.get("coverage") or {}
+            target=clock(horizon.get("target_at_utc"))
+            valid=(hours is not None and knowledge is not None and target is not None and
+                target==knowledge.replace(microsecond=knowledge.microsecond)+__import__("datetime").timedelta(hours=hours) and
+                isinstance(coverage,dict) and coverage.get("reason")=="COMPLETE_HOURLY_CLOSE_GRID" and
+                number(coverage.get("row_count")) and
+                int(coverage["row_count"]) in (hours,hours+1) and
+                number(coverage.get("max_gap_hours")) and 0<coverage["max_gap_hours"]<=1.01)
+            if valid:
+                for symbol in ("BTC","ETH"):
+                    asset=horizon.get(symbol) or {}
+                    reference=asset.get("reference_anchor") or {}
+                    post=asset.get("post_knowledge_close_anchor") or {}
+                    terminal=asset.get("terminal") or {}
+                    start_close=clock(post.get("timestamp"))
+                    end_close=clock(terminal.get("timestamp"))
+                    if not (asset.get("state")=="MATURED" and
+                            positive(reference.get("price")) and
+                            positive(post.get("price")) and positive(terminal.get("close")) and
+                            all(number(reference.get(k)) for k in ("mae_pct","mfe_pct","terminal_return_pct")) and
+                            all(number(post.get(k)) for k in ("mae_pct","mfe_pct","terminal_return_pct")) and
+                            knowledge<=start_close<=end_close<=target if start_close and end_close else False):
+                        valid=False;break
+                    if not isinstance(asset.get("adverse_barriers"),dict):
+                        valid=False;break
+            if not valid:mark(f"INVALID_MATURED_HORIZON_{name}")
+    return {"status":"BLOCKED" if invalid else ("PASS" if checked else "PASS_NO_MATURED_YET"),
+            "checked":checked,"invalid":invalid,"reasons":reasons}
+
 def feature_counts(features:dict|None):
     rows=(features or {}).get("rows") if isinstance(features,dict) else []
     rows=rows if isinstance(rows,list) else []
@@ -130,18 +198,20 @@ def semantic_snapshot(root:Path):
     maturity,families,unknown=matured_counts(m6)
     fcount,pit,unverified=feature_counts(features)
     m6_check=m6_integrity(m6,features)
+    payload_check=matured_payload_integrity(m6)
     sol=latest_sol(root)
     blockers=[]
     if isinstance(features,dict) and features.get("integrity_revision")!="v1.1_PIT_STRICT":blockers.append("FEATURE_COLLECTOR_INTEGRITY_REVISION_NOT_STRICT")
     if isinstance(m6,dict) and m6.get("integrity_revision")!="v1.2_POST_KNOWLEDGE_BAR_INTEGRITY":blockers.append("M6_OUTCOME_INTEGRITY_REVISION_NOT_STRICT")
     if unverified:blockers.append("PIT_UNVERIFIED_FEATURE_ROWS")
     if m6_check["status"]!="PASS":blockers.append("M6_EVENT_CHRONOLOGY_FAMILY_OR_COHORT_INVALID")
+    if payload_check["status"]=="BLOCKED":blockers.append("M6_MATURED_OUTCOME_PAYLOAD_INVALID")
     primary_state=tracker.get("pullback_risk_state") or "UNAVAILABLE"
     if primary_state in {"ELEVATED","HIGH","CONFIRMED"} and fcount==0:blockers.append("PRIMARY_WARNING_WITHOUT_EDGE_FEATURE_ROW")
     semantic={
       "pullback_risk_state":primary_state,
       "distribution_risk":tracker.get("distribution_risk") or "UNKNOWN",
-      "m6_integrity":m6_check,
+      "m6_integrity":m6_check,"m6_matured_payload_integrity":payload_check,
       "m6_event_count":int((m6 or {}).get("event_count") or 0) if isinstance(m6,dict) else 0,
       "m6_provisional_family_count":int((m6 or {}).get("provisional_independent_family_count") or 0) if isinstance(m6,dict) else 0,
       "m6_family_semantics":"PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
@@ -175,6 +245,7 @@ def deltas(prev:dict|None,current:dict):
             if a.get(k)!=b.get(k):d.append(f"{group}.{k}:{a.get(k)}->{b.get(k)}")
     if old.get("blockers")!=current.get("blockers"):d.append("BLOCKER_SET_CHANGED")
     if old.get("m6_integrity")!=current.get("m6_integrity"):d.append("M6_FAMILY_OR_COHORT_LINEAGE_CHANGED")
+    if old.get("m6_matured_payload_integrity")!=current.get("m6_matured_payload_integrity"):d.append("M6_MATURED_PAYLOAD_INTEGRITY_CHANGED")
     if old.get("feature_integrity_revision")!=current.get("feature_integrity_revision"):d.append("FEATURE_INTEGRITY_REVISION_CHANGED")
     if old.get("m6_integrity_revision")!=current.get("m6_integrity_revision"):d.append("M6_INTEGRITY_REVISION_CHANGED")
     return d
