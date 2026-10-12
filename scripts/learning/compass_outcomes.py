@@ -89,13 +89,16 @@ def load_hourly(repo_root: Path, start: datetime, end: datetime, *, as_of: datet
             raw = path.read_text(encoding="utf-8-sig")
             for row in csv.DictReader(io.StringIO(raw)):
                 stamp = parse_utc(row.get("timestamp_utc"))
-                if stamp is None:
-                    continue
+                if stamp is None or stamp.minute or stamp.second or stamp.microsecond:
+                    continue  # Only canonical hour-aligned candle opens are eligible.
                 # timestamp_utc is the opening time of THIS candle. The CSV's
                 # source_window_end_utc is the collection/batch boundary, which
                 # can be identical for several different hourly candles.
                 close_stamp = stamp + HOURLY_CLOSE_OFFSET
-                source_end = parse_utc(row.get("source_window_end_utc"))
+                raw_source_end = row.get("source_window_end_utc")
+                source_end = parse_utc(raw_source_end)
+                if raw_source_end not in (None, "") and source_end is None:
+                    continue  # Present but unparseable collection clock: fail closed.
                 if source_end is not None and source_end < close_stamp:
                     continue  # Inconsistent collection clock: fail closed.
                 if as_of is not None and (close_stamp > as_of or (source_end is not None and source_end > as_of)):
