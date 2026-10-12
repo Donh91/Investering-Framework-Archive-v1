@@ -5,6 +5,9 @@ on:
     paths:
       - '.github/workflows/compass-outcomes.yml'
       - 'scripts/learning/compass_outcomes.py'
+      - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/learning/shadow_compass_v2.py'
+      - 'tests/learning/test_shadow_compass_v2.py'
       - 'scripts/learning/strategic_compass.py'
       - 'scripts/learning/strategic_compass_outcomes.py'
       - 'scripts/learning/shadow_compass_v2_outcomes.py'
@@ -54,6 +57,7 @@ jobs:
           python -m unittest tests.learning.test_strategic_compass -v
           python -m unittest tests.learning.test_strategic_compass_outcomes -v
           python -m unittest tests.learning.test_shadow_compass_v2_outcomes -v
+          python -m unittest tests.learning.test_shadow_compass_v2 -v
           python -m unittest tests.learning.test_shadow_compass_v2_compare -v
           python -m unittest tests.api_agent.test_weekly_calibration_context_v4 -v
           python scripts/learning/compass_outcomes.py --dry-run > /tmp/compass-maturity.json
@@ -91,6 +95,15 @@ jobs:
           from scripts.learning.shadow_compass_v2_outcomes import SCORING_CONTRACT as shadow_id
           assert official_id == 'OFFICIAL_DAILY_COMPASS_SCORING_v3'
           assert shadow_id == 'SHADOW_COMPASS_V2_SCORING_v3'
+          from scripts.data_ping.native_handlekompas import build_packet
+          from scripts.learning.shadow_compass_v2 import build_forecast
+          from pathlib import Path
+          native_source=Path('scripts/data_ping/native_handlekompas.py').read_text()
+          shadow_source=Path('scripts/learning/shadow_compass_v2.py').read_text()
+          assert '"scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3"' in native_source
+          assert '"scoring_contract": "SHADOW_COMPASS_V2_SCORING_v3"' in shadow_source
+          assert 'PENDING_SCORING_CONTRACT_MISMATCH' in Path('scripts/learning/compass_outcomes.py').read_text()
+          assert 'PENDING_SCORING_CONTRACT_MISMATCH' in Path('scripts/learning/shadow_compass_v2_outcomes.py').read_text()
           PY
 
   mature:
