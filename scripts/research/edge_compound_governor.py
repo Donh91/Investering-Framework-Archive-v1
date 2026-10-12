@@ -148,10 +148,14 @@ def matured_payload_integrity(m6:dict|None):
                 number(coverage.get("max_gap_hours")) and 0<coverage["max_gap_hours"]<=1.01)
             if valid:
                 for symbol in ("BTC","ETH"):
-                    asset=horizon.get(symbol) or {}
-                    reference=asset.get("reference_anchor") or {}
-                    post=asset.get("post_knowledge_close_anchor") or {}
-                    terminal=asset.get("terminal") or {}
+                    asset=horizon.get(symbol)
+                    if not isinstance(asset,dict):
+                        valid=False;break
+                    reference=asset.get("reference_anchor")
+                    post=asset.get("post_knowledge_close_anchor")
+                    terminal=asset.get("terminal")
+                    if not all(isinstance(item,dict) for item in (reference,post,terminal)):
+                        valid=False;break
                     start_close=clock(post.get("timestamp"))
                     end_close=clock(terminal.get("timestamp"))
                     if not (asset.get("state")=="MATURED" and
