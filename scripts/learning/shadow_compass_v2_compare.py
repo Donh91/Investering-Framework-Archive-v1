@@ -43,6 +43,15 @@ def _pair_key(row: dict[str, Any]) -> tuple[Any, Any, Any, Any]:
     )
 
 
+def _scoring_revision(row: dict[str, Any]) -> str | None:
+    # A batch-clock v2 outcome cannot be paired as if it used v3 candle clocks.
+    value = row.get("scoring_contract")
+    if not isinstance(value, str) or "_v" not in value:
+        return None
+    revision = value.rsplit("_v", 1)[-1]
+    return revision if revision.isdigit() else None
+
+
 def _row_id(row: dict[str, Any], shadow: bool) -> str:
     key = "forecast_id" if shadow else "compass_id"
     return str(row.get(key) or row.get("source_path") or "UNKNOWN")
@@ -116,6 +125,8 @@ def pair_outcomes(
             o_issue = parse_utc(orow.get("issued_at_utc"))
             if o_issue is None or _pair_key(srow) != _pair_key(orow):
                 continue
+            if _scoring_revision(srow) is None or _scoring_revision(srow) != _scoring_revision(orow):
+                continue  # Fail closed across incompatible/unknown scoring versions.
             distance = abs((s_issue - o_issue).total_seconds())
             candidates.append(
                 (
