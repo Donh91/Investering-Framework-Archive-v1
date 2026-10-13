@@ -30,7 +30,7 @@ if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model 
 // finding disclaimers in a source comment is not an acceptance test.
 const honestyScope = {window: {}, document: {readyState:'loading', addEventListener() {}}};
 const honestyInstrumented = premiumRenderer.replace(/\}\)\(\);\s*$/,
-  'globalThis.__honestyProbe = {renderPremium, freshNearTermReading, twelveHourMethodDisclosure};})();');
+  'globalThis.__honestyProbe = {renderPremium, freshNearTermReading, mixedNearTermReading, twelveHourMethodDisclosure};})();');
 if(honestyInstrumented===premiumRenderer) throw Error('premium active render scope unavailable for behavioral test');
 runInNewContext(honestyInstrumented, honestyScope, {timeout:1500});
 const honesty=honestyScope.__honestyProbe;
