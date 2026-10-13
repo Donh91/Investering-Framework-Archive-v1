@@ -8,30 +8,15 @@
     "threshold_change": false
   },
   "classification_counts": {
-    "CONTEXT_ONLY": 1,
-    "EVIDENTIAL": 2,
-    "NEW_INFORMATION": 1
+    "CONTEXT_ONLY": 0,
+    "EVIDENTIAL": 1,
+    "NEW_INFORMATION": 0
   },
   "classified_deltas": [
-    {
-      "claim": "New settled session 2026-10-12",
-      "classification": "NEW_INFORMATION",
-      "id": "D-SETTLE"
-    },
-    {
-      "claim": "ETHBTC settled evidence advanced.",
-      "classification": "EVIDENTIAL",
-      "id": "D-ETHBTC"
-    },
     {
       "claim": "ETHBTC settled close crossed below the existing registered 0.0300 reference.",
       "classification": "EVIDENTIAL",
       "id": "D-GATE-BREAK"
-    },
-    {
-      "claim": "Settled BTC/ETH relative-leadership sequence changed.",
-      "classification": "CONTEXT_ONLY",
-      "id": "D-LEADERSHIP"
     }
   ],
   "contract": "NATIVE_OTA_READBACK_v1",
@@ -46,8 +31,8 @@
   "eth_leadership": {
     "classification": "DESCRIPTIVE_RELATIVE_LEADERSHIP_ONLY",
     "consecutive_btc_led_settled": 1,
-    "in_progress_leader": "BTC",
-    "in_progress_relative_pp": -0.02025435128629738,
+    "in_progress_leader": "ETH",
+    "in_progress_relative_pp": 0.5990861372013878,
     "in_progress_semantics": "IN_PROGRESS_CONTEXT_ONLY",
     "latest_settled_relative_pp": -1.2428859478588739,
     "settled_eth_led_last_4": 2,
@@ -58,10 +43,10 @@
   "ethbtc_gate": {
     "consecutive_settled_closes_at_or_above": 0,
     "in_progress": {
-      "close_margin_pct": -0.33333333333332993,
+      "close_margin_pct": 0.2666666666666595,
       "date_utc": "2026-10-13",
-      "hour_count": 2,
-      "latest_close": 0.0299,
+      "hour_count": 22,
+      "latest_close": 0.03008,
       "low": 0.0297,
       "low_margin_pct": -0.9999999999999898,
       "semantics": "IN_PROGRESS_NEVER_SETTLED_EVIDENCE"
@@ -103,7 +88,7 @@
     "ota_context_gaps": [],
     "rule": "If a native owner artifact exists, absence from an external/legacy OTA context is OTA_CONTEXT_GAP, not FRAMEWORK_DATA_GAP."
   },
-  "generated_at_utc": "2026-10-13T07:08:09Z",
+  "generated_at_utc": "2026-10-13T23:55:35Z",
   "governance": {
     "canonical_state_change": false,
     "do_not_force_finding": true,
@@ -114,30 +99,30 @@
   },
   "in_progress_session": {
     "btc": {
-      "close": 82442.21,
-      "high": 82471.18,
+      "close": 83533.04,
+      "high": 84168.0,
       "low": 81033.66,
       "open": 81850.01,
-      "return_pct": 0.7235185432475921
+      "return_pct": 2.056236767716957
     },
     "date_utc": "2026-10-13",
     "eth": {
-      "close": 2464.37,
-      "high": 2466.47,
+      "close": 2512.14,
+      "high": 2538.52,
       "low": 2409.09,
       "open": 2447.16,
-      "return_pct": 0.7032641919612947
+      "return_pct": 2.6553229049183447
     },
-    "eth_minus_btc_return_pp": -0.02025435128629738,
+    "eth_minus_btc_return_pp": 0.5990861372013878,
     "ethbtc": {
-      "close": 0.0299,
-      "high": 0.02992,
+      "close": 0.03008,
+      "high": 0.03028,
       "low": 0.0297,
       "open": 0.02991,
-      "return_pct": -0.03343363423603529
+      "return_pct": 0.5683717820126999
     },
-    "hour_count": 2,
-    "last_hour_open_utc": "2026-10-13T01:00:00Z",
+    "hour_count": 22,
+    "last_hour_open_utc": "2026-10-13T21:00:00Z",
     "session_status": "IN_PROGRESS_INCOMPLETE"
   },
   "legacy_claude_ota": {
@@ -147,28 +132,28 @@
     "path": "04_MARKET_LEARNING/claude_ota/LATEST_CLAUDE_OTA_STATUS_v1.json",
     "status": "LEGACY_CONTEXT_ONLY"
   },
-  "mode": "TRIGGER_ONLY",
+  "mode": "FULL_FIXED_OR_MANUAL",
   "owner_readback": {
     "adaptive_cadence": {
       "authority": "OPERATIONAL_SAMPLING_ONLY_NON_BINDING",
       "boost_active": false,
       "boost_reasons": [],
       "ethbtc_live": null,
-      "generated_at_utc": "2026-10-13T03:03:41.431012+00:00",
-      "latest_top100_proxy_advance_ratio": 0.12,
+      "generated_at_utc": "2026-10-13T20:16:29.933105+00:00",
+      "latest_top100_proxy_advance_ratio": 0.38,
       "path": "03_DAILY_CAPTURE_LOGS/cadence/LATEST.json",
       "registered_ethbtc_level_read_only": 0.03,
       "status": "PASS"
     },
     "breadth": {
-      "advance_ratio": 0.12,
-      "advancers": 12,
-      "decliners": 84,
+      "advance_ratio": 0.76,
+      "advancers": 76,
+      "decliners": 22,
       "evidence_role": "PROXY_ONLY_DESCRIPTIVE_ZERO_EXECUTION_WEIGHT",
-      "flat": 4,
-      "membership_hash": "079cf992cc5d30416f74de28e76fea925728fc4c2e32163ce8df8a50d795d258",
-      "outperforming_btc_count": 29,
-      "outperforming_eth_count": 39,
+      "flat": 2,
+      "membership_hash": "84eed6b1941c74f5774bdbe80255045f7e3455f4d77c0565a28ae3f4ab014ffa",
+      "outperforming_btc_count": 34,
+      "outperforming_eth_count": 23,
       "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
       "status": "PASS"
     },
@@ -177,14 +162,14 @@
       "contract": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
       "latest_final": {
         "BTC": {
-          "date": "2026-10-09",
-          "reported_total": 21.1,
+          "date": "2026-10-12",
+          "reported_total": -65.4,
           "session_final": true,
           "total_parity": true
         },
         "ETH": {
-          "date": "2026-10-09",
-          "reported_total": -56.1,
+          "date": "2026-10-12",
+          "reported_total": -85.4,
           "session_final": true,
           "total_parity": true
         }
@@ -230,7 +215,7 @@
       "daily_result": "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
       "l4_bridge_status": "PARTIAL_NATIVE_DISCOVERY_CONTEXT_NOT_FULL_L4_ATTRIBUTION_OWNER",
       "l4_evidence_rule": "NO_L4_EVIDENCE_ROW_FROM_UNVERIFIED_DISCOVERY_OR_RETROSPECTIVE_TAGGING",
-      "observation_date_utc": "2026-10-12",
+      "observation_date_utc": "2026-10-13",
       "owner_contract": "SITUATION_ROOM_DAILY_OWNER_LATEST_POINTER_v1",
       "path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/LATEST.json",
       "run_status": "DEGRADED",
@@ -247,7 +232,7 @@
     "orderbook_delta_over_60m_allowed": false,
     "settled_definition": "EXACTLY_24_UNIQUE_UTC_HOURLY_ROWS_00_THROUGH_23"
   },
-  "report_hash_sha256": "3179f85ec755a3e283fc87d2120e4bfaa80066870dc63e29ac5ab45110e7ede6",
+  "report_hash_sha256": "6e017043c2750a99bea09597dc3029d42d7ed090e026ba97b5b81c2ecacf7b3c",
   "schema_version": 1,
   "settled_session": {
     "btc": {
@@ -278,5 +263,5 @@
     "session_status": "SETTLED_COMPLETE_24H"
   },
   "source_policy": "READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS",
-  "trigger": "DAILY_SETTLED_TRANSITION_CHECK"
+  "trigger": "ADAPTIVE_HIGH_VOI"
 }
