@@ -66,6 +66,24 @@ const sourceHonesty=chatPrompt.match(/## Forecast evidence, honesty and user-vis
 if(!sourceHonesty.includes('12H = fortsættelse af seneste BTC/ETH-retning'))throw Error('Chat KOMPAS missing 12H continuation disclosure');
 if(!sourceHonesty.includes('**NO UNSOURCED CONFIDENCE:**')||!sourceHonesty.includes('A numeric probability / success likelihood requires a prospectively issued, scored and adequately calibrated probability for the identical event/horizon.'))throw Error('Chat KOMPAS missing governed calibrated-probability requirement');
 if(chatPrompt.includes('**Confidence:** <0–100%>'))throw Error('Chat KOMPAS still mandates uncalibrated 0–100% confidence');
+const route=JSON.parse(await readFile(resolve(site,'../../07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json'),'utf8'));
+const canonicalPath='07_PROMPTS_AND_AGENTS/action_compass/2026-09-16__global-action-compass-invocation-contract-v1__canonical.md';
+if(route.canonical_contract!==canonicalPath)throw Error('active Kompas global contract route changed without guard review');
+for(const trigger of ['kompas','handlekompas','compass'])if(!route.hard_triggers?.includes(trigger))throw Error('required ChatGPT hard trigger missing');
+const globalContract=await readFile(resolve(site,'../..',canonicalPath),'utf8');
+if(!globalContract.includes('P0 current-direction vs forecast honesty')||!globalContract.includes('Official NEXT_12H.expected_direction')||!globalContract.includes('P0 confidence and delivery honesty')||!globalContract.includes('not automatically a frozen research forecast'))throw Error('active global Kompas contract missing Task 1.5 truthfulness guard');
+const bilingual=JSON.parse(await readFile(resolve(site,'i18n-da.json'),'utf8')).exact;
+for(const original of [
+  sourceMethod,
+  'No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.',
+  'Keep existing positioning. The 0–12h pressure reading is a current-state observation, not a validated 12H forecast or the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.',
+  'Keep existing positioning. No fresh verified 0–12H reading is available; do not infer a new near-term direction or broaden high-beta exposure from missing evidence.',
+  'No fresh verified 0–12H pressure reading is available. Use the separate weekly context and await verified near-term evidence; missingness is not a swing, short or sell signal.'
+]){
+  if(typeof bilingual[original]!=='string'||!bilingual[original].trim()||bilingual[original]===original)throw Error('DA translation missing for 12H safety disclosure: '+original);
+}
+if(!staleMarkup.includes('No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.'))throw Error('missing-data active render not covered by bilingual catalog');
+if(!freshMarkup.includes(sourceMethod))throw Error('fresh active render not covered by bilingual catalog');
 // Independent end-to-end producer-digest and weekly-source regression checks.
 const root=resolve(site,'../..');
 const j=async p=>JSON.parse(await readFile(resolve(root,p),'utf8'));
