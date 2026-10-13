@@ -62,19 +62,74 @@
         </article>
       </div>
 
-      <section class="section-block section-path">
-        <div class="section-heading"><div><span class="section-index">01 / MARKET CYCLE</span><h2>Hvor bevæger vi os <span>hen?</span></h2></div><span class="section-aside">MARKET CYCLE</span></div>
-        <div class="path-panel">
-          <div class="path-head"><div><span class="label-light">KENDT MARKEDSKONTEKST</span><h3>BTC leder. <span>Den næste overlevering mangler.</span></h3><p>Markedsrejsen styres af bekræftelser, ikke af en kalender. Den viste rækkefølge er strukturel - ikke en automatisk prognose.</p></div></div>
-          <div class="path-route" aria-label="Markedsfaser i kildebunden rækkefølge">
-            <div class="path-phase phase-observed"><div class="path-pin"><span>01</span></div><h4>BTC leder</h4><p>Observeret W40</p></div>
-            <div class="path-phase"><div class="path-pin"><span>02</span></div><h4>ETH styrkes</h4><p>Afventer bekræftelse</p></div>
-            <div class="path-phase"><div class="path-pin"><span>03</span></div><h4>Large → mid</h4><p>Ikke verificeret</p></div>
-            <div class="path-phase"><div class="path-pin"><span>04</span></div><h4>Altseason</h4><p>Ingen sikker ETA</p></div>
-            <div class="path-phase"><div class="path-pin"><span>05</span></div><h4>Beskyttelse</h4><p>Ikke bekræftet</p></div>
+      <section class="section-block section-path" aria-labelledby="path-main-title">
+        <div class="section-heading">
+          <div><span class="section-index">01 / MARKET CYCLE</span><h2 id="path-main-title">Hvor er vi <span>i cyklussen?</span></h2></div>
+          <span class="section-aside">PATH · KILDEBUNDET</span>
+        </div>
+        <div class="path-panel" id="path-panel">
+          <div class="path-head">
+            <div>
+              <span class="label-light">MARKEDSCYKLUS · OFFICIEL UGEREFERENCE</span>
+              <h3 id="path-lead">Cyklusaflæsning afventer kilde.</h3>
+              <p id="path-source-intro">Retning og fase skal kunne dokumenteres. En strukturel rækkefølge er ikke en tidsprognose.</p>
+            </div>
+            <span class="path-source-pill" id="path-source-pill">KILDE AFVENTES</span>
           </div>
-          <div class="path-lower"><span><i class="diamond"></i> Vores aktuelle reference er BTC-lederskab i den <strong>afsluttede uge</strong>, ikke en verificeret 4–8-ugers fase.</span><button class="path-more" type="button" id="expand-cycle" aria-expanded="false" aria-controls="cycle-details">Se hele markedsrejsen <span>＋</span></button></div>
-          <div class="path-expanded" id="cycle-details" hidden><div><strong>Den fulde cyklusrute</strong><p>BTC leadership → Ethereum leadership → Large/mid rotation → Altseason ignition → Micro acceleration → Broad altseason → Mania/euphoria → Distribution → Exit/protection → Cooldown/re-entry.</p></div><div><strong>Hvad skal vi se først?</strong><p>ETH/BTC skal stabilisere sig, deltagelse skal overleve pullbacks, og 90/365-dages bredde skal forbedres. Manglende betingelser er ikke skjulte tidsestimater.</p></div></div>
+
+          <div class="path-current-next" aria-label="Kendt reference og næste cyklusbekræftelse">
+            <div class="path-fact">
+              <span>SIDST DOKUMENTEREDE FASE</span>
+              <strong id="path-current">Ikke verificeret</strong>
+              <small id="path-current-context">Afventer kilde</small>
+            </div>
+            <div class="path-fact">
+              <span>NÆSTE BEKRÆFTELSE</span>
+              <strong id="path-next">Ikke verificeret</strong>
+              <small id="path-next-gate">Afventer kilde</small>
+            </div>
+          </div>
+
+          <div class="path-route-head">
+            <strong>Fra BTC til rotation, altseason og beskyttelse</strong>
+            <small>Trin er betingelser, ikke en nedtælling</small>
+          </div>
+          <ol class="path-route" id="path-route" aria-label="Fem hovedetaper i markedsrejsen">
+            <li class="path-phase"><span class="path-pin">—</span><strong>Afventer kilde</strong></li>
+          </ol>
+
+          <div class="path-watch-strip">
+            <div>
+              <span>ALTSEASON-WATCH</span>
+              <strong id="path-alt-status">Ikke verificeret</strong>
+              <small id="path-alt-evidence">Bred altseason kræver uafhængig bekræftelse.</small>
+            </div>
+            <div class="path-watch-eta"><span>ETA</span><strong id="path-eta">Ingen verificeret ETA</strong></div>
+          </div>
+
+          <div class="path-rotation">
+            <div class="path-rotation-heading">
+              <strong>Denne uges kapitalrotation</strong>
+              <small>Originale Kompas-handlinger · BTC → memes</small>
+            </div>
+            <div class="path-rotation-rail" id="path-rotation-rail" role="list" aria-label="Syv officielle kapitaliseringsniveauer">
+              <span>Afventer kilde</span>
+            </div>
+          </div>
+
+          <details class="path-disclosure" id="cycle-details">
+            <summary><span><strong>Hele markedsrejsen</strong><small>Alle 10 faser, dokumentation og betingelser</small></span><span aria-hidden="true" class="path-details-chevron">⌄</span></summary>
+            <div class="path-expanded">
+              <ol class="path-all-phases" id="path-all-phases"></ol>
+              <div class="path-detail-sources">
+                <div><strong>ETH/BTC · næste gate</strong><p id="path-gate-detail">Ingen verificeret gate.</p></div>
+                <div><strong>2–3 uger · struktur</strong><p id="path-2-3w">Afventer kilde</p></div>
+                <div><strong>4–8 uger · cyklus</strong><p id="path-4-8w">Afventer kilde</p></div>
+                <div><strong>Beskyttelse, distribution og re-entry</strong><p id="path-protection">Afventer separate officielle kilder</p></div>
+              </div>
+              <p class="path-source-disclaimer" id="path-caveat">Ingen etape forfremmes uden verificerede signaler.</p>
+            </div>
+          </details>
         </div>
       </section>
 
