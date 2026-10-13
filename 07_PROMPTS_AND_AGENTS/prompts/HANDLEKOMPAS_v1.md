@@ -89,7 +89,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Microcaps:** <expected % range from current/reference level>
 **Pullback:** <expected % range + most likely timing window>
 **Handling:** **<BUY | BUY DIP | HOLD | SWING-REDUCE | SELL / CASH>**
-**Confidence:** <0–100%>
+**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
 
 ### 1–3 DAGE
 **Marked:** <↑ | → | ↓>
@@ -98,7 +98,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Microcaps:** <expected % range>
 **Pullback:** <expected % range + timing>
 **Handling:** **<one clear action>**
-**Confidence:** <0–100%>
+**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
 
 ### 5–7 DAGE
 **Marked:** <↑ | → | ↓>
@@ -107,7 +107,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Microcaps:** <expected % range>
 **Pullback:** <expected % range + timing>
 **Handling:** **<one clear action>**
-**Confidence:** <0–100%>
+**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
 
 ### 2–3 UGER
 **Marked:** <↑ | → | ↓>
@@ -116,7 +116,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Microcaps:** <expected % range>
 **Pullback:** <expected % range + timing>
 **Handling:** **<one clear action>**
-**Confidence:** <0–100%>
+**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
 
 ### 21–30 DAGE — STRATEGIC COMPASS
 **Marked:** <↑ | → | ↓>
@@ -128,7 +128,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Handling:** **<one clear action within existing authority>**
 **Thesis state:** <ON_TRACK | ACCELERATING | WEAKENING | INVALIDATED | DATA_DEGRADED>
 **Falsifikation:** <short explicit condition(s)>
-**Confidence:** <0–100%>
+**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
 
 ### 4–8 UGER — CYCLE OVERLAY
 **Cycle-retning:** <concise direction from current eligible Cycle Navigator projection>
@@ -138,7 +138,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Handling:** **<high-level action within existing authority>**
 **Thesis state:** <ON_TRACK | ACCELERATING | WEAKENING | INVALIDATED | DATA_DEGRADED>
 **Falsifikation:** <short explicit condition(s)>
-**Confidence:** <0–100%>
+**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
 **Lineage:** <current eligible Cycle Navigator source identity; never synthesize a parallel 4–8W engine>
 
 ### CROSS-HORIZON ALIGNMENT
