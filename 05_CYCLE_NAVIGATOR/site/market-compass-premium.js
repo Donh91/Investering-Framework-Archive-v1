@@ -174,12 +174,19 @@ function decisionMeta(compass) {
 // Official NEXT_12H is a market-direction continuation proxy, not an independently
 // scored 12-hour model. Missing/stale states must never assert a live direction.
 function freshNearTermReading(dataOk, live) {
-  return Boolean(dataOk && !['NO NEW READING','NOT READY','UNCLEAR','UNAVAILABLE','WAITING','NOT ACTIVE','WAIT'].includes(live));
+  // Explicitly recognize only independently sourced *current direction states*.
+  // Unknown/new labels, NO_EDGE and stale/missing states are not a live forecast.
+  return Boolean(dataOk && ['BULLISH','BEARISH','UP','DOWN'].includes(live));
+}
+function mixedNearTermReading(dataOk, live) {
+  return Boolean(dataOk && ['MIXED','SIDEWAYS','NEUTRAL'].includes(live));
 }
 function twelveHourMethodDisclosure(dataOk, live) {
-  return freshNearTermReading(dataOk, live)
-    ? 'Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.'
-    : 'No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.';
+  if (freshNearTermReading(dataOk, live))
+    return 'Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.';
+  if (mixedNearTermReading(dataOk, live))
+    return 'Current BTC/ETH conditions are mixed or sideways; no clear 0–12H direction or independently validated 12H forecast.';
+  return 'No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.';
 }
 
 function recommendationWindow(compass) {
@@ -195,14 +202,19 @@ function decisionDetail(compass, rec, meta) {
   const issued = clean(compass?.issued_at_utc);
   const issuedLabel = issued ? new Date(issued).toLocaleString('en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',','') + ' CPH' : 'timestamp unavailable';
   const liveFresh = freshNearTermReading(true, meta.live);
+  const liveMixed = mixedNearTermReading(true, meta.live);
   const investor = rec.action === 'HOLD'
     ? (liveFresh
       ? 'Keep existing positioning. The 0–12h pressure reading is a current-state observation, not a validated 12H forecast or the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.'
-      : 'Keep existing positioning. No fresh verified 0–12H reading is available; do not infer a new near-term direction or broaden high-beta exposure from missing evidence.')
+      : liveMixed
+        ? 'Keep existing positioning. BTC/ETH conditions are mixed; there is no clear directional 12H signal. Do not broaden high-beta exposure based on mixed conditions alone.'
+        : 'Keep existing positioning. No fresh verified 0–12H reading is available; do not infer a new near-term direction or broaden high-beta exposure from missing evidence.')
     : rec.copy;
   const swing = liveFresh
     ? 'Treat ' + meta.live + ' over ' + meta.liveEta + ' as short-horizon pressure, while the 5–7 day outlook remains ' + meta.weekly + '. ' + meta.risk + ' means a retest deserves attention, but it is not a confirmed sell, short or distribution signal.'
-    : 'No fresh verified 0–12H pressure reading is available. Use the separate weekly context and await verified near-term evidence; missingness is not a swing, short or sell signal.';
+    : liveMixed
+      ? 'Near-term BTC/ETH conditions are mixed, with no clear directional edge. Wait for a verified change; mixed conditions are not a short or sell signal.'
+      : 'No fresh verified 0–12H pressure reading is available. Use the separate weekly context and await verified near-term evidence; missingness is not a swing, short or sell signal.';
   return '<details id="liveDecisionDetail" class="premium-decision-detail">'
     + '<summary><span>DECISION DETAIL</span><b>Investor + swing trader context</b></summary>'
     + '<div class="premium-decision-body">'
