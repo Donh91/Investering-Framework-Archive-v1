@@ -148,7 +148,6 @@ def require_bound_original_outcome(root: Path, prediction_file: Path,
     if key is None or direction is None:
         raise ValueError("ORIGINAL_OUTCOME_CALIBRATION_SOURCE_MISSING")
     required.update({
-        "production_context": prediction.get("production_context"),
         "source_candle_open_utc": prediction.get("source_candle_open_utc"),
         "calibration_key": key,
         "calibration_group": f"{asset}:{hours}H:{direction}:{key}",
@@ -158,6 +157,26 @@ def require_bound_original_outcome(root: Path, prediction_file: Path,
     for field, expected in required.items():
         if expected is None or receipt.get(field) != expected:
             raise ValueError(f"ORIGINAL_OUTCOME_LINKAGE_INVALID:{field}:{relative}:{hours}H:{asset}")
+    # Forecast issuing and later outcome scoring are SEPARATE registered
+    # GitHub Actions runs: their production contexts MUST NOT be identical.
+    # Check each against the registered context contract, not each other.
+    for context_label, context in (
+        ("FORECAST", prediction.get("production_context")),
+        ("OUTCOME", receipt.get("production_context")),
+    ):
+        if not isinstance(context, dict):
+            raise ValueError(f"ORIGINAL_{context_label}_CONTEXT_MISSING")
+        commit = context.get("commit_sha")
+        if (
+            context.get("repository") != "Donh91/Investering-Framework-Archive-v1"
+            or context.get("ref") != "refs/heads/main"
+            or context.get("event") not in ("schedule", "workflow_dispatch")
+            or not str(context.get("run_id", "")).isdigit()
+            or not isinstance(commit, str)
+            or len(commit) != 40
+            or any(char not in "0123456789abcdef" for char in commit)
+        ):
+            raise ValueError(f"ORIGINAL_{context_label}_CONTEXT_INVALID")
     # Null probabilities are valid in WARMUP, but even a null must remain
     # frozen and must not be substituted with a post-outcome estimate.
     if receipt.get("frozen_calibrated_probability_pct", object()) != target.get(
@@ -400,7 +419,12 @@ def self_test():
             "registration_receipt_sha256": "fixture-registry-hash",
             "source_price_observation_utc": utc(WINDOW_START + timedelta(hours=1)),
             "source_candle_open_utc": utc(WINDOW_START),
-            "production_context": {"commit_sha": "fixture"},
+            "production_context": {
+                "commit_sha": "a" * 40, "event": "schedule",
+                "ref": "refs/heads/main",
+                "repository": "Donh91/Investering-Framework-Archive-v1",
+                "run_id": "1",
+            },
             "horizons": {
                 "1H": {"status": "ELIGIBLE", "source_cutoff_utc": utc(WINDOW_START + timedelta(hours=1)), "due_at_utc": utc(WINDOW_START + timedelta(hours=2)), "targets": {"BTC": {"direction": "UP", "start_value": 101, "calibration_key": "fixture", "votes": [], "frozen_calibrated_probability_pct": None}, "ETH": {"direction": "DOWN", "start_value": 201, "calibration_key": "fixture", "votes": [], "frozen_calibrated_probability_pct": None}}},
                 "4H": {"status": "NO_EDGE", "source_cutoff_utc": utc(WINDOW_START + timedelta(hours=1)), "due_at_utc": utc(WINDOW_START + timedelta(hours=5)), "targets": {}},
@@ -420,7 +444,11 @@ def self_test():
             "due_at_utc": forecast["horizons"]["1H"]["due_at_utc"],
             "source_price_observation_utc": forecast["source_price_observation_utc"],
             "source_candle_open_utc": forecast["source_candle_open_utc"],
-            "production_context": forecast["production_context"],
+            "production_context": {
+                **forecast["production_context"],
+                "commit_sha": "b" * 40,
+                "run_id": "2",
+            },
             "calibration_key": "fixture",
             "calibration_group": "BTC:1H:UP:fixture",
             "votes": [],
@@ -446,7 +474,7 @@ def self_test():
             if bad == "horizon": corrupt["horizon_hours"] = 4
             if bad == "contract": corrupt["contract"] = "LEGACY_STALE_OUTCOME"
             if bad == "status": corrupt["status"] = "MATURED"
-            if bad == "production_context": corrupt["production_context"] = {"commit_sha": "different"}
+            if bad == "production_context": corrupt["production_context"] = {**bound["production_context"], "ref": "refs/heads/side-branch"}
             if bad == "source_candle_open_utc": corrupt["source_candle_open_utc"] = "2026-09-14T12:00:00Z"
             if bad == "calibration_key": corrupt["calibration_key"] = "other"
             if bad == "calibration_group": corrupt["calibration_group"] = "ETH:1H:UP:fixture"
