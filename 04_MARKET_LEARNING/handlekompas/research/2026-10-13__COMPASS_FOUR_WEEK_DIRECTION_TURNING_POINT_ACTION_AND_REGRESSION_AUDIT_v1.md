@@ -1,0 +1,124 @@
+# Compass four-week forensic audit - 2026-10-13 - preliminary evidence and executable research handoff
+
+**Authority:** RESEARCH_ONLY / NONCANONICAL / NOT A MODEL PROMOTION. **Status:** VERIFIED PARTIAL FORENSICS, FULL 28-DAY FORECAST CENSUS NOT YET EXECUTED.  
+**Existing owners:** Compass #1573; EDGE-001 / #1530 and #1592; October warnings/action #1553; provenance #1557. No new experimental owner, cron, spend, market weights, threshold, SELL state, wallet access or live change.
+
+## 0. Objective, fixed population, three distinct questions
+
+Evaluate 2026-09-15 06:00 UTC through 2026-10-13 06:00 UTC inclusive (28 complete days, 672 hourly return intervals). Must independently measure:
+1. **Directional skill:** prospectively frozen BTC/ETH direction at its exact issued horizon, against as-of baselines, with abstentions, censored outcomes, uncertainty and price-move magnitudes.
+2. **Turning-point / risk warning skill:** first source-knowable degradation, first genuinely emitted warning, reaction lag, rebound recognition, drawdown severity, false positives, and robust low-breadth / ETH-relative weakness controls.
+3. **Action utility:** separately for an existing holder versus new cash; executable delivery time, next eligible fill, fees/slippage, taxes if knowable, opportunity cost, downside/tail protection, and reentry drag. If unavailable: NOT IDENTIFIABLE, not zero.
+
+The test concerns Official, Shadow v2, T12 Intraday Direction, CN weekly ranges, strategic, warning lanes and old experiments, each under its own original contract. DO NOT pool different forecasts, owner identities, target horizons, instrument bases, periods or scoring revisions.
+
+## 1. Directly verified facts (13 Oct 2026)
+
+- Binance 1h spot BTCUSDT and ETHUSDT: 697 consecutive retrieved candles including day-before warmup; **673 hourly closes, 672 return intervals** over 15 Sep 06:00Z - 13 Oct 06:00Z. BTC 77,630 -> 83,681.87 (**+7.80%**); ETH 2,496.53 -> 2,531.69 (**+1.41%**). Peak-to-subsequent-low excursion in this window: BTC **-8.01%** and ETH **-14.29%**. These are price tape outcomes, NOT forecasts or economic utility. Venue basis Binance Spot; owner hourly archive is the causal framework source.
+- From current `04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json`: group-wise selected independent sample totals BTC: 1H **11/20 (55.0%)**, 4H **41/88 (46.6%)**, 24H **42/76 (55.3%)**; ETH: 1H **12/22 (54.5%)**, 4H **33/92 (35.9%)**, 24H **40/92 (43.5%)**. These aggregate since the 31 Aug registration, NOT this 28d period. Groups are conditional on forecast vote strength and maturity; the selection procedure's independence is heuristic greedy horizon spacing, not independent macro shock episodes. Group count must not become a confidence probability.
+- `DIRECTION_VALIDATION.json`: **263 prediction files**, **1,302 outcome rows validated**, status PASS, promotion NOT_PROMOTED_SHADOW_ONLY. The current aggregate `scored_outcome_count=454`; these totals use differing grains and are not additive to each other.
+- Demonstrated daily failure: a 12 Oct 00:32Z (02:32 Copenhagen) T12 24H forecast predicted BTC UP, due 13 Oct 00:00Z; outcome BTC 83,773.12 -> 81,850 (**-2.2956%, MISS**). ETH same freeze UP vs 2,536.94 -> 2,447.17 (**-3.54%, MISS**). All six BTC vote families were bullish at issuance; correlated consensus != independent causal confirmation. Filename `04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/12/20261012T003213Z_24H_BTC.json`. Separately the 12 Oct 08:41 Copenhagen 24H bullish freeze ended down 0.4% BTC / 1.31% ETH at 13 Oct 08:00 Copenhagen; **not a substitute for the different midnight freeze**.
+- Three-week baseline caveat: T12 sample includes legitimately **CENSORED** outcomes. Example `direction_outcomes/2026/09/15/20260915T180730Z_1H_BTC.json` is `CENSORED` due to `EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE`, even if a subsequently populated historical CSV or external Binance can now yield a price. Do NOT backfill it as HIT/MISS; report as a separate research sensitivity scenario outside registered scoring.
+- The T12 `direction_horizons_hours=[1,4,24]` has no native 12H model. Shadow Compass v2 has distinct forward-only 12h/72h/168h forecasts, activated around 30 Sep, and cannot be projected backward to mid-Sep.
+- **Major semantics defect / communication risk:** `scripts/data_ping/native_handlekompas.py` derives `market_now.directional_state` from **latest BTC+ETH deltas** and `horizon_map` directly maps that into `NEXT_12H.expected_direction`. It is a current-state continuation proxy / nowcast, **not an independent optimized 12h predictive engine**. The UI/user-facing bullish-next-12h wording must carry this uncertainty; test it honestly against forward 12h actuals and same-clock naive continuation baseline. Do not silently alter frozen Official forecasts.
+- Weekly AI path `.github/workflows/weekly-api-calibration-shadow.yml` scheduled once Monday 02:40 Europe/Copenhagen; `research/api_agent/API_INTELLIGENCE_POLICY_v2.json` is ACTIVE_SHADOW_ONLY with `threshold_change=false`, `weight_change=false`. `04_MARKET_LEARNING/intraday_execution/config.json` has `automatic_signal_reweighting=false`, version exactly same blob `ec780123f36c36f192be604f2432f22fd964c07b` at five contemporaneous canonical-main snapshots dated 15 Sep, 22 Sep, 29 Sep, 6 Oct, 12 Oct. Core T12 direction script blob was `759623ed7be5f81869083bab35afd514e4640c32` for first three snapshots and `5a067ffa8706298907bc4b1cb71cfc8aeed4c8c0` 6/12 Oct; observed change adds a shared Wilson-interval function/import in place of local formula, **not evidence of a changed directional vote policy**. Thus **no support that weekly automatic retraining/reweighting caused the T12 misses**. Changes in Official policies, other model families, schedule/input composition and source vintages remain open for investigation.
+- Monthly scorecard data-integrity gap: `research/api_agent/outputs/weekly/2026/W39`, W40 and W41 `MASTER_MONDAY_CALIBRATION_SCORECARD.json` each has **status UNAVAILABLE_API_CONTRACT** with empty analysis and operational-translation layers, even while `matured_outcome_count` is positive (237, 118 and 130). Therefore a Monday "calibration completed" receipt is NOT proof of actual comparative forecast improvement or an economically validated update.
+- Legacy archive already provides negative evidence, not an identified old superior production version: `04_MARKET_LEARNING/full_backtests/2026-07-12__full-sensor-simulation-backtest-v1__canonical.md` found BTC.D B1 standalone early warning/protective trim NOT SUPPORTED, and tested protective trimming underperformed buy-and-hold terminal returns. `04_MARKET_LEARNING/range_skill/2026-07-08__m5-range-skill-audit-degraded-execution__canonical.md`: legacy CN lost to naive ATR range baselines in 9/14 source-backed comparisons. `05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10__legacy_to_automated_kompas_cross_archive_evidence_audit_v1.md` documents legacy CN #13 -> #14 duplicated weekly maps after misses and incomplete old event census.
+- Potential older signal *candidates*, not established production improvements: `04_MARKET_LEARNING/sensor_tournament/2026-07-08__m2-sensor-combination-tournament-degraded-execution__canonical.md` suggests ETH/BTC C-family lean warning (reported +18.5% degraded in-sample trim edge) and D price/volatility as later confirmation, while A3 caused 5/7 false alarms. The 2026-07-12 full sensor replay is adverse to careless sensor promotion. Independent PIT forward test mandatory.
+- The separate experiment repo `Donh91/Eksperimenter-framework-` is a noncanonical execution/replication plane. Its `swing_signal_lab/latest_state.json` and coverage summary remain INITIALIZED_NO_ROWS / 0 matured signal rows in inspected state; **it cannot currently be cited as a proven superior challenger**. Its bridge replication receipts are not forecasts or evidence of decision utility.
+- Existing EDGE-001 T2B has 94 historical annotations and **zero historically admissible typed warning joins**. 144 variants are a preregistered synthetic/PIT test surface, not 144 historical backtest wins. PR #1592 reports 0 admitted Official/Shadow comparable pairs under the latest scoring compatibility gates and substantial v2/v3 contract mismatch. Preserve older rows; avoid retrospective rescoring.
+
+
+## 1b. Direct historic calibration checkpoints (additional verification)
+
+Immutable GitHub `DIRECTION_CALIBRATION.json` snapshots have been read **at the actual source-main commits** listed in R5, not recomputed using today's calibration data. Snapshot timestamps:
+
+| Label | Generated UTC | Matured score-row count |
+|---|---|---:|
+| 15 Sep | 2026-09-15 01:24 | 137 |
+| 22 Sep | 2026-09-22 04:42 | 194 |
+| 29 Sep | 2026-09-29 18:56 | 241 |
+| 6 Oct | 2026-10-06 10:16 | 342 |
+| 12 Oct (prior checkpoint) | 2026-10-11 22:11 | 431 |
+| 13 Oct | 2026-10-13 02:09 | 454 |
+
+**Method:** For each asset/horizon, sum per-calibration-group `hits` and `independent_count`; calculate adjacent-snapshot differences. These are **newly admitted/matured changes in a greedy independent-group calibration register**, NOT a complete time-of-forecast-cohort outcome census. Historical groups might shift with later admissible maturations. Do not label the intervals "forecasts originally issued in that week" or claim strict independence. The 12 Oct checkpoint is generated late 11 Oct UTC.
+
+| Snapshot interval | BTC 1H | ETH 1H | BTC 4H | ETH 4H | BTC 24H | ETH 24H |
+|---|---|---|---|---|---|---|
+| 15–22 Sep | 2/3 | 1/3 | 6/12 | 6/13 | 8/10 | 6/13 |
+| 22–29 Sep | 0/1 | 1/1 | 5/11 | **1/8** | 4/10 | **1/10** |
+| 29 Sep–6 Oct | 3/6 | 3/6 | 10/22 | **6/24** | 9/15 | 9/15 |
+| 6–12 Oct | 3/5 | 4/7 | 7/15 | 6/15 | 7/14 | 8/16 |
+| 12–13 Oct | 2/3 | 1/3 | 2/2 | 2/2 | 1/4 | 2/6 |
+| **15 Sep–13 Oct delta** | **10/18 (55.6%)** | **10/20 (50.0%)** | **30/62 (48.4%)** | **21/62 (33.9%)** | **29/53 (54.7%)** | **26/60 (43.3%)** |
+
+**Finding:** The poor 4H ETH result is persistent across multiple weeks. A monotonic decline after each Monday calibration is contradicted: ETH 4H interim increments were 46.2%, 12.5%, 25.0%, 40.0%, then 2/2, though latter groups are tiny. Together with source code/config stability and prohibition on auto-reweighting, weekly *automatic* calibration-induced regression is not established.
+
+The separate original issuance-based, instrument+clock-matched R0-R3 replay remains REQUIRED, because change in a greedy scorer register is not a fully controlled per-week forecast experiment.
+
+Reference snapshot `DIRECTION_CALIBRATION.json` blob SHA at five dates: `1969d0107f945090460188d61f3893a2e7391273`, `f8c52f84c16af84c0a8182d5f9ae5b9ebc8b77de`, `190e77a6b8a86f4144e2721b2432eb387f513950`, `4240d28f2d076834f11a7ed57eee4845ea4cb7d0`, `f686d4dd68dcf0b4f901750bd1b850086edb879c`. The latest current-main blob is separately versioned, not overwritten.
+
+
+
+### Directional asymmetry within the four-week calibration-register delta
+
+Same saved snapshot subtraction, split strictly by **frozen predicted direction**. This is informative about bias and reversal failure, **not a controlled independent-event estimate**:
+
+| Asset/horizon | Predicted UP: correct/eligible | Predicted DOWN: correct/eligible |
+|---|---:|---:|
+| BTC 1H | 3/8 (37.5%) | 7/10 (70.0%) |
+| ETH 1H | 4/11 (36.4%) | 6/9 (66.7%) |
+| BTC 4H | 19/33 (57.6%) | **11/29 (37.9%)** |
+| ETH 4H | 13/29 (44.8%) | **8/33 (24.2%)** |
+| BTC 24H | 17/29 (58.6%) | 12/24 (50.0%) |
+| ETH 24H | 13/28 (46.4%) | 13/32 (40.6%) |
+
+**New primary falsifiable subhypothesis:** 4H bearish continuation predicts that remain active near drawdown exhaustion disproportionately fail on fast rebounds; this must be tested as *ex-ante rebound risk*, not assumed from ex-post selection. Distinguish DOWN-after-stress versus DOWN-before-stress, check volume/OI/ETHBTC and market microstructure vintages, and compare stable no-reweight momentum, contrarian and session-adjusted controls. Avoid asymmetric costs by making direction classes equally represented in balanced accuracy; test warnings for both false exits and actual downside misses.
+
+
+
+## 1c. Concrete 672-hour actual-price evidence generated in this research PR
+
+The file `04_MARKET_LEARNING/handlekompas/research/evidence/2026-09-15_to_2026-10-13__HOURLY_SPOT_OUTCOME_CROSSCHECK_28D.csv` contains a **complete, independently downloaded 672-row Binance Spot UTC-hour actual-outcome cross-check** (18 columns, zero observed missing hourly source/target inputs). Each row has BTC and ETH spot hourly closes, with trailing realized **1h, 4h, 12h, 24h, 48h, 72h and 168h percentage returns** (rounded to 6 decimals). Rows end at `2026-10-13T06:00:00Z`; one-week earlier warm-up fetched in the same API pull. Original source exchange: Binance `BTCUSDT`/`ETHUSDT` Spot, interval 1h; retrieved 2026-10-13. **Not** evidence that original framework owner knew provider values at original issue time. This derived CSV is **research outcome tape only**, deliberately labelled `forecast_pairing_status=NOT_JOINED_TO_ORIGINAL_FORECAST`. It NEVER converts an original `CENSORED` row into a scored registered forecast. Do not join it to original prediction files until R0 source-vintage integrity and horizon-date admissibility checks pass. It is neither a new original data owner nor a scoring result.
+
+## 2. Required 28d reproducible audit (R0-R8), acceptance tests
+
+**R0 source admission:** enumerate `direction_predictions/**` and `direction_outcomes/**` files by true issue date, not GitHub search ranking. For every file freeze original issue UTC, source cutoff/availability, main first-parent commit, issuance-to-target lead, asset, horizon, contract, direction, vote families, model/rule version, prediction SHA, original config SHA, unaltered frozen reference price, exact target time, original maturation state/actual, censor reason, and scorer revision. Cross-check dated hourly owner CSVs against independent venue observations without overwriting outcomes. Full census expected to include **all** 28d files, not just search top-100 hits. Report explicit missed hours, duplicate captures, blackout periods and first-knowledge conflicts. NO subsequent-value substitution for censored registered events.
+
+**R1 time-by-time:** produce 672-row hourly price outcome table (both assets), plus per-hour `FORECAST_PRESENT`/NO_FORECAST/NO_EDGE/INELIGIBLE/CENSORED/MATURED flag. A new hourly result must never be fabricated from a 4H, 12H or 24H forecast. Separate hourly source availability from predictive forecast availability. Include same-day and 48/72/96-hour compact summary in addition to full artifact.
+
+**R2 same-clock direction benchmark:** for eligible 1H/4H/24H original freezes, compute exact original matured registered outcomes and independently selected nonoverlap horizon samples. Report 28d, 7d rolling, ISO-week, by BTC/ETH, vote strength, UP/DOWN, time-of-day, weekend, drawdown regime and data health. Compare identical issue timestamp/target set to ALWAYS_UP, ALWAYS_DOWN, historical majority direction estimated only pre-issue, trailing-price persistence, reversal, momentum and no-skill. Report balanced accuracy, confusion matrix, directional hit, class balance, signed return weighted by severity, false certainty, sample CI and losses on worst shock families. Explicitly report denominators & censored/abstained cases. Avoid market-wide always-up percentages as if same cohort.
+
+**R3 horizons:** evaluate original frozen Official 12h/72h/168h and Shadow v2 12h/72h/168h only when contract-clock compatible and genuinely matured. For native 1H/4H/24H forecasts do not manufacture 12H forecasts; 12H retrospective rolling BTC return is an ACTUAL BASELINE only. Cross-version v1/v2/v3 must be separate; pairing 0 is an evidence gap, not skill = 0. Include 7d/14d/21d/30d only if originally forecast with exact original target/contract. Register new future forecasts forward-only.
+
+**R4 turn events:** define peaks/troughs using ex-post actuals only as OUTCOME labels; inputs strictly at first-knowledge. Study large 4/12/24/48/72h downside, sharp rebounds, false breakdowns, BTC-led vs ETH-led divergence, failure to react to losing ETH/BTC. Quantify first actionable alert lead/lag vs price-only baselines, no-warning tail days, MFE/MAE, missed + false reversals, false exits on V-recovery and reentry opportunity costs. Cluster related hour windows and assets as one market episode family.
+
+**R5 ablation/old model challenge:** distinguish genuine model/source/version regression from changes in environment. Anchor code snapshot table to 5 source commits: 15 Sep `32177091f2fbba8a88f8ad9bcf197b97b4a2cbd9`; 22 Sep `b0299e6769ee79f55610f0441f50e8e0d1dcb8b2`; 29 Sep `92e06c7f510fc93c1c1ad7be5ce44265892adf83`; 6 Oct `36a07b06fc19abf597f20c9f788d2859d0c5a479`; 12 Oct `ccd3c09235d083db844935a3065ac1a1e1988d0d`. Classify semantic vs cosmetic changes per producer, source version, feature universe, calibration config, Official horizon policy, outcome clock, scoring and downstream translation. Conduct **matched same data, same clocks** predecessor-versus-successor replay with code frozen to each original version, without pretending later versions were live in earlier periods. Label retrospective challenger DEVELOPMENT ONLY, not previously issued predictions. Source first-knowledge and original feature sets mandatory. Separate model regression from regime change and censor selection.
+
+**R6 monthly/weekly update causal test:** distinguish weekly *evaluation* vs actual model-weight changes. Compile issue/commit-level change log for direction owners, prompt/model version, thresholds and signal governance; check every alleged weekly learning effect has a causal deployment path. Compare frozen stable model with hypothetical 1w, 2w, 4w, 8w recalibration/hold intervals under blocked chronological walk-forward, purge/embargo >= target horizon and enough pre-training history. If insufficient historical samples or lookahead-safe feature snapshots, return NOT_IDENTIFIABLE; do not claim 8-week test on a 4-week sample. Hypothesis H0: no proven benefit to short cadence, H1: change frequency or policy instability harms independently scored prospective skill; choose only on a genuinely future sealed holdout. Weekly read-only learning should continue, automatic reweighting remains disabled.
+
+**R7 macro and challenger triage:** PIT-join by original publication/revision/availability timestamps, not period labels: ETF settled flows vs price, ETH/BTC persistence, breadth quality, OI/funding/liquidation, BTC.D provider convention, CFGI technical-vs-social/whale/order/trend dispersion, stablecoin deployment, FRED liquidity/real-rates and Business Cycle state, TechDev original dated releases, verified catalyst news timestamps, weekend liquidity and futures-vs-spot delta. Macro slow-series may condition regime, never backdate to predict intrahour reversals. Reuse M1/M2/M4/M5, 25,506 historical hourly feature panel, 46 labeled episodes, and 851,882 restricted historical alt-market observations only under their source-access controls. For each family, estimate *incremental* lift against baseline and ablate correlated factors; provide false positives, regime stratification and no free alpha language. Old archived sensor claims get verified/provisional/failed labels.
+
+**R8 decision economics and gate:** no auto SELL, no threshold changes, no premature AI weight adjustment. Reuse existing warning action owner #1553 and EDGE-001 T2B as PIT join gate. If no eligible typed delivered warnings/outcomes, report action utility NOT TESTABLE, not that HOLD is optimal. Score incumbent hold, partial trim and reentry at next executable price, worst-case slippage and opportunity cost only when causally comparable. Include abstention policy, separate recommendation for research and live presentation; require independent adversarial methods check, negative controls, cluster-adjusted uncertainty and a prospectively sealed holdout.
+
+## 3. Research accountability and severity
+
+- **P0 scientific semantic audit:** Official `NEXT_12H` nowcast-labelled-as-next-12h forecast. Disclose mechanism and scored performance; protect Official authority while considering future presentation clarification only after audit.
+- **P0 accuracy/reversal:** ETH 4H 33/92 (35.9%) and BTC 4H 41/88 (46.6%) selected groups; investigate regime skew and selection. Candidate failure: same-family correlated momentum votes cannot anticipate V rebounds.
+- **P0 outcome comparability:** version/candle-clock mismatch, censored outcomes, zero admitted pairings; no mixed-version leaderboard or fake 4-week skill score.
+- **P1 weekly reporting integrity:** scorecard `UNAVAILABLE_API_CONTRACT` for W39-W41 despite counted matured rows. Existing owner must fix/clarify receipt before any learning/evolution success claim.
+- **P1 change-frequency hypothesis:** user's weekly over-calibration suspicion **NOT SUPPORTED AS A CAUSAL FINDING** for frozen T12 direction weights; other changes may still create drift. Evaluate, do not change cadence now.
+- **P1 archival regression:** source-backed old CN text reuse after errors; old sensor M2 candidates worth falsification, not evidence of an older universally better version.
+
+## 4. Handoffs / no collision
+
+1. Existing Compass research PR #1573: register 28d and rolling windows R0-R6, mandatory intra-day/Official/Shadow same-clock baselines; challenge language and historical-version regression.
+2. Existing EDGE-001 #1530 / PR #1592: join R4/R7 warning/tail cases only after T2B admissibility and negative controls; keep 144 variants exploratory.
+3. Existing action/warnings #1553 and censor #1557: action-to-delivery-to-fill path and censored denominator separately.
+4. Existing historical cross-archive owner `05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10__legacy_to_automated_kompas_cross_archive_evidence_audit_v1.md`: legacy CN/Data Ping and source-bound predecessor recovery.
+5. Experiment repo is independent replicator, **not** a score owner; request exact original code/forecast/knowledge-time receipts before any challenger claim.
+
+**Completion criteria:** 672-hour artifact, full count and integrity by issued-matured-censored, same-clock 1H/4H/24H, original 12H/72H/168H comparisons where valid, official-vs-shadow pair admission, baseline deltas with sample/uncertainty, turning-point lag/false-exit cost, change-point/regression attribution, macro ablations, causally justified decision-value verdict. Keep blocked cells blocked. No score or economy result is declared COMPLETE by this research design alone.
+
+_Compiled from direct GitHub code, archived receipts, and independent Binance spot candles on 2026-10-13; research design requires a full local-repository-run and independent source-clock audit before calling the 4-week study complete._

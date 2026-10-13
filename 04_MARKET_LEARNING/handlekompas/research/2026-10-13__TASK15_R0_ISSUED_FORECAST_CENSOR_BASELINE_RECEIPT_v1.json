@@ -1,0 +1,834 @@
+{
+  "contract": "EDGE_TASK15_CI_READONLY_COHORT_RECONCILIATION_v1",
+  "status": "REPRODUCED_RETROSPECTIVE_TAPE_SENSITIVITY_PIT_UNVERIFIED",
+  "source": {
+    "repo": "Donh91/Investering-Framework-Archive-v1",
+    "git_head_sha": "d13c43e52acf23c74df153a27f118016d77ec04e",
+    "script_git_blob_sha": "03ad67b12e97bbd4451dcc1c0d2ff36c7ab0943a",
+    "spot_tape_git_blob_sha": "721bfb93ae39f12b16f6614694cee39c7310f72d",
+    "workflow_run_id": 38365749954,
+    "workflow_job_id": 115190344741,
+    "workflow_conclusion": "SUCCESS",
+    "artifact_id": 11796496964,
+    "artifact_name": "task15-readonly-ledger-38365749954",
+    "artifact_sha256": "563faea7dac56d582d4b9510b7a1e3884bd9ba33326366c290bb87fd0129d534",
+    "artifact_expires_at": "2026-10-27T07:55:19Z"
+  },
+  "result": {
+    "forecast_slots": 1140,
+    "ledger_sha256": "fb665ade7278032af0a1a42eb8ab5677b8c5840fbacc97ae2c915f047c8640bf",
+    "limitations": [
+      "Independent Binance tape is later-retrieved ex-post outcome, not original owner-time evidence.",
+      "Original CENSORED receipts are immutable and never converted to canonical HIT or MISS.",
+      "No first-parent canonical publication verification, feature-source-vintage proof, or legal PIT admission in this standalone script.",
+      "Forecasts overlap by horizon, time and asset; observations are not independent event families.",
+      "No original Official/Shadow 12H/72H/168H comparison, trade fills, economics or site/chat delivery.",
+      "Provider spot close and frozen owner close might disagree; start discrepancies remain explicit.",
+      "Missing baseline clocks are excluded from paired comparison, NOT backfilled or zero-counted."
+    ],
+    "mode": "RESEARCH_ONLY_RECONCILIATION",
+    "prediction_files": 264,
+    "results": {
+      "ISSUED_SEP15_TO_OCT12_235959": {
+        "1H": {
+          "admission_status": {
+            "CENSORED_ORIGINAL_NO_RESEARCH_SCORE": 18,
+            "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY": 132,
+            "NO_EDGE_OR_MISSING": 188,
+            "RESEARCH_TAPE_SENSITIVITY_ONLY": 38
+          },
+          "baseline_hits_on_exact_pairs": 79,
+          "by_7day_issuance_cohort_utc": {
+            "2026-09-15T06:00:00Z": {
+              "ex_post_tape_eligible": 40,
+              "matched_baseline_pairs": 40,
+              "model_hits": 18,
+              "model_hits_on_pairs": 18,
+              "original_censored_in_ex_post_cohort": 34,
+              "original_matured_in_ex_post_cohort": 6,
+              "prior_momentum_hits_on_pairs": 18
+            },
+            "2026-09-22T06:00:00Z": {
+              "ex_post_tape_eligible": 28,
+              "matched_baseline_pairs": 28,
+              "model_hits": 9,
+              "model_hits_on_pairs": 9,
+              "original_censored_in_ex_post_cohort": 26,
+              "original_matured_in_ex_post_cohort": 2,
+              "prior_momentum_hits_on_pairs": 10
+            },
+            "2026-09-29T06:00:00Z": {
+              "ex_post_tape_eligible": 52,
+              "matched_baseline_pairs": 52,
+              "model_hits": 28,
+              "model_hits_on_pairs": 28,
+              "original_censored_in_ex_post_cohort": 46,
+              "original_matured_in_ex_post_cohort": 6,
+              "prior_momentum_hits_on_pairs": 29
+            },
+            "2026-10-06T06:00:00Z": {
+              "ex_post_tape_eligible": 50,
+              "matched_baseline_pairs": 50,
+              "model_hits": 23,
+              "model_hits_on_pairs": 23,
+              "original_censored_in_ex_post_cohort": 26,
+              "original_matured_in_ex_post_cohort": 24,
+              "prior_momentum_hits_on_pairs": 22
+            }
+          },
+          "by_asset": {
+            "BTC": {
+              "ex_post_tape_eligible": 85,
+              "matched_baseline_pairs": 85,
+              "model_hits": 39,
+              "model_hits_on_pairs": 39,
+              "original_censored_in_ex_post_cohort": 67,
+              "original_matured_in_ex_post_cohort": 18,
+              "prior_momentum_hits_on_pairs": 39
+            },
+            "ETH": {
+              "ex_post_tape_eligible": 85,
+              "matched_baseline_pairs": 85,
+              "model_hits": 39,
+              "model_hits_on_pairs": 39,
+              "original_censored_in_ex_post_cohort": 65,
+              "original_matured_in_ex_post_cohort": 20,
+              "prior_momentum_hits_on_pairs": 40
+            }
+          },
+          "by_original_outcome_status": {
+            "CENSORED": {
+              "ex_post_tape_eligible": 132,
+              "matched_baseline_pairs": 132,
+              "model_hits": 58,
+              "model_hits_on_pairs": 58,
+              "original_censored_in_ex_post_cohort": 132,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 56
+            },
+            "MATURED": {
+              "ex_post_tape_eligible": 38,
+              "matched_baseline_pairs": 38,
+              "model_hits": 20,
+              "model_hits_on_pairs": 20,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 38,
+              "prior_momentum_hits_on_pairs": 23
+            },
+            "NO_ORIGINAL_RECEIPT": {
+              "ex_post_tape_eligible": 0,
+              "matched_baseline_pairs": 0,
+              "model_hits": 0,
+              "model_hits_on_pairs": 0,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 0
+            }
+          },
+          "by_predicted_direction": {
+            "DOWN": {
+              "ex_post_tape_eligible": 78,
+              "matched_baseline_pairs": 78,
+              "model_hits": 34,
+              "model_hits_on_pairs": 34,
+              "original_censored_in_ex_post_cohort": 59,
+              "original_matured_in_ex_post_cohort": 19,
+              "prior_momentum_hits_on_pairs": 34
+            },
+            "UP": {
+              "ex_post_tape_eligible": 92,
+              "matched_baseline_pairs": 92,
+              "model_hits": 44,
+              "model_hits_on_pairs": 44,
+              "original_censored_in_ex_post_cohort": 73,
+              "original_matured_in_ex_post_cohort": 19,
+              "prior_momentum_hits_on_pairs": 45
+            }
+          },
+          "directional_tape_hits": 78,
+          "eligible_directional_tape_sensitivities": 170,
+          "forecast_slots": 376,
+          "model_hits_on_exact_pairs": 78,
+          "original_censor_reasons": {
+            "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE": 150
+          },
+          "original_outcome_status": {
+            "CENSORED": 150,
+            "MATURED": 42,
+            "NO_ORIGINAL_RECEIPT": 184
+          },
+          "same_clock_prior_momentum_pairs": 170,
+          "tape_start_conflicts": 0
+        },
+        "24H": {
+          "admission_status": {
+            "CENSORED_ORIGINAL_NO_RESEARCH_SCORE": 24,
+            "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY": 170,
+            "NO_EDGE_OR_MISSING": 22,
+            "PENDING_FUTURE_MATURITY": 12,
+            "RESEARCH_TAPE_SENSITIVITY_ONLY": 148
+          },
+          "baseline_hits_on_exact_pairs": 136,
+          "by_7day_issuance_cohort_utc": {
+            "2026-09-15T06:00:00Z": {
+              "ex_post_tape_eligible": 75,
+              "matched_baseline_pairs": 75,
+              "model_hits": 38,
+              "model_hits_on_pairs": 38,
+              "original_censored_in_ex_post_cohort": 50,
+              "original_matured_in_ex_post_cohort": 25,
+              "prior_momentum_hits_on_pairs": 41
+            },
+            "2026-09-22T06:00:00Z": {
+              "ex_post_tape_eligible": 75,
+              "matched_baseline_pairs": 75,
+              "model_hits": 21,
+              "model_hits_on_pairs": 21,
+              "original_censored_in_ex_post_cohort": 50,
+              "original_matured_in_ex_post_cohort": 25,
+              "prior_momentum_hits_on_pairs": 16
+            },
+            "2026-09-29T06:00:00Z": {
+              "ex_post_tape_eligible": 85,
+              "matched_baseline_pairs": 85,
+              "model_hits": 42,
+              "model_hits_on_pairs": 42,
+              "original_censored_in_ex_post_cohort": 40,
+              "original_matured_in_ex_post_cohort": 45,
+              "prior_momentum_hits_on_pairs": 30
+            },
+            "2026-10-06T06:00:00Z": {
+              "ex_post_tape_eligible": 83,
+              "matched_baseline_pairs": 83,
+              "model_hits": 42,
+              "model_hits_on_pairs": 42,
+              "original_censored_in_ex_post_cohort": 30,
+              "original_matured_in_ex_post_cohort": 53,
+              "prior_momentum_hits_on_pairs": 49
+            }
+          },
+          "by_asset": {
+            "BTC": {
+              "ex_post_tape_eligible": 162,
+              "matched_baseline_pairs": 162,
+              "model_hits": 76,
+              "model_hits_on_pairs": 76,
+              "original_censored_in_ex_post_cohort": 86,
+              "original_matured_in_ex_post_cohort": 76,
+              "prior_momentum_hits_on_pairs": 72
+            },
+            "ETH": {
+              "ex_post_tape_eligible": 156,
+              "matched_baseline_pairs": 156,
+              "model_hits": 67,
+              "model_hits_on_pairs": 67,
+              "original_censored_in_ex_post_cohort": 84,
+              "original_matured_in_ex_post_cohort": 72,
+              "prior_momentum_hits_on_pairs": 64
+            }
+          },
+          "by_original_outcome_status": {
+            "CENSORED": {
+              "ex_post_tape_eligible": 170,
+              "matched_baseline_pairs": 170,
+              "model_hits": 70,
+              "model_hits_on_pairs": 70,
+              "original_censored_in_ex_post_cohort": 170,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 68
+            },
+            "MATURED": {
+              "ex_post_tape_eligible": 148,
+              "matched_baseline_pairs": 148,
+              "model_hits": 73,
+              "model_hits_on_pairs": 73,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 148,
+              "prior_momentum_hits_on_pairs": 68
+            },
+            "NO_ORIGINAL_RECEIPT": {
+              "ex_post_tape_eligible": 0,
+              "matched_baseline_pairs": 0,
+              "model_hits": 0,
+              "model_hits_on_pairs": 0,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 0
+            }
+          },
+          "by_predicted_direction": {
+            "DOWN": {
+              "ex_post_tape_eligible": 144,
+              "matched_baseline_pairs": 144,
+              "model_hits": 54,
+              "model_hits_on_pairs": 54,
+              "original_censored_in_ex_post_cohort": 69,
+              "original_matured_in_ex_post_cohort": 75,
+              "prior_momentum_hits_on_pairs": 56
+            },
+            "UP": {
+              "ex_post_tape_eligible": 174,
+              "matched_baseline_pairs": 174,
+              "model_hits": 89,
+              "model_hits_on_pairs": 89,
+              "original_censored_in_ex_post_cohort": 101,
+              "original_matured_in_ex_post_cohort": 73,
+              "prior_momentum_hits_on_pairs": 80
+            }
+          },
+          "directional_tape_hits": 143,
+          "eligible_directional_tape_sensitivities": 318,
+          "forecast_slots": 376,
+          "model_hits_on_exact_pairs": 143,
+          "original_censor_reasons": {
+            "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE": 194
+          },
+          "original_outcome_status": {
+            "CENSORED": 194,
+            "MATURED": 172,
+            "NO_ORIGINAL_RECEIPT": 10
+          },
+          "same_clock_prior_momentum_pairs": 318,
+          "tape_start_conflicts": 0
+        },
+        "4H": {
+          "admission_status": {
+            "CENSORED_ORIGINAL_NO_RESEARCH_SCORE": 28,
+            "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY": 202,
+            "NO_EDGE_OR_MISSING": 18,
+            "RESEARCH_TAPE_SENSITIVITY_ONLY": 128
+          },
+          "baseline_hits_on_exact_pairs": 157,
+          "by_7day_issuance_cohort_utc": {
+            "2026-09-15T06:00:00Z": {
+              "ex_post_tape_eligible": 75,
+              "matched_baseline_pairs": 75,
+              "model_hits": 42,
+              "model_hits_on_pairs": 42,
+              "original_censored_in_ex_post_cohort": 50,
+              "original_matured_in_ex_post_cohort": 25,
+              "prior_momentum_hits_on_pairs": 41
+            },
+            "2026-09-22T06:00:00Z": {
+              "ex_post_tape_eligible": 75,
+              "matched_baseline_pairs": 75,
+              "model_hits": 23,
+              "model_hits_on_pairs": 23,
+              "original_censored_in_ex_post_cohort": 55,
+              "original_matured_in_ex_post_cohort": 20,
+              "prior_momentum_hits_on_pairs": 31
+            },
+            "2026-09-29T06:00:00Z": {
+              "ex_post_tape_eligible": 85,
+              "matched_baseline_pairs": 85,
+              "model_hits": 39,
+              "model_hits_on_pairs": 39,
+              "original_censored_in_ex_post_cohort": 41,
+              "original_matured_in_ex_post_cohort": 44,
+              "prior_momentum_hits_on_pairs": 34
+            },
+            "2026-10-06T06:00:00Z": {
+              "ex_post_tape_eligible": 95,
+              "matched_baseline_pairs": 95,
+              "model_hits": 44,
+              "model_hits_on_pairs": 44,
+              "original_censored_in_ex_post_cohort": 56,
+              "original_matured_in_ex_post_cohort": 39,
+              "prior_momentum_hits_on_pairs": 51
+            }
+          },
+          "by_asset": {
+            "BTC": {
+              "ex_post_tape_eligible": 168,
+              "matched_baseline_pairs": 168,
+              "model_hits": 73,
+              "model_hits_on_pairs": 73,
+              "original_censored_in_ex_post_cohort": 105,
+              "original_matured_in_ex_post_cohort": 63,
+              "prior_momentum_hits_on_pairs": 80
+            },
+            "ETH": {
+              "ex_post_tape_eligible": 162,
+              "matched_baseline_pairs": 162,
+              "model_hits": 75,
+              "model_hits_on_pairs": 75,
+              "original_censored_in_ex_post_cohort": 97,
+              "original_matured_in_ex_post_cohort": 65,
+              "prior_momentum_hits_on_pairs": 77
+            }
+          },
+          "by_original_outcome_status": {
+            "CENSORED": {
+              "ex_post_tape_eligible": 202,
+              "matched_baseline_pairs": 202,
+              "model_hits": 96,
+              "model_hits_on_pairs": 96,
+              "original_censored_in_ex_post_cohort": 202,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 106
+            },
+            "MATURED": {
+              "ex_post_tape_eligible": 128,
+              "matched_baseline_pairs": 128,
+              "model_hits": 52,
+              "model_hits_on_pairs": 52,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 128,
+              "prior_momentum_hits_on_pairs": 51
+            },
+            "NO_ORIGINAL_RECEIPT": {
+              "ex_post_tape_eligible": 0,
+              "matched_baseline_pairs": 0,
+              "model_hits": 0,
+              "model_hits_on_pairs": 0,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 0
+            }
+          },
+          "by_predicted_direction": {
+            "DOWN": {
+              "ex_post_tape_eligible": 153,
+              "matched_baseline_pairs": 153,
+              "model_hits": 54,
+              "model_hits_on_pairs": 54,
+              "original_censored_in_ex_post_cohort": 90,
+              "original_matured_in_ex_post_cohort": 63,
+              "prior_momentum_hits_on_pairs": 67
+            },
+            "UP": {
+              "ex_post_tape_eligible": 177,
+              "matched_baseline_pairs": 177,
+              "model_hits": 94,
+              "model_hits_on_pairs": 94,
+              "original_censored_in_ex_post_cohort": 112,
+              "original_matured_in_ex_post_cohort": 65,
+              "prior_momentum_hits_on_pairs": 90
+            }
+          },
+          "directional_tape_hits": 148,
+          "eligible_directional_tape_sensitivities": 330,
+          "forecast_slots": 376,
+          "model_hits_on_exact_pairs": 148,
+          "original_censor_reasons": {
+            "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE": 230
+          },
+          "original_outcome_status": {
+            "CENSORED": 230,
+            "MATURED": 146
+          },
+          "same_clock_prior_momentum_pairs": 330,
+          "tape_start_conflicts": 0
+        }
+      },
+      "ISSUED_SEP15_TO_OCT13_055959": {
+        "1H": {
+          "admission_status": {
+            "CENSORED_ORIGINAL_NO_RESEARCH_SCORE": 18,
+            "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY": 134,
+            "NO_EDGE_OR_MISSING": 190,
+            "RESEARCH_TAPE_SENSITIVITY_ONLY": 38
+          },
+          "baseline_hits_on_exact_pairs": 81,
+          "by_7day_issuance_cohort_utc": {
+            "2026-09-15T06:00:00Z": {
+              "ex_post_tape_eligible": 40,
+              "matched_baseline_pairs": 40,
+              "model_hits": 18,
+              "model_hits_on_pairs": 18,
+              "original_censored_in_ex_post_cohort": 34,
+              "original_matured_in_ex_post_cohort": 6,
+              "prior_momentum_hits_on_pairs": 18
+            },
+            "2026-09-22T06:00:00Z": {
+              "ex_post_tape_eligible": 28,
+              "matched_baseline_pairs": 28,
+              "model_hits": 9,
+              "model_hits_on_pairs": 9,
+              "original_censored_in_ex_post_cohort": 26,
+              "original_matured_in_ex_post_cohort": 2,
+              "prior_momentum_hits_on_pairs": 10
+            },
+            "2026-09-29T06:00:00Z": {
+              "ex_post_tape_eligible": 52,
+              "matched_baseline_pairs": 52,
+              "model_hits": 28,
+              "model_hits_on_pairs": 28,
+              "original_censored_in_ex_post_cohort": 46,
+              "original_matured_in_ex_post_cohort": 6,
+              "prior_momentum_hits_on_pairs": 29
+            },
+            "2026-10-06T06:00:00Z": {
+              "ex_post_tape_eligible": 52,
+              "matched_baseline_pairs": 52,
+              "model_hits": 25,
+              "model_hits_on_pairs": 25,
+              "original_censored_in_ex_post_cohort": 28,
+              "original_matured_in_ex_post_cohort": 24,
+              "prior_momentum_hits_on_pairs": 24
+            }
+          },
+          "by_asset": {
+            "BTC": {
+              "ex_post_tape_eligible": 86,
+              "matched_baseline_pairs": 86,
+              "model_hits": 40,
+              "model_hits_on_pairs": 40,
+              "original_censored_in_ex_post_cohort": 68,
+              "original_matured_in_ex_post_cohort": 18,
+              "prior_momentum_hits_on_pairs": 40
+            },
+            "ETH": {
+              "ex_post_tape_eligible": 86,
+              "matched_baseline_pairs": 86,
+              "model_hits": 40,
+              "model_hits_on_pairs": 40,
+              "original_censored_in_ex_post_cohort": 66,
+              "original_matured_in_ex_post_cohort": 20,
+              "prior_momentum_hits_on_pairs": 41
+            }
+          },
+          "by_original_outcome_status": {
+            "CENSORED": {
+              "ex_post_tape_eligible": 134,
+              "matched_baseline_pairs": 134,
+              "model_hits": 60,
+              "model_hits_on_pairs": 60,
+              "original_censored_in_ex_post_cohort": 134,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 58
+            },
+            "MATURED": {
+              "ex_post_tape_eligible": 38,
+              "matched_baseline_pairs": 38,
+              "model_hits": 20,
+              "model_hits_on_pairs": 20,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 38,
+              "prior_momentum_hits_on_pairs": 23
+            },
+            "NO_ORIGINAL_RECEIPT": {
+              "ex_post_tape_eligible": 0,
+              "matched_baseline_pairs": 0,
+              "model_hits": 0,
+              "model_hits_on_pairs": 0,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 0
+            }
+          },
+          "by_predicted_direction": {
+            "DOWN": {
+              "ex_post_tape_eligible": 78,
+              "matched_baseline_pairs": 78,
+              "model_hits": 34,
+              "model_hits_on_pairs": 34,
+              "original_censored_in_ex_post_cohort": 59,
+              "original_matured_in_ex_post_cohort": 19,
+              "prior_momentum_hits_on_pairs": 34
+            },
+            "UP": {
+              "ex_post_tape_eligible": 94,
+              "matched_baseline_pairs": 94,
+              "model_hits": 46,
+              "model_hits_on_pairs": 46,
+              "original_censored_in_ex_post_cohort": 75,
+              "original_matured_in_ex_post_cohort": 19,
+              "prior_momentum_hits_on_pairs": 47
+            }
+          },
+          "directional_tape_hits": 80,
+          "eligible_directional_tape_sensitivities": 172,
+          "forecast_slots": 380,
+          "model_hits_on_exact_pairs": 80,
+          "original_censor_reasons": {
+            "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE": 152
+          },
+          "original_outcome_status": {
+            "CENSORED": 152,
+            "MATURED": 42,
+            "NO_ORIGINAL_RECEIPT": 186
+          },
+          "same_clock_prior_momentum_pairs": 172,
+          "tape_start_conflicts": 0
+        },
+        "24H": {
+          "admission_status": {
+            "CENSORED_ORIGINAL_NO_RESEARCH_SCORE": 24,
+            "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY": 170,
+            "NO_EDGE_OR_MISSING": 22,
+            "PENDING_FUTURE_MATURITY": 16,
+            "RESEARCH_TAPE_SENSITIVITY_ONLY": 148
+          },
+          "baseline_hits_on_exact_pairs": 136,
+          "by_7day_issuance_cohort_utc": {
+            "2026-09-15T06:00:00Z": {
+              "ex_post_tape_eligible": 75,
+              "matched_baseline_pairs": 75,
+              "model_hits": 38,
+              "model_hits_on_pairs": 38,
+              "original_censored_in_ex_post_cohort": 50,
+              "original_matured_in_ex_post_cohort": 25,
+              "prior_momentum_hits_on_pairs": 41
+            },
+            "2026-09-22T06:00:00Z": {
+              "ex_post_tape_eligible": 75,
+              "matched_baseline_pairs": 75,
+              "model_hits": 21,
+              "model_hits_on_pairs": 21,
+              "original_censored_in_ex_post_cohort": 50,
+              "original_matured_in_ex_post_cohort": 25,
+              "prior_momentum_hits_on_pairs": 16
+            },
+            "2026-09-29T06:00:00Z": {
+              "ex_post_tape_eligible": 85,
+              "matched_baseline_pairs": 85,
+              "model_hits": 42,
+              "model_hits_on_pairs": 42,
+              "original_censored_in_ex_post_cohort": 40,
+              "original_matured_in_ex_post_cohort": 45,
+              "prior_momentum_hits_on_pairs": 30
+            },
+            "2026-10-06T06:00:00Z": {
+              "ex_post_tape_eligible": 83,
+              "matched_baseline_pairs": 83,
+              "model_hits": 42,
+              "model_hits_on_pairs": 42,
+              "original_censored_in_ex_post_cohort": 30,
+              "original_matured_in_ex_post_cohort": 53,
+              "prior_momentum_hits_on_pairs": 49
+            }
+          },
+          "by_asset": {
+            "BTC": {
+              "ex_post_tape_eligible": 162,
+              "matched_baseline_pairs": 162,
+              "model_hits": 76,
+              "model_hits_on_pairs": 76,
+              "original_censored_in_ex_post_cohort": 86,
+              "original_matured_in_ex_post_cohort": 76,
+              "prior_momentum_hits_on_pairs": 72
+            },
+            "ETH": {
+              "ex_post_tape_eligible": 156,
+              "matched_baseline_pairs": 156,
+              "model_hits": 67,
+              "model_hits_on_pairs": 67,
+              "original_censored_in_ex_post_cohort": 84,
+              "original_matured_in_ex_post_cohort": 72,
+              "prior_momentum_hits_on_pairs": 64
+            }
+          },
+          "by_original_outcome_status": {
+            "CENSORED": {
+              "ex_post_tape_eligible": 170,
+              "matched_baseline_pairs": 170,
+              "model_hits": 70,
+              "model_hits_on_pairs": 70,
+              "original_censored_in_ex_post_cohort": 170,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 68
+            },
+            "MATURED": {
+              "ex_post_tape_eligible": 148,
+              "matched_baseline_pairs": 148,
+              "model_hits": 73,
+              "model_hits_on_pairs": 73,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 148,
+              "prior_momentum_hits_on_pairs": 68
+            },
+            "NO_ORIGINAL_RECEIPT": {
+              "ex_post_tape_eligible": 0,
+              "matched_baseline_pairs": 0,
+              "model_hits": 0,
+              "model_hits_on_pairs": 0,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 0
+            }
+          },
+          "by_predicted_direction": {
+            "DOWN": {
+              "ex_post_tape_eligible": 144,
+              "matched_baseline_pairs": 144,
+              "model_hits": 54,
+              "model_hits_on_pairs": 54,
+              "original_censored_in_ex_post_cohort": 69,
+              "original_matured_in_ex_post_cohort": 75,
+              "prior_momentum_hits_on_pairs": 56
+            },
+            "UP": {
+              "ex_post_tape_eligible": 174,
+              "matched_baseline_pairs": 174,
+              "model_hits": 89,
+              "model_hits_on_pairs": 89,
+              "original_censored_in_ex_post_cohort": 101,
+              "original_matured_in_ex_post_cohort": 73,
+              "prior_momentum_hits_on_pairs": 80
+            }
+          },
+          "directional_tape_hits": 143,
+          "eligible_directional_tape_sensitivities": 318,
+          "forecast_slots": 380,
+          "model_hits_on_exact_pairs": 143,
+          "original_censor_reasons": {
+            "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE": 194
+          },
+          "original_outcome_status": {
+            "CENSORED": 194,
+            "MATURED": 172,
+            "NO_ORIGINAL_RECEIPT": 14
+          },
+          "same_clock_prior_momentum_pairs": 318,
+          "tape_start_conflicts": 0
+        },
+        "4H": {
+          "admission_status": {
+            "CENSORED_ORIGINAL_NO_RESEARCH_SCORE": 28,
+            "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY": 206,
+            "NO_EDGE_OR_MISSING": 18,
+            "RESEARCH_TAPE_SENSITIVITY_ONLY": 128
+          },
+          "baseline_hits_on_exact_pairs": 157,
+          "by_7day_issuance_cohort_utc": {
+            "2026-09-15T06:00:00Z": {
+              "ex_post_tape_eligible": 75,
+              "matched_baseline_pairs": 75,
+              "model_hits": 42,
+              "model_hits_on_pairs": 42,
+              "original_censored_in_ex_post_cohort": 50,
+              "original_matured_in_ex_post_cohort": 25,
+              "prior_momentum_hits_on_pairs": 41
+            },
+            "2026-09-22T06:00:00Z": {
+              "ex_post_tape_eligible": 75,
+              "matched_baseline_pairs": 75,
+              "model_hits": 23,
+              "model_hits_on_pairs": 23,
+              "original_censored_in_ex_post_cohort": 55,
+              "original_matured_in_ex_post_cohort": 20,
+              "prior_momentum_hits_on_pairs": 31
+            },
+            "2026-09-29T06:00:00Z": {
+              "ex_post_tape_eligible": 85,
+              "matched_baseline_pairs": 85,
+              "model_hits": 39,
+              "model_hits_on_pairs": 39,
+              "original_censored_in_ex_post_cohort": 41,
+              "original_matured_in_ex_post_cohort": 44,
+              "prior_momentum_hits_on_pairs": 34
+            },
+            "2026-10-06T06:00:00Z": {
+              "ex_post_tape_eligible": 99,
+              "matched_baseline_pairs": 99,
+              "model_hits": 46,
+              "model_hits_on_pairs": 46,
+              "original_censored_in_ex_post_cohort": 60,
+              "original_matured_in_ex_post_cohort": 39,
+              "prior_momentum_hits_on_pairs": 51
+            }
+          },
+          "by_asset": {
+            "BTC": {
+              "ex_post_tape_eligible": 170,
+              "matched_baseline_pairs": 170,
+              "model_hits": 74,
+              "model_hits_on_pairs": 74,
+              "original_censored_in_ex_post_cohort": 107,
+              "original_matured_in_ex_post_cohort": 63,
+              "prior_momentum_hits_on_pairs": 80
+            },
+            "ETH": {
+              "ex_post_tape_eligible": 164,
+              "matched_baseline_pairs": 164,
+              "model_hits": 76,
+              "model_hits_on_pairs": 76,
+              "original_censored_in_ex_post_cohort": 99,
+              "original_matured_in_ex_post_cohort": 65,
+              "prior_momentum_hits_on_pairs": 77
+            }
+          },
+          "by_original_outcome_status": {
+            "CENSORED": {
+              "ex_post_tape_eligible": 206,
+              "matched_baseline_pairs": 206,
+              "model_hits": 98,
+              "model_hits_on_pairs": 98,
+              "original_censored_in_ex_post_cohort": 206,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 106
+            },
+            "MATURED": {
+              "ex_post_tape_eligible": 128,
+              "matched_baseline_pairs": 128,
+              "model_hits": 52,
+              "model_hits_on_pairs": 52,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 128,
+              "prior_momentum_hits_on_pairs": 51
+            },
+            "NO_ORIGINAL_RECEIPT": {
+              "ex_post_tape_eligible": 0,
+              "matched_baseline_pairs": 0,
+              "model_hits": 0,
+              "model_hits_on_pairs": 0,
+              "original_censored_in_ex_post_cohort": 0,
+              "original_matured_in_ex_post_cohort": 0,
+              "prior_momentum_hits_on_pairs": 0
+            }
+          },
+          "by_predicted_direction": {
+            "DOWN": {
+              "ex_post_tape_eligible": 155,
+              "matched_baseline_pairs": 155,
+              "model_hits": 54,
+              "model_hits_on_pairs": 54,
+              "original_censored_in_ex_post_cohort": 92,
+              "original_matured_in_ex_post_cohort": 63,
+              "prior_momentum_hits_on_pairs": 67
+            },
+            "UP": {
+              "ex_post_tape_eligible": 179,
+              "matched_baseline_pairs": 179,
+              "model_hits": 96,
+              "model_hits_on_pairs": 96,
+              "original_censored_in_ex_post_cohort": 114,
+              "original_matured_in_ex_post_cohort": 65,
+              "prior_momentum_hits_on_pairs": 90
+            }
+          },
+          "directional_tape_hits": 150,
+          "eligible_directional_tape_sensitivities": 334,
+          "forecast_slots": 380,
+          "model_hits_on_exact_pairs": 150,
+          "original_censor_reasons": {
+            "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE": 234
+          },
+          "original_outcome_status": {
+            "CENSORED": 234,
+            "MATURED": 146
+          },
+          "same_clock_prior_momentum_pairs": 334,
+          "tape_start_conflicts": 0
+        }
+      }
+    },
+    "tape_rows": 672
+  },
+  "independent_review_pending": true,
+  "training_or_model_promotion_permitted": false,
+  "official_registered_censor_mutation_permitted": false,
+  "task15_exit_gate": "OPEN",
+  "task2_pullback_information_edge": "BLOCKED_PIT_OUTCOME_ACTION_GATES",
+  "observations": [
+    "Model directional sensitivity 1H 78/170, 4H 148/330, 24H 143/318 through 12 Oct issuance. Same-clock trailing momentum 79/170, 157/330, 136/318, with complete matched eligible denominator for this retrospective research tape.",
+    "Per-clock/original maturity breakdown: 1H originally CENSORED 132/170 vs MATURED 38/170; 4H 202/330 vs 128/330; 24H 170/318 vs 148/318. Never replace censored status with later prices in governed scorer.",
+    "Every original CENSORED receipt in the 28d source census lists EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE. Probe future actual input publication/retrieval cadence and contract lag to correct forward source availability, not retro-rescore.",
+    "Pronounced ex-post 4H DOWN 54/153 and UP 94/177; 24H DOWN 54/144 and UP 89/174. This is a dependent descriptive breakdown, not proof of reversal causation, statistical independent N, calibrated accuracy, or trading value.",
+    "Original MATURED-only retrospective tape diagnostic: 1H 20/38, 4H 52/128, 24H 73/148. This is conditional on maturity and thus subject to censor selection; not a replacement canonical metric.",
+    "The independent Binance tape remains later retrieved ex-post observation, not original owner-time market data. First knowledge/PIT provider snapshots and global independence remain unverified.",
+    "The earlier 4H momentum 160/330 and 24H momentum 139/318 from #1596 do not reproduce under this explicit equal-clock trailing-horizon baseline; those discrepancies must be resolved in methodology review.",
+    "Official/Shadow scoring contracts, delivery logging, after-cost investor actions and sealed future holdout remain separate blocked gates."
+  ]
+}
