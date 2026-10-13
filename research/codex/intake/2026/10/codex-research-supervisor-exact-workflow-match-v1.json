@@ -1,0 +1,81 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-supervisor-exact-workflow-match-v1",
+  "submitted_at_utc": "2026-10-13T22:49:00.148Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "2026-10-14 user-approved AI agent autonomy and orchestration architecture audit",
+    "source_paths": [
+      "scripts/framework_intelligence/automation_orchestration_v1.py",
+      "tests/framework_intelligence/test_automation_orchestration_v1.py",
+      "00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156"
+    ]
+  },
+  "title": "Prevent unrelated workflow remediation from suppressing Supervisor triage",
+  "objective": "Fix the bounded identity-matching defect in the EXISTING Automation Intelligent Orchestration plan: row_matches_workflow currently accepts substring matches across workflow, finding, objective, candidate ID and candidate path. This allows a CODEX_READY/IN_REMEDIATION record for a different workflow with a shared substring to falsely route a current RED workflow as FOLLOW_EXISTING_REMEDIATION, suppressing its Luna/Sol diagnosis. Match exact canonical workflow identity (with only a verified, explicit .yml/.yaml/path normalization when appropriate), and preserve existing remediation authority/deduplication. No new router, queue, scheduler or supervisor.",
+  "finding_key": "SUPERVISOR_REMEDIATION_SUBSTRING_FALSE_MATCH",
+  "primary_target": "scripts/framework_intelligence/automation_orchestration_v1.py",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/framework_intelligence/automation_orchestration_v1.py",
+    "Donh91/Investering-Framework-Archive-v1:tests/framework_intelligence/test_automation_orchestration_v1.py"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/framework_intelligence/automation_orchestration_v1.py@8c4be3fe43b04f79c59cb89b74954fbcf5f1c05c",
+      "summary": "row_matches_workflow() uses `target in workflow_key(value) or workflow_key(value) in target` for five heterogeneous fields; best_remediation_match() trusts that predicate. build_plan() routes matching active states to FOLLOW_EXISTING_REMEDIATION."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "tests/framework_intelligence/test_automation_orchestration_v1.py@8c4be3fe43b04f79c59cb89b74954fbcf5f1c05c",
+      "summary": "Current tests cover correct exact match, isolated errors, repeated errors, clustering, and fingerprint no-op; no negative collision case for overlapping workflow strings."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "2026-10-14 synthetic local reproduction: row_matches_workflow({'workflow':'etf.yml','state':'CODEX_READY'}, 'daily-settled-etf-calibration.yml') == True; row_matches_workflow({'workflow':'alpha.yml','state':'IN_REMEDIATION'}, 'alpha-backup.yml') == True",
+      "summary": "Observed return values prove the substring identity defect; this is a synthetic reachable control-flow error, NOT evidence that the current production ETF failure was actually misrouted."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156",
+      "summary": "Existing ownership for Automation Production Health and deduped remediation; no parallel agent or independent owner."
+    }
+  ],
+  "reproduction": "From exact pinned main 8c4be3fe43b04f79c59cb89b74954fbcf5f1c05c, import row_matches_workflow and build_plan from scripts/framework_intelligence/automation_orchestration_v1.py. The present matcher returns True for unrelated target='daily-settled-etf-calibration.yml' with remediation row {'workflow':'etf.yml','state':'CODEX_READY'}; it also returns True for target='alpha-backup.yml' with row {'workflow':'alpha.yml','state':'IN_REMEDIATION'}. In an otherwise isolated RED health fixture, injecting such an unrelated active remediation record causes build_plan to choose FOLLOW_EXISTING_REMEDIATION instead of Luna/Sol. A same-exact-workflow CODEX_READY row SHOULD still dedupe. Revalidate against fresh main and existing remediation schema before code changes; stop cleanly if superseded/fixed. Does not claim actual current prod ETF false-match.",
+  "acceptance_tests": {
+    "positive": [
+      "Matching a CODEX_READY remediation row whose workflow identity is exactly the RED workflow retains FOLLOW_EXISTING_REMEDIATION and consumes zero duplicate model calls.",
+      "Supported explicit .yml/.yaml representation or matching canonical path normalization, if confirmed by current source contract, retains true matches without relying on broad substring fields.",
+      "When no exact active remediation exists, an isolated RED first failure routes through existing LUNA_TRIAGE; repeated failure/cluster retains existing SOL route.",
+      "Run the full existing tests/framework_intelligence/test_automation_orchestration_v1.py plus the new focused tests, and verify only existing output contracts and ownership are used."
+    ],
+    "negative": [
+      "A row with workflow etf.yml MUST NOT match daily-settled-etf-calibration.yml; a row with workflow alpha.yml MUST NOT match alpha-backup.yml.",
+      "A generic objective/finding/candidate_path/candidate_id merely mentioning or partially containing target workflow text MUST NOT confer a remediation identity if the row's explicit workflow is another value.",
+      "A stale/inactive row, missing/ambiguous identity or unrelated candidate MUST NOT suppress RED diagnosis by pretending an existing active repair; preserve UNKNOWN/NEEDS_MORE_EVIDENCE where appropriate.",
+      "No new supervisor/router/scheduler/remediation queue, no paid model calls, no automatic merge, no override of CODEX_READY authority, no historical receipt rewriting, no market or portfolio behavior changes."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic trading",
+    "forecast scoring",
+    "alpha thresholds",
+    "merging authority",
+    "new scheduler",
+    "new remediation owner",
+    "production secrets"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "FOCUSED_IDENTITY_COLLISION_REGRESSION_PASS_PLUS_EXISTING_ORCHESTRATION_SUITE_PASS_PLUS_INDEPENDENT_CURRENT_HEAD_REVIEW_PLUS_GOVERNED_MERGE_PLUS_EXACT_MAIN_READBACK_PLUS_NEXT_RELEVANT_NATURAL_SUPERVISOR_PLAN_VERIFICATION"
+}
