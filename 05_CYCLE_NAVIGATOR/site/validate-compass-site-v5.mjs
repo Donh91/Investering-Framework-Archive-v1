@@ -95,6 +95,14 @@ const stripCode=productSource.slice(productSource.indexOf('function freshness(){
 runInNewContext(stripCode,stripScope);
 const officialStamp=new Date(testProjection.issued_at_utc).toLocaleString('en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
 if(!stripMarkup.includes(officialStamp)||stripMarkup.includes('2020'))throw Error('header clock is not the rendered Official issuance');
+// Execute the real independent PATH/product reload with a newer fetched
+// Compass while the premium decision still holds the older rendered source.
+const renderedSource=stripScope.officialCompass;
+Object.assign(stripScope,{shell(){},json:async()=>({package:{}}),jsonOptional:async()=>({...testProjection,issued_at_utc:new Date(Date.parse(testProjection.issued_at_utc)+10000).toISOString()}),prices:async()=>null,renderNow(){},renderPath(){},renderProof(){},installNowRefinements(){},clearInterval(){},setInterval(){return 1;},refreshTimer:null,console:{warn(...args){throw Error('product reload probe failed: '+args.join(' '));}}});
+stripScope.document.querySelector=()=>null;stripScope.document.querySelectorAll=()=>[];
+const productReloadCode=productSource.slice(productSource.indexOf('async function render(){'),productSource.indexOf("\ndocument.addEventListener('cn-official-compass-rendered'"))+';render();';
+await runInNewContext(productReloadCode,stripScope);
+if(stripScope.officialCompass!==renderedSource)throw Error('independent product fetch overwrote actual premium-render header source');
 stripScope.officialCompass=null;runInNewContext(stripCode,stripScope);
 if(!stripMarkup.includes('OFFICIAL COMPASS UNAVAILABLE'))throw Error('missing Official source relabeled hourly/weekly as Compass');
 if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish HOLD investor copy may contradict owner');
