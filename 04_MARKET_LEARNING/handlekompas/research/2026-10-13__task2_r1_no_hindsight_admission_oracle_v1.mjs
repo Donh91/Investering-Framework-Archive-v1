@@ -50,7 +50,7 @@ function parseStamp(value) {
 }
 
 function inspectRow(row){
- const fail=(category,reason)=>({signal_id:typeof row?.signal_id==="string"?row.signal_id:"UNKNOWN",family_id:typeof row?.family_id==="string"?row.family_id:"UNKNOWN",original_outcome_status:typeof row?.original_outcome_status==="string"?row.original_outcome_status:"UNKNOWN",admission:category,reason,registered_scored:false,trade_edge_admitted:false});
+ const fail=(category,reason)=>({signal_id:"REDACTED",family_id:"REDACTED",original_outcome_status:["MATURED","CENSORED","MISSING","PENDING"].includes(row?.original_outcome_status)?row.original_outcome_status:"UNKNOWN",admission:category,reason,registered_scored:false,trade_edge_admitted:false});
  if(!row||typeof row!=="object"||Array.isArray(row))return fail("QUARANTINED","ROW_SCHEMA_INVALID");
  if(containsRestrictedKey(row))return fail("QUARANTINED","RESTRICTED_RECORD_MUST_NOT_ENTER_PUBLIC_ORACLE");
  if(!closedPublicSchema(row))return fail("QUARANTINED","UNKNOWN_PUBLIC_SCHEMA_FIELD");
@@ -67,7 +67,7 @@ function inspectRow(row){
  } else if(receipt!=null)return fail("QUARANTINED","MISSING_OR_PENDING_WITH_ORIGINAL_RECEIPT");
  if(row.original_outcome_status==="CENSORED"&&(receipt?.result!=null||receipt?.substitute_later_price_forbidden!==true))return fail("QUARANTINED","CENSORED_RECEIPT_MUTATED_OR_SUBSTITUTION_ALLOWED");
  if(row.original_outcome_status==="MATURED"&&!["HIT","MISS","ABSTAINED"].includes(receipt?.result))return fail("QUARANTINED","INVALID_ORIGINAL_OUTCOME_RESULT");
- const base={signal_id:row.signal_id,family_id:row.family_id,original_outcome_status:row.original_outcome_status,registered_scored:false,trade_edge_admitted:false,issued_at_utc:row.issued_at_utc};
+ const base={signal_id:"REDACTED",family_id:"REDACTED",original_outcome_status:row.original_outcome_status,registered_scored:false,trade_edge_admitted:false,issued_at_utc:row.issued_at_utc};
  if(known>issued)return {...base,admission:"PIT_BLOCKED",reason:"SOURCE_FIRST_KNOWN_AFTER_FORECAST_ISSUE"};
  if(row.signal_state!=="DIRECTIONAL")return {...base,admission:"NON_DIRECTIONAL_PARTICIPATION",reason:row.signal_state};
  if(row.original_outcome_status==="CENSORED")return {...base,admission:"CENSORED_IMMUTABLE",reason:"NO_RETROACTIVE_MATURATION"};
@@ -81,16 +81,24 @@ function inspectRow(row){
 
 function auditCohort(rows){
  if(!Array.isArray(rows))throw Error("INPUT_MUST_BE_ARRAY");
- const seen=new Set(),accepted=[],categories={};
+ const seen=new Set(),accepted=[],categories={},families=new Map();
  for(const row of rows){
   const id=row?.signal_id;
   if(typeof id!=="string"||!id.trim())throw Error("MISSING_SIGNAL_ID");
   if(seen.has(id))throw Error("DUPLICATE_ORIGINAL_SIGNAL_ID");
   seen.add(id);
-  const result=inspectRow(row);accepted.push(result);
+  const result=inspectRow(row);
+  // Output only cohort-local opaque labels. No supplied identifier, including
+  // a wallet or credential disguised as a valid string, enters public logs.
+  result.signal_id=`ROW_${accepted.length+1}`;
+  if(result.admission!=="QUARANTINED"){
+    if(!families.has(row.family_id))families.set(row.family_id,`FAMILY_${families.size+1}`);
+    result.family_id=families.get(row.family_id);
+  }
+  accepted.push(result);
   categories[result.admission]=(categories[result.admission]||0)+1;
  }
- const uniqueFamilies=new Set(accepted.map(x=>x.family_id).filter(x=>x!=="UNKNOWN"));
+ const uniqueFamilies=new Set(families.values());
  return {contract:"TASK2_R1_CAUSAL_SOURCE_ADMISSION_PREFLIGHT_v1",research_only:true,attempted_original_signal_rows:rows.length,retained_rows:accepted.length,declared_family_identifiers:uniqueFamilies.size,verified_independent_market_families:null,admission_counts:categories,registered_directional_skill_rows_admitted:0,portfolio_execution_rows_admitted:0,original_censor_rewrites:0,source_first_known_certification:"REQUIRES_INDEPENDENT_EXTERNAL_ATTESTATION",model_promotion_allowed:false,trade_execution_allowed:false,rows:accepted};
 }
 
@@ -135,6 +143,11 @@ function selfTest(){
  checks++;
  let duplicate=false;try{auditCohort([base,base])}catch(e){duplicate=String(e).includes("DUPLICATE_ORIGINAL_SIGNAL_ID");}
  if(!duplicate)throw Error("duplicate original IDs not rejected");checks++;
+ const sensitive="0x"+"ab".repeat(20);
+ const privateId={...base,signal_id:sensitive,family_id:sensitive,original_outcome_receipt:{...base.original_outcome_receipt,signal_id:sensitive}};
+ if(JSON.stringify(auditCohort([privateId])).includes(sensitive))throw Error("identifier echoed in public result");checks++;
+ if(JSON.stringify(inspectRow({...privateId,password:"fixture"})).includes(sensitive))throw Error("quarantined identifier echoed");checks++;
+ if(JSON.stringify(inspectRow({...base,original_outcome_status:sensitive})).includes(sensitive))throw Error("invalid status echoed");checks++;
  return {status:"SELF_TEST_PASS",negative_and_positive_controls:checks,synthetic_examples_only:true,historical_market_rows_scored:0,automatic_trading_authority:false};
 }
 
@@ -142,8 +155,13 @@ const args=process.argv.slice(2);
 if(args.length===1&&args[0]==='--self-test'){
  console.log(JSON.stringify(selfTest(),null,2));
 }else if(args.length===2&&args[0]==='--input'){
- const x=JSON.parse(fs.readFileSync(args[1],'utf8'));
- console.log(JSON.stringify(auditCohort(x),null,2));
+ try {
+  const x=JSON.parse(fs.readFileSync(args[1],'utf8'));
+  console.log(JSON.stringify(auditCohort(x),null,2));
+ } catch {
+  console.error('INPUT_REJECTED_NO_RAW_DETAILS');
+  process.exitCode=1;
+ }
 }else {
  console.error('Usage: node task2_r1_no_hindsight_admission_oracle_v1.mjs --self-test | --input path-to-JSON-array');
  process.exitCode=2;

@@ -39,7 +39,7 @@ function audit(frozenVariants) {
         const slot=Math.floor(r.known/H);
         const continuous=last&&r.observed-last.observed===H&&slot-Math.floor(last.known/H)===1&&r.segment===last.segment&&r.policy===last.policy;
         if(!continuous){streak=0;ready=null}
-        if(last&&r.policy!==last.policy)lastFire=null;
+        if(last&&(r.policy!==last.policy||r.segment!==last.segment))lastFire=null;
         const usable=["PASS","OK"].includes(r.status)&&Object.hasOwn(R,r.state)&&r.known-r.observed>=0&&r.known-r.observed<=maxAge;
         if(!usable||R[r.state]<R[v.minimum_state]){streak=0;ready=null}
         else{
@@ -90,6 +90,9 @@ function audit(frozenVariants) {
   ok(simulate(expectedP2,controls.V_RECOVERY).length===1,"V recovery P2 one synthetic warning before reclaim");
   const p1=variants.find(v=>v.id==="HIGH-P1-D0-C0");
   ok(simulate(p1,controls.MULTI_ASSET).length===4,"same-time different assets independent per-asset mechanics");
+  const p1Cooldown=variants.find(v=>v.id==="HIGH-P1-D0-C24");
+  ok(simulate(p1Cooldown,controls.SEGMENT_CUTOVER).length===2,"segment cutover resets prior segment cooldown");
+  ok(simulate(p1Cooldown,[row(0),row(1)]).length===1,"same segment retains cooldown");
   const invalid=[
     {name:"FUTURE_OBSERVATION",rows:[row(0,"HIGH",{known:base-M})]},
     {name:"DUPLICATE",rows:[row(0),row(0)]},
