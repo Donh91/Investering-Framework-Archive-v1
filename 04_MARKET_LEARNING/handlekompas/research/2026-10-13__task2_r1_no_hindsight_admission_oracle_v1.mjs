@@ -9,7 +9,7 @@ import fs from 'node:fs';
 const RESTRICTED_KEY=/wallet|holdings|private_key|api_key|raw_chat|user_trade|password|secret|access_token|refresh_token|authorization|credential|seed_phrase|mnemonic/i;
 // Public admission has a closed schema. Unknown metadata cannot hide credentials.
 const ROW_KEYS=new Set(['signal_id','family_id','asset','target','source_sha256','signal_state','source_observed_at_utc','source_first_known_at_utc','issued_at_utc','outcome_due_at_utc','original_outcome_status','original_outcome_receipt','first_known_proof','retrospective_actual_direction']);
-const RECEIPT_KEYS=new Set(['signal_id','source_sha256','asset','target','issued_at_utc','outcome_due_at_utc','status','result','substitute_later_price_forbidden']);
+const RECEIPT_KEYS=new Set(['signal_id','source_sha256','asset','target','issued_at_utc','outcome_due_at_utc','status','result','substitute_later_price_forbidden','signal_state','recorded_at_utc']);
 const PROOF_KEYS=new Set(['status','verifier','proof_sha256']);
 function allowedObject(value,keys){return value!==null&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.has(key));}
 function closedPublicSchema(row){
@@ -19,7 +19,7 @@ function closedPublicSchema(row){
  const receipt=row.original_outcome_receipt;
  if(receipt!=null){
    if(!allowedObject(receipt,RECEIPT_KEYS))return false;
-   if(['signal_id','source_sha256','asset','target','issued_at_utc','outcome_due_at_utc','status'].some(key=>typeof receipt[key]!=='string'))return false;
+   if(['signal_id','source_sha256','asset','target','issued_at_utc','outcome_due_at_utc','status','signal_state','recorded_at_utc'].some(key=>typeof receipt[key]!=='string'))return false;
    if(receipt.result!=null&&!['HIT','MISS','ABSTAINED'].includes(receipt.result))return false;
    if('substitute_later_price_forbidden' in receipt&&typeof receipt.substitute_later_price_forbidden!=='boolean')return false;
  }
@@ -49,8 +49,10 @@ function parseStamp(value) {
  return normalized===value||original===value?ms:null;
 }
 
-function inspectRow(row){
+function inspectRow(row,asOfUtc){
  const fail=(category,reason)=>({signal_id:"REDACTED",family_id:"REDACTED",original_outcome_status:["MATURED","CENSORED","MISSING","PENDING"].includes(row?.original_outcome_status)?row.original_outcome_status:"UNKNOWN",admission:category,reason,registered_scored:false,trade_edge_admitted:false});
+ const asOf=parseStamp(asOfUtc);
+ if(asOf===null)return fail("QUARANTINED","AS_OF_CLOCK_MISSING_OR_INVALID");
  if(!row||typeof row!=="object"||Array.isArray(row))return fail("QUARANTINED","ROW_SCHEMA_INVALID");
  if(containsRestrictedKey(row))return fail("QUARANTINED","RESTRICTED_RECORD_MUST_NOT_ENTER_PUBLIC_ORACLE");
  if(!closedPublicSchema(row))return fail("QUARANTINED","UNKNOWN_PUBLIC_SCHEMA_FIELD");
@@ -60,10 +62,12 @@ function inspectRow(row){
  if(!["DIRECTIONAL","ABSTAIN","NO_EDGE"].includes(row.signal_state))return fail("QUARANTINED","UNRECOGNIZED_SIGNAL_STATE");
  if(!["MATURED","CENSORED","MISSING","PENDING"].includes(row.original_outcome_status))return fail("QUARANTINED","UNRECOGNIZED_OUTCOME_STATE");
  const obs=parseStamp(row.source_observed_at_utc),known=parseStamp(row.source_first_known_at_utc),issued=parseStamp(row.issued_at_utc),due=parseStamp(row.outcome_due_at_utc);
- if([obs,known,issued,due].some(x=>x===null)||obs>known||issued>=due)return fail("QUARANTINED","BAD_OR_OUT_OF_ORDER_ISSUE_OUTCOME_CLOCK");
+ if([obs,known,issued,due].some(x=>x===null)||obs>known||issued>=due||issued>asOf)return fail("QUARANTINED","BAD_OR_OUT_OF_ORDER_ISSUE_OUTCOME_CLOCK");
  const receipt=row.original_outcome_receipt;
  if(row.original_outcome_status==="MATURED"||row.original_outcome_status==="CENSORED"){
-   if(!receipt||receipt.signal_id!==row.signal_id||receipt.source_sha256!==row.source_sha256||receipt.asset!==row.asset||receipt.target!==row.target||receipt.issued_at_utc!==row.issued_at_utc||receipt.outcome_due_at_utc!==row.outcome_due_at_utc||receipt.status!==row.original_outcome_status)return fail("QUARANTINED","ORIGINAL_RECEIPT_BINDING_CONFLICT");
+   if(!receipt||receipt.signal_id!==row.signal_id||receipt.source_sha256!==row.source_sha256||receipt.asset!==row.asset||receipt.target!==row.target||receipt.issued_at_utc!==row.issued_at_utc||receipt.outcome_due_at_utc!==row.outcome_due_at_utc||receipt.status!==row.original_outcome_status||receipt.signal_state!==row.signal_state)return fail("QUARANTINED","ORIGINAL_RECEIPT_BINDING_CONFLICT");
+   const recorded=parseStamp(receipt.recorded_at_utc);
+   if(recorded===null||recorded<due||recorded>asOf||due>asOf)return fail("QUARANTINED","OUTCOME_NOT_MATURE_AT_EXPLICIT_AS_OF");
  } else if(receipt!=null)return fail("QUARANTINED","MISSING_OR_PENDING_WITH_ORIGINAL_RECEIPT");
  if(row.original_outcome_status==="CENSORED"&&(receipt?.result!=null||receipt?.substitute_later_price_forbidden!==true))return fail("QUARANTINED","CENSORED_RECEIPT_MUTATED_OR_SUBSTITUTION_ALLOWED");
  if(row.original_outcome_status==="MATURED"&&!["HIT","MISS","ABSTAINED"].includes(receipt?.result))return fail("QUARANTINED","INVALID_ORIGINAL_OUTCOME_RESULT");
@@ -79,7 +83,8 @@ function inspectRow(row){
  return {...base,admission:"EXTERNAL_PIT_ATTESTATION_REQUIRED",reason:"SELF_DECLARED_REVIEW_CANNOT_CERTIFY_SOURCE_FIRST_KNOWABLE"};
 }
 
-function auditCohort(rows){
+function auditCohort(rows,asOfUtc){
+ if(parseStamp(asOfUtc)===null)throw Error("AS_OF_CLOCK_MISSING_OR_INVALID");
  if(!Array.isArray(rows))throw Error("INPUT_MUST_BE_ARRAY");
  const seen=new Set(),accepted=[],categories={},families=new Map();
  for(const row of rows){
@@ -87,7 +92,7 @@ function auditCohort(rows){
   if(typeof id!=="string"||!id.trim())throw Error("MISSING_SIGNAL_ID");
   if(seen.has(id))throw Error("DUPLICATE_ORIGINAL_SIGNAL_ID");
   seen.add(id);
-  const result=inspectRow(row);
+  const result=inspectRow(row,asOfUtc);
   // Output only cohort-local opaque labels. No supplied identifier, including
   // a wallet or credential disguised as a valid string, enters public logs.
   result.signal_id=`ROW_${accepted.length+1}`;
@@ -99,12 +104,13 @@ function auditCohort(rows){
   categories[result.admission]=(categories[result.admission]||0)+1;
  }
  const uniqueFamilies=new Set(families.values());
- return {contract:"TASK2_R1_CAUSAL_SOURCE_ADMISSION_PREFLIGHT_v1",research_only:true,attempted_original_signal_rows:rows.length,retained_rows:accepted.length,declared_family_identifiers:uniqueFamilies.size,verified_independent_market_families:null,admission_counts:categories,registered_directional_skill_rows_admitted:0,portfolio_execution_rows_admitted:0,original_censor_rewrites:0,source_first_known_certification:"REQUIRES_INDEPENDENT_EXTERNAL_ATTESTATION",model_promotion_allowed:false,trade_execution_allowed:false,rows:accepted};
+ return {contract:"TASK2_R1_CAUSAL_SOURCE_ADMISSION_PREFLIGHT_v1",research_only:true,evaluation_as_of_utc:asOfUtc,attempted_original_signal_rows:rows.length,retained_rows:accepted.length,declared_family_identifiers:uniqueFamilies.size,verified_independent_market_families:null,admission_counts:categories,registered_directional_skill_rows_admitted:0,portfolio_execution_rows_admitted:0,original_censor_rewrites:0,source_first_known_certification:"REQUIRES_INDEPENDENT_EXTERNAL_ATTESTATION",model_promotion_allowed:false,trade_execution_allowed:false,rows:accepted};
 }
 
 function selfTest(){
+ const asOfUtc="2026-10-13T00:00:00Z";
  const base={signal_id:"S1",family_id:"F1",asset:"BTC",target:"UP_4H",source_sha256:"a".repeat(64),signal_state:"DIRECTIONAL",source_observed_at_utc:"2026-10-12T09:00:00Z",source_first_known_at_utc:"2026-10-12T09:02:00Z",issued_at_utc:"2026-10-12T09:05:00Z",outcome_due_at_utc:"2026-10-12T13:00:00Z",original_outcome_status:"MATURED"};
- base.original_outcome_receipt={signal_id:base.signal_id,source_sha256:base.source_sha256,asset:base.asset,target:base.target,issued_at_utc:base.issued_at_utc,outcome_due_at_utc:base.outcome_due_at_utc,status:"MATURED",result:"HIT"};
+ base.original_outcome_receipt={signal_id:base.signal_id,source_sha256:base.source_sha256,asset:base.asset,target:base.target,issued_at_utc:base.issued_at_utc,outcome_due_at_utc:base.outcome_due_at_utc,status:"MATURED",result:"HIT",signal_state:base.signal_state,recorded_at_utc:"2026-10-12T13:05:00Z"};
  const caseRows=[
  ["VALID_METADATA_ONLY",base,"SOURCE_FIRST_KNOWN_PROOF_PENDING"],
  ["FAKE_SELF_ATTESTATION",{...base,first_known_proof:{status:"INDEPENDENT_VERIFIED",verifier:"fixture",proof_sha256:"b".repeat(64)}},"EXTERNAL_PIT_ATTESTATION_REQUIRED"],
@@ -118,8 +124,8 @@ function selfTest(){
  ["BACKDATED_ISSUANCE",{...base,issued_at_utc:"2026-10-12T09:03:00Z"},"QUARANTINED"],
  ["CENSOR_PRESERVED",{...base,original_outcome_status:"CENSORED",original_outcome_receipt:{...base.original_outcome_receipt,status:"CENSORED",result:null,substitute_later_price_forbidden:true},retrospective_actual_direction:"UP"},"CENSORED_IMMUTABLE"],
  ["CENSOR_RETROSCORED_ILLEGAL",{...base,original_outcome_status:"CENSORED",original_outcome_receipt:{...base.original_outcome_receipt,status:"CENSORED",result:"HIT",substitute_later_price_forbidden:true}},"QUARANTINED"],
- ["NO_EDGE_NOT_WIN",{...base,signal_state:"NO_EDGE"},"NON_DIRECTIONAL_PARTICIPATION"],
- ["ABSTAIN_NOT_WIN",{...base,signal_state:"ABSTAIN"},"NON_DIRECTIONAL_PARTICIPATION"],
+ ["NO_EDGE_NOT_WIN",{...base,signal_state:"NO_EDGE",original_outcome_receipt:{...base.original_outcome_receipt,signal_state:"NO_EDGE",result:"ABSTAINED"}},"NON_DIRECTIONAL_PARTICIPATION"],
+ ["ABSTAIN_NOT_WIN",{...base,signal_state:"ABSTAIN",original_outcome_receipt:{...base.original_outcome_receipt,signal_state:"ABSTAIN",result:"ABSTAINED"}},"NON_DIRECTIONAL_PARTICIPATION"],
  ["MISSING_OWNER_OUTCOME",{...base,original_outcome_status:"MISSING",original_outcome_receipt:null,retrospective_actual_direction:"UP"},"MISSING_ORIGINAL_RECEIPT"],
  ["MISSING_CONFLICT",{...base,original_outcome_status:"MISSING"},"QUARANTINED"],
  ["PENDING",{...base,original_outcome_status:"PENDING",original_outcome_receipt:null},"PENDING_MATURITY"],
@@ -134,36 +140,40 @@ function selfTest(){
  ["RECEIPT_RESULT_CONTAINER_DENIED",{...base,original_outcome_receipt:{...base.original_outcome_receipt,result:{unexpected:"fixture-only"}}},"QUARANTINED"],
  ["PROOF_VERIFIER_CONTAINER_DENIED",{...base,first_known_proof:{status:"INDEPENDENT_VERIFIED",verifier:{unexpected:"fixture-only"},proof_sha256:"b".repeat(64)}},"QUARANTINED"],
  ["WRONG_SOURCE_AFTER_ISSUE",{...base,source_observed_at_utc:"2026-10-12T09:08:00Z",source_first_known_at_utc:"2026-10-12T09:09:00Z"},"PIT_BLOCKED"],
+ ["FUTURE_MATURED", {...base,outcome_due_at_utc:"2026-10-14T13:00:00Z",original_outcome_receipt:{...base.original_outcome_receipt,outcome_due_at_utc:"2026-10-14T13:00:00Z",recorded_at_utc:"2026-10-14T13:05:00Z"}}, "QUARANTINED"],
+ ["RECEIPT_BEFORE_DUE",{...base,original_outcome_receipt:{...base.original_outcome_receipt,recorded_at_utc:"2026-10-12T12:59:00Z"}},"QUARANTINED"],
+ ["NO_EDGE_RETRO_PROMOTION",{...base,original_outcome_receipt:{...base.original_outcome_receipt,signal_state:"NO_EDGE",result:"ABSTAINED"}},"QUARANTINED"],
  ["UNKNOWN_SIGNAL",{...base,signal_state:"FUTURE_CLAIM"},"QUARANTINED"],
  ];
  let checks=0;
- for(const [name,data,expected] of caseRows){const a=inspectRow(data);if(a.admission!==expected)throw Error(`${name}: expected ${expected}, got ${a.admission} (${a.reason})`);checks++;}
- const separate=auditCohort([base,{...base,signal_id:"S2",family_id:"F1",original_outcome_receipt:{...base.original_outcome_receipt,signal_id:"S2"}}]);
+ for(const [name,data,expected] of caseRows){const a=inspectRow(data,asOfUtc);if(a.admission!==expected)throw Error(`${name}: expected ${expected}, got ${a.admission} (${a.reason})`);checks++;}
+ const separate=auditCohort([base,{...base,signal_id:"S2",family_id:"F1",original_outcome_receipt:{...base.original_outcome_receipt,signal_id:"S2"}}],asOfUtc);
  if(separate.attempted_original_signal_rows!==2||separate.declared_family_identifiers!==1||separate.registered_directional_skill_rows_admitted!==0)throw Error("dependent pair must not create two independent edge trials");
  checks++;
- let duplicate=false;try{auditCohort([base,base])}catch(e){duplicate=String(e).includes("DUPLICATE_ORIGINAL_SIGNAL_ID");}
+ let duplicate=false;try{auditCohort([base,base],asOfUtc)}catch(e){duplicate=String(e).includes("DUPLICATE_ORIGINAL_SIGNAL_ID");}
  if(!duplicate)throw Error("duplicate original IDs not rejected");checks++;
  const sensitive="0x"+"ab".repeat(20);
  const privateId={...base,signal_id:sensitive,family_id:sensitive,original_outcome_receipt:{...base.original_outcome_receipt,signal_id:sensitive}};
- if(JSON.stringify(auditCohort([privateId])).includes(sensitive))throw Error("identifier echoed in public result");checks++;
- if(JSON.stringify(inspectRow({...privateId,password:"fixture"})).includes(sensitive))throw Error("quarantined identifier echoed");checks++;
- if(JSON.stringify(inspectRow({...base,original_outcome_status:sensitive})).includes(sensitive))throw Error("invalid status echoed");checks++;
+ if(JSON.stringify(auditCohort([privateId],asOfUtc)).includes(sensitive))throw Error("identifier echoed in public result");checks++;
+ if(JSON.stringify(inspectRow({...privateId,password:"fixture"},asOfUtc)).includes(sensitive))throw Error("quarantined identifier echoed");checks++;
+ if(JSON.stringify(inspectRow({...base,original_outcome_status:sensitive},asOfUtc)).includes(sensitive))throw Error("invalid status echoed");checks++;
+ if(inspectRow(base).reason!=="AS_OF_CLOCK_MISSING_OR_INVALID")throw Error("missing evaluation clock admitted");checks++;
  return {status:"SELF_TEST_PASS",negative_and_positive_controls:checks,synthetic_examples_only:true,historical_market_rows_scored:0,automatic_trading_authority:false};
 }
 
 const args=process.argv.slice(2);
 if(args.length===1&&args[0]==='--self-test'){
  console.log(JSON.stringify(selfTest(),null,2));
-}else if(args.length===2&&args[0]==='--input'){
+}else if(args.length===4&&args[0]==='--input'&&args[2]==='--as-of'){
  try {
   const x=JSON.parse(fs.readFileSync(args[1],'utf8'));
-  console.log(JSON.stringify(auditCohort(x),null,2));
+  console.log(JSON.stringify(auditCohort(x,args[3]),null,2));
  } catch {
   console.error('INPUT_REJECTED_NO_RAW_DETAILS');
   process.exitCode=1;
  }
 }else {
- console.error('Usage: node task2_r1_no_hindsight_admission_oracle_v1.mjs --self-test | --input path-to-JSON-array');
+ console.error('Usage: node task2_r1_no_hindsight_admission_oracle_v1.mjs --self-test | --input path-to-JSON-array --as-of UTC-ISO-TIMESTAMP');
  process.exitCode=2;
 }
 
