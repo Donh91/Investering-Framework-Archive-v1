@@ -85,7 +85,7 @@ export function officialPathView(bundle,{lang='da',mode='archived',verifiedAlign
   const weekly=bundle?.weekly, compass=bundle?.compass;
   if(!weekly||!compass||!validWeek(weekly.forecast_week)||
     !Number.isInteger(weekly.public_issue_number)||weekly.public_issue_number<1||
-    !['OK','DEGRADED'].includes(weekly.status)||
+    !['OK','PASS','DEGRADED'].includes(weekly.status)||
     compass.data_status!=='OK'||!ss(compass.issued_at_utc)||
     !Array.isArray(compass.capitalization_ladder)||
     !Array.isArray(weekly.rotation_ladder)||!Array.isArray(weekly.altseason_countdown))return out;
