@@ -45,7 +45,7 @@ def git(root, *args, env=None, check=True):
         raise RuntimeError(f"GIT_ARCHIVE_UNAVAILABLE:{args[0]}:{proc.stderr[:150]}")
     return proc
 
-def select_cases(ledger: Path):
+def select_cases(ledger: Path, *, full_census: bool = False):
     with ledger.open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     candidates = [r for r in rows
@@ -56,6 +56,12 @@ def select_cases(ledger: Path):
                   and r.get("research_admission") in
                     ("RESEARCH_TAPE_SENSITIVITY_ONLY",
                      "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY")]
+    if full_census:
+        # All retrospectively tape-eligible original outcomes, regardless of sign or return.
+        ordered = sorted(candidates, key=lambda r: (r["issue_utc"], r["prediction_id"]))
+        if len({r["prediction_id"] for r in ordered}) != len(ordered):
+            raise ValueError("FULL_FORECAST_ID_DUPLICATE")
+        return ordered, len(candidates), len(rows)
     cohorts = []
     for week in range(4):
         start, end = WINDOW + timedelta(days=7 * week), WINDOW + timedelta(days=7 * (week + 1))
@@ -115,13 +121,13 @@ def first_recorded_publication(root, ref, due, asset, cache):
     return {"source_path": source_path, "first_present_main_commit": None,
             "first_present_committer_utc": None}
 
-def census(root, ledger, output, ref):
+def census(root, ledger, output, ref, *, full_census=False):
     if git(root, "rev-parse", "--is-shallow-repository").stdout.strip() != "false":
         raise RuntimeError("FULL_FIRST_PARENT_GIT_HISTORY_REQUIRED")
     main_sha = git(root, "rev-parse", "--verify", ref).stdout.strip()
     if len(main_sha) != 40:
         raise RuntimeError("MAIN_REF_SHA_UNAVAILABLE")
-    sample, total_candidates, all_slots = select_cases(ledger)
+    sample, total_candidates, all_slots = select_cases(ledger, full_census=full_census)
     cache, records = {}, []
     for row in sample:
         due = parse(row["due_utc"])
@@ -159,8 +165,9 @@ def census(root, ledger, output, ref):
                       "portfolio_execution": False},
         "source_ref": ref, "source_main_commit_sha": main_sha,
         "input_ledger_sha256": hashlib.sha256(ledger.read_bytes()).hexdigest(),
-        "sampling_policy": "FIRST_TWO_FORECASTS_BY_ISSUE_CLOCK_PER_7D_WEEK_X_HORIZON_X_ASSET_X_ORIGINAL_MATURITY_STATE; NO_RETURN_SELECTION",
-        "sampling_max": 4 * len(HORIZONS) * len(ASSETS) * len(STATES) * 2,
+        "sampling_policy": ("ALL_TAPE_ELIGIBLE_ORIGINAL_OUTCOMES_NO_RETURN_SELECTION" if full_census else "FIRST_TWO_FORECASTS_BY_ISSUE_CLOCK_PER_7D_WEEK_X_HORIZON_X_ASSET_X_ORIGINAL_MATURITY_STATE; NO_RETURN_SELECTION"),
+        "sampling_max": (total_candidates if full_census else 4 * len(HORIZONS) * len(ASSETS) * len(STATES) * 2),
+        "coverage_mode": "FULL_RESEARCH_COHORT" if full_census else "PREDECLARED_STRATIFIED_SAMPLE",
         "candidate_rows_in_full_research_tape": total_candidates,
         "all_issuance_slots": all_slots,
         "sampled_rows": len(records), "crosscheck": comparison,
@@ -168,7 +175,7 @@ def census(root, ledger, output, ref):
         "limitations": [
             "Committer timestamps on current canonical first-parent path history approximate archive availability, NOT exchange/source-provider first knowledge.",
             "Later source backfills NEVER turn frozen CENSORED into MATURED.",
-            "Sample selection is deterministic by issuance UTC within censor/matured strata; not representative independent events or causal evidence.",
+            "Sampling is deterministic by issuance UTC and original state; neither source availability nor precision is causal evidence of an underlying trading edge.",
             "This checks main path-changing commits; publication/use in original runner context may differ and needs independent run/owner receipt verification.",
             "No claim that every censor shares the sampled publication-gap root cause; full census and recovery SLA remain separate.",
         ],
@@ -212,11 +219,12 @@ def main():
     ap.add_argument("--out", default="/tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json")
     ap.add_argument("--ref", default="origin/main")
     ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--full-census", action="store_true")
     args = ap.parse_args()
     if args.self_test:
         print(self_test())
         return
-    r = census(Path(args.root), Path(args.input), Path(args.out), args.ref)
+    r = census(Path(args.root), Path(args.input), Path(args.out), args.ref, full_census=args.full_census)
     print(json.dumps({"sampled_rows": r["sampled_rows"],
                       "candidate_rows_in_full_research_tape":r["candidate_rows_in_full_research_tape"],
                       "source_main_commit_sha":r["source_main_commit_sha"],
