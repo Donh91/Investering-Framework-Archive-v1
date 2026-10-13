@@ -42,7 +42,7 @@ function inspectRow(row){
  if([obs,known,issued,due].some(x=>x===null)||obs>known||issued>=due)return fail("QUARANTINED","BAD_OR_OUT_OF_ORDER_ISSUE_OUTCOME_CLOCK");
  const receipt=row.original_outcome_receipt;
  if(row.original_outcome_status==="MATURED"||row.original_outcome_status==="CENSORED"){
-   if(!receipt||receipt.signal_id!==row.signal_id||receipt.source_sha256!==row.source_sha256||receipt.asset!==row.asset||receipt.target!==row.target||receipt.outcome_due_at_utc!==row.outcome_due_at_utc||receipt.status!==row.original_outcome_status)return fail("QUARANTINED","ORIGINAL_RECEIPT_BINDING_CONFLICT");
+   if(!receipt||receipt.signal_id!==row.signal_id||receipt.source_sha256!==row.source_sha256||receipt.asset!==row.asset||receipt.target!==row.target||receipt.issued_at_utc!==row.issued_at_utc||receipt.outcome_due_at_utc!==row.outcome_due_at_utc||receipt.status!==row.original_outcome_status)return fail("QUARANTINED","ORIGINAL_RECEIPT_BINDING_CONFLICT");
  } else if(receipt!=null)return fail("QUARANTINED","MISSING_OR_PENDING_WITH_ORIGINAL_RECEIPT");
  if(row.original_outcome_status==="CENSORED"&&(receipt?.result!=null||receipt?.substitute_later_price_forbidden!==true))return fail("QUARANTINED","CENSORED_RECEIPT_MUTATED_OR_SUBSTITUTION_ALLOWED");
  if(row.original_outcome_status==="MATURED"&&!["HIT","MISS","ABSTAINED"].includes(receipt?.result))return fail("QUARANTINED","INVALID_ORIGINAL_OUTCOME_RESULT");
@@ -75,7 +75,7 @@ function auditCohort(rows){
 
 function selfTest(){
  const base={signal_id:"S1",family_id:"F1",asset:"BTC",target:"UP_4H",source_sha256:"a".repeat(64),signal_state:"DIRECTIONAL",source_observed_at_utc:"2026-10-12T09:00:00Z",source_first_known_at_utc:"2026-10-12T09:02:00Z",issued_at_utc:"2026-10-12T09:05:00Z",outcome_due_at_utc:"2026-10-12T13:00:00Z",original_outcome_status:"MATURED"};
- base.original_outcome_receipt={signal_id:base.signal_id,source_sha256:base.source_sha256,asset:base.asset,target:base.target,outcome_due_at_utc:base.outcome_due_at_utc,status:"MATURED",result:"HIT"};
+ base.original_outcome_receipt={signal_id:base.signal_id,source_sha256:base.source_sha256,asset:base.asset,target:base.target,issued_at_utc:base.issued_at_utc,outcome_due_at_utc:base.outcome_due_at_utc,status:"MATURED",result:"HIT"};
  const caseRows=[
  ["VALID_METADATA_ONLY",base,"SOURCE_FIRST_KNOWN_PROOF_PENDING"],
  ["FAKE_SELF_ATTESTATION",{...base,first_known_proof:{status:"INDEPENDENT_VERIFIED",verifier:"fixture",proof_sha256:"b".repeat(64)}},"EXTERNAL_PIT_ATTESTATION_REQUIRED"],
@@ -86,6 +86,7 @@ function selfTest(){
  ["BAD_ORIGINAL_RESULT",{...base,original_outcome_receipt:{...base.original_outcome_receipt,result:"WIN"}},"QUARANTINED"],
  ["WRONG_OUTCOME_OWNER",{...base,original_outcome_receipt:{...base.original_outcome_receipt,signal_id:"S2"}},"QUARANTINED"],
  ["WRONG_DUE_CLOCK",{...base,original_outcome_receipt:{...base.original_outcome_receipt,outcome_due_at_utc:"2026-10-12T15:00:00Z"}},"QUARANTINED"],
+ ["BACKDATED_ISSUANCE",{...base,issued_at_utc:"2026-10-12T09:03:00Z"},"QUARANTINED"],
  ["CENSOR_PRESERVED",{...base,original_outcome_status:"CENSORED",original_outcome_receipt:{...base.original_outcome_receipt,status:"CENSORED",result:null,substitute_later_price_forbidden:true},retrospective_actual_direction:"UP"},"CENSORED_IMMUTABLE"],
  ["CENSOR_RETROSCORED_ILLEGAL",{...base,original_outcome_status:"CENSORED",original_outcome_receipt:{...base.original_outcome_receipt,status:"CENSORED",result:"HIT",substitute_later_price_forbidden:true}},"QUARANTINED"],
  ["NO_EDGE_NOT_WIN",{...base,signal_state:"NO_EDGE"},"NON_DIRECTIONAL_PARTICIPATION"],
