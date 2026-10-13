@@ -63,8 +63,15 @@ assert.match(render('OK'),/CURRENT ACTION<\/span><strong>HOLD<\/strong>/);assert
 const missingNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'NO NEW READING');
 assert.match(missingNearTerm,/No fresh verified 0–12H reading is available/);
 assert.doesNotMatch(missingNearTerm,/Current BTC\/ETH direction extrapolated/);
-const freshNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'UP');
+const freshNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'BULLISH');
 assert.match(freshNearTerm,/Current BTC\/ETH direction extrapolated, not an independently validated 12H forecast/);
+const mixedNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'MIXED');
+assert.match(mixedNearTerm,/Current BTC\/ETH conditions are mixed or sideways; no clear 0–12H direction/);
+assert.doesNotMatch(mixedNearTerm,/No fresh verified 0–12H reading is available/);
+assert.doesNotMatch(mixedNearTerm,/Current BTC\/ETH direction extrapolated/);
+const unknownNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'STALENESS_UNVERIFIED');
+assert.match(unknownNearTerm,/No fresh verified 0–12H reading is available/);
+assert.doesNotMatch(unknownNearTerm,/Current BTC\/ETH direction extrapolated/);
 const dataDegradedNearTerm=render('DEGRADED','PUBLIC_COMPASS_PROJECTION_v1',null,'UP');
 assert.match(dataDegradedNearTerm,/No fresh verified 0–12H reading is available/);
 assert.doesNotMatch(dataDegradedNearTerm,/Current BTC\/ETH direction extrapolated/);assert.doesNotMatch(render('OK','WRONG_CONTRACT'),/INVESTOR_DETAIL/);
