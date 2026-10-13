@@ -94,11 +94,11 @@ def tape_value(tape: dict, dt, asset: str):
         return None
     try:
         n = float(value)
-        if not math.isfinite(n):
-            raise ValueError('NONFINITE_TAPE_PRICE')
-        return n if n > 0 else None
     except (ValueError, TypeError):
         return None
+    if not math.isfinite(n):
+        raise ValueError('NONFINITE_TAPE_PRICE')
+    return n if n > 0 else None
 
 def tape_momentum(tape: dict, cutoff, asset, horizon):
     if cutoff not in tape:
@@ -108,13 +108,11 @@ def tape_momentum(tape: dict, cutoff, asset, horizon):
         return None
     try:
         n = float(value)
-        if not math.isfinite(n):
-            raise ValueError('NONFINITE_TAPE_MOMENTUM')
-        return n
-    except (ValueError, TypeError) as exc:
-        if isinstance(exc, ValueError) and str(exc)=='NONFINITE_TAPE_MOMENTUM':
-            raise
+    except (ValueError, TypeError):
         return None
+    if not math.isfinite(n):
+        raise ValueError('NONFINITE_TAPE_MOMENTUM')
+    return n
 
 def outcome_file(root: Path, issued: datetime, slug: str, horizon: str, asset: str) -> Path:
     return root / OUTCOME / issued.strftime("%Y/%m/%d") / f"{slug}_{horizon}_{asset}.json"
