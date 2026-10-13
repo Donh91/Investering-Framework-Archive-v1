@@ -24,7 +24,7 @@
   "automatic_signal_promotion_allowed": false,
   "retrospective_censor_overwrite_allowed": false,
   "api_budget_usd_reserved": 0,
-  "work_execution_started": false,
+  "work_execution_started": true,
   "data_families": [
     "HOURLY_OWNER_SPOT_ETHBTC",
     "INTRADAY_SHADOW_1_4_24H",
@@ -238,12 +238,18 @@
     },
     "r1_no_hindsight_preflight": {
       "status": "SYNTHETIC_ONLY_PASS",
-      "negative_positive_fixture_cases": 21,
+      "negative_positive_fixture_cases": 31,
       "node_module": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs",
       "history_rows_independently_scored": 0,
       "independent_source_pit_proof": "BLOCKED",
       "r1_full_chronology": "BLOCKED",
-      "private_raw_data_posted": false
+      "private_raw_data_posted": false,
+      "previous_checkpoint_fixture_cases": 21,
+      "node_cli_execution": "GITHUB_CI_EXECUTED_SELF_TEST_PASS",
+      "regression_minimum_controls": 31,
+      "verified_code_head": "1c1aebd0332a49d4266a2e3b738b9dac4fa8a72a",
+      "verified_outcomes_CI_run": 38432271271,
+      "verification_scope": "SYNTHETIC_MECHANICS_NOT_HISTORICAL_PIT_OR_FORECAST_SKILL"
     },
     "m6_owner_rows": {
       "status": "SOURCE_LINKAGE_ONLY_PASS",
@@ -266,5 +272,6 @@
       "head_at_previous_review": "8947e0e1a1cdf5479a5a9490bf3d11efae0bd584",
       "qa_condition": "Exact-head independent release check, actual 390px/DA_EN and public Pages readback; no presumptive merge"
     }
-  }
+  },
+  "work_execution_scope": "TECHNICAL_PREPARATION_ONLY_R2_R7_NOT_EXECUTED"
 }
