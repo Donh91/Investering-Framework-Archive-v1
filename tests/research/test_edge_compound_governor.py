@@ -441,4 +441,64 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             self.assertFalse(unsafe["conclusion_layer"]["automatic_promotion"])
             self.assertFalse(unsafe["external_routing"]["sol_recommended"])
 
+
+    def test_task15_gate_cannot_change_existing_collect_or_falsify_routing(self):
+        # A genuine existing COLLECT decision must be invariant to every
+        # optional Task1.5 advisory state. No spend, action or collection stop.
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            self.seed_empty_owners(root)
+            freeze=root/"04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-TEST.json"
+            freeze.parent.mkdir(parents=True)
+            freeze.write_text(json.dumps({"protection_tracker":{
+                "pullback_risk_state":"BUILDING","distribution_risk":"NONE"}}))
+            ptr=root/"04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json"
+            ptr.parent.mkdir(parents=True,exist_ok=True)
+            ptr.write_text(json.dumps({"compass_path":freeze.relative_to(root).as_posix()}))
+            now=datetime(2026,10,13,9,tzinfo=timezone.utc)
+            out=root/"state.json";hist=root/"history"
+            baseline=build(root,out,hist,now)
+            self.assertEqual(baseline["decision"],"COLLECT")
+            self.assertEqual(baseline["semantic_state"]["task15_research_admission"]["status"],
+                             "NOT_LOADED_NOT_ADMITTED")
+            gate=root/"04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json"
+            gate.parent.mkdir(parents=True)
+            safe={"contract":"EDGE_TASK_1_5_ADMISSION_GATE_v1",
+                  "status":"BLOCKED_SCIENTIFIC_CLOSURE","task15_closure_allowed":False,
+                  "permissions":{"continue_existing_market_data_collection":True,
+                                 "allow_official_model_weight_change":False,
+                                 "allow_trade_or_sell_signal":False,
+                                 "allow_historical_pullback_economic_claim":False,
+                                 "allow_legacy_censor_rewrite":False}}
+            cases=[
+                ("BLOCKED_RESEARCH_PREFLIGHT",safe),
+                ("UNREVIEWED_RESEARCH_ONLY",{**safe,"status":"UNREVIEWED"}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"permissions":{
+                    **safe["permissions"],"allow_trade_or_sell_signal":True}}),
+            ]
+            for expected,payload in cases:
+                with self.subTest(expected=expected):
+                    gate.write_text(json.dumps(payload))
+                    result=build(root,out,hist,now)
+                    self.assertEqual(result["semantic_state"]["task15_research_admission"]["status"],expected)
+                    self.assertEqual(result["decision"],baseline["decision"])
+                    self.assertEqual(result["external_routing"],baseline["external_routing"])
+                    self.assertEqual(result["conclusion_layer"],baseline["conclusion_layer"])
+                    self.assertEqual(result["authority"],baseline["authority"])
+                    self.assertEqual(result["rules"],baseline["rules"])
+                    self.assertFalse(result["external_routing"]["automatic_dispatch"])
+                    self.assertFalse(result["authority"]["portfolio_action"])
+            # A real source-integrity FALSIFY must also retain its existing
+            # disposition when Task1.5 status is present or malformed.
+            features=root/"research/framework_memory/edge001_tsunami_features/LATEST.json"
+            value=json.loads(features.read_text())
+            value["integrity_revision"]="INVALID_TEST_CONTRACT"
+            features.write_text(json.dumps(value))
+            falsified=build(root,out,hist,now)
+            self.assertEqual(falsified["decision"],"FALSIFY")
+            self.assertIn("FEATURE_COLLECTOR_INTEGRITY_REVISION_NOT_STRICT",
+                          falsified["semantic_state"]["blockers"])
+            self.assertFalse(falsified["external_routing"]["sol_recommended"])
+            self.assertFalse(falsified["conclusion_layer"]["automatic_promotion"])
+
 if __name__=="__main__":unittest.main()
