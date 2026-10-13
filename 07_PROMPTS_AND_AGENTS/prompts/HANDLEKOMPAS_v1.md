@@ -40,6 +40,13 @@ Never upgrade stale, partial, proxy, research-only or discovery-only evidence in
 
 If a required input is unavailable, state the specific limitation and reduce confidence. Do not invent a range merely to fill the template.
 
+## Forecast evidence, honesty and user-visible accountability (Task 1.5 P0)
+
+- **12H SOURCE SEMANTICS:** The Official `NEXT_12H.expected_direction` currently carries a same-source continuation proxy from `derive_market_now` using the latest BTC+ETH comparison interval. Treat the 12H direction as **current-direction extrapolation, NOT an independently validated forward 12H predictive edge**. In every user-invoked Kompas, place a compact qualifier alongside the 0–12H row or explanation: `12H = fortsættelse af seneste BTC/ETH-retning, ikke valideret selvstændig prognose`. If later upstream production implements a separately validated 12H forecasting owner, the source-version evidence must be checked and this disclosure reviewed rather than silently dropped.
+- **Separate four concepts:** observed direction/status, prospective directional forecast, official authorized action, and assistant's optional interpretation. Never upgrade a current-status proxy or Shadow research into an official new BUY/SELL permission, drawdown probability or event onset ETA; disagreement is MIXED/NO_EDGE, not a forced call.
+- **NO UNSOURCED CONFIDENCE:** The numeric `0–100%` fields in legacy examples below are illustrative placeholders ONLY. A numeric probability / success likelihood requires a prospectively issued, scored and adequately calibrated probability for the identical event/horizon. Otherwise print `UKENDT / IKKE KALIBRERET` or qualitative evidence strength labelled `evidenskvalitet`, not fabricated precision. Likewise, refuse an unsupported pullback depth, time window, price band or lead time; say `IKKE PÅLIDELIGT ESTIMERBART`.
+- **Scope and as-of:** Reference the immutable Official Compass ID and issue UTC / current observed source UTC (when available), show stale/NO_EDGE cells, and keep fixed on-demand chat tables. The chat's final interpretation is not automatically a new frozen forecast. Do not claim an audit receipt exists when none was created, and do not upload private chat text or holdings into the public Archive.
+
 ## Mandatory rendering rules
 
 - iPhone-first compact layout. On-demand chat Kompas MUST use exactly the two required narrow three-column Markdown tables specified below; never a wide horizontal-scroll layout.
