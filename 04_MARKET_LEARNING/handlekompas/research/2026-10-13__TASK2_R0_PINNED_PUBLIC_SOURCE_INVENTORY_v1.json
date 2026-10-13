@@ -1,0 +1,435 @@
+{
+  "contract": "TASK2_R0_PUBLIC_SOURCE_INVENTORY_v1",
+  "status": "PINNED_PUBLIC_PRELIMINARY_CENSUS_NOT_R1_PIT_ADMISSION",
+  "generated_date_utc": "2026-10-13",
+  "main_commit": "aea463dc9c5a57fab0e7ef1aa5fc63791158d524",
+  "main_tree": "391aa4154451d1ec49fe3e59db107f21ca1b437f",
+  "scope": "PUBLIC_GITHUB_CONTROL_PLANE_ONLY",
+  "private_source_access": "NOT_ATTEMPTED",
+  "scientific_result": "NONE",
+  "authority": {
+    "changes_official_market_signal": false,
+    "changes_trading_rules": false,
+    "retro_rescore": false,
+    "promotes_model": false,
+    "starts_external_API": false
+  },
+  "controls": {
+    "research_pr": 1573,
+    "task15_pr": 1597,
+    "action_release_pr": 1598,
+    "governor_consumer_pr": 1599,
+    "owner_issues": [
+      1516,
+      1530,
+      1553,
+      1596
+    ]
+  },
+  "families": [
+    {
+      "id": "HOURLY_OWNER_SPOT_ETHBTC",
+      "grain": "one UTC hourly bar per asset with source clock",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/hourly/",
+          "role": "directory_tree_SHA_only",
+          "git_object_sha": "e750d462ecc009ad3becaafe571d0df8374cf71f",
+          "git_object_type": "tree"
+        },
+        {
+          "path": "04_MARKET_LEARNING/intraday_execution/config.json",
+          "git_object_sha": "ec780123f36c36f192be604f2432f22fd964c07b",
+          "git_object_type": "blob",
+          "role": "shadow_model_registry_not_market_data"
+        }
+      ],
+      "admission": "RECONSTRUCTED_NO_PIT",
+      "blocker": "original individual candle first-known and on-time first published receipts not certified; backfills not as-of"
+    },
+    {
+      "id": "INTRADAY_SHADOW_1_4_24H",
+      "grain": "issued asset×horizon×clock; dependent families",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/intraday_execution/LATEST.json",
+          "role": "latest_owner_pointer",
+          "git_object_sha": "b996a0cd3704141514779a8f4d7e7ba613da3aa3",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json",
+          "role": "latest_descriptive_calibration",
+          "git_object_sha": "82586ae90c69611214626cbe78d2d9893d91627e",
+          "git_object_type": "blob"
+        }
+      ],
+      "admission": "RESEARCH_ONLY",
+      "blocker": "Task1.5 824 ex-post spot matches vs 814 original receipts; 500 censored, 314 matured, 10 without owner receipts in source-pinned research PR #1597; scientific outcome/PIT not approved"
+    },
+    {
+      "id": "OFFICIAL_12_72_168H",
+      "grain": "official per-issued freeze×target horizon BTC/ETH",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+          "role": "owner_pointer",
+          "git_object_sha": "93d0821b66eaebb1c7f38036d0b57697f6b7b39f",
+          "git_object_type": "blob"
+        }
+      ],
+      "admission": "ISSUED_ONLY_NOT_SKILL_ADMITTED",
+      "blocker": "original outcomes/versions v1/v2/v3, abstention and first-knowledge clocks need full census and paired baseline"
+    },
+    {
+      "id": "SHADOW_V2",
+      "grain": "challenger per frozen issuance and horizon",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/handlekompas/shadow_v2/",
+          "role": "directory_tree_SHA_only",
+          "git_object_sha": "2fb403e1def9d04cad378b0cb4914bdc147a26c4",
+          "git_object_type": "tree"
+        }
+      ],
+      "admission": "RESEARCH_ONLY",
+      "blocker": "v2 scoring clock discrepancies; no automatic promotion or fair same-issue paired result"
+    },
+    {
+      "id": "STRATEGIC_21_30D",
+      "grain": "official multiweek strategic anchor 21–30D, not 14/21D",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/handlekompas/strategic/",
+          "role": "directory_tree_SHA_only",
+          "git_object_sha": "21a5e767382ee86297f5949cb189a0785805090b",
+          "git_object_type": "tree"
+        }
+      ],
+      "admission": "INVENTORIED_SOURCE_ONLY",
+      "blocker": "no prospectively comparable 14D/21D path label from this strategic era"
+    },
+    {
+      "id": "FORWARD_PATH_14_21D",
+      "grain": "future explicitly issued 14D/21D path checkpoints",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/handlekompas/strategic/",
+          "role": "related_current_owner_directory",
+          "git_object_sha": "21a5e767382ee86297f5949cb189a0785805090b",
+          "git_object_type": "tree"
+        }
+      ],
+      "admission": "NO_ADMITTED_MATCHED_COHORT",
+      "blocker": "existing issue #1516 must confirm genuine issued freeze and maturity; do not create hindsight band"
+    },
+    {
+      "id": "CN_WEEKLY_PRICE_BANDS",
+      "grain": "asset×ISO week frozen range from weekly issuance",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "05_CYCLE_NAVIGATOR/LATEST_PUBLIC_SCORECARD.json",
+          "role": "public_score_pointer",
+          "git_object_sha": "a60a425bae322b732cceea4b852563b4cabd8cca",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
+          "role": "native_bridge_W39",
+          "git_object_sha": "01f5167d806a5f9bbd2ba6cb261a82692e1e93cc",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/",
+          "role": "directory_tree_SHA_only",
+          "git_object_sha": "5647cfac1e991aacab0cf27e073549ae1a19f01c",
+          "git_object_type": "tree"
+        }
+      ],
+      "admission": "ERA_SPECIFIC",
+      "blocker": "range coverage and widths cannot count as narrow/skill before same-week prospectively frozen baseline and independent weekly family"
+    },
+    {
+      "id": "CN_PHASE_ROTATION_ALTSEASON",
+      "grain": "published weekly phase/rotation state×issue",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json",
+          "role": "weekly_delivery_pointer",
+          "git_object_sha": "fe06b32149af589ea330835a750f8d22d1b25e92",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "04_MARKET_LEARNING/cfgi/",
+          "git_object_sha": "137ee629f02fa59ed3f672550a1f0174c4674d1b",
+          "git_object_type": "tree",
+          "role": "CFGI_source_domain_tree_only"
+        },
+        {
+          "path": "04_MARKET_LEARNING/master_monday/",
+          "git_object_sha": "898d3eb4b173e274d39863010bbf7e320675d903",
+          "git_object_type": "tree",
+          "role": "weekly_master_monday_source_tree"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/btc_d_cmc/",
+          "git_object_sha": "5cda2aaf593a4de3bb9f258c065ffd2fc2856f20",
+          "git_object_type": "tree",
+          "role": "BTC_dominance_capture_tree"
+        }
+      ],
+      "admission": "DEGRADED_COVERAGE_NOT_OUTCOME_ADMITTED",
+      "blocker": "status DEGRADED/COVERAGE_LIMITATION; publication X_READY_NOT_CONFIRMED_PUBLISHED, consumer receipt PASS is not confirmed public posting"
+    },
+    {
+      "id": "BREADTH_AND_TIER_LIQUIDITY",
+      "grain": "source-vintage breadth and as-of token-universe membership",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/breadth/",
+          "role": "directory_tree_SHA_only",
+          "git_object_sha": "879ae8b49d30420d8ba31006bd04677fa2096c53",
+          "git_object_type": "tree"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/",
+          "role": "directory_tree_SHA_only",
+          "git_object_sha": "f0f04ad303f066f0b41e120a1ed7e1cdd8789368",
+          "git_object_type": "tree"
+        }
+      ],
+      "admission": "INVENTORY_ONLY",
+      "blocker": "microcap universe, delistings, tier liquidity, first-known exchange coverage and breadth proxy authority unverified"
+    },
+    {
+      "id": "DERIVATIVES_OI_FUNDING_SPOT_FLOW",
+      "grain": "per venue instrument timestamp and source provider",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "06_RESEARCH_LAB/derivatives_crowding_v1/",
+          "role": "research_directory_tree",
+          "git_object_sha": "96f60da2d3692a11c9e5a75f9cbf5d5241c6c6ab",
+          "git_object_type": "tree"
+        }
+      ],
+      "admission": "NOT_PIT_CERTIFIED",
+      "blocker": "derivatives provider/time/rate-limit gaps and feature vintage unknown; backfill must not be read as pre-event"
+    },
+    {
+      "id": "ETF_MACRO_VINTAGE_STABLECOINS",
+      "grain": "provider published session/vintage and market first-known",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/etf/LATEST_ETF_FLOW_STATUS_v1.json",
+          "role": "owner_status_last_confirmed_session_2026_08_05",
+          "git_object_sha": "62f14a40c1c6adb7b042c0163bb595321bc5f818",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "04_MARKET_LEARNING/etf/LATEST_ETF_CANDIDATE_STATUS_v1.json",
+          "role": "candidate_2026_08_06_NOT_OWNER_NOMINATED",
+          "git_object_sha": "e26ea89085de15489d9f196b7c92b34348625a5a",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/",
+          "role": "directory_tree_SHA_only",
+          "git_object_sha": "4a1cd7425a5118f7a3a84ad46281ed2593afe701",
+          "git_object_type": "tree"
+        },
+        {
+          "path": "04_MARKET_LEARNING/macro_shadow/",
+          "git_object_sha": "2b9d6c84eaed5b6f6788d5097fccb948f0441756",
+          "git_object_type": "tree",
+          "role": "macro_vintage_research_tree"
+        },
+        {
+          "path": "04_MARKET_LEARNING/stablecoin_deployment/",
+          "git_object_sha": "cda2748cabf2dacc0013b401d6cc3bde0c2b6871",
+          "git_object_type": "tree",
+          "role": "stablecoin_deployment_source_tree"
+        }
+      ],
+      "admission": "SOURCE_ERA_CONFLICT_PARTIAL",
+      "blocker": "ETF candidate 2026-08-06 owner_nomination NO and canonical_effect NONE; primary source 2026-08-05 only; macro/FRED vintage need release timestamps and revisions"
+    },
+    {
+      "id": "NEWS_SOCIAL_KOL",
+      "grain": "item first publication and unique catalyst×asset family",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/news/",
+          "role": "directory_tree_SHA_only",
+          "git_object_sha": "523d33831aceba6e174c69cfcba57e445880664c",
+          "git_object_type": "tree"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/",
+          "git_object_sha": "cfc34d47553c0bfb8dcbaae049452ea6d0e9e5b7",
+          "git_object_type": "tree",
+          "role": "catalyst_owner_capture_tree"
+        }
+      ],
+      "admission": "INVENTORY_ONLY",
+      "blocker": "raw timestamped source item dedup/licensing and pre-event market reaction proof absent"
+    },
+    {
+      "id": "PULLBACK_PROTECTION_AND_REENTRY",
+      "grain": "prospectively triggered eligible event episode family",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json",
+          "role": "eligibility_policy",
+          "git_object_sha": "84053fac2da1800d01d5a13b24e0371152c43339",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "04_MARKET_LEARNING/pullback_learning/PERFORMANCE_SUMMARY.json",
+          "role": "historical_performance",
+          "git_object_sha": "cfe815cfb10844c41bbafc3e69d8a886451379a8",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/pullback_forensics/",
+          "git_object_sha": "4f928d5c264f1ec91fad573130c8224c6c92be79",
+          "git_object_type": "tree",
+          "role": "post_event_forensics_only_not_issued_warning"
+        }
+      ],
+      "admission": "BLOCKED_NO_ELIGIBILITY_CONTRACT",
+      "blocker": "SUSPENDED_NO_ELIGIBILITY_CONTRACT, zero closed eligible episodes; do not compute trade PnL, depth ETA or SELL"
+    },
+    {
+      "id": "EDGE_M6_TYPED_WARNINGS",
+      "grain": "independent shock family not each correlated warning observation",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "research/framework_memory/m6_warning_events/LATEST.json",
+          "role": "event_ledger",
+          "git_object_sha": "c978e9262f99c034a0a597535ab02ff50e72a516",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
+          "role": "source_feature_ledger",
+          "git_object_sha": "95e453421a2b621d3018d7992fe6f3b170089296",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+          "role": "outcome_calibration",
+          "git_object_sha": "d9574154b7c31c4c1b1e96855a25b6b3ed0bc957",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/144_VARIANT_FROZEN_MANIFEST_v1.json",
+          "git_object_sha": "a75055851c41d2b4cd2532945c16bdecdef46c2d",
+          "git_object_type": "blob",
+          "role": "144_preregistered_variant_grid_PROPOSED_NOT_SCORED"
+        }
+      ],
+      "admission": "RESEARCH_ONLY_NOT_ACTION",
+      "blocker": "20 warnings in 2 provisional families; economic scoring false; 212 eligible series but zero typed-warning calibration rows"
+    },
+    {
+      "id": "PORTFOLIO_ACTION_EXECUTION_PRIVATE",
+      "grain": "as-of action and first realistically executable fill for incumbent vs new cash",
+      "visibility": "RESTRICTED_NOT_FETCHED",
+      "sources": [],
+      "admission": "PRIVATE_OWNER_GATE",
+      "blocker": "no user holdings/transaction timestamps or private fills in public repository; action authority, liquidity and fees require authorized restricted lane"
+    },
+    {
+      "id": "ALPHA_LAB_LAUNCH_WALLET_PRIVATE",
+      "grain": "project→first CA; first eligible block and wallet cohort with failure denominator",
+      "visibility": "RESTRICTED_AND_PUBLIC_DESIGN_ONLY",
+      "sources": [
+        {
+          "path": "06_RESEARCH_LAB/alpha_lab/",
+          "role": "public_research_design_directory_only",
+          "git_object_sha": "d26f4483b4e616a13272a5795004becacfbeb467",
+          "git_object_type": "tree"
+        }
+      ],
+      "admission": "PIT_AND_PRIVATE_OWNER_GATE",
+      "blocker": "positive launch anecdotes not full negative launch denominators, wallet chain provenance/restricted raw tables unavailable in public source"
+    },
+    {
+      "id": "CHAT_CN_SITE_DELIVERY_AND_LEARNING",
+      "grain": "exact official source issuance and delivered visible consumer version",
+      "visibility": "PUBLIC_METADATA",
+      "sources": [
+        {
+          "path": "07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json",
+          "role": "chat_global_route",
+          "git_object_sha": "5446aaaa8bb16476aecbe9ec2c1fc224e560d0a0",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json",
+          "role": "public_feed_pointer",
+          "git_object_sha": "d99c1e6e350714f70c69486a0a488f839b9ec23b",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "research/framework_memory/edge_compound_governor/LATEST.json",
+          "role": "research_learning_pointer",
+          "git_object_sha": "dd6886dd784f2335f1337506623e67ea586f7e83",
+          "git_object_type": "blob"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/site/",
+          "git_object_sha": "59c7599c1bb2ce57264a435f8b93dc8ab0ef0d95",
+          "git_object_type": "tree",
+          "role": "site_consumer_directory_tree"
+        }
+      ],
+      "admission": "PARTIAL_CONSUMER_VALIDATION_ONLY",
+      "blocker": "current production site 0–12H BULLISH accompanied erroneous BEARISH HOLD copy; PR #1598 not merged, chat no universal user-visible receipt"
+    }
+  ],
+  "noteworthy_frozen_checks": {
+    "pullback_eligible_closed_episodes": 0,
+    "pullback_policy": "SUSPENDED_NO_ELIGIBILITY_CONTRACT",
+    "m6_warning_rows": 20,
+    "m6_provisional_families": 2,
+    "m6_action_scoring_ready": false,
+    "calibration_eligible_series_rows": 212,
+    "calibration_typed_warning_rows": 0,
+    "cn_delivery_status": "DEGRADED",
+    "cn_delivery_reason": "COVERAGE_LIMITATION",
+    "cn_publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED",
+    "etf_last_owner_session": "2026-08-05",
+    "etf_candidate_session": "2026-08-06",
+    "etf_candidate_canonical_effect": "NONE"
+  },
+  "denominator_rule": "All attempted issue slots incl CENSORED, MISSING, ABSTAIN, NO_EDGE, later untestable; no overlap duplication",
+  "status_not_verified_by_this_inventory": [
+    "PIT verified first-known",
+    "future holdout",
+    "independent shock family N",
+    "trade fill economic return",
+    "full data-family history",
+    "cross-repo restricted records"
+  ],
+  "next": "R1 exact issued+source+first-known ledger; independent sources/time clocks; no performance metrics until admission",
+  "source_hash_semantics": "git_object_sha is a commit-tree entry hash (blob for files, tree for directories), not a content sha256 nor provider PIT receipt",
+  "shared_source_domains_not_independent_market_trials": [
+    "04_MARKET_LEARNING/handlekompas/strategic/"
+  ],
+  "source_domain_expansion": "Includes CFGI, Master Monday, dominance, macro, stablecoin, catalyst, pullback forensic, frozen 144-grid and site consumer. Source references can recur across research families; repeated source is not independent evidence."
+}
