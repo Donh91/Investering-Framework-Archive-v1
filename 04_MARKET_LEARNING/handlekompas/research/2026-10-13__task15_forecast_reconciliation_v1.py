@@ -15,6 +15,7 @@ import csv
 import hashlib
 import json
 import math
+import os
 import subprocess
 import sys
 import tempfile
@@ -369,7 +370,18 @@ def run(root: Path, out: Path, expected_source_commit: str | None = None):
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from scripts.intraday_execution import validate_direction_confidence as registered
     root = root.resolve()
+    pr_boundary = "NOT_A_PR_ACTIONS_CONTEXT"
     try:
+        # The frozen source worktree differs from GITHUB_WORKSPACE. Validate
+        # the actual synthetic PR checkout first so the owner's complete
+        # canonical-base diff check cannot silently skip frozen ledger edits.
+        if (os.environ.get("GITHUB_ACTIONS") == "true"
+                and os.environ.get("GITHUB_EVENT_NAME") == "pull_request"):
+            workspace = os.environ.get("GITHUB_WORKSPACE")
+            if not workspace:
+                raise registered.ValidationError("PR_CANONICAL_WORKSPACE_UNAVAILABLE")
+            registered.validate_pr_ledger_boundary(Path(workspace).resolve())
+            pr_boundary = "PASS_EXISTING_VALIDATOR_ON_ACTUAL_PR_WORKSPACE"
         validation = registered.validate_repository(root, write_receipt=False)
     except registered.ValidationError as exc:
         raise ValueError(f"TASK15_REGISTERED_VALIDATION_FAILED:{exc}") from exc
@@ -377,6 +389,7 @@ def run(root: Path, out: Path, expected_source_commit: str | None = None):
         raise ValueError("TASK15_REGISTERED_VALIDATION_NOT_PASS")
     validation = {
         **validation,
+        "pr_ledger_boundary": pr_boundary,
         "validator_path": registered.VALIDATOR_PATH,
         "validator_sha256": digest(root / registered.VALIDATOR_PATH),
         "scorer_path": registered.SCORER_PATH,
