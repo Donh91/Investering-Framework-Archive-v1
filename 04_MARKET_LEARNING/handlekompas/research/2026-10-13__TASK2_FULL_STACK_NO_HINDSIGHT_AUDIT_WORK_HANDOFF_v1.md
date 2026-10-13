@@ -149,3 +149,13 @@ DR05 research-only source intake now lives in:
 - `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR01_DR05_PUBLIC_RESEARCH_INTAKE_v3.json` — 26 source-reported TS-A..TS-Z hypotheses and 18 priority work packets with explicit non-admission.
 
 **Do not misinterpret:** an earlier completed Historical Altseason Pullback Lab had strongly negative results under its tested tape (no robust alt-tail precursor; no tested reload policy beat HOLD). That is distinct from 0 admitted *current* Task 2 R2-R7 historical simulations. Do not rerun/re-tune closed price/volume/taker-share trials, relabel native predecessor warnings into today's typed M6, or promote warning to SELL. New information hypotheses center on derivatives liquidity/positioning, not a trading claim. No unreviewed prospective Round 3 scoring, market-rule changes, new automation, private raw provider values or paid source ingestion. Keep source first-known, independent event-family N and full exit/re-entry net-wealth gates.
+
+
+## Deep Research 06 · Derivatives report critical intake · 2026-10-14
+
+The user-supplied 9-page DR06 report on derivative leverage and cross-venue liquidity is preserved as a **research-only, source-critical** intake, not evidence of a successful R2–R7 simulation:
+
+- `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR06_DERIVATIVES_RESEARCH_INTAKE_v1.md` — public-safe research synthesis, source gaps, timestamp/vintage and causal comparator requirements.
+- `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR06_DERIVATIVES_RESEARCH_INTAKE_v1.json` — **six** explicitly described experiment sketches only. Source headline says 20 experiments but **Exp-7 to Exp-20 are not actually specified** and must not be hallucinated or admitted. Source Exp-1 `READY_NOW` is **unverified without pinned dataset hashes/PIT**, not an execution authorization.
+
+No duplicate derivative engine/census: route via existing DR05 T5-DERIV-CENSUS, T5-EVENT-COMPILER, T5-OI-FUNDING, T5-SPOT-DERIV-DIV and T5-FALSE-ALARM owner lanes. Explicitly separate realized from forecast funding first-known times; venue/instrument unit-normalization; leverage *vulnerability* versus price-trigger/liquidation *amplifier*; independent shock-family N. Existing negative controls remain closed. Round 3 collection-only. The raw PDF and private provider data are not copied to public GitHub. No live action, paid data, task automation, new source truth or changed economic edge claim.
