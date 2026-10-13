@@ -14,6 +14,7 @@ import argparse
 import csv
 import hashlib
 import json
+import subprocess
 import tempfile
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -258,7 +259,11 @@ def summarize(rows):
         results[cohort] = entry
     return results
 
-def run(root: Path, out: Path):
+def run(root: Path, out: Path, expected_source_commit: str | None = None):
+    git_proc = subprocess.run(['git','-C',str(root),'rev-parse','HEAD'],capture_output=True,text=True,timeout=15)
+    source_commit = git_proc.stdout.strip() if git_proc.returncode == 0 else None
+    if expected_source_commit is not None and (source_commit is None or source_commit != expected_source_commit or len(expected_source_commit) != 40):
+        raise ValueError('TASK15_SOURCE_COMMIT_MISMATCH_FAIL_CLOSED')
     tape = read_tape(root / TAPE)
     rows, prediction_files = scan(root, tape)
     out.mkdir(parents=True, exist_ok=True)
@@ -273,6 +278,9 @@ def run(root: Path, out: Path):
         "study_start_utc": utc(WINDOW_START), "study_end_utc": utc(WINDOW_END),
         "boundary_semantics": "ISSUED_START_INCLUSIVE_END_EXCLUSIVE;_DUE_END_INCLUSIVE",
         "tape_path": str(TAPE), "tape_sha256": digest(root / TAPE),
+        "source_checkout_commit": source_commit,
+        "expected_bound_commit": expected_source_commit,
+        "source_commit_verified": bool(source_commit and expected_source_commit and source_commit == expected_source_commit),
         "tape_rows": len(tape),
         "prediction_files_total_before_date_filter": prediction_files,
         "forecast_asset_horizon_slots_in_window": len(rows),
@@ -344,11 +352,12 @@ def main():
     parser.add_argument("--root", default=".")
     parser.add_argument("--out", default="/tmp/task15-compass-audit")
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--expect-source-commit", default=None)
     args = parser.parse_args()
     if args.self_test:
         print(self_test())
         return
-    receipt = run(Path(args.root), Path(args.out))
+    receipt = run(Path(args.root), Path(args.out), expected_source_commit=args.expect_source_commit)
     print(json.dumps(receipt, indent=2))
 
 if __name__ == "__main__":
