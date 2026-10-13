@@ -4,6 +4,7 @@ import { officialPullbackDisplay } from './official-pullback-eta.mjs';
 import { officialPullbackStage } from './official-pullback-stage.mjs';
 import { officialPullbackInvestorView } from './official-pullback-investor-view.mjs';
 import { officialBullBear } from './official-bullbear.mjs';
+import { officialPathView } from './official-path.mjs';
 'use strict';
 
 const SOURCE_FILE = './seed.json';
@@ -118,12 +119,7 @@ function playRangeComparison() {
 }
 
 function bindPanels() {
-  $('expand-cycle')?.addEventListener('click', (e) => {
-    const details = $('cycle-details');
-    details.hidden = !details.hidden;
-    e.currentTarget.querySelector('span').textContent = details.hidden ? '＋' : '−';
-    e.currentTarget.setAttribute('aria-expanded', String(!details.hidden));
-  });
+  // PATH uses one native <details>/<summary> disclosure; no custom click state.
   // Kompas explanations now use native <details>/<summary> for accessible disclosure.
   $('history-toggle')?.addEventListener('click', (e) => {
     const details = $('history-full');
@@ -332,6 +328,106 @@ function paintPullback(d, lang = 'da') {
   }
 }
 
+function paintPath(d, lang = 'da') {
+  const view = officialPathView(d, { lang, mode:'archived' });
+  const isDA = lang !== 'en';
+  const route = $('path-route');
+  const full = $('path-all-phases');
+  const rotation = $('path-rotation-rail');
+  clear(route);
+  clear(full);
+  clear(rotation);
+  const pill = $('path-source-pill');
+  if (pill) {
+    pill.dataset.sourceHealth = view.source_health;
+    pill.textContent = view.status === 'SOURCE_BOUND'
+      ? (isDA ? 'ARKIV · IKKE LIVE' : 'ARCHIVE · NOT LIVE') + ' · ' + view.source_health
+      : (isDA ? 'KILDE UTILGÆNGELIG' : 'SOURCE UNAVAILABLE');
+  }
+  setText('path-source-intro', view.status === 'SOURCE_BOUND'
+    ? view.source_label
+    : (isDA ? 'Kildeintegritet ikke verificeret. Faser kan ikke aflæses.' :
+      'Source integrity not verified. Cycle stages unavailable.'));
+  const current = view.current_checkpoint;
+  const next = view.next_checkpoint;
+  setText('path-lead', view.status === 'SOURCE_BOUND'
+    ? (current ? (isDA ? 'BTC-lederskab er senest dokumenteret.' :
+       'BTC leadership was last documented.') :
+       (isDA ? 'Aktuel cyklusfase er ikke bekræftet.' : 'Current cycle phase is unconfirmed.'))
+    : (isDA ? 'Cyklusaflæsning utilgængelig.' : 'Cycle reading unavailable.'));
+  setText('path-current', current?.label || (isDA ? 'Ikke verificeret' : 'Unverified'));
+  setText('path-current-context', current
+    ? (isDA ? 'Afsluttet kildeuge · ikke en livefase' : 'Completed source week · not a live phase')
+    : (isDA ? 'Ingen verificeret aktuel fase' : 'No confirmed current phase'));
+  setText('path-next', next?.label || (isDA ? 'Ikke verificeret' : 'Unverified'));
+  setText('path-next-gate', view.next_gate);
+  setText('path-eta', view.phase_eta);
+  setText('path-alt-status', view.status === 'SOURCE_BOUND'
+    ? (isDA ? 'Altseason ikke bekræftet' : 'Altseason unconfirmed') :
+      (isDA ? 'Ikke tilgængeligt' : 'Unavailable'));
+  setText('path-alt-evidence', view.altseason.detail);
+
+  for (const phase of view.concise_phases) {
+    const item = make('li','path-phase');
+    item.dataset.phase = phase.key;
+    item.dataset.status = phase.status;
+    const pin=make('span','path-pin', String(phase.index + 1).padStart(2,'0'));
+    pin.setAttribute('aria-hidden','true');
+    const text=make('span','path-phase-content');
+    const state=phase.is_reference
+      ? (isDA?'Senest dokumenteret':'Last documented')
+      : phase.key === next?.key
+        ? (isDA?'Næste bekræftelse mangler':'Next confirmation pending')
+        : (isDA?'Ikke bekræftet':'Unconfirmed');
+    text.append(make('strong',null,phase.label),make('small',null,state));
+    item.append(pin,text);
+    route?.append(item);
+  }
+
+  for (const phase of view.full_phases) {
+    const item=make('li','path-full-phase');
+    item.dataset.status=phase.status;
+    const label=make('span','path-full-number',String(phase.index+1).padStart(2,'0'));
+    const group=make('span','path-full-label');
+    group.append(make('strong',null,phase.label),
+      make('small',null, phase.is_reference
+        ? (isDA?'Senest dokumenteret i arkiv':'Last documented in archive')
+        : phase.status==='SOURCE_RISK_CONDITION_NOT_CYCLE_CONFIRMATION'
+          ? (isDA?'Risikokontekst · ikke bekræftet cyklusfase':'Risk context · not a confirmed phase')
+          : (isDA?'Betinget etape · ingen ETA':'Conditional stage · no ETA')));
+    item.append(label,group);
+    full?.append(item);
+  }
+
+  for (const tier of view.rotation) {
+    const row=make('div','path-rotation-tier');
+    row.dataset.segment=tier.key;
+    row.dataset.action=tier.action;
+    row.setAttribute('role','listitem');
+    row.append(make('span','path-tier-label',tier.label),
+      make('strong',null,tier.action === 'WAIT'
+        ? (isDA ? 'AFVENT' : 'WAIT')
+        : tier.action === 'UNAVAILABLE'
+          ? (isDA ? 'INGEN DATA' : 'NO DATA')
+          : tier.action));
+    rotation?.append(row);
+  }
+  setText('path-gate-detail', view.status === 'SOURCE_BOUND'
+    ? view.next_source_caveat + (view.source_window
+        ? ' · ' + (isDA?'Betinget kildevindue: ':'Conditional source window: ') + view.source_window
+        : '')
+    : (isDA?'Afventer verificeret kilde':'Awaiting verified source'));
+  setText('path-2-3w', view.structural_long.weeks_2_3);
+  setText('path-4-8w', view.structural_long.weeks_4_8);
+  setText('path-protection', view.status === 'SOURCE_BOUND'
+    ? (isDA?'Pullback: ':'Pullback: ')+view.protection
+      + ' · '+ (isDA?'Distribution: ':'Distribution: ')+(d.compass?.protection_tracker?.distribution_risk || 'UNKNOWN')
+      + ' · '+ (isDA?'SELL: ':'SELL: ')+view.sell
+      + ' · '+ (isDA?'Re-entry: ':'Re-entry: ')+view.reentry
+    : (isDA?'Uverificeret':'Unverified'));
+  setText('path-caveat', view.source_caveat || (isDA?'Ingen verificeret ETA':'No verified ETA'));
+}
+
 function paintTop(d) {
   const { weekly: w, compass: c } = d;
   setText('header-issue', 'CN #' + w.public_issue_number + ' · ' + w.forecast_week);
@@ -537,7 +633,10 @@ async function initialize() {
       // Translate static content first. The source-owned ETA text is dynamic
       // and must be painted LAST; i18n keeps the original text node baseline.
       selectLanguage(button.dataset.lang);
-      if (data) paintPullback(data, button.dataset.lang);
+      if (data) {
+        paintPullback(data, button.dataset.lang);
+        paintPath(data, button.dataset.lang);
+      }
     });
   });
   bindNavigation();
@@ -548,6 +647,7 @@ async function initialize() {
     const raw = await response.json();
     data = getTrustedSeed(raw);
     paintTop(data);
+    paintPath(data, currentLanguage());
     paintCompass(data);
     renderRangeChart();
     setRangeRevealPhase('score');
