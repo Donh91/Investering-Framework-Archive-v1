@@ -100,6 +100,9 @@ jobs:
           python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py \
             --root . --input /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv \
             --out /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py \
+            --root . --input /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv \
+            --out /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_FULL_CENSUS.json --full-census
       - name: Task 1.5 frozen vote-group challenger shadow negative controls
         run: |
           python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_frozen_vote_ablation_v1.py --self-test
@@ -123,6 +126,7 @@ jobs:
             /tmp/task15-evidence/TASK15_R0_RECEIPT.json
             /tmp/task15-evidence/TASK15_FROZEN_VOTE_ABLATION_DEV_v1.json
             /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json
+            /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_FULL_CENSUS.json
           if-no-files-found: error
           retention-days: 14
       - name: Build and validate public Compass bundle
