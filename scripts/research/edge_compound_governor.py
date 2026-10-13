@@ -51,7 +51,13 @@ def task15_advisory(gate:dict|None,binding:dict):
            and gate.get("task15_closure_allowed") is False)
     if not valid:
         return {**base,"status":"INVALID_NONBINDING_RESEARCH_GATE","declared_research_status":None}
-    upstream=str(gate.get("status") or "UNKNOWN")
+    upstream=gate.get("status")
+    # A missing, non-string or novel status is NOT a valid research gate.
+    # Unknown research results must never be disguised as reviewed pending.
+    if type(upstream) is not str or upstream not in (
+        "BLOCKED_SCIENTIFIC_CLOSURE", "UNREVIEWED"
+    ):
+        return {**base,"status":"INVALID_NONBINDING_RESEARCH_GATE","declared_research_status":None}
     state=("BLOCKED_RESEARCH_PREFLIGHT" if upstream=="BLOCKED_SCIENTIFIC_CLOSURE"
            else "UNREVIEWED_RESEARCH_ONLY")
     return {**base,"status":state,"declared_research_status":upstream}
