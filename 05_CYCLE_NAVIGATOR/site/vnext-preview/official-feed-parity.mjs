@@ -14,6 +14,7 @@ import { officialPullbackDisplay } from './official-pullback-eta.mjs';
 import { officialPullbackStage } from './official-pullback-stage.mjs';
 import { officialPullbackInvestorView } from './official-pullback-investor-view.mjs';
 import { officialBullBear } from './official-bullbear.mjs';
+import { officialPathView } from './official-path.mjs';
 
 const RANGE_FORMULA = '70pct_containment_plus_30pct_jaccard';
 const SCORE_CONTRACT = 'CN_PUBLIC_WEEKLY_SCORECARD_v1';
@@ -93,6 +94,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
       market_structure_precision: null, combined_score: null,
       proof_state: 'NOT_INDEPENDENTLY_SEALED'
     },
+    path: {state:'UNAVAILABLE',source_issue:null,source_week:null,source_health:'UNAVAILABLE',current_checkpoint:null,next_checkpoint:null,phase_eta:null,altseason:null,rotation:[],full_phases:[]},
     edge_claims: { status: 'NO_AUTHENTICATED_FEED', score: null, source: null },
     restrictions: ['NO_SITE_GENERATED_SIGNAL', 'NO_SELL_FROM_PULLBACK',
       'NO_GUESSED_ETA', 'NO_PRICE_SCORE_RECALCULATION', 'NO_CROSS_ERA_AGGREGATE']
@@ -193,6 +195,47 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
     bull_bear_1_3d: cOK ? officialBullBear(compass, '1_3d') : null,
     permit_path_live_gates: cOK && cnJoined
   };
+
+  // PATH is the weekly CN structure plus aligned Official Compass tier ladder.
+  // No independent site phase engine: absent/late/misaligned source cannot show
+  // a LIVE checkpoint, fake ETH-led transition or interpolated stage ETA.
+  if (cOK && cnJoined && Array.isArray(pkg?.rotation_ladder) &&
+      Array.isArray(pkg?.altseason_countdown) &&
+      Array.isArray(compass.capitalization_ladder)) {
+    const view=officialPathView({
+      source_status:'OFFICIAL_CANONICAL_PUBLIC_DELIVERY',
+      weekly:{
+        public_issue_number:issue,forecast_week:forecastWeek,status:pkg.status,
+        market_state:pkg.market_state,
+        rotation_ladder:pkg.rotation_ladder,
+        altseason_countdown:pkg.altseason_countdown,
+        decision_projection:pkg.decision_projection,
+        base_case_2_3_weeks:pkg.base_case_2_3_weeks,
+        base_case_4_8_weeks:pkg.base_case_4_8_weeks
+      },
+      compass
+    }, {mode:'live',verifiedAlignment:true,lang:'da'});
+    if (view.status==='SOURCE_BOUND' && view.is_live) {
+      result.path={
+        state:'SOURCE_BOUND',source_issue:view.source_issue,
+        source_week:view.source_week,source_health:view.source_health,
+        current_checkpoint:view.current_checkpoint,
+        next_checkpoint:view.next_checkpoint,
+        next_gate:view.next_gate,
+        phase_eta:view.phase_eta,
+        source_window:view.source_window,
+        full_phases:view.full_phases,
+        concise_phases:view.concise_phases,
+        altseason:view.altseason,rotation:view.rotation,
+        structural_long:view.structural_long,
+        distribution_risk:compass.protection_tracker?.distribution_risk||'UNKNOWN',
+        sell:compass.sell_assessment?.state||'UNAVAILABLE',
+        reentry:compass.protection_tracker?.reentry_state||'UNAVAILABLE',
+        source_identity:compass.compass_id,
+        official_issued_at_utc:compass.issued_at_utc
+      };
+    }
+  }
 
   // Current public score is deliberately *last completed*, never current week.
   // No concatenation of Machine Scorecard or old Market/Structure scores.
