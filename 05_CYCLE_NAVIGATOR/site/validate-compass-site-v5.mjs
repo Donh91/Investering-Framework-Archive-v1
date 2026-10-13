@@ -54,7 +54,7 @@ function actualPremiumMarkup(c) {
  if(honesty.renderPremium({package:{}},c,null)!==true)throw Error('premium renderer failed to install in mock DOM');
  return markup;
 }
-const testProjection={...compass,contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',action_now:'HOLD'};
+const testProjection={...compass,contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',action_now:'HOLD',issued_at_utc:new Date(Date.now()-60000).toISOString(),full_stack:{...compass.full_stack,source_status:{...compass.full_stack.source_status,official:'VERIFIED'},official_freshness:{contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',status:'VERIFIED_OWNER_POLICY',source_asof_utc:new Date(Date.now()-120000).toISOString(),valid_until_utc:new Date(Date.now()+3600000).toISOString()}}};
 const staleMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'UNCHANGED_NO_NEW_OBSERVATION'}});
 if(!staleMarkup.includes(noSource)||staleMarkup.includes(sourceMethod)||staleMarkup.includes('The 0–12h pressure reading is a current-state observation'))throw Error('rendered NO NEW READING card falsely asserts available 12H direction');
 const freshMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'UP'}});
@@ -66,6 +66,14 @@ const unknownMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compa
 if(!unknownMarkup.includes(noSource)||unknownMarkup.includes(sourceMethod))throw Error('unknown 12H label did not fail closed');
 const degradedMarkup=actualPremiumMarkup({...testProjection,data_status:'UNAVAILABLE'});
 if(!degradedMarkup.includes(noSource)||degradedMarkup.includes(sourceMethod))throw Error('rendered degraded NOW card falsely asserts available 12H direction');
+for(const badProjection of [
+ {...testProjection,full_stack:{...testProjection.full_stack,source_status:{official:'DEGRADED'}}},
+ {...testProjection,full_stack:{...testProjection.full_stack,official_freshness:{...testProjection.full_stack.official_freshness,valid_until_utc:new Date(Date.now()-1000).toISOString()}}},
+ {...testProjection,full_stack:{...testProjection.full_stack,official_freshness:{status:'UNAVAILABLE'}}}
+]){
+ const bad=actualPremiumMarkup({...badProjection,market_now:{directional_state:'BULLISH'}});
+ if(!bad.includes(noSource)||bad.includes(sourceMethod)||bad.includes('APPLIES NOW'))throw Error('stale/unverified official source presented as current');
+}
 if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish HOLD investor copy may contradict owner');
 const chatPrompt=await readFile(resolve(site,'../..','07_PROMPTS_AND_AGENTS/prompts/HANDLEKOMPAS_v1.md'),'utf8');
 const sourceHonesty=chatPrompt.match(/## Forecast evidence, honesty and user-visible accountability \(Task 1\.5 P0\)([\s\S]*?)## Mandatory rendering rules/)?.[1]||'';

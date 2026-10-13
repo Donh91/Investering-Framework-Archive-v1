@@ -189,6 +189,17 @@ function twelveHourMethodDisclosure(dataOk, live) {
   return 'No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.';
 }
 
+function officialCurrentReading(compass, now=Date.now()) {
+  const f=compass?.full_stack, freshness=f?.official_freshness;
+  const issued=Date.parse(compass?.issued_at_utc||''), source=Date.parse(freshness?.source_asof_utc||''), expiry=Date.parse(freshness?.valid_until_utc||'');
+  return Boolean(compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK'
+    && f?.source_status?.official==='VERIFIED'
+    && freshness?.contract==='OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1'
+    && freshness?.status==='VERIFIED_OWNER_POLICY'
+    && Number.isFinite(issued)&&Number.isFinite(source)&&Number.isFinite(expiry)
+    && source<=issued&&issued<=now&&source<=now&&now<=expiry);
+}
+
 function recommendationWindow(compass) {
   const explicit = clean(compass?.next_meaningful_change_eta);
   const near = clean(compass?.horizons?.NEXT_12H?.eta);
@@ -379,7 +390,7 @@ function pullbackCard(compass) {
 }
 function compositeIntel(compass){
  const f=compass?.full_stack;if(f?.contract!=='PUBLIC_COMPASS_FULL_STACK_READBACK_v1')return '';
- const verified=compass?.data_status==='OK'&&f.source_status?.official==='VERIFIED';
+ const verified=officialCurrentReading(compass);
  const sh=f.shadow||{},st=f.strategic||{},current=sh.status==='ALIGNED_RESEARCH',stale=sh.status==='STALE_RESEARCH';
  const d=k=>{const h=sh?.horizons?.[k];return !h?'UNAVAILABLE':current?publicState(h.direction):stale?'STALE · '+publicState(h.direction):'UNVERIFIED';};
  const analysis=current&&sh.horizons?.['1_3d']?.interpretation?publicCompassText(sh.horizons['1_3d'].interpretation):
@@ -419,10 +430,10 @@ function renderPremium(snapshot, compass, event) {
   const root = document.getElementById('productNow');
   if (!root) return false;
   const expanded = [...root.querySelectorAll('#premiumMarketCompass details[open][id]')].map(d=>d.id);
-  const dataOk = compass?.contract === 'PUBLIC_COMPASS_PROJECTION_v1' && compass?.data_status === 'OK';
+  const dataOk = officialCurrentReading(compass);
   // Keep verified weekly/research context, but remove every current Official
   // decision field when the Official owner cannot support an actionable read.
-  const officialView = dataOk ? compass : {contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:compass?.data_status||'UNAVAILABLE',weekly_context:compass?.weekly_context,full_stack:compass?.full_stack};
+  const officialView = dataOk ? compass : {contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'UNAVAILABLE',weekly_context:compass?.weekly_context,full_stack:compass?.full_stack};
   const scale = officialScale(officialView);
   const rec = dataOk ? recommendation(compass.action_now) : {action:'WAIT · DATA DEGRADED',copy:'A current action is unavailable. Wait for a fresh verified Market Compass reading.'};
   const meta = decisionMeta(officialView);
@@ -441,7 +452,7 @@ function renderPremium(snapshot, compass, event) {
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, officialView, scale, h)).join('') + '</div>'
     + riskCurve(officialView)
-    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(publicDataStatus(compass?.data_status || 'UNAVAILABLE')) + '</b></span><span>RISK ROTATION · ' + esc(capSummary(officialView)) + '</span><span>Evidence balance · not probability</span></div>';
+    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(publicDataStatus(officialView?.data_status || 'UNAVAILABLE')) + '</b></span><span>RISK ROTATION · ' + esc(capSummary(officialView)) + '</span><span>Evidence balance · not probability</span></div>';
 
   expanded.forEach(id=>{const d=section.querySelector('#'+id);if(d)d.open=true;});
   root.querySelector('#premiumMarketCompass')?.remove();
