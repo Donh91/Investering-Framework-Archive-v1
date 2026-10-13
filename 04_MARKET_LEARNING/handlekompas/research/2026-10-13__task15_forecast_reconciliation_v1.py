@@ -14,6 +14,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import subprocess
 import tempfile
 from collections import Counter
@@ -93,6 +94,8 @@ def tape_value(tape: dict, dt, asset: str):
         return None
     try:
         n = float(value)
+        if not math.isfinite(n):
+            raise ValueError('NONFINITE_TAPE_PRICE')
         return n if n > 0 else None
     except (ValueError, TypeError):
         return None
@@ -104,8 +107,13 @@ def tape_momentum(tape: dict, cutoff, asset, horizon):
     if value in ("", None):
         return None
     try:
-        return float(value)
-    except (ValueError, TypeError):
+        n = float(value)
+        if not math.isfinite(n):
+            raise ValueError('NONFINITE_TAPE_MOMENTUM')
+        return n
+    except (ValueError, TypeError) as exc:
+        if isinstance(exc, ValueError) and str(exc)=='NONFINITE_TAPE_MOMENTUM':
+            raise
         return None
 
 def outcome_file(root: Path, issued: datetime, slug: str, horizon: str, asset: str) -> Path:
@@ -148,6 +156,8 @@ def scan(root: Path, tape: dict):
                 permitted = forecast_state == "ELIGIBLE" and predicted in ("UP", "DOWN")
                 start_raw = target.get("start_value")
                 start = float(start_raw) if isinstance(start_raw, (float, int)) and not isinstance(start_raw, bool) else None
+                if start is not None and (not math.isfinite(start) or start <= 0):
+                    raise ValueError('NONFINITE_OR_INVALID_FROZEN_START')
                 basis = tape_value(tape, cutoff, asset) if cutoff else None
                 finish = tape_value(tape, due, asset) if matured else None
                 actual = direction_change(start, finish) if matured else None
