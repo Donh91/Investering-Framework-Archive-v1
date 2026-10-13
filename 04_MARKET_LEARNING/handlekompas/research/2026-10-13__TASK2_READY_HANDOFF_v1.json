@@ -9,9 +9,9 @@
     1553,
     1530
   ],
-  "main_sha_at_receipt": "7b5a4b339fc2480764f7099343f4a776b435a3c7",
+  "main_sha_at_receipt": "9761a23eb3d6577125e404ed1e0ba7392be4ba7d",
   "merge_shas": {
-    "1573": null,
+    "1573": "9761a23eb3d6577125e404ed1e0ba7392be4ba7d",
     "1597": "c1f0e4d27a1c27727dbdb7fb4216b1a0678781f2",
     "1598": null,
     "1599": "7b5a4b339fc2480764f7099343f4a776b435a3c7"
@@ -20,7 +20,7 @@
     "A": "BLOCKED",
     "B": "PARTIAL",
     "C": "PARTIAL",
-    "D": "PARTIAL",
+    "D": "DONE",
     "E": "PARTIAL"
   },
   "readiness": {
@@ -34,10 +34,10 @@
   },
   "site": {
     "pr": 1598,
-    "head": "c096e67afe51debb4a559d4bdffe061c07cca760",
+    "head": "e010e6e229521ea3c9a6619eaef69ef755dc59ce",
     "ci_success_workflow_families": 6,
     "product_contract_checks_passed": 134,
-    "independent_final_review": "PENDING",
+    "independent_final_review": "NO_MAJOR_ISSUES_AT_EXACT_HEAD",
     "actual_production_url": "https://donh91.github.io/Investering-Framework-Archive-v1/",
     "live_premium_script_sha256": "70ecaf8dc5cbafc21fcecbddef56434ec68ae96fe83eb91e1b2d40e676ab5995",
     "live_compass_id_observed": "CMP-20261013-b1af85bff6f8",
@@ -50,9 +50,12 @@
     "production_release_approved": false,
     "technical_blocker": "Cloud Chrome cannot reach local preview server; file protocol is rejected by browser security policy. No bypass or PR-version mobile QA claimed.",
     "required_next": "Existing release owner must supply a supported HTTPS PR preview; independently inspect exact final head at 390/430 px DA/EN, all source health states and premium tabs. Then guarded merge, Pages/live asset and source readback.",
-    "last_verified_CI_head": "c096e67afe51debb4a559d4bdffe061c07cca760",
+    "last_verified_CI_head": "e010e6e229521ea3c9a6619eaef69ef755dc59ce",
     "live_deployment_commit_sha": null,
-    "live_version_scope": "Exact fetched premium asset and Compass payload, not an exposed complete Pages deployment commit."
+    "live_version_scope": "Exact fetched premium asset and Compass payload, not an exposed complete Pages deployment commit.",
+    "independent_clean_review_comment": 6150698264,
+    "live_bullish_bearish_contradiction_still_observed": true,
+    "header_source_and_expiry_repairs_in_PR_only": true
   },
   "task15": {
     "pr": 1597,
@@ -95,9 +98,9 @@
   },
   "task2": {
     "pr": 1573,
-    "head": "b847c75f0fb3dac8aab000f689ffcb616d05605e",
-    "ci_success_workflow_families": 5,
-    "independent_final_review": "PENDING",
+    "head": "48e67c76d238eeef6225b056479f4a7f72a576bc",
+    "ci_success_workflow_families": 7,
+    "independent_final_review": "NO_MAJOR_ISSUES_AT_EXACT_HEAD",
     "pinned_inventory_main": "aea463dc9c5a57fab0e7ef1aa5fc63791158d524",
     "pinned_inventory_tree": "391aa4154451d1ec49fe3e59db107f21ca1b437f",
     "source_families": 17,
@@ -105,7 +108,7 @@
     "distinct_source_paths": 36,
     "actual_git_objects_and_root_tree_verified": true,
     "pinned_source_main_ancestry_verified": true,
-    "R1_synthetic_controls_passed": 31,
+    "R1_synthetic_controls_passed": 38,
     "frozen_144_variant_manifest_blob": "a75055851c41d2b4cd2532945c16bdecdef46c2d",
     "frozen_tuple_order_verified": true,
     "synthetic_oracle_scenarios": 14,
@@ -113,7 +116,28 @@
     "original_R4P_adversarial_cases_preserved": 20,
     "variant_winner_selected": false,
     "real_historical_simulations_executed": 0,
-    "last_verified_CI_head": "b847c75f0fb3dac8aab000f689ffcb616d05605e"
+    "last_verified_CI_head": "48e67c76d238eeef6225b056479f4a7f72a576bc",
+    "active_execution_gate_verified_by_existing_CI": true,
+    "external_site_implementation_dependency": {
+      "pr": 1576,
+      "head": "b57822f770dc902240c2310296036433dc31f475",
+      "status": "PINNED_EXTERNAL_NOT_IN_TREE_NOT_DEPLOYED_BLOCKED"
+    },
+    "public_identifiers": "COHORT_LOCAL_OPAQUE_OUTPUT_NO_ORIGINAL_IDENTIFIERS",
+    "private_source_access": "UNVERIFIED_NO_IMMUTABLE_AUTHORIZED_BINDING",
+    "segment_cooldown_reset_control": "P1_C24_NEW_SEGMENT_PASS_SAME_SEGMENT_COUNTERCONTROL_PASS",
+    "explicit_as_of_and_recorded_outcome_clock_required": true,
+    "original_signal_state_receipt_binding_required": true,
+    "normalized_distinct_shared_source_paths_verified": true,
+    "current_gate_never_self_certifies_CI": true,
+    "independent_clean_review_comment": 6151265453,
+    "actual_outcomes_CI_run": 38438169660,
+    "actual_outcomes_CI_job": 115437518907,
+    "CI_executed_integration_commit": "c6b60c0301142af2c44ce32e1eaa0b37e70391aa",
+    "verified_merged_tree": "f4ee1d48c731cf279a6066dbc4bd2e85f287a130",
+    "CI_tested_tree_equals_final_main_merge_tree": true,
+    "review_findings_resolved": 23,
+    "merge_scope": "TECHNICAL_PREPARATION_ONLY_R0_R1_RESUME_READY_R2_R7_NOT_ADMITTED"
   },
   "independent_events": {
     "M6_warning_rows": 20,
@@ -142,7 +166,9 @@
     "Original censored/missing/negative historical evidence is unchanged.",
     "One local chronology run overlapped a legacy test's shallow-history fetch; its availability result is NOT_ADMITTED. Independent complete-history final GitHub CI census above is authoritative.",
     "Local complete registered validation hit unavailable promisor historical blob; reported FAIL, not substituted. Final complete-history GitHub run passed existing registered validator.",
-    "Successive independent review findings and repairs remain in existing PR discussions."
+    "Successive independent review findings and repairs remain in existing PR discussions.",
+    "Two isolated shallow-checkout negative fixture attempts did not establish a missing-object precondition; not admitted as successful fresh-clone validation. Existing source-bound CI validation is separately linked.",
+    "Local command runtime later disconnected; latest changes use existing actual GitHub CI as execution proof. V8 semantic precheck is explicitly not Node CI or historical evidence."
   ],
   "safety": {
     "safepoint_ref": "backup-safepoint/2026-10-13-final-task15-closure",
@@ -150,12 +176,19 @@
     "safepoint_readback": "MATCH",
     "external_vault": "DEFERRED_NOT_CLAIMED_PASS",
     "destructive_authority": "No force/delete/admin/backup-authority changes performed; source edits on verified non-default branches, reviewed PR merges only.",
-    "rollback": "Reviewed inverse scoped code/workflow commits; preserve all immutable forecasts/outcomes and unrelated main changes. Never reset main or overwrite recovery refs.",
+    "rollback": "Use reviewed inverse scoped code/workflow patches against the named merge SHA(s), preserving ALL original forecast/outcome/research receipts, negative results and unrelated later main changes. Never reset main, force-update a branch, bulk revert data, or overwrite recovery refs. Compass has not been merged/deployed; current public asset hash is recorded.",
     "private_values_published": false,
     "claude_bridge_used": false,
     "new_permanent_automations": 0,
     "autonomous_trades": 0,
-    "live_weight_changes": 0
+    "live_weight_changes": 0,
+    "task2_workflow_safepoint": {
+      "ref": "backup-safepoint/2026-10-13-task2-oracle-input-gate",
+      "sha": "3dadcbd0df99a62e46f79e0db5e55a9c604e1991",
+      "readback": "MATCH",
+      "scope": "EXISTING_VALIDATION_INPUT_PATHS_ONLY_NO_SCHEDULE_PERMISSION_WRITER_CHANGES"
+    },
+    "codex_queue_dedup": "FOUR_CURRENT_READY_TASKS_READ_NO_MATCH_NO_NEW_INTAKE_OR_QUEUE_AUTHORITY"
   },
   "resources": {
     "direct_paid_model_API_calls": 0,
@@ -163,5 +196,6 @@
     "work_credit_consumption": "NOT_EXPOSED_MEASURABLE",
     "existing_Codex_review_quota_cost": "NOT_EXPOSED",
     "existing_GitHub_Actions_consumption": "Actual linked runs, platform billing not measured."
-  }
+  },
+  "recorded_at_utc": "2026-10-13T17:28:55.318Z"
 }
