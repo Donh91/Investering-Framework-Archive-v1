@@ -117,6 +117,53 @@ def tape_momentum(tape: dict, cutoff, asset, horizon):
 def outcome_file(root: Path, issued: datetime, slug: str, horizon: str, asset: str) -> Path:
     return root / OUTCOME / issued.strftime("%Y/%m/%d") / f"{slug}_{horizon}_{asset}.json"
 
+def require_bound_original_outcome(root: Path, prediction_file: Path,
+                                   prediction_sha: str, prediction: dict,
+                                   horizon: dict, asset: str, hours: int,
+                                   target: dict, receipt: dict):
+    """Mirror the core immutable owner linkage; never score a misbound receipt.
+
+    This is a fail-closed research intake precheck, NOT an alternative canonical
+    registered validator/scorer. Full registered validation remains external.
+    """
+    relative = prediction_file.relative_to(root).as_posix()
+    required = {
+        "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+        "prediction_path": relative,
+        "prediction_sha256": prediction_sha,
+        "target": asset,
+        "horizon_hours": hours,
+        "issued_at_utc": prediction.get("issued_at_utc"),
+        "due_at_utc": horizon.get("due_at_utc"),
+        "source_price_observation_utc": horizon.get("source_cutoff_utc"),
+        "predicted_direction": target.get("direction"),
+        "registered_test_id": prediction.get("registered_test_id"),
+        "registration_receipt_sha256": prediction.get("registration_receipt_sha256"),
+    }
+    for key, value in required.items():
+        if value is None or receipt.get(key) != value:
+            raise ValueError(f"ORIGINAL_OUTCOME_LINKAGE_INVALID:{key}:{relative}:{hours}H:{asset}")
+    if receipt.get("authority", {}).get("shadow_only") is not True or receipt.get("authority", {}).get("portfolio_execution") is not False:
+        raise ValueError("ORIGINAL_OUTCOME_AUTHORITY_INVALID")
+    start, owner_start = target.get("start_value"), receipt.get("start_value")
+    if not (isinstance(start, (int, float)) and not isinstance(start, bool)
+            and isinstance(owner_start, (int, float)) and not isinstance(owner_start, bool)
+            and math.isfinite(float(start)) and math.isfinite(float(owner_start))
+            and float(start) == float(owner_start)):
+        raise ValueError("ORIGINAL_OUTCOME_START_BINDING_INVALID")
+    status = receipt.get("status")
+    if status not in ("CENSORED", "MATURED"):
+        raise ValueError("ORIGINAL_OUTCOME_STATUS_INVALID")
+    if status == "CENSORED" and (
+        receipt.get("reason") != "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE"
+        or receipt.get("substitute_later_price_forbidden") is not True
+        or receipt.get("result") is not None
+    ):
+        raise ValueError("ORIGINAL_OUTCOME_CENSOR_CONTRACT_INVALID")
+    if status == "MATURED" and receipt.get("result") not in ("HIT", "MISS", "ABSTAINED"):
+        raise ValueError("ORIGINAL_OUTCOME_MATURITY_CONTRACT_INVALID")
+
+
 def scan(root: Path, tape: dict):
     rows = []
     pred_files = sorted((root / PRED).glob("2026/*/*/*.json"))
@@ -139,6 +186,10 @@ def scan(root: Path, tape: dict):
                 target = (h.get("targets") or {}).get(asset) or {}
                 original = outcome_file(root, issued, stem, hname, asset)
                 receipt = read_json(original) if original.is_file() else {}
+                if receipt:
+                    require_bound_original_outcome(
+                        root, file, sha, p, h, asset, hours, target, receipt
+                    )
                 forecast_state = str(h.get("status") or "MISSING_HORIZON")
                 predicted = target.get("direction")
                 key = (str(file.relative_to(root)), asset, hname)
