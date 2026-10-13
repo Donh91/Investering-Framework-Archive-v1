@@ -119,3 +119,13 @@ Each stage must deliver a small, machine-readable receipt containing original ow
 Current privacy checkpoint: earlier private metadata reachability counts are unbound historical observations, not reproducible verified access. Active gate reports UNVERIFIED_NO_IMMUTABLE_AUTHORIZED_BINDING; raw private records remain unread and historical PIT/trade admission blocked. Current 38-control denominator adds public-output redaction, frozen signal-state binding and explicit maturity/as-of tests to preserved earlier checkpoints. Outcomes require an immutable recorded_at_utc at/after due time and no later than the explicit as-of clock; different legitimate producer workflow runs remain permitted.
 
 Current-head CI must be independently read back from the existing GitHub Actions run, then referenced by TASK2_READY_HANDOFF. The machine gate deliberately reports CURRENT_HEAD_CI_RECEIPT_REQUIRED with null current head/run; its separate historical_CI_checkpoint is the original 31-control result only. Defined 38 controls and a historical pass must never be mistaken for current-head CI. Passing code checks still admit zero historical skill/trade rows.
+
+
+## User-supplied Deep Research 01–03 intake · 2026-10-13
+
+Additional evidence discovery has been summarized for cross-thread Task 2 use, without changing any frozen R0–R7 test, source authority, score, permission or historical outcome:
+
+- [Research-only written synthesis](../../../06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.md) — 72 pages across three user-submitted reports, secondary claims, source PDF hashes/page refs, privacy guards and owner-deduplicated work packets.
+- [Machine research intake and 30 study readiness classifications](../../../06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.json) — S01–S30 readiness **as reported** by Deep Research #3, never independent Task 2 admission or historical execution evidence.
+
+**Hard gate remains unchanged:** original source clocks, archive census, negative/missing denominators and event-family independence must still pass existing R0/R1 eligibility. Private source bindings are not established by the existence of these summaries. Full PDFs remain outside the public repo; no private dataset values have been imported. No new scheduler, experiment authority, auto signal promotion, economic PnL or authorized live trading.
