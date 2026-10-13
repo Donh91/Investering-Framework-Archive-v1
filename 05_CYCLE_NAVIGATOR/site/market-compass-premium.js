@@ -200,6 +200,18 @@ function officialCurrentReading(compass, now=Date.now()) {
     && source<=issued&&issued<=now&&source<=now&&now<=expiry);
 }
 
+let freshnessExpiryTimer = null;
+function scheduleFreshnessExpiry(snapshot, compass, event) {
+  if(typeof setTimeout!=='function')return; // isolated no-timer DOM probes only
+  if(freshnessExpiryTimer!==null){clearTimeout(freshnessExpiryTimer);freshnessExpiryTimer=null;}
+  if(!officialCurrentReading(compass))return;
+  const expiry=Date.parse(compass.full_stack.official_freshness.valid_until_utc);
+  freshnessExpiryTimer=setTimeout(()=>{
+    freshnessExpiryTimer=null;
+    renderPremium(snapshot,compass,event);
+  },Math.min(2147483647,Math.max(1,expiry-Date.now()+1)));
+}
+
 function recommendationWindow(compass) {
   const explicit = clean(compass?.next_meaningful_change_eta);
   const near = clean(compass?.horizons?.NEXT_12H?.eta);
@@ -467,6 +479,7 @@ function renderPremium(snapshot, compass, event) {
     detail.open = true;
     requestAnimationFrame(() => detail.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }));
+  scheduleFreshnessExpiry(snapshot, compass, event);
   return true;
 }
 
@@ -507,6 +520,11 @@ async function load() {
 }
 
 function boot() {
+  // Browser suspension may delay timers. Re-check before displaying a
+  // previously cached current action when the page becomes visible again.
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')install();});
+  window.addEventListener?.('pageshow',install);
+  window.addEventListener?.('focus',install);
   load();
   setInterval(load, 5 * 60 * 1000);
 }

@@ -46,7 +46,7 @@ for(const [available,state] of [[true,'NO NEW READING'],[true,'NOT READY'],[true
 }
 function actualPremiumMarkup(c) {
  let markup='';
- const root={querySelectorAll:()=>[],querySelector:()=>null,classList:{add(){}},prepend(section){markup=section.innerHTML;}};
+ const root={querySelectorAll:()=>[],querySelector:()=>null,classList:{add(){}},prepend(section){markup=section.innerHTML;honestyScope.__lastMarkup=markup;}};
  honestyScope.document.getElementById=id=>id==='productNow'?root:null;
  honestyScope.document.createElement=()=>({
    innerHTML:'',querySelectorAll:()=>[],querySelector:()=>null
@@ -74,6 +74,18 @@ for(const badProjection of [
  const bad=actualPremiumMarkup({...badProjection,market_now:{directional_state:'BULLISH'}});
  if(!bad.includes(noSource)||bad.includes(sourceMethod)||bad.includes('APPLIES NOW'))throw Error('stale/unverified official source presented as current');
 }
+// No polling/network refresh is needed to expire an already rendered action.
+const realDate=Date;let clock=Date.now(),expiryCallback=null,scheduledDelay=null;
+honestyScope.Date=class extends realDate {static now(){return clock;}};
+honestyScope.setTimeout=(callback,delay)=>{expiryCallback=callback;scheduledDelay=delay;return 1;};
+honestyScope.clearTimeout=()=>{};
+actualPremiumMarkup(testProjection);
+if(typeof expiryCallback!=='function'||!(scheduledDelay>0&&scheduledDelay<=3600001))throw Error('owner expiry did not schedule invalidation');
+clock=Date.parse(testProjection.full_stack.official_freshness.valid_until_utc)+1;
+expiryCallback();
+if(!honestyScope.__lastMarkup.includes(noSource)||honestyScope.__lastMarkup.includes('APPLIES NOW'))throw Error('expired visible action survived without polling');
+honestyScope.Date=realDate;delete honestyScope.setTimeout;delete honestyScope.clearTimeout;
+if(!premiumRenderer.includes("visibilitychange")||!premiumRenderer.includes("'pageshow'")||!premiumRenderer.includes("'focus'"))throw Error('suspended page has no freshness resume check');
 if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish HOLD investor copy may contradict owner');
 const chatPrompt=await readFile(resolve(site,'../..','07_PROMPTS_AND_AGENTS/prompts/HANDLEKOMPAS_v1.md'),'utf8');
 const sourceHonesty=chatPrompt.match(/## Forecast evidence, honesty and user-visible accountability \(Task 1\.5 P0\)([\s\S]*?)## Mandatory rendering rules/)?.[1]||'';
