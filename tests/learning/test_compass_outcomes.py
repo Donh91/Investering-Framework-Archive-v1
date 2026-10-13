@@ -1,6 +1,8 @@
 import csv
 import hashlib
 import json
+import shutil
+import subprocess
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -133,6 +135,70 @@ class CompassOutcomeTest(unittest.TestCase):
             result = mature_one(root, freeze_path, "12h", datetime(2026, 9, 17, 2, 0, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
             outcome = json.loads((root / result["path"]).read_text())
             self.assertAlmostEqual(outcome["realized"]["btc_mfe_pct"], -5.0)
+
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js unavailable; research oracle needs Node 20+")
+    def test_task2_research_no_hindsight_admission_fails_closed(self):
+        """Task 2 code is synthetic-only; passing here cannot authorize forecasting."""
+        root = Path(__file__).resolve().parents[2]
+        oracle = root / (
+            "04_MARKET_LEARNING/handlekompas/research/"
+            "2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs"
+        )
+        self.assertTrue(oracle.is_file(), "Task2 R1 oracle missing from research branch")
+        result = subprocess.run(
+            ["node", str(oracle), "--self-test"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=45,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        receipt = json.loads(result.stdout)
+        self.assertEqual(receipt["status"], "SELF_TEST_PASS")
+        self.assertGreaterEqual(receipt["negative_and_positive_controls"], 21)
+        self.assertEqual(receipt["historical_market_rows_scored"], 0)
+        self.assertFalse(receipt["automatic_trading_authority"])
+
+    def test_task2_r0_public_census_is_bounded_not_a_skill_claim(self):
+        root = Path(__file__).resolve().parents[2]
+        manifest = root / (
+            "04_MARKET_LEARNING/handlekompas/research/"
+            "2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json"
+        )
+        receipt_path = root / (
+            "04_MARKET_LEARNING/handlekompas/research/"
+            "2026-10-13__TASK2_R0_PUBLIC_SOURCE_CENSUS_AND_R1_ORACLE_RECEIPT_v1.json"
+        )
+        source = json.loads(manifest.read_text(encoding="utf-8"))
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        self.assertEqual(source["contract"], "TASK2_R0_PUBLIC_SOURCE_INVENTORY_v1")
+        self.assertEqual(source["main_commit"], receipt["pinned_main_commit"])
+        self.assertEqual(len(source["families"]), 17)
+        self.assertEqual(
+            len({family["id"] for family in source["families"]}), 17
+        )
+        entries = [part for family in source["families"] for part in family["sources"]]
+        self.assertEqual(len(entries), 27)
+        self.assertEqual(
+            sum(part["git_object_type"] == "tree" for part in entries), 11
+        )
+        self.assertEqual(
+            sum(part["git_object_type"] == "blob" for part in entries), 16
+        )
+        self.assertTrue(all(
+            len(part["git_object_sha"]) == 40
+            and all(c in "0123456789abcdef" for c in part["git_object_sha"])
+            for part in entries
+        ))
+        self.assertTrue(all(
+            family["admission"] not in ("PIT_CERTIFIED", "TRADABLE_EDGE")
+            for family in source["families"]
+        ))
+        self.assertFalse(source["authority"]["changes_trading_rules"])
+        self.assertFalse(receipt["authorization"]["market_rules_changed"])
+        self.assertEqual(receipt["r1_synthetic"]["history_scored_rows"], 0)
 
 
 if __name__ == "__main__":
