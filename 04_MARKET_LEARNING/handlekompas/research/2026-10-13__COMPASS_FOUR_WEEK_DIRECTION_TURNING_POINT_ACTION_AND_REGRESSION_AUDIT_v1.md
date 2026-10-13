@@ -28,6 +28,38 @@ The test concerns Official, Shadow v2, T12 Intraday Direction, CN weekly ranges,
 - The separate experiment repo `Donh91/Eksperimenter-framework-` is a noncanonical execution/replication plane. Its `swing_signal_lab/latest_state.json` and coverage summary remain INITIALIZED_NO_ROWS / 0 matured signal rows in inspected state; **it cannot currently be cited as a proven superior challenger**. Its bridge replication receipts are not forecasts or evidence of decision utility.
 - Existing EDGE-001 T2B has 94 historical annotations and **zero historically admissible typed warning joins**. 144 variants are a preregistered synthetic/PIT test surface, not 144 historical backtest wins. PR #1592 reports 0 admitted Official/Shadow comparable pairs under the latest scoring compatibility gates and substantial v2/v3 contract mismatch. Preserve older rows; avoid retrospective rescoring.
 
+
+## 1b. Direct historic calibration checkpoints (additional verification)
+
+Immutable GitHub `DIRECTION_CALIBRATION.json` snapshots have been read **at the actual source-main commits** listed in R5, not recomputed using today's calibration data. Snapshot timestamps:
+
+| Label | Generated UTC | Matured score-row count |
+|---|---|---:|
+| 15 Sep | 2026-09-15 01:24 | 137 |
+| 22 Sep | 2026-09-22 04:42 | 194 |
+| 29 Sep | 2026-09-29 18:56 | 241 |
+| 6 Oct | 2026-10-06 10:16 | 342 |
+| 12 Oct (prior checkpoint) | 2026-10-11 22:11 | 431 |
+| 13 Oct | 2026-10-13 02:09 | 454 |
+
+**Method:** For each asset/horizon, sum per-calibration-group `hits` and `independent_count`; calculate adjacent-snapshot differences. These are **newly admitted/matured changes in a greedy independent-group calibration register**, NOT a complete time-of-forecast-cohort outcome census. Historical groups might shift with later admissible maturations. Do not label the intervals "forecasts originally issued in that week" or claim strict independence. The 12 Oct checkpoint is generated late 11 Oct UTC.
+
+| Snapshot interval | BTC 1H | ETH 1H | BTC 4H | ETH 4H | BTC 24H | ETH 24H |
+|---|---|---|---|---|---|---|
+| 15–22 Sep | 2/3 | 1/3 | 6/12 | 6/13 | 8/10 | 6/13 |
+| 22–29 Sep | 0/1 | 1/1 | 5/11 | **1/8** | 4/10 | **1/10** |
+| 29 Sep–6 Oct | 3/6 | 3/6 | 10/22 | **6/24** | 9/15 | 9/15 |
+| 6–12 Oct | 3/5 | 4/7 | 7/15 | 6/15 | 7/14 | 8/16 |
+| 12–13 Oct | 2/3 | 1/3 | 2/2 | 2/2 | 1/4 | 2/6 |
+| **15 Sep–13 Oct delta** | **10/18 (55.6%)** | **10/20 (50.0%)** | **30/62 (48.4%)** | **21/62 (33.9%)** | **29/53 (54.7%)** | **26/60 (43.3%)** |
+
+**Finding:** The poor 4H ETH result is persistent across multiple weeks. A monotonic decline after each Monday calibration is contradicted: ETH 4H interim increments were 46.2%, 12.5%, 25.0%, 40.0%, then 2/2, though latter groups are tiny. Together with source code/config stability and prohibition on auto-reweighting, weekly *automatic* calibration-induced regression is not established.
+
+The separate original issuance-based, instrument+clock-matched R0-R3 replay remains REQUIRED, because change in a greedy scorer register is not a fully controlled per-week forecast experiment.
+
+Reference snapshot `DIRECTION_CALIBRATION.json` blob SHA at five dates: `1969d0107f945090460188d61f3893a2e7391273`, `f8c52f84c16af84c0a8182d5f9ae5b9ebc8b77de`, `190e77a6b8a86f4144e2721b2432eb387f513950`, `4240d28f2d076834f11a7ed57eee4845ea4cb7d0`, `f686d4dd68dcf0b4f901750bd1b850086edb879c`. The latest current-main blob is separately versioned, not overwritten.
+
+
 ## 2. Required 28d reproducible audit (R0-R8), acceptance tests
 
 **R0 source admission:** enumerate `direction_predictions/**` and `direction_outcomes/**` files by true issue date, not GitHub search ranking. For every file freeze original issue UTC, source cutoff/availability, main first-parent commit, issuance-to-target lead, asset, horizon, contract, direction, vote families, model/rule version, prediction SHA, original config SHA, unaltered frozen reference price, exact target time, original maturation state/actual, censor reason, and scorer revision. Cross-check dated hourly owner CSVs against independent venue observations without overwriting outcomes. Full census expected to include **all** 28d files, not just search top-100 hits. Report explicit missed hours, duplicate captures, blackout periods and first-knowledge conflicts. NO subsequent-value substitution for censored registered events.
