@@ -200,6 +200,7 @@ function officialCurrentReading(compass, now=Date.now()) {
     && source<=issued&&issued<=now&&source<=now&&now<=expiry);
 }
 
+window.CNOfficialCurrentReading = officialCurrentReading;
 let freshnessExpiryTimer = null;
 function scheduleFreshnessExpiry(snapshot, compass, event) {
   if(typeof setTimeout!=='function')return; // isolated no-timer DOM probes only
@@ -479,6 +480,7 @@ function renderPremium(snapshot, compass, event) {
     detail.open = true;
     requestAnimationFrame(() => detail.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }));
+  if(typeof document.dispatchEvent==='function')document.dispatchEvent(new CustomEvent('cn-official-compass-rendered',{detail:compass}));
   scheduleFreshnessExpiry(snapshot, compass, event);
   return true;
 }

@@ -86,6 +86,17 @@ expiryCallback();
 if(!honestyScope.__lastMarkup.includes(noSource)||honestyScope.__lastMarkup.includes('APPLIES NOW'))throw Error('expired visible action survived without polling');
 honestyScope.Date=realDate;delete honestyScope.setTimeout;delete honestyScope.clearTimeout;
 if(!premiumRenderer.includes("visibilitychange")||!premiumRenderer.includes("'pageshow'")||!premiumRenderer.includes("'focus'"))throw Error('suspended page has no freshness resume check');
+// Header clock is the same rendered Official source, never an hourly monitor
+// or weekly-package timestamp mislabeled as the updated Market Compass.
+const productSource=await readFile(resolve(site,'public-product.js'),'utf8');
+let stripMarkup='';
+const stripScope={Date,esc:String,snapshot:{package:{generated_unix:1},live_observation:{current_action:{generated_at:'2020-01-01T00:00:00Z'}}},officialCompass:testProjection,window:{CNOfficialCurrentReading:honestyScope.window.CNOfficialCurrentReading},document:{getElementById:()=>({set innerHTML(value){stripMarkup=value;}})}};
+const stripCode=productSource.slice(productSource.indexOf('function freshness(){'),productSource.indexOf('\nfunction rotationEta('))+';freshness();';
+runInNewContext(stripCode,stripScope);
+const officialStamp=new Date(testProjection.issued_at_utc).toLocaleString('en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+if(!stripMarkup.includes(officialStamp)||stripMarkup.includes('2020'))throw Error('header clock is not the rendered Official issuance');
+stripScope.officialCompass=null;runInNewContext(stripCode,stripScope);
+if(!stripMarkup.includes('OFFICIAL COMPASS UNAVAILABLE'))throw Error('missing Official source relabeled hourly/weekly as Compass');
 if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish HOLD investor copy may contradict owner');
 const chatPrompt=await readFile(resolve(site,'../..','07_PROMPTS_AND_AGENTS/prompts/HANDLEKOMPAS_v1.md'),'utf8');
 const sourceHonesty=chatPrompt.match(/## Forecast evidence, honesty and user-visible accountability \(Task 1\.5 P0\)([\s\S]*?)## Mandatory rendering rules/)?.[1]||'';
