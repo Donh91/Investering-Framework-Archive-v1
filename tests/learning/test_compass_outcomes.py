@@ -240,6 +240,13 @@ class CompassOutcomeTest(unittest.TestCase):
             belongs_to_main.returncode, 0,
             "TASK2_R0_PINNED_COMMIT_NOT_REACHABLE_FROM_MAIN: " + belongs_to_main.stderr
         )
+        root_tree = subprocess.run(
+            ["git", "rev-parse", f"{pinned_commit}^{{tree}}"],
+            cwd=root, capture_output=True, text=True, timeout=30, check=False,
+        )
+        self.assertEqual(root_tree.returncode, 0, root_tree.stderr)
+        self.assertEqual(source["main_tree"], root_tree.stdout.strip())
+        self.assertEqual(receipt["pinned_main_tree"], root_tree.stdout.strip())
         # Negative control: the pinned snapshot must not be treated as a
         # descendant of the latest main after new commits appeared.
         current_main = subprocess.run(

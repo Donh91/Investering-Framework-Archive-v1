@@ -6,7 +6,17 @@
 
 import fs from 'node:fs';
 
-const RESTRICTED_KEY=/wallet|holdings|private_key|api_key|raw_chat|user_trade/i;
+const RESTRICTED_KEY=/wallet|holdings|private_key|api_key|raw_chat|user_trade|password|secret|access_token|refresh_token|authorization|credential|seed_phrase|mnemonic/i;
+// Public admission has a closed schema. Unknown metadata cannot hide credentials.
+const ROW_KEYS=new Set(['signal_id','family_id','asset','target','source_sha256','signal_state','source_observed_at_utc','source_first_known_at_utc','issued_at_utc','outcome_due_at_utc','original_outcome_status','original_outcome_receipt','first_known_proof','retrospective_actual_direction']);
+const RECEIPT_KEYS=new Set(['signal_id','source_sha256','asset','target','issued_at_utc','outcome_due_at_utc','status','result','substitute_later_price_forbidden']);
+const PROOF_KEYS=new Set(['status','verifier','proof_sha256']);
+function allowedObject(value,keys){return value!==null&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.has(key));}
+function closedPublicSchema(row){
+ return allowedObject(row,ROW_KEYS)
+   && (row.original_outcome_receipt==null||allowedObject(row.original_outcome_receipt,RECEIPT_KEYS))
+   && (row.first_known_proof==null||allowedObject(row.first_known_proof,PROOF_KEYS));
+}
 
 function containsRestrictedKey(value,seen=new Set()){
  if(value===null||typeof value!=="object")return false;
@@ -33,6 +43,7 @@ function inspectRow(row){
  const fail=(category,reason)=>({signal_id:typeof row?.signal_id==="string"?row.signal_id:"UNKNOWN",family_id:typeof row?.family_id==="string"?row.family_id:"UNKNOWN",original_outcome_status:typeof row?.original_outcome_status==="string"?row.original_outcome_status:"UNKNOWN",admission:category,reason,registered_scored:false,trade_edge_admitted:false});
  if(!row||typeof row!=="object"||Array.isArray(row))return fail("QUARANTINED","ROW_SCHEMA_INVALID");
  if(containsRestrictedKey(row))return fail("QUARANTINED","RESTRICTED_RECORD_MUST_NOT_ENTER_PUBLIC_ORACLE");
+ if(!closedPublicSchema(row))return fail("QUARANTINED","UNKNOWN_PUBLIC_SCHEMA_FIELD");
  const required=["signal_id","family_id","asset","target","source_sha256","signal_state","source_observed_at_utc","source_first_known_at_utc","issued_at_utc","outcome_due_at_utc","original_outcome_status"];
  if(required.some(k=>typeof row[k]!=="string"||!row[k].trim()))return fail("QUARANTINED","REQUIRED_FIELD_MISSING");
  if(!/^[a-f0-9]{64}$/.test(row.source_sha256))return fail("QUARANTINED","INVALID_SOURCE_SHA256");
@@ -97,6 +108,10 @@ function selfTest(){
  ["RESTRICTED_WALLET_FIELD",{...base,user_wallet:"0xFAKE"},"QUARANTINED"],
  ["NESTED_RESTRICTED_PRIVATE_KEY",{...base,metadata:{private_key:"fixture-only"}},"QUARANTINED"],
  ["ARRAY_NESTED_RESTRICTED_WALLET",{...base,metadata:[{wallet:"0xFAKE"}]},"QUARANTINED"],
+ ["NESTED_ACCESS_TOKEN",{...base,metadata:{access_token:"fixture-only"}},"QUARANTINED"],
+ ["TOP_LEVEL_PASSWORD",{...base,password:"fixture-only"},"QUARANTINED"],
+ ["RECEIPT_CLIENT_SECRET",{...base,original_outcome_receipt:{...base.original_outcome_receipt,client_secret:"fixture-only"}},"QUARANTINED"],
+ ["UNKNOWN_METADATA_DENIED",{...base,metadata:{novel_field:"fixture-only"}},"QUARANTINED"],
  ["WRONG_SOURCE_AFTER_ISSUE",{...base,source_observed_at_utc:"2026-10-12T09:08:00Z",source_first_known_at_utc:"2026-10-12T09:09:00Z"},"PIT_BLOCKED"],
  ["UNKNOWN_SIGNAL",{...base,signal_state:"FUTURE_CLAIM"},"QUARANTINED"],
  ];
