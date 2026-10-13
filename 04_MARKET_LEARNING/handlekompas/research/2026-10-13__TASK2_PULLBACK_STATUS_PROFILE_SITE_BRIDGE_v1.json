@@ -19,7 +19,7 @@
   "documents": {
     "master": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_PULLBACK_DECISION_PROFILE_AND_SITE_CONSUMER_HANDOVER_v1.md",
     "existing_r4p": "04_MARKET_LEARNING/handlekompas/research/2026-10-12__R4P_PULLBACK_INVESTOR_DECISION_EDGE_DEEP_AUDIT_v1.md",
-    "site_handover": "05_CYCLE_NAVIGATOR/site/vnext-preview/PULLBACK_PROGRESSION_INTERNAL_HANDOVER_2026-10-12.md"
+    "site_handover": null
   },
   "research_workstreams": [
     {
@@ -175,8 +175,8 @@
   "transport": {
     "research_source": "EXISTING_EDGE_M6_PIT_LEDGER_NONCANONICAL",
     "official_status_source": "OFFICIAL_COMPASS_IMMUTABLE_FREEZE_AND_PUBLIC_PROJECTION",
-    "site_adapter": "05_CYCLE_NAVIGATOR/site/vnext-preview/official-feed-parity.mjs",
-    "site_investor_view": "05_CYCLE_NAVIGATOR/site/vnext-preview/official-pullback-investor-view.mjs",
+    "site_adapter": null,
+    "site_investor_view": null,
     "canonical_site_delivery": "05_CYCLE_NAVIGATOR/site/build-public.mjs",
     "allowed_primary_display": [
       "official_risk_stage",
@@ -233,5 +233,40 @@
     "RISK_CLASS_AS_BEAR_MARKET",
     "EXPAND_12H_TO_24H",
     "NEW_WORKFLOW_OR_PAID_API"
-  ]
+  ],
+  "site_implementation_dependency": {
+    "status": "PINNED_EXTERNAL_PR_NOT_ADMITTED",
+    "owner_issue": 1578,
+    "source_pr": 1576,
+    "current_task2_tree_has_these_files": false,
+    "local_consumer_paths_available": false,
+    "canonical_effect": false,
+    "live_admission": "BLOCKED_REQUIRES_APPROVED_SITE_MERGE_AND_LIVE_QA",
+    "external_sources": [
+      {
+        "role": "site_handover",
+        "repository": "Donh91/Investering-Framework-Archive-v1",
+        "commit": "b57822f770dc902240c2310296036433dc31f475",
+        "path": "05_CYCLE_NAVIGATOR/site/vnext-preview/PULLBACK_PROGRESSION_INTERNAL_HANDOVER_2026-10-12.md",
+        "git_blob_sha": "d62c2d346f3248086d82de47e6eb12f1fd649ed6",
+        "status": "EXACT_EXTERNAL_SOURCE_VERIFIED_NOT_LOCAL_OR_DEPLOYED"
+      },
+      {
+        "role": "site_adapter",
+        "repository": "Donh91/Investering-Framework-Archive-v1",
+        "commit": "b57822f770dc902240c2310296036433dc31f475",
+        "path": "05_CYCLE_NAVIGATOR/site/vnext-preview/official-feed-parity.mjs",
+        "git_blob_sha": "834df837e0d1c75923ad24c0570eead3c3c997fd",
+        "status": "EXACT_EXTERNAL_SOURCE_VERIFIED_NOT_LOCAL_OR_DEPLOYED"
+      },
+      {
+        "role": "site_investor_view",
+        "repository": "Donh91/Investering-Framework-Archive-v1",
+        "commit": "b57822f770dc902240c2310296036433dc31f475",
+        "path": "05_CYCLE_NAVIGATOR/site/vnext-preview/official-pullback-investor-view.mjs",
+        "git_blob_sha": "901d81eee5f17468f3c6d2afb3115b08a3fabda8",
+        "status": "EXACT_EXTERNAL_SOURCE_VERIFIED_NOT_LOCAL_OR_DEPLOYED"
+      }
+    ]
+  }
 }
