@@ -26,6 +26,8 @@ if(!premiumRenderer.includes('compositeIntel(compass)'))throw Error('active prem
 if(!premiumRenderer.includes('CN_PREMIUM_COMPASS_OWNER = true'))throw Error('premium owner not detected');
 if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model research')&&!premiumRenderer.includes('Research direction'))throw Error('premium research disclosure absent');
 if(!premiumRenderer.includes('Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.'))throw Error('Official 12H continuation proxy disclosure absent from investor-facing NOW view');
+if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish investor recommendation may contradict current Official direction');
+if(!premiumRenderer.includes('The 0–12h pressure reading is a current-state observation'))throw Error('HOLD investor message lost direction-neutral source disclosure');
 // Independent end-to-end producer-digest and weekly-source regression checks.
 const root=resolve(site,'../..');
 const j=async p=>JSON.parse(await readFile(resolve(root,p),'utf8'));
