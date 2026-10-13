@@ -412,6 +412,39 @@ Object.assign(translations, {
   "Kvalitet af evidens er ikke sandsynlighed. Risikostadie giver ikke i sig selv et SELL-signal.": "Evidence quality is not likelihood. The risk category alone is not a SELL signal."
 });
 
+Object.assign(translations, {
+  "Hvor er vi": "Where are we",
+  "i cyklussen?": "in the cycle?",
+  "PATH · KILDEBUNDET": "PATH · SOURCE-BOUND",
+  "MARKEDSCYKLUS · OFFICIEL UGEREFERENCE": "MARKET CYCLE · OFFICIAL WEEKLY REFERENCE",
+  "Cyklusaflæsning afventer kilde.": "Waiting for cycle source.",
+  "Retning og fase skal kunne dokumenteres. En strukturel rækkefølge er ikke en tidsprognose.": "Market direction and stages require evidence. Structural order is not a time forecast.",
+  "KILDE AFVENTES": "SOURCE PENDING",
+  "Kendt reference og næste cyklusbekræftelse": "Reference and next cycle confirmation",
+  "SIDST DOKUMENTEREDE FASE": "LAST DOCUMENTED PHASE",
+  "NÆSTE BEKRÆFTELSE": "NEXT CONFIRMATION",
+  "Afventer kilde": "Awaiting source",
+  "Fra BTC til rotation, altseason og beskyttelse": "From BTC to rotation, altseason and protection",
+  "Trin er betingelser, ikke en nedtælling": "Stages are conditional, not a countdown",
+  "Fem hovedetaper i markedsrejsen": "Five major market cycle stages",
+  "ALTSEASON-WATCH": "ALTSEASON WATCH",
+  "Ikke verificeret": "Unverified",
+  "Bred altseason kræver uafhængig bekræftelse.": "Broad altseason requires independent confirmation.",
+  "Ingen verificeret ETA": "No verified ETA",
+  "Denne uges kapitalrotation": "This week's capital rotation",
+  "Originale Kompas-handlinger · BTC → memes": "Original Compass actions · BTC → memes",
+  "Syv officielle kapitaliseringsniveauer": "Seven official capitalization tiers",
+  "Hele markedsrejsen": "The full market cycle",
+  "Alle 10 faser, dokumentation og betingelser": "All ten stages, evidence and conditions",
+  "ETH/BTC · næste gate": "ETH/BTC · next gate",
+  "Ingen verificeret gate.": "No verified gate.",
+  "2–3 uger · struktur": "2–3 weeks · structure",
+  "4–8 uger · cyklus": "4–8 weeks · cycle",
+  "Beskyttelse, distribution og re-entry": "Protection, distribution and re-entry",
+  "Afventer separate officielle kilder": "Awaiting separate official sources",
+  "Ingen etape forfremmes uden verificerede signaler.": "No stage is promoted without confirmed evidence."
+});
+
 let language = 'da';
 const original = new WeakMap();
 const attributes = new WeakMap();
