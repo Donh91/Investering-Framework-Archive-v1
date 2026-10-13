@@ -88,6 +88,15 @@ jobs:
           assert Path('/tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv').exists()
           print(json.dumps({'mode':'RESEARCH_ONLY_RECONCILIATION','prediction_files':r['prediction_files_total_before_date_filter'],'forecast_slots':r['forecast_asset_horizon_slots_in_window'],'tape_rows':r['tape_rows'],'ledger_sha256':r['ledger_sha256'],'results':r['results'],'limitations':r['limitations']},sort_keys=True))
           PY
+      - name: Archive Task 1.5 source-bound research receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: task15-readonly-ledger-${{ github.run_id }}
+          path: |
+            /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv
+            /tmp/task15-evidence/TASK15_R0_RECEIPT.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Build and validate public Compass bundle
         run: |
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
