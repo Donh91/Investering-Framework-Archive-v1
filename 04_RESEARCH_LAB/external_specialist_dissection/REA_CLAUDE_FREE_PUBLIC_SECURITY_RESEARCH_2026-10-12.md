@@ -55,3 +55,47 @@ The current P0 work is a **separate stacked private Draft PR #150**, building a 
 - GitHub Actions private repository minutes are finite; no TinyFish Agent/Browser, Firecrawl, hosted inference, or unreviewed autonomous improvement should be added.
 
 Primary sources: [Playwright Docker](https://playwright.dev/docs/docker), [Docker seccomp](https://docs.docker.com/engine/security/seccomp/), [IANA IPv4 special registry](https://www.iana.org/assignments/iana-ipv4-special-registry), [IANA IPv6 special registry](https://www.iana.org/assignments/iana-ipv6-special-registry), [Azure 168.63.129.16](https://learn.microsoft.com/azure/virtual-network/what-is-ip-address-168-63-129-16), [GitHub Actions secure use](https://docs.github.com/en/actions/reference/security/secure-use).
+
+
+## Independent Sol High API security design cross-examination — public, code-free
+
+**Scope:** This document contains no private Alpha Lab source or credentials. The actual private REA implementation remains on private Draft PR #149; the isolated egress research is private Draft PR #150. Reviewing this PUBLIC document cannot be called a code audit, executed security test, or permission to merge. It is a request for an adversarial design-level critique only.
+
+### Frozen system assertions and unresolved gaps
+
+1. **Confirmed offline milestone, bounded:** Nonroot disposable Chromium on Ubuntu 22.04 under a digest-pinned official Playwright Docker image, seccomp, no new privileges, separate renderer user/PID namespaces and `--network none`. The deliberately unsandboxed negative control was rejected. This only proves isolated synthetic browser operation for that image/runner.
+2. **Unverified transport P0:** In the original runner, DNS name validation happens before the Playwright-controlled HTTP request is sent. There is no guaranteed connect-time DNS/IP binding. A browser/Node worker with ordinary host networking may still send direct traffic to cloud metadata, private IP, local services, IPv6 special routes or bypass request interception via alternate browser protocols.
+3. **Experimental component only:** A proposed HTTPS CONNECT broker accepts an explicitly approved exact hostname and port 443, resolves A and AAAA, rejects any non-public result and then dials an approved literal public IP. The code is not integrated into production or connected to a network-isolated REA deployment. Its in-memory limit controls cannot replace a host-enforced packet filter.
+4. **Critical semantic concern:** CONNECT is an opaque bidirectional TLS tunnel. Without inspecting the encrypted requests it cannot independently guarantee GET/HEAD-only. Even GET requests can have side effects. No wallet/credentials reduces consequences but does not prove harmlessness.
+5. **Security boundary must be both ways:** The browser and Node orchestrator should have no Internet route except through a separately isolated, least-privileged egress component. The egress component itself should be unable to contact metadata/internal networks even when its application code is compromised, and it must not receive GitHub API tokens, private repo source or Docker socket access.
+6. **Integrity boundary:** The site's DOM, screenshots, title, redirects, web metadata and future AI summaries are hostile input. They must not become tool calls, workflow edits, portfolio actions, prompt instructions, unreviewed research truth or an automated merge.
+7. **Research boundary:** UI clicking is not backend integrity, economic utilization, protocol execution, verifiable revenue or token quality. A result whose scripts/CDN are policy-blocked must be UNKNOWN/SOURCE_BLOCKED, not LARP or REAL. Prospective blinded controls are needed before any financial utility claim.
+8. **Supply-chain concern:** A digest-pin to a browser image does not pin npm transitive dependencies or GitHub Actions ref hashes. The executor runs on a GitHub-hosted VM where the security of kernel namespaces, seccomp/AppArmor and host control must be treated as an assumption, not a demonstrated complete security boundary.
+
+### Adversarial questions and falsification criteria for a separate API advisor
+
+| Code | Hypothesis to attack | Failure condition |
+|---|---|---|
+| S1 | Deny special/private IPv4 and IPv6 before socket connect | Any metadata/loopback/RFC1918/cloud platform packet succeeds |
+| S2 | DNS name and IP pinned at connection | An A/AAAA rebinding, CNAME chain or split-horizon result can route to disallowed IP |
+| S3 | HTTP CONNECT-only gateway | It accepts arbitrary ports, request-target smuggling, unknown DNS errors, proxy bypass, CONNECT to IP literals or unsafe upstream |
+| S4 | Browser + Node cannot bypass gateway | WebSocket, WebRTC, QUIC/UDP, DNS, DoH, preconnect, service worker, subframe or direct socket egress succeeds |
+| S5 | SSL integrity survives literal-IP dial | Wrong hostname/SNI certificate accepted, trust store relaxed or shared-IP vhost confinement incorrectly assumed |
+| S6 | TLS tunnel alone is read-only | A POST, state-changing GET or arbitrary HTTPS protocol can pass undetected |
+| S7 | Host namespace isolates gateway | Compromised proxy itself can access GitHub runner socket/token, host net, metadata or privileged runtime |
+| S8 | Evidence reports are trustworthy | DNS/HTTP block is marked fraud, a demo tab is counted as real backend, or future AI obeys untrusted webpage instructions |
+| S9 | CI can authorize a live trial | An unreviewed branch or repository variable can change live gate from false to true or access secrets on a PR |
+| S10 | Frozen controls measure value | A retrospective or selection-biased cohort claims forecasting edge without matched baselines and holdout |
+
+### Required differentiation in any conclusions
+
+- **Observed proof:** Only previous synthetic offline Chromium run and its explicit negative control, not real-site security.
+- **Proposed/partly implemented:** Destination-address filtering and CONNECT dial design are not independently validated in deployment.
+- **Not evidenced:** TLS method enforcement, runtime capture of emitted packets, robust DNS rebinding defenses under hostile inputs, full npm/actions supply-chain pinning and an independent code auditor sign-off.
+- **No-go rule:** Any S1–S7 uncertain or positive bypass case means public-site opening stays disabled. Architectural plausibility, test fixture PASS or model approval is insufficient.
+
+### Reviewer priority
+
+Please compare (A) explicit CONNECT broker with system firewall, (B) a pinned-IP HTTP(S) fetch-and-serve model without a live interactive browser, and (C) a supervised browser-only inert-site pilot where no external gateway exists. Identify which option offers the strongest provable **least authority** at the lowest GitHub Actions and implementation cost. Explicitly challenge any use of the phrase “read-only” for an arbitrary public dApp, and specify the smallest **testable, cost-bounded** next change that meaningfully reduces a P0 risk. Unsupported assumptions must remain UNKNOWN.
+
+**Authority:** RESEARCH_ONLY / ADVISORY. Never authorize public browsing, write to private repositories, modify autonomous task schedules, promote investment signals, touch wallets, trade, or increase budgets based on this document. Private source must stay private. Sol output is a reviewer perspective, not a replacement for CI or an independent security sign-off.
