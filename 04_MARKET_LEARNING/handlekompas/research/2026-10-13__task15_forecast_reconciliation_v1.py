@@ -375,6 +375,9 @@ def self_test():
         forecast = {
             "contract": "INTRADAY_DIRECTION_PREDICTION_v1",
             "issued_at_utc": utc(WINDOW_START + timedelta(hours=1, minutes=5)),
+            "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+            "registration_receipt_sha256": "fixture-registry-hash",
+            "source_price_observation_utc": utc(WINDOW_START + timedelta(hours=1)),
             "production_context": {"commit_sha": "fixture"},
             "horizons": {
                 "1H": {"status": "ELIGIBLE", "source_cutoff_utc": utc(WINDOW_START + timedelta(hours=1)), "due_at_utc": utc(WINDOW_START + timedelta(hours=2)), "targets": {"BTC": {"direction": "UP", "start_value": 101}, "ETH": {"direction": "DOWN", "start_value": 201}}},
@@ -385,8 +388,63 @@ def self_test():
         pf.write_text(json.dumps(forecast), encoding="utf-8")
         of = outcome_file(root, parse_utc(forecast["issued_at_utc"]), pf.stem, "1H", "BTC")
         of.parent.mkdir(parents=True)
-        of.write_text(json.dumps({"status": "CENSORED", "reason": "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE"}), encoding="utf-8")
+        bound = {
+            "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+            "prediction_path": pf.relative_to(root).as_posix(),
+            "prediction_sha256": digest(pf),
+            "target": "BTC",
+            "horizon_hours": 1,
+            "issued_at_utc": forecast["issued_at_utc"],
+            "due_at_utc": forecast["horizons"]["1H"]["due_at_utc"],
+            "source_price_observation_utc": forecast["source_price_observation_utc"],
+            "predicted_direction": "UP",
+            "registered_test_id": forecast["registered_test_id"],
+            "registration_receipt_sha256": forecast["registration_receipt_sha256"],
+            "start_value": 101,
+            "authority": {"shadow_only": True, "portfolio_execution": False},
+            "status": "CENSORED", "reason": "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE",
+            "substitute_later_price_forbidden": True,
+        }
+        of.write_text(json.dumps(bound), encoding="utf-8")
         result = run(root, root / "audit")
+        for bad in ("forecast_hash", "target", "horizon", "contract", "status"):
+            corrupt = dict(bound)
+            if bad == "forecast_hash": corrupt["prediction_sha256"] = "tampered"
+            if bad == "target": corrupt["target"] = "ETH"
+            if bad == "horizon": corrupt["horizon_hours"] = 4
+            if bad == "contract": corrupt["contract"] = "LEGACY_STALE_OUTCOME"
+            if bad == "status": corrupt["status"] = "MATURED"
+            of.write_text(json.dumps(corrupt), encoding="utf-8")
+            try:
+                run(root, root / "rejected")
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"tampered original outcome must fail closed: {bad}")
+        of.write_text(json.dumps(bound), encoding="utf-8")
+        cutoff = WINDOW_START + timedelta(hours=1)
+        for data, fn, signature in (
+            ({cutoff: {"btc_usdt_spot_close": "nan"}}, lambda x: tape_value(x, cutoff, "BTC"), "price nan"),
+            ({cutoff: {"btc_trailing_4h_return_pct": "Infinity"}}, lambda x: tape_momentum(x, cutoff, "BTC", "4H"), "momentum inf"),
+        ):
+            try:
+                fn(data)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"invalid non-finite input must fail: {signature}")
+        original_start = forecast["horizons"]["1H"]["targets"]["BTC"]["start_value"]
+        forecast["horizons"]["1H"]["targets"]["BTC"]["start_value"] = float("inf")
+        pf.write_text(json.dumps(forecast), encoding="utf-8")
+        try:
+            run(root, root / "rejected")
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("invalid frozen start must fail")
+        forecast["horizons"]["1H"]["targets"]["BTC"]["start_value"] = original_start
+        pf.write_text(json.dumps(forecast), encoding="utf-8")
+        of.write_text(json.dumps(bound), encoding="utf-8")
         cohort = result["results"]["ISSUED_SEP15_TO_OCT13_055959"]["1H"]
         assert cohort["eligible_directional_tape_sensitivities"] == 2, cohort
         assert cohort["directional_tape_hits"] == 1, cohort
