@@ -88,6 +88,18 @@ jobs:
           assert Path('/tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv').exists()
           print(json.dumps({'mode':'RESEARCH_ONLY_RECONCILIATION','prediction_files':r['prediction_files_total_before_date_filter'],'forecast_slots':r['forecast_asset_horizon_slots_in_window'],'tape_rows':r['tape_rows'],'ledger_sha256':r['ledger_sha256'],'results':r['results'],'limitations':r['limitations']},sort_keys=True))
           PY
+      - name: Task 1.5 source publication chronology, sample only
+        if: github.event.pull_request.number == 1597
+        run: |
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py --self-test
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --quiet --no-tags --unshallow origin +refs/heads/main:refs/remotes/origin/main
+          else
+            git fetch --quiet --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          fi
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py \
+            --root . --input /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv \
+            --out /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json
       - name: Archive Task 1.5 source-bound research receipts
         uses: actions/upload-artifact@v4
         with:
@@ -95,6 +107,7 @@ jobs:
           path: |
             /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv
             /tmp/task15-evidence/TASK15_R0_RECEIPT.json
+            /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json
           if-no-files-found: error
           retention-days: 14
       - name: Build and validate public Compass bundle
