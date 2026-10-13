@@ -100,6 +100,20 @@ jobs:
           python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py \
             --root . --input /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv \
             --out /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json
+      - name: Task 1.5 frozen vote-group challenger shadow negative controls
+        run: |
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_frozen_vote_ablation_v1.py --self-test
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_frozen_vote_ablation_v1.py --root . --ledger /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv --out /tmp/task15-evidence/TASK15_FROZEN_VOTE_ABLATION_DEV_v1.json >/tmp/task15-ablation-summary.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/task15-evidence/TASK15_FROZEN_VOTE_ABLATION_DEV_v1.json'))
+          assert r['status']=='EXPOSED_DEVELOPMENT_ONLY_PIT_AND_PROSPECTIVE_HOLDOUT_BLOCKED'
+          assert r['permission']['portfolio_execution'] is False
+          assert r['permission']['automatic_model_weight_changes'] is False
+          assert len(r['results'])==2
+          assert '4H:ETH' in r['results']['ISSUED_SEP15_TO_OCT12_235959']
+          print(json.dumps({'status':r['status'],'source':r['source'],'results':r['results']},sort_keys=True))
+          PY
       - name: Archive Task 1.5 source-bound research receipts
         uses: actions/upload-artifact@v4
         with:
@@ -107,6 +121,7 @@ jobs:
           path: |
             /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv
             /tmp/task15-evidence/TASK15_R0_RECEIPT.json
+            /tmp/task15-evidence/TASK15_FROZEN_VOTE_ABLATION_DEV_v1.json
             /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json
           if-no-files-found: error
           retention-days: 14
