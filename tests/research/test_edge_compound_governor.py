@@ -402,4 +402,43 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
             self.assertFalse(build(root,out,history,now)["material_delta"])
             self.assertEqual(len(list(history.rglob("*.json"))),2)
 
+
+    def test_task15_advisory_nonblocking_optional_main_only(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);out=root/"out.json";history=root/"history"
+            self.seed_empty_owners(root)
+            now=datetime(2026,10,13,9,tzinfo=timezone.utc)
+            missing=build(root,out,history,now)
+            self.assertEqual(missing["semantic_state"]["task15_research_admission"]["status"],
+                             "NOT_LOADED_NOT_ADMITTED")
+            self.assertFalse(missing["external_routing"]["automatic_dispatch"])
+            self.assertFalse(missing["conclusion_layer"]["automatic_promotion"])
+            gate=root/"04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json"
+            gate.parent.mkdir(parents=True)
+            valid={"contract":"EDGE_TASK_1_5_ADMISSION_GATE_v1",
+                   "status":"BLOCKED_SCIENTIFIC_CLOSURE",
+                   "task15_closure_allowed":False,
+                   "permissions":{"continue_existing_market_data_collection":True,
+                                  "allow_official_model_weight_change":False,
+                                  "allow_trade_or_sell_signal":False,
+                                  "allow_historical_pullback_economic_claim":False,
+                                  "allow_legacy_censor_rewrite":False}}
+            gate.write_text(json.dumps(valid))
+            blocked=build(root,out,history,now)
+            advisory=blocked["semantic_state"]["task15_research_admission"]
+            self.assertEqual(advisory["status"],"BLOCKED_RESEARCH_PREFLIGHT")
+            self.assertEqual(blocked["source_bindings"]["task15_gate"]["status"],"PASS")
+            self.assertIn("TASK15_RESEARCH_ADMISSION_ADVISORY_CHANGED",blocked["deltas"])
+            self.assertEqual(blocked["decision"],"NOOP")
+            self.assertFalse(blocked["external_routing"]["automatic_dispatch"])
+            self.assertFalse(blocked["authority"]["portfolio_action"])
+            valid["permissions"]["allow_official_model_weight_change"]=True
+            gate.write_text(json.dumps(valid))
+            unsafe=build(root,out,history,now)
+            self.assertEqual(unsafe["semantic_state"]["task15_research_admission"]["status"],
+                             "INVALID_NONBINDING_RESEARCH_GATE")
+            self.assertEqual(unsafe["decision"],"NOOP")
+            self.assertFalse(unsafe["conclusion_layer"]["automatic_promotion"])
+            self.assertFalse(unsafe["external_routing"]["sol_recommended"])
+
 if __name__=="__main__":unittest.main()
