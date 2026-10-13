@@ -30,8 +30,8 @@ ASSETS = ("BTC", "ETH")
 COLUMNS = (
     "prediction_id", "asset", "horizon", "issue_utc", "source_cutoff_utc",
     "due_utc", "prediction_sha256", "binding_source_commit", "forecast_status",
-    "direction", "original_outcome_status", "original_outcome_result",
-    "original_outcome_sha256", "original_outcome_binding_sha256",
+    "direction", "original_outcome_status", "original_outcome_result", "original_outcome_reason",
+    "original_outcome_evidence_wait_hours", "original_outcome_sha256", "original_outcome_binding_sha256",
     "frozen_start", "tape_start_at_cutoff", "tape_actual_at_due",
     "tape_start_conflict", "observed_direction", "descriptive_hit",
     "prior_momentum_pct", "baseline_direction", "baseline_hit",
@@ -172,6 +172,8 @@ def scan(root: Path, tape: dict):
                     "direction": predicted or "",
                     "original_outcome_status": receipt.get("status") or "NO_ORIGINAL_RECEIPT",
                     "original_outcome_result": receipt.get("result") or "",
+                    "original_outcome_reason": receipt.get("reason") or "",
+                    "original_outcome_evidence_wait_hours": receipt.get("evidence_wait_hours"),
                     "original_outcome_sha256": digest(original) if original.is_file() else "",
                     "original_outcome_binding_sha256": receipt.get("prediction_sha256") or "",
                     "frozen_start": start,
@@ -207,6 +209,7 @@ def summarize(rows):
                 "baseline_hits_on_exact_pairs": sum(r["baseline_hit"] for r in paired),
                 "model_hits_on_exact_pairs": sum(r["descriptive_hit"] for r in paired),
                 "original_outcome_status": dict(Counter(r["original_outcome_status"] for r in sub)),
+                "original_censor_reasons": dict(Counter(r["original_outcome_reason"] or "UNSPECIFIED" for r in sub if r["original_outcome_status"] == "CENSORED")),
                 "admission_status": dict(Counter(r["research_admission"] for r in sub)),
                 "tape_start_conflicts": sum(bool(r["tape_start_conflict"]) for r in sub),
             }
