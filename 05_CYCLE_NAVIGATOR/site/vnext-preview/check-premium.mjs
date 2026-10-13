@@ -77,7 +77,31 @@ assert.equal([...motionLibrary.matchAll(/^\| (?:0[1-9]|1[0-9]|20) \|/gm)].length
 new Script(js.replace(/^import .*from .*;\s*$/gm, ''), { filename: 'premium.js' });
 new Script(i18n.replace(/export (?=function)/g, ''), { filename: 'premium-i18n.js' });
 
-assert.match(html, /aria-controls="cycle-details"/);
+// PATH v3 is structural context, never a time forecast or new action engine.
+assert.match(html, /<section class="section-block section-path" aria-labelledby="path-main-title">/);
+assert.match(html, /id="path-current"/);
+assert.match(html, /id="path-next"/);
+assert.match(html, /id="path-next-gate"/);
+assert.match(html, /id="path-eta"/);
+assert.match(html, /id="path-rotation-rail"/);
+assert.match(html, /id="path-alt-status"/);
+assert.match(html, /id="path-all-phases"/);
+assert.match(html, /<details class="path-disclosure" id="cycle-details">/);
+assert.doesNotMatch(html, /<details class="path-disclosure"[^>]*open(?:\\s|>)/);
+assert.doesNotMatch(html, /id="expand-cycle"/);
+assert.match(js, /import \{ officialPathView \} from '\.\/official-path\.mjs'/);
+assert.match(js, /function paintPath\(d, lang = 'da'\)/);
+assert.match(js, /officialPathView\(d, \{ lang, mode:'archived' \}\)/);
+assert.match(js, /paintPath\(data, currentLanguage\(\)\)/);
+assert.match(js, /paintPath\(data, button\.dataset\.lang\)/);
+assert.doesNotMatch(js, /\$\('expand-cycle'\)/);
+assert.match(css, /PATH vNext: source-bound phase route/);
+assert.match(css, /\.path-rotation-rail\{display:grid/);
+assert.match(i18n, /"Hvor er vi": "Where are we"/);
+assert.match(i18n, /"Hele markedsrejsen": "The full market cycle"/);
+assert.doesNotMatch(html, /<h3>BTC leder\./);
+assert.doesNotMatch(html, /Observeret W40/);
+
 assert.match(html, /<article class="hero-main" aria-labelledby="overview-title">/);
 assert.match(html, /id="hero-action-summary"/);
 assert.match(html, /id="hero-now"/);
