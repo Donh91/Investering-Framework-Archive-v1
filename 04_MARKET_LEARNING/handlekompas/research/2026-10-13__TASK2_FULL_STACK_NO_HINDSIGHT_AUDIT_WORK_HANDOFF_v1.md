@@ -129,3 +129,13 @@ Additional evidence discovery has been summarized for cross-thread Task 2 use, w
 - [Machine research intake and 30 study readiness classifications](../../../06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.json) — S01–S30 readiness **as reported** by Deep Research #3, never independent Task 2 admission or historical execution evidence.
 
 **Hard gate remains unchanged:** original source clocks, archive census, negative/missing denominators and event-family independence must still pass existing R0/R1 eligibility. Private source bindings are not established by the existence of these summaries. Full PDFs remain outside the public repo; no private dataset values have been imported. No new scheduler, experiment authority, auto signal promotion, economic PnL or authorized live trading.
+
+
+## Research 4 · CFGI incremental-information intake · 2026-10-13
+
+The fourth user-supplied Deep Research report has been distilled as a **research-only** addendum. Preserve the original DR01–DR03 snapshot, and use these additive public-safe anchors for new CFGI work:
+
+- `06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR04_PUBLIC_RESEARCH_INTAKE_v2.md` — report-derived vendor engine-vintage break, price-component double-counting, MAEVE matched-NONE and DCA caveats, C/E/F/J model tournament and R0/R1 negative fixtures.
+- `06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR04_PUBLIC_RESEARCH_INTAKE_v2.json` — 12 source-proposed CFGI-E01..E12 experiments with exact **reported** readiness, explicit `task2_admitted=false` and `historical_simulation_executed=false` for every row. Earlier DR03 S01..S30 are preserved by reference, not reissued.
+
+**Non-negotiable:** report research is not a fresh independent first-known/engine-vintage verification. Neither 2025 legacy CFGI nor the 2026 vendor-upgraded series may be blindly pooled; use source and vintage proof, train-only residualization, matched mechanical price baselines and independent event-family N. Do not infer `FEAR=>BUY`, `GREED=>SELL` or authorize paid CFGI backfill. No site/production/portfolio/threshold or Round 3 scoring change. Existing R0/R1 scientific gates continue to block R2–R7 admissions and economic-edge claims until fulfilled.
