@@ -140,9 +140,30 @@ def require_bound_original_outcome(root: Path, prediction_file: Path,
         "registered_test_id": prediction.get("registered_test_id"),
         "registration_receipt_sha256": prediction.get("registration_receipt_sha256"),
     }
-    for key, value in required.items():
-        if value is None or receipt.get(key) != value:
-            raise ValueError(f"ORIGINAL_OUTCOME_LINKAGE_INVALID:{key}:{relative}:{hours}H:{asset}")
+    # Mirror every frozen linkage field used by the registered scorer.
+    # Comparing a subset would allow a valid receipt with drifted votes,
+    # calibration, provenance or deadline to enter a research denominator.
+    key = target.get("calibration_key")
+    direction = target.get("direction")
+    if key is None or direction is None:
+        raise ValueError("ORIGINAL_OUTCOME_CALIBRATION_SOURCE_MISSING")
+    required.update({
+        "production_context": prediction.get("production_context"),
+        "source_candle_open_utc": prediction.get("source_candle_open_utc"),
+        "calibration_key": key,
+        "calibration_group": f"{asset}:{hours}H:{direction}:{key}",
+        "votes": target.get("votes"),
+        "evidence_deadline_utc": utc(parse_utc(horizon["due_at_utc"]) + timedelta(hours=1.5)),
+    })
+    for field, expected in required.items():
+        if expected is None or receipt.get(field) != expected:
+            raise ValueError(f"ORIGINAL_OUTCOME_LINKAGE_INVALID:{field}:{relative}:{hours}H:{asset}")
+    # Null probabilities are valid in WARMUP, but even a null must remain
+    # frozen and must not be substituted with a post-outcome estimate.
+    if receipt.get("frozen_calibrated_probability_pct", object()) != target.get(
+        "frozen_calibrated_probability_pct", object()
+    ):
+        raise ValueError("ORIGINAL_OUTCOME_FROZEN_PROBABILITY_DRIFT")
     if receipt.get("authority", {}).get("shadow_only") is not True or receipt.get("authority", {}).get("portfolio_execution") is not False:
         raise ValueError("ORIGINAL_OUTCOME_AUTHORITY_INVALID")
     start, owner_start = target.get("start_value"), receipt.get("start_value")
@@ -378,9 +399,10 @@ def self_test():
             "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
             "registration_receipt_sha256": "fixture-registry-hash",
             "source_price_observation_utc": utc(WINDOW_START + timedelta(hours=1)),
+            "source_candle_open_utc": utc(WINDOW_START),
             "production_context": {"commit_sha": "fixture"},
             "horizons": {
-                "1H": {"status": "ELIGIBLE", "source_cutoff_utc": utc(WINDOW_START + timedelta(hours=1)), "due_at_utc": utc(WINDOW_START + timedelta(hours=2)), "targets": {"BTC": {"direction": "UP", "start_value": 101}, "ETH": {"direction": "DOWN", "start_value": 201}}},
+                "1H": {"status": "ELIGIBLE", "source_cutoff_utc": utc(WINDOW_START + timedelta(hours=1)), "due_at_utc": utc(WINDOW_START + timedelta(hours=2)), "targets": {"BTC": {"direction": "UP", "start_value": 101, "calibration_key": "fixture", "votes": [], "frozen_calibrated_probability_pct": None}, "ETH": {"direction": "DOWN", "start_value": 201, "calibration_key": "fixture", "votes": [], "frozen_calibrated_probability_pct": None}}},
                 "4H": {"status": "NO_EDGE", "source_cutoff_utc": utc(WINDOW_START + timedelta(hours=1)), "due_at_utc": utc(WINDOW_START + timedelta(hours=5)), "targets": {}},
             },
         }
@@ -397,6 +419,13 @@ def self_test():
             "issued_at_utc": forecast["issued_at_utc"],
             "due_at_utc": forecast["horizons"]["1H"]["due_at_utc"],
             "source_price_observation_utc": forecast["source_price_observation_utc"],
+            "source_candle_open_utc": forecast["source_candle_open_utc"],
+            "production_context": forecast["production_context"],
+            "calibration_key": "fixture",
+            "calibration_group": "BTC:1H:UP:fixture",
+            "votes": [],
+            "frozen_calibrated_probability_pct": None,
+            "evidence_deadline_utc": utc(parse_utc(forecast["horizons"]["1H"]["due_at_utc"]) + timedelta(hours=1.5)),
             "predicted_direction": "UP",
             "registered_test_id": forecast["registered_test_id"],
             "registration_receipt_sha256": forecast["registration_receipt_sha256"],
@@ -407,13 +436,23 @@ def self_test():
         }
         of.write_text(json.dumps(bound), encoding="utf-8")
         result = run(root, root / "audit")
-        for bad in ("forecast_hash", "target", "horizon", "contract", "status"):
+        for bad in ("forecast_hash", "target", "horizon", "contract", "status",
+                    "production_context", "source_candle_open_utc",
+                    "calibration_key", "calibration_group", "votes",
+                    "frozen_calibrated_probability_pct", "evidence_deadline_utc"):
             corrupt = dict(bound)
             if bad == "forecast_hash": corrupt["prediction_sha256"] = "tampered"
             if bad == "target": corrupt["target"] = "ETH"
             if bad == "horizon": corrupt["horizon_hours"] = 4
             if bad == "contract": corrupt["contract"] = "LEGACY_STALE_OUTCOME"
             if bad == "status": corrupt["status"] = "MATURED"
+            if bad == "production_context": corrupt["production_context"] = {"commit_sha": "different"}
+            if bad == "source_candle_open_utc": corrupt["source_candle_open_utc"] = "2026-09-14T12:00:00Z"
+            if bad == "calibration_key": corrupt["calibration_key"] = "other"
+            if bad == "calibration_group": corrupt["calibration_group"] = "ETH:1H:UP:fixture"
+            if bad == "votes": corrupt["votes"] = [{"direction": "UP", "value": 1.0}]
+            if bad == "frozen_calibrated_probability_pct": corrupt["frozen_calibrated_probability_pct"] = 72.5
+            if bad == "evidence_deadline_utc": corrupt["evidence_deadline_utc"] = "2026-09-16T00:00:00Z"
             of.write_text(json.dumps(corrupt), encoding="utf-8")
             try:
                 run(root, root / "rejected")
