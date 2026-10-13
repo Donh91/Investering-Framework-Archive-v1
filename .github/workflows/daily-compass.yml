@@ -73,6 +73,9 @@ jobs:
           python -m unittest tests.data_ping.test_official_daily_compass -v
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_decision_economics_ledger -v
+      - name: Task 1.5 noncanonical forecast cohort oracle self-test
+        run: |
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_forecast_reconciliation_v1.py --self-test
       - name: Build and validate public Compass bundle
         run: |
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
