@@ -1,0 +1,80 @@
+{
+  "contract": "TASK15_R1_BOUND_SOURCE_PUBLICATION_CORRECTION_v2",
+  "recorded_date_utc": "2026-10-13",
+  "classification": "SOURCE_PINNED_REPRODUCED_NONCANONICAL_RESEARCH_ONLY_NO_PIT_PROMOTION",
+  "supersedes_research_claim": "2026-10-13__TASK15_R1_FULL_OWNER_PUBLICATION_CHRONOLOGY_RECEIPT_v1.json",
+  "superseded_claim": {
+    "research_pairs": 824,
+    "incorrect_original_censored_claim": 510,
+    "original_matured_claim": 314,
+    "reason": "Workflow had read a moving GitHub PR merge checkout rather than explicitly pinned head; original outcome count was overstated by 10. Retained predecessor for historical correction, not deletion."
+  },
+  "evidence": {
+    "head_tree_commit": "1522cb25cfbfd35823d4ef2666ed835fab4b119d",
+    "source_checked_out_head": "1522cb25cfbfd35823d4ef2666ed835fab4b119d",
+    "site_ci": "Official Daily Compass #38377408012",
+    "job_id": 115229289578,
+    "conclusion": "SUCCESS",
+    "forecast_source_files": 263,
+    "possible_horizon_asset_slots": 1140,
+    "independent_price_tape_hours": 672,
+    "ledger_sha256": "616e70fd87a79acf126591c1f8e704c74da7a2bd3b3aa181838ac5f861fea5d9",
+    "owner_first_parent_main_commit": "f55cfd5fa97b7225fe6cbe842f25c4768a831633",
+    "no_alias_to_later_main": true
+  },
+  "research_cohort": {
+    "ex_post_price_joined": 824,
+    "original_outcome_receipts": 814,
+    "original_censored": 500,
+    "original_matured": 314,
+    "missing_original_receipt": 10,
+    "by_horizon": {
+      "1H": {
+        "price_joined": 172,
+        "ex_post_direction_hits": 80,
+        "matched_naive_momentum_hits": 81,
+        "owner_censored": 132,
+        "owner_matured": 38,
+        "missing_original_receipt": 2
+      },
+      "4H": {
+        "price_joined": 334,
+        "ex_post_direction_hits": 150,
+        "matched_naive_momentum_hits": 157,
+        "owner_censored": 200,
+        "owner_matured": 128,
+        "missing_original_receipt": 6
+      },
+      "24H": {
+        "price_joined": 318,
+        "ex_post_direction_hits": 143,
+        "matched_naive_momentum_hits": 136,
+        "owner_censored": 168,
+        "owner_matured": 148,
+        "missing_original_receipt": 2
+      }
+    }
+  },
+  "original_owner_publication_clock": {
+    "full_original_receipts_checked": 814,
+    "original_censored_after_90m_archive_proxy": 500,
+    "original_matured_within_90m_archive_proxy": 314,
+    "missing_receipts_not_classified_as_censored": 10,
+    "inconsistent_receipt_status_with_first_parent_archive_proxy": 0,
+    "source_clock_proxy": "First-parent Git commit timestamps for exact source-candle CSV; not exchange first-knowable nor proof of individual failed scheduler."
+  },
+  "authorization": {
+    "original_censored_rescore_allowed": false,
+    "trade_execution_allowed": false,
+    "official_model_rule_change_allowed": false,
+    "allow_pullback_economic_edge_claim": false,
+    "science_closure": false
+  },
+  "limits": [
+    "Research accuracy includes ex-post price joins to previously CENSORED or entirely missing original receipts; it is not registered official scoring or fresh actionable edge.",
+    "824 overlaps BTC, ETH and horizons; independent event-cluster sample size not established.",
+    "Git source publication availability alone does not prove cause of underlying dropped/queued ETL workflows or provider outage.",
+    "Historical walk-forward version replay, real delivered chat output, original action economics, prospective sealed holdout and independent methodology review remain unverified."
+  ],
+  "verdict": "RESEARCH_COUNT_RECONCILED_TASK1_5_OPEN"
+}
