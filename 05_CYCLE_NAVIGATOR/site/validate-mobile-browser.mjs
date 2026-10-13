@@ -13,7 +13,7 @@ const require=createRequire(import.meta.url);
 const pw=require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules','playwright'));
 const production=process.argv.includes('--production');
 const productionUrl='https://donh91.github.io/Investering-Framework-Archive-v1/';
-const rows=[],failures=[],versions={};
+const rows=[],failures=[],versions={},contextNetwork=[];
 const sha=b=>createHash('sha256').update(b).digest('hex');
 await mkdir(out,{recursive:true});
 let server,base;
@@ -66,17 +66,30 @@ async function geometry(page){
  });
 }
 async function screenshot(page,name){
- const file=name+'.png';await page.screenshot({path:resolve(out,file),fullPage:true});
+ const file=name+'.png';await page.screenshot({path:resolve(out,file),fullPage:true,scale:'css'});
  return {file,sha256:sha(await readFile(resolve(out,file)))};
 }
 function check(ok,message){if(!ok)throw Error(message);}
 async function runCase(browser,engine,width,language,state){
  const context=await browser.newContext({...pw.devices['iPhone 14'],viewport:{width,height:844},locale:language==='da'?'da-DK':'en-GB',timezoneId:'Europe/Copenhagen',reducedMotion:'reduce'});
- const page=await context.newPage();const errors=[];
- page.on('pageerror',e=>errors.push(e.message));
+ const page=await context.newPage();const errors=[],network=[],warnings=[];
+ page.on('console',m=>{if(m.type()==='warning')warnings.push(m.text());});
+ page.on('pageerror',e=>{
+  // WebKit also emits transport/CORS diagnostics as pageerror. Retain them and
+  // require the existing unavailable-data handlers; do not suppress JS errors.
+  if(engine==='webkit'&&/^(?:https:\/)?\/api\.coingecko\.com\/api\/v3\/(?:simple\/price|global)\?[^\s]+ due to access control checks\.$/.test(e.message))network.push(e.message);
+  else errors.push(e.message);
+ });
  try{
-  if(state!=='REAL')await page.route('**/data/compass.json*',route=>route.fulfill({json:fixture(state)}));
+  if(state!=='REAL'){
+   await page.route('**/data/compass.json*',route=>route.fulfill({json:fixture(state)}));
+   // Explicit unavailable decorative-context fixture avoids repeated provider
+   // requests. No fake prices; REAL and production views never use this route.
+   await page.route('https://api.coingecko.com/**',route=>route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},json:{}}));
+  }
+  const catalogReady=page.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/i18n-da.json'));
   await page.goto(base,{waitUntil:'domcontentloaded',timeout:30000});
+  check((await catalogReady).ok(),'TRANSLATION_CATALOG_UNAVAILABLE');
   await page.locator('#premiumMarketCompass').waitFor({state:'visible',timeout:20000});
   await page.locator(`[data-language="${language}"]`).click();
   await page.waitForFunction(lang=>document.documentElement.lang===lang,language);
@@ -128,9 +141,20 @@ async function runCase(browser,engine,width,language,state){
    }
   }
   check(errors.length===0,`BROWSER_SCRIPT_ERROR ${errors.join('; ')}`);
+  if(network.length){
+   for(const [selector,warning] of [['#marketTimestamp','LIVE market feed unavailable'],['#btcDominanceMeta','LIVE global market context unavailable']]){
+    if(await page.locator(selector).count()){
+     check(/unavailable|utilgængelig/i.test(await page.locator(selector).innerText()),`CONTEXT_NETWORK_FAILURE_WITHOUT_UNAVAILABLE_LABEL ${selector}`);
+     check(warnings.some(w=>w.includes(warning)),`CONTEXT_NETWORK_FAILURE_WITHOUT_CAUGHT_HANDLER ${selector}`);
+    }
+   }
+   contextNetwork.push({engine,width,language,state,diagnostics:network,status:'CONTEXT_UNAVAILABLE_HANDLED_NOT_OFFICIAL_SOURCE_FAILURE'});
+  }
+  console.log(`PASS ${engine} ${width} ${language} ${state}`);
  }catch(e){
   const image=await screenshot(page,`FAIL-${engine}-${width}-${language}-${state}`).catch(()=>null);
   failures.push({engine,width,language,state,error:e.message,screenshot:image});
+  console.log(`FAIL ${engine} ${width} ${language} ${state}: ${e.message}`);
  }finally{await context.close();}
 }
 try{
@@ -148,8 +172,14 @@ try{
 }catch(e){failures.push({error:e.message});}
 finally{if(server)await new Promise(r=>server.close(r));}
 const inputs={};
-if(!production)for(const file of ['index.html','market-compass-premium.js','public-product.js','market-compass-premium.css','public-product.css','data/compass.json'])inputs[file]=sha(await readFile(resolve(dist,file)));
-const receipt={contract:'CN_REAL_BROWSER_RELEASE_QA_v1',recorded_at_utc:new Date().toISOString(),mode:production?'REAL_PUBLIC_PRODUCTION':'BUILT_PR_AND_DECLARED_SYNTHETIC_CONSUMER_FIXTURES',checkout_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),playwright_version:require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules','playwright/package.json')).version,browser_versions:versions,device_semantics:'Linux Chromium and WebKit iPhone viewport/touch emulation, not real Safari or physical iPhone',production_url:production?productionUrl:null,inputs,rows,failures,status:failures.length?'FAIL':'BROWSER_CHECKS_PASS_MANUAL_SCREENSHOT_REVIEW_REQUIRED',scientific_edge_established:false,fixtures_are_production_evidence:false};
+for(const file of ['index.html','market-compass-premium.js','public-product.js','market-compass-premium.css','public-product.css','data/compass.json']){
+ try{
+  const r=production?await fetch(new URL(file,productionUrl),{signal:AbortSignal.timeout(20000)}):null;
+  if(r&&!r.ok)throw Error(`PUBLIC_ASSET_HTTP ${file} ${r.status}`);
+  inputs[file]=sha(r?Buffer.from(await r.arrayBuffer()):await readFile(resolve(dist,file)));
+ }catch(e){failures.push({error:e.message});}
+}
+const receipt={contract:'CN_REAL_BROWSER_RELEASE_QA_v1',recorded_at_utc:new Date().toISOString(),mode:production?'REAL_PUBLIC_PRODUCTION':'BUILT_PR_AND_DECLARED_SYNTHETIC_CONSUMER_FIXTURES',checkout_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),playwright_version:require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules','playwright/package.json')).version,browser_versions:versions,device_semantics:'Linux Chromium and WebKit iPhone viewport/touch emulation, not real Safari or physical iPhone',production_url:production?productionUrl:null,inputs,rows,failures,context_network_conditions:contextNetwork,status:failures.length?'FAIL':'BROWSER_CHECKS_PASS_MANUAL_SCREENSHOT_REVIEW_REQUIRED',scientific_edge_established:false,fixtures_are_production_evidence:false};
 await writeFile(resolve(out,'receipt.json'),JSON.stringify(receipt,null,2)+'\n');
 console.log(JSON.stringify({status:receipt.status,rendered_views:rows.length,failures},null,2));
 if(failures.length)process.exitCode=1;
