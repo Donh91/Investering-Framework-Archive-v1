@@ -140,7 +140,7 @@ assert.match(js, /paintPullback\(d, currentLanguage\(\)\)/);
 assert.match(js, /setText\('overview-risk-window', p\.headline\)/);
 assert.match(js, /setText\('compass-risk-window', p\.headline\)/);
 assert.match(js, /selectLanguage\(button\.dataset\.lang\);/);
-assert.match(js, /if \(data\) paintPullback\(data, button\.dataset\.lang\);/);
+assert.match(js, /paintPullback\(data, button\.dataset\.lang\);/);
 assert.ok(js.indexOf('selectLanguage(button.dataset.lang);') < js.indexOf('if (data) paintPullback(data, button.dataset.lang);'), 'Dynamic ETA render must happen AFTER general translation');
 assert.match(css, /\.pullback-brief\{display:flex/);
 
