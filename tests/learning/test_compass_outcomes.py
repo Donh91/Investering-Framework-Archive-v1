@@ -160,6 +160,26 @@ class CompassOutcomeTest(unittest.TestCase):
         self.assertGreaterEqual(receipt["negative_and_positive_controls"], 31)
         self.assertEqual(receipt["historical_market_rows_scored"], 0)
         self.assertFalse(receipt["automatic_trading_authority"])
+        gate = json.loads((root / "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1.json").read_text())
+        self.assertEqual(gate["contract"], "TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1")
+        r1 = gate["reproducible_progress"]["r1_no_hindsight_preflight"]
+        self.assertEqual(r1["negative_positive_fixture_cases"], receipt["negative_and_positive_controls"])
+        self.assertEqual(r1["regression_minimum_controls"], 31)
+        self.assertEqual(r1["node_module"], str(oracle.relative_to(root)))
+        self.assertEqual(r1["history_rows_independently_scored"], receipt["historical_market_rows_scored"])
+        self.assertEqual(r1["status"], "SYNTHETIC_ONLY_PASS")
+        self.assertEqual(r1["independent_source_pit_proof"], "BLOCKED")
+        self.assertEqual(r1["r1_full_chronology"], "BLOCKED")
+        self.assertEqual(r1["verification_scope"], "SYNTHETIC_MECHANICS_NOT_HISTORICAL_PIT_OR_FORECAST_SKILL")
+        # This is the already independently read-back historical CI checkpoint,
+        # not a claim that the current HEAD or a future run has passed.
+        self.assertEqual((r1["verified_code_head"], r1["verified_outcomes_CI_run"]),
+                         ("1c1aebd0332a49d4266a2e3b738b9dac4fa8a72a", 38432271271))
+        self.assertEqual(r1["node_cli_execution"], "GITHUB_CI_EXECUTED_SELF_TEST_PASS")
+        self.assertEqual(gate["work_execution_scope"], "TECHNICAL_PREPARATION_ONLY_R2_R7_NOT_EXECUTED")
+        self.assertTrue(gate["research_only"])
+        for key in ("trade_execution_allowed", "automatic_signal_promotion_allowed", "retrospective_censor_overwrite_allowed"):
+            self.assertIs(gate[key], False)
 
     def test_task2_r0_public_census_is_bounded_not_a_skill_claim(self):
         root = Path(__file__).resolve().parents[2]
@@ -300,6 +320,17 @@ class CompassOutcomeTest(unittest.TestCase):
             for family in source["families"]
         ))
         self.assertFalse(source["authority"]["changes_trading_rules"])
+        gate = json.loads((root / "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1.json").read_text())
+        r0 = gate["reproducible_progress"]["r0_public_source_census"]
+        self.assertEqual(r0["frozen_main_sha"], source["main_commit"])
+        self.assertEqual(gate["data_families"], [family["id"] for family in source["families"]])
+        self.assertEqual(r0["families_total"], len(source["families"]))
+        self.assertEqual(r0["git_source_refs_verified"], len(entries))
+        self.assertEqual(r0["git_tree_refs"], sum(part["git_object_type"] == "tree" for part in entries))
+        self.assertEqual(r0["git_blob_refs"], sum(part["git_object_type"] == "blob" for part in entries))
+        self.assertEqual(r0["distinct_source_paths"], len({part["path"] for part in entries}))
+        self.assertEqual(r0["source_mismatches"], 0)
+        self.assertEqual(r0["receipt"], str(receipt_path.relative_to(root)))
         self.assertFalse(receipt["authorization"]["market_rules_changed"])
         self.assertEqual(receipt["r1_synthetic"]["history_scored_rows"], 0)
 
