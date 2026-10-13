@@ -139,3 +139,13 @@ The fourth user-supplied Deep Research report has been distilled as a **research
 - `06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR04_PUBLIC_RESEARCH_INTAKE_v2.json` — 12 source-proposed CFGI-E01..E12 experiments with exact **reported** readiness, explicit `task2_admitted=false` and `historical_simulation_executed=false` for every row. Earlier DR03 S01..S30 are preserved by reference, not reissued.
 
 **Non-negotiable:** report research is not a fresh independent first-known/engine-vintage verification. Neither 2025 legacy CFGI nor the 2026 vendor-upgraded series may be blindly pooled; use source and vintage proof, train-only residualization, matched mechanical price baselines and independent event-family N. Do not infer `FEAR=>BUY`, `GREED=>SELL` or authorize paid CFGI backfill. No site/production/portfolio/threshold or Round 3 scoring change. Existing R0/R1 scientific gates continue to block R2–R7 admissions and economic-edge claims until fulfilled.
+
+
+## Deep Research 05 · Tsunami negative-evidence intake · 2026-10-14
+
+DR05 research-only source intake now lives in:
+
+- `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR01_DR05_PUBLIC_RESEARCH_INTAKE_v3.md` — public-safe synthesis, terminal prior Round-2 no-edge results, causal event-family requirements, derivative vintage census, false alarms and after-cost investor-value comparison.
+- `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR01_DR05_PUBLIC_RESEARCH_INTAKE_v3.json` — 26 source-reported TS-A..TS-Z hypotheses and 18 priority work packets with explicit non-admission.
+
+**Do not misinterpret:** an earlier completed Historical Altseason Pullback Lab had strongly negative results under its tested tape (no robust alt-tail precursor; no tested reload policy beat HOLD). That is distinct from 0 admitted *current* Task 2 R2-R7 historical simulations. Do not rerun/re-tune closed price/volume/taker-share trials, relabel native predecessor warnings into today's typed M6, or promote warning to SELL. New information hypotheses center on derivatives liquidity/positioning, not a trading claim. No unreviewed prospective Round 3 scoring, market-rule changes, new automation, private raw provider values or paid source ingestion. Keep source first-known, independent event-family N and full exit/re-entry net-wealth gates.
