@@ -18,6 +18,7 @@ import tempfile
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from statistics import median
 
 WINDOW_START = datetime(2026, 9, 15, 6, tzinfo=timezone.utc)
 WINDOW_END = datetime(2026, 10, 13, 6, tzinfo=timezone.utc)
@@ -31,7 +32,8 @@ COLUMNS = (
     "prediction_id", "asset", "horizon", "issue_utc", "source_cutoff_utc",
     "due_utc", "prediction_sha256", "binding_source_commit", "forecast_status",
     "direction", "original_outcome_status", "original_outcome_result", "original_outcome_reason",
-    "original_outcome_evidence_wait_hours", "original_outcome_sha256", "original_outcome_binding_sha256",
+    "original_outcome_evidence_wait_hours", "original_outcome_measured_at_utc",
+    "original_outcome_measurement_delay_hours", "original_outcome_sha256", "original_outcome_binding_sha256",
     "frozen_start", "tape_start_at_cutoff", "tape_actual_at_due",
     "tape_start_conflict", "observed_direction", "descriptive_hit",
     "prior_momentum_pct", "baseline_direction", "baseline_hit",
@@ -174,6 +176,8 @@ def scan(root: Path, tape: dict):
                     "original_outcome_result": receipt.get("result") or "",
                     "original_outcome_reason": receipt.get("reason") or "",
                     "original_outcome_evidence_wait_hours": receipt.get("evidence_wait_hours"),
+                    "original_outcome_measured_at_utc": receipt.get("measured_at_utc") or "",
+                    "original_outcome_measurement_delay_hours": round((parse_utc(receipt["measured_at_utc"]) - due).total_seconds() / 3600, 6) if due and receipt.get("measured_at_utc") else None,
                     "original_outcome_sha256": digest(original) if original.is_file() else "",
                     "original_outcome_binding_sha256": receipt.get("prediction_sha256") or "",
                     "frozen_start": start,
@@ -206,6 +210,14 @@ def detail(rows):
         "original_matured_in_ex_post_cohort": sum(r["original_outcome_status"] == "MATURED" for r in scored),
     }
 
+def latency_diagnostic(values):
+    """Original outcome-run delay, not provider first-availability proof."""
+    nums = sorted(float(x) for x in values if isinstance(x, (int, float)) and not isinstance(x, bool))
+    if not nums:
+        return {"n": 0, "min": None, "median": None, "p90": None, "max": None}
+    return {"n": len(nums), "min": round(nums[0], 3), "median": round(median(nums), 3),
+            "p90": round(nums[min(len(nums) - 1, int(len(nums) * .90))], 3), "max": round(nums[-1], 3)}
+
 def summarize(rows):
     results = {}
     for cohort, subset in (
@@ -226,6 +238,9 @@ def summarize(rows):
                 "model_hits_on_exact_pairs": sum(r["descriptive_hit"] for r in paired),
                 "original_outcome_status": dict(Counter(r["original_outcome_status"] for r in sub)),
                 "original_censor_reasons": dict(Counter(r["original_outcome_reason"] or "UNSPECIFIED" for r in sub if r["original_outcome_status"] == "CENSORED")),
+                "original_censor_wait_hours": latency_diagnostic([r["original_outcome_evidence_wait_hours"] for r in sub if r["original_outcome_status"] == "CENSORED"]),
+                "original_maturity_delay_hours": latency_diagnostic([r["original_outcome_measurement_delay_hours"] for r in sub if r["original_outcome_status"] == "MATURED"]),
+                "original_censor_by_due_utc_hour": dict(sorted(Counter(parse_utc(r["due_utc"]).strftime("%H") for r in sub if r["original_outcome_status"] == "CENSORED" and r["due_utc"]).items())),
                 "admission_status": dict(Counter(r["research_admission"] for r in sub)),
                 "tape_start_conflicts": sum(bool(r["tape_start_conflict"]) for r in sub),
                 "by_asset": {asset: detail([r for r in sub if r["asset"] == asset]) for asset in ASSETS},
@@ -267,6 +282,7 @@ def run(root: Path, out: Path):
             "Independent Binance tape is later-retrieved ex-post outcome, not original owner-time evidence.",
             "Original CENSORED receipts are immutable and never converted to canonical HIT or MISS.",
             "No first-parent canonical publication verification, feature-source-vintage proof, or legal PIT admission in this standalone script.",
+            "Censor evidence_wait_hours and maturity delay measure observed scoring attempts; they do NOT prove initial provider candle availability or identify exact ingestion failure.",
             "Forecasts overlap by horizon, time and asset; observations are not independent event families.",
             "No original Official/Shadow 12H/72H/168H comparison, trade fills, economics or site/chat delivery.",
             "Provider spot close and frozen owner close might disagree; start discrepancies remain explicit.",
