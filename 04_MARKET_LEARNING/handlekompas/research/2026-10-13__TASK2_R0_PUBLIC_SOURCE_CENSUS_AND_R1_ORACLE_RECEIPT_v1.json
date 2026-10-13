@@ -1,0 +1,94 @@
+{
+  "contract": "TASK2_R0_PUBLIC_SOURCE_CENSUS_AND_R1_ORACLE_RECEIPT_v1",
+  "issued_date_utc": "2026-10-13",
+  "execution_status": "R0_PUBLIC_HASH_CENSUS_VERIFIED_R1_SYNTHETIC_PREFLIGHT_PASS_R1_HISTORICAL_ADMISSION_BLOCKED",
+  "scope": "PUBLIC_CONTROL_PLANE_READ_ONLY",
+  "pinned_main_commit": "aea463dc9c5a57fab0e7ef1aa5fc63791158d524",
+  "pinned_main_tree": "391aa4154451d1ec49fe3e59db107f21ca1b437f",
+  "source_inventory": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json",
+  "r0": {
+    "source_families": 17,
+    "source_references": 27,
+    "git_file_blob_sha_verified": 16,
+    "git_directory_tree_sha_verified": 11,
+    "git_ref_mismatches": 0,
+    "repo_branch_scope": "main at pinned SHA, not latest moving HEAD",
+    "restricted_owner_data_used": false,
+    "full_private_cross_repo_inventory_complete": false,
+    "independent_market_episode_count": null,
+    "all_raw_data_matured": false,
+    "verification_method": "27 separately fetched GitHub API objects at exact pinned public source or immutable tree SHA; compare against inventory git_object_sha; three batches of 9, all matched",
+    "limitations": [
+      "File/blob and directory/tree integrity proves repository state only, not legal data PIT source-first knowledge.",
+      "No all-time per-record completeness census yet; per-family SOURCE status represents a checkpoint, not performance.",
+      "Other repositories and user portfolio materials are not exposed to public GitHub; public inventory is intentionally partial."
+    ]
+  },
+  "r1_synthetic": {
+    "script": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs",
+    "controls_executed_in_this_conversation": 21,
+    "result": "SELF_TEST_PASS",
+    "execution_environment": "V8 JS pure functions used verbatim as serialized Node 20 module; GitHub CI project checks passed but do not assert that CI invoked this new script",
+    "history_scored_rows": 0,
+    "pit_source_rows_admitted": 0,
+    "portfolio_trades_authorized": 0,
+    "scope": "fixture behavior only",
+    "failures_tested": [
+      "future first-known",
+      "invalid calendar timestamp",
+      "issued after maturity",
+      "source SHA invalid",
+      "owner receipt target/id/due mismatch",
+      "changed original hit result",
+      "immutably censored receipt not rescorable",
+      "NO_EDGE abstention",
+      "missing original receipt not assumed censored",
+      "duplicate issued signal id",
+      "private field in public research row",
+      "undeclared provider first-known proof",
+      "inverted observed-before-known order",
+      "unknown signal state"
+    ],
+    "limits": [
+      "A proof_sha256+reviewer field within a source record is insufficient to establish independent publication time; external reviewer must authenticate provenance.",
+      "Synthetic fixture control passes do not establish pullback, direction or trading edge.",
+      "No optimizer or production execution driven by this standalone script."
+    ]
+  },
+  "current_negative_truth": {
+    "pullback_closed_eligible_episodes": 0,
+    "m6_warn_rows": 20,
+    "m6_provisional_market_families": 2,
+    "calibration_typed_warning_rows": 0,
+    "ETF_noncanonical_candidate": "2026-08-06",
+    "ETF_latest_validated_owner_session": "2026-08-05",
+    "CN_delivery_status": "DEGRADED",
+    "task15_original_owner_matured": 314,
+    "task15_original_owner_censored": 500,
+    "task15_missing_original_receipt": 10
+  },
+  "owner_route": {
+    "task15_issue": 1596,
+    "edge_governor_issue": 1530,
+    "risk_and_site_owner_issue": 1553,
+    "task2_research_pr": 1573
+  },
+  "future_work_blocked": [
+    "STRICT_R1_SOURCE_FIRST_KNOWABLE_PER_FEED",
+    "R1_COMPLETE_ATTEMPTED_SIGNAL_DENOMINATORS",
+    "PAIRED_SAME_CLOCK_BASELINE_OUTCOMES",
+    "DEPENDENCE_ADJUSTED_EPISODE_FAMILIES",
+    "PRIVATE_FILLS_AND_HOLDER_EXECUTION",
+    "SEALED_PROSPECTIVE_HOLDOUT",
+    "ACTUAL_SITE_AND_CHAT_FIRST_VISIBLE_RECEIPTS",
+    "FULL_INDEPENDENT_REVIEW"
+  ],
+  "authorization": {
+    "market_rules_changed": false,
+    "live_sell_created": false,
+    "model_weight_optimized": false,
+    "new_paid_API_call": false,
+    "recurring_automation_created": false
+  },
+  "next_exact_action": "Complete R1 public per-issued/source evidence ledger under Task1.5/Task2 owner with immutable original receipts, then event-family and negative-control tournament on admitted rows; allow Work to coordinate private/cross-repo and 390px browser review only."
+}
