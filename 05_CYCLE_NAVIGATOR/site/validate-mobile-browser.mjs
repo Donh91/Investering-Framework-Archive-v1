@@ -100,10 +100,27 @@ async function runCase(browser,engine,width,language,state){
    await page.locator(`[data-tab="${tab}"]`).click();
    await page.locator(`#product${tab[0].toUpperCase()+tab.slice(1)}.active`).waitFor();
    const g=await geometry(page);
+   if(tab==='path'){
+    const days=await page.locator('.fw-days button').evaluateAll(nodes=>nodes.map(n=>({width:n.clientWidth,scroll:n.scrollWidth,nowrap:getComputedStyle(n).whiteSpace})));
+    check(days.every(d=>d.nowrap==='nowrap'&&d.scroll<=d.width+2),'WEEKDAY_LABEL_BROKEN_OR_CLIPPED');
+    check(await page.locator('.fw-quote strong').evaluateAll(nodes=>nodes.every(n=>getComputedStyle(n).whiteSpace==='nowrap'&&n.scrollWidth<=n.clientWidth+2)),'PRICE_QUOTE_BROKEN_OR_CLIPPED');
+   }
+   if(tab==='proof')check(await page.locator('.proof-metrics strong').evaluateAll(nodes=>nodes.every(n=>getComputedStyle(n).whiteSpace==='nowrap'&&n.scrollWidth<=n.clientWidth+2)),'CN_IDENTIFIER_BROKEN_OR_CLIPPED');
    const image=await screenshot(page,name+'-'+tab);
    rows.push({engine,width,language,state,tab,synthetic:state!=='REAL',geometry:g,screenshot:image});
    check(g.document_width<=width+3,`HORIZONTAL_DOCUMENT_OVERFLOW ${name} ${tab}: ${g.document_width}`);
    check(g.offenders.length===0,`TEXT_OUTSIDE_VIEWPORT ${name} ${tab}: ${JSON.stringify(g.offenders)}`);
+   if(tab==='path'&&await page.locator('[data-fw-asset="ETH"]').count()){
+    await page.locator('[data-fw-asset="ETH"]').click();
+    check(await page.locator('[data-fw-asset="ETH"]').getAttribute('aria-pressed')==='true','ETH_BUTTON_NOT_SELECTED');
+    const lastDay=page.locator('[data-fw-day]').last();await lastDay.click();
+    check(await lastDay.getAttribute('aria-pressed')==='true','UTC_DAY_BUTTON_NOT_SELECTED');
+    check((await page.locator('.fw-readout').innerText()).trim().length>0,'UTC_DAY_READOUT_MISSING');
+    await page.locator('.fw-reset').click();
+    const g2=await geometry(page);
+    check(g2.document_width<=width+3&&g2.offenders.length===0,'ETH_DAY_CHART_OVERFLOW');
+    rows.push({engine,width,language,state,tab:'path-ETH-last-UTC-day-reset',synthetic:false,geometry:g2,screenshot:await screenshot(page,name+'-path-ETH-day-reset')});
+   }
   }
   if(state==='REAL'){
    await page.locator('[data-tab="now"]').click();
