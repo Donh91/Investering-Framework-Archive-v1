@@ -8,7 +8,9 @@
     "action_owner_issue": 1553,
     "full_publication_census_receipt": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK15_R1_FULL_OWNER_PUBLICATION_CHRONOLOGY_RECEIPT_v1.json",
     "census_main_first_parent_sha": "288b1d59211e7810a2bb53d13c420976069d61bc",
-    "census_ci_run": 38367785431
+    "census_ci_run": 38367785431,
+    "census_original_receipt_status": "RETRACTED_UNREPRODUCED_FROM_CLAIMED_PR_SOURCE_TREE",
+    "new_exact_head_replay_status": "CI_PENDING_AFTER_SOURCE_PIN"
   },
   "classification": "PREFLIGHT_NEGATIVE_GATE_NOT_A_MARKET_SIGNAL",
   "status": "BLOCKED_SCIENTIFIC_CLOSURE",
@@ -23,27 +25,27 @@
   },
   "checks": {
     "original_forecast_cohort_replay": {
-      "status": "RESEARCH_SENSITIVITY_REPRODUCED",
-      "slots": 1140,
-      "eligible_issued_asset_horizon_pairs_2026_09_15_to_2026_10_13_06Z": 824,
+      "status": "RETRACTED_AWAITING_SOURCE_PINNED_REPRODUCTION",
+      "slots": null,
+      "eligible_issued_asset_horizon_pairs_2026_09_15_to_2026_10_13_06Z": null,
       "independent_event_trials": null
     },
     "owner_publication_by_exact_due_cutoff": {
-      "status": "SOURCE_GIT_COMMIT_CLOCK_COMPLETE_BUT_NOT_PROVIDER_PIT",
-      "original_censored_count": 510,
-      "late_archive_count": 510,
-      "original_matured_count": 314,
-      "on_time_archive_count": 314,
+      "status": "RETRACTED_COHORT_MISMATCH_AWAITING_EXACT_HEAD_CENSUS",
+      "original_censored_count": null,
+      "late_archive_count": null,
+      "original_matured_count": null,
+      "on_time_archive_count": null,
       "source_first_known_provider_proven": false
     },
     "original_scoring": {
-      "status": "IMMUTABLE_CENSORS_PRESERVED",
-      "censored_count": 510,
+      "status": "IMMUTABLE_CENSORS_PRESERVED_COUNTS_UNVERIFIED",
+      "censored_count": null,
       "late_ex_post_market_data_may_change_outcome": false
     },
     "intraday_performance": {
-      "status": "DESCRIPTIVE_EX_POST_SENSITIVITY_NOT_SCIENTIFIC_EDGE",
-      "baseline_clock_matched": true,
+      "status": "BLOCKED_MISMATCHED_SOURCE_CHECKOUT",
+      "baseline_clock_matched": false,
       "event_family_adjusted_uncertainty": false,
       "independent_holdout_pass": false
     },
@@ -100,5 +102,16 @@
   ],
   "task15_closure_allowed": false,
   "task2_pullback_edge_claim_allowed": false,
-  "maintainer_note": "Provisional research receipt in draft PR #1597. Current main Governor has not been modified to ingest this optional gate. Do not report automatic consumer adoption until an independently reviewed owner merges a compatible consumer. Never make this advisory gate an automatic production trading or collection blocker."
+  "maintainer_note": "Evidence gate BLOCKED. Prior 824/510 census claim RETRACTED after independent source SHA review: same claimed source tree yields 814/500. Newly pinned PR-head replay pending; no automatic consumer/market policy promotion, no legacy censor rewrite. This gate remains a nonbinding research advisory only.",
+  "prior_invalidated_report": {
+    "previously_claimed_pairs": 824,
+    "previously_claimed_censored": 510,
+    "previously_claimed_matured": 314,
+    "reviewer_head": "8ad1d37aa65ec6dbe6a455a5da38b8c5804984e4",
+    "reviewer_reproduced_pairs": 814,
+    "reviewer_reproduced_censored": 500,
+    "reviewer_reproduced_matured": 314,
+    "status": "COUNTS_CONFLICT_HISTORICAL_CLAIM_RETRACTED_PENDING_PINNED_HEAD_REPLAY",
+    "handling": "Do not reuse prior 824/510 or 814/500 counts as an admitted historical result; original receipts remain immutable; archive of old claim retained for audit."
+  }
 }
