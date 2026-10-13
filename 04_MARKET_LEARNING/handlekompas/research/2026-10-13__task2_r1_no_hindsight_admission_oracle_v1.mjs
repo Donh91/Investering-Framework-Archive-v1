@@ -6,6 +6,16 @@
 
 import fs from 'node:fs';
 
+const RESTRICTED_KEY=/wallet|holdings|private_key|api_key|raw_chat|user_trade/i;
+
+function containsRestrictedKey(value,seen=new Set()){
+ if(value===null||typeof value!=="object")return false;
+ if(seen.has(value))return false;
+ seen.add(value);
+ if(Array.isArray(value))return value.some(item=>containsRestrictedKey(item,seen));
+ return Object.entries(value).some(([key,child])=>RESTRICTED_KEY.test(key)||containsRestrictedKey(child,seen));
+}
+
 function parseStamp(value) {
  if(typeof value!=="string"||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value))return null;
  const ms=Date.parse(value);if(!Number.isFinite(ms))return null;
@@ -22,7 +32,7 @@ function parseStamp(value) {
 function inspectRow(row){
  const fail=(category,reason)=>({signal_id:typeof row?.signal_id==="string"?row.signal_id:"UNKNOWN",family_id:typeof row?.family_id==="string"?row.family_id:"UNKNOWN",original_outcome_status:typeof row?.original_outcome_status==="string"?row.original_outcome_status:"UNKNOWN",admission:category,reason,registered_scored:false,trade_edge_admitted:false});
  if(!row||typeof row!=="object"||Array.isArray(row))return fail("QUARANTINED","ROW_SCHEMA_INVALID");
- if(Object.keys(row).some(k=>/wallet|holdings|private_key|api_key|raw_chat|user_trade/i.test(k)))return fail("QUARANTINED","RESTRICTED_RECORD_MUST_NOT_ENTER_PUBLIC_ORACLE");
+ if(containsRestrictedKey(row))return fail("QUARANTINED","RESTRICTED_RECORD_MUST_NOT_ENTER_PUBLIC_ORACLE");
  const required=["signal_id","family_id","asset","target","source_sha256","signal_state","source_observed_at_utc","source_first_known_at_utc","issued_at_utc","outcome_due_at_utc","original_outcome_status"];
  if(required.some(k=>typeof row[k]!=="string"||!row[k].trim()))return fail("QUARANTINED","REQUIRED_FIELD_MISSING");
  if(!/^[a-f0-9]{64}$/.test(row.source_sha256))return fail("QUARANTINED","INVALID_SOURCE_SHA256");
@@ -84,6 +94,8 @@ function selfTest(){
  ["MISSING_CONFLICT",{...base,original_outcome_status:"MISSING"},"QUARANTINED"],
  ["PENDING",{...base,original_outcome_status:"PENDING",original_outcome_receipt:null},"PENDING_MATURITY"],
  ["RESTRICTED_WALLET_FIELD",{...base,user_wallet:"0xFAKE"},"QUARANTINED"],
+ ["NESTED_RESTRICTED_PRIVATE_KEY",{...base,metadata:{private_key:"fixture-only"}},"QUARANTINED"],
+ ["ARRAY_NESTED_RESTRICTED_WALLET",{...base,metadata:[{wallet:"0xFAKE"}]},"QUARANTINED"],
  ["WRONG_SOURCE_AFTER_ISSUE",{...base,source_observed_at_utc:"2026-10-12T09:08:00Z",source_first_known_at_utc:"2026-10-12T09:09:00Z"},"PIT_BLOCKED"],
  ["UNKNOWN_SIGNAL",{...base,signal_state:"FUTURE_CLAIM"},"QUARANTINED"],
  ];
