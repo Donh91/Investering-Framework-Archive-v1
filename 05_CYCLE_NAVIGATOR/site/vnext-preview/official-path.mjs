@@ -80,7 +80,7 @@ function empty(t){
  * Caller MUST NOT simply toggle live on an unverified source bundle.
  */
 export function officialPathView(bundle,{lang='da',mode='archived',verifiedAlignment=false}={}){
-  const t=LANG[lang==='en'?'en':'da'];
+  const t=LABEL[lang==='en'?'en':'da'];
   const out=empty(t);
   const weekly=bundle?.weekly, compass=bundle?.compass;
   if(!weekly||!compass||!validWeek(weekly.forecast_week)||
