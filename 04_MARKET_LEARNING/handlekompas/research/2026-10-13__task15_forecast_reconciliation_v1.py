@@ -16,6 +16,7 @@ import hashlib
 import json
 import math
 import subprocess
+import sys
 import tempfile
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -359,6 +360,34 @@ def summarize(rows):
     return results
 
 def run(root: Path, out: Path, expected_source_commit: str | None = None):
+    """Admit original statuses only after the complete registered validator.
+
+    Includes outcome semantics, exact-due evidence at original production commits,
+    registration and calibration, not just this module's linkage precheck.
+    Missing/corrupt history fails before an output ledger can be written.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    from scripts.intraday_execution import validate_direction_confidence as registered
+    root = root.resolve()
+    try:
+        validation = registered.validate_repository(root, write_receipt=False)
+    except registered.ValidationError as exc:
+        raise ValueError(f"TASK15_REGISTERED_VALIDATION_FAILED:{exc}") from exc
+    if validation.get("status") != "PASS":
+        raise ValueError("TASK15_REGISTERED_VALIDATION_NOT_PASS")
+    validation = {
+        **validation,
+        "validator_path": registered.VALIDATOR_PATH,
+        "validator_sha256": digest(root / registered.VALIDATOR_PATH),
+        "scorer_path": registered.SCORER_PATH,
+        "scorer_sha256": digest(root / registered.SCORER_PATH),
+    }
+    return _reconcile_validated_research(root, out, expected_source_commit, validation)
+
+
+def _reconcile_validated_research(root: Path, out: Path,
+                                  expected_source_commit: str | None,
+                                  registered_validation: dict):
     git_proc = subprocess.run(['git','-C',str(root),'rev-parse','HEAD'],capture_output=True,text=True,timeout=15)
     source_commit = git_proc.stdout.strip() if git_proc.returncode == 0 else None
     if expected_source_commit is not None and (source_commit is None or source_commit != expected_source_commit or len(expected_source_commit) != 40):
@@ -374,6 +403,7 @@ def run(root: Path, out: Path, expected_source_commit: str | None = None):
     manifest = {
         "contract": "TASK15_INTRADAY_RESEARCH_RECONCILIATION_v1",
         "authority": "RESEARCH_ONLY_NOT_REGISTERED_SCORING_OR_MODEL_PROMOTION",
+        "original_owner_validation": registered_validation,
         "study_start_utc": utc(WINDOW_START), "study_end_utc": utc(WINDOW_END),
         "boundary_semantics": "ISSUED_START_INCLUSIVE_END_EXCLUSIVE;_DUE_END_INCLUSIVE",
         "tape_path": str(TAPE), "tape_sha256": digest(root / TAPE),
@@ -463,7 +493,14 @@ def self_test():
             "substitute_later_price_forbidden": True,
         }
         of.write_text(json.dumps(bound), encoding="utf-8")
-        result = run(root, root / "audit")
+        try:
+            run(root, root / "canonical-rejected")
+        except ValueError as exc:
+            assert "TASK15_REGISTERED_VALIDATION_FAILED" in str(exc), exc
+        else:
+            raise AssertionError("synthetic receipt must not bypass the registered validator")
+        assert not (root / "canonical-rejected").exists()
+        result = _reconcile_validated_research(root, root / "audit", None, {"status": "SYNTHETIC_PRECHECK_ONLY_NOT_REGISTERED_EVIDENCE"})
         for bad in ("forecast_hash", "target", "horizon", "contract", "status",
                     "production_context", "source_candle_open_utc",
                     "calibration_key", "calibration_group", "votes",
@@ -483,7 +520,7 @@ def self_test():
             if bad == "evidence_deadline_utc": corrupt["evidence_deadline_utc"] = "2026-09-16T00:00:00Z"
             of.write_text(json.dumps(corrupt), encoding="utf-8")
             try:
-                run(root, root / "rejected")
+                _reconcile_validated_research(root, root / "rejected", None, {"status": "SYNTHETIC_PRECHECK_ONLY_NOT_REGISTERED_EVIDENCE"})
             except ValueError:
                 pass
             else:
@@ -504,7 +541,7 @@ def self_test():
         forecast["horizons"]["1H"]["targets"]["BTC"]["start_value"] = float("inf")
         pf.write_text(json.dumps(forecast), encoding="utf-8")
         try:
-            run(root, root / "rejected")
+            _reconcile_validated_research(root, root / "rejected", None, {"status": "SYNTHETIC_PRECHECK_ONLY_NOT_REGISTERED_EVIDENCE"})
         except ValueError:
             pass
         else:
