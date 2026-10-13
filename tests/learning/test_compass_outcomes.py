@@ -197,7 +197,7 @@ class CompassOutcomeTest(unittest.TestCase):
         ))
         pinned_commit = source["main_commit"]
         commit_present = subprocess.run(
-            ["git", "cat-file", "-e", f"{pinned_commit}^{commit}"],
+            ["git", "cat-file", "-e", f"{pinned_commit}^{{commit}}"],
             cwd=root,
             capture_output=True,
             text=True,
