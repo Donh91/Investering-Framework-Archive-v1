@@ -12,6 +12,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
 import subprocess
 import tempfile
@@ -87,10 +88,16 @@ def contains_exact_candle(raw_csv: str, due, asset):
     try:
         rows = list(csv.DictReader(raw_csv.splitlines()))
         matching = [r for r in rows if r.get("timestamp_utc") == open_time]
-        return (len(matching) == 1 and matching[0].get("spot_status") == "PASS"
-                and float(matching[0][f"{asset.lower()}_close"]) > 0)
+        if len(matching) != 1 or matching[0].get("spot_status") != "PASS":
+            return False
+        value = float(matching[0][f"{asset.lower()}_close"])
     except (ValueError, KeyError, TypeError, csv.Error):
         return False
+    # Malformed owner candles must NOT be called on-time or late. Abort the
+    # census for non-finite PASS values instead of laundering them as missing.
+    if not math.isfinite(value):
+        raise ValueError("TASK15_OWNER_CANDLE_NONFINITE_PRICE")
+    return value > 0
 
 def provenance_history(root, ref, relative, cache):
     key = ("log", relative)
@@ -210,7 +217,16 @@ def self_test():
         assert late["first_present_committer_utc"] == "2026-09-15T22:07:22Z", late
         assert early["first_present_committer_utc"] == "2026-09-15T18:07:11Z", early
         assert not contains_exact_candle(fp.read_text(), parse("2026-09-15T20:00:00Z"), "BTC")
-    return "PASS: frozen cutoff late-candle test, on-time positive control, missing candle negative"
+        for bad in ("Infinity", "-Infinity", "NaN"):
+            invalid_csv = ("timestamp_utc,spot_status,btc_close\n"
+                           "2026-09-15T18:00:00Z,PASS," + bad + "\n")
+            try:
+                contains_exact_candle(invalid_csv, parse("2026-09-15T19:00:00Z"), "BTC")
+            except ValueError as err:
+                assert "NONFINITE_PRICE" in str(err)
+            else:
+                raise AssertionError("nonfinite owner candle counted: " + bad)
+    return "PASS: frozen cutoff late/on-time/missing controls and 3 nonfinite owner candle rejection controls"
 
 def main():
     ap = argparse.ArgumentParser()
