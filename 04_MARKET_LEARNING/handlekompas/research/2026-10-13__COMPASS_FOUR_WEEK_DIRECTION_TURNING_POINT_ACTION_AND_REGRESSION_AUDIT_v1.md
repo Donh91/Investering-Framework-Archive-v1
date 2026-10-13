@@ -60,6 +60,23 @@ The separate original issuance-based, instrument+clock-matched R0-R3 replay rema
 Reference snapshot `DIRECTION_CALIBRATION.json` blob SHA at five dates: `1969d0107f945090460188d61f3893a2e7391273`, `f8c52f84c16af84c0a8182d5f9ae5b9ebc8b77de`, `190e77a6b8a86f4144e2721b2432eb387f513950`, `4240d28f2d076834f11a7ed57eee4845ea4cb7d0`, `f686d4dd68dcf0b4f901750bd1b850086edb879c`. The latest current-main blob is separately versioned, not overwritten.
 
 
+
+### Directional asymmetry within the four-week calibration-register delta
+
+Same saved snapshot subtraction, split strictly by **frozen predicted direction**. This is informative about bias and reversal failure, **not a controlled independent-event estimate**:
+
+| Asset/horizon | Predicted UP: correct/eligible | Predicted DOWN: correct/eligible |
+|---|---:|---:|
+| BTC 1H | 3/8 (37.5%) | 7/10 (70.0%) |
+| ETH 1H | 4/11 (36.4%) | 6/9 (66.7%) |
+| BTC 4H | 19/33 (57.6%) | **11/29 (37.9%)** |
+| ETH 4H | 13/29 (44.8%) | **8/33 (24.2%)** |
+| BTC 24H | 17/29 (58.6%) | 12/24 (50.0%) |
+| ETH 24H | 13/28 (46.4%) | 13/32 (40.6%) |
+
+**New primary falsifiable subhypothesis:** 4H bearish continuation predicts that remain active near drawdown exhaustion disproportionately fail on fast rebounds; this must be tested as *ex-ante rebound risk*, not assumed from ex-post selection. Distinguish DOWN-after-stress versus DOWN-before-stress, check volume/OI/ETHBTC and market microstructure vintages, and compare stable no-reweight momentum, contrarian and session-adjusted controls. Avoid asymmetric costs by making direction classes equally represented in balanced accuracy; test warnings for both false exits and actual downside misses.
+
+
 ## 2. Required 28d reproducible audit (R0-R8), acceptance tests
 
 **R0 source admission:** enumerate `direction_predictions/**` and `direction_outcomes/**` files by true issue date, not GitHub search ranking. For every file freeze original issue UTC, source cutoff/availability, main first-parent commit, issuance-to-target lead, asset, horizon, contract, direction, vote families, model/rule version, prediction SHA, original config SHA, unaltered frozen reference price, exact target time, original maturation state/actual, censor reason, and scorer revision. Cross-check dated hourly owner CSVs against independent venue observations without overwriting outcomes. Full census expected to include **all** 28d files, not just search top-100 hits. Report explicit missed hours, duplicate captures, blackout periods and first-knowledge conflicts. NO subsequent-value substitution for censored registered events.
