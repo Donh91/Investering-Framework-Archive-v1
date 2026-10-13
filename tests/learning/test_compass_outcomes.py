@@ -157,7 +157,7 @@ class CompassOutcomeTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         receipt = json.loads(result.stdout)
         self.assertEqual(receipt["status"], "SELF_TEST_PASS")
-        self.assertGreaterEqual(receipt["negative_and_positive_controls"], 21)
+        self.assertGreaterEqual(receipt["negative_and_positive_controls"], 31)
         self.assertEqual(receipt["historical_market_rows_scored"], 0)
         self.assertFalse(receipt["automatic_trading_authority"])
 
