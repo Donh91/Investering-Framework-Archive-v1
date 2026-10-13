@@ -475,6 +475,11 @@ class EdgeCompoundGovernorTests(unittest.TestCase):
                 ("UNREVIEWED_RESEARCH_ONLY",{**safe,"status":"UNREVIEWED"}),
                 ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"permissions":{
                     **safe["permissions"],"allow_trade_or_sell_signal":True}}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{k:v for k,v in safe.items() if k!="status"}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"status":"NEW_UNKNOWN_UNREVIEWED"}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"status":None}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"status":123}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"status":["BLOCKED_SCIENTIFIC_CLOSURE"]}),
             ]
             for expected,payload in cases:
                 with self.subTest(expected=expected):
