@@ -206,7 +206,7 @@ class CompassOutcomeTest(unittest.TestCase):
         )
         if commit_present.returncode != 0:
             fetched = subprocess.run(
-                ["git", "fetch", "--quiet", "--no-tags", "--depth=1", "origin", pinned_commit],
+                ["git", "fetch", "--quiet", "--no-tags", "origin", pinned_commit],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -217,15 +217,20 @@ class CompassOutcomeTest(unittest.TestCase):
         # Git object integrity alone is insufficient: an arbitrary branch
         # could contain the same claimed paths. Fetch the actual default-branch
         # history and require the frozen snapshot to be an ancestor of main.
-        # Depth 500 is comfortably above this same-day research snapshot, but
-        # intentionally fails closed if history is unavailable or too shallow.
+        # Complete ancestry has no moving 500-commit expiry and must not
+        # turn an existing complete shared checkout into a shallow repository.
+        shallow = subprocess.run(
+            ["git", "rev-parse", "--is-shallow-repository"], cwd=root,
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        self.assertEqual(shallow.returncode, 0, shallow.stderr)
+        fetch_main = ["git", "fetch", "--quiet", "--no-tags"]
+        if shallow.stdout.strip() == "true":
+            fetch_main.append("--unshallow")
+        fetch_main.extend(["origin", "refs/heads/main"])
         main_history = subprocess.run(
-            ["git", "fetch", "--quiet", "--no-tags", "--depth=500", "origin", "refs/heads/main"],
-            cwd=root,
-            capture_output=True,
-            text=True,
-            timeout=90,
-            check=False,
+            fetch_main, cwd=root, capture_output=True, text=True,
+            timeout=120, check=False,
         )
         self.assertEqual(main_history.returncode, 0, main_history.stderr)
         belongs_to_main = subprocess.run(

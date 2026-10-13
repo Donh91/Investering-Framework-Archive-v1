@@ -13,9 +13,19 @@ const RECEIPT_KEYS=new Set(['signal_id','source_sha256','asset','target','issued
 const PROOF_KEYS=new Set(['status','verifier','proof_sha256']);
 function allowedObject(value,keys){return value!==null&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.has(key));}
 function closedPublicSchema(row){
- return allowedObject(row,ROW_KEYS)
-   && (row.original_outcome_receipt==null||allowedObject(row.original_outcome_receipt,RECEIPT_KEYS))
-   && (row.first_known_proof==null||allowedObject(row.first_known_proof,PROOF_KEYS));
+ const strings=['signal_id','family_id','asset','target','source_sha256','signal_state','source_observed_at_utc','source_first_known_at_utc','issued_at_utc','outcome_due_at_utc','original_outcome_status'];
+ if(!allowedObject(row,ROW_KEYS)||strings.some(key=>typeof row[key]!=='string'))return false;
+ if('retrospective_actual_direction' in row&&!['UP','DOWN','FLAT'].includes(row.retrospective_actual_direction))return false;
+ const receipt=row.original_outcome_receipt;
+ if(receipt!=null){
+   if(!allowedObject(receipt,RECEIPT_KEYS))return false;
+   if(['signal_id','source_sha256','asset','target','issued_at_utc','outcome_due_at_utc','status'].some(key=>typeof receipt[key]!=='string'))return false;
+   if(receipt.result!=null&&!['HIT','MISS','ABSTAINED'].includes(receipt.result))return false;
+   if('substitute_later_price_forbidden' in receipt&&typeof receipt.substitute_later_price_forbidden!=='boolean')return false;
+ }
+ const proof=row.first_known_proof;
+ if(proof!=null&&(!allowedObject(proof,PROOF_KEYS)||['status','verifier','proof_sha256'].some(key=>typeof proof[key]!=='string')))return false;
+ return true;
 }
 
 function containsRestrictedKey(value,seen=new Set()){
@@ -112,6 +122,9 @@ function selfTest(){
  ["TOP_LEVEL_PASSWORD",{...base,password:"fixture-only"},"QUARANTINED"],
  ["RECEIPT_CLIENT_SECRET",{...base,original_outcome_receipt:{...base.original_outcome_receipt,client_secret:"fixture-only"}},"QUARANTINED"],
  ["UNKNOWN_METADATA_DENIED",{...base,metadata:{novel_field:"fixture-only"}},"QUARANTINED"],
+ ["ALLOWED_DIRECTION_NESTED_TOKEN_DENIED",{...base,original_outcome_status:"MISSING",original_outcome_receipt:null,retrospective_actual_direction:{bearerToken:"fixture-only"}},"QUARANTINED"],
+ ["RECEIPT_RESULT_CONTAINER_DENIED",{...base,original_outcome_receipt:{...base.original_outcome_receipt,result:{unexpected:"fixture-only"}}},"QUARANTINED"],
+ ["PROOF_VERIFIER_CONTAINER_DENIED",{...base,first_known_proof:{status:"INDEPENDENT_VERIFIED",verifier:{unexpected:"fixture-only"},proof_sha256:"b".repeat(64)}},"QUARANTINED"],
  ["WRONG_SOURCE_AFTER_ISSUE",{...base,source_observed_at_utc:"2026-10-12T09:08:00Z",source_first_known_at_utc:"2026-10-12T09:09:00Z"},"PIT_BLOCKED"],
  ["UNKNOWN_SIGNAL",{...base,signal_state:"FUTURE_CLAIM"},"QUARANTINED"],
  ];
