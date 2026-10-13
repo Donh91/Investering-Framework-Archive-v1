@@ -195,8 +195,27 @@ class CompassOutcomeTest(unittest.TestCase):
             and all(c in "0123456789abcdef" for c in part["git_object_sha"])
             for part in entries
         ))
+        pinned_commit = source["main_commit"]
+        commit_present = subprocess.run(
+            ["git", "cat-file", "-e", f"{pinned_commit}^{commit}"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if commit_present.returncode != 0:
+            fetched = subprocess.run(
+                ["git", "fetch", "--quiet", "--no-tags", "--depth=1", "origin", pinned_commit],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+            self.assertEqual(fetched.returncode, 0, fetched.stderr)
         for part in entries:
-            object_spec = f"{source['main_commit']}:{part['path'].rstrip('/')}"
+            object_spec = f"{pinned_commit}:{part['path'].rstrip('/')}"
             actual_sha = subprocess.run(
                 ["git", "rev-parse", object_spec],
                 cwd=root,
