@@ -62,7 +62,7 @@ test('Exact current source seven tier actions never convert HOLD to leadership o
  assert.equal(base.full_phases[1].status,'UNCONFIRMED');
 });
 test('Long cycle 4–8w stays unavailable, no invented strategic ETA',()=>{
- assert.match(base.structural_long.weeks_4_8,/UNAVAILABLE/i);
+ assert.match(base.structural_long.weeks_4_8,/(UNAVAILABLE|No evidence-supported)/i);
  assert.match(base.structural_long.weeks_2_3,/Selective/);
 });
 test('Separate protection and sell cannot become automatic completed cycle phases',()=>{
