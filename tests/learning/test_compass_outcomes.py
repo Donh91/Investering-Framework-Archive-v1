@@ -214,6 +214,40 @@ class CompassOutcomeTest(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(fetched.returncode, 0, fetched.stderr)
+        # Git object integrity alone is insufficient: an arbitrary branch
+        # could contain the same claimed paths. Fetch the actual default-branch
+        # history and require the frozen snapshot to be an ancestor of main.
+        # Depth 500 is comfortably above this same-day research snapshot, but
+        # intentionally fails closed if history is unavailable or too shallow.
+        main_history = subprocess.run(
+            ["git", "fetch", "--quiet", "--no-tags", "--depth=500", "origin", "refs/heads/main"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=90,
+            check=False,
+        )
+        self.assertEqual(main_history.returncode, 0, main_history.stderr)
+        belongs_to_main = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", pinned_commit, "FETCH_HEAD"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        self.assertEqual(
+            belongs_to_main.returncode, 0,
+            "TASK2_R0_PINNED_COMMIT_NOT_REACHABLE_FROM_MAIN: " + belongs_to_main.stderr
+        )
+        # Negative control: the pinned snapshot must not be treated as a
+        # descendant of the latest main after new commits appeared.
+        current_main = subprocess.run(
+            ["git", "rev-parse", "FETCH_HEAD"],
+            cwd=root, capture_output=True, text=True, timeout=30, check=False,
+        )
+        self.assertEqual(current_main.returncode, 0, current_main.stderr)
+        self.assertRegex(current_main.stdout.strip(), r"^[0-9a-f]{40}$")
         for part in entries:
             object_spec = f"{pinned_commit}:{part['path'].rstrip('/')}"
             actual_sha = subprocess.run(
