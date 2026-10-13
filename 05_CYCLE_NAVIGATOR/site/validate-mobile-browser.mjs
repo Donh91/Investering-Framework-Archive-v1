@@ -13,7 +13,8 @@ const require=createRequire(import.meta.url);
 const pw=require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules','playwright'));
 const production=process.argv.includes('--production');
 const productionUrl='https://donh91.github.io/Investering-Framework-Archive-v1/';
-const rows=[],failures=[],versions={},contextNetwork=[];
+const rows=[],failures=[],versions={},contextNetwork=[],browserSources=[];
+const assetFiles=['index.html','market-compass-premium.js','public-product.js','market-compass-premium.css','public-product.css','styles.css','frozen-week-chart.css','frozen-week-chart.js','i18n-da.json','data/compass.json'];
 const sha=b=>createHash('sha256').update(b).digest('hex');
 await mkdir(out,{recursive:true});
 let server,base;
@@ -72,7 +73,13 @@ async function screenshot(page,name){
 function check(ok,message){if(!ok)throw Error(message);}
 async function runCase(browser,engine,width,language,state){
  const context=await browser.newContext({...pw.devices['iPhone 14'],viewport:{width,height:844},locale:language==='da'?'da-DK':'en-GB',timezoneId:'Europe/Copenhagen',reducedMotion:'reduce'});
- const page=await context.newPage();const errors=[],network=[],warnings=[];
+ const page=await context.newPage();const errors=[],network=[],warnings=[],assetLoads=[];
+ page.on('response',r=>{
+  const u=new URL(r.url()),origin=new URL(base).origin;
+  if(u.origin!==origin)return;
+  const file=assetFiles.find(f=>u.pathname===new URL(f,base).pathname||(f==='index.html'&&u.pathname===new URL(base).pathname));
+  if(file)assetLoads.push(r.body().then(bytes=>({file,sha256:sha(bytes),status:r.status(),response_observed_at_utc:new Date().toISOString()})).catch(e=>({file,error:e.message})));
+ });
  page.on('console',m=>{if(m.type()==='warning')warnings.push(m.text());});
  page.on('pageerror',e=>{
   // WebKit also emits transport/CORS diagnostics as pageerror. Retain them and
@@ -91,6 +98,10 @@ async function runCase(browser,engine,width,language,state){
   await page.goto(base,{waitUntil:'domcontentloaded',timeout:30000});
   check((await catalogReady).ok(),'TRANSLATION_CATALOG_UNAVAILABLE');
   await page.locator('#premiumMarketCompass').waitFor({state:'visible',timeout:20000});
+  // The premium loader is independent of public-product's optional price fetch.
+  // An active, pre-created tab is not proof that its content finished rendering.
+  await page.locator('#productProof .proof-metrics').waitFor({state:'attached',timeout:30000});
+  await page.locator('#productPath .fw-days button').first().waitFor({state:'attached',timeout:20000});
   await page.locator(`[data-language="${language}"]`).click();
   await page.waitForFunction(lang=>document.documentElement.lang===lang,language);
   if(production)check(await page.evaluate(()=>typeof window.CNOfficialCurrentReading==='function'),'PUBLISHED_REPAIR_NOT_PRESENT');
@@ -159,8 +170,11 @@ async function runCase(browser,engine,width,language,state){
   }
   check(errors.length===0,`BROWSER_SCRIPT_ERROR ${errors.join('; ')}`);
   if(network.length){
-   for(const [selector,warning] of [['#marketTimestamp','LIVE market feed unavailable'],['#btcDominanceMeta','LIVE global market context unavailable']]){
-    if(await page.locator(selector).count()){
+   for(const diagnostic of network){
+    const binding=diagnostic.includes('/global?')?['#btcDominanceMeta','LIVE global market context unavailable']:diagnostic.includes('include_last_updated_at=true')?['#marketTimestamp','LIVE market feed unavailable']:null;
+    if(binding){
+     const [selector,warning]=binding;
+     check(await page.locator(selector).count()===1,`FAILED_CONTEXT_WIDGET_MISSING ${selector}`);
      check(/unavailable|utilgængelig/i.test(await page.locator(selector).innerText()),`CONTEXT_NETWORK_FAILURE_WITHOUT_UNAVAILABLE_LABEL ${selector}`);
      check(warnings.some(w=>w.includes(warning)),`CONTEXT_NETWORK_FAILURE_WITHOUT_CAUGHT_HANDLER ${selector}`);
     }
@@ -172,7 +186,10 @@ async function runCase(browser,engine,width,language,state){
   const image=await screenshot(page,`FAIL-${engine}-${width}-${language}-${state}`).catch(()=>null);
   failures.push({engine,width,language,state,error:e.message,screenshot:image});
   console.log(`FAIL ${engine} ${width} ${language} ${state}: ${e.message}`);
- }finally{await context.close();}
+ }finally{
+  browserSources.push({engine,width,language,state,synthetic:state!=='REAL',responses:await Promise.all(assetLoads)});
+  await context.close();
+ }
 }
 try{
  for(const engine of ['chromium','webkit']){
@@ -188,15 +205,21 @@ try{
  }
 }catch(e){failures.push({error:e.message});}
 finally{if(server)await new Promise(r=>server.close(r));}
-const inputs={};
-for(const file of ['index.html','market-compass-premium.js','public-product.js','market-compass-premium.css','public-product.css','data/compass.json']){
- try{
-  const r=production?await fetch(new URL(file,productionUrl),{signal:AbortSignal.timeout(20000)}):null;
-  if(r&&!r.ok)throw Error(`PUBLIC_ASSET_HTTP ${file} ${r.status}`);
-  inputs[file]=sha(r?Buffer.from(await r.arrayBuffer()):await readFile(resolve(dist,file)));
- }catch(e){failures.push({error:e.message});}
+const inputs={},inputVariants={};
+for(const file of assetFiles){
+ const variants=[...new Set(browserSources.filter(c=>!c.synthetic).flatMap(c=>c.responses.filter(r=>r.file===file&&r.status===200&&!r.error).map(r=>r.sha256)))];
+ inputVariants[file]=variants;
+ if(!variants.length)failures.push({error:`BROWSER_LOADED_SOURCE_MISSING ${file}`});
+ if(file!=='data/compass.json'&&variants.length>1)failures.push({error:`DEPLOYMENT_CHANGED_DURING_BROWSER_RUN ${file}`});
+ inputs[file]=production?(variants.length===1?variants[0]:null):sha(await readFile(resolve(dist,file)));
+ // Static deployed code must equal this checked-out build, independently of
+ // dynamic source refreshes. Every hash comes from a browser-loaded response.
+ if(file!=='index.html'&&file!=='data/compass.json'){
+  const expected=sha(await readFile(resolve(dist,file)));
+  if(variants.some(v=>v!==expected))failures.push({error:`BROWSER_CODE_DIFFERS_FROM_BUILD ${file}`});
+ }
 }
-const receipt={contract:'CN_REAL_BROWSER_RELEASE_QA_v1',recorded_at_utc:new Date().toISOString(),mode:production?'REAL_PUBLIC_PRODUCTION':'BUILT_PR_AND_DECLARED_SYNTHETIC_CONSUMER_FIXTURES',checkout_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),playwright_version:require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules','playwright/package.json')).version,browser_versions:versions,device_semantics:'Linux Chromium and WebKit iPhone viewport/touch emulation, not real Safari or physical iPhone',production_url:production?productionUrl:null,inputs,rows,failures,context_network_conditions:contextNetwork,status:failures.length?'FAIL':'BROWSER_CHECKS_PASS_MANUAL_SCREENSHOT_REVIEW_REQUIRED',scientific_edge_established:false,fixtures_are_production_evidence:false};
+const receipt={contract:'CN_REAL_BROWSER_RELEASE_QA_v1',recorded_at_utc:new Date().toISOString(),mode:production?'REAL_PUBLIC_PRODUCTION':'BUILT_PR_AND_DECLARED_SYNTHETIC_CONSUMER_FIXTURES',checkout_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),playwright_version:require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules','playwright/package.json')).version,browser_versions:versions,device_semantics:'Linux Chromium and WebKit iPhone viewport/touch emulation, not real Safari or physical iPhone',production_url:production?productionUrl:null,inputs,browser_loaded_input_variants:inputVariants,browser_loaded_sources:browserSources,rows,failures,context_network_conditions:contextNetwork,status:failures.length?'FAIL':'BROWSER_CHECKS_PASS_MANUAL_SCREENSHOT_REVIEW_REQUIRED',scientific_edge_established:false,fixtures_are_production_evidence:false};
 await writeFile(resolve(out,'receipt.json'),JSON.stringify(receipt,null,2)+'\n');
 console.log(JSON.stringify({status:receipt.status,rendered_views:rows.length,failures},null,2));
 if(failures.length)process.exitCode=1;
