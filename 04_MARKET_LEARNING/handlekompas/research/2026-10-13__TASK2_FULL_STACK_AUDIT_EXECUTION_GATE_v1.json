@@ -1,0 +1,221 @@
+{
+  "contract": "TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1",
+  "mission_id": "COMPASS-HORIZON-EDGE-20261011",
+  "created_date": "2026-10-13",
+  "stage": "PREREGISTERED_DESIGN_ONLY",
+  "research_only": true,
+  "owner_repo": "Donh91/Investering-Framework-Archive-v1",
+  "read_first": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+  "canonical_related_prs": [
+    1573,
+    1597,
+    1598,
+    1599
+  ],
+  "owner_issues": [
+    1530,
+    1553,
+    1596,
+    1516
+  ],
+  "unmerged_review_dependency_check_required": true,
+  "no_new_scheduler": true,
+  "trade_execution_allowed": false,
+  "automatic_signal_promotion_allowed": false,
+  "retrospective_censor_overwrite_allowed": false,
+  "api_budget_usd_reserved": 0,
+  "work_execution_started": false,
+  "data_families": [
+    "HOURLY_OWNER_SPOT_ETHBTC",
+    "INTRADAY_SHADOW_1_4_24H",
+    "OFFICIAL_12_72_168H",
+    "SHADOW_V2",
+    "STRATEGIC_21_30D",
+    "FORWARD_PATH_14_21D",
+    "CN_WEEKLY_PRICE_BANDS",
+    "CN_PHASE_ROTATION_ALTSEASON",
+    "BREADTH_AND_TIER_LIQUIDITY",
+    "DERIVATIVES_OI_FUNDING_SPOT_FLOW",
+    "ETF_MACRO_VINTAGE_STABLECOINS",
+    "NEWS_SOCIAL_KOL",
+    "PULLBACK_PROTECTION_AND_REENTRY",
+    "EDGE_M6_TYPED_WARNINGS",
+    "PORTFOLIO_ACTION_EXECUTION_PRIVATE",
+    "ALPHA_LAB_LAUNCH_WALLET_PRIVATE",
+    "CHAT_CN_SITE_DELIVERY_AND_LEARNING"
+  ],
+  "frozen_snapshots_asof_2026_10_13": {
+    "pullback_learning_eligibility": "SUSPENDED_NO_ELIGIBILITY_CONTRACT",
+    "pullback_closed_eligible_episodes": 0,
+    "m6_warning_event_count": 20,
+    "m6_provisional_family_count": 2,
+    "m6_economic_action_scoring_ready": false,
+    "action_calibration_eligible_series_rows": 212,
+    "action_calibration_typed_warning_rows": 0,
+    "task15_expost_market_price_joins": 824,
+    "task15_original_outcomes": 814,
+    "task15_censored_original": 500,
+    "task15_matured_original": 314,
+    "task15_missing_original_receipt": 10,
+    "task15_verdict": "BLOCKED_SCIENTIFIC_CLOSURE",
+    "cn_current_pointer_status": "DEGRADED",
+    "note": "Snapshot, not a future readback or admission; head/vintage may change"
+  },
+  "work_stages": [
+    {
+      "id": "R0",
+      "name": "DATA_AUTHORITY_AND_VERSIONED_SOURCE_GRAPH",
+      "method": "DETERMINISTIC_FIRST",
+      "needs": [],
+      "exit": [
+        "exact_main_sha",
+        "source_inventory_by_family_and_grain",
+        "privacy_boundary",
+        "model_source_version_map",
+        "owner_pr_dedup",
+        "pre_registration_sha"
+      ]
+    },
+    {
+      "id": "R1",
+      "name": "ISSUE_TIME_PIT_CENSOR_AND_DELIVERY_RECONCILIATION",
+      "method": "DETERMINISTIC_WITH_INDEPENDENT_REVIEW",
+      "needs": [
+        "R0"
+      ],
+      "exit": [
+        "attempted_population",
+        "admitted",
+        "pending",
+        "censored",
+        "abstain",
+        "no_edge",
+        "unmatched",
+        "source_first_known_certainty",
+        "publication_delay",
+        "negative_fixtures_pass"
+      ]
+    },
+    {
+      "id": "R2",
+      "name": "BASELINE_DIRECTION_RANGE_AND_PATH_TOURNAMENT",
+      "method": "GITHUB_REPLAY_AND_OPTIONAL_SOL_HIGH_METHOD_REVIEW",
+      "needs": [
+        "R1"
+      ],
+      "exit": [
+        "same_clock_control",
+        "event_family_count",
+        "source_version_era",
+        "class_balance",
+        "block_uncertainty",
+        "ablation_controls",
+        "precommitted_metrics",
+        "no_hindsight_winner"
+      ]
+    },
+    {
+      "id": "R3",
+      "name": "PULLBACK_WARNING_DISTRIBUTION_REENTRY",
+      "method": "GITHUB_SYNTHETIC_PLUS_PIT_PROSPECTIVE",
+      "needs": [
+        "R1"
+      ],
+      "exit": [
+        "twenty_R4P_original_adversarial_cases",
+        "frozen_144_grid",
+        "warning_information_lead",
+        "false_sale_cost",
+        "v_recovery_controls",
+        "holder_vs_new_cash",
+        "no_sell_promotion"
+      ]
+    },
+    {
+      "id": "R4",
+      "name": "MACRO_FLOWS_ROTATION_NEWS_ALPHA_LAB_EXTENSIONS",
+      "method": "SPLIT_PUBLIC_PRIVATE_AND_TIME_ELIGIBLE",
+      "needs": [
+        "R1"
+      ],
+      "exit": [
+        "asof_universe_and_listings",
+        "source_first_publication",
+        "independent_market_families",
+        "private_data_no_public_leak",
+        "delisted_failures_and_survivorship",
+        "marginal_lift_beyond_price"
+      ]
+    },
+    {
+      "id": "R5",
+      "name": "DECISION_ECONOMICS_AND_PUBLIC_CONSUMER_REPLAY",
+      "method": "WORK_FOR_BROWSER_AND_CROSS_OWNER_REVIEW",
+      "needs": [
+        "R2",
+        "R3"
+      ],
+      "exit": [
+        "action_permission_at_issue",
+        "first_visible_chat_site",
+        "DA_EN",
+        "390px_mobile",
+        "slippage_fees_spread",
+        "incumbent_vs_cash",
+        "unknown_if_no_receipts"
+      ]
+    },
+    {
+      "id": "R6",
+      "name": "SEALED_FUTURE_HOLDOUT_NEGATIVE_CONTROLS_AND_META_STATISTICS",
+      "method": "DETERMINISTIC_REPLAY_WITH_INDEPENDENT_CRITIQUE",
+      "needs": [
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "exit": [
+        "family_block_bootstrap",
+        "purged_walk_forward",
+        "multiple_testing_controls",
+        "future_maturation",
+        "baseline_outperformance_or_honest_negative"
+      ]
+    },
+    {
+      "id": "R7",
+      "name": "INDEPENDENT_REPORT_AND_OWNER_HANDOVER",
+      "method": "WORK_COORDINATION_RECOMMENDED_NOT_REQUIRED",
+      "needs": [
+        "R0",
+        "R1"
+      ],
+      "exit": [
+        "scoped_pass_fail_block_verdict",
+        "source_commit_and_receipts",
+        "candidate_survivors_if_any",
+        "cost_receipts",
+        "owner_issue_actions",
+        "rollback",
+        "site_parity_readback",
+        "negative_learning_persisted"
+      ]
+    }
+  ],
+  "global_fail_closed": [
+    "MISSING_OR_INVALID_PIT_FIRST_KNOWN",
+    "NOT_SAME_HORIZON_OR_COHORT",
+    "SCORE_CONTRACT_MISMATCH",
+    "RETROSPECTIVE_CENSORED_OUTCOME_RECLASSIFICATION",
+    "ABSTENTION_OR_NO_EDGE_DROPPED_FROM_DENOMINATOR",
+    "INSUFFICIENT_INDEPENDENT_EPISODE_FAMILIES",
+    "AFTER_OUTCOME_PARAMETER_SELECTION",
+    "NO_ACTION_OR_EXECUTABLE_FILL_EVIDENCE",
+    "PRIVATE_RECORD_ON_PUBLIC_BRANCH",
+    "DISAGREEMENT_WITH_CURRENT_MAIN_SOURCE_OWNER",
+    "PREVIEW_ONLY_MISTAKEN_FOR_PRODUCTION"
+  ],
+  "success_state": "NO_ALPHA_CLAIM_UNTIL_INDEPENDENT_PROSPECTIVE_ADMISSION",
+  "next_action": "After supervisor verified state, user re-enters chat for Task2 R0 inventory and hard PIT gate. Work mode only for needed multi-repo browser QA and cross-owner reconciliation.",
+  "request_work_now": false
+}
