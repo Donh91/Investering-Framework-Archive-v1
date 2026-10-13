@@ -195,6 +195,28 @@ class CompassOutcomeTest(unittest.TestCase):
             and all(c in "0123456789abcdef" for c in part["git_object_sha"])
             for part in entries
         ))
+        for part in entries:
+            object_spec = f"{source['main_commit']}:{part['path'].rstrip('/')}"
+            actual_sha = subprocess.run(
+                ["git", "rev-parse", object_spec],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            self.assertEqual(actual_sha.returncode, 0, actual_sha.stderr)
+            self.assertEqual(actual_sha.stdout.strip(), part["git_object_sha"])
+            actual_type = subprocess.run(
+                ["git", "cat-file", "-t", actual_sha.stdout.strip()],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            self.assertEqual(actual_type.returncode, 0, actual_type.stderr)
+            self.assertEqual(actual_type.stdout.strip(), part["git_object_type"])
         self.assertTrue(all(
             family["admission"] not in ("PIT_CERTIFIED", "TRADABLE_EDGE")
             for family in source["families"]
