@@ -28,6 +28,9 @@ if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model 
 if(!premiumRenderer.includes('Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.'))throw Error('Official 12H continuation proxy disclosure absent from investor-facing NOW view');
 if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish investor recommendation may contradict current Official direction');
 if(!premiumRenderer.includes('The 0–12h pressure reading is a current-state observation'))throw Error('HOLD investor message lost direction-neutral source disclosure');
+const chatPrompt=await readFile(resolve(site,'../..','07_PROMPTS_AND_AGENTS/prompts/HANDLEKOMPAS_v1.md'),'utf8');
+if(!chatPrompt.includes('12H = fortsættelse af seneste BTC/ETH-retning'))throw Error('Chat KOMPAS missing 12H continuation disclosure');
+if(chatPrompt.includes('**Confidence:** <0–100%>'))throw Error('Chat KOMPAS still mandates uncalibrated 0–100% confidence');
 // Independent end-to-end producer-digest and weekly-source regression checks.
 const root=resolve(site,'../..');
 const j=async p=>JSON.parse(await readFile(resolve(root,p),'utf8'));
