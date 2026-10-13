@@ -37,7 +37,8 @@ const honesty=honestyScope.__honestyProbe;
 if(!honesty || typeof honesty.renderPremium!=='function' || typeof honesty.twelveHourMethodDisclosure!=='function') throw Error('premium behavioral disclosure hooks unavailable');
 const sourceMethod='Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.';
 const noSource='No fresh verified 0–12H reading is available.';
-if(!honesty.freshNearTermReading(true,'UP') || honesty.freshNearTermReading(true,'NO NEW READING') || honesty.freshNearTermReading(false,'UP')) throw Error('premium 12H availability condition unsafe');
+if(!honesty.freshNearTermReading(true,'UP') || !honesty.freshNearTermReading(true,'BULLISH') || honesty.freshNearTermReading(true,'NO NEW READING') || honesty.freshNearTermReading(true,'MIXED') || honesty.freshNearTermReading(true,'STALE') || honesty.freshNearTermReading(true,'NEW_UNKNOWN_STATE') || honesty.freshNearTermReading(false,'UP')) throw Error('premium 12H availability condition unsafe');
+if(!honesty.mixedNearTermReading(true,'MIXED') || !honesty.mixedNearTermReading(true,'SIDEWAYS') || honesty.mixedNearTermReading(false,'MIXED'))throw Error('premium mixed 12H evidence class invalid');
 if(!honesty.twelveHourMethodDisclosure(true,'UP').includes(sourceMethod))throw Error('valid current 12H continuation method disclosure absent');
 for(const [available,state] of [[true,'NO NEW READING'],[true,'NOT READY'],[true,'UNCLEAR'],[false,'UP']]){
  const text=honesty.twelveHourMethodDisclosure(available,state);
@@ -58,6 +59,11 @@ const staleMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass
 if(!staleMarkup.includes(noSource)||staleMarkup.includes(sourceMethod)||staleMarkup.includes('The 0–12h pressure reading is a current-state observation'))throw Error('rendered NO NEW READING card falsely asserts available 12H direction');
 const freshMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'UP'}});
 if(!freshMarkup.includes(sourceMethod)||freshMarkup.includes(noSource))throw Error('rendered active NOW card lost continuation-proxy caveat');
+const mixedMethod='Current BTC/ETH conditions are mixed or sideways; no clear 0–12H direction or independently validated 12H forecast.';
+const mixedMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'MIXED'}});
+if(!mixedMarkup.includes(mixedMethod)||mixedMarkup.includes(noSource)||mixedMarkup.includes(sourceMethod))throw Error('rendered fresh MIXED falsely asserts a directional 12H forecast or missing data');
+const unknownMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'STALE'}});
+if(!unknownMarkup.includes(noSource)||unknownMarkup.includes(sourceMethod))throw Error('unknown 12H label did not fail closed');
 const degradedMarkup=actualPremiumMarkup({...testProjection,data_status:'UNAVAILABLE'});
 if(!degradedMarkup.includes(noSource)||degradedMarkup.includes(sourceMethod))throw Error('rendered degraded NOW card falsely asserts available 12H direction');
 if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish HOLD investor copy may contradict owner');
@@ -75,6 +81,9 @@ if(!globalContract.includes('P0 current-direction vs forecast honesty')||!global
 const bilingual=JSON.parse(await readFile(resolve(site,'i18n-da.json'),'utf8')).exact;
 for(const original of [
   sourceMethod,
+  mixedMethod,
+  'Keep existing positioning. BTC/ETH conditions are mixed; there is no clear directional 12H signal. Do not broaden high-beta exposure based on mixed conditions alone.',
+  'Near-term BTC/ETH conditions are mixed, with no clear directional edge. Wait for a verified change; mixed conditions are not a short or sell signal.',
   'No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.',
   'Keep existing positioning. The 0–12h pressure reading is a current-state observation, not a validated 12H forecast or the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.',
   'Keep existing positioning. No fresh verified 0–12H reading is available; do not infer a new near-term direction or broaden high-beta exposure from missing evidence.',
