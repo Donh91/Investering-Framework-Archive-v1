@@ -167,15 +167,20 @@ class CompassOutcomeTest(unittest.TestCase):
         self.assertEqual(r1["regression_minimum_controls"], 38)
         self.assertEqual(r1["node_module"], str(oracle.relative_to(root)))
         self.assertEqual(r1["history_rows_independently_scored"], receipt["historical_market_rows_scored"])
-        self.assertEqual(r1["status"], "SYNTHETIC_ONLY_PASS")
+        self.assertEqual(r1["status"], "CONTROLS_DEFINED_CURRENT_HEAD_CI_RECEIPT_REQUIRED")
         self.assertEqual(r1["independent_source_pit_proof"], "BLOCKED")
         self.assertEqual(r1["r1_full_chronology"], "BLOCKED")
         self.assertEqual(r1["verification_scope"], "SYNTHETIC_MECHANICS_NOT_HISTORICAL_PIT_OR_FORECAST_SKILL")
         # This is the already independently read-back historical CI checkpoint,
         # not a claim that the current HEAD or a future run has passed.
-        self.assertEqual((r1["verified_code_head"], r1["verified_outcomes_CI_run"]),
+        self.assertIsNone(r1["verified_code_head"])
+        self.assertIsNone(r1["verified_outcomes_CI_run"])
+        checkpoint = r1["historical_CI_checkpoint"]
+        self.assertEqual(checkpoint["controls"], 31)
+        self.assertEqual((checkpoint["head"], checkpoint["run"]),
                          ("1c1aebd0332a49d4266a2e3b738b9dac4fa8a72a", 38432271271))
-        self.assertEqual(r1["node_cli_execution"], "GITHUB_CI_EXECUTED_SELF_TEST_PASS")
+        self.assertEqual(checkpoint["status"], "GITHUB_CI_EXECUTED_SELF_TEST_PASS")
+        self.assertEqual(r1["node_cli_execution"], "CURRENT_HEAD_CI_RECEIPT_REQUIRED")
         self.assertEqual(gate["work_execution_scope"], "TECHNICAL_PREPARATION_ONLY_R2_R7_NOT_EXECUTED")
         self.assertTrue(gate["research_only"])
         for key in ("trade_execution_allowed", "automatic_signal_promotion_allowed", "retrospective_censor_overwrite_allowed"):

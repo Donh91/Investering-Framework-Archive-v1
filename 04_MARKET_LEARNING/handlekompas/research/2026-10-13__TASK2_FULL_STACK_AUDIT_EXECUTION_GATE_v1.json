@@ -237,7 +237,7 @@
       "shared_source_paths_not_independent": 1
     },
     "r1_no_hindsight_preflight": {
-      "status": "SYNTHETIC_ONLY_PASS",
+      "status": "CONTROLS_DEFINED_CURRENT_HEAD_CI_RECEIPT_REQUIRED",
       "negative_positive_fixture_cases": 38,
       "node_module": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs",
       "history_rows_independently_scored": 0,
@@ -245,11 +245,19 @@
       "r1_full_chronology": "BLOCKED",
       "private_raw_data_posted": false,
       "previous_checkpoint_fixture_cases": 34,
-      "node_cli_execution": "GITHUB_CI_EXECUTED_SELF_TEST_PASS",
+      "node_cli_execution": "CURRENT_HEAD_CI_RECEIPT_REQUIRED",
       "regression_minimum_controls": 38,
-      "verified_code_head": "1c1aebd0332a49d4266a2e3b738b9dac4fa8a72a",
-      "verified_outcomes_CI_run": 38432271271,
-      "verification_scope": "SYNTHETIC_MECHANICS_NOT_HISTORICAL_PIT_OR_FORECAST_SKILL"
+      "verified_code_head": null,
+      "verified_outcomes_CI_run": null,
+      "verification_scope": "SYNTHETIC_MECHANICS_NOT_HISTORICAL_PIT_OR_FORECAST_SKILL",
+      "historical_CI_checkpoint": {
+        "controls": 31,
+        "head": "1c1aebd0332a49d4266a2e3b738b9dac4fa8a72a",
+        "run": 38432271271,
+        "status": "GITHUB_CI_EXECUTED_SELF_TEST_PASS",
+        "scope": "SYNTHETIC_MECHANICS_NOT_HISTORICAL_PIT_OR_FORECAST_SKILL"
+      },
+      "current_CI_receipt_location": "Existing GitHub Actions run for the reviewed PR HEAD; final TASK2_READY_HANDOFF references the externally read-back exact-head result. This gate never self-certifies its own current HEAD."
     },
     "m6_owner_rows": {
       "status": "SOURCE_LINKAGE_ONLY_PASS",
