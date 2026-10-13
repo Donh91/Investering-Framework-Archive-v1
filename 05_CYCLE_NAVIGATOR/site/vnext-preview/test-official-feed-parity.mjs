@@ -333,5 +333,75 @@ it('stale, misaligned or invalid typed window never promotes investor drilldown'
   assert.equal(o.compass.pullback_investor_facts,null);
  }
 });
-console.log('SUCCESS: 41 public-feed source parity/lineage/freshness/score/investor facts proof tests — NO SITE SIGNAL AUTHORITY.');
+const pathOwnerFixture=(l,c)=>{
+ l.package.market_state='Completed W41 was a BTC-led advance in USD, relative rotation not confirmed.';
+ l.package.rotation_ladder=[
+  {segment:'BTC',status:'Led the W41 USD advance'},
+  {segment:'ETH',status:'ETH/BTC relative stabilization not confirmed'},
+  {segment:'Large caps',status:'Unconfirmed'},
+  {segment:'Midcaps',status:'Unconfirmed'},
+  {segment:'Small caps',status:'Unconfirmed'},
+  {segment:'Microcaps',status:'Unconfirmed'}
+ ];
+ l.package.altseason_countdown=[
+  {phase:'30d alt participation: active watch, broad not confirmed',window:'Now / W42'},
+  {phase:'ETH-relative stabilization: not confirmed',window:'W42-next 3 weeks, conditional'},
+  {phase:'Large-cap to midcap transmission: not confirmed',window:'Next 2-3 weeks, conditional'},
+  {phase:'Small- and microcap transmission: not confirmed',window:'No supported ETA'},
+  {phase:'Broad, multi-horizon altseason: paused',window:'No supported ETA'}
+ ];
+ l.package.decision_projection={
+  next_2_3w:{direction:'MIXED',summary:'Selective rotation, evidence still mixed.'},
+  weeks_4_8:{direction:'UNAVAILABLE',summary:'No supported 4-8w call.'}
+ };
+ c.capitalization_ladder=[
+  {segment:'BTC',action:'HOLD',status:'HOLD',eta:'now'},
+  {segment:'ETH',action:'HOLD',status:'HOLD',eta:'now'},
+  {segment:'LARGE_CAPS',action:'WAIT',status:'WAIT',eta:'conditional'},
+  {segment:'MID_CAPS',action:'WAIT',status:'WAIT',eta:'conditional'},
+  {segment:'SMALL_CAPS',action:'WAIT',status:'WAIT',eta:'no fixed ETA'},
+  {segment:'MICROCAPS',action:'HARD_WAIT',status:'HARD_WAIT',eta:'no fixed ETA'},
+  {segment:'MEMES',action:'UNAVAILABLE',status:'UNAVAILABLE',eta:null}
+ ];
+};
+it('existing public feeds provide real source-joined PATH, not forecast a phased hop',()=>{
+ const o=mutate(pathOwnerFixture);
+ assert.equal(o.path.state,'SOURCE_BOUND');
+ assert.equal(o.path.source_issue,29);
+ assert.equal(o.path.source_week,'2026-W42');
+ assert.equal(o.path.current_checkpoint.key,'BTC');
+ assert.equal(o.path.current_checkpoint.status,'FROZEN_WEEK_REFERENCE');
+ assert.equal(o.path.next_checkpoint.key,'ETH');
+ assert.equal(o.path.next_checkpoint.status,'UNCONFIRMED');
+ assert.equal(o.path.phase_eta,'Ingen verificeret ETA');
+ assert.equal(o.path.full_phases.length,10);
+ assert.equal(o.path.rotation.length,7);
+ assert.equal(o.path.rotation[6].action,'UNAVAILABLE');
+ assert.equal(o.path.altseason.status,'WATCH_ONLY');
+});
+it('missing tier source means PATH unavailable, NOT a fabricated live phase',()=>{
+ const o=mutate((l,c)=>{pathOwnerFixture(l,c);delete c.capitalization_ladder;});
+ assert.equal(o.path.state,'UNAVAILABLE');
+ assert.equal(o.compass.action_now,'HOLD_WAIT');
+});
+it('misaligned or stale public Compass blocks PATH completely',()=>{
+ for(const alter of [
+  (l,c)=>{pathOwnerFixture(l,c);c.weekly_context.status='MISMATCH';},
+  (l,c)=>{pathOwnerFixture(l,c);c.weekly_context.public_issue_number=28;},
+  (l,c)=>{pathOwnerFixture(l,c);l.generated_at='2026-10-09T00:00:00Z';}
+ ]){
+  const o=mutate(alter);
+  assert.equal(o.path.state,'UNAVAILABLE');
+  assert.equal(o.path.current_checkpoint,null);
+  assert.equal(o.path.full_phases.length,0);
+ }
+});
+it('PHASE user-visible NEXT gate does not claim altseason or ETA from 30d shadow',()=>{
+ const o=mutate((l,c)=>{pathOwnerFixture(l,c);l.package.altseason_countdown[0].phase='30d alt participation: ALTCOIN_SEASON 95';});
+ assert.equal(o.path.state,'SOURCE_BOUND');
+ assert.equal(o.path.altseason.status,'WATCH_ONLY');
+ assert.equal(o.path.phase_eta,'Ingen verificeret ETA');
+ assert.equal(o.path.full_phases[5].status,'UNCONFIRMED');
+});
+console.log('SUCCESS: 45 public-feed source parity/lineage/freshness/score/PATH proof tests — NO SITE SIGNAL AUTHORITY.');
 
