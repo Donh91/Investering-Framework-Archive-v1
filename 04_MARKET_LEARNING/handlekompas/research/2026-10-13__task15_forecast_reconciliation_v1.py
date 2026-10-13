@@ -190,6 +190,22 @@ def scan(root: Path, tape: dict):
                 })
     return rows, len(pred_files)
 
+def detail(rows):
+    """Paired descriptive sensitivity in one fixed cohort, not causal trial count."""
+    scored = [r for r in rows if r["descriptive_hit"] is not None and
+              r["research_admission"] in
+              ("RESEARCH_TAPE_SENSITIVITY_ONLY", "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY")]
+    pairs = [r for r in scored if r["baseline_hit"] is not None]
+    return {
+        "ex_post_tape_eligible": len(scored),
+        "model_hits": sum(r["descriptive_hit"] for r in scored),
+        "matched_baseline_pairs": len(pairs),
+        "model_hits_on_pairs": sum(r["descriptive_hit"] for r in pairs),
+        "prior_momentum_hits_on_pairs": sum(r["baseline_hit"] for r in pairs),
+        "original_censored_in_ex_post_cohort": sum(r["original_outcome_status"] == "CENSORED" for r in scored),
+        "original_matured_in_ex_post_cohort": sum(r["original_outcome_status"] == "MATURED" for r in scored),
+    }
+
 def summarize(rows):
     results = {}
     for cohort, subset in (
@@ -212,6 +228,17 @@ def summarize(rows):
                 "original_censor_reasons": dict(Counter(r["original_outcome_reason"] or "UNSPECIFIED" for r in sub if r["original_outcome_status"] == "CENSORED")),
                 "admission_status": dict(Counter(r["research_admission"] for r in sub)),
                 "tape_start_conflicts": sum(bool(r["tape_start_conflict"]) for r in sub),
+                "by_asset": {asset: detail([r for r in sub if r["asset"] == asset]) for asset in ASSETS},
+                "by_predicted_direction": {direction: detail([r for r in sub if r["direction"] == direction]) for direction in ("UP", "DOWN")},
+                "by_original_outcome_status": {status: detail([r for r in sub if r["original_outcome_status"] == status]) for status in ("MATURED", "CENSORED", "NO_ORIGINAL_RECEIPT")},
+                "by_7day_issuance_cohort_utc": {
+                    utc(WINDOW_START + timedelta(days=7 * k)): detail([
+                        r for r in sub
+                        if WINDOW_START + timedelta(days=7 * k)
+                        <= parse_utc(r["issue_utc"])
+                        < WINDOW_START + timedelta(days=7 * (k + 1))
+                    ]) for k in range(4)
+                },
             }
         results[cohort] = entry
     return results
