@@ -25,6 +25,7 @@ if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined rende
 if(!premiumRenderer.includes('compositeIntel(compass)'))throw Error('active premium renderer ignores integrated Compass');
 if(!premiumRenderer.includes('CN_PREMIUM_COMPASS_OWNER = true'))throw Error('premium owner not detected');
 if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model research')&&!premiumRenderer.includes('Research direction'))throw Error('premium research disclosure absent');
+if(!premiumRenderer.includes('Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.'))throw Error('Official 12H continuation proxy disclosure absent from investor-facing NOW view');
 // Independent end-to-end producer-digest and weekly-source regression checks.
 const root=resolve(site,'../..');
 const j=async p=>JSON.parse(await readFile(resolve(root,p),'utf8'));
