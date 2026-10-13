@@ -174,7 +174,7 @@ function decisionMeta(compass) {
 // Official NEXT_12H is a market-direction continuation proxy, not an independently
 // scored 12-hour model. Missing/stale states must never assert a live direction.
 function freshNearTermReading(dataOk, live) {
-  return Boolean(dataOk && !['NO NEW READING','NOT READY','UNCLEAR','WAITING','NOT ACTIVE','WAIT'].includes(live));
+  return Boolean(dataOk && !['NO NEW READING','NOT READY','UNCLEAR','UNAVAILABLE','WAITING','NOT ACTIVE','WAIT'].includes(live));
 }
 function twelveHourMethodDisclosure(dataOk, live) {
   return freshNearTermReading(dataOk, live)
