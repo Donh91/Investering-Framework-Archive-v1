@@ -37,6 +37,12 @@
           "role": "directory_tree_SHA_only",
           "git_object_sha": "e750d462ecc009ad3becaafe571d0df8374cf71f",
           "git_object_type": "tree"
+        },
+        {
+          "path": "04_MARKET_LEARNING/intraday_execution/config.json",
+          "git_object_sha": "ec780123f36c36f192be604f2432f22fd964c07b",
+          "git_object_type": "blob",
+          "role": "shadow_model_registry_not_market_data"
         }
       ],
       "admission": "RECONSTRUCTED_NO_PIT",
@@ -160,6 +166,24 @@
           "role": "weekly_delivery_pointer",
           "git_object_sha": "fe06b32149af589ea330835a750f8d22d1b25e92",
           "git_object_type": "blob"
+        },
+        {
+          "path": "04_MARKET_LEARNING/cfgi/",
+          "git_object_sha": "137ee629f02fa59ed3f672550a1f0174c4674d1b",
+          "git_object_type": "tree",
+          "role": "CFGI_source_domain_tree_only"
+        },
+        {
+          "path": "04_MARKET_LEARNING/master_monday/",
+          "git_object_sha": "898d3eb4b173e274d39863010bbf7e320675d903",
+          "git_object_type": "tree",
+          "role": "weekly_master_monday_source_tree"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/btc_d_cmc/",
+          "git_object_sha": "5cda2aaf593a4de3bb9f258c065ffd2fc2856f20",
+          "git_object_type": "tree",
+          "role": "BTC_dominance_capture_tree"
         }
       ],
       "admission": "DEGRADED_COVERAGE_NOT_OUTCOME_ADMITTED",
@@ -223,6 +247,18 @@
           "role": "directory_tree_SHA_only",
           "git_object_sha": "4a1cd7425a5118f7a3a84ad46281ed2593afe701",
           "git_object_type": "tree"
+        },
+        {
+          "path": "04_MARKET_LEARNING/macro_shadow/",
+          "git_object_sha": "2b9d6c84eaed5b6f6788d5097fccb948f0441756",
+          "git_object_type": "tree",
+          "role": "macro_vintage_research_tree"
+        },
+        {
+          "path": "04_MARKET_LEARNING/stablecoin_deployment/",
+          "git_object_sha": "cda2748cabf2dacc0013b401d6cc3bde0c2b6871",
+          "git_object_type": "tree",
+          "role": "stablecoin_deployment_source_tree"
         }
       ],
       "admission": "SOURCE_ERA_CONFLICT_PARTIAL",
@@ -238,6 +274,12 @@
           "role": "directory_tree_SHA_only",
           "git_object_sha": "523d33831aceba6e174c69cfcba57e445880664c",
           "git_object_type": "tree"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/",
+          "git_object_sha": "cfc34d47553c0bfb8dcbaae049452ea6d0e9e5b7",
+          "git_object_type": "tree",
+          "role": "catalyst_owner_capture_tree"
         }
       ],
       "admission": "INVENTORY_ONLY",
@@ -259,6 +301,12 @@
           "role": "historical_performance",
           "git_object_sha": "cfe815cfb10844c41bbafc3e69d8a886451379a8",
           "git_object_type": "blob"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/pullback_forensics/",
+          "git_object_sha": "4f928d5c264f1ec91fad573130c8224c6c92be79",
+          "git_object_type": "tree",
+          "role": "post_event_forensics_only_not_issued_warning"
         }
       ],
       "admission": "BLOCKED_NO_ELIGIBILITY_CONTRACT",
@@ -286,6 +334,12 @@
           "role": "outcome_calibration",
           "git_object_sha": "d9574154b7c31c4c1b1e96855a25b6b3ed0bc957",
           "git_object_type": "blob"
+        },
+        {
+          "path": "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/144_VARIANT_FROZEN_MANIFEST_v1.json",
+          "git_object_sha": "a75055851c41d2b4cd2532945c16bdecdef46c2d",
+          "git_object_type": "blob",
+          "role": "144_preregistered_variant_grid_PROPOSED_NOT_SCORED"
         }
       ],
       "admission": "RESEARCH_ONLY_NOT_ACTION",
@@ -336,6 +390,12 @@
           "role": "research_learning_pointer",
           "git_object_sha": "dd6886dd784f2335f1337506623e67ea586f7e83",
           "git_object_type": "blob"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/site/",
+          "git_object_sha": "59c7599c1bb2ce57264a435f8b93dc8ab0ef0d95",
+          "git_object_type": "tree",
+          "role": "site_consumer_directory_tree"
         }
       ],
       "admission": "PARTIAL_CONSUMER_VALIDATION_ONLY",
@@ -367,5 +427,9 @@
     "cross-repo restricted records"
   ],
   "next": "R1 exact issued+source+first-known ledger; independent sources/time clocks; no performance metrics until admission",
-  "source_hash_semantics": "git_object_sha is a commit-tree entry hash (blob for files, tree for directories), not a content sha256 nor provider PIT receipt"
+  "source_hash_semantics": "git_object_sha is a commit-tree entry hash (blob for files, tree for directories), not a content sha256 nor provider PIT receipt",
+  "shared_source_domains_not_independent_market_trials": [
+    "04_MARKET_LEARNING/handlekompas/strategic/"
+  ],
+  "source_domain_expansion": "Includes CFGI, Master Monday, dominance, macro, stablecoin, catalyst, pullback forensic, frozen 144-grid and site consumer. Source references can recur across research families; repeated source is not independent evidence."
 }
