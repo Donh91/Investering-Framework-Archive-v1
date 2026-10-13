@@ -6,11 +6,12 @@
     "task_issue": 1596,
     "edge_governor_issue": 1530,
     "action_owner_issue": 1553,
-    "full_publication_census_receipt": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK15_R1_FULL_OWNER_PUBLICATION_CHRONOLOGY_RECEIPT_v1.json",
-    "census_main_first_parent_sha": "288b1d59211e7810a2bb53d13c420976069d61bc",
-    "census_ci_run": 38367785431,
-    "census_original_receipt_status": "RETRACTED_UNREPRODUCED_FROM_CLAIMED_PR_SOURCE_TREE",
-    "new_exact_head_replay_status": "CI_PENDING_AFTER_SOURCE_PIN"
+    "full_publication_census_receipt": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK15_R1_BOUND_SOURCE_PUBLICATION_CORRECTION_v2.json",
+    "census_main_first_parent_sha": "f55cfd5fa97b7225fe6cbe842f25c4768a831633",
+    "census_ci_run": 38377408012,
+    "census_original_receipt_status": "SUPERSEDED_BY_SHA_BOUND_CORRECTION_V2",
+    "new_exact_head_replay_status": "REPRODUCED_HISTORICAL_PRICE_TAPE_RESEARCH_ONLY_PIT_UNVERIFIED",
+    "census_source_head_sha": "1522cb25cfbfd35823d4ef2666ed835fab4b119d"
   },
   "classification": "PREFLIGHT_NEGATIVE_GATE_NOT_A_MARKET_SIGNAL",
   "status": "BLOCKED_SCIENTIFIC_CLOSURE",
@@ -25,26 +26,29 @@
   },
   "checks": {
     "original_forecast_cohort_replay": {
-      "status": "RETRACTED_AWAITING_SOURCE_PINNED_REPRODUCTION",
-      "slots": null,
-      "eligible_issued_asset_horizon_pairs_2026_09_15_to_2026_10_13_06Z": null,
-      "independent_event_trials": null
+      "status": "SHA_BOUND_EX_POST_RESEARCH_REPLAY_NOT_SCIENTIFIC_EDGE",
+      "slots": 1140,
+      "eligible_issued_asset_horizon_pairs_2026_09_15_to_2026_10_13_06Z": 824,
+      "independent_event_trials": null,
+      "owner_receipts_count": 814,
+      "missing_original_outcome_receipt_count": 10
     },
     "owner_publication_by_exact_due_cutoff": {
-      "status": "RETRACTED_COHORT_MISMATCH_AWAITING_EXACT_HEAD_CENSUS",
-      "original_censored_count": null,
-      "late_archive_count": null,
-      "original_matured_count": null,
-      "on_time_archive_count": null,
-      "source_first_known_provider_proven": false
+      "status": "HEAD_BOUND_814_RECEIPT_MAIN_ARCHIVE_PROXY_PIT_UNVERIFIED",
+      "original_censored_count": 500,
+      "late_archive_count": 500,
+      "original_matured_count": 314,
+      "on_time_archive_count": 314,
+      "source_first_known_provider_proven": false,
+      "original_receipt_missing": 10
     },
     "original_scoring": {
-      "status": "IMMUTABLE_CENSORS_PRESERVED_COUNTS_UNVERIFIED",
-      "censored_count": null,
+      "status": "IMMUTABLE_ORIGINAL_RECEIPTS_PRESERVED_WITH_MISSINGNESS",
+      "censored_count": 500,
       "late_ex_post_market_data_may_change_outcome": false
     },
     "intraday_performance": {
-      "status": "BLOCKED_MISMATCHED_SOURCE_CHECKOUT",
+      "status": "PROVISIONAL_EX_POST_RECONSTRUCTION_NOT_REGISTERED_OUTCOME_SCORE",
       "baseline_clock_matched": false,
       "event_family_adjusted_uncertainty": false,
       "independent_holdout_pass": false
@@ -102,16 +106,11 @@
   ],
   "task15_closure_allowed": false,
   "task2_pullback_edge_claim_allowed": false,
-  "maintainer_note": "Evidence gate BLOCKED. Prior 824/510 census claim RETRACTED after independent source SHA review: same claimed source tree yields 814/500. Newly pinned PR-head replay pending; no automatic consumer/market policy promotion, no legacy censor rewrite. This gate remains a nonbinding research advisory only.",
+  "maintainer_note": "Source pin and original-receipt status divergence reconciled on research CI #38377408012: 824 ex-post spot joins = 500 originally CENSORED + 314 originally MATURED + 10 with NO_ORIGINAL_RECEIPT. 824 is NOT 824 registered outcomes; earlier 510 CENSORED claim is superseded by v2 correction. No forecast alpha/predictive skill certified. Task1.5 OPEN, Task2 BLOCKED, advisory does not grant trading action or change collection.",
   "prior_invalidated_report": {
-    "previously_claimed_pairs": 824,
-    "previously_claimed_censored": 510,
-    "previously_claimed_matured": 314,
-    "reviewer_head": "8ad1d37aa65ec6dbe6a455a5da38b8c5804984e4",
-    "reviewer_reproduced_pairs": 814,
-    "reviewer_reproduced_censored": 500,
-    "reviewer_reproduced_matured": 314,
-    "status": "COUNTS_CONFLICT_HISTORICAL_CLAIM_RETRACTED_PENDING_PINNED_HEAD_REPLAY",
-    "handling": "Do not reuse prior 824/510 or 814/500 counts as an admitted historical result; original receipts remain immutable; archive of old claim retained for audit."
+    "prior_workflow_derived_claim": "824 owner outcomes including 510 censored",
+    "corrected_shabound_result": "824 retrospective price-joined predictions, 814 originally registered outcome receipts (500 censored and 314 matured), 10 missing original outcome receipts",
+    "correction_evidence": "2026-10-13__TASK15_R1_BOUND_SOURCE_PUBLICATION_CORRECTION_v2.json",
+    "prior_science_verdict": "RETRACTED_AND_SUPERSEDED"
   }
 }
