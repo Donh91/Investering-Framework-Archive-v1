@@ -48,14 +48,17 @@
     "PR_430px_visual_QA": false,
     "actual_Safari_available": false,
     "production_release_approved": false,
-    "technical_blocker": "Cloud Chrome cannot reach local preview server; file protocol is rejected by browser security policy. No bypass or PR-version mobile QA claimed.",
+    "technical_blocker": "Cloud Chrome cannot reach local preview server; file protocol is rejected by browser security policy. No bypass or PR-version mobile QA claimed. Later the entire execution/browser environment disconnected (409 environment_offline), preventing final visual recheck.",
     "required_next": "Existing release owner must supply a supported HTTPS PR preview; independently inspect exact final head at 390/430 px DA/EN, all source health states and premium tabs. Then guarded merge, Pages/live asset and source readback.",
     "last_verified_CI_head": "e010e6e229521ea3c9a6619eaef69ef755dc59ce",
     "live_deployment_commit_sha": null,
     "live_version_scope": "Exact fetched premium asset and Compass payload, not an exposed complete Pages deployment commit.",
     "independent_clean_review_comment": 6150698264,
     "live_bullish_bearish_contradiction_still_observed": true,
-    "header_source_and_expiry_repairs_in_PR_only": true
+    "header_source_and_expiry_repairs_in_PR_only": true,
+    "final_post_research_merge_browser_recheck": false,
+    "final_browser_environment": "ENVIRONMENT_OFFLINE_409_AFTER_RESEARCH_MERGE",
+    "live_version_observation_scope": "Actual live desktop DA/EN and HTTP asset/payload checks earlier during mission, before final Task2 research merge; no site code merged. Latest visual recheck unavailable after environment went offline. NOT production approval."
   },
   "task15": {
     "pr": 1597,
