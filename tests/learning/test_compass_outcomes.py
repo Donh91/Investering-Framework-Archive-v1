@@ -328,8 +328,13 @@ class CompassOutcomeTest(unittest.TestCase):
         self.assertEqual(r0["git_source_refs_verified"], len(entries))
         self.assertEqual(r0["git_tree_refs"], sum(part["git_object_type"] == "tree" for part in entries))
         self.assertEqual(r0["git_blob_refs"], sum(part["git_object_type"] == "blob" for part in entries))
-        self.assertEqual(r0["distinct_source_paths"], len({part["path"] for part in entries}))
-        paths = [part["path"] for part in entries]
+        # Git tree aliases with/without a trailing slash are the same source.
+        paths = [part["path"].rstrip("/") for part in entries]
+        for part, path in zip(entries, paths):
+            self.assertTrue(path)
+            self.assertTrue(all(segment not in ("", ".", "..") for segment in path.split("/")))
+            self.assertIn(part["path"], (path, path + "/") if part["git_object_type"] == "tree" else (path,))
+        self.assertEqual(r0["distinct_source_paths"], len(set(paths)))
         shared_paths = sum(paths.count(path) > 1 for path in set(paths))
         self.assertEqual(receipt["r0"]["distinct_source_paths"], len(set(paths)))
         self.assertEqual(receipt["r0"]["shared_source_paths"], shared_paths)
