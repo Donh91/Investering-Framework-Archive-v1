@@ -171,6 +171,17 @@ function decisionMeta(compass) {
   };
 }
 
+// Official NEXT_12H is a market-direction continuation proxy, not an independently
+// scored 12-hour model. Missing/stale states must never assert a live direction.
+function freshNearTermReading(dataOk, live) {
+  return Boolean(dataOk && !['NO NEW READING','NOT READY','UNCLEAR','WAITING','NOT ACTIVE','WAIT'].includes(live));
+}
+function twelveHourMethodDisclosure(dataOk, live) {
+  return freshNearTermReading(dataOk, live)
+    ? 'Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.'
+    : 'No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.';
+}
+
 function recommendationWindow(compass) {
   const explicit = clean(compass?.next_meaningful_change_eta);
   const near = clean(compass?.horizons?.NEXT_12H?.eta);
@@ -183,10 +194,15 @@ function decisionDetail(compass, rec, meta) {
   const invalidation = publicCompassText(clean(protection.invalidation) || 'No public invalidation condition is currently available.');
   const issued = clean(compass?.issued_at_utc);
   const issuedLabel = issued ? new Date(issued).toLocaleString('en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',','') + ' CPH' : 'timestamp unavailable';
+  const liveFresh = freshNearTermReading(true, meta.live);
   const investor = rec.action === 'HOLD'
-    ? 'Keep existing positioning. The 0–12h pressure reading is a current-state observation, not a validated 12H forecast or the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.'
+    ? (liveFresh
+      ? 'Keep existing positioning. The 0–12h pressure reading is a current-state observation, not a validated 12H forecast or the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.'
+      : 'Keep existing positioning. No fresh verified 0–12H reading is available; do not infer a new near-term direction or broaden high-beta exposure from missing evidence.')
     : rec.copy;
-  const swing = 'Treat ' + meta.live + ' over ' + meta.liveEta + ' as short-horizon pressure, while the 5–7 day outlook remains ' + meta.weekly + '. ' + meta.risk + ' means a retest deserves attention, but it is not a confirmed sell, short or distribution signal.';
+  const swing = liveFresh
+    ? 'Treat ' + meta.live + ' over ' + meta.liveEta + ' as short-horizon pressure, while the 5–7 day outlook remains ' + meta.weekly + '. ' + meta.risk + ' means a retest deserves attention, but it is not a confirmed sell, short or distribution signal.'
+    : 'No fresh verified 0–12H pressure reading is available. Use the separate weekly context and await verified near-term evidence; missingness is not a swing, short or sell signal.';
   return '<details id="liveDecisionDetail" class="premium-decision-detail">'
     + '<summary><span>DECISION DETAIL</span><b>Investor + swing trader context</b></summary>'
     + '<div class="premium-decision-body">'
@@ -403,7 +419,7 @@ function renderPremium(snapshot, compass, event) {
   section.className = 'premium-market-compass';
   section.innerHTML =
     '<div class="premium-overview">'
-    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong>' + (meta.live.includes('MIXED') ? '<p class="mixed-explanation">Conflicting signals · no clear near-term direction.</p>' : meta.live==='NO NEW READING' ? '<p class="mixed-explanation">Current action unchanged · awaiting a fresh near-term reading.</p>' : '') + '<small>' + esc(meta.liveEta) + ' · not the weekly outlook</small><p class="mixed-explanation">Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.</p></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong>' + (meta.weekly.includes('MIXED') ? '<p class="mixed-explanation">Mixed weekly evidence · no clear directional edge.</p>' : '') + '<small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
+    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong>' + (meta.live.includes('MIXED') ? '<p class="mixed-explanation">Conflicting signals · no clear near-term direction.</p>' : meta.live==='NO NEW READING' ? '<p class="mixed-explanation">Current action unchanged · awaiting a fresh near-term reading.</p>' : '') + '<small>' + esc(meta.liveEta) + ' · not the weekly outlook</small><p class="mixed-explanation">' + esc(twelveHourMethodDisclosure(dataOk, meta.live)) + '</p></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong>' + (meta.weekly.includes('MIXED') ? '<p class="mixed-explanation">Mixed weekly evidence · no clear directional edge.</p>' : '') + '<small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
     + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong>' + (dataOk ? '<div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div>' : '') + '<p>' + esc(rec.copy) + '</p>' + (dataOk ? hourlyMonitor(snapshot) : '') + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
     + refreshStatusBanner(compass, event)
