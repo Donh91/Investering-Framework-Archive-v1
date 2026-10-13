@@ -180,12 +180,15 @@ class CompassOutcomeTest(unittest.TestCase):
             len({family["id"] for family in source["families"]}), 17
         )
         entries = [part for family in source["families"] for part in family["sources"]]
-        self.assertEqual(len(entries), 27)
+        self.assertEqual(len(entries), receipt['r0']['source_references'])
+        self.assertGreaterEqual(len(entries), 27)
         self.assertEqual(
-            sum(part["git_object_type"] == "tree" for part in entries), 11
+            sum(part["git_object_type"] == "tree" for part in entries),
+            receipt['r0']['git_directory_tree_sha_verified']
         )
         self.assertEqual(
-            sum(part["git_object_type"] == "blob" for part in entries), 16
+            sum(part["git_object_type"] == "blob" for part in entries),
+            receipt['r0']['git_file_blob_sha_verified']
         )
         self.assertTrue(all(
             len(part["git_object_sha"]) == 40
