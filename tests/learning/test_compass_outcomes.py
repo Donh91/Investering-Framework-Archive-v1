@@ -282,6 +282,19 @@ class CompassOutcomeTest(unittest.TestCase):
             )
             self.assertEqual(actual_type.returncode, 0, actual_type.stderr)
             self.assertEqual(actual_type.stdout.strip(), part["git_object_type"])
+        # The runnable synthetic oracle must consume the frozen manifest Git
+        # object even when that file is absent from this older research tree.
+        grid = subprocess.run(
+            ["node", str(root / "04_MARKET_LEARNING/handlekompas/research/2026-10-12__task2_synthetic_oracle_v1.mjs")],
+            cwd=root, capture_output=True, text=True, timeout=45, check=False,
+        )
+        self.assertEqual(grid.returncode, 0, grid.stdout + grid.stderr)
+        grid_receipt = json.loads(grid.stdout)
+        self.assertEqual(grid_receipt["grid_cardinality"], 144)
+        self.assertTrue(grid_receipt["manifest_exact_tuple_match"])
+        self.assertEqual(grid_receipt["historical_outcome_rows_scored"], 0)
+        self.assertFalse(grid_receipt["live_trade_authority"])
+
         self.assertTrue(all(
             family["admission"] not in ("PIT_CERTIFIED", "TRADABLE_EDGE")
             for family in source["families"]

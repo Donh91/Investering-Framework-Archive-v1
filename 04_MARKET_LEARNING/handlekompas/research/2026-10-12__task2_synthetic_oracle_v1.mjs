@@ -1,6 +1,7 @@
 // Research-only independent synthetic oracle for Task 2, no market data or APIs.
 // Node 20+. From repository root: node 04_MARKET_LEARNING/handlekompas/research/2026-10-12__task2_synthetic_oracle_v1.mjs
 import fs from "node:fs";
+import {execFileSync} from "node:child_process";
 function audit(frozenVariants) {
   const H=3600000, M=60000, base=Date.UTC(2026,0,1), R={NORMAL:0,BUILDING:1,ELEVATED:2,HIGH:3,CONFIRMED:4};
   const dims=[["ELEVATED","HIGH","CONFIRMED"],[1,2,3,6],[0,1,3],[0,6,24,72]];
@@ -107,5 +108,11 @@ function audit(frozenVariants) {
     information_edge_established:false,economic_edge_established:false,live_trade_authority:false,
     notes:"Alert counts are synthetic mechanics only. V_RECOVERY has no market return or PnL meaning. All fixtures use artificial Jan 2026 hours. No variant chosen."};
 }
-const manifest=JSON.parse(fs.readFileSync("06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/144_VARIANT_FROZEN_MANIFEST_v1.json","utf8"));
+const inventory=JSON.parse(fs.readFileSync(new URL('./2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json',import.meta.url),'utf8'));
+const manifestPath='06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/144_VARIANT_FROZEN_MANIFEST_v1.json';
+const binding=inventory.families.flatMap(f=>f.sources).find(s=>s.path===manifestPath);
+if(!binding||binding.git_object_type!=='blob')throw Error('FROZEN_MANIFEST_BINDING_MISSING');
+const object=execFileSync('git',['rev-parse',inventory.main_commit+':'+manifestPath],{encoding:'utf8'}).trim();
+if(object!==binding.git_object_sha||execFileSync('git',['cat-file','-t',object],{encoding:'utf8'}).trim()!=='blob')throw Error('FROZEN_MANIFEST_OBJECT_MISMATCH');
+const manifest=JSON.parse(execFileSync('git',['show',object],{encoding:'utf8'}));
 console.log(JSON.stringify(audit(manifest.variants),null,2));
