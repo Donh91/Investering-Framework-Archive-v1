@@ -112,6 +112,13 @@ const inventory=JSON.parse(fs.readFileSync(new URL('./2026-10-13__TASK2_R0_PINNE
 const manifestPath='06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/144_VARIANT_FROZEN_MANIFEST_v1.json';
 const binding=inventory.families.flatMap(f=>f.sources).find(s=>s.path===manifestPath);
 if(!binding||binding.git_object_type!=='blob')throw Error('FROZEN_MANIFEST_BINDING_MISSING');
+if(!/^[0-9a-f]{40}$/.test(inventory.main_commit))throw Error('PINNED_COMMIT_INVALID');
+try{execFileSync('git',['cat-file','-e',inventory.main_commit+'^{commit}'],{stdio:'ignore'});}
+catch{
+ // Only retrieve the exact immutable source dependency. No branch checkout,
+ // source write, depth reduction, mutable manifest fallback or market API.
+ execFileSync('git',['fetch','--quiet','--no-tags','--no-write-fetch-head','origin',inventory.main_commit],{timeout:120000,stdio:'pipe'});
+}
 const object=execFileSync('git',['rev-parse',inventory.main_commit+':'+manifestPath],{encoding:'utf8'}).trim();
 if(object!==binding.git_object_sha||execFileSync('git',['cat-file','-t',object],{encoding:'utf8'}).trim()!=='blob')throw Error('FROZEN_MANIFEST_OBJECT_MISMATCH');
 const manifest=JSON.parse(execFileSync('git',['show',object],{encoding:'utf8'}));
