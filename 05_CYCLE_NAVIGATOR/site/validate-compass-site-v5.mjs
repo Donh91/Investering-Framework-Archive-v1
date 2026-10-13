@@ -1,6 +1,7 @@
 import './tests/full-stack-readback.test.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { runInNewContext } from 'node:vm';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const site=dirname(fileURLToPath(import.meta.url));
@@ -25,11 +26,45 @@ if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined rende
 if(!premiumRenderer.includes('compositeIntel(compass)'))throw Error('active premium renderer ignores integrated Compass');
 if(!premiumRenderer.includes('CN_PREMIUM_COMPASS_OWNER = true'))throw Error('premium owner not detected');
 if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model research')&&!premiumRenderer.includes('Research direction'))throw Error('premium research disclosure absent');
-if(!premiumRenderer.includes('Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.'))throw Error('Official 12H continuation proxy disclosure absent from investor-facing NOW view');
-if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish investor recommendation may contradict current Official direction');
-if(!premiumRenderer.includes('The 0–12h pressure reading is a current-state observation'))throw Error('HOLD investor message lost direction-neutral source disclosure');
+// Execute the active premium rendering code in an isolated mock DOM. Merely
+// finding disclaimers in a source comment is not an acceptance test.
+const honestyScope = {window: {}, document: {readyState:'loading', addEventListener() {}}};
+const honestyInstrumented = premiumRenderer.replace(/\}\)\(\);\s*$/,
+  'globalThis.__honestyProbe = {renderPremium, freshNearTermReading, twelveHourMethodDisclosure};})();');
+if(honestyInstrumented===premiumRenderer) throw Error('premium active render scope unavailable for behavioral test');
+runInNewContext(honestyInstrumented, honestyScope, {timeout:1500});
+const honesty=honestyScope.__honestyProbe;
+if(!honesty || typeof honesty.renderPremium!=='function' || typeof honesty.twelveHourMethodDisclosure!=='function') throw Error('premium behavioral disclosure hooks unavailable');
+const sourceMethod='Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.';
+const noSource='No fresh verified 0–12H reading is available.';
+if(!honesty.freshNearTermReading(true,'UP') || honesty.freshNearTermReading(true,'NO NEW READING') || honesty.freshNearTermReading(false,'UP')) throw Error('premium 12H availability condition unsafe');
+if(!honesty.twelveHourMethodDisclosure(true,'UP').includes(sourceMethod))throw Error('valid current 12H continuation method disclosure absent');
+for(const [available,state] of [[true,'NO NEW READING'],[true,'NOT READY'],[true,'UNCLEAR'],[false,'UP']]){
+ const text=honesty.twelveHourMethodDisclosure(available,state);
+ if(!text.includes(noSource)||text.includes(sourceMethod))throw Error('missing 12H source claimed as current');
+}
+function actualPremiumMarkup(c) {
+ let markup='';
+ const root={querySelectorAll:()=>[],querySelector:()=>null,classList:{add(){}},prepend(section){markup=section.innerHTML;}};
+ honestyScope.document.getElementById=id=>id==='productNow'?root:null;
+ honestyScope.document.createElement=()=>({
+   innerHTML:'',querySelectorAll:()=>[],querySelector:()=>null
+ });
+ if(honesty.renderPremium({package:{}},c,null)!==true)throw Error('premium renderer failed to install in mock DOM');
+ return markup;
+}
+const testProjection={...compass,contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',action_now:'HOLD'};
+const staleMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'UNCHANGED_NO_NEW_OBSERVATION'}});
+if(!staleMarkup.includes(noSource)||staleMarkup.includes(sourceMethod)||staleMarkup.includes('The 0–12h pressure reading is a current-state observation'))throw Error('rendered NO NEW READING card falsely asserts available 12H direction');
+const freshMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'UP'}});
+if(!freshMarkup.includes(sourceMethod)||freshMarkup.includes(noSource))throw Error('rendered active NOW card lost continuation-proxy caveat');
+const degradedMarkup=actualPremiumMarkup({...testProjection,data_status:'UNAVAILABLE'});
+if(!degradedMarkup.includes(noSource)||degradedMarkup.includes(sourceMethod))throw Error('rendered degraded NOW card falsely asserts available 12H direction');
+if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish HOLD investor copy may contradict owner');
 const chatPrompt=await readFile(resolve(site,'../..','07_PROMPTS_AND_AGENTS/prompts/HANDLEKOMPAS_v1.md'),'utf8');
-if(!chatPrompt.includes('12H = fortsættelse af seneste BTC/ETH-retning'))throw Error('Chat KOMPAS missing 12H continuation disclosure');
+const sourceHonesty=chatPrompt.match(/## Forecast evidence, honesty and user-visible accountability \(Task 1\.5 P0\)([\s\S]*?)## Mandatory rendering rules/)?.[1]||'';
+if(!sourceHonesty.includes('12H = fortsættelse af seneste BTC/ETH-retning'))throw Error('Chat KOMPAS missing 12H continuation disclosure');
+if(!sourceHonesty.includes('**NO UNSOURCED CONFIDENCE:**')||!sourceHonesty.includes('A numeric probability / success likelihood requires a prospectively issued, scored and adequately calibrated probability for the identical event/horizon.'))throw Error('Chat KOMPAS missing governed calibrated-probability requirement');
 if(chatPrompt.includes('**Confidence:** <0–100%>'))throw Error('Chat KOMPAS still mandates uncalibrated 0–100% confidence');
 // Independent end-to-end producer-digest and weekly-source regression checks.
 const root=resolve(site,'../..');
