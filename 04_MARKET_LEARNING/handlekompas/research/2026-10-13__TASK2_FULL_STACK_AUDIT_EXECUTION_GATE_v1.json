@@ -2,7 +2,7 @@
   "contract": "TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1",
   "mission_id": "COMPASS-HORIZON-EDGE-20261011",
   "created_date": "2026-10-13",
-  "stage": "PREREGISTERED_DESIGN_ONLY",
+  "stage": "R0_PUBLIC_PINNED_SOURCE_PREFLIGHT_DONE__R1_SYNTHETIC_NEGATIVE_CONTROL_DONE__R1_LIVE_PIT_BLOCKED",
   "research_only": true,
   "owner_repo": "Donh91/Investering-Framework-Archive-v1",
   "read_first": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
@@ -213,9 +213,56 @@
     "NO_ACTION_OR_EXECUTABLE_FILL_EVIDENCE",
     "PRIVATE_RECORD_ON_PUBLIC_BRANCH",
     "DISAGREEMENT_WITH_CURRENT_MAIN_SOURCE_OWNER",
-    "PREVIEW_ONLY_MISTAKEN_FOR_PRODUCTION"
+    "PREVIEW_ONLY_MISTAKEN_FOR_PRODUCTION",
+    "MISSING_ACTUAL_390PX_FINAL_VISUAL_QA",
+    "SYNTHETIC_ORACLE_PASS_MISTAKEN_FOR_PRODUCTION_TEST_EXECUTION",
+    "SOURCE_REACHABLE_MISTAKEN_FOR_PIT_ADMISSION",
+    "PRIVATE_METADATA_COPIED_TO_PUBLIC_ARCHIVE"
   ],
   "success_state": "NO_ALPHA_CLAIM_UNTIL_INDEPENDENT_PROSPECTIVE_ADMISSION",
-  "next_action": "After supervisor verified state, user re-enters chat for Task2 R0 inventory and hard PIT gate. Work mode only for needed multi-repo browser QA and cross-owner reconciliation.",
-  "request_work_now": false
+  "next_action": "Supervisor: finalize #1598 exact-head 390px visual/DA-EN source-to-live release and rollback, #1597 PIT methodology, #1599 safe readback dependencies. Task2 next run must fresh-read main + all PR heads, then full R1 original issuance-to-first-known ledger; test source admissibility before performance.",
+  "request_work_now": false,
+  "reproducible_progress": {
+    "r0_public_source_census": {
+      "status": "PARTIAL_PUBLIC_PASS",
+      "frozen_main_sha": "aea463dc9c5a57fab0e7ef1aa5fc63791158d524",
+      "families_total": 17,
+      "git_source_refs_verified": 27,
+      "git_tree_refs": 11,
+      "git_blob_refs": 16,
+      "source_mismatches": 0,
+      "private_cross_repo_maturity": "PRIVATE_METADATA_REACHABLE_RAW_UNREAD",
+      "receipt": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PUBLIC_SOURCE_CENSUS_AND_R1_ORACLE_RECEIPT_v1.json"
+    },
+    "r1_no_hindsight_preflight": {
+      "status": "SYNTHETIC_ONLY_PASS",
+      "negative_positive_fixture_cases": 21,
+      "node_module": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs",
+      "history_rows_independently_scored": 0,
+      "independent_source_pit_proof": "BLOCKED",
+      "r1_full_chronology": "BLOCKED",
+      "private_raw_data_posted": false
+    },
+    "m6_owner_rows": {
+      "status": "SOURCE_LINKAGE_ONLY_PASS",
+      "warning_rows": 20,
+      "feature_rows": 20,
+      "joined_by_compass_id": 20,
+      "binding_mismatches": 0,
+      "provisional_families": 2,
+      "independent_market_shock_families_verified": null
+    },
+    "cross_repo_private_access": {
+      "status": "REACHABILITY_VERIFIED_NO_PRIVATE_SOURCE_COPIES",
+      "source_repos_reachable": 4,
+      "restricted_raw_data_read": false,
+      "source_filenames_written_to_public": false
+    },
+    "site_compass_release": {
+      "status": "SUPERVISOR_REVIEW_PENDING",
+      "pr": 1598,
+      "head_at_previous_review": "8947e0e1a1cdf5479a5a9490bf3d11efae0bd584",
+      "qa_condition": "Exact-head independent release check, actual 390px/DA_EN and public Pages readback; no presumptive merge"
+    }
+  }
 }
