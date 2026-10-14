@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
+import {requiredBrowserAssets,firstPartySourceFile,auditBrowserEvidence} from './browser-source-binding.mjs';
 
 const site=dirname(fileURLToPath(import.meta.url)),dist=resolve(site,'dist');
 const out=resolve(process.env.CN_BROWSER_QA_OUTPUT||'runtime/cn-browser-qa');
@@ -14,7 +15,7 @@ const pw=require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules',
 const production=process.argv.includes('--production');
 const productionUrl='https://donh91.github.io/Investering-Framework-Archive-v1/';
 const rows=[],failures=[],versions={},contextNetwork=[],browserSources=[];
-const assetFiles=['index.html','market-compass-premium.js','public-product.js','market-compass-premium.css','public-product.css','styles.css','frozen-week-chart.css','frozen-week-chart.js','i18n-da.json','data/compass.json'];
+const assetFiles=requiredBrowserAssets(await readFile(resolve(dist,'index.html'),'utf8'));
 const sha=b=>createHash('sha256').update(b).digest('hex');
 await mkdir(out,{recursive:true});
 let server,base;
@@ -75,10 +76,12 @@ async function runCase(browser,engine,width,language,state){
  const context=await browser.newContext({...pw.devices['iPhone 14'],viewport:{width,height:844},locale:language==='da'?'da-DK':'en-GB',timezoneId:'Europe/Copenhagen',reducedMotion:'reduce'});
  const page=await context.newPage();const errors=[],network=[],warnings=[],assetLoads=[];
  page.on('response',r=>{
-  const u=new URL(r.url()),origin=new URL(base).origin;
-  if(u.origin!==origin)return;
-  const file=assetFiles.find(f=>u.pathname===new URL(f,base).pathname||(f==='index.html'&&u.pathname===new URL(base).pathname));
-  if(file)assetLoads.push(r.body().then(bytes=>({file,sha256:sha(bytes),status:r.status(),response_observed_at_utc:new Date().toISOString()})).catch(e=>({file,error:e.message})));
+  const file=firstPartySourceFile(r.url(),base);
+  if(file)assetLoads.push(r.body().then(bytes=>({file,sha256:sha(bytes),status:r.status(),response_observed_at_utc:new Date().toISOString()})).catch(e=>({file,status:r.status(),error:e.message})));
+ });
+ page.on('requestfailed',req=>{
+  const file=firstPartySourceFile(req.url(),base);
+  if(file)assetLoads.push(Promise.resolve({file,error:req.failure()?.errorText||'REQUEST_FAILED',status:null}));
  });
  page.on('console',m=>{if(m.type()==='warning')warnings.push(m.text());});
  page.on('pageerror',e=>{
@@ -205,21 +208,29 @@ try{
  }
 }catch(e){failures.push({error:e.message});}
 finally{if(server)await new Promise(r=>server.close(r));}
-const inputs={},inputVariants={};
-for(const file of assetFiles){
- const variants=[...new Set(browserSources.filter(c=>!c.synthetic).flatMap(c=>c.responses.filter(r=>r.file===file&&r.status===200&&!r.error).map(r=>r.sha256)))];
- inputVariants[file]=variants;
- if(!variants.length)failures.push({error:`BROWSER_LOADED_SOURCE_MISSING ${file}`});
- if(file!=='data/compass.json'&&variants.length>1)failures.push({error:`DEPLOYMENT_CHANGED_DURING_BROWSER_RUN ${file}`});
- inputs[file]=production?(variants.length===1?variants[0]:null):sha(await readFile(resolve(dist,file)));
- // Static deployed code must equal this checked-out build, independently of
- // dynamic source refreshes. Every hash comes from a browser-loaded response.
- if(file!=='index.html'&&file!=='data/compass.json'){
-  const expected=sha(await readFile(resolve(dist,file)));
-  if(variants.some(v=>v!==expected))failures.push({error:`BROWSER_CODE_DIFFERS_FROM_BUILD ${file}`});
+const sourceAudit=auditBrowserEvidence(browserSources,assetFiles);
+failures.push(...sourceAudit.failures);
+const inputs={},inputVariants=sourceAudit.variants;
+for(const file of sourceAudit.files){
+ const variants=inputVariants[file]||[];
+ if(!variants.length)continue; // Missing mandatory evidence already fails per browser context.
+ const dynamicJson=file.endsWith('.json')&&file!=='i18n-da.json';
+ if(dynamicJson){
+  // These are mutable production readbacks, never mislabelled as code/build bytes.
+  inputs[file]=production?(variants.length===1?variants[0]:null):null;
+  if(['data/latest.json','data/compass.json','history-scoreboard.json'].includes(file)&&variants.length>1)
+   failures.push({error:'MIXED_REQUIRED_RUNTIME_DATA_VERSIONS',file,variant_count:variants.length});
+  continue;
  }
+ // Every rendered static source, including scripts/styles outside the old
+ // manual list, must equal the exact checked-out public build.
+ let expected;
+ try{expected=sha(await readFile(resolve(dist,file)));}
+ catch{failures.push({error:'RENDERED_STATIC_SOURCE_NOT_IN_BUILD',file});continue;}
+ if(variants.some(v=>v!==expected))failures.push({error:'BROWSER_CODE_DIFFERS_FROM_BUILD',file});
+ inputs[file]=production?(variants.length===1?variants[0]:null):expected;
 }
-const receipt={contract:'CN_REAL_BROWSER_RELEASE_QA_v1',recorded_at_utc:new Date().toISOString(),mode:production?'REAL_PUBLIC_PRODUCTION':'BUILT_PR_AND_DECLARED_SYNTHETIC_CONSUMER_FIXTURES',checkout_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),playwright_version:require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules','playwright/package.json')).version,browser_versions:versions,device_semantics:'Linux Chromium and WebKit iPhone viewport/touch emulation, not real Safari or physical iPhone',production_url:production?productionUrl:null,inputs,browser_loaded_input_variants:inputVariants,browser_loaded_sources:browserSources,rows,failures,context_network_conditions:contextNetwork,status:failures.length?'FAIL':'BROWSER_CHECKS_PASS_MANUAL_SCREENSHOT_REVIEW_REQUIRED',scientific_edge_established:false,fixtures_are_production_evidence:false};
+const receipt={contract:'CN_REAL_BROWSER_RELEASE_QA_v1',recorded_at_utc:new Date().toISOString(),mode:production?'REAL_PUBLIC_PRODUCTION':'BUILT_PR_AND_DECLARED_SYNTHETIC_CONSUMER_FIXTURES',checkout_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),playwright_version:require(resolve(process.env.CN_BROWSER_QA_NODE_MODULES||'node_modules','playwright/package.json')).version,browser_versions:versions,device_semantics:'Linux Chromium and WebKit iPhone viewport/touch emulation, not real Safari or physical iPhone',production_url:production?productionUrl:null,inputs,browser_loaded_input_variants:inputVariants,browser_loaded_sources:browserSources,required_browser_assets:assetFiles,all_observed_browser_assets:sourceAudit.files,per_context_source_count:sourceAudit.realContextCount,optional_source_unavailable:sourceAudit.optionalUnavailable,rows,failures,context_network_conditions:contextNetwork,status:failures.length?'FAIL':'BROWSER_CHECKS_PASS_MANUAL_SCREENSHOT_REVIEW_REQUIRED',scientific_edge_established:false,fixtures_are_production_evidence:false};
 await writeFile(resolve(out,'receipt.json'),JSON.stringify(receipt,null,2)+'\n');
 console.log(JSON.stringify({status:receipt.status,rendered_views:rows.length,failures},null,2));
 if(failures.length)process.exitCode=1;
