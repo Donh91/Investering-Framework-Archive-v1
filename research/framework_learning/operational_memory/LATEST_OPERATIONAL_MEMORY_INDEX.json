@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 3889,
-  "generated_at_utc": "2026-10-13T20:51:34.134130Z",
+  "episode_count": 3966,
+  "generated_at_utc": "2026-10-14T07:58:51.307214Z",
   "rows": [
     {
       "changed_paths": [
@@ -80116,11 +80116,11 @@
         "04_MARKET_LEARNING/ota_native/adaptive/STATE.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-5885665b45716f22",
@@ -103690,11 +103690,11 @@
         "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/settled_etf/2026/10/12/gh-38268543720-1.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-d02867b2707db1b2",
@@ -106188,11 +106188,11 @@
         "research/api_agent/forecast_candidates/RATIFICATION_TERMINAL/86c06c43c6b4806679b862c1.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 6,
         "removed": 0,
-        "same": 6,
-        "status": "EXACT"
+        "same": 4,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-43493871bf544135",
@@ -106214,11 +106214,11 @@
         "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 4,
         "checked": 4,
         "removed": 0,
-        "same": 1,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-3a258c41a57ee378",
@@ -106226,7 +106226,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "3a258c41a57ee3781df1f3685b9a3bbcf60392bf",
       "source_timestamp": "2026-10-13T02:46:02Z",
       "task_class": "API_AGENT",
@@ -106293,11 +106293,11 @@
         "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 7,
         "removed": 0,
-        "same": 7,
-        "status": "EXACT"
+        "same": 4,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-8f5b06a2cd0770ed",
@@ -106320,11 +106320,11 @@
         "LATEST_MACHINE_THROUGHPUT.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 5,
         "removed": 0,
-        "same": 5,
-        "status": "EXACT"
+        "same": 2,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_WEEKLY_OPERATIONS",
       "episode_id": "OE-4a39fa93b8a159f0",
@@ -106576,11 +106576,11 @@
         "04_MARKET_LEARNING/ota_native/LATEST.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-8222bdac69473226",
@@ -107608,11 +107608,11 @@
         "06_RESEARCH_LAB/shared_row_model_tournament_v1/research_actions/LATEST_ACTION_PACKET.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 4,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "06_RESEARCH_LAB",
       "episode_id": "OE-7b827da5afab8807",
@@ -107620,7 +107620,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "RESEARCH",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "7b827da5afab88073125ef3a914220e878d2ed4e",
       "source_timestamp": "2026-10-13T12:12:57Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -108067,6 +108067,31 @@
     },
     {
       "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.md"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 3,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "06_RESEARCH_LAB",
+      "episode_id": "OE-267046811531d958",
+      "episode_path": "episodes/2026/10/OE-267046811531d958.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "267046811531d9585ea22d1f50989457696c348d",
+      "source_timestamp": "2026-10-13T14:02:50-07:00",
+      "task_class": "RESEARCH_ARCHIVE",
+      "task_summary": "research(Task 2): archive public-safe Deep Research 01\u201303 intake"
+    },
+    {
+      "changed_paths": [
         "09_SOURCE_QA/incidents/INCIDENT_daily-settled-etf-38410164847.md"
       ],
       "compatibility": {
@@ -108218,11 +108243,11 @@
         "research/api_agent/outputs/shadow_compass_v2/2026/10/13/SCV2-20261013-142540-549eae296c86_API_AGENT_RECEIPT.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 3,
         "removed": 0,
-        "same": 3,
-        "status": "EXACT"
+        "same": 2,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-e289fa8eef3e417f",
@@ -108235,6 +108260,81 @@
       "source_timestamp": "2026-10-13T14:27:29Z",
       "task_class": "API_AGENT",
       "task_summary": "learning: Shadow Compass v2 38413183029"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR04_PUBLIC_RESEARCH_INTAKE_v2.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR04_PUBLIC_RESEARCH_INTAKE_v2.md"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 3,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "06_RESEARCH_LAB",
+      "episode_id": "OE-0556486b6800fa81",
+      "episode_path": "episodes/2026/10/OE-0556486b6800fa81.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "0556486b6800fa819173a0818b8f5a9e383bd789",
+      "source_timestamp": "2026-10-13T14:45:16-07:00",
+      "task_class": "MARKET_STATE",
+      "task_summary": "research(Task 2): ingest CFGI Deep Research 4 and twelve test gates"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR01_DR05_PUBLIC_RESEARCH_INTAKE_v3.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR01_DR05_PUBLIC_RESEARCH_INTAKE_v3.md"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 3,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "06_RESEARCH_LAB",
+      "episode_id": "OE-78fa73939e9df1ae",
+      "episode_path": "episodes/2026/10/OE-78fa73939e9df1ae.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "78fa73939e9df1ae3a783a14d65b6ebd44b3b87e",
+      "source_timestamp": "2026-10-13T15:13:39-07:00",
+      "task_class": "RESEARCH_ARCHIVE",
+      "task_summary": "research(Task2): archive DR05 Tsunami negative evidence and experiment gates"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR06_DERIVATIVES_RESEARCH_INTAKE_v1.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR06_DERIVATIVES_RESEARCH_INTAKE_v1.md"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 3,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "06_RESEARCH_LAB",
+      "episode_id": "OE-8c4be3fe43b04f79",
+      "episode_path": "episodes/2026/10/OE-8c4be3fe43b04f79.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "8c4be3fe43b04f79c59cb89b74954fbcf5f1c05c",
+      "source_timestamp": "2026-10-13T15:42:24-07:00",
+      "task_class": "MARKET_STATE",
+      "task_summary": "research(Task2): integrate DR06 derivatives report with verification gaps"
     },
     {
       "changed_paths": [
@@ -108529,6 +108629,31 @@
     },
     {
       "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR07_ROTATION_RESEARCH_INTAKE_v1.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR07_ROTATION_RESEARCH_INTAKE_v1.md"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 3,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "06_RESEARCH_LAB",
+      "episode_id": "OE-91efcf699e490cc4",
+      "episode_path": "episodes/2026/10/OE-91efcf699e490cc4.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "91efcf699e490cc40b41a573f472998159cada25",
+      "source_timestamp": "2026-10-13T16:12:38-07:00",
+      "task_class": "RESEARCH_ARCHIVE",
+      "task_summary": "research(Task2): integrate DR07 rotation evidence with no-hindsight gates"
+    },
+    {
+      "changed_paths": [
         "research/api_agent/confidence_bindings/2026/10/13/DCB-c1e0637e2414c00e875a.json",
         "research/api_agent/outputs/daily/2026/10/13/164930/API_CONFLICT_ROUTER.json",
         "research/api_agent/outputs/daily/2026/10/13/164930/DAILY_DIRECTOR_OUTPUT.json",
@@ -108604,11 +108729,11 @@
         "09_SOURCE_QA/native_market_recovery/decisions/2026/10/13/174115_62b8315e344c.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 3,
         "removed": 0,
-        "same": 3,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "09_SOURCE_QA",
       "episode_id": "OE-ddb68348a0b40a80",
@@ -108651,11 +108776,11 @@
         "03_DAILY_CAPTURE_LOGS/hourly/superseded/d4318266e30bcab2f3e26f1264faa850d56d6deba4b912c521da2afe51f118a1.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 25,
         "removed": 0,
-        "same": 25,
-        "status": "EXACT"
+        "same": 23,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-df0cc0dc27c89ee4",
@@ -108686,11 +108811,11 @@
         "04_MARKET_LEARNING/intraday_execution/observations/2026/10/13/20261013T160000Z.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 5,
         "checked": 13,
         "removed": 0,
-        "same": 13,
-        "status": "EXACT"
+        "same": 8,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-00acb3d3da7e0e50",
@@ -108771,11 +108896,11 @@
         "04_MARKET_LEARNING/handlekompas/event_refresh/runs/2026/10/13/174727_c5514d280282.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-e8e5e3f2dd6d4854",
@@ -108797,11 +108922,11 @@
         "04_MARKET_LEARNING/handlekompas/official/public/2026/10/13/CMP-20261013-f34752e8e3c4.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 2,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-8195aaf3ba6f1d85",
@@ -108844,10 +108969,10 @@
         "research/framework_memory/outcome_memory/EXP-FC-3b4d24105669a8950d9f.json"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 14,
         "checked": 25,
         "removed": 0,
-        "same": 22,
+        "same": 11,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -108868,11 +108993,11 @@
         "03_DAILY_CAPTURE_LOGS/captures/LATEST.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-ee7db8e100bf0975",
@@ -108894,11 +109019,11 @@
         "03_DAILY_CAPTURE_LOGS/pullback_forensics/runs/2026/10/13/pfr-38453236642-1/PULLBACK_FORENSICS.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-d631fdff8f1a4370",
@@ -108920,11 +109045,11 @@
         "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/13/B2P-74d0e8e28d52648e82c9/REDUCED_EXECUTION_STACK.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 3,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-d57fd8b26b265a21",
@@ -108944,11 +109069,11 @@
         "03_WEEKLY_OPERATIONS/provider_budget/runs/2026/10/13/191534_03677b5dd342.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_WEEKLY_OPERATIONS",
       "episode_id": "OE-3fc1f127759d6ee7",
@@ -108969,11 +109094,11 @@
         "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/breadth_rich/2026/10/13/gh-38454144952-1.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 3,
         "removed": 0,
-        "same": 3,
-        "status": "EXACT"
+        "same": 2,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-fe27ad92f9cfbb55",
@@ -109004,11 +109129,11 @@
         "04_MARKET_LEARNING/entry_signals/outcomes/20260829T212001Z_graduated_altcoin_topup_active.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 12,
         "checked": 13,
         "removed": 0,
-        "same": 13,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-51d6abd23eb7a2f0",
@@ -109030,11 +109155,11 @@
         "04_MARKET_LEARNING/pullback_learning/observations/2026/10/13/20261013T160000Z.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-5cd7244a631d9d93",
@@ -109078,11 +109203,11 @@
         "04_MARKET_LEARNING/handlekompas/runs/2026/10/13/193543_34e1bac2fa3a.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-fa75ad5aeb08bd6b",
@@ -109125,11 +109250,11 @@
         "research/experiment_lifecycle/dispatch/2026/10/13/ER-145a946f214d875ea94e.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 25,
         "removed": 0,
-        "same": 25,
-        "status": "EXACT"
+        "same": 22,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-6cf6312337d96a1e",
@@ -109172,11 +109297,11 @@
         "03_DAILY_CAPTURE_LOGS/cadence/LATEST.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-a7387d5e5f6b2f26",
@@ -109201,11 +109326,11 @@
         "research/architecture_health/history/38465281570-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 7,
         "removed": 0,
-        "same": 7,
-        "status": "EXACT"
+        "same": 5,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-2c7da7c343b7ac5b",
@@ -109264,11 +109389,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 7,
-        "status": "EXACT"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-defee9966b90bca4",
@@ -109276,12 +109401,2075 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "defee9966b90bca41defe3d55eff7669d7c483c7",
       "source_timestamp": "2026-10-13T20:50:58Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: refresh operations dashboard 38465854659"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 3,
+        "checked": 7,
+        "removed": 0,
+        "same": 4,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-4188feece4194fa5",
+      "episode_path": "episodes/2026/10/OE-4188feece4194fa5.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "4188feece4194fa5c0f012fff60db9babce48a11",
+      "source_timestamp": "2026-10-13T21:00:24Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 38467223391"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/211351_gh-38468922395-1.json",
+        "03_DAILY_CAPTURE_LOGS/captures/LATEST.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-86bbf600358c0cdb",
+      "episode_path": "episodes/2026/10/OE-86bbf600358c0cdb.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "86bbf600358c0cdb86cda282a5c8c3c4389cebce",
+      "source_timestamp": "2026-10-13T21:13:51Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: log live anchor 38468922395"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/instrument_metadata/2026/10/13.json",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/liquidations/2026/10/13.jsonl.gz",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/runs/2026/10/13/pfr-38468922395-1/PULLBACK_FORENSICS.json"
+      ],
+      "compatibility": {
+        "changed": 3,
+        "checked": 4,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-8256e9da68c22824",
+      "episode_path": "episodes/2026/10/OE-8256e9da68c22824.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "8256e9da68c22824f5aebae5aa64c802bbdd2e14",
+      "source_timestamp": "2026-10-13T21:13:55Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: capture passive pullback forensics 38468922395"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/COVERAGE_LATEST.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/13/B2P-bf773fa3e81df8c02ed8/FULL_STACK.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/13/B2P-bf773fa3e81df8c02ed8/PAIR_RECEIPT.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/13/B2P-bf773fa3e81df8c02ed8/REDUCED_EXECUTION_STACK.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 4,
+        "removed": 0,
+        "same": 3,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-dd710f3e731ce983",
+      "episode_path": "episodes/2026/10/OE-dd710f3e731ce983.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "dd710f3e731ce983ed99ca69bfb2a6620f30a927",
+      "source_timestamp": "2026-10-13T21:13:58Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: materialize blinded paired evidence 38468922395"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-13.csv",
+        "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/10/13/211401_HOURLY_SEQUENCE_20261013T211401Z_0c970fddfc54.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/0f430ebad03c4802e0ac8a93cbd228195a7303c2f604359cb7089ac085be38ac.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/16729e06bcc75d44c0387b2b3200ae8a7e35b9ba91bc6a7ef5bcdf0e9de335f5.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/251ee2f993a611e7aacd0a9d534a3b78c083f9cc1be906f9208a74758143c762.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/25fc0877cc43b42bf0a33751aeb2b8927dcefca1df7b464e303dcf4685b5e30f.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/2d9825ea4418ba2c9dafd70a7c913517119fc4884074154648830c95107e518e.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/3a6a71663fbcb7ee491ae12819a4361eddbef7f1e9adff805146bf41b9bc7f30.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/5137d8673be74b08628d94723c8daf90c4105325ff58733cd803fe44c19bff0c.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/515759aaacfd8d13e799acf537820fd399c73e2225ad2c2ac71a28c634d40f4e.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/690fb1b999a0207e9f871ea5d409fca19639bc5b869cc752ebbee5870caf581d.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/98db52996765746743b370769613f2d8858eeeca92eef58523e8e18f58d11f8d.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/a1ec5c3fff73e40a505bc4f8fc02f71ff5a2b8cb048500e9569d535615a574c2.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/abb162fd3a0b0c2b0a400037ad2274478a5c6d5403177f92967780cb527e805d.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/c52bbb377288cf5d92a0f8e05ccaf08e8bddfd28809ba18c56a5a011adbe6039.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/c9cc46178109a7caa9ecf0f5a80afd4974ae05755a712882fbbdd38d5b63e763.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/d1a8164e4e0595e8be2caa0f00a5d0d218fa17c1b29a57addcef7eb40d15e29f.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/d4bc68345fa565e8d772cace0c986064a238ae711003ade24325d89efb83da9c.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/dddd0da373c006ff4b4d88941e6b2c2662b21a001ef5ccf9f1e8a241ee33faf8.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/e0bc49808bd72a9640b79268b5a6f397b76ba76a6b621fb69ffb1d84aad1697f.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/e5cfba1c6dd098b5cef1b765a66bde2b63d4c833f3bf4d4eef462e26d7e70dc1.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/e81cb2f346d49248adb87bb80d4a67c12a60879ee0c0907dae8254e9d8eec836.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/f7236250a9361f14bed83fb2d11e0eace27490333496870395204dfff784113e.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/ff020ffbec4abb24d985a0bf86b70d4fdf9763fcbaa2764e5e6e6ca6525e46ea.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 25,
+        "removed": 0,
+        "same": 23,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-96a700f8fe9f8fc2",
+      "episode_path": "episodes/2026/10/OE-96a700f8fe9f8fc2.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "96a700f8fe9f8fc214e15c0b75d434bc621f9852",
+      "source_timestamp": "2026-10-13T21:14:08Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: materialize hourly sequence 38468969267"
+    },
+    {
+      "changed_paths": [
+        "03_WEEKLY_OPERATIONS/provider_budget/LATEST.json",
+        "03_WEEKLY_OPERATIONS/provider_budget/runs/2026/10/13/211429_ccb6ce038707.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_WEEKLY_OPERATIONS",
+      "episode_id": "OE-7f03ffe0a767767e",
+      "episode_path": "episodes/2026/10/OE-7f03ffe0a767767e.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "7f03ffe0a767767e03d19fa5f5ad8a591104f7a1",
+      "source_timestamp": "2026-10-13T21:14:30Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: provider budget readback 38468922395"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json",
+        "04_MARKET_LEARNING/intraday_execution/DIRECTION_VALIDATION.json",
+        "04_MARKET_LEARNING/intraday_execution/EVENT_SUMMARY.json",
+        "04_MARKET_LEARNING/intraday_execution/LATEST.json",
+        "04_MARKET_LEARNING/intraday_execution/STATE.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/12/20261012T195513Z_24H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/12/20261012T195513Z_24H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T155756Z_4H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T155756Z_4H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T174254Z_4H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T174254Z_4H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/13/20261013T211441Z.json",
+        "04_MARKET_LEARNING/intraday_execution/observations/2026/10/13/20261013T200000Z.json"
+      ],
+      "compatibility": {
+        "changed": 5,
+        "checked": 13,
+        "removed": 0,
+        "same": 8,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-86ac57043b7b2837",
+      "episode_path": "episodes/2026/10/OE-86ac57043b7b2837.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "86ac57043b7b283704c68543e2bd35a3bc232342",
+      "source_timestamp": "2026-10-13T21:17:47Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: intraday execution 38468969267"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/entry_signals/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/entry_signals/STATE.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/211822_df7a882c9f85.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260820T052215Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260821T230935Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260822T210602Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T170928Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T230249Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260824T052629Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260827T021514Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260829T212001Z_graduated_altcoin_topup_active.json"
+      ],
+      "compatibility": {
+        "changed": 12,
+        "checked": 13,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-0007599f1301d2ec",
+      "episode_path": "episodes/2026/10/OE-0007599f1301d2ec.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "0007599f1301d2ec9c8763f641799b0782265633",
+      "source_timestamp": "2026-10-13T21:18:23Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: entry signal ledger 38469041866"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/13/211915_9d99d5f99417.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-6e74d4bfefe5f034",
+      "episode_path": "episodes/2026/10/OE-6e74d4bfefe5f034.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "6e74d4bfefe5f034a35fb54a6a083775c8958ad6",
+      "source_timestamp": "2026-10-13T21:19:16Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 38469592398"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/event_refresh/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/STATE.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/runs/2026/10/13/212002_df7a882c9f85.json"
+      ],
+      "compatibility": {
+        "changed": 3,
+        "checked": 4,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-0049766598c1ba71",
+      "episode_path": "episodes/2026/10/OE-0049766598c1ba71.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "0049766598c1ba71f6628bbd91efa5545d39e237",
+      "source_timestamp": "2026-10-13T21:20:06Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: Compass event refresh 38469597089"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-aecf113aab74.json",
+        "04_MARKET_LEARNING/handlekompas/official/public/2026/10/13/CMP-20261013-aecf113aab74.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 4,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-de6df661e4a784a5",
+      "episode_path": "episodes/2026/10/OE-de6df661e4a784a5.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "de6df661e4a784a581e978314b4ab48e1b997459",
+      "source_timestamp": "2026-10-13T21:21:41Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: official daily Compass 38469801544"
+    },
+    {
+      "changed_paths": [
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/research_actions/LATEST_ACTION_PACKET.json"
+      ],
+      "compatibility": {
+        "changed": 4,
+        "checked": 4,
+        "removed": 0,
+        "same": 0,
+        "status": "DRIFTED"
+      },
+      "dominant_path_prefix": "06_RESEARCH_LAB",
+      "episode_id": "OE-4f55f4a499bbee10",
+      "episode_path": "episodes/2026/10/OE-4f55f4a499bbee10.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "REVALIDATE",
+      "source_commit_sha": "4f55f4a499bbee1034aeb81da1598fb7da0c488b",
+      "source_timestamp": "2026-10-13T21:34:37Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: accumulate prospective shared-row evidence and next action"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 2,
+        "removed": 0,
+        "same": 0,
+        "status": "DRIFTED"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-f37b6991e513d04d",
+      "episode_path": "episodes/2026/10/OE-f37b6991e513d04d.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "REVALIDATE",
+      "source_commit_sha": "f37b6991e513d04d8b6ec7d143195200e025ed3e",
+      "source_timestamp": "2026-10-13T22:53:58Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: official daily Compass 38480762089"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/2026/10/13/SCV2-20261013-225514-8d9d8b943734.json",
+        "research/api_agent/outputs/shadow_compass_v2/2026/10/13/SCV2-20261013-225514-8d9d8b943734_API_AGENT_RECEIPT.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-477cc812086b6736",
+      "episode_path": "episodes/2026/10/OE-477cc812086b6736.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "477cc812086b673683f9287fdf8a8d4be135292b",
+      "source_timestamp": "2026-10-13T22:56:30Z",
+      "task_class": "API_AGENT",
+      "task_summary": "learning: Shadow Compass v2 38480909196"
+    },
+    {
+      "changed_paths": [
+        "09_SOURCE_QA/native_market_recovery/LATEST.json",
+        "09_SOURCE_QA/native_market_recovery/STATE.json",
+        "09_SOURCE_QA/native_market_recovery/decisions/2026/10/13/225738_326c980e31b8.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 3,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "09_SOURCE_QA",
+      "episode_id": "OE-2742c8cbb7d2ebc4",
+      "episode_path": "episodes/2026/10/OE-2742c8cbb7d2ebc4.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "2742c8cbb7d2ebc4819e88fa0777b1f37a73b41d",
+      "source_timestamp": "2026-10-13T22:57:38Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: native market recovery 38481163832"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-13.csv",
+        "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/10/13/225810_HOURLY_SEQUENCE_20261013T225810Z_44c62966fc91.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/0875b33346e59c1c6d39f0b32bef5c6ab44545bc430fe6d4fd2c325f3a51b2fe.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/0bca2b76c34ab06adfbea3a061454f3cdd671f8f8b603b705e050d1a11274eb4.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/1b603cde6e1d41736f20359028811dd024eae96c920c9afc289a5a3e4217cdea.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/1da2971c9fee49bc35e75f13c05a34000918a150b6fe293bf4212ebb18b1b085.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/2b6fbe1ff0707c964d1507fecf78baf0be7edf06cb3c31f8a33bb2723203860a.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/2eda19e3504ae1e1cdbe79fafc5b770e2d9b5420c491054864de9f9262b4e093.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/453ea4cbdabc6ff5916965d4be3553a70234e2456326f12e34b1638b699eda4d.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/590af282002899646c20be40b90fb5461de8f50d76072358e6e1cb88607a4781.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/78fc60d7d151d997ac6990e3b65d8d12ceb18dae1cb08fe526919eb68e363506.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/82f35ee539ea4c18b2654b0748e5152df43470ceb2cf63b519c6dbbfe2dd8ca4.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/9a66a031a63f0317da179cdb4573dd224c49a5a6d1f41049fd94ea0f4812c8e3.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/9e46a12aeb1afa5d8613045dd4dd77786b0dab00f2b1f1d72b3a0a52d2934990.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/a460b7708a8771ca1443765a3946e84a9fe2a8a223cc441b176842dae8b52af1.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/a5b47a3f811f8277df84c3429f7ba0bfffe0c286f93de5c60266d10411c2de4e.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/aca4522d1a46cb3203928dcca89fb4033daa00d6f75e5dcf4be5e326f9079083.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/b381d6aaa323dbe3680c383326a6fbb7641dbd543a83ff555d7556488e694bcb.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/b5fa0034a7e22f40935a83a3915f10236e8376a9e18ce845db8a2d2ae46c229f.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/b6357e2904ec6433cf1714968621f140b80b47ea3a3b2a7e858543ffbabfdc0d.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/baeb01a0a7b893834b470f4edf1b41d0847dbf245f1cdf90f4bd1d367e3c6418.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/cd01929387aef71428d2bf97f83246b49cef50f3b7eafd3c40684c34190cce72.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/d065c5119d24305b795c13fd441dbcabdefe80b8b4226acdb054a0713317d20b.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/e0967e21573008af7957cd7cb84e9f64fda94d86417fa5f5caaefa4dfae76576.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 25,
+        "removed": 0,
+        "same": 23,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-4ed92b7f453ec8fb",
+      "episode_path": "episodes/2026/10/OE-4ed92b7f453ec8fb.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "4ed92b7f453ec8fbb86ecd2e8a6c7d46fb7559b8",
+      "source_timestamp": "2026-10-13T22:58:15Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: materialize hourly sequence 38481211964"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/10/13/CMP-20261013-88618d3ad2a7_12h.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 1,
+        "removed": 0,
+        "same": 1,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-3021f0833812d0f9",
+      "episode_path": "episodes/2026/10/OE-3021f0833812d0f9.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "3021f0833812d0f9b7847df8ff4dde71247091b6",
+      "source_timestamp": "2026-10-13T22:59:44Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: mature Compass outcomes 38481379677"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json",
+        "04_MARKET_LEARNING/intraday_execution/DIRECTION_VALIDATION.json",
+        "04_MARKET_LEARNING/intraday_execution/EVENT_SUMMARY.json",
+        "04_MARKET_LEARNING/intraday_execution/LATEST.json",
+        "04_MARKET_LEARNING/intraday_execution/STATE.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T211441Z_1H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T211441Z_1H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/13/20261013T225842Z.json",
+        "04_MARKET_LEARNING/intraday_execution/observations/2026/10/13/20261013T210000Z.json"
+      ],
+      "compatibility": {
+        "changed": 5,
+        "checked": 9,
+        "removed": 0,
+        "same": 4,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-fd70492b3b23e45b",
+      "episode_path": "episodes/2026/10/OE-fd70492b3b23e45b.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "fd70492b3b23e45b0df5cd15395de8c33b713a2a",
+      "source_timestamp": "2026-10-13T23:00:55Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: intraday execution 38481211964"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/entry_signals/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/entry_signals/STATE.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/230123_b6bd94c25381.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260820T052215Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260821T230935Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260822T210602Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T170928Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T230249Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260824T052629Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260827T021514Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260829T212001Z_graduated_altcoin_topup_active.json"
+      ],
+      "compatibility": {
+        "changed": 12,
+        "checked": 13,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-3224bb80ba088dde",
+      "episode_path": "episodes/2026/10/OE-3224bb80ba088dde.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "3224bb80ba088ddeb0d40c55aa23822c26546308",
+      "source_timestamp": "2026-10-13T23:01:24Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: entry signal ledger 38481277388"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/13/230230_664ba1704f1f.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-1e22a430eae324ff",
+      "episode_path": "episodes/2026/10/OE-1e22a430eae324ff.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "1e22a430eae324ffe8471b983e2982b50bbc36b0",
+      "source_timestamp": "2026-10-13T23:02:30Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 38481624934"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/event_refresh/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/STATE.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/runs/2026/10/13/230303_b6bd94c25381.json"
+      ],
+      "compatibility": {
+        "changed": 3,
+        "checked": 4,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-d3f5f0e6dc43e631",
+      "episode_path": "episodes/2026/10/OE-d3f5f0e6dc43e631.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "d3f5f0e6dc43e631bf8dace8b438c3c5d301357a",
+      "source_timestamp": "2026-10-13T23:03:07Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: Compass event refresh 38481628969"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-af3bcdea9173.json",
+        "04_MARKET_LEARNING/handlekompas/official/public/2026/10/13/CMP-20261013-af3bcdea9173.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 4,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-8dac9ff7cde6b05b",
+      "episode_path": "episodes/2026/10/OE-8dac9ff7cde6b05b.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "8dac9ff7cde6b05b6922835947f319003118cbc6",
+      "source_timestamp": "2026-10-13T23:03:37Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: official daily Compass 38481800519"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PUBLIC_SOURCE_DRIFT_RECEIPT_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1.mjs",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR08_AI_EDGE_TRIBUNAL_INTAKE_v1.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR08_AI_EDGE_TRIBUNAL_INTAKE_v1.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 5,
+        "removed": 0,
+        "same": 5,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-a2f286b6ab1d9edc",
+      "episode_path": "episodes/2026/10/OE-a2f286b6ab1d9edc.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "a2f286b6ab1d9edc6a6a23ca1e3e6b114cbc8a12",
+      "source_timestamp": "2026-10-13T23:22:30-07:00",
+      "task_class": "MARKET_STATE",
+      "task_summary": "research(Task 2): integrate AI Tribunal #8 and 36-source R0 audit"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/entry_signals/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/entry_signals/STATE.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/232727_4e8a9c93240e.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260820T052215Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260821T230935Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260822T210602Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T170928Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T230249Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260824T052629Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260827T021514Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260829T212001Z_graduated_altcoin_topup_active.json"
+      ],
+      "compatibility": {
+        "changed": 12,
+        "checked": 13,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-85d7569ecb7aa20a",
+      "episode_path": "episodes/2026/10/OE-85d7569ecb7aa20a.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "85d7569ecb7aa20ab6c594a1311c3af98e57ba4a",
+      "source_timestamp": "2026-10-13T23:27:27Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: entry signal ledger 38484316754"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/pullback_learning/LATEST.json",
+        "04_MARKET_LEARNING/pullback_learning/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/pullback_learning/STATE.json",
+        "04_MARKET_LEARNING/pullback_learning/observations/2026/10/13/20261013T210000Z.json"
+      ],
+      "compatibility": {
+        "changed": 3,
+        "checked": 4,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-cc5365003cf54b3f",
+      "episode_path": "episodes/2026/10/OE-cc5365003cf54b3f.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "cc5365003cf54b3fa985dcba7aa2e7202845581a",
+      "source_timestamp": "2026-10-13T23:27:34Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: pullback ledger 38484321590"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/13/232755_791bcc152026.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-d69da4a737bfbd8d",
+      "episode_path": "episodes/2026/10/OE-d69da4a737bfbd8d.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "d69da4a737bfbd8dc04d7297988418268579336a",
+      "source_timestamp": "2026-10-13T23:27:55Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 38484330183"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/234403_gh-38485972386-1.json",
+        "03_DAILY_CAPTURE_LOGS/captures/LATEST.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-d1ca39fabe432a05",
+      "episode_path": "episodes/2026/10/OE-d1ca39fabe432a05.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "d1ca39fabe432a05dfc5cce4fb52ec4404adbbe7",
+      "source_timestamp": "2026-10-13T23:44:04Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: log live anchor 38485972386"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/instrument_metadata/2026/10/13.json",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/liquidations/2026/10/13.jsonl.gz",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/runs/2026/10/13/pfr-38485972386-1/PULLBACK_FORENSICS.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 4,
+        "removed": 0,
+        "same": 3,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-c3bb4f2d4101ea2e",
+      "episode_path": "episodes/2026/10/OE-c3bb4f2d4101ea2e.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "c3bb4f2d4101ea2ec45b5c1f5091d533070dbd5a",
+      "source_timestamp": "2026-10-13T23:44:09Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: capture passive pullback forensics 38485972386"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/COVERAGE_LATEST.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/13/B2P-7303ec9d07913d4ff4f7/FULL_STACK.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/13/B2P-7303ec9d07913d4ff4f7/PAIR_RECEIPT.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/13/B2P-7303ec9d07913d4ff4f7/REDUCED_EXECUTION_STACK.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 4,
+        "removed": 0,
+        "same": 3,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-91b71b2358c4d190",
+      "episode_path": "episodes/2026/10/OE-91b71b2358c4d190.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "91b71b2358c4d1909b0170ed201c0be9f22f86c0",
+      "source_timestamp": "2026-10-13T23:44:12Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: materialize blinded paired evidence 38485972386"
+    },
+    {
+      "changed_paths": [
+        "03_WEEKLY_OPERATIONS/provider_budget/LATEST.json",
+        "03_WEEKLY_OPERATIONS/provider_budget/runs/2026/10/13/234446_f5307f2731c9.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_WEEKLY_OPERATIONS",
+      "episode_id": "OE-5d8f4da827b7929c",
+      "episode_path": "episodes/2026/10/OE-5d8f4da827b7929c.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "5d8f4da827b7929c9b9fb615413d677545778d98",
+      "source_timestamp": "2026-10-13T23:44:47Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: provider budget readback 38485972386"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/10/13/234529.json",
+        "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/breadth_rich/2026/10/13/gh-38486120707-1.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 3,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-6b8b7d7981250520",
+      "episode_path": "episodes/2026/10/OE-6b8b7d7981250520.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "6b8b7d7981250520c482b0df7291a5e6c12bf7fa",
+      "source_timestamp": "2026-10-13T23:45:30Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: capture rich breadth 38486120707"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/ota_native/2026/10/13/235535_NATIVE_OTA_READBACK.json",
+        "04_MARKET_LEARNING/ota_native/LATEST.json",
+        "04_MARKET_LEARNING/ota_native/adaptive/2026/10/13/235535_ADAPTIVE_GATE.json",
+        "04_MARKET_LEARNING/ota_native/adaptive/STATE.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 4,
+        "removed": 0,
+        "same": 3,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-1a2558117380c610",
+      "episode_path": "episodes/2026/10/OE-1a2558117380c610.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "1a2558117380c61019bb4365f51a5889118f7640",
+      "source_timestamp": "2026-10-13T23:55:36Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: native OTA adaptive readback 38487124134"
+    },
+    {
+      "changed_paths": [
+        "research/api_agent/confidence_bindings/2026/10/13/DCB-0c141334044da32cd579.json",
+        "research/api_agent/outputs/daily/2026/10/14/003203/API_CONFLICT_ROUTER.json",
+        "research/api_agent/outputs/daily/2026/10/14/003203/DAILY_DIRECTOR_OUTPUT.json",
+        "research/api_agent/outputs/daily/2026/10/14/003203/DAILY_DIRECTOR_RECEIPT.json",
+        "research/api_agent/outputs/daily/2026/10/14/003203/context.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+        "research/experiment_lifecycle/LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json",
+        "research/experiment_lifecycle/admission/2026/10/EC-9d712b9175f4d24b5cf4.json",
+        "research/experiment_lifecycle/admission/2026/10/EC-e0b401a75dda3ae54a67.json",
+        "research/experiment_lifecycle/candidates/2026/10/EC-9d712b9175f4d24b5cf4.json",
+        "research/experiment_lifecycle/candidates/2026/10/EC-e0b401a75dda3ae54a67.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-00e33a68ca23f710cc01.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-01050f0609a2db9de8c6.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-0109ee994b777a85e1a9.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-01fe8465679aa5c9de03.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-040574be090ab7c3c03a.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-04fc38632f8cdfae249b.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-071f962cb2fd54c861e1.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-07647cc738de5f3ebd0b.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-08e077d186bee74effa5.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-0a595c10d3519166b580.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-0c8887bc4c55210ac40f.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-0d43ea5f193b3902024d.json",
+        "research/experiment_lifecycle/dispatch/2026/10/13/ER-0d672f4fec37f73872af.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 25,
+        "removed": 0,
+        "same": 24,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-8b7753fa4e9e938d",
+      "episode_path": "episodes/2026/10/OE-8b7753fa4e9e938d.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "8b7753fa4e9e938d999daca350a986dcde90fe3d",
+      "source_timestamp": "2026-10-14T00:32:17Z",
+      "task_class": "API_AGENT",
+      "task_summary": "ai: materialize multi-horizon Director 38490595844"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/ethbtc_persistence/2026/10/14/gh-38490595844-1_ethbtc-persistence.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 1,
+        "removed": 0,
+        "same": 1,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-d49362aa8482352a",
+      "episode_path": "episodes/2026/10/OE-d49362aa8482352a.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "d49362aa8482352a81cbdabe69e5e23eea57df25",
+      "source_timestamp": "2026-10-14T00:33:11Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "evidence: log ETHBTC persistence lifecycle 38490762233"
+    },
+    {
+      "changed_paths": [
+        "research/api_agent/forecast_candidates/LATEST_FORECAST_MATERIALIZATION_CENSUS.json",
+        "research/api_agent/forecast_candidates/LATEST_RATIFICATION_QUEUE.json",
+        "research/api_agent/forecast_candidates/PENDING/2026/10/14/2997ef058e8535289c3fa7b8.json",
+        "research/api_agent/forecast_candidates/PENDING/2026/10/14/37a5e81e8131a3f280a97992.json",
+        "research/api_agent/forecast_candidates/PENDING/2026/10/14/ecf48faca157f15c7cc4b151.json",
+        "research/api_agent/forecast_candidates/RATIFICATION_TERMINAL/741b38a4aac37872ac4b8d99.json",
+        "research/api_agent/forecast_candidates/RATIFICATION_TERMINAL/cda7d8d5135a311850fbe36c.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-d677386e2cd5bf27",
+      "episode_path": "episodes/2026/10/OE-d677386e2cd5bf27.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "d677386e2cd5bf27f3abee0e26b283d897eb31e1",
+      "source_timestamp": "2026-10-14T00:39:28Z",
+      "task_class": "API_AGENT",
+      "task_summary": "learning: freeze outcome-blind T13 state 38491166482"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-c3cd46a7541506b1",
+      "episode_path": "episodes/2026/10/OE-c3cd46a7541506b1.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "c3cd46a7541506b117d1c4e2e0fb87418120ae41",
+      "source_timestamp": "2026-10-14T00:39:31Z",
+      "task_class": "API_AGENT",
+      "task_summary": "learning: maintain continuity surfaces 38491166482"
+    },
+    {
+      "changed_paths": [
+        "research/api_agent/outputs/evidence_gap/2026/10/14/004006/GAP_AUDIT.json",
+        "research/api_agent/outputs/evidence_gap/2026/10/14/004006/GAP_AUDIT_RECEIPT.json",
+        "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_QUEUE_v1.json",
+        "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 4,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-5c463ef9a00b4293",
+      "episode_path": "episodes/2026/10/OE-5c463ef9a00b4293.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "5c463ef9a00b42932a25f732b56a4dd15c6020cb",
+      "source_timestamp": "2026-10-14T00:40:09Z",
+      "task_class": "API_AGENT",
+      "task_summary": "research: update adaptive evidence gap registry 38491347601"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-13.csv",
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-14.csv",
+        "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/10/14/011305_HOURLY_SEQUENCE_20261014T011305Z_a151af99ad95.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/008a2c3dffce0e144b7a6254b04ef27d16e4591f7b87948cd723e3a4d0487fd9.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/10d59f8e608a751abf6d05dd352afaee53977456b0e28afd8edc9f53f6425bbe.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/1449409abef89e214096fecb01839146e028c88a40344519ca34ec4554aa7676.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/1e73de730b8e63c967aad64a3b8861d70663b00683e36b124470cd14df892a42.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/1e9d33abfae0d21a2859bd84da75b3dd4365e29e12a375adf331ac901fef36b9.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/38860084f43c90ffb1627cb4712d48159c6272c651a54533a27d287d3fcec082.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/41eb8a62abcabd109d5869c580d04d97e33bd601e340991ca3c6269881d3223b.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/480a33126e4e6a1a29fe4fa1c3b8a757029857a06fd9a8094c0029453620dba2.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/49309ef792d0620227661130b4759439a03c1a68be59dd5adc7f65fa6945cef5.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/4e0f95795216d079bce5d07cfab6c9ab29b67011caf401fcc932b6f09fafe762.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/55a2fde25dbfb1be5da5e37cd101d4337c0b72a05a2e1b55fb615d317524018d.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/5b1c33dc7e64bd0a8b9f8f3d41465f792d26c6d0ad877385475c51b0db820ed5.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/6681040eec3c6a742a587c21a21f90d40bcfb04b4cd5e171082564e48b1e9f32.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/72df85cde21bbac72fda11aaa3606ed26d87c259a825b911d282070510e03481.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/77f0b4642eb4308fb4af57a841ce07f0c92f33e635a305ffc3f2ccaea4c44125.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/7ecb06fa03272034fed39e68f83d9623c609bf8cb17cf5ad20c1609373c955ba.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/9a789b1a1dfb230e8ff39270d288f85aca14269dcad65a38c109ea7e22c91bdc.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/b35dc7ba815bf9d3d255e16ecff2a5337735d104e1212377ced287d539562481.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/b976e0b4f42fea89a708e3ea192159428071e885063a5d80c3c905b68aae1ea2.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/bf453e11d6a25048fd466771466691a60ac48b46849fa20a8328bfc371f6afc5.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/c266f9fd5700008a61b0c1a78af57dbd4cddd3a19a45763c803a5163827308f1.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 25,
+        "removed": 0,
+        "same": 23,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-bee006534ab12ec9",
+      "episode_path": "episodes/2026/10/OE-bee006534ab12ec9.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "bee006534ab12ec9c14d9893f92fbf9387920ed9",
+      "source_timestamp": "2026-10-14T01:13:10Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: materialize hourly sequence 38494458982"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/10/14/011408.json",
+        "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/cadence/2026/10/14/cadence-38494556053-1.json",
+        "03_DAILY_CAPTURE_LOGS/cadence/LATEST.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 4,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-bb58034394c04408",
+      "episode_path": "episodes/2026/10/OE-bb58034394c04408.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "bb58034394c04408190d55fb501eb1211cfc5063",
+      "source_timestamp": "2026-10-14T01:14:08Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: adaptive cadence observation 38494556053"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json",
+        "04_MARKET_LEARNING/intraday_execution/DIRECTION_VALIDATION.json",
+        "04_MARKET_LEARNING/intraday_execution/EVENT_SUMMARY.json",
+        "04_MARKET_LEARNING/intraday_execution/LATEST.json",
+        "04_MARKET_LEARNING/intraday_execution/STATE.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/12/20261012T231921Z_24H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/12/20261012T231921Z_24H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T003901Z_24H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T003901Z_24H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T211441Z_4H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T211441Z_4H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/14/20261014T011340Z.json",
+        "04_MARKET_LEARNING/intraday_execution/observations/2026/10/14/20261014T000000Z.json"
+      ],
+      "compatibility": {
+        "changed": 5,
+        "checked": 13,
+        "removed": 0,
+        "same": 8,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-fb62a065498dcba0",
+      "episode_path": "episodes/2026/10/OE-fb62a065498dcba0.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "fb62a065498dcba0249615c406f16cd1bb96b0a5",
+      "source_timestamp": "2026-10-14T01:16:25Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: intraday execution 38494458982"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/entry_signals/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/entry_signals/STATE.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/14/011656_e71ece3eaf61.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260820T052215Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260821T230935Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260822T210602Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T170928Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T230249Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260824T052629Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260827T021514Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260829T212001Z_graduated_altcoin_topup_active.json"
+      ],
+      "compatibility": {
+        "changed": 12,
+        "checked": 13,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-b6d08b4205d2a97b",
+      "episode_path": "episodes/2026/10/OE-b6d08b4205d2a97b.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "b6d08b4205d2a97b11f56f558112f236e3890ae4",
+      "source_timestamp": "2026-10-14T01:16:57Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: entry signal ledger 38494511620"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/14/011737_94c3815ebe7d.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-b775a3b95a3e4c01",
+      "episode_path": "episodes/2026/10/OE-b775a3b95a3e4c01.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "b775a3b95a3e4c0196ad47e137c40cc7069e2b19",
+      "source_timestamp": "2026-10-14T01:17:38Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 38494870283"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/event_refresh/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/STATE.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/runs/2026/10/14/011809_e71ece3eaf61.json"
+      ],
+      "compatibility": {
+        "changed": 3,
+        "checked": 4,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-6ab6af109f09a578",
+      "episode_path": "episodes/2026/10/OE-6ab6af109f09a578.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "6ab6af109f09a578cf7910dfe8f1a61dd96f2b4e",
+      "source_timestamp": "2026-10-14T01:18:12Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: Compass event refresh 38494873731"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/14/CMP-20261014-3aa8ce4931eb.json",
+        "04_MARKET_LEARNING/handlekompas/official/public/2026/10/14/CMP-20261014-3aa8ce4931eb.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 4,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-4b9079b522bbca90",
+      "episode_path": "episodes/2026/10/OE-4b9079b522bbca90.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "4b9079b522bbca907663cd3e5dafefee86acd0f6",
+      "source_timestamp": "2026-10-14T01:18:44Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: official daily Compass 38494974807"
+    },
+    {
+      "changed_paths": [
+        "research/api_agent/outputs/decision_miss/2026/10/14/012205/MISS_AUDIT.json",
+        "research/api_agent/outputs/decision_miss/2026/10/14/012205/MISS_AUDIT_RECEIPT.json",
+        "research/api_agent/outputs/evidence_gap_validation/2026/10/14/012205/VALIDATION_AUDIT.json",
+        "research/api_agent/outputs/evidence_gap_validation/2026/10/14/012205/VALIDATION_RECEIPT.json",
+        "research/evidence_gap/ADAPTIVE_DECISION_MISS_REGISTRY_v1.json",
+        "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_QUEUE_v1.json",
+        "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-c342a6d8ac171bb8",
+      "episode_path": "episodes/2026/10/OE-c342a6d8ac171bb8.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "c342a6d8ac171bb87ee6743d445986ba6e0f3e3d",
+      "source_timestamp": "2026-10-14T01:22:05Z",
+      "task_class": "API_AGENT",
+      "task_summary": "learning: update decision miss and gap validation 38495251275"
+    },
+    {
+      "changed_paths": [
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/research_actions/LATEST_ACTION_PACKET.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "06_RESEARCH_LAB",
+      "episode_id": "OE-85568e00d0116ce0",
+      "episode_path": "episodes/2026/10/OE-85568e00d0116ce0.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "85568e00d0116ce0688b3d05c363a1c4b956a464",
+      "source_timestamp": "2026-10-14T01:25:36Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: accumulate prospective shared-row evidence and next action"
+    },
+    {
+      "changed_paths": [
+        "03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput/2026/10/2026-10-13.json",
+        "03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput/2026/10/2026-10-13.md",
+        "03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput/LATEST.json",
+        "03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput/LATEST.md",
+        "LATEST_MACHINE_THROUGHPUT.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 5,
+        "removed": 0,
+        "same": 5,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_WEEKLY_OPERATIONS",
+      "episode_id": "OE-b11ecfb0008a7c30",
+      "episode_path": "episodes/2026/10/OE-b11ecfb0008a7c30.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "b11ecfb0008a7c301f46a7ab7cf8b3f1c4ecd278",
+      "source_timestamp": "2026-10-14T01:28:36Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: daily machine throughput 2026-10-13 38495737319"
+    },
+    {
+      "changed_paths": [
+        "09_SOURCE_QA/native_market_recovery/LATEST.json",
+        "09_SOURCE_QA/native_market_recovery/STATE.json",
+        "09_SOURCE_QA/native_market_recovery/decisions/2026/10/14/020052_4e55714dae18.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 3,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "09_SOURCE_QA",
+      "episode_id": "OE-c6ca2cb3164465cd",
+      "episode_path": "episodes/2026/10/OE-c6ca2cb3164465cd.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "c6ca2cb3164465cdc0e07ea6c2c1fba5cacc4927",
+      "source_timestamp": "2026-10-14T02:00:52Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: native market recovery 38498751261"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/10/13/CMP-20261013-aa70b21fc6b0_12h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/10/13/CMP-20261013-bfb7ff123449_12h.json",
+        "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes/2026/10/13/SCV2-20261013-142540-549eae296c86_12h.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-6462291c46858991",
+      "episode_path": "episodes/2026/10/OE-6462291c46858991.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "6462291c4685899197597e28b16700c31e811acb",
+      "source_timestamp": "2026-10-14T02:03:22Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: mature Compass outcomes 38498980593"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/entry_signals/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/entry_signals/STATE.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/14/021233_1f278d8f9bee.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260820T052215Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260821T230935Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260822T210602Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T170928Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T230249Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260824T052629Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260827T021514Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260829T212001Z_graduated_altcoin_topup_active.json"
+      ],
+      "compatibility": {
+        "changed": 12,
+        "checked": 13,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-66c0e232d4a2d27c",
+      "episode_path": "episodes/2026/10/OE-66c0e232d4a2d27c.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "66c0e232d4a2d27cbf6a8a50a503156a057a5965",
+      "source_timestamp": "2026-10-14T02:12:34Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: entry signal ledger 38499796222"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/14/021302_1b80963a82f4.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-cd6387f9cc0ab8f9",
+      "episode_path": "episodes/2026/10/OE-cd6387f9cc0ab8f9.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "cd6387f9cc0ab8f9eb3cec93cf26cc10b508861d",
+      "source_timestamp": "2026-10-14T02:13:02Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 38499835474"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/pullback_learning/LATEST.json",
+        "04_MARKET_LEARNING/pullback_learning/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/pullback_learning/STATE.json",
+        "04_MARKET_LEARNING/pullback_learning/observations/2026/10/14/20261014T000000Z.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-df4e63120f9b3527",
+      "episode_path": "episodes/2026/10/OE-df4e63120f9b3527.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "df4e63120f9b35273f963acd5543e3735da94bb1",
+      "source_timestamp": "2026-10-14T02:13:13Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: pullback ledger 38499849581"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/14/021356_db815896c352.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 2,
+        "removed": 0,
+        "same": 1,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-49a36f3f2f705fa1",
+      "episode_path": "episodes/2026/10/OE-49a36f3f2f705fa1.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "49a36f3f2f705fa1960ff8688e10c4498836c31d",
+      "source_timestamp": "2026-10-14T02:13:56Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 38499897622"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/captures/2026/10/14/045510_gh-38513836805-1.json",
+        "03_DAILY_CAPTURE_LOGS/captures/LATEST.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 2,
+        "removed": 0,
+        "same": 2,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-2ac1abb61689a382",
+      "episode_path": "episodes/2026/10/OE-2ac1abb61689a382.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "2ac1abb61689a382e43fbbd0af860ed1d24c0111",
+      "source_timestamp": "2026-10-14T04:55:10Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: log live anchor 38513836805"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/instrument_metadata/2026/10/14.json",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/liquidations/2026/10/14.jsonl.gz",
+        "03_DAILY_CAPTURE_LOGS/pullback_forensics/runs/2026/10/14/pfr-38513836805-1/PULLBACK_FORENSICS.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-29545f5af05b30f0",
+      "episode_path": "episodes/2026/10/OE-29545f5af05b30f0.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "29545f5af05b30f0e96bdff7e649d76fda84a77c",
+      "source_timestamp": "2026-10-14T04:55:16Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: capture passive pullback forensics 38513836805"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/COVERAGE_LATEST.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/14/B2P-8531748b4b8e3dfdcbfc/FULL_STACK.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/14/B2P-8531748b4b8e3dfdcbfc/PAIR_RECEIPT.json",
+        "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs/2026/10/14/B2P-8531748b4b8e3dfdcbfc/REDUCED_EXECUTION_STACK.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-4fbbc116bfd04e32",
+      "episode_path": "episodes/2026/10/OE-4fbbc116bfd04e32.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "4fbbc116bfd04e32bff644e0bcf5f660ee536d53",
+      "source_timestamp": "2026-10-14T04:55:19Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: materialize blinded paired evidence 38513836805"
+    },
+    {
+      "changed_paths": [
+        "03_WEEKLY_OPERATIONS/provider_budget/LATEST.json",
+        "03_WEEKLY_OPERATIONS/provider_budget/runs/2026/10/14/045551_df90b8f442eb.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 2,
+        "removed": 0,
+        "same": 2,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_WEEKLY_OPERATIONS",
+      "episode_id": "OE-c3216a460524af7c",
+      "episode_path": "episodes/2026/10/OE-c3216a460524af7c.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "c3216a460524af7cc16f5354f2ff339f452dec51",
+      "source_timestamp": "2026-10-14T04:55:51Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: provider budget readback 38513836805"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/10/14/050256.json",
+        "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/breadth_rich/2026/10/14/gh-38514524723-1.json"
+      ],
+      "compatibility": {
+        "changed": 1,
+        "checked": 3,
+        "removed": 0,
+        "same": 2,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-44b315229bbe4a1d",
+      "episode_path": "episodes/2026/10/OE-44b315229bbe4a1d.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "44b315229bbe4a1ddd6945fc3911d9e52b157dca",
+      "source_timestamp": "2026-10-14T05:02:56Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: capture rich breadth 38514524723"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/ota_native/2026/10/14/052712_NATIVE_OTA_READBACK.json",
+        "04_MARKET_LEARNING/ota_native/LATEST.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 2,
+        "removed": 0,
+        "same": 2,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-46c7a167b1d328c9",
+      "episode_path": "episodes/2026/10/OE-46c7a167b1d328c9.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "46c7a167b1d328c9f6a13451d74941a09ceb644b",
+      "source_timestamp": "2026-10-14T05:27:12Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "research: native OTA adaptive readback 38516682042"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/decision_economics/LATEST_SEGMENT_RETURN_FOUNDATION.json",
+        "research/etf_owner/2026/10/14/060440/owner_snapshot.json",
+        "research/etf_owner/2026/10/14/060440/receipt.json",
+        "research/etf_owner/LATEST_FARSIDE_ETF_OWNER.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_YIELD_SHADOW.json",
+        "research/experiment_lifecycle/receipts/XR-0041b9ce64cf9ec0109a.json",
+        "research/experiment_lifecycle/receipts/XR-00478389ebea851000ed.json",
+        "research/experiment_lifecycle/receipts/XR-008d7b02c81a1f68ad96.json",
+        "research/experiment_lifecycle/receipts/XR-00cf6f5ff61dc1718163.json",
+        "research/experiment_lifecycle/receipts/XR-00fd91bcf8ab3888422d.json",
+        "research/experiment_lifecycle/receipts/XR-01f1243c213f584e187b.json",
+        "research/experiment_lifecycle/receipts/XR-0243309bcba8da09fa91.json",
+        "research/experiment_lifecycle/receipts/XR-02581837e9196031100e.json",
+        "research/experiment_lifecycle/receipts/XR-0262966b02fc277d3dfd.json",
+        "research/experiment_lifecycle/receipts/XR-02a069f8f6039ce1611e.json",
+        "research/experiment_lifecycle/receipts/XR-02b34e86636966fb4ae2.json",
+        "research/experiment_lifecycle/receipts/XR-02bb564ca2616163b674.json",
+        "research/experiment_lifecycle/receipts/XR-03023d70ebd6435e1fd4.json",
+        "research/experiment_lifecycle/receipts/XR-0333ad62bc712729e091.json",
+        "research/experiment_lifecycle/receipts/XR-03754bb4a8ad8251afef.json",
+        "research/experiment_lifecycle/receipts/XR-0379bba0e3cb62a26ca8.json"
+      ],
+      "compatibility": {
+        "changed": 7,
+        "checked": 25,
+        "removed": 0,
+        "same": 18,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-05f9daba3a8648c1",
+      "episode_path": "episodes/2026/10/OE-05f9daba3a8648c1.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "05f9daba3a8648c1d7c744fa5665b1014c968639",
+      "source_timestamp": "2026-10-14T06:06:59Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: update integrated learning and experiment receipts 38520072263"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/decision_economics/LATEST_SEGMENT_RETURN_FOUNDATION.json",
+        "research/etf_owner/2026/10/14/061237/owner_snapshot.json",
+        "research/etf_owner/2026/10/14/061237/receipt.json",
+        "research/etf_owner/LATEST_FARSIDE_ETF_OWNER.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_YIELD_SHADOW.json",
+        "research/framework_handoffs/LATEST_DATA_CONSUMER_INDEX.json",
+        "research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json",
+        "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+        "research/framework_memory/fnp_forward_rows/LATEST.json",
+        "research/framework_memory/fnp_forward_rows/runs/38520836531-1.json",
+        "research/framework_memory/m6_warning_events/LATEST.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 15,
+        "removed": 0,
+        "same": 15,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-0abc39f8dac5904a",
+      "episode_path": "episodes/2026/10/OE-0abc39f8dac5904a.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "0abc39f8dac5904aeaa5e99fe6a518f2a6593bdb",
+      "source_timestamp": "2026-10-14T06:13:01Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: update integrated learning and experiment receipts 38520836531"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/etf/2026/10/14/071106_2026-10-12.json",
+        "03_DAILY_CAPTURE_LOGS/etf/2026/10/14/071106_2026-10-13.json",
+        "03_DAILY_CAPTURE_LOGS/etf/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/settled_etf/2026/10/14/gh-38410164847-2.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-a9124d5df7cedb87",
+      "episode_path": "episodes/2026/10/OE-a9124d5df7cedb87.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "a9124d5df7cedb87fb6256d0b4e3b027676047d5",
+      "source_timestamp": "2026-10-14T07:11:08Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: log settled ETF calibration 38410164847"
+    },
+    {
+      "changed_paths": [
+        "research/api_agent/outputs/temporary_bridge/pr-1611/comment-6163010914/manifest.json",
+        "research/api_agent/outputs/temporary_bridge/pr-1611/comment-6163010914/output.json",
+        "research/api_agent/outputs/temporary_bridge/pr-1611/comment-6163010914/receipt.json",
+        "research/api_agent/outputs/temporary_bridge/pr-1611/comment-6163010914/review_report.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-084439b28714b9c0",
+      "episode_path": "episodes/2026/10/OE-084439b28714b9c0.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "084439b28714b9c0fee15cd086f3acac4d6cfc2a",
+      "source_timestamp": "2026-10-14T07:16:07Z",
+      "task_class": "API_AGENT",
+      "task_summary": "audit: exact-head Sol PR review receipt 1611/6163010914"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-14.csv",
+        "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/10/14/073703_HOURLY_SEQUENCE_20261014T073703Z_887f8f6aa26c.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/01d259f4c0e4d7cda78299555b9aca22acb67e1a3769b7e0b76b0578c6815c51.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/1585ddb607420d5bbcb2339ce7891ff4868e18e1aa36305b7a98487afb20643b.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/2015c60c34360befc1e6d362710d01cdb1c4dfa9b7650a71bce3f1cbd1cd46b5.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/5671ac1a85de633c699940048db770d418e34ceaab9e66f98c73acdd089ead42.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/5876a511edbb10b3891f913a6ee03cf5167e5472014c44f4fdf061f63fb220e8.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/5e0423fee8c082967e7da4f9b8e21e6a5708b8365687651e3a1c68acc79df7b9.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/69267a80f5aff19f6b608cc83f83de19894bc3053e078308641aaaa6067840fb.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/6df52854e74805a2b4cdbcd189908b0df393a372f0cc5ce3012e6f28d00a0775.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/7ef6c428342a55ddb58786dd03db4e53277d05ba0a14142419c0ecef3ce7d979.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/9c8a762b1472ad683933cf5990ae2961fc0d1657b9f16f25453a543f069992e5.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/bc7b900c0f29889cb1a236f927eef77898958ada5bc167c40fc39fcc78c3ea53.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/bd7f7e803382014a2b6b6dc0e907207676f2b46e09d9128d64e786da098b70f2.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/cb0e6a59c5f15ef51a39336b8320db044b960086014a674da27194c56f29af89.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/ce9d5e9403c06e90cb92e223790942828e3bfd5201a224b1a21e917526ce7dd3.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/d0d5f3a94443a905af4dda53eddfcb4a37618ea990959c8eb69f5f6bca956e24.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/e09bd5641e57d735788ecc3ed9c341995507f95a3fbf174d4d07688f07267296.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/e6b189865e32457701f9ee4b11fee0ad731bf4bc6483dac15889ea5c6392e35d.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/e8c6c9bf32d5aa3a92d1a87036e87c754e5032b08b2cab74dc67d63c9d347853.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/ed85974d5a7e5869bd357869a24f3fe1624cc0e05bb5864440344d636a685fd9.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/fe712fa71f46e8701f3aae94f425e7cfbf037ecc0a4e9923ed5bad5a7011ce62.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 23,
+        "removed": 0,
+        "same": 23,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-70e6e7b31d095512",
+      "episode_path": "episodes/2026/10/OE-70e6e7b31d095512.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "70e6e7b31d09551201062b2b02e40e9ff03a6abe",
+      "source_timestamp": "2026-10-14T07:37:08Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: materialize hourly sequence 38529423911"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/10/14/073944.json",
+        "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/cadence/2026/10/14/cadence-38529747467-1.json",
+        "03_DAILY_CAPTURE_LOGS/cadence/LATEST.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-ba68f487dd4726ab",
+      "episode_path": "episodes/2026/10/OE-ba68f487dd4726ab.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "ba68f487dd4726ab2917a38acf52acae9dcb0866",
+      "source_timestamp": "2026-10-14T07:39:44Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: adaptive cadence observation 38529747467"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json",
+        "04_MARKET_LEARNING/intraday_execution/DIRECTION_VALIDATION.json",
+        "04_MARKET_LEARNING/intraday_execution/EVENT_SUMMARY.json",
+        "04_MARKET_LEARNING/intraday_execution/LATEST.json",
+        "04_MARKET_LEARNING/intraday_execution/STATE.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T020921Z_24H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T020921Z_24H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T074233Z_24H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T074233Z_24H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T225842Z_4H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/13/20261013T225842Z_4H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/14/20261014T011340Z_1H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/14/20261014T011340Z_1H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/14/20261014T011340Z_4H_BTC.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/10/14/20261014T011340Z_4H_ETH.json",
+        "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/14/20261014T073739Z.json",
+        "04_MARKET_LEARNING/intraday_execution/observations/2026/10/14/20261014T060000Z.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 17,
+        "removed": 0,
+        "same": 17,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-86112a8d4c4efbf0",
+      "episode_path": "episodes/2026/10/OE-86112a8d4c4efbf0.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "86112a8d4c4efbf05826a3c3ca1d3a690f968883",
+      "source_timestamp": "2026-10-14T07:40:32Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: intraday execution 38529423911"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/entry_signals/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/entry_signals/STATE.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/14/074100_0ef0fc12949d.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260820T052215Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260821T230935Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260822T210602Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T170928Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260823T230249Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260824T052629Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260827T021514Z_graduated_altcoin_topup_active.json",
+        "04_MARKET_LEARNING/entry_signals/outcomes/20260829T212001Z_graduated_altcoin_topup_active.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 13,
+        "removed": 0,
+        "same": 13,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-dba0aa9d9c5ae35e",
+      "episode_path": "episodes/2026/10/OE-dba0aa9d9c5ae35e.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "dba0aa9d9c5ae35e52975877ef02f887fcd50363",
+      "source_timestamp": "2026-10-14T07:41:00Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "learning: entry signal ledger 38529508165"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/14/074139_a3c05d57f162.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 2,
+        "removed": 0,
+        "same": 2,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-ceda2a0bb766c45b",
+      "episode_path": "episodes/2026/10/OE-ceda2a0bb766c45b.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "ceda2a0bb766c45b21e2a1bf86f43b64047bfb8b",
+      "source_timestamp": "2026-10-14T07:41:39Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 38529939460"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/event_refresh/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/STATE.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/runs/2026/10/14/074212_0ef0fc12949d.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-fc23487a2f8bca3c",
+      "episode_path": "episodes/2026/10/OE-fc23487a2f8bca3c.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "fc23487a2f8bca3c3190a73879aa72733bb29e54",
+      "source_timestamp": "2026-10-14T07:42:18Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: Compass event refresh 38529944616"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/14/CMP-20261014-18699903db9f.json",
+        "04_MARKET_LEARNING/handlekompas/official/public/2026/10/14/CMP-20261014-18699903db9f.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-2f1d34928c3927b8",
+      "episode_path": "episodes/2026/10/OE-2f1d34928c3927b8.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "2f1d34928c3927b8181910a0090d3d072599cc6c",
+      "source_timestamp": "2026-10-14T07:42:49Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: official daily Compass 38530067247"
+    },
+    {
+      "changed_paths": [
+        "09_SOURCE_QA/native_market_recovery/LATEST.json",
+        "09_SOURCE_QA/native_market_recovery/STATE.json",
+        "09_SOURCE_QA/native_market_recovery/decisions/2026/10/14/074958_b487c5dca822.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "09_SOURCE_QA",
+      "episode_id": "OE-c3cec91c54e92b74",
+      "episode_path": "episodes/2026/10/OE-c3cec91c54e92b74.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "c3cec91c54e92b74596297065ad8486dbc5ef75c",
+      "source_timestamp": "2026-10-14T07:49:58Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: native market recovery 38530880794"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/10/13/CMP-20261013-b1af85bff6f8_12h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/10/13/CMP-20261013-f34752e8e3c4_12h.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 2,
+        "removed": 0,
+        "same": 2,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-2a6626cf8d9ea321",
+      "episode_path": "episodes/2026/10/OE-2a6626cf8d9ea321.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "2a6626cf8d9ea32133dbacac23333bfe5ee5da4b",
+      "source_timestamp": "2026-10-14T07:53:17Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: mature Compass outcomes 38531244703"
     }
   ],
-  "source_head_sha": "defee9966b90bca41defe3d55eff7669d7c483c7"
+  "source_head_sha": "2a6626cf8d9ea32133dbacac23333bfe5ee5da4b"
 }
