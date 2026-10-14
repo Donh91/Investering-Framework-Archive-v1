@@ -2,7 +2,7 @@
 Status: **GREEN**
 Status scope: **ARCHITECTURE_EVIDENCE_ONLY_NOT_AGGREGATE_SYSTEM_HEALTH**
 Aggregate system health claim: **NOT ASSERTED**
-Generated: 2026-10-14T06:13:00.285332Z
+Generated: 2026-10-14T08:56:32.986847Z
 
 Owners: 4/6 PASS
 Accepted DATA PINGs: 0
@@ -11,17 +11,17 @@ Experiment candidates: 524
 Codex-ready remediation tasks: 2
 
 ## Freshness hours
-- capture: 1.2973014811111112
-- daily_director: 5.682857036666666
-- weekly_calibration: 47.74219130944444
-- etf_owner: 0.0067345074999999996
-- experiment_registry: 0.0014681477777777779
-- experiment_receipt_sync: 0.0064681477777777776
-- remediation_queue: 9.380357036666666
+- capture: 4.023051901944444
+- daily_director: 8.4086074575
+- weekly_calibration: 50.46794173027778
+- etf_owner: 2.7324849283333332
+- experiment_registry: 2.7272185686111112
+- experiment_receipt_sync: 2.732218568611111
+- remediation_queue: 12.1061074575
 
 ## Evidence health (last 14d)
 - Forecasts due in window: 258
-- Matured outcomes: 290
+- Matured outcomes: 258
 - Censored outcomes: 0
 - Censor rate: 0.0
 
