@@ -97,6 +97,28 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                 self.call()
             http.assert_not_called()
 
+    def test_missing_budget_policy_is_no_spend_and_weekly_can_continue(self):
+        (self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json").unlink()
+        with patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_POLICY_UNREADABLE_NO_SPEND"):
+                self.call()
+            http.assert_not_called()
+            self.assertFalse(self.receipt().exists())
+
+    def test_policy_list_is_no_spend(self):
+        (self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json").write_text("[]")
+        with patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_POLICY_INVALID_SHAPE_NO_SPEND"):
+                self.call()
+            http.assert_not_called()
+
+    def test_malformed_policy_is_no_spend(self):
+        (self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json").write_text("{broken")
+        with patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_POLICY_UNREADABLE_NO_SPEND"):
+                self.call()
+            http.assert_not_called()
+
     def test_valid_call_has_exact_receipt_and_cannot_repeat(self):
         with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)) as guard, \
              patch("urllib.request.urlopen", return_value=Response(self.good)) as http:
