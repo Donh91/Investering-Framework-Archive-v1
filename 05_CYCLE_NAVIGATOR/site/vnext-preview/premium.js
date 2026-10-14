@@ -542,51 +542,130 @@ function paintCompass(d) {
   }
 }
 
+
+/*
+ * Archived W40 research chart. Data owner: original frozen 3-window CN27
+ * scorecard + independently captured 168 hourly OHLC (UTC). Daily ACTUAL
+ * close is observed. Forecast exists ONLY for 1-2,3-4,5-7 day windows.
+ * No derived day-level forecasts; no false daily probability or rescore.
+ */
+function completeDailyHistory(score, asset) {
+  const pack = score?.daily_observations_w40;
+  const rows = completePriceRows(score, asset);
+  if (!pack || pack.contract !== 'CN_W40_OBSERVED_DAILY_OHLC_READBACK_v1' ||
+      pack.observed_hours !== 168 || pack.basis !== 'UTC_ISO_WEEK' ||
+      !Array.isArray(pack.days) || pack.days.length !== 7 || rows.length !== 3 ||
+      !['BTC', 'ETH'].includes(asset)) return null;
+  const expected = ['2026-09-28','2026-09-29','2026-09-30','2026-10-01','2026-10-02','2026-10-03','2026-10-04'];
+  const order = ['day_1_2','day_3_4','day_5_7'];
+  if (rows.some((r,i) => r.window !== order[i])) return null;
+  for (let i = 0; i < 7; i++) {
+    const day = pack.days[i], point = day?.[asset];
+    if (day?.date !== expected[i] || day.observed_hours !== 24 ||
+        !point || ![point.low,point.high,point.close].every((n) => safeNumber(n) && n > 0) ||
+        point.high < point.low || point.close < point.low || point.close > point.high) return null;
+  }
+  for (const [index, start, end] of [[0,0,2],[1,2,4],[2,4,7]]) {
+    const observed = pack.days.slice(start,end).map((d) => d[asset]);
+    const low = Math.min(...observed.map((d) => d.low));
+    const high = Math.max(...observed.map((d) => d.high));
+    if (Math.abs(rows[index].actual_low-low) > .011 ||
+        Math.abs(rows[index].actual_high-high) > .011) return null;
+  }
+  return { days: pack.days, windows: rows };
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function chartElement(tag, attributes = {}, content) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, String(value));
+  if (content != null) node.textContent = String(content);
+  return node;
+}
+// Shape-preserving Hermite handles. The rendering is a guide connecting
+// observed DAILY CLOSES; it never claims to reproduce intraday ticks.
+function monotoneClosePath(points) {
+  if (points.length < 2) return '';
+  const dy = points.slice(1).map((p,i) => points[i+1].y-p.y);
+  const slope = points.map((p,i) => i===0 ? dy[0] : i===points.length-1 ? dy[dy.length-1] :
+    dy[i-1]*dy[i]<=0 ? 0 : 2*dy[i-1]*dy[i]/(dy[i-1]+dy[i]));
+  return points.reduce((str,p,i) => {
+    if (!i) return 'M '+p.x.toFixed(2)+' '+p.y.toFixed(2);
+    const before=points[i-1],dx=(p.x-before.x)/3;
+    return str+' C '+(before.x+dx).toFixed(2)+' '+(before.y+slope[i-1]/3).toFixed(2)+
+      ' '+(p.x-dx).toFixed(2)+' '+(p.y-slope[i]/3).toFixed(2)+
+      ' '+p.x.toFixed(2)+' '+p.y.toFixed(2);
+  },'');
+}
 function renderRangeChart() {
   const root = $('range-visualization'); clear(root);
-  const rows = data?.completed_score?.price_range_precision?.rows;
-  if (!Array.isArray(rows) || !rows.length) {
-    root.append(make('p', 'method-disclaimer', 'Ingen fuldførte offentlige målevinduer tilgængelige.'));
+  const parsed = completeDailyHistory(data?.completed_score, selectedAsset);
+  if (!parsed) {
+    root.append(make('p','method-disclaimer','Daglige observationer er ikke tilstrækkeligt verificeret. Ingen konstrueret kursgraf vises.'));
+    setText('range-method', 'Daglig evidens mangler · intet score- eller forecast-skøn');
     return;
   }
-  const eligible = completePriceRows(data?.completed_score, selectedAsset);
-  if (eligible.length !== 3) {
-    root.append(make('p', 'method-disclaimer', 'Det frosne scorekort mangler komplette prisvinduer.'));
-    return;
+  const { days, windows } = parsed;
+  const rangeValues = [...windows.flatMap(r => [r.forecast_low,r.forecast_high]), ...days.flatMap(d => [d[selectedAsset].low,d[selectedAsset].high])];
+  const step = selectedAsset === 'BTC' ? 1000 : 100;
+  const floor = Math.floor(Math.min(...rangeValues)/step)*step;
+  const ceiling = Math.ceil(Math.max(...rangeValues)/step)*step;
+  const yMin = floor-step, yMax=ceiling+step;
+  const top=22,left=76,right=728,bottom=284,h=bottom-top;
+  const Y = (n) => bottom-(n-yMin)/(yMax-yMin)*h;
+  const X = (i) => left+(right-left)*(i/6);
+  const svg=chartElement('svg',{viewBox:'0 0 760 330',class:'cn-history-chart',role:'img','aria-label':selectedAsset+' observerede dagslukninger og tre historisk frosne prognosevinduer for uge 40. Det er ikke en daglig forecast-kurve.'});
+  svg.append(chartElement('title',{},selectedAsset+' historisk uge 40, dagslukning og 3 frosne prognoseperioder'));
+  svg.append(chartElement('desc',{},'Syv virkelige dagslukninger fra 168 timeobservationer, 28 september til 4 oktober 2026. De frosne forecasts dækker tre separate vinduer: dag 1-2, 3-4 og 5-7. Ingen daglige forecast-priser er estimeret.'));
+  for(let val=yMin;val<=yMax;val+=step){
+    const y=Y(val);
+    svg.append(chartElement('line',{x1:left-8,x2:right,y1:y,y2:y,class:'cn-chart-grid'}));
+    svg.append(chartElement('text',{x:left-14,y:y+4,'text-anchor':'end',class:'cn-chart-tick'},'$'+Math.round(val).toLocaleString('en-US')));
   }
-  const min = Math.min(...eligible.map((r) => Math.min(r.actual_low, r.forecast_low)));
-  const max = Math.max(...eligible.map((r) => Math.max(r.actual_high, r.forecast_high)));
-  const gap = Math.max(1, max - min) * .035;
-  const lo = min - gap, hi = max + gap;
-  const span = hi - lo;
-  const windowLabel = { day_1_2: 'Dag 1–2', day_3_4: 'Dag 3–4', day_5_7: 'Dag 5–7' };
-  for (const r of eligible) {
-    const line = make('div', 'range-row');
-    const meta = make('div', 'range-row-label');
-    meta.append(make('strong', null, windowLabel[r.window] || clean(r.window)), make('small', null, selectedAsset));
-    line.append(meta);
-    const track = make('div', 'range-row-track');
-    const bars = [
-      ['range-forecast', r.forecast_low, r.forecast_high, 'Frosset forecast: '],
-      ['range-observed', r.actual_low, r.actual_high, 'Observeret lav-høj: ']
-    ];
-    for (const [kind, low, high, label] of bars) {
-      const bar = make('div', 'range-bar ' + kind);
-      bar.style.setProperty('--l', ((low - lo) / span * 100).toFixed(4) + '%');
-      bar.style.setProperty('--w', ((high - low) / span * 100).toFixed(4) + '%');
-      bar.setAttribute('role', 'img');
-      bar.setAttribute('aria-label', label + formatUSD(low) + ' – ' + formatUSD(high));
-      bar.title = label + formatUSD(low) + ' – ' + formatUSD(high);
-      track.append(bar);
-    }
-    line.append(track, make('div', 'range-row-score', formatPct(r.score)));
-    root.append(line);
+  const windowsIndex=[[0,1],[2,3],[4,6]];
+  for(let w=0;w<3;w++){
+    const [start,end]=windowsIndex[w],row=windows[w];
+    const x1=X(start)-(start===0?0:20),x2=X(end)+(end===6?0:20);
+    const y1=Y(row.forecast_high),y2=Y(row.forecast_low);
+    svg.append(chartElement('rect',{x:x1,y:y1,width:x2-x1,height:Math.max(1,y2-y1),rx:5,class:'cn-chart-forecast-band'}));
+    svg.append(chartElement('line',{x1,x2,y1,y2:y1,class:'cn-chart-boundary'}));
+    svg.append(chartElement('line',{x1,x2,y1:y2,y2:y2,class:'cn-chart-boundary'}));
+    svg.append(chartElement('text',{x:(x1+x2)/2,y:top+12,'text-anchor':'middle',class:'cn-chart-window'},['D1–2','D3–4','D5–7'][w]));
   }
-  const axis = make('div', 'range-axis');
-  axis.append(make('span', null, formatUSD(min)), make('span', null, formatUSD(max)));
-  root.append(axis);
-  setText('range-method', '70% containment + 30% Jaccard · ' + selectedAsset);
+  const pathPoints=days.map((d,i)=>({x:X(i),y:Y(d[selectedAsset].close)}));
+  days.forEach((d,i)=>{
+    const p=d[selectedAsset],x=X(i);
+    svg.append(chartElement('line',{x1:x,x2:x,y1:Y(p.high),y2:Y(p.low),class:'cn-chart-actual-range'}));
+    svg.append(chartElement('text',{x,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday'},['Man','Tir','Ons','Tor','Fre','Lør','Søn'][i]));
+  });
+  svg.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
+  pathPoints.forEach((p,i)=>{
+    const point=chartElement('circle',{cx:p.x,cy:p.y,r:4.8,class:'cn-chart-point'});
+    point.append(chartElement('title',{},days[i].date+' · '+selectedAsset+' dagsluk '+formatUSD(days[i][selectedAsset].close)));
+    svg.append(point);
+  });
+  const badge=chartElement('text',{x:right,y:14,'text-anchor':'end',class:'cn-chart-week'},'2026 · W40 · UTC');
+  svg.append(badge);root.append(svg);
+  const legend=make('p','cn-chart-proof','Dagsluk: 7 verificerede målinger · Små lodrette streger: faktisk dagsinterval · Blå felter: oprindelige frosne D1–2 / D3–4 / D5–7. Glat linje forbinder kun dagsluk og viser ikke time-for-time prisstien.');
+  root.append(legend);
+  const tableWrap=make('div','cn-chart-table-scroll'),table=make('table','cn-chart-table');
+  const head=make('thead'),headrow=make('tr');
+  for(const label of ['Dag','Forecast lav–høj (periode)','Faktisk lav–høj','Luk']) headrow.append(make('th',null,label));
+  head.append(headrow);table.append(head);
+  const tbody=make('tbody');days.forEach((d,i)=>{
+    const row=windows[i<2?0:i<4?1:2],tr=make('tr');
+    tr.append(make('td',null,['Man','Tir','Ons','Tor','Fre','Lør','Søn'][i]));
+    tr.append(make('td',null,formatUSD(row.forecast_low)+' – '+formatUSD(row.forecast_high)));
+    tr.append(make('td',null,formatUSD(d[selectedAsset].low)+' – '+formatUSD(d[selectedAsset].high)));
+    tr.append(make('td','cn-chart-close-value',formatUSD(d[selectedAsset].close)));
+    tbody.append(tr);
+  });
+  table.append(tbody);tableWrap.append(table);
+  const title=make('h4','cn-chart-table-title','Forecast mod virkelighed · dag for dag');
+  root.append(title,tableWrap);
+  setText('range-method','CN #27 W40 · 70 % containment + 30 % Jaccard · 168/168 timer · 3 originale forecastvinduer');
 }
+
 
 function paintHistory(d) {
   const h = d.history.records;
