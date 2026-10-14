@@ -20,13 +20,18 @@ function reconcile(inventory,head,expectedTree,git){
   if(git(['rev-parse','--verify',inventory.main_commit+'^{tree}'])!==inventory.main_tree)throw Error('Pinned inventory root-tree SHA mismatch');
   if(git(['rev-parse','--verify',head+'^{tree}'])!==expectedTree)throw Error('Current pinned root-tree SHA mismatch');
   try{git(['merge-base','--is-ancestor',inventory.main_commit,head]);}catch{throw Error('Compared commit is not descended from pinned inventory');}
-  const indexed=new Map(),families=[];let refs=0;
-  for(const family of inventory.families){if(!family||typeof family.id!=='string'||!Array.isArray(family.sources))throw Error('Invalid source family');families.push(family.id);
+  if(inventory.families.length===0)throw Error('Empty source-family inventory');
+  const indexed=new Map(),families=[];let refs=0;const seenFamilyIds=new Set();
+  for(const family of inventory.families){if(!family||typeof family.id!=='string'||!family.id||!Array.isArray(family.sources))throw Error('Invalid source family');
+    if(family.sources.length===0)throw Error('Empty source family: '+family.id);
+    if(seenFamilyIds.has(family.id))throw Error('Duplicate source family: '+family.id);
+    seenFamilyIds.add(family.id);families.push(family.id);
     for(const s of family.sources){refs++;if(!checkPath(s.path)||!HEX40.test(s.git_object_sha)||!['tree','blob'].includes(s.git_object_type))throw Error('Invalid source path/SHA/type');
       const norm=s.path.replace(/\/$/,'');let r=indexed.get(norm);if(r){if(r.pinned_object_sha!==s.git_object_sha||r.type!==s.git_object_type)throw Error('Conflicting shared source path: '+norm);r.families.push(family.id);}
       else indexed.set(norm,{path:s.path,type:s.git_object_type,pinned_object_sha:s.git_object_sha,families:[family.id]});
     }
   }
+  if(refs===0||indexed.size===0)throw Error('Vacuous source inventory');
   const rows=[...indexed.values()].map(row=>{
     const path=row.path.replace(/\/$/,'');
     let oldSha,oldType;
