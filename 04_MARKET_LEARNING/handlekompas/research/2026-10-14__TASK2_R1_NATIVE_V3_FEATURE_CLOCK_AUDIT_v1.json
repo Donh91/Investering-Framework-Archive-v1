@@ -1,0 +1,210 @@
+{
+  "contract": "TASK2_R1_NATIVE_V3_FEATURE_CLOCK_AUDIT_v1",
+  "created_at_date": "2026-10-14",
+  "authority": "RESEARCH_ONLY_PUBLIC_PROVENANCE_CLOCK_AUDIT",
+  "original_public_sources_pinned_commit": "098c50d36b222c4c8ffa179a5879d36a74194bc4",
+  "current_native_handlekompas_git_blob_sha": "d00d38bed517861fa2487dce42d330bf05812f6d",
+  "canonical_cohort": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_12H_CENSUS_v1.json",
+  "source_script": "scripts/data_ping/native_handlekompas.py",
+  "source_collector": "scripts/data_terminal/okx_swap_owner_collector.py",
+  "corroborating_vendor_documentation": "https://www.okx.com/en-eu/help/okx-to-optimize-funding-rate-calculation",
+  "finding": "CURRENT_NATIVE_COMPASS_FEATURE_BUILDER_MISUSES_FUNDING_SETTLEMENT_TIME_AS_OBSERVED_AT",
+  "classification": "SOURCE_TIMESTAMP_SEMANTICS_DEFECT_NOT_PROVEN_LOOKAHEAD",
+  "selected_12h_v3_forecasts": 9,
+  "original_source_packet_commit_precedes_forecast_all": 9,
+  "all_original_source_packet_sha256_pointers_match": true,
+  "selected_feature_slots": 216,
+  "features_with_explicit_retrieval": 81,
+  "features_without_explicit_retrieval": 135,
+  "features_with_explicit_retrieval_after_issue": 0,
+  "CFGI_feature_slots": 36,
+  "CFGI_features_with_retrieved_at_preissue": 36,
+  "features_with_future_observed_at_numeric_settlement_time": 12,
+  "forecasts_with_future_funding_settlement_time": 6,
+  "settlement_field_names": [
+    "btc_funding",
+    "eth_funding"
+  ],
+  "interpretation_notes": [
+    "Original CFGI retrieval clocks precede issue, and source packets appear in accessible Git history before issue, a useful as-of archive chain. This alone is not an independent audit of every upstream provider publication, vintage and delivery clock.",
+    "Missing retrieved_at on other features does not mean missing original source Git packet; do not automatically classify 135 slots as historical lookahead or missing data.",
+    "In original Compass selected_features source builder, OKX funding_time milliseconds populate observed_at. These express scheduled funding settlement, NOT quote captured_at; six cases have future settlement labels and do not establish that actual rate was captured in future.",
+    "Funding quote could already have been published when source packet was captured before issue; cannot infer actual lookahead based on its settlement timestamp.",
+    "Original forecasts/outcomes and individual source values remain unchanged; no new scoring, prices, PnL or model performance admitted."
+  ],
+  "original_source_values_exported": false,
+  "underlying_private_provider_values_exported": false,
+  "prospective_code_fix_required": "Pass authenticated actual capture/quote timestamp as observed_at/retrieved_at and preserve funding_time separately as settlement time. Fail closed on missing capture clock; do not infer it from future scheduled settlement. Independent source/CI/security review required; do not rewrite frozen forecasts.",
+  "scientific_admission": {
+    "R0_public_source_object_integrity": "EXISTING_PINNED_RECEIPT_ONLY",
+    "R1_feature_specific_asof_archive_chain": "METADATA_PARTIAL_NOT_FULL_PROVIDER_PIT",
+    "R1_full_forecast_eligibility": "BLOCKED",
+    "R2_historical_simulations_executed": 0,
+    "after_cost_edge_demonstrated": false
+  },
+  "existing_owner_issue": 1596,
+  "rows": [
+    {
+      "compass_id": "CMP-20261012-468da783e9d8",
+      "issued_at_utc": "2026-10-12T23:24:24Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-12T23:22:45Z",
+      "packet_first_git_commit_before_issue_seconds": 99,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 2,
+      "funding_fields_with_future_observation_time": [
+        "btc_funding",
+        "eth_funding"
+      ],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    },
+    {
+      "compass_id": "CMP-20261012-904299b09eca",
+      "issued_at_utc": "2026-10-12T19:59:38Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-12T19:58:03Z",
+      "packet_first_git_commit_before_issue_seconds": 95,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 2,
+      "funding_fields_with_future_observation_time": [
+        "btc_funding",
+        "eth_funding"
+      ],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    },
+    {
+      "compass_id": "CMP-20261013-88618d3ad2a7",
+      "issued_at_utc": "2026-10-13T07:46:16Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-13T07:45:10Z",
+      "packet_first_git_commit_before_issue_seconds": 66,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 2,
+      "funding_fields_with_future_observation_time": [
+        "btc_funding",
+        "eth_funding"
+      ],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    },
+    {
+      "compass_id": "CMP-20261013-aa70b21fc6b0",
+      "issued_at_utc": "2026-10-13T12:20:35Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-13T12:18:59Z",
+      "packet_first_git_commit_before_issue_seconds": 96,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 2,
+      "funding_fields_with_future_observation_time": [
+        "btc_funding",
+        "eth_funding"
+      ],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    },
+    {
+      "compass_id": "CMP-20261013-b1af85bff6f8",
+      "issued_at_utc": "2026-10-13T16:10:20Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-13T16:01:17Z",
+      "packet_first_git_commit_before_issue_seconds": 543,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 0,
+      "funding_fields_with_future_observation_time": [],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    },
+    {
+      "compass_id": "CMP-20261013-bfb7ff123449",
+      "issued_at_utc": "2026-10-13T14:14:43Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-13T12:18:59Z",
+      "packet_first_git_commit_before_issue_seconds": 6944,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 2,
+      "funding_fields_with_future_observation_time": [
+        "btc_funding",
+        "eth_funding"
+      ],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    },
+    {
+      "compass_id": "CMP-20261013-cb70ee1b10f3",
+      "issued_at_utc": "2026-10-13T02:13:56Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-13T02:12:14Z",
+      "packet_first_git_commit_before_issue_seconds": 102,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 2,
+      "funding_fields_with_future_observation_time": [
+        "btc_funding",
+        "eth_funding"
+      ],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    },
+    {
+      "compass_id": "CMP-20261013-d649788e5270",
+      "issued_at_utc": "2026-10-13T00:49:07Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-13T00:42:04Z",
+      "packet_first_git_commit_before_issue_seconds": 423,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 0,
+      "funding_fields_with_future_observation_time": [],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    },
+    {
+      "compass_id": "CMP-20261013-f34752e8e3c4",
+      "issued_at_utc": "2026-10-13T17:48:02Z",
+      "source_packet_first_git_path_commit_at_utc": "2026-10-13T17:46:19Z",
+      "packet_first_git_commit_before_issue_seconds": 103,
+      "forecast_packet_declared_sha256_match": true,
+      "selected_feature_count": 24,
+      "feature_retrieval_time_explicit_count": 9,
+      "feature_retrieval_time_missing_count": 15,
+      "feature_retrieval_after_issue_count": 0,
+      "CFGI_feature_count": 4,
+      "CFGI_feature_retrieval_before_issue_count": 4,
+      "funding_observed_at_later_than_issue_count": 0,
+      "funding_fields_with_future_observation_time": [],
+      "funding_timestamp_semantics": "OKX_FUNDING_SETTLEMENT_TIME_NOT_ORIGINAL_QUOTE_OBSERVATION"
+    }
+  ]
+}
