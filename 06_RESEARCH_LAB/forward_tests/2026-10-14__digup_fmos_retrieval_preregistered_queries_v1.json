@@ -1,7 +1,7 @@
 {
   "contract": "FMOS_DIGUP_METHOD_RETRIEVAL_PREREG_v1",
   "recorded_date_utc": "2026-10-14",
-  "state": "SHADOW_PREREGISTRATION_ONLY_NOT_EXECUTED",
+  "state": "SHADOW_PREREGISTRATION_CORRECTED_PRE_OUTCOME_NOT_EXECUTED",
   "approval_scope": "CONDITIONAL_RESEARCH_EVALUATION_ZERO_SPEND",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "owner": "FMOS_GRAPH_AND_RETRIEVAL_EXISTING_OWNER",
@@ -35,11 +35,73 @@
       "false_authority_or_stale_precedence_violations"
     ],
     "guard": "NO_CANDIDATE_PROMOTION_ON_SYNTHETIC_OR_DUPLICATE_QUERY_GAIN; MUST VERIFY_CURRENT_AUTHORITY_AFTER_RETRIEVAL",
-    "success": "At least one previously missed or materially wrong owner/source returned correctly at same or lower cost, with no false authoritative source precedence, and reproducible run receipt",
-    "kill": "No marginal correct-owner retrieval benefit, unaffordable latency/memory, noncompliant privacy/licensing, or source-version confusion",
+    "success": "At least one verified high-value source/owner missed by current FMOS baseline correctly recovered by challenger on the exact same frozen label-excluded corpus; no false canonical promotion; all frozen resource/cost gates pass; independent review.",
+    "kill": "No incremental owner-correct retrieval value, any label leakage, asymmetric corpus drift, false source precedence, any explicit resource threshold breach, provider/privacy/license problem, or source-version confusion.",
     "dependency_policy": "NO_NEW_GLOBAL_VECTOR_DB_OR_ALWAYS_ON_INDEX_WITHOUT_INDEPENDENT_GAP_PROOF",
     "no_automatic_merge": true,
-    "no_market_or_portfolio_authority": true
+    "no_market_or_portfolio_authority": true,
+    "benchmark_nonleakage_policy": {
+      "benchmark_labels_only_outside_searchable_corpus": true,
+      "mandatory_excluded_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-10-14__digup_fmos_retrieval_preregistered_queries_v1.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__luxalgo_digup_approved_priority_owner_packet_v1.md"
+      ],
+      "exclude_all_mirrored_answer_keys_and_derivative_copies": true,
+      "forbid_using_label_files_for_retrieval_or_query_rewriting": true,
+      "preindex_exclusion_manifest_sha256_required": true,
+      "forbid_indexing_eval_oracle_in_either_arm": true,
+      "exclude_pr_and_issue_comments_with_ground_truth_mappings": true,
+      "mandatory_leakage_negative_control": "Run a separate synthetic-only canary indexing explicit answer-key duplicates versus denied-label corpus. Production trial is invalid if any ranked result derives from label or its copied mapping.",
+      "no_score_if_corpus_contaminated": true
+    },
+    "paired_corpus_policy": {
+      "repo": "Donh91/Investering-Framework-Archive-v1",
+      "registration_base_commit_sha": "c922b47cd81782efca6a64f6042f6cb0fe5efb64",
+      "require_exact_same_frozen_source_commit_for_both_arms": true,
+      "require_complete_hash_of_all_eligible_corpus_paths_and_blobs_prebaseline": true,
+      "require_exact_same_corpus_manifest_sha256_for_both_arms": true,
+      "prohibit_running_baseline_and_challenger_on_different_commits": true,
+      "exclusion_manifest_required": true,
+      "run_if_source_commit_unavailable": "BLOCKED_NOT_RECONSTRUCTABLE",
+      "source_head_sha_only_as_result_field_is_not_sufficient": true,
+      "permits_changing_target_documents_to_answer_file": false
+    },
+    "ground_truth_drift_policy": {
+      "original_registered_count": 30,
+      "original_independent_families": 15,
+      "valid_population": "all 30 frozen case IDs; an independently disallowed/missing source is recorded as blocked not hidden",
+      "missing_or_changed_source": "GROUND_TRUTH_DRIFT_BLOCKED",
+      "independent_reapproval_before_ground_truth_change": true,
+      "changes_must_predate_both_arm_results": true,
+      "no_posthoc_exclusion_or_easy_question_replacement": true,
+      "source_difference_one_arm_only": "INVALID_PAIRED_TRIAL",
+      "report_both": "original_N=30 and preapproved eligible N plus full blocked/excluded ledger",
+      "report_original_denominator_even_if_blocked": true
+    },
+    "resource_policy": {
+      "hardware_same_for_arms": true,
+      "runtime_same_version_and_isolated_environment": true,
+      "measure_3_repeats_per_query": true,
+      "cache_treatments_same_for_both_arms": true,
+      "cold_start_and_warm_search_reported_separately": true,
+      "warm_median_extra_latency_ms_max": 2000,
+      "warm_p95_extra_latency_ms_max": 5000,
+      "peak_rss_extra_mib_max": 1536,
+      "persistent_index_extra_mib_max": 2048,
+      "incremental_paid_provider_cost_usd_max": 0,
+      "candidate_exceeding_any_bound": "FAIL_RESOURCE_GATE_NOT_PROMOTE",
+      "units": "milliseconds and mebibytes (MiB), within same machine and corpus",
+      "freeze_before_first_result": true
+    },
+    "pass_gate_order": [
+      "PERMISSION_AND_LICENSE",
+      "CORPUS_SNAPSHOT_AND_LABEL_NONLEAKAGE",
+      "OWNER_AND_KNOWLEDGE_TIME",
+      "SOURCE_DRIFT_AND_PREAPPROVED_ELIGIBILITY",
+      "RESOURCE_CEILING",
+      "FAMILY_LEVEL_RETRIEVAL_BENEFIT",
+      "INDEPENDENT_ADJUDICATION"
+    ]
   },
   "questions": [
     {
@@ -59,7 +121,7 @@
       "case_id": "DG-FMOS-002",
       "family_id": "CN_FROZEN_W42",
       "language": "en",
-      "query": "Find den interne arkiverede Cycle Navigator uge 42 og dens evaluering",
+      "query": "Locate the archived internal Cycle Navigator assessment for week 42 and its recorded evaluation",
       "expected_paths": [
         "05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_INTERNAL.md"
       ],
@@ -432,5 +494,17 @@
       "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
       "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
     }
-  ]
+  ],
+  "revision": {
+    "revision": "v1.1",
+    "original_blob_sha": "1583a9b3e2d3befdac62b44f67cf08cfea0cbafc",
+    "review_source": "research/api_agent/outputs/temporary_bridge/pr-1619/comment-6165937701/output.json",
+    "review_class": "GPT-6.1 Sol read-only advisory, CI/workflow acceptance separately failed",
+    "date_utc": "2026-10-14",
+    "reason": "4 specific P2 scientific integrity corrections plus DG-FMOS-002 English label repair",
+    "pre_outcome_query_count": 0,
+    "score_seen": false,
+    "correction_status": "PENDING_INDEPENDENT_REVIEW",
+    "retrospective_relabel_allowed": false
+  }
 }
