@@ -194,3 +194,31 @@ This bridge **automatically persists and surfaces accepted notes for owner revie
 3. After scheduled/authorized normal daily loop, \`meta_orchestrator_v1/STATE.json\` carries 3 specialist-handoff observations and \`EXECUTION_QUEUE.json\` carries low-priority \`AUTO_OBSERVE\` candidate entries with exact note SHA-256.
 4. Original heavy \`COMPOUNDING_LEARNING\` owner and one-heavy-workstream limit unchanged, no subscription/provider calls, no Alpha/official forecast change and no paid budget deviation.
 5. Current-next-action and eligibility states remain truthful; absence of actual forward cases is not counted as execution.
+
+
+## 8. Research autonomy reality check: current main and Alpha, 2026-10-14
+
+**Research owner process exists as runnable code; complete scientific closure is NOT claimed.**
+
+| Subsystem | Verified exact implementation | Observed reality and qualification |
+|---|---|---|
+| Framework novelty → VOI → adversarial → meta | \`.github/workflows/autonomous-research-governance-loop.yml\`, \`scripts/research/research_memory_novelty_gate.py\`, \`research_decision_impact_router.py\`, \`independent_research_adversarial_sentinel.py\`, \`research_meta_orchestrator.py\` | Main schedule: \`30 7 * * *\` with Copenhagen timezone; derivative meta state with 7 items, \`binding_integrity=PRIMARY_COMPLETE\`, \`max_concurrent_heavy_workstreams=1\` and no trade/paid authority at read time. This is a routing control, NOT proof each queued item was executed. |
+| Alpha Lab autonomous research | \`Donh91/Meme-Alpha-Lab/.github/workflows/autonomous-research-v1.yml\` | Actual current schedule \`41 7 * * *\` (one/day), despite older architecture and policy descriptions saying six-hour cadence. One heavy research turn per actual workflow run. |
+| Alpha Research Genome | \`Donh91/Meme-Alpha-Lab/.github/workflows/research-genome-v1.yml\` | Actual current schedule \`11 1 * * *\` (one/day). Owns bounded hypothesis and adapter-gap progression, but not self-authorized code merges. |
+| Alpha daily context / research queue | \`Donh91/Meme-Alpha-Lab/.github/workflows/daily-context-and-queue.yml\` | Actual schedule \`15 5 * * *\` Copenhagen; clones pinned public Framework context, refreshes queue and five-gate shadow evidence. A Framework PR NOT YET merged is not in this daily clone. |
+| Framework operational dashboard and health | \`LATEST_OPERATIONS_DASHBOARD.json\`, \`LATEST_HANDOFF.json\`, \`research/architecture_health/LATEST_AUTOMATION_HEALTH.json\`, \`LATEST_ARCHITECTURE_HEALTH.json\` | Latest accessible snapshot includes October 2026 GitHub evidence/receipts. Automation-wide RED due to non-research owner problem while architecture-evidence health is separately GREEN. GREEN on one domain does not mean all owners or code execution are fully healthy. |
+| Alpha method ROI accountability | \`Donh91/Meme-Alpha-Lab/research/genome/METHOD_PERFORMANCE_V1.csv\` | Snapshot at 2026-10-14T06:04:52Z: \`CFGI_REGIME_JOIN\`, \`METHOD_PERFORMANCE_AUDIT\` and \`PARABOLIC_WINNER_AUTOPSY\` each have \`runs=66\`, but \`useful_findings=0\`, \`controls_survived=0\`, \`forward_tests_created=0\`. These are registry counters, not a full audit of all research outcomes. **ACTIVITY ≠ SCIENTIFIC EDGE.** |
+
+### Main research autonomy gap now addressed in this PR
+
+Before: meta-orchestrator had only seven fixed specialist bindings and no direct read-only intake from the external specialist queue. Therefore a manually drafted source note/PR was NOT sufficient to guarantee machine-level future observation. New \`method_intakes\` and \`specialist_intake_handoff\` provide that observation connection **only after reviewed merge**, without placing candidates into active workstreams.
+
+### Unresolved limits and follow-through
+
+1. **Independent review + merge** of this Draft PR remains necessary. The new auto-bridge is not in production until reviewed/merged.
+2. **After merge**, check a future daily loop's exact run ID, commit SHA, derivative \`STATE.json\`, \`EXECUTION_QUEUE.json\` and consumer receipt. Mere presence of a scheduled workflow is NOT proof of consumption.
+3. There is no proof that URGE, LIQN or QuantGPT has a prospectively validated incremental benefit; no scientific test has run from this intake. Conversion from \`AUTO_OBSERVE\` to an executable owner task needs existing owner evaluation, negative controls and governed task intake.
+4. The Alpha Research Genome's 66-run zero-useful-output counters deserve a **separate owner-scoped denominator and method performance review**, not a reset, new engine, new budget or claim of failure. Check whether its useful-finding and control counters are populated by actual validators and whether a successful maturation can be recorded, then keep zero if genuinely none survives.
+5. Keep \`Queue method intake\`, \`owner-executed research\`, \`forward scientific outcomes\` and \`promoted edge\` as four disjoint status classes.
+
+**Overall assessment:** verified runnable research autonomy exists, but the specialist-intake last mile and independently measured research output had gaps; this PR repairs **the former only**. Scientific closure and outcome ROI are separate work.
