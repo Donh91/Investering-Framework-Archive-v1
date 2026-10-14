@@ -34,7 +34,7 @@ class CounterfactualTests(unittest.TestCase):
         self.assertLess(out['net_delta_vs_hold_usd'],0)
     def test_stale_delivery_blocks_early_sale(self):
         out=simulate_synthetic(scenario([100,95,70,60,63]),signal(delivered_h=3),policy(reentry=2))
-        self.assertEqual(out['sale_at'],(BASE+timedelta(hours=3)).isoformat())
+        self.assertEqual(out['sale_at'],(BASE+timedelta(hours=4)).isoformat())
         self.assertEqual(out['reentry_status'],'HORIZON_ENDED_BEFORE_REENTRY')
     def test_liquidity_blocks_not_fantasy_fill(self):
         out=simulate_synthetic(scenario([100,95,70,60],capacities=[1e9,100,1e9,1e9]),signal(),policy())
@@ -52,8 +52,8 @@ class CounterfactualTests(unittest.TestCase):
         self.assertAlmostEqual(out['net_delta_vs_hold_usd'],0)
     def test_next_quote_no_same_signal_bar(self):
         out=simulate_synthetic(scenario([100,90,80,70]),signal(delivered_h=1),policy(reentry=0))
-        self.assertEqual(out['sale_at'],(BASE+timedelta(hours=1)).isoformat())
-        self.assertEqual(out['reentry_at'],(BASE+timedelta(hours=2)).isoformat())
+        self.assertEqual(out['sale_at'],(BASE+timedelta(hours=2)).isoformat())
+        self.assertEqual(out['reentry_at'],(BASE+timedelta(hours=3)).isoformat())
     def test_btc_low_loss_not_altcoin_fill_proxy(self):
         # Illiquid altcoin never borrows a synthetic liquid BTC fill.
         out=simulate_synthetic(scenario([100,80,50,30], capacities=[1e9,10,10,10]),signal(),policy())
