@@ -108,10 +108,31 @@
     "maeve_dca_legs": 641,
     "maeve_social_matches": 318,
     "maeve_post_entry_component_leakage_pending": true,
-    "cfgi_provider_engine_break_2026_07_08": "REPORTED_BY_DR04_NOT_PRIMARY_CERTIFIED",
+    "cfgi_provider_engine_break_2026_07_08": "PRIMARY_VENDOR_DOCUMENTED_FROM_2026_07_08_NOT_PER_OBSERVATION_PIT_CERTIFIED",
     "source_first_known_per_observation_independently_verified": false,
     "after_cost_economic_edge_established": false,
-    "buy_more_historical_data_authorized": false
+    "buy_more_historical_data_authorized": false,
+    "vendor_primary_evidence": {
+      "url": "https://cfgi.io/developer/",
+      "inspected_utc_date": "2026-10-14",
+      "statement": "Readings from 8 Jul 2026 onward come from the upgraded scoring engine",
+      "vendor_v2_timestamp_semantics": "MADRID_LOCAL_DATETIME",
+      "vendor_v3_timestamp_semantics": "ISO_8601_UTC",
+      "vendor_reported_api_v2_sunset_date": "2026-08-01",
+      "vendor_confirmed_signal_schema_field_name_changes": [
+        "cfgi->score",
+        "search->trends",
+        "orderbook->orders"
+      ],
+      "not_verified_by_vendor_page": [
+        "pre_2026_component_weights",
+        "historical_provider_first_known_per_row",
+        "past_v2_timestamp_independently_attested",
+        "proprietary_historical_component_versions",
+        "independent_performance_or_net_wealth_edge"
+      ],
+      "classification": "PRIMARY_VENDOR_CURRENT_DOCUMENTATION__NOT_HISTORICAL_SOURCE_ATTESTATION"
+    }
   },
   "new_native_v3_census": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_12H_CENSUS_v1.json",
   "tasks": [
