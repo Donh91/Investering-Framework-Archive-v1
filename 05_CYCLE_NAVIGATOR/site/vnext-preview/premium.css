@@ -931,3 +931,6 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .brand .cn-logo { display: block; width: 261px; max-width: 100%; height: auto; flex: none; }
 @media (max-width: 800px) { .brand .cn-logo { width: 205px; } }
 @media (max-width: 580px) { .brand .cn-logo { width: min(194px, 48vw); } }
+
+/* Keep the selected wordmark and controls in one row on 375-430px iPhones. */
+@media (max-width: 580px) { .masthead .masthead-inner { gap: 12px; } .masthead .header-actions { gap: 8px; padding-left: 0; } }
