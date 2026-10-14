@@ -41,6 +41,11 @@
       "kind": "OTHER",
       "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156",
       "summary": "Existing ownership for Automation Production Health and deduped remediation; no parallel agent or independent owner."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "research/api_agent/outputs/temporary_bridge/pr-1611/comment-6163010914/review_report.md",
+      "summary": "GPT-6.1 Sol exact-head advisory found the missing IN_REMEDIATION positive-control fixture. API receipt PASS on older intake head ed8ef27df; review did not execute code/tests or certify real remediation."
     }
   ],
   "reproduction": "From exact pinned main 8c4be3fe43b04f79c59cb89b74954fbcf5f1c05c, import row_matches_workflow and build_plan from scripts/framework_intelligence/automation_orchestration_v1.py. The present matcher returns True for unrelated target='daily-settled-etf-calibration.yml' with remediation row {'workflow':'etf.yml','state':'CODEX_READY'}; it also returns True for target='alpha-backup.yml' with row {'workflow':'alpha.yml','state':'IN_REMEDIATION'}. In an otherwise isolated RED health fixture, injecting such an unrelated active remediation record causes build_plan to choose FOLLOW_EXISTING_REMEDIATION instead of Luna/Sol. A same-exact-workflow CODEX_READY row SHOULD still dedupe. Revalidate against fresh main and existing remediation schema before code changes; stop cleanly if superseded/fixed. Does not claim actual current prod ETF false-match.",
@@ -49,7 +54,8 @@
       "Matching a CODEX_READY remediation row whose workflow identity is exactly the RED workflow retains FOLLOW_EXISTING_REMEDIATION and consumes zero duplicate model calls.",
       "Supported explicit .yml/.yaml representation or matching canonical path normalization, if confirmed by current source contract, retains true matches without relying on broad substring fields.",
       "When no exact active remediation exists, an isolated RED first failure routes through existing LUNA_TRIAGE; repeated failure/cluster retains existing SOL route.",
-      "Run the full existing tests/framework_intelligence/test_automation_orchestration_v1.py plus the new focused tests, and verify only existing output contracts and ownership are used."
+      "Run the full existing tests/framework_intelligence/test_automation_orchestration_v1.py plus the new focused tests, and verify only existing output contracts and ownership are used.",
+      "An exact-workflow IN_REMEDIATION row must preserve FOLLOW_EXISTING_REMEDIATION with zero duplicate Luna/Sol calls; do not regress correct in-progress repair ownership while blocking substring collisions."
     ],
     "negative": [
       "A row with workflow etf.yml MUST NOT match daily-settled-etf-calibration.yml; a row with workflow alpha.yml MUST NOT match alpha-backup.yml.",
@@ -77,5 +83,5 @@
   ],
   "linked_health_signature": null,
   "requested_priority": "NORMAL",
-  "post_fix_gate": "FOCUSED_IDENTITY_COLLISION_REGRESSION_PASS_PLUS_EXISTING_ORCHESTRATION_SUITE_PASS_PLUS_INDEPENDENT_CURRENT_HEAD_REVIEW_PLUS_GOVERNED_MERGE_PLUS_EXACT_MAIN_READBACK_PLUS_NEXT_RELEVANT_NATURAL_SUPERVISOR_PLAN_VERIFICATION"
+  "post_fix_gate": "FOCUSED_IDENTITY_COLLISION_REGRESSION_PASS_PLUS_EXISTING_ORCHESTRATION_SUITE_PASS_PLUS_INDEPENDENT_CURRENT_HEAD_REVIEW_PLUS_GOVERNED_MERGE_PLUS_EXACT_MAIN_READBACK_PLUS_NEXT_RELEVANT_NATURAL_SUPERVISOR_PLAN_VERIFICATION_PLUS_EXACT_IN_REMEDIATION_DEDUP_POSITIVE"
 }
