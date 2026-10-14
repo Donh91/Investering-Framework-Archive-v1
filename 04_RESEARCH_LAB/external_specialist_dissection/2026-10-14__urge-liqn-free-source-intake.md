@@ -135,7 +135,7 @@ Existing Task 2 controls may already contain several or all. These cases are **r
 - No machine-readable new queue, no Task 2 R1 completion claim, no new subscription, no QuantGPT tool/API/credentials or copied proprietary material.
 - Distinguish **independent free original sources** from a **free trial of a restrictive third-party product**. A no-cost trial does not grant competitive-use rights.
 
-**Precise next action for Research Lab owner #1512 and Task 2 R1:** Map each of the eight proposed negative controls to existing R1 tests and open PRs (#1573/#1597 and latest current main), produce an evidence-backed matrix \`CASE -> existing test + exact-head CI/receipt -> PASS/FAIL/BLOCKED/DUPLICATE -> single bounded correction or KILL\`. If any test is already present, it must be counted as ALREADY_EXISTS, not newly discovered. A documented outcome of **no new code** is success if independent tests already cover the risk.
+**Precise next action for Research Lab owner #1512 and Task 2 R1:** Map each of the eight proposed negative controls to existing R1 tests and relevant merged/open work (#1573 / merged #1597 and latest current main), produce an evidence-backed matrix \`CASE -> existing test + exact-head CI/receipt -> PASS/FAIL/BLOCKED/DUPLICATE -> single bounded correction or KILL\`. If any test is already present, it must be counted as ALREADY_EXISTS, not newly discovered. A documented outcome of **no new code** is success if independent tests already cover the risk.
 
 #### Public source provenance reviewed 2026-10-14
 
@@ -146,3 +146,23 @@ Existing Task 2 controls may already contain several or all. These cases are **r
 - https://fred.stlouisfed.org/docs/api/fred/realtime_period.html
 - https://docs.freqtrade.io/en/stable/lookahead-analysis/
 - Existing Framework source files listed above, current-main fetched 2026-10-14.
+
+
+## 6. First no-duplicate source-code spot check, current main 2026-10-14
+
+**Read-only check, NOT complete Task 2 scientific closure.** Source: \`04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs\` on main blob \`eb0db0846d42abc3241fc0eac18412f855e0f023\`. Task 1.5 PR #1597 is **MERGED**, merge SHA \`c1f0e4d27a1c27727dbdb7fb4216b1a0678781f2\` on 2026-10-13, not an open prerequisite.
+
+| Public-independent-method risk class | Current evidence seen in owner code | Triage, not scientific verdict |
+|---|---|---|
+| 1. Statement period-end vs filing publication | No direct filing-specific clock semantics in inspected **generic R1 oracle** | OWNER_SOURCE_SCOPE_CHECK; do not assume absent from entire repo |
+| 2. Revised macro vintages | No series-vintage identity in the generic R1 schema; \`scripts/research/fetch_nfcicredit_alfred_vintages.py\` and ETF vintage lab do exist separately | EXISTING_SPECIALIZED_OWNER, R1 dependency/provenance binding to be checked |
+| 3. Delisted/universe membership | Not a field in the generic R1 oracle | R4/Backtest Engine universe control may own; NO DUPLICATE BUILD |
+| 4. First observed vs issue time | \`FUTURE_FIRST_KNOWN\`, \`WRONG_SOURCE_AFTER_ISSUE\`, \`FAKE_SELF_ATTESTATION\`, \`SOURCE_FIRST_KNOWN_AFTER_FORECAST_ISSUE\` | ALREADY_TESTED_SYNTHETIC; independent external real source clock still **BLOCKED** |
+| 5. Pseudo-OOS promoted as sealed holdout | Not in generic R1 oracle; Task 2 explicitly has R6 sealed future holdout | ROUTE_R6_OWNER; no R1 scope expansion without demonstrated leak |
+| 6. Many-trial winner counted without multiplicity | Not in generic R1 oracle; EDGE-001 has frozen 144-variant manifest; trial accounting requires separate verification | EXISTING_EXPERIMENT_OWNER; no new backtesting tool |
+| 7. Gross return mistaken for realizable action | R1 returns \`trade_edge_admitted:false\` and \`portfolio_execution_rows_admitted:0\` unconditionally | ALREADY_FAIL_CLOSED_AT_R1, execution economics under R5 |
+| 8. Fake independent attestation / replication | \`FAKE_SELF_ATTESTATION\`, \`EXTERNAL_PIT_ATTESTATION_REQUIRED\`, always zero admitted directional skill | ALREADY_TESTED_SYNTHETIC, independent real proof still **BLOCKED** |
+
+**Result of this bounded source-code spot check:** At least three major safety classes (4, 7, 8) already have explicit fail-closed mechanics in R1; other classes have existing candidate owners or are outside this generic R1 oracle. This is **not proof of complete regression coverage across all versions/datasets**. No new test or code is justified yet from the cited external product alone.
+
+**Next engineering action if owner continues:** verify actual branch/head CI and coverage within the exact existing owning test suites; prioritize real first-known/PIT source availability, not more fabricated synthetic pass counts. Any claim of missing capability must name the real consumer and produce a falsifying fixture against its exact runtime. If none survives, KILL the candidate as redundant and record the negative result.
