@@ -15,6 +15,7 @@ function parseArgs(argv){
 function checkPath(p){return typeof p==='string'&&p.length>0&&!p.startsWith('/')&&!p.includes('\\')&&!p.includes(':')&&!p.includes('\n')&&!p.includes('//')&&!p.split('/').includes('..')&&!p.split('/').includes('.')}
 function reconcile(inventory,head,expectedTree,git){
   if(!inventory||!HEX40.test(inventory.main_commit)||!HEX40.test(inventory.main_tree)||!Array.isArray(inventory.families))throw Error('Invalid immutable inventory anchor');
+  if(git(['cat-file','-t',inventory.main_commit])!=='commit'||git(['cat-file','-t',head])!=='commit')throw Error('Pinned anchors must name direct commit objects');
   if(git(['rev-parse','--verify',inventory.main_commit+'^{tree}'])!==inventory.main_tree)throw Error('Pinned inventory root-tree SHA mismatch');
   if(git(['rev-parse','--verify',head+'^{tree}'])!==expectedTree)throw Error('Current pinned root-tree SHA mismatch');
   try{git(['merge-base','--is-ancestor',inventory.main_commit,head]);}catch{throw Error('Compared commit is not descended from pinned inventory');}
@@ -41,7 +42,7 @@ function reconcile(inventory,head,expectedTree,git){
 }
 try{
   const a=parseArgs(process.argv.slice(2));const cwd=a['--repo-dir']||process.cwd();
-  const git=(args)=>execFileSync('git',args,{cwd,encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:2e6}).trim();
+  const git=(args)=>execFileSync('git',['--no-replace-objects',...args],{cwd,encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:2e6}).trim();
   const inv=JSON.parse(fs.readFileSync(a['--inventory'],'utf8'));
   const result=reconcile(inv,a['--head'],a['--expected-tree'],git);
   process.stdout.write(JSON.stringify(result,null,2)+'\n');if(!result.verified_all_paths)process.exitCode=2;
