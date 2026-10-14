@@ -105,7 +105,9 @@ def is_api_receipt(path,data): return 'API_AGENT_RECEIPT' in str(data.get('contr
 
 
 def collect_api_usage(root,reference):
+    """Aggregate receipt-estimated spend; gateway PASS is not downstream value."""
     month=reference.strftime('%Y-%m'); count=input_tokens=output_tokens=0; cost=0.0; latest=None; seen=set()
+    by_task={}
     for base in (root/'research/api_agent/outputs',root/'research/api_agent/receipts'):
         for path in base.rglob('*.json') if base.exists() else []:
             data,error=read_json(path)
@@ -116,14 +118,39 @@ def collect_api_usage(root,reference):
             if stamp and (latest is None or stamp>latest[0]): latest=(stamp,path,data)
             if not stamp or stamp.strftime('%Y-%m')!=month: continue
             count+=1
-            try: cost+=float(data.get('cost_usd',data.get('estimated_cost_usd',0)) or 0)
-            except (TypeError,ValueError): pass
+            try: amount=float(data.get('cost_usd',data.get('estimated_cost_usd',0)) or 0)
+            except (TypeError,ValueError): amount=0.0
+            cost+=amount
             usage=data.get('usage') if isinstance(data.get('usage'),dict) else {}
-            try: input_tokens+=int(usage.get('input_tokens',data.get('input_tokens',0)) or 0); output_tokens+=int(usage.get('output_tokens',data.get('output_tokens',0)) or 0)
-            except (TypeError,ValueError): pass
+            try:
+                it=int(usage.get('input_tokens',data.get('input_tokens',0)) or 0)
+                ot=int(usage.get('output_tokens',data.get('output_tokens',0)) or 0)
+                input_tokens+=it; output_tokens+=ot
+            except (TypeError,ValueError): it=ot=0
+            # Group only *the same* already-deduplicated monthly receipts.
+            # This is billing/operational telemetry, not trading or learned skill.
+            name=str(data.get('task') or data.get('task_id') or 'UNCLASSIFIED')[:100]
+            if name not in by_task:
+                by_task[name]={'task':name,'receipt_count':0,'cost_usd':0.0,
+                               'input_tokens':0,'output_tokens':0,
+                               'gateway_pass_count':0,'retry_receipt_count':0}
+            group=by_task[name]
+            group['receipt_count']+=1
+            group['cost_usd']+=amount
+            group['input_tokens']+=it
+            group['output_tokens']+=ot
+            # An API gateway PASS is not a verified producer/consumer or ROI.
+            if data.get('status')=='PASS': group['gateway_pass_count']+=1
+            attempts=data.get('attempt_count')
+            if type(attempts) is int and attempts>1: group['retry_receipt_count']+=1
     row=None
     if latest: row={'path':str(latest[1].relative_to(root)),'completed_at_utc':latest[0].isoformat().replace('+00:00','Z'),'status':latest[2].get('status'),'model':latest[2].get('model'),'task':latest[2].get('task',latest[2].get('task_id')),'cost_usd':latest[2].get('cost_usd',latest[2].get('estimated_cost_usd'))}
-    return {'month':month,'receipt_count':count,'cost_usd':round(cost,6),'input_tokens':input_tokens,'output_tokens':output_tokens,'latest':row}
+    breakdown=sorted(({**g,'cost_usd':round(g['cost_usd'],6)} for g in by_task.values()),
+                     key=lambda r:(-r['cost_usd'],-r['receipt_count'],r['task']))
+    return {'month':month,'receipt_count':count,'cost_usd':round(cost,6),
+            'input_tokens':input_tokens,'output_tokens':output_tokens,'latest':row,
+            'spend_by_task':breakdown,
+            'spend_breakdown_semantics':'DEDUPED_RECEIPT_ESTIMATES_NOT_PROVIDER_BILLING_OR_CAUSAL_VALUE'}
 
 
 def direct_system(root,path,contract,green_hours,red_hours,reference,missing_reason):
@@ -191,6 +218,13 @@ def render_markdown(data):
     lines=['# Operations Dashboard','',f"Overall: **{data['overall_status']}**",f"Generated: `{data['generated_at_utc']}`",'','## Systems','','| System | Status | Detail | Age hours |','|---|---:|---|---:|']
     for name,system in data['systems'].items(): lines.append(f"| `{name}` | **{system['status']}** | {system.get('reason') or system.get('semantic_status') or '-'} | {system.get('age_hours') if system.get('age_hours') is not None else '-'} |")
     usage=data['agent_activity']['openai_api']; exp=data['agent_activity']['experiments']; rem=data['agent_activity']['remediation']; lines+=['','## AI and learning activity','',f"- OpenAI receipts this month: **{usage['receipt_count']}**",f"- OpenAI cost this month: **${usage['cost_usd']:.6f}**",f"- Pending forecast candidates: **{data['agent_activity']['pending_forecast_candidates']}**",f"- Experiment candidates: **{exp['candidate_count']}**",f"- Experiment dispatch requests: **{exp['dispatch_request_count']}**",f"- Codex-ready remediation tasks: **{rem['codex_ready']}**",f"- Needs-more-evidence items: **{rem['needs_more_evidence']}**",'','## Incidents','',f"Open incident references: **{data['incidents']['open_count']}**",'','## Required actions','']
+    if usage.get('spend_by_task'):
+        lines+=['','### API spend by task (receipt estimates only)','',
+                '| Task | Receipts | Estimated USD | Gateway PASS | Retries |',
+                '|---|---:|---:|---:|---:|']
+        for group in usage['spend_by_task'][:12]:
+            lines.append(f"| \`{group['task']}\` | {group['receipt_count']} | \${group['cost_usd']:.6f} | {group['gateway_pass_count']} | {group['retry_receipt_count']} |")
+        lines+=['','A gateway PASS alone is not measured downstream value or investment edge.']
     if data['required_actions']: lines.extend(f"- **{row['priority']}** `{row['system']}` - {row['reason']}" for row in data['required_actions'])
     else: lines.append('- None')
     lines+=['',f"Dashboard SHA-256: `{data['dashboard_sha256']}`",'']; return '\n'.join(lines)
