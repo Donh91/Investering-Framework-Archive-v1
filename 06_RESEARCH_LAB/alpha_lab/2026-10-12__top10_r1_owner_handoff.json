@@ -1,0 +1,55 @@
+{
+  "contract": "ALPHA_RESEARCH_ROUND_HANDOFF_V1",
+  "round_id": "R1_EXECUTABLE_MOONSHOT",
+  "owner_issue": 1340,
+  "verdict": "DATA_BLOCKED",
+  "observed_at_utc": "2026-10-12T00:00:00Z",
+  "timestamp_semantics": "DOCUMENT_DATE_ONLY_NOT_CAPTURE_PROOF",
+  "prereg_sha": "972349a90af8e6b8f0b399983a9390a347afb0fd",
+  "source_snapshot_sha": "c88efa2111b1892fad6b2660e86e45af8f452915492a782f11fb740e81030ecb",
+  "evidence_paths": [
+    "04_RESEARCH_LAB/external_specialist_dissection/ALPHA_LAB_TOP10_SEQUENTIAL_EXECUTION_2026-10-12.md",
+    "06_RESEARCH_LAB/alpha_lab/2026-10-12__top10_r1_askr_pepe_source_admission.json",
+    "https://github.com/Donh91/Meme-Alpha-Lab/pull/146",
+    "https://github.com/Donh91/Meme-Alpha-Lab/pull/147",
+    "https://github.com/Donh91/Meme-Alpha-Lab/blob/research/round1-executable-alpha-freeze-20261012/research/execution_studies/ROUND1_ASKR_EXACT_CURVE_ACCOUNTING_RESULT_20261012.md",
+    "https://github.com/Donh91/Meme-Alpha-Lab/blob/research/round2-synthetic-relay-falsifier-20261012/research/forensics_qualification_shadow_v1/ROUND2_ROUTER_FALSE_POSITIVE_CORRECTION_20261012.md"
+  ],
+  "negative_controls_covered": false,
+  "prospective_credit": 0,
+  "economic_edge": "NOT_ASSESSED",
+  "lesson": "Exact 200-event ASKR onchain source and reserve/supply conservation now SHA-verified; 5 initially flagged distinct-seller relays are actually same-transaction proxy/router hops, not cabal proof. 43 buys and 25 sells used two preexisting execution contracts as event actor; 34 unique recipient address strings do not equal independent buyers. No historical as-of first-seen, fair fill, exit/liquidity proof, matched losers or actual ROI; DATA_BLOCKED remains correct.",
+  "recommended_next_round": "R2_SYNTHETIC_DEMAND_XRAY",
+  "next_action": "R1 owner #98: source-admit contemporaneous curve/v4 reserve, tax, actual buy/sell fills, historical ETHUSD only when source clock verifiable; preserve ROI UNKNOWN. R2 #88: exclude atomic smart-contract intermediary hops, require distinct transactions and authentic EOA/contract roles before quote-recycling tracer; compare to matched controls. #1340 supervisor acknowledge these two immutable evidence digests and move the evidence-backed next step through existing workflow, no duplicate scheduler.",
+  "next_action_owner": "Existing Meme-Alpha-Lab #98 + #88 and Archive #1340 — separate single-owner scoped actions",
+  "next_action_gate": "INDEPENDENT_SOURCE_READBACK_AND_PR1585_REVIEWED_MERGE",
+  "actionable_now": false,
+  "trading_authority": false,
+  "promotion_authority": false,
+  "receipt_state": "DESIGN_HANDOFF_WAITING_MERGE",
+  "auto_dispatch_authorized": false,
+  "round2_parallel_research_status": "ACTIVE_DRAFT_SHADOW_CORRECTED_ROUTER_FALSE_POSITIVES_NOT_FINISHED",
+  "verified_source_updates": {
+    "askr_source_run": 38274003309,
+    "askr_curve_source_sha256": "c88efa2111b1892fad6b2660e86e45af8f452915492a782f11fb740e81030ecb",
+    "askr_curve_events_sha256": "3fc3ee671b04e3ec3522b56798cb496d313d59cd08d2fd16832f73e8bde392c0",
+    "round1_ci": {
+      "run_id": 38284931648,
+      "passing_tests": 37
+    },
+    "round2_chain_source_run": 38276305428,
+    "round2_chain_candidate_sha256": "55adf01af28e88cea0466ba61171f58f2a29f73a4d7281f2f880b4d6f57d5ecc",
+    "round2_ci": {
+      "run_id": 38284892572,
+      "passing_tests": 43
+    },
+    "round2_five_original_transfer_to_sell_patterns": 5,
+    "round2_five_atomic_same_transaction": 5,
+    "round2_independent_wallet_relays_proved": 0,
+    "verified_preexisting_contract_buy_flow_recipient_events": 43,
+    "verified_preexisting_contract_sell_flow_actor_events": 25,
+    "true_independent_buyer_count": "UNKNOWN",
+    "retail_executable_roi_count": 0,
+    "retail_roi_denominator_status": "INSUFFICIENT_HISTORICAL_QUOTE_FIRST_SEEN_AND_EXIT_EVIDENCE"
+  }
+}
