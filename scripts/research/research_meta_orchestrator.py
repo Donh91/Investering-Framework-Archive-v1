@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, hashlib, re
+import argparse, json, hashlib, re, subprocess
 from pathlib import Path
 from typing import Any, Dict, List
 from research_governance_common import ROOT, GOV, load_json, specialist_states, specialist_binding_report, action_of, target_of, evidence_fp, digest, persist_json, append_csv
@@ -142,12 +142,35 @@ INTAKE_ID_RE=re.compile(r"^[A-Z][A-Z0-9_]{5,100}$")
 MAX_METHOD_INTAKES=20
 
 
-def specialist_intake_handoff(root:Path=ROOT)->dict:
-    """Read admitted public method notes; no provider/network calls or execution scheduling.
+def _git_bytes(root:Path,*args:str)->bytes|None:
+    try:
+        p=subprocess.run(["git","-C",str(root),*args],stdout=subprocess.PIPE,
+                         stderr=subprocess.DEVNULL,check=False,timeout=12)
+        return p.stdout if p.returncode==0 else None
+    except (OSError,subprocess.SubprocessError):
+        return None
 
-    New entries are registered under the existing specialist queue owner; this
-    bridge deliberately does NOT change the authoritative next_action or active
-    heavy workstream. A file in a Draft PR is NOT an eligible main-source note.
+
+def _main_checkout_verified(root:Path)->bool:
+    """Only a clean source checkout at the advertised public origin/main may admit notes.
+
+    This is not a PR-merge detector on its own: the exact tracked bytes and
+    source queue are independently compared with committed main below.
+    """
+    top=_git_bytes(root,"rev-parse","--show-toplevel")
+    head=_git_bytes(root,"rev-parse","HEAD")
+    main=_git_bytes(root,"rev-parse","refs/remotes/origin/main")
+    return (bool(top and head and main) and
+            Path(top.decode().strip()).resolve()==root.resolve() and
+            head.strip()==main.strip())
+
+
+def specialist_intake_handoff(root:Path=ROOT)->dict:
+    """Observe only immutable public origin/main queue and note bytes.
+
+    A PR checkout, modified worktree note, symlink escape or untracked note
+    cannot acquire even low-priority observation eligibility. All rejections
+    preserve the existing execution/market authority at zero.
     """
     result={"contract":"RESEARCH_SPECIALIST_INTAKE_HANDOFF_v1",
             "authority":"RESEARCH_ONLY_NON_CANONICAL",
@@ -157,11 +180,24 @@ def specialist_intake_handoff(root:Path=ROOT)->dict:
             "source_license_or_api_admission":False,
             "canonical_effect":False,"portfolio_execution":False,
             "paid_data_authorized":False}
+    root=root.resolve()
     queue_file=root/SPECIALIST_QUEUE_REL
+    allowed_directory=root/SPECIALIST_NOTES_DIR
     if not queue_file.is_file():
         return {**result,"status":"SOURCE_QUEUE_UNAVAILABLE"}
+    if (not queue_file.resolve().is_relative_to(root) or
+            not allowed_directory.resolve().is_relative_to(root)):
+        return {**result,"status":"SOURCE_QUEUE_OUTSIDE_REPO"}
+    if not _main_checkout_verified(root):
+        return {**result,"status":"MAIN_CHECKOUT_NOT_VERIFIED"}
     try:
-        source=load_json(queue_file,{})
+        # The queue itself must be the bytes in the exact main commit.
+        queue_bytes=queue_file.read_bytes()
+        if _git_bytes(root,"show",f"HEAD:{SPECIALIST_QUEUE_REL}")!=queue_bytes:
+            return {**result,"status":"SOURCE_QUEUE_NOT_COMMITTED"}
+        source=json.loads(queue_bytes.decode("utf-8"))
+        if not isinstance(source,dict):
+            return {**result,"status":"INVALID_SOURCE_QUEUE_TYPE"}
         if source.get("contract")!="RESEARCH_LAB_EXTERNAL_SPECIALIST_DISSECTION_QUEUE_V1":
             return {**result,"status":"INVALID_SOURCE_QUEUE_CONTRACT"}
         lanes={x["id"] for x in source.get("lanes",[]) if isinstance(x,dict) and isinstance(x.get("id"),str)}
@@ -182,22 +218,28 @@ def specialist_intake_handoff(root:Path=ROOT)->dict:
                 return {**result,"status":"INVALID_INTAKE_AUTHORITY_OR_PATH","entries":[]}
             seen.add(iid)
             p=(root/note).resolve()
-            allowed=(root/SPECIALIST_NOTES_DIR).resolve()
-            if not p.is_relative_to(allowed):
+            if not p.is_relative_to(allowed_directory.resolve()) or not p.is_relative_to(root):
                 return {**result,"status":"PATH_OUTSIDE_SPECIALIST_PUBLIC_NOTES","entries":[]}
-            status="NOTE_PRESENT_NOT_SOURCE_ADMITTED" if p.is_file() else "NOTE_NOT_MERGED_OR_MISSING"
-            sha=hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else None
+            # One atomic local file read: no has-file/read-hash race.
+            try:
+                note_bytes=p.read_bytes()
+            except OSError:
+                note_bytes=None
+            committed=_git_bytes(root,"show",f"HEAD:{note}") if note_bytes is not None else None
+            verified=(note_bytes is not None and committed is not None and note_bytes==committed)
+            sha=hashlib.sha256(note_bytes).hexdigest() if verified else None
             result["entries"].append({
                 "id":iid,"owner_lane":owner,"related_lane":item.get("related_lane"),
                 "evidence_note":note,"note_sha256":sha,
-                "status":status,"review_state":item.get("review_state","REVIEW_PENDING"),
+                "status":"NOTE_PRESENT_NOT_SOURCE_ADMITTED" if verified else "NOTE_NOT_MERGED_OR_MISSING",
+                "review_state":item.get("review_state","REVIEW_PENDING"),
                 "incremental_value":item.get("incremental_value","UNPROVEN"),
                 "source_access":item.get("source_access","UNVERIFIED"),
                 "execution_mode":"AUTO_OBSERVE","requires_owner_review":True,
                 "market_source_admitted":False,"automatic_promotion":False})
         result["status"]="PUBLIC_NOTES_READ_ONLY" if raw else "NO_REGISTERED_INTAKES"
         return result
-    except (OSError,TypeError,ValueError,KeyError):
+    except (OSError,UnicodeError,TypeError,ValueError,KeyError):
         return {**result,"status":"INVALID_OR_UNREADABLE_INTAKE","entries":[]}
 
 
@@ -211,7 +253,8 @@ def attach_specialist_intakes(state:dict,root:Path=ROOT)->dict:
         return updated
     observations=[]
     for row in report["entries"]:
-        if row["status"]!="NOTE_PRESENT_NOT_SOURCE_ADMITTED":
+        if (row["status"]!="NOTE_PRESENT_NOT_SOURCE_ADMITTED" or
+                not isinstance(row.get("note_sha256"),str) or len(row["note_sha256"])!=64):
             continue
         observations.append({
             "orchestrator_action":"WAIT_FOR_EVIDENCE",
