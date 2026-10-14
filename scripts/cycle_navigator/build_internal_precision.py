@@ -350,6 +350,8 @@ def _cost_preflight(repo: Path, model: str, request_bytes: bytes, max_output_tok
     concurrency group, NOT a platform-wide atomic billing reservation.
     """
     from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
+    if str(repo) not in sys.path:
+        sys.path.insert(0, str(repo))
     policy = read_json(repo / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json")
     if (policy.get("status") != "ACTIVE_SHADOW_ONLY" or
             policy.get("monthly_hard_stop_usd") != 40 or
