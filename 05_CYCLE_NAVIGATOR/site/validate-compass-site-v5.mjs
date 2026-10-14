@@ -1,4 +1,5 @@
 import './tests/full-stack-readback.test.mjs';
+import './tests/browser-source-binding.test.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { runInNewContext } from 'node:vm';
