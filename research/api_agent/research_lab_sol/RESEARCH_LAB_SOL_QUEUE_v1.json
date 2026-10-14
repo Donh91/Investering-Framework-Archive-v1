@@ -161,7 +161,7 @@
       "mission_id": "TASK2-R0-INDEPENDENT-REVIEW-001",
       "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_REVIEW_v1.json",
-      "context_status": "EXACT_PR1627_HEAD_B2841B_SHA_BOUND_STATIC_FALSIFICATION_ONLY",
+      "context_status": "EXACT_PR1627_HEAD_52D4_SOURCE7AE538_TESTB6DC5_ONE_MATERIAL_RECHECK",
       "context_paths": [
         "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_EVIDENCE_v1.md",
         "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_REVIEW_v1.json",
@@ -174,10 +174,12 @@
       ],
       "release_gate": "OWNER_AUTHORIZED_TASK2_R0_P0_AFTER_PRIOR_MISSION_COMPLETE",
       "no_early_sol_opinion": true,
-      "pass_scope": "CODE_REVIEW_STATIC_AND_SYNTHETIC_GIT_ONLY_NO_INDEPENDENT_HISTORICAL_FIRST_KNOWN",
-      "previous_attempt": "NOT_DISPATCHED",
+      "pass_scope": "ONE_RECHECK_OF_CORRECTED_EXACT_R0_CODE_ONLY_NOT_FULL_R1_OR_HISTORICAL_MARKET",
+      "previous_attempt": "COMPLETED_API_REVIEW_2026_10_14_TRIGGER_6172934053_RECEIPT_6173001365_VERDICT_INSUFFICIENT_EVIDENCE",
       "selected_live_rules": [],
-      "no_further_sol_passes_unless_new_material_evidence": true
+      "no_further_sol_passes_unless_new_material_evidence": true,
+      "cross_exam_reason": "NEW_MATERIAL_CORRECTIVE_SOURCE_AND_TEST_BLOBS_AFTER_FIRST_SOL_R0_REVIEW__THREE_IDENTIFIED_FALSIFIERS_FIXED_OR_TARGETED",
+      "additional_sol_pass_limit": 1
     }
   ],
   "authority": {
