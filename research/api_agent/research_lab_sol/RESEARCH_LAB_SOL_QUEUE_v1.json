@@ -134,7 +134,7 @@
     {
       "sequence": 6,
       "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_LAST_VERIFIED_API_RESULT",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-07__RL-DISTRIBUTION-SURVIVAL-META-006__EDGE001-sol-cross-exam-v1.json",
       "context_status": "EDGE001_PROSPECTIVE_DESIGN_CROSS_EXAM_FRESH_BOUND",
       "context_paths": [
@@ -153,7 +153,31 @@
       "previous_attempt": "FAILED_CLOSED_BEFORE_API_QUEUE_STATUS_CONTRACT_NO_PAID_RECEIPT",
       "cross_exam_reason": "MATERIAL_NEW_EVIDENCE: 54/504 rows changed, historical model-selection ranking flips",
       "additional_sol_pass_limit": 1,
-      "selected_live_rules": []
+      "selected_live_rules": [],
+      "owner_hold_reason": "Historical last SOL receipt confirmed 2026-10-12 via existing issue #1476; owner priority lease moved to Task2 R0 exact adversarial independent review; preserve existing evidence and release later only on new material case."
+    },
+    {
+      "sequence": 7,
+      "mission_id": "TASK2-R0-INDEPENDENT-REVIEW-001",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_REVIEW_v1.json",
+      "context_status": "EXACT_PR1627_HEAD_B2841B_SHA_BOUND_STATIC_FALSIFICATION_ONLY",
+      "context_paths": [
+        "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_EVIDENCE_v1.md",
+        "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_REVIEW_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PUBLIC_SOURCE_DRIFT_RECEIPT_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1.mjs",
+        "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_R1_SOL61_ADVERSARIAL_READY_v1.md",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "AGENTS.md"
+      ],
+      "release_gate": "OWNER_AUTHORIZED_TASK2_R0_P0_AFTER_PRIOR_MISSION_COMPLETE",
+      "no_early_sol_opinion": true,
+      "pass_scope": "CODE_REVIEW_STATIC_AND_SYNTHETIC_GIT_ONLY_NO_INDEPENDENT_HISTORICAL_FIRST_KNOWN",
+      "previous_attempt": "NOT_DISPATCHED",
+      "selected_live_rules": [],
+      "no_further_sol_passes_unless_new_material_evidence": true
     }
   ],
   "authority": {
@@ -166,6 +190,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "RL-DISTRIBUTION-SURVIVAL-META-006",
-  "program_phase": "M6_EDGE001_PROSPECTIVE_DESIGN_CROSS_EXAM"
+  "active_mission": "TASK2-R0-INDEPENDENT-REVIEW-001",
+  "program_phase": "TASK2_R0_INDEPENDENT_SOL61_ADVERSARIAL_REVIEW"
 }
