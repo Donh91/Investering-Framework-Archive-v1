@@ -159,6 +159,24 @@ class TemporaryBridgeTests(unittest.TestCase):
             (dst / "output" / "output.json").write_text(json.dumps(output))
             with patch.object(bridge, "pr_info", return_value=info()):
                 self.assertIn("not formal approval", bridge.validate(dst))
+            # A real accepted Sol review can use '; ' after PASS_WITH_FINDINGS.
+            # This must NOT become an accepted prefix-injection/partial-word bug.
+            output["summary"] = "PASS_WITH_FINDINGS; MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE."
+            (dst / "output" / "output.json").write_text(json.dumps(output))
+            with patch.object(bridge, "pr_info", return_value=info()):
+                self.assertIn("not formal approval", bridge.validate(dst))
+            for forbidden in (
+                "PASS_WITH_FINDINGSX MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE.",
+                "PASS_WITH_FINDINGS;MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE.",
+                "PASSES MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE",
+            ):
+                output["summary"] = forbidden
+                (dst / "output" / "output.json").write_text(json.dumps(output))
+                with patch.object(bridge, "pr_info", return_value=info()):
+                    with self.assertRaisesRegex(ValueError, "REVIEW_VERDICT_MISSING"):
+                        bridge.validate(dst)
+            output["summary"] = "PASS MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE"
+            (dst / "output" / "output.json").write_text(json.dumps(output))
             with patch.object(bridge, "pr_info", return_value=info(head="c" * 40)):
                 with self.assertRaisesRegex(ValueError, "EXACT_HEAD"):
                     bridge.validate(dst)
