@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-14T15:35:19Z",
+  "generated_at_utc": "2026-10-14T19:02:07Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -40,7 +40,7 @@
         "private raw data publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4e2c6df9c10d30c4b1d9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-14T15:35:19Z",
+      "last_observed_at_utc": "2026-10-14T19:02:07Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -117,7 +117,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-14T15:35:19Z",
+      "last_observed_at_utc": "2026-10-14T19:02:07Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -189,7 +189,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-14T15:35:19Z",
+      "last_observed_at_utc": "2026-10-14T19:02:07Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -222,6 +222,139 @@
       "transition_receipt_path": "research/codex/transitions/923de2eed113038e8a6c.json",
       "transition_receipt_required": true,
       "workflow": "research-intake/codex-research-memes-v3-solana-cross-chain-expansion-v1"
+    },
+    {
+      "allowed_change_scope": [
+        "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs",
+        "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs"
+      ],
+      "candidate_id": "codex-research-task2-r0-graft-ancestry-hardening-v1",
+      "candidate_path": "research/codex/intake/2026/10/codex-research-task2-r0-graft-ancestry-hardening-v1.json",
+      "candidate_sha256": "8980f75bb49750123ecd000a3b751c3be059bb38912aaaf97e951cd334b5eca0",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "TASK2_R0_GRAFT_FALSE_ANCESTRY_WHILE_NO_REPLACE_OBJECTS",
+      "first_observed_at_utc": "2026-10-14T18:58:47.268Z",
+      "forbidden_changes": [
+        "API budget",
+        "CFGI historical first-known promotion",
+        "auto trade",
+        "automatic merge",
+        "canonical authority",
+        "historical R2\u2013R7 result fabrication",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "new workflow/scheduler/controller",
+        "original historical forecasts/outcomes",
+        "portfolio logic",
+        "private source bytes"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad6c41744767265f7c5a --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-10-14T19:02:07Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Repair only existing source-integrity verifier on open PR #1627. Verified local Git 2.47.3 negative fixture: unrelated commit U with exactly same tree/blob as baseline B and .git/info/grafts entry 'U B' tricks `git --no-replace-objects merge-base --is-ancestor B U` into reporting true. Both SHA/type/tree checks still pass, causing potential false source-ancestry acceptance. Implement raw immutable parent graph verification or fail-closed on graft-bearing/untrusted repository environments; preserve prior replacement-object, direct-commit, source SHA/type and path safeguards, no alternate authority. Also classify operational Git failure as UNKNOWN/invalid (exit1) instead of unsupported missing/type change, preserve deterministic locale-independent result serialization. Add precise regression tests and verify fixes against existing 14 synthetic tests; do not merge automatically. If the existing Codex executor cannot start from the UNMERGED PR head or lacks independent reviewer, classify NEEDS_MORE_EVIDENCE and route to existing Task2 code owner rather than creating a conflicting code engine or writing source to main.",
+      "observations": 1,
+      "post_fix_gate": "Exact PR1627 branch + no-duplicate preflight, proven graft negative fixture fails closed, normal positive child PASS, previous 14 tests PASS, Git operational errors appropriately UNKNOWN, exact changed blob hashes, independent code/security review, repository CI green, no original R0 receipts/data rewritten, no merge without reviewer.",
+      "precondition": "Candidate codex-research-task2-r0-graft-ancestry-hardening-v1 still exists on main at research/codex/intake/2026/10/codex-research-task2-r0-graft-ancestry-hardening-v1.json with SHA-256 8980f75bb49750123ecd000a3b751c3be059bb38912aaaf97e951cd334b5eca0, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_SOL_GRAFT_EXECUTED_FALSIFIER_v1.json",
+        "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1627",
+        "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/RESEARCH_LAB_SOL_ANALYSIS.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_SOL_GRAFT_EXECUTED_FALSIFIER_v1.md",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "ad6c41744767265f7c5a",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-10-14T18:58:47.268Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "Exact PR1627 branch + no-duplicate preflight, proven graft negative fixture fails closed, normal positive child PASS, previous 14 tests PASS, Git operational errors appropriately UNKNOWN, exact changed blob hashes, independent code/security review, repository CI green, no original R0 receipts/data rewritten, no merge without reviewer."
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "f5c5974cbaa5f9ac16dd73b962b07a1872fdb629d1045d7df77da5de29145254",
+      "transition_receipt_path": "research/codex/transitions/ad6c41744767265f7c5a.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-task2-r0-graft-ancestry-hardening-v1"
+    },
+    {
+      "allowed_change_scope": [
+        "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1.mjs",
+        "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs",
+        "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/*TASK2_R0* only for append-only evidence/readback receipt"
+      ],
+      "candidate_id": "codex-research-task2-r0-sol2-git-object-error-isolation-v1",
+      "candidate_path": "research/codex/intake/2026/10/codex-research-task2-r0-sol2-git-object-error-isolation-v1.json",
+      "candidate_sha256": "8d9e8aa20d4438d8a159175b5ff7893dcafb147d0535a2bb80df9f35a37a3c0a",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "TASK2_R0_SOL_PASS2_OPERATIONAL_ERROR_MISCLASSIFICATION_AND_GRAFT_ISOLATION",
+      "first_observed_at_utc": "2026-10-14T18:57:57.421Z",
+      "forbidden_changes": [
+        "API budget",
+        "R2-R7 result fabrication",
+        "automatic merge",
+        "automatic trade execution",
+        "autonomous API spend",
+        "canonical authority",
+        "historical forecast and outcome mutation",
+        "historical source inventory rewrite",
+        "live forecast production output",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "new workflow or scheduler",
+        "portfolio logic",
+        "private raw publication",
+        "source first-known promotion"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ff1c1d6794fc131c6991 --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-10-14T19:02:07Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Address the VERIFIED static-control-flow defect from the second actual GPT-6.1 Sol API review of PR #1627: after a successful target rev-parse, failure of `git cat-file -t` is misreported as TYPE_MISMATCH; a failed rev-parse from Git operational failure can be misreported as MISSING; ancestry subprocess errors are indistinguishable from genuine not-ancestor. Preserve source object classification separately from operational inability to verify. Independently reproduce or falsify Sol's PROPOSED (NOT EXECUTED) Git graft ancestry attack (legacy info/grafts) and potential GIT_DIR / GIT_WORK_TREE / GIT_CONFIG_* contamination, refusing to claim a bug merely from the proposal. Enforce stable serialization/order across process locales and hermetic synthetic fixtures with predictable behavior. Never alter original pin manifest, immutable source/outcome, API budgets or investment logic. Preserve a single R0 verifier implementation, fail closed, and require independent reviewer acceptance before merge.",
+      "observations": 1,
+      "post_fix_gate": "REFRESH_EXACT_MAIN_AND_PR_HEAD, RUN_FULL_OLD_AND_NEW_R0_GIT_FIXTURES_AND_NEGATIVE_GRAFT_ENV_TESTS, INDEPENDENT_NONAUTHOR_CODE_REVIEW, EXISTING_CI, NO_PRIVATE_VALUES, NORMAL_MERGE_CHECKS, POSTMERGE_BLOB_READBACK, SEPARATELY_KEEP_R1_HISTORICAL_PIT_BLOCKED",
+      "precondition": "Candidate codex-research-task2-r0-sol2-git-object-error-isolation-v1 still exists on main at research/codex/intake/2026/10/codex-research-task2-r0-sol2-git-object-error-isolation-v1.json with SHA-256 8d9e8aa20d4438d8a159175b5ff7893dcafb147d0535a2bb80df9f35a37a3c0a, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/RESEARCH_LAB_SOL_ANALYSIS.json",
+        "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/receipt.json",
+        "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1627",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PUBLIC_SOURCE_DRIFT_RECEIPT_v1.json",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "ff1c1d6794fc131c6991",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-10-14T18:57:57.421Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "REFRESH_EXACT_MAIN_AND_PR_HEAD, RUN_FULL_OLD_AND_NEW_R0_GIT_FIXTURES_AND_NEGATIVE_GRAFT_ENV_TESTS, INDEPENDENT_NONAUTHOR_CODE_REVIEW, EXISTING_CI, NO_PRIVATE_VALUES, NORMAL_MERGE_CHECKS, POSTMERGE_BLOB_READBACK, SEPARATELY_KEEP_R1_HISTORICAL_PIT_BLOCKED"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "a7fd5b9541b0d6b2c7b35b37eb92940bed8008703436d522c0b6706c5ebe45c9",
+      "transition_receipt_path": "research/codex/transitions/ff1c1d6794fc131c6991.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-task2-r0-sol2-git-object-error-isolation-v1"
     }
   ]
 }
