@@ -168,3 +168,36 @@ def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
         "portfolio_action_authorized": False,
     }
 
+
+def price_only_lead_synthetic(quotes: list[Quote], warning: Warning) -> dict:
+    """Frozen P1/P2-like synthetic price references, outcome-free warning-clock comparison.
+
+    The first running-peak crossing is computed online on this fictional quote tape;
+    no later global peak/trough is used. NOT an admitted historic lead statistic.
+    """
+    validate(quotes, warning, Policy(.5, 0, 1, 0, 0), 10_000.0)
+    if not quotes[0].at <= warning.delivered_at <= quotes[-1].at:
+        raise ValueError("WARNING_DELIVERY_OUTSIDE_SYNTHETIC_TAPE")
+    peaks = 0.0
+    first = {"P1_PRICE_ONLY_5PCT": None, "P2_PRICE_ONLY_3PCT": None}
+    for quote in quotes:
+        spot = (quote.bid + quote.ask) / 2
+        peaks = max(peaks, spot)
+        drawdown = 1 - spot / peaks
+        if drawdown >= .05 - 1e-12 and first["P1_PRICE_ONLY_5PCT"] is None:
+            first["P1_PRICE_ONLY_5PCT"] = quote.at
+        if drawdown >= .03 - 1e-12 and first["P2_PRICE_ONLY_3PCT"] is None:
+            first["P2_PRICE_ONLY_3PCT"] = quote.at
+    return {
+        "evidence_class": "SYNTHETIC_ONLY_NOT_HISTORICAL_EDGE",
+        "lead_vs_p1_hours": (first["P1_PRICE_ONLY_5PCT"] - warning.delivered_at).total_seconds()/3600
+                              if first["P1_PRICE_ONLY_5PCT"] else None,
+        "lead_vs_p2_hours": (first["P2_PRICE_ONLY_3PCT"] - warning.delivered_at).total_seconds()/3600
+                              if first["P2_PRICE_ONLY_3PCT"] else None,
+        "p1_crossing_utc": first["P1_PRICE_ONLY_5PCT"].isoformat() if first["P1_PRICE_ONLY_5PCT"] else None,
+        "p2_crossing_utc": first["P2_PRICE_ONLY_3PCT"].isoformat() if first["P2_PRICE_ONLY_3PCT"] else None,
+        "no_price_trigger_in_window": all(t is None for t in first.values()),
+        "independent_event_families_verified": False,
+        "historical_lead_certified": False,
+    }
+
