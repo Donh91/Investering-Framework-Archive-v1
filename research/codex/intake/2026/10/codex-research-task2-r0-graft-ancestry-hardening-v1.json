@@ -18,8 +18,8 @@
   "primary_target": "Existing OPEN PR #1627 at head 52d4a6a87ed3d41dbb4c4ccf53285b39c51a4bd5; do not mistakenly treat source as on main",
   "objective": "Repair only existing source-integrity verifier on open PR #1627. Verified local Git 2.47.3 negative fixture: unrelated commit U with exactly same tree/blob as baseline B and .git/info/grafts entry 'U B' tricks `git --no-replace-objects merge-base --is-ancestor B U` into reporting true. Both SHA/type/tree checks still pass, causing potential false source-ancestry acceptance. Implement raw immutable parent graph verification or fail-closed on graft-bearing/untrusted repository environments; preserve prior replacement-object, direct-commit, source SHA/type and path safeguards, no alternate authority. Also classify operational Git failure as UNKNOWN/invalid (exit1) instead of unsupported missing/type change, preserve deterministic locale-independent result serialization. Add precise regression tests and verify fixes against existing 14 synthetic tests; do not merge automatically. If the existing Codex executor cannot start from the UNMERGED PR head or lacks independent reviewer, classify NEEDS_MORE_EVIDENCE and route to existing Task2 code owner rather than creating a conflicting code engine or writing source to main.",
   "allowed_change_scope": [
-    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs (on original open PR #1627 branch, NOT currently on main)",
-    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs (on original open PR #1627 branch, NOT currently on main)"
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs",
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs"
   ],
   "evidence": [
     {
