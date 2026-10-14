@@ -5,6 +5,9 @@ import hashlib
 import json
 import os
 import re
+import subprocess
+import sys
+import time
 import urllib.error
 import urllib.request
 from collections import defaultdict
@@ -340,9 +343,60 @@ def generic_calibration_summary(repo: Path) -> dict[str, Any]:
     }
 
 
-def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidence: list[dict[str, Any]], max_output_tokens: int) -> list[dict[str, Any]]:
+def _cost_preflight(repo: Path, model: str, request_bytes: bytes, max_output_tokens: int) -> None:
+    """Fail closed before any optional CN OpenAI call; reserve worst-case tokens.
+
+    This is a bounded single-lane admission under the existing main-writer
+    concurrency group, NOT a platform-wide atomic billing reservation.
+    """
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
+    policy = read_json(repo / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json")
+    if (policy.get("status") != "ACTIVE_SHADOW_ONLY" or
+            policy.get("monthly_hard_stop_usd") != 40 or
+            policy.get("global_reserve_usd") != 4):
+        raise RuntimeError("CN_API_POLICY_UNVERIFIED")
+    if model not in PRICES_PER_MILLION or type(max_output_tokens) is not int or not 1 <= max_output_tokens <= 5000:
+        raise RuntimeError("CN_API_MODEL_OR_OUTPUT_LIMIT_NOT_APPROVED")
+    if not request_bytes or len(request_bytes) > 200000:
+        raise RuntimeError("CN_API_CONTEXT_SIZE_OUT_OF_BOUNDS")
+    # 1 token/UTF-8-byte is conservative for bounded text payloads.
+    max_cost = estimate_cost(model, len(request_bytes), max_output_tokens)
+    if max_cost > 1.0:
+        raise RuntimeError("CN_API_SINGLE_CALL_ESTIMATE_OUT_OF_BOUNDS")
+    guard = repo / "scripts/api_agent/check_monthly_cost_guard.py"
+    cmd = [sys.executable, str(guard), "--receipt-root", str(repo / "research/api_agent/outputs"),
+           "--pending-ledger-root", str(repo / "runtime/api-cost-ledger"),
+           "--hard-stop-usd", "40", "--reserve-usd", str(round(4.0 + max_cost, 8))]
+    try:
+        result = subprocess.run(cmd, cwd=repo, capture_output=True, timeout=45, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("CN_API_GLOBAL_BUDGET_CHECK_UNAVAILABLE") from exc
+    if result.returncode:
+        raise RuntimeError("CN_API_GLOBAL_BUDGET_BLOCKED")
+
+
+def _cn_cost_receipt_path(repo: Path, claims: list[dict[str, Any]]) -> Path:
+    # Claim identity binds retries to the SAME frozen cohort irrespective
+    # of rebuilt prompts and evidence. Never charge it twice automatically.
+    ids = [str(c["claim_id"]) for c in claims]
+    if not ids or len(set(ids)) != len(ids):
+        raise RuntimeError("CN_API_INVALID_COHORT_IDS")
+    digest = hashlib.sha256(canonical_bytes(ids)).hexdigest()
+    return repo / "research/api_agent/outputs/cn_internal_precision" / digest / "receipt.json"
+
+
+def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidence: list[dict[str, Any]],
+                               max_output_tokens: int, repo: Path | None = None) -> list[dict[str, Any]]:
     if not claims:
         return []
+    # No unscoped direct HTTP call: test callers must pass a repository
+    # authority root; a missing root makes the function no-spend.
+    if repo is None:
+        raise RuntimeError("CN_API_REPO_ROOT_REQUIRED")
+    repo = repo.resolve()
+    receipt_path = _cn_cost_receipt_path(repo, claims)
+    if receipt_path.exists():
+        raise RuntimeError("CN_API_COHORT_ALREADY_ATTEMPTED_OWNER_REVIEW_REQUIRED")
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY_missing_for_mature_long_horizon_claims")
@@ -376,33 +430,94 @@ def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidenc
         "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps({"claims": claims, "weekly_evidence": evidence}, sort_keys=True)}]}],
         "text": {"format": {"type": "json_schema", "name": "cn_internal_long_horizon_scores_v1", "strict": True, "schema": schema}},
     }
-    req = urllib.request.Request("https://api.openai.com/v1/responses", data=canonical_bytes(payload), headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST")
+    payload_bytes = canonical_bytes(payload)
+    _cost_preflight(repo, model, payload_bytes, max_output_tokens)
+    req = urllib.request.Request("https://api.openai.com/v1/responses", data=payload_bytes,
+                                 headers={"Authorization": f"Bearer {api_key}",
+                                          "Content-Type": "application/json"}, method="POST")
+    request_hash = hashlib.sha256(payload_bytes).hexdigest()
+    raw: dict[str, Any] | None = None
+    response_error: str | None = None
     try:
         with urllib.request.urlopen(req, timeout=180) as response:
             raw = json.loads(response.read())
-    except urllib.error.HTTPError as exc:
-        raise RuntimeError(f"openai_http_{exc.code}:{exc.read().decode(errors='replace')[:500]}") from exc
-    text = raw.get("output_text")
-    if not text:
-        parts = []
-        for item in raw.get("output", []):
-            for content in item.get("content", []) if isinstance(item, dict) else []:
-                if isinstance(content, dict) and content.get("type") == "output_text":
-                    parts.append(str(content.get("text", "")))
-        text = "".join(parts)
-    parsed = json.loads(text)
-    rows = parsed.get("scores") or []
-    by_id = {r["claim_id"]: r for r in rows}
-    expected = [c["claim_id"] for c in claims]
-    if list(by_id) != expected:
-        raise SystemExit("INTERNAL_LONG_HORIZON_SCORE_COVERAGE_MISMATCH")
-    for row in rows:
-        status = row["status"]
-        expected_score = ALLOWED_STATUS[status]
-        if expected_score is None and row.get("score") is not None:
-            raise SystemExit("INTERNAL_LONG_HORIZON_NULL_SCORE_MISMATCH")
-        if expected_score is not None and float(row.get("score")) != expected_score:
-            raise SystemExit("INTERNAL_LONG_HORIZON_SCORE_STATUS_MISMATCH")
+            if not isinstance(raw, dict):
+                response_error = "NON_OBJECT_RESPONSE"
+    except (urllib.error.URLError, OSError, ValueError, TypeError) as exc:
+        # After POST, any network ambiguity may have incurred billable tokens.
+        response_error = f"POST_RESPONSE_UNVERIFIABLE:{type(exc).__name__}"
+
+    rows: list[dict[str, Any]] = []
+    valid = False
+    usage = (raw or {}).get("usage") if isinstance(raw, dict) else None
+    input_count = usage.get("input_tokens") if isinstance(usage, dict) else None
+    output_count = usage.get("output_tokens") if isinstance(usage, dict) else None
+    usage_valid = all(type(x) is int and x >= 0 for x in (input_count, output_count))
+    if response_error is None and isinstance(raw, dict):
+        try:
+            if raw.get("status") == "incomplete":
+                raise ValueError("INCOMPLETE_RESPONSE")
+            text = raw.get("output_text")
+            if not text:
+                parts = []
+                for item in raw.get("output", []):
+                    for content in item.get("content", []) if isinstance(item, dict) else []:
+                        if isinstance(content, dict) and content.get("type") == "output_text":
+                            parts.append(str(content.get("text", "")))
+                text = "".join(parts)
+            parsed = json.loads(text)
+            if not isinstance(parsed, dict):
+                raise ValueError("INVALID_RESPONSE_STRUCTURE")
+            rows = parsed.get("scores") or []
+            by_id = {r["claim_id"]: r for r in rows}
+            expected = [c["claim_id"] for c in claims]
+            if list(by_id) != expected:
+                raise ValueError("INTERNAL_LONG_HORIZON_SCORE_COVERAGE_MISMATCH")
+            for row in rows:
+                status = row["status"]
+                expected_score = ALLOWED_STATUS[status]
+                if expected_score is None and row.get("score") is not None:
+                    raise ValueError("INTERNAL_LONG_HORIZON_NULL_SCORE_MISMATCH")
+                if expected_score is not None and float(row.get("score")) != expected_score:
+                    raise ValueError("INTERNAL_LONG_HORIZON_SCORE_STATUS_MISMATCH")
+            valid = True
+        except (ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+            response_error = f"INVALID_STRUCTURED_OUTPUT:{type(exc).__name__}"
+    if not usage_valid:
+        response_error = "CN_API_COST_USAGE_UNKNOWN"
+        valid = False
+
+    receipt = {
+        "contract": "API_AGENT_RECEIPT_v3",
+        "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+        "model": model, "reasoning_effort": "medium",
+        "created_unix": int(time.time()),
+        "response_id": raw.get("id") if isinstance(raw, dict) else None,
+        "request_hash": request_hash,
+        "context_hash": hashlib.sha256(canonical_bytes(evidence)).hexdigest(),
+        "output_hash": hashlib.sha256(canonical_bytes(rows)).hexdigest() if valid else None,
+        "attempt_count": 1, "status": "PASS" if valid else "API_OUTPUT_INVALID",
+        "claim_ids": [c["claim_id"] for c in claims],
+        "authority": "INTERNAL_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY",
+        "error": response_error,
+    }
+    if usage_valid:
+        from scripts.api_agent.api_gateway import estimate_cost
+        receipt.update({
+            "input_tokens": input_count, "output_tokens": output_count,
+            "estimated_cost_usd": estimate_cost(model, input_count, output_count),
+        })
+    else:
+        # Intentionally omit the cost amount. Existing global cost guard
+        # will thereafter fail closed on this receipt until owner reconciles
+        # provider billing, instead of undercounting a possibly paid call.
+        receipt["usage_reconciliation_required"] = True
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    if receipt_path.exists():
+        raise RuntimeError("CN_API_RECEIPT_RACE_NO_OVERWRITE")
+    receipt_path.write_bytes(canonical_bytes(receipt))
+    if not valid:
+        raise RuntimeError(response_error or "CN_API_OUTPUT_INVALID")
     return rows
 
 
@@ -553,7 +668,7 @@ def main() -> None:
             long_scores = [{"claim_id": c["claim_id"], "status": "NOT_EVALUABLE", "score": None, "evidence": "One or more required final Master Monday weekly evidence packages are missing.", "self_critique": "Long-horizon claim was preserved but cannot be scored without the full frozen horizon evidence."} for c in due_long]
         else:
             try:
-                long_scores = score_long_horizon_via_api(args.model, due_long, ev, args.max_output_tokens)
+                long_scores = score_long_horizon_via_api(args.model, due_long, ev, args.max_output_tokens, repo=repo)
             except (RuntimeError, json.JSONDecodeError, urllib.error.URLError):
                 mature_long_pending = len(due_long)
                 long_scores = []
