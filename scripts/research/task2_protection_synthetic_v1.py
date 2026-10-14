@@ -95,6 +95,7 @@ def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
     hold_equity = []
     sim_equity = []
     units, cash = units_initial, 0.0
+    trading_fees, slippage_paid, gas_paid, turnover = 0.0, 0.0, 0.0, 0.0
     sale_at = buy_at = None
     sale_status = "NO_ELIGIBLE_EXECUTION_QUOTE"
     reentry_status = "NOT_APPLICABLE"
@@ -107,6 +108,10 @@ def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
             if notional <= quote.capacity_usd:
                 proceeds = notional * (1 - policy.slippage_fraction) * (1 - policy.fee_fraction) - policy.gas_usd_per_fill
                 if proceeds > 0:
+                    trading_fees += notional * (1 - policy.slippage_fraction) * policy.fee_fraction
+                    slippage_paid += notional * policy.slippage_fraction
+                    gas_paid += policy.gas_usd_per_fill
+                    turnover += notional
                     units -= desired_units
                     cash += proceeds
                     sale_at = quote.at
@@ -123,6 +128,10 @@ def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
             if desired_notional <= quote.capacity_usd:
                 investable = cash * (1 - policy.fee_fraction) - policy.gas_usd_per_fill
                 if investable > 0:
+                    trading_fees += cash * policy.fee_fraction
+                    slippage_paid += investable * policy.slippage_fraction / (1 + policy.slippage_fraction)
+                    gas_paid += policy.gas_usd_per_fill
+                    turnover += cash
                     units += investable / (quote.ask * (1 + policy.slippage_fraction))
                     cash = 0.0
                     buy_at = quote.at
@@ -161,6 +170,13 @@ def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
         "terminal_hold_usd": round(hold_final, 6),
         "terminal_policy_usd": round(policy_final, 6),
         "net_delta_vs_hold_usd": round(policy_final - hold_final, 6),
+        "time_partially_out_of_market_hours": round((buy_at or quotes[-1].at).timestamp()/3600 - sale_at.timestamp()/3600, 6) if sale_at else 0.0,
+        "trade_notional_turnover_usd": round(turnover, 6),
+        "intermediate_trading_fees_usd": round(trading_fees, 6),
+        "intermediate_slippage_usd": round(slippage_paid, 6),
+        "gas_cost_usd": round(gas_paid, 6),
+        "spread_included_in_bid_ask": True,
+        "terminal_fee_applied_symmetrically_to_held_units": True,
         "max_drawdown_hold_fraction": round(drawdown(hold_equity), 8),
         "max_drawdown_policy_fraction": round(drawdown(sim_equity), 8),
         "historical_result_admissible": False,
