@@ -223,7 +223,7 @@ def render_markdown(data):
                 '| Task | Receipts | Estimated USD | Gateway PASS | Retries |',
                 '|---|---:|---:|---:|---:|']
         for group in usage['spend_by_task'][:12]:
-            lines.append(f"| \`{group['task']}\` | {group['receipt_count']} | \${group['cost_usd']:.6f} | {group['gateway_pass_count']} | {group['retry_receipt_count']} |")
+            lines.append(f"| `{group['task']}` | {group['receipt_count']} | ${group['cost_usd']:.6f} | {group['gateway_pass_count']} | {group['retry_receipt_count']} |")
         lines+=['','A gateway PASS alone is not measured downstream value or investment edge.']
     if data['required_actions']: lines.extend(f"- **{row['priority']}** `{row['system']}` - {row['reason']}" for row in data['required_actions'])
     else: lines.append('- None')
