@@ -1,0 +1,49 @@
+{
+  "contract": "RESEARCH_LAB_SOL_API_MISSION_PACKET_v1",
+  "created_date": "2026-10-14",
+  "status": "OWNER_RELEASED_FOR_ONE_BOUNDED_API_ADVERSARIAL_REVIEW",
+  "mission_id": "TASK2-R0-INDEPENDENT-REVIEW-001",
+  "title": "Task 2 R0 independent Git-object verifier adversarial review",
+  "priority": "P0",
+  "recommended_task_lane": "RESEARCH_LAB_SOL_ANALYSIS",
+  "recommended_model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "question": "At exact PR #1627 head b2841b387106a2c5ae22b91eef8c59b786d73b16, independently falsify the original source Git SHA/type verifier and ten negative-control tests. Is there a reproducible material code/science flaw? What exact minimal fix and regression check would resolve it? Prevent any false R1/R2 scientific promotion.",
+  "hypothesis": "The proposed R0 verifier properly rejects tampered baseline source objects, moving refs and unsafe paths while calculating only public Git-object drift; however its test suite could miss subtle Git path/arg/exit vulnerabilities. An independent model can identify novel falsifiers without claiming historical market edge.",
+  "baseline": "Existing original R0 public 36/36 Git-object receipt + manually verified v1 code and all ten synthetic negative controls. Distinguish static code vs actual remote archive replay, independent provider first-known, and forecast outcomes.",
+  "required_outputs": [
+    "source_revision_and_exact_blobs_checked",
+    "static_verifier_verdict",
+    "per_falsifier_pass_fail_unknown",
+    "new_counterexample_or_explicit_none",
+    "reproducible_minimal_fixture_or_design_only",
+    "safety_and_privacy_boundaries",
+    "specific_correction_and_tests_if_needed",
+    "historical_PIT_and_R2_nonadmission"
+  ],
+  "falsifier": "Any input path or commit combination the code mistakenly accepts; missed target source SHA/type discrepancy; wrong success exit; injection/traversal; stale test assumptions; lack of independent source-clock validation disguised as proof.",
+  "kill_condition": "If static code cannot be verified from exact SHA, or bug/counterexample cannot be reproduced, mark UNKNOWN/INSUFFICIENT_EVIDENCE; do not approve PR, issue market claims, or consume a second API pass without new material deterministic evidence.",
+  "forbidden": [
+    "automatic code write",
+    "PR approval",
+    "automatic merge",
+    "new schedule/controller",
+    "original historical forecast/outcome mutation",
+    "private data exposure",
+    "historical R2 scoring",
+    "market rule change",
+    "portfolio action",
+    "budget change",
+    "paid datasets",
+    "fabricated test execution"
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "repository_write": false
+  }
+}
