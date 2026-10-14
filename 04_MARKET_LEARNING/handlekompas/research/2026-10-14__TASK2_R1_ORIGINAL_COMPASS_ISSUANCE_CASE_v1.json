@@ -1,0 +1,81 @@
+{
+  "contract": "TASK2_R1_SINGLE_ORIGINAL_COMPASS_ISSUANCE_CASE_v1",
+  "recorded_date_utc": "2026-10-14",
+  "status": "PUBLIC_GIT_LINEAGE_CONFIRMED__R1_PROVIDER_FIRST_KNOWN_UNVERIFIED__SCORING_CONTRACT_LEGACY_V1",
+  "authority": "RESEARCH_ONLY_NOT_AN_ADMITTED_HISTORICAL_SCORE",
+  "public_repo": "Donh91/Investering-Framework-Archive-v1",
+  "public_repo_baseline_main_sha": "c922b47cd81782efca6a64f6042f6cb0fe5efb64",
+  "case_id": "CMP-20260920-02425db96215",
+  "source_packet": {
+    "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/09/20/155948_2103d6afeb8d.json",
+    "git_blob_sha": "b2cb5af13a248c3dbd35e93552f091e8d370ab0d",
+    "first_git_commit_sha": "7c2e493601cb136a82836310341d65e7d3864c5b",
+    "first_git_commit_author_and_committer_timestamp_utc": "2026-09-20T15:59:49Z",
+    "packet_generated_at_utc": "2026-09-20T15:59:48Z",
+    "packet_sha256_declared": "2103d6afeb8d77786abc2ac16f54bea1d13793a5bf47878f0616e013f0de5cb4",
+    "packet_sha256_independently_rehashed_by_intake": false,
+    "provider_first_known_at_utc": null,
+    "source_native_cadence_and_provider_vintage_attested": false
+  },
+  "forecast": {
+    "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/20/CMP-20260920-02425db96215.json",
+    "git_blob_sha": "30b874a9d8967b44ec7b9a7ab11cb0d27c9b193f",
+    "first_git_commit_sha": "3dc7867b12a7bfb9a68068af08d44d1da5121113",
+    "first_git_commit_author_and_committer_timestamp_utc": "2026-09-20T16:00:54Z",
+    "issued_at_utc": "2026-09-20T16:00:54Z",
+    "compass_sha256_declared": "c8334509c328eb445e7a9943debea119fd68064dd6ec55decf52c20320e48b04",
+    "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v1",
+    "original_public_delivery_first_known_proof_verified": false
+  },
+  "outcome": {
+    "path": "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/09/20/CMP-20260920-02425db96215_12h.json",
+    "git_blob_sha": "4c1028fdb859a09a60fe9334c97faa94eed224f5",
+    "first_git_commit_sha": "61f81dcfffb9c7c2f271e1524d5bcdda6c516781",
+    "first_git_commit_author_and_committer_timestamp_utc": "2026-09-21T06:44:38Z",
+    "issued_at_utc": "2026-09-20T16:00:54Z",
+    "target_at_utc": "2026-09-21T04:00:54Z",
+    "target_observation_at_utc": "2026-09-21T05:00:00Z",
+    "matured_at_utc": "2026-09-21T06:44:37Z",
+    "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v1",
+    "originally_recorded_btc_direction_result": "ABSTAINED",
+    "originally_recorded_eth_direction_result": "ABSTAINED"
+  },
+  "publicly_reproduced_link_checks": {
+    "source_packet_path_matches_forecast": true,
+    "source_packet_declared_sha256_matches_forecast_pointer": true,
+    "forecast_compass_id_matches_outcome": true,
+    "forecast_compass_sha256_matches_outcome": true,
+    "outcome_forecast_path_matches_original": true,
+    "all_three_files_existed_at_readback": true,
+    "source_packet_committed_before_forecast": true,
+    "outcome_committed_after_target": true
+  },
+  "clock_comparisons": {
+    "source_packet_git_commit_before_forecast_seconds": 65,
+    "source_packet_generated_before_forecast_seconds": 66,
+    "outcome_target_observation_after_due_seconds": 3546,
+    "strict_same_target_clock": false
+  },
+  "first_git_commit_evidence_limit": "Git commit recorded author/committer dates are historical repository metadata, not an independently attested provider first-publication or public delivery clock; path history reflects accessible current ancestry, not proof no earlier external signal existed.",
+  "admission": {
+    "original_forecast_to_outcome_git_linkage": "VERIFIED_PUBLIC_METADATA_ONLY",
+    "upstream_provider_first_known": "UNVERIFIED",
+    "independent_proof_of_public_signal_delivery": "UNVERIFIED",
+    "legacy_target_clock_issue": "TARGET_OBSERVATION_3546_SECONDS_AFTER_TARGET",
+    "scoring_contract_v3_equivalent": false,
+    "issued_directional_forecast_eligible_to_score": false,
+    "admitted_independent_event_family_count": 0,
+    "historical_direction_scores_executed_by_this_intake": 0,
+    "economic_action_scores_executed_by_this_intake": 0,
+    "final": "R1_BLOCKED_NO_LIVE_PIT_ATTESTATION_AND_LEGACY_SCORING_CONTRACT"
+  },
+  "owner_issue": 1596,
+  "privacy": "PUBLIC_GIT_METADATA_ONLY_NO_PRIVATE_RAW_DATA_OR_TRADING_INFORMATION",
+  "frozen_historical_files_modified": false,
+  "need_before_any_historical_score": [
+    "Owner-verified provider first-known/publication vintage and source-contract lineage for the contemporaneous packet.",
+    "Original issuance/publication proof independent of self-declared timestamps.",
+    "Preserve v1 target-observation offset; do not recompute v1 as a v3 score or retroactively replace historical outcome.",
+    "Declare eligible forecast and abstention denominators, including overlapping decision families."
+  ]
+}
