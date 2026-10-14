@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, hashlib
+import argparse, json, hashlib, re
+from pathlib import Path
 from typing import Any, Dict, List
-from research_governance_common import GOV, load_json, specialist_states, specialist_binding_report, action_of, target_of, evidence_fp, digest, persist_json, append_csv
+from research_governance_common import ROOT, GOV, load_json, specialist_states, specialist_binding_report, action_of, target_of, evidence_fp, digest, persist_json, append_csv
 
 BASE=GOV/"meta_orchestrator_v1"
 POLICY=BASE/"POLICY.json"
@@ -134,6 +135,108 @@ def orchestrate(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dic
         "deep_research_authorized":False,"external_provider_calls_authorized":False,
     }
 
+
+SPECIALIST_QUEUE_REL="04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json"
+SPECIALIST_NOTES_DIR="04_RESEARCH_LAB/external_specialist_dissection/"
+INTAKE_ID_RE=re.compile(r"^[A-Z][A-Z0-9_]{5,100}$")
+MAX_METHOD_INTAKES=20
+
+
+def specialist_intake_handoff(root:Path=ROOT)->dict:
+    """Read admitted public method notes; no provider/network calls or execution scheduling.
+
+    New entries are registered under the existing specialist queue owner; this
+    bridge deliberately does NOT change the authoritative next_action or active
+    heavy workstream. A file in a Draft PR is NOT an eligible main-source note.
+    """
+    result={"contract":"RESEARCH_SPECIALIST_INTAKE_HANDOFF_v1",
+            "authority":"RESEARCH_ONLY_NON_CANONICAL",
+            "source_queue":SPECIALIST_QUEUE_REL,
+            "status":"NO_REGISTERED_INTAKES","entries":[],
+            "source_notes_verified_as_market_evidence":False,
+            "source_license_or_api_admission":False,
+            "canonical_effect":False,"portfolio_execution":False,
+            "paid_data_authorized":False}
+    queue_file=root/SPECIALIST_QUEUE_REL
+    if not queue_file.is_file():
+        return {**result,"status":"SOURCE_QUEUE_UNAVAILABLE"}
+    try:
+        source=load_json(queue_file,{})
+        if source.get("contract")!="RESEARCH_LAB_EXTERNAL_SPECIALIST_DISSECTION_QUEUE_V1":
+            return {**result,"status":"INVALID_SOURCE_QUEUE_CONTRACT"}
+        lanes={x["id"] for x in source.get("lanes",[]) if isinstance(x,dict) and isinstance(x.get("id"),str)}
+        raw=source.get("method_intakes",[])
+        if not isinstance(raw,list) or len(raw)>MAX_METHOD_INTAKES:
+            return {**result,"status":"INVALID_INTAKE_COUNT_OR_TYPE"}
+        seen=set()
+        for item in raw:
+            if not isinstance(item,dict):
+                return {**result,"status":"INVALID_INTAKE_ENTRY","entries":[]}
+            iid=item.get("id"); owner=item.get("owner_lane"); note=item.get("evidence_note")
+            if (not isinstance(iid,str) or not INTAKE_ID_RE.fullmatch(iid) or iid in seen or
+                    not isinstance(owner,str) or
+                    owner not in lanes|{"TASK2_R1_EXISTING_SOURCE_ADMISSION"} or
+                    item.get("execution_permission") is not False or
+                    not isinstance(note,str) or not note.startswith(SPECIALIST_NOTES_DIR) or
+                    not note.endswith(".md") or ".." in Path(note).parts):
+                return {**result,"status":"INVALID_INTAKE_AUTHORITY_OR_PATH","entries":[]}
+            seen.add(iid)
+            p=(root/note).resolve()
+            allowed=(root/SPECIALIST_NOTES_DIR).resolve()
+            if not p.is_relative_to(allowed):
+                return {**result,"status":"PATH_OUTSIDE_SPECIALIST_PUBLIC_NOTES","entries":[]}
+            status="NOTE_PRESENT_NOT_SOURCE_ADMITTED" if p.is_file() else "NOTE_NOT_MERGED_OR_MISSING"
+            sha=hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else None
+            result["entries"].append({
+                "id":iid,"owner_lane":owner,"related_lane":item.get("related_lane"),
+                "evidence_note":note,"note_sha256":sha,
+                "status":status,"review_state":item.get("review_state","REVIEW_PENDING"),
+                "incremental_value":item.get("incremental_value","UNPROVEN"),
+                "source_access":item.get("source_access","UNVERIFIED"),
+                "execution_mode":"AUTO_OBSERVE","requires_owner_review":True,
+                "market_source_admitted":False,"automatic_promotion":False})
+        result["status"]="PUBLIC_NOTES_READ_ONLY" if raw else "NO_REGISTERED_INTAKES"
+        return result
+    except (OSError,TypeError,ValueError,KeyError):
+        return {**result,"status":"INVALID_OR_UNREADABLE_INTAKE","entries":[]}
+
+
+def attach_specialist_intakes(state:dict,root:Path=ROOT)->dict:
+    """Add low-priority observations to the EXISTING research queue, never work orders."""
+    report=specialist_intake_handoff(root)
+    updated={**state,"specialist_intake_handoff":report}
+    if (report["status"]!="PUBLIC_NOTES_READ_ONLY" or
+            state.get("sentinel_verdict")!="PASS" or
+            state.get("binding_integrity")!="PRIMARY_COMPLETE"):
+        return updated
+    observations=[]
+    for row in report["entries"]:
+        if row["status"]!="NOTE_PRESENT_NOT_SOURCE_ADMITTED":
+            continue
+        observations.append({
+            "orchestrator_action":"WAIT_FOR_EVIDENCE",
+            "source":"EXTERNAL_SPECIALIST_INTAKE",
+            "specialist_action":"EXISTING_OWNER_REVIEW_ONLY",
+            "target":row["id"],
+            "owner_lane":row["owner_lane"],
+            "evidence_note":row["evidence_note"],
+            "evidence_fingerprint":row["note_sha256"],
+            "impact_tier":"LOW",
+            "execution_mode":"AUTO_OBSERVE",
+            "reason":"Public method description is not verified independent market evidence",
+            "canonical_effect":False,
+            "portfolio_execution":False,
+            "paid_data_authorized":False,
+        })
+    # Preserve the existing high-value priority ordering and heavy workstream.
+    updated["queue"]=[*state["queue"],*observations]
+    updated["queue_n"]=len(updated["queue"])
+    updated["evidence_fingerprint"]=digest({
+        "prior_fingerprint":state["evidence_fingerprint"],
+        "specialist_intake_handoff":report,
+    })
+    return updated
+
 def persist(state):
     persist_json(STATE,state)
     persist_json(QUEUE,{"contract":"RESEARCH_META_EXECUTION_QUEUE_v1","authority":"RESEARCH_ONLY_NON_CANONICAL","queue":state["queue"],"active_heavy_workstreams":state["active_heavy_workstreams"],"binding_integrity":state["binding_integrity"],"canonical_effect":False})
@@ -153,6 +256,7 @@ def main():
     states=specialist_states()
     bindings=specialist_binding_report()
     state=orchestrate(policy,states,load_json(MEMORY,{}),load_json(VOI,{}),load_json(SENTINEL,{}),bindings)
+    state=attach_specialist_intakes(state)
     if args.dry_run: print(json.dumps(state,indent=2,sort_keys=True)); return
     persist(state); print(json.dumps(state,indent=2,sort_keys=True))
 if __name__=="__main__": main()
