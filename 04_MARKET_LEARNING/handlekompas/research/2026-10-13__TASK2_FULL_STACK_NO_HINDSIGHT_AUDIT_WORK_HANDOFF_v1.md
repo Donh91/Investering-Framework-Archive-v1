@@ -169,3 +169,23 @@ The user's 11-page DR07 report is **Rotation, Altseason & Market Cycle**, not th
 - `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR07_ROTATION_RESEARCH_INTAKE_v1.json` — ten **source-specified** H1–H10 design sketches, ten **unspecified** H11–H20, and explicit `task2_admitted=false` for all ten. H3/H5/H10 `READY_NOW` labels are unverified in the absence of bound datasets/original first-known forecasts.
 
 **R0/R1 controls preserved:** Any claimed original Cycle Navigator 2021 issuance, 30–40% exit hit-rate and finished after-cost rotation simulations in the PDF must be independently traced to authentic original source objects, exact first-known timestamps, family denominators and reproducible outputs before they count as canonical outcomes. The report itself lacks those receipts. Its lack-of-evidence conclusions cannot universally falsify all rotations; distinguish not-established, low-N and actual tested nulls. Existing DR05 Round-2 negative results remain closed; no retroactive remapping. Current PATH site, ETA logic, Kompas, public scores, historical forecast receipts and live actions remain unchanged. New no-hindsight owner work routes through existing Task 2 and Cycle Navigator research governance, not a new scheduler or engine. AI-vs-simple-rules comparison stays a separate future research input.
+
+
+## Actual R0 Git-object delta execution · 2026-10-14
+
+An exact, publicly reproducible **R0 source-object census** was performed on 2026-10-14 using fixed `main=46c7a167b1d328c9f6a13451d74941a09ceb644b` against the immutable original `aea463dc9c5a57fab0e7ef1aa5fc63791158d524` inventory. Source-Git-object results: **17 families, 37 references, 36 unique paths, 16 CHANGED / 20 UNCHANGED / 0 UNKNOWN / 0 MISSING**. The four research paths hidden by GitHub's truncated recursive tree were separately read at explicit commit ref (no silent coverage inflation). Complete sources:
+
+- `04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_GIT_SOURCE_DELTA_RECEIPT_v1.json` — all 36 public paths and pinned object SHA before/after.
+- `04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_census_v1.mjs` — research-only offline `git` reproducibility gate with synthetic negative fixtures; exact committed script test/independent rerun should be reviewed under PR.
+- `04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PUBLIC_DRIFT_EXECUTION_NOTE_v1.md` — exact methods, commands, provenance and follow-on R1 owner requirements.
+
+**Scientific boundary remains unchanged:** Git tree SHA drift != raw-provider first-known-time, episode independence, historical skill or complete private source R0. Current `R1_LIVE_PIT_BLOCKED` and `R2_R7_NOT_EXECUTED` remain authoritative until immutable restricted receipts qualify original forecasting and outcome data. Preserve censored/missing and negative cases. No production or market behavior changed. No new scheduler/engine/AI dispatch.
+
+
+## R1 private metadata-only preflight · 2026-10-14
+
+An authorized private, metadata-only readback was performed at immutable `Donh91/secrets` main `50cd94708076bb6b0626132a4af87cfb4f4c5fa4` under its current `AGENTS.md`/boundary rules. Provider-value-free report: `04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_PRIVATE_METADATA_READBACK_v1.json`.
+
+- The exact private health receipt reports **1,043 valid captured files**, **1,032 post-floor provenance-complete** and **11 legacy captures quarantined for missing v2 provenance**. Round 3 is currently **collection active for SC01/SC03/SC14**, but `analysis_authorized=false` and both hypothesis testing/outcome scoring remain OFF. Do **not** mistake basic health success for research or trading admission.
+- An immutable private historical altseason reconciliation receipt reports **851,882 data rows** and identifies reconciled primitive source fields `timestamp_ms, close, quote_volume, trade_count, taker_buy_share` as historically research-admissible **within the original coverage limits**. The receipt corrects a legacy compressed-file hash metadata mistake append-only, preserving source bytes. Derived fields, source-first-known clocks, original Compass issued-forecast joins, independent event-family N and broad alpha mining remain separately blocked.
+- **Evidence classification:** This run verified immutable *private receipt metadata and Git object identities*, not the historical raw compressed artifact's SHA256 via independent download. No private raw provider values were read out or written publicly. Do not upgrade `R1_LIVE_PIT_BLOCKED` on this basis.
