@@ -166,3 +166,31 @@ Existing Task 2 controls may already contain several or all. These cases are **r
 **Result of this bounded source-code spot check:** At least three major safety classes (4, 7, 8) already have explicit fail-closed mechanics in R1; other classes have existing candidate owners or are outside this generic R1 oracle. This is **not proof of complete regression coverage across all versions/datasets**. No new test or code is justified yet from the cited external product alone.
 
 **Next engineering action if owner continues:** verify actual branch/head CI and coverage within the exact existing owning test suites; prioritize real first-known/PIT source availability, not more fabricated synthetic pass counts. Any claim of missing capability must name the real consumer and produce a falsifying fixture against its exact runtime. If none survives, KILL the candidate as redundant and record the negative result.
+
+
+## 7. Existing daily governance bridge, 2026-10-14
+
+**Purpose:** Prevent specialist research from being forgotten after user chats or source-note merges, without creating a parallel research autonomy system or claiming the specialist experiment has executed.
+
+### Exact integration
+
+- The pre-existing GitHub Actions [Autonomous Research Governance Loop](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/.github/workflows/autonomous-research-governance-loop.yml) runs the existing \`scripts/research/research_meta_orchestrator.py\` on its daily schedule.
+- The existing canonical specialist queue \`QUEUE_V1.json\` has a new **non-priority** \`method_intakes\` field. It names three research questions, each mapped to a pre-existing owner lane and **this** public note. Its \`lanes\`, ranking, \`current_next_action=FIRST_FORWARD_PONS_BUYER_QUALITY_CASE_V1\` and master issue #1512 are unchanged. Adding a candidate does **not** authorize execution.
+- The meta-orchestrator's new \`specialist_intake_handoff\` reads only the public, merged, actual-on-disk notes listed in the queue. It computes a SHA-256 of each available note and stores a derivative observation in existing \`00_ARCHIVE_CONTROL/research_governance_v1/meta_orchestrator_v1/STATE.json\`. The existing \`EXECUTION_QUEUE.json\` also receives **LOW / WAIT_FOR_EVIDENCE / AUTO_OBSERVE** records, never executor jobs or automatic canonical-review requests.
+- Any Draft-PR-only or missing note remains \`NOTE_NOT_MERGED_OR_MISSING\`, and cannot enter the research execution queue. Invalid paths, unknown owners, unsafe execution permission, unbounded intake or failed sentinel/binding checks are blocked. Validation lives in the existing \`validate_research_meta_orchestrator.py\` and is run by the existing \`autonomous-research-governance-gate.yml\` PR gate.
+- Meta primary/secondary priority, existing one-heavy-workstream limit and authority remain unchanged. No model/API calls are needed to transfer an existing candidate into observation state.
+- The source note is **not** independent market evidence, and its hash is **not** proof of a valid source timestamp. The handoff is a reproducible durable pointer, not a graded outcome, a licensed market feed, an agent assignment, a scheduler or a permission to implement.
+
+### The missing last mile, explicitly not yet claimed
+
+This bridge **automatically persists and surfaces accepted notes for owner review once merged**, but **does not autonomously merge Draft PRs, run scientific experiments, create owner-authorized coding tasks or certify Task 2 R1 PIT outcomes**. Those remain governed by existing queue owners, independent review, source evidence and the separate Codex/Remediation maturity intake.
+
+**Activation condition:** independent review + merge of the existing Draft PR #1613. Until then the daily \`main\` workflow does not contain the code or intake. **Do not call this feature live or autonomously running before post-merge workflow and state readback.**
+
+### Done criteria after merge
+
+1. GitHub Actions research governance gate green at the reviewed PR head.
+2. Diff contains only note, \`QUEUE_V1.json\`, existing meta-orchestrator and its existing validator.
+3. After scheduled/authorized normal daily loop, \`meta_orchestrator_v1/STATE.json\` carries 3 specialist-handoff observations and \`EXECUTION_QUEUE.json\` carries low-priority \`AUTO_OBSERVE\` candidate entries with exact note SHA-256.
+4. Original heavy \`COMPOUNDING_LEARNING\` owner and one-heavy-workstream limit unchanged, no subscription/provider calls, no Alpha/official forecast change and no paid budget deviation.
+5. Current-next-action and eligibility states remain truthful; absence of actual forward cases is not counted as execution.
