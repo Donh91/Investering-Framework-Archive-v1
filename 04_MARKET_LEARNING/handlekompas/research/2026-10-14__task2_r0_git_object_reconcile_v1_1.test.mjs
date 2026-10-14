@@ -6,7 +6,7 @@ import {execFileSync,spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 const dir=mkdtempSync(join(tmpdir(),'task2-r0-v11-'));let count=0;
 function git(...args){return execFileSync('git',args,{cwd:dir,encoding:'utf8'}).trim()}
-function run(inv,head,tree){writeFileSync(join(dir,'inventory.json'),JSON.stringify(inv));return spawnSync(process.execPath,[new URL('./task2_r0_git_object_reconcile_v1_1.mjs',import.meta.url).pathname,'--inventory',join(dir,'inventory.json'),'--head',head,'--expected-tree',tree,'--repo-dir',dir],{encoding:'utf8'});}
+function run(inv,head,tree){writeFileSync(join(dir,'inventory.json'),JSON.stringify(inv));return spawnSync(process.execPath,[new URL('./2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs',import.meta.url).pathname,'--inventory',join(dir,'inventory.json'),'--head',head,'--expected-tree',tree,'--repo-dir',dir],{encoding:'utf8'});}
 function test(name,runTest){runTest();count++;process.stdout.write('PASS '+name+'\n')}
 try{
   git('init','-q');git('config','user.email','r0-test@example.invalid');git('config','user.name','R0 Test');
