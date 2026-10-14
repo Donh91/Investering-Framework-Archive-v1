@@ -180,3 +180,12 @@ An exact, publicly reproducible **R0 source-object census** was performed on 202
 - `04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PUBLIC_DRIFT_EXECUTION_NOTE_v1.md` — exact methods, commands, provenance and follow-on R1 owner requirements.
 
 **Scientific boundary remains unchanged:** Git tree SHA drift != raw-provider first-known-time, episode independence, historical skill or complete private source R0. Current `R1_LIVE_PIT_BLOCKED` and `R2_R7_NOT_EXECUTED` remain authoritative until immutable restricted receipts qualify original forecasting and outcome data. Preserve censored/missing and negative cases. No production or market behavior changed. No new scheduler/engine/AI dispatch.
+
+
+## R1 private metadata-only preflight · 2026-10-14
+
+An authorized private, metadata-only readback was performed at immutable `Donh91/secrets` main `50cd94708076bb6b0626132a4af87cfb4f4c5fa4` under its current `AGENTS.md`/boundary rules. Provider-value-free report: `04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_PRIVATE_METADATA_READBACK_v1.json`.
+
+- The exact private health receipt reports **1,043 valid captured files**, **1,032 post-floor provenance-complete** and **11 legacy captures quarantined for missing v2 provenance**. Round 3 is currently **collection active for SC01/SC03/SC14**, but `analysis_authorized=false` and both hypothesis testing/outcome scoring remain OFF. Do **not** mistake basic health success for research or trading admission.
+- An immutable private historical altseason reconciliation receipt reports **851,882 data rows** and identifies reconciled primitive source fields `timestamp_ms, close, quote_volume, trade_count, taker_buy_share` as historically research-admissible **within the original coverage limits**. The receipt corrects a legacy compressed-file hash metadata mistake append-only, preserving source bytes. Derived fields, source-first-known clocks, original Compass issued-forecast joins, independent event-family N and broad alpha mining remain separately blocked.
+- **Evidence classification:** This run verified immutable *private receipt metadata and Git object identities*, not the historical raw compressed artifact's SHA256 via independent download. No private raw provider values were read out or written publicly. Do not upgrade `R1_LIVE_PIT_BLOCKED` on this basis.
