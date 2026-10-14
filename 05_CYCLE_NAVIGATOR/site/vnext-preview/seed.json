@@ -478,7 +478,115 @@
       "source": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SCORECARD.json"
     },
     "combined_score": null,
-    "combined_score_reason": "Price Range precision is the public score family. Market Structure is analysis-only; Bull/Bear is an evidence-balance forecast, not a precision score."
+    "combined_score_reason": "Price Range precision is the public score family. Market Structure is analysis-only; Bull/Bear is an evidence-balance forecast, not a precision score.",
+    "daily_observations_w40": {
+      "contract": "CN_W40_OBSERVED_DAILY_OHLC_READBACK_v1",
+      "basis": "UTC_ISO_WEEK",
+      "source_file": "03_DAILY_CAPTURE_LOGS/weekly/2026/W40/WEEKLY_HOURLY_ENRICHED.csv",
+      "source_git_blob_sha": "33e0d1366c8de7e69ea1bd9655a96764aeabc70f",
+      "observed_hours": 168,
+      "method": "day high=max(hourly high), low=min(hourly low), close=last hourly close; 7 UTC dates; observation-only, no daily frozen forecast",
+      "days": [
+        {
+          "date": "2026-09-28",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 84999,
+            "low": 82563,
+            "close": 83500.01
+          },
+          "ETH": {
+            "high": 2721.42,
+            "low": 2635.69,
+            "close": 2688.71
+          }
+        },
+        {
+          "date": "2026-09-29",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 84563.99,
+            "low": 82775.94,
+            "close": 83663.66
+          },
+          "ETH": {
+            "high": 2748.6,
+            "low": 2652.2,
+            "close": 2677.98
+          }
+        },
+        {
+          "date": "2026-09-30",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 85649.95,
+            "low": 82956.11,
+            "close": 83623.6
+          },
+          "ETH": {
+            "high": 2738.51,
+            "low": 2656.92,
+            "close": 2686.01
+          }
+        },
+        {
+          "date": "2026-10-01",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 85273.65,
+            "low": 83186,
+            "close": 84880.05
+          },
+          "ETH": {
+            "high": 2722,
+            "low": 2673.13,
+            "close": 2706.42
+          }
+        },
+        {
+          "date": "2026-10-02",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 87220,
+            "low": 83888,
+            "close": 84518.01
+          },
+          "ETH": {
+            "high": 2777.33,
+            "low": 2650.88,
+            "close": 2668.59
+          }
+        },
+        {
+          "date": "2026-10-03",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 85037.63,
+            "low": 84456.02,
+            "close": 84753.56
+          },
+          "ETH": {
+            "high": 2690,
+            "low": 2665.67,
+            "close": 2687.23
+          }
+        },
+        {
+          "date": "2026-10-04",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 86800,
+            "low": 84719.99,
+            "close": 86530
+          },
+          "ETH": {
+            "high": 2739.5,
+            "low": 2686.54,
+            "close": 2726.94
+          }
+        }
+      ]
+    }
   },
   "history": {
     "contract": "CN_PUBLIC_HISTORY_SCOREBOARD_V2",
