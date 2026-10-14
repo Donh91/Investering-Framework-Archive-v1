@@ -4,9 +4,10 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync,spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
+import {fileURLToPath} from 'node:url';
 const dir=mkdtempSync(join(tmpdir(),'task2-r0-v11-'));let count=0;
 function git(...args){return execFileSync('git',args,{cwd:dir,encoding:'utf8'}).trim()}
-function run(inv,head,tree){writeFileSync(join(dir,'inventory.json'),JSON.stringify(inv));return spawnSync(process.execPath,[new URL('./2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs',import.meta.url).pathname,'--inventory',join(dir,'inventory.json'),'--head',head,'--expected-tree',tree,'--repo-dir',dir],{encoding:'utf8'});}
+function run(inv,head,tree){writeFileSync(join(dir,'inventory.json'),JSON.stringify(inv));return spawnSync(process.execPath,[fileURLToPath(new URL('./2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs',import.meta.url)),'--inventory',join(dir,'inventory.json'),'--head',head,'--expected-tree',tree,'--repo-dir',dir],{encoding:'utf8'});}
 function test(name,runTest){runTest();count++;process.stdout.write('PASS '+name+'\n')}
 try{
   git('init','-q');git('config','user.email','r0-test@example.invalid');git('config','user.name','R0 Test');
@@ -27,5 +28,9 @@ try{
   test('conflicting shared path rejected',()=>{const d=structuredClone(inventory);d.families[1].sources[0].git_object_sha='b'.repeat(40);const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Conflicting shared source path/)});
   test('unsafe traversal path rejected',()=>{const d=structuredClone(inventory);d.families[0].sources[0].path='../private.json';const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Invalid source path/)});
   test('newline path rejected',()=>{const d=structuredClone(inventory);d.families[0].sources[0].path='bad\nname';const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Invalid source path/)});
+  test('same original commit and tree succeeds',()=>{const r=run(inventory,base,baseTree);assert.equal(r.status,0,r.stderr);const j=JSON.parse(r.stdout);assert.equal(j.verified_all_paths,true);assert.equal(j.counts.UNCHANGED,3)});
+  test('replacement object cannot forge ancestry',()=>{const target=git('commit-tree',baseTree,'-m','unrelated-root');const replacement=git('commit-tree',baseTree,'-p',base,'-m','replacement-with-parent');git('replace',target,replacement);try{const falsifier=spawnSync('git',['merge-base','--is-ancestor',base,target],{cwd:dir});assert.equal(falsifier.status,0);const corrected=run(inventory,target,baseTree);assert.equal(corrected.status,1,corrected.stdout);assert.match(corrected.stderr,/not descended/)}finally{git('replace','-d',target)}});
+  test('annotated-tag SHA is not direct commit',()=>{git('tag','-a','r0-test-annotated','-m','tag object',base);const tag=git('rev-parse','refs/tags/r0-test-annotated');assert.equal(git('cat-file','-t',tag),'tag');const r=run(inventory,tag,baseTree);assert.equal(r.status,1);assert.match(r.stderr,/direct commit/)});
+  test('file URL path decodes spaces',()=>{const u=new URL('./synthetic%20space/script.mjs',import.meta.url);assert.ok(fileURLToPath(u).includes('synthetic space'))});
   console.log('ALL '+count+' R0 v1.1 TESTS PASS (synthetic Git fixture only)');
 }finally{rmSync(dir,{recursive:true,force:true})}
