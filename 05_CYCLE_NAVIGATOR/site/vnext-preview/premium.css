@@ -926,3 +926,8 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
  .path-detail-sources div{padding:0}
 }
 @media(prefers-reduced-motion:reduce){.path-details-chevron{transition:none!important}}
+
+/* CN_LOGO: selected two-ring compass wordmark. Preview-only; no market semantics change. */
+.brand .cn-logo { display: block; width: 261px; max-width: 100%; height: auto; flex: none; }
+@media (max-width: 800px) { .brand .cn-logo { width: 205px; } }
+@media (max-width: 580px) { .brand .cn-logo { width: min(194px, 48vw); } }
