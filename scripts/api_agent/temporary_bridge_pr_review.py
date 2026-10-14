@@ -208,7 +208,7 @@ def validate(out_dir: Path) -> str:
     if result.get("forecast_candidates") != [] or receipt.get("forecast_candidate_count") != 0:
         raise ValueError("FORECAST_AUTHORITY_FORBIDDEN")
     summary = str(result.get("summary") or "")
-    if not summary.startswith(("PASS ", "PASS_WITH_FINDINGS ", "FAIL ")):
+    if not re.match(r"^(?:PASS|PASS_WITH_FINDINGS|FAIL)(?: |; )", summary):
         raise ValueError("REVIEW_VERDICT_MISSING")
     for marker in ("MODEL_USED=gpt-6.1-sol", "NO_CODE_WRITE_PERFORMED", "NO_AUTHORITY_CHANGE"):
         if marker not in summary:
