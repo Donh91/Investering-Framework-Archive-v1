@@ -24,6 +24,56 @@ class OperationsDashboardTests(unittest.TestCase):
     def test_green_happy_path_and_real_receipt_discovery(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root);dashboard=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC));self.assertEqual(dashboard['contract'],'OPERATIONS_DASHBOARD_v1_2');self.assertEqual(dashboard['overall_status'],'GREEN');self.assertEqual(dashboard['agent_activity']['openai_api']['receipt_count'],1);self.assertEqual(dashboard['agent_activity']['experiments']['candidate_count'],2);self.assertTrue(dashboard['systems']['openai_daily_director']['receipt_path'].endswith('DAILY_DIRECTOR_RECEIPT.json'));self.assertEqual(dashboard['systems']['weekly_output']['target_hash_status'],'MATCH')
+    def test_spend_by_task_uses_existing_deduped_receipts_without_inventing_roi(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            second={
+                'contract':'API_AGENT_RECEIPT_v3','created_unix':1785845401,
+                'status':'PASS','model':'gpt-6.1-sol','task':'TEMP_SOL_PR_REVIEW',
+                'response_id':'resp-2','attempt_count':2,
+                'input_tokens':1500,'output_tokens':1000,
+                'estimated_cost_usd':0.125
+            }
+            self.write_json(root,'research/api_agent/outputs/temporary_bridge/pr-1/receipt.json',second)
+            # Same response logged in a mirrored receipts folder must not double bill.
+            self.write_json(root,'research/api_agent/receipts/duplicate.json',second)
+            doc=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))
+            usage=doc['agent_activity']['openai_api']
+            self.assertEqual(usage['receipt_count'],2)
+            self.assertAlmostEqual(usage['cost_usd'],0.126)
+            self.assertEqual(sum(row['receipt_count'] for row in usage['spend_by_task']),2)
+            self.assertAlmostEqual(sum(row['cost_usd'] for row in usage['spend_by_task']),usage['cost_usd'])
+            self.assertEqual(usage['spend_by_task'][0]['task'],'TEMP_SOL_PR_REVIEW')
+            self.assertEqual(usage['spend_by_task'][0]['gateway_pass_count'],1)
+            self.assertEqual(usage['spend_by_task'][0]['retry_receipt_count'],1)
+            self.assertEqual(usage['spend_by_task'][0]['input_tokens'],1500)
+            self.assertEqual(usage['spend_by_task'][0]['output_tokens'],1000)
+            self.assertIn('NOT_PROVIDER_BILLING_OR_CAUSAL_VALUE',usage['spend_breakdown_semantics'])
+            md=module.render_markdown(doc)
+            self.assertIn('API spend by task',md)
+            self.assertIn('TEMP_SOL_PR_REVIEW',md)
+            self.assertIn('not measured downstream value',md)
+
+    def test_spend_attribution_keeps_unclassified_and_prior_month_outside_total(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            self.write_json(root,'research/api_agent/outputs/orphans/a/receipt.json',{
+                'contract':'API_AGENT_RECEIPT_v3','created_unix':1785845402,
+                'response_id':'orphan-new','estimated_cost_usd':0.05,
+                'input_tokens':900,'output_tokens':50,'status':'DEGRADED'
+            })
+            self.write_json(root,'research/api_agent/outputs/orphans/b/receipt.json',{
+                'contract':'API_AGENT_RECEIPT_v3','created_unix':1783167002,
+                'response_id':'orphan-old','estimated_cost_usd':99.0,
+                'input_tokens':900,'output_tokens':50,'status':'PASS'
+            })
+            usage=module.collect_api_usage(root,datetime(2026,8,4,13,0,tzinfo=UTC))
+            self.assertEqual(usage['receipt_count'],2)
+            by={r['task']:r for r in usage['spend_by_task']}
+            self.assertEqual(by['UNCLASSIFIED']['gateway_pass_count'],0)
+            self.assertEqual(by['UNCLASSIFIED']['receipt_count'],1)
+            self.assertAlmostEqual(usage['cost_usd'],0.051)
+
     def test_weekly_pointer_uses_verified_machine_package_time(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root);row=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['weekly_output'];self.assertEqual(row['status'],'GREEN');self.assertEqual(row['timestamp_utc'],'2026-08-03T08:00:00Z');self.assertEqual(row['target_hash_status'],'MATCH');self.assertTrue(row['target_path'].endswith('MASTER_MONDAY_MACHINE_PACKAGE.json'))
