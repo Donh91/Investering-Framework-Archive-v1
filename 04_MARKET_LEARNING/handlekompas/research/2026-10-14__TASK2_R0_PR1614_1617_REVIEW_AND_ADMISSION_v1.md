@@ -6,7 +6,7 @@
 
 - [PR #1614](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1614) is an older **dirty/conflicted** proposal: source census plus a different pinned comparison receipt and dated restricted-metadata research summary. The comparison receipt describes `17` families/`37` refs/`36` paths; the existing `2026-10-14__TASK2_R0_PUBLIC_SOURCE_DRIFT_RECEIPT_v1.json` on main already covers exact `36/36` source paths at its own separately pinned revision. These are two **different historical exact targets**, not two inconsistent proofs.
 - [PR #1617](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1617) is also now dirty; its improved versioned verifier checks original **per-source SHA/type** (not merely top-level root trees), exact immutable target tree, ancestry, namespace/path syntax, shared-path SHA conflicts. It includes a bounded synthetic Git negative-control test suite. User requested a coherent Task 2 without overlapping tools.
-- This PR reuses **exact Git blobs** from #1617, not silently rewritten code: `task2_r0_git_object_reconcile_v1_1.mjs` blob `f1fb6331173820a539ecfa688fcc7a4fda264767` and `task2_r0_git_object_reconcile_v1_1.test.mjs` blob `c8c133cb3fd8d463ffc001f418bf539fbf9cf753`. Both have been independently GitHub read back after writing on this new clean branch.
+- This PR reuses **exact Git blobs** from #1617, not silently rewritten code: `task2_r0_git_object_reconcile_v1_1.mjs` blob `f1fb6331173820a539ecfa688fcc7a4fda264767` and `task2_r0_git_object_reconcile_v1_1.test.mjs` blob `d1955ff930a96917fdfd40b12e62447a58fb8c58`. Both have been independently GitHub read back after writing on this new clean branch.
 - The old #1614 dated restricted-source metadata (private health 1,043 reported files, 11 legacy capture gaps) remains viewable in that PR until owner decides whether to separately archive a **refreshed** value-free private health receipt. No raw or restricted provider records are transferred. A count from a dated health snapshot does **not** certify individual source first-known.
 
 ## Executable verification
@@ -37,12 +37,12 @@ This addendum is an R0 **execution utility**, not a new canonical source owner, 
 
 ## Exact 1:1 Git blob test execution — 2026-10-14
 
-**Update on earlier mirror-only limitation:** After the first draft of this note, both EXACT source bytes were obtained from the versioned GitHub branch, reconstructed in a local isolated Linux scratch directory and independently checked with `git hash-object`. This new later verification supersedes the earlier *mirror-only* limitation for test execution, but does **not** constitute a second-principal independent reviewer approval.
+**Update on earlier mirror-only limitation:** After the first draft of this note, both EXACT source bytes were obtained from the versioned GitHub branch, reconstructed in a local isolated Linux scratch directory and independently checked with `git hash-object`. At the current corrected test blob the versioned verifier import path resolves correctly. The 10/10 synthetic tests were rerun from locally byte-identical source/test Git blobs on Node 22.16.0 / Git 2.47.3. This supersedes the earlier *mirror-only* limitation for test execution, but does **not** constitute a second-principal independent reviewer approval.
 
 | Test artifact | Exact Git blob read back from PR branch | Local byte length | Local SHA-256 |
 | --- | --- | ---: | --- |
 | `task2_r0_git_object_reconcile_v1_1.mjs` | `f1fb6331173820a539ecfa688fcc7a4fda264767` | 4,577 | `d0350a33d4437739e9dacac954f4d92814c341b453e2a7cc932717c0adad4879` |
-| `task2_r0_git_object_reconcile_v1_1.test.mjs` | `c8c133cb3fd8d463ffc001f418bf539fbf9cf753` | 4,615 | `dfed13b35374a52d4ad3c19b49c85d90b12d083bbc409b03ab5a635b5abb262f` |
+| `task2_r0_git_object_reconcile_v1_1.test.mjs` | `d1955ff930a96917fdfd40b12e62447a58fb8c58` | 4,627 | `fd4ba4263b4ec8e3c6bc6fa87ba0e90c4e0fad13579c97825d04c1f8bed05ba1` |
 
 Exact-command reproduction: `node task2_r0_git_object_reconcile_v1_1.test.mjs` on **Node v22.16.0 / Git 2.47.3 / Linux**. Outcome: **10 of 10 synthetic Git-fixture tests PASS** (changed + missing + shared references, tampered source SHA, original type mismatch, absent baseline source, wrong expected target tree, moving ref, non-ancestor target, conflicting shared path, unsafe traversal, newline path). No credential, private data or live production checkout was needed. Full 36-path historical Git repository reconciliation **was not rerun** in this isolated environment because historical remote Git commits were not available there.
 
