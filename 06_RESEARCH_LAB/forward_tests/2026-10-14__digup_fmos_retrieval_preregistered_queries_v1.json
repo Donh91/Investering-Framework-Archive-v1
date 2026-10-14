@@ -1,0 +1,436 @@
+{
+  "contract": "FMOS_DIGUP_METHOD_RETRIEVAL_PREREG_v1",
+  "recorded_date_utc": "2026-10-14",
+  "state": "SHADOW_PREREGISTRATION_ONLY_NOT_EXECUTED",
+  "approval_scope": "CONDITIONAL_RESEARCH_EVALUATION_ZERO_SPEND",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "owner": "FMOS_GRAPH_AND_RETRIEVAL_EXISTING_OWNER",
+  "case_count": 30,
+  "independent_family_count": 15,
+  "sources": "EXISTING_PUBLIC_FRAMEWORK_MAIN_FILES",
+  "privacy_policy": "NEVER_INDEX_PRIVATE_SECRETS_OR_SUBMIT_PRIVATE_FILES_TO_THIRD_PARTY_MODELS",
+  "source_clock": "CURRENT_MAIN_FILES_AT_REGISTRATION; REVALIDATE_BLOB_OR_EXCLUDE_WITH_REASON_ON_REPLAY",
+  "eval_plan": {
+    "baseline": "CURRENT_FMOS_OWNER_DETERMINISTIC_RETRIEVAL_AND_GITHUB_SOURCE_FIRST_PATH_RESOLUTION",
+    "challenger": "BOUND_SCOPED_HYBRID_KEYWORD_AND_SEMANTIC_METHOD_ONLY_IF_FREE_AND_PRIVACY_SAFE",
+    "freeze": "DO_NOT_REWRITE_QUERIES_EXPECTED_PATHS_OR_THRESHOLDS_AFTER_SEEING_RESULTS",
+    "allowed_result_fields": [
+      "case_id",
+      "method_id",
+      "requested_at_utc",
+      "source_head_sha",
+      "ranked_results_with_paths",
+      "runtime_ms",
+      "memory_bytes",
+      "provider_cost_usd",
+      "errors",
+      "missing_sources"
+    ],
+    "statistics": [
+      "recall_at_1",
+      "recall_at_5",
+      "mrr",
+      "path_sha_completeness",
+      "family_level_recall_at_5",
+      "false_authority_or_stale_precedence_violations"
+    ],
+    "guard": "NO_CANDIDATE_PROMOTION_ON_SYNTHETIC_OR_DUPLICATE_QUERY_GAIN; MUST VERIFY_CURRENT_AUTHORITY_AFTER_RETRIEVAL",
+    "success": "At least one previously missed or materially wrong owner/source returned correctly at same or lower cost, with no false authoritative source precedence, and reproducible run receipt",
+    "kill": "No marginal correct-owner retrieval benefit, unaffordable latency/memory, noncompliant privacy/licensing, or source-version confusion",
+    "dependency_policy": "NO_NEW_GLOBAL_VECTOR_DB_OR_ALWAYS_ON_INDEX_WITHOUT_INDEPENDENT_GAP_PROOF",
+    "no_automatic_merge": true,
+    "no_market_or_portfolio_authority": true
+  },
+  "questions": [
+    {
+      "case_id": "DG-FMOS-001",
+      "family_id": "CN_FROZEN_W42",
+      "language": "da",
+      "query": "Hvor står den frosne ugentlige CN-status for uge 42?",
+      "expected_paths": [
+        "05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_INTERNAL.md"
+      ],
+      "expected_git_blob_sha": "fc84de63538c3e430e2969046ee8c5aa6fdafa98",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-002",
+      "family_id": "CN_FROZEN_W42",
+      "language": "en",
+      "query": "Find den interne arkiverede Cycle Navigator uge 42 og dens evaluering",
+      "expected_paths": [
+        "05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_INTERNAL.md"
+      ],
+      "expected_git_blob_sha": "fc84de63538c3e430e2969046ee8c5aa6fdafa98",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-003",
+      "family_id": "CN_PRECISION",
+      "language": "da",
+      "query": "Find den verificerede Cycle Navigator score for W40",
+      "expected_paths": [
+        "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SCORECARD.json"
+      ],
+      "expected_git_blob_sha": "c3ae66f762d44f4aa47bfcdb9d317b1fe9c6c6c8",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-004",
+      "family_id": "CN_PRECISION",
+      "language": "en",
+      "query": "Where is the per-parameter previous weekly CN scorecard recorded?",
+      "expected_paths": [
+        "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SCORECARD.json"
+      ],
+      "expected_git_blob_sha": "c3ae66f762d44f4aa47bfcdb9d317b1fe9c6c6c8",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-005",
+      "family_id": "TASK2_PIT_ORACLE",
+      "language": "da",
+      "query": "Hvor testes manipuleret first-known tidspunkt i Task 2?",
+      "expected_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs"
+      ],
+      "expected_git_blob_sha": "eb0db0846d42abc3241fc0eac18412f855e0f023",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-006",
+      "family_id": "TASK2_PIT_ORACLE",
+      "language": "en",
+      "query": "Show me the no-hindsight source-admission oracle rather than the research handoff",
+      "expected_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs"
+      ],
+      "expected_git_blob_sha": "eb0db0846d42abc3241fc0eac18412f855e0f023",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-007",
+      "family_id": "TASK2_EXEC_GATE",
+      "language": "da",
+      "query": "Hvad blokerer hele Task 2-audittens historiske validering?",
+      "expected_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1.json"
+      ],
+      "expected_git_blob_sha": "66f2519c2e048ac756cd0f482ba2bf36f36d91f8",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-008",
+      "family_id": "TASK2_EXEC_GATE",
+      "language": "en",
+      "query": "Find source of truth for R1 live PIT blocking status",
+      "expected_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1.json"
+      ],
+      "expected_git_blob_sha": "66f2519c2e048ac756cd0f482ba2bf36f36d91f8",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-009",
+      "family_id": "CEE_STAGE_B",
+      "language": "da",
+      "query": "Hvor er den uafsluttede Stage B mapping for LuxAlgo-baseret statistik?",
+      "expected_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-10-04__conditional-edge-envelope-v1__stage-b-mapping.json"
+      ],
+      "expected_git_blob_sha": "e3dd7f7fbb1851ab6b306026961fd5649971c0f1",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-010",
+      "family_id": "CEE_STAGE_B",
+      "language": "en",
+      "query": "Which JSON prevents outcome queries for Conditional Edge Envelope?",
+      "expected_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-10-04__conditional-edge-envelope-v1__stage-b-mapping.json"
+      ],
+      "expected_git_blob_sha": "e3dd7f7fbb1851ab6b306026961fd5649971c0f1",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-011",
+      "family_id": "CEE_PREREG",
+      "language": "da",
+      "query": "Find de ti oprindeligt frosne spørgsmål om pullback og rotation",
+      "expected_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-09-14__conditional-edge-envelope-v1__shadow-preregistration.md"
+      ],
+      "expected_git_blob_sha": "5e16c4fa849a956ae92f3b6c3eff9dfc22e6b310",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-012",
+      "family_id": "CEE_PREREG",
+      "language": "en",
+      "query": "Where are the predeclared controls against p-hacking for conditional frequencies?",
+      "expected_paths": [
+        "06_RESEARCH_LAB/forward_tests/2026-09-14__conditional-edge-envelope-v1__shadow-preregistration.md"
+      ],
+      "expected_git_blob_sha": "5e16c4fa849a956ae92f3b6c3eff9dfc22e6b310",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-013",
+      "family_id": "LUXAGO_AUDIT",
+      "language": "da",
+      "query": "Har vi undersøgt LuxAlgo/PineTS før?",
+      "expected_paths": [
+        "06_RESEARCH_LAB/audit_summaries/2026-09-14__luxalgo-mechanism-qualification-v1__shadow.md"
+      ],
+      "expected_git_blob_sha": "a7409ecc623051bf6614028e2e1f8a031be69c32",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-014",
+      "family_id": "LUXAGO_AUDIT",
+      "language": "en",
+      "query": "Where is the original qualification decision for Edge Stats, PineTS and Market Trackers?",
+      "expected_paths": [
+        "06_RESEARCH_LAB/audit_summaries/2026-09-14__luxalgo-mechanism-qualification-v1__shadow.md"
+      ],
+      "expected_git_blob_sha": "a7409ecc623051bf6614028e2e1f8a031be69c32",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-015",
+      "family_id": "FMOS_RETRIEVAL",
+      "language": "da",
+      "query": "Hvorfor bruger vi ikke vektorsøgning i FMOS endnu?",
+      "expected_paths": [
+        "00_FMOS/GRAPH_AND_RETRIEVAL.md"
+      ],
+      "expected_git_blob_sha": "574964e450bc007082a58fe77d52edd8db800fb5",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-016",
+      "family_id": "FMOS_RETRIEVAL",
+      "language": "en",
+      "query": "Locate authority and timestamp ordering for graph retrieval",
+      "expected_paths": [
+        "00_FMOS/GRAPH_AND_RETRIEVAL.md"
+      ],
+      "expected_git_blob_sha": "574964e450bc007082a58fe77d52edd8db800fb5",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-017",
+      "family_id": "FMOS_MEMORY",
+      "language": "da",
+      "query": "Find reglerne for genbrug af gamle GitHub-fixes",
+      "expected_paths": [
+        "00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md"
+      ],
+      "expected_git_blob_sha": "4d65d5382c8909d94c7d7afa8ad919f659b17fe0",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-018",
+      "family_id": "FMOS_MEMORY",
+      "language": "en",
+      "query": "Where does operational memory quarantine drifted past solutions?",
+      "expected_paths": [
+        "00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md"
+      ],
+      "expected_git_blob_sha": "4d65d5382c8909d94c7d7afa8ad919f659b17fe0",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-019",
+      "family_id": "FMOS_LIFECYCLE",
+      "language": "da",
+      "query": "Hvornår er en opgave i Github faktisk færdig?",
+      "expected_paths": [
+        "00_FMOS/AUTOMATION_TOPOLOGY.md"
+      ],
+      "expected_git_blob_sha": "63523efbcb5e859a817619b53799b68fafffce17",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-020",
+      "family_id": "FMOS_LIFECYCLE",
+      "language": "en",
+      "query": "Find queue states from merged PR to verified readback",
+      "expected_paths": [
+        "00_FMOS/AUTOMATION_TOPOLOGY.md"
+      ],
+      "expected_git_blob_sha": "63523efbcb5e859a817619b53799b68fafffce17",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-021",
+      "family_id": "PRIVATE_BOUNDARY",
+      "language": "da",
+      "query": "Må vi lægge private rå markedsdata i det offentlige repo?",
+      "expected_paths": [
+        "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md"
+      ],
+      "expected_git_blob_sha": "c8ead1b0e92c32eef4a911ad1b6bf33a09170966",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-022",
+      "family_id": "PRIVATE_BOUNDARY",
+      "language": "en",
+      "query": "Find which repository owns restricted source payloads and how they are bound",
+      "expected_paths": [
+        "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md"
+      ],
+      "expected_git_blob_sha": "c8ead1b0e92c32eef4a911ad1b6bf33a09170966",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-023",
+      "family_id": "CODEX_INTAKE",
+      "language": "da",
+      "query": "Hvordan sendes en dokumenteret research-fejl videre til Codex?",
+      "expected_paths": [
+        "research/codex/README.md"
+      ],
+      "expected_git_blob_sha": "121a73cb61f7df13f7a65bf923e70d7ad97f2285",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-024",
+      "family_id": "CODEX_INTAKE",
+      "language": "en",
+      "query": "Where is the accepted intake path for reproducible code defects?",
+      "expected_paths": [
+        "research/codex/README.md"
+      ],
+      "expected_git_blob_sha": "121a73cb61f7df13f7a65bf923e70d7ad97f2285",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-025",
+      "family_id": "CN_SITE_CONTRACT",
+      "language": "da",
+      "query": "Hvilke regler forhindrer en live graf i at ændre frosne prognoser?",
+      "expected_paths": [
+        "05_CYCLE_NAVIGATOR/site/SITE_CONTRACT.md"
+      ],
+      "expected_git_blob_sha": "8cef63ffede663caa1ebed1ca1099b3aaa011f36",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-026",
+      "family_id": "CN_SITE_CONTRACT",
+      "language": "en",
+      "query": "Find authoritative front-end boundaries for frozen ranges and price charts",
+      "expected_paths": [
+        "05_CYCLE_NAVIGATOR/site/SITE_CONTRACT.md"
+      ],
+      "expected_git_blob_sha": "8cef63ffede663caa1ebed1ca1099b3aaa011f36",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-027",
+      "family_id": "OP_MEMORY_CODE",
+      "language": "da",
+      "query": "Hvor ligger koden der rangerer gamle fejlrettelser efter stier?",
+      "expected_paths": [
+        "scripts/framework_intelligence/operational_memory_v1.py"
+      ],
+      "expected_git_blob_sha": "8e718e31b1581fac8a43320e6c42ad2f95313554",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-028",
+      "family_id": "OP_MEMORY_CODE",
+      "language": "en",
+      "query": "Find Python deterministic operational-memory preflight scoring implementation",
+      "expected_paths": [
+        "scripts/framework_intelligence/operational_memory_v1.py"
+      ],
+      "expected_git_blob_sha": "8e718e31b1581fac8a43320e6c42ad2f95313554",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-029",
+      "family_id": "SPECIALIST_QUEUE",
+      "language": "da",
+      "query": "Hvem prioriterer research af eksterne specialister?",
+      "expected_paths": [
+        "04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json"
+      ],
+      "expected_git_blob_sha": "03a479c3a7cdf31f5c47617b0d8834ad0d7e44de",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    },
+    {
+      "case_id": "DG-FMOS-030",
+      "family_id": "SPECIALIST_QUEUE",
+      "language": "en",
+      "query": "Find the active specialist next-action list and heavy lane priority",
+      "expected_paths": [
+        "04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json"
+      ],
+      "expected_git_blob_sha": "03a479c3a7cdf31f5c47617b0d8834ad0d7e44de",
+      "required_source_status": "EXACT_CURRENT_MAIN_OR_EXPLICIT_REVALIDATION",
+      "ground_truth_type": "PUBLIC_SOURCE_FILE_EXISTS",
+      "evidence_class": "RETRIEVAL_PATH_ONLY_NOT_MARKET_PROOF"
+    }
+  ]
+}
