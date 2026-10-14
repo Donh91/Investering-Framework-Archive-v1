@@ -934,3 +934,38 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 
 /* Keep the selected wordmark and controls in one row on 375-430px iPhones. */
 @media (max-width: 580px) { .masthead .masthead-inner { gap: 12px; } .masthead .header-actions { gap: 8px; padding-left: 0; } }
+
+
+/* Source-exact 2026-W40 daily-close journey, three immutable forecast-window ribbons. */
+.cn-history-chart { width:100%; height:auto; overflow:visible; display:block; max-width:100%; }
+.cn-chart-grid { stroke:#e9eef4; stroke-width:1; stroke-dasharray:3 6; }
+.cn-chart-tick,.cn-chart-weekday { font-size:11px; fill:#75859a; font-weight:570; }
+.cn-chart-window { font-size:10px; fill:#6886ae; letter-spacing:1.5px; font-weight:730; }
+.cn-chart-week { font-size:11px; fill:#8a98aa; font-weight:700; }
+.cn-chart-forecast-band { fill:#3174ce; fill-opacity:.12; }
+.cn-chart-boundary { stroke:#8aadd9; stroke-opacity:.75; stroke-width:1.5; }
+.cn-chart-actual-range { stroke:#3c77ca; stroke-opacity:.55; stroke-width:2; stroke-linecap:round; }
+.cn-chart-close-path { fill:none; stroke:#2166c7; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.cn-chart-point { fill:#2166c7; stroke:#fff; stroke-width:2; }
+.cn-chart-proof { font-size:11px; line-height:1.65; color:#728198; margin:10px 0 20px; }
+.cn-chart-table-title { font-size:16px; letter-spacing:-.02em; color:#10243c; margin:19px 0 9px; }
+.cn-chart-table-scroll { max-width:100%; overflow-x:auto; border:1px solid #e5ebf2; border-radius:12px; }
+.cn-chart-table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+.cn-chart-table th,.cn-chart-table td { padding:10px 12px; text-align:left; border-bottom:1px solid #edf1f6; white-space:nowrap; }
+.cn-chart-table th { font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#7e8da2; background:#f8fafc; }
+.cn-chart-table td { font-size:11px; color:#405675; }
+.cn-chart-table td.cn-chart-close-value { font-weight:760; color:#2166c7; }
+.cn-chart-table tr:last-child td { border-bottom:0; }
+.range-compare-panel[data-reveal-phase="frozen"] .cn-chart-close-path,
+.range-compare-panel[data-reveal-phase="frozen"] .cn-chart-point,
+.range-compare-panel[data-reveal-phase="frozen"] .cn-chart-actual-range { opacity:0; }
+.range-compare-panel[data-reveal-phase="actual"] .cn-chart-close-path { stroke-dasharray:1600; stroke-dashoffset:0; animation:cn-draw-close .65s ease-out both; }
+@keyframes cn-draw-close { from { stroke-dashoffset:1600; } to { stroke-dashoffset:0; } }
+@media (max-width:580px) {
+ .range-visualization { padding:0 2px 8px; }
+ .cn-chart-weekday,.cn-chart-tick { font-size:13px; }
+ .cn-chart-proof { font-size:10px; }
+ .cn-chart-table { min-width:510px; }
+ .cn-chart-table-title { font-size:14px; }
+}
+@media (prefers-reduced-motion:reduce) { .cn-chart-close-path {animation:none!important;stroke-dashoffset:0!important;} }
