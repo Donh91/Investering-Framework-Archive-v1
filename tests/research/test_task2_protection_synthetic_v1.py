@@ -36,6 +36,20 @@ class CounterfactualTests(unittest.TestCase):
         out=simulate_synthetic(scenario([100,95,70,60,63]),signal(delivered_h=3),policy(reentry=2))
         self.assertEqual(out['sale_at'],(BASE+timedelta(hours=4)).isoformat())
         self.assertEqual(out['reentry_status'],'HORIZON_ENDED_BEFORE_REENTRY')
+    def test_cost_accounting_and_time_out_are_visible(self):
+        out=simulate_synthetic(scenario([100,95,85,90,100]),signal(),policy(reentry=2,fee=.01,slip=.02,gas=1))
+        self.assertGreater(out['trade_notional_turnover_usd'],0)
+        self.assertGreater(out['intermediate_trading_fees_usd'],0)
+        self.assertGreater(out['intermediate_slippage_usd'],0)
+        self.assertEqual(out['gas_cost_usd'],2)
+        self.assertEqual(out['time_partially_out_of_market_hours'],2)
+        self.assertTrue(out['spread_included_in_bid_ask'])
+    def test_blocked_sale_incurs_no_fictional_trade_cost(self):
+        out=simulate_synthetic(scenario([100,95,80],capacities=[1e9,100,100]),signal(),policy(gas=10))
+        self.assertEqual(out['intermediate_trading_fees_usd'],0)
+        self.assertEqual(out['trade_notional_turnover_usd'],0)
+        self.assertEqual(out['gas_cost_usd'],0)
+        self.assertEqual(out['time_partially_out_of_market_hours'],0)
     def test_liquidity_blocks_not_fantasy_fill(self):
         out=simulate_synthetic(scenario([100,95,70,60],capacities=[1e9,100,1e9,1e9]),signal(),policy())
         self.assertEqual(out['sale_status'],'BLOCKED_BY_LIQUIDITY')
