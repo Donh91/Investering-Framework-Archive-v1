@@ -352,7 +352,12 @@ def _cost_preflight(repo: Path, model: str, request_bytes: bytes, max_output_tok
     from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
     if str(repo) not in sys.path:
         sys.path.insert(0, str(repo))
-    policy = read_json(repo / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json")
+    try:
+        policy = read_json(repo / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json")
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("CN_API_POLICY_UNREADABLE_NO_SPEND") from exc
+    if not isinstance(policy, dict):
+        raise RuntimeError("CN_API_POLICY_INVALID_SHAPE_NO_SPEND")
     if (policy.get("status") != "ACTIVE_SHADOW_ONLY" or
             policy.get("monthly_hard_stop_usd") != 40 or
             policy.get("global_reserve_usd") != 4):
