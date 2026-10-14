@@ -33,3 +33,17 @@ A locally isolated, functionally matching mirror of the proposed Git-object chec
 This addendum is an R0 **execution utility**, not a new canonical source owner, workflow, scheduler or automatic model optimizer. Existing Codex review invocation on old PR #1617 was previously quota-blocked. The 10 local mirror tests and basic GitHub CI do not substitute for an **independent code/source review** if required by the existing research-to-code governance. Request the existing Supervisor or independent reviewer to inspect the exact new head, verify reproducibility and merge only after its own code/data-boundary gates. Then mark old #1614/#1617 superseded **only when no unique evidence is lost**. Do not force-merge either dirty PR.
 
 **Priority after R0 code review:** R1 provider first-known and original issuance/outcome receipts, followed by cheap matched price/volatility baselines; CFGI pre/post 2026-07-08 vendor scoring eras must not be silently pooled. None of the 2025 1h CFGI rows retrieved retrospectively in Aug 2026 is automatically an authenticated 2025 tradable source.
+
+
+## Exact 1:1 Git blob test execution — 2026-10-14
+
+**Update on earlier mirror-only limitation:** After the first draft of this note, both EXACT source bytes were obtained from the versioned GitHub branch, reconstructed in a local isolated Linux scratch directory and independently checked with `git hash-object`. This new later verification supersedes the earlier *mirror-only* limitation for test execution, but does **not** constitute a second-principal independent reviewer approval.
+
+| Test artifact | Exact Git blob read back from PR branch | Local byte length | Local SHA-256 |
+| --- | --- | ---: | --- |
+| `task2_r0_git_object_reconcile_v1_1.mjs` | `f1fb6331173820a539ecfa688fcc7a4fda264767` | 4,577 | `d0350a33d4437739e9dacac954f4d92814c341b453e2a7cc932717c0adad4879` |
+| `task2_r0_git_object_reconcile_v1_1.test.mjs` | `c8c133cb3fd8d463ffc001f418bf539fbf9cf753` | 4,615 | `dfed13b35374a52d4ad3c19b49c85d90b12d083bbc409b03ab5a635b5abb262f` |
+
+Exact-command reproduction: `node task2_r0_git_object_reconcile_v1_1.test.mjs` on **Node v22.16.0 / Git 2.47.3 / Linux**. Outcome: **10 of 10 synthetic Git-fixture tests PASS** (changed + missing + shared references, tampered source SHA, original type mismatch, absent baseline source, wrong expected target tree, moving ref, non-ancestor target, conflicting shared path, unsafe traversal, newline path). No credential, private data or live production checkout was needed. Full 36-path historical Git repository reconciliation **was not rerun** in this isolated environment because historical remote Git commits were not available there.
+
+**Governance limitation remains:** Exact test execution is useful evidence that code is runnable and rejects designed synthetic failures, but no independent external reviewer has approved this PR. General `gate/validate/storage-health` CI checks succeeding are not a substitute for a code-level security/science review. Reviewer must verify exact PR head and run the test suite independently before merge. This receipt changes no original R0 inventory or historical data.
