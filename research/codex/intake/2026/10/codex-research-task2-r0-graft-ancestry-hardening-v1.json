@@ -1,0 +1,78 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-task2-r0-graft-ancestry-hardening-v1",
+  "submitted_at_utc": "2026-10-14T18:58:47.268Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "Task2 R0 exact Git-graft falsification after two verified GPT-6.1 Sol advisory reviews",
+    "source_paths": [
+      "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_SOL_GRAFT_EXECUTED_FALSIFIER_v1.md",
+      "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_SOL_GRAFT_EXECUTED_FALSIFIER_v1.json",
+      "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/RESEARCH_LAB_SOL_ANALYSIS.json",
+      "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json"
+    ]
+  },
+  "title": "Task 2 R0: prevent false Git ancestry from legacy grafts in unmerged verifier",
+  "finding_key": "TASK2_R0_GRAFT_FALSE_ANCESTRY_WHILE_NO_REPLACE_OBJECTS",
+  "primary_target": "Existing OPEN PR #1627 at head 52d4a6a87ed3d41dbb4c4ccf53285b39c51a4bd5; do not mistakenly treat source as on main",
+  "objective": "Repair only existing source-integrity verifier on open PR #1627. Verified local Git 2.47.3 negative fixture: unrelated commit U with exactly same tree/blob as baseline B and .git/info/grafts entry 'U B' tricks `git --no-replace-objects merge-base --is-ancestor B U` into reporting true. Both SHA/type/tree checks still pass, causing potential false source-ancestry acceptance. Implement raw immutable parent graph verification or fail-closed on graft-bearing/untrusted repository environments; preserve prior replacement-object, direct-commit, source SHA/type and path safeguards, no alternate authority. Also classify operational Git failure as UNKNOWN/invalid (exit1) instead of unsupported missing/type change, preserve deterministic locale-independent result serialization. Add precise regression tests and verify fixes against existing 14 synthetic tests; do not merge automatically. If the existing Codex executor cannot start from the UNMERGED PR head or lacks independent reviewer, classify NEEDS_MORE_EVIDENCE and route to existing Task2 code owner rather than creating a conflicting code engine or writing source to main.",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs",
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs"
+  ],
+  "evidence": [
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_SOL_GRAFT_EXECUTED_FALSIFIER_v1.json",
+      "summary": "Executed Git2.47.3 graft falsifier with baseline, unrelated commit, same tree/blob and false ancestry under --no-replace-objects"
+    },
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1627",
+      "summary": "Current unmerged exact code/test version 52d4a6; source blob 7ae538e6..., tests blob b6dc5bbb..."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/RESEARCH_LAB_SOL_ANALYSIS.json",
+      "summary": "Independent GPT-6.1 Sol advisory verdict WEAKENED; graft/diagnostic/ordering falsifiers, NOT_RUN fixtures"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_SOL_GRAFT_EXECUTED_FALSIFIER_v1.md",
+      "summary": "Exact reproduction commands and observed local result"
+    }
+  ],
+  "reproduction": "On a disposable SHA-1 git repo create one tracked file p, baseline B, baseline tree T, blob S and unrelated raw commit U=git commit-tree T -m unrelated-root (no parent). Confirm B is NOT an ancestor of U. Add the line 'U B' to .git/info/grafts. Confirm `git --no-replace-objects merge-base --is-ancestor B U` unexpectedly exits 0, `git --no-replace-objects cat-file -t U` says commit, rev-parse U^{tree}=T, rev-parse U:p=S. This was EXECUTED on Git 2.47.3, not only modeled. See exact shell commands in attached research receipt. CURRENT PR verifier calls the same graft-sensitive ancestry predicate; its entire exact file has not been locally executed with this fixture yet. First Codex step MUST fetch correct OPEN PR head and reproduce the condition safely, not rely on stale main.",
+  "acceptance_tests": {
+    "positive": [
+      "Ordinary real-child descendant commit of pinned baseline with valid source SHA/type and expected target tree succeeds (exit 0); deterministic output row ordering stable with differing locales.",
+      "Previous 14 PR v1.1 regression cases stay green including replacement refs, annotated tags, percent-escaped file URL paths, invalid base SHA, missing source and tampered type."
+    ],
+    "negative": [
+      "Legacy `.git/info/grafts` false parent U B MUST be rejected as invalid/unknown (exit 1), never success, when raw parentage has no B. Test Git 2.47.3 or comparable supported build and include actual transcript.",
+      "Unrelated U without graft MUST fail; replacement ref cannot forge ancestor; annotated-tag object cannot be supplied as direct commit.",
+      "Target object lookup operational failure must never be reported as confirmed MISSING/TYPE_MISMATCH when source object type was not read; classify operation failure separately and fail closed.",
+      "Malformed paths including traversal/newline and unexpected Git environment overrides must be rejected; if operational constraints prevent safe validation, no source admission."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic merge",
+    "auto trade",
+    "original historical forecasts/outcomes",
+    "private source bytes",
+    "new workflow/scheduler/controller",
+    "CFGI historical first-known promotion",
+    "historical R2–R7 result fabrication"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "Exact PR1627 branch + no-duplicate preflight, proven graft negative fixture fails closed, normal positive child PASS, previous 14 tests PASS, Git operational errors appropriately UNKNOWN, exact changed blob hashes, independent code/security review, repository CI green, no original R0 receipts/data rewritten, no merge without reviewer."
+}
