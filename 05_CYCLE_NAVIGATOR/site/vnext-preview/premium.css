@@ -969,3 +969,46 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
  .cn-chart-table-title { font-size:14px; }
 }
 @media (prefers-reduced-motion:reduce) { .cn-chart-close-path {animation:none!important;stroke-dashoffset:0!important;} }
+
+
+/* CN_LOGO-inspired source-only compass barometer; independent of market direction. */
+.cn-instrument{width:100%;max-width:790px;margin:21px auto 16px}
+.cn-instrument-heading{display:flex;justify-content:space-between;gap:12px;font-size:10px;letter-spacing:.1em;font-weight:700;color:#7789a0}
+.cn-instrument-heading span:last-child{color:#9aa8b7;font-weight:550;letter-spacing:.03em}
+.cn-instrument-svg{display:block;width:100%;height:auto;margin:0 auto}
+.cn-gauge-outer{fill:none;stroke:#e8edf3;stroke-width:17}
+.cn-gauge-inner{fill:none;stroke:#e1e8f1;stroke-width:1}
+.cn-gauge-bear{fill:none;stroke:#dd918e;stroke-width:17;stroke-opacity:.34}
+.cn-gauge-bull{fill:none;stroke:#6bbfb6;stroke-width:17;stroke-opacity:.32}
+.cn-gauge-hold{fill:none;stroke:#86b3ee;stroke-width:17;stroke-opacity:.48}
+.cn-gauge-tick{stroke:#8c9fb9;stroke-width:1.2;stroke-opacity:.53}
+.cn-gauge-tick-major{stroke:#284975;stroke-width:1.5;stroke-opacity:.83}
+.cn-gauge-rose-circle{fill:none;stroke:#dfe7f0;stroke-width:1}
+.cn-gauge-rose{fill:#d7e2ee;fill-opacity:.64}
+.cn-gauge-zone{fill:#5e7394;font-size:11px;font-weight:700;letter-spacing:1.7px;text-anchor:middle}
+.cn-gauge-zone-highlight{fill:#2469ca;font-weight:820}
+.cn-gauge-end{fill:#455d80;font-size:10px;letter-spacing:1.7px;font-weight:700}
+.cn-gauge-needle-body{fill:#2067c6}
+.cn-gauge-pivot-ring{fill:#f8fbff;stroke:#b4c7dc;stroke-width:2}
+.cn-gauge-pivot{fill:#12386c}
+.cn-instrument-footer{display:flex;justify-content:space-between;gap:10px;padding:10px 0 11px;border-top:1px solid #e8edf3}
+.cn-instrument-footer>div{display:flex;flex-direction:column;gap:5px}
+.cn-instrument-footer>div:last-child{text-align:right}
+.cn-instrument-footer span{font-size:9px;color:#7d8da1;letter-spacing:.11em;font-weight:730}
+.cn-instrument-footer strong{font-size:15px;color:#1a3762}
+.cn-instrument-caveat{color:#8b98aa;font-size:10px;line-height:1.55;margin:0}
+.hero-grid{display:block;min-height:0}
+.hero-main{min-height:0}
+.hero-main .hero-title{font-size:clamp(37px,5.4vw,68px);margin:15px 0 12px}
+.hero-main .hero-title em{font-style:italic;color:#276bd1;font-weight:500}
+@media(max-width:580px){
+.cn-instrument{margin:17px auto 13px}
+.cn-instrument-heading{font-size:8px}
+.cn-instrument-heading span:last-child{font-size:7px;letter-spacing:0;text-align:right}
+.cn-instrument-footer strong{font-size:12px}
+.cn-instrument-footer span{font-size:8px}
+.cn-instrument-caveat{font-size:9px}
+.hero-main .hero-title{font-size:39px;letter-spacing:-.065em;margin:12px 0}
+.hero-main{padding:22px 20px 18px}
+.hero-grid{min-height:0}
+}
