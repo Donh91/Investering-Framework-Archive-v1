@@ -2,6 +2,7 @@
 // Usage: node script.mjs --inventory path.json --head <40hex> --expected-tree <40hex> [--repo-dir checkout]
 // No moving HEAD or branch references accepted for --head. No historical PIT admission implied.
 import fs from 'node:fs';
+import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 const HEX40=/^[0-9a-f]{40}$/;
 function parseArgs(argv){
@@ -43,6 +44,12 @@ function reconcile(inventory,head,expectedTree,git){
 try{
   const a=parseArgs(process.argv.slice(2));const cwd=a['--repo-dir']||process.cwd();
   const git=(args)=>execFileSync('git',['--no-replace-objects',...args],{cwd,encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:2e6}).trim();
+  // --no-replace-objects does NOT disable legacy .git/info/grafts; grafts can forge ancestry.
+  // Fail closed in such repositories instead of accepting a synthetic parent relationship.
+  const graftPath=path.resolve(cwd,git(['rev-parse','--git-path','info/grafts']));
+  try {fs.lstatSync(graftPath);throw Error('Legacy Git grafts present: source ancestry untrustworthy');}
+  catch (e) {if(e.code!=='ENOENT')throw e;}
+  if(git(['rev-parse','--is-shallow-repository'])!=='false')throw Error('Shallow Git repository: complete ancestry unavailable');
   const inv=JSON.parse(fs.readFileSync(a['--inventory'],'utf8'));
   const result=reconcile(inv,a['--head'],a['--expected-tree'],git);
   process.stdout.write(JSON.stringify(result,null,2)+'\n');if(!result.verified_all_paths)process.exitCode=2;
