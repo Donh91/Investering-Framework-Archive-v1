@@ -1,4 +1,4 @@
-# Free external specialist research intake: URGE + LIQN (2026-10-14)
+# Free external specialist research intake: URGE + LIQN + QuantGPT (2026-10-14)
 
 **Status:** SOURCE_AND_METHOD_CANDIDATES_ONLY / NO_CLAIM_OF_LIVE_EDGE / NO_SPEND  
 **Master owner:** #1512 and `04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json` (fresh-read: 2026-10-13).  
@@ -64,3 +64,85 @@ Niche competence worth investigating: *factor-level risk dispersion, crowding an
 - https://www.findmymoat.com/tools/liqn (independent, not vendor pricing guarantee)
 - https://github.com/Donh91/Meme-Alpha-Lab/pull/161 (current research code, DRAFT)
 - https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512 (canonical owner)
+
+
+## 5. QuantGPT: Research Lab Red Team intake (source-only, no provider integration)
+
+**Intake UTC date:** 2026-10-14. **Evidence classification:** SOURCE_BACKED_NOT_OUTCOME / PRIOR_METHOD_REFERENCE. **Verdict:** MODIFY_EXISTING_TEST (conditional), not CANONICAL_CANDIDATE. **Priority:** Task 2 R1 and existing Backtest Engine source/PIT-integrity work; no change to specialist queue ordering.
+
+### Frozen proposition
+
+*Independently sourced, planted-asymmetric availability/revision cases may expose false PASS or misleading historical performance in our EXISTING Task 2 original-issuance-to-first-known admission gate, even when synthetic validator tests pass.* This is a falsifiable **capability-gap hypothesis**, not a finding of an actual defect, new strategy or performance improvement.
+
+### Scope: independently observed public claims vs internal state
+
+Official **public** descriptions:
+- https://quantgpt.co/ says the product has long-span market data, documented studies, historical testing and MCP access.
+- https://quantgpt.co/disclosures says its backtests aim to lag positions and join fundamental data by filing date; also describes imperfect survivorship before 1998, gross-vs-net execution limits, revisions, look-ahead and multiple testing. These are **vendor statements, not independently certified properties**.
+- https://github.com/quantgptco/quantgpt-mcp is a published connection/discovery README and public registry; the README expressly says server code is not included. The published repository license does not license QuantGPT's private service, proprietary datasets, algorithms, strategy library or APIs for reuse.
+- https://quantgpt.co/terms (v1.4, effective 2026-10-08 for new accounts) expressly restricts reverse engineering, bulk extraction, cloning interfaces, using protected outputs to build/benchmark competing products, and circumvention. **No QuantGPT signup, API/MCP use, replay of their backtest output, reverse engineering or provider-to-internal benchmark** is authorized or undertaken. General concepts will be sourced and implemented independently from third-party originals, not QuantGPT outputs.
+
+Internal fresh-read evidence:
+- \`04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1.json\` records \`R1_LIVE_PIT_BLOCKED\`, \`history_rows_independently_scored=0\` and original issuance-to-first-known chronology blocked; independent proof remains missing as of that snapshot.
+- \`04_RESEARCH_LAB/auto_trading/research_inputs/2026-09-15_external_tooling_audit/ASTRA_ADJUDICATION_BRIEF.md\` already calls for validating trial/search accounting, planted leakage and recursive-indicator correctness, same-universe shuffle null and independent replication. It parks EODHD, VectorBT and other additional engines pending a unique demonstrable gap.
+- \`backtest_engine/README.md\` describes an engineering validator, not licensed economic backtesting or a clear readiness PASS.
+- Current \`QUEUE_V1.json\` remains led by FIRST_FORWARD_PONS_BUYER_QUALITY_CASE_V1. This **does not** reprioritize Pons, Task 2, S1/S4/S5/S7 or override their existing execution owners.
+
+### Independent sources and potential low-cost method transfer
+
+Only obtain data subject to the ORIGINAL publisher's license and existing source policy, never via QuantGPT:
+1. **Macro revision/vintage:** Federal Reserve's public [FRED/ALFRED real-time periods](https://fred.stlouisfed.org/docs/api/fred/realtime_period.html) and [vintage dates](https://fred.stlouisfed.org/docs/api/fred/series_vintagedates.html). Availability and revision time are independent of observation period end. Some endpoints require a registered FRED API key; do not create or buy a new credential merely for this triage.
+2. **Look-ahead tests:** [Freqtrade's independent lookahead method](https://docs.freqtrade.io/en/stable/lookahead-analysis/) and [recursive-analysis](https://docs.freqtrade.io/en/stable/recursive-analysis/) as test **principles**. The existing tooling audit already identified them; deduplicate before coding.
+3. **Fundamental publication clock / delist universe:** SEC public filing timestamps where an existing approved owner can access them, and an independently admitted as-of tradable-universe ledger. **No reconstruction from QuantGPT data**.
+4. **Trial multiplicity / pseudo-holdout:** independent statistical literature and existing BH/FDR/effective-N, bootstrap, perturbation and preregistration contracts, verified on current main before any new library dependency.
+
+### Smallest adversarial capability-gap check, no new engine
+
+Task 2 existing R1 owner first checks whether each adversarial class is ALREADY_TESTED, PARTIAL, MISSING, BLOCKED_PRIVATE_DATA or REDUNDANT. If already robustly tested, stop and report proof; do not duplicate. If a narrowly specified gap exists, modify only the existing R1 oracle/tests through normal review.
+
+Candidate **synthetic negative controls** (independent original sources / hypothetical fixtures only):
+- A value attached to quarter-end but first publicly released after the decision cutoff must not be admissible at quarter-end.
+- Latest-revised macro series must not silently stand in for a first-available macro vintage at an earlier cutoff.
+- A sampled historical universe that omits later delisted failures must not claim survivor-neutral selection.
+- A record's source event time precedes cutoff, but machine-first-available/immutable source receipt follows cutoff; the row must not be credited as a prospective forecast.
+- A so-called out-of-sample segment inspected while selecting rules must not be labelled sealed holdout.
+- A winning variant selected out of many trials without search accounting must fail multiplicity qualification.
+- Positive gross/backtested signal with no executable cost/liquidity route remains NO_EXECUTION_EVIDENCE, never BUY/SELL edge.
+- Reported PASS from a non-recomputing or mismatched replication receipt must fail independent replication.
+
+Existing Task 2 controls may already contain several or all. These cases are **requests for a deduplicated gap audit**, not claims of absent code. Preserve 0 historical PIT outcome rows until actual source proof; no retrospective promotion.
+
+### Decision divergence, controls, falsifiers
+
+| Question | Requirement |
+|---|---|
+| Decision divergence | A currently admitted R1 historical evidence row changes from PASS to UNKNOWN/REJECT under an independently sourced publication/vintage/replication failure, OR no change because prior controls already correctly reject it |
+| Baseline | Exact current R1 source-admission gate + approved independent original-source proof, NOT QuantGPT's commercial engine |
+| Observation window | Current pinned Task 2 snapshot and the next normal owner-authored R1 test revision; no calendar deadline or agent cron |
+| Minimum valid rows | For *mechanical* gap detection, at least one known-positive and one planted-negative synthetic fixture per verified gap, plus a current-head CI readback; **zero simulated rows count as historical forecasting evidence** |
+| Falsifier | Current R1 already rejects all proposed invalid inputs in tests and real admissible PIT receipts, with independently verified same-cutoff input replay; conclude ALREADY_EXISTS/REDUNDANT |
+| Kill | No unique current-main failure found, source licensing/point-in-time evidence not available, duplicated active research or no affected owner decision |
+| Promotion condition | Existing owner proves a concrete code gap and correction with independent current-head CI and original-source PIT evidence; any forecasting edge requires separately matured prospective rows |
+| False-positive cost | False historic skill, counterfeit edge, time wasted on new backtest engines and accidental import of barred commercial data |
+| False-negative cost | Missing legitimate incremental data-vintage/provenance failure that biases official historical scores |
+
+### Authority and research verdict
+
+**Primary Research Lab verdict: MODIFY_EXISTING_TEST (only if gap demonstrated).** Current receipt status: RESEARCH_ONLY, ACTION_PENDING_OWNER_GAP_CHECK, \`SOURCE_CONTEXT_ONLY\` with respect to QuantGPT itself.
+
+- May change: bounded **research-only** method inventory, review tasks and independently sourced R1 synthetic correctness cases through owner PRs.
+- May not change: Research Lab queue execution priority, Round 3 research/unblinding, private source values, spending, source contracts, production collectors, official predictions, trading permission, Master Monday, Kompas, Cycle Navigator, exit strategy or portfolio decisions.
+- No machine-readable new queue, no Task 2 R1 completion claim, no new subscription, no QuantGPT tool/API/credentials or copied proprietary material.
+- Distinguish **independent free original sources** from a **free trial of a restrictive third-party product**. A no-cost trial does not grant competitive-use rights.
+
+**Precise next action for Research Lab owner #1512 and Task 2 R1:** Map each of the eight proposed negative controls to existing R1 tests and open PRs (#1573/#1597 and latest current main), produce an evidence-backed matrix \`CASE -> existing test + exact-head CI/receipt -> PASS/FAIL/BLOCKED/DUPLICATE -> single bounded correction or KILL\`. If any test is already present, it must be counted as ALREADY_EXISTS, not newly discovered. A documented outcome of **no new code** is success if independent tests already cover the risk.
+
+#### Public source provenance reviewed 2026-10-14
+
+- https://quantgpt.co/
+- https://quantgpt.co/disclosures
+- https://quantgpt.co/terms
+- https://github.com/quantgptco/quantgpt-mcp
+- https://fred.stlouisfed.org/docs/api/fred/realtime_period.html
+- https://docs.freqtrade.io/en/stable/lookahead-analysis/
+- Existing Framework source files listed above, current-main fetched 2026-10-14.
