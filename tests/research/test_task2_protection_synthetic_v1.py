@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2] / "scripts" / "research"))
-from task2_protection_synthetic_v1 import Quote, Warning, Policy, simulate_synthetic
+from task2_protection_synthetic_v1 import Quote, Warning, Policy, simulate_synthetic, price_only_lead_synthetic
 
 BASE = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
@@ -96,6 +96,30 @@ class CounterfactualTests(unittest.TestCase):
     def test_unknown_warning_state_forbidden(self):
         with self.assertRaisesRegex(ValueError,'HISTORICAL_OR_UNAUTHORIZED'):
             simulate_synthetic(scenario([100,90]),replace(signal(),state='BUILDING'),policy())
+
+class PriceOnlyLeadTests(unittest.TestCase):
+    def test_early_warning_beats_frozen_price_triggers(self):
+        out=price_only_lead_synthetic(scenario([100,98,96,94]),signal())
+        self.assertEqual(out['lead_vs_p2_hours'],2)
+        self.assertEqual(out['lead_vs_p1_hours'],3)
+    def test_late_warning_cannot_get_early_lead_credit(self):
+        out=price_only_lead_synthetic(scenario([100,98,96,94]),signal(delivered_h=3))
+        self.assertEqual(out['lead_vs_p2_hours'],-1)
+        self.assertEqual(out['lead_vs_p1_hours'],0)
+    def test_false_positive_warning_on_pump(self):
+        out=price_only_lead_synthetic(scenario([100,110,120,140]),signal())
+        self.assertTrue(out['no_price_trigger_in_window'])
+        self.assertIsNone(out['lead_vs_p1_hours'])
+    def test_delivery_after_horizon_cannot_earn_credit(self):
+        with self.assertRaisesRegex(ValueError,'DELIVERY_OUTSIDE'):
+            price_only_lead_synthetic(scenario([100,90]),signal(delivered_h=3))
+    def test_future_known_source_cannot_lead(self):
+        with self.assertRaisesRegex(ValueError,'LOOKAHEAD'):
+            price_only_lead_synthetic(scenario([100,90]),signal(source_h=3))
+    def test_quote_capture_futurity_cannot_lead(self):
+        q=scenario([100,90]);q[1]=replace(q[1],known_at=q[1].at+timedelta(minutes=1))
+        with self.assertRaisesRegex(ValueError,'QUOTE_CAPTURE'):
+            price_only_lead_synthetic(q,signal())
 
 if __name__=='__main__': unittest.main(verbosity=2)
 
