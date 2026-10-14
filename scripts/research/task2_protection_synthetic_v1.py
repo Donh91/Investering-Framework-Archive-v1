@@ -101,7 +101,7 @@ def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
     first_sell_clock = warning.delivered_at + timedelta(hours=policy.execution_delay_h)
     intended_buy_clock = None
     for quote in quotes:
-        if sale_at is None and quote.at > quotes[0].at and quote.at >= first_sell_clock:
+        if sale_at is None and quote.at > quotes[0].at and quote.at > first_sell_clock:
             desired_units = units_initial * policy.trim_fraction
             notional = desired_units * quote.bid
             if notional <= quote.capacity_usd:
