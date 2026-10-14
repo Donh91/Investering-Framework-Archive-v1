@@ -180,3 +180,14 @@ The user's 11-page DR07 report is **Rotation, Altseason & Market Cycle**, not th
 - **Immediate next existing-owner work:** first-knowledge receipt and complete issue×asset×horizon×status denominator; pin same-clock baseline controls; then admit the smallest honest retrospective/prospective cohort only after verified R1 and independent event-family gate. No retroactive relabeling of M6 or CENSORED, no second supervisor, no new scheduler, no market-action authority.
 
 **Status:** R0 source SHA drift now fully verified for one exact revision; R1 historical admission BLOCKED; R2–R7 actual economic/test outcomes not executed in this intake. All prior DR01–DR07 source summaries and negative evidence remain unchanged.
+
+
+## Independent Deep Research packet — reports DR01–DR08 (2026-10-14)
+
+The **single user-initiated Deep Research handoff** for the eight report intakes lives at:
+- `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DEEP_RESEARCH_INDEPENDENT_REVIEW_PACKET_v1.md` — self-contained public-safe copy/paste research mission, evidence court and five DR workstreams.
+- `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DEEP_RESEARCH_INDEPENDENT_REVIEW_PACKET_v1.json` — 8-report navigation and machine-readable output contract.
+
+**Division of labor:** This existing Task 2 owner alone executes, independently verifies, reviews and promotes source-admitted R0–R7 work. A separate Deep Research session, manually launched when desired, only interrogates public evidence, finds external primary sources and produces versioned, falsifiable owner-bound recommendations. It cannot certify backtests, leak private records, rerun closed Round-2 mining, create new autonomous supervisor/scheduler, or alter trading decisions. The reuploaded DR08 PDF matches the already recorded SHA-256 and is **not a ninth independent report**. The source-pinning code-fix PR #1617 remains an independent review/merge task; do not represent it as done because this packet exists. Any later DR09+ materials extend the packet through new versioned intake without rewriting the prior reports.
+
+**Immediate execution priority is unchanged:** historical original-issued forecast → provider first-known → eligible outcome (including missing/censored/abstained states) → strongest same-clock cheap benchmark; only R1-admitted cohorts may enter actual R2 simulations.
