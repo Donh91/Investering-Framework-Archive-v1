@@ -180,3 +180,16 @@ The user's 11-page DR07 report is **Rotation, Altseason & Market Cycle**, not th
 - **Immediate next existing-owner work:** first-knowledge receipt and complete issue×asset×horizon×status denominator; pin same-clock baseline controls; then admit the smallest honest retrospective/prospective cohort only after verified R1 and independent event-family gate. No retroactive relabeling of M6 or CENSORED, no second supervisor, no new scheduler, no market-action authority.
 
 **Status:** R0 source SHA drift now fully verified for one exact revision; R1 historical admission BLOCKED; R2–R7 actual economic/test outcomes not executed in this intake. All prior DR01–DR07 source summaries and negative evidence remain unchanged.
+
+
+## 2026-10-14 R0 verifier hardening · source-object pinning v1.1
+
+Following the immutable 36/36 R0 public source drift receipt (compared SHA \`05f9daba3a8648c1d7c744fa5665b1014c968639\`), a source-object **verifier integrity gap** was identified in the original standalone script: v1 checked the pinned **root tree**, target root tree, ancestry and target object types, but did not independently require every historical original source path to resolve to the source SHA and type asserted by the inventory. A corrupted per-source historical pin could therefore have been counted as \`CHANGED\` instead of rejected. **This does not invalidate the previously separately verified frozen inventory; it limits what the standalone v1 code proved on its own.**
+
+Remediation is **additive, not retroactive**:
+
+- \`04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs\`: verifies the original \`pinned_main_commit:path\` git object SHA + type for **every distinct path** before comparing with the exact pinned head; rejects missing/tampered originals. Additional deterministic output ordering and path guards. Original v1 source and receipt remain unchanged.
+- \`04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs\`: ten offline Git-fixture negative/positive tests including malicious pin, type, missing source, explicit head/tree mismatch, non-ancestor and traversal; all passed locally on Node 22 (Node 20+ compatible syntax). Run: \`node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs\`.
+- Re-run in a checkout with both immutable commits present by replacing the original v1 runner path with \`...__v1_1.mjs\`, using the independently recorded exact \`--head 05f9daba3a8648c1d7c744fa5665b1014c968639 --expected-tree 8a632948eb8515c023196271a2299259cb8bc607\`, not values derived from moving \`HEAD\`. A genuine current-source refresh requires a **new** externally pinned head and root tree, not overwriting the frozen receipt.
+
+**Scope:** Git-object integrity only. This change does not provide private-provider first-known, original forecast issued-at attestation, historical R2–R7 admission, AI model performance or executable trading proof. No source authority, original outcome, production model, site, credential or automation is changed.
