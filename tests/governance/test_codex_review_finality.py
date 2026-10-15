@@ -48,8 +48,8 @@ class ReviewFinalityTests(unittest.TestCase):
         # isolated copy of the function. The same negative acceptance test
         # MUST fail against the mutant rather than merely pass on good code.
         source = inspect.getsource(gate.decision)
-        original = 'if not completed or not positive:\\n            return fail("REVIEW_IN_PROGRESS_OR_UNVERIFIED")'
-        bad_guard = ('if not completed or not positive:\\n'
+        original = 'if not completed or not positive:\n            return fail("REVIEW_IN_PROGRESS_OR_UNVERIFIED")'
+        bad_guard = ('if not completed or not positive:\n'
                      '            return {"status": "FINAL_TECHNICAL_REVIEW", "technical_review_accepted": True}')
         self.assertIn(original, source)
         env = dict(vars(gate))
