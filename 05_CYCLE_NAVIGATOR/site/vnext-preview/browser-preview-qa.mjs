@@ -271,6 +271,40 @@ try{
       assert.ok(bytes.length>12000,'Blank tablet screenshot');
     }
   }
+  // Desktop first-impression gate: show the *source-owned* action and
+  // direction within a standard 900px-high first screen. A beautiful gauge
+  // which hides the decision until the next scroll is not a premium UX.
+  for(const width of [1024,1280,1440]){
+    await call('Emulation.setDeviceMetricsOverride',{
+      width,height:900,mobile:false,deviceScaleFactor:1
+    },sessionId);
+    await call('Page.navigate',{
+      url:pathToFileURL(source).href+'#overblik'
+    },sessionId);
+    let ready=false;
+    for(let i=0;i<125;i++){
+      ready=await evaluate("Boolean(document.querySelector('#cn-gauge-action')?.textContent.includes('HOLD'))");
+      if(ready)break;
+      await wait(100);
+    }
+    assert.ok(ready,'Desktop source action did not load at '+width);
+    const desktop=await evaluate("(()=>{const card=document.querySelector('.cn-instrument');const footer=document.querySelector('.cn-instrument-footer');const rect=footer.getBoundingClientRect();const strip=document.querySelector('.preview-ribbon')?.textContent;return {inner:innerWidth,overflow:document.documentElement.scrollWidth,top:Math.round(rect.top),bottom:Math.round(rect.bottom),action:document.querySelector('#cn-gauge-action')?.textContent?.trim(),direction:document.querySelector('#cn-gauge-direction')?.textContent?.trim(),snapshotCaveat:strip?.includes('KILDEFAST SNAPSHOT'),gaugeWidth:Math.round(card.getBoundingClientRect().width)}})()");
+    assert.ok(desktop.inner===width&&desktop.overflow<=width+1&&
+      desktop.top>=0&&desktop.bottom<=900&&desktop.gaugeWidth<=650&&
+      desktop.action?.includes('HOLD')&&desktop.direction?.includes('BULLISH')&&
+      desktop.snapshotCaveat,
+      'Decision hidden under desktop first-screen fold '+width+'px '+JSON.stringify(desktop));
+    console.log('PASS desktop first-screen decision '+width+'px '+JSON.stringify(desktop));
+    if(width===1440){
+      await wait(230);
+      const shot=await call('Page.captureScreenshot',{
+        format:'png',captureBeyondViewport:false,fromSurface:true
+      },sessionId);
+      const bytes=Buffer.from(shot.data,'base64');
+      writeFileSync(join(out,'OVERVIEW_DESKTOP_1440.png'),bytes);
+      assert.ok(bytes.length>16000,'Blank desktop Overview screenshot');
+    }
+  }
   assert.deepEqual(runtimeErrors.filter(Boolean),[],'No JavaScript exceptions');
   console.log('PASS all: two lines, 390/430 mobile, 801/820/900/940 desktop-tablet, DA/EN, BTC/ETH, source, hash, scroll-width, real screenshots');
   ws.close();
