@@ -1244,3 +1244,12 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
 @media(prefers-reduced-motion:reduce){
  .cn-path-week .cn-chart-close-path{animation:none!important;}
 }
+
+/* Tablet header must fit without sacrificing four accessible desktop links.
+   W41 metadata is already shown in the content; hide its duplicate in the
+   narrow desktop header, preserving the DA/EN/source controls. */
+@media (min-width:801px) and (max-width:940px) {
+  .masthead .header-issue{display:none;}
+  .masthead .header-actions{gap:8px;padding-left:8px;}
+  .masthead .desktop-nav{gap:12px;}
+}
