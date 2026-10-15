@@ -155,6 +155,38 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                 self.call()
             http.assert_called_once()
 
+    def test_paid_claim_in_changed_cohort_must_not_pay_again(self):
+        failed = {**self.good, "output_text": json.dumps({"scores": []})}
+        first_id = self.claims[0]["claim_id"]
+        with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \\
+             patch("urllib.request.urlopen", return_value=Response(failed)) as http:
+            with self.assertRaisesRegex(RuntimeError, "INVALID_STRUCTURED_OUTPUT"):
+                self.call()
+            self.assertTrue(self.receipt().exists())
+            self.claims = [{"claim_id": first_id}, {"claim_id": "CN-next-due"}]
+            with self.assertRaisesRegex(RuntimeError, "CN_API_CLAIM_ALREADY_ATTEMPTED"):
+                self.call()
+            http.assert_called_once()
+
+        self.claims = [{"claim_id": "CN-next-due"}]
+        second = {**self.good, "id": "resp_other_only"}
+        second["output_text"] = json.dumps({"scores": [{
+            "claim_id": "CN-next-due", "status": "SUPPORTED", "score": 100,
+            "evidence": "synthetic only", "self_critique": "not a historical prediction"}]})
+        with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \\
+             patch("urllib.request.urlopen", return_value=Response(second)) as http:
+            self.assertEqual(self.call()[0]["claim_id"], "CN-next-due")
+            http.assert_called_once()
+
+    def test_malformed_previous_paid_receipt_blocks_new_cohort_no_http(self):
+        older = self.root / "research/api_agent/outputs/cn_internal_precision" / "synthetic-old"
+        older.mkdir(parents=True)
+        (older / "receipt.json").write_text("{broken")
+        with patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_PREVIOUS_RECEIPT_UNREADABLE"):
+                self.call()
+            http.assert_not_called()
+
     def test_invalid_model_output_retains_charge_and_skips_scoring(self):
         invalid = {**self.good, "output_text": json.dumps({"scores": []})}
         with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \
