@@ -84,6 +84,23 @@ try{
     "viewBox:svg?.getAttribute('viewBox')",
     '};})()'
   ].join('');
+  // Real browser bounding boxes, not approximate CSS declaration checks.
+  // All *visible* buttons on the active route must have 44px targets on phone.
+  const inspectMobileTapTargets = `(()=>{
+    const visible=[...document.querySelectorAll('button')].filter(el=>{
+      const r=el.getBoundingClientRect();
+      return r.width>0&&r.height>0&&getComputedStyle(el).visibility!=='hidden';
+    });
+    return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+      undersized:visible.filter(el=>{
+        const r=el.getBoundingClientRect();
+        return r.width<44||r.height<44;
+      }).map(el=>{
+        const r=el.getBoundingClientRect();
+        return {text:el.textContent.trim().slice(0,30),
+          width:Math.round(r.width),height:Math.round(r.height)};
+      })};
+  })()`;
   for(const width of [390,430]){
     await call('Emulation.setDeviceMetricsOverride',{
       width,height:844,mobile:true,deviceScaleFactor:1
@@ -98,6 +115,9 @@ try{
       if(ready)break;await wait(100);
     }
     assert.ok(ready,'Both chart paths must render at '+width);
+    const mobileTap=await evaluate(inspectMobileTapTargets);
+    assert.ok(mobileTap.scrollWidth<=width+1&&mobileTap.undersized.length===0,
+      'Phone tap/overflow regression at '+width+'px '+JSON.stringify(mobileTap));
     for(const lang of ['da','en']){
       await evaluate("document.querySelector('[data-lang="+JSON.stringify(lang)+"]').click()");
       await wait(200);
@@ -152,6 +172,28 @@ try{
         }
       }
     }
+  }
+  // 320/360/375px compact iPhones and the 580px breakpoint are separate
+  // regression widths: no false acceptance from just modern 390px devices.
+  for(const width of [320,360,375,580]){
+    await call('Emulation.setDeviceMetricsOverride',{
+      width,height:844,mobile:true,deviceScaleFactor:1
+    },sessionId);
+    const nav=await call('Page.navigate',{
+      url:pathToFileURL(source).href+'#cn-path-week'
+    },sessionId);
+    assert.ok(!nav.errorText,'Compact source navigation failed: '+nav.errorText);
+    let ready=false;
+    for(let i=0;i<125;i++){
+      ready=await evaluate("Boolean(document.querySelector('.cn-chart-close-path'))");
+      if(ready)break;
+      await wait(100);
+    }
+    assert.ok(ready,'Compact chart source unavailable at '+width);
+    const tap=await evaluate(inspectMobileTapTargets);
+    assert.ok(tap.width===width&&tap.scrollWidth<=width+1&&tap.undersized.length===0,
+      'Compact iPhone touch/overflow FAIL at '+width+'px '+JSON.stringify(tap));
+    console.log('PASS compact mobile '+width+'px, min target 44x44, no overflow');
   }
   // The explicit replay must complete, not leave the solid ACTUAL curve
   // hidden after user interaction. This is deliberately not autoplay.
