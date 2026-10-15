@@ -722,10 +722,10 @@ function renderRangeChart() {
   const floor = Math.floor(Math.min(...rangeValues)/step)*step;
   const ceiling = Math.ceil(Math.max(...rangeValues)/step)*step;
   const yMin = floor-step, yMax=ceiling+step;
-  const top=22,left=76,right=728,bottom=284,h=bottom-top;
+  const top=35,left=87,right=706,bottom=336,h=bottom-top;
   const Y = (n) => bottom-(n-yMin)/(yMax-yMin)*h;
   const X = (i) => left+(right-left)*(i/6);
-  const svg=chartElement('svg',{viewBox:'0 0 790 330',class:'cn-history-chart',role:'img','aria-label':selectedAsset+' observerede dagslukninger og tre historisk frosne prognosevinduer for uge 40. Det er ikke en daglig forecast-kurve.'});
+  const svg=chartElement('svg',{viewBox:'0 0 820 396',class:'cn-history-chart',role:'img','aria-label':selectedAsset+' W40: lys stiplet AFLEDT forecastmidtlinje fra tre frosne perioder, sammenlignet med blå observeret dagslukningskurve fra mandag til søndag.'});
   svg.append(chartElement('title',{},selectedAsset+' historisk uge 40, dagslukning og 3 frosne prognoseperioder'));
   svg.append(chartElement('desc',{},'Syv virkelige dagslukninger fra 168 timeobservationer, 28 september til 4 oktober 2026. De frosne forecasts dækker tre separate vinduer: dag 1-2, 3-4 og 5-7. Ingen daglige forecast-priser er estimeret.'));
   for(let val=yMin;val<=yMax;val+=step){
@@ -737,22 +737,30 @@ function renderRangeChart() {
   // smooth corridor interpolates between their numeric boundaries for
   // presentation, it is NOT a recorded daily forecast or an actual price path.
   const forecastCenters=[.5,2.5,5];
-  const highGuide=windows.map((w,i)=>({x:X(forecastCenters[i]),y:Y(w.forecast_high)}));
-  const lowGuide=windows.map((w,i)=>({x:X(forecastCenters[i]),y:Y(w.forecast_low)}));
-  const midpointGuide=windows.map((w,i)=>({x:X(forecastCenters[i]),y:Y((w.forecast_high+w.forecast_low)/2)}));
+  // Only three authoritative forecast RANGE windows exist. Extrapolate the
+  // three frozen centers flat to week endpoints and interpolate visually
+  // between them. The trajectory is an indicative RANGE MIDPOINT GUIDE,
+  // never a recorded daily closing-price forecast.
+  const guide = (field) => {
+    const values=windows.map(w=>field==='midpoint'?(w.forecast_high+w.forecast_low)/2:w[field]);
+    return [0,...forecastCenters,6].map((day,i)=>({
+      x:X(day),y:Y(i===0?values[0]:i===4?values[2]:values[i-1])
+    }));
+  };
+  const highGuide=guide('forecast_high'),lowGuide=guide('forecast_low');
+  const midpointGuide=guide('midpoint');
   const ribbon=monotoneClosePath(highGuide)+' L '+
     monotoneClosePath([...lowGuide].reverse()).slice(2)+' Z';
   svg.append(chartElement('path',{d:ribbon,class:'cn-chart-forecast-ribbon'}));
-  svg.append(chartElement('path',{d:monotoneClosePath(highGuide),class:'cn-chart-boundary'}));
-  svg.append(chartElement('path',{d:monotoneClosePath(lowGuide),class:'cn-chart-boundary'}));
-  svg.append(chartElement('path',{d:monotoneClosePath(midpointGuide),class:'cn-chart-forecast-midpoint'}));
-  for (let i=0;i<3;i++) {
-    svg.append(chartElement('circle',{cx:midpointGuide[i].x,cy:midpointGuide[i].y,r:3.5,class:'cn-chart-midpoint-anchor'}));
-    svg.append(chartElement('text',{x:midpointGuide[i].x,y:top+14,'text-anchor':'middle',class:'cn-chart-window'},['FROSSET D1–2','FROSSET D3–4','FROSSET D5–7'][i]));
+  svg.append(chartElement('path',{d:monotoneClosePath(midpointGuide),class:'cn-chart-forecast-midpoint','vector-effect':'non-scaling-stroke'}));
+  // Only three pale markers are shown, one per original frozen window.
+  for(let i=0;i<3;i++){
+    const p=midpointGuide[i+1];
+    svg.append(chartElement('circle',{cx:p.x,cy:p.y,r:5,class:'cn-chart-midpoint-anchor'}));
   }
   const pathPoints=days.map((d,i)=>({x:X(i),y:Y(d[selectedAsset].close)}));
   const defs=chartElement('defs'),clip=chartElement('clipPath',{id:'cn-path-actual-clip'});
-  clip.append(chartElement('rect',{x:left-12,y:0,width:760,height:330,id:'cn-path-actual-clip-rect'}));
+  clip.append(chartElement('rect',{x:left-12,y:0,width:740,height:396,id:'cn-path-actual-clip-rect'}));
   defs.append(clip);svg.append(defs);
   const actualGroup=chartElement('g',{'clip-path':'url(#cn-path-actual-clip)'});
   days.forEach((d,i)=>{
@@ -760,7 +768,7 @@ function renderRangeChart() {
     actualGroup.append(chartElement('line',{x1:x,x2:x,y1:Y(p.high),y2:Y(p.low),class:'cn-chart-actual-range'}));
     svg.append(chartElement('text',{x,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday'},['Man','Tir','Ons','Tor','Fre','Lør','Søn'][i]));
   });
-  svg.append(chartElement('text',{x:762,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday cn-chart-weekaxis'},'W40'));
+  svg.append(chartElement('text',{x:774,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday cn-chart-weekaxis'},'W40'));
   actualGroup.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
   pathPoints.forEach((p,i)=>{
     const point=chartElement('circle',{cx:p.x,cy:p.y,r:4.8,class:'cn-chart-point'});
@@ -768,9 +776,9 @@ function renderRangeChart() {
     actualGroup.append(point);
   });
   svg.append(actualGroup);
-  const badge=chartElement('text',{x:right,y:14,'text-anchor':'end',class:'cn-chart-week'},'2026 · W40 · UTC');
+  const badge=chartElement('text',{x:right,y:20,'text-anchor':'end',class:'cn-chart-week'},'2026 · W40 · UTC');
   svg.append(badge);root.append(svg);
-  const legend=make('p','cn-chart-proof','LYS KORRIDOR + STIPLET LINJE: visuelt interpolerede grænser/midtpunkter fra TRE originale frosne perioder (ingen daglige forecast-priser). MØRKEBLÅ: faktiske dagsluk med lodret observeret low–high. Den glatte linje er ikke en intradag-kurssti.');
+  const legend=make('p','cn-chart-proof','Forecast-linjen er en afledt midte fra 3 frosne prisintervaller, ikke en daglig prognose. Den blå linje forbinder 7 faktiske dagslukninger.');
   root.append(legend);
   const tableWrap=make('div','cn-chart-table-scroll'),table=make('table','cn-chart-table');
   const head=make('thead'),headrow=make('tr');
@@ -846,7 +854,7 @@ function renderRangeChart() {
   const dayRoot=$('cn-path-daily-table');clear(dayRoot);
   const title=make('h4','cn-chart-table-title','Faktiske priser · mandag til søndag');
   dayRoot?.append(title,tableWrap);
-  setText('range-method','CN #27 W40 · 168/168 timer · 3 oprindelige frosne vinduer · se score i Resultater');
+  setText('range-method','W40 · 3 frosne perioder · 7 observerede dage');
   setText('cn-replay-day','Faktisk uge · alle syv verificerede dagslukninger');
 }
 
