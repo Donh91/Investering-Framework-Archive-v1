@@ -50,6 +50,10 @@ function navigate(route, { updateHash = true } = {}) {
     page.classList.toggle('is-active', active);
     page.hidden = !active;
   }
+  for (const button of document.querySelectorAll('[data-open-path]')) {
+    button.classList.remove('is-active');
+    button.removeAttribute('aria-current');
+  }
   for (const button of document.querySelectorAll('[data-route]')) {
     const active = button.dataset.route === route;
     button.classList.toggle('is-active', active);
@@ -63,6 +67,28 @@ function navigate(route, { updateHash = true } = {}) {
   document.title = (route === 'overblik' ? 'Overblik' : route === 'kompas' ? 'Kompas' : 'Resultater') + ' — Cycle Navigator';
 }
 
+// PATH is a discoverable deep-link within the same Overblik page. Preserve
+// the existing canonical pages, score owner and source; navigation only.
+function openPathGraph({ updateHash = true } = {}) {
+  navigate('overblik', { updateHash: false });
+  for (const button of document.querySelectorAll('[data-open-path]')) {
+    button.classList.add('is-active');
+    if (button.classList.contains('nav-link') || button.classList.contains('dock-link')) {
+      button.setAttribute('aria-current','page');
+    }
+  }
+  for (const button of document.querySelectorAll('[data-route="overblik"]')) {
+    button.classList.remove('is-active');
+    button.removeAttribute('aria-current');
+  }
+  if (updateHash && location.hash !== '#cn-path-week') {
+    history.replaceState(null, '', '#cn-path-week');
+  }
+  requestAnimationFrame(() => {
+    const target = document.getElementById('cn-path-week');
+    if (target) target.scrollIntoView({ behavior:'auto', block:'start' });
+  });
+}
 function bindNavigation() {
   document.querySelectorAll('[data-route]').forEach((button) => {
     button.addEventListener('click', () => navigate(button.dataset.route));
@@ -70,12 +96,17 @@ function bindNavigation() {
   document.querySelectorAll('[data-go]').forEach((button) => {
     button.addEventListener('click', () => navigate(button.dataset.go));
   });
+  document.querySelectorAll('[data-open-path]').forEach((button) => {
+    button.addEventListener('click', () => openPathGraph());
+  });
   window.addEventListener('hashchange', () => {
     const route = location.hash.slice(1);
-    if (routes.includes(route)) navigate(route, { updateHash: false });
+    if (route === 'cn-path-week') openPathGraph({ updateHash:false });
+    else if (routes.includes(route)) navigate(route, { updateHash: false });
   });
   const initial = location.hash.slice(1);
-  if (routes.includes(initial)) navigate(initial, { updateHash: false });
+  if (initial === 'cn-path-week') openPathGraph({ updateHash:false });
+  else if (routes.includes(initial)) navigate(initial, { updateHash: false });
 }
 
 // Presentation-only score reveal. No price interpolation, market prediction or scorer logic.
@@ -200,10 +231,7 @@ function bindPanels() {
     playRangeComparison();
   }));
   $('range-replay')?.addEventListener('click', playRangeComparison);
-  $('cn-path-week-open')?.addEventListener('click', () => {
-    navigate('overblik');
-    document.getElementById('cn-path-week')?.scrollIntoView({behavior:'instant',block:'start'});
-  });
+  $('cn-path-week-open')?.addEventListener('click', () => openPathGraph());
   $('edge-open-comparison')?.addEventListener('click', () => {
     // The modern Edge chapter links to a genuine, older frozen comparison.
     // It is not promoted into a new scored outcome.
