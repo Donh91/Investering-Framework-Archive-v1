@@ -1,5 +1,8 @@
 # ASTRA HANDOVER - AUTO_TRADING RESEARCH VAULT
 
+> **2026-10-15 model-neutral mission continuity (Auto Trading research).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. The handover is owned by the current Research Lab/Auto Trading research system, not an unavailable model. Qualified GPT-6 research may be routed immediately through current owners when admissible; however, Task 2/MAEVE PIT, historical source coverage, proposal-time multiplicity, queue and no-live-trading restrictions remain real blockers to broader work. Follow the existing [Framework Mission Continuity owner](../../07_PROMPTS_AND_AGENTS/astra/ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 Status: Prepared for future Astra ownership of heavy research.
 
 ## Mission
