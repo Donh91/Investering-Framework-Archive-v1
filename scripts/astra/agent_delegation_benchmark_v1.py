@@ -235,6 +235,23 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
                 base = receipt_root if receipt_root is not None else Path.cwd()
                 if (base / execution_path).resolve() == (base / verification_path).resolve():
                     reason.append(f"REUSED_RECEIPT_PATH_OR_ALIAS_WITHIN_ARM:{mode}")
+        # Inputs are not execution or independent verification receipts.
+        # Byte identity, path identity and filesystem aliases must all fail
+        # closed even if every individual SHA-256 readback succeeds.
+        source_artifacts = [
+            ("FROZEN_QUESTION", c["frozen_question_path"], c["frozen_question_sha256"]),
+            ("EVIDENCE_BUNDLE", c["evidence_path"], c["evidence_sha256"]),
+        ]
+        for source_type, source_path, source_hash in source_artifacts:
+            for mode in MODES:
+                for receipt_type, receipt_path, receipt_hash in receipts(variants[mode]):
+                    label = f"{source_type}_AS_{receipt_type}_{mode}"
+                    if source_hash is not None and source_hash == receipt_hash:
+                        reason.append(f"REUSED_SOURCE_AS_RECEIPT_DIGEST:{label}")
+                    if source_path is not None and receipt_path is not None:
+                        base = receipt_root if receipt_root is not None else Path.cwd()
+                        if (base / source_path).resolve() == (base / receipt_path).resolve():
+                            reason.append(f"REUSED_SOURCE_AS_RECEIPT_PATH_OR_ALIAS:{label}")
         for solo_type, solo_path, solo_hash in receipts(solo):
             for delegated_type, delegated_path, delegated_hash in receipts(delegated):
                 name = f"{solo_type}_SOLO_VS_{delegated_type}_DELEGATED"
