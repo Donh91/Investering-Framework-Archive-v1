@@ -170,6 +170,52 @@ class Bench(unittest.TestCase):
         self.assertEqual(out['byte_consistent_pair_count'], 0)
         self.assertIn('REUSED_RECEIPT_PATH_OR_ALIAS_WITHIN_ARM:DELEGATED', out['rows'][0]['reasons'])
 
+    def test_frozen_question_cannot_be_solo_execution_receipt(self):
+        obj = make_case()
+        case = obj['cases'][0]
+        solo = case['variants'][0]
+        solo['execution_receipt_path'] = case['frozen_question_path']
+        solo['execution_receipt_sha256'] = case['frozen_question_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertFalse(out['rows'][0]['metadata_eligible'])
+        self.assertIn('REUSED_SOURCE_AS_RECEIPT_DIGEST:FROZEN_QUESTION_AS_EXECUTION_SOLO', out['rows'][0]['reasons'])
+
+    def test_evidence_bundle_cannot_be_delegated_verification_receipt(self):
+        obj = make_case()
+        case = obj['cases'][0]
+        delegated = case['variants'][1]
+        delegated['verification']['verification_receipt_path'] = case['evidence_path']
+        delegated['verification']['verification_receipt_sha256'] = case['evidence_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertFalse(out['rows'][0]['metadata_eligible'])
+        self.assertIn('REUSED_SOURCE_AS_RECEIPT_PATH_OR_ALIAS:EVIDENCE_BUNDLE_AS_VERIFICATION_DELEGATED', out['rows'][0]['reasons'])
+
+    def test_copied_question_bytes_at_different_path_rejected(self):
+        obj = make_case()
+        case = obj['cases'][0]
+        solo = case['variants'][0]
+        cloned = 'execution-copy-of-question.txt'
+        (self.root / cloned).write_bytes((self.root / case['frozen_question_path']).read_bytes())
+        solo['execution_receipt_path'] = cloned
+        solo['execution_receipt_sha256'] = case['frozen_question_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_SOURCE_AS_RECEIPT_DIGEST:FROZEN_QUESTION_AS_EXECUTION_SOLO', out['rows'][0]['reasons'])
+
+    def test_evidence_file_symlink_alias_as_receipt_rejected(self):
+        obj = make_case()
+        case = obj['cases'][0]
+        solo = case['variants'][0]
+        alias = 'evidence-as-receipt-symlink.txt'
+        (self.root / alias).symlink_to(case['evidence_path'])
+        solo['execution_receipt_path'] = alias
+        solo['execution_receipt_sha256'] = case['evidence_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_SOURCE_AS_RECEIPT_PATH_OR_ALIAS:EVIDENCE_BUNDLE_AS_EXECUTION_SOLO', out['rows'][0]['reasons'])
+
     def test_duplicate_pair_across_cases_counted_once(self):
         obj = make_case()
         copy = deepcopy(obj['cases'][0])
