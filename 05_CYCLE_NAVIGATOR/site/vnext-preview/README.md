@@ -1,8 +1,26 @@
 # Cycle Navigator vNext - Interactive design preview (2026-10-11)
 
-**Preview URL:** https://cycle-navigator-vnext-preview-l1nbkq.v2.appdeploy.ai/
+## Current authority / delivery · superseding 2026-10-15 update
 
-**Status:** ISOLATED INTERACTIVE PREVIEW / CURRENT PRODUCTION UNCHANGED / NOT CONTINUOUS LIVE SIGNAL
+**Current preview delivery:** GitHub Actions artifacts, built on the existing Draft PR [#1576](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1576), not AppDeploy. The current check's `cn-vnext-source-preview-<run_id>` artifact contains `CYCLE_NAVIGATOR_OFFLINE_PREVIEW.html` (single-file archived interactive demo, verified offline in Chromium), ordinary Vite files, and a SHA-256 `PREVIEW_MANIFEST.json`. `cn-vnext-browser-qa-<run_id>` contains real rendered mobile/tablet/desktop screenshots. Find the latest successful `static-preview` in the PR's Checks tab and download its artifacts; they expire after seven days and can be rebuilt from the exact branch source.
+
+**Delivery status:** `HISTORICAL_DEMO_ONLY / ARCHIVED_CN28_W41_AND_COMPLETED_CN27_W40 / NOT_LIVE / NOT_GITHUB_PAGES_PRODUCTION`. GitHub CI has source tests, actual browser checks for 320–580px phones, 801–940px tablet, 1024–1440px desktop, keyboard focus/Escape/Enter, reduced motion, DA/EN BTC/ETH, readable WCAG AA evidence labels, exact source cutoff and no site overflow. Chromium browser-emulated iPhone viewport **is not native iPhone Safari/VoiceOver signoff**.
+
+**Hard release boundary:** The existing public GitHub Pages site remains separate and unchanged. Current W42+ source consumer, matching Official Compass and CN identities/freshness, immutable score evidence, independent review and approved release/rollback are separate requirements owned by existing [release issue #1578](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1578). The preview's public source seed is fixed at the 2026-10-11 issuance, and the W40 graph uses only genuine three frozen range windows and seven observed daily closes; its dashed midpoint is an **illustrative derived guide**, not seven originally frozen daily price forecasts. Source-specific cutoff and Monday pre-freeze caveat remain mandatory. Do not invent current market actions, profitable edge or independent verification.
+
+**No AppDeploy:** User directed discontinuation of AppDeploy for this work on 15 October. Historical AppDeploy URLs and deployment statements *below this heading* are retained as dated archival evidence only; they are **not** present deployment instructions. Do not redeploy the old app, create an extra host, pay for a new provider or spawn another scheduler.
+
+**Design precedent:** The October 12 Quiet Precision editorial standard rejects redundant decorative market gauges. The current GitHub preview leads with source-owned direction and Official Compass action in one decision row, retains the approved simple BTC/ETH PATH comparison chart, and exposes source-native disclosures. Any aesthetically inspired alternative may only show the three real frozen range windows against observed low/high using exact source data; proposed option and user direction are recorded in release [issue #1578](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1578#issuecomment-6202599679). No new chart mode has yet been accepted or published.
+
+**Baseline verified before this documentation-only update:** [GitHub CI run 38810417062](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/38810417062), exact source head `4a94c3271a156c4109074bb13d1419a405236edb`, 9 relevant SUCCESS, 3 inapplicable SKIPPED, 0 failure. Always verify current head/checks rather than treating this as a timeless release claim.
+
+---
+
+## Historical 11–12 October project notes (superseded for preview delivery)
+
+**Historical AppDeploy preview (not current):** https://cycle-navigator-vnext-preview-l1nbkq.v2.appdeploy.ai/
+
+**Historical status:** ISOLATED INTERACTIVE PREVIEW / CURRENT PRODUCTION UNCHANGED / NOT CONTINUOUS LIVE SIGNAL
 
 ## Latest v2 result-page evolution (Sunday 2026-10-11)
 
@@ -18,7 +36,7 @@ Implemented and merged scoring core: https://github.com/Donh91/CycleNavigator-sc
 
 ## How to preview
 
-Open the URL on iPhone Safari or desktop. Bottom navigation on iPhone:
+For the **current** preview, download and unpack the GitHub Actions source-preview artifact; try the single-file HTML on a desktop browser. Native iPhone Safari still requires manual verification. The navigation description below remains a design inventory from the archived October 11 snapshot:
 
 1. **Overblik** - current-source official direction vs action, Compass authority, pullback protection, one simplified market-cycle journey, frozen BTC/ETH W41 scenario corridors and latest public score credibility.
 2. **Kompas** - exactly two narrow three-column action tables (five horizons and seven independent capitalization rungs), official source permission, compact interpretation, separate SELL/Distribution/Re-entry.
