@@ -742,7 +742,13 @@ function renderRangeChart() {
     return;
   }
   const { days, windows } = parsed;
-  const rangeValues = [...windows.flatMap(r => [r.forecast_low,r.forecast_high]), ...days.flatMap(d => [d[selectedAsset].low,d[selectedAsset].high])];
+  // Focus the visual Y-domain on directly comparable daily observations
+  // and the derived midpoint. Full frozen ranges remain source-exact below,
+  // rather than compressing the actual price path into a giant uncertain band.
+  const rangeValues = [
+    ...windows.map(r => (r.forecast_low+r.forecast_high)/2),
+    ...days.flatMap(d => [d[selectedAsset].low,d[selectedAsset].high])
+  ];
   const step = selectedAsset === 'BTC' ? 1000 : 100;
   const floor = Math.floor(Math.min(...rangeValues)/step)*step;
   const ceiling = Math.ceil(Math.max(...rangeValues)/step)*step;
@@ -784,14 +790,9 @@ function renderRangeChart() {
       x:X(day),y:Y(i===0?values[0]:i===4?values[2]:values[i-1])
     }));
   };
-  const highGuide=guide('forecast_high'),lowGuide=guide('forecast_low');
+  // The three full forecast LOW/HIGH boundaries belong to the exact-value
+  // details below. Do not disguise an interpolated weekly range as daily data.
   const midpointGuide=guide('midpoint');
-  // The return leg intentionally uses descending x. Do not skip it:
-  // silently truncating this leg makes the visually faint ribbon malformed.
-  const upperPath=monotoneClosePath(highGuide);
-  const lowerReturnPath=monotoneClosePath([...lowGuide].reverse());
-  const ribbon=upperPath+' L '+lowerReturnPath.slice(2)+' Z';
-  svg.append(chartElement('path',{d:ribbon,class:'cn-chart-forecast-ribbon'}));
   svg.append(chartElement('path',{d:monotoneClosePath(midpointGuide),class:'cn-chart-forecast-midpoint','vector-effect':'non-scaling-stroke'}));
   // Only three pale markers are shown, one per original frozen window.
   for(let i=0;i<3;i++){
