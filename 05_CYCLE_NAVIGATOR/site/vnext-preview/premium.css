@@ -1301,3 +1301,18 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
   .cn-instrument{max-width:650px;margin:14px auto;}
   .hero-main{padding-top:39px;padding-bottom:29px;}
 }
+
+/* CN investor-source caveat readability — presentation only.
+   Important source/archive and no-automatic-trade disclaimers must remain
+   legible on the same premium white background at mobile and desktop widths. */
+.cn-instrument-heading{font-size:11px;color:#536a86;}
+.cn-instrument-heading span:last-child{font-size:10px;color:#536a86;}
+.cn-instrument-footer span{font-size:10px;color:#536a86;}
+.cn-instrument-caveat{font-size:12px;color:#536a86;}
+.source-strip strong,.source-strip span:not(.status-lamp){color:#536a86;}
+@media (max-width:580px) {
+  .cn-instrument-heading{font-size:10px;letter-spacing:.04em;}
+  .cn-instrument-heading span:last-child{font-size:9px;}
+  .cn-instrument-footer span{font-size:10px;letter-spacing:.06em;}
+  .cn-instrument-caveat{font-size:11px;}
+}
