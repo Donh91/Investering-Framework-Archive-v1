@@ -638,6 +638,49 @@ def evidence_for_long_claims(repo: Path, claims: list[dict[str, Any]]) -> list[d
     return rows
 
 
+def score_matured_claims_bounded(repo: Path, fresh_due: list[dict[str, Any]],
+                               model: str, max_output_tokens: int) -> tuple[list[dict[str, Any]], list[str]]:
+    """One paid request maximum; oversized claim A may not starve eligible B.
+
+    Oversized claims stay explicitly PENDING, never mislabeled as a score or
+    automatically paid on a retry. Any ambiguous/post-payment error stops
+    further calls in this run to avoid accidentally duplicating charges.
+    """
+    scored: list[dict[str, Any]] = []
+    oversized: list[str] = []
+    paid_issued = False
+    for claim in fresh_due:
+        evidence = evidence_for_long_claims(repo, [claim])
+        if any(row.get("status") == "MISSING" for row in evidence):
+            scored.append({
+                "claim_id": claim["claim_id"], "status": "NOT_EVALUABLE",
+                "score": None,
+                "evidence": "One or more required final Master Monday weekly evidence packages are missing.",
+                "self_critique": "Long-horizon claim preserved; no score without all required final evidence.",
+            })
+            continue
+        if paid_issued:
+            break
+        try:
+            # The actual scorer contains both global and per-lane budget guards,
+            # a pre-POST context bound and durable claim-level paid receipts.
+            paid_issued = True
+            scored.extend(score_long_horizon_via_api(
+                model, [claim], evidence, max_output_tokens, repo=repo))
+            break
+        except RuntimeError as exc:
+            if str(exc) in ("CN_API_CONTEXT_SIZE_OUT_OF_BOUNDS",
+                            "CN_API_SINGLE_CALL_ESTIMATE_OUT_OF_BOUNDS"):
+                paid_issued = False  # These errors happen before the POST.
+                oversized.append(claim["claim_id"])
+                continue
+            print(f"CN_LONG_HORIZON_API_BLOCKED:{claim['claim_id']}:{exc}", file=sys.stderr)
+            break
+        except (json.JSONDecodeError, urllib.error.URLError):
+            break
+    return scored, oversized
+
+
 def compact_score(value: Any) -> str:
     if value is None:
         return "N/A"
@@ -729,6 +772,7 @@ def main() -> None:
 
     due_long = matured_unscored_long_horizon(repo, completed_year, completed_week, existing_ids)
     long_scores: list[dict[str, Any]] = []
+    oversize_pending_claim_ids: list[str] = []
     mature_long_pending = 0
     if due_long:
         # Previously attempted paid claims stay pending. Unlike a whole-cohort
@@ -740,15 +784,12 @@ def main() -> None:
             fresh_due = []
         mature_long_pending = len(due_long) - len(fresh_due)
         if fresh_due:
-            ev = evidence_for_long_claims(repo, fresh_due)
-            if any(r.get("status") == "MISSING" for r in ev):
-                long_scores = [{"claim_id": c["claim_id"], "status": "NOT_EVALUABLE", "score": None, "evidence": "One or more required final Master Monday weekly evidence packages are missing.", "self_critique": "Long-horizon claim was preserved but cannot be scored without the full frozen horizon evidence."} for c in fresh_due]
-            else:
-                try:
-                    long_scores = score_long_horizon_via_api(args.model, fresh_due, ev, args.max_output_tokens, repo=repo)
-                except (RuntimeError, json.JSONDecodeError, urllib.error.URLError):
-                    mature_long_pending = len(due_long)
-                    long_scores = []
+            long_scores, oversize_pending_claim_ids = score_matured_claims_bounded(
+                repo, fresh_due, args.model, args.max_output_tokens)
+            mature_long_pending = len(due_long) - len(long_scores)
+            if oversize_pending_claim_ids:
+                print("CN_LONG_HORIZON_OVERSIZE_PENDING:"
+                      + ",".join(oversize_pending_claim_ids), file=sys.stderr)
         cby = {c["claim_id"]: c for c in due_long}
         for s in long_scores:
             c = cby[s["claim_id"]]
@@ -798,6 +839,7 @@ def main() -> None:
         "parameter_scores": rows,
         "newly_matured_long_horizon_scores": long_scores,
         "mature_long_horizon_awaiting_score_count": mature_long_pending,
+        "mature_long_horizon_oversize_pending_claim_ids": oversize_pending_claim_ids,
         "current_frozen_claim_count": len(current_internal.get("claims", [])),
         "current_unavailable_or_unfrozen_count": len(current_internal.get("unavailable_or_unfrozen", [])),
         "generic_framework_calibration": generic,
