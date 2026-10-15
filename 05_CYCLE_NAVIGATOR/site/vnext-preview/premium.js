@@ -134,7 +134,9 @@ function revealActualThrough(dayIndex) {
   const width=dayIndex<0?0:(right-left)*(Math.min(6,dayIndex)/6)+24;
   clip.setAttribute('width',String(width));
   if (dayIndex < 0) setText('cn-replay-day','01 · Frosne intervalvinduer');
-  else setText('cn-replay-day', (dayIndex+1)+'/7 · '+['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'][dayIndex]+
+  else setText('cn-replay-day', (dayIndex+1)+'/7 · '+(currentLanguage()==='en'
+    ?['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+    :['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'])[dayIndex]+
     ' · '+ selectedAsset+' '+formatUSD(data.completed_score.daily_observations_w40.days[dayIndex][selectedAsset].close));
 }
 function playRangeComparison() {
@@ -164,7 +166,9 @@ function playRangeComparison() {
   rangeRevealTimers.push(setTimeout(()=>{
     setRangeRevealPhase('score');
     revealActualThrough(6);
-    setText('cn-replay-day','Faktisk uge · alle syv verificerede dagslukninger');
+    setText('cn-replay-day',english
+    ?'Observed week · all seven verified daily closes'
+    :'Faktisk uge · alle syv verificerede dagslukninger');
   },2350));
 }
 
@@ -743,13 +747,24 @@ function renderRangeChart() {
   const floor = Math.floor(Math.min(...rangeValues)/step)*step;
   const ceiling = Math.ceil(Math.max(...rangeValues)/step)*step;
   const yMin = floor-step, yMax=ceiling+step;
+  const english=currentLanguage()==='en';
+  const weekAbbr=english?['Mon','Tue','Wed','Thu','Fri','Sat','Sun']:['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+  const weekFull=english?['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']:
+    ['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
   const {width:chartW,height:chartH,top,left,right,bottom,weekX}=rangeChartGeometry();
   const h=bottom-top;
   const Y = (n) => bottom-(n-yMin)/(yMax-yMin)*h;
   const X = (i) => left+(right-left)*(i/6);
-  const svg=chartElement('svg',{viewBox:'0 0 '+chartW+' '+chartH,class:'cn-history-chart',role:'img','aria-label':selectedAsset+' W40: lys stiplet AFLEDT forecastmidtlinje fra tre frosne perioder, sammenlignet med blå observeret dagslukningskurve fra mandag til søndag.'});
-  svg.append(chartElement('title',{},selectedAsset+' historisk uge 40, dagslukning og 3 frosne prognoseperioder'));
-  svg.append(chartElement('desc',{},'Syv virkelige dagslukninger fra 168 timeobservationer, 28 september til 4 oktober 2026. De frosne forecasts dækker tre separate vinduer: dag 1-2, 3-4 og 5-7. Ingen daglige forecast-priser er estimeret.'));
+  const svg=chartElement('svg',{viewBox:'0 0 '+chartW+' '+chartH,class:'cn-history-chart',role:'img',
+    'aria-label':english
+      ?selectedAsset+' W40: dashed DERIVED midpoint from 3 frozen range windows versus solid blue observed daily close from Monday to Sunday'
+      :selectedAsset+' W40: lys stiplet AFLEDT forecastmidte fra tre frosne intervalvinduer mod blå faktisk dagslukning mandag til søndag'});
+  svg.append(chartElement('title',{},english
+    ?selectedAsset+' week 40: derived range midpoint versus seven actual daily closes'
+    :selectedAsset+' uge 40: afledt intervalmidte og syv faktiske dagslukninger'));
+  svg.append(chartElement('desc',{},english
+    ?'Actual daily closes from 168 source observations. The three original forecast windows were frozen Monday 05:53 UTC. No seven original daily predicted closing prices exist.'
+    :'Syv faktiske dagslukninger fra 168 timeobservationer. De tre frosne intervalvinduer blev frosset mandag 05:53 UTC. Der findes ikke syv originale forudsagte dagslukningspriser.'));
   for(let val=yMin;val<=yMax;val+=step){
     const y=Y(val);
     svg.append(chartElement('line',{x1:left-8,x2:right,y1:y,y2:y,class:'cn-chart-grid'}));
@@ -791,7 +806,7 @@ function renderRangeChart() {
   days.forEach((d,i)=>{
     const p=d[selectedAsset],x=X(i);
     actualGroup.append(chartElement('line',{x1:x,x2:x,y1:Y(p.high),y2:Y(p.low),class:'cn-chart-actual-range'}));
-    svg.append(chartElement('text',{x,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday'},['Man','Tir','Ons','Tor','Fre','Lør','Søn'][i]));
+    svg.append(chartElement('text',{x,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday'},weekAbbr[i]));
   });
   svg.append(chartElement('text',{x:weekX,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday cn-chart-weekaxis'},'W40'));
   actualGroup.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
@@ -803,15 +818,16 @@ function renderRangeChart() {
   svg.append(actualGroup);
   const badge=chartElement('text',{x:right,y:20,'text-anchor':'end',class:'cn-chart-week'},'2026 · W40 · UTC');
   svg.append(badge);root.append(svg);
-  const legend=make('p','cn-chart-proof','Forecast-linjen er en afledt midte fra 3 frosne prisintervaller, ikke en daglig prognose. Den blå linje forbinder 7 faktiske dagslukninger.');
-  root.append(legend);
+  // Keep exactly one short, source-honest forecast footnote below the chart.
+  // Its owner is the pre-existing .range-summary, not a duplicated caption.
   const tableWrap=make('div','cn-chart-table-scroll'),table=make('table','cn-chart-table');
   const head=make('thead'),headrow=make('tr');
-  for(const label of ['Dag','Forecast lav–høj (periode)','Faktisk lav–høj','Luk']) headrow.append(make('th',null,label));
+  for(const label of english?['Day','Frozen range (window)','Observed low–high','Close']:
+    ['Dag','Frosset interval (periode)','Faktisk lav–høj','Luk']) headrow.append(make('th',null,label));
   head.append(headrow);table.append(head);
   const tbody=make('tbody');days.forEach((d,i)=>{
     const row=windows[i<2?0:i<4?1:2],tr=make('tr');
-    tr.append(make('td',null,['Man','Tir','Ons','Tor','Fre','Lør','Søn'][i]));
+    tr.append(make('td',null,weekAbbr[i]));
     tr.append(make('td',null,formatUSD(row.forecast_low)+' – '+formatUSD(row.forecast_high)));
     tr.append(make('td',null,formatUSD(d[selectedAsset].low)+' – '+formatUSD(d[selectedAsset].high)));
     tr.append(make('td','cn-chart-close-value',formatUSD(d[selectedAsset].close)));
@@ -829,12 +845,14 @@ function renderRangeChart() {
   const windowRoot=$('cn-path-window-table');clear(windowRoot);
   const windowTable=make('table','cn-chart-table cn-window-table');
   const wh=make('thead'),whr=make('tr');
-  for (const label of ['Frosset vindue','BTC/ETH range lav–høj','Faktisk interval lav–høj']) whr.append(make('th',null,label));
+  for (const label of english?['Frozen window','Frozen range low–high','Observed low–high']:
+    ['Frosset vindue','Frosset prisinterval','Faktisk interval lav–høj']) whr.append(make('th',null,label));
   wh.append(whr);windowTable.append(wh);
   const wb=make('tbody');
   windows.forEach((w,i)=>{
     const tr=make('tr');
-    tr.append(make('th',null,['Dag 1–2','Dag 3–4','Dag 5–7'][i]));
+    tr.append(make('th',null,(english?['Days 1–2','Days 3–4','Days 5–7']:
+      ['Dag 1–2','Dag 3–4','Dag 5–7'])[i]));
     tr.append(make('td',null,formatUSD(w.forecast_low)+' – '+formatUSD(w.forecast_high)));
     tr.append(make('td',null,formatUSD(w.actual_low)+' – '+formatUSD(w.actual_high)));
     wb.append(tr);
@@ -849,7 +867,7 @@ function renderRangeChart() {
     ['day_1_2','day_3_4','day_5_7'].every((key)=>typeof frozen.intraday_map?.[key] === 'string' &&
       frozen.intraday_map[key].length > 90);
   if (freezeValid) {
-    frozenRoot?.append(make('h4','cn-chart-table-title','Hvad var den frosne forventning?'));
+    frozenRoot?.append(make('h4','cn-chart-table-title',english?'What did the frozen forecast say?':'Hvad var den frosne forventning?'));
     const descriptions={
       da:['Mulig stabilisering eller fortsættelse, men svag ETH-styrke og markedsstruktur gav risiko for afvisning.',
         'Større opmærksomhed på retest. Et brud på prisintervallet er en prognosefejl, ikke automatisk et breakdown.',
@@ -861,23 +879,26 @@ function renderRangeChart() {
     const collection=make('div','cn-frozen-context');
     ['day_1_2','day_3_4','day_5_7'].forEach((key,i)=>{
       const card=make('div','cn-frozen-context-item');
-      card.append(make('strong',null,['Dag 1–2','Dag 3–4','Dag 5–7'][i]),
+      card.append(make('strong',null,(english?['Days 1–2','Days 3–4','Days 5–7']:['Dag 1–2','Dag 3–4','Dag 5–7'])[i]),
         make('span',null,descriptions[currentLanguage()==='en'?'en':'da'][i]));
       card.dataset.frozenSource = key;
       card.setAttribute('title','2026-W40 · frozen source, Monday 05:53 UTC');
       collection.append(card);
     });
     frozenRoot?.append(collection);
-    setText('cn-path-freeze-status','FRYSNING · MAN 28 SEP 2026 KL. 05:53 UTC. Mandagens faktiske low/high omfatter også timer FØR frysetidspunktet. Historisk visning er ikke fuldt ex ante fra midnat.');
+    setText('cn-path-freeze-status',english
+      ?'FREEZE · MON 28 SEP 2026 AT 05:53 UTC. Monday observed lows/highs also include hours BEFORE the freeze, so this is not an entirely ex-ante midnight comparison.'
+      :'FRYSNING · MAN 28 SEP 2026 KL. 05:53 UTC. Mandagens faktiske low/high omfatter også timer FØR frysetidspunktet. Historisk visning er ikke fuldt ex ante fra midnat.');
   } else {
     frozenRoot?.append(make('p','method-disclaimer','Frossen ugeforventning kan ikke verificeres ud fra kilden.'));
     setText('cn-path-freeze-status','Frysetid ikke kildeverificeret. Ingen ex-ante påstand.');
   }
-  const rangeHeading=make('h4','cn-chart-table-title','Originale frosne intervaller · '+selectedAsset);
+  const rangeHeading=make('h4','cn-chart-table-title',
+    (english?'Original frozen ranges · ':'Originale frosne intervaller · ')+selectedAsset);
   const windowScroll=make('div','cn-chart-table-scroll');
   windowScroll.append(windowTable);windowRoot?.append(rangeHeading,windowScroll);
   const dayRoot=$('cn-path-daily-table');clear(dayRoot);
-  const title=make('h4','cn-chart-table-title','Faktiske priser · mandag til søndag');
+  const title=make('h4','cn-chart-table-title',english?'Observed prices · Monday to Sunday':'Faktiske priser · mandag til søndag');
   dayRoot?.append(title,tableWrap);
   setText('range-method','W40 · 3 frosne perioder · 7 observerede dage');
   setText('cn-replay-day','Faktisk uge · alle syv verificerede dagslukninger');
