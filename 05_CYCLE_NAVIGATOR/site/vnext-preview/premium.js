@@ -86,7 +86,7 @@ function openPathGraph({ updateHash = true } = {}) {
   }
   requestAnimationFrame(() => {
     const target = document.getElementById('cn-path-week');
-    if (target) target.scrollIntoView({ behavior:'auto', block:'start' });
+    if (target) target.scrollIntoView({ behavior:'instant', block:'start' });
   });
 }
 function bindNavigation() {
@@ -989,7 +989,7 @@ async function initialize() {
     // navigation, so honor a shared PATH deep link after source paint too.
     if (location.hash === '#cn-path-week') {
       requestAnimationFrame(() => document.getElementById('cn-path-week')
-        ?.scrollIntoView({ behavior:'auto', block:'start' }));
+        ?.scrollIntoView({ behavior:'instant', block:'start' }));
     }
   } catch (err) {
     console.error('Preview source validation failed:', err);
