@@ -1157,3 +1157,85 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
 @media(prefers-reduced-motion:reduce){
   .cn-path-jump-banner button{transition:none!important;}
 }
+
+
+/* PATH v3: paired source-honest lines, CN quiet-precision chart polish. */
+.cn-path-week .range-compare-panel {
+  padding:23px 24px 15px;
+  border:1px solid #e3eaf2;
+  border-radius:18px;
+  box-shadow:0 6px 22px rgba(18,54,93,.028);
+}
+.cn-path-week .chart-top {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin-bottom:14px;
+}
+.cn-path-week .chart-legend {display:flex;align-items:center;flex-wrap:wrap;
+  justify-content:flex-end;gap:10px 18px;letter-spacing:0;
+  color:#566c89;font-size:11px;font-weight:720;
+}
+.cn-path-week .chart-legend>span {display:inline-flex;gap:7px;align-items:center;white-space:nowrap;}
+.cn-path-week .chart-legend small {font-size:10px;font-weight:560;color:#8998a9;}
+.cn-legend-line {display:inline-block;width:29px;height:0;flex-shrink:0;
+  border-top:3px solid #276cd0;border-radius:9px;vertical-align:middle;}
+.cn-legend-line-forecast {border-color:#7684a9;border-top-style:dashed;}
+.cn-legend-line-observed {border-color:#176add;border-top-width:4px;}
+.cn-path-week .asset-toggle{border-radius:11px;background:#f2f5f9;padding:4px;}
+.cn-path-week .asset-toggle button{border-radius:8px;padding:10px 18px;font-size:12px;}
+.cn-path-week .range-visualization{padding:0;min-width:0;}
+.cn-path-week .cn-history-chart {width:100%;height:auto;aspect-ratio:820/396;display:block;overflow:visible;}
+.cn-path-week .cn-chart-grid {stroke:#e9eef4;stroke-width:1;stroke-dasharray:none;stroke-opacity:.8;}
+.cn-path-week .cn-chart-tick {fill:#8d9bad;font-size:12px;font-weight:550;font-variant-numeric:tabular-nums;}
+.cn-path-week .cn-chart-weekday {fill:#6d7e94;font-size:13px;font-weight:650;}
+.cn-path-week .cn-chart-weekaxis {fill:#345b90;font-size:12px;font-weight:750;}
+.cn-path-week .cn-chart-week {fill:#a3adbd;font-size:12px;letter-spacing:.06em;}
+.cn-path-week .cn-chart-forecast-ribbon{fill:#a5b5d5;fill-opacity:.065;stroke:none;}
+.cn-path-week .cn-chart-boundary{display:none!important;stroke:none!important;}
+.cn-path-week .cn-chart-forecast-midpoint{fill:none;stroke:#7783a8;stroke-width:3.7;
+  stroke-dasharray:11 8;stroke-linecap:round;stroke-linejoin:round;opacity:.98;}
+.cn-path-week .cn-chart-midpoint-anchor{fill:white;stroke:#7783a8;stroke-width:2.5;opacity:.94;}
+.cn-path-week .cn-chart-close-path{fill:none;stroke:#146bd8;stroke-width:4.8;
+  stroke-linecap:round;stroke-linejoin:round;}
+.cn-path-week .cn-chart-point{fill:#146bd8;stroke:white;stroke-width:2.8;}
+.cn-path-week .cn-chart-actual-range{stroke:#3179c7;stroke-opacity:.25;stroke-width:1.6;}
+.cn-path-week .cn-chart-window{display:none;}
+.cn-path-week .cn-chart-proof{font-size:10px;line-height:1.5;
+  color:#8191a5;margin:4px 0 0;letter-spacing:0;}
+.cn-path-week .cn-chart-controls{display:flex;gap:10px;align-items:center;
+  justify-content:space-between;margin:8px 0 10px;padding-top:14px;border-top:1px solid #eef2f6;}
+.cn-path-week .cn-path-replay-day{font-size:11px;line-height:1.45;letter-spacing:0;
+  font-weight:670;color:#5576a1;margin:0;min-height:0;}
+.cn-path-week .range-motion-bar{display:flex;gap:0;align-items:center;
+  flex-shrink:0;justify-content:flex-end;border:0;padding:0;margin:0;}
+.cn-path-week .range-motion-steps{display:none;}
+.cn-path-week .range-replay{display:inline-flex;align-items:center;gap:7px;
+  border-radius:9px;min-height:39px;padding:10px 12px;background:#f4f8ff;
+  border:1px solid #dfe8f5;color:#2565b6;font-size:11px;font-weight:760;}
+.cn-path-week .range-replay:hover{background:#e9f1fe;}
+.cn-path-week .range-summary{display:flex;align-items:center;gap:8px;
+  margin:0;padding:12px 0 0;border-top:1px solid #eef2f6;
+  font-size:10px;line-height:1.55;color:#8190a4;}
+.cn-path-week .range-summary span:first-child{max-width:60ch;}
+.cn-path-week .range-summary span:last-child{font-size:10px;white-space:nowrap;font-weight:640;color:#8fa0b2;}
+.cn-path-week .cn-path-week-description{font-size:12px;line-height:1.6;max-width:740px;}
+@media(max-width:580px){
+ .cn-path-week .range-compare-panel{padding:16px 10px 11px;border-radius:14px;}
+ .cn-path-week .chart-top{align-items:center;gap:9px;margin-bottom:13px;}
+ .cn-path-week .chart-legend{gap:4px 11px;justify-content:flex-end;font-size:9px;}
+ .cn-path-week .chart-legend small{font-size:8px;}
+ .cn-path-week .cn-legend-line{width:19px;border-top-width:2.5px;}
+ .cn-path-week .cn-legend-line-observed{border-top-width:3.5px;}
+ .cn-path-week .asset-toggle button{padding:9px 15px;font-size:11px;}
+ .cn-path-week .cn-chart-forecast-midpoint{stroke-width:3;stroke-dasharray:9 7;}
+ .cn-path-week .cn-chart-close-path{stroke-width:3.9;}
+ .cn-path-week .cn-chart-actual-range{stroke-width:1.3;}
+ .cn-path-week .cn-chart-proof{font-size:9px;margin:7px 5px 0;}
+ .cn-path-week .cn-chart-controls{gap:5px;padding-top:10px;margin:10px 0 8px;}
+ .cn-path-week .cn-path-replay-day{font-size:10px;}
+ .cn-path-week .range-replay{padding:8px 9px;font-size:10px;min-height:36px;}
+ .cn-path-week .range-summary{font-size:9px;display:block;}
+ .cn-path-week .range-summary span:last-child{display:block;margin-top:4px;font-size:9px;}
+}
+@media(prefers-reduced-motion:reduce){
+ .cn-path-week .cn-chart-close-path{animation:none!important;}
+}
