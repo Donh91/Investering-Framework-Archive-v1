@@ -170,6 +170,11 @@ class TemporaryBridgeTests(unittest.TestCase):
             (dst / "output" / "output.json").write_text(json.dumps(output))
             with patch.object(bridge, "pr_info", return_value=info()):
                 self.assertIn("not formal approval", bridge.validate(dst))
+            # The governed summary also admits comma-plus-space after the verdict.
+            output["summary"] = "PASS, MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE."
+            (dst / "output" / "output.json").write_text(json.dumps(output))
+            with patch.object(bridge, "pr_info", return_value=info()):
+                self.assertIn("not formal approval", bridge.validate(dst))
             for forbidden in (
                 "PASS_WITH_FINDINGSX MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE.",
                 "PASS_WITH_FINDINGS;MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE.",
