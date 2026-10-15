@@ -180,6 +180,10 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
     if not isinstance(cases, list) or not cases:
         raise ContractError("cases must be nonempty")
     seen = set()
+    # Cross-case uniqueness is mandatory. Case labels are not independent runs.
+    seen_runs: dict[str, str] = {}
+    seen_digest: dict[str, str] = {}
+    seen_files: dict[str, str] = {}
     rows = []
     for case in cases:
         c = _object(case, CASE_KEYS, CASE_KEYS, "case")
@@ -230,6 +234,29 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
                     base = receipt_root if receipt_root is not None else Path.cwd()
                     if (base / solo_path).resolve() == (base / delegated_path).resolve():
                         reason.append(f"REUSED_RECEIPT_PATH_OR_ALIAS:{name}")
+        # Reusing a run or receipt across multiple cases must not inflate the
+        # number of matched comparisons, even when case_id and paths differ.
+        # Same-case arm collisions are already handled by the checks above.
+        for mode in MODES:
+            v = variants[mode]
+            run_id = v["run_id"]
+            if run_id in seen_runs and seen_runs[run_id] != cid:
+                reason.append(f"REUSED_RUN_ID_ACROSS_CASES:{run_id}")
+            else:
+                seen_runs.setdefault(run_id, cid)
+            for receipt_type, receipt_path, receipt_sha in receipts(v):
+                if receipt_sha is not None:
+                    if receipt_sha in seen_digest and seen_digest[receipt_sha] != cid:
+                        reason.append(f"REUSED_RECEIPT_DIGEST_ACROSS_CASES:{receipt_type}_{mode}")
+                    else:
+                        seen_digest.setdefault(receipt_sha, cid)
+                if receipt_path is not None:
+                    root_dir = receipt_root if receipt_root is not None else Path.cwd()
+                    resolved_path = str((root_dir / receipt_path).resolve())
+                    if resolved_path in seen_files and seen_files[resolved_path] != cid:
+                        reason.append(f"REUSED_RECEIPT_PATH_ACROSS_CASES:{receipt_type}_{mode}")
+                    else:
+                        seen_files.setdefault(resolved_path, cid)
         if c["evidence_class"] == "SYNTHETIC_FIXTURE":
             reason.append("SYNTHETIC_NOT_EMPIRICAL")
         for mode in MODES:
