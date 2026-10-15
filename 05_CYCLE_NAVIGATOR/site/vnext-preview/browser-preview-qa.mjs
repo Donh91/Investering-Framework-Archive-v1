@@ -148,6 +148,15 @@ try{
     const mobileTap=await evaluate(inspectMobileTapTargets);
     assert.ok(mobileTap.scrollWidth<=width+1&&mobileTap.undersized.length===0,
       'Phone tap/overflow regression at '+width+'px '+JSON.stringify(mobileTap));
+    // Taste reference is a style inspiration, not a runtime dependency:
+    // computed CSS must actually balance type and align financial figures.
+    const typography=await evaluate("(()=>({headline:getComputedStyle(document.querySelector('#overview-title')).textWrapStyle,headlineWrap:getComputedStyle(document.querySelector('#overview-title')).textWrap,section:getComputedStyle(document.querySelector('#cn-path-week-title')).textWrapStyle,sectionWrap:getComputedStyle(document.querySelector('#cn-path-week-title')).textWrap,numbers:getComputedStyle(document.querySelector('.hero-key-metrics strong')).fontVariantNumeric,copy:getComputedStyle(document.querySelector('.cn-path-week-description')).textWrapStyle,copyWrap:getComputedStyle(document.querySelector('.cn-path-week-description')).textWrap}))()");
+    assert.ok(
+      (typography.headline==='balance'||typography.headlineWrap?.includes('balance'))&&
+      (typography.section==='balance'||typography.sectionWrap?.includes('balance'))&&
+      typography.numbers?.includes('tabular-nums')&&
+      (typography.copy==='pretty'||typography.copyWrap?.includes('pretty')),
+      'Editorial typography must be applied by Chromium '+width+'px: '+JSON.stringify(typography));
     const contrast=await evaluate(inspectPathContrast);
     assert.ok(contrast.every(x=>Number.isFinite(x.contrast)&&x.contrast>=4.5),
       'Evidence-bearing PATH labels must meet WCAG AA small-text contrast '+JSON.stringify(contrast));
