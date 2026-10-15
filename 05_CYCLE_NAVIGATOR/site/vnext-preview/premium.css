@@ -1115,3 +1115,17 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
 @media(prefers-reduced-motion:reduce){
 .cn-chart-close-path,.cn-chart-forecast-midpoint{animation:none!important;transition:none!important;}
 }
+
+
+/* Frozen W40 scenarios are source-grounded explanatory labels, not an inferred curve. */
+.cn-frozen-context{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:11px 0 17px;}
+.cn-frozen-context-item{background:#f8fafc;border:1px solid #e4edf7;border-radius:9px;padding:13px;display:flex;flex-direction:column;gap:7px;line-height:1.6;}
+.cn-frozen-context-item strong{font-size:12px;color:#214b7d;}
+.cn-frozen-context-item span{font-size:10px;color:#73849a;}
+.cn-path-freeze-status{font-size:10px;font-weight:650;color:#91733d;line-height:1.7;background:#fcfaf6;border:1px solid #f0e7d5;border-radius:8px;padding:10px 12px;margin:18px 0 0;}
+.cn-chart-weekaxis{fill:#315f9f;font-weight:790;}
+@media(max-width:580px){
+.cn-frozen-context{grid-template-columns:1fr;gap:7px;}
+.cn-frozen-context-item{padding:10px 12px;}
+.cn-frozen-context-item span{font-size:11px;}
+}
