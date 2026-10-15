@@ -38,6 +38,28 @@ jobs:
         env:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/verify-vite-bundle.mjs --artifact-dir "$RUNNER_TEMP/cn-vnext-preview"
+      - name: Open standalone offline HTML in real headless Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          browser="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$browser"
+          mkdir -p "$RUNNER_TEMP/cn-vnext-browser-qa"
+          timeout 35s "$browser" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --virtual-time-budget=3500 --window-size=430,932 --dump-dom "file://$RUNNER_TEMP/cn-vnext-preview/CYCLE_NAVIGATOR_OFFLINE_PREVIEW.html#cn-path-week" > "$RUNNER_TEMP/cn-vnext-browser-qa/rendered.html" 2> "$RUNNER_TEMP/cn-vnext-browser-qa/chrome.log"
+          grep -q 'cn-chart-forecast-midpoint' "$RUNNER_TEMP/cn-vnext-browser-qa/rendered.html"
+          grep -q 'cn-chart-close-path' "$RUNNER_TEMP/cn-vnext-browser-qa/rendered.html"
+          grep -q 'cn-chart-weekday' "$RUNNER_TEMP/cn-vnext-browser-qa/rendered.html"
+          grep -q 'data-asset="ETH"' "$RUNNER_TEMP/cn-vnext-browser-qa/rendered.html"
+          timeout 35s "$browser" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --virtual-time-budget=3500 --window-size=430,932 --screenshot="$RUNNER_TEMP/cn-vnext-browser-qa/PATH_CHROME_430.png" "file://$RUNNER_TEMP/cn-vnext-preview/CYCLE_NAVIGATOR_OFFLINE_PREVIEW.html#cn-path-week" >/dev/null 2>> "$RUNNER_TEMP/cn-vnext-browser-qa/chrome.log"
+          test -s "$RUNNER_TEMP/cn-vnext-browser-qa/PATH_CHROME_430.png"
+          echo "PASS: Browser executed self-contained offline archived preview, rendered both price paths and screenshot"
+      - name: Preserve standalone browser QA screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: cn-vnext-browser-qa-${{ github.run_id }}
+          path: ${{ runner.temp }}/cn-vnext-browser-qa/PATH_CHROME_430.png
+          if-no-files-found: error
+          retention-days: 7
       - name: Archive the exact tested GitHub preview without deploying
         uses: actions/upload-artifact@v4
         with:
