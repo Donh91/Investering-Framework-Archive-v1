@@ -91,5 +91,71 @@ class T6RotationSurvivalTests(unittest.TestCase):
                 operate(packet(0.0301, 0.0002), bad, Path(td))
 
 
+    def test_identical_replay_after_reversal_preserves_immutable_observation_and_state(self):
+        """Production failure: old reversal recomputed from already-closed STATE."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            operate(packet(0.0301, 0.0002), cadence(), root)
+            reversal = packet(0.02963, -0.00047, stamp="2026-09-10T01:00:00Z")
+            first = operate(reversal, cadence(), root)
+            frozen = (root / "observations" / Path(first["observation_path"]).name).read_bytes()
+            state_before = (root / "STATE.json").read_bytes()
+            latest_before = (root / "LATEST.json").read_bytes()
+            self.assertEqual(first["event"], "ETHBTC_REVERSAL_OBSERVED")
+            self.assertEqual(operate(reversal, cadence(), root), first)
+            self.assertEqual((root / "STATE.json").read_bytes(), state_before)
+            self.assertEqual((root / "LATEST.json").read_bytes(), latest_before)
+            self.assertEqual((root / "observations" / Path(first["observation_path"]).name).read_bytes(), frozen)
+
+    def test_replay_changed_cadence_cannot_silently_reuse_original_observation(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            sample = packet(0.0301, 0.0002)
+            operate(sample, cadence(), root)
+            state_before = (root / "STATE.json").read_bytes()
+            with self.assertRaisesRegex(ValueError, "immutable_conflict"):
+                operate(sample, cadence(0.0298), root)
+            self.assertEqual((root / "STATE.json").read_bytes(), state_before)
+
+    def test_replay_corrupt_frozen_object_fails_closed_without_state_change(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            sample = packet(0.0301, 0.0002)
+            result = operate(sample, cadence(), root)
+            observation_path = Path(result["observation_path"])
+            frozen = json.loads(observation_path.read_text())
+            frozen["current_ethbtc"] = 0.09999
+            observation_path.write_text(json.dumps(frozen))
+            state_before = (root / "STATE.json").read_bytes()
+            with self.assertRaisesRegex(ValueError, "immutable_conflict"):
+                operate(sample, cadence(), root)
+            self.assertEqual((root / "STATE.json").read_bytes(), state_before)
+
+    def test_replay_missing_latest_pointer_is_never_inferred_or_regenerated(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            sample = packet(0.0301, 0.0002)
+            operate(sample, cadence(), root)
+            (root / "LATEST.json").unlink()
+            state_before = (root / "STATE.json").read_bytes()
+            with self.assertRaisesRegex(ValueError, "t6_replay_latest_pointer_missing"):
+                operate(sample, cadence(), root)
+            self.assertEqual((root / "STATE.json").read_bytes(), state_before)
+
+    def test_stale_older_source_replay_does_not_rewind_newer_latest(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            old = packet(0.0301, 0.0002)
+            operate(old, cadence(), root)
+            later = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+            operate(later, cadence(), root)
+            state_before = (root / "STATE.json").read_bytes()
+            latest_before = (root / "LATEST.json").read_bytes()
+            with self.assertRaisesRegex(ValueError, "t6_replay_latest_pointer_mismatch"):
+                operate(old, cadence(), root)
+            self.assertEqual((root / "STATE.json").read_bytes(), state_before)
+            self.assertEqual((root / "LATEST.json").read_bytes(), latest_before)
+
+
 if __name__ == "__main__":
     unittest.main()
