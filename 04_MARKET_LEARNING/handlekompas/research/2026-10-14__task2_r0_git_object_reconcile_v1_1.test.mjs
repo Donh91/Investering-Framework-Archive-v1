@@ -36,6 +36,31 @@ try{
       const r=run(inventory,head,tree);assert.equal(r.status,1,r.stdout);assert.equal(r.stdout,'');assert.match(r.stderr,/TASK2_R0_RECONCILIATION_BLOCKED/);
     }finally{writeFileSync(obj,before);}
   });
+  test('readable original object under forged hash path must fail closed',()=>{
+    const obj=join(dir,'.git','objects',objA.slice(0,2),objA.slice(2));
+    const before=readFileSync(obj);writeFileSync(obj,deflateSync(Buffer.from('blob 1\0Z')));
+    try{
+      const readable=spawnSync('git',['cat-file','blob',objA],{cwd:dir,encoding:'utf8'});
+      assert.equal(readable.status,0);
+      assert.equal(readable.stdout,'Z');
+      const r=run(inventory,head,tree);
+      assert.equal(r.status,1,r.stdout);assert.equal(r.stdout,'');
+      assert.match(r.stderr,/Original pinned source object unreadable or hash mismatch/);
+    }finally{writeFileSync(obj,before);}
+  });
+  test('readable target object under forged hash path must fail closed',()=>{
+    const blob=git('rev-parse',head+':fixture/a.json');
+    const obj=join(dir,'.git','objects',blob.slice(0,2),blob.slice(2));
+    const before=readFileSync(obj);writeFileSync(obj,deflateSync(Buffer.from('blob 1\0Z')));
+    try{
+      const readable=spawnSync('git',['cat-file','blob',blob],{cwd:dir,encoding:'utf8'});
+      assert.equal(readable.status,0);
+      assert.equal(readable.stdout,'Z');
+      const r=run(inventory,head,tree);
+      assert.equal(r.status,1,r.stdout);assert.equal(r.stdout,'');
+      assert.match(r.stderr,/Unreadable target tree\/object/);
+    }finally{writeFileSync(obj,before);}
+  });
   function withoutLooseObject(sha,fn){
     const obj=join(dir,'.git','objects',sha.slice(0,2),sha.slice(2));
     const bytes=readFileSync(obj);rmSync(obj);
