@@ -1,5 +1,8 @@
 # ASTRA CHAIN-NATIVE RESEARCH COMPILER V1
 
+> **2026-10-15 model-neutral mission continuity (Chain-native research).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. Astra-labelled researcher means the current qualified GPT-6 framework and bounded independent reviewers, never a hardcoded future model. Reuse existing Alpha Lab and blockchain source owners; no direct trade/portfolio authority or speculative hindsight launch data. Follow the existing [Framework Mission Continuity owner](../../07_PROMPTS_AND_AGENTS/astra/ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 Status: `PREPARED_FOR_ASTRA`
 Authority: `RESEARCH_ONLY`
 Owner: Investering Framework Research Lab
