@@ -1,5 +1,8 @@
 # READ FIRST — Astra Landing Zone v1
 
+> **2026-10-15 model-neutral mission continuity (onboarding).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. The optional multi-agent landing-zone remains `PREPARED_NOT_ACTIVE`, but that state does **not** block already-authorized GPT-6 research, repository audits, single-agent work or canonical-domain missions. Follow the existing [Framework Mission Continuity owner](ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 Status: `PREPARED_NOT_ACTIVE`
 
 Astra-class repository-aware models should read these files after the normal `AGENTS.md` / canonical-context onboarding and before proposing swarm/orchestration changes:
