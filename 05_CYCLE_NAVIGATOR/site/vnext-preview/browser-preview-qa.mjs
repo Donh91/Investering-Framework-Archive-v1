@@ -348,7 +348,7 @@ try{
     await evaluate(nativeSummary+".focus()");
     const focus=await evaluate("document.activeElement?.tagName");
     assert.equal(focus,'SUMMARY','Native summary must be focusable');
-    await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},sessionId);
+    await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'},sessionId);
     await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},sessionId);
     // Native details toggle as a queued activation default action; CDP's
     // key event completion alone is not the same as DOM microtask completion.
