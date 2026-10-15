@@ -71,6 +71,11 @@ try{
     'route:location.hash,lang:document.documentElement.lang,',
     "asset:document.querySelector('[data-asset].selected')?.dataset.asset,",
     "hasSource:document.body.textContent.includes('W40'),",
+    "forecastNote:document.querySelector('.cn-path-week .range-summary')?.textContent?.trim(),",
+    "forecastLegend:document.querySelector('.cn-path-week .cn-legend-forecast')?.textContent?.trim(),",
+    "heading:document.querySelector('#cn-path-week-title')?.textContent?.trim(),",
+    "weekdays:[...svg.querySelectorAll('.cn-chart-weekday')].map(x=>x.textContent),",
+    "revealPhase:document.querySelector('.range-compare-panel')?.dataset.revealPhase,",
     "paths:p.map(x=>Boolean(x&&x.getAttribute('d')?.includes(' C ')&&",
     "x.getBBox().width>100&&getComputedStyle(x).display!=='none'&&getComputedStyle(x).opacity!=='0')),",
     "viewBox:svg?.getAttribute('viewBox')",
@@ -99,7 +104,16 @@ try{
         const proof=await evaluate(readPaths);
         assert.ok(proof.inner===width&&proof.scrollWidth<=width+1&&
           proof.route==='#cn-path-week'&&proof.lang===lang&&proof.asset===asset&&
-          proof.hasSource&&proof.paths.every(Boolean),
+          proof.hasSource&&proof.paths.every(Boolean)&&proof.revealPhase==='score'&&
+          (lang==='en'?
+            proof.forecastNote?.includes('derived midpoint line')&&
+            proof.forecastNote?.includes('three frozen price ranges')&&
+            proof.forecastLegend?.includes('(derived)')&&
+            proof.heading?.includes('The frozen week')&&
+            proof.weekdays?.join(',')==='Mon,Tue,Wed,Thu,Fri,Sat,Sun':
+            proof.forecastNote?.includes('afledt midtlinje')&&
+            proof.forecastLegend?.includes('(afledt)')&&
+            proof.weekdays?.join(',')==='Man,Tir,Ons,Tor,Fre,Lør,Søn'),
           'Browser QA '+width+' '+lang+' '+asset+' '+JSON.stringify(proof));
         console.log('PASS '+width+' '+lang+' '+asset+' '+JSON.stringify(proof));
         if(lang==='da'&&asset==='BTC'){
@@ -112,10 +126,32 @@ try{
           const filepath=join(out,'PATH_CHROME_'+width+'.png');
           writeFileSync(filepath,bytes);
           assert.ok(bytes.length>12000,'Blank/tiny Chrome screenshot '+bytes.length+'B '+filepath);
+          // The chart-centered shot intentionally excludes the long heading.
+          // Also capture the actual hash destination to confirm the sticky
+          // header never hides the page's title on an iPhone-sized screen.
+          await evaluate("document.getElementById('cn-path-week').scrollIntoView({behavior:'instant',block:'start'})");
+          await wait(250);
+          const top=await evaluate("Math.round(document.querySelector('#cn-path-week-title').getBoundingClientRect().top)");
+          assert.ok(top>=60&&top<260,'PATH heading obscured or offscreen at '+width+'px: '+top);
+          const sectionShot=await call('Page.captureScreenshot',{
+            format:'png',captureBeyondViewport:false,fromSurface:true
+          },sessionId);
+          const sectionBytes=Buffer.from(sectionShot.data,'base64');
+          writeFileSync(join(out,'PATH_SECTION_'+width+'.png'),sectionBytes);
+          assert.ok(sectionBytes.length>12000,'Blank/tiny PATH heading screenshot');
         }
       }
     }
   }
+  // The explicit replay must complete, not leave the solid ACTUAL curve
+  // hidden after user interaction. This is deliberately not autoplay.
+  await evaluate("document.querySelector('[data-lang=da]').click()");
+  await evaluate("document.querySelector('[data-asset=BTC]').click()");
+  await evaluate("document.querySelector('#range-replay').click()");
+  await wait(2700);
+  const replayState=await evaluate("(()=>({phase:document.querySelector('.range-compare-panel')?.dataset.revealPhase,label:document.querySelector('#cn-replay-day')?.textContent,visible:getComputedStyle(document.querySelector('.cn-chart-close-path')).opacity}))()");
+  assert.ok(replayState.phase==='score'&&replayState.label?.includes('alle syv')&&replayState.visible==='1',
+    'Actual path must fully return after explicit 7-day replay: '+JSON.stringify(replayState));
   assert.deepEqual(runtimeErrors.filter(Boolean),[],'No JavaScript exceptions');
   console.log('PASS all: two foreground lines, 390/430px, DA/EN, BTC/ETH, source, route, no horizontal overflow, nonblank screenshots');
   ws.close();
