@@ -306,6 +306,49 @@ try{
       assert.ok(bytes.length>16000,'Blank editorial Overview screenshot at '+width);
     }
   }
+  // Native keyboard semantics: no fake screenshot-only accessibility pass.
+  // Test the source-dialog's accessible focus trap and Escape return path.
+  await call('Emulation.setDeviceMetricsOverride',{
+    width:390,height:844,mobile:true,deviceScaleFactor:1
+  },sessionId);
+  await call('Page.navigate',{url:pathToFileURL(source).href+'#cn-path-week'},sessionId);
+  let accessible=false;
+  for(let i=0;i<125;i++){
+    accessible=await evaluate("Boolean(document.querySelector('.cn-chart-close-path'))");
+    if(accessible)break;await wait(100);
+  }
+  assert.ok(accessible,'Accessible PATH page failed to initialize');
+  await evaluate("document.querySelector('#source-button').click()");
+  const initiallyFocused=await evaluate("(()=>({open:!document.querySelector('#source-dialog').hidden,focus:document.activeElement?.id,expanded:document.querySelector('#source-button')?.getAttribute('aria-expanded')}))()");
+  assert.ok(initiallyFocused.open&&initiallyFocused.focus==='close-source'&&initiallyFocused.expanded==='true',
+    'Source dialog must open with focus inside modal '+JSON.stringify(initiallyFocused));
+  await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9,modifiers:8},sessionId);
+  await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9,modifiers:8},sessionId);
+  const wrappedToLast=await evaluate("document.activeElement?.closest('#source-dialog') !== null && document.activeElement?.tagName==='A'");
+  assert.ok(wrappedToLast,'Shift-Tab must wrap source dialog first focusable to last');
+  await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9},sessionId);
+  await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9},sessionId);
+  assert.equal(await evaluate("document.activeElement?.id"),'close-source','Tab must wrap back to modal close button');
+  await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27},sessionId);
+  await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27},sessionId);
+  const restored=await evaluate("(()=>({hidden:document.querySelector('#source-dialog').hidden,focus:document.activeElement?.id,expanded:document.querySelector('#source-button')?.getAttribute('aria-expanded')}))()");
+  assert.ok(restored.hidden&&restored.focus==='source-button'&&restored.expanded==='false',
+    'Escape must close source dialog and restore focus '+JSON.stringify(restored));
+  const nativeSummary="document.querySelector('#cn-path-week .cn-path-range-details summary')";
+  await evaluate(nativeSummary+".focus()");
+  for(const expected of [true,false]){
+    await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},sessionId);
+    await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},sessionId);
+    const open=await evaluate("document.querySelector('#cn-path-week .cn-path-range-details').open");
+    assert.equal(open,expected,'Native keyboard Enter must toggle provenance disclosure');
+  }
+  await call('Emulation.setEmulatedMedia',{
+    features:[{name:'prefers-reduced-motion',value:'reduce'}]
+  },sessionId);
+  const motion=await evaluate("getComputedStyle(document.querySelector('.cn-chart-close-path')).animationName");
+  assert.equal(motion,'none','Source price chart must respect reduced-motion preference');
+  await call('Emulation.setEmulatedMedia',{features:[]},sessionId);
+  console.log('PASS keyboard: modal focus/shift-tab/tab/escape, native details enter, reduced-motion chart');
   assert.deepEqual(runtimeErrors.filter(Boolean),[],'No JavaScript exceptions');
   console.log('PASS all: two lines, 390/430 mobile, 801/820/900/940 desktop-tablet, DA/EN, BTC/ETH, source, hash, scroll-width, real screenshots');
   ws.close();
