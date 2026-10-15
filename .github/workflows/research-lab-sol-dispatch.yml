@@ -53,7 +53,9 @@ jobs:
           assert policy['research_lab_sol_analysis']['periodic_schedule'] is False
           assert queue['trigger_issue']==1476
           assert queue['max_active_missions']==1
-          assert sum(row['state']=='ACTIVE_RELEASED' for row in queue['missions'])<=1
+          released=[row for row in queue['missions'] if row['state']=='ACTIVE_RELEASED']
+          assert len(released)<=1
+          assert queue.get('active_mission') == (released[0]['mission_id'] if released else None)
           assert queue['authority']['automatic_code_write'] is False
           assert queue['authority']['automatic_merge'] is False
           PY
