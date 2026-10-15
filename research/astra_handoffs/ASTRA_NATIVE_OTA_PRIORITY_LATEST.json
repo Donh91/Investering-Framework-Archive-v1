@@ -18,7 +18,10 @@
     "CLAUDE_OTA_ROUTINE_RETIREMENT_NOT_READY"
   ],
   "core_principle": "RECONCILE_DO_NOT_RECOLLECT",
-  "routine_schedule_target": ["MONDAY_FIXED", "FRIDAY_FIXED"],
+  "routine_schedule_target": [
+    "MONDAY_FIXED",
+    "FRIDAY_FIXED"
+  ],
   "early_trigger_policy": "USE_REGISTERED_SETTLED_CONDITIONS_FROM_EXISTING_OWNERS_WITHOUT_DUPLICATE_EXTERNAL_POLLING",
   "required_capabilities": [
     "SETTLED_VS_LIVE_QA",
@@ -33,5 +36,16 @@
     "PRODUCTION_PROOF_AND_CURRENT_MAIN_READBACK"
   ],
   "cost_policy": "NEAR_ZERO_MARGINAL_MARKET_DATA_COST_WHEN_EXISTING_OWNERS_HAVE_REQUIRED_DATA",
-  "success_definition": "Routine Claude OTA becomes unnecessary for operations; Claude/Astra remain optional challengers or deep-research tools only."
+  "success_definition": "Routine Claude OTA becomes unnecessary for operations; Claude/Astra remain optional challengers or deep-research tools only.",
+  "status": "HISTORICAL_DESIGN_ROUTE_TO_EXISTING_NATIVE_OWNER",
+  "reconciliation": {
+    "date": "2026-10-15",
+    "source_commit": "77537b33285ff55daaaebefc74d2dcfd2f91b8b5",
+    "current_owner_readback": "04_MARKET_LEARNING/ota_native/LATEST.json",
+    "observed_generated_at_utc": "2026-10-15T05:17:10Z",
+    "observed_contract": "NATIVE_OTA_READBACK_v1",
+    "observed_mode": "TRIGGER_ONLY",
+    "observed_legacy_status": "LEGACY_CONTEXT_ONLY",
+    "action": "Do not build the historical proposed workflow. Verify current native owner and production proof before any retirement decision. No schedule, trigger, source or market authority changes."
+  }
 }
