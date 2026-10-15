@@ -136,6 +136,60 @@ class Bench(unittest.TestCase):
         b['verification']['verification_receipt_sha256'] = a['execution_receipt_sha256']
         self.assert_reused_receipt_not_metadata_eligible(obj)
 
+    def test_duplicate_pair_across_cases_counted_once(self):
+        obj = make_case()
+        copy = deepcopy(obj['cases'][0])
+        copy['case_id'] = 'second-label-same-execution'
+        obj['cases'].append(copy)
+        out = self.check(obj)
+        self.assertEqual(out['attempted_case_count'], 2)
+        self.assertEqual(out['byte_consistent_pair_count'], 1)
+        self.assertFalse(out['rows'][1]['metadata_eligible'])
+        self.assertTrue(any('ACROSS_CASES' in r for r in out['rows'][1]['reasons']))
+
+    def test_shared_one_arm_across_cases_cannot_inflate_pairs(self):
+        obj = make_case()
+        copy = deepcopy(obj['cases'][0])
+        copy['case_id'] = 'partial-reuse'
+        # Give delegated arm an independent execution and receipt so only SOLO
+        # reuses a prior run. It still must not count as another paired sample.
+        copy['variants'][1]['run_id'] = 'independent-delegated-id'
+        self.tmp_delegated = b'{"arm":"new-delegated"}\\n'
+        self.tmp_verified = b'{"verification":"new-delegated"}\\n'
+        (self.root / 'exec-second.json').write_bytes(self.tmp_delegated)
+        (self.root / 'verify-second.json').write_bytes(self.tmp_verified)
+        copy['variants'][1]['execution_receipt_path'] = 'exec-second.json'
+        copy['variants'][1]['execution_receipt_sha256'] = hashlib.sha256(self.tmp_delegated).hexdigest()
+        copy['variants'][1]['verification']['verification_receipt_path'] = 'verify-second.json'
+        copy['variants'][1]['verification']['verification_receipt_sha256'] = hashlib.sha256(self.tmp_verified).hexdigest()
+        obj['cases'].append(copy)
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 1)
+        self.assertIn('REUSED_RUN_ID_ACROSS_CASES:run-1', out['rows'][1]['reasons'])
+
+    def test_independent_second_case_is_distinct_metadata_pair(self):
+        obj = make_case()
+        copy = deepcopy(obj['cases'][0])
+        copy['case_id'] = 'independent-case'
+        for v in copy['variants']:
+            v['run_id'] += '-new'
+            for typ, path_key, sha_key in [
+                (v, 'execution_receipt_path', 'execution_receipt_sha256'),
+                (v['verification'], 'verification_receipt_path', 'verification_receipt_sha256'),
+            ]:
+                oldpath = typ[path_key]
+                newpath = 'second-' + oldpath
+                newbytes = self.root.joinpath(oldpath).read_bytes() + b'second-case'
+                self.root.joinpath(newpath).write_bytes(newbytes)
+                typ[path_key] = newpath
+                typ[sha_key] = hashlib.sha256(newbytes).hexdigest()
+        obj['cases'].append(copy)
+        out = self.check(obj)
+        self.assertEqual(out['attempted_case_count'], 2)
+        self.assertEqual(out['byte_consistent_pair_count'], 2)
+        self.assertFalse(any('ACROSS_CASES' in r for row in out['rows'] for r in row['reasons']))
+        self.assertEqual(out['paired_eligible_count'], 0)
+
     def test_empty_denominator_is_ineligible(self):
         obj = make_case()
         for variant in obj['cases'][0]['variants']:
