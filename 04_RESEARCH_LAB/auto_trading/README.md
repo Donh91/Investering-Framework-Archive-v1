@@ -23,9 +23,9 @@ For any broad historical master audit that intersects this research vault, **rea
 
 **Immediate order:** preserve the **successful E1 temporal-integrity validator evidence** separately from the **negative E3/E2 strategy results**, then finish/review existing PR #1643 delegation-receipt safeguards, then, if permitted and properly frozen, run **one** actual single-GPT-6 vs bounded-specialists comparison. Only then consider selective AI-call filtering. Broad autonomous strategy search remains blocked by existing #1557 trial-denominator and current PIT/scientific-admission gates. Code-only/synthetic tests cannot be reported as empirical AI-edge. **No new agent, engine, scheduler, budget, live execution or automatic permission** is established by this link.
 
-## Current prioritization — READ THIS FIRST
+## Historical September 2026 prioritization — reassess against current owner state
 
-The independent 2026-09-12 architecture audit has materially changed ordering without changing the safety boundary.
+The independent 2026-09-12 architecture audit has materially changed ordering without changing the safety boundary. This section records the September ordering; it is not an instruction to rebuild validators already implemented and verified by the current E1/E1X owners. Apply existing checks only to newly unverified source lanes and follow the refreshed Discovery & Validation crosswalk above and fresh current main for today's order.
 
 Read:
 
