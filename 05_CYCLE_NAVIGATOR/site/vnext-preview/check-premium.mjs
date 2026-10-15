@@ -324,10 +324,10 @@ for (const [name,pts] of [['forward',asc],['reverse',desc]]) {
 assert.equal(spline([{x:0,y:1},{x:0,y:2}]),'', 'Duplicate x is invalid');
 assert.equal(spline([{x:0,y:1},{x:3,y:2},{x:2,y:3}]),'',
   'Nonmonotone x cannot form an unambiguous smooth SVG boundary');
-const ribbonPath=spline(asc)+' L '+spline(desc).slice(2)+' Z';
-assert.equal((ribbonPath.match(/ C /g)||[]).length,6,
-  'Filled corridor requires both three-segment curves, not one-sided fragment');
-assert.match(js,/const ribbon=upperPath\+' L '\+lowerReturnPath\.slice\(2\)\+' Z'/);
+// The pure spline supports both directions, but the production chart now
+// intentionally shows just two comparable price paths; full forecast bands
+// are in the explicit source-backed range table.
+assert.ok(!js.includes('const ribbon=upperPath'), 'No resurrected heavy forecast band');
 
 assert.match(js, /function paintSourceInstrument\(c\)/);
 assert.match(html, /id="cn-instrument-svg"/);
