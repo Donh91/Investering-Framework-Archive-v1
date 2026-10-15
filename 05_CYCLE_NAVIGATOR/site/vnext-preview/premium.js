@@ -528,25 +528,6 @@ function paintPath(d, lang = 'da') {
 }
 
 
-function paintSourceInstrument(c) {
-  const marker = $('cn-gauge-needle');
-  const action = String(c?.action_now ?? 'UNAVAILABLE').toUpperCase();
-  // Only explicit governed action maps to a segment. Mixed HOLD_WAIT is
-  // shown at the neutral HOLD/WAIT boundary, NEVER as new BUY permission.
-  const degrees = { WAIT:-22, HARD_WAIT:-34, HOLD_WAIT:0, HOLD:21 };
-  const known = c?.data_status === 'OK' && Object.prototype.hasOwnProperty.call(degrees, action);
-  if (marker) {
-    marker.hidden = !known;
-    if (known) marker.setAttribute('transform','rotate('+degrees[action]+' 340 276)');
-    marker.setAttribute('aria-hidden','true');
-  }
-  setText('cn-gauge-action',known?actionView(action).text:'UNAVAILABLE');
-  setText('cn-gauge-direction',directionView(c?.horizons?.NEXT_12H?.expected_direction).text);
-  const instrument = $('cn-instrument-svg');
-  if (instrument) instrument.setAttribute('aria-label', known ?
-    'Arkiveret officiel handling '+actionView(action).text+'. Retning og handletilladelse er adskilt. Illustrationen viser ingen sandsynlighed.' :
-    'Ingen understøttet nåleposition. Handletilladelse ikke verificeret.');
-}
 
 function paintTop(d) {
   const { weekly: w, compass: c } = d;
@@ -562,7 +543,6 @@ function paintTop(d) {
   const currentDirection = String(c.horizons?.NEXT_12H?.expected_direction || 'UNAVAILABLE').toUpperCase();
   if ($('hero-now')) $('hero-now').dataset.direction = currentDirection;
   setText('hero-action-summary', actionView(c.action_now).text);
-  paintSourceInstrument(c);
   paintOverviewSnapshot(c);
   setText('hero-deck', localizedPulse(c));
   paintPullback(d, currentLanguage());
