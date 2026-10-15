@@ -1129,3 +1129,31 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
 .cn-frozen-context-item{padding:10px 12px;}
 .cn-frozen-context-item span{font-size:11px;}
 }
+
+/* PATH week graph: one-tap discoverability on desktop and iPhone. */
+.cn-path-jump-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin:0 0 17px;padding:10px 14px;border:1px solid #dce6f2;
+  border-radius:10px;background:#f5f9fe;
+}
+.cn-path-jump-banner>span{font-size:10px;letter-spacing:.1em;font-weight:730;color:#7083a1;}
+.cn-path-jump-banner button{border:0;background:#fff;color:#1e5ba9;font-size:12px;
+  font-weight:750;border-radius:8px;padding:11px 13px;
+  box-shadow:0 2px 7px rgba(17,56,106,.055);white-space:nowrap;}
+.cn-path-jump-banner button:hover{background:#e7effa;}
+.cn-nav-path.is-active{color:#246bc2;border-bottom-color:#2b71cc;}
+.cn-dock-path.is-active{color:#286fc8;}
+.cn-path-week{scroll-margin-top:110px;}
+@media(max-width:800px){
+  .mobile-dock .dock-link{width:25%;flex:1 1 25%;min-width:0;font-size:10px;}
+  .cn-dock-path{color:#617ca2;}
+}
+@media(max-width:580px){
+  .cn-path-jump-banner{gap:7px;padding:9px 10px;}
+  .cn-path-jump-banner>span{font-size:8px;letter-spacing:.04em;}
+  .cn-path-jump-banner button{font-size:10px;padding:10px 9px;}
+  .cn-path-week{scroll-margin-top:88px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .cn-path-jump-banner button{transition:none!important;}
+}
