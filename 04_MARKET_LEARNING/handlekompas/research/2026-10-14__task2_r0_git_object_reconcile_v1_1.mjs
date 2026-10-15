@@ -22,7 +22,7 @@ function targetObject(head,p,git){
   const entries=listing.split('\0').filter(Boolean);
   const match=entries.length===1&&/^([0-7]{6}) (blob|tree|commit) ([0-9a-f]{40})\t(.+)$/u.exec(entries[0]);
   if(!match||match[4]!==p)throw Error('Ambiguous target path lookup: '+p);
-  try{if(git(['cat-file','-t',match[3]])!==match[2])throw Error('Object type differs from tree entry');}
+  try{if(git(['cat-file','-t',match[3]])!==match[2])throw Error('Object type differs from tree entry');git(['cat-file',match[2],match[3]],true);}
   catch{throw Error('Unreadable target tree/object: '+p);}
   return {sha:match[3],type:match[2]};
 }
@@ -50,6 +50,7 @@ function reconcile(inventory,head,expectedTree,git){
     try{oldSha=git(['rev-parse','--verify',inventory.main_commit+':'+path]);oldType=git(['cat-file','-t',oldSha]);}
     catch{throw Error('Original pinned source object missing: '+path);}
     if(oldSha!==row.pinned_object_sha||oldType!==row.type)throw Error('Original pinned source SHA/type mismatch: '+path);
+    try{git(['cat-file',oldType,oldSha],true);}catch{throw Error('Original pinned source object unreadable: '+path);}
     const target=targetObject(head,path,git);
     const sha=target?.sha??null,type=target?.type??null;
     return {...row,checked_object_sha:sha,status:!sha?'MISSING':type!==row.type?'TYPE_MISMATCH':sha===row.pinned_object_sha?'UNCHANGED':'CHANGED'};
@@ -60,11 +61,11 @@ function reconcile(inventory,head,expectedTree,git){
   // It invalidates the registered source contract: fail operationally closed
   // rather than returning the same drift exit code as a missing source.
   if(counts.TYPE_MISMATCH>0)throw Error('Compared source object TYPE_MISMATCH: '+rows.filter(x=>x.status==='TYPE_MISMATCH').map(x=>x.path).join(', '));
-  return {contract:'TASK2_R0_GIT_OBJECT_RECONCILIATION_v1_1',original_pinned_source_objects_verified:true,scope:'PUBLIC_GIT_OBJECTS_ONLY_NOT_MARKET_PIT',inventory_base_commit:inventory.main_commit,inventory_base_tree:inventory.main_tree,compared_commit:head,compared_tree:expectedTree,family_count:families.length,source_references:refs,distinct_source_paths:rows.length,counts,verified_all_paths:counts.MISSING===0&&counts.TYPE_MISMATCH===0,rows,market_first_known_admitted:false,economic_edge_established:false};
+  return {contract:'TASK2_R0_GIT_OBJECT_RECONCILIATION_v1_1',original_pinned_source_objects_verified:true,scope:'PUBLIC_GIT_OBJECTS_ONLY_NOT_MARKET_PIT',inventory_base_commit:inventory.main_commit,inventory_base_tree:inventory.main_tree,compared_commit:head,compared_tree:expectedTree,family_count:families.length,source_references:refs,distinct_source_paths:rows.length,counts,verified_all_paths:counts.MISSING===0&&counts.TYPE_MISMATCH===0,verified_unchanged_source_set:counts.CHANGED===0&&counts.MISSING===0&&counts.TYPE_MISMATCH===0,rows,market_first_known_admitted:false,economic_edge_established:false};
 }
 try{
   const a=parseArgs(process.argv.slice(2));const cwd=a['--repo-dir']||process.cwd();
-  const git=(args)=>execFileSync('git',['--no-replace-objects',...args],{cwd,encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:2e6}).trim();
+  const git=(args,discardOutput=false)=>{const result=execFileSync('git',['--no-replace-objects',...args],{cwd,encoding:'utf8',stdio:['ignore',discardOutput?'ignore':'pipe','pipe'],maxBuffer:2e6});return result?.trim()||'';};
   // --no-replace-objects does NOT disable legacy .git/info/grafts; grafts can forge ancestry.
   // Fail closed in such repositories instead of accepting a synthetic parent relationship.
   const graftPath=path.resolve(cwd,git(['rev-parse','--git-path','info/grafts']));
@@ -73,5 +74,5 @@ try{
   if(git(['rev-parse','--is-shallow-repository'])!=='false')throw Error('Shallow Git repository: complete ancestry unavailable');
   const inv=JSON.parse(fs.readFileSync(a['--inventory'],'utf8'));
   const result=reconcile(inv,a['--head'],a['--expected-tree'],git);
-  process.stdout.write(JSON.stringify(result,null,2)+'\n');if(!result.verified_all_paths)process.exitCode=2;
+  process.stdout.write(JSON.stringify(result,null,2)+'\n');if(!result.verified_unchanged_source_set)process.exitCode=2;
 }catch(e){process.stderr.write('TASK2_R0_RECONCILIATION_BLOCKED: '+e.message+'\n');process.exitCode=1;}
