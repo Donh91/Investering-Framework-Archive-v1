@@ -420,6 +420,11 @@ def _previously_attempted_claim_ids(repo: Path) -> set[str]:
     return attempted
 
 
+def _fresh_unattempted_long_claims(repo: Path, due: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    attempted = _previously_attempted_claim_ids(repo)
+    return [claim for claim in due if claim["claim_id"] not in attempted]
+
+
 def _reject_previously_attempted_claims(repo: Path, claims: list[dict[str, Any]]) -> None:
     current = {str(item["claim_id"]) for item in claims}
     if current.intersection(_previously_attempted_claim_ids(repo)):
@@ -708,8 +713,7 @@ def main() -> None:
         # Previously attempted paid claims stay pending. Unlike a whole-cohort
         # abort, fresh mature claims still advance through the ordinary guard.
         try:
-            previously_attempted = _previously_attempted_claim_ids(repo)
-            fresh_due = [c for c in due_long if c["claim_id"] not in previously_attempted]
+            fresh_due = _fresh_unattempted_long_claims(repo, due_long)
         except RuntimeError as exc:
             print(f"CN_LONG_HORIZON_COST_PROVENANCE_BLOCKED:{exc}", file=sys.stderr)
             fresh_due = []
