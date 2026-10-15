@@ -181,6 +181,10 @@ function bindPanels() {
     playRangeComparison();
   }));
   $('range-replay')?.addEventListener('click', playRangeComparison);
+  $('cn-path-week-open')?.addEventListener('click', () => {
+    navigate('overblik');
+    document.getElementById('cn-path-week')?.scrollIntoView({behavior:'instant',block:'start'});
+  });
   $('edge-open-comparison')?.addEventListener('click', () => {
     // The modern Edge chapter links to a genuine, older frozen comparison.
     // It is not promoted into a new scored outcome.
@@ -682,31 +686,43 @@ function renderRangeChart() {
     svg.append(chartElement('line',{x1:left-8,x2:right,y1:y,y2:y,class:'cn-chart-grid'}));
     svg.append(chartElement('text',{x:left-14,y:y+4,'text-anchor':'end',class:'cn-chart-tick'},'$'+Math.round(val).toLocaleString('en-US')));
   }
-  const windowsIndex=[[0,1],[2,3],[4,6]];
-  for(let w=0;w<3;w++){
-    const [start,end]=windowsIndex[w],row=windows[w];
-    const x1=X(start)-(start===0?0:20),x2=X(end)+(end===6?0:20);
-    const y1=Y(row.forecast_high),y2=Y(row.forecast_low);
-    svg.append(chartElement('rect',{x:x1,y:y1,width:x2-x1,height:Math.max(1,y2-y1),rx:5,class:'cn-chart-forecast-band'}));
-    svg.append(chartElement('line',{x1,x2,y1,y2:y1,class:'cn-chart-boundary'}));
-    svg.append(chartElement('line',{x1,x2,y1:y2,y2:y2,class:'cn-chart-boundary'}));
-    svg.append(chartElement('text',{x:(x1+x2)/2,y:top+12,'text-anchor':'middle',class:'cn-chart-window'},['D1–2','D3–4','D5–7'][w]));
+  // Forecast has ONLY three originally frozen 2/2/3-day windows. The
+  // smooth corridor interpolates between their numeric boundaries for
+  // presentation, it is NOT a recorded daily forecast or an actual price path.
+  const forecastCenters=[.5,2.5,5];
+  const highGuide=windows.map((w,i)=>({x:X(forecastCenters[i]),y:Y(w.forecast_high)}));
+  const lowGuide=windows.map((w,i)=>({x:X(forecastCenters[i]),y:Y(w.forecast_low)}));
+  const midpointGuide=windows.map((w,i)=>({x:X(forecastCenters[i]),y:Y((w.forecast_high+w.forecast_low)/2)}));
+  const ribbon=monotoneClosePath(highGuide)+' L '+
+    monotoneClosePath([...lowGuide].reverse()).slice(2)+' Z';
+  svg.append(chartElement('path',{d:ribbon,class:'cn-chart-forecast-ribbon'}));
+  svg.append(chartElement('path',{d:monotoneClosePath(highGuide),class:'cn-chart-boundary'}));
+  svg.append(chartElement('path',{d:monotoneClosePath(lowGuide),class:'cn-chart-boundary'}));
+  svg.append(chartElement('path',{d:monotoneClosePath(midpointGuide),class:'cn-chart-forecast-midpoint'}));
+  for (let i=0;i<3;i++) {
+    svg.append(chartElement('circle',{cx:midpointGuide[i].x,cy:midpointGuide[i].y,r:3.5,class:'cn-chart-midpoint-anchor'}));
+    svg.append(chartElement('text',{x:midpointGuide[i].x,y:top+14,'text-anchor':'middle',class:'cn-chart-window'},['FROSSET D1–2','FROSSET D3–4','FROSSET D5–7'][i]));
   }
   const pathPoints=days.map((d,i)=>({x:X(i),y:Y(d[selectedAsset].close)}));
+  const defs=chartElement('defs'),clip=chartElement('clipPath',{id:'cn-path-actual-clip'});
+  clip.append(chartElement('rect',{x:left-12,y:0,width:760,height:330,id:'cn-path-actual-clip-rect'}));
+  defs.append(clip);svg.append(defs);
+  const actualGroup=chartElement('g',{'clip-path':'url(#cn-path-actual-clip)'});
   days.forEach((d,i)=>{
     const p=d[selectedAsset],x=X(i);
-    svg.append(chartElement('line',{x1:x,x2:x,y1:Y(p.high),y2:Y(p.low),class:'cn-chart-actual-range'}));
+    actualGroup.append(chartElement('line',{x1:x,x2:x,y1:Y(p.high),y2:Y(p.low),class:'cn-chart-actual-range'}));
     svg.append(chartElement('text',{x,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday'},['Man','Tir','Ons','Tor','Fre','Lør','Søn'][i]));
   });
-  svg.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
+  actualGroup.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
   pathPoints.forEach((p,i)=>{
     const point=chartElement('circle',{cx:p.x,cy:p.y,r:4.8,class:'cn-chart-point'});
     point.append(chartElement('title',{},days[i].date+' · '+selectedAsset+' dagsluk '+formatUSD(days[i][selectedAsset].close)));
-    svg.append(point);
+    actualGroup.append(point);
   });
+  svg.append(actualGroup);
   const badge=chartElement('text',{x:right,y:14,'text-anchor':'end',class:'cn-chart-week'},'2026 · W40 · UTC');
   svg.append(badge);root.append(svg);
-  const legend=make('p','cn-chart-proof','Dagsluk: 7 verificerede målinger · Små lodrette streger: faktisk dagsinterval · Blå felter: oprindelige frosne D1–2 / D3–4 / D5–7. Glat linje forbinder kun dagsluk og viser ikke time-for-time prisstien.');
+  const legend=make('p','cn-chart-proof','LYS KORRIDOR + STIPLET LINJE: visuelt interpolerede grænser/midtpunkter fra TRE originale frosne perioder (ingen daglige forecast-priser). MØRKEBLÅ: faktiske dagsluk med lodret observeret low–high. Den glatte linje er ikke en intradag-kurssti.');
   root.append(legend);
   const tableWrap=make('div','cn-chart-table-scroll'),table=make('table','cn-chart-table');
   const head=make('thead'),headrow=make('tr');
@@ -729,9 +745,28 @@ function renderRangeChart() {
     card.append(make('small',null, '70 % containment + 30 % Jaccard'));
     cards?.append(card);
   }
-  const title=make('h4','cn-chart-table-title','Forecast mod virkelighed · dag for dag');
-  root.append(title,tableWrap);
-  setText('range-method','CN #27 W40 · 70 % containment + 30 % Jaccard · 168/168 timer · 3 originale forecastvinduer');
+  const windowRoot=$('cn-path-window-table');clear(windowRoot);
+  const windowTable=make('table','cn-chart-table cn-window-table');
+  const wh=make('thead'),whr=make('tr');
+  for (const label of ['Frosset vindue','BTC/ETH range lav–høj','Faktisk interval lav–høj']) whr.append(make('th',null,label));
+  wh.append(whr);windowTable.append(wh);
+  const wb=make('tbody');
+  windows.forEach((w,i)=>{
+    const tr=make('tr');
+    tr.append(make('th',null,['Dag 1–2','Dag 3–4','Dag 5–7'][i]));
+    tr.append(make('td',null,formatUSD(w.forecast_low)+' – '+formatUSD(w.forecast_high)));
+    tr.append(make('td',null,formatUSD(w.actual_low)+' – '+formatUSD(w.actual_high)));
+    wb.append(tr);
+  });
+  windowTable.append(wb);
+  const rangeHeading=make('h4','cn-chart-table-title','Originale frosne intervaller · '+selectedAsset);
+  const windowScroll=make('div','cn-chart-table-scroll');
+  windowScroll.append(windowTable);windowRoot?.append(rangeHeading,windowScroll);
+  const dayRoot=$('cn-path-daily-table');clear(dayRoot);
+  const title=make('h4','cn-chart-table-title','Faktiske priser · mandag til søndag');
+  dayRoot?.append(title,tableWrap);
+  setText('range-method','CN #27 W40 · 168/168 timer · 3 oprindelige frosne vinduer · se score i Resultater');
+  setText('cn-replay-day','Faktisk uge · alle syv verificerede dagslukninger');
 }
 
 
