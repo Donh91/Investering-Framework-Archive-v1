@@ -66,6 +66,28 @@ class OriginalAdmissionTests(unittest.TestCase):
             admission.git("show", "0123456789012345678901234567890123456789:some.json")
             self.assertEqual(run.call_args.args[0][:3], ["git", "--no-replace-objects", "show"])
 
+    def test_info_edge_and_action_edge_have_distinct_nonpromoting_clocks(self):
+        d = build()
+        self.assertEqual(len(d["rows"]), 11)
+        for row in d["rows"]:
+            info = row["information_edge_gate"]
+            action = row["investor_action_edge_gate"]
+            self.assertEqual(info["status"], "NOT_ADMITTED")
+            self.assertEqual(action["status"], "NOT_ADMITTED")
+            self.assertFalse(info["user_delivery_required"])
+            self.assertTrue(action["user_delivery_required"])
+            self.assertNotIn("FIRST_USER_DELIVERY_UNVERIFIED", info["missing"])
+            self.assertIn("FIRST_USER_DELIVERY_UNVERIFIED", action["missing"])
+            self.assertIn("PROVIDER_FIRST_PUBLICATION_UNVERIFIED", info["missing"])
+            self.assertIn("PROVIDER_FIRST_PUBLICATION_UNVERIFIED", action["missing"])
+            self.assertFalse(action["portfolio_execution_authorized"])
+            self.assertEqual(
+                "ORIGINAL_OUTCOME_ABSENT_AT_FROZEN_SNAPSHOT" in info["missing"],
+                row["original_outcome_status"] != "PRESENT",
+            )
+        self.assertEqual(sum(r["information_edge_gate"]["status"] == "ADMITTED" for r in d["rows"]), 0)
+        self.assertEqual(sum(r["investor_action_edge_gate"]["status"] == "ADMITTED" for r in d["rows"]), 0)
+
     def test_full_cohort_fails_closed_and_separates_later_outcomes(self):
         d = build()
         self.assertEqual(d["cohort"], {"original_attempts": 11, "original_outcomes_present": 9, "original_outcomes_absent": 2, "unique_source_blobs": 10, "unique_raw_capture_blobs": 7, "admitted": 0, "independent_market_event_families_certified": 0})
