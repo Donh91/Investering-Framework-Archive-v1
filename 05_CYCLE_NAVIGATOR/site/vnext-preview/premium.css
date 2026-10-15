@@ -1253,3 +1253,29 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
   .masthead .header-actions{gap:8px;padding-left:8px;}
   .masthead .desktop-nav{gap:12px;}
 }
+
+/* CN mobile touch-target and editorial legibility pass.
+   Audited at 320/360/375/390/430/580px: >=44px actual visible controls,
+   no horizontal overflow, same two-line premium hierarchy. */
+@media (max-width:800px) {
+  .masthead .language-switch button{min-width:44px;min-height:44px;}
+  .masthead .icon-button{width:44px;height:44px;}
+  .cn-path-week .asset-toggle button{min-width:56px;min-height:44px;}
+  .cn-path-week .range-replay{min-height:44px;}
+  .cn-path-jump-banner button{min-height:44px;}
+  .source-strip .text-button{min-height:44px;padding:8px 7px;}
+  .forecast-note button{min-height:44px;padding:10px 0;}
+  .cn-overview-horizons button,.cn-overview-more{min-height:44px;}
+}
+@media (max-width:350px) {
+  .masthead .brand .cn-logo{width:130px;}
+  .masthead .masthead-inner{gap:6px;}
+  .masthead .header-actions{gap:4px;}
+}
+@media (max-width:580px) {
+  .cn-path-week .section-index{font-size:10px;}
+  .cn-path-week .section-aside{font-size:10px;color:#657895;letter-spacing:.025em;}
+  .cn-path-week .chart-legend small{font-size:9px;}
+  .cn-path-week .cn-path-week-description{font-size:13px;}
+  .cn-path-week .range-summary{font-size:12px;}
+}
