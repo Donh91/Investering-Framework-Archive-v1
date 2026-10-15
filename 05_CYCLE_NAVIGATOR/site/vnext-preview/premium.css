@@ -1316,3 +1316,13 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
   .cn-instrument-footer span{font-size:10px;letter-spacing:.06em;}
   .cn-instrument-caveat{font-size:11px;}
 }
+
+/* CN archived preview ribbon safe-label sizing.
+   Snapshot/not-live distinction stays visible without wrapping or cropping
+   on narrow phones; checked at 320/360/390/430px. */
+@media(max-width:580px){
+  .preview-ribbon{font-size:9px;letter-spacing:.025em;gap:5px;}
+}
+@media(max-width:350px){
+  .preview-ribbon{font-size:8px;letter-spacing:0;gap:3px;}
+}
