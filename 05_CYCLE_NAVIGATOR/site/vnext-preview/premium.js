@@ -131,7 +131,8 @@ function paintOverviewSnapshot(c) {
   }
   const item = c?.horizons?.[horizon], direction = directionView(item?.expected_direction).text;
   const action = actionView(item?.action_posture).text;
-  setText('cn-overview-horizon-state', (da?'Retning: ':'Direction: ') + direction);
+  const label = ({ NEXT_12H:'12T', NEXT_1_3D:'1–3D', NEXT_5_7D:'5–7D', NEXT_2_3W:'2–3U', CYCLE_ALTCOINS_3_8W:'4–8U' })[horizon];
+  setText('cn-overview-horizon-state', label + ' · ' + (da?'Retning: ':'Direction: ') + direction);
   setText('cn-overview-horizon-action', (da?'Handling: ':'Action: ') + action);
   const body = $('cn-overview-market-body'); clear(body);
   const names = [['BTC','Bitcoin'],['ETH','Ethereum'],['LARGE_CAPS','Large caps'],['MID_CAPS','Mid caps'],
