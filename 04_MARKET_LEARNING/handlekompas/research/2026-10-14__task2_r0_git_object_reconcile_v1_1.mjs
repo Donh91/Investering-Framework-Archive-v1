@@ -2,6 +2,8 @@
 // Usage: node script.mjs --inventory path.json --head <40hex> --expected-tree <40hex> [--repo-dir checkout]
 // No moving HEAD or branch references accepted for --head. No historical PIT admission implied.
 import fs from 'node:fs';
+import os from 'node:os';
+import {createHash} from 'node:crypto';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 const HEX40=/^[0-9a-f]{40}$/;
@@ -14,7 +16,7 @@ function parseArgs(argv){
   return o;
 }
 function checkPath(p){return typeof p==='string'&&p.length>0&&!p.startsWith('/')&&!p.includes('\\')&&!p.includes(':')&&!p.includes('\n')&&!p.includes('//')&&!p.split('/').includes('..')&&!p.split('/').includes('.')}
-function targetObject(head,p,git){
+function targetObject(head,p,git,verifyObject){
   let listing;
   try{listing=git(['ls-tree','-z',head,'--',':(literal)'+p]);}
   catch{throw Error('Unreadable target tree/object: '+p);}
@@ -22,11 +24,11 @@ function targetObject(head,p,git){
   const entries=listing.split('\0').filter(Boolean);
   const match=entries.length===1&&/^([0-7]{6}) (blob|tree|commit) ([0-9a-f]{40})\t(.+)$/u.exec(entries[0]);
   if(!match||match[4]!==p)throw Error('Ambiguous target path lookup: '+p);
-  try{if(git(['cat-file','-t',match[3]])!==match[2])throw Error('Object type differs from tree entry');git(['cat-file',match[2],match[3]],true);}
+  try{if(git(['cat-file','-t',match[3]])!==match[2])throw Error('Object type differs from tree entry');verifyObject(match[2],match[3]);}
   catch{throw Error('Unreadable target tree/object: '+p);}
   return {sha:match[3],type:match[2]};
 }
-function reconcile(inventory,head,expectedTree,git){
+function reconcile(inventory,head,expectedTree,git,verifyObject){
   if(!inventory||!HEX40.test(inventory.main_commit)||!HEX40.test(inventory.main_tree)||!Array.isArray(inventory.families))throw Error('Invalid immutable inventory anchor');
   if(git(['cat-file','-t',inventory.main_commit])!=='commit'||git(['cat-file','-t',head])!=='commit')throw Error('Pinned anchors must name direct commit objects');
   if(git(['rev-parse','--verify',inventory.main_commit+'^{tree}'])!==inventory.main_tree)throw Error('Pinned inventory root-tree SHA mismatch');
@@ -50,8 +52,8 @@ function reconcile(inventory,head,expectedTree,git){
     try{oldSha=git(['rev-parse','--verify',inventory.main_commit+':'+path]);oldType=git(['cat-file','-t',oldSha]);}
     catch{throw Error('Original pinned source object missing: '+path);}
     if(oldSha!==row.pinned_object_sha||oldType!==row.type)throw Error('Original pinned source SHA/type mismatch: '+path);
-    try{git(['cat-file',oldType,oldSha],true);}catch{throw Error('Original pinned source object unreadable: '+path);}
-    const target=targetObject(head,path,git);
+    try{verifyObject(oldType,oldSha);}catch{throw Error('Original pinned source object unreadable or hash mismatch: '+path);}
+    const target=targetObject(head,path,git,verifyObject);
     const sha=target?.sha??null,type=target?.type??null;
     return {...row,checked_object_sha:sha,status:!sha?'MISSING':type!==row.type?'TYPE_MISMATCH':sha===row.pinned_object_sha?'UNCHANGED':'CHANGED'};
   });
@@ -72,7 +74,34 @@ try{
   try {fs.lstatSync(graftPath);throw Error('Legacy Git grafts present: source ancestry untrustworthy');}
   catch (e) {if(e.code!=='ENOENT')throw e;}
   if(git(['rev-parse','--is-shallow-repository'])!=='false')throw Error('Shallow Git repository: complete ancestry unavailable');
-  const inv=JSON.parse(fs.readFileSync(a['--inventory'],'utf8'));
-  const result=reconcile(inv,a['--head'],a['--expected-tree'],git);
+  // Git cat-file may emit readable bytes from a loose object under the WRONG
+  // SHA filename. Validate canonical Git type+length+raw bytes independently.
+  // Spill to a temporary file and hash in chunks: no unbounded stdout buffer,
+  // no shell pipeline or content printed into public logs.
+  const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'task2-r0-verify-'));
+  const verifyObject=(type,sha)=>{
+    if(!['blob','tree'].includes(type)||!HEX40.test(sha))throw Error('Invalid object identity');
+    const pathname=path.join(scratch,'object.bin');
+    const fd=fs.openSync(pathname,'w+');
+    try{
+      execFileSync('git',['--no-replace-objects','cat-file',type,sha],{
+        cwd,stdio:['ignore',fd,'pipe'],maxBuffer:2e6
+      });
+      const size=fs.fstatSync(fd).size;
+      const h=createHash('sha1').update(Buffer.from(type+' '+size+'\0'));
+      const chunk=Buffer.allocUnsafe(65536);
+      for(let offset=0;offset<size;){
+        const n=fs.readSync(fd,chunk,0,Math.min(chunk.length,size-offset),offset);
+        if(n===0)throw Error('Incomplete Git object content');
+        h.update(chunk.subarray(0,n));offset+=n;
+      }
+      if(h.digest('hex')!==sha)throw Error('Git object hash-path mismatch');
+    }finally{fs.closeSync(fd);}
+  };
+  let result;
+  try{
+    const inv=JSON.parse(fs.readFileSync(a['--inventory'],'utf8'));
+    result=reconcile(inv,a['--head'],a['--expected-tree'],git,verifyObject);
+  }finally{fs.rmSync(scratch,{recursive:true,force:true});}
   process.stdout.write(JSON.stringify(result,null,2)+'\n');if(!result.verified_unchanged_source_set)process.exitCode=2;
 }catch(e){process.stderr.write('TASK2_R0_RECONCILIATION_BLOCKED: '+e.message+'\n');process.exitCode=1;}
