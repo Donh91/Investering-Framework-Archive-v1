@@ -350,6 +350,27 @@ assert.equal((html.match(/id="cn-source-chart"/g)||[]).length,1);
 assert.equal((html.match(/id="cn-path-window-table"/g)||[]).length,1);
 assert.equal((html.match(/id="cn-path-daily-table"/g)||[]).length,1);
 assert.equal((html.match(/id="cn-path-week-open"/g)||[]).length,1);
+// Desktop/phone coordinate spaces must remain readable and replay must
+// share exact axes with the SVG rather than hard-coded stale desktop pixels.
+const geometryStart=js.indexOf('function rangeChartGeometry() {');
+const geometryEnd=js.indexOf('\nfunction renderRangeChart()',geometryStart);
+assert.ok(geometryStart>=0 && geometryEnd>geometryStart, 'Mobile source geometry exists');
+const geometryFnSource=js.slice(geometryStart,geometryEnd);
+const getGeometry=new Function('window', geometryFnSource+'; return rangeChartGeometry();');
+const phone=getGeometry({matchMedia:()=>({matches:true})});
+const desktop=getGeometry({matchMedia:()=>({matches:false})});
+assert.equal(phone.width,480); assert.equal(phone.height,380);
+assert.equal(desktop.width,820);assert.equal(desktop.height,396);
+for (const size of [phone,desktop]) {
+  assert.ok(size.left>55 && size.right<size.weekX && size.weekX<size.width,
+    'Y labels, seven observed points and week label fit inside responsive SVG');
+  assert.ok(size.top>0 && size.bottom<size.height-30, 'Price path and weekday labels fit');
+  assert.equal((size.right-size.left)/6>25,true, 'Seven observed days are distinguishable');
+}
+assert.match(js,/const \{left,right\}=rangeChartGeometry\(\)/);
+assert.match(js,/window\.matchMedia\('\(max-width: 580px\)'\)\.addEventListener/);
+assert.match(css,/\.cn-history-chart\{aspect-ratio:480\/380/);
+
 assert.match(js,/function revealActualThrough\(dayIndex\)/);
 assert.match(js,/cn-path-actual-clip-rect/);
 assert.match(js,/const forecastCenters=\[\.5,2\.5,5\]/);
