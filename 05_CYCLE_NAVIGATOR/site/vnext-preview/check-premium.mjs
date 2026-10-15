@@ -341,5 +341,15 @@ assert.match(js,/const label = \(\{ NEXT_12H:/);
 assert.match(js,/function completeDailyHistory\(score, asset\)/);
 assert.ok(!html.includes('Updated just now'), 'Archive preview must never claim freshly updated LIVE status');
 
+// User-discoverable PATH navigation and real deep-link regression.
+assert.equal((html.match(/data-open-path/g)||[]).length,3,
+  'Desktop PATH button, iPhone dock PATH button and immediate Overview CTA required');
+assert.match(js, /function openPathGraph\(\{ updateHash = true \} = \{\}\)/);
+assert.match(js, /route === 'cn-path-week'/);
+assert.match(js, /initial === 'cn-path-week'/);
+assert.match(js, /target\.scrollIntoView\(\{ behavior:'auto', block:'start' \}\)/);
+assert.match(css, /\.mobile-dock \.dock-link\{width:25%;/);
+assert.match(html, /class="cn-path-jump-banner"/);
+
 console.log('PASS: premium CN source lineage, fail-closed fixtures, bilingual copy, score semantics, modal keyboard and JavaScript syntax');
 console.log('Reminder: this is static smoke/contract QA. It does not certify iPhone visual quality or ex-ante cryptographic score proof.');
