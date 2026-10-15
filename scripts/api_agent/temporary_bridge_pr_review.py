@@ -215,7 +215,7 @@ def validate(out_dir: Path) -> str:
     # Keep the accepted model/authority fields contiguous and affirmative.
     summary = str(result.get("summary") or "")
     verdict_pattern = (
-        r"(?:PASS_WITH_FINDINGS|PASS|FAIL)(?: |; )"
+        r"(?:PASS_WITH_FINDINGS|PASS|FAIL)(?:[;,]? )"
         r"MODEL_USED=gpt-6\.1-sol(?:[;,]? )"
         r"NO_CODE_WRITE_PERFORMED(?:[;,]? )"
         r"NO_AUTHORITY_CHANGE\.?"
