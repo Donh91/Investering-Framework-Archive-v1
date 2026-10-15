@@ -349,9 +349,9 @@ def _cost_preflight(repo: Path, model: str, request_bytes: bytes, max_output_tok
     This is a bounded single-lane admission under the existing main-writer
     concurrency group, NOT a platform-wide atomic billing reservation.
     """
-    from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
     if str(repo) not in sys.path:
         sys.path.insert(0, str(repo))
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
     try:
         policy = read_json(repo / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json")
     except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
