@@ -18,17 +18,18 @@ const child=spawn(browser,['--headless=new','--no-sandbox','--disable-gpu',
   '--disable-dev-shm-usage','--no-first-run','--no-default-browser-check',
   '--disable-extensions','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],
   {stdio:['ignore','ignore','pipe']});
-let wsUrl='';
+let wsUrl='',startupLog='';
 child.stderr.on('data',chunk=>{
+  startupLog=(startupLog+chunk.toString()).slice(-6000);
   const m=chunk.toString().match(/DevTools listening on (ws:\/\/\S+)/);
   if(m)wsUrl=m[1];
 });
 try{
-  for(let i=0;i<150&&!wsUrl;i++){
+  for(let i=0;i<350&&!wsUrl;i++){
     if(child.exitCode!==null)throw Error('Chrome exited '+child.exitCode);
     await wait(100);
   }
-  assert.ok(wsUrl,'Chrome debug websocket unavailable');
+  assert.ok(wsUrl,'Chrome debug websocket unavailable after 35s: '+startupLog);
   const ws=new WebSocket(wsUrl),pending=new Map();let id=0;
   await new Promise((ok,bad)=>{
     ws.addEventListener('open',ok,{once:true});
