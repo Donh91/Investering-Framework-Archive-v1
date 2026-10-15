@@ -230,9 +230,16 @@ function bindPanels() {
       b.classList.toggle('selected', active);
       b.setAttribute('aria-pressed', String(active));
     });
+    // The primary chart is a side-by-side comparison, not an autoplay
+    // sequence. BTC/ETH changes must show BOTH lines immediately. Replay
+    // starts only from the explicit user action below.
+    cancelRangeReveal();
     renderRangeChart();
+    setRangeRevealPhase('score');
+    setText('cn-replay-day',currentLanguage()==='en'
+      ?'Observed week · all seven verified daily closes'
+      :'Faktisk uge · alle syv verificerede dagslukninger');
     translateInterface();
-    playRangeComparison();
   }));
   $('range-replay')?.addEventListener('click', playRangeComparison);
   $('cn-path-week-open')?.addEventListener('click', () => openPathGraph());
@@ -955,7 +962,9 @@ async function initialize() {
         paintPullback(data, button.dataset.lang);
         paintPath(data, button.dataset.lang);
         paintOverviewSnapshot(data.compass);
+        cancelRangeReveal();
         renderRangeChart();
+        setRangeRevealPhase('score');
         translateInterface();
       }
     });
