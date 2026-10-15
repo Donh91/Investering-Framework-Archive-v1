@@ -13,12 +13,17 @@ const source = JSON.parse(readFileSync(resolve(dir, 'seed.json'), 'utf8'));
 const motionLibrary = readFileSync(resolve(dir, 'MOTION_TOOLKIT_20_REPOS_AND_CN_DECISION.md'), 'utf8');
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
 const unique = new Set(ids);
+// The path replay SVG is created after source validation; its clip rectangle
+// must be declared in chartElement, never assumed to exist in static HTML.
+const dynamicSvgId = 'cn-path-actual-clip-rect';
+assert.match(js, /id:'cn-path-actual-clip-rect'/);
 assert.equal(ids.length, unique.size, 'Duplicate HTML ids');
 for (const expected of ['page-overblik', 'page-kompas', 'page-dokumentation', 'horizon-body', 'asset-body', 'range-visualization', 'history-full', 'source-dialog']) {
   assert.ok(unique.has(expected), 'Missing required UI section: ' + expected);
 }
 for (const match of [...js.matchAll(/\$\('([^']+)'\)/g), ...js.matchAll(/setText\('([^']+)'/g)]) {
-  assert.ok(unique.has(match[1]), 'JavaScript targets nonexistent HTML ID: ' + match[1]);
+  assert.ok(unique.has(match[1]) || match[1] === dynamicSvgId,
+    'JavaScript targets nonexistent HTML or declared dynamic SVG ID: ' + match[1]);
 }
 assert.match(css, /prefers-reduced-motion: reduce/);
 assert.match(css, /@media \(max-width: 580px\)/);
