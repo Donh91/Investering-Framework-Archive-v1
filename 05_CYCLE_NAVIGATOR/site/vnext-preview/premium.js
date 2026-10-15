@@ -698,7 +698,10 @@ function chartElement(tag, attributes = {}, content) {
 function monotoneClosePath(points) {
   if (points.length < 2) return '';
   if (points.some((p,i) => !Number.isFinite(p.x) || !Number.isFinite(p.y) ||
-    (i > 0 && p.x <= points[i-1].x))) return '';
+    (i > 0 && p.x === points[i-1].x) ||
+    (i > 1 && (p.x-points[i-1].x)*(points[i-1].x-points[i-2].x) <= 0))) return '';
+  // A closed corridor needs the upper curve left-to-right AND the lower
+  // curve right-to-left. Both monotonic x directions must be supported.
   // Fritsch-Carlson / PCHIP shape-preserving tangents for UNEVEN x-spacings.
   // Prevent spurious peaks when the frozen source has only 3 window centers.
   const h=points.slice(1).map((p,i)=>p.x-points[i].x);
@@ -758,8 +761,11 @@ function renderRangeChart() {
   };
   const highGuide=guide('forecast_high'),lowGuide=guide('forecast_low');
   const midpointGuide=guide('midpoint');
-  const ribbon=monotoneClosePath(highGuide)+' L '+
-    monotoneClosePath([...lowGuide].reverse()).slice(2)+' Z';
+  // The return leg intentionally uses descending x. Do not skip it:
+  // silently truncating this leg makes the visually faint ribbon malformed.
+  const upperPath=monotoneClosePath(highGuide);
+  const lowerReturnPath=monotoneClosePath([...lowGuide].reverse());
+  const ribbon=upperPath+' L '+lowerReturnPath.slice(2)+' Z';
   svg.append(chartElement('path',{d:ribbon,class:'cn-chart-forecast-ribbon'}));
   svg.append(chartElement('path',{d:monotoneClosePath(midpointGuide),class:'cn-chart-forecast-midpoint','vector-effect':'non-scaling-stroke'}));
   // Only three pale markers are shown, one per original frozen window.
