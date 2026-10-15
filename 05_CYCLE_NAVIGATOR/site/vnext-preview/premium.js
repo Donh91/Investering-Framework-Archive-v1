@@ -816,7 +816,8 @@ function renderRangeChart() {
     actualGroup.append(chartElement('line',{x1:x,x2:x,y1:Y(p.high),y2:Y(p.low),class:'cn-chart-actual-range'}));
     svg.append(chartElement('text',{x,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday'},weekAbbr[i]));
   });
-  svg.append(chartElement('text',{x:weekX,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday cn-chart-weekaxis'},'W40'));
+  // W40 is already labeled at the chart's upper edge. No second W40
+  // beside Sunday: it clashes with the seventh weekday at iPhone width.
   actualGroup.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
   pathPoints.forEach((p,i)=>{
     const point=chartElement('circle',{cx:p.x,cy:p.y,r:4.8,class:'cn-chart-point'});
