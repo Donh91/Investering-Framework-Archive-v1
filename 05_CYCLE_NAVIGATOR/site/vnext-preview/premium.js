@@ -802,9 +802,9 @@ function renderRangeChart() {
       const card=make('div','cn-frozen-context-item');
       card.append(make('strong',null,['Dag 1–2','Dag 3–4','Dag 5–7'][i]),
         make('span',null,descriptions[currentLanguage()==='en'?'en':'da'][i]));
-      const original=make('small',null,'Kilde: '+frozen.intraday_map[key]);
-      original.hidden=true;
-      card.append(original);collection.append(card);
+      card.dataset.frozenSource = key;
+      card.setAttribute('title','2026-W40 · frozen source, Monday 05:53 UTC');
+      collection.append(card);
     });
     frozenRoot?.append(collection);
     setText('cn-path-freeze-status','FRYSNING · MAN 28 SEP 2026 KL. 05:53 UTC. Mandagens faktiske low/high omfatter også timer FØR frysetidspunktet. Historisk visning er ikke fuldt ex ante fra midnat.');
@@ -872,6 +872,8 @@ async function initialize() {
         paintPullback(data, button.dataset.lang);
         paintPath(data, button.dataset.lang);
         paintOverviewSnapshot(data.compass);
+        renderRangeChart();
+        translateInterface();
       }
     });
   });
