@@ -295,5 +295,21 @@ assert.match(css, /\.cn-gauge-bear/);
 assert.match(css, /\.cn-chart-table/);
 assert.match(js, /const degrees = \{ WAIT:-22, HARD_WAIT:-34, HOLD_WAIT:0, HOLD:21 \}/);
 
+
+// Approved visual-reference hierarchy and source-only action safety.
+const sourceChartStart=html.indexOf('class="cn-results-evidence"');
+const legacyFoldStart=html.indexOf('class="edge-legacy-fold"');
+const prospectiveStart=html.indexOf('class="edge-era"');
+assert.ok(prospectiveStart > 0 && prospectiveStart < sourceChartStart && sourceChartStart < legacyFoldStart,
+  'Actual historic chart must be visible after prospective v2 and outside collapsed Legacy');
+assert.equal((html.match(/id="range-visualization"/g)||[]).length,1);
+assert.equal((html.match(/data-overview-horizon="/g)||[]).length,5);
+assert.equal((html.match(/id="cn-overview-market-body"/g)||[]).length,1);
+assert.ok(html.includes('id="cn-range-official-scorecards"'));
+assert.match(js,/function paintOverviewSnapshot\(c\)/);
+assert.match(js,/const label = \(\{ NEXT_12H:/);
+assert.match(js,/function completeDailyHistory\(score, asset\)/);
+assert.ok(!html.includes('Updated just now'), 'Archive preview must never claim freshly updated LIVE status');
+
 console.log('PASS: premium CN source lineage, fail-closed fixtures, bilingual copy, score semantics, modal keyboard and JavaScript syntax');
 console.log('Reminder: this is static smoke/contract QA. It does not certify iPhone visual quality or ex-ante cryptographic score proof.');
