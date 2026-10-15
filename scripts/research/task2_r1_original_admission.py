@@ -29,6 +29,24 @@ def original(ref, path, expected_blob=None):
     return json.loads(raw), blob
 
 
+def optional_original(ref, path):
+    """Certify an absent Git path by successful traversal of the exact tree.
+
+    A failed git command, missing nested tree or unreadable blob is an
+    operational integrity blocker, never evidence that a forecast outcome
+    was absent. Git's pathspec can overmatch, so use exact NUL-delimited paths.
+    """
+    if not path or path.startswith("/") or any(part in ("", ".", "..") for part in path.split("/")):
+        raise ValueError(f"Invalid original Git path: {path}")
+    paths = git("ls-tree", "-r", "--full-tree", "--name-only", "-z", ref, "--", path)
+    found = [entry.decode("utf-8") for entry in paths.split(b"\x00") if entry]
+    if path not in found:
+        if found:
+            raise ValueError(f"Original Git lookup returned only nonexact matches: {path}")
+        return None, None
+    return original(ref, path)
+
+
 def earlier(clock, issue):
     if clock is None:
         return None
@@ -105,11 +123,8 @@ def build():
                 "vendor_first_publication_at": None,
             })
         outcome_path = f"04_MARKET_LEARNING/handlekompas/official/outcomes/2026/{day[4:6]}/{day[6:8]}/{fid}_12h.json"
-        try:
-            outcome, outcome_blob = original(ref, outcome_path)
-            original_status = "PRESENT"
-        except subprocess.CalledProcessError:
-            outcome, outcome_blob, original_status = None, None, "ABSENT_AT_ORIGINAL_SNAPSHOT"
+        outcome, outcome_blob = optional_original(ref, outcome_path)
+        original_status = "PRESENT" if outcome is not None else "ABSENT_AT_ORIGINAL_SNAPSHOT"
         expected_outcome_status = ("PRESENT" if item["outcome_12h_at_pinned_ref"] == "PRESENT"
                                    else "ABSENT_AT_ORIGINAL_SNAPSHOT")
         frozen_outcome_status = ("PRESENT" if frozen["outcome_12h_presence_at_pinned_commit"] == "PRESENT"
@@ -118,13 +133,12 @@ def build():
             raise ValueError(f"Original outcome snapshot census mismatch: {fid}")
         if original_status == "PRESENT" and outcome_blob != frozen["outcome_git_blob_sha"]:
             raise ValueError(f"Original outcome Git blob mismatch: {fid}")
-        try:
-            current_outcome, current_blob = original("HEAD", outcome_path)
-            current_status = "PRESENT_ON_CURRENT_MAIN"
-        except subprocess.CalledProcessError:
-            current_outcome, current_blob, current_status = None, None, "ABSENT_ON_CURRENT_MAIN"
+        # HEAD in GitHub PR CI may be a synthetic test-merge commit,
+        # not refs/heads/main. This is checkout context only, never "main".
+        checkout_outcome, checkout_blob = optional_original("HEAD", outcome_path)
+        checkout_status = "PRESENT_ON_CHECKOUT_HEAD" if checkout_outcome is not None else "ABSENT_ON_CHECKOUT_HEAD"
         if outcome is None:
-            outcome = current_outcome
+            outcome = checkout_outcome
         target_at = outcome.get("target_at_utc") if outcome else None
         offset = int((dt.datetime.fromisoformat(target_at.replace("Z", "+00:00")) - dt.datetime.fromisoformat(issue.replace("Z", "+00:00"))).total_seconds()) if target_at else None
         time_basis = outcome.get("time_basis", {}) if outcome else {}
@@ -152,7 +166,7 @@ def build():
             "issue_to_original_target_seconds": offset if original_status == "PRESENT" else None,
             "original_outcome_status": original_status, "original_outcome_git_blob_sha": outcome_blob,
             "original_direction_result_only_not_admitted": {asset: outcome["direction_accuracy"][asset]["result"] for asset in ("btc", "eth")} if original_status == "PRESENT" else None,
-            "current_main_outcome_status": current_status, "current_main_outcome_git_blob_sha": current_blob,
+            "checkout_outcome_status": checkout_status, "checkout_outcome_git_blob_sha": checkout_blob,
             "admissibility": "NOT_ADMITTED", "reason": ["PROVIDER_FIRST_PUBLICATION_UNVERIFIED", "FIRST_USER_DELIVERY_UNVERIFIED", "INDEPENDENT_EVENT_FAMILY_UNVERIFIED", "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"] + (["ORIGINAL_OUTCOME_ABSENT_AT_FROZEN_SNAPSHOT"] if original_status != "PRESENT" else []),
             # Two non-promoting research gates: an internally issued information
             # comparison need not require user delivery, whereas any investor
@@ -175,7 +189,7 @@ def build():
         raise ValueError("Cohort/dependency census changed")
     return {
         "contract": "TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v1", "status": "RESEARCH_ONLY_NOT_ADMITTED",
-        "generated_from_main_sha": git("rev-parse", "HEAD").decode().strip(), "original_snapshot_sha": ref,
+        "generated_from_checkout_head_sha": git("rev-parse", "HEAD").decode().strip(), "checkout_ref_semantics": "MAY_BE_PR_TEST_MERGE_NOT_VERIFIED_CURRENT_MAIN", "original_snapshot_sha": ref,
         "source_census_path": CENSUS, "owner_issue": 1596,
         "cohort": {"original_attempts": 11, "original_outcomes_present": sum(r["original_outcome_status"] == "PRESENT" for r in rows), "original_outcomes_absent": sum(r["original_outcome_status"] != "PRESENT" for r in rows), "unique_source_blobs": 10, "unique_raw_capture_blobs": 7, "admitted": 0, "independent_market_event_families_certified": 0},
         "clock_interpretation": "Internal Git and collector retrieval precede issue, but this does not independently certify vendor publication/revision or user delivery. OKX funding_time is future settlement, not the quote observation clock. CFGI is v3 4h lookback refreshed about every 15 minutes; October 2026 is post July 8 scoring era. No retrospective static=true or 2025 backfill is joined.",
