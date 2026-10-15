@@ -1075,3 +1075,43 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
 .cn-overview-horizon-readout{padding:12px 10px;}
 .cn-overview-horizon-readout strong,.cn-overview-horizon-readout span{font-size:11px;}
 }
+
+
+/* PATH owns the single week narrative. Results owns scoring, not a second plot. */
+.cn-path-week{scroll-margin-top:110px;}
+.cn-path-week-description{max-width:820px;line-height:1.7;color:#7889a0;font-size:13px;margin:0 0 18px;}
+.cn-path-week .range-compare-panel{box-shadow:0 11px 45px rgba(22,47,88,.035);padding:25px 28px;}
+.cn-chart-forecast-ribbon{fill:#9ebde9;fill-opacity:.21;stroke:none;}
+.cn-chart-forecast-midpoint{fill:none;stroke:#8faeda;stroke-width:2;stroke-dasharray:7 7;stroke-linecap:round;}
+.cn-chart-midpoint-anchor{stroke:#91afd7;fill:white;stroke-width:2;}
+.cn-path-replay-day{margin:6px 0 4px;color:#2c67ba;letter-spacing:.025em;font-size:12px;font-weight:750;min-height:18px;}
+.cn-path-range-details{border:1px solid #e4eaf2;background:#fff;border-radius:14px;margin-top:14px;overflow:hidden;}
+.cn-path-range-details summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;padding:18px 22px;color:#1e4678;font-weight:730;font-size:13px;align-items:center;}
+.cn-path-range-details summary::-webkit-details-marker{display:none;}
+.cn-path-range-details summary span{color:#7893b4;font-size:21px;}
+.cn-path-range-details[open] summary span{transform:rotate(45deg);}
+.cn-path-range-detail-content{padding:0 22px 20px;border-top:1px solid #ebf0f6;}
+.cn-path-range-detail-content>p{font-size:11px;line-height:1.65;color:#7c8b9e;}
+.cn-path-range-detail-content .cn-chart-table-title{margin-top:17px;}
+.cn-results-evidence{background:#fff;border:1px solid #e2e9f1;border-radius:14px;padding:22px 24px;}
+.cn-results-evidence .cn-range-scorecards{margin-top:9px;}
+.cn-results-evidence .cn-overview-more{padding:14px 0 2px;}
+.cn-results-footnote{font-size:11px;color:#8593a5;line-height:1.6;margin:7px 0 0;}
+.cn-chart-forecast-band{display:none;}
+.cn-path-week .chart-legend{letter-spacing:.02em;line-height:1.5;}
+.cn-path-week .range-summary{font-size:10px;}
+@media(max-width:580px){
+.cn-path-week{scroll-margin-top:90px;}
+.cn-path-week .range-compare-panel{padding:17px 10px;}
+.cn-path-week-description{font-size:11px;}
+.cn-path-week .chart-top{margin-bottom:13px;gap:8px;}
+.cn-path-week .chart-legend{gap:9px;font-size:9px;}
+.cn-path-week .range-motion-bar{gap:11px;}
+.cn-path-range-details summary{padding:15px 14px;font-size:12px;}
+.cn-path-range-detail-content{padding:0 10px 15px;}
+.cn-results-evidence{padding:15px 12px;}
+.cn-path-week .range-summary{flex-wrap:wrap;}
+}
+@media(prefers-reduced-motion:reduce){
+.cn-chart-close-path,.cn-chart-forecast-midpoint{animation:none!important;transition:none!important;}
+}
