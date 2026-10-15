@@ -170,6 +170,73 @@ class Bench(unittest.TestCase):
         self.assertEqual(out['byte_consistent_pair_count'], 0)
         self.assertIn('REUSED_RECEIPT_PATH_OR_ALIAS_WITHIN_ARM:DELEGATED', out['rows'][0]['reasons'])
 
+    def make_independent_second_case(self, obj):
+        second = deepcopy(obj['cases'][0])
+        second['case_id'] = 'independent-second-case'
+        for v in second['variants']:
+            v['run_id'] += '-second'
+            for record, path_key, sha_key in [
+                (v, 'execution_receipt_path', 'execution_receipt_sha256'),
+                (v['verification'], 'verification_receipt_path', 'verification_receipt_sha256'),
+            ]:
+                previous = record[path_key]
+                fresh = 'independent-' + previous
+                payload = (self.root / previous).read_bytes() + b' independent-second-case'
+                (self.root / fresh).write_bytes(payload)
+                record[path_key] = fresh
+                record[sha_key] = hashlib.sha256(payload).hexdigest()
+        obj['cases'].append(second)
+        return second
+
+    def test_second_case_cannot_disguise_prior_run_as_question(self):
+        obj = make_case()
+        second = self.make_independent_second_case(obj)
+        original_receipt = obj['cases'][0]['variants'][0]
+        second['frozen_question_path'] = original_receipt['execution_receipt_path']
+        second['frozen_question_sha256'] = original_receipt['execution_receipt_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 1)
+        self.assertTrue(out['rows'][0]['metadata_eligible'])
+        self.assertFalse(out['rows'][1]['metadata_eligible'])
+        self.assertIn('REUSED_PRIOR_RECEIPT_AS_SOURCE_DIGEST:FROZEN_QUESTION', out['rows'][1]['reasons'])
+        self.assertIn('REUSED_PRIOR_RECEIPT_AS_SOURCE_PATH_OR_ALIAS:FROZEN_QUESTION', out['rows'][1]['reasons'])
+
+    def test_second_case_cannot_disguise_prior_source_as_run(self):
+        obj = make_case()
+        second = self.make_independent_second_case(obj)
+        fresh_source = b'new independent evidence bundle for case two'
+        (self.root / 'case-two-evidence.txt').write_bytes(fresh_source)
+        second['evidence_path'] = 'case-two-evidence.txt'
+        second['evidence_sha256'] = hashlib.sha256(fresh_source).hexdigest()
+        first_evidence = obj['cases'][0]
+        delegated = second['variants'][1]
+        delegated['execution_receipt_path'] = first_evidence['evidence_path']
+        delegated['execution_receipt_sha256'] = first_evidence['evidence_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 1)
+        self.assertFalse(out['rows'][1]['metadata_eligible'])
+        self.assertIn('REUSED_PRIOR_SOURCE_AS_RECEIPT_DIGEST:EXECUTION_DELEGATED', out['rows'][1]['reasons'])
+        self.assertIn('REUSED_PRIOR_SOURCE_AS_RECEIPT_PATH_OR_ALIAS:EXECUTION_DELEGATED', out['rows'][1]['reasons'])
+
+    def test_opposite_arm_executors_cannot_independently_verify(self):
+        obj = make_case()
+        solo, delegated = obj['cases'][0]['variants']
+        solo['verification']['verifier_id'] = delegated['executor_id']
+        delegated['verification']['verifier_id'] = solo['executor_id']
+        out = self.check(obj)
+        self.assertFalse(out['rows'][0]['metadata_eligible'])
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('PAIR_EXECUTOR_USED_AS_INDEPENDENT_VERIFIER:SOLO', out['rows'][0]['reasons'])
+        self.assertIn('PAIR_EXECUTOR_USED_AS_INDEPENDENT_VERIFIER:DELEGATED', out['rows'][0]['reasons'])
+
+    def test_independent_second_case_still_counts_as_separate_pair(self):
+        obj = make_case()
+        self.make_independent_second_case(obj)
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 2)
+        self.assertEqual(out['paired_eligible_count'], 0)
+        self.assertTrue(all(row['metadata_eligible'] for row in out['rows']))
+
     def test_frozen_question_cannot_be_solo_execution_receipt(self):
         obj = make_case()
         case = obj['cases'][0]
