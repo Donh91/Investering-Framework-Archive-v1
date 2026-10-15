@@ -101,6 +101,36 @@ try{
           width:Math.round(r.width),height:Math.round(r.height)};
       })};
   })()`;
+  // Evidence labels are essential, not decorative metadata. Test their
+  // computed contrast in Chrome, with exact white/card and canvas backdrops.
+  const inspectPathContrast = `(()=>{
+    const samples=[
+      ['.cn-path-week .section-aside','rgb(246,247,248)','color'],
+      ['.cn-path-week .cn-chart-tick','rgb(255,255,255)','fill'],
+      ['.cn-path-week .cn-chart-weekday','rgb(255,255,255)','fill'],
+      ['.cn-path-week .cn-chart-week','rgb(255,255,255)','fill'],
+      ['.cn-path-week .chart-legend small','rgb(255,255,255)','color'],
+      ['.cn-path-week .range-summary','rgb(255,255,255)','color'],
+      ['.cn-path-week .range-summary span:last-child','rgb(255,255,255)','color']
+    ];
+    const channels=s=>String(s).match(/[0-9.]+/g)?.slice(0,3).map(Number);
+    const l=s=>{
+      const rgb=channels(s);
+      if(!rgb||rgb.length!==3)return NaN;
+      const c=rgb.map(v=>{
+        const x=v/255;
+        return x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4;
+      });
+      return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];
+    };
+    return samples.map(([selector,background,property])=>{
+      const node=document.querySelector(selector);
+      const foreground=node&&getComputedStyle(node)[property];
+      const a=l(foreground),b=l(background);
+      const contrast=(Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+      return {selector,foreground,contrast:Number(contrast.toFixed(2))};
+    });
+  })()`;
   for(const width of [390,430]){
     await call('Emulation.setDeviceMetricsOverride',{
       width,height:844,mobile:true,deviceScaleFactor:1
@@ -118,6 +148,10 @@ try{
     const mobileTap=await evaluate(inspectMobileTapTargets);
     assert.ok(mobileTap.scrollWidth<=width+1&&mobileTap.undersized.length===0,
       'Phone tap/overflow regression at '+width+'px '+JSON.stringify(mobileTap));
+    const contrast=await evaluate(inspectPathContrast);
+    assert.ok(contrast.every(x=>Number.isFinite(x.contrast)&&x.contrast>=4.5),
+      'Evidence-bearing PATH labels must meet WCAG AA small-text contrast '+JSON.stringify(contrast));
+    console.log('PASS PATH source-caption AA contrast '+width+'px '+JSON.stringify(contrast));
     for(const lang of ['da','en']){
       await evaluate("document.querySelector('[data-lang="+JSON.stringify(lang)+"]').click()");
       await wait(200);
