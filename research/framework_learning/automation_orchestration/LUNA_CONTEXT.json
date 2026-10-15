@@ -4,7 +4,12 @@
   "items": [
     {
       "cluster_id": null,
-      "existing_remediation": null,
+      "existing_remediation": {
+        "finding": "LATEST_RUN_FAILED",
+        "route": "OBSERVE",
+        "signature": "de75e01cec1253a0a7a5",
+        "state": "OBSERVED"
+      },
       "failure_streak": 1,
       "findings": [
         "LATEST_RUN_FAILED"
@@ -22,6 +27,6 @@
       "writer_group": "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
     }
   ],
-  "plan_fingerprint": "988e798eb90efd129f6e10022da3b6da47dc2e04fae9ba657a391839adcd1640",
-  "source_health_generated_at_utc": "2026-10-15T08:28:15.384382Z"
+  "plan_fingerprint": "5414c6e11a832fa5204a3c3acad40c4d438388f9d7442918d138f2fe0e85f049",
+  "source_health_generated_at_utc": "2026-10-15T19:17:27.950040Z"
 }
