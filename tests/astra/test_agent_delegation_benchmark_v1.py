@@ -13,6 +13,7 @@ H = lambda k: format(k, '064x')
 FIXTURES = {
     'question.txt': b'Frozen Task 2 question; demonstration only\n',
     'evidence.txt': b'Frozen synthetic public evidence; not real source\n',
+    'rubric.txt': b'Frozen shared scoring rubric: 10 predeclared checks; demo only\n',
     'exec-solo.json': b'{"arm":"SOLO", "demo":true}\n',
     'exec-delegated.json': b'{"arm":"DELEGATED", "demo":true}\n',
     'verify-solo.json': b'{"verified":"SOLO", "demo":true}\n',
@@ -37,6 +38,7 @@ def make_case(evidence_class='PUBLIC_IMMUTABLE_RECEIPT'):
                 registered_at_utc='2026-10-15T08:00:00Z', task_family='TASK2_PIT_SOURCE_REVIEW',
                 cases=[dict(case_id='test-case', frozen_question_sha256=SHA('question.txt'), frozen_question_path='question.txt',
                             evidence_sha256=SHA('evidence.txt'), evidence_path='evidence.txt',
+                            rubric_sha256=SHA('rubric.txt'), rubric_path='rubric.txt',
                             evidence_class=evidence_class,
                             variants=[variant('SOLO', 1), variant('DELEGATED', 2)])])
 
@@ -236,6 +238,39 @@ class Bench(unittest.TestCase):
         self.assertEqual(out['byte_consistent_pair_count'], 2)
         self.assertEqual(out['paired_eligible_count'], 0)
         self.assertTrue(all(row['metadata_eligible'] for row in out['rows']))
+
+    def test_frozen_rubric_is_byte_verified_for_both_arms(self):
+        out = self.check(make_case())
+        self.assertEqual(out['byte_consistent_pair_count'], 1)
+        self.assertTrue(out['rows'][0]['metadata_eligible'])
+
+    def test_missing_frozen_rubric_fails_closed(self):
+        (self.root / 'rubric.txt').unlink()
+        out = self.check(make_case())
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('FROZEN_RUBRIC:SOURCE_FILE_MISSING', out['rows'][0]['reasons'])
+
+    def test_frozen_rubric_hash_mismatch_fails_closed(self):
+        (self.root / 'rubric.txt').write_bytes(b'altered post hoc scoring criteria')
+        out = self.check(make_case())
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('FROZEN_RUBRIC:HASH_MISMATCH', out['rows'][0]['reasons'])
+
+    def test_rubric_cannot_be_used_as_execution_evidence(self):
+        obj = make_case()
+        case = obj['cases'][0]
+        solo = case['variants'][0]
+        solo['execution_receipt_path'] = case['rubric_path']
+        solo['execution_receipt_sha256'] = case['rubric_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_SOURCE_AS_RECEIPT_DIGEST:FROZEN_RUBRIC_AS_EXECUTION_SOLO', out['rows'][0]['reasons'])
+
+    def test_missing_rubric_fields_rejected_by_schema(self):
+        obj = make_case()
+        del obj['cases'][0]['rubric_sha256']
+        with self.assertRaises(bench.ContractError):
+            self.check(obj)
 
     def test_frozen_question_cannot_be_solo_execution_receipt(self):
         obj = make_case()
