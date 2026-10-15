@@ -166,9 +166,9 @@ function playRangeComparison() {
   rangeRevealTimers.push(setTimeout(()=>{
     setRangeRevealPhase('score');
     revealActualThrough(6);
-    setText('cn-replay-day',english
-    ?'Observed week · all seven verified daily closes'
-    :'Faktisk uge · alle syv verificerede dagslukninger');
+    setText('cn-replay-day',currentLanguage()==='en'
+      ?'Observed week · all seven verified daily closes'
+      :'Faktisk uge · alle syv verificerede dagslukninger');
   },2350));
 }
 
