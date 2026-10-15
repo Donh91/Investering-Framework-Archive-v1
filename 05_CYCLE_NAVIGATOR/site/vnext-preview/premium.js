@@ -130,7 +130,7 @@ function setRangeRevealPhase(phase) {
 function revealActualThrough(dayIndex) {
   const clip = $('cn-path-actual-clip-rect');
   if (!clip) return;
-  const left=76, right=728;
+  const left=87, right=706;
   const width=dayIndex<0?0:(right-left)*(Math.min(6,dayIndex)/6)+24;
   clip.setAttribute('width',String(width));
   if (dayIndex < 0) setText('cn-replay-day','01 · Frosne intervalvinduer');
