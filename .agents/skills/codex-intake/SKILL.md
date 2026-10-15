@@ -69,6 +69,14 @@ Do not invent new candidate schema fields merely to express a diagnosis. Use the
 
 If evidence is incomplete, route to `NEEDS_MORE_EVIDENCE`. If authority is too broad, reject the Codex route and escalate to framework owner.
 
+## Failure-contract and adversarial-test requirement (2026-10-16)
+
+This requirement applies inside the existing candidate schema; do not invent another task format or engine. Before changing consequential code, freeze one bounded failing example plus a **failure matrix** recording the principal invariants that an adversary, upstream producer or corrupted file could break. Write a negative test for each relevant critical safety invariant *before* the implementation. Useful patterns include corrupting all consequential frozen-state fields one at a time, using missing/stale/out-of-order evidence, reusing execution receipts as independent verification, normalizing identity aliases, contradicting an accepted status in a model-produced string, removing a cost lane guard while the global budget remains, and submitting oversized batches. Include a positive control for a legitimately safe case.
+
+Prove each high-risk negative test is sensitive: remove/mutate the relevant guard or supply its violating input and show that the test fails. A stub that merely returns `subprocess.CompletedProcess([], 0)` does not prove the invoked command includes the required per-lane cap or reserves budget correctly. Use explicit command/argument assertions and error/no-payment controls. Reject unrelated test expansion and duplicate validator logic; reuse the existing domain owner.
+
+Before *any* autonomously integrated PR: current SHA and diff, all required CI SUCCESS, latest Codex review request/completion event on that SHA, no newer pending review, no unresolved P0/P1/P2 findings, and exact current domain/governance authorization. `COMMENTED` is not a formal `APPROVED`; a favorable review followed by a later still-running review is `REVIEW_IN_PROGRESS`. A head change resets finality. No agent may approve its own code or imply its own review is independent. Then verify exact `main` blob and relevant natural post-fix evidence; otherwise remain `POST_FIX_OBSERVATION` or blocked.
+
 ## Root-cause discipline before readiness
 
 A reproducible symptom is necessary but not always sufficient for a safe remediation candidate.
