@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib.util
+import inspect
 import json
 import unittest
 from pathlib import Path
@@ -41,6 +42,25 @@ class ReviewFinalityTests(unittest.TestCase):
         self.assertEqual(result["status"], "FINAL_TECHNICAL_REVIEW")
         self.assertTrue(result["technical_review_accepted"])
         self.assertTrue(result["not_formal_github_approved"])
+
+    def test_review_race_negative_control_detects_mutated_missing_guard(self):
+        # Remove the consequence of the actual pending-review guard in an
+        # isolated copy of the function. The same negative acceptance test
+        # MUST fail against the mutant rather than merely pass on good code.
+        source = inspect.getsource(gate.decision)
+        original = 'if not completed or not positive:\\n            return fail("REVIEW_IN_PROGRESS_OR_UNVERIFIED")'
+        bad_guard = ('if not completed or not positive:\\n'
+                     '            return {"status": "FINAL_TECHNICAL_REVIEW", "technical_review_accepted": True}')
+        self.assertIn(original, source)
+        env = dict(vars(gate))
+        exec(compile(source.replace(original, bad_guard), "<mutated-review-finality>", "exec"), env)
+        latest_request = request("2026-10-15T22:30:00Z")
+        earlier = [request("2026-10-15T22:27:00Z"),
+                   summary("2026-10-15T22:27:30Z"),
+                   positive("2026-10-15T22:28:00Z"), latest_request]
+        self.assertFalse(gate.decision(HEAD, earlier, [], [])["technical_review_accepted"])
+        with self.assertRaises(AssertionError):
+            self.assertFalse(env["decision"](HEAD, earlier, [], [])["technical_review_accepted"])
 
     def test_review_requested_after_positive_must_remain_pending(self):
         rows = [request("2026-10-15T22:27:00Z"),
