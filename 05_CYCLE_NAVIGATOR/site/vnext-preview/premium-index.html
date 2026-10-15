@@ -41,10 +41,6 @@
         <article class="hero-main" aria-labelledby="overview-title">
           <div class="hero-context"><span>OFFICIELT MARKEDSBILLEDE</span><span id="hero-horizon">NÆSTE 12 TIMER</span></div>
           <h1 class="hero-title" id="overview-title">Læs <em>skiftet.</em></h1>
-          <div class="hero-key-metrics">
-            <div class="hero-key-signal"><span class="metric-label">MARKEDSRETNING · 12 TIMER</span><strong id="hero-now" class="hero-direction" aria-live="polite">↗ BULLISH · 12T</strong></div>
-            <div class="hero-action-line"><span class="metric-label">OFFICIEL HANDLING</span><strong id="hero-action-summary" aria-live="polite">HOLD / AFVENT</strong></div>
-          </div>
           <p class="hero-subtitle" id="hero-deck">BTC og ETH steg i den seneste officielle observation. Den bredere kapitalrotation er dog ikke bekræftet.</p>
           
           <section class="cn-instrument" aria-label="Markedsbarometer, officiel handling og markedsretning er separate signaler">
@@ -79,6 +75,24 @@
               <div><span>RETNING · 12 TIMER</span><strong id="cn-gauge-direction">Ikke verificeret</strong></div>
             </div>
             <p class="cn-instrument-caveat">Nålen gengiver kun en kildebekræftet handling. Bull/Bear og BUY/SELL beregnes ikke ud fra grafikken.</p>
+          </section>
+          <div class="hero-key-metrics cn-overview-posture">
+            <div class="hero-key-signal"><span class="metric-label">RETNING · 12 TIMER</span><strong id="hero-now" class="hero-direction" aria-live="polite">↗ BULLISH · 12T</strong></div>
+            <div class="hero-action-line"><span class="metric-label">OFFICIEL HANDLING · NU</span><strong id="hero-action-summary" aria-live="polite">HOLD / AFVENT</strong></div>
+          </div>
+          <section class="cn-overview-decision" aria-label="Officielle tidshorisonter og markedssegmenter">
+            <div class="cn-overview-heading"><span>VÆLG TIDSHORISONT</span><span>ARKIVERET OFFICIELT KOMPAS</span></div>
+            <div class="cn-overview-horizons" role="group" aria-label="Vælg officiel horisont">
+              <button type="button" data-overview-horizon="NEXT_12H" aria-pressed="false">12T</button>
+              <button type="button" data-overview-horizon="NEXT_1_3D" aria-pressed="false">1–3D</button>
+              <button type="button" data-overview-horizon="NEXT_5_7D" aria-pressed="true" class="is-selected">5–7D</button>
+              <button type="button" data-overview-horizon="NEXT_2_3W" aria-pressed="false">2–3U</button>
+              <button type="button" data-overview-horizon="CYCLE_ALTCOINS_3_8W" aria-pressed="false">4–8U</button>
+            </div>
+            <div class="cn-overview-horizon-readout" aria-live="polite"><strong id="cn-overview-horizon-state">Afventer verificeret kilde</strong><span id="cn-overview-horizon-action">—</span></div>
+            <div class="cn-overview-heading"><span>MARKEDSSEGMENTER</span><span>STATUS · HANDLING</span></div>
+            <div class="cn-overview-tablewrap"><table class="cn-overview-market-table" aria-label="Officielle beslutninger for syv aktivklasser"><thead><tr><th>Aktivklasse</th><th>Status</th><th>Handling</th></tr></thead><tbody id="cn-overview-market-body"></tbody></table></div>
+            <button type="button" class="cn-overview-more" data-go="kompas">Åbn hele Kompas med evidens og risiko ↗</button>
           </section>
           <div class="hero-detail-list">
             <div class="hero-detail"><span>NÆSTE 1–3 DAGE</span><strong id="hero-forward">MIXED · 1–3D</strong></div>
@@ -317,6 +331,18 @@
         <div class="edge-accountability"><span class="edge-accountability-dot"></span><strong>STATUS · METODE UNDER INDFØRELSE</strong><span id="edge-era-status">Ingen nye W42-prognoser eller resultater er endnu publiceret og uafhængigt forseglede. Data vises først, når de faktisk findes.</span></div>
         <div class="edge-real-example"><div><span>GÅ TIL ET VIRKELIGT EKSEMPEL</span><strong>Se hvordan en frossen prognose møder virkeligheden.</strong><small>CN #27 · W40 · Historisk Price Range-resultat, ikke en ny v2-score</small></div><button type="button" id="edge-open-comparison">Se animeret sammenligning <span>↗</span></button></div>
       </section>
+      <section class="cn-results-evidence" aria-label="Dokumenteret historisk BTC og ETH prognose sammenligning">
+        <div class="cn-results-evidence-head"><span>HISTORISK EKSEMPEL · CN #27, UGE 40, 2026</span><p>Syv faktiske dagslukninger og tre oprindelige frosne prognosevinduer. Eksemplet er ikke en score for den nye W42-serie.</p></div>
+      <div class="section-heading compact-heading"><div><span class="section-index">ARCHIVED EXAMPLE / FROZEN → REALITY</span><h2>Hvad forudsagde vi - og hvad skete der?</h2></div><span class="section-aside">CN #27 · W40</span></div>
+      <div class="range-compare-panel" id="cn-source-chart">
+        <div class="chart-top"><div class="asset-toggle" role="group" aria-label="Vælg aktiv"><button type="button" class="selected" data-asset="BTC" aria-pressed="true">BTC</button><button type="button" data-asset="ETH" aria-pressed="false">ETH</button></div><div class="chart-legend"><span><i class="legend-dot forecast"></i> FROSSET</span><span><i class="legend-dot observed"></i> OBSERVERET</span></div></div>
+        <div class="range-motion-bar"><div class="range-motion-steps" aria-label="Sammenligningsanimationens stadier"><span data-motion-step="frozen">01 · Frosset prognose</span><span data-motion-step="actual">02 · Virkeligheden</span><span data-motion-step="score">03 · Score</span></div><button type="button" class="range-replay" id="range-replay" aria-label="Afspil prisinterval sammenligning igen">↻ <span>Afspil ugen</span></button></div>
+        <div class="range-visualization" id="range-visualization" aria-label="Kildeverificeret ugentlig BTC ETH prisgraf, originale tre prognosevinduer og faktiske daglige priser"></div>
+        <div id="cn-range-official-scorecards" class="cn-range-scorecards" aria-label="Originale scoreperioder"></div>
+        <div class="range-summary"><span>Frosset forecast er kun publiceret for tre vinduer. Kun den faktiske daglige slutkurs tegnes som flydende kurve, aldrig en opdigtet forecastprissti.</span><span id="range-method">70% containment + 30% Jaccard</span></div>
+      </div>
+
+      </section>
       <section class="edge-lifecycle">
         <div class="section-heading compact-heading"><div><span class="section-index">01 / FROZEN → REALITY</span><h2>Udsagn, der skal stå deres prøve.</h2></div><span class="section-aside">WEEK 42 → NEXT 8 WEEKS</span></div>
         <div class="edge-checkpoint-panel">
@@ -351,14 +377,6 @@
 <div class="proof-summary-grid">
         <article class="proof-number"><span>PRICE RANGE PRECISION / CN #27</span><div class="proof-num">82<span>,05</span><sup>%</sup></div><p>Seneste afsluttede offentlige uge · 2026-W40</p></article>
         <article class="proof-measures"><span>DETALJER · PUBLIC SCORECARD</span><div class="proof-measures-row"><span>Bitcoin</span><strong>82,27 %</strong></div><div class="proof-measures-row"><span>Ethereum</span><strong>81,82 %</strong></div><div class="proof-measures-row"><span>Datadækning</span><strong>168 timer</strong></div><div class="proof-measures-row"><span>Market / Structure</span><strong>Ikke scoret</strong></div></article>
-      </div>
-
-      <div class="section-heading compact-heading"><div><span class="section-index">01 / FORECAST VS REALITY</span><h2>Hvad sagde vi - og hvad skete der?</h2></div><span class="section-aside">CN #27 · W40</span></div>
-      <div class="range-compare-panel">
-        <div class="chart-top"><div class="asset-toggle" role="group" aria-label="Vælg aktiv"><button type="button" class="selected" data-asset="BTC" aria-pressed="true">BTC</button><button type="button" data-asset="ETH" aria-pressed="false">ETH</button></div><div class="chart-legend"><span><i class="legend-dot forecast"></i> FROSSET</span><span><i class="legend-dot observed"></i> OBSERVERET</span></div></div>
-        <div class="range-motion-bar"><div class="range-motion-steps" aria-label="Sammenligningsanimationens stadier"><span data-motion-step="frozen">01 · Frosset prognose</span><span data-motion-step="actual">02 · Virkeligheden</span><span data-motion-step="score">03 · Score</span></div><button type="button" class="range-replay" id="range-replay" aria-label="Afspil prisinterval sammenligning igen">↻ <span>Afspil ugen</span></button></div>
-        <div class="range-visualization" id="range-visualization" aria-label="Kildeverificeret ugentlig BTC ETH prisgraf, originale tre prognosevinduer og faktiske daglige priser"></div>
-        <div class="range-summary"><span>Frosset forecast er kun publiceret for tre vinduer. Kun den faktiske daglige slutkurs tegnes som flydende kurve, aldrig en opdigtet forecastprissti.</span><span id="range-method">70% containment + 30% Jaccard</span></div>
       </div>
 
       <div class="section-heading compact-heading"><div><span class="section-index">02 / VERIFIED METHOD, EXPLICIT ERA</span><h2>Historisk scorearkiv</h2></div><span class="section-aside">27 AFSLUTTEDE CN</span></div>
