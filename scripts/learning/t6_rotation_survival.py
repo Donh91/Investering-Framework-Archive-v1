@@ -127,6 +127,43 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
     level = registered_level(cadence)
     prior = prior_ethbtc(packet, current)
     packet_hash = sha(packet)
+    obs_id = hashlib.sha256(f"{packet_hash}|{observed_at}".encode()).hexdigest()[:20]
+    observation_path = root / "observations" / f"{observed_at[:10]}_{obs_id}.json"
+
+    # An already-frozen source observation must be an idempotent NOOP.  A rerun
+    # may see the *later* state (e.g., after the observation closed a sequence),
+    # so reconstructing the old event from current STATE would corrupt history.
+    # We only reuse the existing exact immutable object, never silently accept
+    # a different packet, cadence level or missing/stale LATEST pointer.
+    if observation_path.exists():
+        original = read_json(observation_path)
+        axes = snapshot_axes(packet)
+        expected_source_fields = {
+            "contract": OBS_CONTRACT,
+            "authority": AUTHORITY,
+            "observed_at_utc": observed_at,
+            "source_packet_sha256": packet_hash,
+            "registered_ethbtc_level_read_only": level,
+            "current_ethbtc": current,
+            "prior_ethbtc": prior,
+            "first_cross_detected": prior is not None and prior < level <= current,
+            "axes": axes,
+            "missing_axes": [name for name, row in axes.items() if not row["available"]],
+            "retrospective_creation": False,
+        }
+        if any(original.get(key) != value for key, value in expected_source_fields.items()):
+            raise ValueError(f"immutable_conflict:{observation_path}")
+        latest_path = root / "LATEST.json"
+        if not latest_path.exists():
+            raise ValueError("t6_replay_latest_pointer_missing")
+        latest = read_json(latest_path)
+        if (latest.get("contract") != "ROTATION_SURVIVAL_LATEST_v1"
+                or latest.get("observation_path") != observation_path.as_posix()
+                or latest.get("observation_sha256") != sha(original)
+                or latest.get("observed_at_utc") != observed_at):
+            raise ValueError("t6_replay_latest_pointer_mismatch")
+        return latest
+
     state_path = root / "STATE.json"
     state = read_json(state_path) if state_path.exists() else {"contract": STATE_CONTRACT, "active_sequence_id": None}
     active = state.get("active_sequence_id")
@@ -186,8 +223,7 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
         observation["event"] = "NO_ELIGIBLE_FIRST_CROSS"
         observation["right_censored"] = True
 
-    obs_id = hashlib.sha256(f"{packet_hash}|{observed_at}".encode()).hexdigest()[:20]
-    write_immutable(root / "observations" / f"{observed_at[:10]}_{obs_id}.json", observation)
+    write_immutable(observation_path, observation)
     latest = {"contract": "ROTATION_SURVIVAL_LATEST_v1", "observed_at_utc": observed_at, "observation_path": str((root / "observations" / f"{observed_at[:10]}_{obs_id}.json").as_posix()), "observation_sha256": sha(observation), "event": observation["event"], "active_sequence_id": state.get("active_sequence_id"), "authority": AUTHORITY}
     (root / "LATEST.json").write_bytes(canon(latest))
     return latest
