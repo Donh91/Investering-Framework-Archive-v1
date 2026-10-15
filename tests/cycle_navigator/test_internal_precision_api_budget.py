@@ -68,6 +68,50 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
     def receipt(self):
         return cn._cn_cost_receipt_path(self.root, self.claims)
 
+    def test_oversized_first_claim_does_not_starve_later_due_claim(self):
+        claims = [{"claim_id": "big"}, {"claim_id": "small"}]
+        accepted = [{"claim_id": "small", "status": "SUPPORTED", "score": 100,
+                     "evidence": "synthetic", "self_critique": "synthetic"}]
+        with patch.object(cn, "evidence_for_long_claims", return_value=[{"status": "AVAILABLE"}]), \
+             patch.object(cn, "score_long_horizon_via_api", side_effect=[
+                 RuntimeError("CN_API_CONTEXT_SIZE_OUT_OF_BOUNDS"), accepted,
+             ]) as paid:
+            scores, blocked = cn.score_matured_claims_bounded(self.root, claims, "gpt-5.6-terra", 5000)
+            self.assertEqual(scores, accepted)
+            self.assertEqual(blocked, ["big"])
+            self.assertEqual(paid.call_count, 2)
+            self.assertEqual(paid.call_args_list[0].args[1], [claims[0]])
+            self.assertEqual(paid.call_args_list[1].args[1], [claims[1]])
+
+    def test_paid_or_ambiguous_failure_stops_before_following_claim(self):
+        claims = [{"claim_id": "first"}, {"claim_id": "second"}]
+        with patch.object(cn, "evidence_for_long_claims", return_value=[{"status": "AVAILABLE"}]), \
+             patch.object(cn, "score_long_horizon_via_api", side_effect=RuntimeError("CN_API_COST_USAGE_UNKNOWN")) as paid:
+            scores, blocked = cn.score_matured_claims_bounded(self.root, claims, "gpt-5.6-terra", 5000)
+            self.assertEqual((scores, blocked), ([], []))
+            paid.assert_called_once()
+
+    def test_one_successful_paid_call_maximum_per_run(self):
+        claims = [{"claim_id": "a"}, {"claim_id": "b"}]
+        result = [{"claim_id": "a", "status": "MIXED", "score": 50,
+                   "evidence": "synthetic", "self_critique": "synthetic"}]
+        with patch.object(cn, "evidence_for_long_claims", return_value=[{"status": "AVAILABLE"}]), \
+             patch.object(cn, "score_long_horizon_via_api", return_value=result) as paid:
+            scores, blocked = cn.score_matured_claims_bounded(self.root, claims, "gpt-5.6-terra", 5000)
+            self.assertEqual(scores, result)
+            self.assertFalse(blocked)
+            paid.assert_called_once()
+
+    def test_missing_final_week_is_not_evaluable_without_payment(self):
+        claim = {"claim_id": "missing"}
+        with patch.object(cn, "evidence_for_long_claims", return_value=[{"status": "MISSING"}]), \
+             patch.object(cn, "score_long_horizon_via_api") as paid:
+            scores, blocked = cn.score_matured_claims_bounded(self.root, [claim], "gpt-5.6-terra", 5000)
+            self.assertEqual(scores[0]["status"], "NOT_EVALUABLE")
+            self.assertIsNone(scores[0]["score"])
+            self.assertFalse(blocked)
+            paid.assert_not_called()
+
     def test_no_due_claims_is_strictly_no_spend(self):
         with patch("urllib.request.urlopen") as http:
             self.assertEqual(cn.score_long_horizon_via_api(
