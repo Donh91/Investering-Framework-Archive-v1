@@ -16,7 +16,7 @@ from typing import Any
 
 HASH_RE = re.compile(r"^[a-f0-9]{64}$")
 MODES = ("SOLO", "DELEGATED")
-CASE_KEYS = {"case_id", "frozen_question_sha256", "frozen_question_path", "evidence_sha256", "evidence_path", "evidence_class", "variants"}
+CASE_KEYS = {"case_id", "frozen_question_sha256", "frozen_question_path", "evidence_sha256", "evidence_path", "rubric_sha256", "rubric_path", "evidence_class", "variants"}
 RUN_KEYS = {"mode", "run_id", "executor_id", "status", "execution_receipt_sha256", "execution_receipt_path", "verification", "usage", "outcome", "delegation"}
 USAGE_KEYS = {"input_tokens", "output_tokens", "cost_usd", "wallclock_ms"}
 VERIFY_KEYS = {"method", "verifier_id", "status", "verification_receipt_sha256", "verification_receipt_path"}
@@ -197,8 +197,10 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
         seen.add(cid)
         _sha(c["frozen_question_sha256"], cid + ".frozen_question_sha256")
         _sha(c["evidence_sha256"], cid + ".evidence_sha256")
+        _sha(c["rubric_sha256"], cid + ".rubric_sha256")
         _str(c["frozen_question_path"], cid + ".frozen_question_path")
         _str(c["evidence_path"], cid + ".evidence_path")
+        _str(c["rubric_path"], cid + ".rubric_path")
         if c["evidence_class"] not in {"PUBLIC_IMMUTABLE_RECEIPT", "RESTRICTED_HASH_BINDING", "SYNTHETIC_FIXTURE"}:
             raise ContractError(f"{cid}: evidence_class must be explicit")
         if not isinstance(c["variants"], list) or len(c["variants"]) != 2:
@@ -214,9 +216,11 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
         reason = []
         reason += _readback(receipt_root, c["frozen_question_path"], c["frozen_question_sha256"], "FROZEN_QUESTION")
         reason += _readback(receipt_root, c["evidence_path"], c["evidence_sha256"], "EVIDENCE_BUNDLE")
+        reason += _readback(receipt_root, c["rubric_path"], c["rubric_sha256"], "FROZEN_RUBRIC")
         for source_type, source_path, source_sha in [
             ("FROZEN_QUESTION", c["frozen_question_path"], c["frozen_question_sha256"]),
             ("EVIDENCE_BUNDLE", c["evidence_path"], c["evidence_sha256"]),
+            ("FROZEN_RUBRIC", c["rubric_path"], c["rubric_sha256"]),
         ]:
             if source_sha in seen_digest and seen_digest[source_sha] != cid:
                 reason.append(f"REUSED_PRIOR_RECEIPT_AS_SOURCE_DIGEST:{source_type}")
@@ -261,6 +265,7 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
         source_artifacts = [
             ("FROZEN_QUESTION", c["frozen_question_path"], c["frozen_question_sha256"]),
             ("EVIDENCE_BUNDLE", c["evidence_path"], c["evidence_sha256"]),
+            ("FROZEN_RUBRIC", c["rubric_path"], c["rubric_sha256"]),
         ]
         for source_type, source_path, source_hash in source_artifacts:
             for mode in MODES:
