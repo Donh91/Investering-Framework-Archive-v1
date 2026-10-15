@@ -9,7 +9,7 @@ Authority: Non-core, non-execution, non-canonical until separately promoted thro
 
 This folder is the controlled intake and research area for theories, architectures, repositories, datasets, strategy ideas and agent patterns that may become useful for future automated AI trading.
 
-The near-term objective is collection, deduplication and disciplined hypothesis formation **plus execution of falsifiable research**. The long-term objective is to give Astra a clean body of evidence to audit, reproduce, reject, combine or promote.
+The near-term objective is collection, deduplication and disciplined hypothesis formation **plus execution of falsifiable research**. The long-term objective is to give the existing framework's qualified GPT-6 research and independent verification roles a clean body of evidence to audit, reproduce, reject, combine or propose for separate promotion.
 
 This folder must not create a parallel market framework. It must reuse existing Investering Framework state, Research Lab governance, Forecast/Sequence accountability, data provenance standards and existing source contracts wherever possible.
 
@@ -73,10 +73,10 @@ Every candidate must be evaluated against simple baselines and realistic fees, s
 - `THEORY_LEDGER.md` - explicit hypotheses worth testing.
 - `GOVERNANCE.md` - safety, evidence and promotion rules.
 - `INTAKE_TEMPLATE.md` - repeatable template for future links, repos and ideas.
-- `ASTRA_HANDOVER.md` - instructions for Astra when it takes ownership of the heavy research phase.
-- `EXTERNAL_ARCHITECTURE_AUDIT_2026-09-12__SECOND_PASS_DECISION.md` - framework-native decision after the independent Cowork audit; current prioritization authority for AUTO_TRADING research ordering.
+- `ASTRA_HANDOVER.md` - historical Astra-named handover; current Research Lab owner and qualified available execution route apply, with no new activation authority.
+- `EXTERNAL_ARCHITECTURE_AUDIT_2026-09-12__SECOND_PASS_DECISION.md` - historical September second-pass research decision; preserve scientific constraints and valid evidence, but use current main, canonical owners and the refreshed Discovery & Validation crosswalk for the present order.
 - `ASTRA_CHAIN_NATIVE_RESEARCH_COMPILER_V1.md` - Astra-era extension of the chain-specific research-agent idea into context packs, specialist blind-opposition passes, visibility/capacity research, failure-aware retrieval and prospective A/B evaluation.
-- `ASTRA_DISCOVERY_VALIDATION_RESEARCH_QUEUE.md` - research queue for independent grading, machine-checkable kill switches, search-bias controls, pre-reasoning cost gates, bounded parallelism and future Agents API execution-lane benchmarking; subject to the P0 ordering in the second-pass decision above.
+- `ASTRA_DISCOVERY_VALIDATION_RESEARCH_QUEUE.md` - current model-neutral research crosswalk (historical path retained), with bounded GPT-6 comparison proposals under actual source/PIT, review and budget gates; historical September ordering does not override this current owner map.
 - `MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md` - governed point-in-time research contract for small/microcap assets before any strategy layer evaluates them.
 - `MMT_V3_RESEARCH_QUEUE.md` - microstructure/order-flow + typed-scripting research queue, with duplicate-data audit and free/live-first acquisition policy.
 - `NANSEN_MCP_RESEARCH_QUEUE.md` - read-only Nansen evaluation queue for wallet/entity labels, Smart Money/onchain features, duplicate-coverage control, point-in-time label leakage and API-credit efficiency.
