@@ -781,7 +781,7 @@ function renderRangeChart() {
   for(let val=yMin;val<=yMax;val+=step){
     const y=Y(val);
     svg.append(chartElement('line',{x1:left-8,x2:right,y1:y,y2:y,class:'cn-chart-grid'}));
-    svg.append(chartElement('text',{x:left-14,y:y+4,'text-anchor':'end',class:'cn-chart-tick'},'$'+Math.round(val).toLocaleString('en-US')));
+    svg.append(chartElement('text',{x:left-14,y:y+4,'text-anchor':'end',class:'cn-chart-tick'},'$'+Math.round(val).toLocaleString(currentLanguage()==='en'?'en-US':'da-DK')));
   }
   // Forecast has ONLY three originally frozen 2/2/3-day windows. The
   // smooth corridor interpolates between their numeric boundaries for
