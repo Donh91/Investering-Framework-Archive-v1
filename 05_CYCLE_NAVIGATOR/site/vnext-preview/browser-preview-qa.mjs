@@ -74,6 +74,8 @@ try{
     "forecastNote:document.querySelector('.cn-path-week .range-summary')?.textContent?.trim(),",
     "forecastLegend:document.querySelector('.cn-path-week .cn-legend-forecast')?.textContent?.trim(),",
     "heading:document.querySelector('#cn-path-week-title')?.textContent?.trim(),",
+    "mondayClose:document.querySelector('#cn-path-daily-table tbody tr:first-child td:last-child')?.textContent?.trim(),",
+    "freezeDisclosure:document.querySelector('#cn-path-freeze-status')?.textContent?.trim(),",
     "weekdays:[...svg.querySelectorAll('.cn-chart-weekday')].map(x=>x.textContent),",
     "revealPhase:document.querySelector('.range-compare-panel')?.dataset.revealPhase,",
     "paths:p.map(x=>Boolean(x&&x.getAttribute('d')?.includes(' C ')&&",
@@ -105,6 +107,10 @@ try{
         assert.ok(proof.inner===width&&proof.scrollWidth<=width+1&&
           proof.route==='#cn-path-week'&&proof.lang===lang&&proof.asset===asset&&
           proof.hasSource&&proof.paths.every(Boolean)&&proof.revealPhase==='score'&&
+          proof.mondayClose===(asset==='BTC'
+            ?(lang==='en'?'$83,500.01':'$83.500,01')
+            :(lang==='en'?'$2,688.71':'$2.688,71'))&&
+          proof.freezeDisclosure?.startsWith(lang==='en'?'FREEZE':'FRYSNING')&&
           (lang==='en'?
             proof.forecastNote?.includes('derived midpoint line')&&
             proof.forecastNote?.includes('three frozen price ranges')&&
