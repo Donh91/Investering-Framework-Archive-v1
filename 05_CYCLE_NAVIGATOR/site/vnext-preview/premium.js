@@ -697,14 +697,23 @@ function chartElement(tag, attributes = {}, content) {
 // observed DAILY CLOSES; it never claims to reproduce intraday ticks.
 function monotoneClosePath(points) {
   if (points.length < 2) return '';
-  const dy = points.slice(1).map((p,i) => points[i+1].y-p.y);
-  const slope = points.map((p,i) => i===0 ? dy[0] : i===points.length-1 ? dy[dy.length-1] :
-    dy[i-1]*dy[i]<=0 ? 0 : 2*dy[i-1]*dy[i]/(dy[i-1]+dy[i]));
-  return points.reduce((str,p,i) => {
-    if (!i) return 'M '+p.x.toFixed(2)+' '+p.y.toFixed(2);
-    const before=points[i-1],dx=(p.x-before.x)/3;
-    return str+' C '+(before.x+dx).toFixed(2)+' '+(before.y+slope[i-1]/3).toFixed(2)+
-      ' '+(p.x-dx).toFixed(2)+' '+(p.y-slope[i]/3).toFixed(2)+
+  if (points.some((p,i) => !Number.isFinite(p.x) || !Number.isFinite(p.y) ||
+    (i > 0 && p.x <= points[i-1].x))) return '';
+  // Fritsch-Carlson / PCHIP shape-preserving tangents for UNEVEN x-spacings.
+  // Prevent spurious peaks when the frozen source has only 3 window centers.
+  const h=points.slice(1).map((p,i)=>p.x-points[i].x);
+  const d=h.map((width,i)=>(points[i+1].y-points[i].y)/width);
+  const m=points.map((_,i)=>{
+    if (i===0 || i===points.length-1) return 0;
+    if (d[i-1]===0 || d[i]===0 || d[i-1]*d[i]<0) return 0;
+    const w1=2*h[i]+h[i-1],w2=h[i]+2*h[i-1];
+    return (w1+w2)/(w1/d[i-1]+w2/d[i]);
+  });
+  return points.reduce((str,p,i)=>{
+    if(!i) return 'M '+p.x.toFixed(2)+' '+p.y.toFixed(2);
+    const before=points[i-1],dx=h[i-1]/3;
+    return str+' C '+(before.x+dx).toFixed(2)+' '+(before.y+m[i-1]*dx).toFixed(2)+
+      ' '+(p.x-dx).toFixed(2)+' '+(p.y-m[i]*dx).toFixed(2)+
       ' '+p.x.toFixed(2)+' '+p.y.toFixed(2);
   },'');
 }
