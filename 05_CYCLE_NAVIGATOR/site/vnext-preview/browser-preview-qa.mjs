@@ -335,8 +335,13 @@ try{
   assert.ok(restored.hidden&&restored.focus==='source-button'&&restored.expanded==='false',
     'Escape must close source dialog and restore focus '+JSON.stringify(restored));
   const nativeSummary="document.querySelector('#cn-path-week .cn-path-range-details summary')";
-  await evaluate(nativeSummary+".focus()");
   for(const expected of [true,false]){
+    // Once a disclosure opens, the browser can move its focus to the
+    // newly displayed subtree. Give each actual key activation a focused
+    // native summary, just as a keyboard user navigating back to it would.
+    await evaluate(nativeSummary+".focus()");
+    const focus=await evaluate("document.activeElement?.tagName");
+    assert.equal(focus,'SUMMARY','Native summary must be focusable');
     await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},sessionId);
     await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},sessionId);
     // Native details toggle as a queued activation default action; CDP's
