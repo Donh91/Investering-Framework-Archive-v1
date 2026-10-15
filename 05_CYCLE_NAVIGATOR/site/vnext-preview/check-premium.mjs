@@ -431,9 +431,7 @@ const replayEvents=[],replayTimers=[];
 let replayLanguage='da';
 const runReplay=new Function(
   'completeDailyHistory','data','selectedAsset','cancelRangeReveal',
-  ', fail-closed fixtures, bilingual copy, score semantics, modal keyboard and JavaScript syntax');
-console.log('Reminder: this is static smoke/contract QA. It does not certify iPhone visual quality or ex-ante cryptographic score proof.');
-,'window','setRangeRevealPhase','revealActualThrough',
+  '$','window','setRangeRevealPhase','revealActualThrough',
   'rangeRevealTimers','setTimeout','setText','currentLanguage',
   replaySource+'; return playRangeComparison;'
 )(
@@ -445,7 +443,8 @@ console.log('Reminder: this is static smoke/contract QA. It does not certify iPh
 );
 for(const lang of ['da','en']){
   replayLanguage=lang;replayTimers.length=0;replayEvents.length=0;
-  runReplay();assert.equal(replayTimers.length,8,'seven days plus final completion');
+  runReplay();
+  assert.equal(replayTimers.length,8,'seven days plus final completion');
   for(const timer of [...replayTimers]) timer();
   assert.ok(replayEvents.includes('day:6'),'Sunday must be revealed');
   assert.ok(replayEvents.some(x=>x.includes(lang==='da'?'Faktisk uge':'Observed week')),
