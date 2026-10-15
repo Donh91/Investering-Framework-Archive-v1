@@ -393,14 +393,14 @@ def _cn_cost_receipt_path(repo: Path, claims: list[dict[str, Any]]) -> Path:
 
 
 
-def _reject_previously_attempted_claims(repo: Path, claims: list[dict[str, Any]]) -> None:
-    """Require no overlap with any earlier paid CN cohort, even if cohort membership changes."""
+def _previously_attempted_claim_ids(repo: Path) -> set[str]:
+    """Read paid-attempt claim IDs from trusted, durable CN receipts only."""
     root = repo / "research/api_agent/outputs/cn_internal_precision"
     if not root.exists():
-        return
+        return set()
     if not root.is_dir() or root.is_symlink():
         raise RuntimeError("CN_API_RECEIPT_ROOT_INVALID")
-    current = {str(item["claim_id"]) for item in claims}
+    attempted: set[str] = set()
     for path in sorted(root.glob("*/receipt.json")):
         if path.is_symlink() or path.parent.is_symlink():
             raise RuntimeError("CN_API_RECEIPT_PATH_INVALID")
@@ -416,8 +416,14 @@ def _reject_previously_attempted_claims(repo: Path, claims: list[dict[str, Any]]
         if (not isinstance(ids, list) or not ids or
                 any(not isinstance(v, str) or not v for v in ids) or len(ids) != len(set(ids))):
             raise RuntimeError("CN_API_PREVIOUS_RECEIPT_CLAIMS_INVALID")
-        if current.intersection(ids):
-            raise RuntimeError("CN_API_CLAIM_ALREADY_ATTEMPTED_OWNER_REVIEW_REQUIRED")
+        attempted.update(ids)
+    return attempted
+
+
+def _reject_previously_attempted_claims(repo: Path, claims: list[dict[str, Any]]) -> None:
+    current = {str(item["claim_id"]) for item in claims}
+    if current.intersection(_previously_attempted_claim_ids(repo)):
+        raise RuntimeError("CN_API_CLAIM_ALREADY_ATTEMPTED_OWNER_REVIEW_REQUIRED")
 
 
 def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidence: list[dict[str, Any]],
@@ -699,15 +705,25 @@ def main() -> None:
     long_scores: list[dict[str, Any]] = []
     mature_long_pending = 0
     if due_long:
-        ev = evidence_for_long_claims(repo, due_long)
-        if any(r.get("status") == "MISSING" for r in ev):
-            long_scores = [{"claim_id": c["claim_id"], "status": "NOT_EVALUABLE", "score": None, "evidence": "One or more required final Master Monday weekly evidence packages are missing.", "self_critique": "Long-horizon claim was preserved but cannot be scored without the full frozen horizon evidence."} for c in due_long]
-        else:
-            try:
-                long_scores = score_long_horizon_via_api(args.model, due_long, ev, args.max_output_tokens, repo=repo)
-            except (RuntimeError, json.JSONDecodeError, urllib.error.URLError):
-                mature_long_pending = len(due_long)
-                long_scores = []
+        # Previously attempted paid claims stay pending. Unlike a whole-cohort
+        # abort, fresh mature claims still advance through the ordinary guard.
+        try:
+            previously_attempted = _previously_attempted_claim_ids(repo)
+            fresh_due = [c for c in due_long if c["claim_id"] not in previously_attempted]
+        except RuntimeError as exc:
+            print(f"CN_LONG_HORIZON_COST_PROVENANCE_BLOCKED:{exc}", file=sys.stderr)
+            fresh_due = []
+        mature_long_pending = len(due_long) - len(fresh_due)
+        if fresh_due:
+            ev = evidence_for_long_claims(repo, fresh_due)
+            if any(r.get("status") == "MISSING" for r in ev):
+                long_scores = [{"claim_id": c["claim_id"], "status": "NOT_EVALUABLE", "score": None, "evidence": "One or more required final Master Monday weekly evidence packages are missing.", "self_critique": "Long-horizon claim was preserved but cannot be scored without the full frozen horizon evidence."} for c in fresh_due]
+            else:
+                try:
+                    long_scores = score_long_horizon_via_api(args.model, fresh_due, ev, args.max_output_tokens, repo=repo)
+                except (RuntimeError, json.JSONDecodeError, urllib.error.URLError):
+                    mature_long_pending = len(due_long)
+                    long_scores = []
         cby = {c["claim_id"]: c for c in due_long}
         for s in long_scores:
             c = cby[s["claim_id"]]
