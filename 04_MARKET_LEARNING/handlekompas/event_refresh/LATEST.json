@@ -6,7 +6,8 @@
     "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
   },
   "cause_codes": [
-    "MARKET_STATE_CHANGED"
+    "MARKET_STATE_CHANGED",
+    "SCHEDULED_FREEZE_MISSING"
   ],
   "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
   "cooldown_seconds": 10800,
@@ -44,16 +45,16 @@
   ],
   "current_market_state": {
     "action_permission": "HOLD_WAIT",
-    "btc_delta_pct": -0.1497338052098507,
-    "directional_state": "BEARISH",
-    "eth_delta_pct": -0.06362532122523579,
-    "eth_relative_state": "STRENGTHENING",
-    "ethbtc_delta_pct": 0.13518080432577406,
-    "market_observation_open_utc": "2026-10-15T00:00:00Z",
+    "btc_delta_pct": 0.3737356177860862,
+    "directional_state": "BULLISH",
+    "eth_delta_pct": 0.350272386789241,
+    "eth_relative_state": "FLAT",
+    "ethbtc_delta_pct": 0.0,
+    "market_observation_open_utc": "2026-10-15T06:00:00Z",
     "new_price_observation": true,
-    "predecessor_market_observation_open_utc": "2026-10-14T21:00:00Z",
-    "regime": "BEARISH",
-    "summary": "BTC and ETH are both declining over the latest governed comparison interval; this does not create sell authority."
+    "predecessor_market_observation_open_utc": "2026-10-15T05:00:00Z",
+    "regime": "BULLISH",
+    "summary": "BTC and ETH are both advancing over the latest governed comparison interval; action authority remains separate."
   },
   "current_protection_tracker": {
     "authority": {
@@ -93,26 +94,26 @@
     "reentry_state": "INACTIVE"
   },
   "dispatch": true,
-  "evaluated_at_utc": "2026-10-15T01:05:52Z",
+  "evaluated_at_utc": "2026-10-15T07:30:37Z",
   "heat_detail": {
-    "btc_return_24h_pct": -2.02464,
+    "btc_return_24h_pct": -2.60571,
     "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
-    "eth_return_24h_pct": -3.23469,
+    "eth_return_24h_pct": -5.30895,
     "existing_entry_temperature": "NORMAL",
-    "median_return_24h_pct": -2.03118
+    "median_return_24h_pct": -4.711565
   },
-  "heat_state": "NORMAL",
-  "last_request_age_seconds": 9722.0,
-  "last_requested_source_sha": "473f8ab798cf1efe92142f9837fbc987d63e32d8a5df3c1f44c224058895a373",
-  "latest_compass_source_packet_sha256": "473f8ab798cf1efe92142f9837fbc987d63e32d8a5df3c1f44c224058895a373",
+  "heat_state": "HOT_DOWNSIDE_REASSESSMENT",
+  "last_request_age_seconds": 23085.0,
+  "last_requested_source_sha": "00e05fe20c126b6a9a3ee435d4acac3108f965332cbdade07a6eb3079eed64e8",
+  "latest_compass_source_packet_sha256": "00e05fe20c126b6a9a3ee435d4acac3108f965332cbdade07a6eb3079eed64e8",
   "missing_freeze_observation_only": true,
-  "missing_scheduled_freeze": null,
-  "protective_bypass": true,
+  "missing_scheduled_freeze": "MORNING",
+  "protective_bypass": false,
   "reason": "MATERIAL_REASSESSMENT_REQUIRED",
   "request_retry_seconds": 1200,
   "scheduled_slot_proximity_seconds": 1800,
-  "seconds_to_next_scheduled_compass": 18668.0,
-  "source_packet_sha256": "00e05fe20c126b6a9a3ee435d4acac3108f965332cbdade07a6eb3079eed64e8",
+  "seconds_to_next_scheduled_compass": 38783.0,
+  "source_packet_sha256": "a596a68c45b8dd015e6454750ebd1585cdf2e329ccb376ee8cb984d9f2c0cefc",
   "suppressed_cause_codes": [],
   "upstream_refresh_required": false
 }
