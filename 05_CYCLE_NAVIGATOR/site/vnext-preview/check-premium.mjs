@@ -427,7 +427,7 @@ const replayStart=js.indexOf('function playRangeComparison() {');
 const replayEnd=js.indexOf('\nconst overviewHorizonKeys',replayStart);
 assert.ok(replayStart>0 && replayEnd>replayStart,'Extract replay logic');
 const replaySource=js.slice(replayStart,replayEnd);
-const replayEvents=[],replayTimers=[];
+const replayEvents=[],replayHandles=[],replayCallbacks=[];
 let replayLanguage='da';
 const runReplay=new Function(
   'completeDailyHistory','data','selectedAsset','cancelRangeReveal',
@@ -436,16 +436,20 @@ const runReplay=new Function(
   replaySource+'; return playRangeComparison;'
 )(
   ()=>({days:Array(7)}),{completed_score:{}},'BTC',()=>{},
-  ()=>({disabled:false}),{matchMedia:()=>({matches:false})},
-  x=>replayEvents.push('phase:'+x),n=>replayEvents.push('day:'+n),
-  replayTimers,(fn)=>{replayEvents.push('scheduled');replayTimers.push(fn);return replayTimers.length;},
+  ()=>{},()=>({disabled:false}),{matchMedia:()=>({matches:false})},
+  phase=>replayEvents.push('phase:'+phase),day=>replayEvents.push('day:'+day),
+  replayHandles,
+  (callback)=>{replayCallbacks.push(callback);return replayCallbacks.length;},
   (id,value)=>replayEvents.push(id+':'+value),()=>replayLanguage
 );
 for(const lang of ['da','en']){
-  replayLanguage=lang;replayTimers.length=0;replayEvents.length=0;
+  replayLanguage=lang;replayHandles.length=0;replayCallbacks.length=0;replayEvents.length=0;
   runReplay();
-  assert.equal(replayTimers.length,8,'seven days plus final completion');
-  for(const timer of [...replayTimers]) timer();
+  assert.equal(replayHandles.length,8,'Seven daily replay handles plus completion handle');
+  assert.equal(replayCallbacks.length,8,'Seven callbacks plus final completion callback');
+  for(const timer of [...replayCallbacks]) timer();
+  assert.equal(replayEvents.filter(x=>x.startsWith('day:')).length,9,
+    'Initial frozen state, seven dated actual frames, and final readback');
   assert.ok(replayEvents.includes('day:6'),'Sunday must be revealed');
   assert.ok(replayEvents.some(x=>x.includes(lang==='da'?'Faktisk uge':'Observed week')),
     'Replay completion translated safely for '+lang);
