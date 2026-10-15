@@ -384,7 +384,22 @@ assert.ok(html.includes('FORECAST <small>(afledt)</small>'), 'Derived forecast d
 assert.ok(html.indexOf('id="range-visualization"') < html.indexOf('id="range-replay"'),
   'Users should see the actual 2-line price chart before playback controls');
 assert.match(js,/cn-chart-forecast-midpoint/);
-assert.match(css,/\.cn-chart-forecast-ribbon/);
+assert.ok(!js.includes("class:'cn-chart-forecast-ribbon'"),
+  'The wide three-window range is a separate exact-value disclosure, not a visually dominant/ambiguous price band');
+assert.match(js,/windows\.map\(r => \(r\.forecast_low\+r\.forecast_high\)\/2\)/);
+for(const asset of ['BTC','ETH']) {
+  const windows=source.completed_score.price_range_precision.rows.filter(x=>x.asset===asset);
+  const days=source.completed_score.daily_observations_w40.days;
+  const step=asset==='BTC'?1000:100;
+  const values=[...windows.map(w=>(w.forecast_low+w.forecast_high)/2),
+    ...days.flatMap(d=>[d[asset].low,d[asset].high])];
+  const lo=Math.floor(Math.min(...values)/step)*step-step;
+  const hi=Math.ceil(Math.max(...values)/step)*step+step;
+  assert.ok(hi>lo && values.every(x=>x>=lo && x<=hi),
+    asset+' observed daily extrema and forecast midpoint must all be fully in viewport');
+  assert.ok(hi-lo < (asset==='BTC'?12000:700),
+    asset+' must not let wide forecast uncertainty flatten the comparable observed path');
+}
 assert.equal((html.match(/id="range-visualization"/g)||[]).length,1);
 assert.equal((html.match(/data-overview-horizon="/g)||[]).length,5);
 assert.equal((html.match(/id="cn-overview-market-body"/g)||[]).length,1);
