@@ -362,6 +362,13 @@ def _cost_preflight(repo: Path, model: str, request_bytes: bytes, max_output_tok
             policy.get("monthly_hard_stop_usd") != 40 or
             policy.get("global_reserve_usd") != 4):
         raise RuntimeError("CN_API_POLICY_UNVERIFIED")
+    caps = policy.get("lane_caps_usd")
+    lane_task = "CN_INTERNAL_LONG_HORIZON_SCORER"
+    # An absent cap must never silently fall back to the global monthly limit.
+    if (not isinstance(caps, dict) or
+            type(caps.get(lane_task)) not in (int, float) or
+            caps[lane_task] != 1):
+        raise RuntimeError("CN_API_LANE_CAP_UNVERIFIED_NO_SPEND")
     if model not in PRICES_PER_MILLION or type(max_output_tokens) is not int or not 1 <= max_output_tokens <= 5000:
         raise RuntimeError("CN_API_MODEL_OR_OUTPUT_LIMIT_NOT_APPROVED")
     if not request_bytes or len(request_bytes) > 200000:
@@ -380,6 +387,20 @@ def _cost_preflight(repo: Path, model: str, request_bytes: bytes, max_output_tok
         raise RuntimeError("CN_API_GLOBAL_BUDGET_CHECK_UNAVAILABLE") from exc
     if result.returncode:
         raise RuntimeError("CN_API_GLOBAL_BUDGET_BLOCKED")
+    # The existing task-specific governor must independently enforce this
+    # lane's monthly allowance, not merely the global post-reserve balance.
+    lane_cmd = [
+        sys.executable, str(repo / "scripts/api_agent/check_api_lane_budget.py"),
+        "--receipt-root", str(repo / "research/api_agent/outputs"),
+        "--task", lane_task, "--cap-usd", str(caps[lane_task]),
+        "--reserve-usd", str(round(max_cost, 8)),
+    ]
+    try:
+        lane_result = subprocess.run(lane_cmd, cwd=repo, capture_output=True, timeout=45, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("CN_API_LANE_BUDGET_CHECK_UNAVAILABLE") from exc
+    if lane_result.returncode:
+        raise RuntimeError("CN_API_LANE_BUDGET_BLOCKED")
 
 
 def _cn_cost_receipt_path(repo: Path, claims: list[dict[str, Any]]) -> Path:
