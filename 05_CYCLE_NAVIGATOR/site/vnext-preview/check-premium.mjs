@@ -421,6 +421,17 @@ assert.match(css, /\.mobile-dock \.dock-link\{width:25%;/);
 assert.match(html, /class="cn-path-jump-banner"/);
 
 
+// Two-line visual hierarchy must be immediate: switching assets cannot
+// automatically start a replay that hides ACTUAL behind a frozen phase.
+const assetHandlerStart=js.indexOf("document.querySelectorAll('[data-asset]').forEach");
+const explicitReplayButton=js.indexOf("  $('range-replay')?.addEventListener('click', playRangeComparison)",assetHandlerStart);
+assert.ok(assetHandlerStart>=0&&explicitReplayButton>assetHandlerStart);
+const assetHandler=js.slice(assetHandlerStart,explicitReplayButton);
+assert.ok(!assetHandler.includes('playRangeComparison()'), 'BTC/ETH switch cannot autoplay or hide ACTUAL');
+assert.match(assetHandler,/cancelRangeReveal\(\)/);
+assert.match(assetHandler,/renderRangeChart\(\)/);
+assert.match(assetHandler,/setRangeRevealPhase\('score'\)/);
+
 // Replay must finish after day seven in both DA and EN without referring
 // to a block-scoped renderRangeChart variable. Exercise the real function.
 const replayStart=js.indexOf('function playRangeComparison() {');
