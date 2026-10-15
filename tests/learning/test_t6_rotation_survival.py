@@ -257,6 +257,71 @@ class T6RotationSurvivalTests(unittest.TestCase):
                     operate(sample, cadence(), root)
                 self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
+    def test_replay_rejects_corruption_of_complete_frozen_baseline(self):
+        # Previously all of these passed because only id, level and clock were
+        # checked; no immutable market axes, first-cross or outcome placeholders.
+        corruptions = [
+            ("axes_at_freeze", lambda x: x["ETHBTC"].update(value=999.0)),
+            ("axes_at_freeze", lambda x: x["breadth"].update(value=0.91)),
+            ("axes_at_freeze", lambda x: x["flow"].update(available=True, value={"btc_etf_musd": 999.0})),
+            ("first_cross", lambda x: x.update(cross_ethbtc=999.0)),
+            ("right_censored", lambda x: None),
+            ("failure_outcome", lambda x: "CLAIMED_FAILURE"),
+            ("benchmark", lambda x: "DIFFERENT_EVENT"),
+            ("missingness_policy", lambda x: "INFER_MISSING"),
+        ]
+        for mode in ("first_cross", "active", "reversal"):
+            for field, edit in corruptions:
+                with self.subTest(mode=mode, field=field, edit=str(edit)), tempfile.TemporaryDirectory() as td:
+                    root = Path(td)
+                    first_packet = packet(0.0301, 0.0002)
+                    first = operate(first_packet, cadence(), root)
+                    sample = first_packet
+                    if mode == "active":
+                        sample = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                        operate(sample, cadence(), root)
+                    if mode == "reversal":
+                        sample = packet(0.0298, -0.0003, stamp="2026-09-10T01:00:00Z")
+                        operate(sample, cadence(), root)
+                    path = root / "sequences" / first["active_sequence_id"] / "BASELINE.json"
+                    baseline = json.loads(path.read_text())
+                    if field in ("right_censored", "failure_outcome", "benchmark", "missingness_policy"):
+                        edit(baseline)
+                        if field == "right_censored":
+                            baseline[field] = False
+                    else:
+                        edit(baseline[field])
+                    path.write_text(json.dumps(baseline))
+                    before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                    with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch"):
+                        operate(sample, cadence(), root)
+                    self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_replay_rejects_missing_or_mutated_first_cross_observation(self):
+        for mode in ("missing", "changed_axes", "changed_packet", "changed_cross"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                initial = packet(0.0301, 0.0002)
+                first = operate(initial, cadence(), root)
+                later = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                operate(later, cadence(), root)
+                first_path = Path(first["observation_path"])
+                if mode == "missing":
+                    first_path.unlink()
+                else:
+                    observation = json.loads(first_path.read_text())
+                    if mode == "changed_axes":
+                        observation["axes"]["ETHBTC"]["value"] = 999.0
+                    elif mode == "changed_packet":
+                        observation["source_packet_sha256"] = "0" * 64
+                    else:
+                        observation["prior_ethbtc"] = 0.032
+                    first_path.write_text(json.dumps(observation))
+                before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch"):
+                    operate(later, cadence(), root)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
     def test_valid_first_cross_replay_preserves_next_fresh_elapsed_time(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
