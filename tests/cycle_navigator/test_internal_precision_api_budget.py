@@ -158,7 +158,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
     def test_paid_claim_in_changed_cohort_must_not_pay_again(self):
         failed = {**self.good, "output_text": json.dumps({"scores": []})}
         first_id = self.claims[0]["claim_id"]
-        with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \\
+        with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \
              patch("urllib.request.urlopen", return_value=Response(failed)) as http:
             with self.assertRaisesRegex(RuntimeError, "INVALID_STRUCTURED_OUTPUT"):
                 self.call()
@@ -173,7 +173,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         second["output_text"] = json.dumps({"scores": [{
             "claim_id": "CN-next-due", "status": "SUPPORTED", "score": 100,
             "evidence": "synthetic only", "self_critique": "not a historical prediction"}]})
-        with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \\
+        with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \
              patch("urllib.request.urlopen", return_value=Response(second)) as http:
             self.assertEqual(self.call()[0]["claim_id"], "CN-next-due")
             http.assert_called_once()
