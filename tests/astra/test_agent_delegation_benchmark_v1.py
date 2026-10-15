@@ -78,12 +78,63 @@ class Bench(unittest.TestCase):
         self.assertEqual(out['byte_consistent_pair_count'], 1)
         self.assertEqual(out['paired_eligible_count'], 0)
 
+    def assert_reused_receipt_not_metadata_eligible(self, obj):
+        out = self.check(obj)
+        self.assertEqual(out['paired_eligible_count'], 0)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertEqual(out['metadata_status'], 'NO_BYTE_CONSISTENT_PAIRS')
+        self.assertFalse(out['rows'][0]['eligible'])
+        self.assertFalse(out['rows'][0]['metadata_eligible'])
+        self.assertFalse(any(k.endswith('_delegated_minus_solo') for k in out['rows'][0]))
+        self.assertTrue(any('REUSED_RECEIPT' in x for x in out['rows'][0]['reasons']))
+
     def test_reused_receipt_is_not_empirical(self):
         obj = make_case()
         a,b = obj['cases'][0]['variants']
         b['execution_receipt_path'] = a['execution_receipt_path']
         b['execution_receipt_sha256'] = a['execution_receipt_sha256']
-        self.assertEqual(self.check(obj)['paired_eligible_count'], 0)
+        self.assert_reused_receipt_not_metadata_eligible(obj)
+
+    def test_reused_verification_receipt_path_not_metadata_eligible(self):
+        obj = make_case()
+        a,b = obj['cases'][0]['variants']
+        b['verification']['verification_receipt_path'] = a['verification']['verification_receipt_path']
+        b['verification']['verification_receipt_sha256'] = a['verification']['verification_receipt_sha256']
+        self.assert_reused_receipt_not_metadata_eligible(obj)
+
+    def test_same_execution_bytes_at_distinct_paths_not_metadata_eligible(self):
+        obj = make_case()
+        a,b = obj['cases'][0]['variants']
+        self.assertNotEqual(a['execution_receipt_path'], b['execution_receipt_path'])
+        (self.root / b['execution_receipt_path']).write_bytes(
+            (self.root / a['execution_receipt_path']).read_bytes())
+        b['execution_receipt_sha256'] = a['execution_receipt_sha256']
+        self.assert_reused_receipt_not_metadata_eligible(obj)
+
+    def test_same_verification_bytes_at_distinct_paths_not_metadata_eligible(self):
+        obj = make_case()
+        a,b = obj['cases'][0]['variants']
+        ap = a['verification']['verification_receipt_path']
+        bp = b['verification']['verification_receipt_path']
+        self.assertNotEqual(ap, bp)
+        (self.root / bp).write_bytes((self.root / ap).read_bytes())
+        b['verification']['verification_receipt_sha256'] = a['verification']['verification_receipt_sha256']
+        self.assert_reused_receipt_not_metadata_eligible(obj)
+
+    def test_receipt_alias_same_file_not_metadata_eligible(self):
+        obj = make_case()
+        a,b = obj['cases'][0]['variants']
+        (self.root / 'exec-solo-alias.json').symlink_to('exec-solo.json')
+        b['execution_receipt_path'] = 'exec-solo-alias.json'
+        b['execution_receipt_sha256'] = a['execution_receipt_sha256']
+        self.assert_reused_receipt_not_metadata_eligible(obj)
+
+    def test_cross_role_reused_receipt_not_metadata_eligible(self):
+        obj = make_case()
+        a,b = obj['cases'][0]['variants']
+        b['verification']['verification_receipt_path'] = a['execution_receipt_path']
+        b['verification']['verification_receipt_sha256'] = a['execution_receipt_sha256']
+        self.assert_reused_receipt_not_metadata_eligible(obj)
 
     def test_empty_denominator_is_ineligible(self):
         obj = make_case()
