@@ -197,6 +197,30 @@
         <div class="forecast-note"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>12 timer: forsigtig styrke. 1–7 dage: blandet retning. 2–3 uger: selektiv deltagelse. Ingen sikker lang cyklusetape.</span><button type="button" data-go="kompas">Åbn Kompas <span>↗</span></button></div>
       </section>
 
+      <section class="section-block cn-path-week" id="cn-path-week" aria-labelledby="cn-path-week-title">
+        <div class="section-heading">
+          <div><span class="section-index">03 / PATH · FROZEN VS ACTUAL</span><h2 id="cn-path-week-title">Den frosne uge. <span>Og den faktiske rejse.</span></h2></div>
+          <span class="section-aside">CN #27 · W40 · 28 SEP–4 OCT 2026</span>
+        </div>
+        <p class="cn-path-week-description">Historisk, færdigmålt eksempel fra uge 40. De frosne prognoser blev lavet for 3 perioder, ikke for hvert af ugens syv døgn. Den faktisk målte priskurve vises dag for dag. Uge 41 ovenfor er en separat fremadrettet prognose.</p>
+      <div class="range-compare-panel" id="cn-source-chart">
+        <div class="chart-top"><div class="asset-toggle" role="group" aria-label="Vælg aktiv"><button type="button" class="selected" data-asset="BTC" aria-pressed="true">BTC</button><button type="button" data-asset="ETH" aria-pressed="false">ETH</button></div><div class="chart-legend"><span><i class="legend-dot forecast"></i> FROSSET</span><span><i class="legend-dot observed"></i> OBSERVERET</span></div></div>
+        <div class="range-motion-bar"><div class="range-motion-steps" aria-label="Sammenligningsanimationens stadier"><span data-motion-step="frozen">01 · Frosset prognose</span><span data-motion-step="actual">02 · Virkeligheden</span><span data-motion-step="score">03 · Score</span></div><button type="button" class="range-replay" id="range-replay" aria-label="Afspil prisinterval sammenligning igen">↻ <span>Afspil ugen</span></button></div>
+        <div class="range-visualization" id="range-visualization" aria-label="Kildeverificeret ugentlig BTC ETH prisgraf, originale tre prognosevinduer og faktiske daglige priser"></div>
+        <p id="cn-replay-day" class="cn-path-replay-day" aria-live="polite">Faktisk prissti · man–søn</p>
+        <div class="range-summary"><span>Den lyse, flydende forecast-korridor er en visuel interpolation mellem TRE frosne intervalvinduer, IKKE syv daglige forecasts. Den blå kurve forbinder de syv observerede dagslukninger.</span><span id="range-method">70% containment + 30% Jaccard</span></div>
+      </div>
+
+        <details class="cn-path-range-details">
+          <summary>Vis frosne prisintervaller og forventninger <span>＋</span></summary>
+          <div class="cn-path-range-detail-content">
+            <p>Følgende niveauer er taget fra de oprindelige, frosne tre perioder. Dagsvise forecast-priser blev ikke offentliggjort og er derfor ikke opfundet.</p>
+            <div id="cn-path-window-table"></div>
+            <div id="cn-path-daily-table"></div>
+          </div>
+        </details>
+      </section>
+
       <section class="section-block proof-teaser">
         <div class="section-heading"><div><span class="section-index">03 / PUBLIC ACCOUNTABILITY</span><h2>Vi måler vores <span>markedsforståelse.</span></h2></div><span class="section-aside">THE NEW CN TRACK RECORD</span></div>
         <div class="teaser-shell">
@@ -331,17 +355,11 @@
         <div class="edge-accountability"><span class="edge-accountability-dot"></span><strong>STATUS · METODE UNDER INDFØRELSE</strong><span id="edge-era-status">Ingen nye W42-prognoser eller resultater er endnu publiceret og uafhængigt forseglede. Data vises først, når de faktisk findes.</span></div>
         <div class="edge-real-example"><div><span>GÅ TIL ET VIRKELIGT EKSEMPEL</span><strong>Se hvordan en frossen prognose møder virkeligheden.</strong><small>CN #27 · W40 · Historisk Price Range-resultat, ikke en ny v2-score</small></div><button type="button" id="edge-open-comparison">Se animeret sammenligning <span>↗</span></button></div>
       </section>
-      <section class="cn-results-evidence" aria-label="Dokumenteret historisk BTC og ETH prognose sammenligning">
-        <div class="cn-results-evidence-head"><span>HISTORISK EKSEMPEL · CN #27, UGE 40, 2026</span><p>Syv faktiske dagslukninger og tre oprindelige frosne prognosevinduer. Eksemplet er ikke en score for den nye W42-serie.</p></div>
-      <div class="section-heading compact-heading"><div><span class="section-index">ARCHIVED EXAMPLE / FROZEN → REALITY</span><h2>Hvad forudsagde vi - og hvad skete der?</h2></div><span class="section-aside">CN #27 · W40</span></div>
-      <div class="range-compare-panel" id="cn-source-chart">
-        <div class="chart-top"><div class="asset-toggle" role="group" aria-label="Vælg aktiv"><button type="button" class="selected" data-asset="BTC" aria-pressed="true">BTC</button><button type="button" data-asset="ETH" aria-pressed="false">ETH</button></div><div class="chart-legend"><span><i class="legend-dot forecast"></i> FROSSET</span><span><i class="legend-dot observed"></i> OBSERVERET</span></div></div>
-        <div class="range-motion-bar"><div class="range-motion-steps" aria-label="Sammenligningsanimationens stadier"><span data-motion-step="frozen">01 · Frosset prognose</span><span data-motion-step="actual">02 · Virkeligheden</span><span data-motion-step="score">03 · Score</span></div><button type="button" class="range-replay" id="range-replay" aria-label="Afspil prisinterval sammenligning igen">↻ <span>Afspil ugen</span></button></div>
-        <div class="range-visualization" id="range-visualization" aria-label="Kildeverificeret ugentlig BTC ETH prisgraf, originale tre prognosevinduer og faktiske daglige priser"></div>
-        <div id="cn-range-official-scorecards" class="cn-range-scorecards" aria-label="Originale scoreperioder"></div>
-        <div class="range-summary"><span>Frosset forecast er kun publiceret for tre vinduer. Kun den faktiske daglige slutkurs tegnes som flydende kurve, aldrig en opdigtet forecastprissti.</span><span id="range-method">70% containment + 30% Jaccard</span></div>
-      </div>
-
+      <section class="cn-results-evidence" aria-label="Historisk score, uden duplikeret prisgraf">
+        <div class="cn-results-evidence-head"><span>HISTORISK RESULTAT · CN #27, W40 2026</span><p>Gennemsigtighed: oprindelige interval-scores, ikke procent af dage indenfor og ikke nye v2-scores.</p></div>
+        <div id="cn-range-official-scorecards" class="cn-range-scorecards" aria-label="Oprindelige scoreperioder"></div>
+        <button type="button" id="cn-path-week-open" class="cn-overview-more">Se den frosne og faktiske ugegraf i PATH ↗</button>
+        <p class="cn-results-footnote">Én graf har ét hjem i PATH. Resultater viser dokumenterede outcomes og metode; ingen historiske prognoser er omskrevet.</p>
       </section>
       <section class="edge-lifecycle">
         <div class="section-heading compact-heading"><div><span class="section-index">01 / FROZEN → REALITY</span><h2>Udsagn, der skal stå deres prøve.</h2></div><span class="section-aside">WEEK 42 → NEXT 8 WEEKS</span></div>
