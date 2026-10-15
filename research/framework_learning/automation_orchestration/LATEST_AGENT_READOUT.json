@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-15T07:43:00Z",
+  "generated_at_utc": "2026-10-15T08:33:21Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -13,15 +13,36 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "luna_triage": null,
+  "luna_triage": {
+    "evidence_against": [
+      "No failure logs, failed job or step, error message, or dependency status were supplied, so a shared dependency failure or code defect cannot be identified.",
+      "The supplied data does not name an existing owner."
+    ],
+    "evidence_for": [
+      "framework-learning-operations.yml has a latest-run failure (run 38689508626).",
+      "The failure streak is 1, while recent_failure_count is 2; this is insufficient to establish a persistent failure pattern."
+    ],
+    "forecast_candidates": [],
+    "hypotheses": [
+      "Classify as an unresolved execution failure; transient noise is possible, but the evidence does not distinguish it from missing evidence, dependency failure, or a code defect.",
+      "The next inspection should be by the existing owner of framework-learning-operations.yml or its automation operations. That owner is not identified in the supplied data."
+    ],
+    "status": "DEGRADED",
+    "summary": "Triage is limited by the absence of run-level failure details. Inspect the failed run to identify the failing job or step before classifying or escalating further.",
+    "uncertainties": [
+      "Failure cause and whether it is transient or persistent.",
+      "Whether a shared dependency is implicated.",
+      "Which existing person or team owns the workflow."
+    ]
+  },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "60892b931420549c8930c2835b1fa0d20b993f3b4581b7a3310c74595243bbac",
+  "plan_fingerprint": "988e798eb90efd129f6e10022da3b6da47dc2e04fae9ba657a391839adcd1640",
   "routing_summary": {
     "existing_remediation_count": 0,
-    "luna_triage_count": 0,
+    "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
   "sol_6_1_diagnosis": null,
-  "source_health_generated_at_utc": "2026-10-14T19:32:23.804449Z"
+  "source_health_generated_at_utc": "2026-10-15T08:28:15.384382Z"
 }
