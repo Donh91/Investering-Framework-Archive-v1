@@ -1,5 +1,6 @@
 import importlib.util
 import hashlib
+import json
 import tempfile
 import unittest
 from copy import deepcopy
@@ -269,6 +270,15 @@ class Bench(unittest.TestCase):
         second['case_id'] = ' TEST-CASE '
         with self.assertRaises(bench.ContractError):
             self.check(obj)
+
+    def test_repository_example_reproduces_checked_in_negative_result(self):
+        directory = MODULE.parents[2] / '07_PROMPTS_AND_AGENTS/astra/examples'
+        source = json.loads((directory / 'AGENT_DELEGATION_PAIRED_BENCHMARK_SYNTHETIC_v1.json').read_text(encoding='utf-8'))
+        expected = json.loads((directory / 'AGENT_DELEGATION_PAIRED_BENCHMARK_SYNTHETIC_RESULT_v1.json').read_text(encoding='utf-8'))
+        actual = bench.evaluate(source)
+        self.assertEqual(actual, expected)
+        self.assertEqual(actual['paired_eligible_count'], 0)
+        self.assertIn('FROZEN_RUBRIC:RECEIPT_ROOT_NOT_PROVIDED', actual['rows'][0]['reasons'])
 
     def test_frozen_rubric_is_byte_verified_for_both_arms(self):
         out = self.check(make_case())
