@@ -154,6 +154,21 @@ def build():
             "original_direction_result_only_not_admitted": {asset: outcome["direction_accuracy"][asset]["result"] for asset in ("btc", "eth")} if original_status == "PRESENT" else None,
             "current_main_outcome_status": current_status, "current_main_outcome_git_blob_sha": current_blob,
             "admissibility": "NOT_ADMITTED", "reason": ["PROVIDER_FIRST_PUBLICATION_UNVERIFIED", "FIRST_USER_DELIVERY_UNVERIFIED", "INDEPENDENT_EVENT_FAMILY_UNVERIFIED", "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"] + (["ORIGINAL_OUTCOME_ABSENT_AT_FROZEN_SNAPSHOT"] if original_status != "PRESENT" else []),
+            # Two non-promoting research gates: an internally issued information
+            # comparison need not require user delivery, whereas any investor
+            # action/PnL claim must establish delivery, actionability and fills.
+            "information_edge_gate": {
+                "status": "NOT_ADMITTED",
+                "missing": ["PROVIDER_FIRST_PUBLICATION_UNVERIFIED", "INDEPENDENT_EVENT_FAMILY_UNVERIFIED", "SAME_CLOCK_BASELINE_UNVERIFIED"] + (["ORIGINAL_OUTCOME_ABSENT_AT_FROZEN_SNAPSHOT"] if original_status != "PRESENT" else []),
+                "original_issue_clock_bound": True,
+                "user_delivery_required": False,
+            },
+            "investor_action_edge_gate": {
+                "status": "NOT_ADMITTED",
+                "missing": ["PROVIDER_FIRST_PUBLICATION_UNVERIFIED", "INDEPENDENT_EVENT_FAMILY_UNVERIFIED", "FIRST_USER_DELIVERY_UNVERIFIED", "FIRST_EXECUTABLE_FILL_AND_AFTER_COST_HOLD_CONTROL_UNVERIFIED"] + (["ORIGINAL_OUTCOME_ABSENT_AT_FROZEN_SNAPSHOT"] if original_status != "PRESENT" else []),
+                "user_delivery_required": True,
+                "portfolio_execution_authorized": False,
+            },
             "next_required_evidence": ["per-field vendor revision and first-publication or independent immutable original response binding", "original investor visibility/action clock", "target bar origin and same-clock control", "independent event and negative/no-warning universe"],
         })
     if len(rows) != 11 or len({r["source_packet"]["git_blob_sha"] for r in rows}) != 10 or len({r["raw_capture"]["git_blob_sha"] for r in rows}) != 7:
