@@ -208,6 +208,28 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
         reason += _readback(receipt_root, c["evidence_path"], c["evidence_sha256"], "EVIDENCE_BUNDLE")
         if variants["SOLO"]["run_id"] == variants["DELEGATED"]["run_id"]:
             raise ContractError(f"{cid}: two arms cannot share one execution run ID")
+
+        # Separate run IDs are insufficient: two purported independent arms
+        # cannot reuse execution OR verification evidence under the same digest,
+        # filepath, or filesystem alias (including crossed receipt roles).
+        solo, delegated = variants["SOLO"], variants["DELEGATED"]
+        def receipts(variant: dict[str, Any]) -> list[tuple[str, str | None, str | None]]:
+            ver = variant["verification"]
+            return [
+                ("EXECUTION", variant["execution_receipt_path"], variant["execution_receipt_sha256"]),
+                ("VERIFICATION", ver["verification_receipt_path"], ver["verification_receipt_sha256"]),
+            ]
+        for solo_type, solo_path, solo_hash in receipts(solo):
+            for delegated_type, delegated_path, delegated_hash in receipts(delegated):
+                name = f"{solo_type}_SOLO_VS_{delegated_type}_DELEGATED"
+                if solo_hash is not None and solo_hash == delegated_hash:
+                    reason.append(f"REUSED_RECEIPT_DIGEST:{name}")
+                if solo_path is not None and delegated_path is not None:
+                    # Path(...).resolve() normalizes '.' / '..' and symlink aliases.
+                    # Without receipt_root, path equality is still detectable.
+                    base = receipt_root if receipt_root is not None else Path.cwd()
+                    if (base / solo_path).resolve() == (base / delegated_path).resolve():
+                        reason.append(f"REUSED_RECEIPT_PATH_OR_ALIAS:{name}")
         if c["evidence_class"] == "SYNTHETIC_FIXTURE":
             reason.append("SYNTHETIC_NOT_EMPIRICAL")
         for mode in MODES:
