@@ -1,5 +1,5 @@
 // Offline Node 20+ regression tests for v1.1: synthetic Git objects, never private data.
-import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync,spawnSync} from 'node:child_process';
@@ -19,6 +19,20 @@ try{
     {id:'SHARED',sources:[{path:'fixture/a.json',git_object_sha:objA,git_object_type:'blob'}]}]};
   writeFileSync(join(dir,'fixture','a.json'),'B');rmSync(join(dir,'gone.json'));git('add','-A');git('commit','-qm','head');const head=git('rev-parse','HEAD'),tree=git('rev-parse',head+'^{tree}');
   test('valid anchored drift, missing, shared refs',()=>{const r=run(inventory,head,tree);assert.equal(r.status,2);const d=JSON.parse(r.stdout);assert.equal(d.counts.CHANGED,2);assert.equal(d.counts.MISSING,1);assert.equal(d.source_references,4);assert.equal(d.distinct_source_paths,3);assert.equal(d.original_pinned_source_objects_verified,true)});
+  function withoutLooseObject(sha,fn){
+    const obj=join(dir,'.git','objects',sha.slice(0,2),sha.slice(2));
+    const bytes=readFileSync(obj);rmSync(obj);
+    try{fn();}finally{writeFileSync(obj,bytes);}
+  }
+  test('unreadable target blob blocks without drift JSON',()=>{
+    const blob=git('rev-parse',head+':fixture/a.json');
+    withoutLooseObject(blob,()=>{const r=run(inventory,head,tree);assert.equal(r.status,1,r.stdout);assert.equal(r.stdout,'');assert.match(r.stderr,/TASK2_R0_RECONCILIATION_BLOCKED:.*unreadable target/i);});
+  });
+  test('unreadable nested target tree blocks without drift JSON',()=>{
+    const nested=git('rev-parse',head+':fixture');
+    const fileOnly={...inventory,families:[{id:'A',sources:[inventory.families[0].sources[0]]}]};
+    withoutLooseObject(nested,()=>{const r=run(fileOnly,head,tree);assert.equal(r.status,1,r.stdout);assert.equal(r.stdout,'');assert.match(r.stderr,/TASK2_R0_RECONCILIATION_BLOCKED:.*unreadable target/i);});
+  });
   test('compared source blob becoming tree is operational BLOCKED',()=>{
     mkdirSync(join(dir,'gone.json'));writeFileSync(join(dir,'gone.json','nested.json'),'new');
     git('add','-A');git('commit','-qm','replace removed blob with tree');

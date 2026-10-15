@@ -14,6 +14,18 @@ function parseArgs(argv){
   return o;
 }
 function checkPath(p){return typeof p==='string'&&p.length>0&&!p.startsWith('/')&&!p.includes('\\')&&!p.includes(':')&&!p.includes('\n')&&!p.includes('//')&&!p.split('/').includes('..')&&!p.split('/').includes('.')}
+function targetObject(head,p,git){
+  let listing;
+  try{listing=git(['ls-tree','-z',head,'--',':(literal)'+p]);}
+  catch{throw Error('Unreadable target tree/object: '+p);}
+  if(!listing)return null; // Only an intact target tree can prove a genuine missing path.
+  const entries=listing.split('\0').filter(Boolean);
+  const match=entries.length===1&&/^([0-7]{6}) (blob|tree|commit) ([0-9a-f]{40})\t(.+)$/u.exec(entries[0]);
+  if(!match||match[4]!==p)throw Error('Ambiguous target path lookup: '+p);
+  try{if(git(['cat-file','-t',match[3]])!==match[2])throw Error('Object type differs from tree entry');}
+  catch{throw Error('Unreadable target tree/object: '+p);}
+  return {sha:match[3],type:match[2]};
+}
 function reconcile(inventory,head,expectedTree,git){
   if(!inventory||!HEX40.test(inventory.main_commit)||!HEX40.test(inventory.main_tree)||!Array.isArray(inventory.families))throw Error('Invalid immutable inventory anchor');
   if(git(['cat-file','-t',inventory.main_commit])!=='commit'||git(['cat-file','-t',head])!=='commit')throw Error('Pinned anchors must name direct commit objects');
@@ -38,11 +50,11 @@ function reconcile(inventory,head,expectedTree,git){
     try{oldSha=git(['rev-parse','--verify',inventory.main_commit+':'+path]);oldType=git(['cat-file','-t',oldSha]);}
     catch{throw Error('Original pinned source object missing: '+path);}
     if(oldSha!==row.pinned_object_sha||oldType!==row.type)throw Error('Original pinned source SHA/type mismatch: '+path);
-    let sha=null,type=null;
-    try{sha=git(['rev-parse','--verify',head+':'+path]);type=git(['cat-file','-t',sha]);}catch{}
+    const target=targetObject(head,path,git);
+    const sha=target?.sha??null,type=target?.type??null;
     return {...row,checked_object_sha:sha,status:!sha?'MISSING':type!==row.type?'TYPE_MISMATCH':sha===row.pinned_object_sha?'UNCHANGED':'CHANGED'};
   });
-  rows.sort((a,b)=>a.path.localeCompare(b.path));
+  rows.sort((a,b)=>Buffer.compare(Buffer.from(a.path,'utf8'),Buffer.from(b.path,'utf8')));
   const counts=Object.fromEntries(['CHANGED','UNCHANGED','MISSING','TYPE_MISMATCH'].map(s=>[s,rows.filter(x=>x.status===s).length]));
   // A source switching Git object kind is not an ordinary content drift.
   // It invalidates the registered source contract: fail operationally closed
