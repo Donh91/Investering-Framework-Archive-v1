@@ -305,10 +305,12 @@ for (const asset of ['BTC','ETH']) {
   }
 }
 assert.match(js, /function completeDailyHistory\(score, asset\)/);
-assert.match(js, /function monotoneClosePath\\(points\\)/);
-// Regression: after moving to the shape-preserving spline, reverse-x path
-// previously returned '' and the preview silently drew a malformed ribbon.
-const splineSource = js.match(/function monotoneClosePath\\(points\\) \\{[\\s\\S]*?\\n\\}/)?.[0];
+assert.ok(js.includes('function monotoneClosePath(points) {'), 'Expected SVG spline helper');
+// Regression: reverse-x range boundary must not disappear silently.
+const splineStart = js.indexOf('function monotoneClosePath(points) {');
+const splineEnd = js.indexOf('\nfunction renderRangeChart()', splineStart);
+assert.ok(splineStart >= 0 && splineEnd > splineStart, 'Spline and chart functions found');
+const splineSource = js.slice(splineStart,splineEnd);
 assert.ok(splineSource, 'Readable pure SVG interpolation helper');
 const spline = new Function(splineSource + '; return monotoneClosePath;')();
 const asc = [{x:0,y:5},{x:10,y:8},{x:20,y:6},{x:40,y:9}];
