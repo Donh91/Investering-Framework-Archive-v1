@@ -12,11 +12,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 RESEARCH = "04_MARKET_LEARNING/handlekompas/research/"
 CENSUS = RESEARCH + "2026-10-14__TASK2_R1_NATIVE_V3_11_SOURCE_CLOCK_CASES_v1.json"
+FORECAST_CENSUS = RESEARCH + "2026-10-14__TASK2_R1_NATIVE_V3_12H_CENSUS_v1.json"
 
 
 def git(*args, input_bytes=None):
     return subprocess.run(
-        ["git", *args], cwd=ROOT, input=input_bytes, capture_output=True, check=True
+        ["git", "--no-replace-objects", *args], cwd=ROOT, input=input_bytes, capture_output=True, check=True
     ).stdout
 
 
@@ -48,12 +49,28 @@ def clock_status(observed, retrieved, issue, funding=False):
 def build():
     census = json.loads((ROOT / CENSUS).read_text())
     ref = census["pinned_original_main_ref"]
+    # An independent, earlier 17-attempt census provides the expected frozen
+    # forecast Git blobs and outcome presence. Never silently reconstruct a
+    # convenient subset from current HEAD or 11-row source metadata alone.
+    forecast_census = json.loads((ROOT / FORECAST_CENSUS).read_text())
+    if forecast_census["pinned_public_main_commit"] != ref:
+        raise ValueError("Original forecast census uses a different pinned Git revision")
+    original_v3 = {f["id"]: f for f in forecast_census["forecast_rows"]
+                   if f["original_scoring_contract"] == "OFFICIAL_DAILY_COMPASS_SCORING_v3"}
+    if (len(original_v3) != 11 or len(census["rows"]) != 11
+            or {f["compass_id"] for f in census["rows"]} != set(original_v3)):
+        raise ValueError("Original forecast census or attempt roster mismatch")
     rows = []
     for item in census["rows"]:
         fid, issue = item["compass_id"], item["issued_at_utc"]
         day = fid.split("-")[1]
         forecast_path = f"04_MARKET_LEARNING/handlekompas/official/daily/2026/{day[4:6]}/{day[6:8]}/{fid}.json"
-        forecast, forecast_blob = original(ref, forecast_path)
+        frozen = original_v3[fid]
+        if frozen["forecast_path"] != forecast_path:
+            raise ValueError(f"Original forecast path differs from frozen census: {fid}")
+        forecast, forecast_blob = original(ref, forecast_path, frozen["forecast_git_blob_sha"])
+        if forecast.get("scoring_contract") != frozen["original_scoring_contract"]:
+            raise ValueError(f"Original forecast scoring contract differs: {fid}")
         packet, packet_blob = original(item["source_first_visible_path_commit_sha"], item["source_path"], item["source_git_blob_sha"])
         target = packet["source_health"]["live_anchor"]["provenance"]["target"]
         capture, capture_blob = original(target["exact_commit_sha"], target["exact_path"], target["git_blob_sha"])
@@ -93,8 +110,14 @@ def build():
             original_status = "PRESENT"
         except subprocess.CalledProcessError:
             outcome, outcome_blob, original_status = None, None, "ABSENT_AT_ORIGINAL_SNAPSHOT"
-        if original_status != ("PRESENT" if item["outcome_12h_at_pinned_ref"] == "PRESENT" else "ABSENT_AT_ORIGINAL_SNAPSHOT"):
+        expected_outcome_status = ("PRESENT" if item["outcome_12h_at_pinned_ref"] == "PRESENT"
+                                   else "ABSENT_AT_ORIGINAL_SNAPSHOT")
+        frozen_outcome_status = ("PRESENT" if frozen["outcome_12h_presence_at_pinned_commit"] == "PRESENT"
+                                 else "ABSENT_AT_ORIGINAL_SNAPSHOT")
+        if original_status != expected_outcome_status or original_status != frozen_outcome_status:
             raise ValueError(f"Original outcome snapshot census mismatch: {fid}")
+        if original_status == "PRESENT" and outcome_blob != frozen["outcome_git_blob_sha"]:
+            raise ValueError(f"Original outcome Git blob mismatch: {fid}")
         try:
             current_outcome, current_blob = original("HEAD", outcome_path)
             current_status = "PRESENT_ON_CURRENT_MAIN"
