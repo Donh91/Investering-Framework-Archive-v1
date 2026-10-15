@@ -42,6 +42,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          # R1 tests check exact historical Git object revisions, not shallow HEAD.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -53,6 +56,11 @@ jobs:
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_decision_economics_ledger -v
           python -m unittest tests.health.test_provider_budget_status -v
+      - name: Validate research-only original Task 2 R1 clock and SHA admissions
+        run: |
+          if [ -f scripts/research/task2_r1_original_admission.py ] && [ -f tests/research/test_task2_r1_original_admission.py ]; then
+            python -m unittest tests.research.test_task2_r1_original_admission -v
+          fi
       - name: Validate repository state readback when available
         shell: bash
         run: |
