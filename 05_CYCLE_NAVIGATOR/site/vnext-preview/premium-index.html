@@ -17,6 +17,7 @@
       </a>
       <nav class="desktop-nav" aria-label="Hovednavigation">
         <button type="button" class="nav-link is-active" data-route="overblik" aria-current="page">Overblik</button>
+        <button type="button" class="nav-link cn-nav-path" data-open-path aria-label="Åbn PATH ugegraf">PATH · Ugegraf</button>
         <button type="button" class="nav-link" data-route="kompas">Kompas</button>
         <button type="button" class="nav-link" data-route="dokumentation">Resultater <span class="nav-arrow">↗</span></button>
       </nav>
@@ -37,6 +38,10 @@
         <span class="edition">PUBLIC FORECAST <span id="edition-number">NO. 28</span> <span class="edition-separator">·</span> 11 OCT 2026</span>
       </div>
 
+      <div class="cn-path-jump-banner">
+        <span>W40 · FROSSET VS FAKTISK UGE</span>
+        <button type="button" data-open-path>Se PATH-ugegraf <span aria-hidden="true">↗</span></button>
+      </div>
       <div class="hero-grid">
         <article class="hero-main" aria-labelledby="overview-title">
           <div class="hero-context"><span>OFFICIELT MARKEDSBILLEDE</span><span id="hero-horizon">NÆSTE 12 TIMER</span></div>
@@ -431,6 +436,7 @@
 
   <nav class="mobile-dock" aria-label="Mobilnavigation">
     <button type="button" class="dock-link is-active" data-route="overblik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65"><circle cx="12" cy="12" r="8.6"/><path d="m10 14 5-5-2 5-3 0Z"/></svg><span>Overblik</span></button>
+    <button type="button" class="dock-link cn-dock-path" data-open-path aria-label="Åbn PATH ugegraf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65"><path d="M3 19h18M4 14l5-5 4 3 7-8"/><circle cx="4" cy="14" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="13" cy="12" r="1.5"/><circle cx="20" cy="4" r="1.5"/></svg><span>PATH</span></button>
     <button type="button" class="dock-link" data-route="kompas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65"><path d="M3 12h4l3-6 4 12 3-6h4"/></svg><span>Kompas</span></button>
     <button type="button" class="dock-link" data-route="dokumentation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65"><path d="M4 19V5m0 14h17M8 15l4-5 3 2 5-7"/></svg><span>Resultater</span></button>
   </nav>
