@@ -11,6 +11,7 @@ import hashlib
 import json
 import math
 import re
+import unicodedata
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -47,6 +48,11 @@ def _str(v: Any, loc: str) -> str:
     if not isinstance(v, str) or not v.strip():
         raise ContractError(f"{loc}: nonempty string required")
     return v
+
+
+def _identity_key(v: str) -> str:
+    """Conservative alias key; identity labels are not authenticated by this tool."""
+    return unicodedata.normalize("NFKC", v).strip().casefold()
 
 
 def _nonnegative_int(v: Any, loc: str) -> int:
@@ -110,7 +116,7 @@ def _check_variant(value: Any, mode: str, loc: str) -> dict[str, Any]:
         _sha(q, loc + ".question_hashes")
     if len(qs) != len(set(qs)):
         raise ContractError(f"{loc}: duplicate question assignments; replication/adversarial requires separate governed mode")
-    if verification["method"] == "INDEPENDENT_REVIEW" and verification["status"] == "PASS" and executor == verification["verifier_id"]:
+    if verification["method"] == "INDEPENDENT_REVIEW" and verification["status"] == "PASS" and _identity_key(executor) == _identity_key(verification["verifier_id"]):
         raise ContractError(f"{loc}: self-review cannot claim independence")
     return v
 
@@ -192,9 +198,9 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
     for case in cases:
         c = _object(case, CASE_KEYS, CASE_KEYS, "case")
         cid = _str(c["case_id"], "case_id")
-        if cid in seen:
+        if _identity_key(cid) in seen:
             raise ContractError("duplicate case_id")
-        seen.add(cid)
+        seen.add(_identity_key(cid))
         _sha(c["frozen_question_sha256"], cid + ".frozen_question_sha256")
         _sha(c["evidence_sha256"], cid + ".evidence_sha256")
         _sha(c["rubric_sha256"], cid + ".rubric_sha256")
@@ -229,17 +235,17 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
                 reason.append(f"REUSED_PRIOR_RECEIPT_AS_SOURCE_PATH_OR_ALIAS:{source_type}")
             seen_source_digest.setdefault(source_sha, cid)
             seen_source_files.setdefault(source_file, cid)
-        if variants["SOLO"]["run_id"] == variants["DELEGATED"]["run_id"]:
+        if _identity_key(variants["SOLO"]["run_id"]) == _identity_key(variants["DELEGATED"]["run_id"]):
             raise ContractError(f"{cid}: two arms cannot share one execution run ID")
 
         # Separate run IDs are insufficient: two purported independent arms
         # cannot reuse execution OR verification evidence under the same digest,
         # filepath, or filesystem alias (including crossed receipt roles).
         solo, delegated = variants["SOLO"], variants["DELEGATED"]
-        pair_executors = {solo["executor_id"], delegated["executor_id"]}
+        pair_executors = {_identity_key(solo["executor_id"]), _identity_key(delegated["executor_id"])}
         for mode in MODES:
             review = variants[mode]["verification"]
-            if review["method"] == "INDEPENDENT_REVIEW" and review["verifier_id"] in pair_executors:
+            if review["method"] == "INDEPENDENT_REVIEW" and _identity_key(review["verifier_id"]) in pair_executors:
                 reason.append(f"PAIR_EXECUTOR_USED_AS_INDEPENDENT_VERIFIER:{mode}")
         def receipts(variant: dict[str, Any]) -> list[tuple[str, str | None, str | None]]:
             ver = variant["verification"]
@@ -293,7 +299,7 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
         # Same-case arm collisions are already handled by the checks above.
         for mode in MODES:
             v = variants[mode]
-            run_id = v["run_id"]
+            run_id = _identity_key(v["run_id"])
             if run_id in seen_runs and seen_runs[run_id] != cid:
                 reason.append(f"REUSED_RUN_ID_ACROSS_CASES:{run_id}")
             else:
