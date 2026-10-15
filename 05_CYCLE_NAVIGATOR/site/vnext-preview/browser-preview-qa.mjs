@@ -162,8 +162,41 @@ try{
   const replayState=await evaluate("(()=>({phase:document.querySelector('.range-compare-panel')?.dataset.revealPhase,label:document.querySelector('#cn-replay-day')?.textContent,visible:getComputedStyle(document.querySelector('.cn-chart-close-path')).opacity}))()");
   assert.ok(replayState.phase==='score'&&replayState.label?.includes('alle syv')&&replayState.visible==='1',
     'Actual path must fully return after explicit 7-day replay: '+JSON.stringify(replayState));
+  // Intermediate tablet widths are easy to miss: the desktop nav used to
+  // push the header's trailing buttons outside the viewport at 801–925px.
+  // Assert real layout bounds, not merely a successful CSS compilation.
+  for(const width of [801,820,900,940]){
+    await call('Emulation.setDeviceMetricsOverride',{
+      width,height:844,mobile:false,deviceScaleFactor:1
+    },sessionId);
+    await call('Page.navigate',{url:pathToFileURL(source).href+'#cn-path-week'},sessionId);
+    let ready=false;
+    for(let i=0;i<125;i++){
+      ready=await evaluate("Boolean(document.querySelector('.cn-chart-close-path'))");
+      if(ready)break;
+      await wait(100);
+    }
+    assert.ok(ready,'Tablet preview failed to render at '+width);
+    await evaluate("document.querySelector('.cn-path-range-details').open=true");
+    const state=await evaluate("(()=>{const mast=document.querySelector('.masthead-inner');const end=document.querySelector('.header-actions');return {viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,headerRight:Math.round(end.getBoundingClientRect().right),navVisible:getComputedStyle(document.querySelector('.desktop-nav')).display!=='none',tableVisible:!!document.querySelector('#cn-path-daily-table tbody tr'),chartPresent:!!document.querySelector('.cn-chart-close-path')}})()");
+    assert.ok(state.viewport===width&&state.scrollWidth<=width+1&&state.headerRight<=width+1&&
+      state.navVisible&&state.tableVisible&&state.chartPresent,
+      'Tablet header/forecast must fit at '+width+'px '+JSON.stringify(state));
+    console.log('PASS tablet '+width+'px '+JSON.stringify(state));
+    if(width===820){
+      await evaluate("document.querySelector('.cn-path-range-details').open=false");
+      await evaluate("document.getElementById('cn-path-week').scrollIntoView({behavior:'instant',block:'start'})");
+      await wait(300);
+      const shot=await call('Page.captureScreenshot',{
+        format:'png',captureBeyondViewport:false,fromSurface:true
+      },sessionId);
+      const bytes=Buffer.from(shot.data,'base64');
+      writeFileSync(join(out,'PATH_TABLET_820.png'),bytes);
+      assert.ok(bytes.length>12000,'Blank tablet screenshot');
+    }
+  }
   assert.deepEqual(runtimeErrors.filter(Boolean),[],'No JavaScript exceptions');
-  console.log('PASS all: two foreground lines, 390/430px, DA/EN, BTC/ETH, source, route, no horizontal overflow, nonblank screenshots');
+  console.log('PASS all: two lines, 390/430 mobile, 801/820/900/940 desktop-tablet, DA/EN, BTC/ETH, source, hash, scroll-width, real screenshots');
   ws.close();
 }finally{
   // Chrome writes profile files asynchronously. Cleanup must never obscure a
