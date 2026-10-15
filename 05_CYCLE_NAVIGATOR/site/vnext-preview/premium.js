@@ -919,6 +919,12 @@ async function initialize() {
     setRangeRevealPhase('score');
     paintHistory(data);
     paintSource(data);
+    // Dynamic source rendering can shift the page after the initial hash
+    // navigation, so honor a shared PATH deep link after source paint too.
+    if (location.hash === '#cn-path-week') {
+      requestAnimationFrame(() => document.getElementById('cn-path-week')
+        ?.scrollIntoView({ behavior:'auto', block:'start' }));
+    }
   } catch (err) {
     console.error('Preview source validation failed:', err);
     setText('source-health', 'DATASOURCE: UNAVAILABLE');
