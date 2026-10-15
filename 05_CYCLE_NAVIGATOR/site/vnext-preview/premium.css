@@ -1279,3 +1279,15 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
   .cn-path-week .cn-path-week-description{font-size:13px;}
   .cn-path-week .range-summary{font-size:12px;}
 }
+
+/* CN contrast gate for evidence-bearing PATH text.
+   Keep the premium muted palette, but never make source caveats, axes or
+   derived-forecast labels disappear into the background. Foreground #536a86
+   gives WCAG AA small-text contrast on both white paper and #f6f7f8 canvas. */
+.cn-path-week .section-aside{color:#536a86;}
+.cn-path-week .cn-chart-tick,
+.cn-path-week .cn-chart-weekday{fill:#536a86;}
+.cn-path-week .cn-chart-week{fill:#60738e;}
+.cn-path-week .chart-legend small{color:#536a86;}
+.cn-path-week .range-summary{color:#536a86;font-size:12px;}
+.cn-path-week .range-summary span:last-child{color:#536a86;}
