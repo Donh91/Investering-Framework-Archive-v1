@@ -335,6 +335,12 @@ try{
   assert.ok(restored.hidden&&restored.focus==='source-button'&&restored.expanded==='false',
     'Escape must close source dialog and restore focus '+JSON.stringify(restored));
   const nativeSummary="document.querySelector('#cn-path-week .cn-path-range-details summary')";
+  // The same offline file persists its DOM when Chrome navigates between
+  // hash destinations. A prior tablet test deliberately opened this
+  // disclosure; reset ONLY test state before testing actual keyboard input.
+  await evaluate("document.querySelector('#cn-path-week .cn-path-range-details').open=false");
+  assert.equal(await evaluate("document.querySelector('#cn-path-week .cn-path-range-details').open"),false,
+    'Keyboard disclosure test must begin closed');
   for(const expected of [true,false]){
     // Once a disclosure opens, the browser can move its focus to the
     // newly displayed subtree. Give each actual key activation a focused
