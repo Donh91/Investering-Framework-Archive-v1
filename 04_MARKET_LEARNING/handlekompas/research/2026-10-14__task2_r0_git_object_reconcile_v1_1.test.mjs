@@ -19,6 +19,14 @@ try{
     {id:'SHARED',sources:[{path:'fixture/a.json',git_object_sha:objA,git_object_type:'blob'}]}]};
   writeFileSync(join(dir,'fixture','a.json'),'B');rmSync(join(dir,'gone.json'));git('add','-A');git('commit','-qm','head');const head=git('rev-parse','HEAD'),tree=git('rev-parse',head+'^{tree}');
   test('valid anchored drift, missing, shared refs',()=>{const r=run(inventory,head,tree);assert.equal(r.status,2);const d=JSON.parse(r.stdout);assert.equal(d.counts.CHANGED,2);assert.equal(d.counts.MISSING,1);assert.equal(d.source_references,4);assert.equal(d.distinct_source_paths,3);assert.equal(d.original_pinned_source_objects_verified,true)});
+  test('compared source blob becoming tree is operational BLOCKED',()=>{
+    mkdirSync(join(dir,'gone.json'));writeFileSync(join(dir,'gone.json','nested.json'),'new');
+    git('add','-A');git('commit','-qm','replace removed blob with tree');
+    const typeHead=git('rev-parse','HEAD'),typeTree=git('rev-parse',typeHead+'^{tree}');
+    const r=run(inventory,typeHead,typeTree);
+    assert.equal(r.status,1,r.stdout);assert.match(r.stderr,/TASK2_R0_RECONCILIATION_BLOCKED: Compared source object TYPE_MISMATCH: gone.json/);
+    assert.equal(r.stdout,'');
+  });
   test('tampered original SHA rejected',()=>{const d=structuredClone(inventory);d.families[0].sources[0].git_object_sha='0'.repeat(40);d.families[1].sources[0].git_object_sha='0'.repeat(40);const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Original pinned source SHA\/type mismatch/)});
   test('tampered original type rejected',()=>{const d=structuredClone(inventory);d.families[0].sources[0].git_object_type='tree';d.families[1].sources[0].git_object_type='tree';const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Original pinned source SHA\/type mismatch/)});
   test('missing original path rejected',()=>{const d=structuredClone(inventory);d.families[0].sources[0].path='ghost.json';d.families[1].sources[0].path='ghost.json';const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Original pinned source object missing/)});
