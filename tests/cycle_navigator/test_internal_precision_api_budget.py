@@ -164,6 +164,8 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                 self.call()
             self.assertTrue(self.receipt().exists())
             self.claims = [{"claim_id": first_id}, {"claim_id": "CN-next-due"}]
+            new_due = cn._fresh_unattempted_long_claims(self.root, self.claims)
+            self.assertEqual([claim["claim_id"] for claim in new_due], ["CN-next-due"])
             with self.assertRaisesRegex(RuntimeError, "CN_API_CLAIM_ALREADY_ATTEMPTED"):
                 self.call()
             http.assert_called_once()
@@ -183,6 +185,8 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         older.mkdir(parents=True)
         (older / "receipt.json").write_text("{broken")
         with patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_PREVIOUS_RECEIPT_UNREADABLE"):
+                cn._fresh_unattempted_long_claims(self.root, self.claims)
             with self.assertRaisesRegex(RuntimeError, "CN_API_PREVIOUS_RECEIPT_UNREADABLE"):
                 self.call()
             http.assert_not_called()
