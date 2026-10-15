@@ -274,6 +274,20 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                 self.call()
             http.assert_not_called()
 
+    def test_duplicate_model_rows_cannot_reduce_pending_count_or_double_score(self):
+        one = json.loads(self.good["output_text"])["scores"][0]
+        duplicated = {**self.good, "output_text": json.dumps({"scores": [one, one]})}
+        with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \
+             patch("urllib.request.urlopen", return_value=Response(duplicated)) as paid:
+            with self.assertRaisesRegex(RuntimeError, "INVALID_STRUCTURED_OUTPUT"):
+                self.call()
+            receipt = json.loads(self.receipt().read_text())
+            self.assertEqual(receipt["status"], "API_OUTPUT_INVALID")
+            self.assertEqual(receipt["claim_ids"], [self.claims[0]["claim_id"]])
+            with self.assertRaisesRegex(RuntimeError, "COHORT_ALREADY_ATTEMPTED"):
+                self.call()
+            paid.assert_called_once()
+
     def test_invalid_model_output_retains_charge_and_skips_scoring(self):
         invalid = {**self.good, "output_text": json.dumps({"scores": []})}
         with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \
