@@ -184,6 +184,10 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
     seen_runs: dict[str, str] = {}
     seen_digest: dict[str, str] = {}
     seen_files: dict[str, str] = {}
+    # Source bundles may legitimately recur across cases. They must never
+    # masquerade as execution/review receipts anywhere in the series.
+    seen_source_digest: dict[str, str] = {}
+    seen_source_files: dict[str, str] = {}
     rows = []
     for case in cases:
         c = _object(case, CASE_KEYS, CASE_KEYS, "case")
@@ -210,6 +214,17 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
         reason = []
         reason += _readback(receipt_root, c["frozen_question_path"], c["frozen_question_sha256"], "FROZEN_QUESTION")
         reason += _readback(receipt_root, c["evidence_path"], c["evidence_sha256"], "EVIDENCE_BUNDLE")
+        for source_type, source_path, source_sha in [
+            ("FROZEN_QUESTION", c["frozen_question_path"], c["frozen_question_sha256"]),
+            ("EVIDENCE_BUNDLE", c["evidence_path"], c["evidence_sha256"]),
+        ]:
+            if source_sha in seen_digest and seen_digest[source_sha] != cid:
+                reason.append(f"REUSED_PRIOR_RECEIPT_AS_SOURCE_DIGEST:{source_type}")
+            source_file = str(((receipt_root if receipt_root is not None else Path.cwd()) / source_path).resolve())
+            if source_file in seen_files and seen_files[source_file] != cid:
+                reason.append(f"REUSED_PRIOR_RECEIPT_AS_SOURCE_PATH_OR_ALIAS:{source_type}")
+            seen_source_digest.setdefault(source_sha, cid)
+            seen_source_files.setdefault(source_file, cid)
         if variants["SOLO"]["run_id"] == variants["DELEGATED"]["run_id"]:
             raise ContractError(f"{cid}: two arms cannot share one execution run ID")
 
@@ -217,6 +232,11 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
         # cannot reuse execution OR verification evidence under the same digest,
         # filepath, or filesystem alias (including crossed receipt roles).
         solo, delegated = variants["SOLO"], variants["DELEGATED"]
+        pair_executors = {solo["executor_id"], delegated["executor_id"]}
+        for mode in MODES:
+            review = variants[mode]["verification"]
+            if review["method"] == "INDEPENDENT_REVIEW" and review["verifier_id"] in pair_executors:
+                reason.append(f"PAIR_EXECUTOR_USED_AS_INDEPENDENT_VERIFIER:{mode}")
         def receipts(variant: dict[str, Any]) -> list[tuple[str, str | None, str | None]]:
             ver = variant["verification"]
             return [
@@ -274,6 +294,12 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
             else:
                 seen_runs.setdefault(run_id, cid)
             for receipt_type, receipt_path, receipt_sha in receipts(v):
+                if receipt_sha is not None and receipt_sha in seen_source_digest and seen_source_digest[receipt_sha] != cid:
+                    reason.append(f"REUSED_PRIOR_SOURCE_AS_RECEIPT_DIGEST:{receipt_type}_{mode}")
+                if receipt_path is not None:
+                    source_path_resolved = str(((receipt_root if receipt_root is not None else Path.cwd()) / receipt_path).resolve())
+                    if source_path_resolved in seen_source_files and seen_source_files[source_path_resolved] != cid:
+                        reason.append(f"REUSED_PRIOR_SOURCE_AS_RECEIPT_PATH_OR_ALIAS:{receipt_type}_{mode}")
                 if receipt_sha is not None:
                     if receipt_sha in seen_digest and seen_digest[receipt_sha] != cid:
                         reason.append(f"REUSED_RECEIPT_DIGEST_ACROSS_CASES:{receipt_type}_{mode}")
