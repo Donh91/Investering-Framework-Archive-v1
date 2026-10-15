@@ -286,7 +286,11 @@ assert.equal(frozen.frozen_at_utc,'2026-09-28T05:53:37Z');
 assert.ok(Date.parse(frozen.frozen_at_utc)>Date.parse('2026-09-28T00:00:00Z'),
   'Must disclose Monday pre-freeze observations when showing daily actual low/high');
 for (const window of ['day_1_2','day_3_4','day_5_7']) {
- assert.ok(frozen.intraday_map[window].includes('BTC 
+  assert.ok(typeof frozen.intraday_map[window] === 'string' &&
+    frozen.intraday_map[window].includes('BTC') &&
+    frozen.intraday_map[window].includes('ETH'),
+    'All original source windows must be recorded, not fabricated');
+}
 assert.equal(readback.days.length, 7);
 assert.equal(readback.source_git_blob_sha, '33e0d1366c8de7e69ea1bd9655a96764aeabc70f');
 for (const asset of ['BTC','ETH']) {
