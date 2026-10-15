@@ -339,6 +339,9 @@ try{
   for(const expected of [true,false]){
     await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},sessionId);
     await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},sessionId);
+    // Native details toggle as a queued activation default action; CDP's
+    // key event completion alone is not the same as DOM microtask completion.
+    await wait(120);
     const open=await evaluate("document.querySelector('#cn-path-week .cn-path-range-details').open");
     assert.equal(open,expected,'Native keyboard Enter must toggle provenance disclosure');
   }
