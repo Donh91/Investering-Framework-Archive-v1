@@ -142,6 +142,50 @@ class T6RotationSurvivalTests(unittest.TestCase):
                 operate(sample, cadence(), root)
             self.assertEqual((root / "STATE.json").read_bytes(), state_before)
 
+    def test_valid_replay_preserves_all_supported_nonreversal_states(self):
+        for mode in ("no_cross", "first_cross", "active"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                sample = packet(0.029, 0.0) if mode == "no_cross" else packet(0.0301, 0.0002)
+                result = operate(sample, cadence(), root)
+                if mode == "active":
+                    sample = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                    result = operate(sample, cadence(), root)
+                before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                self.assertEqual(operate(sample, cadence(), root), result)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_replay_rejects_corrupted_consequential_latest_fields(self):
+        for field, value in (("event", "NO_ELIGIBLE_FIRST_CROSS"),
+                             ("active_sequence_id", None),
+                             ("authority", {"binding": True})):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                sample = packet(0.0301, 0.0002)
+                operate(sample, cadence(), root)
+                latest_path = root / "LATEST.json"
+                latest = json.loads(latest_path.read_text())
+                latest[field] = value
+                latest_path.write_text(json.dumps(latest))
+                before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                with self.assertRaisesRegex(ValueError, "t6_replay_latest_pointer_mismatch"):
+                    operate(sample, cadence(), root)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_replay_rejects_state_that_disagrees_with_frozen_event(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            sample = packet(0.0301, 0.0002)
+            operate(sample, cadence(), root)
+            state_path = root / "STATE.json"
+            state = json.loads(state_path.read_text())
+            state["active_sequence_id"] = None
+            state_path.write_text(json.dumps(state))
+            before = {p: p.read_bytes() for p in root.rglob("*.json")}
+            with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch"):
+                operate(sample, cadence(), root)
+            self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
     def test_stale_older_source_replay_does_not_rewind_newer_latest(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
