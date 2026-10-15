@@ -42,6 +42,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "status": "ACTIVE_SHADOW_ONLY",
             "monthly_hard_stop_usd": 40,
             "global_reserve_usd": 4,
+            "lane_caps_usd": {"CN_INTERNAL_LONG_HORIZON_SCORER": 1},
         }))
         (self.root / "research/api_agent/outputs").mkdir(parents=True)
         self.claims = [{"claim_id": "CN29-test-frozen-2w"}]
@@ -97,6 +98,38 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                 self.call()
             http.assert_not_called()
 
+    def test_missing_specific_lane_cap_fails_closed_before_payment(self):
+        path = self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json"
+        policy = json.loads(path.read_text())
+        policy["lane_caps_usd"].pop("CN_INTERNAL_LONG_HORIZON_SCORER")
+        path.write_text(json.dumps(policy))
+        with patch("subprocess.run") as guard, patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_LANE_CAP_UNVERIFIED_NO_SPEND"):
+                self.call()
+            guard.assert_not_called()
+            http.assert_not_called()
+
+    def test_lane_budget_denial_fails_before_post_without_receipt(self):
+        with patch("subprocess.run", side_effect=[
+            subprocess.CompletedProcess([], 0),
+            subprocess.CompletedProcess([], 1),
+        ]) as guard, patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_LANE_BUDGET_BLOCKED"):
+                self.call()
+            self.assertEqual(guard.call_count, 2)
+            http.assert_not_called()
+            self.assertFalse(self.receipt().exists())
+
+    def test_lane_budget_unavailable_fails_closed(self):
+        with patch("subprocess.run", side_effect=[
+            subprocess.CompletedProcess([], 0),
+            OSError("lane validator unavailable"),
+        ]) as guard, patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_LANE_BUDGET_CHECK_UNAVAILABLE"):
+                self.call()
+            self.assertEqual(guard.call_count, 2)
+            http.assert_not_called()
+
     def test_missing_budget_policy_is_no_spend_and_weekly_can_continue(self):
         (self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json").unlink()
         with patch("urllib.request.urlopen") as http:
@@ -132,10 +165,16 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             self.assertEqual(receipt["input_tokens"], 600)
             self.assertEqual(receipt["output_tokens"], 200)
             self.assertGreater(receipt["estimated_cost_usd"], 0)
-            command = guard.call_args.args[0]
-            self.assertIn("check_monthly_cost_guard.py", " ".join(command))
-            self.assertIn("--pending-ledger-root", command)
-            self.assertIn("--reserve-usd", command)
+            self.assertEqual(guard.call_count, 2, "both the global and task-specific gates must run")
+            monthly_command = guard.call_args_list[0].args[0]
+            lane_command = guard.call_args_list[1].args[0]
+            self.assertIn("check_monthly_cost_guard.py", " ".join(monthly_command))
+            self.assertIn("--pending-ledger-root", monthly_command)
+            self.assertIn("--reserve-usd", monthly_command)
+            self.assertIn("check_api_lane_budget.py", " ".join(lane_command))
+            self.assertEqual(lane_command[lane_command.index("--task") + 1], "CN_INTERNAL_LONG_HORIZON_SCORER")
+            self.assertEqual(lane_command[lane_command.index("--cap-usd") + 1], "1")
+            self.assertIn("--reserve-usd", lane_command)
             with self.assertRaisesRegex(RuntimeError, "COHORT_ALREADY_ATTEMPTED"):
                 self.call()
             http.assert_called_once()
