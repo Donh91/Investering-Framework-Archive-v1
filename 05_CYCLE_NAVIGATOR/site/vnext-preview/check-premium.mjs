@@ -329,12 +329,24 @@ assert.equal(spline([{x:0,y:1},{x:3,y:2},{x:2,y:3}]),'',
 // are in the explicit source-backed range table.
 assert.ok(!js.includes('const ribbon=upperPath'), 'No resurrected heavy forecast band');
 
-assert.match(js, /function paintSourceInstrument\(c\)/);
-assert.match(html, /id="cn-instrument-svg"/);
-assert.match(html, /id="cn-gauge-needle" hidden/);
-assert.match(css, /\.cn-gauge-bear/);
+// The Quiet Precision design specification explicitly rejects a duplicate
+// ornamental gauge. Only Official Compass owns action; the UI merely renders
+// separate source-owned direction and official action, once each.
+assert.ok(!html.includes('id="cn-instrument-svg"')&&!html.includes('cn-gauge-needle'),
+  'No decorative gauge or invented needle in decision-first editorial preview');
+assert.ok(!js.includes('paintSourceInstrument')&&!js.includes('const degrees = { WAIT:'),
+  'No obsolete client-side market/action position inference');
+assert.ok(!css.includes('.cn-gauge-')&&!css.includes('.cn-instrument'),
+  'No dead gauge selectors in CSS bundle');
+assert.match(html, /id="hero-now"/);
+assert.match(html, /id="hero-action-summary"/);
+const heroStart=html.indexOf('class="hero-key-metrics cn-overview-posture"');
+const horizonStart=html.indexOf('class="cn-overview-decision"');
+assert.ok(heroStart>0&&horizonStart>heroStart&&
+  html.indexOf('id="hero-now"',heroStart)<horizonStart&&
+  html.indexOf('id="hero-action-summary"',heroStart)<horizonStart,
+  'Direction and Official Compass action precede all horizon/phase/pullback exposition');
 assert.match(css, /\.cn-chart-table/);
-assert.match(js, /const degrees = \{ WAIT:-22, HARD_WAIT:-34, HOLD_WAIT:0, HOLD:21 \}/);
 
 
 // Approved visual-reference hierarchy and source-only action safety.
