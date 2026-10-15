@@ -17,9 +17,15 @@ This folder must not create a parallel market framework. It must reuse existing 
 
 For any broad historical master audit that intersects this research vault, **read the already merged, source-bound research dossier** at `05_CYCLE_NAVIGATOR/internal_learning/research/2026-10-10__legacy_to_automated_kompas_cross_archive_evidence_audit_v1.md`, including §8–9. It indexes pre-automation ChatGPT DATA PING, CFGI/Grok/TechDev, Cycle Navigator/Master Monday, the private MAEVE/851,882-row historical panel/BlockHorizon manifests, negative E1X/M1–M6 results, cross-repo PR and Claude Bridge dependencies, source/time leakage caveats, and outstanding original-chat recovery. The **separately staged** master-audit external-source intake is Archive draft PR #1558; read its exact head and reviewer status, not only main. This is navigation and evidence hygiene, **not** a new research engine, duplication of that PR's machine queue, permission to expose restricted data, or automatic strategy promotion.
 
-## Current prioritization — READ THIS FIRST
+## AI Discovery & Validation (GPT-6), current research entrypoint
 
-The independent 2026-09-12 architecture audit has materially changed ordering without changing the safety boundary.
+**Operational focus refreshed 2026-10-15, RESEARCH_ONLY.** The model-neutral owner crosswalk is the **existing** [Discovery & Validation Research Queue](ASTRA_DISCOVERY_VALIDATION_RESEARCH_QUEUE.md). Its historical `ASTRA_` filename is retained for stable Git links, not as a requirement for an Astra model or a new role. Use today's qualified GPT-6/API/Codex lanes under current routing and budget, and read the queue's top current-state reconciliation before interpreting its historical proposals.
+
+**Immediate order:** preserve the **successful E1 temporal-integrity validator evidence** separately from the **negative E3/E2 strategy results**, then finish/review existing PR #1643 delegation-receipt safeguards, then, if permitted and properly frozen, run **one** actual single-GPT-6 vs bounded-specialists comparison. Only then consider selective AI-call filtering. Broad autonomous strategy search remains blocked by existing #1557 trial-denominator and current PIT/scientific-admission gates. Code-only/synthetic tests cannot be reported as empirical AI-edge. **No new agent, engine, scheduler, budget, live execution or automatic permission** is established by this link.
+
+## Historical September 2026 prioritization — reassess against current owner state
+
+The independent 2026-09-12 architecture audit has materially changed ordering without changing the safety boundary. This section records the September ordering; it is not an instruction to rebuild validators already implemented and verified by the current E1/E1X owners. Apply existing checks only to newly unverified source lanes and follow the refreshed Discovery & Validation crosswalk above and fresh current main for today's order.
 
 Read:
 
