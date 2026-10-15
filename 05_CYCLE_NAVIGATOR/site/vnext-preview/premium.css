@@ -1291,3 +1291,13 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
 .cn-path-week .chart-legend small{color:#536a86;}
 .cn-path-week .range-summary{color:#536a86;font-size:12px;}
 .cn-path-week .range-summary span:last-child{color:#536a86;}
+
+/* CN desktop first-screen decision hierarchy.
+   A 790px gauge pushed the source-owned HOLD/BULLISH readout below the first
+   900px screen at 1024–1440px. Smaller, centered geometry preserves the
+   instrument and makes its action legible above the fold without duplicating
+   or deriving a single market signal. Mobile layout is untouched. */
+@media (min-width:901px) {
+  .cn-instrument{max-width:650px;margin:14px auto;}
+  .hero-main{padding-top:39px;padding-bottom:29px;}
+}
