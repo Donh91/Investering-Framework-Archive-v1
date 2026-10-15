@@ -136,6 +136,40 @@ class Bench(unittest.TestCase):
         b['verification']['verification_receipt_sha256'] = a['execution_receipt_sha256']
         self.assert_reused_receipt_not_metadata_eligible(obj)
 
+    def test_same_execution_and_verification_receipt_within_solo(self):
+        obj = make_case()
+        solo = obj['cases'][0]['variants'][0]
+        solo['verification']['verification_receipt_path'] = solo['execution_receipt_path']
+        solo['verification']['verification_receipt_sha256'] = solo['execution_receipt_sha256']
+        out = self.check(obj)
+        self.assertFalse(out['rows'][0]['metadata_eligible'])
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_RECEIPT_DIGEST_WITHIN_ARM:SOLO', out['rows'][0]['reasons'])
+        self.assertIn('REUSED_RECEIPT_PATH_OR_ALIAS_WITHIN_ARM:SOLO', out['rows'][0]['reasons'])
+
+    def test_same_verification_bytes_under_new_path_within_delegated(self):
+        obj = make_case()
+        delegated = obj['cases'][0]['variants'][1]
+        execution = delegated['execution_receipt_path']
+        alias = 'verify-clone-delegated.json'
+        (self.root / alias).write_bytes((self.root / execution).read_bytes())
+        delegated['verification']['verification_receipt_path'] = alias
+        delegated['verification']['verification_receipt_sha256'] = delegated['execution_receipt_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_RECEIPT_DIGEST_WITHIN_ARM:DELEGATED', out['rows'][0]['reasons'])
+
+    def test_same_file_symlink_alias_within_delegated(self):
+        obj = make_case()
+        delegated = obj['cases'][0]['variants'][1]
+        alias = 'verification-alias-delegated.json'
+        (self.root / alias).symlink_to(delegated['execution_receipt_path'])
+        delegated['verification']['verification_receipt_path'] = alias
+        delegated['verification']['verification_receipt_sha256'] = delegated['execution_receipt_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_RECEIPT_PATH_OR_ALIAS_WITHIN_ARM:DELEGATED', out['rows'][0]['reasons'])
+
     def test_duplicate_pair_across_cases_counted_once(self):
         obj = make_case()
         copy = deepcopy(obj['cases'][0])
