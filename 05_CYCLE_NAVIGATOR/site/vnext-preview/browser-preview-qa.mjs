@@ -119,6 +119,13 @@ try{
   console.log('PASS all: two foreground lines, 390/430px, DA/EN, BTC/ETH, source, route, no horizontal overflow, nonblank screenshots');
   ws.close();
 }finally{
+  // Chrome writes profile files asynchronously. Cleanup must never obscure a
+  // genuine browser assertion/connection failure with a secondary ENOTEMPTY.
   child.kill('SIGTERM');
-  rmSync(profile,{recursive:true,force:true,maxRetries:3});
+  await Promise.race([
+    new Promise(done=>child.once('exit',done)),
+    wait(2500)
+  ]);
+  try { rmSync(profile,{recursive:true,force:true,maxRetries:20,retryDelay:150}); }
+  catch(err) { console.warn('Non-blocking temporary Chromium profile cleanup:',err.code); }
 }
