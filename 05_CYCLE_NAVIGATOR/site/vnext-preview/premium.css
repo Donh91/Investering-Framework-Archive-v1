@@ -1280,3 +1280,23 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
 @media(max-width:350px){
   .preview-ribbon{font-size:8px;letter-spacing:0;gap:3px;}
 }
+
+/* Editorial typography calibration (reference: Taste Skill, principles only).
+   Improve headline line-break balance and legibility of comparable financial
+   figures without loading fonts, scripts or altering source meaning. */
+#overview-title,
+.section-heading h2,
+.secondary-heading h1 {
+  text-wrap: balance;
+}
+.hero-subtitle,
+.cn-path-week-description {
+  text-wrap: pretty;
+}
+.hero-key-metrics strong,
+.cn-overview-horizon-readout,
+.cn-overview-market-table,
+.cn-chart-table,
+.cn-range-scorecards {
+  font-variant-numeric: tabular-nums;
+}
