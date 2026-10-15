@@ -130,7 +130,7 @@ function setRangeRevealPhase(phase) {
 function revealActualThrough(dayIndex) {
   const clip = $('cn-path-actual-clip-rect');
   if (!clip) return;
-  const left=87, right=706;
+  const {left,right}=rangeChartGeometry();
   const width=dayIndex<0?0:(right-left)*(Math.min(6,dayIndex)/6)+24;
   clip.setAttribute('width',String(width));
   if (dayIndex < 0) setText('cn-replay-day','01 · Frosne intervalvinduer');
@@ -720,6 +720,15 @@ function monotoneClosePath(points) {
       ' '+p.x.toFixed(2)+' '+p.y.toFixed(2);
   },'');
 }
+// Give the iPhone chart its own legible coordinate system instead of
+// reducing an 820px desktop SVG to unreadably small 5px price labels.
+function rangeChartGeometry() {
+  const compact = typeof window.matchMedia === 'function' &&
+    window.matchMedia('(max-width: 580px)').matches;
+  return compact
+    ? { width:480, height:380, top:24, left:76, right:424, bottom:320, weekX:458 }
+    : { width:820, height:396, top:35, left:87, right:706, bottom:336, weekX:774 };
+}
 function renderRangeChart() {
   const root = $('range-visualization'); clear(root);
   const parsed = completeDailyHistory(data?.completed_score, selectedAsset);
@@ -734,10 +743,11 @@ function renderRangeChart() {
   const floor = Math.floor(Math.min(...rangeValues)/step)*step;
   const ceiling = Math.ceil(Math.max(...rangeValues)/step)*step;
   const yMin = floor-step, yMax=ceiling+step;
-  const top=35,left=87,right=706,bottom=336,h=bottom-top;
+  const {width:chartW,height:chartH,top,left,right,bottom,weekX}=rangeChartGeometry();
+  const h=bottom-top;
   const Y = (n) => bottom-(n-yMin)/(yMax-yMin)*h;
   const X = (i) => left+(right-left)*(i/6);
-  const svg=chartElement('svg',{viewBox:'0 0 820 396',class:'cn-history-chart',role:'img','aria-label':selectedAsset+' W40: lys stiplet AFLEDT forecastmidtlinje fra tre frosne perioder, sammenlignet med blå observeret dagslukningskurve fra mandag til søndag.'});
+  const svg=chartElement('svg',{viewBox:'0 0 '+chartW+' '+chartH,class:'cn-history-chart',role:'img','aria-label':selectedAsset+' W40: lys stiplet AFLEDT forecastmidtlinje fra tre frosne perioder, sammenlignet med blå observeret dagslukningskurve fra mandag til søndag.'});
   svg.append(chartElement('title',{},selectedAsset+' historisk uge 40, dagslukning og 3 frosne prognoseperioder'));
   svg.append(chartElement('desc',{},'Syv virkelige dagslukninger fra 168 timeobservationer, 28 september til 4 oktober 2026. De frosne forecasts dækker tre separate vinduer: dag 1-2, 3-4 og 5-7. Ingen daglige forecast-priser er estimeret.'));
   for(let val=yMin;val<=yMax;val+=step){
@@ -775,7 +785,7 @@ function renderRangeChart() {
   }
   const pathPoints=days.map((d,i)=>({x:X(i),y:Y(d[selectedAsset].close)}));
   const defs=chartElement('defs'),clip=chartElement('clipPath',{id:'cn-path-actual-clip'});
-  clip.append(chartElement('rect',{x:left-12,y:0,width:740,height:396,id:'cn-path-actual-clip-rect'}));
+  clip.append(chartElement('rect',{x:left-12,y:0,width:right-left+24,height:chartH,id:'cn-path-actual-clip-rect'}));
   defs.append(clip);svg.append(defs);
   const actualGroup=chartElement('g',{'clip-path':'url(#cn-path-actual-clip)'});
   days.forEach((d,i)=>{
@@ -783,7 +793,7 @@ function renderRangeChart() {
     actualGroup.append(chartElement('line',{x1:x,x2:x,y1:Y(p.high),y2:Y(p.low),class:'cn-chart-actual-range'}));
     svg.append(chartElement('text',{x,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday'},['Man','Tir','Ons','Tor','Fre','Lør','Søn'][i]));
   });
-  svg.append(chartElement('text',{x:774,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday cn-chart-weekaxis'},'W40'));
+  svg.append(chartElement('text',{x:weekX,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday cn-chart-weekaxis'},'W40'));
   actualGroup.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
   pathPoints.forEach((p,i)=>{
     const point=chartElement('circle',{cx:p.x,cy:p.y,r:4.8,class:'cn-chart-point'});
@@ -930,6 +940,17 @@ async function initialize() {
   });
   bindNavigation();
   bindPanels();
+  if (typeof window.matchMedia === 'function') {
+    window.matchMedia('(max-width: 580px)').addEventListener?.('change', () => {
+      // Recreate paths and clip geometry only when crossing the real breakpoint.
+      // Avoid stale desktop coordinates after iPhone landscape rotation.
+      if (data) {
+        cancelRangeReveal();
+        renderRangeChart();
+        setRangeRevealPhase('score');
+      }
+    });
+  }
   try {
     const response = await fetch(SOURCE_FILE, { cache: 'no-store' });
     if (!response.ok) throw new Error('Source HTTP ' + response.status);
