@@ -216,9 +216,9 @@ def validate(out_dir: Path) -> str:
     summary = str(result.get("summary") or "")
     verdict_pattern = (
         r"(?:PASS_WITH_FINDINGS|PASS|FAIL)(?: |; )"
-        r"MODEL_USED=gpt-6\\.1-sol(?:,? )"
+        r"MODEL_USED=gpt-6\.1-sol(?:,? )"
         r"NO_CODE_WRITE_PERFORMED(?:,? )"
-        r"NO_AUTHORITY_CHANGE\\.?"
+        r"NO_AUTHORITY_CHANGE\.?"
     )
     if re.fullmatch(verdict_pattern, summary) is None:
         raise ValueError("REVIEW_VERDICT_OR_MARKERS_INVALID")
