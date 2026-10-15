@@ -280,6 +280,38 @@ class Bench(unittest.TestCase):
         self.assertEqual(actual['paired_eligible_count'], 0)
         self.assertIn('FROZEN_RUBRIC:RECEIPT_ROOT_NOT_PROVIDED', actual['rows'][0]['reasons'])
 
+    def test_scoring_rubric_cannot_be_frozen_question_file(self):
+        obj = make_case()
+        case = obj['cases'][0]
+        case['rubric_path'] = case['frozen_question_path']
+        case['rubric_sha256'] = case['frozen_question_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_SOURCE_ARTIFACT_DIGEST:FROZEN_QUESTION_VS_FROZEN_RUBRIC', out['rows'][0]['reasons'])
+        self.assertIn('REUSED_SOURCE_ARTIFACT_PATH_OR_ALIAS:FROZEN_QUESTION_VS_FROZEN_RUBRIC', out['rows'][0]['reasons'])
+
+    def test_rubric_copied_evidence_bytes_rejected(self):
+        obj = make_case()
+        case = obj['cases'][0]
+        clone = 'copied-evidence-rubric.txt'
+        (self.root / clone).write_bytes((self.root / case['evidence_path']).read_bytes())
+        case['rubric_path'] = clone
+        case['rubric_sha256'] = case['evidence_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_SOURCE_ARTIFACT_DIGEST:EVIDENCE_BUNDLE_VS_FROZEN_RUBRIC', out['rows'][0]['reasons'])
+
+    def test_rubric_evidence_symlink_alias_rejected(self):
+        obj = make_case()
+        case = obj['cases'][0]
+        alias = 'alias-of-evidence-as-rubric.txt'
+        (self.root / alias).symlink_to(case['evidence_path'])
+        case['rubric_path'] = alias
+        case['rubric_sha256'] = case['evidence_sha256']
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('REUSED_SOURCE_ARTIFACT_PATH_OR_ALIAS:EVIDENCE_BUNDLE_VS_FROZEN_RUBRIC', out['rows'][0]['reasons'])
+
     def test_frozen_rubric_is_byte_verified_for_both_arms(self):
         out = self.check(make_case())
         self.assertEqual(out['byte_consistent_pair_count'], 1)
