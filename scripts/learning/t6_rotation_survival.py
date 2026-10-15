@@ -153,6 +153,17 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
         }
         if any(original.get(key) != value for key, value in expected_source_fields.items()):
             raise ValueError(f"immutable_conflict:{observation_path}")
+        event = original.get("event")
+        if event == "FIRST_CROSS_FROZEN":
+            expected_active = sequence_id(packet_hash, observed_at)
+        elif event == "ACTIVE_SEQUENCE_OBSERVATION":
+            expected_active = original.get("sequence_id")
+            if not isinstance(expected_active, str) or not expected_active:
+                raise ValueError("t6_replay_state_mismatch")
+        elif event in {"ETHBTC_REVERSAL_OBSERVED", "NO_ELIGIBLE_FIRST_CROSS"}:
+            expected_active = None
+        else:
+            raise ValueError("t6_replay_state_mismatch")
         latest_path = root / "LATEST.json"
         if not latest_path.exists():
             raise ValueError("t6_replay_latest_pointer_missing")
@@ -160,8 +171,21 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
         if (latest.get("contract") != "ROTATION_SURVIVAL_LATEST_v1"
                 or latest.get("observation_path") != observation_path.as_posix()
                 or latest.get("observation_sha256") != sha(original)
-                or latest.get("observed_at_utc") != observed_at):
+                or latest.get("observed_at_utc") != observed_at
+                or latest.get("event") != event
+                or "active_sequence_id" not in latest
+                or latest["active_sequence_id"] != expected_active
+                or latest.get("authority") != AUTHORITY):
             raise ValueError("t6_replay_latest_pointer_mismatch")
+        state_path = root / "STATE.json"
+        if state_path.exists():
+            replay_state = read_json(state_path)
+            if (replay_state.get("contract") != STATE_CONTRACT
+                    or "active_sequence_id" not in replay_state
+                    or replay_state["active_sequence_id"] != expected_active):
+                raise ValueError("t6_replay_state_mismatch")
+        elif expected_active is not None or event == "ETHBTC_REVERSAL_OBSERVED":
+            raise ValueError("t6_replay_state_mismatch")
         return latest
 
     state_path = root / "STATE.json"
