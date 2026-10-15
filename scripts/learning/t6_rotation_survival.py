@@ -184,6 +184,36 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
                     or "active_sequence_id" not in replay_state
                     or replay_state["active_sequence_id"] != expected_active):
                 raise ValueError("t6_replay_state_mismatch")
+            if event in {"FIRST_CROSS_FROZEN", "ACTIVE_SEQUENCE_OBSERVATION", "ETHBTC_REVERSAL_OBSERVED"}:
+                replay_sequence = expected_active if expected_active is not None else original.get("sequence_id")
+                if not isinstance(replay_sequence, str) or not replay_sequence.startswith("T6-") or len(replay_sequence) != 19 or any(c not in "0123456789abcdef" for c in replay_sequence[3:]):
+                    raise ValueError("t6_replay_state_mismatch")
+                baseline_path = root / "sequences" / replay_sequence / "BASELINE.json"
+                if not baseline_path.is_file():
+                    raise ValueError("t6_replay_state_mismatch")
+                baseline = read_json(baseline_path)
+                start = baseline.get("sequence_start_utc")
+                source = baseline.get("source_packet_sha256")
+                if (baseline.get("contract") != CONTRACT or baseline.get("authority") != AUTHORITY
+                        or baseline.get("sequence_id") != replay_sequence
+                        or baseline.get("registered_ethbtc_level_read_only") != level
+                        or not isinstance(start, str) or not isinstance(source, str)
+                        or len(source) != 64 or any(c not in "0123456789abcdef" for c in source)
+                        or sequence_id(source, start) != replay_sequence
+                        or parse_time(start) > parse_time(observed_at)):
+                    raise ValueError("t6_replay_state_mismatch")
+                if event == "FIRST_CROSS_FROZEN" and (start != observed_at or source != packet_hash):
+                    raise ValueError("t6_replay_state_mismatch")
+                if event == "ETHBTC_REVERSAL_OBSERVED":
+                    expected_state = {"contract": STATE_CONTRACT, "active_sequence_id": None,
+                                      "last_closed_sequence_id": replay_sequence, "closed_at_utc": observed_at,
+                                      "closure_reason": "ETHBTC_REVERSED_BELOW_REGISTERED_FIRST_CROSS_LEVEL",
+                                      "source_packet_sha256": packet_hash}
+                else:
+                    expected_state = {"contract": STATE_CONTRACT, "active_sequence_id": replay_sequence,
+                                      "sequence_start_utc": start, "source_packet_sha256": source}
+                if replay_state != expected_state:
+                    raise ValueError("t6_replay_state_mismatch")
         elif expected_active is not None or event == "ETHBTC_REVERSAL_OBSERVED":
             raise ValueError("t6_replay_state_mismatch")
         return latest

@@ -200,6 +200,73 @@ class T6RotationSurvivalTests(unittest.TestCase):
             self.assertEqual((root / "STATE.json").read_bytes(), state_before)
             self.assertEqual((root / "LATEST.json").read_bytes(), latest_before)
 
+    def test_replay_rejects_corrupt_active_sequence_clock_and_source(self):
+        for mode in ("first_cross", "active"):
+            for field, value in (("sequence_start_utc", "2027-01-01T00:00:00Z"),
+                                 ("source_packet_sha256", "0" * 64)):
+                with self.subTest(mode=mode, field=field), tempfile.TemporaryDirectory() as td:
+                    root = Path(td)
+                    sample = packet(0.0301, 0.0002)
+                    operate(sample, cadence(), root)
+                    if mode == "active":
+                        sample = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                        operate(sample, cadence(), root)
+                    state_path = root / "STATE.json"
+                    state = json.loads(state_path.read_text())
+                    state[field] = value
+                    state_path.write_text(json.dumps(state))
+                    before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                    with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch"):
+                        operate(sample, cadence(), root)
+                    self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_replay_rejects_corrupt_or_missing_active_baseline(self):
+        for mode in ("missing", "clock", "source"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                sample = packet(0.0301, 0.0002)
+                result = operate(sample, cadence(), root)
+                path = root / "sequences" / result["active_sequence_id"] / "BASELINE.json"
+                if mode == "missing":
+                    path.unlink()
+                else:
+                    baseline = json.loads(path.read_text())
+                    baseline["sequence_start_utc" if mode == "clock" else "source_packet_sha256"] = "2027-01-01T00:00:00Z" if mode == "clock" else "0" * 64
+                    path.write_text(json.dumps(baseline))
+                before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch"):
+                    operate(sample, cadence(), root)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_reversal_replay_rejects_corrupt_closure_clock_and_source(self):
+        for field, value in (("closed_at_utc", "2027-01-01T00:00:00Z"),
+                             ("source_packet_sha256", "0" * 64),
+                             ("last_closed_sequence_id", "T6-wrong"),
+                             ("closure_reason", "OTHER")):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                operate(packet(0.0301, 0.0002), cadence(), root)
+                sample = packet(0.0298, -0.0003, stamp="2026-09-10T01:00:00Z")
+                operate(sample, cadence(), root)
+                state_path = root / "STATE.json"
+                state = json.loads(state_path.read_text())
+                state[field] = value
+                state_path.write_text(json.dumps(state))
+                before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch"):
+                    operate(sample, cadence(), root)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_valid_first_cross_replay_preserves_next_fresh_elapsed_time(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            sample = packet(0.0301, 0.0002)
+            first = operate(sample, cadence(), root)
+            self.assertEqual(operate(sample, cadence(), root), first)
+            later = operate(packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z"), cadence(), root)
+            observation = json.loads(Path(later["observation_path"]).read_text())
+            self.assertEqual(observation["time_in_state_days"], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()
