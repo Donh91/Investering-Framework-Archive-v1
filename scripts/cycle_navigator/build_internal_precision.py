@@ -392,6 +392,34 @@ def _cn_cost_receipt_path(repo: Path, claims: list[dict[str, Any]]) -> Path:
     return repo / "research/api_agent/outputs/cn_internal_precision" / digest / "receipt.json"
 
 
+
+def _reject_previously_attempted_claims(repo: Path, claims: list[dict[str, Any]]) -> None:
+    """Require no overlap with any earlier paid CN cohort, even if cohort membership changes."""
+    root = repo / "research/api_agent/outputs/cn_internal_precision"
+    if not root.exists():
+        return
+    if not root.is_dir() or root.is_symlink():
+        raise RuntimeError("CN_API_RECEIPT_ROOT_INVALID")
+    current = {str(item["claim_id"]) for item in claims}
+    for path in sorted(root.glob("*/receipt.json")):
+        if path.is_symlink() or path.parent.is_symlink():
+            raise RuntimeError("CN_API_RECEIPT_PATH_INVALID")
+        try:
+            prior = json.loads(path.read_text())
+        except (OSError, ValueError, TypeError) as exc:
+            raise RuntimeError("CN_API_PREVIOUS_RECEIPT_UNREADABLE") from exc
+        if not isinstance(prior, dict) or prior.get("contract") != "API_AGENT_RECEIPT_v3":
+            raise RuntimeError("CN_API_PREVIOUS_RECEIPT_INVALID")
+        if prior.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER":
+            raise RuntimeError("CN_API_PREVIOUS_RECEIPT_TASK_INVALID")
+        ids = prior.get("claim_ids")
+        if (not isinstance(ids, list) or not ids or
+                any(not isinstance(v, str) or not v for v in ids) or len(ids) != len(set(ids))):
+            raise RuntimeError("CN_API_PREVIOUS_RECEIPT_CLAIMS_INVALID")
+        if current.intersection(ids):
+            raise RuntimeError("CN_API_CLAIM_ALREADY_ATTEMPTED_OWNER_REVIEW_REQUIRED")
+
+
 def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidence: list[dict[str, Any]],
                                max_output_tokens: int, repo: Path | None = None) -> list[dict[str, Any]]:
     if not claims:
@@ -404,6 +432,7 @@ def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidenc
     receipt_path = _cn_cost_receipt_path(repo, claims)
     if receipt_path.exists():
         raise RuntimeError("CN_API_COHORT_ALREADY_ATTEMPTED_OWNER_REVIEW_REQUIRED")
+    _reject_previously_attempted_claims(repo, claims)
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY_missing_for_mature_long_horizon_claims")
