@@ -305,7 +305,28 @@ for (const asset of ['BTC','ETH']) {
   }
 }
 assert.match(js, /function completeDailyHistory\(score, asset\)/);
-assert.match(js, /function monotoneClosePath\(points\)/);
+assert.match(js, /function monotoneClosePath\\(points\\)/);
+// Regression: after moving to the shape-preserving spline, reverse-x path
+// previously returned '' and the preview silently drew a malformed ribbon.
+const splineSource = js.match(/function monotoneClosePath\\(points\\) \\{[\\s\\S]*?\\n\\}/)?.[0];
+assert.ok(splineSource, 'Readable pure SVG interpolation helper');
+const spline = new Function(splineSource + '; return monotoneClosePath;')();
+const asc = [{x:0,y:5},{x:10,y:8},{x:20,y:6},{x:40,y:9}];
+const desc = [...asc].reverse();
+for (const [name,pts] of [['forward',asc],['reverse',desc]]) {
+  const d=spline(pts);
+  assert.ok(d.startsWith('M ') && (d.match(/ C /g)||[]).length===pts.length-1,
+    name + ' spline must preserve all windows and be visibly complete');
+  assert.ok(!d.includes('NaN') && !d.includes('Infinity'),name+' spline remains finite');
+}
+assert.equal(spline([{x:0,y:1},{x:0,y:2}]),'', 'Duplicate x is invalid');
+assert.equal(spline([{x:0,y:1},{x:3,y:2},{x:2,y:3}]),'',
+  'Nonmonotone x cannot form an unambiguous smooth SVG boundary');
+const ribbonPath=spline(asc)+' L '+spline(desc).slice(2)+' Z';
+assert.equal((ribbonPath.match(/ C /g)||[]).length,6,
+  'Filled corridor requires both three-segment curves, not one-sided fragment');
+assert.match(js,/const ribbon=upperPath\+' L '\+lowerReturnPath\.slice\(2\)\+' Z'/);
+
 assert.match(js, /function paintSourceInstrument\(c\)/);
 assert.match(html, /id="cn-instrument-svg"/);
 assert.match(html, /id="cn-gauge-needle" hidden/);
