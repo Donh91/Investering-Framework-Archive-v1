@@ -297,11 +297,23 @@ assert.match(js, /const degrees = \{ WAIT:-22, HARD_WAIT:-34, HOLD_WAIT:0, HOLD:
 
 
 // Approved visual-reference hierarchy and source-only action safety.
-const sourceChartStart=html.indexOf('class="cn-results-evidence"');
+const sourceChartStart=html.indexOf('id="cn-path-week"');
+const sourceChartMarkup=html.indexOf('id="range-visualization"');
 const legacyFoldStart=html.indexOf('class="edge-legacy-fold"');
 const prospectiveStart=html.indexOf('class="edge-era"');
-assert.ok(prospectiveStart > 0 && prospectiveStart < sourceChartStart && sourceChartStart < legacyFoldStart,
-  'Actual historic chart must be visible after prospective v2 and outside collapsed Legacy');
+const summaryStart=html.indexOf('class="cn-results-evidence"');
+assert.ok(sourceChartStart > 0 && sourceChartMarkup > sourceChartStart &&
+  sourceChartMarkup < prospectiveStart && prospectiveStart < summaryStart && summaryStart < legacyFoldStart,
+  'One weekly price journey belongs to PATH; Results contains score receipts only');
+assert.equal((html.match(/id="cn-source-chart"/g)||[]).length,1);
+assert.equal((html.match(/id="cn-path-window-table"/g)||[]).length,1);
+assert.equal((html.match(/id="cn-path-daily-table"/g)||[]).length,1);
+assert.equal((html.match(/id="cn-path-week-open"/g)||[]).length,1);
+assert.match(js,/function revealActualThrough\(dayIndex\)/);
+assert.match(js,/cn-path-actual-clip-rect/);
+assert.match(js,/FROSSET D1–2/);
+assert.match(js,/cn-chart-forecast-midpoint/);
+assert.match(css,/\.cn-chart-forecast-ribbon/);
 assert.equal((html.match(/id="range-visualization"/g)||[]).length,1);
 assert.equal((html.match(/data-overview-horizon="/g)||[]).length,5);
 assert.equal((html.match(/id="cn-overview-market-body"/g)||[]).length,1);
