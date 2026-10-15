@@ -34,7 +34,16 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-pullback-investor-view.mjs
       - name: Verify all 10 source-bound PATH stages and conditional gates
         run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-path.mjs
-      - name: Bundle production-style Vite preview (development tool only)
-        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/verify-vite-bundle.mjs
+      - name: Bundle production-style Vite preview and retain immutable PR artifact
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/verify-vite-bundle.mjs --artifact-dir "$RUNNER_TEMP/cn-vnext-preview"
+      - name: Archive the exact tested GitHub preview without deploying
+        uses: actions/upload-artifact@v4
+        with:
+          name: cn-vnext-source-preview-${{ github.run_id }}
+          path: ${{ runner.temp }}/cn-vnext-preview/
+          if-no-files-found: error
+          retention-days: 7
       - name: No production deployment
-        run: echo 'Design smoke test only; no published CN site or official signal is changed.'
+        run: echo 'PR artifact only. No Pages deployment, production signal, or AppDeploy needed.'
