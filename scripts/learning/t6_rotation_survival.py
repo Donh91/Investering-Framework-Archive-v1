@@ -106,6 +106,67 @@ def sequence_id(packet_hash: str, observed_at: str) -> str:
     return "T6-" + hashlib.sha256(f"{packet_hash}|{observed_at}".encode()).hexdigest()[:16]
 
 
+def verified_replay_baseline(root: Path, seq: str, level: float, at: str) -> dict[str, Any]:
+    """Validate the COMPLETE baseline against its first immutable cross observation.
+
+    A sequence ID/clock alone cannot authenticate frozen price/breadth/flow axes.
+    A replay must fail closed when the historical first-cross observation or
+    baseline is missing or inconsistent. No historical object is rewritten.
+    """
+    baseline_path = root / "sequences" / seq / "BASELINE.json"
+    if not baseline_path.is_file():
+        raise ValueError("t6_replay_state_mismatch")
+    baseline = read_json(baseline_path)
+    start = baseline.get("sequence_start_utc")
+    source = baseline.get("source_packet_sha256")
+    if (not isinstance(start, str) or not isinstance(source, str)
+            or len(source) != 64 or any(c not in "0123456789abcdef" for c in source)
+            or sequence_id(source, start) != seq or parse_time(start) > parse_time(at)):
+        raise ValueError("t6_replay_state_mismatch")
+    first_id = hashlib.sha256(f"{source}|{start}".encode()).hexdigest()[:20]
+    first_path = root / "observations" / f"{start[:10]}_{first_id}.json"
+    if not first_path.is_file():
+        raise ValueError("t6_replay_state_mismatch")
+    first = read_json(first_path)
+    before, crossed = first.get("prior_ethbtc"), first.get("current_ethbtc")
+    axes = first.get("axes")
+    if (first.get("contract") != OBS_CONTRACT or first.get("authority") != AUTHORITY
+            or first.get("event") != "FIRST_CROSS_FROZEN"
+            or first.get("observed_at_utc") != start
+            or first.get("source_packet_sha256") != source
+            or first.get("registered_ethbtc_level_read_only") != level
+            or first.get("active_sequence_id_before") is not None
+            or first.get("first_cross_detected") is not True
+            or first.get("retrospective_creation") is not False
+            or first.get("right_censored") is not None
+            and first.get("right_censored") is not True
+            or isinstance(before, bool) or not isinstance(before, (int, float))
+            or isinstance(crossed, bool) or not isinstance(crossed, (int, float))
+            or not before < level <= crossed
+            or not isinstance(axes, dict) or set(axes) != {"ETHBTC", "breadth", "BTC_D", "deployment", "flow"}
+            or axes.get("ETHBTC") != axis(crossed, "normalized_state.scalar_values.ethbtc")
+            or first.get("missing_axes") != [key for key, row in axes.items() if isinstance(row, dict) and row.get("available") is False]
+            or any(not isinstance(row, dict) or set(row) != {"available", "value", "source_field", "inferred"}
+                   or row.get("inferred") is not False
+                   or row.get("available") is not (row.get("value") is not None)
+                   for row in axes.values())):
+        raise ValueError("t6_replay_state_mismatch")
+    expected = {
+        "contract": CONTRACT, "authority": AUTHORITY, "sequence_id": seq,
+        "sequence_start_utc": start, "benchmark": "FIRST_ETHBTC_CROSS",
+        "registered_ethbtc_level_read_only": level,
+        "source_packet_sha256": source,
+        "first_cross": {"prior_ethbtc": before, "cross_ethbtc": crossed},
+        "axes_at_freeze": axes, "right_censored": True,
+        "relationship_classification": None, "incremental_value_vs_first_cross": None,
+        "delay_cost": None, "failure_outcome": None, "exit_side_outcome": None,
+        "missingness_policy": "MISSING_REMAINS_UNKNOWN_NEVER_INFERRED",
+    }
+    if baseline != expected:
+        raise ValueError("t6_replay_state_mismatch")
+    return baseline
+
+
 def write_immutable(path: Path, value: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     data = canon(value)
@@ -188,20 +249,9 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
                 replay_sequence = expected_active if expected_active is not None else original.get("sequence_id")
                 if not isinstance(replay_sequence, str) or not replay_sequence.startswith("T6-") or len(replay_sequence) != 19 or any(c not in "0123456789abcdef" for c in replay_sequence[3:]):
                     raise ValueError("t6_replay_state_mismatch")
-                baseline_path = root / "sequences" / replay_sequence / "BASELINE.json"
-                if not baseline_path.is_file():
-                    raise ValueError("t6_replay_state_mismatch")
-                baseline = read_json(baseline_path)
-                start = baseline.get("sequence_start_utc")
-                source = baseline.get("source_packet_sha256")
-                if (baseline.get("contract") != CONTRACT or baseline.get("authority") != AUTHORITY
-                        or baseline.get("sequence_id") != replay_sequence
-                        or baseline.get("registered_ethbtc_level_read_only") != level
-                        or not isinstance(start, str) or not isinstance(source, str)
-                        or len(source) != 64 or any(c not in "0123456789abcdef" for c in source)
-                        or sequence_id(source, start) != replay_sequence
-                        or parse_time(start) > parse_time(observed_at)):
-                    raise ValueError("t6_replay_state_mismatch")
+                baseline = verified_replay_baseline(root, replay_sequence, level, observed_at)
+                start = baseline["sequence_start_utc"]
+                source = baseline["source_packet_sha256"]
                 if event == "FIRST_CROSS_FROZEN" and (start != observed_at or source != packet_hash):
                     raise ValueError("t6_replay_state_mismatch")
                 if event == "ETHBTC_REVERSAL_OBSERVED":
