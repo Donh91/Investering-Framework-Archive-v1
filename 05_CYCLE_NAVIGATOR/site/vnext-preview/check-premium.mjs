@@ -420,5 +420,37 @@ assert.match(js, /target\.scrollIntoView\(\{ behavior:'auto', block:'start' \}\)
 assert.match(css, /\.mobile-dock \.dock-link\{width:25%;/);
 assert.match(html, /class="cn-path-jump-banner"/);
 
+
+// Replay must finish after day seven in both DA and EN without referring
+// to a block-scoped renderRangeChart variable. Exercise the real function.
+const replayStart=js.indexOf('function playRangeComparison() {');
+const replayEnd=js.indexOf('\nconst overviewHorizonKeys',replayStart);
+assert.ok(replayStart>0 && replayEnd>replayStart,'Extract replay logic');
+const replaySource=js.slice(replayStart,replayEnd);
+const replayEvents=[],replayTimers=[];
+let replayLanguage='da';
+const runReplay=new Function(
+  'completeDailyHistory','data','selectedAsset','cancelRangeReveal',
+  ', fail-closed fixtures, bilingual copy, score semantics, modal keyboard and JavaScript syntax');
+console.log('Reminder: this is static smoke/contract QA. It does not certify iPhone visual quality or ex-ante cryptographic score proof.');
+,'window','setRangeRevealPhase','revealActualThrough',
+  'rangeRevealTimers','setTimeout','setText','currentLanguage',
+  replaySource+'; return playRangeComparison;'
+)(
+  ()=>({days:Array(7)}),{completed_score:{}},'BTC',()=>{},
+  ()=>({disabled:false}),{matchMedia:()=>({matches:false})},
+  x=>replayEvents.push('phase:'+x),n=>replayEvents.push('day:'+n),
+  replayTimers,(fn)=>{replayEvents.push('scheduled');replayTimers.push(fn);return replayTimers.length;},
+  (id,value)=>replayEvents.push(id+':'+value),()=>replayLanguage
+);
+for(const lang of ['da','en']){
+  replayLanguage=lang;replayTimers.length=0;replayEvents.length=0;
+  runReplay();assert.equal(replayTimers.length,8,'seven days plus final completion');
+  for(const timer of [...replayTimers]) timer();
+  assert.ok(replayEvents.includes('day:6'),'Sunday must be revealed');
+  assert.ok(replayEvents.some(x=>x.includes(lang==='da'?'Faktisk uge':'Observed week')),
+    'Replay completion translated safely for '+lang);
+}
+
 console.log('PASS: premium CN source lineage, fail-closed fixtures, bilingual copy, score semantics, modal keyboard and JavaScript syntax');
 console.log('Reminder: this is static smoke/contract QA. It does not certify iPhone visual quality or ex-ante cryptographic score proof.');
