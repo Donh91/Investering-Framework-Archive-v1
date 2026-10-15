@@ -77,6 +77,7 @@ try{
     "mondayClose:document.querySelector('#cn-path-daily-table tbody tr:first-child td:last-child')?.textContent?.trim(),",
     "freezeDisclosure:document.querySelector('#cn-path-freeze-status')?.textContent?.trim(),",
     "weekdays:[...svg.querySelectorAll('.cn-chart-weekday')].map(x=>x.textContent),",
+    "axisTicks:[...svg.querySelectorAll('.cn-chart-tick')].map(x=>x.textContent),",
     "revealPhase:document.querySelector('.range-compare-panel')?.dataset.revealPhase,",
     "paths:p.map(x=>Boolean(x&&x.getAttribute('d')?.includes(' C ')&&",
     "x.getBBox().width>100&&getComputedStyle(x).display!=='none'&&getComputedStyle(x).opacity!=='0')),",
@@ -107,6 +108,9 @@ try{
         assert.ok(proof.inner===width&&proof.scrollWidth<=width+1&&
           proof.route==='#cn-path-week'&&proof.lang===lang&&proof.asset===asset&&
           proof.hasSource&&proof.paths.every(Boolean)&&proof.revealPhase==='score'&&
+          proof.axisTicks?.includes(asset==='BTC'
+            ?(lang==='en'?'$85,000':'$85.000')
+            :(lang==='en'?'$2,700':'$2.700'))&&
           proof.mondayClose===(asset==='BTC'
             ?(lang==='en'?'$83,500.01':'$83.500,01')
             :(lang==='en'?'$2,688.71':'$2.688,71'))&&
