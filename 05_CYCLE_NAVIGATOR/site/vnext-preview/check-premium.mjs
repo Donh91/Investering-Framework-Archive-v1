@@ -278,6 +278,73 @@ const readback = source.completed_score.daily_observations_w40;
 assert.equal(readback.contract, 'CN_W40_OBSERVED_DAILY_OHLC_READBACK_v1');
 assert.equal(readback.basis, 'UTC_ISO_WEEK');
 assert.equal(readback.observed_hours, 168);
+const frozen = source.completed_score.frozen_weekly_expectation_w40;
+assert.equal(frozen.contract,'CN_W40_ORIGINAL_FROZEN_INTRADAY_PATH_CONTEXT_v1');
+assert.equal(frozen.source_git_blob_sha,'4f867d594c355c31ede8a3718638c6e72249a5a8');
+assert.equal(frozen.original_forecast_freeze_sha256,'e64e4c52af960220f03fa69a86cbd9853888d085c99d5b2c7ff061aa3aa8471f');
+assert.equal(frozen.frozen_at_utc,'2026-09-28T05:53:37Z');
+assert.ok(Date.parse(frozen.frozen_at_utc)>Date.parse('2026-09-28T00:00:00Z'),
+  'Must disclose Monday pre-freeze observations when showing daily actual low/high');
+for (const window of ['day_1_2','day_3_4','day_5_7']) {
+ assert.ok(frozen.intraday_map[window].includes('BTC 
+assert.equal(readback.days.length, 7);
+assert.equal(readback.source_git_blob_sha, '33e0d1366c8de7e69ea1bd9655a96764aeabc70f');
+for (const asset of ['BTC','ETH']) {
+  const dayRows = readback.days;
+  assert.ok(dayRows.every((d) => d.observed_hours === 24 && Number.isFinite(d[asset].close) &&
+    d[asset].low <= d[asset].close && d[asset].close <= d[asset].high));
+  const sourceRows = source.completed_score.price_range_precision.rows.filter((r) => r.asset === asset);
+  for (let i=0; i<3; i++) {
+    const [start,end] = [[0,2],[2,4],[4,7]][i];
+    assert.ok(Math.abs(sourceRows[i].actual_low-Math.min(...dayRows.slice(start,end).map((d) => d[asset].low))) < .011);
+    assert.ok(Math.abs(sourceRows[i].actual_high-Math.max(...dayRows.slice(start,end).map((d) => d[asset].high))) < .011);
+  }
+}
+assert.match(js, /function completeDailyHistory\(score, asset\)/);
+assert.match(js, /function monotoneClosePath\(points\)/);
+assert.match(js, /function paintSourceInstrument\(c\)/);
+assert.match(html, /id="cn-instrument-svg"/);
+assert.match(html, /id="cn-gauge-needle" hidden/);
+assert.match(css, /\.cn-gauge-bear/);
+assert.match(css, /\.cn-chart-table/);
+assert.match(js, /const degrees = \{ WAIT:-22, HARD_WAIT:-34, HOLD_WAIT:0, HOLD:21 \}/);
+
+
+// Approved visual-reference hierarchy and source-only action safety.
+const sourceChartStart=html.indexOf('id="cn-path-week"');
+const sourceChartMarkup=html.indexOf('id="range-visualization"');
+const legacyFoldStart=html.indexOf('class="edge-legacy-fold"');
+const prospectiveStart=html.indexOf('class="edge-era"');
+const summaryStart=html.indexOf('class="cn-results-evidence"');
+assert.ok(sourceChartStart > 0 && sourceChartMarkup > sourceChartStart &&
+  sourceChartMarkup < prospectiveStart && prospectiveStart < summaryStart && summaryStart < legacyFoldStart,
+  'One weekly price journey belongs to PATH; Results contains score receipts only');
+assert.equal((html.match(/id="cn-source-chart"/g)||[]).length,1);
+assert.equal((html.match(/id="cn-path-window-table"/g)||[]).length,1);
+assert.equal((html.match(/id="cn-path-daily-table"/g)||[]).length,1);
+assert.equal((html.match(/id="cn-path-week-open"/g)||[]).length,1);
+assert.match(js,/function revealActualThrough\(dayIndex\)/);
+assert.match(js,/cn-path-actual-clip-rect/);
+assert.match(js,/FROSSET D1–2/);
+assert.match(js,/cn-chart-forecast-midpoint/);
+assert.match(css,/\.cn-chart-forecast-ribbon/);
+assert.equal((html.match(/id="range-visualization"/g)||[]).length,1);
+assert.equal((html.match(/data-overview-horizon="/g)||[]).length,5);
+assert.equal((html.match(/id="cn-overview-market-body"/g)||[]).length,1);
+assert.ok(html.includes('id="cn-range-official-scorecards"'));
+assert.match(js,/function paintOverviewSnapshot\(c\)/);
+assert.match(js,/const label = \(\{ NEXT_12H:/);
+assert.match(js,/function completeDailyHistory\(score, asset\)/);
+assert.ok(!html.includes('Updated just now'), 'Archive preview must never claim freshly updated LIVE status');
+
+console.log('PASS: premium CN source lineage, fail-closed fixtures, bilingual copy, score semantics, modal keyboard and JavaScript syntax');
+console.log('Reminder: this is static smoke/contract QA. It does not certify iPhone visual quality or ex-ante cryptographic score proof.');
+),'Original source window expected, not fabricated daily path');
+}
+assert.match(html, /id="cn-path-frozen-expectations"/);
+assert.match(html, /id="cn-path-freeze-status"/);
+assert.match(js, /Mandagens faktiske low\/high omfatter også timer FØR frysetidspunktet/);
+
 assert.equal(readback.days.length, 7);
 assert.equal(readback.source_git_blob_sha, '33e0d1366c8de7e69ea1bd9655a96764aeabc70f');
 for (const asset of ['BTC','ETH']) {
