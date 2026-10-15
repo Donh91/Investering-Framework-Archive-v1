@@ -9,7 +9,7 @@
 
 **Existing owner execution loop:** fresh main -> AGENTS/current owner + active handoff -> classify model-name-only versus genuine dependency -> deduplicate and check verified DONE/active PR -> choose cheapest sufficient qualified executor -> execute one bounded eligible unit under existing task/budget permissions -> independent verification and durable source/receipt -> next best eligible unit. If a genuine blocker exists, record the **exact blocker and unblocking condition**, move to another eligible existing-owner unit where governance allows, and do not wait for a nonexistent model launch. Do not re-run completed experiments, create another supervisor/queue, launch unauthorised API research, lower any standard or self-promote a result.
 
-**Relevant cross-repo name alias:** `Meme-Alpha-Lab` has historically named its heavy queue `ASTRA_WORK`; treat that stable queue identifier as a compatibility alias for owner-gated research through the existing qualified execution environment, not a requirement for an Astra model. Its queue-specific concurrency, Work-availability, budget, evidence and code-review limits remain intact. This paragraph does **not** modify the private repository or grant access.
+**Cross-repository boundary:** The separate Meme Alpha Lab repository controls its own queue and model policy. This public document proposes no change to that repository. Consult its current authorized policy before interpreting any task requirement; a private model requirement remains binding until changed by that repository's owner.
 
 ---
 # Astra Deferred Recovery and Successor Routing v1
