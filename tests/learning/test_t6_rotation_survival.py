@@ -286,9 +286,10 @@ class T6RotationSurvivalTests(unittest.TestCase):
                     path = root / "sequences" / first["active_sequence_id"] / "BASELINE.json"
                     baseline = json.loads(path.read_text())
                     if field in ("right_censored", "failure_outcome", "benchmark", "missingness_policy"):
-                        edit(baseline)
-                        if field == "right_censored":
-                            baseline[field] = False
+                        baseline[field] = {
+                            "right_censored": False, "failure_outcome": "CLAIMED_FAILURE",
+                            "benchmark": "DIFFERENT_EVENT", "missingness_policy": "INFER_MISSING",
+                        }[field]
                     else:
                         edit(baseline[field])
                     path.write_text(json.dumps(baseline))
