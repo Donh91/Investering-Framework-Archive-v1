@@ -273,6 +273,17 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
             ("EVIDENCE_BUNDLE", c["evidence_path"], c["evidence_sha256"]),
             ("FROZEN_RUBRIC", c["rubric_path"], c["rubric_sha256"]),
         ]
+        # Each input has a distinct scientific role: the frozen scoring rubric
+        # must never be a relabelled question or evidence bundle, and vice versa.
+        # Compare both claimed digests and resolved file aliases.
+        for i, (left_role, left_path, left_hash) in enumerate(source_artifacts):
+            for right_role, right_path, right_hash in source_artifacts[i + 1:]:
+                roles = f"{left_role}_VS_{right_role}"
+                if left_hash == right_hash:
+                    reason.append(f"REUSED_SOURCE_ARTIFACT_DIGEST:{roles}")
+                base = receipt_root if receipt_root is not None else Path.cwd()
+                if (base / left_path).resolve() == (base / right_path).resolve():
+                    reason.append(f"REUSED_SOURCE_ARTIFACT_PATH_OR_ALIAS:{roles}")
         for source_type, source_path, source_hash in source_artifacts:
             for mode in MODES:
                 for receipt_type, receipt_path, receipt_hash in receipts(variants[mode]):
