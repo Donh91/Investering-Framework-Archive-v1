@@ -118,7 +118,48 @@ function playRangeComparison() {
   rangeRevealTimers.push(setTimeout(() => setRangeRevealPhase('score'), 880));
 }
 
+
+const overviewHorizonKeys = new Set(['NEXT_12H','NEXT_1_3D','NEXT_5_7D','NEXT_2_3W','CYCLE_ALTCOINS_3_8W']);
+let overviewHorizon = 'NEXT_5_7D';
+function paintOverviewSnapshot(c) {
+  const da = currentLanguage() !== 'en';
+  const horizon = overviewHorizonKeys.has(overviewHorizon) ? overviewHorizon : 'NEXT_5_7D';
+  for (const b of document.querySelectorAll('[data-overview-horizon]')) {
+    const selected = b.dataset.overviewHorizon === horizon;
+    b.classList.toggle('is-selected',selected);
+    b.setAttribute('aria-pressed',String(selected));
+  }
+  const item = c?.horizons?.[horizon], direction = directionView(item?.expected_direction).text;
+  const action = actionView(item?.action_posture).text;
+  setText('cn-overview-horizon-state', (da?'Retning: ':'Direction: ') + direction);
+  setText('cn-overview-horizon-action', (da?'Handling: ':'Action: ') + action);
+  const body = $('cn-overview-market-body'); clear(body);
+  const names = [['BTC','Bitcoin'],['ETH','Ethereum'],['LARGE_CAPS','Large caps'],['MID_CAPS','Mid caps'],
+    ['SMALL_CAPS','Small caps'],['MICROCAPS','Microcaps'],['MEMES','Memes']];
+  for (const [segment,label] of names) {
+    const sourceRow = c?.capitalization_ladder?.find((row) => row.segment === segment);
+    const tr = make('tr'); tr.append(make('th',null,label));
+    const status = String(sourceRow?.status || 'UNAVAILABLE').toUpperCase();
+    const action = String(sourceRow?.action || 'UNAVAILABLE').toUpperCase();
+    const normalize = (word) => ({
+      'UNAVAILABLE':da?'Utilgængelig':'Unavailable',
+      'HARD_WAIT':da?'Afvent':'Wait', 'WAIT':da?'Afvent':'Wait',
+      'HOLD': 'HOLD','BUY':'BUY','SELL':'SELL'
+    }[word] || word);
+    const stateTd=make('td');
+    const dot=make('i','cn-segment-indicator');
+    dot.dataset.status=status;
+    dot.setAttribute('aria-hidden','true');
+    stateTd.append(dot,make('span',null,normalize(status)));
+    tr.append(stateTd,make('td',null,normalize(action)));body?.append(tr);
+  }
+}
+
 function bindPanels() {
+  document.querySelectorAll('[data-overview-horizon]').forEach((button) => button.addEventListener('click', () => {
+    overviewHorizon = button.dataset.overviewHorizon;
+    if (data) paintOverviewSnapshot(data.compass);
+  }));
   // PATH uses one native <details>/<summary> disclosure; no custom click state.
   // Kompas explanations now use native <details>/<summary> for accessible disclosure.
   $('history-toggle')?.addEventListener('click', (e) => {
@@ -142,11 +183,7 @@ function bindPanels() {
   $('edge-open-comparison')?.addEventListener('click', () => {
     // The modern Edge chapter links to a genuine, older frozen comparison.
     // It is not promoted into a new scored outcome.
-    const archive = document.querySelector('.edge-legacy-fold');
-    if (!archive) return;
-    const wasOpen = archive.open;
-    archive.open = true;
-    if (wasOpen && data) playRangeComparison();
+    if (data) playRangeComparison();
     const panel = document.querySelector('.range-compare-panel');
     if (panel) {
       const reduce = typeof window.matchMedia === 'function' &&
@@ -155,10 +192,9 @@ function bindPanels() {
     }
   });
 
-  document.querySelector('.edge-legacy-fold')?.addEventListener('toggle', (event) => {
-    if (event.currentTarget.open && data) playRangeComparison();
-    else cancelRangeReveal();
-  });
+  // Historical chart now lives outside the collapsed legacy archive.
+  // Keep legacy disclosure independent from chart playback.
+  void document.querySelector('.edge-legacy-fold');
 
   const dialog = $('source-dialog');
   const sourceButton = $('source-button');
@@ -464,6 +500,7 @@ function paintTop(d) {
   if ($('hero-now')) $('hero-now').dataset.direction = currentDirection;
   setText('hero-action-summary', actionView(c.action_now).text);
   paintSourceInstrument(c);
+  paintOverviewSnapshot(c);
   setText('hero-deck', localizedPulse(c));
   paintPullback(d, currentLanguage());
   setText('compass-updated', 'KILDEFAST SNAPSHOT · ' + c.issued_at_utc.slice(0, 16).replace('T', ' ') + ' UTC');
@@ -683,6 +720,14 @@ function renderRangeChart() {
     tbody.append(tr);
   });
   table.append(tbody);tableWrap.append(table);
+  const cards=$('cn-range-official-scorecards');clear(cards);
+  for (let i=0;i<3;i++) {
+    const r=windows[i],card=make('div','cn-score-card');
+    card.append(make('span',null,['Dag 1–2','Dag 3–4','Dag 5–7'][i]));
+    card.append(make('strong',null,formatPct(r.score)));
+    card.append(make('small',null, '70 % containment + 30 % Jaccard'));
+    cards?.append(card);
+  }
   const title=make('h4','cn-chart-table-title','Forecast mod virkelighed · dag for dag');
   root.append(title,tableWrap);
   setText('range-method','CN #27 W40 · 70 % containment + 30 % Jaccard · 168/168 timer · 3 originale forecastvinduer');
@@ -737,6 +782,7 @@ async function initialize() {
       if (data) {
         paintPullback(data, button.dataset.lang);
         paintPath(data, button.dataset.lang);
+        paintOverviewSnapshot(data.compass);
       }
     });
   });
