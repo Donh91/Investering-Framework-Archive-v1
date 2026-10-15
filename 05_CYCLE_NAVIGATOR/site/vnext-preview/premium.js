@@ -94,28 +94,47 @@ function setRangeRevealPhase(phase) {
     step.classList.toggle('is-current', step.dataset.motionStep === phase);
   }
 }
+// User-visible animation is seven discrete verified UTC observations,
+// never fabricated intraday interpolations.
+function revealActualThrough(dayIndex) {
+  const clip = $('cn-path-actual-clip-rect');
+  if (!clip) return;
+  const left=76, right=728;
+  const width=dayIndex<0?0:(right-left)*(Math.min(6,dayIndex)/6)+24;
+  clip.setAttribute('width',String(width));
+  if (dayIndex < 0) setText('cn-replay-day','01 · Frosne intervalvinduer');
+  else setText('cn-replay-day', (dayIndex+1)+'/7 · '+['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'][dayIndex]+
+    ' · '+ selectedAsset+' '+formatUSD(data.completed_score.daily_observations_w40.days[dayIndex][selectedAsset].close));
+}
 function playRangeComparison() {
   cancelRangeReveal();
-  const rows = data?.completed_score?.price_range_precision?.rows;
-  const available = Array.isArray(rows) && rows.filter((r) =>
-    r.asset === selectedAsset && ['forecast_low','forecast_high','actual_low','actual_high'].every((key) => safeNumber(r[key]))
-  ).length === 3;
+  const available = Boolean(completeDailyHistory(data?.completed_score,selectedAsset));
   const button = $('range-replay');
   if (button) button.disabled = !available;
   if (!available) {
     setRangeRevealPhase('score');
     return;
   }
-  // Do not hide information from users who request less movement or on legacy browsers.
   const reduce = typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduce) {
     setRangeRevealPhase('score');
+    revealActualThrough(6);
     return;
   }
   setRangeRevealPhase('frozen');
-  rangeRevealTimers.push(setTimeout(() => setRangeRevealPhase('actual'), 350));
-  rangeRevealTimers.push(setTimeout(() => setRangeRevealPhase('score'), 880));
+  revealActualThrough(-1);
+  for (let i=0;i<7;i++) {
+    rangeRevealTimers.push(setTimeout(()=>{
+      setRangeRevealPhase('actual');
+      revealActualThrough(i);
+    }, 420+i*260));
+  }
+  rangeRevealTimers.push(setTimeout(()=>{
+    setRangeRevealPhase('score');
+    revealActualThrough(6);
+    setText('cn-replay-day','Faktisk uge · alle syv verificerede dagslukninger');
+  },2350));
 }
 
 
