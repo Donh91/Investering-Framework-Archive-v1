@@ -217,6 +217,36 @@
       "additional_sol_pass_limit": 1,
       "selected_live_rules": [],
       "prior_sol_r0_resolved_only_as_api_review": true
+    },
+    {
+      "sequence": 9,
+      "mission_id": "TASK2-R1-FIRST-KNOWN-INCREMENTAL-003",
+      "state": "OWNER_HELD_WAIT_NEW_INDEPENDENT_ORIGINAL_PROVIDER_FIRST_KNOWN_EVIDENCE",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-15__TASK2_R1_FIRST_KNOWN_INCREMENTAL_SOL61_v1.json",
+      "context_status": "NO_NEW_PROVIDER_FIRST_KNOWN_PROOF_AUTHENTICATED__PR1644_REVIEW_PENDING",
+      "context_paths": [
+        "06_RESEARCH_LAB/mission_packets/2026-10-15__TASK2_R1_FIRST_KNOWN_INCREMENTAL_SOL61_v1.json",
+        "research/api_agent/outputs/research_lab_sol/TASK2-R1-CFGI-PIT-FALSIFICATION-002/issue-1476/comment-6176416300/RESEARCH_LAB_SOL_ANALYSIS.json",
+        "research/api_agent/outputs/research_lab_sol/TASK2-R1-CFGI-PIT-FALSIFICATION-002/issue-1476/comment-6176416300/receipt.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_11_SOURCE_CLOCK_CASES_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_12H_CENSUS_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_FEATURE_CLOCK_AUDIT_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md",
+        "AGENTS.md"
+      ],
+      "release_gate": "EXISTING_1596_OWNER_VERIFIED_MATERIAL_NEW_PROVIDER_ORIGINAL_FIRST_KNOWN_DATA_PLUS_GOVERNED_PR_MERGE_REVIEW_BUDGET",
+      "prerequisite_owner_issue": 1596,
+      "trigger_issue": 1476,
+      "selected_live_rules": [],
+      "no_early_sol_opinion": true,
+      "max_runs_for_this_release": 0,
+      "no_dispatch_before_new_evidence": true,
+      "no_further_sol_passes_unless_new_material_evidence": true,
+      "pass_scope": "ADVERSARIAL_VERIFIED_NEW_PROVIDER_PIT_IN_ONE_SOURCE_FAMILY_ONLY_NOT_HISTORICAL_R2_OR_ACTION",
+      "prior_reused_mission_precluded": "TASK2-R1-CFGI-PIT-FALSIFICATION-002",
+      "previously_completed_receipt": "research/api_agent/outputs/research_lab_sol/TASK2-R1-CFGI-PIT-FALSIFICATION-002/issue-1476/comment-6176416300/receipt.json",
+      "queue_slot_note": "The existing prior R1 mission remains the single ACTIVE_RELEASED until explicit governed owner transition. Change both states atomically before any new Sol trigger. This row is intentionally NOT ACTIVE_RELEASED."
     }
   ],
   "authority": {
