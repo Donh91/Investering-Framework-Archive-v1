@@ -44,6 +44,10 @@ function reconcile(inventory,head,expectedTree,git){
   });
   rows.sort((a,b)=>a.path.localeCompare(b.path));
   const counts=Object.fromEntries(['CHANGED','UNCHANGED','MISSING','TYPE_MISMATCH'].map(s=>[s,rows.filter(x=>x.status===s).length]));
+  // A source switching Git object kind is not an ordinary content drift.
+  // It invalidates the registered source contract: fail operationally closed
+  // rather than returning the same drift exit code as a missing source.
+  if(counts.TYPE_MISMATCH>0)throw Error('Compared source object TYPE_MISMATCH: '+rows.filter(x=>x.status==='TYPE_MISMATCH').map(x=>x.path).join(', '));
   return {contract:'TASK2_R0_GIT_OBJECT_RECONCILIATION_v1_1',original_pinned_source_objects_verified:true,scope:'PUBLIC_GIT_OBJECTS_ONLY_NOT_MARKET_PIT',inventory_base_commit:inventory.main_commit,inventory_base_tree:inventory.main_tree,compared_commit:head,compared_tree:expectedTree,family_count:families.length,source_references:refs,distinct_source_paths:rows.length,counts,verified_all_paths:counts.MISSING===0&&counts.TYPE_MISMATCH===0,rows,market_first_known_admitted:false,economic_edge_established:false};
 }
 try{
