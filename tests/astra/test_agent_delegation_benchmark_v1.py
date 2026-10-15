@@ -239,6 +239,37 @@ class Bench(unittest.TestCase):
         self.assertEqual(out['paired_eligible_count'], 0)
         self.assertTrue(all(row['metadata_eligible'] for row in out['rows']))
 
+    def test_whitespace_and_case_cannot_disguise_self_review(self):
+        obj = make_case()
+        obj['cases'][0]['variants'][0]['verification']['verifier_id'] = ' EXECUTOR-1 '
+        with self.assertRaises(bench.ContractError):
+            self.check(obj)
+
+    def test_opposite_arm_fullwidth_and_whitespace_alias_rejected(self):
+        obj = make_case()
+        solo, delegated = obj['cases'][0]['variants']
+        solo['verification']['verifier_id'] = ' ｅｘｅｃｕｔｏｒ-2 '
+        delegated['verification']['verifier_id'] = ' ExEcUtOr-1 '
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 0)
+        self.assertIn('PAIR_EXECUTOR_USED_AS_INDEPENDENT_VERIFIER:SOLO', out['rows'][0]['reasons'])
+        self.assertIn('PAIR_EXECUTOR_USED_AS_INDEPENDENT_VERIFIER:DELEGATED', out['rows'][0]['reasons'])
+
+    def test_run_id_normalized_reuse_cannot_inflate_pair_count(self):
+        obj = make_case()
+        second = self.make_independent_second_case(obj)
+        second['variants'][0]['run_id'] = ' RUN-1 '
+        out = self.check(obj)
+        self.assertEqual(out['byte_consistent_pair_count'], 1)
+        self.assertIn('REUSED_RUN_ID_ACROSS_CASES:run-1', out['rows'][1]['reasons'])
+
+    def test_case_id_normalized_duplicate_rejected(self):
+        obj = make_case()
+        second = self.make_independent_second_case(obj)
+        second['case_id'] = ' TEST-CASE '
+        with self.assertRaises(bench.ContractError):
+            self.check(obj)
+
     def test_frozen_rubric_is_byte_verified_for_both_arms(self):
         out = self.check(make_case())
         self.assertEqual(out['byte_consistent_pair_count'], 1)
