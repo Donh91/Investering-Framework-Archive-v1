@@ -539,8 +539,11 @@ def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidenc
             rows = parsed.get("scores") or []
             by_id = {r["claim_id"]: r for r in rows}
             expected = [c["claim_id"] for c in claims]
-            if list(by_id) != expected:
-                raise ValueError("INTERNAL_LONG_HORIZON_SCORE_COVERAGE_MISMATCH")
+            if (not isinstance(rows, list) or len(rows) != len(expected)
+                    or len(by_id) != len(expected) or list(by_id) != expected):
+                # A duplicate claim cannot count twice or create a negative
+                # pending denominator, even when dict keys collapse to one.
+                raise ValueError("INTERNAL_LONG_HORIZON_DUPLICATE_OR_MISSING_SCORES")
             for row in rows:
                 status = row["status"]
                 expected_score = ALLOWED_STATUS[status]
