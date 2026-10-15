@@ -416,7 +416,7 @@ assert.match(js, /function openPathGraph\(\{ updateHash = true \} = \{\}\)/);
 assert.match(js, /route === 'cn-path-week'/);
 assert.match(js, /initial === 'cn-path-week'/);
 assert.match(js, /location\.hash === '#cn-path-week'/);
-assert.match(js, /target\.scrollIntoView\(\{ behavior:'auto', block:'start' \}\)/);
+assert.match(js, /target\.scrollIntoView\(\{ behavior:'instant', block:'start' \}\)/);
 assert.match(css, /\.mobile-dock \.dock-link\{width:25%;/);
 assert.match(html, /class="cn-path-jump-banner"/);
 
