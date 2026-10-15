@@ -189,7 +189,7 @@
     {
       "sequence": 8,
       "mission_id": "TASK2-R1-CFGI-PIT-FALSIFICATION-002",
-      "state": "ACTIVE_RELEASED",
+      "state": "FINAL_ADJUDICATED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R1_CFGI_SOL61_SOURCE_PIT_REVIEW_v1.json",
       "context_status": "ORIGINAL_V3_R1_CFGI_SOURCE_CLOCKS_PLUS_8_PUBLIC_SAFE_DEEP_RESEARCH_INTAKES",
       "context_paths": [
@@ -246,7 +246,7 @@
       "pass_scope": "ADVERSARIAL_VERIFIED_NEW_PROVIDER_PIT_IN_ONE_SOURCE_FAMILY_ONLY_NOT_HISTORICAL_R2_OR_ACTION",
       "prior_reused_mission_precluded": "TASK2-R1-CFGI-PIT-FALSIFICATION-002",
       "previously_completed_receipt": "research/api_agent/outputs/research_lab_sol/TASK2-R1-CFGI-PIT-FALSIFICATION-002/issue-1476/comment-6176416300/receipt.json",
-      "queue_slot_note": "The existing prior R1 mission remains the single ACTIVE_RELEASED until explicit governed owner transition. Change both states atomically before any new Sol trigger. This row is intentionally NOT ACTIVE_RELEASED."
+      "queue_slot_note": "The prior R1 mission has a durable PASS receipt and is FINAL_ADJUDICATED. No mission is ACTIVE_RELEASED while original provider evidence is missing. Release only this held mission via a separate reviewed owner transition after verified new evidence and budget checks."
     }
   ],
   "authority": {
