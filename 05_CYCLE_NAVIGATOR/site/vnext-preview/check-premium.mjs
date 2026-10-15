@@ -436,7 +436,7 @@ const runReplay=new Function(
   replaySource+'; return playRangeComparison;'
 )(
   ()=>({days:Array(7)}),{completed_score:{}},'BTC',()=>{},
-  ()=>{},()=>({disabled:false}),{matchMedia:()=>({matches:false})},
+  ()=>({disabled:false}),{matchMedia:()=>({matches:false})},
   phase=>replayEvents.push('phase:'+phase),day=>replayEvents.push('day:'+day),
   replayHandles,
   (callback)=>{replayCallbacks.push(callback);return replayCallbacks.length;},
