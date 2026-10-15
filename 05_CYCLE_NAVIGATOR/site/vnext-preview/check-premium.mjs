@@ -329,7 +329,16 @@ assert.equal((html.match(/id="cn-path-daily-table"/g)||[]).length,1);
 assert.equal((html.match(/id="cn-path-week-open"/g)||[]).length,1);
 assert.match(js,/function revealActualThrough\(dayIndex\)/);
 assert.match(js,/cn-path-actual-clip-rect/);
-assert.match(js,/FROSSET D1–2/);
+assert.match(js,/const forecastCenters=\[\.5,2\.5,5\]/);
+assert.match(js,/const midpointGuide=guide\('midpoint'\)/);
+assert.match(js,/cn-chart-forecast-midpoint/);
+assert.ok(!js.includes("svg.append(chartElement('path',{d:monotoneClosePath(highGuide),class:'cn-chart-boundary'}))"),
+  'Do not show heavy forecast boundary strokes on the main chart');
+assert.equal((html.match(/class="cn-legend-line cn-legend-line-forecast"/g)||[]).length,1);
+assert.equal((html.match(/class="cn-legend-line cn-legend-line-observed"/g)||[]).length,1);
+assert.ok(html.includes('FORECAST <small>(afledt)</small>'), 'Derived forecast distinction required');
+assert.ok(html.indexOf('id="range-visualization"') < html.indexOf('id="range-replay"'),
+  'Users should see the actual 2-line price chart before playback controls');
 assert.match(js,/cn-chart-forecast-midpoint/);
 assert.match(css,/\.cn-chart-forecast-ribbon/);
 assert.equal((html.match(/id="range-visualization"/g)||[]).length,1);
