@@ -1,3 +1,17 @@
+# Framework Mission Continuity — Model-Neutral Recovery and Capability Routing
+**Operational correction 2026-10-15.** This file is the **existing** recovery owner under a preserved historical `ASTRA_` filename, not a new execution engine, scheduler, model router or source of authority. Original historical rules remain below unless this correction explicitly clarifies their model-name interpretation.
+
+## Binding model-name continuity rule
+
+**The investment framework, not "Astra", owns all missions.** Earlier use of *Astra*, *Astra-era*, *when Astra becomes available*, *future Astra*, or *Astra reserved* is a historical naming convention based on an anticipated model. It is **never, by itself**, a valid operational dependency, permission denial, queue suspension, or justification for waiting. Treat the work as an **existing-owner mission** and route it through currently qualified GPT-6 family capability (including current Sol variants), other qualified models, deterministic tools or Codex according to the current API capability, budget, domain and review owners.
+
+**No mass unblock or unauthorized activation:** A genuinely current owner-signed pause, `PREPARED_NOT_ACTIVE` runtime/service activation flag, restricted evidence gate, missing prerequisites, budget/Work-credit hard stop, scientific admission/PIT gate, model capability shortfall, API authorization, independent review, source/recovery separation, trading prohibition or user-requested explicit hold remains fully binding. A current task profile that *explicitly* requests `requires_astra=true` is a real request-time model constraint until the task owner independently changes it; do not silently downgrade it. However, historical mission prose must **not** be translated into `requires_astra=true` or `gpt-6-astra` by default. Model ID strings, fixture/receipt contract IDs, hashes, previous studies and stable filenames are preserved for compatibility and historical integrity.
+
+**Existing owner execution loop:** fresh main -> AGENTS/current owner + active handoff -> classify model-name-only versus genuine dependency -> deduplicate and check verified DONE/active PR -> choose cheapest sufficient qualified executor -> execute one bounded eligible unit under existing task/budget permissions -> independent verification and durable source/receipt -> next best eligible unit. If a genuine blocker exists, record the **exact blocker and unblocking condition**, move to another eligible existing-owner unit where governance allows, and do not wait for a nonexistent model launch. Do not re-run completed experiments, create another supervisor/queue, launch unauthorised API research, lower any standard or self-promote a result.
+
+**Relevant cross-repo name alias:** `Meme-Alpha-Lab` has historically named its heavy queue `ASTRA_WORK`; treat that stable queue identifier as a compatibility alias for owner-gated research through the existing qualified execution environment, not a requirement for an Astra model. Its queue-specific concurrency, Work-availability, budget, evidence and code-review limits remain intact. This paragraph does **not** modify the private repository or grant access.
+
+---
 # Astra Deferred Recovery and Successor Routing v1
 
 Status: `ACTIVE_DISCOVERY_AND_REQUALIFICATION_CONTRACT`
