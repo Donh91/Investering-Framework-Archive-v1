@@ -17,6 +17,8 @@ on:
       - 'tests/learning/test_m6_warning_event_outcomes.py'
       - 'tests/learning/test_edge001_tsunami_feature_ledger.py'
       - 'tests/research/test_edge_compound_governor.py'
+      - 'scripts/learning/t6_rotation_survival.py'
+      - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
 
 permissions:
@@ -48,6 +50,8 @@ jobs:
         run: |
           python -m unittest tests.learning.test_m6_warning_event_outcomes tests.learning.test_edge001_tsunami_feature_ledger tests.research.test_edge_compound_governor -v
           python scripts/research/edge001_144_variant_pit_harness.py --self-test
+      - name: Run prospective T6 exact-replay regressions (PR only)
+        run: python -m unittest tests.learning.test_t6_rotation_survival -v
   operate:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
