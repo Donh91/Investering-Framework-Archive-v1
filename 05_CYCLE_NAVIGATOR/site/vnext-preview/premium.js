@@ -697,7 +697,7 @@ function renderRangeChart() {
   const top=22,left=76,right=728,bottom=284,h=bottom-top;
   const Y = (n) => bottom-(n-yMin)/(yMax-yMin)*h;
   const X = (i) => left+(right-left)*(i/6);
-  const svg=chartElement('svg',{viewBox:'0 0 760 330',class:'cn-history-chart',role:'img','aria-label':selectedAsset+' observerede dagslukninger og tre historisk frosne prognosevinduer for uge 40. Det er ikke en daglig forecast-kurve.'});
+  const svg=chartElement('svg',{viewBox:'0 0 790 330',class:'cn-history-chart',role:'img','aria-label':selectedAsset+' observerede dagslukninger og tre historisk frosne prognosevinduer for uge 40. Det er ikke en daglig forecast-kurve.'});
   svg.append(chartElement('title',{},selectedAsset+' historisk uge 40, dagslukning og 3 frosne prognoseperioder'));
   svg.append(chartElement('desc',{},'Syv virkelige dagslukninger fra 168 timeobservationer, 28 september til 4 oktober 2026. De frosne forecasts dækker tre separate vinduer: dag 1-2, 3-4 og 5-7. Ingen daglige forecast-priser er estimeret.'));
   for(let val=yMin;val<=yMax;val+=step){
@@ -732,6 +732,7 @@ function renderRangeChart() {
     actualGroup.append(chartElement('line',{x1:x,x2:x,y1:Y(p.high),y2:Y(p.low),class:'cn-chart-actual-range'}));
     svg.append(chartElement('text',{x,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday'},['Man','Tir','Ons','Tor','Fre','Lør','Søn'][i]));
   });
+  svg.append(chartElement('text',{x:762,y:bottom+27,'text-anchor':'middle',class:'cn-chart-weekday cn-chart-weekaxis'},'W40'));
   actualGroup.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
   pathPoints.forEach((p,i)=>{
     const point=chartElement('circle',{cx:p.x,cy:p.y,r:4.8,class:'cn-chart-point'});
@@ -778,6 +779,39 @@ function renderRangeChart() {
     wb.append(tr);
   });
   windowTable.append(wb);
+  const frozen=data.completed_score.frozen_weekly_expectation_w40;
+  const frozenRoot=$('cn-path-frozen-expectations');clear(frozenRoot);
+  const freezeValid = frozen?.contract === 'CN_W40_ORIGINAL_FROZEN_INTRADAY_PATH_CONTEXT_v1' &&
+    frozen.forecast_week === '2026-W40' && frozen.public_issue_number === 27 &&
+    frozen.frozen_at_utc === '2026-09-28T05:53:37Z' &&
+    frozen.source_git_blob_sha === '4f867d594c355c31ede8a3718638c6e72249a5a8' &&
+    ['day_1_2','day_3_4','day_5_7'].every((key)=>typeof frozen.intraday_map?.[key] === 'string' &&
+      frozen.intraday_map[key].length > 90);
+  if (freezeValid) {
+    frozenRoot?.append(make('h4','cn-chart-table-title','Hvad var den frosne forventning?'));
+    const descriptions={
+      da:['Mulig stabilisering eller fortsættelse, men svag ETH-styrke og markedsstruktur gav risiko for afvisning.',
+        'Større opmærksomhed på retest. Et brud på prisintervallet er en prognosefejl, ikke automatisk et breakdown.',
+        'Bredere interval for enten dybere retest eller genopretning. Ingen forudsigelse af ekstra volatilitet sidst på ugen.'],
+      en:['Stabilization or a continuation attempt was possible, with rejection risk from ETH weakness and microstructure.',
+        'Retest watch increased. A range breach was a forecast miss, not automatic evidence of market breakdown.',
+        'Wider band allowed a deeper retest or recovery, without predicting late-week volatility expansion.']
+    };
+    const collection=make('div','cn-frozen-context');
+    ['day_1_2','day_3_4','day_5_7'].forEach((key,i)=>{
+      const card=make('div','cn-frozen-context-item');
+      card.append(make('strong',null,['Dag 1–2','Dag 3–4','Dag 5–7'][i]),
+        make('span',null,descriptions[currentLanguage()==='en'?'en':'da'][i]));
+      const original=make('small',null,'Kilde: '+frozen.intraday_map[key]);
+      original.hidden=true;
+      card.append(original);collection.append(card);
+    });
+    frozenRoot?.append(collection);
+    setText('cn-path-freeze-status','FRYSNING · MAN 28 SEP 2026 KL. 05:53 UTC. Mandagens faktiske low/high omfatter også timer FØR frysetidspunktet. Historisk visning er ikke fuldt ex ante fra midnat.');
+  } else {
+    frozenRoot?.append(make('p','method-disclaimer','Frossen ugeforventning kan ikke verificeres ud fra kilden.'));
+    setText('cn-path-freeze-status','Frysetid ikke kildeverificeret. Ingen ex-ante påstand.');
+  }
   const rangeHeading=make('h4','cn-chart-table-title','Originale frosne intervaller · '+selectedAsset);
   const windowScroll=make('div','cn-chart-table-scroll');
   windowScroll.append(windowTable);windowRoot?.append(rangeHeading,windowScroll);
