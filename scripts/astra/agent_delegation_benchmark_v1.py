@@ -223,6 +223,18 @@ def evaluate(data: Any, *, receipt_root: Path | None = None) -> dict[str, Any]:
                 ("EXECUTION", variant["execution_receipt_path"], variant["execution_receipt_sha256"]),
                 ("VERIFICATION", ver["verification_receipt_path"], ver["verification_receipt_sha256"]),
             ]
+        # An arm's verification cannot be the same physical evidence as its
+        # execution, even when both digests are individually valid.
+        for mode in MODES:
+            execution, verification = receipts(variants[mode])
+            _, execution_path, execution_hash = execution
+            _, verification_path, verification_hash = verification
+            if execution_hash is not None and execution_hash == verification_hash:
+                reason.append(f"REUSED_RECEIPT_DIGEST_WITHIN_ARM:{mode}")
+            if execution_path is not None and verification_path is not None:
+                base = receipt_root if receipt_root is not None else Path.cwd()
+                if (base / execution_path).resolve() == (base / verification_path).resolve():
+                    reason.append(f"REUSED_RECEIPT_PATH_OR_ALIAS_WITHIN_ARM:{mode}")
         for solo_type, solo_path, solo_hash in receipts(solo):
             for delegated_type, delegated_path, delegated_hash in receipts(delegated):
                 name = f"{solo_type}_SOLO_VS_{delegated_type}_DELEGATED"
