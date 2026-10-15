@@ -1,4 +1,5 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -88,11 +89,62 @@ class OriginalAdmissionTests(unittest.TestCase):
         self.assertEqual(sum(r["information_edge_gate"]["status"] == "ADMITTED" for r in d["rows"]), 0)
         self.assertEqual(sum(r["investor_action_edge_gate"]["status"] == "ADMITTED" for r in d["rows"]), 0)
 
+    def _create_disposable_git_outcome(self):
+        td = tempfile.TemporaryDirectory()
+        self.addCleanup(td.cleanup)
+        root = Path(td.name)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        (root / "nested").mkdir()
+        (root / "nested" / "outcome.json").write_text('{"status":"PRESENT"}')
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
+        subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                        "commit", "-qm", "frozen test fixture"], cwd=root, check=True)
+        return root
+
+    def test_original_missing_path_is_absent_only_after_successful_tree_traversal(self):
+        root = self._create_disposable_git_outcome()
+        with mock.patch.object(admission, "ROOT", root):
+            self.assertEqual(admission.optional_original("HEAD", "nested/never.json"), (None, None))
+            actual, blob = admission.optional_original("HEAD", "nested/outcome.json")
+            self.assertEqual(actual["status"], "PRESENT")
+            self.assertEqual(len(blob), 40)
+
+    def test_missing_original_blob_is_operational_error_never_absence(self):
+        root = self._create_disposable_git_outcome()
+        blob = subprocess.check_output(["git", "rev-parse", "HEAD:nested/outcome.json"], cwd=root).decode().strip()
+        (root / ".git" / "objects" / blob[:2] / blob[2:]).unlink()
+        with mock.patch.object(admission, "ROOT", root):
+            with self.assertRaises(subprocess.CalledProcessError):
+                admission.optional_original("HEAD", "nested/outcome.json")
+
+    def test_missing_original_nested_tree_is_operational_error_never_absence(self):
+        root = self._create_disposable_git_outcome()
+        tree = subprocess.check_output(["git", "rev-parse", "HEAD:nested"], cwd=root).decode().strip()
+        (root / ".git" / "objects" / tree[:2] / tree[2:]).unlink()
+        with mock.patch.object(admission, "ROOT", root):
+            with self.assertRaises(subprocess.CalledProcessError):
+                admission.optional_original("HEAD", "nested/outcome.json")
+
+    def test_failed_git_tree_lookup_must_propagate_not_become_missing(self):
+        with mock.patch.object(admission, "git", side_effect=subprocess.CalledProcessError(128, ["git", "ls-tree"])):
+            with self.assertRaises(subprocess.CalledProcessError):
+                admission.optional_original("HEAD", "nested/outcome.json")
+
+    def test_checkout_head_is_not_labeled_as_verified_main(self):
+        rows = build()
+        self.assertIn("generated_from_checkout_head_sha", rows)
+        self.assertNotIn("generated_from_main_sha", rows)
+        self.assertEqual(rows["checkout_ref_semantics"], "MAY_BE_PR_TEST_MERGE_NOT_VERIFIED_CURRENT_MAIN")
+        self.assertTrue(all(
+            x["checkout_outcome_status"] == "PRESENT_ON_CHECKOUT_HEAD" for x in rows["rows"]
+        ))
+        self.assertTrue(all("current_main_outcome_status" not in x for x in rows["rows"]))
+
     def test_full_cohort_fails_closed_and_separates_later_outcomes(self):
         d = build()
         self.assertEqual(d["cohort"], {"original_attempts": 11, "original_outcomes_present": 9, "original_outcomes_absent": 2, "unique_source_blobs": 10, "unique_raw_capture_blobs": 7, "admitted": 0, "independent_market_event_families_certified": 0})
         self.assertEqual(sum(len(r["selected_feature_clocks"]) for r in d["rows"]), 264)
-        self.assertEqual(sum(r["current_main_outcome_status"] == "PRESENT_ON_CURRENT_MAIN" for r in d["rows"]), 11)
+        self.assertEqual(sum(r["checkout_outcome_status"] == "PRESENT_ON_CHECKOUT_HEAD" for r in d["rows"]), 11)
         self.assertTrue(all(r["nominal_reference_to_target_seconds"] == 43200 for r in d["rows"] if r["original_outcome_status"] == "PRESENT"))
         self.assertTrue(all(r["admissibility"] == "NOT_ADMITTED" and r["first_user_delivery_at_utc"] is None for r in d["rows"]))
         self.assertTrue(all(r["collector_clocks"]["selected_CFGI_scores_match_capture"] and r["collector_clocks"]["selected_OKX_funding_quotes_match_capture"] for r in d["rows"]))
