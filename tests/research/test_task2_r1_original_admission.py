@@ -1,6 +1,10 @@
 import json
+import tempfile
 import unittest
+from pathlib import Path
+from unittest import mock
 
+import scripts.research.task2_r1_original_admission as admission
 from scripts.research.task2_r1_original_admission import build, clock_status, original
 
 
@@ -15,6 +19,52 @@ class OriginalAdmissionTests(unittest.TestCase):
     def test_wrong_original_git_blob_fails(self):
         with self.assertRaisesRegex(ValueError, "Git blob mismatch"):
             original("098c50d36b222c4c8ffa179a5879d36a74194bc4", "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-468da783e9d8.json", "0" * 40)
+
+    def _run_with_tampered_frozen_census(self, modify):
+        frozen = json.loads((admission.ROOT / admission.FORECAST_CENSUS).read_text())
+        modify(frozen)
+        with tempfile.TemporaryDirectory() as td:
+            tampered_path = Path(td) / "tampered_frozen_forecast_census.json"
+            tampered_path.write_text(json.dumps(frozen))
+            with mock.patch.object(admission, "FORECAST_CENSUS", tampered_path):
+                return build()
+
+    def test_original_forecast_git_blob_must_match_separately_frozen_census(self):
+        def modify(frozen):
+            f = next(x for x in frozen["forecast_rows"]
+                     if x["original_scoring_contract"] == "OFFICIAL_DAILY_COMPASS_SCORING_v3")
+            f["forecast_git_blob_sha"] = "0" * 40
+        with self.assertRaisesRegex(ValueError, "Git blob mismatch"):
+            self._run_with_tampered_frozen_census(modify)
+
+    def test_original_outcome_presence_must_agree_across_two_censuses(self):
+        def modify(frozen):
+            f = next(x for x in frozen["forecast_rows"]
+                     if x["original_scoring_contract"] == "OFFICIAL_DAILY_COMPASS_SCORING_v3"
+                     and x["outcome_12h_presence_at_pinned_commit"] == "PRESENT")
+            f["outcome_12h_presence_at_pinned_commit"] = "ABSENT_AT_SNAPSHOT"
+        with self.assertRaisesRegex(ValueError, "Original outcome snapshot census mismatch"):
+            self._run_with_tampered_frozen_census(modify)
+
+    def test_original_forecast_roster_cannot_be_silently_shrunk(self):
+        def modify(frozen):
+            f = next(x for x in frozen["forecast_rows"]
+                     if x["original_scoring_contract"] == "OFFICIAL_DAILY_COMPASS_SCORING_v3")
+            frozen["forecast_rows"].remove(f)
+        with self.assertRaisesRegex(ValueError, "Original forecast census or attempt roster mismatch"):
+            self._run_with_tampered_frozen_census(modify)
+
+    def test_frozen_parent_commit_must_equal_raw_source_era(self):
+        def modify(frozen):
+            frozen["pinned_public_main_commit"] = "0" * 40
+        with self.assertRaisesRegex(ValueError, "Original forecast census uses a different pinned Git revision"):
+            self._run_with_tampered_frozen_census(modify)
+
+    def test_original_git_object_reads_disable_local_replace_objects(self):
+        with mock.patch.object(admission.subprocess, "run") as run:
+            run.return_value.stdout = b"frozen"
+            admission.git("show", "0123456789012345678901234567890123456789:some.json")
+            self.assertEqual(run.call_args.args[0][:3], ["git", "--no-replace-objects", "show"])
 
     def test_full_cohort_fails_closed_and_separates_later_outcomes(self):
         d = build()
