@@ -20,6 +20,12 @@ assert.match(html, /CycleNavigator-scores/, 'Independent proof navigation missin
 assert.match(html, /CN_PUBLIC_SNAPSHOT_V2/, 'Public snapshot contract missing');
 assert.match(html, /PUBLIC_COMPASS_PROJECTION_v1/, 'Public Compass contract missing');
 assert.match(html, /CN_PUBLIC_SERIES_INDEX_v1/, 'Public series owner contract missing');
+// Regression: unavailable source must never be presented as an official WAIT/HOLD decision.
+assert.ok(html.includes('addRow(aroot,[x,"Ukendt","UTILGÆNGELIG"])'), 'Missing source must be unavailable in asset rows');
+assert.ok(html.includes('set("actionNow","UTILGÆNGELIG")'), 'Failed source fetch must clear the current action');
+assert.ok(html.includes('set("sellState","UNAVAILABLE")'), 'Failed source fetch must clear SELL authority');
+assert.ok(!html.includes('set("actionNow",valid?(safe(c.action_now)||"AFVENT"):"AFVENT")'), 'Missing Compass must not look like an official WAIT');
+
 for(const guard of ['weeklyAligned', 'deliveryFresh', 'compassFresh', 'scoreValid', 'actuals_hourly_coverage===168', 'candidate.public_issue_number<pub.public_issue_number']){
   assert.ok(html.includes(guard), 'Public preview must fail closed on missing integrity gate: '+guard);
 }
