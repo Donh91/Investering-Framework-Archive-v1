@@ -65,6 +65,14 @@ class ReviewFinalityTests(unittest.TestCase):
         self.assertEqual(gate.decision(HEAD, rows, [], [])["status"],
                          "POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION")
 
+    def test_newer_running_state_blocks_prior_positive_on_same_head(self):
+        running = summary(at="2026-10-15T23:03:00Z")
+        state = {"code_review": {"commit_sha": HEAD, "status": "running",
+                                 "has_unresolved_findings": None}}
+        running["body"] = "<!-- codex-review-state:v1 " + json.dumps(state) + " -->"
+        result = gate.decision(HEAD, [request(), summary(), positive(), running], [], [])
+        self.assertEqual(result["status"], "NEWER_CODEX_REVIEW_NOT_COMPLETE")
+
     def test_review_race_negative_control_detects_mutated_missing_guard(self):
         # Remove the consequence of the actual pending-review guard in an
         # isolated copy of the function. The same negative acceptance test
