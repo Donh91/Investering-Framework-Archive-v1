@@ -18,6 +18,7 @@ import { officialPathView } from './official-path.mjs';
 
 const RANGE_FORMULA = '70pct_containment_plus_30pct_jaccard';
 const SCORE_CONTRACT = 'CN_PUBLIC_WEEKLY_SCORECARD_v1';
+const PUBLIC_SERIES_CONTRACT = 'CN_PUBLIC_SERIES_INDEX_v1';
 const VALID_WEEKLY_HEALTH = new Set(['OK', 'PASS', 'DEGRADED']);
 const HOUR_MS = 3600000;
 
@@ -101,6 +102,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
   };
 
   if (latest?.schema !== 'CN_PUBLIC_SNAPSHOT_V2' ||
+      latest.public_series?.contract !== PUBLIC_SERIES_CONTRACT ||
       compass?.contract !== 'PUBLIC_COMPASS_PROJECTION_v1') return result;
 
   result.delivery_health = normalizeAge(latest.generated_at, nowEpochMs, deliveryMaxAgeHours);
