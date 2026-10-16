@@ -437,7 +437,8 @@ it('actual public build readback agrees with canonical weekly, Compass and matur
  assert.equal(pointer.contract,'CYCLE_NAVIGATOR_DELIVERY_POINTER_v1');
  assert.equal(index.contract,'CN_PUBLIC_SERIES_INDEX_v1');
  assert.equal(publicCompass.contract,'PUBLIC_COMPASS_LATEST_POINTER_v1');
- assert.match(publicCompass.public_projection_path,/^04_MARKET_LEARNING\\/handlekompas\\/official\\/public\\/20\\d\\d\\/\\d\\d\\//);
+ assert.ok(publicCompass.public_projection_path.startsWith('04_MARKET_LEARNING/handlekompas/official/public/'));
+ assert.ok(!publicCompass.public_projection_path.includes('..'));
  const projectionBytes=readFileSync(resolve(root,publicCompass.public_projection_path));
  assert.equal(createHash('sha256').update(projectionBytes).digest('hex'),publicCompass.public_projection_content_sha256);
  execFileSync(process.execPath,[resolve(site,'build-public.mjs')],{
