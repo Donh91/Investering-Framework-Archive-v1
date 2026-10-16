@@ -132,7 +132,12 @@ def verified_replay_baseline(root: Path, seq: str, level: float, at: str) -> dic
         # SOURCE_PACKET.json. Authenticate from the original immutable
         # Auto Market State run archive, never synthesize or backfill it.
         stamp = parse_time(start)
-        source_dir = (root.resolve().parents[2] / "04_MARKET_LEARNING" /
+        resolved_root = root.resolve()
+        if (len(resolved_root.parents) < 3 or
+                resolved_root.parts[-3:] != ("research", "framework_memory",
+                                             "rotation_survival_forward_rows")):
+            raise ValueError("t6_replay_first_source_packet_missing")
+        source_dir = (resolved_root.parents[2] / "04_MARKET_LEARNING" /
                       "entry_signals" / "auto_market_state" / "runs" /
                       stamp.strftime("%Y/%m/%d"))
         matches = sorted(source_dir.glob(stamp.strftime("%H%M%S") + "_*.json"))
