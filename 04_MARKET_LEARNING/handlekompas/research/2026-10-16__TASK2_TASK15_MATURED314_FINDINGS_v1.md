@@ -38,6 +38,19 @@ On only 314 originally MATURED matched decisions: **Compass 145/314 (46.18%)**, 
 
 **Material availability bias:** original MATURED paired coverage by horizon differs substantially: BTC/ETH 1H 18/86 and 20/86 (20.93% and 23.26%); 24H 76/162 and 72/156 (46.91% and 46.15%). 4H intermediate. Cross-horizon hit-rate comparison is **selection-confounded** by outcomes original owner managed to publish, not necessarily by model differences.
 
+## Additional actual-original-source data test: archive arrival delays
+
+Read the **separate full original** `TASK15_R1_OWNER_PUBLICATION_FULL_CENSUS.json` 717,189-byte member, SHA256 `b30d8e515221314a217b5add128f0918f9eeaf6d99d2c682d142482a9f3d4776`, ledger-bound to the same original CSV SHA. ALL **814** original eligible source-publication cases are documented: **314** first-archived by due+90 minutes and **500** first-archived after. Original 500/814 = **61.4%** fail the archive's 90-minute publication-class condition; original archival evidence alone has `scorer_would_have_received_source=UNVERIFIED_EXECUTION_CONTEXT` for **all 814**.
+
+| First archive commit relative to original forecast's target time | N | Median delay (lower midpoint) | 90th percentile |
+| --- | ---: | ---: | ---: |
+| Original MATURED cohort ≤90 min | 314 | 39.617 min | 80.350 min |
+| Original CENSORED cohort >90 min | 500 | 164.333 min | 313.033 min |
+
+The original 814 rows cover 175 distinct published Git commit IDs and 29 source paths, **NOT** 814 independent providers/events. Horizon split 1H 38/170 on time, 4H 128/328, 24H 148/316. This is a **documented original-publication coverage/censor mechanism**, not proof that the upstream vendor was late, that the scorer read the file, or that fixing the Git arrival clock would have yielded more accurate predictions.
+
+**Information-value-based collection priority:** Address *original on-time source and execution receipt latency* as a large measured scientific coverage limitation before buying expensive extra feature histories. The potential number of better-verifiable future outcomes is material, but the **marginal directional information or after-cost PnL benefit remains UNKNOWN**, to be measured prospectively. This entire source-clock analysis is classified **PUBLICATION_GIT_COMMIT_TIME_ONLY**, never as original vendor `FIRST_KNOWN`.
+
 ## What next, without blocking on perfect provider vintage
 
 1. **DONE for this bounded question:** extract original-MATURED 314, paired asset×horizon divergence, error taxonomy, 44 NO_EDGE coverage, 28-day/125-issue dependency and 1H/24H maturity selection. Result is small/no robust Compass increment; no repeated pooled 824 run.
