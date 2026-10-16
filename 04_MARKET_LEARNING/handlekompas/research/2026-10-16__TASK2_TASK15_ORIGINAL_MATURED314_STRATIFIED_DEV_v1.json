@@ -266,7 +266,8 @@
     "actionable_delivery_verified": false,
     "after_cost_investor_value": "UNKNOWN",
     "feature_family_lift": "NOT_YET_MEASURED",
-    "next": "Match existing original frozen vote ablation feature subsets specifically against MATURED same-clock price controls; preserve available-case attrition, 44 abstentions and 500/10 censored/no-receipt separate; do not rerun 824 pooled score."
+    "next": "Match existing original frozen vote ablation feature subsets specifically against MATURED same-clock price controls; preserve available-case attrition, 44 abstentions and 500/10 censored/no-receipt separate; do not rerun 824 pooled score.",
+    "maturation_selection_bias": "Original MATURED paired coverage ranges BTC1H 18/86=20.93%, ETH1H 20/86=23.26%, BTC24H 76/162=46.91%, ETH24H 72/156=46.15%; comparisons across horizons are confounded by strongly unequal maturity selection."
   },
   "safety": {
     "private_value_rows_exported": false,
@@ -276,5 +277,61 @@
     "portfolio_action": false,
     "paid_sol_call": false,
     "new_workflow": false
-  }
+  },
+  "by_asset_horizon_original_maturity_coverage": [
+    {
+      "asset": "BTC",
+      "horizon": "1H",
+      "paired": 86,
+      "original_matured": 18,
+      "original_censored": 67,
+      "original_no_receipt": 1,
+      "matured_coverage_pct": 20.93
+    },
+    {
+      "asset": "BTC",
+      "horizon": "4H",
+      "paired": 170,
+      "original_matured": 63,
+      "original_censored": 104,
+      "original_no_receipt": 3,
+      "matured_coverage_pct": 37.06
+    },
+    {
+      "asset": "BTC",
+      "horizon": "24H",
+      "paired": 162,
+      "original_matured": 76,
+      "original_censored": 85,
+      "original_no_receipt": 1,
+      "matured_coverage_pct": 46.91
+    },
+    {
+      "asset": "ETH",
+      "horizon": "1H",
+      "paired": 86,
+      "original_matured": 20,
+      "original_censored": 65,
+      "original_no_receipt": 1,
+      "matured_coverage_pct": 23.26
+    },
+    {
+      "asset": "ETH",
+      "horizon": "4H",
+      "paired": 164,
+      "original_matured": 65,
+      "original_censored": 96,
+      "original_no_receipt": 3,
+      "matured_coverage_pct": 39.63
+    },
+    {
+      "asset": "ETH",
+      "horizon": "24H",
+      "paired": 156,
+      "original_matured": 72,
+      "original_censored": 83,
+      "original_no_receipt": 1,
+      "matured_coverage_pct": 46.15
+    }
+  ]
 }
