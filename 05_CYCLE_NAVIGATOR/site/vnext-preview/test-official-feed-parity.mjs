@@ -226,7 +226,7 @@ it('a scored current W42 week is not eligible as completed forecast',()=>{
 });
 it('missing source does not fabricate permission or score',()=>{
  const o=read({schema:'CN_PUBLIC_SNAPSHOT_V2'},compass);
- assert.equal(o.weekly.state,'MISMATCH');
+ assert.equal(o.weekly.state,'UNAVAILABLE');
  assert.equal(o.completed_score.state,'UNAVAILABLE');
  assert.equal(o.compass.permit_path_live_gates,false);
 });
