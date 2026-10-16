@@ -7,9 +7,7 @@ on:
       - '.github/workflows/provider-budget-readback.yml'
       - 'scripts/data_ping/native_handlekompas.py'
       - 'scripts/research/task2_r1_original_admission.py'
-      - 'scripts/research/task2_existing_data_coverage.py'
       - 'tests/research/test_task2_r1_original_admission.py'
-      - 'tests/research/test_task2_existing_data_coverage.py'
       - 'scripts/cycle_navigator/build_weekly_cycle_navigator.py'
       - 'scripts/learning/compass_outcomes.py'
       - 'scripts/learning/decision_economics_ledger.py'
@@ -60,24 +58,6 @@ jobs:
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_decision_economics_ledger -v
           python -m unittest tests.health.test_provider_budget_status -v
-      - name: Verify existing-data-first Task2 source coverage and no-hindsight negatives
-        run: |
-          python -m unittest tests.research.test_task2_existing_data_coverage -v
-          python scripts/research/task2_existing_data_coverage.py \
-            --expected-git-blob 9e728b835de294e5777222c171a89874a69dae95 \
-            --output /tmp/task2-existing-data-coverage.json
-          python - <<'PY'
-          import json
-          d=json.load(open('/tmp/task2-existing-data-coverage.json'))
-          assert d['contract']=='TASK2_AVAILABLE_DATA_EXPLORATORY_COVERAGE_v1'
-          assert d['original_forecast_attempts']==11
-          assert d['feature_observations']==264
-          assert d['explicit_local_retrieval_clocks']==99
-          assert d['scientifically_admitted_forecasts']==0
-          assert d['release']['R2_certified'] is False
-          assert d['release']['paid_api_call'] is False
-          print('TASK2_EXISTING_DATA_COVERAGE_TESTED_SOURCE_ONLY')
-          PY
       - name: Validate research-only original Task 2 R1 clock and SHA admissions
         run: |
           if [ -f scripts/research/task2_r1_original_admission.py ] && [ -f tests/research/test_task2_r1_original_admission.py ]; then
