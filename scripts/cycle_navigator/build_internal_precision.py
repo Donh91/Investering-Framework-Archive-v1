@@ -529,7 +529,11 @@ def _valid_cn_prior_paid_receipt(receipt: Any, reservation: dict[str, Any]) -> b
         return False
     if (type(receipt.get("created_unix")) is not int
             or receipt["created_unix"] < reservation["created_unix"]
-            or receipt["created_unix"] > int(time.time()) + 300):
+            or receipt["created_unix"] > int(time.time()) + 300
+            or time.gmtime(receipt["created_unix"])[:2]
+               != time.gmtime(reservation["created_unix"])[:2]):
+        # Midnight rollover is a conservative owner-reconciliation stop,
+        # never an excuse to omit a prior-month charge from the ledger.
         return False
     if not re.fullmatch(r"[0-9a-f]{64}", str(receipt.get("context_hash") or "")):
         return False
@@ -539,7 +543,11 @@ def _valid_cn_prior_paid_receipt(receipt: Any, reservation: dict[str, Any]) -> b
     if receipt["input_tokens"] + receipt["output_tokens"] <= 0:
         return False
     cost = receipt.get("estimated_cost_usd")
-    if type(cost) not in (int, float) or not math.isfinite(cost) or cost < 0:
+    maximum = reservation.get("max_estimated_cost_usd")
+    if (type(maximum) not in (int, float) or not math.isfinite(maximum)
+            or not 0 < maximum <= 1
+            or type(cost) not in (int, float) or not math.isfinite(cost)
+            or not 0 <= cost <= maximum + 1e-8):
         return False
     if receipt["status"] == "PASS":
         if (not re.fullmatch(r"[0-9a-f]{64}", str(receipt.get("output_hash") or ""))
