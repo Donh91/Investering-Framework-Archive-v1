@@ -107,7 +107,8 @@ jobs:
           assert not any(x["authority"].values())
           print("TASK2_VOTES_ACTUAL_ORIGINAL_REPLAY_PASS",
                 json.dumps({"file_count":x["original_forecast_files_replayed"],
-                            "by_family":x["family_comparison"]},sort_keys=True))
+                            "by_family":x["family_comparison"],
+                            "by_asset_horizon":x["by_asset_horizon"]},sort_keys=True))
           PY
           rm -f /tmp/task2_original_issued_forecasts.zip /tmp/task2_matured314_vote_family_aggregate.json
       - name: Validate repository state readback when available
