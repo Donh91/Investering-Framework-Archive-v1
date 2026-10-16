@@ -2,7 +2,7 @@
 
 **Decision:** 2026-10-16 authenticated owner instruction: continue every scientifically legitimate diagnostic possible on currently held data. Absence of one desired external source MUST NOT halt unrelated existing-data analyses. This is an addendum within existing Task 2 #1596 / #1530 / #1553, not a new engine, schedule, queue, score or owner.
 
-**Evidence pin:** frozen original R1 v2 Git blob `9e728b835de294e5777222c171a89874a69dae95` at `04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json`. Verified by deterministic `scripts/research/task2_existing_data_coverage.py` and 10 positive/negative tests in the existing Native Handlekompas CI. The generated /tmp report is an aggregate technical diagnostic, NOT a fresh original market capture or a score.
+**Evidence pin:** frozen original R1 v2 Git blob `9e728b835de294e5777222c171a89874a69dae95` at `04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json`. Verified by deterministic `scripts/research/task2_existing_data_coverage.py` and 10 positive/negative tests, executed successfully on the original PR head under Native Handlekompas CI. For this reviewed research-only PR head, no GitHub workflow is changed; reproduce with `python -m unittest tests.research.test_task2_existing_data_coverage -v`. CI coverage on subsequent heads must be read from exact-head checks, not inferred from the earlier head. The generated /tmp report is an aggregate technical diagnostic, NOT a fresh original market capture or a score.
 
 ## A. What is **actually available** in this frozen cohort
 
