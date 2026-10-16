@@ -122,5 +122,78 @@ class SelfImprovementV1Test(unittest.TestCase):
         self.assertFalse(self.output.exists())
 
 
+    def test_empty_census_never_reports_clean(self):
+        self.health["workflows"] = []
+        self._save(self.health_path, self.health)
+        result = self.snapshot()
+        self.assertEqual(result["operational_verdict"], "INSUFFICIENT_EVIDENCE")
+        self.assertIn("EMPTY_WORKFLOW_CENSUS", result["input_issues"])
+
+    def test_unknown_missing_or_invalid_status_fails_closed(self):
+        for value in ("UNKNOWN", None, "", "BLUE"):
+            with self.subTest(value=value):
+                self.output.unlink(missing_ok=True)
+                self.health["workflows"][0]["status"] = value
+                self._save(self.health_path, self.health)
+                result = self.snapshot()
+                self.assertEqual(result["operational_verdict"], "INSUFFICIENT_EVIDENCE")
+                self.assertTrue(result["input_issues"])
+
+    def test_case_normalization_and_amber_advisory(self):
+        for value, verdict in (("red", "NEEDS_DIAGNOSIS"),
+                               ("AMBER", "ADVISORY_DEGRADED"),
+                               ("YELLOW", "ADVISORY_DEGRADED"),
+                               ("green", "NO_RED_HEALTH_INCIDENTS")):
+            with self.subTest(value=value):
+                self.output.unlink(missing_ok=True)
+                self.health["workflows"][0]["status"] = value
+                self._save(self.health_path, self.health)
+                self.assertEqual(self.snapshot()["operational_verdict"], verdict)
+
+    def test_recurring_red_after_green_keeps_history(self):
+        first = self.snapshot()
+        self.assertEqual(first["incident_history"][0]["observation_count"], 1)
+        self.health["workflows"][0]["status"] = "GREEN"
+        self.health["workflows"][0]["live"]["latest_run"]["id"] = 13
+        self._save(self.health_path, self.health)
+        middle = self.snapshot()
+        self.assertEqual(middle["incident_count"], 0)
+        self.assertEqual(middle["incident_history"][0]["observation_count"], 1)
+        self.health["workflows"][0]["status"] = "RED"
+        self.health["workflows"][0]["live"]["latest_run"]["id"] = 14
+        self._save(self.health_path, self.health)
+        last = self.snapshot()
+        self.assertEqual(last["incidents"][0]["observation_count"], 2)
+        self.assertEqual(last["incident_history"][0]["first_seen_at_utc"],
+                         first["incidents"][0]["first_seen_at_utc"])
+
+    def test_corrupt_prior_is_isolated_without_touching_sources(self):
+        self.snapshot()
+        self.output.write_text('{"contract":"OTHER"}')
+        result = self.snapshot()
+        self.assertEqual(result["prior_status"], "INVALID_IGNORED")
+        self.assertEqual(result["operational_verdict"], "NEEDS_DIAGNOSIS")
+        self.assertFalse(result["authority"]["automatic_code_write"])
+
+    def test_real_shape_six_amber_is_visible(self):
+        self.health["workflows"] = [
+            {"workflow": f"workflow-{i}.yml", "status": "GREEN" if i < 192 else "AMBER",
+             "findings": ["EVIDENCE_PARTIAL"] if i >= 192 else []}
+            for i in range(198)
+        ]
+        self._save(self.health_path, self.health)
+        result = self.snapshot()
+        self.assertEqual(result["operational_verdict"], "ADVISORY_DEGRADED")
+        self.assertEqual(result["workflow_census_count"], 198)
+        self.assertEqual(result["incident_count"], 6)
+        self.assertEqual(len(result["incident_history"]), 6)
+
+    def test_absent_run_id_does_not_fake_repeat(self):
+        self.health["workflows"][0]["live"]["latest_run"].pop("id")
+        self._save(self.health_path, self.health)
+        self.snapshot()
+        self.assertEqual(self.snapshot()["incidents"][0]["observation_count"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

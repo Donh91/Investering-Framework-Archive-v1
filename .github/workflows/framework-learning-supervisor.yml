@@ -150,6 +150,12 @@ jobs:
           assert evolution['authority']['automatic_merge'] is False
           assert evolution['authority']['automatic_code_write'] is False
           assert evolution['scoreboard']['DOCUMENTED_IMPROVEMENT']==0
+          assert evolution['operational_verdict'] in (
+              'NO_RED_HEALTH_INCIDENTS', 'ADVISORY_DEGRADED',
+              'NEEDS_DIAGNOSIS', 'INSUFFICIENT_EVIDENCE')
+          assert isinstance(evolution['workflow_census_count'], int)
+          assert len(evolution['incident_history']) >= evolution['incident_count']
+          assert evolution['input_issues'] == [] or evolution['operational_verdict']=='INSUFFICIENT_EVIDENCE'
           assert h['status']=='PASS', h
           assert h['source_of_truth']=='CURRENT_GITHUB_MAIN'
           assert h['memory_role']=='DERIVED_ACCELERATION_LAYER_ONLY'

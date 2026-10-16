@@ -71,8 +71,10 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         root / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
         EXPERIMENT_CONTRACT,
     )
-    if not isinstance(health.get("workflows"), list):
+    workflows = health.get("workflows")
+    if not isinstance(workflows, list):
         raise ValueError("missing_health_workflow_census")
+    census_empty = len(workflows) == 0
     candidates = registry.get("candidates")
     if not isinstance(candidates, list):
         raise ValueError("missing_experiment_candidate_census")
@@ -120,23 +122,44 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
             })
 
     # Read previous derived snapshot for recurrence only, never scientific authority.
-    prior = {}
+    prior: dict[str, Any] = {}
+    prior_status = "ABSENT"
     if output.exists():
-        prior, _ = _read(output, OUTPUT_CONTRACT)
+        try:
+            prior, _ = _read(output, OUTPUT_CONTRACT)
+            historical = prior.get("incident_history", prior.get("incidents", []))
+            if not isinstance(historical, list):
+                raise ValueError("malformed_previous_incident_history")
+            prior_status = "VALID"
+        except (ValueError, TypeError, UnicodeDecodeError):
+            prior, prior_status = {}, "INVALID_IGNORED"
+    historical = prior.get("incident_history", prior.get("incidents", []))
     prior_incidents = {
-        x.get("fingerprint"): x for x in prior.get("incidents", [])
-        if isinstance(x, dict) and x.get("fingerprint")
+        x["fingerprint"]: x for x in historical
+        if isinstance(x, dict) and isinstance(x.get("fingerprint"), str)
     }
+    history_by_key = dict(prior_incidents)
     incidents = []
+    status_issues: list[str] = []
     workflows_seen: set[str] = set()
-    for item in health["workflows"]:
+    for item in workflows:
         if not isinstance(item, dict):
             raise ValueError("malformed_health_workflow")
         workflow = item.get("workflow")
         if not isinstance(workflow, str) or not workflow or workflow in workflows_seen:
             raise ValueError("missing_or_duplicate_workflow")
         workflows_seen.add(workflow)
-        if item.get("status") != "RED":
+        raw_status = item.get("status")
+        if not isinstance(raw_status, str):
+            status_issues.append(f"{workflow}:MISSING_OR_INVALID_STATUS")
+            continue
+        status = raw_status.strip().upper()
+        if status == "YELLOW":
+            status = "AMBER"
+        if status not in {"GREEN", "AMBER", "RED"}:
+            status_issues.append(f"{workflow}:UNKNOWN_STATUS:{status[:48]}")
+            continue
+        if status == "GREEN":
             continue
         findings = item.get("findings") or []
         if not isinstance(findings, list) or not all(isinstance(x, str) for x in findings):
@@ -148,11 +171,15 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         run_id = latest.get("id")
         # Re-processing an identical health receipt is NOT another observation.
         increment = 1 if not old or (run_id is not None and run_id != old.get("observed_run_id")) else 0
-        count = int(old.get("observation_count", 0)) + increment
-        incidents.append({
+        prior_count = old.get("observation_count", 0)
+        if not isinstance(prior_count, int) or isinstance(prior_count, bool) or prior_count < 0:
+            prior_count = 0
+        count = prior_count + increment
+        record = {
             "fingerprint": fingerprint,
             "workflow": workflow,
             "findings": sorted(set(findings)),
+            "severity": status,
             "classification": "UNKNOWN",
             "observed_run_id": run_id,
             "first_seen_at_utc": old.get("first_seen_at_utc") or now.isoformat().replace("+00:00", "Z"),
@@ -163,11 +190,23 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
             "route": "EXISTING_REMEDIATION_OWNER",
             "owner_issue": 1156,
             "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
-        })
+        }
+        incidents.append(record)
+        history_by_key[fingerprint] = record
 
     health_status = _source_age_status(health.get("generated_at_utc"), now)
     registry_status = _source_age_status(registry.get("generated_at_utc"), now)
     current = health_status == "CURRENT" and registry_status == "CURRENT"
+    has_red = any(x["severity"] == "RED" for x in incidents)
+    has_amber = any(x["severity"] == "AMBER" for x in incidents)
+    if census_empty or status_issues or not current:
+        operational_verdict = "INSUFFICIENT_EVIDENCE"
+    elif has_red:
+        operational_verdict = "NEEDS_DIAGNOSIS"
+    elif has_amber:
+        operational_verdict = "ADVISORY_DEGRADED"
+    else:
+        operational_verdict = "NO_RED_HEALTH_INCIDENTS"
     result = {
         "contract": OUTPUT_CONTRACT,
         "authority": {
@@ -184,9 +223,13 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         "source_sha256": {"automation_health": health_sha, "experiment_registry": registry_sha},
         "input_health": "CURRENT" if current else "STALE",
         "input_freshness": {"automation_health": health_status, "experiment_registry": registry_status},
-        "operational_verdict": "INSUFFICIENT_EVIDENCE" if not current else ("NEEDS_DIAGNOSIS" if incidents else "NO_RED_HEALTH_INCIDENTS"),
+        "operational_verdict": operational_verdict,
+        "workflow_census_count": len(workflows),
+        "input_issues": (["EMPTY_WORKFLOW_CENSUS"] if census_empty else []) + status_issues,
+        "prior_status": prior_status,
         "incident_count": len(incidents),
         "incidents": sorted(incidents, key=lambda x: x["workflow"]),
+        "incident_history": sorted(history_by_key.values(), key=lambda x: x["fingerprint"]),
         "scoreboard": {key: scoreboard[key] for key in VERDICTS},
         "candidate_count": len(candidates),
         "challengers": challengers,
