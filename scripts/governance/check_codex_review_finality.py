@@ -94,6 +94,30 @@ def paged(repo, path):
     raise ValueError("PAGINATION_NOT_EXHAUSTIVE")
 
 
+def consistent_live_snapshot(repo: str, number: int, head: str) -> dict:
+    """Double-read PR and all review events; any mutation during census blocks.
+
+    This is a conservative read-only release preflight, not an atomic GitHub
+    compare-and-swap for issue comments. The merger must run it immediately
+    before a GitHub exact-head merge with no intermediate asynchronous work.
+    """
+    def read_once():
+        pr = gh_get(f"repos/{repo}/pulls/{number}")
+        if (pr.get("head", {}).get("sha") != head or pr.get("state") != "open"
+                or pr.get("draft")):
+            raise ValueError("PR_HEAD_OR_STATE_CHANGED")
+        comments = paged(repo, f"issues/{number}/comments")
+        reviews = paged(repo, f"pulls/{number}/reviews")
+        inline = paged(repo, f"pulls/{number}/comments")
+        return (pr.get("head", {}).get("sha"), pr.get("updated_at"),
+                comments, reviews, inline)
+    before = read_once()
+    after = read_once()
+    if before != after:
+        raise ValueError("REVIEW_SNAPSHOT_CHANGED_DURING_CENSUS")
+    return decision(head, after[2], after[3], after[4])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", required=True)
@@ -104,12 +128,7 @@ def main():
     try:
         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", a.repo) or a.pr < 1:
             raise ValueError("BAD_PR_INPUT")
-        pr = gh_get(f"repos/{a.repo}/pulls/{a.pr}")
-        if pr.get("head", {}).get("sha") != a.head or pr.get("state") != "open" or pr.get("draft"):
-            raise ValueError("PR_HEAD_OR_STATUS_CHANGED")
-        result = decision(a.head, paged(a.repo, f"issues/{a.pr}/comments"),
-                          paged(a.repo, f"pulls/{a.pr}/reviews"),
-                          paged(a.repo, f"pulls/{a.pr}/comments"))
+        result = consistent_live_snapshot(a.repo, a.pr, a.head)
     except (ValueError, TypeError, KeyError, subprocess.SubprocessError, json.JSONDecodeError):
         pass
     print(json.dumps(result, sort_keys=True))
