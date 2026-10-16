@@ -337,6 +337,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "claim_ids": ["frozen-A"],
             "request_hash": "a" * 64,
             "created_unix": int(time.time()) - 5,
+            "max_estimated_cost_usd": 0.10,
         }
         valid = {
             "contract": "API_AGENT_RECEIPT_v3",
@@ -396,6 +397,22 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             valid, {**reservation, "created_unix": int(time.time()) + 3600}))
         self.assertFalse(cn._valid_cn_prior_paid_receipt(
             valid, {key: val for key, val in reservation.items() if key != "created_unix"}))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            {**valid, "estimated_cost_usd": 0.11}, reservation))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            valid, {**reservation, "max_estimated_cost_usd": float("nan")}))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            valid, {key: val for key, val in reservation.items() if key != "max_estimated_cost_usd"}))
+        # Midnight: even chronologically valid receipts cannot move a charge
+        # into the following month's guard without owner reconciliation.
+        from datetime import datetime, timezone, timedelta
+        month_start=datetime.now(timezone.utc).replace(day=1,hour=0,minute=0,second=0,microsecond=0)
+        pre_midnight=int((month_start-timedelta(seconds=2)).timestamp())
+        after_midnight=int(month_start.timestamp())+2
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            {**valid, "created_unix": after_midnight},
+            {**reservation, "created_unix": pre_midnight}))
+
 
 
     def test_month_shards_keep_prior_claims_in_global_no_retry_census(self):
