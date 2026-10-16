@@ -328,6 +328,63 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                     self.root, ["new-B"], "a" * 64, "gpt-5.6-terra", 0.10)
             self.assertEqual(source.call_count, 2)
 
+    def test_durable_liability_never_reconciles_partial_or_contradictory_paid_receipts(self):
+        reservation = {
+            "contract": "CN_PAID_API_PREPOST_RESERVATION_v1",
+            "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+            "model": "gpt-5.6-terra",
+            "claim_ids": ["frozen-A"],
+            "request_hash": "a" * 64,
+        }
+        valid = {
+            "contract": "API_AGENT_RECEIPT_v3",
+            "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+            "authority": cn.AUTHORITY,
+            "claim_ids": ["frozen-A"],
+            "request_hash": "a" * 64,
+            "model": "gpt-5.6-terra",
+            "reasoning_effort": "medium",
+            "attempt_count": 1,
+            "status": "PASS",
+            "created_unix": 1790000000,
+            "context_hash": "b" * 64,
+            "output_hash": "c" * 64,
+            "input_tokens": 600,
+            "output_tokens": 200,
+            "estimated_cost_usd": 0.01,
+            "error": None,
+        }
+        self.assertTrue(cn._valid_cn_prior_paid_receipt(valid, reservation))
+        for field, bad in (
+            ("model", None), ("created_unix", None), ("status", None),
+            ("input_tokens", None), ("output_tokens", -2),
+            ("estimated_cost_usd", float("nan")),
+            ("estimated_cost_usd", float("inf")),
+            ("estimated_cost_usd", -1),
+            ("authority", "PORTFOLIO_ACTION"), ("attempt_count", True),
+            ("context_hash", "bad"), ("output_hash", None),
+            ("request_hash", "d" * 64), ("claim_ids", ["another"]),
+            ("reasoning_effort", None), ("status", "BLOCKED"),
+            ("usage_reconciliation_required", True),
+        ):
+            with self.subTest(field=field, bad=bad):
+                candidate = {**valid, field: bad}
+                self.assertFalse(cn._valid_cn_prior_paid_receipt(candidate, reservation))
+        for removed in ("model", "created_unix", "status", "input_tokens",
+                        "output_tokens", "attempt_count", "context_hash",
+                        "estimated_cost_usd", "authority", "reasoning_effort"):
+            with self.subTest(removed=removed):
+                candidate = {**valid}
+                candidate.pop(removed)
+                self.assertFalse(cn._valid_cn_prior_paid_receipt(candidate, reservation))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            {**valid, "status": "API_OUTPUT_INVALID", "error": None}, reservation))
+        self.assertTrue(cn._valid_cn_prior_paid_receipt(
+            {**valid, "status": "API_OUTPUT_INVALID", "output_hash": None,
+             "error": "INVALID_STRUCTURED_OUTPUT:ValueError"}, reservation))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(valid,
+                         {**reservation, "model": None}))
+
     def test_valid_call_has_exact_receipt_and_cannot_repeat(self):
         with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)) as guard, \
              patch("urllib.request.urlopen", return_value=Response(self.good)) as http:
