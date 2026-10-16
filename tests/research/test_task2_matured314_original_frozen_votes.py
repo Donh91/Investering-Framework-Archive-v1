@@ -83,12 +83,12 @@ class MatchedFrozenVoteTests(unittest.TestCase):
         # A PR may execute its own source code. It must not inherit the
         # production main-writer token while replaying the source ZIP.
         workflow=(ROOT/".github/workflows/native-handlekompas.yml").read_text()
-        self.assertIn("permissions:\\n  actions: write\\n  contents: write\\n  issues: write", workflow)
-        validate=workflow.split("\\n  validate:\\n",1)[1].split("\\n  readback:\\n",1)[0]
-        self.assertRegex(validate,r"(?m)^    permissions:\\n      actions: read\\n      contents: read\\n")
+        self.assertIn("permissions:\n  actions: write\n  contents: write\n  issues: write", workflow)
+        validate=workflow.split("\n  validate:\n",1)[1].split("\n  readback:\n",1)[0]
+        self.assertRegex(validate,r"(?m)^    permissions:\n      actions: read\n      contents: read\n")
         self.assertNotRegex(validate,r"(?m)^      (?:actions|contents|issues): write$")
-        readback=workflow.split("\\n  readback:\\n",1)[1].split("\\n  incident:\\n",1)[0]
-        self.assertNotIn("\\n    permissions:",readback)
+        readback=workflow.split("\n  readback:\n",1)[1].split("\n  incident:\n",1)[0]
+        self.assertNotIn("\n    permissions:",readback)
 
     def test_research_receipt_only_pr_change_triggers_original_source_replay(self):
         # Previous workflow guard omitted the published JSON receipt: a future
