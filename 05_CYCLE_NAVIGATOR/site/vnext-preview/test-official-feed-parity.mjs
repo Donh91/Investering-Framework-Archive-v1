@@ -150,9 +150,9 @@ it('explicit missing numeric weekly range stays null',()=>{
  assert.equal(o.weekly.eth_range,null);
  assert.deepEqual(o.weekly.btc_range,{low:78000,high:88000});
 });
-it('weekly/Compass ID mismatch blocks PATH without overwriting independently valid NOW',()=>{
+it('weekly/Compass ID mismatch blocks PATH and unverified NOW authority',()=>{
  const o=mutate((l,c)=>{c.weekly_context.public_issue_number=28});
- assert.equal(o.compass.action_now,'HOLD_WAIT');
+ assert.equal(o.compass.action_now,'UNAVAILABLE');
  assert.equal(o.compass.permit_path_live_gates,false);
  assert.notEqual(o.compass.weekly_alignment,'ALIGNED');
 });
@@ -287,11 +287,11 @@ it('stale weekly delivery blocks risk ETA and Bull/Bear even when Compass object
  assert.equal(o.compass.bull_bear_1_3d,null);
  assert.equal(o.compass.action_now,'UNAVAILABLE');
 });
-it('misaligned public CN week blocks risk ETA but does not rewrite Compass action',()=>{
+it('misaligned public CN week blocks risk ETA and unverified Compass action',()=>{
  const o=mutate((l,c)=>{validW42(l,c);c.weekly_context.public_issue_number=28});
  assert.equal(o.compass.pullback_window,null);
  assert.equal(o.compass.permit_path_live_gates,false);
- assert.equal(o.compass.action_now,'HOLD_WAIT');
+ assert.equal(o.compass.action_now,'UNAVAILABLE');
 });
 it('malformed governed W42 window does not create dates',()=>{
  const o=mutate((l,c)=>{validW42(l,c);c.protection_tracker.public_explanation.onset_start_utc='2026-10-14T02:00:00Z'});
