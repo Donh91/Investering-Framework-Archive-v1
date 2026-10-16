@@ -40,6 +40,11 @@ concurrency:
 jobs:
   validate:
     if: github.event_name == 'pull_request'
+    # Original-research PR tests fetch artifacts but must never inherit the
+    # workflow-level writer token used by the separate main readback job.
+    permissions:
+      actions: read
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
