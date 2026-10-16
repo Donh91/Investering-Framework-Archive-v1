@@ -122,7 +122,7 @@ var weeklyAligned=Number.isInteger(pub.public_issue_number)&&pub.public_issue_nu
  pub.forecast_week===expectedWeek&&["OK","PASS","DEGRADED"].includes(p.status);
 if(!weeklyAligned)throw Error("Unverified public CN week/issue lineage");
 var now=Date.now(),parsed=Date.parse(cn.generated_at);
-var deliveryFresh=typeof cn.generated_at==="string"&&/(?:Z|[+-]\\d\\d:\\d\\d)$/.test(cn.generated_at)&&
+var deliveryFresh=typeof cn.generated_at==="string"&&/(?:Z|[+-]\d\d:\d\d)$/.test(cn.generated_at)&&
  Number.isFinite(parsed)&&parsed<=now+300000&&now-parsed<=86400000;
 set("state",safe(p.market_state)||"Officiel markedsstatus ikke tilgængelig");
 set("summary",safe(p.base_case_this_week)||"Offentlig vurdering er ikke tilgængelig.");
@@ -133,7 +133,7 @@ var currentContext=p.market_cycle_context||{};
 set("phase",safe(currentContext.current_phase)||"Fase ikke bekræftet");
 set("nextGate",safe(currentContext.next_gate)||"Afventer signal");
 var issued=Date.parse(c.issued_at_utc);
-var compassFresh=typeof c.issued_at_utc==="string"&&/(?:Z|[+-]\\d\\d:\\d\\d)$/.test(c.issued_at_utc)&&
+var compassFresh=typeof c.issued_at_utc==="string"&&/(?:Z|[+-]\d\d:\d\d)$/.test(c.issued_at_utc)&&
  Number.isFinite(issued)&&issued<=now+300000&&now-issued<=86400000&&issued<=parsed+300000;
 var valid=deliveryFresh&&compassFresh&&c.data_status==="OK"&&typeof c.compass_id==="string"&&c.compass_id.trim()!=="";
 var aligned=valid&&c.weekly_context&&c.weekly_context.status==="ALIGNED"&&
