@@ -549,6 +549,16 @@ def _valid_cn_prior_paid_receipt(receipt: Any, reservation: dict[str, Any]) -> b
             or type(cost) not in (int, float) or not math.isfinite(cost)
             or not 0 <= cost <= maximum + 1e-8):
         return False
+    # A receipt cannot self-declare artificially low spend: recompute from
+    # its exact governed model and measured token usage, before new paid POST.
+    try:
+        from scripts.api_agent.api_gateway import estimate_cost
+        expected_cost = estimate_cost(receipt["model"], receipt["input_tokens"],
+                                      receipt["output_tokens"])
+    except (ImportError, KeyError, TypeError, ValueError):
+        return False
+    if abs(cost - expected_cost) > 1e-8:
+        return False
     if receipt["status"] == "PASS":
         if (not re.fullmatch(r"[0-9a-f]{64}", str(receipt.get("output_hash") or ""))
                 or receipt.get("error") is not None):
