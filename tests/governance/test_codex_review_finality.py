@@ -87,6 +87,37 @@ class ReviewFinalityTests(unittest.TestCase):
         rows = [summary(at=when), positive(at=when), request(when)]
         self.assertFalse(gate.decision(HEAD, rows, [], [])["technical_review_accepted"])
 
+    def test_same_second_conflicting_codex_states_are_order_independent_blockers(self):
+        completed = summary(at="2026-10-15T23:01:00Z")
+        running = summary(at="2026-10-15T23:01:00Z")
+        running["body"] = "<!-- codex-review-state:v1 " + json.dumps({
+            "code_review": {"commit_sha": HEAD, "status": "running",
+                            "has_unresolved_findings": None}}) + " -->"
+        adverse = summary(at="2026-10-15T23:01:00Z", unresolved=True)
+        for other in (running, adverse):
+            for pair in ([completed, other], [other, completed]):
+                with self.subTest(other=other["body"], pair=pair):
+                    result = gate.decision(HEAD, [request(), *pair, positive()], [], [])
+                    self.assertEqual(result["status"], "AMBIGUOUS_CODEX_STATE_SEQUENCE")
+                    self.assertFalse(result["technical_review_accepted"])
+
+    def test_later_unambiguous_completion_can_close_previous_state_timestamp_tie(self):
+        earlier = summary(at="2026-10-15T23:01:00Z")
+        running = summary(at="2026-10-15T23:01:00Z")
+        running["body"] = "<!-- codex-review-state:v1 " + json.dumps({
+            "code_review": {"commit_sha": HEAD, "status": "running",
+                            "has_unresolved_findings": None}}) + " -->"
+        later = summary(at="2026-10-15T23:03:00Z")
+        result = gate.decision(HEAD, [request(), earlier, running, later,
+                                      positive(at="2026-10-15T23:04:00Z")], [], [])
+        self.assertEqual(result["status"], "FINAL_TECHNICAL_REVIEW")
+
+    def test_positive_at_same_second_as_completion_has_no_temporal_proof(self):
+        rows = [request(), summary(at="2026-10-15T23:01:00Z"),
+                positive(at="2026-10-15T23:01:00Z")]
+        self.assertEqual(gate.decision(HEAD, rows, [], [])["status"],
+                         "POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION")
+
     def test_review_race_negative_control_detects_mutated_missing_guard(self):
         # Remove the consequence of the actual pending-review guard in an
         # isolated copy of the function. The same negative acceptance test
