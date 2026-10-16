@@ -527,5 +527,63 @@ class T6RotationSurvivalTests(unittest.TestCase):
                 operate(sample, cadence(), root)
 
 
+    def test_unseen_older_packet_cannot_rewind_latest_or_close_sequence(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            operate(packet(0.0301, 0.0002), cadence(), root)
+            current = packet(0.0304, 0.0003, stamp="2026-09-11T01:00:00Z")
+            latest = operate(current, cadence(), root)
+            frozen = {p: p.read_bytes() for p in root.rglob("*.json")}
+            # A distinct Sep 10 source was never observed: it is NOT an
+            # idempotent replay and must not overwrite the newer Sep 11 row.
+            late_reversal = packet(0.0297, -0.0004, stamp="2026-09-10T01:00:00Z")
+            with self.assertRaisesRegex(ValueError, "t6_fresh_packet_time_regression"):
+                operate(late_reversal, cadence(), root)
+            self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, frozen)
+            self.assertEqual(json.loads((root / "LATEST.json").read_text()), latest)
+
+    def test_unseen_equal_timestamp_with_different_source_is_not_a_replay(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            operate(packet(0.0301, 0.0002), cadence(), root)
+            original = packet(0.0304, 0.0003, stamp="2026-09-11T01:00:00Z")
+            operate(original, cadence(), root)
+            frozen = {p: p.read_bytes() for p in root.rglob("*.json")}
+            alternate = packet(0.0305, 0.0004, stamp="2026-09-11T01:00:00Z")
+            with self.assertRaisesRegex(ValueError, "t6_fresh_packet_time_regression"):
+                operate(alternate, cadence(), root)
+            self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, frozen)
+
+    def test_new_packet_rejects_missing_or_rehashed_latest_pointer(self):
+        for kind in ("missing", "wrong_sha", "wrong_event"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                operate(packet(0.0301, 0.0002), cadence(), root)
+                ptr_path = root / "LATEST.json"
+                if kind == "missing":
+                    ptr_path.unlink()
+                else:
+                    ptr = json.loads(ptr_path.read_text())
+                    if kind == "wrong_sha":
+                        ptr["observation_sha256"] = "0" * 64
+                    else:
+                        ptr["event"] = "UNKNOWN"
+                    ptr_path.write_text(json.dumps(ptr))
+                frozen = {p: p.read_bytes() for p in root.rglob("*.json")}
+                sample = packet(0.0304, 0.0003, stamp="2026-09-11T01:00:00Z")
+                with self.assertRaisesRegex(ValueError, "t6_fresh_latest_pointer_missing|t6_fresh_latest_pointer_mismatch"):
+                    operate(sample, cadence(), root)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, frozen)
+
+    def test_strict_monotonic_natural_packet_still_advances(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            operate(packet(0.0301, 0.0002), cadence(), root)
+            operate(packet(0.0304, 0.0003, stamp="2026-09-11T01:00:00Z"), cadence(), root)
+            latest = operate(packet(0.0306, 0.0002, stamp="2026-09-12T01:00:00Z"), cadence(), root)
+            self.assertEqual(latest["event"], "ACTIVE_SEQUENCE_OBSERVATION")
+            self.assertEqual(latest["observed_at_utc"], "2026-09-12T01:00:00Z")
+
+
 if __name__ == "__main__":
     unittest.main()
