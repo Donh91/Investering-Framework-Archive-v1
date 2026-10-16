@@ -151,17 +151,19 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
     alignedContext?.status === 'ALIGNED' &&
     alignedContext?.forecast_week === forecastWeek &&
     alignedContext?.public_issue_number === issue;
+  // An otherwise fresh Compass is not actionable without a matching public CN identity.
+  const actionable = cOK && cnJoined;
   result.compass = {
-    state: cOK ? 'FRESH' : compassAge === 'STALE' ? 'STALE' : 'UNAVAILABLE',
+    state: actionable ? 'FRESH' : compassAge === 'STALE' ? 'STALE' : 'UNAVAILABLE',
     compass_id: typeof compass.compass_id === 'string' ? compass.compass_id : null,
     issued_at_utc: compass.issued_at_utc ?? null,
     weekly_alignment: cnJoined ? 'ALIGNED' :
       alignedContext?.status === 'MISMATCH' ? 'MISMATCH' : 'UNVERIFIED',
-    action_now: cOK && typeof compass.action_now === 'string' ? compass.action_now : 'UNAVAILABLE',
-    pullback_risk_state: cOK ? (compass.protection_tracker?.pullback_risk_state || 'UNAVAILABLE') : 'UNAVAILABLE',
-    distribution_risk: cOK ? (compass.protection_tracker?.distribution_risk || 'UNKNOWN') : 'UNKNOWN',
-    sell_assessment_state: cOK ? (compass.sell_assessment?.state || 'UNAVAILABLE') : 'UNAVAILABLE',
-    reentry_state: cOK ? (compass.protection_tracker?.reentry_state || 'UNAVAILABLE') : 'UNAVAILABLE',
+    action_now: actionable && typeof compass.action_now === 'string' ? compass.action_now : 'UNAVAILABLE',
+    pullback_risk_state: actionable ? (compass.protection_tracker?.pullback_risk_state || 'UNAVAILABLE') : 'UNAVAILABLE',
+    distribution_risk: actionable ? (compass.protection_tracker?.distribution_risk || 'UNKNOWN') : 'UNKNOWN',
+    sell_assessment_state: actionable ? (compass.sell_assessment?.state || 'UNAVAILABLE') : 'UNAVAILABLE',
+    reentry_state: actionable ? (compass.protection_tracker?.reentry_state || 'UNAVAILABLE') : 'UNAVAILABLE',
     // A source week is not by itself an event onset. Public ETA is permitted
     // ONLY if verified Compass and weekly public CN identities are aligned.
     pullback_window: cOK && cnJoined ?
@@ -194,7 +196,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
         items:v.rows
       } : null;
     })() : null,
-    bull_bear_1_3d: cOK ? officialBullBear(compass, '1_3d') : null,
+    bull_bear_1_3d: actionable ? officialBullBear(compass, '1_3d') : null,
     permit_path_live_gates: cOK && cnJoined
   };
 
