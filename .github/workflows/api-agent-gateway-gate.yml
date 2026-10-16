@@ -5,6 +5,9 @@ on:
     paths:
       - 'research/api_agent/**'
       - 'scripts/api_agent/**'
+      - 'scripts/cycle_navigator/build_internal_precision.py'
+      - 'tests/cycle_navigator/test_internal_precision_api_budget.py'
+      - '.github/workflows/cycle-navigator-internal-precision.yml'
       - 'scripts/architecture/build_latest_handoff.py'
       - 'tests/api_agent/**'
       - '.github/workflows/api-agent-gateway-gate.yml'
@@ -43,6 +46,10 @@ jobs:
             tests.api_agent.test_director_situation_room_shadow \
             tests.api_agent.test_daily_director_conflict_budget \
             tests.api_agent.test_daily_director_workflow_contract -v
+      - name: Run CN paid API preflight, receipt and fail-closed regression tests
+        run: |
+          python -m py_compile scripts/cycle_navigator/build_internal_precision.py
+          python -m unittest -v tests.cycle_navigator.test_internal_precision_api_budget
       - name: Compile and CLI-smoke gateway, capability routing, intelligence and forecast backlog machinery
         run: |
           python -m py_compile \
