@@ -58,16 +58,26 @@ def decision(head, comments, reviews, inline):
                     positive.append((when, m.group(1)))
         if not completed or not positive:
             return fail("REVIEW_IN_PROGRESS_OR_UNVERIFIED")
-        if latest_state and max(latest_state, key=lambda entry: entry[0])[1].get("status") != "completed":
+        # GitHub exposes second-resolution comment timestamps. Sorting tied
+        # state events by pagination/API order would allow a preceding clean
+        # completion to conceal a later running or adverse review. Treat an
+        # indistinguishable latest state conflict as UNVERIFIED, not APPROVED.
+        latest_time = max(when for when, _state in latest_state)
+        tied_states = [state for when, state in latest_state if when == latest_time]
+        if any(state != tied_states[0] for state in tied_states[1:]):
+            return fail("AMBIGUOUS_CODEX_STATE_SEQUENCE")
+        latest = tied_states[0]
+        if latest.get("status") != "completed":
             return fail("NEWER_CODEX_REVIEW_NOT_COMPLETE")
-        if max(completed, key=lambda entry: entry[0])[1].get("has_unresolved_findings") is not False:
+        if latest.get("has_unresolved_findings") is not False:
             return fail("UNRESOLVED_CODEX_FINDINGS")
         last_positive, positive_ref = max(positive)
         # Codex currently emits a 10-hex receipt but a full SHA in its trusted
         # state JSON. The same separately authenticated bot must attest both,
         # and the complete state must finish no later than the positive receipt.
         # Never accept a short-prefix receipt without this exact full-SHA bind.
-        if not any(state_time <= last_positive and state.get("commit_sha") == head
+        if not any(state_time < last_positive and state.get("commit_sha") == head
+                   and state.get("has_unresolved_findings") is False
                    for state_time, state in completed):
             return fail("POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION")
         for row in reviews:
