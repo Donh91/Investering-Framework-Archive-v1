@@ -75,6 +75,41 @@ jobs:
         run: |
           python -m py_compile 04_MARKET_LEARNING/handlekompas/research/2026-10-16__task2_matured314_reproduce_v1.py
           python -m unittest tests.research.test_task2_matured314_reproduce -v
+      - name: Research-only original frozen vote replay (changed-file PR only)
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}" HEAD)
+          if ! echo "$changed" | grep -Eq '(2026-10-16__task2_matured314_original_frozen_votes_v1.py|test_task2_matured314_original_frozen_votes.py)'; then
+            echo "TASK2_VOTE_REPLAY_CLEAN_NOOP_UNCHANGED_PR"
+            exit 0
+          fi
+          python -m unittest tests.research.test_task2_matured314_original_frozen_votes -v
+          curl --fail --silent --show-error --location --retry 2 --max-time 90 \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/actions/artifacts/11829371964/zip" \
+            --output /tmp/task2_original_issued_forecasts.zip
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-16__task2_matured314_original_frozen_votes_v1.py \
+            --root . --artifact /tmp/task2_original_issued_forecasts.zip \
+            --output /tmp/task2_matured314_vote_family_aggregate.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/task2_matured314_vote_family_aggregate.json'))
+          assert x["original_matured_directional"]==314
+          assert x["original_matured_abstentions"]==44
+          assert x["original_forecast_files_replayed"]==125
+          assert x["status"].startswith("EXPOST_")
+          assert all(v["available_n"]<=314 for v in x["family_comparison"].values())
+          assert not any(x["authority"].values())
+          print("TASK2_VOTES_ACTUAL_ORIGINAL_REPLAY_PASS",
+                json.dumps({"file_count":x["original_forecast_files_replayed"],
+                            "by_family":x["family_comparison"]},sort_keys=True))
+          PY
+          rm -f /tmp/task2_original_issued_forecasts.zip /tmp/task2_matured314_vote_family_aggregate.json
       - name: Validate repository state readback when available
         shell: bash
         run: |
