@@ -12,6 +12,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Task 2 R0 pinned-source Git-object fail-closed cases
+        run: node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs
       - run: python -m unittest tests.data_storage.test_durable_promotion_controller tests.data_storage.test_storage_telemetry
       - run: python scripts/data_storage/storage_telemetry.py --root . --output storage-telemetry.json
       - uses: actions/upload-artifact@v4
