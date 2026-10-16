@@ -83,7 +83,10 @@ jobs:
         run: |
           set -euo pipefail
           changed=$(git diff --name-only "origin/${{ github.base_ref }}" HEAD)
-          if ! echo "$changed" | grep -Eq '(2026-10-16__task2_matured314_original_frozen_votes_v1.py|test_task2_matured314_original_frozen_votes.py)'; then
+          # Changes to the published aggregate receipt must also replay the immutable
+          # source ZIP. Otherwise an independently altered receipt could pass CI.
+          replay_pattern='(2026-10-16__task2_matured314_original_frozen_votes_v1.py|test_task2_matured314_original_frozen_votes.py|2026-10-16__TASK2_ORIGINAL_MATURED314_FROZEN_VOTE_FAMILY_RECEIPT_v1.json)'
+          if ! echo "$changed" | grep -Eq "$replay_pattern"; then
             echo "TASK2_VOTE_REPLAY_CLEAN_NOOP_UNCHANGED_PR"
             exit 0
           fi
