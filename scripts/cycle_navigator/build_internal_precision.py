@@ -566,14 +566,36 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
         raise RuntimeError("CN_API_DURABLE_RESERVATION_REQUEST_INVALID")
     if type(max_cost) not in (int, float) or not 0 < max_cost <= 1 or max_cost != max_cost:
         raise RuntimeError("CN_API_DURABLE_RESERVATION_COST_INVALID")
-    reservation_path = f"{CN_RESERVATION_ROOT}/{request_hash}.json"
+    # Shard new immutable liabilities by UTC month. Read legacy flat entries
+    # and every prior month, not just the current month: claim-id replay can
+    # cross calendar boundaries. An incomplete shard census always blocks POST.
+    month = time.strftime("%Y-%m", time.gmtime())
+    reservation_path = f"{CN_RESERVATION_ROOT}/{month}/{request_hash}.json"
     listing = _cn_gh_api(f"contents/{CN_RESERVATION_ROOT}?ref={CN_RESERVATION_BRANCH}", allow_not_found=True)
+    previous_files: list[dict[str, Any]] = []
     if listing is not None:
         if not isinstance(listing, list) or len(listing) >= 100:
             raise RuntimeError("CN_API_DURABLE_RESERVATION_CENSUS_INCOMPLETE")
-        for item in listing:
+        for entry in listing:
+            if not isinstance(entry, dict):
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
+            name = str(entry.get("name") or "")
+            if entry.get("type") == "dir" and re.fullmatch(r"20[0-9]{2}-(?:0[1-9]|1[0-2])", name):
+                shard = _cn_gh_api(f"contents/{CN_RESERVATION_ROOT}/{name}?ref={CN_RESERVATION_BRANCH}")
+                if not isinstance(shard, list) or len(shard) >= 100:
+                    raise RuntimeError("CN_API_DURABLE_RESERVATION_CENSUS_INCOMPLETE")
+                previous_files.extend(shard)
+            elif entry.get("type") == "file":
+                previous_files.append(entry)  # legacy flat reservations
+            else:
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
+        for item in previous_files:
             if (not isinstance(item, dict) or item.get("type") != "file"
-                    or not re.fullmatch(r"[0-9a-f]{64}\.json", str(item.get("name")))):
+                    or not re.fullmatch(r"[0-9a-f]{64}\.json", str(item.get("name")))
+                    or not isinstance(item.get("path"), str)
+                    or not re.fullmatch(
+                        rf"{re.escape(CN_RESERVATION_ROOT)}/(?:20[0-9]{{2}}-(?:0[1-9]|1[0-2])/)?[0-9a-f]{{64}}\.json",
+                        item["path"])):
                 raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
             previous_bytes = _cn_gh_file(str(item["path"]), ref=CN_RESERVATION_BRANCH)
             try:
