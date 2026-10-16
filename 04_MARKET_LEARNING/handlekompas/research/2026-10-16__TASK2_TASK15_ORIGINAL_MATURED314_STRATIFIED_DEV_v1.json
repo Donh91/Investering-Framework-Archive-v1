@@ -333,5 +333,68 @@
       "original_no_receipt": 1,
       "matured_coverage_pct": 46.15
     }
-  ]
+  ],
+  "original_archive_publication_clock": {
+    "classification": "FIRST_ARCHIVED_MAIN_COMMIT_TIME_NOT_VENDOR_FIRST_KNOWN_OR_SCORER_AVAILABILITY",
+    "source_member": "TASK15_R1_OWNER_PUBLICATION_FULL_CENSUS.json",
+    "original_member_sha256": "b30d8e515221314a217b5add128f0918f9eeaf6d99d2c682d142482a9f3d4776",
+    "all_original_publication_cases": 814,
+    "first_archived_by_90min_cutoff": 314,
+    "first_archived_after_90min_cutoff": 500,
+    "after_cutoff_fraction_pct": 61.4251,
+    "archive_case_status_reconciled_to_314_500": true,
+    "purported_scorer_exec_visibility": "UNVERIFIED_EXECUTION_CONTEXT_FOR_ALL_814",
+    "original_matured_314_minutes_from_due": {
+      "min": 0.85,
+      "p10": 7.567,
+      "median_lower": 39.617,
+      "p90": 80.35,
+      "p95": 85.25,
+      "max": 90
+    },
+    "original_censored_500_minutes_from_due": {
+      "min": 90.35,
+      "p10": 101.933,
+      "median_lower": 164.333,
+      "p90": 313.033,
+      "p95": 361.017,
+      "max": 1255.93
+    },
+    "by_horizon": [
+      {
+        "horizon": "1H",
+        "n": 170,
+        "matured": 38,
+        "censored": 132,
+        "matured_pct": 22.3529,
+        "matured_median_minutes": 53.3,
+        "censored_median_minutes": 187.367
+      },
+      {
+        "horizon": "4H",
+        "n": 328,
+        "matured": 128,
+        "censored": 200,
+        "matured_pct": 39.0244,
+        "matured_median_minutes": 41.933,
+        "censored_median_minutes": 151.783
+      },
+      {
+        "horizon": "24H",
+        "n": 316,
+        "matured": 148,
+        "censored": 168,
+        "matured_pct": 46.8354,
+        "matured_median_minutes": 36.467,
+        "censored_median_minutes": 169.167
+      }
+    ],
+    "distinct_archived_commits": 175,
+    "distinct_archived_source_paths": 29,
+    "outcome_classification_is_mechanically_related_to_90minute_publication_cutoff": true,
+    "causal_warning": "first-archived Git committer UTC is not external provider publication clock, original scorer access, or independent market event; cannot claim delayed archives CAUSE false forecasts or define original provider first-known",
+    "highest_measured_missingness_priority": "ARCHIVE_PUBLICATION_AND_OWNER_OUTCOME_CAPTURE_LATENCY__61.4PCT_BEYOND_90MIN_ON_814_CASES",
+    "additional_direction_accuracy_if_captured_timely": "UNKNOWN",
+    "data_value_quantification": "coverage opportunity only; not measured prospective information/alpha lift"
+  }
 }
