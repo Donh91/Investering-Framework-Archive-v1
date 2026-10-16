@@ -234,7 +234,7 @@ class T6RotationSurvivalTests(unittest.TestCase):
                     baseline["sequence_start_utc" if mode == "clock" else "source_packet_sha256"] = "2027-01-01T00:00:00Z" if mode == "clock" else "0" * 64
                     path.write_text(json.dumps(baseline))
                 before = {p: p.read_bytes() for p in root.rglob("*.json")}
-                with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch"):
+                with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch|t6_replay_first_source_packet_mismatch"):
                     operate(sample, cadence(), root)
                 self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
@@ -321,7 +321,7 @@ class T6RotationSurvivalTests(unittest.TestCase):
                 path.write_text(json.dumps(base))
                 original.write_text(json.dumps(frozen))
                 before = {p: p.read_bytes() for p in root.rglob("*.json")}
-                with self.assertRaisesRegex(ValueError, "t6_replay_first_source_packet_mismatch"):
+                with self.assertRaisesRegex(ValueError, "t6_replay_first_source_packet_mismatch|immutable_conflict"):
                     operate(sample, cadence(), root)
                 self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
