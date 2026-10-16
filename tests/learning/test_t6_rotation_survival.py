@@ -325,6 +325,30 @@ class T6RotationSurvivalTests(unittest.TestCase):
                     operate(sample, cadence(), root)
                 self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
+    def test_archived_original_packet_preserves_legacy_replay_without_backfill(self):
+        from scripts.learning.t6_rotation_survival import canon
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = repo / "research/framework_memory/rotation_survival_forward_rows"
+            initial = packet(0.0301, 0.0002)
+            first = operate(initial, cadence(), root)
+            seq = first["active_sequence_id"]
+            local_packet = root / "sequences" / seq / "SOURCE_PACKET.json"
+            original_bytes = local_packet.read_bytes()
+            archive = (repo / "04_MARKET_LEARNING/entry_signals/auto_market_state/runs"
+                       / "2026/09/09/010000_real_source.json")
+            archive.parent.mkdir(parents=True, exist_ok=True)
+            archive.write_bytes(original_bytes)
+            local_packet.unlink()
+            self.assertEqual(operate(initial, cadence(), root), first)
+            self.assertFalse(local_packet.exists(), "do not backfill historical source snapshots")
+            archive.write_bytes(canon({**initial, "new_unverified_field": 1}))
+            with self.assertRaisesRegex(ValueError, "t6_replay_first_source_packet_mismatch"):
+                operate(initial, cadence(), root)
+            archive.unlink()
+            with self.assertRaisesRegex(ValueError, "t6_replay_first_source_packet_missing"):
+                operate(initial, cadence(), root)
+
     def test_replay_rejects_missing_or_tampered_original_source_packet(self):
         for mode in ("missing", "changed"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as td:
