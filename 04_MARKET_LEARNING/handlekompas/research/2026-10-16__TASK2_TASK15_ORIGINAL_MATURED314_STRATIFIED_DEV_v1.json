@@ -1,0 +1,280 @@
+{
+  "contract": "TASK2_TASK15_ORIGINAL_MATURED314_STRATIFIED_DEV_v1",
+  "as_of_utc_date": "2026-10-16",
+  "status": "EX_POST_DEVELOPMENT_ONLY_NOT_CERTIFIED_PROVIDER_PIT_OR_INVESTOR_ACTION",
+  "owner_issue": 1596,
+  "sources": {
+    "original_actions_run_id": 38427468434,
+    "artifact_id": 11829371964,
+    "original_zip_sha256": "4bce43736374b8fcff7aa9ffd1fdac18c303d8b2264b8291bb6e0b80fcde23ae",
+    "ledger_member": "TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv",
+    "ledger_sha256": "616e70fd87a79acf126591c1f8e704c74da7a2bd3b3aa181838ac5f861fea5d9",
+    "original_prediction_checkout": "0e8c386b5a4ee57a5500cb3d02951c9e398b1b4f",
+    "published_parent": "04_MARKET_LEARNING/handlekompas/research/2026-10-16__TASK2_TASK15_824_PAIRED_SOURCE_RESULT_v1.json"
+  },
+  "method": "Verified raw ZIP and 1140-row CSV SHA256 and prediction-id uniqueness. Filter strictly original_outcome_status=MATURED and exact same issue/asset/horizon TRUE/FALSE directional hits for both original and prior-packet momentum. Verify original HIT/MISS receipt equals tape hit. Keep 500 originally censored plus 10 missing original receipts outside 314. Bootstrap 8000 seeded UTC issue-clock/date resamples, descriptive only.",
+  "census": {
+    "all_original_slots": 1140,
+    "all_original_matured_in_ledger": 358,
+    "all_original_censored_in_ledger": 570,
+    "all_original_no_receipt_in_ledger": 212,
+    "retrospective_matched": 824,
+    "original_matured_matched": 314,
+    "original_matured_abstained_no_edge_excluded_from_accuracy": 44,
+    "matured_abstained_horizons": {
+      "1H": 4,
+      "4H": 18,
+      "24H": 22
+    },
+    "paired_censored_excluded": 500,
+    "paired_original_no_receipt_excluded": 10,
+    "independent_event_families_certified": 0,
+    "matured_issue_times": 125,
+    "matured_issue_utc_dates": 28
+  },
+  "paired": {
+    "n": 314,
+    "compass_hits": 145,
+    "price_hits": 142,
+    "compass_pct": 46.1783,
+    "price_pct": 45.2229,
+    "lift_pp": 0.9554,
+    "same_direction": 203,
+    "disagree": 111,
+    "compass_only": 57,
+    "price_only": 54,
+    "both_correct": 88,
+    "both_wrong": 115
+  },
+  "by_asset_horizon": [
+    {
+      "asset": "BTC",
+      "horizon": "1H",
+      "n": 18,
+      "compass_hits": 10,
+      "price_hits": 9,
+      "disagree": 3,
+      "compass_only": 2,
+      "price_only": 1,
+      "compass_pct": 55.56,
+      "price_pct": 50,
+      "lift_pp": 5.56
+    },
+    {
+      "asset": "BTC",
+      "horizon": "4H",
+      "n": 63,
+      "compass_hits": 30,
+      "price_hits": 26,
+      "disagree": 22,
+      "compass_only": 13,
+      "price_only": 9,
+      "compass_pct": 47.62,
+      "price_pct": 41.27,
+      "lift_pp": 6.35
+    },
+    {
+      "asset": "BTC",
+      "horizon": "24H",
+      "n": 76,
+      "compass_hits": 41,
+      "price_hits": 38,
+      "disagree": 35,
+      "compass_only": 19,
+      "price_only": 16,
+      "compass_pct": 53.95,
+      "price_pct": 50,
+      "lift_pp": 3.95
+    },
+    {
+      "asset": "ETH",
+      "horizon": "1H",
+      "n": 20,
+      "compass_hits": 10,
+      "price_hits": 14,
+      "disagree": 4,
+      "compass_only": 0,
+      "price_only": 4,
+      "compass_pct": 50,
+      "price_pct": 70,
+      "lift_pp": -20
+    },
+    {
+      "asset": "ETH",
+      "horizon": "4H",
+      "n": 65,
+      "compass_hits": 22,
+      "price_hits": 25,
+      "disagree": 17,
+      "compass_only": 7,
+      "price_only": 10,
+      "compass_pct": 33.85,
+      "price_pct": 38.46,
+      "lift_pp": -4.62
+    },
+    {
+      "asset": "ETH",
+      "horizon": "24H",
+      "n": 72,
+      "compass_hits": 32,
+      "price_hits": 30,
+      "disagree": 30,
+      "compass_only": 16,
+      "price_only": 14,
+      "compass_pct": 44.44,
+      "price_pct": 41.67,
+      "lift_pp": 2.78
+    }
+  ],
+  "by_asset": [
+    {
+      "asset": "BTC",
+      "n": 157,
+      "compass_hits": 81,
+      "price_hits": 73,
+      "disagree": 60,
+      "compass_only": 34,
+      "price_only": 26,
+      "lift_pp": 5.0955
+    },
+    {
+      "asset": "ETH",
+      "n": 157,
+      "compass_hits": 64,
+      "price_hits": 69,
+      "disagree": 51,
+      "compass_only": 23,
+      "price_only": 28,
+      "lift_pp": -3.1847
+    }
+  ],
+  "by_horizon": [
+    {
+      "horizon": "1H",
+      "n": 38,
+      "compass_hits": 20,
+      "price_hits": 23,
+      "disagree": 7,
+      "compass_only": 2,
+      "price_only": 5,
+      "lift_pp": -7.8947
+    },
+    {
+      "horizon": "4H",
+      "n": 128,
+      "compass_hits": 52,
+      "price_hits": 51,
+      "disagree": 39,
+      "compass_only": 20,
+      "price_only": 19,
+      "lift_pp": 0.7812
+    },
+    {
+      "horizon": "24H",
+      "n": 148,
+      "compass_hits": 73,
+      "price_hits": 68,
+      "disagree": 65,
+      "compass_only": 35,
+      "price_only": 30,
+      "lift_pp": 3.3784
+    }
+  ],
+  "ex_post_price_tape_regime": [
+    {
+      "label": "PREVIOUS_PACKET_MOMENTUM_CONTINUED_IN_OUTCOME",
+      "n": 142,
+      "compass_hits": 88,
+      "price_hits": 142,
+      "disagree": 54,
+      "causal_warning": "OUTCOME_DEFINED_RETROSPECTIVE_NOT_EX_ANTE_REGIME"
+    },
+    {
+      "label": "PREVIOUS_PACKET_MOMENTUM_REVERSED_IN_OUTCOME",
+      "n": 172,
+      "compass_hits": 57,
+      "price_hits": 0,
+      "disagree": 57,
+      "causal_warning": "OUTCOME_DEFINED_RETROSPECTIVE_NOT_EX_ANTE_REGIME"
+    }
+  ],
+  "exploratory_cluster_bootstrap": {
+    "algorithm": "8000 seeded Python stdlib cluster resamples, pct point 2.5/97.5",
+    "seed": 3142026,
+    "by_exact_issue_utc": {
+      "clusters": 125,
+      "lower_pp": -7.099,
+      "upper_pp": 8.555
+    },
+    "by_utc_issue_date": {
+      "clusters": 28,
+      "lower_pp": -7.895,
+      "upper_pp": 10.063
+    },
+    "interpretation": "illustrative sensitivity intervals only; cross-asset, overlapping horizon and serial dependence remain; not confirmatory CIs"
+  },
+  "independent_nonoverlap_diagnostic": [
+    {
+      "asset": "BTC",
+      "horizon": "1H",
+      "n": 18,
+      "compass_hits": 10,
+      "price_hits": 9
+    },
+    {
+      "asset": "BTC",
+      "horizon": "4H",
+      "n": 54,
+      "compass_hits": 27,
+      "price_hits": 22
+    },
+    {
+      "asset": "BTC",
+      "horizon": "24H",
+      "n": 20,
+      "compass_hits": 10,
+      "price_hits": 10
+    },
+    {
+      "asset": "ETH",
+      "horizon": "1H",
+      "n": 20,
+      "compass_hits": 10,
+      "price_hits": 14
+    },
+    {
+      "asset": "ETH",
+      "horizon": "4H",
+      "n": 54,
+      "compass_hits": 17,
+      "price_hits": 21
+    },
+    {
+      "asset": "ETH",
+      "horizon": "24H",
+      "n": 20,
+      "compass_hits": 7,
+      "price_hits": 8
+    }
+  ],
+  "conclusions": {
+    "measured": "Compass +3 directionally correct vs prior-packet price baseline on 314 original MATURED scored paired, 57 wins vs 54 losses on disagreements. Directional lift varies by asset/horizon; no stable gain established.",
+    "negative": "No demonstrable reliable incremental directional advantage in this pre-inspected development sample; nominal +0.9554pp spans zero under day/issue clustered diagnostic.",
+    "pre_registered_out_of_sample": false,
+    "independent_provider_first_known": false,
+    "certified_historical_r2": false,
+    "actionable_delivery_verified": false,
+    "after_cost_investor_value": "UNKNOWN",
+    "feature_family_lift": "NOT_YET_MEASURED",
+    "next": "Match existing original frozen vote ablation feature subsets specifically against MATURED same-clock price controls; preserve available-case attrition, 44 abstentions and 500/10 censored/no-receipt separate; do not rerun 824 pooled score."
+  },
+  "safety": {
+    "private_value_rows_exported": false,
+    "original_forecasts_changed": false,
+    "original_outcomes_promoted": false,
+    "live_rules_changed": false,
+    "portfolio_action": false,
+    "paid_sol_call": false,
+    "new_workflow": false
+  }
+}
