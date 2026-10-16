@@ -28,6 +28,7 @@ const latest = {
     }
   },
   public_series: {
+    contract: 'CN_PUBLIC_SERIES_INDEX_v1',
     current_public_projection: { public_issue_number: 29, forecast_week: '2026-W42' },
     latest_completed_score: {
       public_issue_number: 28, forecast_week: '2026-W41', price_range_score: 49.56, status: 'FINAL_DUAL_TRACK'
@@ -100,6 +101,16 @@ it('future W42 binary Edge cannot be scored from current site feeds',()=>{
 it('missing/mismatched root contract fails closed',()=>{
  assert.equal(read({schema:'OTHER'},compass).weekly.state,'UNAVAILABLE');
  assert.equal(read(latest,{contract:'OTHER'}).compass.action_now,'UNAVAILABLE');
+});
+it('untrusted public series identity fails closed before consuming CN, Compass or scores',()=>{
+ for(const contract of [undefined, null, 'CN_PUBLIC_SERIES_INDEX_v0', 'CN_PUBLIC_SERIES_INDEX_v2']){
+   const o=mutate(l=>{l.public_series.contract=contract});
+   assert.equal(o.weekly.state,'UNAVAILABLE');
+   assert.equal(o.compass.action_now,'UNAVAILABLE');
+   assert.equal(o.completed_score.price_range_precision,null);
+   assert.equal(o.compass.permit_path_live_gates,false);
+   assert.equal(o.delivery_health,'UNAVAILABLE');
+ }
 });
 it('missing weekly public issue cannot default to machine identity',()=>{
  const o=mutate(l=>{delete l.public_series.current_public_projection.public_issue_number});
@@ -447,6 +458,7 @@ it('actual public build readback agrees with canonical weekly, Compass and matur
  const liveLatest=json('05_CYCLE_NAVIGATOR/site/dist/data/latest.json');
  const liveCompass=json('05_CYCLE_NAVIGATOR/site/dist/data/compass.json');
  assert.equal(liveLatest.schema,'CN_PUBLIC_SNAPSHOT_V2');
+ assert.equal(liveLatest.public_series?.contract,index.contract);
  assert.equal(liveCompass.contract,'PUBLIC_COMPASS_PROJECTION_v1');
  assert.equal(liveLatest.pointer.iso_week,pointer.iso_week);
  assert.equal(liveLatest.pointer.iso_year,pointer.iso_year);
@@ -486,6 +498,12 @@ it('actual public build readback agrees with canonical weekly, Compass and matur
    assert.equal(actual.compass.permit_path_live_gates,false);
  }
  // Adversarial mutations to the *real built* readback, not fabricated prices.
+ const wrongContract=structuredClone(liveLatest);
+ wrongContract.public_series.contract='CN_PUBLIC_SERIES_INDEX_v0';
+ const wrongContractResult=inspectOfficialPublicFeeds(wrongContract,liveCompass,{nowUtc:now});
+ assert.equal(wrongContractResult.weekly.state,'UNAVAILABLE');
+ assert.equal(wrongContractResult.compass.action_now,'UNAVAILABLE');
+ assert.equal(wrongContractResult.completed_score.price_range_precision,null);
  const wrongWeek=structuredClone(liveLatest);
  wrongWeek.public_series.current_public_projection.forecast_week='1900-W01';
  const mismatched=inspectOfficialPublicFeeds(wrongWeek,liveCompass,{nowUtc:now});
