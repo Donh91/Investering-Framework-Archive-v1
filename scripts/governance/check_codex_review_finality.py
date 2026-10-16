@@ -41,7 +41,9 @@ def decision(head, comments, reviews, inline):
                 continue
             body = str(row.get("body") or "")
             when = stamp(row.get("updated_at") or row.get("created_at"))
-            if when < last:
+            # GitHub comment timestamps are second-resolution. A receipt with
+            # the same time as a request could PRECEDE it; fail closed.
+            if when <= last:
                 continue
             m = re.search(r"<!-- codex-review-state:v1\s+(.+?)\s*-->", body, re.S)
             if m:
@@ -70,7 +72,7 @@ def decision(head, comments, reviews, inline):
             return fail("POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION")
         for row in reviews:
             if (not is_codex(row) or row.get("commit_id") != head
-                    or stamp(row.get("submitted_at")) < last):
+                    or stamp(row.get("submitted_at")) <= last):
                 continue
             body = str(row.get("body") or "")
             if stamp(row.get("submitted_at")) > last_positive and re.search(r"\bP[012]\b|review suggestions", body, re.I):
