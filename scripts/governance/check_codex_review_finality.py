@@ -19,7 +19,7 @@ def stamp(value):
 
 def is_codex(row):
     user = row.get("user") or {}
-    return isinstance(user, dict) and str(user.get("login", "")).casefold().startswith("chatgpt-codex-connector")
+    return (isinstance(user, dict) and user.get("login") == "chatgpt-codex-connector[bot]" and user.get("type") == "Bot" and user.get("id") == 199175422)
 
 
 def decision(head, comments, reviews, inline):
@@ -46,16 +46,23 @@ def decision(head, comments, reviews, inline):
             if m:
                 state = json.loads(m.group(1)).get("code_review", {})
                 if state.get("commit_sha") == head and state.get("status") == "completed":
-                    completed.append(state)
+                    completed.append((when, state))
             if "Codex Review: Didn't find any major issues" in body:
                 m = re.search(r"Reviewed commit:\*\*\s*\x60([a-f0-9]{10,40})\x60", body)
                 if m and head.startswith(m.group(1)):
-                    positive.append(when)
+                    positive.append((when, m.group(1)))
         if not completed or not positive:
             return fail("REVIEW_IN_PROGRESS_OR_UNVERIFIED")
-        if completed[-1].get("has_unresolved_findings") is not False:
+        if max(completed, key=lambda entry: entry[0])[1].get("has_unresolved_findings") is not False:
             return fail("UNRESOLVED_CODEX_FINDINGS")
-        last_positive = max(positive)
+        last_positive, positive_ref = max(positive)
+        # Codex currently emits a 10-hex receipt but a full SHA in its trusted
+        # state JSON. The same separately authenticated bot must attest both,
+        # and the complete state must finish no later than the positive receipt.
+        # Never accept a short-prefix receipt without this exact full-SHA bind.
+        if not any(state_time <= last_positive and state.get("commit_sha") == head
+                   for state_time, state in completed):
+            return fail("POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION")
         for row in reviews:
             if (not is_codex(row) or row.get("commit_id") != head
                     or stamp(row.get("submitted_at")) < last):
