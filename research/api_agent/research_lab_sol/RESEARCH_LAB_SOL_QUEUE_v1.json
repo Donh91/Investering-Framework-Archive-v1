@@ -189,7 +189,7 @@
     {
       "sequence": 8,
       "mission_id": "TASK2-R1-CFGI-PIT-FALSIFICATION-002",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_LAST_VERIFIED_API_RESULT",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R1_CFGI_SOL61_SOURCE_PIT_REVIEW_v1.json",
       "context_status": "ORIGINAL_V3_R1_CFGI_SOURCE_CLOCKS_PLUS_8_PUBLIC_SAFE_DEEP_RESEARCH_INTAKES",
       "context_paths": [
@@ -216,7 +216,12 @@
       "pass_scope": "ADVERSARIAL_R1_SOURCE_CLOCK_RESEARCH_ONLY_NO_HISTORICAL_R2_OR_PORTFOLIO_ACTION",
       "additional_sol_pass_limit": 1,
       "selected_live_rules": [],
-      "prior_sol_r0_resolved_only_as_api_review": true
+      "prior_sol_r0_resolved_only_as_api_review": true,
+      "completed_api_results": ["research/api_agent/outputs/research_lab_sol/TASK2-R1-CFGI-PIT-FALSIFICATION-002/issue-1476/comment-6176416300/receipt.json"],
+      "last_verified_api_model": "gpt-6.1-sol",
+      "last_advisory_verdict": "INSUFFICIENT_EVIDENCE_NOT_SCIENTIFICALLY_ADMITTED",
+      "new_paid_attempts_authorized": false,
+      "owner_hold_reason": "Genuine PASS receipt already persisted; no repeat until separately released against verifiably NEW, independently source-bound PIT or delivery evidence. Owner must adjudicate rather than replay identical R1 packet."
     }
   ],
   "authority": {
@@ -229,6 +234,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "TASK2-R1-CFGI-PIT-FALSIFICATION-002",
-  "program_phase": "TASK2_R1_CFGI_PIT_SCIENTIFIC_ADVERSARIAL_REVIEW_AFTER_R0_SOL_RECEIPTS"
+  "active_mission": null,
+  "program_phase": "TASK2_R1_SOL61_API_COMPLETED_INSUFFICIENT_EVIDENCE__PIT_AND_DELIVERY_STILL_BLOCKED"
 }
