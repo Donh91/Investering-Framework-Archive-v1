@@ -474,6 +474,14 @@ class T6RotationSurvivalTests(unittest.TestCase):
                     self.assertNotIn(field, frozen)
                     frozen[field] = value
                     first_path.write_text(json.dumps(frozen))
+                    # Adversary also updates the public pointer hash, so the
+                    # source/frozen-schema guard, not a stale-pointer shortcut,
+                    # must independently detect the added outcome field.
+                    from scripts.learning.t6_rotation_survival import sha
+                    ptr_path = root / "LATEST.json"
+                    ptr = json.loads(ptr_path.read_text())
+                    ptr["observation_sha256"] = sha(frozen)
+                    ptr_path.write_text(json.dumps(ptr))
                     before = {p: p.read_bytes() for p in root.rglob("*.json")}
                     if event == "first_replay":
                         next_packet = initial
