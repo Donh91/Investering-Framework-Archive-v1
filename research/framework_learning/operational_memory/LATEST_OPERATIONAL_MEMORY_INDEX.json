@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 4300,
-  "generated_at_utc": "2026-10-16T07:29:16.483873Z",
+  "episode_count": 4305,
+  "generated_at_utc": "2026-10-16T08:25:32.582582Z",
   "rows": [
     {
       "changed_paths": [
@@ -119628,6 +119628,31 @@
     },
     {
       "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-16__TASK2_EXISTING_DATA_FIRST_EXECUTION_LADDER_v1.md",
+        "scripts/research/task2_existing_data_coverage.py",
+        "tests/research/test_task2_existing_data_coverage.py"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-4c40e43e0ed6f541",
+      "episode_path": "episodes/2026/10/OE-4c40e43e0ed6f541.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "4c40e43e0ed6f541e5f2439f279336d0f7b077f6",
+      "source_timestamp": "2026-10-16T00:30:03-07:00",
+      "task_class": "AUTOMATION_REMEDIATION",
+      "task_summary": "research(Task2): audit existing data and prioritize incremental source value without PIT promotion"
+    },
+    {
+      "changed_paths": [
         "research/api_agent/outputs/decision_miss/2026/10/16/004201/MISS_AUDIT.json",
         "research/api_agent/outputs/decision_miss/2026/10/16/004201/MISS_AUDIT_RECEIPT.json",
         "research/api_agent/outputs/evidence_gap_validation/2026/10/16/004201/VALIDATION_AUDIT.json",
@@ -119707,6 +119732,52 @@
       "source_timestamp": "2026-10-16T00:51:50Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: daily machine throughput 2026-10-15 38831696383"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-16__TASK2_R1_PAIRED_B2_DECISION_DIAGNOSTIC_v1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 1,
+        "removed": 0,
+        "same": 1,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-42603acef144d2a7",
+      "episode_path": "episodes/2026/10/OE-42603acef144d2a7.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "42603acef144d2a7c7f157c9c2966a90d52d33b6",
+      "source_timestamp": "2026-10-16T00:57:47-07:00",
+      "task_class": "MARKET_STATE",
+      "task_summary": "research(Task2): pin observed paired price baseline no-decision-lift diagnostic"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-16__TASK2_TASK15_824_PAIRED_SOURCE_RESULT_v1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 1,
+        "removed": 0,
+        "same": 1,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-340aa4107f7c18ed",
+      "episode_path": "episodes/2026/10/OE-340aa4107f7c18ed.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "340aa4107f7c18ed37530d592e65ffbde97ba193",
+      "source_timestamp": "2026-10-16T01:12:35-07:00",
+      "task_class": "MARKET_STATE",
+      "task_summary": "research(Task2): exact original 824-row paired decision and censor-safe source audit"
     },
     {
       "changed_paths": [
@@ -120094,10 +120165,10 @@
         "research/architecture_health/history/38841166844-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 5,
         "checked": 7,
         "removed": 0,
-        "same": 5,
+        "same": 2,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -120262,11 +120333,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 7,
-        "status": "EXACT"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-341a3694691110a1",
@@ -120274,7 +120345,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "341a3694691110a16136b23d86d1f1b7672fb9c1",
       "source_timestamp": "2026-10-16T02:43:57Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -120463,11 +120534,11 @@
         "research/framework_memory/m6_warning_events/LATEST.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 15,
         "removed": 0,
-        "same": 15,
-        "status": "EXACT"
+        "same": 12,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-2b59db912d4e197e",
@@ -120998,7 +121069,64 @@
       "source_timestamp": "2026-10-16T07:25:04Z",
       "task_class": "MARKET_STATE",
       "task_summary": "learning: mature Compass outcomes 38867023724"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/history/38873045387-attempt-1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 6,
+        "removed": 0,
+        "same": 6,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-a60ab05707f8539b",
+      "episode_path": "episodes/2026/10/OE-a60ab05707f8539b.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "a60ab05707f8539b541d6b2babf327959dafd6e4",
+      "source_timestamp": "2026-10-16T08:24:13Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 38873045387"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-8ab5945b74f39254",
+      "episode_path": "episodes/2026/10/OE-8ab5945b74f39254.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "8ab5945b74f3925465af18702301d1ecdaed1606",
+      "source_timestamp": "2026-10-16T08:24:51Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 38873458800"
     }
   ],
-  "source_head_sha": "aaf188169c870561adca45deba5c3be62fa2024c"
+  "source_head_sha": "8ab5945b74f3925465af18702301d1ecdaed1606"
 }

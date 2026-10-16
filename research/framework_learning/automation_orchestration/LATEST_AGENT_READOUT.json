@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-16T07:30:06Z",
+  "generated_at_utc": "2026-10-16T08:26:13Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -13,38 +13,15 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "luna_triage": {
-    "evidence_against": [
-      "Only one current failure item is supplied, with a failure streak of 1; this does not establish a persistent defect.",
-      "No run logs, failed job or step, error message, or comparison with prior run details are provided to identify a dependency failure or code defect."
-    ],
-    "evidence_for": [
-      "The workflow `framework-learning-operations.yml` has a failed latest run (38689508626).",
-      "The item reports 2 recent failures, but their relationship to this run and their causes are unspecified.",
-      "An existing remediation record for `LATEST_RUN_FAILED` is already `OBSERVED` with route `OBSERVE`; do not duplicate it or escalate its authority."
-    ],
-    "forecast_candidates": [],
-    "hypotheses": [
-      "Failure class is undetermined from the supplied evidence; a transient execution failure is possible, but a shared dependency failure or code defect cannot be ruled out.",
-      "The issue is not established as persistent: the failure streak is 1, while the broader recent-failure count lacks details.",
-      "Next inspection should remain with the existing owner of `framework-learning-operations.yml`. No owner identity is included in the supplied data, so a specific person or team cannot be named."
-    ],
-    "status": "DEGRADED",
-    "summary": "Triage the single failed workflow as an unclassified execution failure. Keep its existing OBSERVED remediation state; inspect the run details before assigning a cause. The supplied data does not identify the workflow owner.",
-    "uncertainties": [
-      "Failed job, step, error output, and run logs are missing.",
-      "Details of the 2 recent failures and whether they share a cause are missing.",
-      "No named existing workflow owner is supplied."
-    ]
-  },
+  "luna_triage": null,
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "453b9aecb83f6b61dc1d14e69ffe9905b70b85a54a94bc249316902f006d1f75",
+  "plan_fingerprint": "5208b4894278acffce80a25fdc74951f9e29a92715711aecec417960de967d2e",
   "routing_summary": {
     "existing_remediation_count": 0,
-    "luna_triage_count": 1,
+    "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
   "sol_6_1_diagnosis": null,
-  "source_health_generated_at_utc": "2026-10-16T02:35:27.777034Z"
+  "source_health_generated_at_utc": "2026-10-16T08:21:02.718324Z"
 }
