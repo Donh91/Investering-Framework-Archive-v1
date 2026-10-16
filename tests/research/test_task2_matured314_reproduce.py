@@ -75,6 +75,29 @@ class Task2Matured314Tests(unittest.TestCase):
         self.assertLess(report["exploratory_cluster_bootstrap"]["by_utc_issue_date"]["lower_pp"],0)
         self.assertGreater(report["exploratory_cluster_bootstrap"]["by_utc_issue_date"]["upper_pp"],0)
 
+    def test_publication_census_does_not_treat_git_committer_clock_as_vendor_pit(self):
+        sample = [
+            {"prediction_id":f"m{i}","original_outcome_status":"MATURED",
+             "publication_minutes_from_due":39.617,
+             "archive_publication_class":"PRESENT_BY_90_MIN_CUTOFF",
+             "scorer_would_have_received_source":"UNVERIFIED_EXECUTION_CONTEXT",
+             "first_present_main_commit":"a"*40,"source_path":"hourly.csv"}
+            for i in range(314)
+        ] + [
+            {"prediction_id":f"c{i}","original_outcome_status":"CENSORED",
+             "publication_minutes_from_due":164.333,
+             "archive_publication_class":"FIRST_PRESENT_AFTER_90_MIN_CUTOFF",
+             "scorer_would_have_received_source":"UNVERIFIED_EXECUTION_CONTEXT",
+             "first_present_main_commit":"b"*40,"source_path":"hourly.csv"}
+            for i in range(500)
+        ]
+        metrics=audit.publication_metrics(sample)
+        self.assertEqual((metrics["cases"],metrics["matured"],metrics["censored"]),(814,314,500))
+        self.assertEqual((metrics["matured_lower_median_minutes"],metrics["censored_lower_median_minutes"]),(39.617,164.333))
+        sample[0]["publication_minutes_from_due"]=100
+        with self.assertRaisesRegex(ValueError,"PUBLICATION_CLOCK_FALSE_EVIDENCE"):
+            audit.publication_metrics(sample)
+
     def test_wrong_original_artifact_sha_fails_closed_before_reading(self):
         with tempfile.TemporaryDirectory() as td:
             p=Path(td)/"notoriginal.zip"
