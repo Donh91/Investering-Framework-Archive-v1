@@ -6,6 +6,7 @@ Research metadata only. No market values, outcome scoring or backtest is emitted
 import argparse
 import datetime as dt
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -64,7 +65,16 @@ def clock_status(observed, retrieved, issue, funding=False):
     return "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN" if retrieved else "RETRIEVAL_CLOCK_UNKNOWN"
 
 
-def build():
+def build(context_ref: str | None = None):
+    # An explicit historical output context is a *frozen commit*, not HEAD.
+    # PR CI commonly checks out a synthetic test-merge commit: its results
+    # must not be misrepresented as accepted current main or original issue.
+    if context_ref is not None:
+        if not isinstance(context_ref, str) or re.fullmatch(r"[0-9a-f]{40}", context_ref) is None:
+            raise ValueError("Original admission context must be an immutable 40-char Git commit")
+        verified = git("rev-parse", "--verify", f"{context_ref}^{{commit}}").decode().strip()
+        if verified != context_ref:
+            raise ValueError("Original admission context is not the exact Git commit")
     census = json.loads((ROOT / CENSUS).read_text())
     ref = census["pinned_original_main_ref"]
     # An independent, earlier 17-attempt census provides the expected frozen
@@ -152,7 +162,7 @@ def build():
             raise ValueError(f"Original outcome Git blob mismatch: {fid}")
         # HEAD in GitHub PR CI may be a synthetic test-merge commit,
         # not refs/heads/main. This is checkout context only, never "main".
-        checkout_outcome, checkout_blob = optional_original("HEAD", outcome_path)
+        checkout_outcome, checkout_blob = optional_original(context_ref or "HEAD", outcome_path)
         checkout_status = "PRESENT_ON_CHECKOUT_HEAD" if checkout_outcome is not None else "ABSENT_ON_CHECKOUT_HEAD"
         if outcome is None:
             outcome = checkout_outcome
@@ -205,8 +215,14 @@ def build():
     if len(rows) != 11 or len({r["source_packet"]["git_blob_sha"] for r in rows}) != 10 or len({r["raw_capture"]["git_blob_sha"] for r in rows}) != 7:
         raise ValueError("Cohort/dependency census changed")
     return {
-        "contract": "TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v1", "status": "RESEARCH_ONLY_NOT_ADMITTED",
-        "generated_from_checkout_head_sha": git("rev-parse", "HEAD").decode().strip(), "checkout_ref_semantics": "MAY_BE_PR_TEST_MERGE_NOT_VERIFIED_CURRENT_MAIN", "original_snapshot_sha": ref,
+        "contract": ("TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2" if context_ref else "TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v1"),
+        "status": "RESEARCH_ONLY_NOT_ADMITTED",
+        **({"generated_from_context_ref_sha": context_ref,
+            "context_ref_semantics": "EXACT_IMMUTABLE_GIT_COMMIT_NOT_CURRENT_MAIN_OR_USER_DELIVERY"}
+           if context_ref else
+           {"generated_from_checkout_head_sha": git("rev-parse", "HEAD").decode().strip(),
+            "checkout_ref_semantics": "MAY_BE_PR_TEST_MERGE_NOT_VERIFIED_CURRENT_MAIN"}),
+        "original_snapshot_sha": ref,
         "source_census_path": CENSUS, "owner_issue": 1596,
         "cohort": {"original_attempts": 11, "original_outcomes_present": sum(r["original_outcome_status"] == "PRESENT" for r in rows), "original_outcomes_absent": sum(r["original_outcome_status"] != "PRESENT" for r in rows), "unique_source_blobs": 10, "unique_raw_capture_blobs": 7, "admitted": 0, "independent_market_event_families_certified": 0},
         "clock_interpretation": "Internal Git and collector retrieval precede issue, but this does not independently certify vendor publication/revision or user delivery. OKX funding_time is future settlement, not the quote observation clock. CFGI is v3 4h lookback refreshed about every 15 minutes; October 2026 is post July 8 scoring era. No retrospective static=true or 2025 backfill is joined.",
@@ -219,5 +235,6 @@ def build():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True)
+    parser.add_argument("--context-ref", help="Exact 40-character immutable Git commit to bind checkout-context outcomes")
     args = parser.parse_args()
-    Path(args.output).write_text(json.dumps(build(), indent=2, ensure_ascii=False) + "\n")
+    Path(args.output).write_text(json.dumps(build(context_ref=args.context_ref), indent=2, ensure_ascii=False) + "\n")
