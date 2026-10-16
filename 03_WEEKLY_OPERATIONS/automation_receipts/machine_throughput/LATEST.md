@@ -1,34 +1,34 @@
 # Daily Machine Throughput
 
-Date: **2026-10-13** (Europe/Copenhagen)
+Date: **2026-10-15** (Europe/Copenhagen)
 Status: **PASS**
 
 ## Throughput
 
-- Workflow runs started: **1000** (33 scheduled)
-- Scheduled workflow failures: **1**
-- Live-anchor captures: **7**
-- Unique hourly observation rows: **23**
-- Core observation units: **30**
-- Owner collection attempts: **42**
+- Workflow runs started: **1000** (15 scheduled)
+- Scheduled workflow failures: **0**
+- Live-anchor captures: **6**
+- Unique hourly observation rows: **20**
+- Core observation units: **26**
+- Owner collection attempts: **36**
 - Instrumented physical source calls: **81**
-- Instrumented source response bytes: **523603**
-- Durable evidence bytes at window close: **10656949**
-- Structural normalized values: **199900**
+- Instrumented source response bytes: **523859**
+- Durable evidence bytes at window close: **10828496**
+- Structural normalized values: **203384**
 
 ## AI and learning
 
-- API-agent receipts: **10**
-- Actual model calls: **10**
+- API-agent receipts: **8**
+- Actual model calls: **8**
 - Daily Director model calls: **4**
-- Input/output tokens: **379257 / 36010**
-- Recorded API cost: **$0.291527**
+- Input/output tokens: **374420 / 25518**
+- Recorded API cost: **$0.169728**
 - New experiment candidates: **8**
-- New experiment observations: **2004**
+- New experiment observations: **2072**
 - New forecast-memory artifacts: **20**
 
 ## Instrumentation boundary
 
-Physical HTTP-call total: **PARTIAL_INSTRUMENTATION**. The hourly lane contributes 81 exact recorded calls; 42 owner invocations remain outside physical-request counting. No total is inferred.
+Physical HTTP-call total: **PARTIAL_INSTRUMENTATION**. The hourly lane contributes 81 exact recorded calls; 36 owner invocations remain outside physical-request counting. No total is inferred.
 
-Receipt SHA-256: `8e40af4a1ca31cdef6d799487af84648c150296a039245ae9c8242a74c613cde`
+Receipt SHA-256: `00dac0319e89133648b7379ce2df7d6c87ac57aef879105f4f44a6b61594a047`

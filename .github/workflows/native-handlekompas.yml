@@ -6,6 +6,8 @@ on:
       - '.github/workflows/native-handlekompas.yml'
       - '.github/workflows/provider-budget-readback.yml'
       - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/research/task2_r1_original_admission.py'
+      - 'tests/research/test_task2_r1_original_admission.py'
       - 'scripts/cycle_navigator/build_weekly_cycle_navigator.py'
       - 'scripts/learning/compass_outcomes.py'
       - 'scripts/learning/decision_economics_ledger.py'
@@ -42,6 +44,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          # R1 tests check exact historical Git object revisions, not shallow HEAD.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -53,6 +58,17 @@ jobs:
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_decision_economics_ledger -v
           python -m unittest tests.health.test_provider_budget_status -v
+      - name: Validate research-only original Task 2 R1 clock and SHA admissions
+        run: |
+          if [ -f scripts/research/task2_r1_original_admission.py ] && [ -f tests/research/test_task2_r1_original_admission.py ]; then
+            python -m unittest tests.research.test_task2_r1_original_admission -v
+            # Frozen R1 scientific admission artifact is source-only and
+            # must exactly match generator output under the declared Git
+            # historical context, not synthetic PR merge HEAD.
+            python scripts/research/task2_r1_original_admission.py --context-ref 5a41cd3043bb582524f15fe9fde6f52792246a54 --output /tmp/task2_r1_original_admission_v2.json
+            cmp -s /tmp/task2_r1_original_admission_v2.json 04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json
+            echo 'Task2 R1 v2 exact immutable-context artifact parity verified'
+          fi
       - name: Validate repository state readback when available
         shell: bash
         run: |

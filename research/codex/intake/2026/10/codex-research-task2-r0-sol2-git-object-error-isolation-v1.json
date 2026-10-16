@@ -1,0 +1,95 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-task2-r0-sol2-git-object-error-isolation-v1",
+  "submitted_at_utc": "2026-10-14T18:57:57.421Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Task 2 no-hindsight R0 second independent GPT-6.1 Sol API review 2026-10-14",
+    "source_paths": [
+      "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/RESEARCH_LAB_SOL_ANALYSIS.json",
+      "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/receipt.json",
+      "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_REVIEW_v1.json",
+      "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1.mjs",
+      "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs"
+    ]
+  },
+  "title": "Harden Task 2 R0 Git-object verifier: fail-closed object errors and hostile ancestry environment",
+  "objective": "Address the VERIFIED static-control-flow defect from the second actual GPT-6.1 Sol API review of PR #1627: after a successful target rev-parse, failure of `git cat-file -t` is misreported as TYPE_MISMATCH; a failed rev-parse from Git operational failure can be misreported as MISSING; ancestry subprocess errors are indistinguishable from genuine not-ancestor. Preserve source object classification separately from operational inability to verify. Independently reproduce or falsify Sol's PROPOSED (NOT EXECUTED) Git graft ancestry attack (legacy info/grafts) and potential GIT_DIR / GIT_WORK_TREE / GIT_CONFIG_* contamination, refusing to claim a bug merely from the proposal. Enforce stable serialization/order across process locales and hermetic synthetic fixtures with predictable behavior. Never alter original pin manifest, immutable source/outcome, API budgets or investment logic. Preserve a single R0 verifier implementation, fail closed, and require independent reviewer acceptance before merge.",
+  "finding_key": "TASK2_R0_SOL_PASS2_OPERATIONAL_ERROR_MISCLASSIFICATION_AND_GRAFT_ISOLATION",
+  "primary_target": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1.mjs",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1.mjs",
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs",
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/*TASK2_R0* only for append-only evidence/readback receipt"
+  ],
+  "evidence": [
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/RESEARCH_LAB_SOL_ANALYSIS.json",
+      "summary": "Actual GPT-6.1 Sol high Responses API output VERIFIED static F2 type-query/ancestry error misclassification; legacy-graft, nondeterministic sort, Git environment issues are PROPOSED or CONFLICTED, not executed counterexamples. VERDICT WEAKENED."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/receipt.json",
+      "summary": "Actual API call receipt PASS, model gpt-6.1-sol, reasoning high, estimate $0.163946; receipt verifies API execution only, not independent source runtime tests."
+    },
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1627",
+      "summary": "Exact R0 source PR head as captured by reviewer 52d4a6a87ed3d41dbb4c4ccf53285b39c51a4bd5; fresh-state preflight MUST re-read current head, source blob and tests. Reviewer noted source blob 7ae538e6b1f87108de3c6057c187909ffe2458a1 and tests blob b6dc5bbb99f600875eda99d3487de6f5fd0756ff. Never assume PR head immutable."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json",
+      "summary": "Canonical exact baseline manifest; do not mutate."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PUBLIC_SOURCE_DRIFT_RECEIPT_v1.json",
+      "summary": "Existing 36-source exact Git-object receipt, not historical source first-known proof."
+    }
+  ],
+  "reproduction": "Fetch CURRENT exact PR #1627 head and source/test blobs from GitHub before doing any work. Confirm source `try{sha=git(['rev-parse','--verify',head+':'+path]);type=git(['cat-file','-t',sha]);}catch{}` then `status: !sha?'MISSING':type!==row.type?'TYPE_MISMATCH'...` (or current equivalent). Synthetic Git fixture: original base B contains blob S at `p`, descendant H contains another known blob C at `p`. Inject deterministic cat-file failure only after target rev-parse returns C. Assert this is OPERATIONAL_UNVERIFIED (nonzero) rather than TYPE_MISMATCH, while a real type transition remains TYPE_MISMATCH and genuinely absent target path remains MISSING. Repeat for ancestry `merge-base` subprocess failure, distinguishing status 1 NOT_ANCESTOR from fatal status >=2 / signal / exec failure. Probe legacy `.git/info/grafts` by creating unrelated root U with matching tree and a graft linking U to B, then test under exact Git version and captured environment; this is an UNEXECUTED Sol hypothesis until actually reproduced. Probe `GIT_DIR` / `GIT_WORK_TREE` / `GIT_CONFIG_*` redirection in disposable repositories; do not touch user's real config. Verify output row ordering across two locale environments. Avoid false universal claims if a Git version rejects grafts.",
+  "acceptance_tests": {
+    "positive": [
+      "An exact-checkout unchanged baseline + pinned target with all 36 source objects present and matching original type yields verifiable status as before (changed hashes may still be CHANGED, not automatically science admitted).",
+      "Synthetic changed-but-complete descendant blob yields exit 0 and source CHANGED, preserving correct scientific non-admission fields.",
+      "Synthetic true target blob-to-tree/tree-to-blob transition reports TYPE_MISMATCH and nonzero fail-closed, not an operational error.",
+      "Synthetic absent target path reports MISSING separately from a failed Git command, with direct pinned commit and root-tree checks preserved.",
+      "Deterministic multiple-path output sorted by codepoint/byte comparison consistently under two locale settings; original inventory never changed.",
+      "Current source code and regression tests pass independent execution on exact SHA branch with a versioned public-safe verification receipt; no alteration to R1 admission, outcomes or any live rule."
+    ],
+    "negative": [
+      "Fault-inject target Git rev-parse returning SHA C and subsequent cat-file -t operational failure: never report verified TYPE_MISMATCH or exit 0; distinguish OPERATIONAL_UNVERIFIED or fail exit 1 with evidence.",
+      "Force malformed or missing Git object and Git command exit >1 during ancestry: never classify it as a verified NOT_ANCESTOR; fail closed with operation diagnostic, not a success.",
+      "Test legacy graft metadata against unrelated commit U: if reproduction succeeds, source MUST reject forged ancestry; if cannot reproduce, explicitly record NOT_REPRODUCED_GIT_VERSION, not universal security PASS.",
+      "Under GIT_DIR/GIT_WORK_TREE/GIT_CONFIG env injections, temporary fixture must not touch external repository or accept false ancestry; fail closed or clear untrusted Git vars in controlled subprocess.",
+      "Reject tag-for-commit, replacement refs, invalid path syntax, moving symbolic refs, and conflicting shared path cases already covered; do not drop earlier 14 regression cases.",
+      "Do not change code owner, schedule, budget, canonical policy, historical outcomes, portfolio action, threshold, private raw data, or self-merge."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic trade execution",
+    "live forecast production output",
+    "new workflow or scheduler",
+    "historical source inventory rewrite",
+    "historical forecast and outcome mutation",
+    "private raw publication",
+    "autonomous API spend",
+    "automatic merge",
+    "source first-known promotion",
+    "R2-R7 result fabrication"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "REFRESH_EXACT_MAIN_AND_PR_HEAD, RUN_FULL_OLD_AND_NEW_R0_GIT_FIXTURES_AND_NEGATIVE_GRAFT_ENV_TESTS, INDEPENDENT_NONAUTHOR_CODE_REVIEW, EXISTING_CI, NO_PRIVATE_VALUES, NORMAL_MERGE_CHECKS, POSTMERGE_BLOB_READBACK, SEPARATELY_KEEP_R1_HISTORICAL_PIT_BLOCKED"
+}

@@ -1,5 +1,8 @@
 # Compounding Learning Controller v1 — Astra Handoff
 
+> **2026-10-15 model-neutral mission continuity (Compounding Learning).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. The historical `until Astra` / build-from-scratch instructions cannot delay current work. The controller is already implemented under its present canonical owner. Read current main and Compounding Learning health; carry out only evidence-backed, nonduplicative review or remediation under existing permissions. Do **not** rebuild the old branch or claim scientific promotion. Follow the existing [Framework Mission Continuity owner](../../07_PROMPTS_AND_AGENTS/astra/ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 **Status:** `HISTORICAL_BUILD_HANDOFF_CURRENT_IMPLEMENTATION_EXISTS`  
 **Authority:** `RESEARCH_ONLY_NON_CANONICAL`  
 **Prepared:** 2026-09-05  
