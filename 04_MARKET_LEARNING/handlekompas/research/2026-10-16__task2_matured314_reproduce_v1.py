@@ -19,6 +19,8 @@ from pathlib import Path
 ORIGINAL_ZIP_SHA = "4bce43736374b8fcff7aa9ffd1fdac18c303d8b2264b8291bb6e0b80fcde23ae"
 ORIGINAL_LEDGER_SHA = "616e70fd87a79acf126591c1f8e704c74da7a2bd3b3aa181838ac5f861fea5d9"
 LEDGER_MEMBER = "TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv"
+PUBLICATION_MEMBER = "TASK15_R1_OWNER_PUBLICATION_FULL_CENSUS.json"
+PUBLICATION_SHA = "b30d8e515221314a217b5add128f0918f9eeaf6d99d2c682d142482a9f3d4776"
 RESEARCH_ONLY = "EX_POST_DEVELOPMENT_ONLY_NOT_CERTIFIED_PROVIDER_PIT_OR_INVESTOR_ACTION"
 
 
@@ -38,6 +40,48 @@ def load_original(zip_path: Path) -> list[dict]:
     if len(rows) != 1140 or len({r["prediction_id"] for r in rows}) != 1140:
         raise ValueError("ORIGINAL_FORECAST_DENOMINATOR_MISMATCH")
     return rows
+
+
+def publication_metrics(cases: list[dict]) -> dict:
+    """Classify original Git-first-archival delay, never vendor publication."""
+    if len(cases) != 814 or len({x["prediction_id"] for x in cases}) != 814:
+        raise ValueError("ORIGINAL_PUBLICATION_CENSUS_MISMATCH")
+    counts = Counter(x["original_outcome_status"] for x in cases)
+    if counts != {"MATURED": 314, "CENSORED": 500}:
+        raise ValueError("PUBLICATION_OUTCOME_CLASS_DRIFT")
+    if any(
+        x["scorer_would_have_received_source"] != "UNVERIFIED_EXECUTION_CONTEXT"
+        or (x["original_outcome_status"] == "MATURED") != (x["publication_minutes_from_due"] <= 90)
+        or (x["original_outcome_status"] == "MATURED") != (x["archive_publication_class"] == "PRESENT_BY_90_MIN_CUTOFF")
+        for x in cases
+    ):
+        raise ValueError("PUBLICATION_CLOCK_FALSE_EVIDENCE")
+    def lower_median(group):
+        delays = sorted(x["publication_minutes_from_due"] for x in group)
+        return round(delays[(len(delays)-1)//2], 3)
+    return {
+        "cases":len(cases),"matured":counts["MATURED"],"censored":counts["CENSORED"],
+        "matured_lower_median_minutes":lower_median([x for x in cases if x["original_outcome_status"]=="MATURED"]),
+        "censored_lower_median_minutes":lower_median([x for x in cases if x["original_outcome_status"]=="CENSORED"]),
+        "distinct_archived_commits":len({x["first_present_main_commit"] for x in cases}),
+        "distinct_archived_source_paths":len({x["source_path"] for x in cases}),
+        "scorer_visibility":"UNVERIFIED_EXECUTION_CONTEXT",
+    }
+
+
+def load_publication(zip_path: Path) -> dict:
+    outer=zip_path.read_bytes()
+    if sha256(outer)!=ORIGINAL_ZIP_SHA:
+        raise ValueError("ORIGINAL_ACTIONS_ZIP_SHA_MISMATCH")
+    with zipfile.ZipFile(io.BytesIO(outer)) as archive:
+        data=archive.read(PUBLICATION_MEMBER)
+    if sha256(data)!=PUBLICATION_SHA:
+        raise ValueError("ORIGINAL_PUBLICATION_MEMBER_SHA_MISMATCH")
+    document=json.loads(data)
+    if (document["input_ledger_sha256"]!=ORIGINAL_LEDGER_SHA
+            or document["coverage_mode"]!="FULL_RESEARCH_COHORT"):
+        raise ValueError("PUBLICATION_NOT_BOUND_TO_ORIGINAL_LEDGER")
+    return publication_metrics(document["cases"])
 
 
 def paired(rows: list[dict]) -> list[dict]:
@@ -117,6 +161,7 @@ def main() -> None:
     ap.add_argument("--published-receipt", type=Path)
     args = ap.parse_args()
     found = analyze(load_original(args.artifact))
+    found["original_archival_publication"] = load_publication(args.artifact)
     if args.published_receipt:
         receipt = json.loads(args.published_receipt.read_text())
         assert receipt["status"] == RESEARCH_ONLY
@@ -125,6 +170,19 @@ def main() -> None:
             for key in ("n", "compass_hits","price_hits","disagree","compass_only","price_only","lift_pp"):
                 if r[key] != expected[key]:
                     raise ValueError("PUBLISHED_RECEIPT_MISMATCH:"+r["asset"]+":"+r["horizon"]+":"+key)
+        pub = receipt["original_archive_publication_clock"]
+        observed = found["original_archival_publication"]
+        for got, want in (
+            ("cases",pub["all_original_publication_cases"]),
+            ("matured",pub["first_archived_by_90min_cutoff"]),
+            ("censored",pub["first_archived_after_90min_cutoff"]),
+            ("matured_lower_median_minutes",pub["original_matured_314_minutes_from_due"]["median_lower"]),
+            ("censored_lower_median_minutes",pub["original_censored_500_minutes_from_due"]["median_lower"]),
+            ("distinct_archived_commits",pub["distinct_archived_commits"]),
+            ("distinct_archived_source_paths",pub["distinct_archived_source_paths"]),
+        ):
+            if observed[got] != want:
+                raise ValueError("PUBLISHED_ARCHIVAL_DELAY_MISMATCH:"+got)
         assert found["issue_clock_cluster_interval"] == (
             receipt["exploratory_cluster_bootstrap"]["by_exact_issue_utc"]["clusters"],
             receipt["exploratory_cluster_bootstrap"]["by_exact_issue_utc"]["lower_pp"],
