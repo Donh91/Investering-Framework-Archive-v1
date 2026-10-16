@@ -91,6 +91,38 @@ class ReviewFinalityTests(unittest.TestCase):
         result = gate.decision(HEAD, [bot, summary(), positive()], [], [])
         self.assertEqual(result["status"], "REVIEW_NOT_REQUESTED")
 
+    def test_new_review_request_during_live_census_blocks_release(self):
+        pr = {"head": {"sha": HEAD}, "state": "open", "draft": False,
+              "updated_at": "2026-10-15T23:00:00Z"}
+        stable = [request(), summary(), positive()]
+        changed = stable + [request("2026-10-15T23:03:00Z")]
+        with patch.object(gate, "gh_get", return_value=pr), \
+             patch.object(gate, "paged", side_effect=[
+                 stable, [], [], changed, [], [],
+             ]) as fetched:
+            with self.assertRaisesRegex(ValueError, "REVIEW_SNAPSHOT_CHANGED_DURING_CENSUS"):
+                gate.consistent_live_snapshot("owner/repo", 1650, HEAD)
+            self.assertEqual(fetched.call_count, 6)
+
+    def test_head_update_during_live_census_blocks_release(self):
+        first = {"head": {"sha": HEAD}, "state": "open", "draft": False}
+        second = {"head": {"sha": "b" * 40}, "state": "open", "draft": False}
+        with patch.object(gate, "gh_get", side_effect=[first, second]), \
+             patch.object(gate, "paged", return_value=[]):
+            with self.assertRaisesRegex(ValueError, "PR_HEAD_OR_STATE_CHANGED"):
+                gate.consistent_live_snapshot("owner/repo", 1650, HEAD)
+
+    def test_stable_two_pass_live_census_can_pass_technical_only(self):
+        pr = {"head": {"sha": HEAD}, "state": "open", "draft": False}
+        known = [request(), summary(), positive()]
+        with patch.object(gate, "gh_get", return_value=pr), \
+             patch.object(gate, "paged", side_effect=[
+                 known, [], [], known, [], [],
+             ]):
+            result = gate.consistent_live_snapshot("owner/repo", 1650, HEAD)
+            self.assertEqual(result["status"], "FINAL_TECHNICAL_REVIEW")
+            self.assertTrue(result["not_formal_github_approved"])
+
     def test_incomplete_event_pagination_fails_closed(self):
         batch = [{"id": i} for i in range(100)]
         with patch.object(gate, "gh_get", return_value=batch) as source:
