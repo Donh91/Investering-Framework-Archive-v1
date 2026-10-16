@@ -4,6 +4,7 @@ import argparse
 import base64
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -495,6 +496,50 @@ def _cn_gh_file(path: str, *, ref: str = "main", allow_not_found: bool = False) 
         raise RuntimeError("CN_API_DURABLE_RESERVATION_FILE_INVALID") from exc
 
 
+
+def _valid_cn_prior_paid_receipt(receipt: Any, reservation: dict[str, Any]) -> bool:
+    """Do not reconcile a pre-POST liability using a partial/fabricated paid receipt.
+
+    Exact complete usage and model are required before another paid claim may
+    begin. Unknown usage, contradictory status, NaN and missing fields keep
+    the previous liability outstanding, rather than silently charging again.
+    """
+    if not isinstance(receipt, dict):
+        return False
+    if (receipt.get("contract") != "API_AGENT_RECEIPT_v3"
+            or receipt.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER"
+            or receipt.get("authority") != AUTHORITY
+            or receipt.get("claim_ids") != reservation.get("claim_ids")
+            or receipt.get("request_hash") != reservation.get("request_hash")
+            or receipt.get("model") != reservation.get("model")
+            or receipt.get("reasoning_effort") != "medium"
+            or receipt.get("attempt_count") != 1
+            or receipt.get("status") not in {"PASS", "API_OUTPUT_INVALID"}
+            or receipt.get("usage_reconciliation_required") is True):
+        return False
+    if (type(receipt.get("created_unix")) is not int
+            or receipt["created_unix"] <= 0):
+        return False
+    if not re.fullmatch(r"[0-9a-f]{64}", str(receipt.get("context_hash") or "")):
+        return False
+    for key in ("input_tokens", "output_tokens"):
+        if type(receipt.get(key)) is not int or receipt[key] < 0:
+            return False
+    if receipt["input_tokens"] + receipt["output_tokens"] <= 0:
+        return False
+    cost = receipt.get("estimated_cost_usd")
+    if type(cost) not in (int, float) or not math.isfinite(cost) or cost < 0:
+        return False
+    if receipt["status"] == "PASS":
+        if (not re.fullmatch(r"[0-9a-f]{64}", str(receipt.get("output_hash") or ""))
+                or receipt.get("error") is not None):
+            return False
+    else:
+        if receipt.get("output_hash") is not None or not isinstance(receipt.get("error"), str):
+            return False
+    return True
+
+
 def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], request_hash: str,
                                         model: str, max_cost: float) -> None:
     """Persist one-way pre-POST cost liability on an owner-scoped NON-main task branch.
@@ -550,12 +595,7 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
                 paid_receipt = json.loads(remote_receipt)
             except (ValueError, TypeError) as exc:
                 raise RuntimeError("CN_API_PREVIOUS_REMOTE_RECEIPT_INVALID") from exc
-            if (not isinstance(paid_receipt, dict)
-                    or paid_receipt.get("contract") != "API_AGENT_RECEIPT_v3"
-                    or paid_receipt.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER"
-                    or paid_receipt.get("claim_ids") != previous["claim_ids"]
-                    or paid_receipt.get("request_hash") != previous.get("request_hash")
-                    or not isinstance(paid_receipt.get("estimated_cost_usd"), (int, float))):
+            if not _valid_cn_prior_paid_receipt(paid_receipt, previous):
                 raise RuntimeError("CN_API_PREVIOUS_REMOTE_RECEIPT_INVALID")
             # The existing global/lane guards read local main: their accounting
             # can only be considered complete if the same receipt is present.
