@@ -63,6 +63,22 @@ const mutate = (fun)=>{
 };
 const it=(desc,callback)=>{try{callback();console.log('PASS',desc)}catch(err){console.error('FAIL',desc);throw err}};
 
+
+it('fresh but mismatched public CN identity cannot expose Compass action, SELL, risk or bull/bear',()=>{
+ const l=structuredClone(latest),c=structuredClone(compass);
+ c.weekly_context.forecast_week='2026-W41';
+ const o=read(l,c);
+ assert.equal(o.compass.weekly_alignment,'UNVERIFIED');
+ assert.equal(o.compass.state,'UNAVAILABLE');
+ assert.equal(o.compass.action_now,'UNAVAILABLE');
+ assert.equal(o.compass.sell_assessment_state,'UNAVAILABLE');
+ assert.equal(o.compass.pullback_risk_state,'UNAVAILABLE');
+ assert.equal(o.compass.distribution_risk,'UNKNOWN');
+ assert.equal(o.compass.reentry_state,'UNAVAILABLE');
+ assert.equal(o.compass.bull_bear_1_3d,null);
+ assert.equal(o.compass.permit_path_live_gates,false);
+});
+
 it('real public CN #29 and machine #30 stay distinct; W42 ranges source-bound',()=>{
  const o=read();
  assert.equal(o.weekly.public_issue_number,29);
