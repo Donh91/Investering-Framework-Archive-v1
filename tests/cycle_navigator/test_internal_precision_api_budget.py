@@ -354,10 +354,17 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "output_hash": "c" * 64,
             "input_tokens": 600,
             "output_tokens": 200,
-            "estimated_cost_usd": 0.01,
+            "estimated_cost_usd": 0.0036,
             "error": None,
         }
         self.assertTrue(cn._valid_cn_prior_paid_receipt(valid, reservation))
+        # Valid token amounts do not authenticate a forged lower billed cost.
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            {**valid, "estimated_cost_usd": 0.000001}, reservation))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            {**valid, "estimated_cost_usd": 0.01}, reservation))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            {**valid, "model": "unknown-pricing-model"}, {**reservation, "model": "unknown-pricing-model"}))
         for field, bad in (
             ("model", None), ("created_unix", None), ("status", None),
             ("input_tokens", None), ("output_tokens", -2),
