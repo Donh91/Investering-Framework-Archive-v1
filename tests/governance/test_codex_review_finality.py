@@ -73,6 +73,20 @@ class ReviewFinalityTests(unittest.TestCase):
         result = gate.decision(HEAD, [request(), summary(), positive(), running], [], [])
         self.assertEqual(result["status"], "NEWER_CODEX_REVIEW_NOT_COMPLETE")
 
+    def test_same_second_prior_receipts_do_not_clear_newer_request(self):
+        # The earlier review belongs to a first request, but all timestamps
+        # round to the second of a second, newer request. Temporal tie != later.
+        when = "2026-10-15T23:01:00Z"
+        rows = [request(when), summary(at=when), positive(at=when), request(when)]
+        result = gate.decision(HEAD, rows, [], [])
+        self.assertEqual(result["status"], "REVIEW_IN_PROGRESS_OR_UNVERIFIED")
+        self.assertFalse(result["technical_review_accepted"])
+
+    def test_same_second_completion_and_request_is_not_order_proof(self):
+        when = "2026-10-15T23:01:00Z"
+        rows = [summary(at=when), positive(at=when), request(when)]
+        self.assertFalse(gate.decision(HEAD, rows, [], [])["technical_review_accepted"])
+
     def test_review_race_negative_control_detects_mutated_missing_guard(self):
         # Remove the consequence of the actual pending-review guard in an
         # isolated copy of the function. The same negative acceptance test
