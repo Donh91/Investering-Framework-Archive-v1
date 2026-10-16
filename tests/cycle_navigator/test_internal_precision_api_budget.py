@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import time
 import tempfile
 import unittest
 from pathlib import Path
@@ -335,6 +336,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "model": "gpt-5.6-terra",
             "claim_ids": ["frozen-A"],
             "request_hash": "a" * 64,
+            "created_unix": int(time.time()) - 5,
         }
         valid = {
             "contract": "API_AGENT_RECEIPT_v3",
@@ -346,7 +348,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "reasoning_effort": "medium",
             "attempt_count": 1,
             "status": "PASS",
-            "created_unix": 1790000000,
+            "created_unix": int(time.time()),
             "context_hash": "b" * 64,
             "output_hash": "c" * 64,
             "input_tokens": 600,
@@ -384,6 +386,16 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
              "error": "INVALID_STRUCTURED_OUTPUT:ValueError"}, reservation))
         self.assertFalse(cn._valid_cn_prior_paid_receipt(valid,
                          {**reservation, "model": None}))
+        # Both reservation and receipt carry the same charge month/clock
+        # lineage. Earlier-month backdating cannot lower this month's spend.
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            {**valid, "created_unix": reservation["created_unix"] - 1}, reservation))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            {**valid, "created_unix": int(time.time()) + 3600}, reservation))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            valid, {**reservation, "created_unix": int(time.time()) + 3600}))
+        self.assertFalse(cn._valid_cn_prior_paid_receipt(
+            valid, {key: val for key, val in reservation.items() if key != "created_unix"}))
 
 
     def test_month_shards_keep_prior_claims_in_global_no_retry_census(self):
