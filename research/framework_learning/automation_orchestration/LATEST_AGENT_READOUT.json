@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-15T19:22:55Z",
+  "generated_at_utc": "2026-10-16T07:30:06Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,31 +15,30 @@
   },
   "luna_triage": {
     "evidence_against": [
-      "Only one current failure item is supplied, with failure_streak=1; persistence is not established.",
-      "No job-step logs, exit code, failure message, dependency health, or comparison with successful runs are provided.",
-      "No named owner is present in the supplied data; the existing remediation is routed to OBSERVE."
+      "Only one current failure item is supplied, with a failure streak of 1; this does not establish a persistent defect.",
+      "No run logs, failed job or step, error message, or comparison with prior run details are provided to identify a dependency failure or code defect."
     ],
     "evidence_for": [
-      "framework-learning-operations.yml has latest finding LATEST_RUN_FAILED (run 38689508626).",
-      "recent_failure_count=2 indicates two recent failures, but the time span and whether they share a cause are unspecified.",
-      "Existing remediation state is OBSERVED with route OBSERVE; there is no supplied basis to duplicate or elevate it."
+      "The workflow `framework-learning-operations.yml` has a failed latest run (38689508626).",
+      "The item reports 2 recent failures, but their relationship to this run and their causes are unspecified.",
+      "An existing remediation record for `LATEST_RUN_FAILED` is already `OBSERVED` with route `OBSERVE`; do not duplicate it or escalate its authority."
     ],
     "forecast_candidates": [],
     "hypotheses": [
-      "Treat this as an undiagnosed execution failure. The available evidence does not distinguish transient runner noise from a shared dependency issue or a code defect.",
-      "The existing workflow owner or automation-operations maintainer should inspect the failed run next; no specific individual or team owner is identified in the supplied context."
+      "Failure class is undetermined from the supplied evidence; a transient execution failure is possible, but a shared dependency failure or code defect cannot be ruled out.",
+      "The issue is not established as persistent: the failure streak is 1, while the broader recent-failure count lacks details.",
+      "Next inspection should remain with the existing owner of `framework-learning-operations.yml`. No owner identity is included in the supplied data, so a specific person or team cannot be named."
     ],
     "status": "DEGRADED",
-    "summary": "Triage one workflow failure: framework-learning-operations.yml, run 38689508626. Cause and persistence remain undetermined. Preserve the existing OBSERVED remediation state; next inspection belongs with the workflow/automation-operations owner, whose identity is not supplied.",
+    "summary": "Triage the single failed workflow as an unclassified execution failure. Keep its existing OBSERVED remediation state; inspect the run details before assigning a cause. The supplied data does not identify the workflow owner.",
     "uncertainties": [
-      "Failure details and affected job/step are absent.",
-      "The two recent failures may or may not share a cause; their timing and run outcomes are not supplied.",
-      "Dependency status, runner conditions, and relevant code changes are unknown.",
-      "A named existing owner cannot be identified from the supplied evidence."
+      "Failed job, step, error output, and run logs are missing.",
+      "Details of the 2 recent failures and whether they share a cause are missing.",
+      "No named existing workflow owner is supplied."
     ]
   },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "5414c6e11a832fa5204a3c3acad40c4d438388f9d7442918d138f2fe0e85f049",
+  "plan_fingerprint": "453b9aecb83f6b61dc1d14e69ffe9905b70b85a54a94bc249316902f006d1f75",
   "routing_summary": {
     "existing_remediation_count": 0,
     "luna_triage_count": 1,
@@ -47,5 +46,5 @@
     "sol_6_1_diagnosis_count": 0
   },
   "sol_6_1_diagnosis": null,
-  "source_health_generated_at_utc": "2026-10-15T19:17:27.950040Z"
+  "source_health_generated_at_utc": "2026-10-16T02:35:27.777034Z"
 }
