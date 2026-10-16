@@ -108,7 +108,7 @@ axis.append(min,max);box.appendChild(axis);root.appendChild(box);
 });
 }
 document.querySelectorAll("nav button").forEach(function(btn){btn.addEventListener("click",function(){document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("active",b===btn)});document.querySelectorAll(".view").forEach(function(v){v.hidden=v.id!=="view-"+btn.dataset.view});});});
-var assets=["BTC","ETH","Large","Mid","Small","Micro","Memes"];var aroot=byId("assetRows");assets.forEach(function(x){addRow(aroot,[x,"Ukendt","AFVENT"])});
+var assets=["BTC","ETH","Large","Mid","Small","Micro","Memes"];var aroot=byId("assetRows");assets.forEach(function(x){addRow(aroot,[x,"Ukendt","UTILGÆNGELIG"])});
 var troot=byId("horizonRows");
 Promise.all([loadJSON("latest.json"),loadJSON("compass.json").catch(function(){return {contract:"PUBLIC_COMPASS_PROJECTION_v1",data_status:"UNAVAILABLE"};})]).then(function(values){
 var cn=values[0],c=values[1]; if(cn.schema!=="CN_PUBLIC_SNAPSHOT_V2"||cn.public_series?.contract!=="CN_PUBLIC_SERIES_INDEX_v1")throw Error("Unverified public CN source contract");
@@ -139,7 +139,7 @@ var valid=deliveryFresh&&compassFresh&&c.data_status==="OK"&&typeof c.compass_id
 var aligned=valid&&c.weekly_context&&c.weekly_context.status==="ALIGNED"&&
  c.weekly_context.forecast_week===pub.forecast_week&&c.weekly_context.public_issue_number===pub.public_issue_number;
 set("compassHealth",valid?"Official Compass · OK":"KOMPAS · utilgængelig");
-set("actionNow",valid?(safe(c.action_now)||"AFVENT"):"AFVENT");
+set("actionNow",valid?(safe(c.action_now,"UTILGÆNGELIG")):"UTILGÆNGELIG");
 set("actionDesc",valid?"Officiel handling · "+(safe(c.issued_at_utc)||"tid ukendt"):"Intet verificeret aktuelt handlingssignal.");
 set("riskStatus",valid?(safe(c.protection_tracker&&c.protection_tracker.pullback_risk_state)||"Utilgængelig"):"Utilgængelig");
 set("riskDesc",valid?(safe(c.protection_tracker&&c.protection_tracker.pullback_class)||"Ingen kvalificeret risikoklasse"):"Fresh Official Compass required");
@@ -165,8 +165,8 @@ set("interpret",valid?(safe(c.market_now&&c.market_now.summary)||safe(c.conclusi
 var sell=c.sell_assessment||{};set("sellState",valid?(safe(sell.state)||"UNAVAILABLE"):"UNAVAILABLE");set("sellReason",valid?(safe(sell.reason)||"Ingen kvalificeret SELL-autoritet"):"Ingen verificeret salgsbeslutning.");
 set("reentry",valid?(safe(c.protection_tracker&&c.protection_tracker.reentry_message)||"Ikke tilgængelig"):"Ikke tilgængelig");
 var horizons=[["0–12 timer","next_12h"],["1–3 dage","next_1_3d"],["5–7 dage","next_5_7d"],["2–3 uger","next_2_3w"],["4–8 uger","weeks_4_8"]]; clear(troot);
-horizons.forEach(function(h){var k=c.horizons&&c.horizons[h[1]]||null;var dp=p.decision_projection||{};var weekly=dp[h[1]]||null;var dir=valid&&k&&safe(k.directional_state||k.direction)||aligned&&weekly&&safe(weekly.direction)||"UKENDT";var action=valid&&k&&safe(k.action)||"AFVENT";addRow(troot,[h[0],dir,action]);});
-if(aligned&&Array.isArray(c.capitalization_ladder)){clear(aroot);assets.forEach(function(asset,i){var item=c.capitalization_ladder.find(function(x){return String(x.asset||x.segment||x.tier||"").toLowerCase().includes(asset.toLowerCase())});addRow(aroot,[asset,item&&safe(item.status)||"Ukendt",item&&safe(item.action)||"AFVENT"])});}
-}).catch(function(err){console.warn("CN vNext preview data unavailable:",err);set("status","Kilde utilgængelig");set("state","Ingen verificerede data");set("summary","Prototypen viser ikke gættede markedsværdier. Når offentlige kildedata kan indlæses og deres kontrakter bekræftes, vises de her.");set("compassHealth","Kilde utilgængelig");});
+horizons.forEach(function(h){var k=c.horizons&&c.horizons[h[1]]||null;var dp=p.decision_projection||{};var weekly=dp[h[1]]||null;var dir=valid&&k&&safe(k.directional_state||k.direction)||aligned&&weekly&&safe(weekly.direction)||"UKENDT";var action=valid&&k&&safe(k.action,"UTILGÆNGELIG")||"UTILGÆNGELIG";addRow(troot,[h[0],dir,action]);});
+if(aligned&&Array.isArray(c.capitalization_ladder)){clear(aroot);assets.forEach(function(asset,i){var item=c.capitalization_ladder.find(function(x){return String(x.asset||x.segment||x.tier||"").toLowerCase().includes(asset.toLowerCase())});addRow(aroot,[asset,item&&safe(item.status)||"Ukendt",item&&safe(item.action,"UTILGÆNGELIG")||"UTILGÆNGELIG"])});}
+}).catch(function(err){console.warn("CN vNext preview data unavailable:",err);set("status","Kilde utilgængelig");set("state","Ingen verificerede data");set("summary","Prototypen viser ikke gættede markedsværdier. Når offentlige kildedata kan indlæses og deres kontrakter bekræftes, vises de her.");set("compassHealth","Kilde utilgængelig");set("actionNow","UTILGÆNGELIG");set("sellState","UNAVAILABLE");});
 })();
 </script></body></html>
