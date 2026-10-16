@@ -62,12 +62,12 @@ jobs:
         run: |
           if [ -f scripts/research/task2_r1_original_admission.py ] && [ -f tests/research/test_task2_r1_original_admission.py ]; then
             python -m unittest tests.research.test_task2_r1_original_admission -v
-            # One-time value-free v2 admission artifact publication bridge.
-            # This is research-only, no provider/API calls or main writes.
+            # Frozen R1 scientific admission artifact is source-only and
+            # must exactly match generator output under the declared Git
+            # historical context, not synthetic PR merge HEAD.
             python scripts/research/task2_r1_original_admission.py --context-ref 5a41cd3043bb582524f15fe9fde6f52792246a54 --output /tmp/task2_r1_original_admission_v2.json
-            echo 'TASK2_R1_V2_ARTIFACT_START'
-            cat /tmp/task2_r1_original_admission_v2.json
-            echo 'TASK2_R1_V2_ARTIFACT_END'
+            cmp -s /tmp/task2_r1_original_admission_v2.json 04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json
+            echo 'Task2 R1 v2 exact immutable-context artifact parity verified'
           fi
       - name: Validate repository state readback when available
         shell: bash
