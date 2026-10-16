@@ -62,6 +62,12 @@ jobs:
         run: |
           if [ -f scripts/research/task2_r1_original_admission.py ] && [ -f tests/research/test_task2_r1_original_admission.py ]; then
             python -m unittest tests.research.test_task2_r1_original_admission -v
+            # One-time value-free v2 admission artifact publication bridge.
+            # This is research-only, no provider/API calls or main writes.
+            python scripts/research/task2_r1_original_admission.py --context-ref 5a41cd3043bb582524f15fe9fde6f52792246a54 --output /tmp/task2_r1_original_admission_v2.json
+            echo 'TASK2_R1_V2_ARTIFACT_START'
+            cat /tmp/task2_r1_original_admission_v2.json
+            echo 'TASK2_R1_V2_ARTIFACT_END'
           fi
       - name: Validate repository state readback when available
         shell: bash
