@@ -243,7 +243,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         previous = {"contract": "CN_PAID_API_PREPOST_RESERVATION_v1",
                     "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
                     "claim_ids": ["prior-A"],
-                    "receipt_path": "research/api_agent/outputs/cn_internal_precision/old/receipt.json"}
+                    "receipt_path": "research/api_agent/outputs/cn_internal_precision/" + ("c" * 64) + "/receipt.json"}
         with patch.dict(os.environ, {
                 "GH_TOKEN": "offline-test-only", "GITHUB_ACTIONS": "true",
                 "GITHUB_REPOSITORY": cn.CN_REPOSITORY}, clear=False), \
