@@ -74,6 +74,57 @@ class OperationsDashboardTests(unittest.TestCase):
             self.assertEqual(by['UNCLASSIFIED']['receipt_count'],1)
             self.assertAlmostEqual(usage['cost_usd'],0.051)
 
+    def test_unknown_api_costs_remain_explicit_not_silent_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            variants=[
+                ('MISSING_COST', {}),
+                ('INVALID_COST', {'estimated_cost_usd':'not-a-number'}),
+                ('NAN_COST', {'estimated_cost_usd':float('nan')}),
+                ('NEGATIVE_COST', {'estimated_cost_usd':-0.1}),
+                ('UNKNOWN_USAGE', {'estimated_cost_usd':0.3, 'usage_reconciliation_required':True}),
+                ('KNOWN_FREE', {'estimated_cost_usd':0.0}),
+            ]
+            for index,(name,fields) in enumerate(variants):
+                row={'contract':'API_AGENT_RECEIPT_v3','created_unix':1785845410+index,
+                     'response_id':'unknown-'+str(index),'status':'PASS',
+                     'task':name,'input_tokens':500,'output_tokens':200,**fields}
+                self.write_json(root,'research/api_agent/outputs/extra/'+name+'/receipt.json',row)
+            doc=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))
+            usage=doc['agent_activity']['openai_api']
+            self.assertEqual(usage['receipt_count'],7)
+            self.assertEqual(usage['unknown_cost_receipt_count'],5)
+            self.assertEqual(usage['cost_estimate_status'],'PARTIAL_UNKNOWN')
+            self.assertAlmostEqual(usage['cost_usd'],0.001)
+            groups={x['task']:x for x in usage['spend_by_task']}
+            self.assertEqual(groups['KNOWN_FREE']['unknown_cost_receipt_count'],0)
+            self.assertEqual(groups['KNOWN_FREE']['cost_usd'],0.0)
+            self.assertEqual(groups['MISSING_COST']['unknown_cost_receipt_count'],1)
+            self.assertEqual(groups['UNKNOWN_USAGE']['unknown_cost_receipt_count'],1)
+            self.assertEqual(groups['UNKNOWN_USAGE']['cost_usd'],0.0)
+            self.assertEqual(sum(x['unknown_cost_receipt_count'] for x in usage['spend_by_task']),5)
+            doc['required_actions']=[{'priority':'P0','system':'real_incident',
+                                      'reason':'must act'}]
+            report=module.render_markdown(doc)
+            self.assertIn('5 unknown-cost receipts',report)
+            self.assertIn('| Unknown-cost receipts |',report)
+            self.assertLess(report.index('### API spend by task'),report.index('## Required actions'))
+            self.assertLess(report.index('## Required actions'),report.index('**P0** `real_incident`'))
+
+    def test_unknown_cost_without_task_is_not_masked_by_unclassified_total(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            self.write_json(root,'research/api_agent/outputs/partial/receipt.json',
+                {'contract':'API_AGENT_RECEIPT_v3','created_unix':1785845490,
+                 'response_id':'partial-unknown','status':'API_OUTPUT_INVALID',
+                 'attempt_count':1,'usage_reconciliation_required':True,
+                 'input_tokens':10,'output_tokens':3})
+            usage=module.collect_api_usage(root,datetime(2026,8,4,13,0,tzinfo=UTC))
+            self.assertEqual(usage['unknown_cost_receipt_count'],1)
+            self.assertEqual(usage['cost_estimate_status'],'PARTIAL_UNKNOWN')
+            groups={g['task']:g for g in usage['spend_by_task']}
+            self.assertEqual(groups['UNCLASSIFIED']['unknown_cost_receipt_count'],1)
+
     def test_weekly_pointer_uses_verified_machine_package_time(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root);row=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['weekly_output'];self.assertEqual(row['status'],'GREEN');self.assertEqual(row['timestamp_utc'],'2026-08-03T08:00:00Z');self.assertEqual(row['target_hash_status'],'MATCH');self.assertTrue(row['target_path'].endswith('MASTER_MONDAY_MACHINE_PACKAGE.json'))
