@@ -455,6 +455,7 @@ def _reject_previously_attempted_claims(repo: Path, claims: list[dict[str, Any]]
 
 CN_RESERVATION_ROOT = "runtime/api-cost-ledger/cn_internal_precision_reservations"
 CN_REPOSITORY = "Donh91/Investering-Framework-Archive-v1"
+CN_RESERVATION_BRANCH = "agent/task-20261016-cn-cost-liability"
 
 
 def _cn_gh_api(path: str, *, fields: dict[str, str] | None = None,
@@ -482,8 +483,8 @@ def _cn_gh_api(path: str, *, fields: dict[str, str] | None = None,
         raise RuntimeError("CN_API_DURABLE_RESERVATION_RESPONSE_INVALID") from exc
 
 
-def _cn_gh_file(path: str, *, allow_not_found: bool = False) -> bytes | None:
-    item = _cn_gh_api(f"contents/{path}?ref=main", allow_not_found=allow_not_found)
+def _cn_gh_file(path: str, *, ref: str = "main", allow_not_found: bool = False) -> bytes | None:
+    item = _cn_gh_api(f"contents/{path}?ref={ref}", allow_not_found=allow_not_found)
     if item is None:
         return None
     if not isinstance(item, dict) or item.get("encoding") != "base64" or not isinstance(item.get("content"), str):
@@ -496,10 +497,11 @@ def _cn_gh_file(path: str, *, allow_not_found: bool = False) -> bytes | None:
 
 def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], request_hash: str,
                                         model: str, max_cost: float) -> None:
-    """Persist a one-way reservation on main before issuing a billable POST.
+    """Persist one-way pre-POST cost liability on an owner-scoped NON-main task branch.
 
-    Existing GitHub main is the durable ledger and existing contents:write
-    permission is the only writer. A failed/cancelled later workflow retains
+    GitHub main and its canonical paid receipts remain distinct, reviewed
+    immutable scientific truth. Existing GitHub contents:write on the scoped
+    non-default branch is the only provisional liability writer. A failed/cancelled later workflow retains
     this pre-POST reservation, preventing an unaudited paid retry.
     """
     if (os.environ.get("GITHUB_ACTIONS") != "true"
@@ -513,7 +515,7 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
     if type(max_cost) not in (int, float) or not 0 < max_cost <= 1 or max_cost != max_cost:
         raise RuntimeError("CN_API_DURABLE_RESERVATION_COST_INVALID")
     reservation_path = f"{CN_RESERVATION_ROOT}/{request_hash}.json"
-    listing = _cn_gh_api(f"contents/{CN_RESERVATION_ROOT}?ref=main", allow_not_found=True)
+    listing = _cn_gh_api(f"contents/{CN_RESERVATION_ROOT}?ref={CN_RESERVATION_BRANCH}", allow_not_found=True)
     if listing is not None:
         if not isinstance(listing, list) or len(listing) >= 100:
             raise RuntimeError("CN_API_DURABLE_RESERVATION_CENSUS_INCOMPLETE")
@@ -521,7 +523,7 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
             if (not isinstance(item, dict) or item.get("type") != "file"
                     or not re.fullmatch(r"[0-9a-f]{64}\.json", str(item.get("name")))):
                 raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
-            previous_bytes = _cn_gh_file(str(item["path"]))
+            previous_bytes = _cn_gh_file(str(item["path"]), ref=CN_RESERVATION_BRANCH)
             try:
                 previous = json.loads(previous_bytes)
             except (TypeError, ValueError) as exc:
@@ -584,9 +586,9 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
     payload = base64.b64encode(raw).decode()
     _cn_gh_api(f"contents/{reservation_path}", fields={
         "message": "cn: durable paid-attempt reservation before optional model call",
-        "content": payload, "branch": "main",
+        "content": payload, "branch": CN_RESERVATION_BRANCH,
     })
-    if _cn_gh_file(reservation_path) != raw:
+    if _cn_gh_file(reservation_path, ref=CN_RESERVATION_BRANCH) != raw:
         raise RuntimeError("CN_API_RESERVATION_MAIN_READBACK_FAILED_NO_SPEND")
 
 
