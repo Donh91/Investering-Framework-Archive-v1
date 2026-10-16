@@ -534,8 +534,31 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
             # If a paid call may have occurred but the canonical receipt was
             # not successfully published on main, *all* further spend stops
             # until existing owner reconciles failed-run artifacts/provider cost.
-            if _cn_gh_file(previous["receipt_path"], allow_not_found=True) is None:
+            prior_receipt_path = previous["receipt_path"]
+            if not re.fullmatch(
+                    r"research/api_agent/outputs/cn_internal_precision/[0-9a-f]{64}/receipt\\.json",
+                    prior_receipt_path):
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_RECEIPT_PATH_INVALID")
+            remote_receipt = _cn_gh_file(prior_receipt_path, allow_not_found=True)
+            if remote_receipt is None:
                 raise RuntimeError("CN_API_PREVIOUS_UNRECONCILED_PAID_ATTEMPT")
+            try:
+                paid_receipt = json.loads(remote_receipt)
+            except (ValueError, TypeError) as exc:
+                raise RuntimeError("CN_API_PREVIOUS_REMOTE_RECEIPT_INVALID") from exc
+            if (not isinstance(paid_receipt, dict)
+                    or paid_receipt.get("contract") != "API_AGENT_RECEIPT_v3"
+                    or paid_receipt.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER"
+                    or paid_receipt.get("claim_ids") != previous["claim_ids"]
+                    or paid_receipt.get("request_hash") != previous.get("request_hash")
+                    or not isinstance(paid_receipt.get("estimated_cost_usd"), (int, float))):
+                raise RuntimeError("CN_API_PREVIOUS_REMOTE_RECEIPT_INVALID")
+            # The existing global/lane guards read local main: their accounting
+            # can only be considered complete if the same receipt is present.
+            local_receipt = repo / prior_receipt_path
+            if (not local_receipt.is_file() or local_receipt.is_symlink()
+                    or local_receipt.read_bytes() != remote_receipt):
+                raise RuntimeError("CN_API_PREVIOUS_REMOTE_RECEIPT_NOT_ACCOUNTED")
     digest = hashlib.sha256(canonical_bytes(claim_ids)).hexdigest()
     receipt_path = f"research/api_agent/outputs/cn_internal_precision/{digest}/receipt.json"
     row = {
