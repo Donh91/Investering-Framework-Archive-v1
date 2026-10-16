@@ -510,7 +510,10 @@ def _valid_cn_prior_paid_receipt(receipt: Any, reservation: dict[str, Any]) -> b
                 r"[0-9a-f]{64}", str(reservation.get("request_hash") or ""))
             or not isinstance(reservation.get("claim_ids"), list)
             or not reservation["claim_ids"]
-            or any(not isinstance(v, str) or not v for v in reservation["claim_ids"])):
+            or any(not isinstance(v, str) or not v for v in reservation["claim_ids"])
+            or type(reservation.get("created_unix")) is not int
+            or reservation["created_unix"] <= 0
+            or reservation["created_unix"] > int(time.time()) + 300):
         return False
     if (receipt.get("contract") != "API_AGENT_RECEIPT_v3"
             or receipt.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER"
@@ -525,7 +528,8 @@ def _valid_cn_prior_paid_receipt(receipt: Any, reservation: dict[str, Any]) -> b
             or receipt.get("usage_reconciliation_required") is True):
         return False
     if (type(receipt.get("created_unix")) is not int
-            or receipt["created_unix"] <= 0):
+            or receipt["created_unix"] < reservation["created_unix"]
+            or receipt["created_unix"] > int(time.time()) + 300):
         return False
     if not re.fullmatch(r"[0-9a-f]{64}", str(receipt.get("context_hash") or "")):
         return False
