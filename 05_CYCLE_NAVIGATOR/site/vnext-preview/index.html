@@ -111,26 +111,55 @@ document.querySelectorAll("nav button").forEach(function(btn){btn.addEventListen
 var assets=["BTC","ETH","Large","Mid","Small","Micro","Memes"];var aroot=byId("assetRows");assets.forEach(function(x){addRow(aroot,[x,"Ukendt","AFVENT"])});
 var troot=byId("horizonRows");
 Promise.all([loadJSON("latest.json"),loadJSON("compass.json").catch(function(){return {contract:"PUBLIC_COMPASS_PROJECTION_v1",data_status:"UNAVAILABLE"};})]).then(function(values){
-var cn=values[0],c=values[1]; if(cn.schema!=="CN_PUBLIC_SNAPSHOT_V2")throw Error("Wrong weekly public source contract");
+var cn=values[0],c=values[1]; if(cn.schema!=="CN_PUBLIC_SNAPSHOT_V2"||cn.public_series?.contract!=="CN_PUBLIC_SERIES_INDEX_v1")throw Error("Unverified public CN source contract");
 if(c.contract!=="PUBLIC_COMPASS_PROJECTION_v1")c={contract:"PUBLIC_COMPASS_PROJECTION_v1",data_status:"UNAVAILABLE"};
 var p=cn.package||{},series=cn.public_series||{},quality=String(p.status||cn.pointer&&cn.pointer.status||"").toUpperCase();
+var wk=cn.pointer||{},pub=series.current_public_projection||{};
+var isoWeek=Number(wk.iso_week),isoYear=Number(wk.iso_year);
+var expectedWeek=Number.isInteger(isoYear)&&Number.isInteger(isoWeek)&&isoWeek>=1&&isoWeek<=53?isoYear+"-W"+String(isoWeek).padStart(2,"0"):null;
+var weeklyAligned=Number.isInteger(pub.public_issue_number)&&pub.public_issue_number>0&&
+ Number.isInteger(wk.issue_number)&&p.issue_number===wk.issue_number&&p.status===wk.status&&
+ pub.forecast_week===expectedWeek&&["OK","PASS","DEGRADED"].includes(p.status);
+if(!weeklyAligned)throw Error("Unverified public CN week/issue lineage");
+var now=Date.now(),parsed=Date.parse(cn.generated_at);
+var deliveryFresh=typeof cn.generated_at==="string"&&/(?:Z|[+-]\\d\\d:\\d\\d)$/.test(cn.generated_at)&&
+ Number.isFinite(parsed)&&parsed<=now+300000&&now-parsed<=86400000;
 set("state",safe(p.market_state)||"Officiel markedsstatus ikke tilgængelig");
 set("summary",safe(p.base_case_this_week)||"Offentlig vurdering er ikke tilgængelig.");
 set("issue","CN #"+(series.current_public_projection&&series.current_public_projection.public_issue_number||"—")+" · "+(series.current_public_projection&&series.current_public_projection.forecast_week||"Ukendt uge"));
 set("refreshed","Datapakke: "+(safe(cn.generated_at)||"Udateret"));
-set("status",quality==="OK"||quality==="COMPLETE"?"Ugentlig kilde OK":quality||"Ikke bekræftet");
+set("status",!deliveryFresh?"Kilde forældet":quality==="OK"||quality==="PASS"?"Ugentlig kilde OK":quality||"Ikke bekræftet");
 var currentContext=p.market_cycle_context||{};
 set("phase",safe(currentContext.current_phase)||"Fase ikke bekræftet");
 set("nextGate",safe(currentContext.next_gate)||"Afventer signal");
-var valid=c.data_status==="OK"; var aligned=valid&&c.weekly_context&&c.weekly_context.status==="ALIGNED";
+var issued=Date.parse(c.issued_at_utc);
+var compassFresh=typeof c.issued_at_utc==="string"&&/(?:Z|[+-]\\d\\d:\\d\\d)$/.test(c.issued_at_utc)&&
+ Number.isFinite(issued)&&issued<=now+300000&&now-issued<=86400000&&issued<=parsed+300000;
+var valid=deliveryFresh&&compassFresh&&c.data_status==="OK"&&typeof c.compass_id==="string"&&c.compass_id.trim()!=="";
+var aligned=valid&&c.weekly_context&&c.weekly_context.status==="ALIGNED"&&
+ c.weekly_context.forecast_week===pub.forecast_week&&c.weekly_context.public_issue_number===pub.public_issue_number;
 set("compassHealth",valid?"Official Compass · OK":"KOMPAS · utilgængelig");
 set("actionNow",valid?(safe(c.action_now)||"AFVENT"):"AFVENT");
 set("actionDesc",valid?"Officiel handling · "+(safe(c.issued_at_utc)||"tid ukendt"):"Intet verificeret aktuelt handlingssignal.");
 set("riskStatus",valid?(safe(c.protection_tracker&&c.protection_tracker.pullback_risk_state)||"Utilgængelig"):"Utilgængelig");
 set("riskDesc",valid?(safe(c.protection_tracker&&c.protection_tracker.pullback_class)||"Ingen kvalificeret risikoklasse"):"Fresh Official Compass required");
-var score=cn.public_scorecard;var s=score&&score.price_range_precision&&score.price_range_precision.score;set("score",fmtNum(s));set("proofScore",fmtNum(s));
-set("scoreMeta",score?"Offentlig CN #"+score.public_issue_number+" · "+score.forecast_week+" · kildekort tilgængeligt":"Ingen afsluttet score indlæst");
-set("proofDesc",score?"CN #"+score.public_issue_number+" · "+score.forecast_week+" · "+String(score.status||"status ukendt"):"Afsluttet offentlig scorecard ikke tilgængeligt");
+var ref=series.latest_completed_score||{},candidate=cn.public_scorecard||{},range=candidate.price_range_precision||{};
+var rows=range.rows,complete=Array.isArray(rows)&&rows.length===6&&
+ rows.every(function(r){return ["BTC","ETH"].includes(r.asset)&&["day_1_2","day_3_4","day_5_7"].includes(r.window)&&
+ ["forecast_low","forecast_high","actual_low","actual_high","score"].every(function(k){return typeof r[k]==="number"&&Number.isFinite(r[k]);})&&
+ r.forecast_low>0&&r.forecast_high>r.forecast_low&&r.actual_low>0&&r.actual_high>=r.actual_low&&r.score>=0&&r.score<=100;})&&
+ new Set(rows.map(function(r){return r.asset+":"+r.window;})).size===6;
+var scoreValid=candidate.contract==="CN_PUBLIC_WEEKLY_SCORECARD_v1"&&
+ typeof ref.status==="string"&&/^FINAL(?:_|$)/.test(ref.status)&&candidate.status===ref.status&&
+ candidate.public_issue_number===ref.public_issue_number&&candidate.public_issue_number<pub.public_issue_number&&
+ candidate.forecast_week===ref.forecast_week&&candidate.market_structure_precision===null&&candidate.combined_score===null&&
+ range.formula==="70pct_containment_plus_30pct_jaccard"&&range.actuals_hourly_coverage===168&&complete&&
+ typeof range.score==="number"&&Number.isFinite(range.score)&&range.score>=0&&range.score<=100&&
+ typeof ref.price_range_score==="number"&&Math.abs(range.score-ref.price_range_score)<=0.000001;
+var score=scoreValid?candidate:null,s=score?range.score:null;
+set("score",fmtNum(s));set("proofScore",fmtNum(s));
+set("scoreMeta",score?"Offentlig CN #"+score.public_issue_number+" · "+score.forecast_week+" · foreløbigt bevis":"Ingen verificerbar afsluttet score indlæst");
+set("proofDesc",score?"CN #"+score.public_issue_number+" · "+score.forecast_week+" · "+String(score.status)+" · ikke uafhængigt forseglet":"Afsluttet offentlig scorecard ikke tilgængeligt");
 renderRanges(score);
 set("interpret",valid?(safe(c.market_now&&c.market_now.summary)||safe(c.conclusion)||"Kvalificeret offentlig fortolkning ikke tilgængelig"):"Kompas er utilgængeligt. Ingen retning eller BUY/SELL må opfindes.");
 var sell=c.sell_assessment||{};set("sellState",valid?(safe(sell.state)||"UNAVAILABLE"):"UNAVAILABLE");set("sellReason",valid?(safe(sell.reason)||"Ingen kvalificeret SELL-autoritet"):"Ingen verificeret salgsbeslutning.");
