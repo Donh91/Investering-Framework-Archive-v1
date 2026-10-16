@@ -510,6 +510,8 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
         raise RuntimeError("CN_API_DURABLE_RESERVATION_CLAIMS_INVALID")
     if not re.fullmatch(r"[a-f0-9]{64}", request_hash):
         raise RuntimeError("CN_API_DURABLE_RESERVATION_REQUEST_INVALID")
+    if type(max_cost) not in (int, float) or not 0 < max_cost <= 1 or max_cost != max_cost:
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_COST_INVALID")
     reservation_path = f"{CN_RESERVATION_ROOT}/{request_hash}.json"
     listing = _cn_gh_api(f"contents/{CN_RESERVATION_ROOT}?ref=main", allow_not_found=True)
     if listing is not None:
@@ -568,6 +570,12 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
         "model": model,
         "request_hash": request_hash,
         "max_estimated_cost_usd": max_cost,
+        # Existing global cost guard reads the pending-ledger root. Treat
+        # reserved maximum as a conservative charge liability, even before
+        # the provider reports actual usage. A later paid receipt may also
+        # be counted; over-reservation is safer than untracked paid retries.
+        "estimated_cost_usd": max_cost,
+        "created_unix": int(time.time()),
         "receipt_path": receipt_path,
         "authority": AUTHORITY,
         "no_automatic_paid_retry": True,
