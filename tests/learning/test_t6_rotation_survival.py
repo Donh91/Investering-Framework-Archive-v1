@@ -298,6 +298,54 @@ class T6RotationSurvivalTests(unittest.TestCase):
                         operate(sample, cadence(), root)
                     self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
+    def test_replay_rejects_coordinated_first_observation_and_baseline_mutation(self):
+        # Both derivatives can agree while disagreeing with the original packet.
+        for mode in ("first_cross", "active", "reversal"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                first_packet = packet(0.0301, 0.0002)
+                first = operate(first_packet, cadence(), root)
+                sample = first_packet
+                if mode == "active":
+                    sample = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                    operate(sample, cadence(), root)
+                elif mode == "reversal":
+                    sample = packet(0.0298, -0.0003, stamp="2026-09-10T01:00:00Z")
+                    operate(sample, cadence(), root)
+                path = root / "sequences" / first["active_sequence_id"] / "BASELINE.json"
+                original = Path(first["observation_path"])
+                base = json.loads(path.read_text())
+                frozen = json.loads(original.read_text())
+                base["axes_at_freeze"]["breadth"]["value"] = 0.99
+                frozen["axes"]["breadth"]["value"] = 0.99
+                path.write_text(json.dumps(base))
+                original.write_text(json.dumps(frozen))
+                before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                with self.assertRaisesRegex(ValueError, "t6_replay_first_source_packet_mismatch"):
+                    operate(sample, cadence(), root)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_replay_rejects_missing_or_tampered_original_source_packet(self):
+        for mode in ("missing", "changed"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                first_packet = packet(0.0301, 0.0002)
+                first = operate(first_packet, cadence(), root)
+                source = root / "sequences" / first["active_sequence_id"] / "SOURCE_PACKET.json"
+                self.assertTrue(source.is_file())
+                if mode == "missing":
+                    source.unlink()
+                    expected = "t6_replay_first_source_packet_missing"
+                else:
+                    altered = json.loads(source.read_text())
+                    altered["normalized_state"]["scalar_values"]["breadth_advance_ratio"] = 0.99
+                    source.write_text(json.dumps(altered))
+                    expected = "t6_replay_first_source_packet_mismatch"
+                before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                with self.assertRaisesRegex(ValueError, expected):
+                    operate(first_packet, cadence(), root)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
     def test_replay_rejects_missing_or_mutated_first_cross_observation(self):
         for mode in ("missing", "changed_axes", "changed_packet", "changed_cross"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as td:
