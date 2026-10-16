@@ -1,0 +1,521 @@
+{
+  "contract": "TASK2_ORIGINAL_MATURED314_VOTE_FAMILY_REPLAY_RECEIPT_v1",
+  "status": "REAL_ORIGINAL_125_FORECAST_HASH_BOUND_EXPOST_DEVELOPMENT_ONLY",
+  "as_of_date": "2026-10-16",
+  "owner_issue": 1596,
+  "original_actions_artifact": 11829371964,
+  "original_zip_sha256": "4bce43736374b8fcff7aa9ffd1fdac18c303d8b2264b8291bb6e0b80fcde23ae",
+  "original_ledger_sha256": "616e70fd87a79acf126591c1f8e704c74da7a2bd3b3aa181838ac5f861fea5d9",
+  "original_forecast_commit": "0e8c386b5a4ee57a5500cb3d02951c9e398b1b4f",
+  "source_script": "04_MARKET_LEARNING/handlekompas/research/2026-10-16__task2_matured314_original_frozen_votes_v1.py",
+  "CI": {
+    "validated_head": "5a7379cf7422345cdcd9084b1d1b2a64a3e3b7da",
+    "workflow_run": 38882552856,
+    "validation_job": 116912501491,
+    "total_workflows": 8,
+    "passed_workflows": 8,
+    "synthetic_tests": 7
+  },
+  "denominator": {
+    "issued_all": 1140,
+    "original_matured_all": 358,
+    "matured_directional": 314,
+    "matured_no_edge_abstention": 44,
+    "original_censored_retrospective_only": 500,
+    "no_original_receipt_retrospective_only": 10
+  },
+  "result": {
+    "by_asset_horizon": [
+      {
+        "asset": "BTC",
+        "families": {
+          "ETHBTC_BREADTH_ONLY": {
+            "available_n": 0,
+            "candidate_hits": 0,
+            "candidate_minus_price_pp": null,
+            "candidate_only_hits": 0,
+            "coverage_pct": 0,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 18,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 0,
+            "same_clock_price_hits": 0
+          },
+          "PRICE_AND_TAKER_CONFIRM": {
+            "available_n": 6,
+            "candidate_hits": 4,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 0,
+            "coverage_pct": 33.333,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 18,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 4,
+            "same_clock_price_hits": 4
+          },
+          "PRICE_FAMILY_MAJORITY": {
+            "available_n": 9,
+            "candidate_hits": 6,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 0,
+            "coverage_pct": 50,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 18,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 6,
+            "same_clock_price_hits": 6
+          },
+          "PRICE_TAKER_ETH_CROSS_CONFIRM": {
+            "available_n": 0,
+            "candidate_hits": 0,
+            "candidate_minus_price_pp": null,
+            "candidate_only_hits": 0,
+            "coverage_pct": 0,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 18,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 0,
+            "same_clock_price_hits": 0
+          },
+          "TAKER_ONLY": {
+            "available_n": 15,
+            "candidate_hits": 8,
+            "candidate_minus_price_pp": 6.6667,
+            "candidate_only_hits": 2,
+            "coverage_pct": 83.333,
+            "direction_disagreements_vs_price": 3,
+            "original_matured_directional_n": 18,
+            "price_only_hits": 1,
+            "same_clock_compass_hits": 8,
+            "same_clock_price_hits": 7
+          }
+        },
+        "horizon": "1H",
+        "n": 18
+      },
+      {
+        "asset": "BTC",
+        "families": {
+          "ETHBTC_BREADTH_ONLY": {
+            "available_n": 0,
+            "candidate_hits": 0,
+            "candidate_minus_price_pp": null,
+            "candidate_only_hits": 0,
+            "coverage_pct": 0,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 63,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 0,
+            "same_clock_price_hits": 0
+          },
+          "PRICE_AND_TAKER_CONFIRM": {
+            "available_n": 31,
+            "candidate_hits": 16,
+            "candidate_minus_price_pp": 6.4516,
+            "candidate_only_hits": 4,
+            "coverage_pct": 49.206,
+            "direction_disagreements_vs_price": 6,
+            "original_matured_directional_n": 63,
+            "price_only_hits": 2,
+            "same_clock_compass_hits": 16,
+            "same_clock_price_hits": 14
+          },
+          "PRICE_FAMILY_MAJORITY": {
+            "available_n": 46,
+            "candidate_hits": 20,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 4,
+            "coverage_pct": 73.016,
+            "direction_disagreements_vs_price": 8,
+            "original_matured_directional_n": 63,
+            "price_only_hits": 4,
+            "same_clock_compass_hits": 20,
+            "same_clock_price_hits": 20
+          },
+          "PRICE_TAKER_ETH_CROSS_CONFIRM": {
+            "available_n": 0,
+            "candidate_hits": 0,
+            "candidate_minus_price_pp": null,
+            "candidate_only_hits": 0,
+            "coverage_pct": 0,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 63,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 0,
+            "same_clock_price_hits": 0
+          },
+          "TAKER_ONLY": {
+            "available_n": 49,
+            "candidate_hits": 26,
+            "candidate_minus_price_pp": 10.2041,
+            "candidate_only_hits": 13,
+            "coverage_pct": 77.778,
+            "direction_disagreements_vs_price": 21,
+            "original_matured_directional_n": 63,
+            "price_only_hits": 8,
+            "same_clock_compass_hits": 27,
+            "same_clock_price_hits": 21
+          }
+        },
+        "horizon": "4H",
+        "n": 63
+      },
+      {
+        "asset": "BTC",
+        "families": {
+          "ETHBTC_BREADTH_ONLY": {
+            "available_n": 0,
+            "candidate_hits": 0,
+            "candidate_minus_price_pp": null,
+            "candidate_only_hits": 0,
+            "coverage_pct": 0,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 76,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 0,
+            "same_clock_price_hits": 0
+          },
+          "PRICE_AND_TAKER_CONFIRM": {
+            "available_n": 40,
+            "candidate_hits": 22,
+            "candidate_minus_price_pp": 10,
+            "candidate_only_hits": 10,
+            "coverage_pct": 52.632,
+            "direction_disagreements_vs_price": 16,
+            "original_matured_directional_n": 76,
+            "price_only_hits": 6,
+            "same_clock_compass_hits": 22,
+            "same_clock_price_hits": 18
+          },
+          "PRICE_FAMILY_MAJORITY": {
+            "available_n": 55,
+            "candidate_hits": 29,
+            "candidate_minus_price_pp": 1.8182,
+            "candidate_only_hits": 12,
+            "coverage_pct": 72.368,
+            "direction_disagreements_vs_price": 23,
+            "original_matured_directional_n": 76,
+            "price_only_hits": 11,
+            "same_clock_compass_hits": 29,
+            "same_clock_price_hits": 28
+          },
+          "PRICE_TAKER_ETH_CROSS_CONFIRM": {
+            "available_n": 0,
+            "candidate_hits": 0,
+            "candidate_minus_price_pp": null,
+            "candidate_only_hits": 0,
+            "coverage_pct": 0,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 76,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 0,
+            "same_clock_price_hits": 0
+          },
+          "TAKER_ONLY": {
+            "available_n": 63,
+            "candidate_hits": 35,
+            "candidate_minus_price_pp": 9.5238,
+            "candidate_only_hits": 18,
+            "coverage_pct": 82.895,
+            "direction_disagreements_vs_price": 30,
+            "original_matured_directional_n": 76,
+            "price_only_hits": 12,
+            "same_clock_compass_hits": 35,
+            "same_clock_price_hits": 29
+          }
+        },
+        "horizon": "24H",
+        "n": 76
+      },
+      {
+        "asset": "ETH",
+        "families": {
+          "ETHBTC_BREADTH_ONLY": {
+            "available_n": 9,
+            "candidate_hits": 6,
+            "candidate_minus_price_pp": 22.2222,
+            "candidate_only_hits": 2,
+            "coverage_pct": 45,
+            "direction_disagreements_vs_price": 2,
+            "original_matured_directional_n": 20,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 4,
+            "same_clock_price_hits": 4
+          },
+          "PRICE_AND_TAKER_CONFIRM": {
+            "available_n": 9,
+            "candidate_hits": 6,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 0,
+            "coverage_pct": 45,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 20,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 6,
+            "same_clock_price_hits": 6
+          },
+          "PRICE_FAMILY_MAJORITY": {
+            "available_n": 12,
+            "candidate_hits": 8,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 0,
+            "coverage_pct": 60,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 20,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 8,
+            "same_clock_price_hits": 8
+          },
+          "PRICE_TAKER_ETH_CROSS_CONFIRM": {
+            "available_n": 2,
+            "candidate_hits": 1,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 0,
+            "coverage_pct": 10,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 20,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 1,
+            "same_clock_price_hits": 1
+          },
+          "TAKER_ONLY": {
+            "available_n": 17,
+            "candidate_hits": 8,
+            "candidate_minus_price_pp": -29.4118,
+            "candidate_only_hits": 0,
+            "coverage_pct": 85,
+            "direction_disagreements_vs_price": 5,
+            "original_matured_directional_n": 20,
+            "price_only_hits": 5,
+            "same_clock_compass_hits": 9,
+            "same_clock_price_hits": 13
+          }
+        },
+        "horizon": "1H",
+        "n": 20
+      },
+      {
+        "asset": "ETH",
+        "families": {
+          "ETHBTC_BREADTH_ONLY": {
+            "available_n": 31,
+            "candidate_hits": 13,
+            "candidate_minus_price_pp": 12.9032,
+            "candidate_only_hits": 9,
+            "coverage_pct": 47.692,
+            "direction_disagreements_vs_price": 14,
+            "original_matured_directional_n": 65,
+            "price_only_hits": 5,
+            "same_clock_compass_hits": 9,
+            "same_clock_price_hits": 9
+          },
+          "PRICE_AND_TAKER_CONFIRM": {
+            "available_n": 31,
+            "candidate_hits": 12,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 0,
+            "coverage_pct": 47.692,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 65,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 12,
+            "same_clock_price_hits": 12
+          },
+          "PRICE_FAMILY_MAJORITY": {
+            "available_n": 49,
+            "candidate_hits": 17,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 2,
+            "coverage_pct": 75.385,
+            "direction_disagreements_vs_price": 4,
+            "original_matured_directional_n": 65,
+            "price_only_hits": 2,
+            "same_clock_compass_hits": 16,
+            "same_clock_price_hits": 17
+          },
+          "PRICE_TAKER_ETH_CROSS_CONFIRM": {
+            "available_n": 10,
+            "candidate_hits": 3,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 0,
+            "coverage_pct": 15.385,
+            "direction_disagreements_vs_price": 0,
+            "original_matured_directional_n": 65,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 3,
+            "same_clock_price_hits": 3
+          },
+          "TAKER_ONLY": {
+            "available_n": 51,
+            "candidate_hits": 20,
+            "candidate_minus_price_pp": -1.9608,
+            "candidate_only_hits": 7,
+            "coverage_pct": 78.462,
+            "direction_disagreements_vs_price": 15,
+            "original_matured_directional_n": 65,
+            "price_only_hits": 8,
+            "same_clock_compass_hits": 21,
+            "same_clock_price_hits": 21
+          }
+        },
+        "horizon": "4H",
+        "n": 65
+      },
+      {
+        "asset": "ETH",
+        "families": {
+          "ETHBTC_BREADTH_ONLY": {
+            "available_n": 28,
+            "candidate_hits": 9,
+            "candidate_minus_price_pp": 10.7143,
+            "candidate_only_hits": 5,
+            "coverage_pct": 38.889,
+            "direction_disagreements_vs_price": 7,
+            "original_matured_directional_n": 72,
+            "price_only_hits": 2,
+            "same_clock_compass_hits": 8,
+            "same_clock_price_hits": 6
+          },
+          "PRICE_AND_TAKER_CONFIRM": {
+            "available_n": 39,
+            "candidate_hits": 15,
+            "candidate_minus_price_pp": -5.1282,
+            "candidate_only_hits": 6,
+            "coverage_pct": 54.167,
+            "direction_disagreements_vs_price": 14,
+            "original_matured_directional_n": 72,
+            "price_only_hits": 8,
+            "same_clock_compass_hits": 15,
+            "same_clock_price_hits": 17
+          },
+          "PRICE_FAMILY_MAJORITY": {
+            "available_n": 58,
+            "candidate_hits": 24,
+            "candidate_minus_price_pp": -3.4483,
+            "candidate_only_hits": 11,
+            "coverage_pct": 80.556,
+            "direction_disagreements_vs_price": 24,
+            "original_matured_directional_n": 72,
+            "price_only_hits": 13,
+            "same_clock_compass_hits": 24,
+            "same_clock_price_hits": 26
+          },
+          "PRICE_TAKER_ETH_CROSS_CONFIRM": {
+            "available_n": 11,
+            "candidate_hits": 2,
+            "candidate_minus_price_pp": 9.0909,
+            "candidate_only_hits": 1,
+            "coverage_pct": 15.278,
+            "direction_disagreements_vs_price": 1,
+            "original_matured_directional_n": 72,
+            "price_only_hits": 0,
+            "same_clock_compass_hits": 2,
+            "same_clock_price_hits": 1
+          },
+          "TAKER_ONLY": {
+            "available_n": 57,
+            "candidate_hits": 23,
+            "candidate_minus_price_pp": 0,
+            "candidate_only_hits": 11,
+            "coverage_pct": 79.167,
+            "direction_disagreements_vs_price": 22,
+            "original_matured_directional_n": 72,
+            "price_only_hits": 11,
+            "same_clock_compass_hits": 26,
+            "same_clock_price_hits": 23
+          }
+        },
+        "horizon": "24H",
+        "n": 72
+      }
+    ],
+    "by_family": {
+      "ETHBTC_BREADTH_ONLY": {
+        "available_n": 68,
+        "candidate_hits": 28,
+        "candidate_minus_price_pp": 13.2353,
+        "candidate_only_hits": 16,
+        "coverage_pct": 21.656,
+        "direction_disagreements_vs_price": 23,
+        "original_matured_directional_n": 314,
+        "price_only_hits": 7,
+        "same_clock_compass_hits": 21,
+        "same_clock_price_hits": 19
+      },
+      "PRICE_AND_TAKER_CONFIRM": {
+        "available_n": 156,
+        "candidate_hits": 75,
+        "candidate_minus_price_pp": 2.5641,
+        "candidate_only_hits": 20,
+        "coverage_pct": 49.682,
+        "direction_disagreements_vs_price": 36,
+        "original_matured_directional_n": 314,
+        "price_only_hits": 16,
+        "same_clock_compass_hits": 75,
+        "same_clock_price_hits": 71
+      },
+      "PRICE_FAMILY_MAJORITY": {
+        "available_n": 229,
+        "candidate_hits": 104,
+        "candidate_minus_price_pp": -0.4367,
+        "candidate_only_hits": 29,
+        "coverage_pct": 72.93,
+        "direction_disagreements_vs_price": 59,
+        "original_matured_directional_n": 314,
+        "price_only_hits": 30,
+        "same_clock_compass_hits": 103,
+        "same_clock_price_hits": 105
+      },
+      "PRICE_TAKER_ETH_CROSS_CONFIRM": {
+        "available_n": 23,
+        "candidate_hits": 6,
+        "candidate_minus_price_pp": 4.3478,
+        "candidate_only_hits": 1,
+        "coverage_pct": 7.325,
+        "direction_disagreements_vs_price": 1,
+        "original_matured_directional_n": 314,
+        "price_only_hits": 0,
+        "same_clock_compass_hits": 6,
+        "same_clock_price_hits": 5
+      },
+      "TAKER_ONLY": {
+        "available_n": 252,
+        "candidate_hits": 120,
+        "candidate_minus_price_pp": 2.381,
+        "candidate_only_hits": 51,
+        "coverage_pct": 80.255,
+        "direction_disagreements_vs_price": 96,
+        "original_matured_directional_n": 314,
+        "price_only_hits": 45,
+        "same_clock_compass_hits": 126,
+        "same_clock_price_hits": 114
+      }
+    },
+    "file_count": 125
+  },
+  "hypothesis_eth_cross": {
+    "matured_eth_source_available_n": 68,
+    "candidate_correct": 28,
+    "price_correct": 19,
+    "incumbent_compass_correct": 21,
+    "paired_candidate_only": 16,
+    "paired_price_only": 7,
+    "naive_unadjusted_exact_p": 0.0931396484375,
+    "limitation": "UNADJUSTED_NOT_INDEPENDENT_FIVE_INTERRELATED_FAMILIES_MANY_SUBGROUPS_NOT_OOS"
+  },
+  "limitations": [
+    "Outcomes previously seen; ex-post development only",
+    "Original vendor first publication and revision clocks not certified",
+    "125 original Git SHA and original original forecast content SHA confirmed, not independent market event",
+    "Different candidate coverage; conditional hit rates are not comparative population skill",
+    "No portfolio delivery/fills/fees/PnL",
+    "No automatic live model update"
+  ],
+  "authority": {
+    "live_rules": false,
+    "trade": false,
+    "portfolio": false,
+    "scientific_pit_promotion": false,
+    "paid_sol": false
+  }
+}
