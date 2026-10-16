@@ -123,9 +123,22 @@ def verified_replay_baseline(root: Path, seq: str, level: float, at: str) -> dic
     # files*. Their agreement is not independent proof of archived inputs.
     # Source packet bytes were frozen at first-cross and bound by SHA-256.
     packet_path = root / "sequences" / seq / "SOURCE_PACKET.json"
-    if not packet_path.is_file() or packet_path.is_symlink():
+    if packet_path.is_file() and not packet_path.is_symlink():
+        packet = read_json(packet_path)
+    elif packet_path.exists():
         raise ValueError("t6_replay_first_source_packet_missing")
-    packet = read_json(packet_path)
+    else:
+        # Read-only legacy compatibility: historical sequences predate
+        # SOURCE_PACKET.json. Authenticate from the original immutable
+        # Auto Market State run archive, never synthesize or backfill it.
+        stamp = parse_time(start)
+        source_dir = (root.resolve().parents[2] / "04_MARKET_LEARNING" /
+                      "entry_signals" / "auto_market_state" / "runs" /
+                      stamp.strftime("%Y/%m/%d"))
+        matches = sorted(source_dir.glob(stamp.strftime("%H%M%S") + "_*.json"))
+        if len(matches) != 1 or not matches[0].is_file() or matches[0].is_symlink():
+            raise ValueError("t6_replay_first_source_packet_missing")
+        packet = read_json(matches[0])
     if sha(packet) != source:
         raise ValueError("t6_replay_first_source_packet_mismatch")
     if (not isinstance(start, str) or not isinstance(source, str)
