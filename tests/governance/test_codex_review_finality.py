@@ -118,6 +118,18 @@ class ReviewFinalityTests(unittest.TestCase):
         self.assertEqual(gate.decision(HEAD, rows, [], [])["status"],
                          "POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION")
 
+    def test_edited_request_requires_later_review(self):
+        earlier = [request(), summary(), positive()]
+        edited = {"user": HUMAN, "created_at": "2026-10-15T22:30:00Z",
+                  "updated_at": "2026-10-15T23:03:00Z", "body": "@codex review"}
+        self.assertEqual(gate.decision(HEAD, earlier + [edited], [], [])["status"],
+                         "REVIEW_IN_PROGRESS_OR_UNVERIFIED")
+
+    def test_positive_review_is_not_merge_authorization(self):
+        result = gate.decision(HEAD, [request(), summary(), positive()], [], [])
+        self.assertFalse(result["merge_authorized"])
+        self.assertFalse(result["atomic_review_merge_binding"])
+
     def test_review_race_negative_control_detects_mutated_missing_guard(self):
         # Remove the consequence of the actual pending-review guard in an
         # isolated copy of the function. The same negative acceptance test
