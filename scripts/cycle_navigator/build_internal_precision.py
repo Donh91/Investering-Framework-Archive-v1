@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -452,6 +453,112 @@ def _reject_previously_attempted_claims(repo: Path, claims: list[dict[str, Any]]
         raise RuntimeError("CN_API_CLAIM_ALREADY_ATTEMPTED_OWNER_REVIEW_REQUIRED")
 
 
+CN_RESERVATION_ROOT = "runtime/api-cost-ledger/cn_internal_precision_reservations"
+CN_REPOSITORY = "Donh91/Investering-Framework-Archive-v1"
+
+
+def _cn_gh_api(path: str, *, fields: dict[str, str] | None = None,
+               allow_not_found: bool = False) -> Any:
+    """Use existing authenticated gh/contents permissions, never a new service."""
+    cmd = ["gh", "api"]
+    if fields is not None:
+        cmd.extend(["-X", "PUT"])
+    cmd.append(f"repos/{CN_REPOSITORY}/{path}")
+    if fields:
+        for name, value in fields.items():
+            cmd.extend(["-f", f"{name}={value}"])
+    try:
+        result = subprocess.run(cmd, capture_output=True, timeout=45, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_GITHUB_UNAVAILABLE") from exc
+    if result.returncode:
+        message = result.stderr.decode(errors="replace") if isinstance(result.stderr, bytes) else str(result.stderr)
+        if allow_not_found and "HTTP 404" in message:
+            return None
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_GITHUB_UNAVAILABLE")
+    try:
+        return json.loads(result.stdout)
+    except (ValueError, TypeError) as exc:
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_RESPONSE_INVALID") from exc
+
+
+def _cn_gh_file(path: str, *, allow_not_found: bool = False) -> bytes | None:
+    item = _cn_gh_api(f"contents/{path}?ref=main", allow_not_found=allow_not_found)
+    if item is None:
+        return None
+    if not isinstance(item, dict) or item.get("encoding") != "base64" or not isinstance(item.get("content"), str):
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_FILE_INVALID")
+    try:
+        return base64.b64decode(item["content"], validate=False)
+    except (ValueError, TypeError) as exc:
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_FILE_INVALID") from exc
+
+
+def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], request_hash: str,
+                                        model: str, max_cost: float) -> None:
+    """Persist a one-way reservation on main before issuing a billable POST.
+
+    Existing GitHub main is the durable ledger and existing contents:write
+    permission is the only writer. A failed/cancelled later workflow retains
+    this pre-POST reservation, preventing an unaudited paid retry.
+    """
+    if (os.environ.get("GITHUB_ACTIONS") != "true"
+            or os.environ.get("GITHUB_REPOSITORY") != CN_REPOSITORY
+            or not os.environ.get("GH_TOKEN")):
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_AUTH_REQUIRED_NO_SPEND")
+    if not claim_ids or len(claim_ids) != len(set(claim_ids)) or any(not isinstance(x, str) or not x for x in claim_ids):
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_CLAIMS_INVALID")
+    if not re.fullmatch(r"[a-f0-9]{64}", request_hash):
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_REQUEST_INVALID")
+    reservation_path = f"{CN_RESERVATION_ROOT}/{request_hash}.json"
+    listing = _cn_gh_api(f"contents/{CN_RESERVATION_ROOT}?ref=main", allow_not_found=True)
+    if listing is not None:
+        if not isinstance(listing, list) or len(listing) >= 100:
+            raise RuntimeError("CN_API_DURABLE_RESERVATION_CENSUS_INCOMPLETE")
+        for item in listing:
+            if (not isinstance(item, dict) or item.get("type") != "file"
+                    or not re.fullmatch(r"[0-9a-f]{64}\\.json", str(item.get("name")))):
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
+            previous_bytes = _cn_gh_file(str(item["path"]))
+            try:
+                previous = json.loads(previous_bytes)
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_UNREADABLE") from exc
+            if (not isinstance(previous, dict) or previous.get("contract") != "CN_PAID_API_PREPOST_RESERVATION_v1"
+                    or previous.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER"
+                    or not isinstance(previous.get("claim_ids"), list)
+                    or not isinstance(previous.get("receipt_path"), str)):
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_INVALID")
+            if set(claim_ids) & set(previous["claim_ids"]):
+                raise RuntimeError("CN_API_CLAIM_ALREADY_RESERVED_NO_RETRY")
+            # If a paid call may have occurred but the canonical receipt was
+            # not successfully published on main, *all* further spend stops
+            # until existing owner reconciles failed-run artifacts/provider cost.
+            if _cn_gh_file(previous["receipt_path"], allow_not_found=True) is None:
+                raise RuntimeError("CN_API_PREVIOUS_UNRECONCILED_PAID_ATTEMPT")
+    digest = hashlib.sha256(canonical_bytes(claim_ids)).hexdigest()
+    receipt_path = f"research/api_agent/outputs/cn_internal_precision/{digest}/receipt.json"
+    row = {
+        "contract": "CN_PAID_API_PREPOST_RESERVATION_v1",
+        "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+        "claim_ids": claim_ids,
+        "model": model,
+        "request_hash": request_hash,
+        "max_estimated_cost_usd": max_cost,
+        "receipt_path": receipt_path,
+        "authority": AUTHORITY,
+        "no_automatic_paid_retry": True,
+    }
+    raw = canonical_bytes(row)
+    payload = base64.b64encode(raw).decode()
+    _cn_gh_api(f"contents/{reservation_path}", fields={
+        "message": "cn: durable paid-attempt reservation before optional model call",
+        "content": payload, "branch": "main",
+    })
+    if _cn_gh_file(reservation_path) != raw:
+        raise RuntimeError("CN_API_RESERVATION_MAIN_READBACK_FAILED_NO_SPEND")
+
+
 def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidence: list[dict[str, Any]],
                                max_output_tokens: int, repo: Path | None = None) -> list[dict[str, Any]]:
     if not claims:
@@ -500,6 +607,13 @@ def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidenc
     }
     payload_bytes = canonical_bytes(payload)
     _cost_preflight(repo, model, payload_bytes, max_output_tokens)
+    # Persist the future charge liability *before* the HTTP POST; otherwise
+    # a later Actions validation/git-push failure would erase its local receipt.
+    from scripts.api_agent.api_gateway import estimate_cost
+    _reserve_cn_api_attempt_before_post(
+        repo, [str(c["claim_id"]) for c in claims],
+        hashlib.sha256(payload_bytes).hexdigest(), model,
+        estimate_cost(model, len(payload_bytes), max_output_tokens))
     req = urllib.request.Request("https://api.openai.com/v1/responses", data=payload_bytes,
                                  headers={"Authorization": f"Bearer {api_key}",
                                           "Content-Type": "application/json"}, method="POST")
