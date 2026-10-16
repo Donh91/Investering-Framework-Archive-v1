@@ -17,6 +17,15 @@ def stamp(value):
     return d.astimezone(timezone.utc)
 
 
+def effective_request_time(row):
+    """Edits adding @codex review are new requests, not old comments."""
+    created = stamp(row.get("created_at"))
+    updated = stamp(row["updated_at"]) if row.get("updated_at") else created
+    if updated < created:
+        raise ValueError("COMMENT_CLOCK_REGRESSION")
+    return updated
+
+
 def is_codex(row):
     user = row.get("user") or {}
     return (isinstance(user, dict) and user.get("login") == "chatgpt-codex-connector[bot]" and user.get("type") == "Bot" and user.get("id") == 199175422)
@@ -28,7 +37,7 @@ def decision(head, comments, reviews, inline):
     if not re.fullmatch(r"[0-9a-f]{40}", head):
         return fail("INVALID_HEAD")
     try:
-        requests = [stamp(row.get("created_at")) for row in comments
+        requests = [effective_request_time(row) for row in comments
                     if not is_codex(row) and re.search(r"(?mi)^\s*@codex\s+review\b", str(row.get("body") or ""))]
         if not requests:
             return fail("REVIEW_NOT_REQUESTED")
@@ -92,9 +101,12 @@ def decision(head, comments, reviews, inline):
                 continue
             if stamp(row.get("created_at")) >= last and re.search(r"\bP[012]\b|codex-code-review-finding:v1", str(row.get("body") or "")):
                 return fail("CURRENT_HEAD_INLINE_FINDING")
+        # This is a read-only snapshot, not a lock on same-head comments.
+        # No caller may infer atomic authorization to merge from this result.
         return {"status": "FINAL_TECHNICAL_REVIEW", "technical_review_accepted": True,
                 "head": head, "review_requested_at": last.isoformat(),
-                "not_formal_github_approved": True}
+                "not_formal_github_approved": True, "merge_authorized": False,
+                "atomic_review_merge_binding": False}
     except (TypeError, ValueError, KeyError, json.JSONDecodeError):
         return fail("REVIEW_FINALITY_UNVERIFIED")
 
