@@ -102,6 +102,13 @@ jobs:
           assert x["original_matured_directional"]==314
           assert x["original_matured_abstentions"]==44
           assert x["original_forecast_files_replayed"]==125
+          frozen=json.load(open('04_MARKET_LEARNING/handlekompas/research/2026-10-16__TASK2_ORIGINAL_MATURED314_FROZEN_VOTE_FAMILY_RECEIPT_v1.json'))
+          assert frozen["original_zip_sha256"]==x["original_zip_sha256"]
+          assert frozen["original_ledger_sha256"]==x["original_csv_sha256"]
+          assert frozen["result"]=={"file_count":x["original_forecast_files_replayed"],
+                                    "by_family":x["family_comparison"],
+                                    "by_asset_horizon":x["by_asset_horizon"]}
+          print("TASK2_ORIGINAL_SOURCE_RECEIPT_BYTE_PARITY_VERIFIED")
           assert x["status"].startswith("EXPOST_")
           assert all(v["available_n"]<=314 for v in x["family_comparison"].values())
           assert not any(x["authority"].values())
