@@ -153,7 +153,7 @@ class TemporaryBridgeTests(unittest.TestCase):
             receipt = {"status": "PASS", "model": "gpt-6.1-sol", "context_hash": bridge.sha256(canonical),
                        "forecast_candidate_count": 0, "input_tokens": 800, "output_tokens": 400,
                        "estimated_cost_usd": 0.006}
-            output = {"summary": "PASS MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE",
+            output = {"status": "READY", "summary": "PASS MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE",
                       "evidence_against": [], "uncertainties": ["Tests not run"], "forecast_candidates": []}
             (dst / "output" / "receipt.json").write_text(json.dumps(receipt))
             (dst / "output" / "output.json").write_text(json.dumps(output))
@@ -161,6 +161,8 @@ class TemporaryBridgeTests(unittest.TestCase):
                 self.assertIn("not formal approval", bridge.validate(dst))
             # A real accepted Sol review can use '; ' after PASS_WITH_FINDINGS.
             # This must NOT become an accepted prefix-injection/partial-word bug.
+            output["status"] = "DEGRADED"
+            output["evidence_against"] = ["P3| synthetic noncritical finding"]
             output["summary"] = "PASS_WITH_FINDINGS; MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE."
             (dst / "output" / "output.json").write_text(json.dumps(output))
             with patch.object(bridge, "pr_info", return_value=info()):
@@ -171,6 +173,8 @@ class TemporaryBridgeTests(unittest.TestCase):
             with patch.object(bridge, "pr_info", return_value=info()):
                 self.assertIn("not formal approval", bridge.validate(dst))
             # The governed summary also admits comma-plus-space after the verdict.
+            output["status"] = "READY"
+            output["evidence_against"] = []
             output["summary"] = "PASS, MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE."
             (dst / "output" / "output.json").write_text(json.dumps(output))
             with patch.object(bridge, "pr_info", return_value=info()):
@@ -194,6 +198,19 @@ class TemporaryBridgeTests(unittest.TestCase):
                 with patch.object(bridge, "pr_info", return_value=info()):
                     with self.assertRaisesRegex(ValueError, "REVIEW_VERDICT_OR_MARKERS_INVALID"):
                         bridge.validate(dst)
+            # Reject semantic contradictions even when each marker is spelled right.
+            for review_status, header, evidence in (
+                ("BLOCKED", "PASS MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE", []),
+                ("READY", "PASS MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE", ["P1| real regression"]),
+                ("READY", "FAIL MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE", []),
+                ("BLOCKED", "PASS_WITH_FINDINGS MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE", ["P1| blocked"]),
+            ):
+                output["status"], output["summary"], output["evidence_against"] = review_status, header, evidence
+                (dst / "output" / "output.json").write_text(json.dumps(output))
+                with patch.object(bridge, "pr_info", return_value=info()):
+                    with self.assertRaisesRegex(ValueError, "REVIEW_STRUCTURED_STATUS_CONTRADICTS_VERDICT"):
+                        bridge.validate(dst)
+            output["status"], output["evidence_against"] = "READY", []
             output["summary"] = "PASS MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE"
             (dst / "output" / "output.json").write_text(json.dumps(output))
             with patch.object(bridge, "pr_info", return_value=info(head="c" * 40)):
