@@ -387,16 +387,51 @@ function refreshStatusBanner(compass, event) {
     '</span><strong>' + esc(title) + '</strong><small>' + esc(note) + '</small></section>';
 }
 
+// This single shared state function is consumed by BOTH premium and header.
+// Owner freshness is projected only from a hash-verified Official daily.
+function officialReadingState(compass, now=Date.now()) {
+  const f=compass?.full_stack, freshness=f?.official_freshness;
+  if(compass?.contract!=='PUBLIC_COMPASS_PROJECTION_v1' ||
+     compass?.data_status!=='OK' || f?.source_status?.official!=='VERIFIED')return 'UNAVAILABLE';
+  const issued=Date.parse(compass?.issued_at_utc||'');
+  if(!Number.isFinite(issued)||issued>now)return 'UNAVAILABLE';
+  if(freshness?.contract!=='OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1'||
+     freshness?.status!=='VERIFIED_OWNER_POLICY')return 'UNAVAILABLE';
+  const source=Date.parse(freshness.source_asof_utc||'');
+  const expiry=Date.parse(freshness.valid_until_utc||'');
+  if(!Number.isFinite(source)||!Number.isFinite(expiry)||source>issued||source>expiry)
+    return 'UNAVAILABLE';
+  return issued<=expiry && now<=expiry ? 'CURRENT' : 'LAST_VERIFIED';
+}
+window.CNOfficialReadingState = officialReadingState;
+let freshnessExpiryTimer=null;
+function scheduleFreshnessExpiry(snapshot,compass,event){
+  if(typeof setTimeout!=='function')return;
+  if(freshnessExpiryTimer!==null){clearTimeout(freshnessExpiryTimer);freshnessExpiryTimer=null;}
+  if(officialReadingState(compass)!=='CURRENT')return;
+  const deadline=Date.parse(compass.full_stack.official_freshness.valid_until_utc);
+  freshnessExpiryTimer=setTimeout(()=>{
+    freshnessExpiryTimer=null;
+    renderPremium(snapshot,compass,event);
+  },Math.min(2147483647,Math.max(1,deadline-Date.now()+1)));
+}
+
 function renderPremium(snapshot, compass, event) {
   const root = document.getElementById('productNow');
   if (!root) return false;
   const expanded = [...root.querySelectorAll('#premiumMarketCompass details[open][id]')].map(d=>d.id);
-  const dataOk = compass?.contract === 'PUBLIC_COMPASS_PROJECTION_v1' && compass?.data_status === 'OK';
+  const readingState=officialReadingState(compass);
+  const dataOk=readingState==='CURRENT', lastVerified=readingState==='LAST_VERIFIED';
+  const priorAge=Number.isFinite(Date.parse(compass?.issued_at_utc||''))
+    ? Math.max(0,Math.floor((Date.now()-Date.parse(compass.issued_at_utc))/60000)) : null;
   // Keep verified weekly/research context, but remove every current Official
   // decision field when the Official owner cannot support an actionable read.
   const officialView = dataOk ? compass : {contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:compass?.data_status||'UNAVAILABLE',weekly_context:compass?.weekly_context,full_stack:compass?.full_stack};
   const scale = officialScale(officialView);
-  const rec = dataOk ? recommendation(compass.action_now) : {action:'WAIT · DATA DEGRADED',copy:'A current action is unavailable. Wait for a fresh verified Market Compass reading.'};
+  const rec = dataOk||lastVerified ? recommendation(compass.action_now) : {
+    action:'UNAVAILABLE',copy:'No source-verified current action is available. Missing evidence is not a WAIT or BUY recommendation.'};
+  if(lastVerified)rec.copy='Historical action only. This is NOT a current recommendation. Last issued '+(priorAge===null?'at an unknown time':priorAge+' minutes ago')+'.';
+
   const meta = decisionMeta(officialView);
   const section = document.createElement('section');
   section.id = 'premiumMarketCompass';
@@ -404,7 +439,7 @@ function renderPremium(snapshot, compass, event) {
   section.innerHTML =
     '<div class="premium-overview">'
     + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong>' + (meta.live.includes('MIXED') ? '<p class="mixed-explanation">Conflicting signals · no clear near-term direction.</p>' : meta.live==='NO NEW READING' ? '<p class="mixed-explanation">Current action unchanged · awaiting a fresh near-term reading.</p>' : '') + '<small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong>' + (meta.weekly.includes('MIXED') ? '<p class="mixed-explanation">Mixed weekly evidence · no clear directional edge.</p>' : '') + '<small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
-    + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong>' + (dataOk ? '<div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div>' : '') + '<p>' + esc(rec.copy) + '</p>' + (dataOk ? hourlyMonitor(snapshot) : '') + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
+    + '<aside><span>' + (dataOk?'CURRENT ACTION':lastVerified?'LAST VERIFIED ACTION · NOT CURRENT':'ACTION UNAVAILABLE') + '</span><strong>' + esc(rec.action) + '</strong>' + (dataOk ? '<div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div>' : '') + '<p>' + esc(rec.copy) + '</p>' + (dataOk ? hourlyMonitor(snapshot) : '') + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
     + refreshStatusBanner(compass, event)
     + (dataOk ? decisionDetail(compass, rec, meta) : '')
@@ -413,7 +448,7 @@ function renderPremium(snapshot, compass, event) {
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, officialView, scale, h)).join('') + '</div>'
     + riskCurve(officialView)
-    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(publicDataStatus(compass?.data_status || 'UNAVAILABLE')) + '</b></span><span>RISK ROTATION · ' + esc(capSummary(officialView)) + '</span><span>Evidence balance · not probability</span></div>';
+    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(dataOk?'CURRENT':lastVerified?'LAST VERIFIED · STALE':'UNAVAILABLE') + '</b></span><span>RISK ROTATION · ' + esc(capSummary(officialView)) + '</span><span>Evidence balance · not probability</span></div>';
 
   expanded.forEach(id=>{const d=section.querySelector('#'+id);if(d)d.open=true;});
   root.querySelector('#premiumMarketCompass')?.remove();
@@ -428,6 +463,9 @@ function renderPremium(snapshot, compass, event) {
     detail.open = true;
     requestAnimationFrame(() => detail.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }));
+  scheduleFreshnessExpiry(snapshot,compass,event);
+  if(typeof CustomEvent==='function'&&typeof document.dispatchEvent==='function')
+    document.dispatchEvent(new CustomEvent('cn-official-compass-rendered',{detail:compass}));
   return true;
 }
 
