@@ -36,4 +36,89 @@ assert.match(header,/window\.CNOfficialReadingState\?\.\(officialCompass\)/,'Hea
 assert.match(premium,/LAST VERIFIED ACTION · NOT CURRENT/,'Stale must be explicitly historical');
 assert.match(premium,/dataOk \? '<div class="premium-action-window"/,'Only CURRENT shows APPLIES NOW window');
 assert.match(premium,/scheduleFreshnessExpiry\(snapshot,compass,event\)/,'Expiration schedules in-place rerender');
+
+// Grok exact-head negative control: stale or unavailable cannot synthesize
+// ACTION NOW: WAIT via the *real* pullbackCard function.
+const pbStart=premium.indexOf('function pullbackCard(');
+const pbEnd=premium.indexOf('\nfunction compositeIntel(',pbStart);
+assert.ok(pbStart>0&&pbEnd>pbStart);
+const ctx={
+  Date, esc:String,clean:v=>typeof v==='string'&&v.trim()?v.trim():null,
+  publicState:v=>String(v||'UNAVAILABLE').replaceAll('_',' '),
+  publicCompassText:v=>String(v||''),
+  recommendation:raw=>({action:raw==='HOLD'?'HOLD':'WAIT',
+    copy:raw==='HOLD'?'Hold source-verified positioning.':'Stay patient. Do not infer a new risk-on call.'})
+};
+vm.createContext(ctx);
+vm.runInContext(premium.slice(pbStart,pbEnd)+';globalThis.pull=pullbackCard;',ctx);
+const pbComp={...verified,action_now:'HOLD'};
+const currentPb=ctx.pull(pbComp,'CURRENT');
+const stalePb=ctx.pull(pbComp,'LAST_VERIFIED');
+const unavailablePb=ctx.pull({...pbComp,data_status:'DEGRADED'},'UNAVAILABLE');
+assert.match(currentPb,/ACTION NOW · COMPASS<\/span><strong>HOLD/);
+for(const html of [stalePb,unavailablePb]){
+  assert.doesNotMatch(html,/ACTION NOW · COMPASS/,'No ACTION NOW when source is not current');
+  assert.doesNotMatch(html,/<strong>WAIT<\/strong>/,'No fabricated WAIT');
+  assert.doesNotMatch(html,/Stay patient/,'No recommendation fallback');
+  assert.match(html,/UNAVAILABLE/,'Action must be explicitly unavailable');
+}
+assert.match(stalePb,/LAST VERIFIED COMPASS ACTION · NOT CURRENT/);
+assert.match(unavailablePb,/COMPASS ACTION UNAVAILABLE/);
+
+// Combined Compass intelligence must not promote hash verified (but expired)
+// records into a current official action either.
+const ciStart=premium.indexOf('function compositeIntel(');
+const ciEnd=premium.indexOf('\nfunction refreshStatusBanner(',ciStart);
+assert.ok(ciStart>0&&ciEnd>ciStart);
+vm.runInContext(premium.slice(ciStart,ciEnd)+';globalThis.combined=compositeIntel;',ctx);
+const ciComp={...pbComp,full_stack:{...verified.full_stack,
+  contract:'PUBLIC_COMPASS_FULL_STACK_READBACK_v1',shadow:{status:'UNVERIFIED'},
+  strategic:{}}};
+assert.match(ctx.combined(ciComp,'CURRENT'),/OFFICIAL ACTION<\/span><strong>HOLD/);
+assert.match(ctx.combined(ciComp,'LAST_VERIFIED'),/UNAVAILABLE · NOT CURRENT/);
+assert.doesNotMatch(ctx.combined(ciComp,'UNAVAILABLE'),/WAIT · DATA DEGRADED/);
+
+// A source can expire between hourly/full product renders. A premium
+// freshness event must update the existing hero without re-creating the DOM.
+const heroStart=header.indexOf('function syncHeroFreshness(');
+const heroEnd=header.indexOf('\nfunction pathEta(',heroStart);
+assert.ok(heroStart>0&&heroEnd>heroStart);
+const el=()=>({textContent:''});
+const word=el(),heroCopy=el(),next=el(),confirm=el(),risk=el();
+const officialWord={textContent:'HOLD'},officialCopy={textContent:'Verified Official decision'};
+const documentRoot={
+ querySelector:s=>s==='.action-hero .action-word'?word:
+ s==='.action-hero > p'?heroCopy:
+ s==='#premiumMarketCompass aside > strong'?officialWord:
+ s==='#premiumMarketCompass aside > p'?officialCopy:null,
+ querySelectorAll:s=>s==='.action-hero .hero-lines > div strong'?[el(),next,confirm,risk]:[]
+};
+const heroContext={document:{getElementById:()=>documentRoot},snapshot:{},officialCompass:{},
+ window:{CNOfficialReadingState:()=> 'CURRENT'}};
+vm.createContext(heroContext);
+vm.runInContext(header.slice(heroStart,heroEnd)+';globalThis.sync=syncHeroFreshness;',heroContext);
+heroContext.sync();
+assert.equal(word.textContent,'HOLD');
+heroContext.window.CNOfficialReadingState=()=> 'LAST_VERIFIED';
+heroContext.sync();
+assert.equal(word.textContent,'NO CURRENT CALL');
+assert.match(next.textContent,/No current 1–3-day action/);
+assert.match(confirm.textContent,/verification required/);
+assert.match(risk.textContent,/unavailable/);
+heroContext.window.CNOfficialReadingState=()=> 'UNAVAILABLE';
+heroContext.sync();
+assert.equal(word.textContent,'NO CURRENT CALL');
+assert.doesNotMatch(next.textContent,/Stay hold/);
+
+// Translation contract for newly introduced action/freshness copy.
+const lang=JSON.parse(await readFile(new URL('../i18n-da.json',import.meta.url),'utf8'));
+for(const key of ['CURRENT OFFICIAL COMPASS','LAST VERIFIED COMPASS · NOT CURRENT',
+  'OFFICIAL COMPASS UNAVAILABLE','NO CURRENT CALL','NEXT SCHEDULED CHECK',
+  'LAST VERIFIED ACTION · NOT CURRENT','COMPASS ACTION UNAVAILABLE',
+  'No current 1–3-day action. Await a fresh verified Official Compass.']){
+  assert.ok(lang.exact[key]?.length>3,'Danish UI copy missing: '+key);
+}
+assert.ok(lang.phrases['Historical action only. This is NOT a current recommendation. Last issued']);
+assert.match(builder,/\/\(\?:Z\|\[\+-\]/,'Timestamp freshness must use explicit zone');
+
 console.log('OFFICIAL_COMPASS_FRESHNESS_3STATE_PASS');

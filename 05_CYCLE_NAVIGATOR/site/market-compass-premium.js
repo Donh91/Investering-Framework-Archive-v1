@@ -319,8 +319,8 @@ function horizonCard(snapshot, compass, scale, horizon) {
     + '</article>';
 }
 
-function pullbackCard(compass) {
-  const valid=compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK';
+function pullbackCard(compass, readingState='UNAVAILABLE') {
+  const valid=readingState==='CURRENT'&&compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK';
   const p=valid&&compass?.protection_tracker?.contract==='COMPASS_PROTECTION_TRACKER_v1'?compass.protection_tracker:{};
   const sell=valid&&compass?.sell_assessment?.contract==='COMPASS_SELL_ASSESSMENT_v1'?compass.sell_assessment:{};
   const state=String(p.pullback_risk_state||'UNAVAILABLE').toUpperCase();
@@ -342,16 +342,21 @@ function pullbackCard(compass) {
   const timing=Number.isFinite(start)&&Number.isFinite(end)&&end>start?(Date.now()>=end?'Prior watch window · ':Date.now()>=start?'Window open · ':'Possible onset · ')+date(start)+'–'+date(end-1)+' · UTC':'Possible onset date not established';
   const explanation=safeCopy(copy?.summary)||(ordinary?'A routine retest is possible. A large decline is not confirmed.':state==='NORMAL'?'The current signal does not establish a material pullback.':'The evidence does not establish a confirmed decline.');
   const edge=!!sell.state&&!['UNAVAILABLE','UNKNOWN','INACTIVE','NONE'].includes(sell.state);
-  const rec=recommendation(valid?compass.action_now:'WAIT');
+  const rec=valid?recommendation(compass.action_now):{
+    action:'UNAVAILABLE',
+    copy:'No current source-verified Compass action. A prior reading is not a trading recommendation.'
+  };
+  const actionHeading=valid?'ACTION NOW · COMPASS':readingState==='LAST_VERIFIED'
+    ?'LAST VERIFIED COMPASS ACTION · NOT CURRENT':'COMPASS ACTION UNAVAILABLE';
   return '<details id="pullbackWatch" class="premium-pullback" data-contract="CN_PULLBACK_WATCH_v1"><summary><div><span>RISK WATCH · DIP / PULLBACK</span><h3>'+esc(title)+'</h3><p class="pullback-window">'+esc(timing)+'</p><p>'+esc(explanation)+'</p></div><div class="pullback-summary-state"><strong>'+esc(status)+'</strong><small>EVIDENCE QUALITY · '+esc(publicState(p.confidence_quality||'UNAVAILABLE'))+'</small><b>'+esc(edge?'SELL / TRIM · '+publicState(sell.state):'Sell / rebuy edge: NOT ESTABLISHED')+'</b><span>Investor details ↓</span></div></summary><div class="pullback-body">'
-    +'<div class="pullback-facts"><article><span>ACTION NOW · COMPASS</span><strong>'+esc(rec.action)+'</strong><p>'+esc(rec.copy)+'</p></article><article><span>DEPTH + DURATION</span><strong>Not quantified</strong><p>Dates describe possible onset, not the length or size of a decline.</p></article><article><span>SELL / TRIM</span><strong>'+esc(publicState(sell.state||'UNAVAILABLE'))+'</strong><p>'+esc(edge?'A separate verified assessment is available in the current Compass.':'This watch does not establish a reason to sell and buy back lower.')+'</p></article><article><span>RE-ENTRY</span><strong>'+esc(publicState(p.reentry_state||'UNAVAILABLE'))+'</strong><p>'+esc(publicCompassText(p.reentry_message||'No verified re-entry assessment available.'))+'</p></article></div>'
+    +'<div class="pullback-facts"><article><span>'+esc(actionHeading)+'</span><strong>'+esc(rec.action)+'</strong><p>'+esc(rec.copy)+'</p></article><article><span>DEPTH + DURATION</span><strong>Not quantified</strong><p>Dates describe possible onset, not the length or size of a decline.</p></article><article><span>SELL / TRIM</span><strong>'+esc(publicState(sell.state||'UNAVAILABLE'))+'</strong><p>'+esc(edge?'A separate verified assessment is available in the current Compass.':'This watch does not establish a reason to sell and buy back lower.')+'</p></article><article><span>RE-ENTRY</span><strong>'+esc(publicState(p.reentry_state||'UNAVAILABLE'))+'</strong><p>'+esc(publicCompassText(p.reentry_message||'No verified re-entry assessment available.'))+'</p></article></div>'
     +'<div class="pullback-impact"><span>BTC / ETH / ALTCOINS</span><p>'+esc(ordinary?'A routine dip does not imply a major BTC or ETH decline. Small caps and memes still require their own risk and liquidity confirmation.':'The current classification and segment permissions govern risk. A price-range miss alone does not establish distribution or a sell signal.')+'</p></div>'
     +'<div class="pullback-evidence"><span>WATCH FOR</span><p>'+esc(safeCopy(copy?.watch_for)||'A fresh verified risk update before changing the current action.')+'</p><span>WHAT WOULD WEAKEN IT</span><p>'+esc(safeCopy(copy?.weakens_if)||'The warning must be downgraded by the next verified protection assessment.')+'</p></div>'
     +'<p class="pullback-note">Evidence quality is qualitative, not a probability. Possible onset dates can pass without confirmation. Risk warnings and trading permissions remain separate.</p></div></details>';
 }
-function compositeIntel(compass){
+function compositeIntel(compass, readingState='UNAVAILABLE'){
  const f=compass?.full_stack;if(f?.contract!=='PUBLIC_COMPASS_FULL_STACK_READBACK_v1')return '';
- const verified=compass?.data_status==='OK'&&f.source_status?.official==='VERIFIED';
+ const verified=readingState==='CURRENT'&&compass?.data_status==='OK'&&f.source_status?.official==='VERIFIED';
  const sh=f.shadow||{},st=f.strategic||{},current=sh.status==='ALIGNED_RESEARCH',stale=sh.status==='STALE_RESEARCH';
  const d=k=>{const h=sh?.horizons?.[k];return !h?'UNAVAILABLE':current?publicState(h.direction):stale?'STALE · '+publicState(h.direction):'UNVERIFIED';};
  const analysis=current&&sh.horizons?.['1_3d']?.interpretation?publicCompassText(sh.horizons['1_3d'].interpretation):
@@ -360,7 +365,7 @@ function compositeIntel(compass){
  const lanes=[['12H',d('12h')],['1–3D',d('1_3d')],['5–7D',d('5_7d')],['2–3W',f.weekly?.direction_2_3w||'UNAVAILABLE'],['21–30D',st.horizon_21_30d?.direction||'UNAVAILABLE'],['4–8W',st.horizon_4_8w?.direction||'UNAVAILABLE']];
  return '<section class="compass-synthesis" data-contract="PUBLIC_COMPASS_FULL_STACK_READBACK_v1" aria-label="Combined Compass intelligence">'
  +'<div class="synthesis-head"><div><span>COMBINED COMPASS INTELLIGENCE</span><strong>Official actions + independent model research</strong></div><small>'+esc(f.status==='COMPLETE'?'SOURCE-ALIGNED':'PARTIAL EVIDENCE')+'</small></div>'
- +'<div class="synthesis-proof"><div><span>OFFICIAL ACTION</span><strong>'+esc(verified?recommendation(compass.action_now).action:'WAIT · DATA DEGRADED')+'</strong></div>'
+ +'<div class="synthesis-proof"><div><span>OFFICIAL ACTION</span><strong>'+esc(verified?recommendation(compass.action_now).action:'UNAVAILABLE · NOT CURRENT')+'</strong></div>'
  +'<div><span>RESEARCH PERSPECTIVE</span><strong>'+esc(current?'Source-aligned model view':stale?'Stale model observation':'Not verified')+'</strong></div></div>'
  +'<div class="synthesis-horizons">'+lanes.map(([label,value])=>'<div><span>'+esc(label)+'</span><strong>'+esc(publicState(value))+'</strong></div>').join('')+'</div>'
  +'<p class="synthesis-analysis">'+esc(analysis)+'</p>'
@@ -443,8 +448,8 @@ function renderPremium(snapshot, compass, event) {
     + '</div>'
     + refreshStatusBanner(compass, event)
     + (dataOk ? decisionDetail(compass, rec, meta) : '')
-    + compositeIntel(compass)
-    + pullbackCard(officialView)
+    + compositeIntel(compass,readingState)
+    + pullbackCard(officialView,readingState)
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, officialView, scale, h)).join('') + '</div>'
     + riskCurve(officialView)

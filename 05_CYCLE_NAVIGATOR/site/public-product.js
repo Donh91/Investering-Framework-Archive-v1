@@ -257,11 +257,37 @@ function precisionLite(data){
 function renderNow(data,px){
   const p=data.package||{},live=data.live_observation||{},a=live.current_action||{},st=String(a.stance||'WAIT').toUpperCase(),available=window.CNOfficialReadingState?.(officialCompass)==='CURRENT'&&!!a.generated_at,limited=/DATA_DEGRADED/i.test(String(a.current||''));
   const marketPhase=phaseCopy(p.market_state||'');
-  const next=investorText(a.next_days)||(`Stay ${actionTitle(st).toLowerCase()} while the next market confirmation develops.`);
-  const confirm=gate(a.confirmation,'confirm'),risk=gate(a.invalidation,'risk');
+  const next=available?(investorText(a.next_days)||'See the source-verified Official Compass horizons below.'):'No current 1–3-day action. Await a fresh verified Official Compass.';
+  const confirm=available?gate(a.confirmation,'confirm'):'Fresh Official Compass verification required';
+  const risk=available?gate(a.invalidation,'risk'):'Current risk guidance unavailable without fresh verification';
   const headline=!available?'Fresh evidence is temporarily unavailable. No new risk call is inferred from price alone.':limited?'Signal confidence is temporarily limited. Keep risk contained until the evidence improves.':({HOLD:'Keep current positioning. Do not add broad market risk yet.',WAIT:'Stay patient. A broader risk-on move is not confirmed yet.',PREPARE:'Prepare for a possible shift, but wait for confirmation before adding broadly.',SELECTIVE:'Add selectively only. Broad market risk is not confirmed yet.','PROTECT CAPITAL':'Reduce risk and protect capital until conditions improve.','BROADER DEPLOYMENT':'Broader participation is confirmed enough to add risk across the market.'}[st]||'Keep the current stance until the evidence changes.');
   document.getElementById('productNow').innerHTML=`<div id="productFreshness" class="freshness-strip"></div><section class="action-hero"><div class="action-label">MARKET COMPASS</div><div class="action-word">${esc(available?actionTitle(st):'NO CURRENT CALL')}</div><p>${esc(headline)}</p><div class="hero-lines"><div><span>MARKET PHASE</span><strong>${esc(marketPhase)}</strong></div><div><span>NEXT 1–3 DAYS</span><strong>${esc(short(next,180))}</strong></div><div><span>NEXT CONFIRMATION</span><strong>${esc(short(confirm,180))}</strong></div><div class="risk-line"><span>RISK</span><strong>${esc(short(risk,170))}</strong></div></div></section><section class="context-row"><article><span>LIVE MARKET</span><strong>${esc(px||'Live prices temporarily unavailable')}</strong><small>Market context only. Prices cannot rewrite the weekly outlook.</small></article><article><span>THIS WEEK</span><strong>${esc(short(investorText(p.base_case_this_week||p.market_state)||'No public weekly summary available.',220))}</strong><small>Plain-English translation of the current weekly outlook.</small></article></section>${precisionLite(data)}`;
   freshness();
+}
+
+
+function syncHeroFreshness(){
+  // The premium owner emits this on its immediate source-expiry timer.
+  // Update text nodes only: rebuilding productNow would destroy the premium
+  // DOM and cause its MutationObserver to reinstall recursively.
+  const root=document.getElementById('productNow');
+  if(!root||!snapshot)return;
+  const reading=window.CNOfficialReadingState?.(officialCompass)||'UNAVAILABLE';
+  const label=root.querySelector('.action-hero .action-word');
+  const copy=root.querySelector('.action-hero > p');
+  const values=root.querySelectorAll('.action-hero .hero-lines > div strong');
+  if(reading==='CURRENT'){
+    const officialAction=root.querySelector('#premiumMarketCompass aside > strong')?.textContent;
+    if(label&&officialAction)label.textContent=officialAction;
+    const officialCopy=root.querySelector('#premiumMarketCompass aside > p')?.textContent;
+    if(copy&&officialCopy)copy.textContent=officialCopy;
+    return;
+  }
+  if(label)label.textContent='NO CURRENT CALL';
+  if(copy)copy.textContent='Fresh evidence is temporarily unavailable. No new risk call is inferred from price alone.';
+  if(values[1])values[1].textContent='No current 1–3-day action. Await a fresh verified Official Compass.';
+  if(values[2])values[2].textContent='Fresh Official Compass verification required';
+  if(values[3])values[3].textContent='Current risk guidance unavailable without fresh verification';
 }
 
 function pathEta(value){
@@ -666,7 +692,7 @@ async function render(){
   }catch(e){console.warn('Cycle Navigator unavailable',e);const n=document.getElementById('productNow');if(n)n.innerHTML='<section class="fail-card"><small>MARKET DATA TEMPORARILY UNAVAILABLE</small><h1>WAIT</h1><p>No new action is inferred while verified evidence is unavailable.</p></section>';}
 }
 
-document.addEventListener('cn-official-compass-rendered',(e)=>{officialCompass=e.detail||null;freshness();});
+document.addEventListener('cn-official-compass-rendered',(e)=>{officialCompass=e.detail||null;freshness();syncHeroFreshness();});
 document.addEventListener('cn-language-change',freshness);
 render();setInterval(render,5*60*1000);
 })();

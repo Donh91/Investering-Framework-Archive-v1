@@ -193,6 +193,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       const checks=owner?.checks;
       if(owner?.status==="PASS"&&Array.isArray(checks)&&checks.length>0&&checks.every(row=>
         row?.status==="PASS"&&typeof row.timestamp==="string"&&
+        /(?:Z|[+-]\d{2}:\d{2})$/.test(row.timestamp)&&
         Number.isFinite(Date.parse(row.timestamp))&&
         typeof row.max_age_seconds==="number"&&Number.isFinite(row.max_age_seconds)&&
         row.max_age_seconds>0)){
