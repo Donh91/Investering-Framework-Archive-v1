@@ -47,6 +47,12 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         (self.root / "research/api_agent/outputs").mkdir(parents=True)
         self.claims = [{"claim_id": "CN29-test-frozen-2w"}]
         self.evidence = [{"week": "2026-W41", "status": "FINAL"}]
+        # Existing scorer tests target API response and independent budget
+        # admission. GitHub persistence is tested explicitly below instead
+        # of accidentally causing real remote writes in these offline cases.
+        self.reservation_patcher = patch.object(cn, "_reserve_cn_api_attempt_before_post")
+        self.reservation_call = self.reservation_patcher.start()
+        self.addCleanup(self.reservation_patcher.stop)
         self.good = {
             "id": "resp_cn_budget_test",
             "status": "completed",
@@ -195,6 +201,60 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "CN_API_POLICY_UNREADABLE_NO_SPEND"):
                 self.call()
             http.assert_not_called()
+
+    def test_durable_reservation_requires_existing_github_actions_context(self):
+        self.reservation_patcher.stop()
+        with patch.dict(os.environ, {
+                "OPENAI_API_KEY": "fake-not-a-secret", "GH_TOKEN": "",
+                "GITHUB_ACTIONS": "false", "GITHUB_REPOSITORY": cn.CN_REPOSITORY}, clear=False), \
+             patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)), \
+             patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_DURABLE_RESERVATION_AUTH_REQUIRED_NO_SPEND"):
+                self.call()
+            http.assert_not_called()
+            self.assertFalse(self.receipt().exists())
+
+    def test_reservation_requires_remote_write_and_matching_main_readback(self):
+        self.reservation_patcher.stop()
+        with patch.dict(os.environ, {
+                "GH_TOKEN": "offline-test-only", "GITHUB_ACTIONS": "true",
+                "GITHUB_REPOSITORY": cn.CN_REPOSITORY}, clear=False):
+            calls = []
+            written = []
+            def fake_api(path, *, fields=None, allow_not_found=False):
+                calls.append((path, fields))
+                if fields:
+                    written.append(fields)
+                    return {"content": {"sha": "test"}}
+                return None
+            with patch.object(cn, "_cn_gh_api", side_effect=fake_api), \
+                 patch.object(cn, "_cn_gh_file", return_value=None):
+                with self.assertRaisesRegex(RuntimeError, "CN_API_RESERVATION_MAIN_READBACK_FAILED_NO_SPEND"):
+                    cn._reserve_cn_api_attempt_before_post(
+                        self.root, ["frozen-A"], "a" * 64, "gpt-5.6-terra", 0.10)
+            self.assertEqual(len(written), 1)
+            self.assertEqual(written[0]["branch"], "main")
+            self.assertTrue(any("contents/" in path for path, fields in calls if fields))
+
+    def test_unresolved_previous_reservation_blocks_paid_retry(self):
+        self.reservation_patcher.stop()
+        old_digest = "b" * 64
+        old_path = f"{cn.CN_RESERVATION_ROOT}/{old_digest}.json"
+        previous = {"contract": "CN_PAID_API_PREPOST_RESERVATION_v1",
+                    "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+                    "claim_ids": ["prior-A"],
+                    "receipt_path": "research/api_agent/outputs/cn_internal_precision/old/receipt.json"}
+        with patch.dict(os.environ, {
+                "GH_TOKEN": "offline-test-only", "GITHUB_ACTIONS": "true",
+                "GITHUB_REPOSITORY": cn.CN_REPOSITORY}, clear=False), \
+             patch.object(cn, "_cn_gh_api", return_value=[{
+                 "name": old_digest + ".json", "path": old_path, "type": "file"}]), \
+             patch.object(cn, "_cn_gh_file", side_effect=[
+                 cn.canonical_bytes(previous), None]) as source:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_PREVIOUS_UNRECONCILED_PAID_ATTEMPT"):
+                cn._reserve_cn_api_attempt_before_post(
+                    self.root, ["new-B"], "a" * 64, "gpt-5.6-terra", 0.10)
+            self.assertEqual(source.call_count, 2)
 
     def test_valid_call_has_exact_receipt_and_cannot_repeat(self):
         with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)) as guard, \
