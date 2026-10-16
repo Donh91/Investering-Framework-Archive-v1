@@ -236,6 +236,44 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             self.assertEqual(written[0]["branch"], "main")
             self.assertTrue(any("contents/" in path for path, fields in calls if fields))
 
+    def test_reservation_persists_counted_cost_and_verifies_main_bytes(self):
+        import base64
+        self.reservation_patcher.stop()
+        stored = {}
+        def fake_api(path, *, fields=None, allow_not_found=False):
+            if fields is not None:
+                self.assertEqual(fields["branch"], "main")
+                stored["file_path"] = path
+                stored["body"] = base64.b64decode(fields["content"])
+                return {"commit": {"sha": "test"}} 
+            if "contents/" in path and path.endswith("?ref=main"):
+                return {"encoding": "base64",
+                        "content": base64.b64encode(stored["body"]).decode()}
+            return None
+        with patch.dict(os.environ, {
+                "GH_TOKEN": "offline-test-only", "GITHUB_ACTIONS": "true",
+                "GITHUB_REPOSITORY": cn.CN_REPOSITORY}, clear=False), \
+             patch.object(cn, "_cn_gh_api", side_effect=fake_api):
+            cn._reserve_cn_api_attempt_before_post(
+                self.root, ["frozen-A"], "a" * 64, "gpt-5.6-terra", 0.10)
+        row = json.loads(stored["body"])
+        self.assertEqual(row["contract"], "CN_PAID_API_PREPOST_RESERVATION_v1")
+        self.assertEqual(row["estimated_cost_usd"], 0.10)
+        self.assertTrue(type(row["created_unix"]) is int and row["created_unix"] > 0)
+        self.assertTrue(row["no_automatic_paid_retry"])
+        self.assertEqual(row["claim_ids"], ["frozen-A"])
+
+    def test_reservation_rejects_invalid_max_cost_before_github(self):
+        self.reservation_patcher.stop()
+        with patch.dict(os.environ, {
+                "GH_TOKEN": "offline-test-only", "GITHUB_ACTIONS": "true",
+                "GITHUB_REPOSITORY": cn.CN_REPOSITORY}, clear=False), \
+             patch.object(cn, "_cn_gh_api") as gh:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_DURABLE_RESERVATION_COST_INVALID"):
+                cn._reserve_cn_api_attempt_before_post(
+                    self.root, ["frozen-A"], "a" * 64, "gpt-5.6-terra", float("nan"))
+            gh.assert_not_called()
+
     def test_unresolved_previous_reservation_blocks_paid_retry(self):
         self.reservation_patcher.stop()
         old_digest = "b" * 64
