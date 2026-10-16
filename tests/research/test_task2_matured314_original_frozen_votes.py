@@ -1,5 +1,6 @@
 """Synthetic fail-closed tests; original Actions ZIP is checked in gated PR CI."""
 import hashlib
+import re
 import importlib.util
 import json
 import tempfile
@@ -77,6 +78,23 @@ class MatchedFrozenVoteTests(unittest.TestCase):
         row["prediction_id"]=m.PREFIX+"../escape.json#1H:BTC"
         with self.assertRaisesRegex(ValueError,"UNSAFE_ISSUED_FORECAST_PATH"):
             m.original_files(ROOT,[row])
+
+    def test_research_receipt_only_pr_change_triggers_original_source_replay(self):
+        # Previous workflow guard omitted the published JSON receipt: a future
+        # receipt-only edit could have escaped immutable source replay.
+        workflow=(ROOT/".github/workflows/native-handlekompas.yml").read_text()
+        match=re.search(r"replay_pattern='([^']+)'", workflow)
+        self.assertIsNotNone(match, "Original-source replay path guard is missing")
+        pattern=match.group(1)
+        receipt="04_MARKET_LEARNING/handlekompas/research/2026-10-16__TASK2_ORIGINAL_MATURED314_FROZEN_VOTE_FAMILY_RECEIPT_v1.json"
+        source="04_MARKET_LEARNING/handlekompas/research/2026-10-16__task2_matured314_original_frozen_votes_v1.py"
+        test="tests/research/test_task2_matured314_original_frozen_votes.py"
+        for path in (receipt, source, test):
+            with self.subTest(path=path):
+                self.assertIsNotNone(re.search(pattern, path))
+        for path in ("docs/unrelated.md", "04_MARKET_LEARNING/handlekompas/LATEST.json"):
+            with self.subTest(unrelated=path):
+                self.assertIsNone(re.search(pattern, path))
 
     def test_historical_modification_is_not_an_executable_authority(self):
         self.assertIn("EXPOST",m.STATUS)
