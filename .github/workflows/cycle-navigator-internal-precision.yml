@@ -44,6 +44,7 @@ jobs:
       - name: Build internal precision freeze, settlement and compact box
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           python scripts/cycle_navigator/build_internal_precision.py \
