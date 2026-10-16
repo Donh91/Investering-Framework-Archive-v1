@@ -517,7 +517,7 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
             raise RuntimeError("CN_API_DURABLE_RESERVATION_CENSUS_INCOMPLETE")
         for item in listing:
             if (not isinstance(item, dict) or item.get("type") != "file"
-                    or not re.fullmatch(r"[0-9a-f]{64}\\.json", str(item.get("name")))):
+                    or not re.fullmatch(r"[0-9a-f]{64}\.json", str(item.get("name")))):
                 raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
             previous_bytes = _cn_gh_file(str(item["path"]))
             try:
