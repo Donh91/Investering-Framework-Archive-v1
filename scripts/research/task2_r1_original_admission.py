@@ -90,6 +90,23 @@ def build():
         if forecast.get("scoring_contract") != frozen["original_scoring_contract"]:
             raise ValueError(f"Original forecast scoring contract differs: {fid}")
         packet, packet_blob = original(item["source_first_visible_path_commit_sha"], item["source_path"], item["source_git_blob_sha"])
+        # Certification must bind the immutable *forecast's* own recorded
+        # universe and selected features to the exact Git packet, not merely
+        # trust the independent 11-row census's source path and blob.
+        universe = forecast["evidence_snapshot"]["full_feature_universe_reference"]
+        binding = forecast["source_bindings"]["auto_market_state"]
+        expected_path = item["source_path"]
+        expected_packet_hash = packet["packet_sha256"]
+        for label, declared in (
+            ("forecast universe", universe),
+            ("forecast source binding", binding),
+        ):
+            if (declared.get("packet_path") != expected_path
+                    or declared.get("packet_sha256") != expected_packet_hash):
+                raise ValueError(f"Forecast packet binding mismatch ({label}): {fid}")
+        for feature in forecast["evidence_snapshot"]["selected_features"]:
+            if feature.get("source_path") != expected_path:
+                raise ValueError(f"Selected feature packet path mismatch: {fid}")
         target = packet["source_health"]["live_anchor"]["provenance"]["target"]
         capture, capture_blob = original(target["exact_commit_sha"], target["exact_path"], target["git_blob_sha"])
         commit_clock = git("show", "-s", "--format=%cI", target["exact_commit_sha"]).decode().strip()
