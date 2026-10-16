@@ -215,13 +215,24 @@ def validate(out_dir: Path) -> str:
     # Keep the accepted model/authority fields contiguous and affirmative.
     summary = str(result.get("summary") or "")
     verdict_pattern = (
-        r"(?:PASS_WITH_FINDINGS|PASS|FAIL)(?:[;,]? )"
+        r"(?P<verdict>PASS_WITH_FINDINGS|PASS|FAIL)(?:[;,]? )"
         r"MODEL_USED=gpt-6\.1-sol(?:[;,]? )"
         r"NO_CODE_WRITE_PERFORMED(?:[;,]? )"
         r"NO_AUTHORITY_CHANGE\.?"
     )
-    if re.fullmatch(verdict_pattern, summary) is None:
+    verdict = re.fullmatch(verdict_pattern, summary)
+    if verdict is None:
         raise ValueError("REVIEW_VERDICT_OR_MARKERS_INVALID")
+    review_status = result.get("status")
+    actionable_findings = any(
+        isinstance(value, str) and value.startswith(("P0|", "P1|", "P2|"))
+        for value in result.get("evidence_against", [])
+    )
+    if (review_status not in ("READY", "DEGRADED", "BLOCKED")
+            or (verdict.group("verdict") == "PASS" and (review_status != "READY" or actionable_findings))
+            or (verdict.group("verdict") == "PASS_WITH_FINDINGS" and review_status != "DEGRADED")
+            or (verdict.group("verdict") == "FAIL" and review_status != "BLOCKED")):
+        raise ValueError("REVIEW_STRUCTURED_STATUS_CONTRADICTS_VERDICT")
     number, head = manifest["pr_number"], manifest["head_sha"]
     require_pr(pr_info(number), number, head)
     findings = [v for v in result.get("evidence_against", []) if isinstance(v, str) and v.startswith(("P0|", "P1|", "P2|", "P3|"))]
