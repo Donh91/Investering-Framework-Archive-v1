@@ -431,7 +431,7 @@ class T6RotationSurvivalTests(unittest.TestCase):
                     latest["observation_sha256"] = sha(frozen)
                     latest_path.write_text(json.dumps(latest))
                     before = {p: p.read_bytes() for p in root.rglob("*.json")}
-                    with self.assertRaisesRegex(ValueError, "t6_replay_event_fields_mismatch|t6_replay_state_mismatch|t6_replay_latest_pointer_mismatch"):
+                    with self.assertRaisesRegex(ValueError, "t6_replay_frozen_observation_schema_mismatch|t6_replay_event_fields_mismatch|t6_replay_state_mismatch|t6_replay_latest_pointer_mismatch"):
                         operate(sample, cadence(), root)
                     self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
@@ -482,7 +482,7 @@ class T6RotationSurvivalTests(unittest.TestCase):
                     else:
                         next_packet = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
                     with self.assertRaisesRegex(ValueError,
-                            "t6_replay_frozen_first_schema_mismatch|immutable_conflict"):
+                            "t6_replay_frozen_first_schema_mismatch|t6_replay_frozen_observation_schema_mismatch|immutable_conflict"):
                         operate(next_packet, cadence(), root)
                     self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
