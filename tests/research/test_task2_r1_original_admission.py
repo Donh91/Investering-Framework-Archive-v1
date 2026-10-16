@@ -140,6 +140,31 @@ class OriginalAdmissionTests(unittest.TestCase):
         ))
         self.assertTrue(all("current_main_outcome_status" not in x for x in rows["rows"]))
 
+    def test_original_forecast_packet_identity_must_be_consistent_across_all_bindings(self):
+        # Simulate post-decode corruption after an exact Git blob check. Both
+        # source *identity* and hash must be cross-checked against the
+        # independent frozen packet, not trusted from the forecast alone.
+        real_original = admission.original
+        forecast_suffix = "/CMP-20261012-468da783e9d8.json"
+        mutations = (
+            ("universe_path", lambda f: f["evidence_snapshot"]["full_feature_universe_reference"].__setitem__("packet_path", "wrong.json")),
+            ("universe_hash", lambda f: f["evidence_snapshot"]["full_feature_universe_reference"].__setitem__("packet_sha256", "0" * 64)),
+            ("binding_path", lambda f: f["source_bindings"]["auto_market_state"].__setitem__("packet_path", "wrong.json")),
+            ("binding_hash", lambda f: f["source_bindings"]["auto_market_state"].__setitem__("packet_sha256", "0" * 64)),
+            ("selected_path", lambda f: f["evidence_snapshot"]["selected_features"][0].__setitem__("source_path", "wrong.json")),
+        )
+        for label, change in mutations:
+            def forged_original(ref, path, expected_blob=None):
+                obj, blob = real_original(ref, path, expected_blob)
+                if path.endswith(forecast_suffix):
+                    obj = json.loads(json.dumps(obj))
+                    change(obj)
+                return obj, blob
+            with self.subTest(label=label):
+                with mock.patch.object(admission, "original", side_effect=forged_original):
+                    with self.assertRaisesRegex(ValueError, "packet binding mismatch|Selected feature packet path mismatch"):
+                        build()
+
     def test_full_cohort_fails_closed_and_separates_later_outcomes(self):
         d = build()
         self.assertEqual(d["cohort"], {"original_attempts": 11, "original_outcomes_present": 9, "original_outcomes_absent": 2, "unique_source_blobs": 10, "unique_raw_capture_blobs": 7, "admitted": 0, "independent_market_event_families_certified": 0})
