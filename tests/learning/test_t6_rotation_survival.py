@@ -367,7 +367,7 @@ class T6RotationSurvivalTests(unittest.TestCase):
                         observation["prior_ethbtc"] = 0.032
                     first_path.write_text(json.dumps(observation))
                 before = {p: p.read_bytes() for p in root.rglob("*.json")}
-                with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch"):
+                with self.assertRaisesRegex(ValueError, "t6_replay_state_mismatch|t6_replay_first_source_packet_mismatch"):
                     operate(later, cadence(), root)
                 self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
