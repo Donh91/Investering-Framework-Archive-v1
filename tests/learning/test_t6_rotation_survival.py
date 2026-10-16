@@ -323,6 +323,61 @@ class T6RotationSurvivalTests(unittest.TestCase):
                     operate(later, cadence(), root)
                 self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
 
+    def test_replay_fails_on_tampered_event_fields_even_with_new_pointer_hash(self):
+        for mode in ("no_cross", "first_cross", "active", "reversal"):
+            for field, replacement in (
+                ("active_sequence_id_before", "T6-ffffffffffffffff"),
+                ("right_censored", "tampered"),
+                ("time_in_state_days", 999.0),
+                ("sequence_id", "T6-ffffffffffffffff"),
+            ):
+                with self.subTest(mode=mode, field=field), tempfile.TemporaryDirectory() as td:
+                    root = Path(td)
+                    if mode == "no_cross":
+                        sample = packet(0.0299, 0.0001)
+                        result = operate(sample, cadence(), root)
+                    else:
+                        initial = packet(0.0301, 0.0002)
+                        result = operate(initial, cadence(), root)
+                        sample = initial
+                        if mode == "active":
+                            sample = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                            result = operate(sample, cadence(), root)
+                        if mode == "reversal":
+                            sample = packet(0.0298, -0.0003, stamp="2026-09-10T01:00:00Z")
+                            result = operate(sample, cadence(), root)
+                    obs_path = Path(result["observation_path"])
+                    frozen = json.loads(obs_path.read_text())
+                    old = frozen.get(field, "__ABSENT__")
+                    if old == replacement:
+                        continue
+                    frozen[field] = replacement
+                    obs_path.write_text(json.dumps(frozen))
+                    latest_path = root / "LATEST.json"
+                    latest = json.loads(latest_path.read_text())
+                    from scripts.learning.t6_rotation_survival import sha
+                    latest["observation_sha256"] = sha(frozen)
+                    latest_path.write_text(json.dumps(latest))
+                    before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                    with self.assertRaisesRegex(ValueError, "t6_replay_event_fields_mismatch|t6_replay_state_mismatch"):
+                        operate(sample, cadence(), root)
+                    self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_legitimate_event_derived_replays_remain_idempotent(self):
+        for mode in ("no_cross", "first_cross", "active", "reversal"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                sample = packet(0.0299, 0.0001) if mode == "no_cross" else packet(0.0301, 0.0002)
+                result = operate(sample, cadence(), root)
+                if mode in ("active", "reversal"):
+                    sample = (packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                              if mode == "active" else
+                              packet(0.0298, -0.0003, stamp="2026-09-10T01:00:00Z"))
+                    result = operate(sample, cadence(), root)
+                before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                self.assertEqual(operate(sample, cadence(), root), result)
+                self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
     def test_valid_first_cross_replay_preserves_next_fresh_elapsed_time(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
