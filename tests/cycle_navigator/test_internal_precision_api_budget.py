@@ -236,6 +236,38 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             self.assertEqual(written[0]["branch"], "main")
             self.assertTrue(any("contents/" in path for path, fields in calls if fields))
 
+    def test_existing_global_cost_guard_counts_real_reserved_liability(self):
+        from datetime import datetime, timezone
+        ledger = self.root / "runtime/api-cost-ledger/cn_internal_precision_reservations"
+        ledger.mkdir(parents=True)
+        reservation = {
+            "contract": "CN_PAID_API_PREPOST_RESERVATION_v1",
+            "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+            "model": "gpt-5.6-terra",
+            "claim_ids": ["claim-real-guard"],
+            "request_hash": "a" * 64,
+            "estimated_cost_usd": 0.12,
+            "created_unix": int(datetime.now(timezone.utc).timestamp()),
+        }
+        (ledger / ("a" * 64 + ".json")).write_text(json.dumps(reservation))
+        guard = Path(__file__).resolve().parents[2] / "scripts/api_agent/check_monthly_cost_guard.py"
+        base_cmd = [
+            os.sys.executable, str(guard),
+            "--receipt-root", str(self.root / "research/api_agent/outputs"),
+            "--pending-ledger-root", str(self.root / "runtime/api-cost-ledger"),
+        ]
+        allowed = subprocess.run(base_cmd + [
+            "--hard-stop-usd", "0.4", "--reserve-usd", "0.1"
+        ], capture_output=True, text=True)
+        self.assertEqual(allowed.returncode, 0, allowed.stderr)
+        self.assertEqual(json.loads(allowed.stdout)["spent_usd"], 0.12)
+        blocked = subprocess.run(base_cmd + [
+            "--hard-stop-usd", "0.2", "--reserve-usd", "0.1"
+        ], capture_output=True, text=True)
+        self.assertNotEqual(blocked.returncode, 0)
+        self.assertEqual(json.loads(blocked.stdout)["status"], "BLOCKED")
+        self.assertEqual(json.loads(blocked.stdout)["spent_usd"], 0.12)
+
     def test_reservation_persists_counted_cost_and_verifies_main_bytes(self):
         import base64
         self.reservation_patcher.stop()
