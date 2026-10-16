@@ -69,6 +69,12 @@ jobs:
             cmp -s /tmp/task2_r1_original_admission_v2.json 04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json
             echo 'Task2 R1 v2 exact immutable-context artifact parity verified'
           fi
+      - name: Validate Task 2 original-maturity cohort source-only research receipt
+        # PR-only source and count checks. The owner's original ZIP remains
+        # outside the public repository and is reverified by the CLI separately.
+        run: |
+          python -m py_compile 04_MARKET_LEARNING/handlekompas/research/2026-10-16__task2_matured314_reproduce_v1.py
+          python -m unittest tests.research.test_task2_matured314_reproduce -v
       - name: Validate repository state readback when available
         shell: bash
         run: |
