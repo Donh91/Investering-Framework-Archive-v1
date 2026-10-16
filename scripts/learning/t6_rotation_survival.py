@@ -266,6 +266,33 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
                     raise ValueError("t6_replay_state_mismatch")
         elif expected_active is not None or event == "ETHBTC_REVERSAL_OBSERVED":
             raise ValueError("t6_replay_state_mismatch")
+        # Consequential event-derived fields are part of the frozen observation.
+        # Reconstruct them from packet/source and the independently verified
+        # first-cross BASELINE rather than trusting the replayed event object.
+        if event == "NO_ELIGIBLE_FIRST_CROSS":
+            if (original.get("first_cross_detected") is not False
+                    or original.get("active_sequence_id_before") is not None
+                    or original.get("right_censored") is not True
+                    or any(key in original for key in ("sequence_id", "time_in_state_days"))):
+                raise ValueError("t6_replay_event_fields_mismatch")
+        elif event == "FIRST_CROSS_FROZEN":
+            if (original.get("first_cross_detected") is not True
+                    or original.get("active_sequence_id_before") is not None
+                    or any(key in original for key in ("sequence_id", "time_in_state_days", "right_censored"))):
+                raise ValueError("t6_replay_event_fields_mismatch")
+        else:
+            if event not in {"ACTIVE_SEQUENCE_OBSERVATION", "ETHBTC_REVERSAL_OBSERVED"}:
+                raise ValueError("t6_replay_event_fields_mismatch")
+            active_expected = event == "ACTIVE_SEQUENCE_OBSERVATION"
+            start_at = parse_time(baseline["sequence_start_utc"])
+            duration = max(0.0, (parse_time(observed_at) - start_at).total_seconds() / 86400.0)
+            if (original.get("active_sequence_id_before") != replay_sequence
+                    or original.get("sequence_id") != replay_sequence
+                    or type(original.get("time_in_state_days")) is not float
+                    or original["time_in_state_days"] != duration
+                    or original.get("right_censored") is not active_expected
+                    or (current >= level) is not active_expected):
+                raise ValueError("t6_replay_event_fields_mismatch")
         return latest
 
     state_path = root / "STATE.json"
