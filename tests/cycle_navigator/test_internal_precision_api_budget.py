@@ -385,6 +385,58 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         self.assertFalse(cn._valid_cn_prior_paid_receipt(valid,
                          {**reservation, "model": None}))
 
+
+    def test_month_shards_keep_prior_claims_in_global_no_retry_census(self):
+        self.reservation_patcher.stop()
+        old_hash = "b" * 64
+        old_path = f"{cn.CN_RESERVATION_ROOT}/2026-09/{old_hash}.json"
+        old_row = {
+            "contract": "CN_PAID_API_PREPOST_RESERVATION_v1",
+            "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+            "claim_ids": ["frozen-A"],
+            "model": "gpt-5.6-terra",
+            "request_hash": old_hash,
+            "receipt_path": f"research/api_agent/outputs/cn_internal_precision/{'c' * 64}/receipt.json",
+        }
+        def fake_api(path, *, fields=None, allow_not_found=False):
+            if path == f"contents/{cn.CN_RESERVATION_ROOT}?ref={cn.CN_RESERVATION_BRANCH}":
+                return [{"type": "dir", "name": "2026-09",
+                         "path": f"{cn.CN_RESERVATION_ROOT}/2026-09"}]
+            if path == f"contents/{cn.CN_RESERVATION_ROOT}/2026-09?ref={cn.CN_RESERVATION_BRANCH}":
+                return [{"type": "file", "name": old_hash + ".json", "path": old_path}]
+            self.fail("unexpected GitHub API operation: " + path)
+        with patch.dict(os.environ, {"GH_TOKEN": "offline-only",
+                                       "GITHUB_ACTIONS": "true",
+                                       "GITHUB_REPOSITORY": cn.CN_REPOSITORY}, clear=False), \
+             patch.object(cn, "_cn_gh_api", side_effect=fake_api), \
+             patch.object(cn, "_cn_gh_file", return_value=cn.canonical_bytes(old_row)), \
+             patch("urllib.request.urlopen") as http:
+            with self.assertRaisesRegex(RuntimeError, "CN_API_CLAIM_ALREADY_RESERVED_NO_RETRY"):
+                cn._reserve_cn_api_attempt_before_post(
+                    self.root, ["frozen-A"], "a" * 64, "gpt-5.6-terra", 0.10)
+            http.assert_not_called()
+
+    def test_month_shard_untrusted_directory_and_full_census_fail_closed(self):
+        self.reservation_patcher.stop()
+        for listing in ([{"type": "dir", "name": "../unsafe"}],
+                        [{"type": "dir", "name": "2026-09"}]):
+            with self.subTest(listing=listing):
+                def fake_api(path, *, fields=None, allow_not_found=False):
+                    if path == f"contents/{cn.CN_RESERVATION_ROOT}?ref={cn.CN_RESERVATION_BRANCH}":
+                        return listing
+                    return [{"type": "file", "name": "a" * 64 + ".json",
+                             "path": f"{cn.CN_RESERVATION_ROOT}/2026-09/" + "a" * 64 + ".json"}] * 100
+                with patch.dict(os.environ, {"GH_TOKEN": "offline-only",
+                                             "GITHUB_ACTIONS": "true",
+                                             "GITHUB_REPOSITORY": cn.CN_REPOSITORY}, clear=False), \
+                     patch.object(cn, "_cn_gh_api", side_effect=fake_api), \
+                     patch("urllib.request.urlopen") as http:
+                    with self.assertRaisesRegex(RuntimeError,
+                            "CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE|CN_API_DURABLE_RESERVATION_CENSUS_INCOMPLETE"):
+                        cn._reserve_cn_api_attempt_before_post(
+                            self.root, ["new-A"], "a" * 64, "gpt-5.6-terra", 0.10)
+                    http.assert_not_called()
+
     def test_valid_call_has_exact_receipt_and_cannot_repeat(self):
         with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)) as guard, \
              patch("urllib.request.urlopen", return_value=Response(self.good)) as http:
