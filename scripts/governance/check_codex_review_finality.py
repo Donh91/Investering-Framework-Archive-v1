@@ -34,6 +34,7 @@ def decision(head, comments, reviews, inline):
             return fail("REVIEW_NOT_REQUESTED")
         last = max(requests)
         completed = []
+        latest_state = []
         positive = []
         for row in comments:
             if not is_codex(row):
@@ -45,14 +46,18 @@ def decision(head, comments, reviews, inline):
             m = re.search(r"<!-- codex-review-state:v1\s+(.+?)\s*-->", body, re.S)
             if m:
                 state = json.loads(m.group(1)).get("code_review", {})
-                if state.get("commit_sha") == head and state.get("status") == "completed":
-                    completed.append((when, state))
+                if state.get("commit_sha") == head:
+                    latest_state.append((when, state))
+                    if state.get("status") == "completed":
+                        completed.append((when, state))
             if "Codex Review: Didn't find any major issues" in body:
                 m = re.search(r"Reviewed commit:\*\*\s*\x60([a-f0-9]{10,40})\x60", body)
                 if m and head.startswith(m.group(1)):
                     positive.append((when, m.group(1)))
         if not completed or not positive:
             return fail("REVIEW_IN_PROGRESS_OR_UNVERIFIED")
+        if latest_state and max(latest_state, key=lambda entry: entry[0])[1].get("status") != "completed":
+            return fail("NEWER_CODEX_REVIEW_NOT_COMPLETE")
         if max(completed, key=lambda entry: entry[0])[1].get("has_unresolved_findings") is not False:
             return fail("UNRESOLVED_CODEX_FINDINGS")
         last_positive, positive_ref = max(positive)
