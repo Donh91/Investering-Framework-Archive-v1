@@ -8,6 +8,8 @@ on:
       - 'scripts/health/**'
       - 'scripts/learning/**'
       - 'scripts/api_agent/**'
+      - 'scripts/governance/check_codex_review_finality.py'
+      - 'tests/governance/test_codex_review_finality.py'
       - 'scripts/data_terminal/farside_etf_owner.py'
       - 'tests/architecture/test_full_architecture_1to7.py'
       - '.github/workflows/**'
@@ -40,6 +42,10 @@ jobs:
             scripts/api_agent/check_monthly_cost_guard.py
       - name: Run integrated architecture tests
         run: python -m unittest tests.architecture.test_full_architecture_1to7 -v
+      - name: Reject incomplete, stale and pending Codex review outcomes
+        run: |
+          python -m py_compile scripts/governance/check_codex_review_finality.py tests/governance/test_codex_review_finality.py
+          python -m unittest discover -s tests/governance -p test_codex_review_finality.py -v
       - name: Verify writer safety and API boundaries
         run: |
           python scripts/health/build_automation_health.py \
