@@ -233,7 +233,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                     cn._reserve_cn_api_attempt_before_post(
                         self.root, ["frozen-A"], "a" * 64, "gpt-5.6-terra", 0.10)
             self.assertEqual(len(written), 1)
-            self.assertEqual(written[0]["branch"], "main")
+            self.assertEqual(written[0]["branch"], cn.CN_RESERVATION_BRANCH)
             self.assertTrue(any("contents/" in path for path, fields in calls if fields))
 
     def test_existing_global_cost_guard_counts_real_reserved_liability(self):
@@ -274,13 +274,13 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         stored = {}
         def fake_api(path, *, fields=None, allow_not_found=False):
             if fields is not None:
-                self.assertEqual(fields["branch"], "main")
+                self.assertEqual(fields["branch"], cn.CN_RESERVATION_BRANCH)
                 stored["file_path"] = path
                 stored["body"] = base64.b64decode(fields["content"])
                 return {"commit": {"sha": "test"}} 
-            if path == f"contents/{cn.CN_RESERVATION_ROOT}?ref=main":
+            if path == f"contents/{cn.CN_RESERVATION_ROOT}?ref={cn.CN_RESERVATION_BRANCH}":
                 return None  # no historical reservations before this PUT
-            if "contents/" in path and path.endswith("?ref=main"):
+            if "contents/" in path and path.endswith(f"?ref={cn.CN_RESERVATION_BRANCH}"):
                 return {"encoding": "base64",
                         "content": base64.b64encode(stored["body"]).decode()}
             return None
