@@ -245,6 +245,11 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
   const coverage = range?.actuals_hourly_coverage;
   const sixRows = range?.rows;
   const scoreMatches = card?.contract === SCORE_CONTRACT &&
+    // A complete-looking numeric table is not proof of outcome maturity.
+    // Both public series index and canonical scorecard must independently
+    // attest the SAME final state before any percentage is displayed.
+    typeof scoreRef?.status === 'string' && /^FINAL(?:_|$)/.test(scoreRef.status) &&
+    card?.status === scoreRef.status &&
     Number.isInteger(scoreRef?.public_issue_number) &&
     card.public_issue_number === scoreRef.public_issue_number &&
     card.forecast_week === scoreRef.forecast_week &&

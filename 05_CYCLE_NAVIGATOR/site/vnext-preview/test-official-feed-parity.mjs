@@ -1,4 +1,9 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { inspectOfficialPublicFeeds } from './official-feed-parity.mjs';
 
 // Synthetic shapes only, not simulated market predictions or public observations.
@@ -25,11 +30,11 @@ const latest = {
   public_series: {
     current_public_projection: { public_issue_number: 29, forecast_week: '2026-W42' },
     latest_completed_score: {
-      public_issue_number: 28, forecast_week: '2026-W41', price_range_score: 49.56
+      public_issue_number: 28, forecast_week: '2026-W41', price_range_score: 49.56, status: 'FINAL_DUAL_TRACK'
     }
   },
   public_scorecard: {
-    contract: 'CN_PUBLIC_WEEKLY_SCORECARD_v1', public_issue_number: 28,
+    contract: 'CN_PUBLIC_WEEKLY_SCORECARD_v1', status: 'FINAL_DUAL_TRACK', public_issue_number: 28,
     forecast_week: '2026-W41', market_structure_precision: null, combined_score: null,
     price_range_precision: {
       formula: '70pct_containment_plus_30pct_jaccard',
@@ -403,5 +408,115 @@ it('PHASE user-visible NEXT gate does not claim altseason or ETA from 30d shadow
  assert.equal(o.path.phase_eta,'Ingen verificeret ETA');
  assert.equal(o.path.full_phases[5].status,'UNCONFIRMED');
 });
-console.log('SUCCESS: 45 public-feed source parity/lineage/freshness/score/PATH proof tests — NO SITE SIGNAL AUTHORITY.');
+
+it('pending public scorecard cannot be promoted to FINAL by complete-looking numeric rows',()=>{
+ const o=mutate(l=>{l.public_scorecard.status='PENDING';l.public_series.latest_completed_score.status='PENDING';});
+ assert.equal(o.completed_score.state,'MISMATCH_OR_INCOMPLETE');
+ assert.equal(o.completed_score.price_range_precision,null);
+});
+it('final scorecard with nonfinal public index cannot be presented as matured',()=>{
+ const o=mutate(l=>{l.public_series.latest_completed_score.status='PENDING';});
+ assert.equal(o.completed_score.state,'MISMATCH_OR_INCOMPLETE');
+});
+it('mismatched scorecard and public index maturity attestations fail closed',()=>{
+ const o=mutate(l=>{l.public_scorecard.status='FINAL_UNVERIFIED';});
+ assert.equal(o.completed_score.state,'MISMATCH_OR_INCOMPLETE');
+});
+
+// Real canonical SOURCE CONSUMER proof, not a frozen W42 synthetic test.
+// Builds ONLY local ephemeral site/dist, never deploys or writes a producer.
+// CI checks the PR merge checkout against the actual public owner files at
+// test time, including later W43+ source rotations without hard-coded prices.
+it('actual public build readback agrees with canonical weekly, Compass and matured score owners',()=>{
+ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
+ const site=resolve(root,'05_CYCLE_NAVIGATOR/site');
+ const json=(path)=>JSON.parse(readFileSync(resolve(root,path),'utf8'));
+ const pointer=json('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json');
+ const index=json('05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json');
+ const publicCompass=json('04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json');
+ assert.equal(pointer.contract,'CYCLE_NAVIGATOR_DELIVERY_POINTER_v1');
+ assert.equal(index.contract,'CN_PUBLIC_SERIES_INDEX_v1');
+ assert.equal(publicCompass.contract,'PUBLIC_COMPASS_LATEST_POINTER_v1');
+ assert.match(publicCompass.public_projection_path,/^04_MARKET_LEARNING\\/handlekompas\\/official\\/public\\/20\\d\\d\\/\\d\\d\\//);
+ const projectionBytes=readFileSync(resolve(root,publicCompass.public_projection_path));
+ assert.equal(createHash('sha256').update(projectionBytes).digest('hex'),publicCompass.public_projection_content_sha256);
+ execFileSync(process.execPath,[resolve(site,'build-public.mjs')],{
+   cwd:root,encoding:'utf8',timeout:60000,maxBuffer:1024*1024
+ });
+ const liveLatest=json('05_CYCLE_NAVIGATOR/site/dist/data/latest.json');
+ const liveCompass=json('05_CYCLE_NAVIGATOR/site/dist/data/compass.json');
+ assert.equal(liveLatest.schema,'CN_PUBLIC_SNAPSHOT_V2');
+ assert.equal(liveCompass.contract,'PUBLIC_COMPASS_PROJECTION_v1');
+ assert.equal(liveLatest.pointer.iso_week,pointer.iso_week);
+ assert.equal(liveLatest.pointer.iso_year,pointer.iso_year);
+ assert.equal(liveLatest.pointer.issue_number,pointer.issue_number);
+ assert.equal(liveLatest.package.issue_number,pointer.issue_number);
+ assert.equal(liveLatest.package.status,pointer.status);
+ assert.equal(liveLatest.public_series.current_public_projection.public_issue_number,
+   index.current_public_projection.public_issue_number);
+ assert.equal(liveLatest.public_series.current_public_projection.forecast_week,
+   index.current_public_projection.forecast_week);
+ assert.equal(liveCompass.compass_id,publicCompass.compass_id);
+ assert.equal(liveCompass.issued_at_utc,publicCompass.issued_at_utc);
+ assert.equal(liveLatest.public_scorecard.public_issue_number,index.latest_completed_score.public_issue_number);
+ assert.equal(liveLatest.public_scorecard.forecast_week,index.latest_completed_score.forecast_week);
+ assert.equal(liveLatest.public_scorecard.status,index.latest_completed_score.status);
+ const now=new Date().toISOString();
+ const actual=inspectOfficialPublicFeeds(liveLatest,liveCompass,{nowUtc:now});
+ assert.equal(actual.delivery_health,'FRESH');
+ assert.equal(actual.weekly.public_issue_number,index.current_public_projection.public_issue_number);
+ assert.equal(actual.weekly.machine_issue_number,pointer.issue_number);
+ assert.equal(actual.weekly.forecast_week,index.current_public_projection.forecast_week);
+ assert.equal(actual.weekly.state,pointer.status==='DEGRADED'?'DEGRADED':'OK');
+ assert.equal(actual.completed_score.state,'FINAL_PUBLIC_SCORECARD');
+ assert.equal(actual.completed_score.forecast_week,index.latest_completed_score.forecast_week);
+ assert.equal(actual.completed_score.price_range_precision,index.latest_completed_score.price_range_score);
+ assert.equal(actual.completed_score.market_structure_precision,null);
+ assert.equal(actual.completed_score.combined_score,null);
+ assert.match(actual.completed_score.proof_state,/NOT_INDEPENDENTLY_SEALED/);
+ assert.equal(actual.edge_claims.score,null);
+ assert.equal(actual.edge_claims.status,'NO_AUTHENTICATED_FEED');
+ if(actual.compass.state==='FRESH'){
+   assert.equal(actual.compass.action_now,liveCompass.action_now);
+   assert.equal(actual.compass.weekly_alignment,'ALIGNED');
+   assert.equal(actual.compass.permit_path_live_gates,true);
+ }else{
+   assert.equal(actual.compass.action_now,'UNAVAILABLE');
+   assert.equal(actual.compass.permit_path_live_gates,false);
+ }
+ // Adversarial mutations to the *real built* readback, not fabricated prices.
+ const wrongWeek=structuredClone(liveLatest);
+ wrongWeek.public_series.current_public_projection.forecast_week='1900-W01';
+ const mismatched=inspectOfficialPublicFeeds(wrongWeek,liveCompass,{nowUtc:now});
+ assert.equal(mismatched.weekly.state,'MISMATCH');
+ assert.equal(mismatched.compass.permit_path_live_gates,false);
+ const pending=structuredClone(liveLatest);
+ pending.public_series.latest_completed_score.status='PENDING';
+ assert.equal(inspectOfficialPublicFeeds(pending,liveCompass,{nowUtc:now}).completed_score.state,'MISMATCH_OR_INCOMPLETE');
+ const partial=structuredClone(liveLatest);
+ partial.public_scorecard.price_range_precision.actuals_hourly_coverage=167;
+ assert.equal(inspectOfficialPublicFeeds(partial,liveCompass,{nowUtc:now}).completed_score.state,'MISMATCH_OR_INCOMPLETE');
+ const stale=structuredClone(liveLatest);
+ stale.generated_at='2026-01-01T00:00:00Z';
+ const staleResult=inspectOfficialPublicFeeds(stale,liveCompass,{nowUtc:now});
+ assert.equal(staleResult.delivery_health,'STALE');
+ assert.equal(staleResult.compass.action_now,'UNAVAILABLE');
+ assert.equal(staleResult.compass.permit_path_live_gates,false);
+ for(const obj of [liveLatest,liveCompass]){
+   const forbidden=/^(?:api_?key|private_?key|access_?token|refresh_?token|raw_?payload|restricted_?provider_?values)$/i;
+   const scan=(node)=>{if(!node||typeof node!=='object')return;
+     for(const [key,value] of Object.entries(node)){
+       assert.ok(!forbidden.test(key),'Restricted public output key: '+key);
+       scan(value);
+     }
+   };
+   scan(obj);
+ }
+ console.log('REAL_SOURCE_BUILD_PARITY_VERIFIED: '+actual.weekly.forecast_week+
+   ' public #'+actual.weekly.public_issue_number+' machine #'+actual.weekly.machine_issue_number+
+   ' Compass '+actual.compass.state+' score '+actual.completed_score.forecast_week+
+   '; local build only, not Pages or native Safari.');
+});
+
+console.log('SUCCESS: synthetic + actual canonical public-build source parity, maturity, freshness, risk and PATH gates — NO SITE SIGNAL AUTHORITY.');
 
