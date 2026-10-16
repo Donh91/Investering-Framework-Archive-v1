@@ -140,6 +140,21 @@ class OriginalAdmissionTests(unittest.TestCase):
         ))
         self.assertTrue(all("current_main_outcome_status" not in x for x in rows["rows"]))
 
+    def test_explicit_immutable_context_ref_is_not_ambient_synthetic_head(self):
+        pinned = "5a41cd3043bb582524f15fe9fde6f52792246a54"
+        historic = build(context_ref=pinned)
+        self.assertEqual(historic["contract"], "TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2")
+        self.assertEqual(historic["generated_from_context_ref_sha"], pinned)
+        self.assertNotIn("generated_from_checkout_head_sha", historic)
+        self.assertNotIn("generated_from_main_sha", historic)
+        self.assertEqual(historic["cohort"]["admitted"], 0)
+        self.assertEqual(len(historic["rows"]), 11)
+        for bad in ("main", "HEAD", "0" * 39, "g" * 40):
+            with self.subTest(invalid_ref=bad), self.assertRaises(ValueError):
+                build(context_ref=bad)
+        with self.assertRaises(subprocess.CalledProcessError):
+            build(context_ref="0" * 40)
+
     def test_original_forecast_packet_identity_must_be_consistent_across_all_bindings(self):
         # Simulate post-decode corruption after an exact Git blob check. Both
         # source *identity* and hash must be cross-checked against the
