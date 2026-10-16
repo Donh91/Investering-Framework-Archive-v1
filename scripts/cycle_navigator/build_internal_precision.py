@@ -536,7 +536,7 @@ def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], reques
             # until existing owner reconciles failed-run artifacts/provider cost.
             prior_receipt_path = previous["receipt_path"]
             if not re.fullmatch(
-                    r"research/api_agent/outputs/cn_internal_precision/[0-9a-f]{64}/receipt\\.json",
+                    r"research/api_agent/outputs/cn_internal_precision/[0-9a-f]{64}/receipt\.json",
                     prior_receipt_path):
                 raise RuntimeError("CN_API_DURABLE_RESERVATION_RECEIPT_PATH_INVALID")
             remote_receipt = _cn_gh_file(prior_receipt_path, allow_not_found=True)
