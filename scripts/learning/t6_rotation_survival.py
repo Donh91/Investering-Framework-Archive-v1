@@ -119,6 +119,15 @@ def verified_replay_baseline(root: Path, seq: str, level: float, at: str) -> dic
     baseline = read_json(baseline_path)
     start = baseline.get("sequence_start_utc")
     source = baseline.get("source_packet_sha256")
+    # A first-cross observation and baseline are *both mutable repository
+    # files*. Their agreement is not independent proof of archived inputs.
+    # Source packet bytes were frozen at first-cross and bound by SHA-256.
+    packet_path = root / "sequences" / seq / "SOURCE_PACKET.json"
+    if not packet_path.is_file() or packet_path.is_symlink():
+        raise ValueError("t6_replay_first_source_packet_missing")
+    packet = read_json(packet_path)
+    if sha(packet) != source:
+        raise ValueError("t6_replay_first_source_packet_mismatch")
     if (not isinstance(start, str) or not isinstance(source, str)
             or len(source) != 64 or any(c not in "0123456789abcdef" for c in source)
             or sequence_id(source, start) != seq or parse_time(start) > parse_time(at)):
@@ -130,6 +139,11 @@ def verified_replay_baseline(root: Path, seq: str, level: float, at: str) -> dic
     first = read_json(first_path)
     before, crossed = first.get("prior_ethbtc"), first.get("current_ethbtc")
     axes = first.get("axes")
+    source_axes = snapshot_axes(packet)
+    original_first = prior_ethbtc(packet, float(scalar(packet, "ethbtc")))
+    if (packet_timestamp(packet) != start or snapshot_axes(packet) != axes
+            or original_first != before or scalar(packet, "ethbtc") != crossed):
+        raise ValueError("t6_replay_first_source_packet_mismatch")
     if (first.get("contract") != OBS_CONTRACT or first.get("authority") != AUTHORITY
             or first.get("event") != "FIRST_CROSS_FROZEN"
             or first.get("observed_at_utc") != start
@@ -333,6 +347,10 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
             "exit_side_outcome": None,
             "missingness_policy": "MISSING_REMAINS_UNKNOWN_NEVER_INFERRED",
         }
+        # Persist the original packet *before* baseline/state/observation.
+        # Replay validates its byte identity, not just two self-consistent
+        # derivative files. No API call, new authority or historical rewrite.
+        write_immutable(root / "sequences" / active / "SOURCE_PACKET.json", packet)
         write_immutable(root / "sequences" / active / "BASELINE.json", baseline)
         state = {"contract": STATE_CONTRACT, "active_sequence_id": active, "sequence_start_utc": observed_at, "source_packet_sha256": packet_hash}
         state_path.parent.mkdir(parents=True, exist_ok=True)
