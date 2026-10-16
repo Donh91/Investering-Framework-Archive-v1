@@ -15,7 +15,7 @@ gate = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(gate)
 
 HEAD = "a" * 40
-BOT = {"login": "chatgpt-codex-connector[bot]"}
+BOT = {"login": "chatgpt-codex-connector[bot]", "type": "Bot", "id": 199175422}
 HUMAN = {"login": "Donh91"}
 
 
@@ -42,6 +42,28 @@ class ReviewFinalityTests(unittest.TestCase):
         self.assertEqual(result["status"], "FINAL_TECHNICAL_REVIEW")
         self.assertTrue(result["technical_review_accepted"])
         self.assertTrue(result["not_formal_github_approved"])
+
+    def test_lookalike_bot_cannot_forge_positive_or_completed_state(self):
+        fake = {"login": "chatgpt-codex-connector-fake", "type": "User", "id": 999}
+        rows = [request(), {**summary(), "user": fake}, {**positive(), "user": fake}]
+        self.assertEqual(gate.decision(HEAD, rows, [], [])["status"],
+                         "REVIEW_IN_PROGRESS_OR_UNVERIFIED")
+
+    def test_same_bot_name_wrong_identity_is_untrusted(self):
+        wrong = {"login": "chatgpt-codex-connector[bot]", "type": "Bot", "id": 999}
+        rows = [request(), {**summary(), "user": wrong}, {**positive(), "user": wrong}]
+        self.assertFalse(gate.decision(HEAD, rows, [], [])["technical_review_accepted"])
+
+    def test_positive_requires_exact_matching_completed_state(self):
+        other = "a" * 10 + "b" * 30
+        rows = [request(), summary(head=other), positive(head=other)]
+        self.assertFalse(gate.decision(HEAD, rows, [], [])["technical_review_accepted"])
+
+    def test_positive_before_exact_state_completion_is_not_verified(self):
+        rows = [request(), positive(at="2026-10-15T23:01:00Z"),
+                summary(at="2026-10-15T23:02:00Z")]
+        self.assertEqual(gate.decision(HEAD, rows, [], [])["status"],
+                         "POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION")
 
     def test_review_race_negative_control_detects_mutated_missing_guard(self):
         # Remove the consequence of the actual pending-review guard in an
