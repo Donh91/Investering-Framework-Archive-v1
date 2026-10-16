@@ -19,6 +19,11 @@ assert.match(html, /390px|720px/, 'Mobile breakpoint missing');
 assert.match(html, /CycleNavigator-scores/, 'Independent proof navigation missing');
 assert.match(html, /CN_PUBLIC_SNAPSHOT_V2/, 'Public snapshot contract missing');
 assert.match(html, /PUBLIC_COMPASS_PROJECTION_v1/, 'Public Compass contract missing');
+assert.match(html, /CN_PUBLIC_SERIES_INDEX_v1/, 'Public series owner contract missing');
+for(const guard of ['weeklyAligned', 'deliveryFresh', 'compassFresh', 'scoreValid', 'actuals_hourly_coverage===168', 'candidate.public_issue_number<pub.public_issue_number']){
+  assert.ok(html.includes(guard), 'Public preview must fail closed on missing integrity gate: '+guard);
+}
+assert.match(html, /\/\^FINAL/, 'Only final source scores may be displayed');
 assert.match(html, /status==="ALIGNED"/, 'Compass/CN binding guard missing');
 const marketPath = html.match(/id="phase"[\s\S]*?<div class="rule"/)?.[0] || '';
 assert.ok(marketPath, 'Missing market timeline section');
