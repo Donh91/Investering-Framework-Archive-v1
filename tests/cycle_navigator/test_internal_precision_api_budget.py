@@ -246,6 +246,8 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                 stored["file_path"] = path
                 stored["body"] = base64.b64decode(fields["content"])
                 return {"commit": {"sha": "test"}} 
+            if path == f"contents/{cn.CN_RESERVATION_ROOT}?ref=main":
+                return None  # no historical reservations before this PUT
             if "contents/" in path and path.endswith("?ref=main"):
                 return {"encoding": "base64",
                         "content": base64.b64encode(stored["body"]).decode()}
