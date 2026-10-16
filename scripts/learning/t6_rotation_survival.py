@@ -155,6 +155,16 @@ def verified_replay_baseline(root: Path, seq: str, level: float, at: str) -> dic
     if not first_path.is_file():
         raise ValueError("t6_replay_state_mismatch")
     first = read_json(first_path)
+    # Historical evidence is schema-exact: absence is part of the freeze.
+    # Added outcome/censoring fields must not be accepted after maturation.
+    required_first_keys = {
+        "contract", "authority", "observed_at_utc", "source_packet_sha256",
+        "registered_ethbtc_level_read_only", "current_ethbtc",
+        "prior_ethbtc", "first_cross_detected", "active_sequence_id_before",
+        "axes", "missing_axes", "retrospective_creation", "event",
+    }
+    if set(first) != required_first_keys:
+        raise ValueError("t6_replay_frozen_first_schema_mismatch")
     before, crossed = first.get("prior_ethbtc"), first.get("current_ethbtc")
     axes = first.get("axes")
     source_axes = snapshot_axes(packet)
@@ -247,6 +257,13 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
         if any(original.get(key) != value for key, value in expected_source_fields.items()):
             raise ValueError(f"immutable_conflict:{observation_path}")
         event = original.get("event")
+        expected_keys = set(expected_source_fields) | {"active_sequence_id_before", "event"}
+        if event == "NO_ELIGIBLE_FIRST_CROSS":
+            expected_keys.add("right_censored")
+        elif event in {"ACTIVE_SEQUENCE_OBSERVATION", "ETHBTC_REVERSAL_OBSERVED"}:
+            expected_keys.update({"sequence_id", "time_in_state_days", "right_censored"})
+        if set(original) != expected_keys:
+            raise ValueError("t6_replay_frozen_observation_schema_mismatch")
         if event == "FIRST_CROSS_FROZEN":
             expected_active = sequence_id(packet_hash, observed_at)
         elif event == "ACTIVE_SEQUENCE_OBSERVATION":
@@ -330,6 +347,21 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
     state_path = root / "STATE.json"
     state = read_json(state_path) if state_path.exists() else {"contract": STATE_CONTRACT, "active_sequence_id": None}
     active = state.get("active_sequence_id")
+    if active is not None:
+        if (not isinstance(active, str) or not active.startswith("T6-")
+                or len(active) != 19 or any(c not in "0123456789abcdef" for c in active[3:])):
+            raise ValueError("t6_fresh_active_state_mismatch")
+        # Each real scheduled *new* packet must independently authenticate the
+        # original first-cross packet and frozen observation before any write.
+        # Protect the natural producer path, not only explicit replay.
+        baseline = verified_replay_baseline(root, active, level, observed_at)
+        expected_state = {
+            "contract": STATE_CONTRACT, "active_sequence_id": active,
+            "sequence_start_utc": baseline["sequence_start_utc"],
+            "source_packet_sha256": baseline["source_packet_sha256"],
+        }
+        if state != expected_state:
+            raise ValueError("t6_fresh_active_state_mismatch")
     crossed = prior is not None and prior < level <= current
     observation: dict[str, Any] = {
         "contract": OBS_CONTRACT,
