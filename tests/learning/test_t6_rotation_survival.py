@@ -461,5 +461,71 @@ class T6RotationSurvivalTests(unittest.TestCase):
             self.assertEqual(observation["time_in_state_days"], 1.0)
 
 
+    def test_frozen_first_observation_rejects_added_fields_even_without_value_change(self):
+        for field, value in (("right_censored", None), ("right_censored", True),
+                             ("failure_outcome", "CLAIMED_FAILURE"), ("extra_field", 1)):
+            for event in ("active", "reversal", "first_replay"):
+                with self.subTest(field=field, value=value, event=event), tempfile.TemporaryDirectory() as td:
+                    root = Path(td)
+                    initial = packet(0.0301, 0.0002)
+                    first = operate(initial, cadence(), root)
+                    first_path = Path(first["observation_path"])
+                    frozen = json.loads(first_path.read_text())
+                    self.assertNotIn(field, frozen)
+                    frozen[field] = value
+                    first_path.write_text(json.dumps(frozen))
+                    before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                    if event == "first_replay":
+                        next_packet = initial
+                    elif event == "reversal":
+                        next_packet = packet(0.0298, -0.0003, stamp="2026-09-10T01:00:00Z")
+                    else:
+                        next_packet = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                    with self.assertRaisesRegex(ValueError,
+                            "t6_replay_frozen_first_schema_mismatch|immutable_conflict"):
+                        operate(next_packet, cadence(), root)
+                    self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_fresh_active_and_reversal_reject_corrupted_frozen_baseline(self):
+        for event in ("active", "reversal"):
+            for field in ("source_packet_sha256", "axes_at_freeze", "sequence_start_utc"):
+                with self.subTest(event=event, field=field), tempfile.TemporaryDirectory() as td:
+                    root = Path(td)
+                    first = operate(packet(0.0301, 0.0002), cadence(), root)
+                    baseline_path = root / "sequences" / first["active_sequence_id"] / "BASELINE.json"
+                    baseline = json.loads(baseline_path.read_text())
+                    if field == "axes_at_freeze":
+                        baseline[field]["breadth"]["value"] = 0.99
+                    else:
+                        baseline[field] = "0" * 64 if field == "source_packet_sha256" else "2027-01-01T00:00:00Z"
+                    baseline_path.write_text(json.dumps(baseline))
+                    before = {p: p.read_bytes() for p in root.rglob("*.json")}
+                    sample = (packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+                              if event == "active" else
+                              packet(0.0298, -0.0003, stamp="2026-09-10T01:00:00Z"))
+                    with self.assertRaisesRegex(ValueError,
+                            "t6_replay_state_mismatch|t6_replay_first_source_packet_mismatch"):
+                        operate(sample, cadence(), root)
+                    self.assertEqual({p: p.read_bytes() for p in root.rglob("*.json")}, before)
+
+    def test_replayed_active_observation_rejects_unexpected_maturity_field(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            operate(packet(0.0301, 0.0002), cadence(), root)
+            sample = packet(0.0304, 0.0003, stamp="2026-09-10T01:00:00Z")
+            latest = operate(sample, cadence(), root)
+            obs_path = Path(latest["observation_path"])
+            frozen = json.loads(obs_path.read_text())
+            frozen["failure_outcome"] = "BACKFILLED"
+            obs_path.write_text(json.dumps(frozen))
+            pointer_path = root / "LATEST.json"
+            pointer = json.loads(pointer_path.read_text())
+            from scripts.learning.t6_rotation_survival import sha
+            pointer["observation_sha256"] = sha(frozen)
+            pointer_path.write_text(json.dumps(pointer))
+            with self.assertRaisesRegex(ValueError, "t6_replay_frozen_observation_schema_mismatch"):
+                operate(sample, cadence(), root)
+
+
 if __name__ == "__main__":
     unittest.main()
