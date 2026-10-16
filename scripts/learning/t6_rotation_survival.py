@@ -344,7 +344,33 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
                 raise ValueError("t6_replay_event_fields_mismatch")
         return latest
 
+    # A different never-seen packet is not permission to rewind the sequence.
+    # Compare the real producer's clock to the immutable latest observation
+    # before ANY state/baseline/observation write. Equal clock with different
+    # source identity is ambiguous and must not replace a frozen observation.
+    latest_path = root / "LATEST.json"
     state_path = root / "STATE.json"
+    if latest_path.exists():
+        previous_latest = read_json(latest_path)
+        previous_path_value = previous_latest.get("observation_path")
+        if (previous_latest.get("contract") != "ROTATION_SURVIVAL_LATEST_v1"
+                or not isinstance(previous_path_value, str)
+                or previous_latest.get("authority") != AUTHORITY
+                or not isinstance(previous_latest.get("observed_at_utc"), str)):
+            raise ValueError("t6_fresh_latest_pointer_mismatch")
+        previous_path = Path(previous_path_value)
+        if (not previous_path.is_file() or previous_path.is_symlink()
+                or not previous_path.is_relative_to(root)):
+            raise ValueError("t6_fresh_latest_pointer_mismatch")
+        previous_observation = read_json(previous_path)
+        if (previous_latest.get("observation_sha256") != sha(previous_observation)
+                or previous_latest["observed_at_utc"] != previous_observation.get("observed_at_utc")
+                or previous_latest.get("event") != previous_observation.get("event")):
+            raise ValueError("t6_fresh_latest_pointer_mismatch")
+        if parse_time(observed_at) <= parse_time(previous_latest["observed_at_utc"]):
+            raise ValueError("t6_fresh_packet_time_regression")
+    elif state_path.exists() or any((root / "observations").glob("*.json")):
+        raise ValueError("t6_fresh_latest_pointer_missing")
     state = read_json(state_path) if state_path.exists() else {"contract": STATE_CONTRACT, "active_sequence_id": None}
     active = state.get("active_sequence_id")
     if active is not None:
