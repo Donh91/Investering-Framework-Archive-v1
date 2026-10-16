@@ -140,6 +140,18 @@ class OriginalAdmissionTests(unittest.TestCase):
         ))
         self.assertTrue(all("current_main_outcome_status" not in x for x in rows["rows"]))
 
+    def test_checked_in_r1_v2_matches_frozen_context_generation_byte_for_byte(self):
+        # CI must compare the published research artifact to exact recomputation,
+        # not only compare an intentionally selected status/count summary.
+        pinned = "5a41cd3043bb582524f15fe9fde6f52792246a54"
+        path = admission.ROOT / (
+            "04_MARKET_LEARNING/handlekompas/research/"
+            "2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json"
+        )
+        rebuilt = (json.dumps(build(context_ref=pinned), indent=2, ensure_ascii=False) + "\n").encode()
+        self.assertEqual(path.read_bytes(), rebuilt)
+        self.assertEqual(json.loads(rebuilt)["cohort"]["admitted"], 0)
+
     def test_explicit_immutable_context_ref_is_not_ambient_synthetic_head(self):
         pinned = "5a41cd3043bb582524f15fe9fde6f52792246a54"
         historic = build(context_ref=pinned)
