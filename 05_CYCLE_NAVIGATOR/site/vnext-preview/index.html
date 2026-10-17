@@ -35,7 +35,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{text-transform:upper
 <div class="hero"><div><div class="heroLine"><span class="eyebrow">Markedets retning</span><span class="pill" id="status">Afventer offentlige data</span></div><h1 class="display" id="state">Cycle Navigator</h1><p class="lede" id="summary">Designstudie. Denne visning viser kun kildebundne oplysninger, når den offentlige CN-snapshot er tilgængelig.</p><div class="heroMeta"><span class="micro" id="issue">CN · offentlig uge ikke indlæst</span><span class="micro" id="refreshed">Seneste opdatering ukendt</span></div></div><div class="instrument" aria-hidden="true"><div class="needle"></div></div></div>
 <div class="sectionTop"><h2>Det vigtigste lige nu</h2><span class="sub">Tre spørgsmål, ét overblik</span></div>
 <div class="trio">
-<article class="panel"><span class="eyebrow">01 · Handling nu</span><div class="action" id="actionNow">AFVENT</div><p class="cardText" id="actionDesc">Officiel Kompas-handling kan ikke bekræftes endnu.</p></article>
+<article class="panel"><span class="eyebrow">01 · Handling nu</span><div class="action" id="actionNow">UTILGÆNGELIG</div><p class="cardText" id="actionDesc">Officiel Kompas-handling kan ikke bekræftes endnu.</p></article>
 <article class="panel"><span class="eyebrow">02 · Næste bekræftelse</span><div class="action" style="font-size:19px" id="nextGate">Ukendt</div><p class="cardText">Kun publicerede betingelser, ingen beregnet nedtælling.</p></article>
 <article class="panel"><span class="eyebrow">03 · Pullback / protection</span><div class="action" style="font-size:19px" id="riskStatus">Ukendt</div><p class="cardText" id="riskDesc">Risiko er ikke en selvstændig SELL-instruktion.</p></article>
 </div>
@@ -135,9 +135,11 @@ set("nextGate",safe(currentContext.next_gate)||"Afventer signal");
 var issued=Date.parse(c.issued_at_utc);
 var compassFresh=typeof c.issued_at_utc==="string"&&/(?:Z|[+-]\d\d:\d\d)$/.test(c.issued_at_utc)&&
  Number.isFinite(issued)&&issued<=now+300000&&now-issued<=86400000&&issued<=parsed+300000;
-var valid=deliveryFresh&&compassFresh&&c.data_status==="OK"&&typeof c.compass_id==="string"&&c.compass_id.trim()!=="";
-var aligned=valid&&c.weekly_context&&c.weekly_context.status==="ALIGNED"&&
+var sourceFresh=deliveryFresh&&compassFresh&&c.data_status==="OK"&&typeof c.compass_id==="string"&&c.compass_id.trim()!=="";
+var aligned=sourceFresh&&c.weekly_context&&c.weekly_context.status==="ALIGNED"&&
  c.weekly_context.forecast_week===pub.forecast_week&&c.weekly_context.public_issue_number===pub.public_issue_number;
+// A fresh Compass with a different public CN issue/week is NOT actionable.
+var valid=Boolean(aligned);
 set("compassHealth",valid?"Official Compass · OK":"KOMPAS · utilgængelig");
 set("actionNow",valid?(safe(c.action_now,"UTILGÆNGELIG")):"UTILGÆNGELIG");
 set("actionDesc",valid?"Officiel handling · "+(safe(c.issued_at_utc)||"tid ukendt"):"Intet verificeret aktuelt handlingssignal.");
