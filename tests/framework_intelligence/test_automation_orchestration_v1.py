@@ -141,5 +141,115 @@ class AutomationOrchestrationV1Test(unittest.TestCase):
             self.assertIn("sole CODEX_READY authority", result["note"])
 
 
+    def test_exact_identity_blocks_cross_workflow_collision_and_prose(self):
+        positive = [
+            ("ETF.yml", "etf.yaml"),
+            (".github/workflows/ETf.YML", "etf.yml"),
+            ("alpha.yml", "alpha"),
+            ("solo.yaml", ".github/workflows/solo.yml"),
+        ]
+        for row_name, health_name in positive:
+            with self.subTest(row_name=row_name):
+                self.assertTrue(mod.row_matches_workflow({"workflow": row_name}, health_name))
+        negatives = [
+            ({"workflow": "etf.yml", "state": "CODEX_READY"}, "daily-settled-etf-calibration.yml"),
+            ({"workflow": "alpha.yml", "state": "IN_REMEDIATION"}, "alpha-backup.yml"),
+            ({"workflow": "other.yml", "objective": "Fix ci.yml", "candidate_id": "ci",
+              "finding": "ci.yml failed", "candidate_path": "ci.yml"}, "ci.yml"),
+            ({"objective": "Fix ci.yml", "candidate_id": "ci"}, "ci.yml"),
+            ({"workflow": "research-intake/ci-fix", "candidate_id": "ci-fix"}, "ci.yml"),
+            ({"workflow": "etf.yml"}, ".github/workflows/other/etf.yml"),
+        ]
+        for row, name in negatives:
+            with self.subTest(row=row, target=name):
+                self.assertFalse(mod.row_matches_workflow(row, name))
+
+    def test_wrong_remediation_cannot_hide_red_workflow_or_paid_lane(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_fixture(root, [workflow("daily-settled-etf-calibration.yml")],
+                               remediation={"items": [{
+                                   "workflow": "etf.yml", "state": "CODEX_READY",
+                                   "finding": "daily-settled-etf-calibration.yml", "signature": "other"
+                               }]})
+            plan = mod.build_plan(root, root / "out")
+            self.assertEqual(plan["items"][0]["route"], "LUNA_TRIAGE")
+            self.assertTrue(plan["agent_calls"]["luna_required"])
+            self.assertEqual(plan["routing_summary"]["existing_remediation_count"], 0)
+
+    def test_exact_in_remediation_keeps_no_duplicate_model_calls(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_fixture(root, [workflow("ALPHA.yml", streak=3)],
+                               remediation={"items": [{
+                                   "workflow": ".github/workflows/alpha.yaml",
+                                   "state": "IN_REMEDIATION", "signature": "same"
+                               }]})
+            plan = mod.build_plan(root, root / "out")
+            self.assertEqual(plan["items"][0]["route"], "FOLLOW_EXISTING_REMEDIATION")
+            self.assertFalse(plan["agent_calls"]["sol_6_1_required"])
+            self.assertFalse(plan["agent_calls"]["luna_required"])
+
+    def test_verified_situation_room_intake_keeps_existing_dedup(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            cid = "codex-situation-room-daily-static-root-cause-v1"
+            relative = f"research/codex/intake/2026/08/{cid}.json"
+            candidate = {"contract": "CODEX_RESEARCH_CANDIDATE_v1",
+                         "candidate_id": cid, "status": "SUBMITTED",
+                         "primary_target": ".github/workflows/situation-room-daily-static.yml",
+                         "allowed_change_scope": [
+                             ".github/workflows/situation-room-daily-static.yml",
+                             ".github/workflows/situation-room-owner-live-gate.yml"]}
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(candidate))
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            link = {"workflow": f"research-intake/{cid}", "candidate_id": cid,
+                    "candidate_path": relative, "candidate_sha256": digest,
+                    "state": "POST_FIX_OBSERVATION", "signature": "observed"}
+            self.assertEqual(mod.verified_intake_target(root, link),
+                             ".github/workflows/situation-room-daily-static.yml")
+            self.write_fixture(root, [workflow("situation-room-daily-static.yml", streak=2)],
+                               remediation={"items": [link]})
+            plan = mod.build_plan(root, root / "out")
+            self.assertEqual(plan["items"][0]["route"], "FOLLOW_EXISTING_REMEDIATION")
+            self.assertFalse(plan["agent_calls"]["sol_6_1_required"])
+            # Multi-workflow scope is NOT permission to deduplicate the other gate.
+            self.write_fixture(root, [workflow("situation-room-owner-live-gate.yml")],
+                               remediation={"items": [link]})
+            other = mod.build_plan(root, root / "out2")
+            self.assertEqual(other["items"][0]["route"], "LUNA_TRIAGE")
+            # Tampered candidate, even with the same name, must not be trusted.
+            path.write_text(json.dumps({**candidate, "primary_target": ".github/workflows/etf.yml"}))
+            self.assertIsNone(mod.verified_intake_target(root, link))
+            self.write_fixture(root, [workflow("situation-room-daily-static.yml")],
+                               remediation={"items": [link]})
+            bad = mod.build_plan(root, root / "out3")
+            self.assertEqual(bad["items"][0]["route"], "LUNA_TRIAGE")
+
+    def test_negative_identity_fails_under_legacy_substring_mutation(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_fixture(root, [workflow("daily-settled-etf-calibration.yml")],
+                               remediation={"items": [{
+                                   "workflow": "etf.yml", "state": "CODEX_READY",
+                                   "signature": "alien"
+                               }]})
+            def assert_negative_guard():
+                plan = mod.build_plan(root, root / "mutant")
+                self.assertEqual(plan["items"][0]["route"], "LUNA_TRIAGE")
+            assert_negative_guard()
+            def old_substring(row, target, **kwargs):
+                left = mod.workflow_key(row.get("workflow"))
+                right = mod.workflow_key(target)
+                return bool(left and right and (left in right or right in left))
+            with patch.object(mod, "row_matches_workflow", old_substring):
+                with self.assertRaises(AssertionError):
+                    assert_negative_guard()
+
+
 if __name__ == "__main__":
     unittest.main()
