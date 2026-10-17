@@ -88,7 +88,7 @@ def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
         if any(not isinstance(p.get("id"), str) or not isinstance(p.get("code"), str)
                for p in proposals):
             return {**empty, "status": "INVALID"}
-        return {"status": "ADVISORY_CURRENT", "reference": rel,
+        return {"status": "ADVISORY_PREVIOUS_EVIDENCE", "reference": rel,
                 "proposal_ids": [p["id"] for p in proposals],
                 "attention_codes": [p["code"] for p in proposals],
                 "grok_review_candidate_count": sum(
