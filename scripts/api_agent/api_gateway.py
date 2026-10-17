@@ -296,7 +296,10 @@ def main() -> None:
     else:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: raise SystemExit("OPENAI_API_KEY_missing")
-        for attempt in range(2):
+        max_attempts = task_cfg.get("max_attempts", 2)
+        if type(max_attempts) is not int or max_attempts not in (1, 2):
+            raise ValueError("invalid_api_attempt_limit")
+        for attempt in range(max_attempts):
             payload = dict(request_payload)
             if attempt == 1:
                 payload["max_output_tokens"] = retry_output_token_limit(task_cfg)
