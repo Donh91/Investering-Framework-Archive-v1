@@ -40,11 +40,11 @@ Never claim an investment edge from a model vote, activity counts or one weekly
 delta. Never infer external evidence or missing historical timepoints.
 Forecast candidates MUST be [] and portfolio/trading actions forbidden.
 The output is untrusted ADVISORY, not autonomous routing or code.
-Format: status=READY|INSUFFICIENT_EVIDENCE, concise summary <=700 chars;
+Format: status=READY|DEGRADED, concise summary <=700 chars;
 evidence_for <=3 bounded observations, evidence_against <=3 falsifiers,
 uncertainties <=3 unresolved source-independent proofs,
 hypotheses <=3 owner-named reproducible questions with kill criterion.
-If no material investigation is justified, status INSUFFICIENT_EVIDENCE and say NO_ACTION.
+If no material investigation is justified, status DEGRADED and say NO_ACTION.
 Do not request tool calls, repo secrets, paid escalation, merge or trading.
 """
 
@@ -112,7 +112,8 @@ def verify_receipts(root: Path, packet: dict, now: datetime) -> None:
     for row in packet.get("proposals", []):
         if row.get("goal_id") not in allowed:
             raise ValueError("unowned_strategic_goal")
-    if (now - stamp(packet.get("generated_at_utc"))).total_seconds() not in range(0, MAX_AGE_SECONDS+1):
+    elapsed = (now - stamp(packet.get("generated_at_utc"))).total_seconds()
+    if elapsed < 0 or elapsed > MAX_AGE_SECONDS:
         raise ValueError("stale_or_future_strategist")
 
 
@@ -186,6 +187,10 @@ def check_output(root: Path, runtime: Path, *, run_id: str) -> dict[str, Any]:
     plan = load(runtime / "plan.json")
     if not plan.get("run_allowed") or not re.fullmatch(r"[0-9]{1,20}", run_id):
         raise ValueError("no_verified_run")
+    fingerprint = plan.get("material_fingerprint")
+    if (not isinstance(fingerprint, str) or not HEX.fullmatch(fingerprint) or
+            plan.get("reservation_path") != f"{RESERVATIONS}/{fingerprint}.json"):
+        raise ValueError("reservation_path_not_allowlisted")
     reserved = load(root / plan["reservation_path"])
     if reserved.get("contract") != "FRAMEWORK_STRATEGIST_SEMANTIC_RESERVATION_v1" or (
             reserved.get("material_fingerprint") != plan["material_fingerprint"] or
@@ -200,13 +205,13 @@ def check_output(root: Path, runtime: Path, *, run_id: str) -> dict[str, Any]:
     response = load(outputroot / "output.json")
     if (receipt.get("contract") != "API_AGENT_RECEIPT_v3" or receipt.get("task") != TASK or
             receipt.get("model") != MODEL or receipt.get("status") != "PASS" or
-            receipt.get("context_hash") != plan["context_sha256"] or
+            receipt.get("context_hash") != sha(canonical(load(runtime / "context.json")) + b"\n") or
             receipt.get("prompt_hash") != plan["prompt_sha256"] or
             receipt.get("forecast_candidate_count") != 0 or response.get("forecast_candidates") != []):
         raise ValueError("untrusted_api_receipt")
     if receipt.get("attempt_count") != 1:
         raise ValueError("multiple_paid_attempts_forbidden")
-    if sha(canonical(response)) != receipt.get("output_hash"):
+    if sha(canonical(response) + b"\n") != receipt.get("output_hash"):
         raise ValueError("api_output_hash_mismatch")
     fields = ("summary", "evidence_for", "evidence_against", "uncertainties", "hypotheses")
     if not isinstance(response.get("summary"), str) or len(response["summary"]) > 900:
@@ -215,7 +220,7 @@ def check_output(root: Path, runtime: Path, *, run_id: str) -> dict[str, Any]:
         rows = response.get(field)
         if not isinstance(rows, list) or len(rows) > 3 or any(not isinstance(x,str) or len(x) > 600 for x in rows):
             raise ValueError("unbounded_model_field:"+field)
-    if response.get("status") not in ("READY", "INSUFFICIENT_EVIDENCE"):
+    if response.get("status") not in ("READY", "DEGRADED"):
         raise ValueError("untrusted_model_status")
     result = {
         "contract":CONTRACT,"authority":"ADVISORY_MODEL_HYPOTHESIS_ONLY",
