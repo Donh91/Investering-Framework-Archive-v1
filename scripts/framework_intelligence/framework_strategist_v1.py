@@ -36,6 +36,8 @@ SOURCES = {
                          "WEEKLY_FORENSICS_PACK_v1", 14 * 24),
 }
 REQUIRED = set(SOURCES) - {"weekly_forensics"}
+ROW_FIELDS = {"weekly_delta": "changes", "unconsumed": "items",
+              "staleness": "items", "weekly_forensics": "findings"}
 ALLOWED_ROUTES = {"SUPERVISOR_ATTENTION", "EXISTING_SOURCE_OWNER", "GROK_REVIEW_CANDIDATE"}
 SEVERITY = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "INFO": 3}
 
@@ -165,6 +167,16 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
     receipts: dict[str, dict] = {"strategic_intent": intent_receipt}
     for name, (path, contract, age) in SOURCES.items():
         docs[name], receipts[name] = _read_receipt(root, path, contract, now, age)
+    # Well-formed JSON can still have a malformed payload. Treat it as
+    # unavailable evidence, not as an exception that kills the parent job.
+    for name, field in ROW_FIELDS.items():
+        document = docs.get(name)
+        if document is not None:
+            rows = document.get(field)
+            if (not isinstance(rows, list) or len(rows) > 10000
+                    or any(not isinstance(row, dict) for row in rows)):
+                docs[name] = None
+                receipts[name]["status"] = "INVALID_SCHEMA"
     incomplete = sorted(n for n in REQUIRED if docs[n] is None)
     observations: list[dict] = []
     verified_names = {n for n, doc in docs.items() if doc is not None}
@@ -172,6 +184,13 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
     # False-green and integrity: only authority-bound, not self-classified AI prose.
     health = docs["health"]
     evolution = docs["self_improvement"]
+    if health is not None and evolution is not None:
+        reported_hashes = evolution.get("source_sha256")
+        if (not isinstance(reported_hashes, dict)
+                or reported_hashes.get("automation_health") != receipts["health"]["sha256"]):
+            receipts["self_improvement"]["status"] = "SOURCE_BINDING_MISMATCH"
+            docs["self_improvement"] = None
+            evolution = None
     if health is not None and evolution is not None:
         health_status = health.get("status")
         verdict = evolution.get("operational_verdict")
@@ -277,12 +296,25 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
             context="Required strategic inputs unavailable; absence is UNKNOWN, not health."))
 
     # This is a proposal-only lens; no fabricated Alpha Lab/Task2/Compass outcome progress.
+    # A source mismatch is an explicit missing required input. In particular,
+    # do not use a second report about the same health bytes as independent truth.
+    incomplete = sorted(n for n in REQUIRED if docs[n] is None)
+    if incomplete and not any(x["code"] == "STRATEGIC_SOURCE_GAP" for x in observations):
+        observations.append(_observation(
+            "STRATEGIC_SOURCE_GAP", "HIGH", "RELIABILITY",
+            "Framework Learning Supervisor", [f"missing:{name}" for name in incomplete],
+            "Restore the exact owner receipt/binding before trusting strategic claims.",
+            context="Integrity mismatch is UNKNOWN, not a fresh outcome or root cause."))
     priority = sorted(observations, key=lambda x: (SEVERITY[x["severity"]], x["code"], x["id"]))
     accepted = priority[:3]
     for row in accepted:
         row["evidence_bindings"] = [
             {"name": key, **receipts[key]} for key in row["evidence_sources"] if key in receipts
         ]
+        row["evidence_fingerprint"] = _digest([
+            {"path": receipts[name]["path"], "sha256": receipts[name]["sha256"]}
+            for name in row["evidence_sources"] if name in receipts
+        ])[:24]
         row["grok_bridge_state"] = ("CANDIDATE_NOT_DISPATCHED" if
                                     row["routing"] == "GROK_REVIEW_CANDIDATE" else "NOT_REQUESTED")
     evidence_status = "DEGRADED" if incomplete or any(r["status"] != "CURRENT" for r in receipts.values()) else "CURRENT"
