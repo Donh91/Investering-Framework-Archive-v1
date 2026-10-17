@@ -261,7 +261,7 @@ def check_output(root: Path, runtime: Path, *, run_id: str) -> dict[str, Any]:
     except (KeyError, ValueError, TypeError):
         raise ValueError("unreadable_reservation_payload")
     git_blob = hashlib.sha1(
-        b"blob " + str(len(bytes_reserved)).encode() + b"\\0" + bytes_reserved
+        b"blob " + str(len(bytes_reserved)).encode() + b"\0" + bytes_reserved
     ).hexdigest()
     content = remote.get("content")
     commit = remote.get("commit")
