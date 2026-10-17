@@ -207,7 +207,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
       } : null;
     })() : null,
     bull_bear_1_3d: actionable ? officialBullBear(compass, '1_3d') : null,
-    permit_path_live_gates: cOK && cnJoined
+    permit_path_live_gates: actionable
   };
 
   // PATH is the weekly CN structure plus aligned Official Compass tier ladder.
