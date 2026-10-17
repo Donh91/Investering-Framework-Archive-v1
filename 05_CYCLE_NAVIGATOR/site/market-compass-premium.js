@@ -141,7 +141,8 @@ function actionFromLane(lane) {
   if (!p) return 'UNAVAILABLE'; // Missing source lane is not an explicit WAIT decision.
   if (/PREPARE|ADD|DEPLOY|TOPUP|BUY/.test(p)) return 'PREPARE';
   if (/HOLD/.test(p)) return 'HOLD';
-  return 'WAIT';
+  if (/WAIT|ABSTAIN|NO_ACTION/.test(p)) return 'WAIT';
+  return 'UNAVAILABLE'; // Unknown posture is not an authenticated WAIT decision.
 }
 
 function capSummary(compass) {
