@@ -205,7 +205,9 @@ class AutomationOrchestrationV1Test(unittest.TestCase):
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(candidate))
-            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            digest = hashlib.sha256(json.dumps(
+                candidate, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            ).encode("utf-8")).hexdigest()
             link = {"workflow": f"research-intake/{cid}", "candidate_id": cid,
                     "candidate_path": relative, "candidate_sha256": digest,
                     "state": "POST_FIX_OBSERVATION", "signature": "observed"}

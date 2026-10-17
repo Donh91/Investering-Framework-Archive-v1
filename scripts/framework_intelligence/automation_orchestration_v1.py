@@ -116,9 +116,12 @@ def verified_intake_target(repo: Path, row: dict[str, Any]) -> str | None:
         declared_digest = row.get("candidate_sha256")
         if not isinstance(declared_digest, str) or not re.fullmatch(r"[0-9a-f]{64}", declared_digest):
             return None
-        if hashlib.sha256(raw).hexdigest() != declared_digest:
-            return None
         candidate = json.loads(raw)
+        # Codex Research Intake uses canonical JSON hashing, NOT raw-file
+        # bytes (see write_codex_research_transition_receipt.py).
+        canonical = json.dumps(candidate, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        if hashlib.sha256(canonical).hexdigest() != declared_digest:
+            return None
     except (OSError, ValueError, TypeError):
         return None
     if not isinstance(candidate, dict) or candidate.get("contract") != "CODEX_RESEARCH_CANDIDATE_v1":
