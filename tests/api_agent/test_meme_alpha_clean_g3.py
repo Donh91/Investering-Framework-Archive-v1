@@ -8,6 +8,7 @@ from scripts.api_agent.meme_alpha_clean_g3 import (
     clean_g3_feature_summary,
     compute_asof_wallet_quality,
     freeze_clean_g3_shadow_packet,
+    evaluate_conviction_cluster_v0,
 )
 
 
@@ -186,6 +187,150 @@ class MemeAlphaCleanG3Tests(unittest.TestCase):
         feature_map = {item["feature_name"]: item for item in packet["features"]}
         self.assertEqual(feature_map["mean_asof_shrunk_sellable_5x_rate"]["feature_value_at_cutoff"], "UNKNOWN")
         self.assertEqual(feature_map["mean_asof_shrunk_sellable_5x_rate"]["mutability_class"], "UNKNOWN")
+
+
+    def _qualified_rows(self, wallets: tuple[str, ...]) -> tuple[dict, list[dict]]:
+        graph = build_current_token_buyer_graph(
+            create_event(),
+            [trade(f"e{i}", ts=1010 + i, wallet=w) for i, w in enumerate(wallets)],
+            cutoff_seconds=60,
+        )
+        outcomes = []
+        for wallet in wallets:
+            outcomes.extend([
+                prior(f"{wallet}-1", wallet, maturity="1970-01-01T00:10:00Z", five_x=True),
+                prior(f"{wallet}-2", wallet, maturity="1970-01-01T00:11:00Z", five_x=False),
+                prior(f"{wallet}-3", wallet, maturity="1970-01-01T00:12:00Z", five_x=True),
+            ])
+        return graph, compute_asof_wallet_quality(graph, outcomes, min_prior_matured=3)
+
+    def test_conviction_v0_two_independent_qualified_clusters_freeze_event(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        event = evaluate_conviction_cluster_v0(
+            buyer_graph=graph,
+            wallet_quality_rows=rows,
+            link_evidence=[],
+            provenance_by_wallet={"A": "PASS", "B": "PASS"},
+            liquidity_state="PASS",
+            sellability_state="PASS",
+        )
+        self.assertEqual(event["status"], "FROZEN_SHADOW_EVENT")
+        self.assertEqual(event["cluster_count"], 2)
+        self.assertEqual(event["funding_independence_state"], "PASS")
+        self.assertTrue(event["prospective_credit"])
+        self.assertFalse(event["authority"]["user_alert"])
+
+    def test_conviction_v0_strong_controller_collapses_two_wallets(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        event = evaluate_conviction_cluster_v0(
+            buyer_graph=graph,
+            wallet_quality_rows=rows,
+            link_evidence=[{
+                "kind": "STRONG_CONTROLLER", "wallet_a": "A", "wallet_b": "B",
+                "effective_at_utc": "1970-01-01T00:15:00Z",
+            }],
+            provenance_by_wallet={"A": "PASS", "B": "PASS"},
+            liquidity_state="PASS",
+            sellability_state="PASS",
+        )
+        self.assertEqual(event["cluster_count"], 1)
+        self.assertEqual(event["status"], "FROZEN_CONTROL")
+        self.assertEqual(event["control_class"], "SINGLE_CLUSTER")
+        self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_same_funder_fails_independence_closed(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        links = [
+            {"kind": "SAME_FUNDER", "wallet": "A", "funder": "F", "effective_at_utc": "1970-01-01T00:15:00Z"},
+            {"kind": "SAME_FUNDER", "wallet": "B", "funder": "F", "effective_at_utc": "1970-01-01T00:15:00Z"},
+        ]
+        event = evaluate_conviction_cluster_v0(
+            buyer_graph=graph, wallet_quality_rows=rows, link_evidence=links,
+            provenance_by_wallet={"A": "PASS", "B": "PASS"},
+            liquidity_state="PASS", sellability_state="PASS",
+        )
+        self.assertEqual(event["cluster_count"], 2)
+        self.assertEqual(event["funding_independence_state"], "UNKNOWN")
+        self.assertEqual(event["status"], "FROZEN_CONTROL")
+        self.assertEqual(event["control_class"], "MULTI_CLUSTER_NOT_ELIGIBLE")
+        self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_unknown_provenance_does_not_vote(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        event = evaluate_conviction_cluster_v0(
+            buyer_graph=graph, wallet_quality_rows=rows, link_evidence=[],
+            provenance_by_wallet={"A": "PASS", "B": "UNKNOWN"},
+            liquidity_state="PASS", sellability_state="PASS",
+        )
+        self.assertEqual(event["cluster_count"], 1)
+        self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_unknown_liquidity_or_sellability_never_passes(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        event = evaluate_conviction_cluster_v0(
+            buyer_graph=graph, wallet_quality_rows=rows, link_evidence=[],
+            provenance_by_wallet={"A": "PASS", "B": "PASS"},
+            liquidity_state="UNKNOWN", sellability_state="PASS",
+        )
+        self.assertEqual(event["cluster_count"], 2)
+        self.assertEqual(event["status"], "FROZEN_CONTROL")
+        self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_degraded_capture_is_control_despite_qualified_history(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        graph.update(capture_state="DEGRADED", eligible_for_training=False)
+        event = self._evaluate_qualified(graph, rows)
+        self.assertEqual(event["cluster_count"], 2)
+        self.assertEqual(event["control_class"], "MULTI_CLUSTER_NOT_ELIGIBLE")
+        self.assertEqual(event["status"], "FROZEN_CONTROL")
+        self.assertFalse(event["prospective_credit"])
+
+    def _evaluate_qualified(self, graph: dict, rows: list[dict]) -> dict:
+        return evaluate_conviction_cluster_v0(
+            buyer_graph=graph, wallet_quality_rows=rows, link_evidence=[],
+            provenance_by_wallet={row["wallet"]: "PASS" for row in rows},
+            liquidity_state="PASS", sellability_state="PASS",
+        )
+
+    def test_conviction_v0_capture_eligibility_must_be_explicit(self) -> None:
+        for capture, eligibility in (("COMPLETE", False), ("COMPLETE", None),
+                                     ("UNKNOWN", True), (None, True),
+                                     ("DEGRADED", True), ("COMPLETE", "true")):
+            graph, rows = self._qualified_rows(("A", "B"))
+            graph.update(capture_state=capture, eligible_for_training=eligibility)
+            with self.subTest(capture=capture, eligibility=eligibility):
+                self.assertFalse(self._evaluate_qualified(graph, rows)["prospective_credit"])
+
+    def test_conviction_v0_future_precomputed_history_cannot_vote(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        for row in rows:
+            row["latest_matured_outcome_at_utc"] = "1970-01-01T00:30:00Z"
+        event = self._evaluate_qualified(graph, rows)
+        self.assertEqual(event["cluster_count"], 0)
+        self.assertEqual(event["status"], "FROZEN_CONTROL")
+        self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_one_future_wallet_leaves_single_control(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        rows[0]["latest_matured_outcome_at_utc"] = "1970-01-01T00:30:00Z"
+        event = self._evaluate_qualified(graph, rows)
+        self.assertEqual(event["cluster_count"], 1)
+        self.assertEqual(event["control_class"], "SINGLE_CLUSTER")
+        self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_unknown_maturity_never_votes(self) -> None:
+        for value in (None, "", "not-a-time", "1970-01-01T00:12:00", 123):
+            graph, rows = self._qualified_rows(("A", "B"))
+            for row in rows:
+                row["latest_matured_outcome_at_utc"] = value
+            with self.subTest(value=value):
+                self.assertEqual(self._evaluate_qualified(graph, rows)["cluster_count"], 0)
+
+    def test_conviction_v0_cutoff_boundary_remains_eligible(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        for row in rows:
+            row["latest_matured_outcome_at_utc"] = graph["cutoff_utc"]
+        self.assertTrue(self._evaluate_qualified(graph, rows)["prospective_credit"])
 
 
 if __name__ == "__main__":
