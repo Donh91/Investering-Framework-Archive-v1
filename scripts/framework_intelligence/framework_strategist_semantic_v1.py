@@ -13,9 +13,16 @@ import base64
 import hashlib
 import json
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+# CLI calls from GitHub Actions use python scripts/.../this_file.py.
+# Anchor imports to the checked-out repository, not the invoking cwd.
+REPO_MODULE_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_MODULE_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_MODULE_ROOT))
 
 from scripts.framework_intelligence.framework_strategist_v1 import (
     DRYRUN_OUTPUT_PATH, INTENT_PATH, OUTPUT_PATH, REQUIRED, SOURCES,
