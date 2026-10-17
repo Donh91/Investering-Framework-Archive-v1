@@ -136,7 +136,10 @@ jobs:
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           ! grep -q 'CAPITAL ROTATION · HERE AND NOW' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'MARKET COMPASS UPDATED' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'CURRENT OFFICIAL COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'LAST VERIFIED COMPASS · NOT CURRENT' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'OFFICIAL COMPASS UNAVAILABLE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q 'MARKET COMPASS UPDATED' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'completed forecasts with score evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'SINCE LAST CN' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'WHY THIS CALL' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
