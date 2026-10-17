@@ -20,6 +20,31 @@ assert.match(html, /CycleNavigator-scores/, 'Independent proof navigation missin
 assert.match(html, /CN_PUBLIC_SNAPSHOT_V2/, 'Public snapshot contract missing');
 assert.match(html, /PUBLIC_COMPASS_PROJECTION_v1/, 'Public Compass contract missing');
 assert.match(html, /CN_PUBLIC_SERIES_INDEX_v1/, 'Public series owner contract missing');
+// Runtime adversarial source-join check: a fresh but wrong-week Compass is NOT actionable.
+const authorityStart = html.indexOf('var sourceFresh=deliveryFresh&&compassFresh');
+const authorityEnd = html.indexOf('set("compassHealth",', authorityStart);
+assert.ok(authorityStart >= 0 && authorityEnd > authorityStart, 'Compass authority gate not found');
+const authorityScript = new Script(html.slice(authorityStart, authorityEnd) + '\n({sourceFresh,aligned,valid})');
+const source = {
+  data_status:'OK', compass_id:'CMP-TEST',
+  weekly_context:{status:'ALIGNED',forecast_week:'2026-W42',public_issue_number:29}
+};
+const projection = {forecast_week:'2026-W42',public_issue_number:29};
+const checkAuthority = (c, pub, deliveryFresh=true, compassFresh=true) =>
+  authorityScript.runInNewContext({c,pub,deliveryFresh,compassFresh}).valid;
+assert.equal(checkAuthority(source,projection),true,'Matching fresh public source should pass');
+assert.equal(checkAuthority({...source,weekly_context:{...source.weekly_context,forecast_week:'2026-W41'}},projection),false,'Wrong week must fail');
+assert.equal(checkAuthority({...source,weekly_context:{...source.weekly_context,public_issue_number:28}},projection),false,'Wrong issue must fail');
+assert.equal(checkAuthority({...source,weekly_context:undefined},projection),false,'Missing join must fail');
+assert.equal(checkAuthority({...source,data_status:'UNAVAILABLE'},projection),false,'Unavailable Compass must fail');
+assert.equal(checkAuthority({...source,compass_id:''},projection),false,'Missing source ID must fail');
+assert.equal(checkAuthority(source,projection,false,true),false,'Stale CN delivery must fail');
+assert.equal(checkAuthority(source,projection,true,false),false,'Stale Compass must fail');
+assert.match(html, /set\\("actionNow",valid\\?/, 'Current action must use source-joined authority');
+assert.match(html, /set\\("sellState",valid\\?/, 'SELL must use source-joined authority');
+assert.match(html, /set\\("riskStatus",valid\\?/, 'Risk must use source-joined authority');
+assert.doesNotMatch(html, /id="actionNow">AFVENT</, 'Unverified initial action must not look like official WAIT');
+
 // Regression: unavailable source must never be presented as an official WAIT/HOLD decision.
 assert.ok(html.includes('addRow(aroot,[x,"Ukendt","UTILGÆNGELIG"])'), 'Missing source must be unavailable in asset rows');
 assert.ok(html.includes('set("actionNow","UTILGÆNGELIG")'), 'Failed source fetch must clear the current action');
