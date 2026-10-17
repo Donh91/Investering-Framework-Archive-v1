@@ -15,6 +15,10 @@ on:
       - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
       - 'scripts/framework_intelligence/self_improvement_v1.py'
+      - 'scripts/framework_intelligence/framework_strategist_v1.py'
+      - 'tests/framework_intelligence/test_framework_strategist_v1.py'
+      - '00_FMOS/framework_strategist/**'
+      - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'scripts/framework_intelligence/supervisor_mission_intake_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_replay_v1.py'
@@ -77,6 +81,7 @@ jobs:
             scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/self_improvement_v1.py \
+            scripts/framework_intelligence/framework_strategist_v1.py \
             scripts/framework_intelligence/supervisor_mission_intake_v1.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
@@ -89,6 +94,7 @@ jobs:
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_self_improvement_v1 \
+            tests.framework_intelligence.test_framework_strategist_v1 \
             tests.framework_intelligence.test_supervisor_mission_intake_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
@@ -112,6 +118,9 @@ jobs:
           python scripts/framework_intelligence/self_improvement_v1.py \
             --repo-root . \
             --output runtime/framework-learning-supervisor/LATEST_SELF_IMPROVEMENT_V1.json
+          python scripts/framework_intelligence/framework_strategist_v1.py \
+            --repo-root . \
+            --output runtime/framework-learning-supervisor/strategist/LATEST.json
           python scripts/framework_intelligence/operational_memory_v1.py \
             --repo-root . \
             --output-root runtime/operational-memory \
@@ -137,6 +146,7 @@ jobs:
           p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
           q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
           evolution=json.loads((root/'LATEST_SELF_IMPROVEMENT_V1.json').read_text())
+          strategist=json.loads((root/'strategist/LATEST.json').read_text())
           om=Path('runtime/operational-memory')
           h=json.loads((om/'LATEST_OPERATIONAL_MEMORY_HEALTH.json').read_text())
           st=json.loads((om/'LATEST_OPERATIONAL_MEMORY_STATE.json').read_text())
@@ -148,6 +158,12 @@ jobs:
           assert p['live_consumption_allowed'] is False
           assert q['authority']=='PROPOSAL_ONLY'
           assert evolution['contract']=='SELF_IMPROVEMENT_ADVISORY_v1'
+          assert strategist['contract']=='FRAMEWORK_STRATEGIST_BRIEF_v1'
+          assert strategist['authority']['portfolio_execution'] is False
+          assert strategist['authority']['autonomous_grok_request'] is False
+          assert strategist['authority']['autonomous_api_payment'] is False
+          assert strategist['authority']['autonomous_merge'] is False
+          assert len(strategist['proposals']) <= 3
           assert evolution['authority']['automatic_promotion'] is False
           assert evolution['authority']['automatic_merge'] is False
           assert evolution['authority']['automatic_code_write'] is False
@@ -667,6 +683,7 @@ jobs:
             scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/self_improvement_v1.py \
+            scripts/framework_intelligence/framework_strategist_v1.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
             scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
@@ -674,6 +691,7 @@ jobs:
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_self_improvement_v1 \
+            tests.framework_intelligence.test_framework_strategist_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_capability_router \
@@ -700,6 +718,9 @@ jobs:
           python scripts/framework_intelligence/self_improvement_v1.py \
             --repo-root . \
             --output research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json
+          python scripts/framework_intelligence/framework_strategist_v1.py \
+            --repo-root . \
+            --output research/framework_learning/strategist/LATEST.json
           python scripts/framework_intelligence/operational_memory_v1.py \
             --repo-root . \
             --output-root research/framework_learning/operational_memory \
@@ -722,17 +743,25 @@ jobs:
           p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
           q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
           evolution=json.loads((root/'LATEST_SELF_IMPROVEMENT_V1.json').read_text())
+          strategist=json.loads((root/'strategist/LATEST.json').read_text())
           om=root/'operational_memory'
           h=json.loads((om/'LATEST_OPERATIONAL_MEMORY_HEALTH.json').read_text())
           st=json.loads((om/'LATEST_OPERATIONAL_MEMORY_STATE.json').read_text())
           audit=json.loads((om/'LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json').read_text())
           handoff=json.loads(Path('research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json').read_text())
+          assert handoff['evidence']['FRAMEWORK_STRATEGIST']['sha256']
           assert s['canonical_effect'] is False
           assert s['portfolio_execution'] is False
           assert s['master_monday_live_influence'] is False
           assert p['live_consumption_allowed'] is False
           assert q['authority']=='PROPOSAL_ONLY'
           assert evolution['contract']=='SELF_IMPROVEMENT_ADVISORY_v1'
+          assert strategist['contract']=='FRAMEWORK_STRATEGIST_BRIEF_v1'
+          assert strategist['authority']['portfolio_execution'] is False
+          assert strategist['authority']['autonomous_grok_request'] is False
+          assert strategist['authority']['autonomous_api_payment'] is False
+          assert strategist['authority']['autonomous_merge'] is False
+          assert len(strategist['proposals']) <= 3
           assert evolution['authority']['automatic_promotion'] is False
           assert evolution['authority']['automatic_merge'] is False
           assert evolution['authority']['automatic_code_write'] is False
@@ -967,6 +996,7 @@ jobs:
           for rel in \
             research/framework_learning/LATEST_SUPERVISOR_STATE.json \
             research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json \
+             research/framework_learning/strategist/LATEST.json \
             research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json \
             research/framework_learning/LATEST_DELEGATION_QUEUE.json \
             research/framework_learning/automation_orchestration/LATEST_PLAN.json \
