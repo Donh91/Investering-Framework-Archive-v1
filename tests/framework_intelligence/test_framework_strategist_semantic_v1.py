@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import tests.framework_intelligence.test_framework_strategist_v1 as fixtures
+from scripts.api_agent.api_gateway import api_attempt_limit
 from scripts.framework_intelligence.framework_strategist_semantic_v1 import (
     CONTRACT, LATEST, MODEL, OUTPUT_PATH, RESERVATIONS, RUNTIME,
     TASK, canonical, check_output, create_plan, reservation_payload, sha,
@@ -59,6 +60,13 @@ class SemanticTest(unittest.TestCase):
         self.fixture.write(str(output.relative_to(self.root) / "output.json"),result)
         self.fixture.write(str(output.relative_to(self.root) / "receipt.json"),receipt)
         return plan, row, receipt, result
+
+    def test_gateway_one_attempt_override_does_not_change_other_tasks(self):
+        self.assertEqual(api_attempt_limit({"max_attempts": 1}), 1)
+        self.assertEqual(api_attempt_limit({}), 2)
+        for value in (0, 3, True, "1", None):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                api_attempt_limit({"max_attempts": value})
 
     def test_prepare_material_high_uses_terra_existing_lane(self):
         plan = self.plan()
