@@ -109,8 +109,10 @@ def _health_input_issues(health: dict[str, Any], workflows: list[dict[str, Any]]
         current_source_time = _timestamp(health.get("generated_at_utc"))
         if current_source_time < previous_source_time:
             issues.append("SOURCE_TIME_REGRESSION")
-    except (KeyError, TypeError):
-        pass
+    except (KeyError, TypeError, ValueError, AttributeError):
+        # Malformed previous metadata cannot lock the live advisory writer.
+        # It must never be accepted as proof of recovery or freshness.
+        issues.append("PRIOR_SOURCE_BINDING_UNREADABLE")
     return list(dict.fromkeys(issues)), coverage
 
 
@@ -239,7 +241,10 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
     registry_status = _source_age_status(registry.get("generated_at_utc"), now)
     current = health_status == "CURRENT" and registry_status == "CURRENT"
     health_issues, live_coverage = _health_input_issues(health, workflows, prior)
-    source_changed = health_sha != (prior.get("source_sha256") or {}).get("automation_health")
+    prior_source_sha = prior.get("source_sha256")
+    if not isinstance(prior_source_sha, dict):
+        prior_source_sha = {}
+    source_changed = health_sha != prior_source_sha.get("automation_health")
     trustworthy_new_receipt = current and not health_issues and source_changed
     source_timestamp = _timestamp(health.get("generated_at_utc")).isoformat().replace("+00:00", "Z")
     incidents = []
