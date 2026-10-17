@@ -5,6 +5,7 @@ import { officialPullbackStage } from './official-pullback-stage.mjs';
 import { officialPullbackInvestorView } from './official-pullback-investor-view.mjs';
 import { officialBullBear } from './official-bullbear.mjs';
 import { officialPathView } from './official-path.mjs';
+import { initializeCurrentPublicPanel, paintCurrentPublicPanel } from './current-public-panel.mjs';
 'use strict';
 
 const SOURCE_FILE = './seed.json';
@@ -939,6 +940,7 @@ async function initialize() {
       // Translate static content first. The source-owned ETA text is dynamic
       // and must be painted LAST; i18n keeps the original text node baseline.
       selectLanguage(button.dataset.lang);
+      paintCurrentPublicPanel(button.dataset.lang);
       if (data) {
         paintPullback(data, button.dataset.lang);
         paintPath(data, button.dataset.lang);
@@ -952,6 +954,9 @@ async function initialize() {
   });
   bindNavigation();
   bindPanels();
+  // Independent current readback: archived preview remains frozen regardless
+  // of public-feed availability. No forecast actions are ever synthesized here.
+  void initializeCurrentPublicPanel(currentLanguage());
   if (typeof window.matchMedia === 'function') {
     window.matchMedia('(max-width: 580px)').addEventListener?.('change', () => {
       // Recreate paths and clip geometry only when crossing the real breakpoint.
