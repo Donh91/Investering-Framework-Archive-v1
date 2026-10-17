@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { inspectOfficialPublicFeeds } from './official-feed-parity.mjs';
+import { summarizeCurrentPublic } from './current-public-panel.mjs';
 
 // Synthetic shapes only, not simulated market predictions or public observations.
 // Reproduce the current official public site/build-public.mjs output contracts
@@ -519,6 +520,29 @@ it('actual public build readback agrees with canonical weekly, Compass and matur
  assert.equal(liveLatest.public_scorecard.status,index.latest_completed_score.status);
  const now=new Date().toISOString();
  const actual=inspectOfficialPublicFeeds(liveLatest,liveCompass,{nowUtc:now});
+ // Exact public builder output -> first-viewport adapter; never archived seed.
+ const investorCurrent=summarizeCurrentPublic(liveLatest,liveCompass,{nowUtc:now});
+ const knownAction=new Set(['HOLD_WAIT','HOLD','HARD_WAIT','WAIT','BUY','BUY_DIP','PREPARE']);
+ const currentExpected=actual.compass.state==='FRESH' &&
+   actual.compass.permit_path_live_gates===true &&
+   knownAction.has(actual.compass.action_now);
+ assert.equal(investorCurrent.status,currentExpected?'CURRENT_VERIFIED':'UNAVAILABLE');
+ assert.equal(investorCurrent.action,currentExpected?actual.compass.action_now:'UNAVAILABLE');
+ const actualDirection=liveCompass.horizons?.NEXT_12H?.expected_direction;
+ const safeDirection=new Set(['UP','DOWN','MIXED','SIDEWAYS','NEUTRAL','BULLISH','BEARISH']);
+ assert.equal(investorCurrent.direction,currentExpected&&safeDirection.has(actualDirection)?
+   actualDirection:'UNKNOWN');
+ assert.equal(investorCurrent.forecast_week,actual.weekly.forecast_week);
+ if(investorCurrent.status==='CURRENT_VERIFIED') {
+   assert.equal(investorCurrent.source_identity,liveCompass.compass_id);
+ }
+ const noOwner=structuredClone(liveCompass);
+ noOwner.full_stack={...noOwner.full_stack,official_freshness:{status:'UNAVAILABLE'}};
+ const noOwnerCurrent=summarizeCurrentPublic(liveLatest,noOwner,{nowUtc:now});
+ assert.equal(noOwnerCurrent.status,'UNAVAILABLE');
+ assert.equal(noOwnerCurrent.action,'UNAVAILABLE');
+ assert.equal(noOwnerCurrent.direction,'UNKNOWN');
+
  assert.equal(actual.delivery_health,'FRESH');
  assert.equal(actual.weekly.public_issue_number,index.current_public_projection.public_issue_number);
  assert.equal(actual.weekly.machine_issue_number,pointer.issue_number);
@@ -547,11 +571,13 @@ it('actual public build readback agrees with canonical weekly, Compass and matur
  assert.equal(wrongContractResult.weekly.state,'UNAVAILABLE');
  assert.equal(wrongContractResult.compass.action_now,'UNAVAILABLE');
  assert.equal(wrongContractResult.completed_score.price_range_precision,null);
+ assert.equal(summarizeCurrentPublic(wrongContract,liveCompass,{nowUtc:now}).status,'UNAVAILABLE');
  const wrongWeek=structuredClone(liveLatest);
  wrongWeek.public_series.current_public_projection.forecast_week='1900-W01';
  const mismatched=inspectOfficialPublicFeeds(wrongWeek,liveCompass,{nowUtc:now});
  assert.equal(mismatched.weekly.state,'MISMATCH');
  assert.equal(mismatched.compass.permit_path_live_gates,false);
+ assert.equal(summarizeCurrentPublic(wrongWeek,liveCompass,{nowUtc:now}).action,'UNAVAILABLE');
  const pending=structuredClone(liveLatest);
  pending.public_series.latest_completed_score.status='PENDING';
  assert.equal(inspectOfficialPublicFeeds(pending,liveCompass,{nowUtc:now}).completed_score.state,'MISMATCH_OR_INCOMPLETE');
