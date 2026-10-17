@@ -93,73 +93,42 @@ Lifecycle state never converts a genuine active failure into success. Invalid li
 
 
 
-## Universal GitHub queue continuity (2026-10-14 owner clarification)
+## Universal GitHub queue continuity — NON-BINDING proposal (2026-10-14; revised 2026-10-18)
 
-**Scope:** All existing GitHub queues and queued issues/PR work in the Investering framework estate, including Codex/remediation, scientific experiments, Research Lab, Alpha Lab, Compass/Cycle Navigator, FMOS, operational maintenance and future domain-owned queues. **This is a shared accountability expectation, not a new global queue, scheduler, executor, source of truth or automatic work authorization.** Queue owners and their canonical state contracts remain authoritative. Prefer established owner routes over creating new central middleware.
+**Review status: PROPOSED / NO OWNER RATIFICATION VERIFIED / NOT CURRENT GOVERNING POLICY.** This bounded cross-domain note describes a possible consistency principle for existing GitHub queues. It does **not** amend operative contracts of Codex/remediation, scientific experiments, Research Lab, Alpha Lab, Compass/Cycle Navigator, FMOS or Supervisor. Current AGENTS.md, per-domain contracts, schedules and documented receipts retain precedence.
 
-### Binding invariant
+### Suggested interpretation, not a new lifecycle
 
-> **QUEUE IS A COMMITMENT TO FOLLOW THROUGH, NOT PROOF OF EXECUTION.** A queued item must remain owned and traceable until a documented terminal outcome or a valid, observed wait/block state. The user must not have to remember to manually carry research conclusions, implementation instructions or remediation between GitHub agents and domain owners.
+> A queue entry identifies proposed or admitted work; it is never evidence that execution, scientific validation, notification or downstream consumption occurred.
 
-Before declaring a new queue item actionable, the existing owner records, in its own established issue/body/queue contract or authorized receipt (field names may differ):
-1. a stable identity, source/ref and reason for the work;
-2. a single accountable **owner/consumer**, with existing queue or execution route;
-3. a precisely bounded **next action**, its dependencies and its eligibility trigger;
-4. evidence class, scope, immutable source binding where applicable, and permitted/forbidden actions;
-5. priority, budget, concurrency and review requirements inherited from the owner, not improvised by intake;
-6. one status/last-verified-readback pointer to execution, result, independent review or the explicit blocker.
+When an **existing authorized owner** next updates its ordinary record, useful fields *within that owner's current schema* include: stable source/ref and evidence class, accountable owner, next admissible action, dependencies/eligibility/revisit condition, budget/security/review limits, and completion or blocked-state evidence. Exact fields, state labels and required events differ by domain. This is **not** a newly mandatory schema, extra durable registry or independent runner.
 
-If item admission is intentionally only a research idea or an observation, it must say **RESEARCH_ONLY**, **AUTO_OBSERVE** or the owner's equivalent; that does not authorize expensive research, code writes, experiments, market claims or trades. A legitimate prospective wait is not a failed task merely because time passes.
+Illustrative owner-specific lifecycle only:
 
-### Domain owner's lifecycle, not a new state authority
+~~~text
+SOURCE / INTAKE
+  -> existing domain owner + deduplication (if admitted)
+  -> eligibility/readiness under that owner's rules
+  -> real execution + source/commit evidence OR explicit wait/block
+  -> applicable independent review, maturation and consumer readback
+  -> domain-authorized closed/rejected/superseded outcome OR continued wait
+~~~
 
-Normal path, with domain-specific state names retained:
+**Do not conflate:** an issue comment, a merged PR, GitHub Actions success, CODEX_READY, a model technical review comment and a verified natural production outcome. Each establishes a different fact. A research note that was never admitted is not an overdue operational task. An expected wait for first-known market data, a qualified source or available approved budget is not automatically failure.
 
-\`\`\`text
-ENQUEUED / REGISTERED
- -> DEDUPLICATED + OWNER_BOUND
- -> ELIGIBLE + GOVERNED EXECUTION HANDOFF
- -> ACTUAL RUN / CODE PR / RESEARCH EVIDENCE (or WAIT / BLOCKED)
- -> INDEPENDENT VERIFICATION / OUTCOME MATURATION
- -> DOMAIN READBACK VERIFIED
- -> DONE / REJECTED / SUPERSEDED / EXPLICITLY BLOCKED WITH REOPEN TRIGGER
-\`\`\`
+### Existing authority and permitted follow-up
 
-- **Not the same thing:** a GitHub issue comment, accepted PR, workflow scheduled, workflow run success, state file created, CodeX-ready candidate or AI model opinion. Each may be evidence of only its own step, not proof of downstream consumption.
-- A queue item cannot be called \`DONE\` merely because the PR merged; the **intended downstream consumer** and post-merge verification receipt are required where the task's purpose includes activation or delivery.
-- An item with no existing consumer, missing source, unavailable budget/Work credits, unauthorized action, unavailable private evidence, disputed owner or unmet safety gate remains explicit **BLOCKED/WAITING + blocker + existing escalation/reopen owner**, not silently dropped, repeatedly re-queued or routed to a newly invented agent.
-- Scientific/risk claims cannot move to \`PROVEN\`, and staged candidates cannot be treated as trade or portfolio permissions, without their distinct evidence/maturation gates.
-- Negative findings, deduplicated ideas, dead ends, cancelled tasks and missing data are valid **durable terminal or waiting** outcomes. Never manufacture a PASS to empty the queue.
+- Preserve existing domain-owned processes. Route bounded reproducible code defects only through the existing Codex intake and remediation controller; method candidates via Research Lab/Experiment Lifecycle; rendering defects via current SITE/CN owners. Do not add a global queue, scheduler, supervisor obligation, starvation scanner, source-of-truth index or unattended execution trigger.
+- **No new standing Supervisor requirement is established here.** Sampling blocked/eligible records, reporting age or implementing starvation detection are only candidate practices for a separately authorized, measurable, domain-owned pilot. First establish true eligibility and owner from canonical sources.
+- An owner may preserve explicit WAITING/UNVERIFIED/NO_SOURCE or native equivalents where its authoritative contract supports them. An issue comment cannot authenticate spending, permissions, private-data access, merges or portfolio actions.
+- Future workflow/code changes require separate scoped PRs obeying then-current ownership, safety, CI, review and post-merge readback gates. This document is not that implementation.
+- The existing code-delivery topology QUEUED -> IN_PR -> MERGED -> READBACK_VERIFIED -> DONE remains applicable **only where the existing owner contract adopts it**. Rejected, superseded, non-actionable or pending research must not be relabelled successful.
 
-### Existing Supervisor and owner responsibility
+### Review and adoption boundaries
 
-When the existing Supervisor / FMOS / domain owner next inspects **its authorized** queue or sees new intake evidence, perform a *source-first continuity check* without creating additional automations:
+The 2026-10-16 AGENTS.md owner-approved single-account merge exception, where applicable, differs from a formal independent GitHub APPROVED review. Owner authorization is not an independent endorsement; model reviews (including Grok/Codex technical comments) are advisory evidence, not a GitHub approval or authority change.
 
-\`\`\`text
-queue item -> current owner -> source-of-truth status -> eligibility trigger
- -> consumer / exact workflow or PR -> actual run/commit/receipt
- -> downstream readback -> final state or named blocker
-\`\`\`
-
-1. **Deduplicate** against current queues, owner PRs, Codex remediation and prior receipts before making work.
-2. If the next step is eligible and **already authorized**, hand it to its existing owner or executor using that owner's admission/dispatch contract. Do not assert an issue comment is authenticated authorization.
-3. If work cannot legitimately progress, preserve the item with exact \`WAITING_FOR_SOURCE\`, \`WAITING_FOR_BUDGET\`, \`NEEDS_REVIEW\`, \`PRIVATE_DATA_AUTHORITY_UNAVAILABLE\`, \`NOT_YET_ELIGIBLE\`, etc., mapped to the existing owner's vocabulary, and identify who/what can unblock it.
-4. Detect **silent starvation** from actual expected schedule opportunities and source-freshness receipts; distinguish expected wait from a missed eligible execution. Report aged actionable items to existing supervisor/remediation owners, not to a new queue.
-5. Verify a **real downstream consumer** before declaring closure. Missing run/readback/proof is \`NOT_VERIFIED\`, not \`PASS\`. Reopened regressions follow existing Codex/experiment/run life-cycle policy.
-6. Route a reproducible bounded code defect through existing \`research/codex/intake\`; experiment proposals through Experiment Lifecycle; specialist methodology through Research Lab; presentation issues to their existing site/Compass owner. Do not replace any owner.
-
-The original FMOS receipt rule \`QUEUED -> IN_PR -> MERGED -> READBACK_VERIFIED -> DONE\` remains binding for code-delivery/activation where applicable. Some queues legitimately end at \`REJECTED\`, \`DUPLICATED\`, \`UNTESTABLE\` or \`WAITING_FOR_FUTURE_ELIGIBLE_EVENT\`. Do not force code PRs for method observations.
-
-### Adoption and real verification
-
-**No blanket claim that every old GitHub issue now auto-executes.** This paragraph supplies an operational interpretation that existing controllers and new queued work should obey after reviewed merge. Domain owners adopt it **within their current governance and execution contracts** and must supply actual source/run/consumer evidence.
-
-The existing Supervisor should progressively sample at least one eligible and one blocked item per significant queue family and report:
-\`queue_id | owner | next_action | gate | runner_or_wait | actual_receipt | consumer_readback | state | blocker_or_reopen\`.
-
-If a queue family has no functioning consumer, fix that existing owner's handoff **before** inventing a new agent, watcher, scheduled check or registry. Any code/workflow modification requires its own bounded reviewed PR and the high-impact safepoint procedure when applicable. Do not alter budgets, protected/main branches, privacy boundaries, Claude manual-only policy, automatic merging, Round 3 firewall or trading authority to implement this rule.
-
-**Success criterion:** For admitted eligible items, all observable transitions are accounted for by the real owner; for ineligible items, the precise reason and re-entry condition remain retrievable. A well-labelled waiting case is an honest outcome. An unconsumed report is not a completed task.
+This section is **a reviewable proposal only**. Future adoption into operational instructions requires an authenticated domain-owner decision, exact current-main applicability, identified consumer, independent technical review where required, and bounded post-adoption readback. There is no presumption old unprocessed issues are automatically monitored or that this documentation authorizes action.
 
 ## Remediation and Codex
 
