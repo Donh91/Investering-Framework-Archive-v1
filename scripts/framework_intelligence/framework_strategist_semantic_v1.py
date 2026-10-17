@@ -269,7 +269,7 @@ def check_output(root: Path, runtime: Path, *, run_id: str) -> dict[str, Any]:
             content.get("path") != plan["reservation_path"] or
             content.get("sha") != git_blob or
             not isinstance(commit.get("sha"), str) or
-            not HEX.fullmatch(commit["sha"].lower() + "0" * 24 if len(commit["sha"]) == 40 else "")):
+            re.fullmatch(r"[0-9a-f]{40}",commit["sha"]) is None):
         raise ValueError("reservation_remote_sha_not_verified")
     if (reserved.get("contract") != "FRAMEWORK_STRATEGIST_SEMANTIC_RESERVATION_v1" or
             reserved.get("material_fingerprint") != plan["material_fingerprint"] or
