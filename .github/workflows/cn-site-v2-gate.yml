@@ -30,6 +30,8 @@ jobs:
           python3 scripts/cycle_navigator/validate_public_series.py
           node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/tests/official-compass-freshness.test.mjs
+          node 05_CYCLE_NAVIGATOR/site/tests/full-stack-readback.test.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           python3 scripts/cycle_navigator/build_public_live_precision.py
