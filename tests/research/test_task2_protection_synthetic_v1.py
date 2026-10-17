@@ -68,6 +68,20 @@ class CounterfactualTests(unittest.TestCase):
         out=simulate_synthetic(scenario([100,90,80,70]),signal(delivered_h=1),policy(reentry=0))
         self.assertEqual(out['sale_at'],(BASE+timedelta(hours=2)).isoformat())
         self.assertEqual(out['reentry_at'],(BASE+timedelta(hours=3)).isoformat())
+    def test_warning_before_first_quote_fills_first_quote(self):
+        # Issued and delivered before the synthetic tape starts; the first
+        # quote is the first time a tradable quote is actually available.
+        out=simulate_synthetic(scenario([100,95,90,92]),
+            signal(source_h=-1,issued_h=-1,delivered_h=-1),policy(reentry=2))
+        self.assertEqual(out['sale_at'],BASE.isoformat())
+        self.assertEqual(out['reentry_at'],(BASE+timedelta(hours=2)).isoformat())
+        self.assertEqual(out['evidence_class'],'SYNTHETIC_ONLY_NOT_HISTORICAL_EDGE')
+
+    def test_warning_delivered_on_first_quote_waits_until_next(self):
+        # No execution on a quote published simultaneously with delivery.
+        out=simulate_synthetic(scenario([100,95,90]),signal(),policy())
+        self.assertEqual(out['sale_at'],(BASE+timedelta(hours=1)).isoformat())
+
     def test_btc_low_loss_not_altcoin_fill_proxy(self):
         # Illiquid altcoin never borrows a synthetic liquid BTC fill.
         out=simulate_synthetic(scenario([100,80,50,30], capacities=[1e9,10,10,10]),signal(),policy())
