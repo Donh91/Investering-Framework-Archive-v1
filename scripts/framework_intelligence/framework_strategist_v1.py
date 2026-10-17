@@ -63,6 +63,8 @@ def _read_receipt(root: Path, path: str, contract: str,
     receipt = {"path": path, "contract": contract, "status": "MISSING",
                "sha256": None, "source_generated_at_utc": None}
     try:
+        if not source.exists() and not source.is_symlink():
+            return None, receipt
         if (not source.is_file() or source.is_symlink()
                 or source.resolve() != source.absolute()
                 or root.resolve() not in source.resolve().parents):
