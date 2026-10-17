@@ -213,6 +213,14 @@ def build_request(task: str, task_cfg: dict[str, Any], prompt: str, context: dic
     }
 
 
+def api_attempt_limit(task_cfg: dict[str, Any]) -> int:
+    """A single paid attempt is a task-local override, never an assumed default."""
+    attempts = task_cfg.get("max_attempts", 2)
+    if type(attempts) is not int or attempts not in (1, 2):
+        raise ValueError("invalid_api_attempt_limit")
+    return attempts
+
+
 def retry_output_token_limit(task_cfg: dict[str, Any]) -> int:
     first = int(task_cfg["max_output_tokens"])
     configured = task_cfg.get("retry_max_output_tokens")
@@ -296,10 +304,7 @@ def main() -> None:
     else:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: raise SystemExit("OPENAI_API_KEY_missing")
-        max_attempts = task_cfg.get("max_attempts", 2)
-        if type(max_attempts) is not int or max_attempts not in (1, 2):
-            raise ValueError("invalid_api_attempt_limit")
-        for attempt in range(max_attempts):
+        for attempt in range(api_attempt_limit(task_cfg)):
             payload = dict(request_payload)
             if attempt == 1:
                 payload["max_output_tokens"] = retry_output_token_limit(task_cfg)
