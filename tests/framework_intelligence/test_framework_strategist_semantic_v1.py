@@ -21,6 +21,11 @@ class SemanticTest(unittest.TestCase):
         self.root = f.root
         self.runtime = self.root / RUNTIME
         self.now = fixtures.NOW
+        # Model admission fixture: an actual meaningful owner-visible warning,
+        # not the baseline informational "no documented improvement" reminder.
+        f.sources["health"]["status"] = "RED"
+        f.sources["self_improvement"]["operational_verdict"] = "NEEDS_DIAGNOSIS"
+        f.flush_sources()
         f.run_brain()
         f.write("research/api_agent/API_TASK_REGISTRY_v1.json",
                 {"tasks": {TASK: {"model": MODEL}}})
