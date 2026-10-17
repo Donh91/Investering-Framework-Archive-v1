@@ -9,6 +9,7 @@ from pathlib import Path
 from scripts.framework_intelligence.framework_strategist_v1 import (
     INTENT_PATH, OUTPUT_PATH, SOURCES, build,
 )
+from scripts.framework_intelligence.framework_learning_supervisor import read_strategist_advisory
 
 NOW = datetime(2026, 10, 17, 19, 0, tzinfo=timezone.utc)
 STAMP = "2026-10-17T18:00:00Z"
@@ -362,6 +363,47 @@ class StrategistTest(unittest.TestCase):
         self.assertEqual(result["source_receipts"]["self_improvement"]["status"], "INVALID_SCHEMA")
         self.assertNotIn("NO_DOCUMENTED_IMPROVEMENT_ADMISSION",
                          [x["code"] for x in result["proposals"]])
+
+
+    def test_parent_supervisor_consumes_exact_source_bound_advisory_only(self):
+        result = self.run_brain()
+        parent = read_strategist_advisory(self.root, NOW)
+        self.assertEqual(parent["status"], "ADVISORY_CURRENT")
+        self.assertEqual(parent["proposal_ids"], [x["id"] for x in result["proposals"]])
+        self.assertFalse(parent["automatic_routing"])
+        self.assertEqual(parent["grok_review_candidate_count"], 0)
+
+    def test_parent_does_not_reuse_stale_or_shifted_source(self):
+        self.run_brain()
+        self.sources["health"]["status"] = "AMBER"
+        self.flush_sources()
+        parent = read_strategist_advisory(self.root, NOW)
+        self.assertEqual(parent["status"], "SOURCE_MOVED")
+        self.assertEqual(parent["proposal_ids"], [])
+
+    def test_parent_rejects_authority_injection(self):
+        self.run_brain()
+        packet = json.loads(self.output.read_text())
+        packet["authority"]["autonomous_merge"] = True
+        self.output.write_text(json.dumps(packet))
+        parent = read_strategist_advisory(self.root, NOW)
+        self.assertEqual(parent["status"], "AUTHORITY_VIOLATION")
+        self.assertEqual(parent["proposal_ids"], [])
+
+    def test_parent_rejects_unapproved_model_grok_dispatch_flag(self):
+        self.run_brain()
+        packet = json.loads(self.output.read_text())
+        packet["proposals"][0]["automatic_grok_call"] = True
+        self.output.write_text(json.dumps(packet))
+        parent = read_strategist_advisory(self.root, NOW)
+        self.assertEqual(parent["status"], "AUTHORITY_VIOLATION")
+
+    def test_parent_rejects_outdated_brief_without_unsafe_queue(self):
+        self.run_brain()
+        far = datetime(2026, 10, 25, 19, 0, tzinfo=timezone.utc)
+        parent = read_strategist_advisory(self.root, far)
+        self.assertEqual(parent["status"], "STALE")
+        self.assertEqual(parent["proposal_ids"], [])
 
 
 if __name__ == "__main__":
