@@ -79,6 +79,10 @@ it('expired original Official source blocks a fresh projection and its BUY/SELL 
  assert.equal(o.compass.state,'UNAVAILABLE');
  assert.equal(o.compass.action_now,'UNAVAILABLE');
  assert.equal(o.compass.sell_assessment_state,'UNAVAILABLE');
+ assert.equal(o.compass.pullback_window,null);
+ assert.equal(o.compass.pullback_stage,null);
+ assert.equal(o.compass.pullback_investor_facts,null);
+ assert.equal(o.path.state,'UNAVAILABLE');
 });
 it('missing or unverifiable Official owner policy cannot authorize current actions',()=>{
  for(const broken of [null,{status:'UNAVAILABLE'}, {contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',status:'VERIFIED_OWNER_POLICY',valid_until_utc:'not-a-date'}]){
