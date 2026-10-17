@@ -25,6 +25,80 @@ def sha256(path: Path):
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
 
 
+def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
+    """Ingest PREVIOUS approved producer receipt, without trust/dispatch authority.
+
+    The Strategist writes after this Supervisor step in the same existing
+    workflow; this explicit one-run lag prevents circular generation.
+    """
+    rel = "research/framework_learning/strategist/LATEST.json"
+    path = root / rel
+    empty = {"status": "UNAVAILABLE", "reference": rel, "proposal_ids": [],
+             "attention_codes": [], "grok_review_candidate_count": 0,
+             "automatic_routing": False, "source_sha256": None}
+    try:
+        if path.is_symlink() or not path.is_file():
+            return empty
+        raw = path.read_bytes()
+        if len(raw) > 2_000_000:
+            return {**empty, "status": "INVALID"}
+        packet = json.loads(raw)
+        if (not isinstance(packet, dict) or
+                packet.get("contract") != "FRAMEWORK_STRATEGIST_BRIEF_v1" or
+                packet.get("owner") != "EXISTING_FRAMEWORK_LEARNING_SUPERVISOR"):
+            return {**empty, "status": "INVALID"}
+        authority = packet.get("authority")
+        prohibited = ("canonical_effect", "portfolio_execution", "autonomous_grok_request",
+                      "autonomous_api_payment", "autonomous_merge", "new_queue")
+        if (not isinstance(authority, dict) or any(authority.get(key) is not False for key in prohibited)):
+            return {**empty, "status": "AUTHORITY_VIOLATION"}
+        generated = packet.get("generated_at_utc")
+        if not isinstance(generated, str) or not generated.endswith("Z"):
+            return {**empty, "status": "INVALID"}
+        stamp = datetime.fromisoformat(generated.replace("Z", "+00:00"))
+        elapsed = (now - stamp).total_seconds()
+        if elapsed < -900 or elapsed > 48 * 3600:
+            return {**empty, "status": "STALE"}
+        if packet.get("input_status") != "CURRENT":
+            return {**empty, "status": "DEGRADED"}
+        receipts = packet.get("source_receipts")
+        if not isinstance(receipts, dict) or not receipts:
+            return {**empty, "status": "INVALID"}
+        # Any source moved after the previous brief: do not reuse yesterday's
+        # decision context, even if its model description sounds persuasive.
+        for value in receipts.values():
+            if (not isinstance(value, dict) or value.get("status") != "CURRENT"
+                    or not isinstance(value.get("path"), str)):
+                return {**empty, "status": "SOURCE_MOVED"}
+            name = Path(value["path"])
+            if name.is_absolute() or ".." in name.parts:
+                return {**empty, "status": "INVALID"}
+            original = (root / name).resolve()
+            if root.resolve() not in original.parents or not original.is_file():
+                return {**empty, "status": "SOURCE_MOVED"}
+            if hashlib.sha256(original.read_bytes()).hexdigest() != value.get("sha256"):
+                return {**empty, "status": "SOURCE_MOVED"}
+        proposals = packet.get("proposals")
+        if (not isinstance(proposals, list) or len(proposals) > 3
+                or any(not isinstance(p, dict) or p.get("dispatch_allowed") is not False
+                       or p.get("automatic_grok_call") is not False
+                       or p.get("automatic_market_change") is not False
+                       for p in proposals)):
+            return {**empty, "status": "AUTHORITY_VIOLATION"}
+        if any(not isinstance(p.get("id"), str) or not isinstance(p.get("code"), str)
+               for p in proposals):
+            return {**empty, "status": "INVALID"}
+        return {"status": "ADVISORY_CURRENT", "reference": rel,
+                "proposal_ids": [p["id"] for p in proposals],
+                "attention_codes": [p["code"] for p in proposals],
+                "grok_review_candidate_count": sum(
+                    p.get("routing") == "GROK_REVIEW_CANDIDATE" for p in proposals),
+                "automatic_routing": False,
+                "source_sha256": hashlib.sha256(raw).hexdigest()}
+    except (OSError, ValueError, TypeError, UnicodeDecodeError):
+        return {**empty, "status": "INVALID"}
+
+
 def week_id(now: datetime):
     y, w, _ = now.isocalendar()
     return int(y), int(w), f"{int(y)}-W{int(w):02d}"
@@ -215,6 +289,7 @@ def main():
         "unconsumed_information_count": len(unconsumed), "method_audit_due_count": sum(1 for x in staleness if x["status"] == "METHOD_AUDIT_DUE"), "delegation_queue_count": len(queue),
         "next_best_existing_experiment": src["next_best"], "compounding_learning_backlog_reference": "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/LEARNING_BACKLOG.json",
         "compute_policy": "DETERMINISTIC_FIRST_LUNA_FOR_ROUTINE_GPT6_1_SOL_FOR_DIFFICULT_ASTRA_FOR_AGENTIC_EXTREME", "automation_orchestration": orchestration_summary, "canonical_effect": False, "portfolio_execution": False, "master_monday_live_influence": False,
+        "strategist_advisory": read_strategist_advisory(root, now),
     }
     docs = {
         "LATEST_LEARNING_MEMORY.json": memory,
