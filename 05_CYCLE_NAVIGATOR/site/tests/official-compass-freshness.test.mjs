@@ -146,4 +146,63 @@ for(const txt of [
   'Official Compass unavailable · no current reading.'
 ])assert.ok(lang.exact[txt]?.length>5,'Missing Danish translation: '+txt);
 
+// P1: The PATH tab uses the SAME Official freshness state as NOW and the
+// header; hash-aligned but expired data must never remain live rotation.
+const pathStart=header.indexOf('function pathWeeklyAlignment(');
+const pathEnd=header.indexOf('\nfunction statusActive(',pathStart);
+assert.ok(pathStart>0&&pathEnd>pathStart,'PATH alignment source exists');
+const pathState={current:'CURRENT'};
+const pathCtx={window:{CNOfficialReadingState:()=>pathState.current}};
+vm.createContext(pathCtx);
+vm.runInContext(header.slice(pathStart,pathEnd)+';globalThis.pathAligned=pathWeeklyAlignment;globalThis.pathNotice=pathAlignmentNotice;',pathCtx);
+const pathData={public_series:{current_public_projection:{public_issue_number:29,forecast_week:'2026-W42'}}};
+const pathOfficial={...verified,weekly_context:{contract:'CN_COMPASS_WEEKLY_ALIGNMENT_v1',status:'ALIGNED',
+  public_issue_number:29,forecast_week:'2026-W42'}};
+const currentPath=pathCtx.pathAligned(pathData,pathOfficial);
+assert.equal(currentPath.ok,true);
+assert.equal(currentPath.readingState,'CURRENT');
+assert.equal(pathCtx.pathNotice(currentPath),'');
+pathState.current='LAST_VERIFIED';
+const expiredPath=pathCtx.pathAligned(pathData,pathOfficial);
+assert.equal(expiredPath.ok,false);
+assert.equal(expiredPath.status,'OFFICIAL_EXPIRED');
+assert.match(pathCtx.pathNotice(expiredPath),/LAST VERIFIED COMPASS · NOT CURRENT/);
+assert.doesNotMatch(pathCtx.pathNotice(expiredPath),/LIVE SIGNALS REFRESHING/);
+pathState.current='UNAVAILABLE';
+const missingPath=pathCtx.pathAligned(pathData,pathOfficial);
+assert.equal(missingPath.ok,false);
+assert.equal(missingPath.status,'OFFICIAL_UNAVAILABLE');
+assert.match(pathCtx.pathNotice(missingPath),/OFFICIAL COMPASS UNAVAILABLE/);
+pathState.current='CURRENT';
+assert.equal(pathCtx.pathAligned(pathData,{...pathOfficial,data_status:'DEGRADED'}).ok,false);
+assert.equal(pathCtx.pathAligned(pathData,{...pathOfficial,weekly_context:{...pathOfficial.weekly_context,public_issue_number:28}}).ok,false);
+assert.match(header,/liveCompass=alignment\.ok\?compass:null/,'PATH may consume live segments only after freshness and weekly alignment');
+assert.match(header,/pathReadingState=alignment\.readingState/,'PATH records the state that actually rendered');
+
+// The original 30-second freshness check must re-render an already mounted
+// PATH at expiry, independent of the five-minute full product reload.
+const refreshStart=header.indexOf('function refreshPathIfReadingChanged(');
+const refreshEnd=header.indexOf('\nfunction freshness(',refreshStart);
+assert.ok(refreshStart>0&&refreshEnd>refreshStart);
+let pathCalls=0;
+const live={current:'CURRENT'};
+const refreshCtx={
+ window:{CNOfficialReadingState:()=>live.current},
+ snapshot:pathData, officialCompass:pathOfficial, pathReadingState:'CURRENT',
+ document:{getElementById:id=>id==='productPath'?{}:null},
+ renderPath:()=>{pathCalls++;refreshCtx.pathReadingState=live.current;}
+};
+vm.createContext(refreshCtx);
+vm.runInContext(header.slice(refreshStart,refreshEnd)+';globalThis.recheck=refreshPathIfReadingChanged;',refreshCtx);
+refreshCtx.recheck();
+assert.equal(pathCalls,0,'No unnecessary PATH rerender before expiry');
+live.current='LAST_VERIFIED';refreshCtx.recheck();
+assert.equal(pathCalls,1,'Expiry must refresh PATH immediately when observed');
+refreshCtx.recheck();
+assert.equal(pathCalls,1,'Identical stale state is not a repeated rerender');
+live.current='UNAVAILABLE';refreshCtx.recheck();
+assert.equal(pathCalls,2,'Missing owner reading revokes prior PATH permissions');
+assert.match(header,/refreshPathIfReadingChanged\(\);/,'The real 30-second freshness path must consume expiry transition');
+console.log('PATH_OFFICIAL_EXPIRY_FAIL_CLOSED');
+
 console.log('OFFICIAL_COMPASS_FRESHNESS_3STATE_PASS');
