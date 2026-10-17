@@ -128,7 +128,11 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         try:
             prior, _ = _read(output, OUTPUT_CONTRACT)
             historical = prior.get("incident_history", prior.get("incidents", []))
-            if not isinstance(historical, list):
+            if (not isinstance(historical, list)
+                    or any(not isinstance(x, dict)
+                           or not isinstance(x.get("fingerprint"), str)
+                           or not x.get("fingerprint") for x in historical)
+                    or len({x["fingerprint"] for x in historical}) != len(historical)):
                 raise ValueError("malformed_previous_incident_history")
             prior_status = "VALID"
         except (ValueError, TypeError, UnicodeDecodeError):
@@ -194,6 +198,37 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         incidents.append(record)
         history_by_key[fingerprint] = record
 
+    # Never silently erase corrupted recurrence evidence and then claim no
+    # problems on the next green health run. This is a DERIVED advisory only:
+    # persistent RED integrity-loss evidence, no repaired history invented.
+    integrity_fp = _fingerprint("__SELF_IMPROVEMENT_HISTORY__", ["PRIOR_INCIDENT_HISTORY_INVALID"])
+    old_integrity = prior_incidents.get(integrity_fp)
+    history_integrity_lost = prior_status == "INVALID_IGNORED" or old_integrity is not None
+    if history_integrity_lost:
+        old_integrity = old_integrity if isinstance(old_integrity, dict) else {}
+        count = old_integrity.get("observation_count", 1)
+        if type(count) is not int or count < 1:
+            count = 1
+        stamp = now.isoformat().replace("+00:00", "Z")
+        integrity_incident = {
+            "fingerprint": integrity_fp,
+            "workflow": "__SELF_IMPROVEMENT_HISTORY__",
+            "findings": ["PRIOR_INCIDENT_HISTORY_INVALID"],
+            "severity": "RED",
+            "classification": "HISTORY_INTEGRITY_LOSS",
+            "observed_run_id": None,
+            "first_seen_at_utc": old_integrity.get("first_seen_at_utc") or stamp,
+            "last_seen_at_utc": stamp,
+            "observation_count": count,
+            "automatic_retry_allowed": False,
+            "automatic_code_write_allowed": False,
+            "route": "EXISTING_REMEDIATION_OWNER",
+            "owner_issue": 1156,
+            "reason": "Prior derived incident history failed validation; retain loss marker until separate owner-verified restoration, never reconstruct deleted observations",
+        }
+        incidents.append(integrity_incident)
+        history_by_key[integrity_fp] = integrity_incident
+
     health_status = _source_age_status(health.get("generated_at_utc"), now)
     registry_status = _source_age_status(registry.get("generated_at_utc"), now)
     current = health_status == "CURRENT" and registry_status == "CURRENT"
@@ -225,7 +260,8 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         "input_freshness": {"automation_health": health_status, "experiment_registry": registry_status},
         "operational_verdict": operational_verdict,
         "workflow_census_count": len(workflows),
-        "input_issues": (["EMPTY_WORKFLOW_CENSUS"] if census_empty else []) + status_issues,
+        "input_issues": (["EMPTY_WORKFLOW_CENSUS"] if census_empty else []) + status_issues +
+                        (["PRIOR_INCIDENT_HISTORY_INTEGRITY_LOST"] if history_integrity_lost else []),
         "prior_status": prior_status,
         "incident_count": len(incidents),
         "incidents": sorted(incidents, key=lambda x: x["workflow"]),

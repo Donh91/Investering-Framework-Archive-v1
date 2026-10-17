@@ -175,6 +175,44 @@ class SelfImprovementV1Test(unittest.TestCase):
         self.assertEqual(result["operational_verdict"], "NEEDS_DIAGNOSIS")
         self.assertFalse(result["authority"]["automatic_code_write"])
 
+    def test_corrupted_history_never_becomes_false_green_and_is_persistent(self):
+        self.health["workflows"][0]["status"] = "GREEN"
+        self._save(self.health_path, self.health)
+        clean = self.snapshot()
+        self.assertEqual(clean["operational_verdict"], "NO_RED_HEALTH_INCIDENTS")
+        self.output.write_text('{"contract":"OTHER"}', encoding="utf-8")
+        damaged = self.snapshot()
+        self.assertEqual(damaged["prior_status"], "INVALID_IGNORED")
+        self.assertEqual(damaged["operational_verdict"], "NEEDS_DIAGNOSIS")
+        self.assertEqual(damaged["incident_count"], 1)
+        self.assertEqual(damaged["incidents"][0]["classification"], "HISTORY_INTEGRITY_LOSS")
+        self.assertIn("PRIOR_INCIDENT_HISTORY_INTEGRITY_LOST", damaged["input_issues"])
+        self.assertFalse(damaged["incidents"][0]["automatic_code_write_allowed"])
+        subsequent = self.snapshot()
+        self.assertEqual(subsequent["prior_status"], "VALID")
+        self.assertEqual(subsequent["operational_verdict"], "NEEDS_DIAGNOSIS")
+        self.assertEqual(subsequent["incidents"][0]["fingerprint"], damaged["incidents"][0]["fingerprint"])
+        self.assertEqual(subsequent["incidents"][0]["first_seen_at_utc"], damaged["incidents"][0]["first_seen_at_utc"])
+        self.assertEqual(subsequent["incidents"][0]["observation_count"], 1)
+        self.assertIn("PRIOR_INCIDENT_HISTORY_INTEGRITY_LOST", subsequent["input_issues"])
+
+    def test_malformed_or_duplicate_prior_history_requires_persistent_integrity_review(self):
+        self.health["workflows"][0]["status"] = "GREEN"
+        self._save(self.health_path, self.health)
+        for history in ([{"unbound": "no fingerprint"}],
+                        [{"fingerprint": "duplicated"}, {"fingerprint": "duplicated"}],
+                        "not_a_list"):
+            with self.subTest(history=history):
+                self.output.unlink(missing_ok=True)
+                self.snapshot()
+                bad = json.loads(self.output.read_text(encoding="utf-8"))
+                bad["incident_history"] = history
+                self.output.write_text(json.dumps(bad), encoding="utf-8")
+                result = self.snapshot()
+                self.assertEqual(result["operational_verdict"], "NEEDS_DIAGNOSIS")
+                self.assertEqual(result["incidents"][0]["classification"], "HISTORY_INTEGRITY_LOSS")
+                self.assertIn("PRIOR_INCIDENT_HISTORY_INTEGRITY_LOST", result["input_issues"])
+
     def test_real_shape_six_amber_is_visible(self):
         self.health["workflows"] = [
             {"workflow": f"workflow-{i}.yml", "status": "GREEN" if i < 192 else "AMBER",
