@@ -1,5 +1,7 @@
 # Research Lab High-Intelligence Mission Backlog v1
 
+> Operational reconciliation, 2026-10-15: the execution-state paragraphs below are preserved historical planning, not a current queue. At main `77537b33285ff55daaaebefc74d2dcfd2f91b8b5`, `research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json` records M1-M5 as `FINAL_ADJUDICATED`, with each final adjudication present under `06_RESEARCH_LAB/m1_checkpoints/` through `m5_checkpoints/`. Do not rerun those missions or wait for the historical 5.6/Claude role labels. M1-M3 explicitly retain Claude as a non-blocking challenge; historical role labels do not reopen M1-M5. M6 and Task 2 R0 are owner-held; Task 2 R1/CFGI is the single active released Sol mission. Resolve fresh queue and owner evidence before any further action. No scientific verdict or historical record below is rewritten by this notice.
+
 **Date:** 2026-10-05  
 **Status:** SHADOW_PLANNING / RESEARCH_BACKLOG  
 **Authority:** NONE_BY_ITSELF  

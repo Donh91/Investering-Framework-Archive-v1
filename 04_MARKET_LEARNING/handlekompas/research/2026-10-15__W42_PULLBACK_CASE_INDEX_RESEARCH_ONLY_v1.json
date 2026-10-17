@@ -1,0 +1,179 @@
+{
+  "contract": "COMPASS_W42_PULLBACK_CASE_INDEX_RESEARCH_ONLY_v1",
+  "status": "RESEARCH_INPUT_ONLY_NO_CANONICAL_PROMOTION",
+  "event_id": "W42_20261014_15_DOWNMOVE",
+  "case_document": "04_MARKET_LEARNING/handlekompas/research/2026-10-15__W42_PULLBACK_CPI_PREWARNINGS_OFFICIAL_SHADOW_CN_FORENSIC_LEARNING_v1.md",
+  "observed_through_utc": "2026-10-15T09:00:00Z",
+  "assembled_asof_utc": "2026-10-15T09:32:00Z",
+  "authority": {
+    "original_forecast_edits": false,
+    "original_outcome_edits": false,
+    "research_only": true,
+    "market_state_change": false,
+    "portfolio_permission": false,
+    "automatic_sell": false,
+    "new_workflow": false,
+    "new_model": false,
+    "threshold_or_weight_update": false
+  },
+  "public_event_evidence": {
+    "us_cpi_release_at_utc": "2026-10-14T12:30:00Z",
+    "us_cpi_source": "https://www.bls.gov/news.release/archives/cpi_10142026.htm",
+    "us_cpi_actual_headline_yoy_pct": 3.7,
+    "actual_release_not_known_before_cpi": true,
+    "posthoc_market_crosscheck": "independent public Binance spot completed 1h, never canonical scorer",
+    "completed_candle_end_utc": "2026-10-15T09:00:00Z",
+    "prices": {
+      "BTCUSDT": {
+        "close": 81380.29,
+        "return24h_pct": -2.46,
+        "return72h_pct": -2.55,
+        "low24h": 80226.35
+      },
+      "ETHUSDT": {
+        "close": 2373.95,
+        "return24h_pct": -5.27,
+        "return72h_pct": -6.99,
+        "low24h": 2318
+      },
+      "SOLUSDT": {
+        "close": 103.33,
+        "return24h_pct": -3.46,
+        "return72h_pct": -7.51
+      },
+      "ETHBTC": {
+        "close": 0.02917,
+        "return24h_pct": -2.9,
+        "return72h_pct": -4.58
+      }
+    }
+  },
+  "cn_frozen": {
+    "source_path": "05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json",
+    "git_blob_sha": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+    "short_horizon_bull_bear": {
+      "bull": 4,
+      "bear": 6
+    },
+    "pullback_risk": "ELEVATED",
+    "distribution": "UNKNOWN",
+    "week_ranges": {
+      "BTCUSDT": [
+        78000,
+        88000
+      ],
+      "ETHUSDT": [
+        2260,
+        2720
+      ]
+    },
+    "eth_day3_4_envelope": [
+      2320,
+      2670
+    ],
+    "eth_day3_4_breached_by_usd": 2,
+    "onset_eta": "UNAVAILABLE"
+  },
+  "official_12h_observed_attempts": [
+    {
+      "id": "CMP-20261014-3aa8ce4931eb",
+      "issued_utc": "2026-10-14T01:18:44Z",
+      "pre_cpi": true,
+      "direction": "DOWN",
+      "btc": "CORRECT",
+      "eth": "CORRECT",
+      "btc_realized_pct": -0.8075177636885145,
+      "eth_realized_pct": -1.2492623251511237,
+      "persistence_baseline": "CORRECT"
+    },
+    {
+      "id": "CMP-20261014-18699903db9f",
+      "issued_utc": "2026-10-14T07:42:48Z",
+      "pre_cpi": true,
+      "direction": "MIXED",
+      "btc": "ABSTAINED",
+      "eth": "ABSTAINED",
+      "btc_realized_pct": -2.0555111452544517,
+      "eth_realized_pct": -2.9359636587176663
+    },
+    {
+      "id": "CMP-20261014-e84827a7fb53",
+      "issued_utc": "2026-10-14T11:55:34Z",
+      "pre_cpi": true,
+      "direction": "UNAVAILABLE",
+      "btc": "ABSTAINED",
+      "eth": "ABSTAINED",
+      "btc_realized_pct": -2.0555111452544517,
+      "eth_realized_pct": -2.9359636587176663
+    },
+    {
+      "id": "CMP-20261014-cdd1f365da26",
+      "issued_utc": "2026-10-14T13:49:20Z",
+      "pre_cpi": false,
+      "direction": "DOWN",
+      "btc": "CORRECT",
+      "eth": "CORRECT",
+      "btc_realized_pct": -1.314588715159759,
+      "eth_realized_pct": -2.328642668227976,
+      "persistence_baseline": "CORRECT"
+    },
+    {
+      "id": "CMP-20261014-34b416163f12",
+      "issued_utc": "2026-10-14T21:47:44Z",
+      "pre_cpi": false,
+      "direction": "UNAVAILABLE",
+      "btc": "ABSTAINED",
+      "eth": "ABSTAINED",
+      "btc_realized_pct": -1.2200090455476542,
+      "eth_realized_pct": -3.380609504854415
+    }
+  ],
+  "shadow_second_leg": {
+    "id": "SCV2-20261014-214817-0e099c6982e5",
+    "issued_utc": "2026-10-14T21:48:17Z",
+    "source_packet_generated_utc": "2026-10-14T18:59:05Z",
+    "h12": "DOWN",
+    "confidence": "MEDIUM",
+    "h72": "MIXED",
+    "h168": "NO_EDGE",
+    "risk": "ELEVATED",
+    "native_scored_outcome_verified": false,
+    "pre_macro_release": false,
+    "post_first_selloff": true
+  },
+  "original_t12_outcomes_status": "SOME_4H_CENSORED_EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE_NEVER_RETRO_SCORE",
+  "owner_capability": {
+    "official_action": "HOLD_WAIT",
+    "official_sell": "UNAVAILABLE",
+    "distribution": "UNKNOWN",
+    "reentry": "INACTIVE",
+    "pullback_learning": "SUSPENDED_NO_ELIGIBILITY_CONTRACT",
+    "pre_sell_alert_delivery_verified": false
+  },
+  "confounds": [
+    "OVERLAPPING_12H_SAMPLES",
+    "SOURCE_FIRST_KNOWN_NOT_PROVEN",
+    "SOURCE_CANDLE_CLOCK_BEFORE_ISSUANCE",
+    "CPI_POST_RELEASE_CONTINUATION",
+    "PERSISTENCE_BASELINE_SAME_HITS",
+    "SHARED_SOURCE_FAMILIES",
+    "STALE_SETTLED_ETF_SESSION",
+    "NO_ACTUAL_PORTFOLIO_EXECUTION",
+    "UNVERIFIED_INDEPENDENT_EVENT_FAMILY_N"
+  ],
+  "followups": [
+    {
+      "owner_issue": 1553,
+      "task": "WARN_TO_ALERT_TO_ACTION_DELAY_FALSE_POSITIVES_AND_COST_MATCHED_UTILITY"
+    },
+    {
+      "owner_issue": 1596,
+      "task": "AS_ISSUED_SOURCE_FIRST_KNOWN_AND_CENSORED_DENOMINATOR_PERSISTENCE_BASELINES"
+    },
+    {
+      "owner_issue": 1530,
+      "task": "CONDITIONAL_EDGE_PULLBACK_ROTATION_ABLATIONS_AFTER_R1_GATE"
+    }
+  ],
+  "promotion": "NONE_PENDING_INDEPENDENT_R1_AND_PROSPECTIVE_FALSIFICATION"
+}

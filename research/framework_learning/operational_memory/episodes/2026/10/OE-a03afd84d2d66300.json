@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/build_operations_dashboard.py",
+    "tests/health/test_operations_dashboard.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-a03afd84d2d66300",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(observability): attribute monthly API spend and retries to existing dashboard task owners * test(observability): verify cost-by-task, retry, mirror-dedup and monthly scoping * fix(observability): render ordinary Markdown task and USD cells without escaped literals * fix(operations): expose unknown API charges and keep required actions independent * test(operations): distinguish unknown API costs, actual zero and action hierarchy",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/build_operations_dashboard.py": "65024a68ed0b3e6eef636dae2ebb923f5c4068c0",
+    "tests/health/test_operations_dashboard.py": "a34009ec301620e9acffb7ad75b03efe10d99b6f"
+  },
+  "source_commit_sha": "a03afd84d2d66300991b0525df20fa9cdd14c023",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-15T19:34:49-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "observability: expose known and unknown API spending by task"
+}

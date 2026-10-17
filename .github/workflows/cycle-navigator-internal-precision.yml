@@ -35,9 +35,16 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Verify CN API budget admission and receipt fail-closed regressions
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/cycle_navigator/build_internal_precision.py
+          python -m unittest -v tests.cycle_navigator.test_internal_precision_api_budget
+
       - name: Build internal precision freeze, settlement and compact box
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           python scripts/cycle_navigator/build_internal_precision.py \
@@ -74,6 +81,11 @@ jobs:
                   05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json \
                   05_CYCLE_NAVIGATOR/LATEST_PUBLIC_SCORECARD.json \
                   05_CYCLE_NAVIGATOR/site/history-scoreboard.json
+          # The conditional CN long-horizon model cost receipt is an audited
+          # part of the same canonical weekly write. No call => no new file.
+          if [ -d research/api_agent/outputs/cn_internal_precision ]; then
+            git add research/api_agent/outputs/cn_internal_precision
+          fi
           if git diff --cached --quiet; then
             echo 'NO_INTERNAL_PRECISION_DIFF'
             exit 0
@@ -111,6 +123,11 @@ jobs:
             Path('05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json'),
             Path('05_CYCLE_NAVIGATOR/LATEST_PUBLIC_SCORECARD.json'),
           ]
+          # A valid or unknown-cost receipt MUST survive remote main readback;
+          # otherwise the monthly hard-stop could silently undercount spend.
+          receipts=Path('research/api_agent/outputs/cn_internal_precision')
+          if receipts.is_dir():
+              paths.extend(sorted(receipts.glob('*/receipt.json')))
           latest_public=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_PUBLIC_SCORECARD.json').read_text())
           paths.append(Path(latest_public['scorecard_path']))
           rows=[]
@@ -138,4 +155,5 @@ jobs:
           path: |
             runtime_cn_internal_*.json
             runtime_cn_public_*.json
+            research/api_agent/outputs/cn_internal_precision/**/receipt.json
           retention-days: 30

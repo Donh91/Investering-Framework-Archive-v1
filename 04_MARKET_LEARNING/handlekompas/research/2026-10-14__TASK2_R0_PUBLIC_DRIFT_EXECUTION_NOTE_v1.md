@@ -10,19 +10,11 @@
 - Real GitHub verification used pinned `git/trees` recursively in 5 untruncated top-level subtrees (03_DAILY_CAPTURE_LOGS 9,770 entries; 04_MARKET_LEARNING 6,745; 05_CYCLE_NAVIGATOR 309; 06_RESEARCH_LAB 637; 07_PROMPTS_AND_AGENTS 323). The `research/` recursive response was **truncated after 53,911 entries**, so four research source blobs were verified **individually** by exact `fetch_file(..., ref=46c7...)`. Do not misreport the truncated tree as fully covered.
 - 16 changed objects span capture logs (6 directory trees), Official/Shadow Compass (3), intraday direction outputs (2), pullback summary (1), Action Compass/EDGE/M6 memory (4). **Changed means different Git objects**, not that data worsened, matured, was on time or had a new predictive signal. The unchanged sources are an object-level status at two commits, not a completeness attestation for individual raw events.
 
-## Reproducibility
+## Reproducibility and scoped 2026-10-18 supersession
 
-Repository-local, standalone offline verifier: [`2026-10-14__task2_r0_git_object_census_v1.mjs`](2026-10-14__task2_r0_git_object_census_v1.mjs). It reads the pinned original source inventory, rejects wrong baseline/root tree, duplicate SHA conflicts and path traversal, independently resolves each directory tree/blob with Git plumbing for **both exact pinned SHAs**, and prints deterministic JSON. No API tokens or paid sources needed.
+The historical 36-path Git-object comparison was recorded from exact SHA-pinned GitHub reads as described above. This additive receipt is **descriptive public object identity only**; it has not been admitted as provider-first-known, original-forecast PIT, market-family N or investment skill.
 
-```bash
-node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_census_v1.mjs --self-test
-node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_census_v1.mjs \
-  --inventory 04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json \
-  --baseline aea463dc9c5a57fab0e7ef1aa5fc63791158d524 \
-  --current 46c7a167b1d328c9f6a13451d74941a09ceb644b
-```
-
-The reproduction checkout must contain both Git commits (fetch explicit object history if not). The independent 7-scenario synthetic Git fixture was exercised locally on a prototype of the verifier during this preparation; **CI/exact committed script self-test and a full local-clone re-run must still be checked before calling the reproducible execution fully independently reviewed**. The receipt itself was collected from actual pinned GitHub object readbacks, not synthesized fixture data.
+**Update, 2026-10-18:** The draft #1614 originally bundled a separate experimental `task2_r0_git_object_census_v1.mjs`. That weaker local verifier is deliberately **not transplanted to main**, because the more stringent, already-merged Task 2 R0 source-integrity path in #1627 is the appropriate execution/verification owner. Do not treat this historical delta receipt as a substitute for #1627 or as proof that the pinned 36-source comparison was re-executed using the newer verifier. Any fresh replay must use the current approved R0 evidence-admission method, exact original pinned Git objects and fail-closed controls, without changing the historic 16/20 labels.
 
 ## Admission and next sequence (strict)
 

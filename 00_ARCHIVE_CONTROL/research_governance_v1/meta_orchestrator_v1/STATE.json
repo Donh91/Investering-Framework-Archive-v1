@@ -3,17 +3,17 @@
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "9cbbbe18500dbf42df7e1e4ca996ccf59676dd9ef79a042b92e5fe7de278af1e",
+      "evidence_fingerprint": "02d1d519565726bd8eb7ea03fcfb5aa73c4c93bb933d35ebb4b06225cd6eda1d",
       "execution_mode": "AUTO_LOCAL_RESEARCH",
       "impact_tier": "MEDIUM",
       "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
       "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
-      "source": "COMPOUNDING_LEARNING",
-      "specialist_action": "STRESS_TEST_REGIME_SPECIFICITY",
-      "target": "EC-3b5610a3c12b040694a9"
+      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
+      "target": "EC-0258e3807909a4d1987f"
     }
   ],
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -83,35 +83,20 @@
   "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
   "controller_conflicts": [],
   "deep_research_authorized": false,
-  "evidence_fingerprint": "c972870205e4bffac7b6ae5763ff54bca26d817a4daebe632ca528e10e6acd64",
+  "evidence_fingerprint": "9e3e1024ad16b24734b093f1895298dd80ebd6f7cfa759ff17a6dff3a3d2bfe4",
   "external_provider_calls_authorized": false,
   "max_concurrent_heavy_workstreams": 1,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "primary_action": "QUEUE_BOUNDED_RESEARCH",
   "primary_execution_mode": "AUTO_LOCAL_RESEARCH",
-  "primary_source": "COMPOUNDING_LEARNING",
-  "primary_target": "EC-3b5610a3c12b040694a9",
+  "primary_source": "MONTHLY_COUNCIL",
+  "primary_target": "EC-0258e3807909a4d1987f",
   "queue": [
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "9cbbbe18500dbf42df7e1e4ca996ccf59676dd9ef79a042b92e5fe7de278af1e",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "MEDIUM",
-      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
-      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
-      "source": "COMPOUNDING_LEARNING",
-      "specialist_action": "STRESS_TEST_REGIME_SPECIFICITY",
-      "target": "EC-3b5610a3c12b040694a9"
-    },
-    {
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "b6184b1d8b19f629eb6afffcdb7e37aabd2ee4f3b595b4c004f41b5d0303b48e",
+      "evidence_fingerprint": "02d1d519565726bd8eb7ea03fcfb5aa73c4c93bb933d35ebb4b06225cd6eda1d",
       "execution_mode": "AUTO_LOCAL_RESEARCH",
       "impact_tier": "MEDIUM",
       "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
@@ -137,6 +122,21 @@
       "source": "SHADOW_REGISTRY",
       "specialist_action": "RECOVER_EVALUATOR",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "9cbbbe18500dbf42df7e1e4ca996ccf59676dd9ef79a042b92e5fe7de278af1e",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "BLOCKED",
+      "novelty_verdict": "DUPLICATE_EXACT",
+      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
+      "source": "COMPOUNDING_LEARNING",
+      "specialist_action": "STRESS_TEST_REGIME_SPECIFICITY",
+      "target": "EC-3b5610a3c12b040694a9"
     },
     {
       "canonical_effect": false,
@@ -200,6 +200,6 @@
     }
   ],
   "queue_n": 7,
-  "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
+  "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
   "sentinel_verdict": "PASS"
 }

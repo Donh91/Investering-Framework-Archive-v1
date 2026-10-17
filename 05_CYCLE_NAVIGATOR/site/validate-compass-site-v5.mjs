@@ -22,7 +22,7 @@ if(f.shadow?.status==='ALIGNED_RESEARCH'||f.shadow?.status==='STALE_RESEARCH'){
  for(const key of ['12h','1_3d','5_7d']) if(!f.shadow.horizons?.[key])throw Error('missing independent horizon');
 }
 if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined renderer');
-if(!premiumRenderer.includes('compositeIntel(compass)'))throw Error('active premium renderer ignores integrated Compass');
+if(!premiumRenderer.includes('compositeIntel(compass,readingState)')||!premiumRenderer.includes("const verified=readingState==='CURRENT'"))throw Error('active premium renderer does not bind integrated Compass to current Official freshness');
 if(!premiumRenderer.includes('CN_PREMIUM_COMPASS_OWNER = true'))throw Error('premium owner not detected');
 if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model research')&&!premiumRenderer.includes('Research direction'))throw Error('premium research disclosure absent');
 // Independent end-to-end producer-digest and weekly-source regression checks.
