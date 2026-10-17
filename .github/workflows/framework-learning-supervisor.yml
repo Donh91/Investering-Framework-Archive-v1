@@ -793,9 +793,11 @@ jobs:
           PY
       - name: Prepare strategic semantic analysis only on material change
         run: |
-          python scripts/framework_intelligence/framework_strategist_semantic_v1.py prepare \
+          if ! python scripts/framework_intelligence/framework_strategist_semantic_v1.py prepare \
             --repo-root . \
-            --runtime-dir runtime/framework-learning-supervisor/strategist-semantic
+            --runtime-dir runtime/framework-learning-supervisor/strategist-semantic; then
+            echo "Semantic source not qualified; deterministic Supervisor continues unchanged."
+          fi
       - name: Run bounded intelligent automation orchestration
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
