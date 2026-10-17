@@ -855,6 +855,78 @@ jobs:
             finalize+=(--sol-output "$outroot/sol/output.json")
           fi
           "${finalize[@]}"
+      - name: Governed zero-retry Terra strategic reasoning (existing schedule)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          plan="runtime/framework-learning-supervisor/strategist-semantic/plan.json"
+          needed="$(python - "$plan" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1]))
+          print("yes" if p.get("run_allowed") is True and p.get("max_api_calls")==1 else "no")
+          PY
+          )"
+          if [ "$needed" != "yes" ]; then
+            echo "No novel material question: deterministic Supervisor is sufficient."
+            exit 0
+          fi
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "No API key: deterministic-only; no payment attempted."
+            exit 0
+          fi
+          if ! python scripts/api_agent/check_api_lane_budget.py \
+              --receipt-root research/api_agent/outputs \
+              --task FRAMEWORK_STRATEGIST_SEMANTIC \
+              --cap-usd 0.75 --reserve-usd 0.05 ||
+             ! python scripts/api_agent/check_monthly_cost_guard.py \
+              --receipt-root research/api_agent/outputs \
+              --hard-stop-usd 40 --reserve-usd 4.0; then
+            echo "Semantic lane/global budget not verified: no API call."
+            exit 0
+          fi
+          if ! python scripts/framework_intelligence/framework_strategist_semantic_v1.py \
+            reserve-payload --repo-root . \
+            --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
+            --run-id "$GITHUB_RUN_ID" > "$RUNNER_TEMP/strat-reserve-row.json"; then
+            echo "Paid attempt rejected by immutable reservation gate."
+            exit 0
+          fi
+          python - "$RUNNER_TEMP/strat-reserve-row.json" "$RUNNER_TEMP/strat-reserve-request.json" <<'PY'
+          import json,sys
+          row=json.load(open(sys.argv[1]))
+          with open(sys.argv[2],"w") as target:
+              json.dump(row["request"],target)
+          PY
+          rel="$(python - "$RUNNER_TEMP/strat-reserve-row.json" <<'PY'
+          import json,sys
+          print(json.load(open(sys.argv[1]))["path"])
+          PY
+          )"
+          # Atomic first-create in GitHub main; rejected duplicate means NO payment.
+          if ! gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$rel" \
+              --input "$RUNNER_TEMP/strat-reserve-request.json" >/dev/null; then
+            echo "Reservation was not durably created: API remains blocked."
+            exit 0
+          fi
+          outroot="research/api_agent/outputs/framework_strategist/run-$GITHUB_RUN_ID"
+          if ! python scripts/api_agent/api_gateway.py \
+              --task FRAMEWORK_STRATEGIST_SEMANTIC \
+              --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+              --prompt-file runtime/framework-learning-supervisor/strategist-semantic/prompt.txt \
+              --context-file runtime/framework-learning-supervisor/strategist-semantic/context.json \
+              --output-dir "$outroot" \
+              --intended-write-prefix research/api_agent/outputs/framework_strategist/; then
+            echo "Terra attempt unsuccessful. Reservation forbids automatic paid retry."
+            exit 0
+          fi
+          if ! python scripts/framework_intelligence/framework_strategist_semantic_v1.py \
+              validate --repo-root . \
+              --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
+              --run-id "$GITHUB_RUN_ID"; then
+            echo "Model output not verifiable; preserved as untrusted evidence only."
+          fi
       - name: Manage Operational Memory audit escalation
         if: always()
         env:
