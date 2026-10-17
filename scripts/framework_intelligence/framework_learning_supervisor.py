@@ -64,17 +64,34 @@ def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
         receipts = packet.get("source_receipts")
         if not isinstance(receipts, dict) or not receipts:
             return {**empty, "status": "INVALID"}
-        # Any source moved after the previous brief: do not reuse yesterday's
-        # decision context, even if its model description sounds persuasive.
-        for value in receipts.values():
-            if (not isinstance(value, dict) or value.get("status") != "CURRENT"
-                    or not isinstance(value.get("path"), str)):
-                return {**empty, "status": "SOURCE_MOVED"}
-            name = Path(value["path"])
-            if name.is_absolute() or ".." in name.parts:
+        # The producer's receipt paths are untrusted input; a malicious
+        # previous advisory must not induce arbitrary local file reads.
+        expected = {
+            "strategic_intent": "00_FMOS/framework_strategist/STRATEGIC_INTENT_v1.json",
+            "learning_memory": "research/framework_learning/LATEST_LEARNING_MEMORY.json",
+            "weekly_delta": "research/framework_learning/LATEST_WEEKLY_LEARNING_DELTA.json",
+            "self_improvement": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
+            "health": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+            "unconsumed": "research/framework_learning/LATEST_UNCONSUMED_INFORMATION.json",
+            "staleness": "research/framework_learning/LATEST_METHOD_STALENESS_REGISTER.json",
+            "weekly_forensics": "research/framework_learning/weekly_forensics/LATEST.json",
+        }
+        optional = {"weekly_forensics"}
+        if set(receipts) != set(expected):
+            return {**empty, "status": "INVALID"}
+        for name, relative in expected.items():
+            value = receipts[name]
+            if not isinstance(value, dict) or value.get("path") != relative:
                 return {**empty, "status": "INVALID"}
-            original = (root / name).resolve()
-            if (root.resolve() not in original.parents or not original.is_file() or original != (root / name).absolute()):
+            if name in optional and value.get("status") != "CURRENT":
+                # Explicitly optional, never used for a finding in this state.
+                continue
+            if value.get("status") != "CURRENT":
+                return {**empty, "status": "SOURCE_MOVED"}
+            original = root / relative
+            if (not original.is_file() or original.is_symlink()
+                    or original.resolve() != original.absolute()
+                    or root.resolve() not in original.resolve().parents):
                 return {**empty, "status": "SOURCE_MOVED"}
             if hashlib.sha256(original.read_bytes()).hexdigest() != value.get("sha256"):
                 return {**empty, "status": "SOURCE_MOVED"}
