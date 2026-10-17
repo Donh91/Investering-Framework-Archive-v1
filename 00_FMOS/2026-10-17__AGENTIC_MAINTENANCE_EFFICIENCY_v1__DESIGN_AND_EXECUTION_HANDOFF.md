@@ -2,7 +2,7 @@
 ## Integrated architecture and implementation handoff, 2026-10-17
 
 **Status:** DESIGN PROPOSAL / AGENT EXECUTION HANDOFF. **Not a live activation, authorization, new system owner, or claim of completed implementation.**
-**Canonical execution owner:** existing Framework Learning Supervisor / Automation Production Health / Remediation, issue #1156.
+**Operational repair owner:** existing Framework Learning Supervisor / Automation Production Health / Remediation, issue #1156. This is task ownership only, **not** merge authority. Issue #1156's goal of end-to-end repair without user intervention means automated diagnosis, bounded preparation, testing and readback *within permissions already granted*; it does not override AGENTS.md §0.2a, grant bot self-merge or pre-authorize release.
 **Evaluation owner:** existing Adaptive Evolution Scoreboard / Anti-False-Success Ledger, issue #1157.
 **Code-intake authority:** existing Remediation Maturation Controller and CODEX_READY contracts.
 **Reference:** https://developers.openai.com/blog/maintaining-software-with-the-gpt-6-family (OpenAI, 2026-10-14).
@@ -24,6 +24,8 @@ Read current:
 Control plane = public Investering-Framework-Archive-v1. Restricted provider payloads, private normalized values, and immutable private evidence = Donh91/secrets. Credentials = approved secret plane only. Public issue/PR/comment must not contain restricted values. Preserve Round 3 analysis firewall, frozen forecasts, original source timestamps, and recovery-plane separation. Fail closed if required private authority is unavailable. None of these safety barriers may be relaxed for model speed or maintenance gains.
 
 The current API policy still has "code_write_executor: CODEX_ONLY" and "api_models_have_repository_write_authority: false"; issue #1156 proposes a broader qualified-executor route. **Treat this as a documented policy migration candidate, not implicit permission.** Until a narrowly reviewed authority change is genuinely approved and enforced, APIs may inspect/propose but not write where the active policy forbids it. Codex remains usable but is not the permanent conceptual default for future qualified executors.
+
+**Governance review warning (Grok pilot F1, 2026-10-17):** a local mutation removing this document's hard stops and claiming self-merge left unrelated repository CI jobs green. Therefore a green `gate` or `storage-health` check on a docs-only PR is NOT evidence of governance-content safety. Until the existing owner has a sensitive, mutation-tested governance check, require a manual or independent semantic review of the exact diff and current policy. Do not call the check validated merely because it ran green. Prefer a robust contract-aware check in an existing gate to brittle magic-string matching; implement it only through a separate scoped, reviewed task.
 
 ## 1. Existing topology, not a replacement
 
@@ -66,7 +68,7 @@ Do not put general housekeeping into CODEX_RESEARCH_CANDIDATE unless it actually
 ## 3. Executor selection, future-proof and cost-aware
 
 Two distinct execution contexts:
-- **Interactive ChatGPT preference:** use the newest strongest accessible chat model with highest supported reasoning effort when the product exposes it. The framework does not purport to control ChatGPT's host selector or verify a hidden effort configuration.
+- **Interactive ChatGPT preference (distinct user-facing context, OUTSIDE API routing):** use the newest strongest accessible chat model with highest supported reasoning effort when the product exposes it. The framework does not purport to control ChatGPT's host selector or verify a hidden effort configuration. This preference does not override background-task policy of cheapest qualified execution.
 - **Work/Codex/API/background task:** dynamically choose the lowest expected end-to-end-cost *qualified and available* capability that meets quality/risk requirements, escalating directly for difficult or consequential tasks. Use newest models when beneficial; older/cheaper models may win on measured equal-quality tasks. Do not reserve any task for an Astra/Sol/Luna/Terra name. Re-evaluate when new models become available.
 
 Selection inputs: task contract, risk/blast radius, tools actually available, context size, evidence boundary, prior failure, deadline, quota/credits, executor permissions, expected total cost (tokens + retries + Actions minutes + review + repair), and expected success quality. A cheaper first call that drives 4 retries is not a saving.
@@ -80,7 +82,7 @@ Selection order is capability-based, not model-name-based:
 
 A fallback must not drop quality/permission/evidence constraints. When credits, API capacity or code-write permissions are unavailable: try another *authorized* qualified executor, or remain BLOCKED_WITH_REASON. Never pretend a task executed because its agent was assigned.
 
-Model pricing/capability records are **dated observations**, not timeless rules. Runtime validate model availability and supported effort/tooling before selection. A configured historical ID is a backward-compatibility fallback, never a hard commitment. The current CAPABILITY_ROUTING_POLICY and task registry remain runtime authorities until revised through the normal governed process. Do not create a second router: modify those existing paths, if experiments warrant it.
+Model pricing/capability records are **dated observations**, not timeless rules. Runtime validate model availability and supported effort/tooling before selection. A configured historical ID is a backward-compatibility fallback, never a hard commitment. The current CAPABILITY_ROUTING_POLICY and task registry remain runtime authorities until revised through the normal governed process. Do not create a second router: modify those existing paths, if experiments warrant it. **Distinguish per-run selection from authority-changing policy edits:** ordinary selection among already authorized models within approved budget/permissions needs no new personal sign-off per call. Altering router authority, permissions, budget, security gates, supported executor write capability, or the approved policy's meaning requires a separately authenticated explicit approval from repository owner Donh91, then the normal PR, review and readback. Merely running an evaluation does not approve a config change.
 
 Maximum useful delegation depth and redelegation remain governed by the active delegation policy. A specialist's opinion is advisory; author identity is never counted as independent GitHub approval. Keep API hard-stop and lane caps unchanged unless the owner separately authorizes a budget amendment.
 
@@ -90,11 +92,11 @@ Maximum useful delegation depth and redelegation remain governed by the active d
 
 **Propose draft PR:** allowed only through currently authorized branch-writing executor and within a documented scoped task. No production behavior change before merge. Even a purely test-only fix must preserve negative controls.
 
-**Small mechanical repairs:** candidate for greater unattended autonomy under existing #1156 only when all current permissions, task-specific scope, risk-adjusted tests, review and release gates permit it. Owner proposal #1156 is not blanket self-merge authorization.
+**Small mechanical repairs:** candidate for greater unattended autonomy under existing #1156 only when all current permissions, task-specific scope, risk-adjusted tests, review and release gates permit it. Owner proposal #1156 is not blanket self-merge authorization. Specifically, #1156's acceptance claim of `end-to-end without user intervention` excludes release/integration unless AGENTS.md §0.2a is met by an authenticated owner mandate or a separately ratified bounded release policy. Executor failover carries the original task's permissions and cannot supply missing owner approval.
 
 **Governed high-impact or semantic work:** explicit domain-owner escalation. No autonomously changed trade thresholds, forecast scoring, historical records, source hierarchy, API budget, credentials, branch/ruleset policy, recovery authority, payment semantics, portfolio action, scientific promotion or release policy.
 
-**Merge:** obey live GitHub protection and AGENTS.md. Owner-directed single-account integration applies only within its documented authorization and exact-head controls; it is not fake APPROVED or general unattended bot permission. The current review-event TOCTOU limitation precludes treating a bot comment census as atomic authorization. No bypass, force push or direct-main integration of a PR. Before merge, verify exact HEAD SHA, actual CI, live review state, P0/P1 blockers, backup/recovery separation and domain requirements. After merge, prove exact main blob and natural producer/consumer observation. Green CI alone != HEALED.
+**Merge:** obey AGENTS.md whether or not GitHub main is technically protected. **Verified 2026-10-17:** Archive `main` advertised `protected:false` and GitHub returned no repository rulesets; missing rules are a defense gap, not permission to merge. It cannot be assumed that GitHub mechanically enforces this document's release requirements. Introducing required-PR branch protection must first account for the existing direct-main scheduled publishers: migrate/validate them rather than breaking critical data/health pipelines by flipping the switch. Owner-directed single-account integration applies only within its documented authorization and exact-head controls; it is not fake APPROVED or general unattended bot permission. The current review-event TOCTOU limitation precludes treating a bot comment census as atomic authorization. No bypass, force push or direct-main integration of a PR. Before merge, verify exact HEAD SHA, actual CI, live review state, P0/P1 blockers, backup/recovery separation and domain requirements. After merge, prove exact main blob and natural producer/consumer observation. Green CI alone != HEALED.
 
 **Fail-safe:** same fingerprint repair concurrency one; bounded retries; timeout; stop on root-cause expansion; independent observation on self-healing owner failure; rollback/quarantine when verification fails; never silently relax checks to turn RED green. GitHub Actions critical Class A duties remain protected by #1156 Actions budget guard.
 
@@ -122,6 +124,8 @@ Safety floors (zero allowed critical regressions): source provenance, original t
 
 Secondary endpoints: confirmed false-removal proposals; recurring incident count; P50/P95 CI time; Actions minutes/day and burn projection; provider-reported/receipt-estimated API cost by task; token use; repair retries; time to diagnosis; time to *verified* closure; production reopens; PR review effort. Mark unmeasurable quantities UNKNOWN, not zero.
 
+**Pilot economics and stop gate:** Before any paid A/B or multi-model experiment, #1157 must preregister the funding lane, fixed maximum USD spend per pilot (including retries and verification), actual provider/receipt-cost measurement, stop-on-cap behavior, and how it remains within *all* current monthly, per-run and lane hard stops. No pilot is authorized to spend merely because this design exists. If a fresh budget source is unavailable, use offline/replay fixtures or mark BLOCKED; do not guess remaining money.
+
 Pilot A (quality): freeze a small verified set of actual recent flaky-test or low-risk static-code findings with a no-model baseline; compare existing executor against 1-2 qualified alternative model/effort configurations, using same snapshot/tools/evidence, order-balanced where feasible and independent scorer. Same input/output contract, randomized/blinded review if practical. Count correct accepted findings, omissions and damaging false positives, not raw suggestions.
 
 Pilot B (CI): obtain per-workflow/job runtime and measured cost baseline; rank candidate improvements by evidence-backed minutes/day. Trial one non-semantic optimization while preserving original 100% mandatory negative/integrity gates. Compare actual before/after with equivalent workflow scope, avoiding confounding from differing loads.
@@ -136,7 +140,7 @@ The #1157 owner must freeze sample, metric, baseline, exclusion rules, required 
 - Read the mandatory current-state files and exact rulesets above.
 - Diff current #1156 proposed executor authorization against current CAPABILITY_ROUTING_POLICY (including CODEX_ONLY and API code-write false), API gateway, runtime tool binding, and actual PR release path.
 - Inventory overlaps with existing Work/Supervisor/Codex efforts, open PRs and remediation candidates.
-- Inventory current workflow load + quotas/billing-source freshness; classify unknown vs verified. Capture current RED workflows and CODEX_READY count.
+- Inventory current workflow load + quotas/billing-source freshness; classify unknown vs verified. Capture current RED workflows and CODEX_READY count. Explicitly report missing main protection/rulesets, but plan a safe migration of direct-main publishers before branch-policy enforcement; owner-only settings changes remain out of agent scope.
 - Deliver one concise gap table: already implemented / needs test / requires code / requires separate authority / not worth implementing.
 **Exit:** source-grounded plan, no new workflows, no duplicate issue or policy mutation.
 
@@ -155,7 +159,7 @@ The #1157 owner must freeze sample, metric, baseline, exclusion rules, required 
 
 ### Phase 3, integrate improvements into existing owners
 - Under #1156: extend existing health/remediation diagnosis, duplicate suppression, failed-job targeting, and Actions-minute guard only where tests find a true gap.
-- Under existing API routing owner: revise **only qualified operational mappings** after reviewer/owner approval, remove accidental model-name locks without diminishing permission boundaries.
+- Under existing API routing owner: test proposed model/executor changes in shadow against frozen tasks. Non-semantic runtime choice **inside approved policy** may stay autonomous. Any change to CAPABILITY_ROUTING_POLICY/API_TASK_REGISTRY affecting permitted operations, executor write access, security, budget or policy interpretation requires authenticated **Donh91 owner approval** before governed branch/PR/release. Remove accidental model-name locks only after approval where it is required; preserve permission boundaries.
 - Under existing Codex queue: retain exact transition/completion evidence, no substitute authority.
 - Under #1157: store outcomes in existing experimental record/scoreboard; do not establish a new competing ledger.
 **Exit:** merged bounded code and verified operational behavior, or named explicit blockers.
@@ -179,7 +183,7 @@ The #1157 owner must freeze sample, metric, baseline, exclusion rules, required 
 | Retry | transient provider fault one bounded retry | deterministic fingerprint stops blind retries |
 | Private data | public metadata only | raw private values and credentials never in public receipts |
 | Billing | idempotent failure/retry stays bounded | prior paid failure cannot spuriously charge again |
-| Merge | exact head, authorized, real checks | latest pending/TOCTOU, changed head, prohibited self-review -> blocked |
+| Merge | exact head, authenticated owner authority, real checks | missing GitHub rulesets/branch protection never count as authorization; latest pending/TOCTOU, changed head or self-review -> blocked |
 | Closure | exact main blob + natural readback | green CI only remains POST_FIX_OBSERVATION |
 | Budget | critical work prioritized | class C defers under CONSERVE/CRITICAL; UNKNOWN usage not fabricated |
 | Scientific boundary | maintenance-only operation | no Round3 unsealing or forecast/outcome historical mutation |
@@ -193,6 +197,8 @@ NO_NEW_SUPERVISOR; NO_NEW_SCHEDULED_WORKFLOW; NO_NEW_ROUTER_OR_QUEUE; NO_MODEL_B
 If scope requires semantic policy, new permissions, new spending, separate source authority, trade decision logic, or cross-repository destructive keys: **stop and route to current owner**. Do not silently reinterpret this document as permission.
 
 No claim of implementation, autonomy, production verification, or savings until proved by exact receipts and readback.
+
+**Path owner verification:** `00_FMOS/WP00_PATH_OWNER_REGISTRY_v1.json` already maps `00_FMOS/**` to `FMOS_CONTROL` with PR-only write policy; this dated design inherits that owner class. No new registry row or authority class is required unless a subsequent source-of-truth review finds a stricter requirement.
 
 ## 10. Immediate next-agent execution packet
 
