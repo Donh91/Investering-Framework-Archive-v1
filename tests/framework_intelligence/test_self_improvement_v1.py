@@ -147,6 +147,7 @@ class SelfImprovementV1Test(unittest.TestCase):
             with self.subTest(value=value):
                 self.output.unlink(missing_ok=True)
                 self.health["workflows"][0]["status"] = value
+                self.health["status"] = "RED" if value.lower() == "red" else "GREEN" if value.lower() == "green" else "AMBER"
                 self._save(self.health_path, self.health)
                 self.assertEqual(self.snapshot()["operational_verdict"], verdict)
 
@@ -154,12 +155,14 @@ class SelfImprovementV1Test(unittest.TestCase):
         first = self.snapshot()
         self.assertEqual(first["incident_history"][0]["observation_count"], 1)
         self.health["workflows"][0]["status"] = "GREEN"
+        self.health["status"] = "GREEN"
         self.health["workflows"][0]["live"]["latest_run"]["id"] = 13
         self._save(self.health_path, self.health)
         middle = self.snapshot()
         self.assertEqual(middle["incident_count"], 0)
         self.assertEqual(middle["incident_history"][0]["observation_count"], 1)
         self.health["workflows"][0]["status"] = "RED"
+        self.health["status"] = "RED"
         self.health["workflows"][0]["live"]["latest_run"]["id"] = 14
         self._save(self.health_path, self.health)
         last = self.snapshot()
@@ -177,6 +180,7 @@ class SelfImprovementV1Test(unittest.TestCase):
 
     def test_corrupted_history_never_becomes_false_green_and_is_persistent(self):
         self.health["workflows"][0]["status"] = "GREEN"
+        self.health["status"] = "GREEN"
         self._save(self.health_path, self.health)
         clean = self.snapshot()
         self.assertEqual(clean["operational_verdict"], "NO_RED_HEALTH_INCIDENTS")
@@ -198,6 +202,7 @@ class SelfImprovementV1Test(unittest.TestCase):
 
     def test_malformed_or_duplicate_prior_history_requires_persistent_integrity_review(self):
         self.health["workflows"][0]["status"] = "GREEN"
+        self.health["status"] = "GREEN"
         self._save(self.health_path, self.health)
         for history in ([{"unbound": "no fingerprint"}],
                         [{"fingerprint": "duplicated"}, {"fingerprint": "duplicated"}],
@@ -219,6 +224,7 @@ class SelfImprovementV1Test(unittest.TestCase):
              "findings": ["EVIDENCE_PARTIAL"] if i >= 192 else []}
             for i in range(198)
         ]
+        self.health["status"] = "AMBER"
         self._save(self.health_path, self.health)
         result = self.snapshot()
         self.assertEqual(result["operational_verdict"], "ADVISORY_DEGRADED")
