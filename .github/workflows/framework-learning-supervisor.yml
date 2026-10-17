@@ -16,6 +16,9 @@ on:
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
       - 'scripts/framework_intelligence/self_improvement_v1.py'
       - 'scripts/framework_intelligence/framework_strategist_v1.py'
+      - 'scripts/framework_intelligence/framework_strategist_semantic_v1.py'
+      - 'tests/framework_intelligence/test_framework_strategist_semantic_v1.py'
+      - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
       - 'tests/framework_intelligence/test_framework_strategist_v1.py'
       - '00_FMOS/framework_strategist/**'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
@@ -82,6 +85,7 @@ jobs:
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/self_improvement_v1.py \
             scripts/framework_intelligence/framework_strategist_v1.py \
+            scripts/framework_intelligence/framework_strategist_semantic_v1.py \
             scripts/framework_intelligence/supervisor_mission_intake_v1.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
@@ -95,6 +99,7 @@ jobs:
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_self_improvement_v1 \
             tests.framework_intelligence.test_framework_strategist_v1 \
+            tests.framework_intelligence.test_framework_strategist_semantic_v1 \
             tests.framework_intelligence.test_supervisor_mission_intake_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
@@ -121,6 +126,10 @@ jobs:
           python scripts/framework_intelligence/framework_strategist_v1.py \
             --repo-root . \
             --output runtime/framework-learning-supervisor/strategist/LATEST.json
+          python scripts/framework_intelligence/framework_strategist_semantic_v1.py prepare \
+            --repo-root . \
+            --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
+            --strategist-path runtime/framework-learning-supervisor/strategist/LATEST.json
           python scripts/framework_intelligence/operational_memory_v1.py \
             --repo-root . \
             --output-root runtime/operational-memory \
@@ -684,6 +693,7 @@ jobs:
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/self_improvement_v1.py \
             scripts/framework_intelligence/framework_strategist_v1.py \
+            scripts/framework_intelligence/framework_strategist_semantic_v1.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
             scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
@@ -692,6 +702,7 @@ jobs:
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_self_improvement_v1 \
             tests.framework_intelligence.test_framework_strategist_v1 \
+            tests.framework_intelligence.test_framework_strategist_semantic_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_capability_router \
@@ -780,6 +791,11 @@ jobs:
             assert key in handoff['agent_read_order']['CODEX_OPERATIONAL_PREFLIGHT'], key
             assert key in handoff['agent_read_order']['ASTRA_RESEARCH_ROUTING'], key
           PY
+      - name: Prepare strategic semantic analysis only on material change
+        run: |
+          python scripts/framework_intelligence/framework_strategist_semantic_v1.py prepare \
+            --repo-root . \
+            --runtime-dir runtime/framework-learning-supervisor/strategist-semantic
       - name: Run bounded intelligent automation orchestration
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -982,6 +998,9 @@ jobs:
           git add research/framework_learning research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
           if [ -d research/api_agent/outputs/automation_orchestration ]; then
             git add research/api_agent/outputs/automation_orchestration
+          fi
+          if [ -d research/api_agent/outputs/framework_strategist ]; then
+            git add research/api_agent/outputs/framework_strategist
           fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "research: refresh framework learning supervisor ${GITHUB_RUN_ID}"
