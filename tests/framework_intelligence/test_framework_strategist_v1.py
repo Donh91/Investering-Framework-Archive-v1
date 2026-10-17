@@ -406,5 +406,25 @@ class StrategistTest(unittest.TestCase):
         self.assertEqual(parent["proposal_ids"], [])
 
 
+    def test_malicious_symlink_source_is_never_read(self):
+        external = Path(self.tmp.name).parent / ("strategist-external-" + self.root.name + ".json")
+        external.write_text('{"contract":"AUTOMATION_PRODUCTION_HEALTH_v2_1","status":"GREEN"}')
+        self.addCleanup(lambda: external.unlink(missing_ok=True))
+        path = self.root / SOURCES["health"][0]
+        path.unlink()
+        path.symlink_to(external)
+        result = self.run_brain()
+        self.assertEqual(result["source_receipts"]["health"]["status"], "PATH_UNSAFE")
+        self.assertIn("health", result["incomplete_required_inputs"])
+
+    def test_output_parent_symlink_is_not_an_allowed_write_target(self):
+        with tempfile.TemporaryDirectory() as outside:
+            self.output.parent.parent.mkdir(parents=True, exist_ok=True)
+            self.output.parent.symlink_to(outside, target_is_directory=True)
+            with self.assertRaises(ValueError):
+                self.run_brain()
+            self.assertFalse((Path(outside) / "LATEST.json").exists())
+
+
 if __name__ == "__main__":
     unittest.main()
