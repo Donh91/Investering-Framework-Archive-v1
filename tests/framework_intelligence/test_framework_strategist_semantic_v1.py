@@ -1,5 +1,6 @@
 """Negative and positive controls for the governed Strategist semantic lane."""
 import base64
+import hashlib
 import json
 import unittest
 from datetime import timedelta
@@ -37,7 +38,14 @@ class SemanticTest(unittest.TestCase):
     def reserve(self, run_id="12345"):
         plan = self.plan()
         rel, payload = reservation_payload(self.root, self.runtime, run_id=run_id)
-        value = json.loads(base64.b64decode(payload["content"]).decode("utf-8"))
+        raw = base64.b64decode(payload["content"])
+        value = json.loads(raw.decode("utf-8"))
+        gitblob = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+        submitted = {"path": rel, "request": payload}
+        remote = {"content": {"path": rel, "sha": gitblob},
+                  "commit": {"sha": "a" * 40}}
+        self.fixture.write(str((self.runtime / "reservation_submitted.json").relative_to(self.root)), submitted)
+        self.fixture.write(str((self.runtime / "reservation_remote_response.json").relative_to(self.root)), remote)
         self.fixture.write(rel, value)
         return plan, value
 
@@ -116,6 +124,21 @@ class SemanticTest(unittest.TestCase):
         row = json.loads(base64.b64decode(request["content"]))
         self.assertFalse(row["automatic_retry_allowed"])
         self.assertEqual(row["status"], "PAID_ATTEMPT_RESERVED_NO_RETRY")
+
+    def test_invalid_remote_reservation_blob_blocks_acceptance(self):
+        self.response()
+        rel = str((self.runtime / "reservation_remote_response.json").relative_to(self.root))
+        receipt = json.loads((self.root / rel).read_text())
+        receipt["content"]["sha"] = "0" * 40
+        self.fixture.write(rel, receipt)
+        with self.assertRaises(ValueError):
+            check_output(self.root, self.runtime, run_id="12345")
+
+    def test_missing_remote_receipt_blocks_api_result(self):
+        self.response()
+        (self.runtime / "reservation_remote_response.json").unlink()
+        with self.assertRaises(ValueError):
+            check_output(self.root, self.runtime, run_id="12345")
 
     def test_invalid_reservation_ref_is_not_dispatched(self):
         self.plan()
