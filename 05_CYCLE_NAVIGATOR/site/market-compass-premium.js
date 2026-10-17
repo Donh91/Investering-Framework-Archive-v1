@@ -171,6 +171,48 @@ function decisionMeta(compass) {
   };
 }
 
+// Official NEXT_12H is a market-direction continuation proxy, not an independently
+// scored 12-hour model. Missing/stale states must never assert a live direction.
+function freshNearTermReading(dataOk, live) {
+  // Explicitly recognize only independently sourced *current direction states*.
+  // Unknown/new labels, NO_EDGE and stale/missing states are not a live forecast.
+  return Boolean(dataOk && ['BULLISH','BEARISH','UP','DOWN'].includes(live));
+}
+function mixedNearTermReading(dataOk, live) {
+  return Boolean(dataOk && ['MIXED','SIDEWAYS','NEUTRAL'].includes(live));
+}
+function twelveHourMethodDisclosure(dataOk, live) {
+  if (freshNearTermReading(dataOk, live))
+    return 'Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.';
+  if (mixedNearTermReading(dataOk, live))
+    return 'Current BTC/ETH conditions are mixed or sideways; no clear 0–12H direction or independently validated 12H forecast.';
+  return 'No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.';
+}
+
+function officialCurrentReading(compass, now=Date.now()) {
+  const f=compass?.full_stack, freshness=f?.official_freshness;
+  const issued=Date.parse(compass?.issued_at_utc||''), source=Date.parse(freshness?.source_asof_utc||''), expiry=Date.parse(freshness?.valid_until_utc||'');
+  return Boolean(compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK'
+    && f?.source_status?.official==='VERIFIED'
+    && freshness?.contract==='OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1'
+    && freshness?.status==='VERIFIED_OWNER_POLICY'
+    && Number.isFinite(issued)&&Number.isFinite(source)&&Number.isFinite(expiry)
+    && source<=issued&&issued<=now&&source<=now&&now<=expiry);
+}
+
+window.CNOfficialCurrentReading = officialCurrentReading;
+let freshnessExpiryTimer = null;
+function scheduleFreshnessExpiry(snapshot, compass, event) {
+  if(typeof setTimeout!=='function')return; // isolated no-timer DOM probes only
+  if(freshnessExpiryTimer!==null){clearTimeout(freshnessExpiryTimer);freshnessExpiryTimer=null;}
+  if(!officialCurrentReading(compass))return;
+  const expiry=Date.parse(compass.full_stack.official_freshness.valid_until_utc);
+  freshnessExpiryTimer=setTimeout(()=>{
+    freshnessExpiryTimer=null;
+    renderPremium(snapshot,compass,event);
+  },Math.min(2147483647,Math.max(1,expiry-Date.now()+1)));
+}
+
 function recommendationWindow(compass) {
   const explicit = clean(compass?.next_meaningful_change_eta);
   const near = clean(compass?.horizons?.NEXT_12H?.eta);
@@ -183,10 +225,20 @@ function decisionDetail(compass, rec, meta) {
   const invalidation = publicCompassText(clean(protection.invalidation) || 'No public invalidation condition is currently available.');
   const issued = clean(compass?.issued_at_utc);
   const issuedLabel = issued ? new Date(issued).toLocaleString('en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',','') + ' CPH' : 'timestamp unavailable';
+  const liveFresh = freshNearTermReading(true, meta.live);
+  const liveMixed = mixedNearTermReading(true, meta.live);
   const investor = rec.action === 'HOLD'
-    ? 'Keep existing positioning. The bearish 0–12h pressure reading is tactical, not the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.'
+    ? (liveFresh
+      ? 'Keep existing positioning. The 0–12h pressure reading is a current-state observation, not a validated 12H forecast or the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.'
+      : liveMixed
+        ? 'Keep existing positioning. BTC/ETH conditions are mixed; there is no clear directional 12H signal. Do not broaden high-beta exposure based on mixed conditions alone.'
+        : 'Keep existing positioning. No fresh verified 0–12H reading is available; do not infer a new near-term direction or broaden high-beta exposure from missing evidence.')
     : rec.copy;
-  const swing = 'Treat ' + meta.live + ' over ' + meta.liveEta + ' as short-horizon pressure, while the 5–7 day outlook remains ' + meta.weekly + '. ' + meta.risk + ' means a retest deserves attention, but it is not a confirmed sell, short or distribution signal.';
+  const swing = liveFresh
+    ? 'Treat ' + meta.live + ' over ' + meta.liveEta + ' as short-horizon pressure, while the 5–7 day outlook remains ' + meta.weekly + '. ' + meta.risk + ' means a retest deserves attention, but it is not a confirmed sell, short or distribution signal.'
+    : liveMixed
+      ? 'Near-term BTC/ETH conditions are mixed, with no clear directional edge. Wait for a verified change; mixed conditions are not a short or sell signal.'
+      : 'No fresh verified 0–12H pressure reading is available. Use the separate weekly context and await verified near-term evidence; missingness is not a swing, short or sell signal.';
   return '<details id="liveDecisionDetail" class="premium-decision-detail">'
     + '<summary><span>DECISION DETAIL</span><b>Investor + swing trader context</b></summary>'
     + '<div class="premium-decision-body">'
@@ -351,7 +403,7 @@ function pullbackCard(compass) {
 }
 function compositeIntel(compass){
  const f=compass?.full_stack;if(f?.contract!=='PUBLIC_COMPASS_FULL_STACK_READBACK_v1')return '';
- const verified=compass?.data_status==='OK'&&f.source_status?.official==='VERIFIED';
+ const verified=officialCurrentReading(compass);
  const sh=f.shadow||{},st=f.strategic||{},current=sh.status==='ALIGNED_RESEARCH',stale=sh.status==='STALE_RESEARCH';
  const d=k=>{const h=sh?.horizons?.[k];return !h?'UNAVAILABLE':current?publicState(h.direction):stale?'STALE · '+publicState(h.direction):'UNVERIFIED';};
  const analysis=current&&sh.horizons?.['1_3d']?.interpretation?publicCompassText(sh.horizons['1_3d'].interpretation):
@@ -391,10 +443,10 @@ function renderPremium(snapshot, compass, event) {
   const root = document.getElementById('productNow');
   if (!root) return false;
   const expanded = [...root.querySelectorAll('#premiumMarketCompass details[open][id]')].map(d=>d.id);
-  const dataOk = compass?.contract === 'PUBLIC_COMPASS_PROJECTION_v1' && compass?.data_status === 'OK';
+  const dataOk = officialCurrentReading(compass);
   // Keep verified weekly/research context, but remove every current Official
   // decision field when the Official owner cannot support an actionable read.
-  const officialView = dataOk ? compass : {contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:compass?.data_status||'UNAVAILABLE',weekly_context:compass?.weekly_context,full_stack:compass?.full_stack};
+  const officialView = dataOk ? compass : {contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'UNAVAILABLE',weekly_context:compass?.weekly_context,full_stack:compass?.full_stack};
   const scale = officialScale(officialView);
   const rec = dataOk ? recommendation(compass.action_now) : {action:'WAIT · DATA DEGRADED',copy:'A current action is unavailable. Wait for a fresh verified Market Compass reading.'};
   const meta = decisionMeta(officialView);
@@ -403,7 +455,7 @@ function renderPremium(snapshot, compass, event) {
   section.className = 'premium-market-compass';
   section.innerHTML =
     '<div class="premium-overview">'
-    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong>' + (meta.live.includes('MIXED') ? '<p class="mixed-explanation">Conflicting signals · no clear near-term direction.</p>' : meta.live==='NO NEW READING' ? '<p class="mixed-explanation">Current action unchanged · awaiting a fresh near-term reading.</p>' : '') + '<small>' + esc(meta.liveEta) + ' · not the weekly outlook</small></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong>' + (meta.weekly.includes('MIXED') ? '<p class="mixed-explanation">Mixed weekly evidence · no clear directional edge.</p>' : '') + '<small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
+    + '<div class="premium-overview-copy"><span class="premium-kicker">CYCLE NAVIGATOR · CONCLUSION</span><h2>' + esc(dataOk ? 'One market. Three decision windows.' : 'Fresh market evidence is still loading.') + '</h2><p>' + esc(cnConclusion(snapshot)) + '</p><div class="premium-hero-meta"><a href="#liveDecisionDetail" data-live-detail><span>NEAR-TERM PRESSURE · 0–12H</span><strong>' + esc(meta.live) + '</strong>' + (meta.live.includes('MIXED') ? '<p class="mixed-explanation">Conflicting signals · no clear near-term direction.</p>' : meta.live==='NO NEW READING' ? '<p class="mixed-explanation">Current action unchanged · awaiting a fresh near-term reading.</p>' : '') + '<small>' + esc(meta.liveEta) + ' · not the weekly outlook</small><p class="mixed-explanation">' + esc(twelveHourMethodDisclosure(dataOk, meta.live)) + '</p></a><a href="#liveDecisionDetail" data-live-detail><span>WEEKLY OUTLOOK · 5–7D</span><strong>' + esc(meta.weekly) + '</strong>' + (meta.weekly.includes('MIXED') ? '<p class="mixed-explanation">Mixed weekly evidence · no clear directional edge.</p>' : '') + '<small>' + esc(meta.weeklyEta) + ' · current weekly view</small></a></div></div>'
     + '<aside><span>CURRENT ACTION</span><strong>' + esc(rec.action) + '</strong>' + (dataOk ? '<div class="premium-action-window"><span>APPLIES NOW</span><b>NEXT REVIEW · ' + esc(recommendationWindow(compass)) + '</b><small>This is the reassessment window, not a promise that the action changes.</small></div>' : '') + '<p>' + esc(rec.copy) + '</p>' + (dataOk ? hourlyMonitor(snapshot) : '') + '<small>Current action · near-term pressure and weekly outlook remain separate signals.</small></aside>'
     + '</div>'
     + refreshStatusBanner(compass, event)
@@ -413,7 +465,7 @@ function renderPremium(snapshot, compass, event) {
     + '<div class="premium-compass-head"><div><span class="premium-kicker">MARKET COMPASS</span><h2>Directional pressure by horizon.</h2></div><p>Each Bull/Bear balance is an official evidence reading. Tap a horizon to see the public inputs, current drivers and method behind the call.</p></div>'
     + '<div class="premium-horizon-grid">' + HORIZONS.map((h) => horizonCard(snapshot, officialView, scale, h)).join('') + '</div>'
     + riskCurve(officialView)
-    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(publicDataStatus(compass?.data_status || 'UNAVAILABLE')) + '</b></span><span>RISK ROTATION · ' + esc(capSummary(officialView)) + '</span><span>Evidence balance · not probability</span></div>';
+    + '<div class="premium-footline"><span>DATA STATUS · <b>' + esc(publicDataStatus(officialView?.data_status || 'UNAVAILABLE')) + '</b></span><span>RISK ROTATION · ' + esc(capSummary(officialView)) + '</span><span>Evidence balance · not probability</span></div>';
 
   expanded.forEach(id=>{const d=section.querySelector('#'+id);if(d)d.open=true;});
   root.querySelector('#premiumMarketCompass')?.remove();
@@ -428,6 +480,8 @@ function renderPremium(snapshot, compass, event) {
     detail.open = true;
     requestAnimationFrame(() => detail.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }));
+  if(typeof document.dispatchEvent==='function')document.dispatchEvent(new CustomEvent('cn-official-compass-rendered',{detail:compass}));
+  scheduleFreshnessExpiry(snapshot, compass, event);
   return true;
 }
 
@@ -468,6 +522,11 @@ async function load() {
 }
 
 function boot() {
+  // Browser suspension may delay timers. Re-check before displaying a
+  // previously cached current action when the page becomes visible again.
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')install();});
+  window.addEventListener?.('pageshow',install);
+  window.addEventListener?.('focus',install);
   load();
   setInterval(load, 5 * 60 * 1000);
 }

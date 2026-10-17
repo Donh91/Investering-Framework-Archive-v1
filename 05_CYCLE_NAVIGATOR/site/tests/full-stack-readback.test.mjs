@@ -52,18 +52,38 @@ for(const mode of ['valid','health','time']){
 }
 // Preserve Python integral-float bytes rather than parse/stringify reconstruction.
 f=fixture();const raw='{"contract":"FLOAT_TEST","number":1.0}';const digest=hash(raw),withDigest='{"contract":"FLOAT_TEST","number":1.0,"z_sha256":"'+digest+'"}';assert.equal(f.context.digest(withDigest,JSON.parse(withDigest),'z_sha256',digest),true);assert.equal(f.context.digest(withDigest.replace('1.0','2.0'),JSON.parse(withDigest.replace('1.0','2.0')),'z_sha256',digest),false);
-function render(status,contract='PUBLIC_COMPASS_PROJECTION_v1',event=null){
+function render(status,contract='PUBLIC_COMPASS_PROJECTION_v1',event=null,liveState='NO NEW READING',sourceHealth='VERIFIED',expired=false){
  let html='';const root={querySelectorAll:()=>[],querySelector:()=>null,classList:{add:()=>{}},prepend:s=>{html=s.innerHTML}};
- const ctx={document:{getElementById:()=>root,createElement:()=>({querySelector:()=>null,querySelectorAll:()=>[]})},esc:String,HORIZONS:[],officialScale:()=>null,decisionMeta:()=>({live:'UNAVAILABLE',liveEta:'UNKNOWN',weekly:'UNAVAILABLE',weeklyEta:'UNKNOWN'}),cnConclusion:()=>'',recommendationWindow:()=>'',hourlyMonitor:()=>'',decisionDetail:()=>'<p>INVESTOR_DETAIL</p>',compositeIntel:()=>'',pullbackCard:()=>'',riskCurve:()=>'',publicDataStatus:String,capSummary:()=>''};
- vm.createContext(ctx);vm.runInContext(premium.slice(premium.indexOf('function publicAction'),premium.indexOf('\nfunction cnConclusion'))+premium.slice(premium.indexOf('function refreshStatusBanner('),premium.indexOf('\nlet latestSnapshot'))+';globalThis.run=renderPremium;',ctx);
- ctx.run({live_observation:{current_action:{stance:'BUY'}}},{contract,data_status:status,action_now:'HOLD_WAIT_DATA_DEGRADED',issued_at_utc:'2026-10-11T06:30:00Z',bull_bear_scale:{}},event);return html;
+ const ctx={window:{},document:{getElementById:()=>root,createElement:()=>({querySelector:()=>null,querySelectorAll:()=>[]})},esc:String,HORIZONS:[],officialScale:()=>null,decisionMeta:()=>({live:liveState,liveEta:'UNKNOWN',weekly:'UNAVAILABLE',weeklyEta:'UNKNOWN'}),cnConclusion:()=>'',recommendationWindow:()=>'',hourlyMonitor:()=>'',decisionDetail:()=>'<p>INVESTOR_DETAIL</p>',compositeIntel:()=>'',pullbackCard:()=>'',riskCurve:()=>'',publicDataStatus:String,capSummary:()=>''};
+ vm.createContext(ctx);vm.runInContext(premium.slice(premium.indexOf('function publicAction'),premium.indexOf('\nfunction cnConclusion'))+premium.slice(premium.indexOf('function freshNearTermReading('),premium.indexOf('\nfunction recommendationWindow('))+premium.slice(premium.indexOf('function refreshStatusBanner('),premium.indexOf('\nlet latestSnapshot'))+';globalThis.run=renderPremium;',ctx);
+ ctx.run({live_observation:{current_action:{stance:'BUY'}}},{contract,data_status:status,action_now:'HOLD_WAIT_DATA_DEGRADED',issued_at_utc:new Date(Date.now()-60000).toISOString(),full_stack:{source_status:{official:sourceHealth},official_freshness:{contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',status:'VERIFIED_OWNER_POLICY',source_asof_utc:new Date(Date.now()-120000).toISOString(),valid_until_utc:new Date(Date.now()+(expired?-30000:3600000)).toISOString()}},bull_bear_scale:{}},event);return html;
 }
 for(const status of ['DEGRADED','NOT_PUBLISHED','STALE',undefined]){const html=render(status);assert.match(html,/WAIT · DATA DEGRADED/);assert.doesNotMatch(html,/Keep current positioning|INVESTOR_DETAIL|APPLIES NOW/);}
-assert.match(render('OK'),/CURRENT ACTION<\/span><strong>HOLD<\/strong>/);assert.match(render('OK'),/INVESTOR_DETAIL/);assert.doesNotMatch(render('OK','WRONG_CONTRACT'),/INVESTOR_DETAIL/);
+assert.match(render('OK'),/CURRENT ACTION<\/span><strong>HOLD<\/strong>/);assert.match(render('OK'),/INVESTOR_DETAIL/);
+const missingNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'NO NEW READING');
+assert.match(missingNearTerm,/No fresh verified 0–12H reading is available/);
+assert.doesNotMatch(missingNearTerm,/Current BTC\/ETH direction extrapolated/);
+const freshNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'BULLISH');
+assert.match(freshNearTerm,/Current BTC\/ETH direction extrapolated, not an independently validated 12H forecast/);
+const mixedNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'MIXED');
+assert.match(mixedNearTerm,/Current BTC\/ETH conditions are mixed or sideways; no clear 0–12H direction/);
+assert.doesNotMatch(mixedNearTerm,/No fresh verified 0–12H reading is available/);
+assert.doesNotMatch(mixedNearTerm,/Current BTC\/ETH direction extrapolated/);
+const unknownNearTerm=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'STALENESS_UNVERIFIED');
+assert.match(unknownNearTerm,/No fresh verified 0–12H reading is available/);
+assert.doesNotMatch(unknownNearTerm,/Current BTC\/ETH direction extrapolated/);
+const dataDegradedNearTerm=render('DEGRADED','PUBLIC_COMPASS_PROJECTION_v1',null,'UP');
+assert.match(dataDegradedNearTerm,/No fresh verified 0–12H reading is available/);
+assert.doesNotMatch(dataDegradedNearTerm,/Current BTC\/ETH direction extrapolated/);assert.doesNotMatch(render('OK','WRONG_CONTRACT'),/INVESTOR_DETAIL/);
+for(const [health,expired] of [['DEGRADED',false],['VERIFIED',true]]){
+ const bad=render('OK','PUBLIC_COMPASS_PROJECTION_v1',null,'BULLISH',health,expired);
+ assert.match(bad,/No fresh verified 0–12H reading is available/);
+ assert.doesNotMatch(bad,/Current BTC\/ETH direction extrapolated|INVESTOR_DETAIL|APPLIES NOW/);
+}
 // The premium NOW renderer is the real current site owner. It must NOT
 // label an operations/scheduling outage as a live market-move detection.
 const scheduled={contract:'PUBLIC_COMPASS_EVENT_STATUS_v1',status:'REASSESSMENT_REQUESTED',
-  detected_at_utc:'2026-10-11T07:45:00Z',cause_codes:['SCHEDULED_FREEZE_MISSING']};
+  detected_at_utc:new Date(Date.now()-10000).toISOString(),cause_codes:['SCHEDULED_FREEZE_MISSING']};
 const late=render('OK','PUBLIC_COMPASS_PROJECTION_v1',scheduled);
 assert.match(late,/SCHEDULED UPDATE DELAYED/);
 assert.match(late,/Fresh Compass update requested/);

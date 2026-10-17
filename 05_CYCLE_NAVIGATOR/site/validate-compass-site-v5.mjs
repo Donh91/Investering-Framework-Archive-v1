@@ -1,6 +1,8 @@
 import './tests/full-stack-readback.test.mjs';
+import './tests/browser-source-binding.test.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { runInNewContext } from 'node:vm';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const site=dirname(fileURLToPath(import.meta.url));
@@ -25,6 +27,112 @@ if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined rende
 if(!premiumRenderer.includes('compositeIntel(compass)'))throw Error('active premium renderer ignores integrated Compass');
 if(!premiumRenderer.includes('CN_PREMIUM_COMPASS_OWNER = true'))throw Error('premium owner not detected');
 if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model research')&&!premiumRenderer.includes('Research direction'))throw Error('premium research disclosure absent');
+// Execute the active premium rendering code in an isolated mock DOM. Merely
+// finding disclaimers in a source comment is not an acceptance test.
+const honestyScope = {window: {}, document: {readyState:'loading', addEventListener() {}}};
+const honestyInstrumented = premiumRenderer.replace(/\}\)\(\);\s*$/,
+  'globalThis.__honestyProbe = {renderPremium, freshNearTermReading, mixedNearTermReading, twelveHourMethodDisclosure};})();');
+if(honestyInstrumented===premiumRenderer) throw Error('premium active render scope unavailable for behavioral test');
+runInNewContext(honestyInstrumented, honestyScope, {timeout:1500});
+const honesty=honestyScope.__honestyProbe;
+if(!honesty || typeof honesty.renderPremium!=='function' || typeof honesty.twelveHourMethodDisclosure!=='function') throw Error('premium behavioral disclosure hooks unavailable');
+const sourceMethod='Current BTC/ETH direction extrapolated, not an independently validated 12H forecast.';
+const noSource='No fresh verified 0–12H reading is available.';
+if(!honesty.freshNearTermReading(true,'UP') || !honesty.freshNearTermReading(true,'BULLISH') || honesty.freshNearTermReading(true,'NO NEW READING') || honesty.freshNearTermReading(true,'MIXED') || honesty.freshNearTermReading(true,'STALE') || honesty.freshNearTermReading(true,'NEW_UNKNOWN_STATE') || honesty.freshNearTermReading(false,'UP')) throw Error('premium 12H availability condition unsafe');
+if(!honesty.mixedNearTermReading(true,'MIXED') || !honesty.mixedNearTermReading(true,'SIDEWAYS') || honesty.mixedNearTermReading(false,'MIXED'))throw Error('premium mixed 12H evidence class invalid');
+if(!honesty.twelveHourMethodDisclosure(true,'UP').includes(sourceMethod))throw Error('valid current 12H continuation method disclosure absent');
+for(const [available,state] of [[true,'NO NEW READING'],[true,'NOT READY'],[true,'UNCLEAR'],[false,'UP']]){
+ const text=honesty.twelveHourMethodDisclosure(available,state);
+ if(!text.includes(noSource)||text.includes(sourceMethod))throw Error('missing 12H source claimed as current');
+}
+function actualPremiumMarkup(c) {
+ let markup='';
+ const root={querySelectorAll:()=>[],querySelector:()=>null,classList:{add(){}},prepend(section){markup=section.innerHTML;honestyScope.__lastMarkup=markup;}};
+ honestyScope.document.getElementById=id=>id==='productNow'?root:null;
+ honestyScope.document.createElement=()=>({
+   innerHTML:'',querySelectorAll:()=>[],querySelector:()=>null
+ });
+ if(honesty.renderPremium({package:{}},c,null)!==true)throw Error('premium renderer failed to install in mock DOM');
+ return markup;
+}
+const testProjection={...compass,contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',action_now:'HOLD',issued_at_utc:new Date(Date.now()-60000).toISOString(),full_stack:{...compass.full_stack,source_status:{...compass.full_stack.source_status,official:'VERIFIED'},official_freshness:{contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',status:'VERIFIED_OWNER_POLICY',source_asof_utc:new Date(Date.now()-120000).toISOString(),valid_until_utc:new Date(Date.now()+3600000).toISOString()}}};
+const staleMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'UNCHANGED_NO_NEW_OBSERVATION'}});
+if(!staleMarkup.includes(noSource)||staleMarkup.includes(sourceMethod)||staleMarkup.includes('The 0–12h pressure reading is a current-state observation'))throw Error('rendered NO NEW READING card falsely asserts available 12H direction');
+const freshMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'UP'}});
+if(!freshMarkup.includes(sourceMethod)||freshMarkup.includes(noSource))throw Error('rendered active NOW card lost continuation-proxy caveat');
+const mixedMethod='Current BTC/ETH conditions are mixed or sideways; no clear 0–12H direction or independently validated 12H forecast.';
+const mixedMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'MIXED'}});
+if(!mixedMarkup.includes(mixedMethod)||mixedMarkup.includes(noSource)||mixedMarkup.includes(sourceMethod))throw Error('rendered fresh MIXED falsely asserts a directional 12H forecast or missing data');
+const unknownMarkup=actualPremiumMarkup({...testProjection,market_now:{...(compass.market_now||{}),directional_state:'STALE'}});
+if(!unknownMarkup.includes(noSource)||unknownMarkup.includes(sourceMethod))throw Error('unknown 12H label did not fail closed');
+const degradedMarkup=actualPremiumMarkup({...testProjection,data_status:'UNAVAILABLE'});
+if(!degradedMarkup.includes(noSource)||degradedMarkup.includes(sourceMethod))throw Error('rendered degraded NOW card falsely asserts available 12H direction');
+for(const badProjection of [
+ {...testProjection,full_stack:{...testProjection.full_stack,source_status:{official:'DEGRADED'}}},
+ {...testProjection,full_stack:{...testProjection.full_stack,official_freshness:{...testProjection.full_stack.official_freshness,valid_until_utc:new Date(Date.now()-1000).toISOString()}}},
+ {...testProjection,full_stack:{...testProjection.full_stack,official_freshness:{status:'UNAVAILABLE'}}}
+]){
+ const bad=actualPremiumMarkup({...badProjection,market_now:{directional_state:'BULLISH'}});
+ if(!bad.includes(noSource)||bad.includes(sourceMethod)||bad.includes('APPLIES NOW'))throw Error('stale/unverified official source presented as current');
+}
+// No polling/network refresh is needed to expire an already rendered action.
+const realDate=Date;let clock=Date.now(),expiryCallback=null,scheduledDelay=null;
+honestyScope.Date=class extends realDate {static now(){return clock;}};
+honestyScope.setTimeout=(callback,delay)=>{expiryCallback=callback;scheduledDelay=delay;return 1;};
+honestyScope.clearTimeout=()=>{};
+actualPremiumMarkup(testProjection);
+if(typeof expiryCallback!=='function'||!(scheduledDelay>0&&scheduledDelay<=3600001))throw Error('owner expiry did not schedule invalidation');
+clock=Date.parse(testProjection.full_stack.official_freshness.valid_until_utc)+1;
+expiryCallback();
+if(!honestyScope.__lastMarkup.includes(noSource)||honestyScope.__lastMarkup.includes('APPLIES NOW'))throw Error('expired visible action survived without polling');
+honestyScope.Date=realDate;delete honestyScope.setTimeout;delete honestyScope.clearTimeout;
+if(!premiumRenderer.includes("visibilitychange")||!premiumRenderer.includes("'pageshow'")||!premiumRenderer.includes("'focus'"))throw Error('suspended page has no freshness resume check');
+// Header clock is the same rendered Official source, never an hourly monitor
+// or weekly-package timestamp mislabeled as the updated Market Compass.
+const productSource=await readFile(resolve(site,'public-product.js'),'utf8');
+let stripMarkup='';
+const stripScope={Date,esc:String,snapshot:{package:{generated_unix:1},live_observation:{current_action:{generated_at:'2020-01-01T00:00:00Z'}}},officialCompass:testProjection,window:{CNOfficialCurrentReading:honestyScope.window.CNOfficialCurrentReading},document:{getElementById:()=>({set innerHTML(value){stripMarkup=value;}})}};
+const stripCode=productSource.slice(productSource.indexOf('function freshness(){'),productSource.indexOf('\nfunction rotationEta('))+';freshness();';
+runInNewContext(stripCode,stripScope);
+const officialStamp=new Date(testProjection.issued_at_utc).toLocaleString('en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+if(!stripMarkup.includes(officialStamp)||stripMarkup.includes('2020'))throw Error('header clock is not the rendered Official issuance');
+// Execute the real independent PATH/product reload with a newer fetched
+// Compass while the premium decision still holds the older rendered source.
+const renderedSource=stripScope.officialCompass;
+Object.assign(stripScope,{shell(){},json:async()=>({package:{}}),jsonOptional:async()=>({...testProjection,issued_at_utc:new Date(Date.parse(testProjection.issued_at_utc)+10000).toISOString()}),prices:async()=>null,renderNow(){},renderPath(){},renderProof(){},installNowRefinements(){},clearInterval(){},setInterval(){return 1;},refreshTimer:null,console:{warn(...args){throw Error('product reload probe failed: '+args.join(' '));}}});
+stripScope.document.querySelector=()=>null;stripScope.document.querySelectorAll=()=>[];
+const productReloadCode=productSource.slice(productSource.indexOf('async function render(){'),productSource.indexOf("\ndocument.addEventListener('cn-official-compass-rendered'"))+';render();';
+await runInNewContext(productReloadCode,stripScope);
+if(stripScope.officialCompass!==renderedSource)throw Error('independent product fetch overwrote actual premium-render header source');
+stripScope.officialCompass=null;runInNewContext(stripCode,stripScope);
+if(!stripMarkup.includes('OFFICIAL COMPASS UNAVAILABLE'))throw Error('missing Official source relabeled hourly/weekly as Compass');
+if(premiumRenderer.includes('The bearish 0–12h pressure reading'))throw Error('hard-coded bearish HOLD investor copy may contradict owner');
+const chatPrompt=await readFile(resolve(site,'../..','07_PROMPTS_AND_AGENTS/prompts/HANDLEKOMPAS_v1.md'),'utf8');
+const sourceHonesty=chatPrompt.match(/## Forecast evidence, honesty and user-visible accountability \(Task 1\.5 P0\)([\s\S]*?)## Mandatory rendering rules/)?.[1]||'';
+if(!sourceHonesty.includes('12H = fortsættelse af seneste BTC/ETH-retning'))throw Error('Chat KOMPAS missing 12H continuation disclosure');
+if(!sourceHonesty.includes('**NO UNSOURCED CONFIDENCE:**')||!sourceHonesty.includes('A numeric probability / success likelihood requires a prospectively issued, scored and adequately calibrated probability for the identical event/horizon.'))throw Error('Chat KOMPAS missing governed calibrated-probability requirement');
+if(chatPrompt.includes('**Confidence:** <0–100%>'))throw Error('Chat KOMPAS still mandates uncalibrated 0–100% confidence');
+const route=JSON.parse(await readFile(resolve(site,'../../07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json'),'utf8'));
+const canonicalPath='07_PROMPTS_AND_AGENTS/action_compass/2026-09-16__global-action-compass-invocation-contract-v1__canonical.md';
+if(route.canonical_contract!==canonicalPath)throw Error('active Kompas global contract route changed without guard review');
+for(const trigger of ['kompas','handlekompas','compass'])if(!route.hard_triggers?.includes(trigger))throw Error('required ChatGPT hard trigger missing');
+const globalContract=await readFile(resolve(site,'../..',canonicalPath),'utf8');
+if(!globalContract.includes('P0 current-direction vs forecast honesty')||!globalContract.includes('Official NEXT_12H.expected_direction')||!globalContract.includes('P0 confidence and delivery honesty')||!globalContract.includes('not automatically a frozen research forecast'))throw Error('active global Kompas contract missing Task 1.5 truthfulness guard');
+const bilingual=JSON.parse(await readFile(resolve(site,'i18n-da.json'),'utf8')).exact;
+for(const original of [
+  sourceMethod,
+  mixedMethod,
+  'Keep existing positioning. BTC/ETH conditions are mixed; there is no clear directional 12H signal. Do not broaden high-beta exposure based on mixed conditions alone.',
+  'Near-term BTC/ETH conditions are mixed, with no clear directional edge. Wait for a verified change; mixed conditions are not a short or sell signal.',
+  'No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.',
+  'Keep existing positioning. The 0–12h pressure reading is a current-state observation, not a validated 12H forecast or the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.',
+  'Keep existing positioning. No fresh verified 0–12H reading is available; do not infer a new near-term direction or broaden high-beta exposure from missing evidence.',
+  'No fresh verified 0–12H pressure reading is available. Use the separate weekly context and await verified near-term evidence; missingness is not a swing, short or sell signal.'
+]){
+  if(typeof bilingual[original]!=='string'||!bilingual[original].trim()||bilingual[original]===original)throw Error('DA translation missing for 12H safety disclosure: '+original);
+}
+if(!staleMarkup.includes('No fresh verified 0–12H reading is available. The continuation method is not an independently validated 12H forecast.'))throw Error('missing-data active render not covered by bilingual catalog');
+if(!freshMarkup.includes(sourceMethod))throw Error('fresh active render not covered by bilingual catalog');
 // Independent end-to-end producer-digest and weekly-source regression checks.
 const root=resolve(site,'../..');
 const j=async p=>JSON.parse(await readFile(resolve(root,p),'utf8'));
