@@ -104,15 +104,20 @@ def _health_input_issues(health: dict[str, Any], workflows: list[dict[str, Any]]
     if (type(previous_coverage) in (int, float) and
             previous_coverage - coverage >= 0.5):
         issues.append("SUSPECTED_LIVE_COVERAGE_COLLAPSE")
-    try:
-        previous_source_time = _timestamp(previous["source_generated_at_utc"]["automation_health"])
-        current_source_time = _timestamp(health.get("generated_at_utc"))
-        if current_source_time < previous_source_time:
-            issues.append("SOURCE_TIME_REGRESSION")
-    except (KeyError, TypeError, ValueError, AttributeError):
-        # Malformed previous metadata cannot lock the live advisory writer.
-        # It must never be accepted as proof of recovery or freshness.
-        issues.append("PRIOR_SOURCE_BINDING_UNREADABLE")
+    # Legacy snapshots lack this additive binding entirely. Only a PRESENT
+    # malformed binding is an error; absence is not false evidence of damage.
+    binding = previous.get("source_generated_at_utc")
+    if binding is not None:
+        if not isinstance(binding, dict) or "automation_health" not in binding:
+            issues.append("PRIOR_SOURCE_BINDING_UNREADABLE")
+        else:
+            try:
+                previous_source_time = _timestamp(binding["automation_health"])
+                current_source_time = _timestamp(health.get("generated_at_utc"))
+                if current_source_time < previous_source_time:
+                    issues.append("SOURCE_TIME_REGRESSION")
+            except (TypeError, ValueError):
+                issues.append("PRIOR_SOURCE_BINDING_UNREADABLE")
     return list(dict.fromkeys(issues)), coverage
 
 
