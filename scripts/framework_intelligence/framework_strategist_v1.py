@@ -273,6 +273,24 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
                 "Audit incremental value against independent baseline; do not label this investment improvement.",
                 context=f"{positive} distinct strengthened families in one weekly delta; may share original roots.",
                 scientific="UNVERIFIED_RESEARCH_DIRECTION"))
+        compounding = delta.get("source_compounding_delta")
+        if isinstance(compounding, dict) and compounding.get("contract") == "LEARNING_DELTA_v1":
+            changed = compounding.get("changed_families")
+            if isinstance(changed, list) and len(changed) <= 10000:
+                identities = {
+                    item.get("semantic_identity") for item in changed
+                    if isinstance(item, dict)
+                    and isinstance(item.get("semantic_identity"), str)
+                    and item.get("semantic_identity")
+                    and item.get("new_evidence_fingerprint") != item.get("previous_evidence_fingerprint")
+                }
+                if len(identities) >= 3 and compounding.get("material_change") is True:
+                    observations.append(_observation(
+                        "MATERIAL_HYPOTHESIS_FAMILY_REVISION", "MEDIUM", "RESEARCH_RIGOR", "#1157",
+                        ["weekly_delta"],
+                        "Which changed hypothesis families have genuinely new evidence, and which merely changed labels?",
+                        context=f"{len(identities)} distinct changed compounding-family identities; may share original roots, never evidence of alpha.",
+                        scientific="DESCRIPTIVE_RESEARCH_ONLY"))
 
     # Use explicit weekly finding owners; not freeform model-selected instructions.
     forensics = docs["weekly_forensics"]
