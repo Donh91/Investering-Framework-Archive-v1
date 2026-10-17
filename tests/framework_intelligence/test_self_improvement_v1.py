@@ -239,5 +239,107 @@ class SelfImprovementV1Test(unittest.TestCase):
         self.assertEqual(self.snapshot()["incidents"][0]["observation_count"], 1)
 
 
+    # Claude audit 2026-10-17: new adversarial cases, adjusted for merged HEAD.
+    def test_top_level_red_without_red_rows_is_insufficient(self):
+        self.health["workflows"][0]["status"] = "GREEN"
+        self._save(self.health_path, self.health)
+        result = self.snapshot()
+        self.assertEqual(result["operational_verdict"], "INSUFFICIENT_EVIDENCE")
+        self.assertIn("TOP_LEVEL_RED_WITHOUT_RED_ROWS", result["input_issues"])
+
+    def test_green_summary_cannot_override_red_workflow(self):
+        self.health["status"] = "GREEN"
+        self._save(self.health_path, self.health)
+        result = self.snapshot()
+        self.assertIn("TOP_LEVEL_GREEN_WITH_RED_ROWS", result["input_issues"])
+        self.assertEqual(result["incidents"][0]["observation_count"], 0)
+
+    def test_api_error_and_count_mismatch_stop_false_confidence(self):
+        for kind in ("api_error", "red_count"):
+            with self.subTest(kind=kind):
+                self.output.unlink(missing_ok=True)
+                self.health.pop("api_error", None)
+                self.health.pop("red_count", None)
+                self.health[kind] = "actions_read_denied" if kind == "api_error" else 0
+                self._save(self.health_path, self.health)
+                result = self.snapshot()
+                self.assertEqual(result["operational_verdict"], "INSUFFICIENT_EVIDENCE")
+                self.assertFalse(result["source_observation_counted"])
+                self.assertEqual(result["incidents"][0]["observation_count"], 0)
+
+    def test_stale_receipt_must_not_create_new_history(self):
+        self.health["generated_at_utc"] = "2026-10-01T00:00:00Z"
+        self._save(self.health_path, self.health)
+        stale = self.snapshot()
+        self.assertEqual(stale["operational_verdict"], "INSUFFICIENT_EVIDENCE")
+        self.assertEqual(stale["incident_history"], [])
+        self.assertEqual(stale["incidents"][0]["observation_count"], 0)
+        self.health["generated_at_utc"] = "2026-10-16T07:00:00Z"
+        self._save(self.health_path, self.health)
+        fresh = self.snapshot()
+        self.assertEqual(fresh["incidents"][0]["observation_count"], 1)
+        self.assertEqual(fresh["incidents"][0]["first_seen_at_utc"], "2026-10-16T07:00:00Z")
+
+    def test_time_regression_does_not_mutate_recurrence(self):
+        first = self.snapshot()
+        self.health["generated_at_utc"] = "2026-10-16T06:59:00Z"
+        self.health["workflows"][0]["live"]["latest_run"]["id"] = 13
+        self._save(self.health_path, self.health)
+        result = self.snapshot()
+        self.assertEqual(first["incidents"][0]["observation_count"], 1)
+        self.assertIn("SOURCE_TIME_REGRESSION", result["input_issues"])
+        self.assertEqual(result["operational_verdict"], "INSUFFICIENT_EVIDENCE")
+        self.assertEqual(result["incidents"][0]["observation_count"], 1)
+
+    def test_run_id_aba_must_not_count_three_observations(self):
+        self.snapshot()
+        self.health["workflows"][0]["live"]["latest_run"]["id"] = 13
+        self._save(self.health_path, self.health)
+        self.assertEqual(self.snapshot()["incidents"][0]["observation_count"], 2)
+        self.health["workflows"][0]["live"]["latest_run"]["id"] = 12
+        self._save(self.health_path, self.health)
+        self.assertEqual(self.snapshot()["incidents"][0]["observation_count"], 2)
+
+    def test_no_run_id_fresh_receipt_is_counted_once(self):
+        self.health["workflows"][0]["live"]["latest_run"].pop("id")
+        self._save(self.health_path, self.health)
+        self.snapshot()
+        self.health["new_receipt_marker"] = "changed"
+        self._save(self.health_path, self.health)
+        self.assertEqual(self.snapshot()["incidents"][0]["observation_count"], 2)
+        self.assertEqual(self.snapshot()["incidents"][0]["observation_count"], 2)
+
+    def test_invalid_matured_outcome_not_republished_as_object(self):
+        self.registry["candidates"][0]["matured_outcome_count"] = {"nested": "object"}
+        self._save(self.registry_path, self.registry)
+        result = self.snapshot()
+        item = next(c for c in result["challengers"] if c["source_state"] == "MATURED_SUPPORTED")
+        self.assertIsNone(item["matured_outcome_count"])
+        self.assertEqual(item["evidence_direction"], "POSITIVE_UNVERIFIED")
+        self.registry["candidate_count"] = True
+        self._save(self.registry_path, self.registry)
+        with self.assertRaises(ValueError):
+            self.snapshot()
+        self.registry["candidate_count"] = 3
+        self.registry["state_counts"]["MATURED_SUPPORTED"] = True
+        self._save(self.registry_path, self.registry)
+        with self.assertRaises(ValueError):
+            self.snapshot()
+
+    def test_output_escape_or_source_overwrite_is_blocked(self):
+        with self.assertRaises(ValueError):
+            mod.build_snapshot(self.root, self.root.parent / "outside-self-improvement.json", now=self.now)
+        with self.assertRaises(ValueError):
+            mod.build_snapshot(self.root, self.health_path, now=self.now)
+
+    def test_live_coverage_collapse_is_reported(self):
+        self.snapshot()
+        self.health["workflows"].append({"workflow": "not-observed.yml", "status": "GREEN"})
+        self._save(self.health_path, self.health)
+        result = self.snapshot()
+        self.assertIn("SUSPECTED_LIVE_COVERAGE_COLLAPSE", result["input_issues"])
+        self.assertFalse(result["source_observation_counted"])
+
+
 if __name__ == "__main__":
     unittest.main()
