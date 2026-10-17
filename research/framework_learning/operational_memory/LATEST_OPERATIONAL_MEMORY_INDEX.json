@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 4461,
-  "generated_at_utc": "2026-10-17T07:10:07.704157Z",
+  "episode_count": 4463,
+  "generated_at_utc": "2026-10-17T08:00:30.823485Z",
   "rows": [
     {
       "changed_paths": [
@@ -123070,10 +123070,10 @@
         "research/architecture_health/history/38950643934-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 5,
         "checked": 9,
         "removed": 0,
-        "same": 7,
+        "same": 4,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -123161,11 +123161,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 4,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-99c070010144892d",
@@ -123173,7 +123173,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "99c070010144892d18d77feab2f67163bf91280c",
       "source_timestamp": "2026-10-16T19:20:49Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -124399,11 +124399,11 @@
         "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-815c03513b814ac0",
@@ -125271,11 +125271,11 @@
         "research/experiment_lifecycle/receipts/XR-041352b050a0d7046984.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 25,
         "removed": 0,
-        "same": 25,
-        "status": "EXACT"
+        "same": 23,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-1ca3441ee3873859",
@@ -125635,7 +125635,64 @@
       "source_timestamp": "2026-10-17T06:58:43Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: adaptive cadence observation 39011879196"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/history/39015479176-attempt-1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 6,
+        "removed": 0,
+        "same": 6,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-3e6c607376b2ff1f",
+      "episode_path": "episodes/2026/10/OE-3e6c607376b2ff1f.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "3e6c607376b2ff1faf666d801dad98448116c7cb",
+      "source_timestamp": "2026-10-17T07:59:13Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 39015479176"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-f17a128233bce8de",
+      "episode_path": "episodes/2026/10/OE-f17a128233bce8de.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "f17a128233bce8de3edef3547b1f03f0bffedb8e",
+      "source_timestamp": "2026-10-17T07:59:51Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 39015661219"
     }
   ],
-  "source_head_sha": "0696d63ebd1d451c9b8e497099cce0399e18d531"
+  "source_head_sha": "f17a128233bce8de3edef3547b1f03f0bffedb8e"
 }
