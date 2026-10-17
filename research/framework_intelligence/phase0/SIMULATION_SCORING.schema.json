@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FRAMEWORK_INTELLIGENCE_PHASE0_WEEK_v1",
+  "type": "object",
+  "required": ["week", "cutoff_utc", "hard_gates", "scores", "total_score", "verdict"],
+  "properties": {
+    "week": {"type": "string"},
+    "cutoff_utc": {"type": ["string", "null"]},
+    "hard_gates": {
+      "type": "object",
+      "required": ["zero_future_leakage", "zero_retrospective_forecast_creation", "zero_silent_canonical_promotion", "zero_duplicate_evidence_inflation"]
+    },
+    "scores": {"type": "object"},
+    "total_score": {"type": "integer", "minimum": 0, "maximum": 20},
+    "verdict": {"enum": ["PASS", "NEEDS_FIX", "FAIL_SCIENTIFIC_INTEGRITY", "NOT_EVALUABLE"]}
+  }
+}
