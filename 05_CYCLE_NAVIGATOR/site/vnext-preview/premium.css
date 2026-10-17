@@ -1300,3 +1300,31 @@ background:#fafcfe;border:1px solid #e9eef4;border-radius:9px;padding:14px 15px;
 .cn-range-scorecards {
   font-variant-numeric: tabular-nums;
 }
+
+/* Current public readback is visually and semantically separate from W40/W41 archive.
+   On failure, verified current action never inherits archived fixture values. */
+.cn-current-public{border:1px solid #d6e2ef;background:#fff;border-radius:16px;padding:clamp(17px,3vw,30px);margin:0 0 18px;box-shadow:var(--shadow);}
+.cn-current-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);}
+.cn-current-head span{font-size:10px;font-weight:800;letter-spacing:.1em;color:#315b92;}
+.cn-current-head strong{font-size:10px;letter-spacing:.04em;color:#8a4320;}
+.cn-current-public[data-state="CURRENT_VERIFIED"] .cn-current-head strong{color:#126248;}
+.cn-current-primary{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0;}
+.cn-current-primary>div,.cn-current-secondary>div{min-width:0;display:flex;flex-direction:column;gap:6px;}
+.cn-current-primary span,.cn-current-secondary span{font-size:10px;color:#536a86;font-weight:750;letter-spacing:.05em;}
+.cn-current-primary strong{font-size:clamp(18px,2.2vw,28px);line-height:1.2;letter-spacing:-.02em;overflow-wrap:anywhere;color:#102d50;}
+.cn-current-public[data-state="UNAVAILABLE"] .cn-current-primary strong{color:#6c7786;}
+.cn-current-secondary{display:grid;grid-template-columns:1fr 1fr 2fr;gap:14px;border-top:1px solid var(--line);padding-top:14px;}
+.cn-current-secondary strong{font-size:13px;line-height:1.4;color:#273b55;font-weight:650;overflow-wrap:anywhere;}
+.cn-current-provenance{font-size:11px;color:#405571;margin:16px 0 3px;line-height:1.5;overflow-wrap:anywhere;}
+.cn-current-delivery{font-size:11px;color:#566b85;margin:0;line-height:1.5;overflow-wrap:anywhere;}
+.cn-archive-boundary{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;border-top:1px solid #d6e2ef;padding:18px 2px 12px;margin-top:6px;color:#536a86;}
+.cn-archive-boundary strong{font-size:10px;letter-spacing:.05em;}
+.cn-archive-boundary span{font-size:11px;line-height:1.5;}
+@media(max-width:580px){
+  .cn-current-public{padding:17px 16px;}
+  .cn-current-primary{gap:12px;}
+  .cn-current-primary strong{font-size:20px;}
+  .cn-current-secondary{grid-template-columns:1fr 1fr;}
+  .cn-current-secondary>div:last-child{grid-column:1/-1;}
+}
+@media(max-width:350px){.cn-current-primary{grid-template-columns:1fr;}}
