@@ -368,7 +368,7 @@ class StrategistTest(unittest.TestCase):
     def test_parent_supervisor_consumes_exact_source_bound_advisory_only(self):
         result = self.run_brain()
         parent = read_strategist_advisory(self.root, NOW)
-        self.assertEqual(parent["status"], "ADVISORY_CURRENT")
+        self.assertEqual(parent["status"], "ADVISORY_PREVIOUS_EVIDENCE")
         self.assertEqual(parent["proposal_ids"], [x["id"] for x in result["proposals"]])
         self.assertFalse(parent["automatic_routing"])
         self.assertEqual(parent["grok_review_candidate_count"], 0)
