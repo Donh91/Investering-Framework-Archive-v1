@@ -176,7 +176,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
     reentry_state: actionable ? (compass.protection_tracker?.reentry_state || 'UNAVAILABLE') : 'UNAVAILABLE',
     // A source week is not by itself an event onset. Public ETA is permitted
     // ONLY if verified Compass and weekly public CN identities are aligned.
-    pullback_window: cOK && cnJoined ?
+    pullback_window: actionable ?
       (() => {
         const p = officialPullbackDisplay(compass, { forecast_week: forecastWeek }, 'da');
         return p.state === 'VALID' ? {
@@ -189,7 +189,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
           caution: p.note
         } : null;
       })() : null,
-    pullback_stage: cOK && cnJoined ? (() => {
+    pullback_stage: actionable ? (() => {
       const p=officialPullbackStage(compass, {forecast_week: forecastWeek}, 'da');
       return p.status==='SOURCE_VALID' ? {
         source_risk_state:p.sourceRiskState, stage_label:p.stageLabel,
@@ -199,7 +199,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
         sell_permission:false, confirmed_market_decline:false
       } : null;
     })() : null,
-    pullback_investor_facts: cOK && cnJoined ? (() => {
+    pullback_investor_facts: actionable ? (() => {
       const v=officialPullbackInvestorView(compass,{forecast_week:forecastWeek},'da');
       return v.status==='VALID' ? {
         authority:'SOURCE_ONLY_UI',risk_state:v.source_risk_state,
@@ -213,7 +213,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
   // PATH is the weekly CN structure plus aligned Official Compass tier ladder.
   // No independent site phase engine: absent/late/misaligned source cannot show
   // a LIVE checkpoint, fake ETH-led transition or interpolated stage ETA.
-  if (cOK && cnJoined && Array.isArray(pkg?.rotation_ladder) &&
+  if (actionable && Array.isArray(pkg?.rotation_ladder) &&
       Array.isArray(pkg?.altseason_countdown) &&
       Array.isArray(compass.capitalization_ladder)) {
     const view=officialPathView({
