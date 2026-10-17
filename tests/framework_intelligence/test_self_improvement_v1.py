@@ -341,5 +341,17 @@ class SelfImprovementV1Test(unittest.TestCase):
         self.assertFalse(result["source_observation_counted"])
 
 
+    def test_malformed_present_prior_source_binding_fails_closed_not_crashes(self):
+        self.snapshot()
+        prior = json.loads(self.output.read_text())
+        prior["source_sha256"] = ["invalid"]
+        prior["source_generated_at_utc"] = {"automation_health": "bad"}
+        self.output.write_text(json.dumps(prior))
+        result = self.snapshot()
+        self.assertIn("PRIOR_SOURCE_BINDING_UNREADABLE", result["input_issues"])
+        self.assertEqual(result["operational_verdict"], "INSUFFICIENT_EVIDENCE")
+        self.assertFalse(result["source_observation_counted"])
+
+
 if __name__ == "__main__":
     unittest.main()
