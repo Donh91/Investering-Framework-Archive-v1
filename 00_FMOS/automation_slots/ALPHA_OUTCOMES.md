@@ -1,0 +1,4 @@
+# S4: Alpha Lab Outcome Learning
+**Host:** `6acbfb98f548819181e783607e69f58f`. **Schedule:** daily 22:15 Europe/Copenhagen. **Owner:** Meme-Alpha-Lab #77/#85/#126, Archive #1340.
+
+Read fresh MAL AGENTS and main. Use `research/alpha_audit/TOP10_OUTCOME_MATURATION_RUNBOOK_V1.md` only once MAL PR #143 is merged and exact main bytes verified; until then retain the safety-complete existing host prompt. Freeze Oct 11 Top 10; mature 24h, 72h, 7d and later admitted cohorts without hindsight, timestamp mismatch or invented fills. Ten-row denominator including no-CA/never-launched/rugs. Append only to existing owner-authorized research/outcome records; read back and dedupe; no separate scanner or production alert authority. Quiet days silent; source missing = DATA_INVALID/UNKNOWN. Supervisor consumes material learning; no duplicate weekly Alpha Tool Review.

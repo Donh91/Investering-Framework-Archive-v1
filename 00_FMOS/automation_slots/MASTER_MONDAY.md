@@ -1,0 +1,4 @@
+# S2: Master Monday + Cycle Navigator
+**Host:** `6a5515c4a5448191b3f6607fc568927f`. **Schedule:** Monday 10:00 Europe/Copenhagen. **Authority:** read-only presentation of completed ISO-week canonical GitHub evidence, never a new data capture or writer.
+
+Read AGENTS and current orchestration, Daily Capture v2.2, final settled weekly package, freeze, outcome and delivery pointers. One clear cycle phase, grounded horizon/ETA only when supported, actionable Danish board and scientific-firewall status. Preserve original freeze, no fabricated forecast score, no shadow-to-canonical promotion. Existing supervisor covers readiness; do not resurrect the old separate Master Monday Data Gate. If source incomplete, publish explicit partial status rather than backfilling. If GitHub unavailable, fail closed on market claims but do not pretend the scheduled task itself was disabled.
