@@ -328,9 +328,9 @@ class SelfImprovementV1Test(unittest.TestCase):
 
     def test_output_escape_or_source_overwrite_is_blocked(self):
         with self.assertRaises(ValueError):
-            mod.build_snapshot(self.root, self.root.parent / "outside-self-improvement.json", now=self.now)
+            build_snapshot(self.root, self.root.parent / "outside-self-improvement.json", now=self.now)
         with self.assertRaises(ValueError):
-            mod.build_snapshot(self.root, self.health_path, now=self.now)
+            build_snapshot(self.root, self.health_path, now=self.now)
 
     def test_live_coverage_collapse_is_reported(self):
         self.snapshot()
