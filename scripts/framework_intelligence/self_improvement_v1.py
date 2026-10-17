@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -59,10 +60,104 @@ def _source_age_status(generated: Any, now: datetime, max_age_hours: float = 36)
     return "CURRENT" if -0.25 <= age <= max_age_hours else "STALE"
 
 
+def _health_input_issues(health: dict[str, Any], workflows: list[dict[str, Any]],
+                         previous: dict[str, Any]) -> tuple[list[str], float]:
+    """Fail closed on self-contradictory or blind health receipts.
+
+    Status normalization is retained for backward compatibility; unrecognized
+    values never count as healthy. No finding here authorizes an automatic fix.
+    """
+    issues: list[str] = []
+    counts: Counter[str] = Counter()
+    with_live = 0
+    for item in workflows:
+        if not isinstance(item, dict):
+            raise ValueError("malformed_health_workflow")
+        raw = item.get("status")
+        status = raw.strip().upper() if isinstance(raw, str) else ""
+        status = "AMBER" if status == "YELLOW" else status
+        if status not in {"GREEN", "AMBER", "RED"}:
+            issues.append("UNRECOGNIZED_WORKFLOW_STATUS")
+        else:
+            counts[status] += 1
+        if isinstance(item.get("live"), dict) and isinstance(item["live"].get("latest_run"), dict):
+            with_live += 1
+    top_raw = health.get("status")
+    top = top_raw.strip().upper() if isinstance(top_raw, str) else ""
+    top = "AMBER" if top == "YELLOW" else top
+    if top not in {"GREEN", "AMBER", "RED"}:
+        issues.append("TOP_LEVEL_STATUS_UNRECOGNIZED")
+    elif top == "RED" and not counts["RED"]:
+        issues.append("TOP_LEVEL_RED_WITHOUT_RED_ROWS")
+    elif top == "GREEN" and counts["RED"]:
+        issues.append("TOP_LEVEL_GREEN_WITH_RED_ROWS")
+    if health.get("api_error"):
+        issues.append("HEALTH_API_ERROR_REPORTED")
+    for field, expected in (("red_count", counts["RED"]), ("amber_count", counts["AMBER"]),
+                            ("green_count", counts["GREEN"]), ("workflow_count", len(workflows))):
+        reported = health.get(field)
+        if reported is not None and (type(reported) is not int or reported != expected):
+            issues.append("HEALTH_CENSUS_COUNT_MISMATCH")
+            break
+    coverage = with_live / len(workflows) if workflows else 0.0
+    prior_hashes = previous.get("source_sha256")
+    if prior_hashes is not None and not isinstance(prior_hashes, dict):
+        issues.append("PRIOR_SOURCE_BINDING_UNREADABLE")
+    previous_coverage = previous.get("health_live_coverage")
+    if (type(previous_coverage) in (int, float) and
+            previous_coverage - coverage >= 0.5):
+        issues.append("SUSPECTED_LIVE_COVERAGE_COLLAPSE")
+    # Legacy snapshots lack this additive binding entirely. Only a PRESENT
+    # malformed binding is an error; absence is not false evidence of damage.
+    binding = previous.get("source_generated_at_utc")
+    if binding is not None:
+        if not isinstance(binding, dict) or "automation_health" not in binding:
+            issues.append("PRIOR_SOURCE_BINDING_UNREADABLE")
+        else:
+            try:
+                previous_source_time = _timestamp(binding["automation_health"])
+                current_source_time = _timestamp(health.get("generated_at_utc"))
+                if current_source_time < previous_source_time:
+                    issues.append("SOURCE_TIME_REGRESSION")
+            except (TypeError, ValueError):
+                issues.append("PRIOR_SOURCE_BINDING_UNREADABLE")
+    return list(dict.fromkeys(issues)), coverage
+
+
+def _safe_write(root: Path, output: Path, value: dict[str, Any]) -> None:
+    root_real, target_real = root.resolve(), output.resolve()
+    if root_real not in target_real.parents:
+        raise ValueError("output_outside_repo_root")
+    source_paths = (
+        root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        root / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+    )
+    if target_real in {p.resolve() for p in source_paths}:
+        raise ValueError("output_collides_with_source")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_name(f".{output.name}.{os.getpid()}.tmp")
+    try:
+        with temporary.open("w", encoding="utf-8") as handle:
+            json.dump(value, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary.replace(output)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> dict[str, Any]:
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
         raise ValueError("now_must_be_timezone_aware")
+    now = now.astimezone(timezone.utc)
+    # Never overwrite a source receipt, including when caller supplies --output.
+    if root.resolve() not in output.resolve().parents or output.resolve() in {
+        (root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json").resolve(),
+        (root / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json").resolve(),
+    }:
+        raise ValueError("output_path_not_safe")
     health, health_sha = _read(
         root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
         HEALTH_CONTRACT,
@@ -78,7 +173,7 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
     candidates = registry.get("candidates")
     if not isinstance(candidates, list):
         raise ValueError("missing_experiment_candidate_census")
-    if registry.get("candidate_count") != len(candidates):
+    if type(registry.get("candidate_count")) is not int or registry["candidate_count"] != len(candidates):
         raise ValueError("candidate_count_mismatch")
 
     identifiers: set[str] = set()
@@ -94,9 +189,11 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
             raise ValueError("unknown_experiment_state")
         identifiers.add(identifier)
         state_counts[state] += 1
-    if dict(state_counts) != {
-        key: value for key, value in (registry.get("state_counts") or {}).items() if value
-    }:
+    declared_counts = registry.get("state_counts")
+    if (not isinstance(declared_counts, dict) or
+            any(type(value) is not int or value < 0 for value in declared_counts.values())):
+        raise ValueError("malformed_experiment_state_counts")
+    if dict(state_counts) != {key: value for key, value in declared_counts.items() if value}:
         raise ValueError("experiment_state_counts_mismatch")
 
     # Proven scientific improvement requires frozen endpoint/baseline, independent
@@ -116,7 +213,12 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
                 "candidate_id": candidate["candidate_id"],
                 "source_state": state,
                 "verdict": verdict,
-                "matured_outcome_count": candidate.get("matured_outcome_count", 0),
+                "matured_outcome_count": (candidate.get("matured_outcome_count", 0)
+                    if type(candidate.get("matured_outcome_count", 0)) is int and candidate.get("matured_outcome_count", 0) >= 0
+                    else None),
+                "evidence_direction": ("NEGATIVE" if state == "MATURED_NOT_SUPPORTED" else
+                    "POSITIVE_UNVERIFIED" if state == "MATURED_SUPPORTED" else
+                    "INCONCLUSIVE" if state == "MATURED_INCONCLUSIVE" else "QUARANTINED"),
                 "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
                 "automatic_promotion": False,
             })
@@ -143,8 +245,18 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         if isinstance(x, dict) and isinstance(x.get("fingerprint"), str)
     }
     history_by_key = dict(prior_incidents)
+    health_status = _source_age_status(health.get("generated_at_utc"), now)
+    registry_status = _source_age_status(registry.get("generated_at_utc"), now)
+    current = health_status == "CURRENT" and registry_status == "CURRENT"
+    health_issues, live_coverage = _health_input_issues(health, workflows, prior)
+    prior_source_sha = prior.get("source_sha256")
+    if not isinstance(prior_source_sha, dict):
+        prior_source_sha = {}
+    source_changed = health_sha != prior_source_sha.get("automation_health")
+    trustworthy_new_receipt = current and not health_issues and source_changed
+    source_timestamp = _timestamp(health.get("generated_at_utc")).isoformat().replace("+00:00", "Z")
     incidents = []
-    status_issues: list[str] = []
+    status_issues: list[str] = health_issues.copy()
     workflows_seen: set[str] = set()
     for item in workflows:
         if not isinstance(item, dict):
@@ -173,12 +285,23 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         live = item.get("live") if isinstance(item.get("live"), dict) else {}
         latest = live.get("latest_run") if isinstance(live.get("latest_run"), dict) else {}
         run_id = latest.get("id")
-        # Re-processing an identical health receipt is NOT another observation.
-        increment = 1 if not old or (run_id is not None and run_id != old.get("observed_run_id")) else 0
+        # Count a unique, fresh and consistent SOURCE observation only once.
+        # A/B/A run ID flapping must never inflate recurrence, and no-run-id
+        # receipts can be distinguished by their immutable source checksum.
+        keys = old.get("observed_keys")
+        if not isinstance(keys, list):
+            legacy_run = old.get("observed_run_id")
+            keys = [f"run:{legacy_run}"] if legacy_run is not None else []
+        keys = [key for key in keys if isinstance(key, str)][-50:]
+        key = f"run:{run_id}" if run_id is not None else f"receipt:{health_sha}"
+        seen = key in keys
+        increment = int(trustworthy_new_receipt and not seen)
         prior_count = old.get("observation_count", 0)
-        if not isinstance(prior_count, int) or isinstance(prior_count, bool) or prior_count < 0:
+        if type(prior_count) is not int or prior_count < 0:
             prior_count = 0
         count = prior_count + increment
+        if increment:
+            keys = (keys + [key])[-50:]
         record = {
             "fingerprint": fingerprint,
             "workflow": workflow,
@@ -186,9 +309,12 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
             "severity": status,
             "classification": "UNKNOWN",
             "observed_run_id": run_id,
-            "first_seen_at_utc": old.get("first_seen_at_utc") or now.isoformat().replace("+00:00", "Z"),
-            "last_seen_at_utc": now.isoformat().replace("+00:00", "Z"),
+            "first_seen_at_utc": old.get("first_seen_at_utc") or
+                (source_timestamp if increment else None),
+            "last_seen_at_utc": source_timestamp if increment else old.get("last_seen_at_utc"),
             "observation_count": count,
+            "observed_keys": keys,
+            "counted_in_this_snapshot": bool(increment),
             "automatic_retry_allowed": False,
             "automatic_code_write_allowed": False,
             "route": "EXISTING_REMEDIATION_OWNER",
@@ -196,7 +322,8 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
             "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
         }
         incidents.append(record)
-        history_by_key[fingerprint] = record
+        if trustworthy_new_receipt:
+            history_by_key[fingerprint] = record
 
     # Never silently erase corrupted recurrence evidence and then claim no
     # problems on the next green health run. This is a DERIVED advisory only:
@@ -229,9 +356,6 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         incidents.append(integrity_incident)
         history_by_key[integrity_fp] = integrity_incident
 
-    health_status = _source_age_status(health.get("generated_at_utc"), now)
-    registry_status = _source_age_status(registry.get("generated_at_utc"), now)
-    current = health_status == "CURRENT" and registry_status == "CURRENT"
     has_red = any(x["severity"] == "RED" for x in incidents)
     has_amber = any(x["severity"] == "AMBER" for x in incidents)
     if census_empty or status_issues or not current:
@@ -258,6 +382,10 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         "source_sha256": {"automation_health": health_sha, "experiment_registry": registry_sha},
         "input_health": "CURRENT" if current else "STALE",
         "input_freshness": {"automation_health": health_status, "experiment_registry": registry_status},
+        "source_generated_at_utc": {"automation_health": source_timestamp},
+        "health_live_coverage": round(live_coverage, 4),
+        "health_consistency": "OK" if not status_issues else "DEGRADED",
+        "source_observation_counted": trustworthy_new_receipt,
         "operational_verdict": operational_verdict,
         "workflow_census_count": len(workflows),
         "input_issues": (["EMPTY_WORKFLOW_CENSUS"] if census_empty else []) + status_issues +
@@ -273,10 +401,7 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
         "promotion_policy": "NONE_BY_THIS_REPORT; prospective held-out evidence and independent governance required",
         "repair_policy": "NO_RETRIES_OR_AUTOMATIC_MERGE_BY_THIS_REPORT; existing remediation remains executor",
     }
-    output.parent.mkdir(parents=True, exist_ok=True)
-    temporary = output.with_name(output.name + ".tmp")
-    temporary.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-    temporary.replace(output)
+    _safe_write(root, output, result)
     return result
 
 
