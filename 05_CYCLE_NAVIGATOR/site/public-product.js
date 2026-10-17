@@ -185,7 +185,7 @@ function sparkline(records){
   return `<svg class="score-spark" viewBox="0 0 ${w} ${h}" role="img" aria-label="Historical Cycle Navigator scores"><line x1="${pad}" y1="${y(100)}" x2="${w-pad}" y2="${y(100)}"/><line x1="${pad}" y1="${y(75)}" x2="${w-pad}" y2="${y(75)}"/><line x1="${pad}" y1="${y(50)}" x2="${w-pad}" y2="${y(50)}"/><polyline class="series weekly" points="${points('weekly')}"/><polyline class="series price" points="${points('price')}"/><polyline class="series market" points="${points('market')}"/></svg>`;
 }
 
-let snapshot=null,officialCompass=null,refreshTimer=null;
+let snapshot=null,officialCompass=null,refreshTimer=null,pathReadingState=null;
 
 function shell(){
   const main=document.querySelector('main');if(!main)return;
@@ -206,8 +206,14 @@ async function json(u){const r=await fetch(`${u}?v=${Date.now()}`,{cache:'no-sto
 async function jsonOptional(u){try{return await json(u);}catch{return null;}}
 async function prices(){try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd',{cache:'no-store'}),d=await r.json(),b=+d.bitcoin?.usd,e=+d.ethereum?.usd;return b&&e?`BTC $${Math.round(b).toLocaleString()} · ETH $${Math.round(e).toLocaleString()} · ETH/BTC ${(e/b).toFixed(5)}`:null;}catch{return null;}}
 
+function refreshPathIfReadingChanged(){
+  const state=window.CNOfficialReadingState?.(officialCompass)||'UNAVAILABLE';
+  if(snapshot&&pathReadingState!==state&&document.getElementById('productPath'))renderPath(snapshot,officialCompass);
+}
+
 function freshness(){
   const h=document.getElementById('productFreshness');if(!h||!snapshot)return;
+  refreshPathIfReadingChanged();
   // Exactly the same policy-derived state and owner issue clock as premium.
   const status=window.CNOfficialReadingState?.(officialCompass)||'UNAVAILABLE';
   const stamp=Date.parse(officialCompass?.issued_at_utc||'');
@@ -377,14 +383,21 @@ function compassSegment(compass,segment){
   return (Array.isArray(compass?.capitalization_ladder)?compass.capitalization_ladder:[]).find(x=>x?.segment===segment)||null;
 }
 function pathWeeklyAlignment(data,compass){
+  // PATH is a consumer of the EXACT same Official freshness policy as NOW.
+  // Weekly issue alignment by itself cannot authorize current rotation calls.
+  const readingState=window.CNOfficialReadingState?.(compass)||'UNAVAILABLE';
   const current=data?.public_series?.current_public_projection||{},receipt=compass?.weekly_context||{};
   const currentIssue=Number(current.public_issue_number),receiptIssue=Number(receipt.public_issue_number);
   const currentWeek=String(current.forecast_week||''),receiptWeek=String(receipt.forecast_week||'');
-  const ok=compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK'&&receipt.contract==='CN_COMPASS_WEEKLY_ALIGNMENT_v1'&&receipt.status==='ALIGNED'&&Number.isInteger(currentIssue)&&Number.isInteger(receiptIssue)&&currentIssue===receiptIssue&&currentWeek!==''&&currentWeek===receiptWeek;
-  return {ok,status:ok?'ALIGNED':receipt.status||'UNVERIFIED',currentWeek,receiptWeek};
+  const aligned=compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK'&&receipt.contract==='CN_COMPASS_WEEKLY_ALIGNMENT_v1'&&receipt.status==='ALIGNED'&&Number.isInteger(currentIssue)&&Number.isInteger(receiptIssue)&&currentIssue===receiptIssue&&currentWeek!==''&&currentWeek===receiptWeek;
+  const ok=readingState==='CURRENT'&&aligned;
+  const status=readingState==='LAST_VERIFIED'?'OFFICIAL_EXPIRED':readingState!=='CURRENT'?'OFFICIAL_UNAVAILABLE':ok?'ALIGNED':receipt.status||'UNVERIFIED';
+  return {ok,status,readingState,currentWeek,receiptWeek};
 }
 function pathAlignmentNotice(alignment){
   if(alignment.ok)return'';
+  if(alignment.status==='OFFICIAL_EXPIRED')return '<section class="path-alignment-warning"><span>LAST VERIFIED COMPASS · NOT CURRENT</span><strong>Live rotation signals are unavailable.</strong><p>The weekly journey stays frozen; expired Official evidence does not authorize current tier or trading permissions.</p></section>';
+  if(alignment.status==='OFFICIAL_UNAVAILABLE')return '<section class="path-alignment-warning"><span>OFFICIAL COMPASS UNAVAILABLE</span><strong>No live rotation signal is verified.</strong><p>Only the separately frozen weekly context is available. Missing Official evidence is not a HOLD or BUY call.</p></section>';
   return '<section class="path-alignment-warning"><span>LIVE SIGNALS REFRESHING</span><strong>The weekly path stays fixed while live data catches up.</strong><p>Rotation and Altcoin signals temporarily show no live call until the fresh data matches the current weekly outlook.</p></section>';
 }
 function statusActive(value){
@@ -595,6 +608,7 @@ function pathContext(data){
 }
 function renderPath(data,compass){
   const p=data.package||{},alignment=pathWeeklyAlignment(data,compass),liveCompass=alignment.ok?compass:null;
+  pathReadingState=alignment.readingState;
   document.getElementById('productPath').innerHTML='<header class="product-head path-v2-head"><small>PATH · THE MARKET JOURNEY</small><h2>The market journey.</h2><p>The market regime, altcoin rotation and weekly price plan. Open a card for the evidence behind it.</p></header>'
     +pathAlignmentNotice(alignment)
     +marketCycleTrack(p,liveCompass)
