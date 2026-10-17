@@ -18,6 +18,7 @@ from typing import Any
 CONTRACT = "FRAMEWORK_STRATEGIST_BRIEF_v1"
 INTENT_PATH = "00_FMOS/framework_strategist/STRATEGIC_INTENT_v1.json"
 OUTPUT_PATH = "research/framework_learning/strategist/LATEST.json"
+DRYRUN_OUTPUT_PATH = "runtime/framework-learning-supervisor/strategist/LATEST.json"
 # Path + authoritative exact contract + maximum accepted age, in hours.
 SOURCES = {
     "learning_memory": ("research/framework_learning/LATEST_LEARNING_MEMORY.json",
@@ -118,11 +119,8 @@ def _valid_rows(data: dict, field: str) -> list[dict]:
 
 def _safe_write(root: Path, output: Path, result: dict) -> None:
     base, target = root.resolve(), output.resolve()
-    if base not in target.parents:
-        raise ValueError("output_not_in_repository")
-    forbidden = [INTENT_PATH, *[x[0] for x in SOURCES.values()]]
-    if target in {(root / p).resolve() for p in forbidden}:
-        raise ValueError("output_overwrites_source")
+    if target not in {(root / OUTPUT_PATH).resolve(), (root / DRYRUN_OUTPUT_PATH).resolve()}:
+        raise ValueError("output_not_allowlisted")
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_name("." + output.name + "." + str(os.getpid()) + ".tmp")
     try:
@@ -144,9 +142,7 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
     root = root.resolve()
     output = output.resolve()
     # Validate output BEFORE reading sources or touching any data.
-    if root not in output.parents or output in {
-        (root / path).resolve() for path in [INTENT_PATH, *[v[0] for v in SOURCES.values()]]
-    }:
+    if output not in {(root / OUTPUT_PATH).resolve(), (root / DRYRUN_OUTPUT_PATH).resolve()}:
         raise ValueError("invalid_output_path")
     intent, intent_receipt = _read_receipt(root, INTENT_PATH, "FRAMEWORK_STRATEGIC_INTENT_v1",
                                            now, 24 * 365 * 3)
@@ -177,6 +173,14 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
                     or any(not isinstance(row, dict) for row in rows)):
                 docs[name] = None
                 receipts[name]["status"] = "INVALID_SCHEMA"
+    # Incomplete inner contracts are no more authoritative than unreadable JSON.
+    if docs["health"] is not None and docs["health"].get("status") not in {"GREEN", "AMBER", "RED"}:
+        docs["health"] = None
+        receipts["health"]["status"] = "INVALID_SCHEMA"
+    if docs["self_improvement"] is not None and docs["self_improvement"].get("operational_verdict") not in {
+            "NEEDS_DIAGNOSIS", "ADVISORY_DEGRADED", "NO_RED_HEALTH_INCIDENTS", "INSUFFICIENT_EVIDENCE"}:
+        docs["self_improvement"] = None
+        receipts["self_improvement"]["status"] = "INVALID_SCHEMA"
     incomplete = sorted(n for n in REQUIRED if docs[n] is None)
     observations: list[dict] = []
     verified_names = {n for n, doc in docs.items() if doc is not None}
