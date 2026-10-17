@@ -152,7 +152,17 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
     alignedContext?.forecast_week === forecastWeek &&
     alignedContext?.public_issue_number === issue;
   // An otherwise fresh Compass is not actionable without a matching public CN identity.
-  const actionable = cOK && cnJoined;
+  // The original hash-verified Official source owner may expire BEFORE the
+  // public projection's issue-age window. Never extend it with an arbitrary TTL.
+  const ownerFreshness = compass.full_stack?.official_freshness;
+  const ownerExpiry = validUtc(ownerFreshness?.valid_until_utc);
+  const ownerAsOf = validUtc(ownerFreshness?.source_asof_utc);
+  const ownerCurrent = ownerFreshness?.contract === 'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1' &&
+    ownerFreshness?.status === 'VERIFIED_OWNER_POLICY' &&
+    ownerFreshness?.semantics === 'SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA' &&
+    ownerAsOf !== null && ownerExpiry !== null && ownerAsOf <= ownerExpiry &&
+    ownerAsOf <= nowEpochMs + 5 * 60000 && nowEpochMs < ownerExpiry;
+  const actionable = cOK && cnJoined && ownerCurrent;
   result.compass = {
     state: actionable ? 'FRESH' : compassAge === 'STALE' ? 'STALE' : 'UNAVAILABLE',
     compass_id: typeof compass.compass_id === 'string' ? compass.compass_id : null,
