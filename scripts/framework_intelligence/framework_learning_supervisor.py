@@ -37,7 +37,7 @@ def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
              "attention_codes": [], "grok_review_candidate_count": 0,
              "automatic_routing": False, "source_sha256": None}
     try:
-        if path.is_symlink() or not path.is_file():
+        if (path.is_symlink() or not path.is_file() or path.resolve() != path.absolute()):
             return empty
         raw = path.read_bytes()
         if len(raw) > 2_000_000:
@@ -74,7 +74,7 @@ def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
             if name.is_absolute() or ".." in name.parts:
                 return {**empty, "status": "INVALID"}
             original = (root / name).resolve()
-            if root.resolve() not in original.parents or not original.is_file():
+            if (root.resolve() not in original.parents or not original.is_file() or original != (root / name).absolute()):
                 return {**empty, "status": "SOURCE_MOVED"}
             if hashlib.sha256(original.read_bytes()).hexdigest() != value.get("sha256"):
                 return {**empty, "status": "SOURCE_MOVED"}
