@@ -50,7 +50,7 @@ class SemanticTest(unittest.TestCase):
                    "output_hash": sha(canonical(result) + b"\n"),
                    "forecast_candidate_count": 0, "attempt_count": 1,
                    "estimated_cost_usd": 0.022, "input_tokens": 1100, "output_tokens": 1600}
-        output = self.root / "research/api_agent/outputs/framework_strategist/run-" / run_id
+        output = self.root / "research/api_agent/outputs/framework_strategist" / f"run-{run_id}"
         self.fixture.write(str(output.relative_to(self.root) / "output.json"),result)
         self.fixture.write(str(output.relative_to(self.root) / "receipt.json"),receipt)
         return plan, row, receipt, result
