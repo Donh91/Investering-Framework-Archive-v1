@@ -9,6 +9,7 @@ a SINGLE API gateway attempt. Reservation existence blocks paid replay.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import re
@@ -187,6 +188,40 @@ def create_plan(root: Path, runtime: Path, *, now: datetime,
     return plan
 
 
+def reservation_payload(root: Path, runtime: Path, *, run_id: str) -> tuple[str, dict]:
+    """Create contents-API request data; only the owner workflow may send it.
+
+    The reservation is a durable, immutable PAID LIABILITY / no-retry marker.
+    GitHub's contents API atomic create rejects duplicate paths (422) before
+    calling the model; no get-then-create race or automated paid retry.
+    """
+    plan = load(runtime / "plan.json")
+    fp = plan.get("material_fingerprint")
+    if (plan.get("contract") != "FRAMEWORK_STRATEGIST_SEMANTIC_PLAN_v1"
+            or plan.get("run_allowed") is not True or not isinstance(fp, str)
+            or not HEX.fullmatch(fp)
+            or plan.get("reservation_path") != f"{RESERVATIONS}/{fp}.json"
+            or not re.fullmatch(r"[0-9]{1,20}", run_id)):
+        raise ValueError("paid_reservation_not_eligible")
+    if (root / plan["reservation_path"]).exists():
+        raise ValueError("paid_reservation_already_exists")
+    data = {
+        "contract":"FRAMEWORK_STRATEGIST_SEMANTIC_RESERVATION_v1",
+        "material_fingerprint":fp,"github_run_id":run_id,
+        "task":TASK,"model":MODEL,"automatic_retry_allowed":False,
+        "status":"PAID_ATTEMPT_RESERVED_NO_RETRY",
+        "source_strategist_sha256":plan["source_strategist_sha256"],
+        "prompt_sha256":plan["prompt_sha256"],
+    }
+    # Deliberately no SHA overwrite: only CREATE, never update reservation.
+    request = {
+        "message":f"budget(strategist): reserve exactly one Terra attempt {fp[:12]}",
+        "content":base64.b64encode(canonical(data)+b"\n").decode("ascii"),
+        "branch":"main",
+    }
+    return plan["reservation_path"], request
+
+
 def check_output(root: Path, runtime: Path, *, run_id: str) -> dict[str, Any]:
     plan = load(runtime / "plan.json")
     if not plan.get("run_allowed") or not re.fullmatch(r"[0-9]{1,20}", run_id):
@@ -256,7 +291,7 @@ def check_output(root: Path, runtime: Path, *, run_id: str) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="action", required=True)
-    for action in ("prepare", "validate"):
+    for action in ("prepare", "reserve-payload", "validate"):
         s = sub.add_parser(action)
         s.add_argument("--repo-root", type=Path, default=Path("."))
         s.add_argument("--runtime-dir", type=Path, default=Path(RUNTIME))
@@ -271,6 +306,9 @@ def main() -> None:
         result = create_plan(root,runtime,now=datetime.now(timezone.utc),
                              strategist_path=args.strategist_path)
         print(json.dumps(result, sort_keys=True))
+    elif args.action == "reserve-payload":
+        path, request = reservation_payload(root, runtime, run_id=args.run_id)
+        print(json.dumps({"path": path, "request": request}, sort_keys=True))
     else:
         result = check_output(root,runtime,run_id=args.run_id)
         print(json.dumps({"status":"VERIFIED_ADVISORY_ONLY","fingerprint":result["material_fingerprint"]},sort_keys=True))
