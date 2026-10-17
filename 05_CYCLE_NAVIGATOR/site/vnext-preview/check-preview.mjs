@@ -40,9 +40,9 @@ assert.equal(checkAuthority({...source,data_status:'UNAVAILABLE'},projection),fa
 assert.equal(checkAuthority({...source,compass_id:''},projection),false,'Missing source ID must fail');
 assert.equal(checkAuthority(source,projection,false,true),false,'Stale CN delivery must fail');
 assert.equal(checkAuthority(source,projection,true,false),false,'Stale Compass must fail');
-assert.match(html, /set\\("actionNow",valid\\?/, 'Current action must use source-joined authority');
-assert.match(html, /set\\("sellState",valid\\?/, 'SELL must use source-joined authority');
-assert.match(html, /set\\("riskStatus",valid\\?/, 'Risk must use source-joined authority');
+assert.ok(html.includes('set("actionNow",valid?'), 'actionNow must use joined source authority');
+assert.ok(html.includes('set("sellState",valid?'), 'sellState must use joined source authority');
+assert.ok(html.includes('set("riskStatus",valid?'), 'riskStatus must use joined source authority');
 assert.doesNotMatch(html, /id="actionNow">AFVENT</, 'Unverified initial action must not look like official WAIT');
 
 // Regression: unavailable source must never be presented as an official WAIT/HOLD decision.
