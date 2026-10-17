@@ -49,6 +49,13 @@ const compass = {
   contract: 'PUBLIC_COMPASS_PROJECTION_v1',
   compass_id: 'CMP-TEST-20261012', issued_at_utc: '2026-10-12T09:35:11Z', data_status: 'OK',
   weekly_context: {status: 'ALIGNED', forecast_week: '2026-W42', public_issue_number: 29},
+  full_stack: {official_freshness: {
+    contract: 'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',
+    status: 'VERIFIED_OWNER_POLICY',
+    source_asof_utc: '2026-10-12T09:00:00Z',
+    valid_until_utc: '2026-10-12T13:00:00Z',
+    semantics: 'SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA'
+  }},
   action_now: 'HOLD_WAIT',
   protection_tracker: {
     pullback_risk_state: 'BUILDING', distribution_risk: 'UNKNOWN', reentry_state: 'INACTIVE'
@@ -63,6 +70,22 @@ const mutate = (fun)=>{
 };
 const it=(desc,callback)=>{try{callback();console.log('PASS',desc)}catch(err){console.error('FAIL',desc);throw err}};
 
+
+it('expired original Official source blocks a fresh projection and its BUY/SELL claims',()=>{
+ const o=mutate((l,c)=>{
+   c.full_stack.official_freshness.valid_until_utc='2026-10-12T11:59:59Z';
+   c.action_now='BUY'; c.sell_assessment.state='SELL';
+ });
+ assert.equal(o.compass.state,'UNAVAILABLE');
+ assert.equal(o.compass.action_now,'UNAVAILABLE');
+ assert.equal(o.compass.sell_assessment_state,'UNAVAILABLE');
+});
+it('missing or unverifiable Official owner policy cannot authorize current actions',()=>{
+ for(const broken of [null,{status:'UNAVAILABLE'}, {contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',status:'VERIFIED_OWNER_POLICY',valid_until_utc:'not-a-date'}]){
+   const o=mutate((l,c)=>{c.full_stack.official_freshness=broken;c.action_now='BUY'});
+   assert.equal(o.compass.action_now,'UNAVAILABLE');
+ }
+});
 
 it('fresh but mismatched public CN identity cannot expose Compass action, SELL, risk or bull/bear',()=>{
  const l=structuredClone(latest),c=structuredClone(compass);
