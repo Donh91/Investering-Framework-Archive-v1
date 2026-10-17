@@ -14,7 +14,8 @@
     "AUTOMATION_ORCHESTRATOR_ESCALATION": 4,
     "FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT": 6,
     "RESEARCH_LAB_SOL_ANALYSIS": 10,
-    "CN_INTERNAL_LONG_HORIZON_SCORER": 1
+    "CN_INTERNAL_LONG_HORIZON_SCORER": 1,
+    "FRAMEWORK_STRATEGIST_SEMANTIC": 0.75
   },
   "director_schedule": {
     "maximum_runs_per_day": 4,
@@ -100,5 +101,22 @@
     "automatic_merge": false,
     "monthly_hard_stop_unchanged": true,
     "predecessor_adjudication_required": true
+  },
+  "framework_strategist_semantic": {
+    "status": "OWNER_AUTHORIZED_PRE_REVIEW_CANDIDATE",
+    "task": "FRAMEWORK_STRATEGIST_SEMANTIC",
+    "invoking_owner": "EXISTING_FRAMEWORK_LEARNING_SUPERVISOR",
+    "schedule": "NONE_ADDED",
+    "max_paid_attempts_per_material_fingerprint": 1,
+    "paid_attempt_reservation_before_api": true,
+    "allow_luna_fallback": false,
+    "default_model": "gpt-5.6-terra",
+    "qualified_senior_escalation": "EXISTING_OWNER_GATED_SOL_LANE_ONLY",
+    "monthly_lane_cap_usd": 0.75,
+    "global_monthly_hard_stop_unchanged": true,
+    "threshold": "NEW_MATERIAL_HIGH_OR_MEDIUM_ADVISORY_ONLY",
+    "autonomous_merge": false,
+    "canonical_effect": false,
+    "market_action": false
   }
 }
