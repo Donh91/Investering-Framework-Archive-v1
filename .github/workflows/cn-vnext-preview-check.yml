@@ -1,0 +1,69 @@
+name: CN vNext draft preview smoke check
+
+on:
+  pull_request:
+    paths:
+      - '05_CYCLE_NAVIGATOR/site/vnext-preview/**'
+      - '.github/workflows/cn-vnext-preview-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect isolated mobile prototype and compile inline JavaScript
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/check-preview.mjs
+      - name: Validate premium interactive preview, source bundle and contracts
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/check-premium.mjs
+      - name: Verify official public feed parity and negative source/risk/score scenarios
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-feed-parity.mjs
+      - name: Verify source-only Bull Bear scale and reject unsupported synthetic signals
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-bullbear.mjs
+      - name: Verify Pullback source week, exact onset evidence and fail-closed ETA
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-pullback-eta.mjs
+      - name: Verify progressive official Pullback stages without fabricated imminent risk
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-pullback-stage.mjs
+      - name: Verify source-only investor Pullback horizons, impact and uncalibrated odds
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-pullback-investor-view.mjs
+      - name: Verify all 10 source-bound PATH stages and conditional gates
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/test-official-path.mjs
+      - name: Bundle production-style Vite preview and retain immutable PR artifact
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node 05_CYCLE_NAVIGATOR/site/vnext-preview/verify-vite-bundle.mjs --artifact-dir "$RUNNER_TEMP/cn-vnext-preview"
+      - name: Browser-inspect exact offline artifact with real Chromium DevTools
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 90s node 05_CYCLE_NAVIGATOR/site/vnext-preview/browser-preview-qa.mjs "$RUNNER_TEMP/cn-vnext-preview/CYCLE_NAVIGATOR_OFFLINE_PREVIEW.html" "$RUNNER_TEMP/cn-vnext-browser-qa"
+      - name: Preserve browser QA screenshot and route evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cn-vnext-browser-qa-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/cn-vnext-browser-qa/PATH_CHROME_390.png
+            ${{ runner.temp }}/cn-vnext-browser-qa/PATH_CHROME_430.png
+            ${{ runner.temp }}/cn-vnext-browser-qa/PATH_SECTION_390.png
+            ${{ runner.temp }}/cn-vnext-browser-qa/PATH_SECTION_430.png
+            ${{ runner.temp }}/cn-vnext-browser-qa/PATH_TABLET_820.png
+            ${{ runner.temp }}/cn-vnext-browser-qa/OVERVIEW_DESKTOP_1440.png
+            ${{ runner.temp }}/cn-vnext-browser-qa/OVERVIEW_MOBILE_390.png
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Archive the exact tested GitHub preview without deploying
+        uses: actions/upload-artifact@v4
+        with:
+          name: cn-vnext-source-preview-${{ github.run_id }}
+          path: ${{ runner.temp }}/cn-vnext-preview/
+          if-no-files-found: error
+          retention-days: 7
+      - name: No production deployment
+        run: echo 'PR artifact only. No Pages deployment, production signal, or AppDeploy needed.'

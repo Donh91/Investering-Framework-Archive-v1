@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f8fafc">
+<title>Cycle Navigator — vNext designstudie</title>
+<style>
+:root{--ink:#07172f;--blue:#2f6fda;--muted:#5c6d83;--line:#dce5f0;--bg:#f7f9fc;--white:#fff;--amber:#ba750f;--red:#b4494b}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.shell{width:min(1060px,calc(100% - 36px));margin:0 auto}
+.top{border-bottom:1px solid var(--line);background:rgba(255,255,255,.97)}.topInner{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{display:flex;align-items:center;gap:11px}.mark{width:35px;height:35px;display:grid;place-items:center;background:var(--ink);color:white;font-weight:800;border-radius:11px;letter-spacing:-.07em;font-size:15px}.brand strong{display:block;font-size:16px;letter-spacing:-.035em}.brand small{display:block;font-size:10px;color:var(--muted);letter-spacing:.06em;margin-top:3px;text-transform:uppercase}
+.lab{font-size:10px;font-weight:700;color:var(--muted);border:1px solid var(--line);padding:7px 9px;border-radius:7px;white-space:nowrap}
+nav{display:flex;border-bottom:1px solid var(--line);gap:28px;overflow-x:auto;white-space:nowrap}nav button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:17px 0 14px;font-size:13px;font-weight:650}nav button.active{color:var(--blue);border-color:var(--blue)}
+main{padding:24px 0 65px}.view[hidden]{display:none}.eyebrow{font-size:10px;letter-spacing:.12em;font-weight:750;text-transform:uppercase;color:var(--blue)}.micro{font-size:12px;color:var(--muted);line-height:1.55}.pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:750;letter-spacing:.06em;border:1px solid #d5e0ee;padding:7px 9px;border-radius:6px;color:var(--muted);background:#fff}.pill:before{content:"";width:6px;height:6px;border-radius:50%;background:#9aaec4}.pill.ok:before{background:#22966c}.pill.warn:before{background:var(--amber)}
+h1,h2,h3,p{margin-top:0}.display{font-size:clamp(36px,7vw,68px);letter-spacing:-.063em;line-height:1.08;font-weight:720;margin:12px 0 15px}.lede{font-size:clamp(15px,2.3vw,19px);line-height:1.62;color:#405169;max-width:720px}.hero{padding:40px 0 36px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;border-bottom:1px solid var(--line)}
+.heroLine{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.heroMeta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.instrument{width:135px;height:135px;border:1px solid #dce6f4;border-radius:50%;position:relative;align-self:center;background:radial-gradient(circle at center,#fff 0 40%,#f0f5fc 42% 43%,transparent 44%);display:grid;place-items:center}
+.instrument:before{content:"";position:absolute;width:88%;height:1px;background:#dce6f4;transform:rotate(-45deg)}.instrument:after{content:"";position:absolute;width:1px;height:88%;background:#dce6f4;transform:rotate(-45deg)}.needle{height:72px;width:8px;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;transform:rotate(36deg)}.needle:before{content:"";display:block;border-bottom:34px solid var(--blue);border-left:5px solid transparent;border-right:5px solid transparent}.needle:after{content:"";display:block;border-top:34px solid #c2d5ee;border-left:5px solid transparent;border-right:5px solid transparent}
+.sectionTop{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:34px 0 17px}.sectionTop h2{font-size:24px;letter-spacing:-.045em;margin:0}.sub{color:var(--muted);font-size:12px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.action{font-size:25px;letter-spacing:-.045em;margin:10px 0 6px;font-weight:750;overflow-wrap:anywhere}.cardText{font-size:13px;line-height:1.57;color:#526177;margin:0}.rule{border-top:1px solid var(--line);margin:18px 0}.strong{font-weight:700;color:var(--ink)}.split{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}.quietPanel{background:#f0f5fc;border:1px solid #d6e4f6;border-radius:13px;padding:20px}
+.timeline{display:flex;align-items:center;gap:0;margin-top:18px;min-width:0}.step{flex:1;position:relative;padding-top:30px;font-size:10px;color:var(--muted);line-height:1.4}.step:before{content:"";position:absolute;top:6px;left:2px;right:4px;height:1px;background:#cddbed}.step:after{content:"";position:absolute;top:0;left:2px;width:13px;height:13px;border:3px solid #cddbed;border-radius:50%;background:white}.step.present:after{background:var(--blue);border-color:var(--blue);box-shadow:0 0 0 4px #e4efff}.step.present{font-weight:750;color:var(--ink)}.step.last:before{display:none}.step span{display:block;font-size:9px;letter-spacing:.05em;text-transform:uppercase;margin-top:5px}
+.stats{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.score{font-size:40px;letter-spacing:-.055em;font-weight:760}.textlink{display:inline-flex;gap:8px;align-items:center;font-size:12px;color:var(--blue);font-weight:700}.textlink:after{content:"↗"}.subsection{margin-top:26px}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-transform:uppercase;letter-spacing:.08em;color:#6d7b8e;font-weight:700;font-size:10px;text-align:left;border-bottom:1px solid var(--line);padding:13px 8px}td{border-bottom:1px solid #ecf0f6;padding:15px 8px;vertical-align:top}td:last-child,th:last-child{text-align:right}.up{color:#147e65}.down{color:var(--red)}.none{color:#8591a2}.token{font-weight:740}.caption{color:var(--muted);font-size:11px;line-height:1.6}.code{font-family:ui-monospace,monospace;word-break:break-word;font-size:11px}.detail{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}summary{cursor:pointer;font-weight:650;font-size:13px}.detail p{margin-top:13px}
+.footer{border-top:1px solid var(--line);padding:22px 0 50px;font-size:11px;color:var(--muted);line-height:1.6}
+
+.rangeGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.rangeAsset{padding:20px;border:1px solid var(--line);background:#fff;border-radius:14px}.rangeAsset h3{margin:0 0 14px;font-size:18px;letter-spacing:-.035em}.rangeItem{margin-top:14px}.rangeLabel{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;margin-bottom:7px}.rangeLabel strong{color:var(--ink)}.rangeTrack{height:29px;border-left:1px dashed #dce5f0;border-right:1px dashed #dce5f0;position:relative;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),#edf2f8 calc(25% - 1px),#edf2f8 25%)}.rangeForecast,.rangeObserved{position:absolute;height:7px;min-width:2px;border-radius:3px}.rangeForecast{top:5px;background:#ced9e8}.rangeObserved{top:17px;background:var(--blue)}.rangeAxis{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin-top:5px}.rangeLegend{display:flex;gap:15px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:0 0 17px}.rangeLegend i{display:inline-block;width:13px;height:7px;border-radius:2px;margin-right:5px}.rangeLegend .frozen{background:#ced9e8}.rangeLegend .actual{background:var(--blue)}
+@media(max-width:720px){.rangeGrid{grid-template-columns:1fr}.hero{grid-template-columns:1fr;padding-top:28px}.instrument{display:none}.trio{grid-template-columns:1fr}.split{grid-template-columns:1fr}.shell{width:calc(100% - 30px)}.sectionTop{align-items:flex-start;flex-direction:column;gap:4px}.panel{padding:18px}.step{font-size:9px}.step span{font-size:8px}.lab{font-size:9px}.brand small{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style></head>
+<body><header class="top"><div class="shell topInner"><a class="logo" href="#top"><span class="mark">CN</span><span class="brand"><strong>Cycle Navigator</strong><small>Market intelligence</small></span></a><span class="lab">vNext · Design preview</span></div></header>
+<div class="shell"><nav aria-label="Primary navigation"><button class="active" data-view="overview" type="button">Overblik</button><button data-view="compass" type="button">Kompas</button><button data-view="proof" type="button">Dokumentation</button></nav></div>
+<main class="shell" id="top">
+<section class="view" id="view-overview">
+<div class="hero"><div><div class="heroLine"><span class="eyebrow">Markedets retning</span><span class="pill" id="status">Afventer offentlige data</span></div><h1 class="display" id="state">Cycle Navigator</h1><p class="lede" id="summary">Designstudie. Denne visning viser kun kildebundne oplysninger, når den offentlige CN-snapshot er tilgængelig.</p><div class="heroMeta"><span class="micro" id="issue">CN · offentlig uge ikke indlæst</span><span class="micro" id="refreshed">Seneste opdatering ukendt</span></div></div><div class="instrument" aria-hidden="true"><div class="needle"></div></div></div>
+<div class="sectionTop"><h2>Det vigtigste lige nu</h2><span class="sub">Tre spørgsmål, ét overblik</span></div>
+<div class="trio">
+<article class="panel"><span class="eyebrow">01 · Handling nu</span><div class="action" id="actionNow">UTILGÆNGELIG</div><p class="cardText" id="actionDesc">Officiel Kompas-handling kan ikke bekræftes endnu.</p></article>
+<article class="panel"><span class="eyebrow">02 · Næste bekræftelse</span><div class="action" style="font-size:19px" id="nextGate">Ukendt</div><p class="cardText">Kun publicerede betingelser, ingen beregnet nedtælling.</p></article>
+<article class="panel"><span class="eyebrow">03 · Pullback / protection</span><div class="action" style="font-size:19px" id="riskStatus">Ukendt</div><p class="cardText" id="riskDesc">Risiko er ikke en selvstændig SELL-instruktion.</p></article>
+</div>
+<div class="sectionTop"><h2>Hvor er vi i cyklussen?</h2><span class="sub">Kildebunden markedsrejse</span></div>
+<div class="panel"><div class="eyebrow">Aktuelt checkpoint</div><h3 id="phase" style="font-size:26px;letter-spacing:-.05em;margin:10px 0">Endnu ikke bekræftet</h3><div class="timeline" aria-label="Illustration af fasernes rækkefølge, ikke aktuel fremdrift"><div class="step">BTC<span>Lederskab</span></div><div class="step">ETH<span>Rotation</span></div><div class="step">Large / mid<span>Deltagelse</span></div><div class="step">Micro / alt<span>Acceleration</span></div><div class="step last">Exit<span>Beskyttelse</span></div></div><div class="rule"></div><p class="caption">Skematisk faseoversigt. Ingen fase er markeret som aktuel i skitsen. Den aktuelle kildebekræftede fase vises i overskriften ovenfor.</p></div>
+<div class="sectionTop"><h2>Seneste afsluttede resultat</h2><span class="sub">Adskilt fra markedssignalet</span></div>
+<div class="quietPanel"><div class="stats"><div><div class="eyebrow">Price Range Precision</div><div class="score" id="score">—</div></div><div class="micro" id="scoreMeta">Intet score-resultat indlæst</div></div><div class="rule"></div><a class="textlink" href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer">Åbn offentligt scorearkiv</a><p class="caption" style="margin:12px 0 0">Uafhængig kryptografisk verificering skal være bestået, før en score kaldes verificeret. Historiske og foreløbige scores mærkes særskilt.</p></div>
+</section>
+<section class="view" id="view-compass" hidden>
+<div class="sectionTop" style="margin-top:10px"><div><span class="eyebrow">Official Compass · live</span><h1 style="font-size:clamp(32px,6vw,48px);letter-spacing:-.06em;margin:9px 0">Mit Kompas</h1></div><span class="pill" id="compassHealth">Afventer data</span></div>
+<p class="lede">Samme enkle logik som Kompas i ChatGPT. Ikke flere konkurrerende vurderinger.</p>
+<article class="panel"><span class="eyebrow">Taktiske tidshorisonter</span><table><thead><tr><th>Tid</th><th>Retning</th><th>Handling</th></tr></thead><tbody id="horizonRows"><tr><td>0–12 timer</td><td class="none">Ukendt</td><td>AFVENT</td></tr><tr><td>1–3 dage</td><td class="none">Ukendt</td><td>AFVENT</td></tr><tr><td>5–7 dage</td><td class="none">Ukendt</td><td>AFVENT</td></tr><tr><td>2–3 uger</td><td class="none">Ukendt</td><td>AFVENT</td></tr><tr><td>4–8 uger</td><td class="none">Ukendt</td><td>AFVENT</td></tr></tbody></table><div class="detail"><details><summary>Hvad bygger Kompas på?</summary><p class="caption">NOW læser kun verificeret Official Compass. Ugentlige og langsigtede horisonter er tydeligt mærket; manglende data vises som ukendt, ikke med et gæt.</p></details></div></article>
+<div class="sectionTop"><h2>Aktivklasser</h2><span class="sub">Separation mellem retning og tilladelse</span></div>
+<article class="panel"><table><thead><tr><th>Aktiv</th><th>Status</th><th>Handling</th></tr></thead><tbody id="assetRows"></tbody></table></article>
+<div class="sectionTop"><h2>Min fortolkning</h2><span class="sub" id="interpretHorizon">Nuværende horisont</span></div><article class="quietPanel"><p style="font-size:15px;line-height:1.7;margin:0" id="interpret">Ingen selvstændig AI-konklusion dannes i browseren. Et kildebundet markedsresumé vises, når offentlig struktur og kvalitet er kendt.</p></article>
+<div class="sectionTop"><h2>SELL / Swing</h2><span class="sub">Adskilt fra pullback-advarsel</span></div><article class="panel"><strong id="sellState">Ikke tilgængelig</strong><p class="cardText" id="sellReason" style="margin-top:8px">Der er ikke dokumenteret en selvstændig officiel salgsbeslutning.</p><div class="detail"><details><summary>Risikodetaljer og re-entry</summary><p class="caption" id="reentry">Re-entry afventer verificerede signaler.</p></details></div></article>
+</section>
+<section class="view" id="view-proof" hidden>
+<div style="padding:24px 0 16px"><span class="eyebrow">Åben kontrol · ingen X-afhængighed</span><h1 class="display">Vis arbejdet.<br>Ikke kun scoren.</h1><p class="lede">Alle historiske resultater skal kunne følges tilbage til en offentlig frossen prognose, den tilsvarende markedsperiode og en dokumenteret scoringsmetode.</p></div>
+<div class="split"><article class="panel"><span class="eyebrow">Seneste afsluttede offentlige score</span><div class="score" id="proofScore">—</div><p class="cardText" id="proofDesc">Afventer datakilde</p><div class="rule"></div><strong>Price Range ≠ Market Structure ≠ Investment Returns</strong><p class="caption" style="margin-top:9px">Ingen syntetisk samlet præcisionsscore. Historiske scoringer vises med deres oprindelige metode og særskilt fra nyere serier.</p></article>
+<article class="quietPanel"><span class="eyebrow">Troværdighed</span><h3 style="margin:12px 0 10px;font-size:25px;letter-spacing:-.05em">Efterprøv med egen AI</h3><p class="cardText">Et AI-værktøj skal kunne kontrollere frysning, datakilder, metoder, udregning og uafhængigt tidsstempel.</p><div class="rule"></div><p class="caption"><strong>Aktuel bevisstatus:</strong> nyt repo under opbygning. Ingen uafhængigt forseglede releases verificeret endnu.</p><a class="textlink" href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer">CycleNavigator-scores</a></article></div>
+<div class="sectionTop"><h2>Frosne intervaller vs. faktiske priser</h2><span class="sub">Afsluttede uger, ingen gættede kurver</span></div><div class="rangeLegend"><span><i class="frozen"></i>Frossen prognose</span><span><i class="actual"></i>Observeret lav–høj</span></div><div class="rangeGrid" id="rangeChart"><div class="quietPanel"><p class="caption">Ingen afsluttede sammenlignelige intervaller indlæst.</p></div></div><p class="caption">Diagrammet viser kun faktisk frosne og realiserede lav–høj-intervaller. Det er ikke et prisforløb eller et køb/salgssignal. BTC og ETH bruger hver deres dokumenterede prisskala.</p><div class="sectionTop"><h2>Prognose → virkelighed → bevis</h2><span class="sub">Offentlig revisionskæde</span></div><article class="panel"><div class="timeline"><div class="step present">01<span>Freeze</span></div><div class="step">02<span>Timestamp</span></div><div class="step">03<span>Outcome</span></div><div class="step">04<span>Score</span></div><div class="step last">05<span>Verify</span></div></div><p class="caption" style="margin-top:20px">Diagrammet viser den planlagte kontrolproces, ikke at kontroltrinnene allerede er bestået. En verificerbar offentlig score kræver blandt andet ægte bevis for, at prognosen fandtes før de målte resultater.</p></article>
+</section></main>
+<footer class="footer"><div class="shell">Cycle Navigator vNext · Isoleret designprototype. Ikke en ny markedsmodel, ikke et handelssignal og ikke en produktionsversion. Status og datakvalitet skal altid følge kilden. <a href="https://github.com/Donh91/CycleNavigator-scores">Score proof</a>.</div></footer>
+<script>
+(function(){
+"use strict";
+var DATA_ROOT="https://donh91.github.io/Investering-Framework-Archive-v1/data/";
+var byId=function(id){return document.getElementById(id);};
+var set=function(id,v){var n=byId(id);if(n)n.textContent=(v===null||v===undefined||v==="")?"Ukendt":String(v);};
+var safe=function(v){return (typeof v==="string"&&v.trim())?v.trim():null;};
+var clear=function(root){while(root.firstChild)root.removeChild(root.firstChild);};
+function cell(tr,v,klass){var td=document.createElement("td");td.textContent=v||"Ukendt";if(klass)td.className=klass;tr.appendChild(td);}
+function addRow(root,cols){var tr=document.createElement("tr");cols.forEach(function(x){cell(tr,x)});root.appendChild(tr);}
+function fmtNum(v){return typeof v==="number"&&Number.isFinite(v)?v.toLocaleString("da-DK",{maximumFractionDigits:2})+" %":"—";}
+function loadJSON(file){return fetch(DATA_ROOT+file,{cache:"no-store"}).then(function(r){if(!r.ok)throw Error(file+": "+r.status);return r.json();});}
+function renderRanges(card){
+var root=byId("rangeChart");if(!root)return;
+var rows=card&&card.price_range_precision&&card.price_range_precision.rows;
+if(!Array.isArray(rows)||!rows.length)return;
+clear(root);
+["BTC","ETH"].forEach(function(asset){
+var items=rows.filter(function(r){return r.asset===asset&&["forecast_low","forecast_high","actual_low","actual_high"].every(function(k){return typeof r[k]==="number"&&Number.isFinite(r[k]);});});
+if(!items.length)return;
+var lows=items.flatMap(function(r){return [r.forecast_low,r.actual_low];});
+var highs=items.flatMap(function(r){return [r.forecast_high,r.actual_high];});
+var lo=Math.min.apply(Math,lows),hi=Math.max.apply(Math,highs),span=Math.max(hi-lo,1);
+var box=document.createElement("div");box.className="rangeAsset";
+var title=document.createElement("h3");title.textContent=asset+" · tre målevinduer";box.appendChild(title);
+items.forEach(function(r){
+var segment=document.createElement("div");segment.className="rangeItem";
+var head=document.createElement("div");head.className="rangeLabel";
+var left=document.createElement("strong");left.textContent=String(r.window||"Interval").replaceAll("_"," ");
+var right=document.createElement("span");right.textContent=String(r.score==null?"Ikke scoret":r.score+" %");
+head.append(left,right);segment.appendChild(head);
+var track=document.createElement("div");track.className="rangeTrack";
+[["rangeForecast",r.forecast_low,r.forecast_high],["rangeObserved",r.actual_low,r.actual_high]].forEach(function(entry){
+var bar=document.createElement("span");bar.className=entry[0];
+bar.style.left=((entry[1]-lo)/span*100).toFixed(4)+"%";
+bar.style.width=((entry[2]-entry[1])/span*100).toFixed(4)+"%";
+bar.title=(entry[0]==="rangeForecast"?"Frossen prognose: ":"Observeret: ")+entry[1]+" – "+entry[2];
+track.appendChild(bar);
+});segment.appendChild(track);box.appendChild(segment);
+});
+var axis=document.createElement("div");axis.className="rangeAxis";
+var min=document.createElement("span"),max=document.createElement("span");
+min.textContent=lo.toLocaleString("da-DK",{maximumFractionDigits:2});
+max.textContent=hi.toLocaleString("da-DK",{maximumFractionDigits:2});
+axis.append(min,max);box.appendChild(axis);root.appendChild(box);
+});
+}
+document.querySelectorAll("nav button").forEach(function(btn){btn.addEventListener("click",function(){document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("active",b===btn)});document.querySelectorAll(".view").forEach(function(v){v.hidden=v.id!=="view-"+btn.dataset.view});});});
+var assets=["BTC","ETH","Large","Mid","Small","Micro","Memes"];var aroot=byId("assetRows");assets.forEach(function(x){addRow(aroot,[x,"Ukendt","UTILGÆNGELIG"])});
+var troot=byId("horizonRows");
+Promise.all([loadJSON("latest.json"),loadJSON("compass.json").catch(function(){return {contract:"PUBLIC_COMPASS_PROJECTION_v1",data_status:"UNAVAILABLE"};})]).then(function(values){
+var cn=values[0],c=values[1]; if(cn.schema!=="CN_PUBLIC_SNAPSHOT_V2"||cn.public_series?.contract!=="CN_PUBLIC_SERIES_INDEX_v1")throw Error("Unverified public CN source contract");
+if(c.contract!=="PUBLIC_COMPASS_PROJECTION_v1")c={contract:"PUBLIC_COMPASS_PROJECTION_v1",data_status:"UNAVAILABLE"};
+var p=cn.package||{},series=cn.public_series||{},quality=String(p.status||cn.pointer&&cn.pointer.status||"").toUpperCase();
+var wk=cn.pointer||{},pub=series.current_public_projection||{};
+var isoWeek=Number(wk.iso_week),isoYear=Number(wk.iso_year);
+var expectedWeek=Number.isInteger(isoYear)&&Number.isInteger(isoWeek)&&isoWeek>=1&&isoWeek<=53?isoYear+"-W"+String(isoWeek).padStart(2,"0"):null;
+var weeklyAligned=Number.isInteger(pub.public_issue_number)&&pub.public_issue_number>0&&
+ Number.isInteger(wk.issue_number)&&p.issue_number===wk.issue_number&&p.status===wk.status&&
+ pub.forecast_week===expectedWeek&&["OK","PASS","DEGRADED"].includes(p.status);
+if(!weeklyAligned)throw Error("Unverified public CN week/issue lineage");
+var now=Date.now(),parsed=Date.parse(cn.generated_at);
+var deliveryFresh=typeof cn.generated_at==="string"&&/(?:Z|[+-]\d\d:\d\d)$/.test(cn.generated_at)&&
+ Number.isFinite(parsed)&&parsed<=now+300000&&now-parsed<=86400000;
+set("state",safe(p.market_state)||"Officiel markedsstatus ikke tilgængelig");
+set("summary",safe(p.base_case_this_week)||"Offentlig vurdering er ikke tilgængelig.");
+set("issue","CN #"+(series.current_public_projection&&series.current_public_projection.public_issue_number||"—")+" · "+(series.current_public_projection&&series.current_public_projection.forecast_week||"Ukendt uge"));
+set("refreshed","Datapakke: "+(safe(cn.generated_at)||"Udateret"));
+set("status",!deliveryFresh?"Kilde forældet":quality==="OK"||quality==="PASS"?"Ugentlig kilde OK":quality||"Ikke bekræftet");
+var currentContext=p.market_cycle_context||{};
+set("phase",safe(currentContext.current_phase)||"Fase ikke bekræftet");
+set("nextGate",safe(currentContext.next_gate)||"Afventer signal");
+var issued=Date.parse(c.issued_at_utc);
+var compassFresh=typeof c.issued_at_utc==="string"&&/(?:Z|[+-]\d\d:\d\d)$/.test(c.issued_at_utc)&&
+ Number.isFinite(issued)&&issued<=now+300000&&now-issued<=86400000&&issued<=parsed+300000;
+var sourceFresh=deliveryFresh&&compassFresh&&c.data_status==="OK"&&typeof c.compass_id==="string"&&c.compass_id.trim()!=="";
+var aligned=sourceFresh&&c.weekly_context&&c.weekly_context.status==="ALIGNED"&&
+ c.weekly_context.forecast_week===pub.forecast_week&&c.weekly_context.public_issue_number===pub.public_issue_number;
+// A fresh Compass with a different public CN issue/week is NOT actionable.
+var valid=Boolean(aligned);
+set("compassHealth",valid?"Official Compass · OK":"KOMPAS · utilgængelig");
+set("actionNow",valid?(safe(c.action_now,"UTILGÆNGELIG")):"UTILGÆNGELIG");
+set("actionDesc",valid?"Officiel handling · "+(safe(c.issued_at_utc)||"tid ukendt"):"Intet verificeret aktuelt handlingssignal.");
+set("riskStatus",valid?(safe(c.protection_tracker&&c.protection_tracker.pullback_risk_state)||"Utilgængelig"):"Utilgængelig");
+set("riskDesc",valid?(safe(c.protection_tracker&&c.protection_tracker.pullback_class)||"Ingen kvalificeret risikoklasse"):"Fresh Official Compass required");
+var ref=series.latest_completed_score||{},candidate=cn.public_scorecard||{},range=candidate.price_range_precision||{};
+var rows=range.rows,complete=Array.isArray(rows)&&rows.length===6&&
+ rows.every(function(r){return ["BTC","ETH"].includes(r.asset)&&["day_1_2","day_3_4","day_5_7"].includes(r.window)&&
+ ["forecast_low","forecast_high","actual_low","actual_high","score"].every(function(k){return typeof r[k]==="number"&&Number.isFinite(r[k]);})&&
+ r.forecast_low>0&&r.forecast_high>r.forecast_low&&r.actual_low>0&&r.actual_high>=r.actual_low&&r.score>=0&&r.score<=100;})&&
+ new Set(rows.map(function(r){return r.asset+":"+r.window;})).size===6;
+var scoreValid=candidate.contract==="CN_PUBLIC_WEEKLY_SCORECARD_v1"&&
+ typeof ref.status==="string"&&/^FINAL(?:_|$)/.test(ref.status)&&candidate.status===ref.status&&
+ candidate.public_issue_number===ref.public_issue_number&&candidate.public_issue_number<pub.public_issue_number&&
+ candidate.forecast_week===ref.forecast_week&&candidate.market_structure_precision===null&&candidate.combined_score===null&&
+ range.formula==="70pct_containment_plus_30pct_jaccard"&&range.actuals_hourly_coverage===168&&complete&&
+ typeof range.score==="number"&&Number.isFinite(range.score)&&range.score>=0&&range.score<=100&&
+ typeof ref.price_range_score==="number"&&Math.abs(range.score-ref.price_range_score)<=0.000001;
+var score=scoreValid?candidate:null,s=score?range.score:null;
+set("score",fmtNum(s));set("proofScore",fmtNum(s));
+set("scoreMeta",score?"Offentlig CN #"+score.public_issue_number+" · "+score.forecast_week+" · foreløbigt bevis":"Ingen verificerbar afsluttet score indlæst");
+set("proofDesc",score?"CN #"+score.public_issue_number+" · "+score.forecast_week+" · "+String(score.status)+" · ikke uafhængigt forseglet":"Afsluttet offentlig scorecard ikke tilgængeligt");
+renderRanges(score);
+set("interpret",valid?(safe(c.market_now&&c.market_now.summary)||safe(c.conclusion)||"Kvalificeret offentlig fortolkning ikke tilgængelig"):"Kompas er utilgængeligt. Ingen retning eller BUY/SELL må opfindes.");
+var sell=c.sell_assessment||{};set("sellState",valid?(safe(sell.state)||"UNAVAILABLE"):"UNAVAILABLE");set("sellReason",valid?(safe(sell.reason)||"Ingen kvalificeret SELL-autoritet"):"Ingen verificeret salgsbeslutning.");
+set("reentry",valid?(safe(c.protection_tracker&&c.protection_tracker.reentry_message)||"Ikke tilgængelig"):"Ikke tilgængelig");
+var horizons=[["0–12 timer","next_12h"],["1–3 dage","next_1_3d"],["5–7 dage","next_5_7d"],["2–3 uger","next_2_3w"],["4–8 uger","weeks_4_8"]]; clear(troot);
+horizons.forEach(function(h){var k=c.horizons&&c.horizons[h[1]]||null;var dp=p.decision_projection||{};var weekly=dp[h[1]]||null;var dir=valid&&k&&safe(k.directional_state||k.direction)||aligned&&weekly&&safe(weekly.direction)||"UKENDT";var action=valid&&k&&safe(k.action,"UTILGÆNGELIG")||"UTILGÆNGELIG";addRow(troot,[h[0],dir,action]);});
+if(aligned&&Array.isArray(c.capitalization_ladder)){clear(aroot);assets.forEach(function(asset,i){var item=c.capitalization_ladder.find(function(x){return String(x.asset||x.segment||x.tier||"").toLowerCase().includes(asset.toLowerCase())});addRow(aroot,[asset,item&&safe(item.status)||"Ukendt",item&&safe(item.action,"UTILGÆNGELIG")||"UTILGÆNGELIG"])});}
+}).catch(function(err){console.warn("CN vNext preview data unavailable:",err);set("status","Kilde utilgængelig");set("state","Ingen verificerede data");set("summary","Prototypen viser ikke gættede markedsværdier. Når offentlige kildedata kan indlæses og deres kontrakter bekræftes, vises de her.");set("compassHealth","Kilde utilgængelig");set("actionNow","UTILGÆNGELIG");set("sellState","UNAVAILABLE");});
+})();
+</script></body></html>

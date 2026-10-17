@@ -1,0 +1,907 @@
+{
+  "contract": "CN_VNEXT_PREVIEW_SOURCE_BUNDLE_v1",
+  "source_status": "POINT_IN_TIME_PREVIEW_ARCHIVE_NOT_LIVE",
+  "snapshot_issued_at_utc": "2026-10-11T13:15:27Z",
+  "weekly": {
+    "public_issue_number": 28,
+    "forecast_week": "2026-W41",
+    "status": "DEGRADED",
+    "status_reason_codes": [
+      "MATURING_CONTEXT",
+      "COVERAGE_LIMITATION"
+    ],
+    "forecast_source_freeze_sha256": "41cb3ea00c751bb8c4099f0f3fb88e8eb8f357f052adb3a3d00798886a0589f3",
+    "frozen_unix": 1791180846,
+    "base_case_this_week": "W41 begins with a BTC-led USD advance but unresolved rotation. Early BTC continuation and a later retest are both credible; ETH-relative weakness, negative settled ETH ETF flows and mixed microstructure limit conviction. Prospective scenario envelopes: BTC $82,000–$92,000 and ETH $2,560–$2,960. Neither distribution nor broad altseason is confirmed.",
+    "base_case_2_3_weeks": "Selective, volatile participation without a dependable broad-market direction. BTC may remain the relative anchor, but an alt-led advance requires ETH/BTC stabilization, 30d breadth that survives pullbacks, and improving 90d/365d context. Neither a broad rotation nor a sustained decline is established.",
+    "base_case_4_8_weeks": "UNAVAILABLE cycle direction and UNAVAILABLE action posture. The 56-day shadow rotation window has 38 passing days against 42 required, and final Master Monday does not establish a stable cycle phase.",
+    "market_state": "Completed W40 was a BTC-led USD advance: BTC $84,472.01→$86,530 (+2.44%), ETH $2,688.65→$2,726.94 (+1.43%), and ETH/BTC 0.03183→0.03152 (−0.97%). All 168 hours were observed. Late USD recovery and constructive 30d alt participation oppose a breakdown call, but ETH-relative weakness, +82.9 versus −118.0 in reported settled BTC/ETH ETF units, mixed microstructure, and 90d/365d rotation scores of 55/37 prevent confirmation of durable broad rotation or a stable cycle phase.",
+    "altseason_countdown": [
+      {
+        "phase": "30d alt participation: active watch, not persistent confirmation; the shadow source returned to ALTCOIN_SEASON at 78 on October 4 after several readings below that label.",
+        "window": "Now / W41"
+      },
+      {
+        "phase": "ETH-relative stabilization: not confirmed; ETH/BTC fell during W40.",
+        "window": "W41–next 3 weeks, conditional"
+      },
+      {
+        "phase": "Large-cap to midcap transmission: unconfirmed by capitalization tier.",
+        "window": "Next 2–3 weeks, conditional"
+      },
+      {
+        "phase": "Small- and microcap transmission: unconfirmed.",
+        "window": "No supported ETA"
+      },
+      {
+        "phase": "Broad, multi-horizon altseason: paused; 90d and 365d readings remain between published thresholds.",
+        "window": "No supported ETA"
+      }
+    ],
+    "rotation_ladder": [
+      {
+        "segment": "BTC",
+        "status": "Led the W40 USD advance and recovered late; W41 follow-through versus retest is unresolved."
+      },
+      {
+        "segment": "ETH",
+        "status": "Rose in USD but lagged BTC; ETH-relative stabilization remains unconfirmed."
+      },
+      {
+        "segment": "Large caps",
+        "status": "Selective participation plausible; durable tier-wide handoff not independently established."
+      },
+      {
+        "segment": "Midcaps",
+        "status": "Constructive 30d shadow breadth does not independently confirm sustained midcap transmission."
+      },
+      {
+        "segment": "Small caps",
+        "status": "Sustained transmission unconfirmed; no supported ETA."
+      },
+      {
+        "segment": "Microcaps",
+        "status": "Sustained transmission unconfirmed; no supported ETA."
+      }
+    ],
+    "uncertainties": [
+      "The 56-day shadow rotation window is MATURING at 38 passing days versus 42 required; a 4–8-week direction and action posture are unavailable.",
+      "The supplied READY prospective continuity bridge targets W39 only. W41 numeric bands are newly frozen evidence-bounded scenarios, not a supplied governed W41 range-model output.",
+      "Only six passing daily observations appear in the seven-day rotation context; no missing day is interpolated. Individual capitalization-tier transmission is not independently resolved.",
+      "Final Master Monday supplies no operational translation or calibrated decision-utility score. Divergent flows and mixed microstructure do not establish distribution, and scenario weights are not probabilities."
+    ],
+    "decision_projection": {
+      "next_1_3d": {
+        "direction": "MIXED",
+        "summary": "Late W40 BTC strength favors an early continuation attempt, but ETH/BTC weakness, divergent settled flows and mixed microstructure prevent a one-way market call."
+      },
+      "next_5_7d": {
+        "direction": "MIXED",
+        "summary": "A retest or renewed USD continuation is plausible. BTC's late advance and constructive 30d breadth oppose ETH-relative weakness, negative settled ETH flows and mixed microstructure."
+      },
+      "next_2_3w": {
+        "direction": "MIXED",
+        "summary": "Selective, volatile participation rather than confirmed broad rotation or a clear decline. BTC-relative resilience is possible, but ETH/BTC, pullback-resistant 30d breadth and 90d/365d confirmation must improve before an alt-led direction can be called."
+      },
+      "next_21_30d": {
+        "action_posture": "WAIT",
+        "btc_direction": "MIXED",
+        "confidence": "LOW",
+        "direction": "MIXED",
+        "eth_direction": "MIXED",
+        "ethbtc_direction": "NO_EDGE",
+        "expected_path": "First test whether BTC's USD advance holds through a retest; then whether ETH/BTC stabilizes and 30d breadth survives weakness; finally look for—or fail to obtain—90d/365d breadth and settled ETH-flow confirmation. This is a conditional sequence, not a dated rotation forecast.",
+        "falsification": [
+          "The selective-consolidation base case weakens toward the bull case if ETH/BTC strengthens persistently, 30d participation survives pullbacks, and longer-horizon breadth and ETH flows improve together.",
+          "It weakens toward the bear case if BTC loses its completed-W40 advance while 30d breadth fades and ETH-relative weakness persists.",
+          "Neither scenario is established by a single 30d shadow label or one isolated ETF session."
+        ],
+        "regime_destination": "MIXED",
+        "scenario_semantics": "UNCALIBRATED_SCENARIO_WEIGHT_NOT_PROBABILITY",
+        "scenarios": [
+          {
+            "label": "BASE",
+            "thesis": "BTC-relative leadership and selective participation persist through volatile consolidation; broad alt rotation remains unconfirmed.",
+            "weight_pct": 50
+          },
+          {
+            "label": "BULL",
+            "thesis": "USD strength persists, ETH/BTC stabilizes, and pullback-resistant breadth begins to reach the longer rotation horizons.",
+            "weight_pct": 25
+          },
+          {
+            "label": "BEAR",
+            "thesis": "BTC's advance reverses, short-horizon breadth fades, and persistent ETH weakness turns a retest into broader contraction risk.",
+            "weight_pct": 25
+          }
+        ],
+        "summary": "Conditional 21–30-day mixed outlook and WAIT posture, not an actionable cycle turn. Analytical scenario weights are not calibrated probabilities; the partially overlapping 4–8-week cycle/action call remains unavailable."
+      },
+      "weeks_4_8": {
+        "action_posture": "UNAVAILABLE",
+        "confidence": "UNKNOWN",
+        "direction": "UNAVAILABLE",
+        "eta": "UNAVAILABLE — 56-day shadow context remains MATURING.",
+        "horizon_days": null,
+        "state": "UNCLEAR",
+        "summary": "No evidence-supported 4–8-week cycle direction or action posture. A conditional 21–30-day scenario does not fill the missing longer-window confirmation.",
+        "through_date": null,
+        "warning": "NONE"
+      },
+      "protection": {
+        "confidence_quality": "LOW",
+        "distribution_risk": "UNKNOWN",
+        "drivers": [
+          "W40 BTC gained 2.44% and ETH 1.43%, while ETH/BTC declined 0.97%.",
+          "The 30d shadow source ended at 78 with an ALTCOIN_SEASON label, but 90d was 55 and 365d was 37; the shorter-window label varied during W40.",
+          "Five settled sessions totaled +82.9 in reported BTC ETF units versus −118.0 in ETH ETF units; final Master Monday describes mixed microstructure and no confirmed broad transmission.",
+          "The 168-hour price path recovered late, countering a confirmed-breakdown claim."
+        ],
+        "eta_window": "Possible W41 retest, particularly Day 3–7; timing and occurrence unconfirmed.",
+        "invalidation": "The near-term retest watch weakens if BTC sustains its late-W40 advance while ETH/BTC stabilizes and breadth and flows confirm participation. A single range breach is a forecast miss, not automatically distribution.",
+        "pullback_class": "Ordinary retest watch; depth and severity unquantified.",
+        "pullback_risk_state": "BUILDING"
+      }
+    },
+    "forecast_freeze": {
+      "btc_range_low": 82000,
+      "btc_range_high": 92000,
+      "eth_range_low": 2560,
+      "eth_range_high": 2960,
+      "intraday_map": {
+        "day_1_2": "BTC $84,000–$89,000; ETH $2,640–$2,830. Test BTC-led continuation against early rejection; relative ETH stabilization remains unconfirmed.",
+        "day_3_4": "BTC $83,000–$90,500; ETH $2,600–$2,900. Retest or consolidation watch; a break of a prospective band is a range miss, not an automatic regime signal.",
+        "day_5_7": "BTC $82,000–$92,000; ETH $2,560–$2,960. Wider scenario envelope allows continuation or a deeper retest; it does not forecast the greatest realized volatility in this window."
+      },
+      "bull_bear_scale": {
+        "contract": "CN_PUBLIC_BULL_BEAR_SCALE_v1",
+        "forecast_week": "2026-W41",
+        "horizons": {
+          "1_3d": {
+            "bear": 4,
+            "bias": "LEAN_BULLISH",
+            "bull": 6,
+            "summary": "BTC's late-W40 USD recovery and constructive short-lookback breadth modestly favor continuation, offset by ETH-relative weakness, divergent settled ETF flows and mixed microstructure; the combined market path remains mixed."
+          },
+          "2_3w": {
+            "bear": 5,
+            "bias": "NEUTRAL",
+            "bull": 5,
+            "summary": "Selective, volatile participation has counterweights: BTC resilience and constructive 30d breadth versus weak ETH/BTC, negative settled ETH flows and non-confirmatory 90d/365d breadth. No broad alt-led or sustained downside direction is established."
+          },
+          "5_7d": {
+            "bear": 5,
+            "bias": "NEUTRAL",
+            "bull": 5,
+            "summary": "Late USD strength and short-horizon participation balance retest risk, ETH lag and mixed confirmation quality; either continuation or a bounded reversal remains plausible."
+          }
+        },
+        "invariants": [
+          "Bull plus bear equals 10 at each horizon.",
+          "Values express evidence balance, not probabilities or calibrated odds.",
+          "The 2–3-week reading uses its own rotation and persistence evidence and matches the 2–3-week compass; it is not extrapolated from Day 5–7."
+        ],
+        "public_issue_number": 28,
+        "semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY"
+      }
+    }
+  },
+  "compass": {
+    "compass_id": "CMP-20261011-7d14a9ee5914",
+    "issued_at_utc": "2026-10-11T13:15:27Z",
+    "data_status": "OK",
+    "action_now": "HOLD_WAIT",
+    "market_now": {
+      "action_permission": "HOLD_WAIT",
+      "btc_delta_pct": 0.1047756447393633,
+      "directional_state": "BULLISH",
+      "eth_delta_pct": 0.1715451055662065,
+      "eth_relative_state": "FLAT",
+      "ethbtc_delta_pct": 0,
+      "market_observation_open_utc": "2026-10-11T12:00:00Z",
+      "new_price_observation": true,
+      "predecessor_market_observation_open_utc": "2026-10-11T07:00:00Z",
+      "regime": "BULLISH",
+      "summary": "BTC and ETH are both advancing over the latest governed comparison interval; action authority remains separate."
+    },
+    "horizons": {
+      "CYCLE_ALTCOINS_3_8W": {
+        "action_posture": "UNAVAILABLE",
+        "eta": "UNAVAILABLE — 56-day shadow context remains MATURING.",
+        "expected_direction": "UNAVAILABLE",
+        "expected_path": "No evidence-supported 4–8-week cycle direction or action posture. A conditional 21–30-day scenario does not fill the missing longer-window confirmation.",
+        "horizon_days": null,
+        "label": "UNCLEAR",
+        "state": "UNCLEAR",
+        "through_date": null,
+        "warning": "NONE"
+      },
+      "NEXT_12H": {
+        "action_posture": "HOLD",
+        "eta": "0-12h",
+        "expected_direction": "UP",
+        "expected_path": "Current-state continuation unless the native confirmation or deterioration gate changes state.",
+        "label": "BULLISH"
+      },
+      "NEXT_1_3D": {
+        "action_posture": "WAIT",
+        "eta": "24-72h",
+        "expected_direction": "MIXED",
+        "expected_path": "Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap.",
+        "label": "MIXED"
+      },
+      "NEXT_2_3W": {
+        "action_posture": "WAIT",
+        "eta": "14-21d",
+        "expected_direction": "MIXED",
+        "expected_path": "Selective, volatile participation rather than confirmed broad rotation or a clear decline. BTC-relative resilience is possible, but ETH/BTC, pullback-resistant 30d breadth and 90d/365d confirmation must improve before an alt-led direction can be called.",
+        "label": "MIXED"
+      },
+      "NEXT_5_7D": {
+        "action_posture": "WAIT",
+        "eta": "120-168h",
+        "expected_direction": "MIXED",
+        "expected_path": "W41 begins with a BTC-led USD advance but unresolved rotation. Early BTC continuation and a later retest are both credible; ETH-relative weakness, negative settled ETH ETF flows and mixed microstructure limit conviction. Prospective scenario envelopes: BTC $82,000–$92,000 and ETH $2,560–$2,960. Neither distribution nor broad altseason is confirmed.",
+        "label": "MIXED"
+      }
+    },
+    "capitalization_ladder": [
+      {
+        "action": "HOLD",
+        "direction": "BULLISH",
+        "eta": "now",
+        "reason": "Liquidity anchor; preserve core while the short-horizon gate resolves.",
+        "segment": "BTC",
+        "status": "HOLD"
+      },
+      {
+        "action": "HOLD",
+        "direction": "BULLISH",
+        "eta": "now",
+        "reason": "Relative-strength leadership must hold before broader rotation is trusted.",
+        "segment": "ETH",
+        "status": "HOLD"
+      },
+      {
+        "action": "WAIT",
+        "direction": "MIXED",
+        "eta": "1-7d conditional",
+        "reason": "First alt-risk tier eligible only after a registered canonical confirmation.",
+        "segment": "LARGE_CAPS",
+        "status": "WAIT"
+      },
+      {
+        "action": "WAIT",
+        "direction": "MIXED",
+        "eta": "1-7d conditional",
+        "reason": "Requires durable large-cap transmission under a registered canonical confirmation.",
+        "segment": "MID_CAPS",
+        "status": "WAIT"
+      },
+      {
+        "action": "WAIT",
+        "direction": "MIXED",
+        "eta": "1-7d conditional",
+        "reason": "Requires confirmed mid-cap participation before deployment.",
+        "segment": "SMALL_CAPS",
+        "status": "WAIT"
+      },
+      {
+        "action": "HARD_WAIT",
+        "direction": "MIXED",
+        "eta": "no fixed ETA",
+        "reason": "Highest-beta non-meme tier remains late in the rotation sequence.",
+        "segment": "MICROCAPS",
+        "status": "HARD_WAIT"
+      },
+      {
+        "action": "UNAVAILABLE",
+        "direction": "UNAVAILABLE",
+        "eta": null,
+        "reason": "Meme risk is a separate rung and requires a governed meme-specific decision owner. No such owner is currently bound, so MICROCAPS cannot be used as a proxy.",
+        "segment": "MEMES",
+        "status": "UNAVAILABLE"
+      }
+    ],
+    "protection_tracker": {
+      "authority": {
+        "new_market_classifier": false,
+        "portfolio_execution": false,
+        "wallet_specific": false
+      },
+      "confidence_quality": "LOW",
+      "contract": "COMPASS_PROTECTION_TRACKER_v1",
+      "data_quality": "OK",
+      "decisive_public_drivers": [
+        "W40 BTC gained 2.44% and ETH 1.43%, while ETH/BTC declined 0.97%.",
+        "The 30d shadow source ended at 78 with an ALTCOIN_SEASON label, but 90d was 55 and 365d was 37; the shorter-window label varied during W40.",
+        "Five settled sessions totaled +82.9 in reported BTC ETF units versus −118.0 in ETH ETF units; final Master Monday describes mixed microstructure and no confirmed broad transmission.",
+        "The 168-hour price path recovered late, countering a confirmed-breakdown claim."
+      ],
+      "distribution_risk": "UNKNOWN",
+      "eta_window": "Possible W41 retest, particularly Day 3–7; timing and occurrence unconfirmed.",
+      "invalidation": "The near-term retest watch weakens if BTC sustains its late-W40 advance while ETH/BTC stabilizes and breadth and flows confirm participation. A single range breach is a forecast miss, not automatically distribution.",
+      "last_material_change_at": "2026-10-11T13:15:27Z",
+      "public_explanation": null,
+      "pullback_class": "ORDINARY RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED.",
+      "pullback_risk_state": "BUILDING",
+      "reentry_message": "No re-entry review is active.",
+      "reentry_state": "INACTIVE"
+    },
+    "sell_assessment": {
+      "authority": {
+        "automatic_action": false,
+        "new_sell_rule": false,
+        "portfolio_execution": false,
+        "protection_is_sell_authority": false
+      },
+      "contract": "COMPASS_SELL_ASSESSMENT_v1",
+      "eta": "UNKNOWN",
+      "horizon": "UNKNOWN",
+      "protection_context": {
+        "distribution_risk": "UNKNOWN",
+        "pullback_risk_state": "BUILDING"
+      },
+      "reason": "No governed sell/trim decision owner is bound. Protection and distribution risk are not sell instructions.",
+      "state": "UNAVAILABLE"
+    },
+    "conclusion": "BULLISH next 12h; MIXED over 1-3d; MIXED over 5-7d; UNCLEAR for the long-cycle altcoin lane. Current action: HOLD_WAIT.",
+    "bull_bear_scale": {
+      "authority": {
+        "new_market_classifier": false,
+        "portfolio_execution": false,
+        "probability_model": false,
+        "site_synthesis_allowed": false
+      },
+      "contract": "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1",
+      "horizons": {
+        "1_3d": {
+          "bear": 5,
+          "bias": "NEUTRAL",
+          "bull": 5,
+          "status": "OK",
+          "summary": "Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap."
+        },
+        "2_3w": {
+          "bear": 5,
+          "bias": "NEUTRAL",
+          "bull": 5,
+          "status": "OK",
+          "summary": "Selective, volatile participation rather than confirmed broad rotation or a clear decline. BTC-relative resilience is possible, but ETH/BTC, pullback-resistant 30d breadth and 90d/365d confirmation must improve before an alt-led direction can be called."
+        },
+        "5_7d": {
+          "bear": 5,
+          "bias": "NEUTRAL",
+          "bull": 5,
+          "status": "OK",
+          "summary": "W41 begins with a BTC-led USD advance but unresolved rotation. Early BTC continuation and a later retest are both credible; ETH-relative weakness, negative settled ETH ETF flows and mixed microstructure limit conviction. Prospective scenario envelopes: BTC $82,000–$92,000 and ETH $2,560–$2,960. Neither distribution nor broad altseason is confirmed."
+        }
+      },
+      "mapping_version": "DIRECTION_ONLY_COARSE_v1",
+      "owner": "OFFICIAL_COMPASS",
+      "resolution": "COARSE_CATEGORICAL_DIRECTION",
+      "semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY",
+      "source_of_truth_contract": "MARKET_WEATHER_SOURCE_OF_TRUTH_v1"
+    }
+  },
+  "completed_score": {
+    "contract": "CN_PUBLIC_WEEKLY_SCORECARD_v1",
+    "public_issue_number": 27,
+    "forecast_week": "2026-W40",
+    "status": "FINAL_DUAL_TRACK",
+    "price_range_precision": {
+      "actuals": "03_DAILY_CAPTURE_LOGS/weekly/2026/W40.json",
+      "actuals_hourly_coverage": 168,
+      "btc_score": 82.27,
+      "eth_score": 81.82,
+      "formula": "70pct_containment_plus_30pct_jaccard",
+      "intraday_window_scores": {
+        "day_1_2": 86.53,
+        "day_3_4": 79.61,
+        "day_5_7": 80
+      },
+      "rows": [
+        {
+          "actual_high": 84999,
+          "actual_low": 82563,
+          "asset": "BTC",
+          "forecast_high": 86500,
+          "forecast_low": 81700,
+          "score": 85.22,
+          "score_window_policy": "LEGACY_WEEK_BOUNDARY_v1",
+          "window": "day_1_2"
+        },
+        {
+          "actual_high": 2748.6,
+          "actual_low": 2635.69,
+          "asset": "ETH",
+          "forecast_high": 2750,
+          "forecast_low": 2560,
+          "score": 87.83,
+          "score_window_policy": "LEGACY_WEEK_BOUNDARY_v1",
+          "window": "day_1_2"
+        },
+        {
+          "actual_high": 85649.95,
+          "actual_low": 82956.11,
+          "asset": "BTC",
+          "forecast_high": 87700,
+          "forecast_low": 80400,
+          "score": 81.07,
+          "score_window_policy": "LEGACY_WEEK_BOUNDARY_v1",
+          "window": "day_3_4"
+        },
+        {
+          "actual_high": 2738.51,
+          "actual_low": 2656.92,
+          "asset": "ETH",
+          "forecast_high": 2810,
+          "forecast_low": 2510,
+          "score": 78.16,
+          "score_window_policy": "LEGACY_WEEK_BOUNDARY_v1",
+          "window": "day_3_4"
+        },
+        {
+          "actual_high": 87220,
+          "actual_low": 83888,
+          "asset": "BTC",
+          "forecast_high": 89000,
+          "forecast_low": 79500,
+          "score": 80.52,
+          "score_window_policy": "LEGACY_WEEK_BOUNDARY_v1",
+          "window": "day_5_7"
+        },
+        {
+          "actual_high": 2777.33,
+          "actual_low": 2650.88,
+          "asset": "ETH",
+          "forecast_high": 2880,
+          "forecast_low": 2480,
+          "score": 79.48,
+          "score_window_policy": "LEGACY_WEEK_BOUNDARY_v1",
+          "window": "day_5_7"
+        }
+      ],
+      "score": 82.05,
+      "score_window_policy": "LEGACY_WEEK_BOUNDARY_v1",
+      "scoring_valid_from_utc": null,
+      "source": "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl"
+    },
+    "market_structure_status": "ANALYSIS_ONLY_NOT_SCORED",
+    "market_structure_precision": null,
+    "frozen_claim_precision": {
+      "method": "canonical_public_continuity_score_from_frozen_parameters",
+      "note": "Official reproducible score across the frozen weekly claim set. It is not blended with price-range precision.",
+      "parameter_coverage_pct": 100,
+      "score": 83.33,
+      "scored_parameter_count": 12,
+      "source": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SCORECARD.json"
+    },
+    "combined_score": null,
+    "combined_score_reason": "Price Range precision is the public score family. Market Structure is analysis-only; Bull/Bear is an evidence-balance forecast, not a precision score.",
+    "daily_observations_w40": {
+      "contract": "CN_W40_OBSERVED_DAILY_OHLC_READBACK_v1",
+      "basis": "UTC_ISO_WEEK",
+      "source_file": "03_DAILY_CAPTURE_LOGS/weekly/2026/W40/WEEKLY_HOURLY_ENRICHED.csv",
+      "source_git_blob_sha": "33e0d1366c8de7e69ea1bd9655a96764aeabc70f",
+      "observed_hours": 168,
+      "method": "day high=max(hourly high), low=min(hourly low), close=last hourly close; 7 UTC dates; observation-only, no daily frozen forecast",
+      "days": [
+        {
+          "date": "2026-09-28",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 84999,
+            "low": 82563,
+            "close": 83500.01
+          },
+          "ETH": {
+            "high": 2721.42,
+            "low": 2635.69,
+            "close": 2688.71
+          }
+        },
+        {
+          "date": "2026-09-29",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 84563.99,
+            "low": 82775.94,
+            "close": 83663.66
+          },
+          "ETH": {
+            "high": 2748.6,
+            "low": 2652.2,
+            "close": 2677.98
+          }
+        },
+        {
+          "date": "2026-09-30",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 85649.95,
+            "low": 82956.11,
+            "close": 83623.6
+          },
+          "ETH": {
+            "high": 2738.51,
+            "low": 2656.92,
+            "close": 2686.01
+          }
+        },
+        {
+          "date": "2026-10-01",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 85273.65,
+            "low": 83186,
+            "close": 84880.05
+          },
+          "ETH": {
+            "high": 2722,
+            "low": 2673.13,
+            "close": 2706.42
+          }
+        },
+        {
+          "date": "2026-10-02",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 87220,
+            "low": 83888,
+            "close": 84518.01
+          },
+          "ETH": {
+            "high": 2777.33,
+            "low": 2650.88,
+            "close": 2668.59
+          }
+        },
+        {
+          "date": "2026-10-03",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 85037.63,
+            "low": 84456.02,
+            "close": 84753.56
+          },
+          "ETH": {
+            "high": 2690,
+            "low": 2665.67,
+            "close": 2687.23
+          }
+        },
+        {
+          "date": "2026-10-04",
+          "observed_hours": 24,
+          "BTC": {
+            "high": 86800,
+            "low": 84719.99,
+            "close": 86530
+          },
+          "ETH": {
+            "high": 2739.5,
+            "low": 2686.54,
+            "close": 2726.94
+          }
+        }
+      ]
+    },
+    "frozen_weekly_expectation_w40": {
+      "contract": "CN_W40_ORIGINAL_FROZEN_INTRADAY_PATH_CONTEXT_v1",
+      "source_file": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+      "source_git_blob_sha": "4f867d594c355c31ede8a3718638c6e72249a5a8",
+      "original_forecast_freeze_sha256": "e64e4c52af960220f03fa69a86cbd9853888d085c99d5b2c7ff061aa3aa8471f",
+      "source_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+      "frozen_at_utc": "2026-09-28T05:53:37Z",
+      "forecast_week": "2026-W40",
+      "public_issue_number": 27,
+      "intraday_map": {
+        "day_1_2": "BTC $81,700–$86,500; ETH $2,560–$2,750. Stabilization or a continuation attempt is possible, but weak ETH-relative performance and microstructure leave rejection risk.",
+        "day_3_4": "BTC $80,400–$87,700; ETH $2,510–$2,810. Retest watch becomes more prominent; a breach of these bands would be a forecast miss, not an automatic breakdown signal.",
+        "day_5_7": "BTC $79,500–$89,000; ETH $2,480–$2,880. Wider prospective envelope for either a deeper retest or recovery; no late-week volatility expansion is asserted."
+      },
+      "interpretation": "Window narratives were frozen on Monday after 05:53 UTC; historical Monday daily extrema include pre-freeze observations. Graph interpolation is visual, not an ex-ante daily path."
+    }
+  },
+  "history": {
+    "contract": "CN_PUBLIC_HISTORY_SCOREBOARD_V2",
+    "coverage": {
+      "completed_issues": 27,
+      "latest_open_issue": 28,
+      "note": "Component availability varies by scoring era. A recovered row does not imply that every score family was published.",
+      "rows_with_published_or_canonical_score_evidence": 27
+    },
+    "policy": {
+      "cross_era_aggregate": false,
+      "historical_scores_locked": true,
+      "market_structure_score_cutover": {
+        "first_analysis_only_public_issue": 27,
+        "historical_rows_preserved": true,
+        "last_scored_public_issue": 26,
+        "new_market_structure_scores": false
+      },
+      "missing_component": "UNAVAILABLE",
+      "open_issue_excluded": true,
+      "retroactive_rescoring": false
+    },
+    "provenance_note": "Recent dual-track records are resolved by public forecast week plus immutable publication lineage. Machine issue numbers are not public-series join keys during the September migration offset. From CN27 onward Market Structure is qualitative analysis only and carries no public accuracy score. Price Range precision remains the scored public forecast family.",
+    "records": [
+      {
+        "cn": 1,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 2,
+        "intraday_display": "BTC 89",
+        "overall": 88,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 92",
+        "structure_display": "Cycle 95 · Rotation 78"
+      },
+      {
+        "cn": 2,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 3,
+        "intraday_display": "BTC 87",
+        "overall": 88,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST_CHUNK",
+        "range_display": "BTC 91",
+        "structure_display": "Cycle 88 · Rotation 82"
+      },
+      {
+        "cn": 3,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 4,
+        "intraday_display": "BTC 80",
+        "overall": 83,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 83",
+        "structure_display": "Cycle 90 · Rotation 78"
+      },
+      {
+        "cn": 4,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 5,
+        "intraday_display": "BTC 82",
+        "overall": 86,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 88",
+        "structure_display": "Cycle 92 · Rotation 95"
+      },
+      {
+        "cn": 5,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 6,
+        "intraday_display": "BTC 78",
+        "overall": 85,
+        "provenance": "RECOVERED_ORIGINAL_CN6_SCORECARD",
+        "range_display": "BTC 84",
+        "structure_display": "Cycle 93 · Rotation 97"
+      },
+      {
+        "cn": 6,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 7,
+        "intraday_display": "BTC 87",
+        "overall": 92,
+        "provenance": "ARCHIVED_CN7_SCORECARD",
+        "range_display": "BTC 91",
+        "structure_display": "Cycle 94 · Rotation 96"
+      },
+      {
+        "cn": 7,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 8,
+        "intraday_display": "BTC 84",
+        "overall": 91,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 89 · ETH 81",
+        "structure_display": "Cycle 96 · Rotation 98"
+      },
+      {
+        "cn": 8,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 9,
+        "intraday_display": "BTC 82",
+        "overall": 90,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 87 · ETH 84",
+        "structure_display": "Cycle 97 · Rotation 95"
+      },
+      {
+        "cn": 9,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 10,
+        "intraday_display": "BTC 70",
+        "overall": 72,
+        "provenance": "RECOVERED_ORIGINAL_CN10_SCORECARD",
+        "range_display": "BTC 74 · ETH 63",
+        "structure_display": "Cycle 84 · Rotation 55"
+      },
+      {
+        "cn": 10,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 11,
+        "intraday_display": "BTC 58 · ETH 61",
+        "overall": 70,
+        "provenance": "ARCHIVED_CN11_SCORECARD",
+        "range_display": "BTC 62 · ETH 65",
+        "structure_display": "Cycle 89 · Rotation 95 · ETH/BTC 95"
+      },
+      {
+        "cn": 11,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 12,
+        "intraday_display": "BTC 67 · ETH 91",
+        "overall": 84,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 72 · ETH 88",
+        "structure_display": "Cycle 89 · Rotation 95"
+      },
+      {
+        "cn": 12,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 13,
+        "intraday_display": "BTC 61 · ETH 78",
+        "overall": 79,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 72 · ETH 88",
+        "structure_display": "Cycle 86 · Rotation 95"
+      },
+      {
+        "cn": 13,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 14,
+        "intraday_display": "BTC 42 · ETH 44",
+        "overall": 68,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 45 · ETH 48",
+        "structure_display": "Cycle 88 · Rotation 95"
+      },
+      {
+        "cn": 14,
+        "era": "PUBLISHED_MANUAL_AUDIT",
+        "evaluated_in": 15,
+        "intraday_display": null,
+        "overall": 83,
+        "provenance": "ARCHIVED_PUBLISHED_X_POST",
+        "range_display": "BTC 82 · ETH 66",
+        "structure_display": "Cycle 88 · Rotation 95"
+      },
+      {
+        "cn": 15,
+        "era": "BRIDGE_PUBLISHED_SCORE",
+        "evaluated_in": 16,
+        "intraday_display": "80",
+        "overall": null,
+        "provenance": "RECOVERED_ORIGINAL_CN16_SCORECARD",
+        "range_display": "Combined 85 · BTC 86 · ETH 83",
+        "structure_display": "Regime HIT · Rotation HIT"
+      },
+      {
+        "cn": 16,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 17,
+        "intraday_display": "60",
+        "overall": null,
+        "provenance": "RECOVERED_ORIGINAL_CN17_SCORECARD",
+        "range_display": "Combined 82 · BTC 93 · ETH 70",
+        "structure_display": "Regime 2/2 · Rotation 2/2"
+      },
+      {
+        "cn": 17,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 18,
+        "intraday_display": "74",
+        "overall": null,
+        "provenance": "RECOVERED_ORIGINAL_CN18_SCORECARD",
+        "range_display": "Combined 85 · BTC 89 · ETH 82",
+        "structure_display": "Regime 2/2 · Rotation 2/2 · Leadership MISS"
+      },
+      {
+        "cn": 18,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 19,
+        "intraday_display": "82",
+        "overall": 90,
+        "provenance": "RECOVERED_ORIGINAL_CN19_SCORECARD",
+        "range_display": "89",
+        "structure_display": "100"
+      },
+      {
+        "cn": 19,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 20,
+        "intraday_display": "72",
+        "overall": 87,
+        "provenance": "RECOVERED_ORIGINAL_CN20_SCORECARD",
+        "range_display": "88",
+        "structure_display": "100"
+      },
+      {
+        "cn": 20,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 21,
+        "intraday_display": "90",
+        "overall": 94,
+        "provenance": "PUBLISHED_CN21_SCORECARD",
+        "range_display": "92",
+        "structure_display": "100"
+      },
+      {
+        "cn": 21,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 22,
+        "intraday_display": "BTC 48 · ETH 54",
+        "overall": 72,
+        "provenance": "PUBLISHED_CN22_SCORECARD",
+        "range_display": "BTC 55 · ETH 62",
+        "structure_display": "Cycle 94 · Rotation 95 · ETH/BTC 96"
+      },
+      {
+        "cn": 22,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 23,
+        "intraday_display": "78",
+        "overall": 88,
+        "provenance": "PUBLISHED_CN23_SCORECARD",
+        "range_display": null,
+        "structure_display": "Cycle 93 · ETH/BTC 90 · Breadth 92 · Rotation 82 · Altseason timing 94 · Deployment sequencing 78"
+      },
+      {
+        "cn": 23,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 24,
+        "intraday_display": null,
+        "overall": 93,
+        "provenance": "PUBLISHED_CN24_SCORECARD",
+        "range_display": "BTC 89 · ETH 94",
+        "structure_display": "Cycle 94 · ETH/BTC 91 · Breadth 95 · Rotation 92"
+      },
+      {
+        "cn": 24,
+        "era": "FROZEN_PROSPECTIVE",
+        "evaluated_in": 25,
+        "intraday_display": null,
+        "overall": 93,
+        "provenance": "PUBLISHED_CN25_SCORECARD",
+        "range_display": "BTC 96 · ETH 100",
+        "structure_display": "Cycle 100 · ETH/BTC 100 · Breadth 100 · Rotation 50"
+      },
+      {
+        "allow_derived_overall": false,
+        "cn": 25,
+        "era": "DUAL_TRACK_CANONICAL",
+        "evaluated_in": 26,
+        "intraday_display": "D1–2 58.87 · D3–4 67.56 · D5–7 88.09",
+        "overall": null,
+        "provenance": "PUBLIC_CN25_W38_DUAL_TRACK_SCORECARD",
+        "range_display": "Combined 71.51 · BTC 67.48 · ETH 75.53",
+        "structure_display": "Frozen claims 78.57 · Market/Structure 80 · Cycle 100 · ETH/BTC 100 · Breadth 50 · Rotation 50 · Altseason 100"
+      },
+      {
+        "allow_derived_overall": false,
+        "cn": 26,
+        "era": "LEGACY_STRUCTURE_TRANSITION",
+        "evaluated_in": 27,
+        "intraday_display": "D1–2 83.19 · D3–4 86.35 · D5–7 76.02",
+        "overall": null,
+        "provenance": "PUBLIC_CN26_W39_USER_CONFIRMED_PLUS_CANONICAL_ACTUALS",
+        "range_display": "Combined 81.85 · BTC 78.66 · ETH 85.05",
+        "structure_display": "Legacy Market/Structure 60",
+        "structure_method": "LEGACY_PRE_V2"
+      },
+      {
+        "allow_derived_overall": false,
+        "cn": 27,
+        "era": "PRICE_PRECISION_PLUS_STRUCTURE_ANALYSIS",
+        "evaluated_in": 28,
+        "intraday_display": "D1–2 86.53 · D3–4 79.61 · D5–7 80",
+        "overall": null,
+        "provenance": "PUBLIC_CN27_2026-W40_DUAL_TRACK_SCORECARD",
+        "range_display": "Combined 82.05 · BTC 82.27 · ETH 81.82",
+        "structure_display": null,
+        "structure_method": "ANALYSIS_ONLY_NOT_SCORED"
+      }
+    ]
+  }
+}

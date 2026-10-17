@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f8">
+  <meta name="description" content="Cycle Navigator · Markedet, uden støjen. Kildebunden cyklusanalyse, taktisk Kompas og åbent scorearkiv.">
+  <title>Cycle Navigator — vNext Preview</title>
+  <link rel="stylesheet" href="./premium.css">
+</head>
+<body>
+  <div class="preview-ribbon"><span class="ribbon-dot"></span><span>DESIGN PREVIEW</span><span class="ribbon-divider">/</span><span>KILDEFAST SNAPSHOT, IKKE LIVE TRADING</span></div>
+  <header class="masthead">
+    <div class="shell masthead-inner">
+      <a class="brand" href="#overblik" aria-label="Cycle Navigator forsiden">
+        <img class="cn-logo" src="./CN_LOGO.svg" alt="" width="261" height="43" aria-hidden="true">
+      </a>
+      <nav class="desktop-nav" aria-label="Hovednavigation">
+        <button type="button" class="nav-link is-active" data-route="overblik" aria-current="page">Overblik</button>
+        <button type="button" class="nav-link cn-nav-path" data-open-path aria-label="Åbn PATH ugegraf">PATH · Ugegraf</button>
+        <button type="button" class="nav-link" data-route="kompas">Kompas</button>
+        <button type="button" class="nav-link" data-route="dokumentation">Resultater <span class="nav-arrow">↗</span></button>
+      </nav>
+      <div class="header-actions">
+        <div class="language-switch" role="group" aria-label="Sprog / Language"><button type="button" data-lang="da" aria-pressed="true" class="is-selected">DA</button><span aria-hidden="true"></span><button type="button" data-lang="en" aria-pressed="false">EN</button></div>
+        <span class="header-issue" id="header-issue">CN #28 · W41</span>
+        <button type="button" class="icon-button" id="source-button" aria-label="Åbn kildeinformation" title="Kildestatus" aria-controls="source-dialog" aria-expanded="false">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell content">
+    <section class="page is-active" id="page-overblik" aria-label="Markedsoverblik">
+      <div class="intro-line">
+        <span class="eyebrow"><span class="eyebrow-line"></span>THE MARKET, WITHOUT THE NOISE</span>
+        <span class="edition">PUBLIC FORECAST <span id="edition-number">NO. 28</span> <span class="edition-separator">·</span> 11 OCT 2026</span>
+      </div>
+
+      <!-- Current public source is separate from and NEVER replaces archived W40/W41 seed. -->
+      <section class="cn-current-public" id="cn-current-public-panel" data-state="UNAVAILABLE" aria-labelledby="cn-current-kicker">
+        <div class="cn-current-head">
+          <span id="cn-current-kicker">AKTUELT · OFFENTLIG KILDE</span>
+          <strong id="cn-current-status" role="status">UTILGÆNGELIG · IKKE LIVE</strong>
+        </div>
+        <div class="cn-current-primary">
+          <div><span id="cn-current-action-label">OFFICIEL HANDLING · NU</span><strong id="cn-current-action">UNAVAILABLE</strong></div>
+          <div><span id="cn-current-direction-label">RETNING · NÆSTE 12 TIMER</span><strong id="cn-current-direction">UNKNOWN</strong></div>
+        </div>
+        <div class="cn-current-secondary">
+          <div><span id="cn-current-risk-label">PULLBACK-RISIKO</span><strong id="cn-current-risk">UNKNOWN</strong></div>
+          <div><span id="cn-current-phase-label">CYKLUSFASE</span><strong id="cn-current-phase">UNKNOWN</strong></div>
+          <div><span id="cn-current-gate-label">NÆSTE KILDEGATE</span><strong id="cn-current-gate">UNKNOWN</strong></div>
+        </div>
+        <p id="cn-current-provenance" class="cn-current-provenance">Ingen verificeret aktuel handling. Arkivet nedenfor er historisk.</p>
+        <p id="cn-current-delivery" class="cn-current-delivery">Kilde udløbet, ufuldstændig eller endnu ikke verificeret.</p>
+      </section>
+      <div class="cn-archive-boundary" aria-label="Historisk preview, ikke aktuelle markedsdata">
+        <strong>HISTORISK DESIGNARKIV · CN #28 / W41</strong>
+        <span>Den følgende visning og W40-graf er fastfrosset historik, ikke aktuelle signaler.</span>
+      </div>
+
+      <div class="cn-path-jump-banner">
+        <span>W40 · FROSSET VS FAKTISK UGE</span>
+        <button type="button" data-open-path>Se PATH-ugegraf <span aria-hidden="true">↗</span></button>
+      </div>
+      <div class="hero-grid">
+        <article class="hero-main" aria-labelledby="overview-title">
+          <div class="hero-context"><span>OFFICIELT MARKEDSBILLEDE</span><span id="hero-horizon">NÆSTE 12 TIMER</span></div>
+          <h1 class="hero-title" id="overview-title">Læs <em>skiftet.</em></h1>
+          <p class="hero-subtitle" id="hero-deck">BTC og ETH steg i den seneste officielle observation. Den bredere kapitalrotation er dog ikke bekræftet.</p>
+          
+          <div class="hero-key-metrics cn-overview-posture">
+            <div class="hero-key-signal"><span class="metric-label">RETNING · 12 TIMER</span><strong id="hero-now" class="hero-direction" aria-live="polite">↗ BULLISH · 12T</strong></div>
+            <div class="hero-action-line"><span class="metric-label">OFFICIEL HANDLING · NU</span><strong id="hero-action-summary" aria-live="polite">HOLD / AFVENT</strong></div>
+          </div>
+          <section class="cn-overview-decision" aria-label="Officielle tidshorisonter og markedssegmenter">
+            <div class="cn-overview-heading"><span>VÆLG TIDSHORISONT</span><span>ARKIVERET OFFICIELT KOMPAS</span></div>
+            <div class="cn-overview-horizons" role="group" aria-label="Vælg officiel horisont">
+              <button type="button" data-overview-horizon="NEXT_12H" aria-pressed="false">12T</button>
+              <button type="button" data-overview-horizon="NEXT_1_3D" aria-pressed="false">1–3D</button>
+              <button type="button" data-overview-horizon="NEXT_5_7D" aria-pressed="true" class="is-selected">5–7D</button>
+              <button type="button" data-overview-horizon="NEXT_2_3W" aria-pressed="false">2–3U</button>
+              <button type="button" data-overview-horizon="CYCLE_ALTCOINS_3_8W" aria-pressed="false">4–8U</button>
+            </div>
+            <div class="cn-overview-horizon-readout" aria-live="polite"><strong id="cn-overview-horizon-state">Afventer verificeret kilde</strong><span id="cn-overview-horizon-action">—</span></div>
+            <div class="cn-overview-heading"><span>MARKEDSSEGMENTER</span><span>STATUS · HANDLING</span></div>
+            <div class="cn-overview-tablewrap"><table class="cn-overview-market-table" aria-label="Officielle beslutninger for syv aktivklasser"><thead><tr><th>Aktivklasse</th><th>Status</th><th>Handling</th></tr></thead><tbody id="cn-overview-market-body"></tbody></table></div>
+            <button type="button" class="cn-overview-more" data-go="kompas">Åbn hele Kompas med evidens og risiko ↗</button>
+          </section>
+          <div class="hero-detail-list">
+            <div class="hero-detail"><span>NÆSTE 1–3 DAGE</span><strong id="hero-forward">MIXED · 1–3D</strong></div>
+            <div class="hero-detail"><span>NÆSTE BEKRÆFTELSE</span><strong>ETH/BTC + markedsbredde</strong></div>
+            <div class="hero-detail"><span>PULLBACK · TID</span><div class="pullback-brief"><strong id="overview-risk">BUILDING</strong><small class="risk-stage-label" id="overview-risk-stage">Stadie afventer kilde</small><small id="overview-risk-window">ETA afventer kilde</small></div></div>
+          </div>
+          <p class="hero-risk-note" id="overview-risk-desc">Start og slut ikke bekræftet · ikke et SELL-signal.</p>
+          <div class="source-strip" role="status">
+            <div><span class="status-lamp degraded" aria-hidden="true"></span><strong id="source-health">WEEKLY: DEGRADED</strong><span id="source-time">KILDEFAST SNAPSHOT · 2026-10-11 13:15 UTC</span></div>
+            <button class="text-button" type="button" data-go="dokumentation">Se kilder <span aria-hidden="true">↗</span></button>
+          </div>
+        </article>
+      </div>
+
+      <section class="section-block section-path" aria-labelledby="path-main-title">
+        <div class="section-heading">
+          <div><span class="section-index">01 / MARKET CYCLE</span><h2 id="path-main-title">Hvor er vi <span>i cyklussen?</span></h2></div>
+          <span class="section-aside">PATH · KILDEBUNDET</span>
+        </div>
+        <div class="path-panel" id="path-panel">
+          <div class="path-head">
+            <div>
+              <span class="label-light">MARKEDSCYKLUS · OFFICIEL UGEREFERENCE</span>
+              <h3 id="path-lead">Cyklusaflæsning afventer kilde.</h3>
+              <p id="path-source-intro">Retning og fase skal kunne dokumenteres. En strukturel rækkefølge er ikke en tidsprognose.</p>
+            </div>
+            <span class="path-source-pill" id="path-source-pill">KILDE AFVENTES</span>
+          </div>
+
+          <div class="path-current-next" aria-label="Kendt reference og næste cyklusbekræftelse">
+            <div class="path-fact">
+              <span>SIDST DOKUMENTEREDE FASE</span>
+              <strong id="path-current">Ikke verificeret</strong>
+              <small id="path-current-context">Afventer kilde</small>
+            </div>
+            <div class="path-fact">
+              <span>NÆSTE BEKRÆFTELSE</span>
+              <strong id="path-next">Ikke verificeret</strong>
+              <small id="path-next-gate">Afventer kilde</small>
+            </div>
+          </div>
+
+          <div class="path-route-head">
+            <strong>Fra BTC til rotation, altseason og beskyttelse</strong>
+            <small>Trin er betingelser, ikke en nedtælling</small>
+          </div>
+          <ol class="path-route" id="path-route" aria-label="Fem hovedetaper i markedsrejsen">
+            <li class="path-phase"><span class="path-pin">—</span><strong>Afventer kilde</strong></li>
+          </ol>
+
+          <div class="path-watch-strip">
+            <div>
+              <span>ALTSEASON-WATCH</span>
+              <strong id="path-alt-status">Ikke verificeret</strong>
+              <small id="path-alt-evidence">Bred altseason kræver uafhængig bekræftelse.</small>
+            </div>
+            <div class="path-watch-eta"><span>ETA</span><strong id="path-eta">Ingen verificeret ETA</strong></div>
+          </div>
+
+          <div class="path-rotation">
+            <div class="path-rotation-heading">
+              <strong>Denne uges kapitalrotation</strong>
+              <small>Originale Kompas-handlinger · BTC → memes</small>
+            </div>
+            <div class="path-rotation-rail" id="path-rotation-rail" role="list" aria-label="Syv officielle kapitaliseringsniveauer">
+              <span>Afventer kilde</span>
+            </div>
+          </div>
+
+          <details class="path-disclosure" id="cycle-details">
+            <summary><span><strong>Hele markedsrejsen</strong><small>Alle 10 faser, dokumentation og betingelser</small></span><span aria-hidden="true" class="path-details-chevron">⌄</span></summary>
+            <div class="path-expanded">
+              <ol class="path-all-phases" id="path-all-phases"></ol>
+              <div class="path-detail-sources">
+                <div><strong>ETH/BTC · næste gate</strong><p id="path-gate-detail">Ingen verificeret gate.</p></div>
+                <div><strong>2–3 uger · struktur</strong><p id="path-2-3w">Afventer kilde</p></div>
+                <div><strong>4–8 uger · cyklus</strong><p id="path-4-8w">Afventer kilde</p></div>
+                <div><strong>Beskyttelse, distribution og re-entry</strong><p id="path-protection">Afventer separate officielle kilder</p></div>
+              </div>
+              <p class="path-source-disclaimer" id="path-caveat">Ingen etape forfremmes uden verificerede signaler.</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading"><div><span class="section-index">02 / WEEKLY FORECAST</span><h2>Den kommende uge. <span>Uden gætterier.</span></h2></div><span class="section-aside">FRYSNING · 2026-W41</span></div>
+        <div class="forecast-grid">
+          <div class="forecast-surface">
+            <div class="forecast-title"><span>BITCOIN <small>BTC / USD</small></span><span class="forecast-tag">7D SCENARIO</span></div>
+            <div class="forecast-large">$82.000 <span>—</span> $92.000</div>
+            
+            <p class="forecast-hint">Kildeafledt scenarieinterval. Ikke en sandsynlighed eller et aktuelt spotniveau.</p>
+          </div>
+          <div class="forecast-surface">
+            <div class="forecast-title"><span>ETHEREUM <small>ETH / USD</small></span><span class="forecast-tag">7D SCENARIO</span></div>
+            <div class="forecast-large">$2.560 <span>—</span> $2.960</div>
+            
+            <p class="forecast-hint">Prisintervallet er frosset for ugen, ikke genberegnet ud fra efterfølgende kurser.</p>
+          </div>
+        </div>
+        <div class="forecast-note"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>12 timer: forsigtig styrke. 1–7 dage: blandet retning. 2–3 uger: selektiv deltagelse. Ingen sikker lang cyklusetape.</span><button type="button" data-go="kompas">Åbn Kompas <span>↗</span></button></div>
+      </section>
+
+      <section class="section-block cn-path-week" id="cn-path-week" aria-labelledby="cn-path-week-title">
+        <div class="section-heading">
+          <div><span class="section-index">03 / PATH · FROZEN VS ACTUAL</span><h2 id="cn-path-week-title">Den frosne uge. <span>Og den faktiske rejse.</span></h2></div>
+          <span class="section-aside">CN #27 · W40 · 28 SEP–4 OCT 2026</span>
+        </div>
+        <p class="cn-path-week-description">Uge 40, 2026 · Frosset forventning over for faktisk prisudvikling. Se ugeforløbet, og åbn de oprindelige intervaller nedenfor.</p>
+      <div class="range-compare-panel" id="cn-source-chart">
+        <div class="chart-top">
+          <div class="asset-toggle" role="group" aria-label="Vælg aktiv"><button type="button" class="selected" data-asset="BTC" aria-pressed="true">BTC</button><button type="button" data-asset="ETH" aria-pressed="false">ETH</button></div>
+          <div class="chart-legend" aria-label="Kurveforklaring">
+            <span class="cn-legend-forecast"><i class="cn-legend-line cn-legend-line-forecast" aria-hidden="true"></i> FORECAST <small>(afledt)</small></span>
+            <span class="cn-legend-observed"><i class="cn-legend-line cn-legend-line-observed" aria-hidden="true"></i> FAKTISK</span>
+          </div>
+        </div>
+        <div class="range-visualization" id="range-visualization" aria-label="Kildeverificeret ugentlig BTC ETH prisgraf, afledt forecastmidte fra 3 frosne vinduer og faktisk dagsluk pr. dag"></div>
+        <div class="cn-chart-controls">
+          <p id="cn-replay-day" class="cn-path-replay-day" aria-live="polite">Faktisk uge · syv dagslukninger</p>
+          <div class="range-motion-bar"><div class="range-motion-steps" aria-label="Sammenligningsanimationens stadier"><span data-motion-step="frozen">01 · Frosset prognose</span><span data-motion-step="actual">02 · Virkeligheden</span><span data-motion-step="score">03 · Score</span></div><button type="button" class="range-replay" id="range-replay" aria-label="Afspil ugen dag for dag">↻ <span>Afspil ugeforløb</span></button></div>
+        </div>
+        <div class="range-summary"><span>Forecast er en <strong>afledt midtlinje</strong> fra tre frosne prisintervaller, ikke syv oprindelige dagsprognoser.</span><span id="range-method">W40 · kildearkiv</span></div>
+      </div>
+
+        <details class="cn-path-range-details">
+          <summary>Vis frosne prisintervaller og forventninger <span aria-hidden="true">+</span></summary>
+          <div class="cn-path-range-detail-content">
+            <p>Følgende niveauer er taget fra de oprindelige, frosne tre perioder. Dagsvise forecast-priser blev ikke offentliggjort og er derfor ikke opfundet.</p>
+            <div id="cn-path-window-table"></div>
+            <div id="cn-path-frozen-expectations"></div>
+            <div id="cn-path-daily-table"></div>
+            <p id="cn-path-freeze-status" class="cn-path-freeze-status">Frysetid og kilde afventer kontrol</p>
+          </div>
+        </details>
+      </section>
+
+      <section class="section-block proof-teaser">
+        <div class="section-heading"><div><span class="section-index">03 / PUBLIC ACCOUNTABILITY</span><h2>Vi måler vores <span>markedsforståelse.</span></h2></div><span class="section-aside">THE NEW CN TRACK RECORD</span></div>
+        <div class="teaser-shell">
+          <div><span class="teaser-caption">NEW SCORE ERA · FRA 12. OKTOBER 2026</span><div class="teaser-score">W<span>42</span><sup>↗</sup></div><div class="teaser-label">Price Range <span>+ Direction + Pullback Edge</span></div><p class="caption" style="font-size:11px;color:#8899ab;margin:16px 0 0">Første nye scores kommer først efter faktisk frysning og en afsluttet måleperiode.</p></div>
+          <div class="teaser-divider"></div>
+          <div class="teaser-explainer"><p>Kunne vi forudsige <strong>bevægelsen</strong>, ikke bare prisniveauet? Og advare om et pullback, før det ramte altcoins?</p><div class="proof-micro"><span>Ugentlige og intradag prisintervaller · separat score</span><span>Flow, rotation og 14–56-dages checkpoints</span><span>Pullback onset / recovery / størrelse / altcoin-impact</span><span>Historiske X-scores bevaret under Legacy Archive</span></div><button class="primary-action" type="button" data-go="dokumentation">Udforsk det nye scorekapitel <span>↗</span></button></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="page-kompas" aria-label="Mit Kompas" hidden>
+      <header class="compass-page-head">
+        <div>
+          <span class="compass-eyebrow">OFFICIAL COMPASS <span>· ARKIVERET PREVIEW</span></span>
+          <h1>Kompas<span class="compass-period">.</span></h1>
+        </div>
+        <p class="compass-source-mini" id="compass-updated">OFFICIAL SNAPSHOT · KILDETID UKENDT</p>
+      </header>
+
+      <section class="compass-summary" aria-label="Handling og markedsretning nu">
+        <div class="summary-action">
+          <span>HANDLING NU</span>
+          <strong id="compass-primary-action" aria-live="polite">HOLD / AFVENT</strong>
+          <small>Officiel handletilladelse</small>
+        </div>
+        <div class="summary-timer">
+          <span>MARKEDSRETNING · 0–12 TIMER</span>
+          <strong id="compass-primary-direction">↗ BULLISH</strong>
+          <small>Retning er ikke en købsgodkendelse</small>
+        </div>
+      </section>
+
+      <div class="compass-weather" id="compass-bullbear" aria-label="Officiel Bull/Bear-evidensbalance">
+        <div class="compass-weather-title">
+          <span><strong>Bull / Bear</strong><small>1–3 dage</small></span>
+          <strong id="bullbear-bias">UTILGÆNGELIG</strong>
+        </div>
+        <div class="compass-weather-line">
+          <span class="compass-weather-side bear">BEAR <strong id="bullbear-bear">—</strong></span>
+          <div class="compass-weather-track" id="bullbear-track" aria-hidden="true">
+            <span class="compass-weather-fill bear" id="bullbear-bear-fill"></span>
+            <span class="compass-weather-fill bull" id="bullbear-bull-fill"></span>
+          </div>
+          <span class="compass-weather-side bull">BULL <strong id="bullbear-bull">—</strong></span>
+        </div>
+        <p>Evidensbalance · ikke sandsynlighed eller købssignal.</p>
+      </div>
+
+      <div class="compass-urgent" aria-label="Vigtige risiko- og salgssignaler">
+        <div><span>PULLBACK</span><strong id="compass-risk-inline">BUILDING</strong><small class="risk-stage-label" id="compass-risk-stage">Stadie afventer kilde</small><small id="compass-risk-window">ETA afventer kilde</small></div>
+        <div><span>SELL / TRIM</span><strong id="compass-sell-inline">UNAVAILABLE</strong></div>
+        <div><span>DISTRIBUTION</span><strong id="compass-distribution-inline">UNKNOWN</strong></div>
+      </div>
+
+      <div class="pullback-stage-ruler" id="pullback-stage-ruler" role="group" aria-label="Officielle pullback-risikoklasser; ikke sandsynlighed eller nedtælling">
+        <div class="pullback-stage-ruler-head">
+          <span>RISIKOSTADIER</span><small>Risikoklasse · ikke en 1–10 sandsynlighed</small>
+        </div>
+        <div class="pullback-stage-ruler-steps" aria-hidden="true">
+          <span class="pullback-stage-unit" data-risk-stage="NORMAL"><span class="risk-stage-mark"></span><small>Ro</small></span>
+          <span class="pullback-stage-unit" data-risk-stage="BUILDING"><span class="risk-stage-mark"></span><small>Opbygning</small></span>
+          <span class="pullback-stage-unit" data-risk-stage="ELEVATED"><span class="risk-stage-mark"></span><small>Forhøjet</small></span>
+          <span class="pullback-stage-unit" data-risk-stage="HIGH"><span class="risk-stage-mark"></span><small>Høj</small></span>
+          <span class="pullback-stage-unit" data-risk-stage="CONFIRMED"><span class="risk-stage-mark"></span><small>Bekræftet</small></span>
+        </div>
+      </div>
+
+      <section class="compass-table-block" aria-labelledby="compass-horizon-title">
+        <div class="compass-table-heading">
+          <h2 id="compass-horizon-title">Tidshorisonter</h2>
+          <span>STATUS · HANDLING · TID</span>
+        </div>
+        <div class="table-frame">
+          <table class="data-table" id="horizon-table"><thead><tr><th scope="col">TID</th><th scope="col">RETNING</th><th scope="col">HANDLING</th></tr></thead><tbody id="horizon-body"></tbody></table>
+        </div>
+      </section>
+
+      <section class="compass-table-block" aria-labelledby="compass-assets-title">
+        <div class="compass-table-heading">
+          <h2 id="compass-assets-title">Aktivklasser</h2>
+          <span>BTC → MEMES</span>
+        </div>
+        <div class="table-frame">
+          <table class="data-table asset-table"><thead><tr><th scope="col">AKTIV</th><th scope="col">STATUS</th><th scope="col">HANDLING</th></tr></thead><tbody id="asset-body"></tbody></table>
+        </div>
+      </section>
+
+      <section class="compass-disclosure-group" aria-label="Uddybende kompasinformation">
+        <p class="compass-disclosure-eyebrow">UDDYBNING & KILDER</p>
+        <details class="compass-disclosure">
+          <summary><span><strong>Min fortolkning</strong><small>1–3 dage · betingelser og længere horisonter</small></span><span class="compass-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="compass-disclosure-content">
+            <p id="interpretation-copy">Blandet og selektiv deltagelse. Bred rotation er endnu ikke bekræftet.</p>
+            <div id="bullbear-other-horizons" class="compass-weather-explainer"></div>
+            <div id="interpret-details" class="compass-source-explanation"></div>
+          </div>
+        </details>
+        <details class="compass-disclosure">
+          <summary><span><strong>Pullback, beskyttelse & re-entry</strong><small>Begrundelse, distribution og SELL-adskillelse</small></span><span class="compass-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="compass-disclosure-content">
+            <div class="compass-risk-heading"><span>OFFICIEL RISIKOTILSTAND</span><strong id="risk-large">BUILDING</strong></div>
+            <p id="risk-main-copy">Muligt retest. Dybde og tidspunkt er ikke bekræftet.</p>
+            <div class="risk-state-grid">
+              <div><span>DISTRIBUTION</span><strong id="distribution-label">UNKNOWN</strong></div>
+              <div><span>SELL / TRIM</span><strong id="sell-label">UNAVAILABLE</strong></div>
+              <div><span>RE-ENTRY</span><strong id="reentry-label">INACTIVE</strong></div>
+            </div>
+            <div class="pullback-investor-details" aria-label="Pullback scenarie og tidshorisonter">
+              <p class="pullback-details-intro">Hvad betyder advarslen for en investor?</p>
+              <div class="pullback-facts-grid" id="pullback-investor-facts" aria-live="polite"></div>
+              <p class="pullback-details-foot">Kvalitet af evidens er ikke sandsynlighed. Risikostadie giver ikke i sig selv et SELL-signal.</p>
+            </div>
+            <div id="risk-details" class="risk-detail-list"><p id="risk-evidence-quality" hidden></p></div>
+          </div>
+        </details>
+        <div class="compass-bottom-note">
+          <p>Kun officielle Kompas-signaler. Ingen beregnet BUY/SELL fra grafikken.</p>
+          <button type="button" class="plain-link" data-go="dokumentation">Se resultater og metode <span aria-hidden="true">↗</span></button>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="page-dokumentation" aria-label="Dokumentation og historiske scores" hidden>
+      <div class="secondary-heading"><span class="eyebrow"><span class="eyebrow-line"></span>THE RECEIPTS, NOT THE HYPE</span><h1>Resultater, der kan <em>efterprøves.</em></h1><p>Frosne prognoser. Faktiske markedsdata. Dokumenterede scores. Adskilte metoder. Ingen kunstig samlet præcision.</p></div>
+      <section class="edge-era" id="edge-era" aria-label="Nyt fremadrettet scoresystem fra 12. oktober 2026">
+        <div class="edge-head"><div><span class="edge-eyebrow">NEW ERA <span class="edge-year">/ FROM 12 OCT 2026</span></span><h2>Vi scorer nu hele<br><em>markedshistorien.</em></h2><p>Ikke kun hvor priserne lander. Også hvad vi siger om retning, rotation og pullbacks — frosset før udfaldet og evalueret, når virkeligheden kan måles.</p></div><span class="edge-new-stamp">PROSPECTIVE · V2</span></div>
+        <div class="edge-score-grid">
+          <article class="edge-score-card"><span class="edge-score-label">01 / PRICE RANGES</span><h3>Weekly <span>+ intradays</span></h3><div class="edge-score-value" id="edge-price-score">— <small>PENDING</small></div><p>BTC og ETH · ugentlig præcision + dag 1–2, 3–4 og 5–7. Den eksisterende 70/30-metode bevares.</p><span class="edge-subline">INGEN V42 SCORE FØR UGEN ER AFSLUTTET</span></article>
+          <article class="edge-score-card"><span class="edge-score-label">02 / DIRECTION & ROTATION</span><h3>Markedets <span>retning</span></h3><div class="edge-score-value" id="edge-rotation-score">— <small>PENDING</small></div><p>Frosne testbare udsagn om flow, ETH/BTC, deltagelse og kapitalrotation. 100 = korrekt · 0 = forkert.</p><span class="edge-subline">14 / 21 / 28 / 56 DAGES CHECKPOINTS</span></article>
+          <article class="edge-score-card edge-score-accent"><span class="edge-score-label">03 / PULLBACK EDGE</span><h3>Advarsel <span>før faldet</span></h3><div class="edge-score-value" id="edge-pullback-score">— <small>PENDING</small></div><p>Varsling eller ingen varsling, faktisk onset, forventet slutning, dybde og påvirkning af altcoins.</p><span class="edge-subline">MISSES OG FALSKE ALARMER TÆLLER OGSÅ</span></article>
+        </div>
+        <div class="edge-accountability"><span class="edge-accountability-dot"></span><strong>STATUS · METODE UNDER INDFØRELSE</strong><span id="edge-era-status">Ingen nye W42-prognoser eller resultater er endnu publiceret og uafhængigt forseglede. Data vises først, når de faktisk findes.</span></div>
+        <div class="edge-real-example"><div><span>GÅ TIL ET VIRKELIGT EKSEMPEL</span><strong>Se hvordan en frossen prognose møder virkeligheden.</strong><small>CN #27 · W40 · Historisk Price Range-resultat, ikke en ny v2-score</small></div><button type="button" id="edge-open-comparison">Se animeret sammenligning <span>↗</span></button></div>
+      </section>
+      <section class="cn-results-evidence" aria-label="Historisk score, uden duplikeret prisgraf">
+        <div class="cn-results-evidence-head"><span>HISTORISK RESULTAT · CN #27, W40 2026</span><p>Gennemsigtighed: oprindelige interval-scores, ikke procent af dage indenfor og ikke nye v2-scores.</p></div>
+        <div id="cn-range-official-scorecards" class="cn-range-scorecards" aria-label="Oprindelige scoreperioder"></div>
+        <button type="button" id="cn-path-week-open" class="cn-overview-more">Se den frosne og faktiske ugegraf i PATH ↗</button>
+        <p class="cn-results-footnote">Én graf har ét hjem i PATH. Resultater viser dokumenterede outcomes og metode; ingen historiske prognoser er omskrevet.</p>
+      </section>
+      <section class="edge-lifecycle">
+        <div class="section-heading compact-heading"><div><span class="section-index">01 / FROZEN → REALITY</span><h2>Udsagn, der skal stå deres prøve.</h2></div><span class="section-aside">WEEK 42 → NEXT 8 WEEKS</span></div>
+        <div class="edge-checkpoint-panel">
+          <div class="edge-checkpoint-head"><span>DEN FØRSTE NYE SERIE</span><strong>NEXT SERIES · ISSUE ID PENDING · 2026-W42</strong></div>
+          <div class="edge-checkpoints">
+            <div class="edge-checkpoint"><b>12–48T</b><strong>PULLBACK TIMING</strong><small>Afventer præcis frysning</small><i></i></div>
+            <div class="edge-checkpoint"><b>7D</b><strong>PRICE / FLOW</strong><small>Afventer udfald</small><i></i></div>
+            <div class="edge-checkpoint"><b>14D</b><strong>ROTATION CHECK</strong><small>Afventer udfald</small><i></i></div>
+            <div class="edge-checkpoint"><b>21D</b><strong>DIRECTION GATE</strong><small>Afventer udfald</small><i></i></div>
+            <div class="edge-checkpoint"><b>28D</b><strong>STRUCTURE</strong><small>Afventer udfald</small><i></i></div>
+            <div class="edge-checkpoint"><b>56D</b><strong>CYCLE THESIS</strong><small>Afventer udfald</small></div>
+          </div>
+          <p>Alle lange udsagn bliver hos deres oprindelige CN-udgave. En prognose fra W42 kan stadig være åben, når W43, W44 og W45 er publiceret.</p>
+        </div>
+      </section>
+      <section class="edge-warning-section">
+        <div class="section-heading compact-heading"><div><span class="section-index">02 / THE PULLBACK TAPE</span><h2>Varslede vi stormen <span>i tide?</span></h2></div><span class="section-aside">INCL. NO-WARNING CASES</span></div>
+        <div class="edge-warning-panel">
+          <div class="edge-warning-top"><div><span>PROSPEKTIV PULLBACK SCORE</span><h3>Én advarsel. <em>Et efterfølgende facit.</em></h3></div><span class="edge-tape-tag">V2 · NOT YET GRADED</span></div>
+          <div class="edge-warning-rail">
+            <div class="edge-warning-step"><span>01 · FREEZE</span><strong>Warning / None</strong><small id="edge-warning-freeze">Afventer W42-source</small></div>
+            <div class="edge-warning-step"><span>02 · ONSET</span><strong>Faktisk start</strong><small id="edge-warning-onset">Ikke observeret endnu</small></div>
+            <div class="edge-warning-step"><span>03 · DEPTH</span><strong>Størrelse</strong><small id="edge-warning-depth">Små / materielle / store fald</small></div>
+            <div class="edge-warning-step"><span>04 · RECOVERY</span><strong>Slut / re-entry</strong><small id="edge-warning-recovery">Ukendt før udfald</small></div>
+          </div>
+          <div class="edge-warning-bottom"><span><b>ALTCOINS:</b> Impact scores kræver en foruddefineret, verificerbar kurskurv; ingen score fremstilles, før den eksisterer.</span><span><b>FAIRNESS:</b> Ingen advarsel tæller også. Et overset fald eller en falsk alarm får 0.</span></div>
+        </div>
+      </section>
+      <details class="edge-legacy-fold">
+        <summary><span><small>HISTORICAL ARCHIVE · CN #1–27</small><strong>Tidligere Price Range- og X-scores</strong><em>Bevaret som reference. Ikke en del af den nye Edge-score.</em></span><span class="edge-legacy-toggle" aria-hidden="true">＋</span></summary>
+        <div class="edge-legacy-content">
+<div class="proof-summary-grid">
+        <article class="proof-number"><span>PRICE RANGE PRECISION / CN #27</span><div class="proof-num">82<span>,05</span><sup>%</sup></div><p>Seneste afsluttede offentlige uge · 2026-W40</p></article>
+        <article class="proof-measures"><span>DETALJER · PUBLIC SCORECARD</span><div class="proof-measures-row"><span>Bitcoin</span><strong>82,27 %</strong></div><div class="proof-measures-row"><span>Ethereum</span><strong>81,82 %</strong></div><div class="proof-measures-row"><span>Datadækning</span><strong>168 timer</strong></div><div class="proof-measures-row"><span>Market / Structure</span><strong>Ikke scoret</strong></div></article>
+      </div>
+
+      <div class="section-heading compact-heading"><div><span class="section-index">02 / VERIFIED METHOD, EXPLICIT ERA</span><h2>Historisk scorearkiv</h2></div><span class="section-aside">27 AFSLUTTEDE CN</span></div>
+      <div class="history-panel"><div class="history-controls"><div><span class="history-kicker">SENESTE MODERNE PRICE RANGE-SERIE</span><h3>Seneste tre afsluttede uger</h3></div><button class="plain-link" id="history-toggle" type="button" aria-expanded="false">Alle 27 udgaver <span>＋</span></button></div><div class="history-bars" id="history-bars"></div><p class="method-disclaimer">Scores fra forskellige metodiske perioder blandes ikke til ét gennemsnit. Ældre X-baserede opgørelser bevares med deres oprindelige proveniens.</p><div id="history-full" class="history-full" hidden></div></div>
+
+              </div>
+      </details>
+
+      <div class="section-heading compact-heading"><div><span class="section-index">03 / INDEPENDENT VERIFICATION</span><h2>Din AI skal kunne kontrollere os.</h2></div><span class="section-aside">PUBLIC · MACHINE READABLE</span></div>
+      <div class="verification-panel">
+        <div class="verification-main">
+          <span class="verify-overline">OPEN SOURCE PROOF INITIATIVE</span>
+          <h3>Stol ikke på tallet.<br><span>Verificér det selv.</span></h3>
+          <p>Original prognose → offentlig tidsstempling → afsluttet markedsperiode → reproducerbar score → efterprøvet revision.</p>
+          <div class="verification-status"><span class="status-pending-dot"></span><strong>LEGACY / FORELØBIG</strong><span>Uafhængig immutable-release-forsegling mangler endnu.</span></div>
+          <div class="verification-links"><a class="primary-action primary-action-blue" href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer">Åbn offentligt score-repo <span>↗</span></a><button type="button" class="outline-button" id="copy-verification-prompt">Kopiér AI-auditprompt <span>↗</span></button></div>
+          <p class="verify-caveat">Historisk GitHub-arkivering er ikke i sig selv kryptografisk bevis for en ex-ante prognose. Ingen historiske records er her markedsført som uafhængigt forseglede.</p>
+        </div>
+        <div class="verification-graphic" aria-hidden="true">
+          <div class="verification-node"><span>01</span><strong>FORECAST FREEZE</strong><small>Før udfaldet</small></div><div class="vline"></div>
+          <div class="verification-node"><span>02</span><strong>HASH + TIMESTAMP</strong><small>Uafhængigt bevis</small></div><div class="vline"></div>
+          <div class="verification-node"><span>03</span><strong>OUTCOME</strong><small>Observeret data</small></div><div class="vline"></div>
+          <div class="verification-node"><span>04</span><strong>REPRODUCE</strong><small>Åben metode</small></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="source-dialog" id="source-dialog" role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" hidden>
+    <div class="source-dialog-inner"><div class="source-head"><strong id="source-dialog-title">Datakilde og begrænsninger</strong><button type="button" id="close-source" aria-label="Luk">×</button></div><div id="source-detail"></div><a href="https://github.com/Donh91/CycleNavigator-scores" rel="noopener noreferrer" target="_blank">Åbn offentligt scorearkiv ↗</a></div>
+  </div>
+
+  <nav class="mobile-dock" aria-label="Mobilnavigation">
+    <button type="button" class="dock-link is-active" data-route="overblik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65"><circle cx="12" cy="12" r="8.6"/><path d="m10 14 5-5-2 5-3 0Z"/></svg><span>Overblik</span></button>
+    <button type="button" class="dock-link cn-dock-path" data-open-path aria-label="Åbn PATH ugegraf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65"><path d="M3 19h18M4 14l5-5 4 3 7-8"/><circle cx="4" cy="14" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="13" cy="12" r="1.5"/><circle cx="20" cy="4" r="1.5"/></svg><span>PATH</span></button>
+    <button type="button" class="dock-link" data-route="kompas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65"><path d="M3 12h4l3-6 4 12 3-6h4"/></svg><span>Kompas</span></button>
+    <button type="button" class="dock-link" data-route="dokumentation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65"><path d="M4 19V5m0 14h17M8 15l4-5 3 2 5-7"/></svg><span>Resultater</span></button>
+  </nav>
+  <footer class="footer"><div class="shell footer-inner"><div><span class="footer-mark">◎</span><strong>CYCLE NAVIGATOR</strong><small>DATA FIRST. ALWAYS.</small></div><p>Previewen bruger et kildefast offentligt snapshot. Det er ikke et selvstændigt markedssignal, automatisk handelssystem eller kryptografisk scorecertifikat.</p><button type="button" data-go="dokumentation">Læs metoden ↗</button></div></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./premium.js"></script>
+</body>
+</html>
