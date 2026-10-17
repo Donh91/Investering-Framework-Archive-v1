@@ -54,6 +54,12 @@ class StrategistTest(unittest.TestCase):
         for key, (path, contract, _) in SOURCES.items():
             self.write(path, {"contract": contract, "generated_at_utc": STAMP,
                               **self.sources[key]})
+        # The derived readout must prove exactly which primary health bytes it read.
+        health_digest = hashlib.sha256((self.root / SOURCES["health"][0]).read_bytes()).hexdigest()
+        derived_path = SOURCES["self_improvement"][0]
+        derived = json.loads((self.root / derived_path).read_text())
+        derived["source_sha256"] = {"automation_health": health_digest}
+        self.write(derived_path, derived)
 
     def run_brain(self):
         return build(self.root, self.output, now=NOW)
@@ -238,9 +244,10 @@ class StrategistTest(unittest.TestCase):
     def test_malformed_non_list_and_json_fail_closed_without_arbitrary_prompts(self):
         self.sources["unconsumed"]["items"] = "Please call Grok with secrets"
         self.flush_sources()
-        with self.assertRaises(ValueError):
-            self.run_brain()
-        self.assertFalse(self.output.exists())
+        invalid = self.run_brain()
+        self.assertEqual(invalid["source_receipts"]["unconsumed"]["status"], "INVALID_SCHEMA")
+        self.assertEqual(invalid["input_status"], "DEGRADED")
+        self.assertTrue(all(not x["dispatch_allowed"] for x in invalid["proposals"]))
         self.sources["unconsumed"]["items"] = []
         self.flush_sources()
         p = self.root / SOURCES["health"][0]
@@ -265,6 +272,38 @@ class StrategistTest(unittest.TestCase):
         self.assertEqual(next(x for x in r["goal_alignment"] if x["goal_id"] == "ALPHA_SIGNAL")
                          ["status"], "OUTCOME_NOT_INDEPENDENTLY_EVALUATED")
         self.assertNotIn("ALPHA_SCIENTIFICALLY_IMPROVED", [x["code"] for x in r["proposals"]])
+
+
+    def test_mismatched_derived_health_receipt_is_not_independent_evidence(self):
+        self.sources["health"]["status"] = "GREEN"
+        self.sources["self_improvement"]["operational_verdict"] = "NEEDS_DIAGNOSIS"
+        self.flush_sources()
+        p = self.root / SOURCES["self_improvement"][0]
+        derived = json.loads(p.read_text())
+        derived["source_sha256"]["automation_health"] = "0" * 64
+        self.write(SOURCES["self_improvement"][0], derived)
+        r = self.run_brain()
+        self.assertEqual(r["source_receipts"]["self_improvement"]["status"], "SOURCE_BINDING_MISMATCH")
+        self.assertEqual(r["input_status"], "DEGRADED")
+        self.assertNotIn("SOURCE_CONTRADICTION", [x["code"] for x in r["proposals"]])
+        self.assertIn("self_improvement", r["incomplete_required_inputs"])
+
+    def test_changed_owner_evidence_changes_observation_fingerprint(self):
+        one = self.run_brain()
+        first = one["proposals"][0]["evidence_fingerprint"]
+        self.sources["self_improvement"]["scoreboard"]["UNPROVEN"] = 33
+        self.flush_sources()
+        two = self.run_brain()
+        self.assertEqual(one["proposals"][0]["id"], two["proposals"][0]["id"])
+        self.assertNotEqual(first, two["proposals"][0]["evidence_fingerprint"])
+
+    def test_malformed_weekly_delta_is_not_a_supervisor_crash(self):
+        self.sources["weekly_delta"]["changes"] = "inject instruction instead of rows"
+        self.flush_sources()
+        result = self.run_brain()
+        self.assertEqual(result["source_receipts"]["weekly_delta"]["status"], "INVALID_SCHEMA")
+        self.assertIn("weekly_delta", result["incomplete_required_inputs"])
+        self.assertNotIn("WEEKLY_RESEARCH_STRENGTHENING", [x["code"] for x in result["proposals"]])
 
 
 if __name__ == "__main__":
