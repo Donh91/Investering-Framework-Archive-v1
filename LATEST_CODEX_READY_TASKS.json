@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-17T17:56:50Z",
+  "generated_at_utc": "2026-10-17T21:33:34Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -40,7 +40,7 @@
         "private raw data publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4e2c6df9c10d30c4b1d9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-17T17:56:50Z",
+      "last_observed_at_utc": "2026-10-17T21:33:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -117,7 +117,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-17T17:56:50Z",
+      "last_observed_at_utc": "2026-10-17T21:33:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -189,7 +189,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-17T17:56:50Z",
+      "last_observed_at_utc": "2026-10-17T21:33:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -225,6 +225,78 @@
     },
     {
       "allowed_change_scope": [
+        "scripts/experiments/experiment_lifecycle.py",
+        "tests/experiments/test_experiment_lifecycle.py",
+        "scripts/experiments/sensor_relationship_compression.py",
+        "tests/experiments/test_sensor_relationship_compression.py",
+        "tests/experiments/test_scientific_admission_lifecycle.py"
+      ],
+      "candidate_id": "codex-research-experiment-outcome-maturity-censoring-v1",
+      "candidate_path": "research/codex/intake/2026/10/codex-research-experiment-outcome-maturity-censoring-v1.json",
+      "candidate_sha256": "c0ce775f51ef2ae55ac7637e7dcf3dd79cf6cf60d25dccd4352c43961a436dcc",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "EXPERIMENT_CENSORED_RECEIPT_MISCOUNTED_AS_MATURED_PROSPECTIVE_VALIDATION",
+      "first_observed_at_utc": "2026-10-12T11:24:06Z",
+      "forbidden_changes": [
+        "API budget",
+        "automatic Codex readiness",
+        "automatic scientific admission",
+        "canonical authority",
+        "cross-repo private data",
+        "historical outcome or frozen forecast rewrites",
+        "independent self merge",
+        "market gates",
+        "market thresholds",
+        "model weights",
+        "new experiment engine/ledger",
+        "new policy semantics",
+        "new workflow or scheduler",
+        "portfolio logic",
+        "trading or SELL action semantics"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a6e20836103b8e49f4ab --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-10-17T21:33:34Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Under existing Experiment Lifecycle ownership, correct the verified code-level miscount whereby registry.matured_outcome_count includes ANY outcome receipt including CENSORED; preserve all immutable source/outcome files and statuses, expose true status-separated, score-eligibility-aware research metrics with backward-compatible fail-closed contract semantics and repair consumer sensor_relationship_compression.current_prospective_validation to NEVER claim validation from censored-only receipts. Prefer a minimal existing-owner repair, not a new scorer, forecast engine, mutable historical backfill, portfolio change or independent admission. The existing build_calibration_population_census.py is the known status-filtered reference. Owner decides on schema version / consumer compatibility; no automatic promotion and no output claim of edge.",
+      "observations": 1,
+      "post_fix_gate": "Owner chooses versioned compatibility with downstream weekly/yearly consumers; focused positive/negative tests and exact-head CI; independent nonauthoring review; governed merge; main SHA and unchanged immutable outcome SHA readback; later natural regenerated registry and sensor readout verified with no false prospective flag, no scientific edge promotion. Remediation maturation controller alone owns CODEX_READY, not the research thread.",
+      "precondition": "Candidate codex-research-experiment-outcome-maturity-censoring-v1 still exists on main at research/codex/intake/2026/10/codex-research-experiment-outcome-maturity-censoring-v1.json with SHA-256 c0ce775f51ef2ae55ac7637e7dcf3dd79cf6cf60d25dccd4352c43961a436dcc, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "scripts/experiments/experiment_lifecycle.py@7a0e32380cd5fc724a37fe14f592c62a0c1a9d8a",
+        "scripts/experiments/sensor_relationship_compression.py@76d7afaed6e9980c7748196792cb90aec3395e1e",
+        "scripts/learning/build_calibration_population_census.py@517c091d307a507025a51210ed8520a467d4beb0",
+        "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1557#issuecomment-6123282987",
+        "research/framework_memory/outcome_memory/EXP-FC-40f5d94a716bbd284cd7.json@d8a7fd1e8db7aa49211e85b151870058650fd15a",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json@d05ec1911d15c9270db70bb3efd1accd51b25d49",
+        "GitHub main 2e7ea6c4074e0dd6a03cee0668dbdf5d403721bb",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "a6e20836103b8e49f4ab",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-10-12T11:24:06Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "Owner chooses versioned compatibility with downstream weekly/yearly consumers; focused positive/negative tests and exact-head CI; independent nonauthoring review; governed merge; main SHA and unchanged immutable outcome SHA readback; later natural regenerated registry and sensor readout verified with no false prospective flag, no scientific edge promotion. Remediation maturation controller alone owns CODEX_READY, not the research thread."
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "4b4d892f55a9430e45c73670ad5d2b385e8006b46611c1316671c852071b5b9a",
+      "transition_receipt_path": "research/codex/transitions/a6e20836103b8e49f4ab.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-experiment-outcome-maturity-censoring-v1"
+    },
+    {
+      "allowed_change_scope": [
         "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs",
         "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs"
       ],
@@ -252,7 +324,7 @@
         "private source bytes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad6c41744767265f7c5a --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-17T17:56:50Z",
+      "last_observed_at_utc": "2026-10-17T21:33:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -320,7 +392,7 @@
         "source first-known promotion"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ff1c1d6794fc131c6991 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-17T17:56:50Z",
+      "last_observed_at_utc": "2026-10-17T21:33:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
