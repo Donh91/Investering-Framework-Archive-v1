@@ -306,5 +306,39 @@ class StrategistTest(unittest.TestCase):
         self.assertNotIn("WEEKLY_RESEARCH_STRENGTHENING", [x["code"] for x in result["proposals"]])
 
 
+    def test_material_compounding_revision_without_alpha_hype(self):
+        self.sources["weekly_delta"]["source_compounding_delta"] = {
+            "contract": "LEARNING_DELTA_v1",
+            "material_change": True,
+            "changed_families": [
+                {"semantic_identity": f"family-{i}", "new_evidence_fingerprint": f"new-{i}",
+                 "previous_evidence_fingerprint": "old"}
+                for i in range(5)
+            ],
+        }
+        self.flush_sources()
+        result = self.run_brain()
+        proposal = next(o for o in result["proposals"]
+                        if o["code"] == "MATERIAL_HYPOTHESIS_FAMILY_REVISION")
+        self.assertEqual(proposal["scientific_status"], "DESCRIPTIVE_RESEARCH_ONLY")
+        self.assertIn("never evidence of alpha", proposal["interpretation"])
+        self.assertFalse(proposal["automatic_market_change"])
+
+    def test_repeated_compounding_family_is_not_extra_independent_evidence(self):
+        self.sources["weekly_delta"]["source_compounding_delta"] = {
+            "contract": "LEARNING_DELTA_v1",
+            "material_change": True,
+            "changed_families": [
+                {"semantic_identity": "one", "new_evidence_fingerprint": "changed",
+                 "previous_evidence_fingerprint": "old"}
+                for i in range(40)
+            ],
+        }
+        self.flush_sources()
+        result = self.run_brain()
+        self.assertNotIn("MATERIAL_HYPOTHESIS_FAMILY_REVISION",
+                         [o["code"] for o in result["proposals"]])
+
+
 if __name__ == "__main__":
     unittest.main()
