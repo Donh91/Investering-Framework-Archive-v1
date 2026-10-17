@@ -63,7 +63,10 @@ def _read_receipt(root: Path, path: str, contract: str,
     receipt = {"path": path, "contract": contract, "status": "MISSING",
                "sha256": None, "source_generated_at_utc": None}
     try:
-        if not source.is_file() or source.is_symlink():
+        if (not source.is_file() or source.is_symlink()
+                or source.resolve() != source.absolute()
+                or root.resolve() not in source.resolve().parents):
+            receipt["status"] = "PATH_UNSAFE"
             return None, receipt
         raw = source.read_bytes()
         if len(raw) > 5_000_000:
@@ -119,7 +122,9 @@ def _valid_rows(data: dict, field: str) -> list[dict]:
 
 def _safe_write(root: Path, output: Path, result: dict) -> None:
     base, target = root.resolve(), output.resolve()
-    if target not in {(root / OUTPUT_PATH).resolve(), (root / DRYRUN_OUTPUT_PATH).resolve()}:
+    if (base not in target.parents or output.is_symlink()
+            or output.absolute() != target
+            or target not in {(root / OUTPUT_PATH).absolute(), (root / DRYRUN_OUTPUT_PATH).absolute()}):
         raise ValueError("output_not_allowlisted")
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_name("." + output.name + "." + str(os.getpid()) + ".tmp")
@@ -140,9 +145,11 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
         raise ValueError("naive_clock")
     now = now.astimezone(timezone.utc)
     root = root.resolve()
+    output_absolute = output.absolute()
     output = output.resolve()
-    # Validate output BEFORE reading sources or touching any data.
-    if output not in {(root / OUTPUT_PATH).resolve(), (root / DRYRUN_OUTPUT_PATH).resolve()}:
+    # Validate output and its entire symlink chain BEFORE touching any data.
+    if (root not in output.parents or output != output_absolute
+            or output not in {(root / OUTPUT_PATH).absolute(), (root / DRYRUN_OUTPUT_PATH).absolute()}):
         raise ValueError("invalid_output_path")
     intent, intent_receipt = _read_receipt(root, INTENT_PATH, "FRAMEWORK_STRATEGIC_INTENT_v1",
                                            now, 24 * 365 * 3)
