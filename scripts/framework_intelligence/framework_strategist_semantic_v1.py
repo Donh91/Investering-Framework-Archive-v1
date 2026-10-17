@@ -245,10 +245,37 @@ def check_output(root: Path, runtime: Path, *, run_id: str) -> dict[str, Any]:
     if (not isinstance(fingerprint, str) or not HEX.fullmatch(fingerprint) or
             plan.get("reservation_path") != f"{RESERVATIONS}/{fingerprint}.json"):
         raise ValueError("reservation_path_not_allowlisted")
-    reserved = load(root / plan["reservation_path"])
-    if reserved.get("contract") != "FRAMEWORK_STRATEGIST_SEMANTIC_RESERVATION_v1" or (
+    # GitHub Contents API creates the immutable marker on REMOTE main.
+    # The runner checkout stays on its original SHA. Verify the actual PUT
+    # response's exact Git blob SHA; never expect that file in local checkout.
+    submitted = load(runtime / "reservation_submitted.json")
+    remote = load(runtime / "reservation_remote_response.json")
+    if submitted.get("path") != plan["reservation_path"]:
+        raise ValueError("submitted_reservation_path_mismatch")
+    request = submitted.get("request")
+    if not isinstance(request, dict) or request.get("branch") != "main":
+        raise ValueError("reservation_request_untrusted")
+    try:
+        bytes_reserved = base64.b64decode(request["content"], validate=True)
+        reserved = json.loads(bytes_reserved)
+    except (KeyError, ValueError, TypeError):
+        raise ValueError("unreadable_reservation_payload")
+    git_blob = hashlib.sha1(
+        b"blob " + str(len(bytes_reserved)).encode() + b"\\0" + bytes_reserved
+    ).hexdigest()
+    content = remote.get("content")
+    commit = remote.get("commit")
+    if (not isinstance(content, dict) or not isinstance(commit, dict) or
+            content.get("path") != plan["reservation_path"] or
+            content.get("sha") != git_blob or
+            not isinstance(commit.get("sha"), str) or
+            not HEX.fullmatch(commit["sha"].lower() + "0" * 24 if len(commit["sha"]) == 40 else "")):
+        raise ValueError("reservation_remote_sha_not_verified")
+    if (reserved.get("contract") != "FRAMEWORK_STRATEGIST_SEMANTIC_RESERVATION_v1" or
             reserved.get("material_fingerprint") != plan["material_fingerprint"] or
-            reserved.get("github_run_id") != run_id):
+            reserved.get("github_run_id") != run_id or
+            reserved.get("source_strategist_sha256") != plan["source_strategist_sha256"] or
+            reserved.get("automatic_retry_allowed") is not False):
         raise ValueError("unverifiable_prior_reservation")
     task = load(root / "research/api_agent/API_TASK_REGISTRY_v1.json")
     config = task.get("tasks", {}).get(TASK)
