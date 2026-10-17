@@ -36,6 +36,8 @@ for (const [src,target] of [
   ['official-pullback-stage.mjs','src/official-pullback-stage.mjs'],
   ['official-pullback-investor-view.mjs','src/official-pullback-investor-view.mjs'],
   ['official-path.mjs','src/official-path.mjs'],
+  ['official-feed-parity.mjs','src/official-feed-parity.mjs'],
+  ['current-public-panel.mjs','src/current-public-panel.mjs'],
   ['seed.json','public/seed.json'],
   ['CN_LOGO.svg','public/CN_LOGO.svg']
 ]) cpSync(resolve(base,src),join(root,target));
@@ -124,10 +126,11 @@ try {
     entries.sort((a,b)=>a.path.localeCompare(b.path));
     const sources=['premium-index.html','premium.js','premium.css','premium-i18n.js',
       'seed.json','CN_LOGO.svg','official-bullbear.mjs','official-pullback-eta.mjs',
-      'official-pullback-stage.mjs','official-pullback-investor-view.mjs','official-path.mjs'];
+      'official-pullback-stage.mjs','official-pullback-investor-view.mjs','official-path.mjs',
+      'official-feed-parity.mjs','current-public-panel.mjs'];
     const manifest={
       contract:'CN_VNEXT_GITHUB_ARTIFACT_PREVIEW_v1',
-      authority:'ISOLATED_ARCHIVED_SOURCE_ONLY_NOT_PRODUCTION',
+      authority:'ISOLATED_ARCHIVED_SEED_WITH_OPTIONAL_PUBLIC_CURRENT_READBACK_NOT_PRODUCTION',
       production_pages_unchanged:true,
       deployed:false,
       offline_single_file:true,
@@ -135,7 +138,7 @@ try {
       checkout_sha:process.env.GITHUB_SHA||null,
       source_files:sources.map(name=>({path:name,sha256:sha256(readFileSync(resolve(base,name)))})),
       output_files:entries,
-      note:'Includes single-file CYCLE_NAVIGATOR_OFFLINE_PREVIEW.html with original archive source and code embedded. Multi-file index.html requires HTTP. Device/browser acceptance is separate. No Pages or AppDeploy deployment is claimed.'
+      note:'Includes original W40/W41 archive seed plus an independent optional canonical public current-readback panel which fails closed without browser network access. Single-file portable HTML embeds archived seed/JS/CSS/logo. Multi-file index.html requires HTTP. No Pages/AppDeploy deployment or native Safari acceptance is claimed.'
     };
     writeFileSync(join(artifactDir,'PREVIEW_MANIFEST.json'),JSON.stringify(manifest,null,2)+'\n');
     console.log('PASS: portable GitHub preview artifact '+entries.length+' bundled files with SHA-256 manifest');
