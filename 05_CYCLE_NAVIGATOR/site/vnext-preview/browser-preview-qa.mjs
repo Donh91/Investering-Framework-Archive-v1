@@ -280,39 +280,37 @@ try{
       assert.ok(bytes.length>12000,'Blank tablet screenshot');
     }
   }
-  // An editorial information hierarchy is not the same as a decorative
-  // market gauge: the source-owned action and direction must be first and
-  // unobscured in the FIRST viewport on both phone and desktop. The removed
-  // gauge must not reappear as duplicated signals.
+  // Current public source takes the first viewport; historical W41 HOLD
+  // is visible only below the explicit HISTORISK DESIGNARKIV separator.
   for(const [width,height] of [[390,844],[430,932],[1024,900],[1280,900],[1440,900]]){
     await call('Emulation.setDeviceMetricsOverride',{
       width,height,mobile:width<800,deviceScaleFactor:1
     },sessionId);
-    await call('Page.navigate',{
-      url:pathToFileURL(source).href+'#overblik'
-    },sessionId);
+    await call('Page.navigate',{url:pathToFileURL(source).href+'#overblik'},sessionId);
     let ready=false;
     for(let i=0;i<125;i++){
       ready=await evaluate("Boolean(document.querySelector('#hero-action-summary')?.textContent.includes('HOLD')&&document.querySelector('#hero-now')?.textContent.includes('BULLISH'))");
       if(ready)break;
       await wait(100);
     }
-    assert.ok(ready,'Official Compass action/direction did not load at '+width);
-    const proof=await evaluate("(()=>{const dir=document.querySelector('#hero-now');const act=document.querySelector('#hero-action-summary');const dr=dir.getBoundingClientRect(),ar=act.getBoundingClientRect();return {inner:innerWidth,overflow:document.documentElement.scrollWidth,dirTop:Math.round(dr.top),dirBottom:Math.round(dr.bottom),actionTop:Math.round(ar.top),actionBottom:Math.round(ar.bottom),action:act.textContent.trim(),direction:dir.textContent.trim(),archive:document.querySelector('.preview-ribbon')?.textContent?.includes('KILDEFAST SNAPSHOT'),hasGauge:!!document.querySelector('#cn-instrument-svg'),sourceInfo:!!document.querySelector('#source-button'),firstHorizon:document.querySelector('[data-overview-horizon]')?.textContent?.trim()}})()");
+    assert.ok(ready,'Historical archive did not load at '+width);
+    const proof=await evaluate("(()=>{const dir=document.querySelector('#cn-current-direction');const act=document.querySelector('#cn-current-action');const status=document.querySelector('#cn-current-status');const panel=document.querySelector('#cn-current-public-panel');const dr=dir.getBoundingClientRect(),ar=act.getBoundingClientRect();return {inner:innerWidth,overflow:document.documentElement.scrollWidth,dirTop:Math.round(dr.top),dirBottom:Math.round(dr.bottom),actionTop:Math.round(ar.top),actionBottom:Math.round(ar.bottom),action:act.textContent.trim(),direction:dir.textContent.trim(),state:panel.dataset.state,status:status.textContent.trim(),archive:document.querySelector('.cn-archive-boundary')?.textContent?.includes('HISTORISK DESIGNARKIV'),hasGauge:!!document.querySelector('#cn-instrument-svg'),sourceInfo:!!document.querySelector('#source-button')}})()");
+    const failClosed = proof.state==='UNAVAILABLE' && proof.action==='UNAVAILABLE' && proof.direction==='UNKNOWN';
+    const sourceVerified = proof.state==='CURRENT_VERIFIED' &&
+      ['HOLD_WAIT','HOLD','HARD_WAIT','WAIT','BUY','BUY_DIP','PREPARE'].includes(proof.action) &&
+      ['UP','DOWN','MIXED','SIDEWAYS','NEUTRAL','BULLISH','BEARISH','UNKNOWN'].includes(proof.direction);
     assert.ok(proof.inner===width&&proof.overflow<=width+1&&
       proof.dirTop>=0&&proof.dirBottom<height&&proof.actionTop>=0&&
       proof.actionBottom<height&&proof.archive&&!proof.hasGauge&&proof.sourceInfo&&
-      proof.action.includes('HOLD')&&proof.direction.includes('BULLISH'),
-      'Decision-first editorial hero fail at '+width+'px '+JSON.stringify(proof));
-    console.log('PASS editorial source-owned first-screen '+width+'px '+JSON.stringify(proof));
+      (failClosed||sourceVerified),
+      'Current source first-screen fail at '+width+'px '+JSON.stringify(proof));
+    console.log('PASS first-screen current-source-vs-archive '+width+'px '+JSON.stringify(proof));
     if(width===1440 || width===390){
       await wait(230);
-      const shot=await call('Page.captureScreenshot',{
-        format:'png',captureBeyondViewport:false,fromSurface:true
-      },sessionId);
+      const shot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true},sessionId);
       const bytes=Buffer.from(shot.data,'base64');
       writeFileSync(join(out,width===1440?'OVERVIEW_DESKTOP_1440.png':'OVERVIEW_MOBILE_390.png'),bytes);
-      assert.ok(bytes.length>16000,'Blank editorial Overview screenshot at '+width);
+      assert.ok(bytes.length>16000,'Blank first-viewport screenshot at '+width);
     }
   }
   // Native keyboard semantics: no fake screenshot-only accessibility pass.
