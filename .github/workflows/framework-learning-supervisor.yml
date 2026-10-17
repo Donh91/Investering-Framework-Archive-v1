@@ -908,10 +908,16 @@ jobs:
           )"
           # Atomic first-create in GitHub main; rejected duplicate means NO payment.
           if ! gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$rel" \
-              --input "$RUNNER_TEMP/strat-reserve-request.json" >/dev/null; then
+              --input "$RUNNER_TEMP/strat-reserve-request.json" > "$RUNNER_TEMP/strat-put-response.json"; then
             echo "Reservation was not durably created: API remains blocked."
             exit 0
           fi
+          # GitHub updated REMOTE main, not the runner checkout. Preserve the
+          # exact GitHub response and submitted bytes for post-call blob proof.
+          cp "$RUNNER_TEMP/strat-reserve-row.json" \
+            runtime/framework-learning-supervisor/strategist-semantic/reservation_submitted.json
+          cp "$RUNNER_TEMP/strat-put-response.json" \
+            runtime/framework-learning-supervisor/strategist-semantic/reservation_remote_response.json
           outroot="research/api_agent/outputs/framework_strategist/run-$GITHUB_RUN_ID"
           if ! python scripts/api_agent/api_gateway.py \
               --task FRAMEWORK_STRATEGIST_SEMANTIC \
