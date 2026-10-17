@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -57,6 +58,13 @@ def _reject_nonfinite(value: str) -> None:
     raise ValueError("json_nonfinite_constant:" + value)
 
 
+def _finite_float(value: str) -> float:
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError("json_numeric_overflow")
+    return number
+
+
 def _digest(obj: Any) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, ensure_ascii=True,
                                      separators=(",", ":")).encode()).hexdigest()
@@ -80,7 +88,7 @@ def _read_receipt(root: Path, path: str, contract: str,
             receipt["status"] = "OVERSIZED"
             return None, receipt
         receipt["sha256"] = hashlib.sha256(raw).hexdigest()
-        data = json.loads(raw, parse_constant=_reject_nonfinite)
+        data = json.loads(raw, parse_constant=_reject_nonfinite, parse_float=_finite_float)
         if not isinstance(data, dict) or data.get("contract") != contract:
             receipt["status"] = "WRONG_CONTRACT"
             return None, receipt
