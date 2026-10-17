@@ -251,5 +251,32 @@ class AutomationOrchestrationV1Test(unittest.TestCase):
                     assert_negative_guard()
 
 
+    def test_current_situation_room_intake_lineage_if_present(self):
+        # Read only, no external APIs or writes. Protect the live dedup link
+        # from becoming a syntactically plausible but cryptographically invalid
+        # shortcut to duplicate paid diagnoses on the real producer dataset.
+        import json
+        root = Path(".")
+        path = root / "research/remediation/LATEST_REMEDIATION_QUEUE.json"
+        if not path.is_file():
+            self.skipTest("No canonical remediation queue fixture available")
+        queue = json.loads(path.read_text())
+        rows = queue.get("items", [])
+        cid = "codex-situation-room-daily-static-root-cause-v1"
+        linked = [row for row in rows if
+                  isinstance(row, dict) and row.get("candidate_id") == cid
+                  and row.get("workflow") == "research-intake/" + cid
+                  and row.get("state") in mod.ACTIVE_REMEDIATION_STATES]
+        if not linked:
+            self.skipTest("No active matching intake row in current public queue")
+        for row in linked:
+            self.assertEqual(
+                mod.verified_intake_target(root, row),
+                ".github/workflows/situation-room-daily-static.yml",
+                "Active Situation Room post-fix remediation must keep a verified "
+                "exact target to avoid unnecessary repeated Luna/Sol calls",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
