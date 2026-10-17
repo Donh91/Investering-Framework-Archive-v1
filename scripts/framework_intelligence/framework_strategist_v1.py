@@ -52,6 +52,11 @@ def _stamp(value: Any) -> datetime:
     return date.astimezone(timezone.utc)
 
 
+def _reject_nonfinite(value: str) -> None:
+    """Python's JSON decoder otherwise accepts NaN and +/-Infinity."""
+    raise ValueError("json_nonfinite_constant:" + value)
+
+
 def _digest(obj: Any) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, ensure_ascii=True,
                                      separators=(",", ":")).encode()).hexdigest()
@@ -75,7 +80,7 @@ def _read_receipt(root: Path, path: str, contract: str,
             receipt["status"] = "OVERSIZED"
             return None, receipt
         receipt["sha256"] = hashlib.sha256(raw).hexdigest()
-        data = json.loads(raw)
+        data = json.loads(raw, parse_constant=_reject_nonfinite)
         if not isinstance(data, dict) or data.get("contract") != contract:
             receipt["status"] = "WRONG_CONTRACT"
             return None, receipt
@@ -190,9 +195,7 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
             "NEEDS_DIAGNOSIS", "ADVISORY_DEGRADED", "NO_RED_HEALTH_INCIDENTS", "INSUFFICIENT_EVIDENCE"}:
         docs["self_improvement"] = None
         receipts["self_improvement"]["status"] = "INVALID_SCHEMA"
-    incomplete = sorted(n for n in REQUIRED if docs[n] is None)
     observations: list[dict] = []
-    verified_names = {n for n, doc in docs.items() if doc is not None}
 
     # False-green and integrity: only authority-bound, not self-classified AI prose.
     health = docs["health"]
@@ -318,17 +321,8 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
                 "Ask source owners to verify whether these existing high-severity weekly blockers remain open.",
                 context=f"{len(serious)} historical weekly findings; may already be resolved since the source timestamp."))
 
-    # Missing sources are never replaced with legacy or imagination.
-    if incomplete:
-        observations.append(_observation(
-            "STRATEGIC_SOURCE_GAP", "HIGH", "RELIABILITY", "Framework Learning Supervisor",
-            [f"missing:{name}" for name in incomplete],
-            "Restore fresh, contract-correct owner receipts before making strategic claims.",
-            context="Required strategic inputs unavailable; absence is UNKNOWN, not health."))
-
-    # This is a proposal-only lens; no fabricated Alpha Lab/Task2/Compass outcome progress.
-    # A source mismatch is an explicit missing required input. In particular,
-    # do not use a second report about the same health bytes as independent truth.
+    # A SHA binding mismatch can occur AFTER initial schema validation.
+    # Classify missing inputs once, after the source-binding firewall.
     incomplete = sorted(n for n in REQUIRED if docs[n] is None)
     if incomplete and not any(x["code"] == "STRATEGIC_SOURCE_GAP" for x in observations):
         observations.append(_observation(
@@ -348,7 +342,16 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
         ])[:24]
         row["grok_bridge_state"] = ("CANDIDATE_NOT_DISPATCHED" if
                                     row["routing"] == "GROK_REVIEW_CANDIDATE" else "NOT_REQUESTED")
-    evidence_status = "DEGRADED" if incomplete or any(r["status"] != "CURRENT" for r in receipts.values()) else "CURRENT"
+    required_receipt_names = REQUIRED | {"strategic_intent"}
+    required_noncurrent = any(receipts[name]["status"] != "CURRENT"
+                              for name in required_receipt_names)
+    optional_warnings = [
+        {"name": name, "status": receipts[name]["status"]}
+        for name in sorted(set(SOURCES) - REQUIRED)
+        if receipts[name]["status"] != "CURRENT"
+    ]
+    evidence_status = "DEGRADED" if incomplete or required_noncurrent else "CURRENT"
+    verified_names = {n for n, doc in docs.items() if doc is not None}
     result = {
         "contract": CONTRACT,
         "generated_at_utc": now.isoformat().replace("+00:00", "Z"),
@@ -361,6 +364,7 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
         "intent_sha256": intent_receipt["sha256"],
         "source_receipts": receipts,
         "input_status": evidence_status,
+        "optional_source_warnings": optional_warnings,
         "incomplete_required_inputs": incomplete,
         "covered_source_count": len(verified_names),
         "goal_alignment": [
