@@ -1,5 +1,15 @@
 # Cycle Navigator vNext - Interactive design preview (2026-10-11)
 
+## 17 October 2026 — current/public readback integration (supersedes source-status descriptions below)
+
+**State: ISOLATED_PREVIEW_WITH_OPTIONAL_CURRENT_PUBLIC_READBACK / NOT A PRODUCTION RELEASE.** The first Overblik viewport now reads only the existing public `site/build-public.mjs` output contracts at `https://donh91.github.io/Investering-Framework-Archive-v1/data/latest.json` and `compass.json`, via `current-public-panel.mjs` -> `official-feed-parity.mjs`. The two HTTP files are source-joined and must pass the current week, correct issue number, delivery timestamp, original verified Official owner expiry and Compass identity. Current action, 12h direction, risk and PATH gate are either sourced from this authenticated readback or shown as `UNAVAILABLE/UNKNOWN`; no synthetic market prediction, score, ETA or SELL permission. The UI rechecks the expiry of its cached readback every minute **without extra HTTP polling**.
+
+**The existing `seed.json` stays a frozen W41/CN28 plus W40/CN27 historical archive**, with its source-owned BTC/ETH actual-versus-frozen PATH and all 27 historical records. It is visually separated by a HISTORISK DESIGNARKIV barrier; it is never the fallback for a failed current feed. The Vite multi-file preview and portable single-file demo contain the same client readback code. Portable `file://` and restricted CI browsers may block cross-origin HTTP; the **verified expected state there is `UNAVAILABLE`**, not proof the public website is live. Normal browser on the canonical host, cross-origin access, native Safari, qualified review, production Pages build/deploy and rollback remain unverified requirements.
+
+**Evidence:** existing `check-premium.mjs`/ `test-official-feed-parity.mjs` synthetic and canonical local `build-public.mjs` readback; existing `verify-vite-bundle.mjs` includes the two new source consumers in its immutable preview artifact manifest; existing Chromium `browser-preview-qa.mjs` verifies 390/430 current unavailable-versus-archived label separation, 320–1440 no overflow, but is **not native Safari**. Check current exact PR #1576 SHA and CI before citing any pass. No Work, AppDeploy, extra workflow or production main change.
+
+---
+
 ## Current authority / delivery · superseding 2026-10-15 update
 
 **Current preview delivery:** GitHub Actions artifacts, built on the existing Draft PR [#1576](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1576), not AppDeploy. The current check's `cn-vnext-source-preview-<run_id>` artifact contains `CYCLE_NAVIGATOR_OFFLINE_PREVIEW.html` (single-file archived interactive demo, verified offline in Chromium), ordinary Vite files, and a SHA-256 `PREVIEW_MANIFEST.json`. `cn-vnext-browser-qa-<run_id>` contains real rendered mobile/tablet/desktop screenshots. Find the latest successful `static-preview` in the PR's Checks tab and download its artifacts; they expire after seven days and can be rebuilt from the exact branch source.
