@@ -17,7 +17,7 @@ const PREVIEW_UNKNOWN = Object.freeze({
 });
 
 const text = (v) => typeof v === 'string' && v.trim()
-  ? v.trim().replace(/\\s+/g,' ').slice(0,180) : null;
+  ? v.trim().replace(/\s+/g,' ').slice(0,180) : null;
 
 export function summarizeCurrentPublic(latest, compass, { nowUtc = new Date().toISOString() } = {}) {
   const view = inspectOfficialPublicFeeds(latest, compass, { nowUtc });
