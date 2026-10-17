@@ -100,6 +100,9 @@ def _health_input_issues(health: dict[str, Any], workflows: list[dict[str, Any]]
             issues.append("HEALTH_CENSUS_COUNT_MISMATCH")
             break
     coverage = with_live / len(workflows) if workflows else 0.0
+    prior_hashes = previous.get("source_sha256")
+    if prior_hashes is not None and not isinstance(prior_hashes, dict):
+        issues.append("PRIOR_SOURCE_BINDING_UNREADABLE")
     previous_coverage = previous.get("health_live_coverage")
     if (type(previous_coverage) in (int, float) and
             previous_coverage - coverage >= 0.5):
