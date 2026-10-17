@@ -169,6 +169,12 @@ def create_plan(root: Path, runtime: Path, *, now: datetime,
                 "code":x["code"], "severity":x["severity"],
                 "question":str(x.get("question") or "")[:400],
                 "evidence_fingerprint":x["evidence_fingerprint"]} for x in proposals]
+    intent = load(root / INTENT_PATH)
+    mission = [{"goal_id":str(g["id"])[:80],
+                "purpose":str(g.get("title") or "")[:140],
+                "desired_effect":str(g.get("desired_effect") or "")[:240],
+                "evidence_requirement":str(g.get("evidence_requirement") or "")[:240]}
+               for g in intent["goals"]]
     context = {
         "contract":"FRAMEWORK_STRATEGIST_SEMANTIC_CONTEXT_v1",
         "material_fingerprint":fp,
@@ -176,6 +182,8 @@ def create_plan(root: Path, runtime: Path, *, now: datetime,
         "owner_intent_sha256":packet["intent_sha256"],
         "source_integrity":"REQUIRED_CURRENT_SHA_MATCHED",
         "domain_context":"All investment alpha/cycle/outcome improvements UNKNOWN pending independent proof",
+        "mission_goals":mission,
+        "capital_protection_priority":True,
         "longitudinal_claim":packet.get("longitudinal_claim"),
         "observations":summary, "authority":"ADVISORY_NO_AUTOMATION",
         "no_private_data":True, "no_external_evidence_claimed":True,
