@@ -121,4 +121,29 @@ for(const key of ['CURRENT OFFICIAL COMPASS','LAST VERIFIED COMPASS · NOT CURRE
 assert.ok(lang.phrases['Historical action only. This is NOT a current recommendation. Last issued']);
 assert.match(builder,/\/\(\?:Z\|\[\+-\]/,'Timestamp freshness must use explicit zone');
 
+
+// P1-A negative control: missing Official horizon posture must NEVER become
+// a generated WAIT/AFVENT recommendation in LAST_VERIFIED or UNAVAILABLE.
+const actStart=premium.indexOf('function actionFromLane(');
+const actEnd=premium.indexOf('\nfunction capSummary(',actStart);
+assert.ok(actStart>0&&actEnd>actStart);
+const actCtx={};vm.createContext(actCtx);
+vm.runInContext(premium.slice(actStart,actEnd)+';globalThis.fromLane=actionFromLane;',actCtx);
+assert.equal(actCtx.fromLane(undefined),'UNAVAILABLE');
+assert.equal(actCtx.fromLane({}),'UNAVAILABLE');
+assert.equal(actCtx.fromLane({action_posture:null}),'UNAVAILABLE');
+assert.equal(actCtx.fromLane({action_posture:'HOLD'}),'HOLD');
+assert.equal(actCtx.fromLane({action_posture:'WAIT'}),'WAIT');
+assert.equal(actCtx.fromLane({action_posture:'PREPARE'}),'PREPARE');
+// The actual 3 cards receive empty lanes for non-current officialView.
+assert.match(premium,/HORIZONS\.map\(\(h\) => horizonCard\(snapshot, officialView, scale, h\)\)/);
+assert.match(premium,/premium-horizon-meta.*actionFromLane\(lane\)/);
+// P2 user-facing copy must distinguish expired evidence from missing evidence.
+assert.match(premium,/lastVerified \? 'Previously verified Compass · not current\.'/);
+for(const txt of [
+  'See the source-verified Official Compass horizons below.',
+  'Previously verified Compass · not current.',
+  'Official Compass unavailable · no current reading.'
+])assert.ok(lang.exact[txt]?.length>5,'Missing Danish translation: '+txt);
+
 console.log('OFFICIAL_COMPASS_FRESHNESS_3STATE_PASS');
