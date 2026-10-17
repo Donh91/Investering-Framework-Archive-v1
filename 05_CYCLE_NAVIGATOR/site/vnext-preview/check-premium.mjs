@@ -4,6 +4,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
 import assert from 'node:assert/strict';
+import { summarizeCurrentPublic, loadCanonicalPublicFeeds, CANONICAL_PUBLIC_DATA_ROOT } from './current-public-panel.mjs';
 const dir = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(resolve(dir, 'premium-index.html'), 'utf8');
 const css = readFileSync(resolve(dir, 'premium.css'), 'utf8');
@@ -477,6 +478,78 @@ for(const lang of ['da','en']){
   assert.ok(replayEvents.some(x=>x.includes(lang==='da'?'Faktisk uge':'Observed week')),
     'Replay completion translated safely for '+lang);
 }
+
+// P0: the first-viewport CURRENT panel must never be populated from the old
+// W40/W41 preview archive. These are typed public-build fixtures, not markets.
+for (const id of ['cn-current-public-panel','cn-current-status','cn-current-action',
+ 'cn-current-direction','cn-current-risk','cn-current-phase','cn-current-gate',
+ 'cn-current-provenance','cn-current-delivery']) {
+  assert.ok(ids.includes(id), 'Missing first viewport public source readback: '+id);
+}
+assert.match(html, /HISTORISK DESIGNARKIV · CN #28 \/ W41/);
+assert.match(js, /import \{ initializeCurrentPublicPanel, paintCurrentPublicPanel \} from '\.\/current-public-panel\.mjs'/);
+assert.match(js, /void initializeCurrentPublicPanel\(currentLanguage\(\)\)/);
+assert.match(js, /paintCurrentPublicPanel\(button\.dataset\.lang\)/);
+assert.equal(CANONICAL_PUBLIC_DATA_ROOT,'https://donh91.github.io/Investering-Framework-Archive-v1/data/');
+const fixtureNow='2026-10-17T12:00:00Z';
+const publicLatest={
+ schema:'CN_PUBLIC_SNAPSHOT_V2', generated_at:'2026-10-17T11:55:00Z',
+ pointer:{iso_year:2026,iso_week:42,issue_number:30,status:'DEGRADED'},
+ package:{issue_number:30,status:'DEGRADED',forecast_freeze:{}},
+ public_series:{contract:'CN_PUBLIC_SERIES_INDEX_v1',
+   current_public_projection:{public_issue_number:29,forecast_week:'2026-W42'}}
+};
+const publicCompass={
+ contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',
+ compass_id:'CMP-TEST-17OCT',issued_at_utc:'2026-10-17T11:50:00Z',
+ weekly_context:{status:'ALIGNED',forecast_week:'2026-W42',public_issue_number:29},
+ full_stack:{official_freshness:{
+   contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',
+   status:'VERIFIED_OWNER_POLICY',source_asof_utc:'2026-10-17T11:30:00Z',
+   valid_until_utc:'2026-10-17T13:00:00Z',
+   semantics:'SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA'}},
+ action_now:'HOLD_WAIT',horizons:{NEXT_12H:{expected_direction:'UP'}}
+};
+const summarize=(l=publicLatest,c=publicCompass,nowUtc=fixtureNow)=>
+ summarizeCurrentPublic(l,c,{nowUtc});
+const accepted=summarize();
+assert.equal(accepted.status,'CURRENT_VERIFIED');
+assert.equal(accepted.action,'HOLD_WAIT');
+assert.equal(accepted.direction,'UP');
+assert.equal(accepted.forecast_week,'2026-W42');
+assert.equal(accepted.issue,29);
+assert.equal(accepted.phase,'UNKNOWN','No inferred live PATH checkpoint');
+const cloned=(lMutate,cMutate)=>{const l=structuredClone(publicLatest);
+ const c=structuredClone(publicCompass);lMutate?.(l);cMutate?.(c);return summarize(l,c);};
+for(const out of [
+ cloned(null,c=>{c.weekly_context.forecast_week='2026-W41';}),
+ cloned(null,c=>{c.full_stack.official_freshness.valid_until_utc='2026-10-17T11:59:00Z';}),
+ cloned(null,c=>{c.full_stack.official_freshness=null;}),
+ cloned(l=>{l.generated_at='2026-10-15T11:55:00Z';}),
+ cloned(null,c=>{c.horizons.NEXT_12H.expected_direction='UP';c.action_now='SELL';}),
+ cloned(l=>{l.public_series.current_public_projection.forecast_week='2026-W41';}),
+ summarize(publicLatest,publicCompass,'2026-10-18T12:00:00Z')
+]) {
+ assert.equal(out.status,'UNAVAILABLE','Invalid public owner source cannot be marked current');
+ assert.equal(out.action,'UNAVAILABLE','No unverified action');
+ assert.equal(out.direction,'UNKNOWN','No leaked historical/expired 12h direction');
+ assert.equal(out.risk,'UNKNOWN','No leaked risk from expired source');
+ assert.equal(out.gate,'UNKNOWN','No invented next gate');
+}
+const observedUrls=[];
+const joined=await loadCanonicalPublicFeeds(async(url,options)=>{
+ observedUrls.push(url);
+ assert.equal(options.cache,'no-store');
+ assert.equal(options.redirect,'error');
+ return {ok:true,url,json:async()=>url.endsWith('/latest.json')?publicLatest:publicCompass};
+});
+assert.deepEqual(observedUrls,[CANONICAL_PUBLIC_DATA_ROOT+'latest.json',
+ CANONICAL_PUBLIC_DATA_ROOT+'compass.json']);
+assert.equal(joined.compass,publicCompass);
+await assert.rejects(()=>loadCanonicalPublicFeeds(async(url)=>({
+ ok:true,url:'https://untrusted.example/data/latest.json',json:async()=>publicLatest
+})),/CANONICAL_PUBLIC_FEED_UNAVAILABLE/);
+console.log('PASS: canonical public first viewport, W42 joined source, expiry and missing-source fail-closed controls');
 
 console.log('PASS: premium CN source lineage, fail-closed fixtures, bilingual copy, score semantics, modal keyboard and JavaScript syntax');
 console.log('Reminder: this is static smoke/contract QA. It does not certify iPhone visual quality or ex-ante cryptographic score proof.');
