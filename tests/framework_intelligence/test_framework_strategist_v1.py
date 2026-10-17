@@ -340,5 +340,29 @@ class StrategistTest(unittest.TestCase):
                          [o["code"] for o in result["proposals"]])
 
 
+    def test_cannot_overwrite_unrelated_framework_files_even_inside_repo(self):
+        path = self.root / "AGENTS.md"
+        path.write_text("must never change\n")
+        with self.assertRaises(ValueError):
+            build(self.root, path, now=NOW)
+        self.assertEqual(path.read_text(), "must never change\n")
+
+    def test_health_unknown_status_is_not_counted_as_current(self):
+        self.sources["health"]["status"] = "BLUE"
+        self.flush_sources()
+        result = self.run_brain()
+        self.assertEqual(result["source_receipts"]["health"]["status"], "INVALID_SCHEMA")
+        self.assertEqual(result["input_status"], "DEGRADED")
+        self.assertIn("health", result["incomplete_required_inputs"])
+
+    def test_unknown_derived_verdict_cannot_be_interpreted_as_green(self):
+        self.sources["self_improvement"]["operational_verdict"] = "MAGIC_SUCCESS"
+        self.flush_sources()
+        result = self.run_brain()
+        self.assertEqual(result["source_receipts"]["self_improvement"]["status"], "INVALID_SCHEMA")
+        self.assertNotIn("NO_DOCUMENTED_IMPROVEMENT_ADMISSION",
+                         [x["code"] for x in result["proposals"]])
+
+
 if __name__ == "__main__":
     unittest.main()
