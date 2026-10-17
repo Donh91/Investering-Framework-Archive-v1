@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.framework_intelligence.framework_strategist_v1 import (
-    INTENT_PATH, OUTPUT_PATH, REQUIRED, SOURCES,
+    DRYRUN_OUTPUT_PATH, INTENT_PATH, OUTPUT_PATH, REQUIRED, SOURCES,
 )
 
 TASK = "FRAMEWORK_STRATEGIST_SEMANTIC"
@@ -117,11 +117,15 @@ def verify_receipts(root: Path, packet: dict, now: datetime) -> None:
         raise ValueError("stale_or_future_strategist")
 
 
-def create_plan(root: Path, runtime: Path, *, now: datetime) -> dict[str, Any]:
+def create_plan(root: Path, runtime: Path, *, now: datetime,
+                strategist_path: str = OUTPUT_PATH) -> dict[str, Any]:
     root = root.resolve()
     if runtime.resolve() != (root / RUNTIME).resolve():
         raise ValueError("runtime_not_allowlisted")
-    packet = load(root / OUTPUT_PATH)
+    if strategist_path not in (OUTPUT_PATH, DRYRUN_OUTPUT_PATH):
+        raise ValueError("strategist_source_not_allowlisted")
+    packet_path = root / strategist_path
+    packet = load(packet_path)
     if packet.get("contract") != "FRAMEWORK_STRATEGIST_BRIEF_v1" or packet.get("input_status") != "CURRENT":
         raise ValueError("strategist_not_qualified")
     auth = packet.get("authority", {})
@@ -160,7 +164,7 @@ def create_plan(root: Path, runtime: Path, *, now: datetime) -> dict[str, Any]:
     context = {
         "contract":"FRAMEWORK_STRATEGIST_SEMANTIC_CONTEXT_v1",
         "material_fingerprint":fp,
-        "source_strategist_sha256":sha((root / OUTPUT_PATH).read_bytes()),
+        "source_strategist_sha256":sha(packet_path.read_bytes()),
         "owner_intent_sha256":packet["intent_sha256"],
         "source_integrity":"REQUIRED_CURRENT_SHA_MATCHED",
         "domain_context":"All investment alpha/cycle/outcome improvements UNKNOWN pending independent proof",
@@ -256,13 +260,16 @@ def main() -> None:
         s = sub.add_parser(action)
         s.add_argument("--repo-root", type=Path, default=Path("."))
         s.add_argument("--runtime-dir", type=Path, default=Path(RUNTIME))
-        if action == "validate":
+        if action == "prepare":
+            s.add_argument("--strategist-path", default=OUTPUT_PATH)
+        else:
             s.add_argument("--run-id", required=True)
     args = parser.parse_args()
     root = args.repo_root.resolve()
     runtime = (root / args.runtime_dir).resolve()
     if args.action == "prepare":
-        result = create_plan(root,runtime,now=datetime.now(timezone.utc))
+        result = create_plan(root,runtime,now=datetime.now(timezone.utc),
+                             strategist_path=args.strategist_path)
         print(json.dumps(result, sort_keys=True))
     else:
         result = check_output(root,runtime,run_id=args.run_id)
