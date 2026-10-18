@@ -685,32 +685,12 @@ function chartElement(tag, attributes = {}, content) {
   if (content != null) node.textContent = String(content);
   return node;
 }
-// Shape-preserving Hermite handles. The rendering is a guide connecting
-// observed DAILY CLOSES; it never claims to reproduce intraday ticks.
-function monotoneClosePath(points) {
-  if (points.length < 2) return '';
-  if (points.some((p,i) => !Number.isFinite(p.x) || !Number.isFinite(p.y) ||
-    (i > 0 && p.x === points[i-1].x) ||
-    (i > 1 && (p.x-points[i-1].x)*(points[i-1].x-points[i-2].x) <= 0))) return '';
-  // A closed corridor needs the upper curve left-to-right AND the lower
-  // curve right-to-left. Both monotonic x directions must be supported.
-  // Fritsch-Carlson / PCHIP shape-preserving tangents for UNEVEN x-spacings.
-  // Prevent spurious peaks when the frozen source has only 3 window centers.
-  const h=points.slice(1).map((p,i)=>p.x-points[i].x);
-  const d=h.map((width,i)=>(points[i+1].y-points[i].y)/width);
-  const m=points.map((_,i)=>{
-    if (i===0 || i===points.length-1) return 0;
-    if (d[i-1]===0 || d[i]===0 || d[i-1]*d[i]<0) return 0;
-    const w1=2*h[i]+h[i-1],w2=h[i]+2*h[i-1];
-    return (w1+w2)/(w1/d[i-1]+w2/d[i]);
-  });
-  return points.reduce((str,p,i)=>{
-    if(!i) return 'M '+p.x.toFixed(2)+' '+p.y.toFixed(2);
-    const before=points[i-1],dx=h[i-1]/3;
-    return str+' C '+(before.x+dx).toFixed(2)+' '+(before.y+m[i-1]*dx).toFixed(2)+
-      ' '+(p.x-dx).toFixed(2)+' '+(p.y-m[i]*dx).toFixed(2)+
-      ' '+p.x.toFixed(2)+' '+p.y.toFixed(2);
-  },'');
+// Straight daily close-to-close connectors. No intraday interpolation.
+function straightDailyPath(points) {
+  if (!Array.isArray(points) || points.length < 2 ||
+      points.some((p,i)=>!Number.isFinite(p.x)||!Number.isFinite(p.y)||
+        (i>0 && p.x<=points[i-1].x))) return '';
+  return points.map((p,i)=>(i?'L ':'M ')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
 }
 // Give the iPhone chart its own legible coordinate system instead of
 // reducing an 820px desktop SVG to unreadably small 5px price labels.
@@ -730,13 +710,10 @@ function renderRangeChart() {
     return;
   }
   const { days, windows } = parsed;
-  // Focus the visual Y-domain on directly comparable daily observations
-  // and the derived midpoint. Full frozen ranges remain source-exact below,
-  // rather than compressing the actual price path into a giant uncertain band.
-  const rangeValues = [
-    ...windows.map(r => (r.forecast_low+r.forecast_high)/2),
-    ...days.flatMap(d => [d[selectedAsset].low,d[selectedAsset].high])
-  ];
+  // There are no authentic seven daily frozen forecast points in W40.
+  // Scale only from source-observed daily prices. The three frozen ranges
+  // stay exact in the disclosure below, never converted into a fake line.
+  const rangeValues = days.flatMap(d => [d[selectedAsset].low,d[selectedAsset].high]);
   const step = selectedAsset === 'BTC' ? 1000 : 100;
   const floor = Math.floor(Math.min(...rangeValues)/step)*step;
   const ceiling = Math.ceil(Math.max(...rangeValues)/step)*step;
@@ -751,41 +728,18 @@ function renderRangeChart() {
   const X = (i) => left+(right-left)*(i/6);
   const svg=chartElement('svg',{viewBox:'0 0 '+chartW+' '+chartH,class:'cn-history-chart',role:'img',
     'aria-label':english
-      ?selectedAsset+' W40: dashed DERIVED midpoint from 3 frozen range windows versus solid blue observed daily close from Monday to Sunday'
-      :selectedAsset+' W40: lys stiplet AFLEDT forecastmidte fra tre frosne intervalvinduer mod blå faktisk dagslukning mandag til søndag'});
+      ?selectedAsset+' W40: seven verified actual UTC daily closes. No authentic daily forecast line was published.'
+      :selectedAsset+' uge 40: syv verificerede faktiske UTC-dagsluk. Ingen oprindelig daglig forecastkurve blev offentliggjort.'});
   svg.append(chartElement('title',{},english
-    ?selectedAsset+' week 40: derived range midpoint versus seven actual daily closes'
-    :selectedAsset+' uge 40: afledt intervalmidte og syv faktiske dagslukninger'));
+    ?selectedAsset+' W40: observed seven-day price path, not a forecast'
+    :selectedAsset+' uge 40: syv faktiske dagslukninger, ikke en prognose'));
   svg.append(chartElement('desc',{},english
-    ?'Actual daily closes from 168 source observations. The three original forecast windows were frozen Monday 05:53 UTC. No seven original daily predicted closing prices exist.'
-    :'Syv faktiske dagslukninger fra 168 timeobservationer. De tre frosne intervalvinduer blev frosset mandag 05:53 UTC. Der findes ikke syv originale forudsagte dagslukningspriser.'));
+    ?'Observed daily closes from 168 source hours. The frozen forecast consisted of three original range windows, disclosed as exact figures separately. No invented day-level predictions.'
+    :'Faktiske dagslukninger fra 168 kildetimer. Den frosne prognose bestod kun af tre originale intervaller, som fremgår separat med eksakte tal. Ingen opfundne dagsprognoser.'));
   for(let val=yMin;val<=yMax;val+=step){
     const y=Y(val);
     svg.append(chartElement('line',{x1:left-8,x2:right,y1:y,y2:y,class:'cn-chart-grid'}));
     svg.append(chartElement('text',{x:left-14,y:y+4,'text-anchor':'end',class:'cn-chart-tick'},'$'+Math.round(val).toLocaleString(currentLanguage()==='en'?'en-US':'da-DK')));
-  }
-  // Forecast has ONLY three originally frozen 2/2/3-day windows. The
-  // smooth corridor interpolates between their numeric boundaries for
-  // presentation, it is NOT a recorded daily forecast or an actual price path.
-  const forecastCenters=[.5,2.5,5];
-  // Only three authoritative forecast RANGE windows exist. Extrapolate the
-  // three frozen centers flat to week endpoints and interpolate visually
-  // between them. The trajectory is an indicative RANGE MIDPOINT GUIDE,
-  // never a recorded daily closing-price forecast.
-  const guide = (field) => {
-    const values=windows.map(w=>field==='midpoint'?(w.forecast_high+w.forecast_low)/2:w[field]);
-    return [0,...forecastCenters,6].map((day,i)=>({
-      x:X(day),y:Y(i===0?values[0]:i===4?values[2]:values[i-1])
-    }));
-  };
-  // The three full forecast LOW/HIGH boundaries belong to the exact-value
-  // details below. Do not disguise an interpolated weekly range as daily data.
-  const midpointGuide=guide('midpoint');
-  svg.append(chartElement('path',{d:monotoneClosePath(midpointGuide),class:'cn-chart-forecast-midpoint','vector-effect':'non-scaling-stroke'}));
-  // Only three pale markers are shown, one per original frozen window.
-  for(let i=0;i<3;i++){
-    const p=midpointGuide[i+1];
-    svg.append(chartElement('circle',{cx:p.x,cy:p.y,r:5,class:'cn-chart-midpoint-anchor'}));
   }
   const pathPoints=days.map((d,i)=>({x:X(i),y:Y(d[selectedAsset].close)}));
   const defs=chartElement('defs'),clip=chartElement('clipPath',{id:'cn-path-actual-clip'});
@@ -799,7 +753,7 @@ function renderRangeChart() {
   });
   // W40 is already labeled at the chart's upper edge. No second W40
   // beside Sunday: it clashes with the seventh weekday at iPhone width.
-  actualGroup.append(chartElement('path',{d:monotoneClosePath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
+  actualGroup.append(chartElement('path',{d:straightDailyPath(pathPoints),class:'cn-chart-close-path','vector-effect':'non-scaling-stroke'}));
   pathPoints.forEach((p,i)=>{
     const point=chartElement('circle',{cx:p.x,cy:p.y,r:4.8,class:'cn-chart-point'});
     point.append(chartElement('title',{},days[i].date+' · '+selectedAsset+' dagsluk '+formatUSD(days[i][selectedAsset].close)));
@@ -808,6 +762,9 @@ function renderRangeChart() {
   svg.append(actualGroup);
   const badge=chartElement('text',{x:right,y:20,'text-anchor':'end',class:'cn-chart-week'},'2026 · W40 · UTC');
   svg.append(badge);root.append(svg);
+  setText('range-method',english
+    ?'W40: three original frozen ranges · no daily forecast series'
+    :'W40: tre originale frosne intervaller · ingen daglig forecastkurve');
   // Keep exactly one short, source-honest forecast footnote below the chart.
   // Its owner is the pre-existing .range-summary, not a duplicated caption.
   const tableWrap=make('div','cn-chart-table-scroll'),table=make('table','cn-chart-table');
