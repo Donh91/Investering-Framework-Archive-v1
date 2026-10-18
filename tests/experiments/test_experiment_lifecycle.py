@@ -128,12 +128,29 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             "spec":{"kind":"SENSOR_COMBINATION","title":"Synthetic sensor control"}
         }))
         ids=forecasts or [str(x.get("forecast_id")) for x in outcomes]
+        from scripts.experiments.experiment_lifecycle import sha
+        frozen_by_id={}
         for i,fid in enumerate(ids):
-            (fr/f"{i}.json").write_text(json.dumps({
+            frozen={
                 "contract":"FROZEN_FORECAST_v1",
-                "source_candidate_id":"EC-censor","forecast_id":fid
-            }))
-        for i,outcome in enumerate(outcomes):
+                "source_candidate_id":"EC-censor","forecast_id":fid,
+                "unit_contract_version":"FORECAST_TARGET_UNITS_v2",
+                "outcome_due_utc":"2026-09-02T00:00:00Z",
+                "settlement_contract_version":"FORECAST_SETTLEMENT_EXACT_TARGET_TIME_v1",
+                "scientific_admission":{"status":"QUALIFIED_FOR_FORWARD_TEST"},
+            }
+            frozen_by_id[fid]=frozen
+            (fr/f"{i}.json").write_text(json.dumps(frozen))
+        for i,original in enumerate(outcomes):
+            outcome=dict(original)
+            frozen=frozen_by_id[outcome["forecast_id"]]
+            outcome.setdefault("forecast_sha256",sha(frozen))
+            outcome.setdefault("settlement_contract_version",frozen["settlement_contract_version"])
+            outcome.setdefault("settlement_target_utc",frozen["outcome_due_utc"])
+            outcome.setdefault("settlement_observation_utc",frozen["outcome_due_utc"])
+            outcome.setdefault("settlement_offset_seconds",0)
+            outcome.setdefault("evidence_path","synthetic/read-only-evidence.json")
+            outcome.setdefault("evidence_sha256","a"*64)
             (oc/f"{i}.json").write_text(json.dumps(outcome))
         return registry(cr,ob,fr,oc,rc,"2026-10-18T00:00:00Z")
 
@@ -199,6 +216,42 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 self.assertEqual(c["matured_outcome_count"],0)
                 self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
                 self.assertEqual(c["state"],"WAITING_FOR_DATA")
+
+    def test_forged_eligible_outcome_lineage_fails_closed(self):
+        for patch in (
+            {"forecast_sha256":"b"*64},
+            {"settlement_target_utc":"2026-09-03T00:00:00Z"},
+            {"settlement_observation_utc":"2026-09-02T00:00:01Z"},
+            {"settlement_offset_seconds":60},
+            {"settlement_contract_version":"LEGACY"},
+            {"evidence_sha256":None},
+        ):
+            with tempfile.TemporaryDirectory() as td:
+                row=dict(self.outcome("EXP-FC-1",result="HIT"),**patch)
+                r=self.sample_registry(Path(td),[row])
+                c=r["candidates"][0]
+                self.assertEqual(c["matured_outcome_count"],1)
+                self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
+                self.assertEqual(c["state"],"MATURED_INCONCLUSIVE")
+
+    def test_one_forecast_id_cannot_serve_two_candidates(self):
+        from scripts.experiments.experiment_lifecycle import registry
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); cr=root/"candidates"; fr=root/"forecasts"
+            cr.mkdir();fr.mkdir()
+            for i,cid in enumerate(("EC-one","EC-two")):
+                (cr/f"{i}.json").write_text(json.dumps({
+                    "contract":"EXPERIMENT_CANDIDATE_v1","candidate_id":cid,
+                    "created_at_utc":"2026-09-01T00:00:00Z",
+                    "spec":{"kind":"SENSOR_COMBINATION","title":cid}
+                }))
+                (fr/f"{i}.json").write_text(json.dumps({
+                    "contract":"FROZEN_FORECAST_v1","forecast_id":"EXP-FC-shared",
+                    "source_candidate_id":cid,
+                }))
+            with self.assertRaisesRegex(ValueError,"forecast_id_ownership_or_content_conflict"):
+                registry(cr,root/"observations",fr,root/"outcomes",root/"receipts",
+                         "2026-10-18T00:00:00Z")
 
     def test_duplicate_forecast_outcomes_are_not_order_dependent(self):
         with tempfile.TemporaryDirectory() as td:
