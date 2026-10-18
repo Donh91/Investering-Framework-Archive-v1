@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { inspectOfficialPublicFeeds } from './official-feed-parity.mjs';
-import { summarizeCurrentPublic } from './current-public-panel.mjs';
+import { summarizeCurrentPublic, currentDirectionMethod } from './current-public-panel.mjs';
 
 // Synthetic shapes only, not simulated market predictions or public observations.
 // Reproduce the current official public site/build-public.mjs output contracts
@@ -72,6 +72,31 @@ const mutate = (fun)=>{
 const it=(desc,callback)=>{try{callback();console.log('PASS',desc)}catch(err){console.error('FAIL',desc);throw err}};
 
 
+it('12h direction is explicitly a continuation proxy in DA/EN, including missing and expired',()=>{
+ const hasDirection=structuredClone(compass);
+ hasDirection.horizons={NEXT_12H:{expected_direction:'UP'}};
+ const current=summarizeCurrentPublic(latest,hasDirection,{nowUtc:NOW});
+ assert.equal(current.status,'CURRENT_VERIFIED');
+ assert.equal(current.direction,'UP');
+ for(const [lang,positive,negative] of [
+  ['da',/observeret BTC\/ETH-retning.*ikke en selvstændigt valideret prognose/i,/Ingen verificeret aktuel 12t-retning/],
+  ['en',/observed BTC\/ETH direction.*not an independently validated forecast/i,/No verified current 12h direction/]
+ ]){
+  assert.match(currentDirectionMethod(lang,current.status==='CURRENT_VERIFIED'&&current.direction!=='UNKNOWN'),positive);
+  assert.match(currentDirectionMethod(lang,false),negative);
+ }
+ const noDirection=summarizeCurrentPublic(latest,compass,{nowUtc:NOW});
+ assert.equal(noDirection.direction,'UNKNOWN');
+ assert.match(currentDirectionMethod('da',noDirection.status==='CURRENT_VERIFIED'&&noDirection.direction!=='UNKNOWN'),/Ingen verificeret/);
+ hasDirection.full_stack.official_freshness.valid_until_utc='2026-10-12T11:59:59Z';
+ const expired=summarizeCurrentPublic(latest,hasDirection,{nowUtc:NOW});
+ assert.equal(expired.status,'UNAVAILABLE');
+ assert.equal(expired.direction,'UNKNOWN');
+ assert.match(currentDirectionMethod('en',expired.status==='CURRENT_VERIFIED'&&expired.direction!=='UNKNOWN'),/No verified/);
+ const markup=readFileSync(resolve(dirname(fileURLToPath(import.meta.url)),'premium-index.html'),'utf8');
+ assert.match(markup,/id="cn-current-direction-method"/);
+ assert.match(markup,/RETNINGSPROXY · 0–12 TIMER/);
+});
 it('expired original Official source blocks a fresh projection and its BUY/SELL claims',()=>{
  const o=mutate((l,c)=>{
    c.full_stack.official_freshness.valid_until_utc='2026-10-12T11:59:59Z';
