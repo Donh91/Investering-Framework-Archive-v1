@@ -63,9 +63,9 @@ try{
   const readPaths = [
     '(()=>{',
     "const svg=document.querySelector('#range-visualization svg');",
-    "const forecast=svg?.querySelector('.cn-chart-forecast-midpoint');",
+    "const derived=svg?.querySelectorAll('.cn-chart-forecast-midpoint').length||0;",
     "const actual=svg?.querySelector('.cn-chart-close-path');",
-    "const p=[forecast,actual];",
+    "const p=[actual];",
     'return {',
     'inner:innerWidth,scrollWidth:document.documentElement.scrollWidth,',
     'route:location.hash,lang:document.documentElement.lang,',
@@ -79,7 +79,7 @@ try{
     "weekdays:[...svg.querySelectorAll('.cn-chart-weekday')].map(x=>x.textContent),",
     "axisTicks:[...svg.querySelectorAll('.cn-chart-tick')].map(x=>x.textContent),",
     "revealPhase:document.querySelector('.range-compare-panel')?.dataset.revealPhase,",
-    "paths:p.map(x=>Boolean(x&&x.getAttribute('d')?.includes(' C ')&&",
+    "derivedCount:derived,paths:p.map(x=>Boolean(x&&x.getAttribute('d')?.includes(' L ')&&",
     "x.getBBox().width>100&&getComputedStyle(x).display!=='none'&&getComputedStyle(x).opacity!=='0')),",
     "viewBox:svg?.getAttribute('viewBox')",
     '};})()'
@@ -141,10 +141,10 @@ try{
     assert.ok(!nav.errorText,'File navigation failed: '+nav.errorText);
     let ready=false;
     for(let i=0;i<125;i++){
-      ready=await evaluate("Boolean(document.querySelector('#range-visualization .cn-chart-forecast-midpoint')&&document.querySelector('#range-visualization .cn-chart-close-path'))");
+      ready=await evaluate("Boolean(document.querySelector('#range-visualization .cn-chart-close-path'))");
       if(ready)break;await wait(100);
     }
-    assert.ok(ready,'Both chart paths must render at '+width);
+    assert.ok(ready,'Source-authentic observed daily path must render at '+width);
     const mobileTap=await evaluate(inspectMobileTapTargets);
     assert.ok(mobileTap.scrollWidth<=width+1&&mobileTap.undersized.length===0,
       'Phone tap/overflow regression at '+width+'px '+JSON.stringify(mobileTap));
@@ -170,7 +170,7 @@ try{
         const proof=await evaluate(readPaths);
         assert.ok(proof.inner===width&&proof.scrollWidth<=width+1&&
           proof.route==='#cn-path-week'&&proof.lang===lang&&proof.asset===asset&&
-          proof.hasSource&&proof.paths.every(Boolean)&&proof.revealPhase==='score'&&
+          proof.hasSource&&proof.derivedCount===0&&proof.paths.every(Boolean)&&proof.revealPhase==='score'&&
           proof.axisTicks?.includes(asset==='BTC'
             ?(lang==='en'?'$85,000':'$85.000')
             :(lang==='en'?'$2,700':'$2.700'))&&
@@ -179,13 +179,13 @@ try{
             :(lang==='en'?'$2,688.71':'$2.688,71'))&&
           proof.freezeDisclosure?.startsWith(lang==='en'?'FREEZE':'FRYSNING')&&
           (lang==='en'?
-            proof.forecastNote?.includes('derived midpoint line')&&
-            proof.forecastNote?.includes('three frozen price ranges')&&
-            proof.forecastLegend?.includes('(derived)')&&
+            proof.forecastNote?.includes('no authentic seven-day forecast curve')&&
+            proof.forecastNote?.includes('Exact original frozen ranges')&&
+            proof.forecastLegend?.includes('3 FROZEN RANGES')&&
             proof.heading?.includes('The frozen week')&&
             proof.weekdays?.join(',')==='Mon,Tue,Wed,Thu,Fri,Sat,Sun':
-            proof.forecastNote?.includes('afledt midtlinje')&&
-            proof.forecastLegend?.includes('(afledt)')&&
+            proof.forecastNote?.includes('ingen oprindelig 7-dages forecastkurve')&&
+            proof.forecastLegend?.includes('3 FROSNE INTERVALLER')&&
             proof.weekdays?.join(',')==='Man,Tir,Ons,Tor,Fre,Lør,Søn'),
           'Browser QA '+width+' '+lang+' '+asset+' '+JSON.stringify(proof));
         console.log('PASS '+width+' '+lang+' '+asset+' '+JSON.stringify(proof));
