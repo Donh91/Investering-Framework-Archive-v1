@@ -4,7 +4,7 @@ const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
 const h=JSON.parse(history);
 const chartSource=await read('./frozen-week-chart.js'),chartCss=await read('./frozen-week-chart.css');
-const chartAPI={};new Function('window','document',chartSource)(chartAPI,{addEventListener(){}});const chartModel=chartAPI.CNWeekChart.model;
+const chartAPI={};new Function('window','document',chartSource)(chartAPI,{addEventListener(){}});const chartModel=chartAPI.CNWeekChart.model,chartLinePlan=chartAPI.CNWeekChart.linePlan;
 const etaStart=product.indexOf('function pathEta'),etaEnd=product.indexOf('function pathStatus');
 const productSyntaxOk=(()=>{try{new Function(product);return true}catch{return false}})();
 const etaSlice=etaStart>=0&&etaEnd>etaStart?product.slice(etaStart,etaEnd):'';
@@ -27,6 +27,17 @@ const weekIdentityText=translateCompass('W40 BTC gained 2.44%. Possible W41 rete
 const futureFixture=structuredClone(synthetic);futureFixture.public_live_precision.daily_observations.BTC[6]={day:7,date:'2026-10-11',close:110,low:100,high:120,as_of_utc:'2099-10-12T00:00:00Z',coverage_complete_to_date:true};
 const badDaily=structuredClone(dailyFixture);badDaily.public_live_precision.daily_price_path.BTC.points[3].expected_close=130;
 const badDate=structuredClone(synthetic);badDate.public_live_precision.daily_observations.BTC[0].date='2026-10-06';
+const positivePlan=chartLinePlan(chartModel(dailyFixture,'BTC'));
+const missingForecastPlan=chartLinePlan(chartModel(synthetic,'BTC'));
+const observedGap=structuredClone(dailyFixture);
+observedGap.public_live_precision.daily_observations.BTC[1].coverage_complete_to_date=false;
+observedGap.public_live_precision.daily_observations.BTC[2]={
+  day:3,date:'2026-10-07',close:112,low:100,high:118,
+  as_of_utc:'2026-10-07T12:00:00Z',status:'PARTIAL',
+  coverage_complete_to_date:true,observed_hours:12
+};
+const gappedPlan=chartLinePlan(chartModel(observedGap,'BTC'));
+
 const packageSanitizer=new Function(build.slice(build.indexOf('const pick='),build.indexOf('async function readJson'))+';return sanitizePackage;')();
 const translationProjection=new Function('sanitizePackage','standaloneFreeze','publicStructureAnalysis','return '+build.slice(build.indexOf('function publicTranslations('),build.indexOf('const snapshot=')))(packageSanitizer,{},()=>null);
 const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
@@ -36,7 +47,19 @@ const checks=[
  ['Danish projection cannot publish untranslated private-scenario source content',!acceptedTranslations.some(x=>x.en.includes('9000'))&&translationProjection({market_state:'Legacy source without translations.'}).length===0],
  ['weekly chart rejects future timestamps and wrong UTC day identity',!chartModel(futureFixture,'BTC').days[6].actual&&!chartModel(badDate,'BTC').days[0].actual],
  ['invalid daily forecast bounds fail to published ranges without fabricated line',chartModel(badDaily,'BTC').daily.length===0&&chartModel(badDaily,'BTC').rows.length===3],
- ['TradingView weekly chart is self-hosted and overlays authentic evidence only',liveBuilder.includes('vendor/lightweight-charts-5.2.0.js')&&chartSource.includes('lineVisible:false')&&chartSource.includes('if(d.actual)run.push(d)')&&chartSource.includes("['D1–2','D3–4','D5–7']")&&!chartSource.includes('LineType.Curved')],
+ ['TradingView weekly chart is self-hosted and overlays authentic evidence only',liveBuilder.includes('vendor/lightweight-charts-5.2.0.js')&&chartSource.includes('lineVisible:false')&&chartSource.includes('if(d.actual)current.push(')&&chartSource.includes("['D1–2','D3–4','D5–7']")&&!chartSource.includes('LineType.Curved')],
+ ['published daily forecast is exactly seven immutable points and actual does not extend into future',
+    positivePlan.forecast.length===7&&positivePlan.actualRuns.length===1&&positivePlan.actualRuns[0].length===2&&
+    positivePlan.forecast.every((p,i)=>p.time===chartModel(dailyFixture,'BTC').days[i].time&&p.value===105+i)&&
+    positivePlan.actualRuns[0].every((p,i)=>p.value===110&&p.time===chartModel(dailyFixture,'BTC').days[i].time)],
+ ['unpublished daily path plots no fabricated forecast while preserving real observations',
+    missingForecastPlan.forecast.length===0&&missingForecastPlan.actualRuns.length===1&&
+    missingForecastPlan.actualRuns[0].length===2],
+ ['missing source coverage splits actual line into disjoint runs, never bridges data gaps',
+    gappedPlan.forecast.length===7&&gappedPlan.actualRuns.length===2&&
+    gappedPlan.actualRuns.every(run=>run.length===1)&&
+    gappedPlan.actualRuns[0][0].time===chartModel(observedGap,'BTC').days[0].time&&
+    gappedPlan.actualRuns[1][0].time===chartModel(observedGap,'BTC').days[2].time],
  ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('if(!m.daily.length)scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
  ['DA/ENG ships before product rendering with bound public prose only',liveBuilder.includes('./i18n.js')&&build.includes('presentation_translations:publicTranslations(pkg)')&&build.includes('allowed.has(x.en)')&&build.includes('digits(x.en)===digits(x.da)')],
  ['public tab links restore PATH or PROOF without creating another forecast',product.includes("const initialView=location.hash.slice(1)")&&product.includes("['path','proof'].includes(initialView)")&&product.includes("history.replaceState(null,'','#'+b.dataset.tab)")],
