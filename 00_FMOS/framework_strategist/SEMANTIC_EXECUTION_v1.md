@@ -15,13 +15,13 @@ Output:
 - `research/framework_learning/strategist/semantic/reservations/<sha256>.json` — **created on main via GitHub's atomic Contents API before API billing**. If this create fails, NO MODEL CALL. On any failed or uncertain paid response this reservation remains: no automated retry for same material fingerprint.
 
 ## Cost
-Model default `gpt-5.6-terra`, medium effort, 1,900 output-token ceiling, strict one-attempt gateway override. Global monthly hard stop **$40 unchanged**, reserve **$4 unchanged**. New strategist sublane cap **$0.75/month** and minimum **$0.05** remaining; user authorized OpenAI API but never blanket budget expansion. Higher-cost GPT-6.1 Sol only by existing owner-gated specialist path, not implicit failure fallback. No payment without `OPENAI_API_KEY`, existing budget receipts and verified GitHub prepayment reservation. Single-call budget does not prove actual provider-side debits: hold/reconcile separately if uncertain.
+Model default `gpt-6.1-sol`, high reasoning effort, 5,400 output-token ceiling, strict one-attempt gateway override. Global monthly hard stop **$40 unchanged**, reserve **$4 unchanged**. New strategist sublane cap **$0.75/month** and minimum **$0.05** remaining; user authorized OpenAI API but never blanket budget expansion. No automatic senior/Astra fallback; manual, separately reviewed specialist path remains required. No payment without `OPENAI_API_KEY`, existing budget receipts and verified GitHub prepayment reservation. Single-call budget does not prove actual provider-side debits: hold/reconcile separately if uncertain.
 
 ## Behavior
 1. Deterministic Strategist generates source-fresh, SHA-verified 0-3 owner-bound proposals.
 2. `prepare` sees whether at least one HIGH/MEDIUM/CRITICAL question exists and checks frozen material fingerprint against any earlier durable paid-attempt reservation.
 3. Old material fingerprint, missing/ambiguous input, optional source absent without use, malformed original SHA, absent budget proof, missing key, or failed reservation => NO CALL.
-4. If admitted: existing code creates a durable reservation in main, then one Terra API gateway request. **No auto retry.**
+4. If admitted: existing code creates a durable reservation in main, then one Sol 6.1 API gateway request. **No auto retry.**
 5. Output is verified against task, model, exact source/context/prompt SHA, reservation run ID, response hash, cost/attempt receipt, bounded output and empty forecast candidates.
 6. Only advisory untrusted result is published; never send model prose into GitHub command executor, new queue, Grok, Codex, market or portfolio logic. Existing Supervisor will only read a semantic interpretation after a separately reviewed **bounded consumer adaptation** (this PR does not cause strategy-based automated actions).
 
