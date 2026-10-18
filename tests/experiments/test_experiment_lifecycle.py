@@ -159,7 +159,15 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             import hashlib
             raw_path=root/"raw"/fid/"source.json"
             raw_path.parent.mkdir(parents=True,exist_ok=True)
-            raw_bytes=json.dumps({"synthetic":True,"close":price},sort_keys=True).encode()
+            from datetime import datetime,timedelta,timezone
+            due=datetime.fromisoformat(frozen["outcome_due_utc"].replace("Z","+00:00"))
+            prior=due-timedelta(minutes=1)
+            open_ms=int(prior.timestamp()*1000)
+            close_ms=int(due.timestamp()*1000)-1
+            # Real 1m Binance row shape, made from entirely synthetic prices.
+            # Only the original raw close may establish a scoreable outcome.
+            raw_bytes=json.dumps([[open_ms,"100","104","99",str(price),
+                                   "1",close_ms]],separators=(",",":")).encode()
             raw_path.write_bytes(raw_bytes)
             evidence={"contract":"FORECAST_SETTLEMENT_EVIDENCE_v1",
                       "forecast_id":fid,"forecast_sha256":sha(frozen),
@@ -169,15 +177,15 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                       "captured_at_semantics":"ADJUDICATION_TARGET_TIME_NOT_SOURCE_OBSERVATION",
                       "metric_path":frozen["metric_path"],
                       "source_candle_confirmed":True,
-                      "source_candle_open_utc":"2026-09-01T23:59:00Z",
-                      "source_candle_close_utc":"2026-09-01T23:59:59Z",
-                      "source_candle_offset_seconds":-1,
+                      "source_candle_open_utc":prior.isoformat().replace("+00:00","Z"),
+                      "source_candle_close_utc":(due-timedelta(milliseconds=1)).isoformat().replace("+00:00","Z"),
+                      "source_candle_offset_seconds":-0.001,
                       "source_retrieved_at_utc":"2026-09-02T00:00:05Z",
                       "source_publication_lag_seconds":5,
                       "source_raw_path":f"raw/{fid}/source.json",
                       "source_raw_bytes":len(raw_bytes),
                       "source_raw_sha256":hashlib.sha256(raw_bytes).hexdigest(),
-                      "source_id":"SYNTHETIC_PIT_VALIDATOR_FIXTURE",
+                      "source_id":"BINANCE_SPOT_MARKET_DATA_ONLY_KLINES",
                       "source_instrument":"BTCUSDT",
                       "authority":{"portfolio_action":False,"framework_state_change":False,
                                    "model_weight_change":False,"canonical_promotion":False,
