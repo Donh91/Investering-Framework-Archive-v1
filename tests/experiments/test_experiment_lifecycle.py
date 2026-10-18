@@ -334,6 +334,35 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             self.assertEqual(row["scientific_score_eligible_outcome_count"],0)
             self.assertEqual(row["state"],"MATURED_INCONCLUSIVE")
 
+    def test_nonfinite_coherently_rehashed_market_evidence_cannot_be_eligible(self):
+        from scripts.experiments.experiment_lifecycle import registry, sha
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            positive=self.sample_registry(root,[self.outcome("EXP-FC-1",result="HIT")])
+            self.assertEqual(positive["candidates"][0]["scientific_score_eligible_outcome_count"],1)
+            evidence_file=root/"settlement_evidence/EXP-FC-1.json"
+            outcome_file=root/"outcomes/0.json"
+            binding_file=root/"settlement_bindings/EXP-FC-1.json"
+            evidence=json.loads(evidence_file.read_text())
+            evidence["market_metrics"]["spot"]["BTCUSDT"]["close"]=float("inf")
+            evidence_file.write_text(json.dumps(evidence))
+            outcome=json.loads(outcome_file.read_text())
+            outcome["end_value"]=float("inf")
+            outcome["return_pct"]=float("inf")
+            outcome["evidence_sha256"]=sha(evidence)
+            outcome_file.write_text(json.dumps(outcome))
+            binding=json.loads(binding_file.read_text())
+            binding["evidence_sha256"]=sha(evidence)
+            binding["outcome_sha256"]=sha(outcome)
+            binding["binding_sha256"]=sha({k:v for k,v in binding.items() if k!="binding_sha256"})
+            binding_file.write_text(json.dumps(binding))
+            r=registry(root/"candidates",root/"observations",root/"forecasts",
+                       root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
+            row=r["candidates"][0]
+            self.assertEqual(row["matured_outcome_count"],1)
+            self.assertEqual(row["scientific_score_eligible_outcome_count"],0)
+            self.assertEqual(row["state"],"MATURED_INCONCLUSIVE")
+
     def test_missing_or_mutated_binding_and_evidence_fail_closed(self):
         from scripts.experiments.experiment_lifecycle import registry
         for type_name in ("missing","mutated","missing_evidence","wrong_evidence"):
