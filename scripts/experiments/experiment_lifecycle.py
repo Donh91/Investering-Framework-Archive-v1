@@ -20,6 +20,7 @@ from metric_resolver import (  # noqa: E402  (path is prepared immediately above
 )
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "learning"))
 from outcome_maturation_engine import classify as classify_frozen_outcome  # noqa: E402
+from mature_exact_settlement_forecasts import validate_evidence as validate_original_settlement_evidence  # noqa: E402
 
 UTC = timezone.utc
 KINDS = {"SENSOR_COMBINATION", "FORECAST_TEST", "SEQUENCE_TEST", "DATA_QUALITY_TEST"}
@@ -341,9 +342,26 @@ def outcome_bound_to_frozen_forecast(
         return False
     if binding.get("settlement_target_utc") != outcome.get("settlement_target_utc"):
         return False
-    # An internally matching binding is not independent result evidence.
-    # Recompute HIT/MISS from the original settlement metric and original
-    # frozen forecast with the EXISTING canonical maturation scorer.
+    # A self-consistent forged outcome+binding+evidence can still claim a
+    # non-existent price. Reuse the EXISTING producer's raw-receipt integrity
+    # validator before attempting to classify HIT/MISS.
+    repo_root = outcome_root.parent
+    if (outcome_root.parent.name == "framework_memory"
+            and outcome_root.parent.parent.name == "research"):
+        repo_root = outcome_root.parent.parent.parent
+    raw_ref = evidence.get("source_raw_path")
+    if not isinstance(raw_ref, str) or not raw_ref or Path(raw_ref).is_absolute():
+        return False
+    raw_file = (repo_root / raw_ref).resolve(strict=False)
+    if not raw_file.is_relative_to(repo_root.resolve(strict=False)):
+        return False
+    try:
+        validate_original_settlement_evidence(frozen, evidence, repo_root)
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError):
+        return False
+    # Recompute HIT/MISS from the validated original settlement metric with
+    # the EXISTING canonical maturation scorer. This is still not an
+    # independently Git-anchored proof of first-known publication.
     try:
         resolution = resolve_for_forecast(evidence, frozen)
         if not resolution.ok:
