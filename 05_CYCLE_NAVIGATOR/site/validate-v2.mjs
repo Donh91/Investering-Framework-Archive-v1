@@ -46,7 +46,7 @@ function probeChartRender(data){
   const ctx={
     save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},
     fill(){paints.fills++},stroke(){paints.whiskerStrokes++},
-    fillRect(){paints.intervalRects++},strokeRect(){},fillText(){},
+    fillRect(x,y,width,height){if(height>20)paints.intervalRects++},strokeRect(){},fillText(){},
     setLineDash(){},measureText(text){return {width:text.length*7}},
     createLinearGradient(){return {addColorStop(){}}}
   };
