@@ -1,5 +1,6 @@
 """Synthetic negative controls; no private or live market data in tests."""
 import copy
+import random
 import importlib.util
 from pathlib import Path
 import unittest
@@ -190,6 +191,35 @@ class Tests(unittest.TestCase):
         x = run(s)
         self.assertIn('PARSE_UNAVAILABLE', x['provider_observations'][2]['flags'])
         self.assertNotIn('PRIVATE_PROVIDER_VALUE', str(x))
+
+    def test_deterministic_malformed_provider_fuzz(self):
+        rng = random.Random(20261018)
+        choices = [None, True, False, 0, -1, 1e308, 'NaN', '', {}, [], {'unexpected': 'payload'}]
+        for n in range(1200):
+            rows = sources()
+            for _ in range(rng.randrange(1, 5)):
+                obs = rng.choice(rows)
+                op = rng.randrange(5)
+                if op == 0:
+                    obs['captured_at_utc'] = rng.choice(choices)
+                elif op == 1:
+                    obs['http_status'] = rng.choice([200, 401, 402, 429, 500, None, True])
+                elif op == 2:
+                    obs['payload'] = rng.choice(choices)
+                elif op == 3 and isinstance(obs['payload'], dict):
+                    if obs['provider'] == 'DEXPAPRIKA':
+                        obs['payload']['liquidity_usd'] = rng.choice(choices)
+                    elif obs['provider'] == 'DEXSCREENER' and isinstance(obs['payload'].get('pair'), dict):
+                        obs['payload']['pair']['liquidity'] = rng.choice(choices)
+                elif op == 4 and obs['provider'] == 'GECKOTERMINAL' and isinstance(obs['payload'], dict):
+                    if isinstance(obs['payload'].get('data'), dict):
+                        obs['payload']['data']['attributes'] = rng.choice(choices)
+            output = qa.evaluate_case({'case_id': 'FUZZ' + str(n), 'observations': rows})
+            self.assertNotIn('case_id', output)
+            self.assertFalse(output['sellability_proven'])
+            self.assertIsNone(output['trade_signal'])
+            self.assertIn(output['source_qa_state'],
+                          {'INCOMPLETE', 'INVALID', 'CONFLICT', 'STALE', 'COMPARABLE_AS_AGGREGATORS_ONLY'})
 
     def test_source_time_unknown_not_claimed_fresh(self):
         x = run(sources())
