@@ -386,32 +386,29 @@ assert.match(css,/\.cn-history-chart\{aspect-ratio:480\/380/);
 
 assert.match(js,/function revealActualThrough\(dayIndex\)/);
 assert.match(js,/cn-path-actual-clip-rect/);
-assert.match(js,/const forecastCenters=\[\.5,2\.5,5\]/);
-assert.match(js,/const midpointGuide=guide\('midpoint'\)/);
-assert.match(js,/cn-chart-forecast-midpoint/);
-assert.ok(!js.includes("svg.append(chartElement('path',{d:monotoneClosePath(highGuide),class:'cn-chart-boundary'}))"),
-  'Do not show heavy forecast boundary strokes on the main chart');
+assert.match(js,/function straightDailyPath\(points\)/);
+assert.match(js,/straightDailyPath\(pathPoints\)/);
+assert.doesNotMatch(js,/const midpointGuide=|const forecastCenters=|cn-chart-forecast-midpoint/);
+assert.ok(!js.includes("svg.append(chartElement('path',{d:monotoneClosePath(highGuide),class:'cn-chart-boundary'}))",
+  'Archived W40 range windows cannot become a fabricated daily forecast line');
 assert.equal((html.match(/class="cn-legend-line cn-legend-line-forecast"/g)||[]).length,1);
 assert.equal((html.match(/class="cn-legend-line cn-legend-line-observed"/g)||[]).length,1);
-assert.ok(html.includes('FORECAST <small>(afledt)</small>'), 'Derived forecast distinction required');
+assert.ok(html.includes('3 FROSNE INTERVALLER <small>(se nedenfor)</small>'),
+  'Legacy frozen ranges must be explicitly distinguished from a daily forecast');
 assert.ok(html.indexOf('id="range-visualization"') < html.indexOf('id="range-replay"'),
-  'Users should see the actual 2-line price chart before playback controls');
-assert.match(js,/cn-chart-forecast-midpoint/);
-assert.ok(!js.includes("class:'cn-chart-forecast-ribbon'"),
-  'The wide three-window range is a separate exact-value disclosure, not a visually dominant/ambiguous price band');
-assert.match(js,/windows\.map\(r => \(r\.forecast_low\+r\.forecast_high\)\/2\)/);
+  'Historical observed price chart precedes playback controls');
+assert.match(js,/windows\[i<2\?0:i<4\?1:2\]/);
+assert.match(js,/no authentic daily forecast line was published/);
 for(const asset of ['BTC','ETH']) {
-  const windows=source.completed_score.price_range_precision.rows.filter(x=>x.asset===asset);
   const days=source.completed_score.daily_observations_w40.days;
   const step=asset==='BTC'?1000:100;
-  const values=[...windows.map(w=>(w.forecast_low+w.forecast_high)/2),
-    ...days.flatMap(d=>[d[asset].low,d[asset].high])];
+  const values=days.flatMap(d=>[d[asset].low,d[asset].high]);
   const lo=Math.floor(Math.min(...values)/step)*step-step;
   const hi=Math.ceil(Math.max(...values)/step)*step+step;
   assert.ok(hi>lo && values.every(x=>x>=lo && x<=hi),
-    asset+' observed daily extrema and forecast midpoint must all be fully in viewport');
+    asset+' observed daily prices must fit their documented axes');
   assert.ok(hi-lo < (asset==='BTC'?12000:700),
-    asset+' must not let wide forecast uncertainty flatten the comparable observed path');
+    asset+' actual evidence must not be flattened by unsupported forecast midpoints');
 }
 assert.equal((html.match(/id="range-visualization"/g)||[]).length,1);
 assert.equal((html.match(/data-overview-horizon="/g)||[]).length,5);
