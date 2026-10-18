@@ -189,9 +189,8 @@ def evaluate_case(case: dict[str, Any], *, max_age_seconds: int = 120,
                     flags.add('SOURCE_TIME_IN_FUTURE')
                 elif (captured - market).total_seconds() > max_age_seconds:
                     flags.add('SOURCE_STALE')
-            except (KeyError, ValueError, TypeError, AttributeError) as err:
+            except (KeyError, ValueError, TypeError, AttributeError):
                 flags.add('PARSE_UNAVAILABLE')
-                flags.add('PARSE_' + str(err).upper()[:64].replace(' ', '_'))
         results.append({'provider': provider, 'payload_sha256': digest, 'flags': sorted(flags)})
     conflicts = set()
     if len(parsed) >= 2:
@@ -225,7 +224,7 @@ def evaluate_case(case: dict[str, Any], *, max_age_seconds: int = 120,
         state = 'INCOMPLETE'
     else:
         state = 'COMPARABLE_AS_AGGREGATORS_ONLY'
-    return {'contract': CONTRACT, 'case_id': case['case_id'],
+    return {'contract': CONTRACT, 'case_ref_sha256': _digest(case['case_id']),
             'mode': 'READ_ONLY_OFFLINE', 'independent_onchain_validation': False,
             'sellability_proven': False, 'trade_signal': None,
             'source_qa_state': state,
