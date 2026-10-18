@@ -306,28 +306,23 @@ for (const asset of ['BTC','ETH']) {
   }
 }
 assert.match(js, /function completeDailyHistory\(score, asset\)/);
-assert.ok(js.includes('function monotoneClosePath(points) {'), 'Expected SVG spline helper');
-// Regression: reverse-x range boundary must not disappear silently.
-const splineStart = js.indexOf('function monotoneClosePath(points) {');
-const splineEnd = js.indexOf('\nfunction renderRangeChart()', splineStart);
-assert.ok(splineStart >= 0 && splineEnd > splineStart, 'Spline and chart functions found');
-const splineSource = js.slice(splineStart,splineEnd);
-assert.ok(splineSource, 'Readable pure SVG interpolation helper');
-const spline = new Function(splineSource + '; return monotoneClosePath;')();
-const asc = [{x:0,y:5},{x:10,y:8},{x:20,y:6},{x:40,y:9}];
-const desc = [...asc].reverse();
-for (const [name,pts] of [['forward',asc],['reverse',desc]]) {
-  const d=spline(pts);
-  assert.ok(d.startsWith('M ') && (d.match(/ C /g)||[]).length===pts.length-1,
-    name + ' spline must preserve all windows and be visibly complete');
-  assert.ok(!d.includes('NaN') && !d.includes('Infinity'),name+' spline remains finite');
-}
-assert.equal(spline([{x:0,y:1},{x:0,y:2}]),'', 'Duplicate x is invalid');
-assert.equal(spline([{x:0,y:1},{x:3,y:2},{x:2,y:3}]),'',
-  'Nonmonotone x cannot form an unambiguous smooth SVG boundary');
-// The pure spline supports both directions, but the production chart now
-// intentionally shows just two comparable price paths; full forecast bands
-// are in the explicit source-backed range table.
+assert.ok(js.includes('function straightDailyPath(points) {'), 'Expected source-exact straight daily connector');
+const pathStart = js.indexOf('function straightDailyPath(points) {');
+const pathEnd = js.indexOf('\n// Give the iPhone chart',pathStart);
+assert.ok(pathStart>=0 && pathEnd>pathStart,'Straight daily connector is pure and inspectable');
+const connector = new Function(js.slice(pathStart,pathEnd)+'; return straightDailyPath;')();
+const actualPoints=[{x:0,y:5},{x:10,y:8},{x:20,y:6},{x:40,y:9}];
+const observedLine=connector(actualPoints);
+assert.ok(observedLine.startsWith('M ') && (observedLine.match(/ L /g)||[]).length===actualPoints.length-1,
+  'Only straight segments join the four source-observed closes');
+assert.ok(!observedLine.includes(' C ')&&!observedLine.includes('NaN'),
+  'No made-up smoothed daily highs, troughs or malformed SVG');
+assert.equal(connector([...actualPoints].reverse()),'','Reverse date order must be rejected');
+assert.equal(connector([{x:0,y:1},{x:0,y:2}]),'','Duplicate day must be rejected');
+assert.equal(connector([{x:0,y:1},{x:3,y:2},{x:2,y:3}]),'',
+  'Out-of-order day is invalid, not silently corrected');
+assert.ok(!js.includes('const forecastCenters=')&&!js.includes('midpointGuide'),
+  'Three published range windows never become a seven-day curve');
 assert.ok(!js.includes('const ribbon=upperPath'), 'No resurrected heavy forecast band');
 
 // The Quiet Precision design specification explicitly rejects a duplicate
