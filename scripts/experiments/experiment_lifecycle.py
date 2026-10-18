@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import itertools
 import json
+import math
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -299,6 +300,11 @@ def outcome_bound_to_frozen_forecast(
     if not isinstance(outcome.get("evidence_sha256"), str) or len(outcome["evidence_sha256"]) != 64:
         return False
     forecast_id = str(frozen["forecast_id"])
+    # A file-derived ID must never become a path traversal or symlink target.
+    if (not forecast_id.startswith("EXP-FC-") or len(forecast_id) > 128
+            or not forecast_id.isascii()
+            or any(not (c.isalnum() or c in "_-") for c in forecast_id)):
+        return False
     original = outcome_root.parent
     # Canonical settlement producer writes immutable binding and evidence
     # beside outcome_memory; do not trust a self-declared outcome result.
@@ -344,16 +350,21 @@ def outcome_bound_to_frozen_forecast(
             return False
         start = frozen.get("start_value")
         end = resolution.value
-        if type(start) not in (int, float) or type(end) not in (int, float) or float(start) <= 0:
+        if (type(start) not in (int, float) or type(end) not in (int, float)
+                or not math.isfinite(float(start)) or not math.isfinite(float(end))
+                or float(start) <= 0):
             return False
         if classify_frozen_outcome(frozen, float(start), float(end)) != outcome.get("result"):
             return False
         if type(outcome.get("start_value")) not in (int, float) or float(outcome["start_value"]) != float(start):
             return False
-        if type(outcome.get("end_value")) not in (int, float) or float(outcome["end_value"]) != float(end):
+        if (type(outcome.get("end_value")) not in (int, float)
+                or not math.isfinite(float(outcome["end_value"]))
+                or float(outcome["end_value"]) != float(end)):
             return False
         observed_return = round((float(end) / float(start) - 1.0) * 100.0, 8)
-        if type(outcome.get("return_pct")) not in (int, float):
+        if (type(outcome.get("return_pct")) not in (int, float)
+                or not math.isfinite(float(outcome["return_pct"]))):
             return False
         if abs(float(outcome["return_pct"]) - observed_return) > 1e-8:
             return False
