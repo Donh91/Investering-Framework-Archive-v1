@@ -112,4 +112,108 @@ class ExperimentLifecycleTest(unittest.TestCase):
                 self.assertEqual(row["controls"]["control_freeze_time_utc"],"2026-08-05T10:00:00Z");self.assertEqual(row["controls"]["always_wait"],"ALWAYS_WAIT");self.assertEqual(row["unit_contract_version"],"FORECAST_TARGET_UNITS_v2")
 
 
+
+class CensoredOutcomeIntegrityTests(unittest.TestCase):
+    """Task2 science: raw receipt != MATURED != scientifically scoreable."""
+
+    def sample_registry(self, root: Path, outcomes: list[dict], forecasts=None):
+        from scripts.experiments.experiment_lifecycle import registry
+        cr=root/"candidates"; ob=root/"observations"; fr=root/"forecasts"
+        oc=root/"outcomes"; rc=root/"receipts"
+        for folder in (cr,ob,fr,oc,rc):
+            folder.mkdir(parents=True,exist_ok=True)
+        (cr/"test.json").write_text(json.dumps({
+            "contract":"EXPERIMENT_CANDIDATE_v1","candidate_id":"EC-censor",
+            "created_at_utc":"2026-09-01T00:00:00Z",
+            "spec":{"kind":"SENSOR_COMBINATION","title":"Synthetic sensor control"}
+        }))
+        ids=forecasts or [str(x.get("forecast_id")) for x in outcomes]
+        for i,fid in enumerate(ids):
+            (fr/f"{i}.json").write_text(json.dumps({
+                "contract":"FROZEN_FORECAST_v1",
+                "source_candidate_id":"EC-censor","forecast_id":fid
+            }))
+        for i,outcome in enumerate(outcomes):
+            (oc/f"{i}.json").write_text(json.dumps(outcome))
+        return registry(cr,ob,fr,oc,rc,"2026-10-18T00:00:00Z")
+
+    @staticmethod
+    def outcome(fid, *, status="MATURED", result="HIT", score=True, contract="MATURED_OUTCOME_v3"):
+        return {"contract":contract,"forecast_id":fid,"status":status,
+                "result":result,"scientific_score_eligible":score}
+
+    def test_censored_only_is_retained_but_not_matured_or_scored(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=self.sample_registry(Path(td),[self.outcome("EXP-FC-1",status="CENSORED",result=None,score=False)])
+            c=r["candidates"][0]
+            self.assertEqual(c["outcome_record_count"],1)
+            self.assertEqual(c["censored_outcome_count"],1)
+            self.assertEqual(c["matured_outcome_count"],0)
+            self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
+            self.assertEqual(c["outcome_evidence_state"],"CENSORED_ONLY")
+            self.assertEqual(c["state"],"WAITING_FOR_DATA")
+            self.assertNotIn("MATURED_INCONCLUSIVE",r["state_counts"])
+
+    def test_true_eligible_matured_hit_and_miss_are_distinct(self):
+        for result,expected in [("HIT","MATURED_SUPPORTED"),("MISS","MATURED_NOT_SUPPORTED")]:
+            with self.subTest(result=result),tempfile.TemporaryDirectory() as td:
+                r=self.sample_registry(Path(td),[self.outcome("EXP-FC-1",result=result)])
+                c=r["candidates"][0]
+                self.assertEqual(c["state"],expected)
+                self.assertEqual(c["matured_outcome_count"],1)
+                self.assertEqual(c["scientific_score_eligible_outcome_count"],1)
+                self.assertEqual(c["censored_outcome_count"],0)
+
+    def test_physical_maturity_without_scientific_eligibility_never_promotes(self):
+        for value in (False,None,"true"):
+            with self.subTest(score=value),tempfile.TemporaryDirectory() as td:
+                r=self.sample_registry(Path(td),[self.outcome("EXP-FC-1",score=value)])
+                c=r["candidates"][0]
+                self.assertEqual(c["matured_outcome_count"],1)
+                self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
+                self.assertEqual(c["state"],"MATURED_INCONCLUSIVE")
+
+    def test_mixed_eligible_and_censored_do_not_double_count(self):
+        a=self.outcome("EXP-FC-1",result="MISS")
+        b=self.outcome("EXP-FC-2",status="CENSORED",result=None,score=False)
+        for records in ((a,b),(b,a)):
+            with tempfile.TemporaryDirectory() as td:
+                r=self.sample_registry(Path(td),list(records))
+                c=r["candidates"][0]
+                self.assertEqual(c["state"],"MATURED_NOT_SUPPORTED")
+                self.assertEqual(c["outcome_record_count"],2)
+                self.assertEqual(c["matured_outcome_count"],1)
+                self.assertEqual(c["censored_outcome_count"],1)
+                self.assertEqual(c["scientific_score_eligible_outcome_count"],1)
+                self.assertEqual(c["unknown_outcome_count"],0)
+
+    def test_unknown_or_invalid_contract_is_not_a_matured_success(self):
+        for case in (
+            self.outcome("EXP-FC-1",status="UNKNOWN"),
+            self.outcome("EXP-FC-1",contract="DUBIOUS_OUTCOME_v0"),
+            self.outcome("EXP-FC-1",status="CENSORED",score=True),
+        ):
+            with tempfile.TemporaryDirectory() as td:
+                r=self.sample_registry(Path(td),[case])
+                c=r["candidates"][0]
+                self.assertEqual(c["matured_outcome_count"],0)
+                self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
+                self.assertEqual(c["state"],"WAITING_FOR_DATA")
+
+    def test_duplicate_forecast_outcomes_are_not_order_dependent(self):
+        with tempfile.TemporaryDirectory() as td:
+            with self.assertRaisesRegex(ValueError,"duplicate_outcome_forecast_id"):
+                self.sample_registry(Path(td),[
+                    self.outcome("EXP-FC-1",result="HIT"),
+                    self.outcome("EXP-FC-1",result="MISS")
+                ],forecasts=["EXP-FC-1"])
+
+    def test_missing_forecast_outcome_is_not_inferred_from_any_receipt(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=self.sample_registry(Path(td),[],forecasts=["EXP-FC-missing"])
+            c=r["candidates"][0]
+            self.assertEqual(c["outcome_record_count"],0)
+            self.assertEqual(c["matured_outcome_count"],0)
+            self.assertEqual(c["state"],"WAITING_FOR_MATURITY")
+
 if __name__ == "__main__": unittest.main()
