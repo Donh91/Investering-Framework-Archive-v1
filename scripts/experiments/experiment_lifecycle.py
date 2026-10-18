@@ -21,6 +21,13 @@ from metric_resolver import (  # noqa: E402  (path is prepared immediately above
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "learning"))
 from outcome_maturation_engine import classify as classify_frozen_outcome  # noqa: E402
 from mature_exact_settlement_forecasts import validate_evidence as validate_original_settlement_evidence  # noqa: E402
+from forecast_settlement_price_owner import (  # noqa: E402
+    SettlementSourceError,
+    validate_forecast as validate_original_price_forecast,
+    last_closed_minute_open,
+    parse_binance,
+    parse_okx,
+)
 
 UTC = timezone.utc
 KINDS = {"SENSOR_COMBINATION", "FORECAST_TEST", "SEQUENCE_TEST", "DATA_QUALITY_TEST"}
@@ -357,7 +364,27 @@ def outcome_bound_to_frozen_forecast(
         return False
     try:
         validate_original_settlement_evidence(frozen, evidence, repo_root)
-    except (OSError, ValueError, TypeError, KeyError, UnicodeError):
+        # The producer validator binds the raw *bytes*, but must not be used
+        # alone: also rederive the original candle and close PRICE from those
+        # exact raw bytes, not from mutable normalized market_metrics.
+        _, spec, raw_target = validate_original_price_forecast(frozen)
+        raw_bytes = raw_file.read_bytes()
+        original_open = last_closed_minute_open(raw_target)
+        if spec["kind"] == "BINANCE_SPOT_1M":
+            original_observation = parse_binance(
+                raw_bytes, spec["symbol"], raw_target, original_open)
+        elif spec["kind"] == "OKX_MARK_1M":
+            original_observation = parse_okx(
+                raw_bytes, spec["inst_id"], raw_target, original_open)
+        else:
+            return False
+        if (original_observation["source"] != evidence.get("source_id")
+                or original_observation["instrument"] != evidence.get("source_instrument")
+                or original_observation["confirmed"] is not True
+                or dt(original_observation["candle_open_utc"]) != dt(evidence["source_candle_open_utc"])
+                or dt(original_observation["candle_close_utc"]) != dt(evidence["source_candle_close_utc"])):
+            return False
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError, SettlementSourceError):
         return False
     # Recompute HIT/MISS from the validated original settlement metric with
     # the EXISTING canonical maturation scorer. This is still not an
@@ -365,6 +392,10 @@ def outcome_bound_to_frozen_forecast(
     try:
         resolution = resolve_for_forecast(evidence, frozen)
         if not resolution.ok:
+            return False
+        if type(resolution.value) not in (int, float) or not math.isfinite(float(resolution.value)):
+            return False
+        if float(resolution.value) != float(original_observation["close"]):
             return False
         start = frozen.get("start_value")
         end = resolution.value
