@@ -154,9 +154,34 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             frozen=frozen_by_id[fid]
             expected=original.get("result")
             price=102.0 if expected=="HIT" else 100.2 if expected=="MISS" else 100.0
+            # Full synthetic RAW source is required by the *original*
+            # canonical settlement validator (not only a self-hashed JSON).
+            import hashlib
+            raw_path=root/"raw"/fid/"source.json"
+            raw_path.parent.mkdir(parents=True,exist_ok=True)
+            raw_bytes=json.dumps({"synthetic":True,"close":price},sort_keys=True).encode()
+            raw_path.write_bytes(raw_bytes)
             evidence={"contract":"FORECAST_SETTLEMENT_EVIDENCE_v1",
                       "forecast_id":fid,"forecast_sha256":sha(frozen),
+                      "settlement_contract_version":frozen["settlement_contract_version"],
                       "settlement_target_utc":frozen["outcome_due_utc"],
+                      "captured_at_utc":frozen["outcome_due_utc"],
+                      "captured_at_semantics":"ADJUDICATION_TARGET_TIME_NOT_SOURCE_OBSERVATION",
+                      "metric_path":frozen["metric_path"],
+                      "source_candle_confirmed":True,
+                      "source_candle_open_utc":"2026-09-01T23:59:00Z",
+                      "source_candle_close_utc":"2026-09-01T23:59:59Z",
+                      "source_candle_offset_seconds":-1,
+                      "source_retrieved_at_utc":"2026-09-02T00:00:05Z",
+                      "source_publication_lag_seconds":5,
+                      "source_raw_path":f"raw/{fid}/source.json",
+                      "source_raw_bytes":len(raw_bytes),
+                      "source_raw_sha256":hashlib.sha256(raw_bytes).hexdigest(),
+                      "source_id":"SYNTHETIC_PIT_VALIDATOR_FIXTURE",
+                      "source_instrument":"BTCUSDT",
+                      "authority":{"portfolio_action":False,"framework_state_change":False,
+                                   "model_weight_change":False,"canonical_promotion":False,
+                                   "scientific_skill_authority":False},
                       "market_metrics":{"spot":{"BTCUSDT":{"close":price}}}}
             (evidence_root/f"{fid}.json").write_text(json.dumps(evidence))
             outcome.setdefault("forecast_sha256",sha(frozen))
@@ -387,6 +412,47 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                              root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
                 self.assertEqual(reg["candidates"][0]["scientific_score_eligible_outcome_count"],0)
                 self.assertEqual(reg["candidates"][0]["state"],"MATURED_INCONCLUSIVE")
+
+    def test_raw_receipt_digest_mismatch_never_scores_hit(self):
+        from scripts.experiments.experiment_lifecycle import registry,sha
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            self.sample_registry(root,[self.outcome("EXP-FC-1",result="MISS")])
+            # Forge a complete, mutually consistent fake HIT in outcome,
+            # binding and evidence, without altering the original raw blob.
+            outcome_path=root/"outcomes/0.json"
+            evidence_path=root/"settlement_evidence/EXP-FC-1.json"
+            binding_path=root/"settlement_bindings/EXP-FC-1.json"
+            evidence=json.loads(evidence_path.read_text())
+            evidence["market_metrics"]["spot"]["BTCUSDT"]["close"]=102.0
+            evidence_path.write_text(json.dumps(evidence))
+            outcome=json.loads(outcome_path.read_text())
+            outcome["result"]="HIT"
+            outcome["end_value"]=102.0
+            outcome["return_pct"]=2.0
+            outcome["evidence_sha256"]=sha(evidence)
+            outcome_path.write_text(json.dumps(outcome))
+            binding=json.loads(binding_path.read_text())
+            binding["evidence_sha256"]=sha(evidence)
+            binding["outcome_sha256"]=sha(outcome)
+            binding["binding_sha256"]=sha({k:v for k,v in binding.items()
+                                            if k!="binding_sha256"})
+            binding_path.write_text(json.dumps(binding))
+            r=registry(root/"candidates",root/"observations",root/"forecasts",
+                       root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
+            c=r["candidates"][0]
+            self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
+            self.assertEqual(c["state"],"MATURED_INCONCLUSIVE")
+
+    def test_missing_raw_receipt_never_scores_hit(self):
+        from scripts.experiments.experiment_lifecycle import registry
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            self.sample_registry(root,[self.outcome("EXP-FC-1",result="HIT")])
+            (root/"raw/EXP-FC-1/source.json").unlink()
+            r=registry(root/"candidates",root/"observations",root/"forecasts",
+                       root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
+            self.assertEqual(r["candidates"][0]["scientific_score_eligible_outcome_count"],0)
 
     def test_duplicate_forecast_outcomes_are_not_order_dependent(self):
         with tempfile.TemporaryDirectory() as td:
