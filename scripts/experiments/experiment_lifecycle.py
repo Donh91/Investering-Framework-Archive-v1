@@ -259,13 +259,68 @@ def unique_candidate_rows(candidate_root: Path) -> tuple[list[tuple[Path, dict[s
     return rows, duplicate_count
 
 
+def outcome_bound_to_frozen_forecast(outcome: dict[str, Any], frozen: dict[str, Any]) -> bool:
+    """Narrow status-eligible evidence: a self-declared score flag is insufficient.
+
+    Uses the original frozen forecast's canonical SHA, first-frozen scientific
+    admission and exact-target-time settlement contract. This still is NOT an
+    independent assessment of forecast skill or external vendor evidence.
+    """
+    if frozen.get("contract") != "FROZEN_FORECAST_v1" or frozen.get("unit_contract_version") != UNIT_CONTRACT_VERSION:
+        return False
+    if frozen.get("forecast_id") != outcome.get("forecast_id"):
+        return False
+    if outcome.get("forecast_sha256") != sha(frozen):
+        return False
+    admission = frozen.get("scientific_admission")
+    if not isinstance(admission, dict) or admission.get("status") != "QUALIFIED_FOR_FORWARD_TEST":
+        return False
+    exact = "FORECAST_SETTLEMENT_EXACT_TARGET_TIME_v1"
+    if frozen.get("settlement_contract_version") != exact or outcome.get("settlement_contract_version") != exact:
+        return False
+    due = frozen.get("outcome_due_utc")
+    target = outcome.get("settlement_target_utc")
+    observed = outcome.get("settlement_observation_utc")
+    if not isinstance(due, str) or not isinstance(target, str) or not isinstance(observed, str):
+        return False
+    try:
+        if dt(due) != dt(target) or dt(due) != dt(observed):
+            return False
+    except (ValueError, TypeError):
+        return False
+    offset = outcome.get("settlement_offset_seconds")
+    if type(offset) not in (int, float) or not float(offset) == 0.0:
+        return False
+    if not isinstance(outcome.get("evidence_sha256"), str) or len(outcome["evidence_sha256"]) != 64:
+        return False
+    if not isinstance(outcome.get("evidence_path"), str) or not outcome["evidence_path"]:
+        return False
+    return True
+
+
 def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, outcome_root: Path, receipt_root: Path, now: str) -> dict[str, Any]:
     candidate_rows, duplicate_candidate_file_count = unique_candidate_rows(candidate_root)
-    candidates = [value for _, value in candidate_rows]; observations = {}; candidate_forecasts = {}; outcomes = {}; receipts = {}
-    for _, value in jsons(observation_root, "EXPERIMENT_OBSERVATION_v1"): observations.setdefault(value["candidate_id"], []).append(value)
-    for _, value in jsons(forecast_root, "FROZEN_FORECAST_v1"):
-        candidate_id = value.get("source_candidate_id"); forecast_id = value.get("forecast_id")
-        if candidate_id and forecast_id: candidate_forecasts.setdefault(candidate_id, []).append(forecast_id)
+    candidates = [value for _, value in candidate_rows]
+    observations = {}; candidate_forecasts = {}; outcomes = {}; receipts = {}
+    original_forecasts = {}
+    for _, value in jsons(observation_root, "EXPERIMENT_OBSERVATION_v1"):
+        observations.setdefault(value["candidate_id"], []).append(value)
+    for path, value in sorted(jsons(forecast_root, "FROZEN_FORECAST_v1"), key=lambda x: x[0].as_posix()):
+        candidate_id = value.get("source_candidate_id")
+        forecast_id = value.get("forecast_id")
+        if not candidate_id or not forecast_id:
+            continue
+        key = str(forecast_id)
+        owner = str(candidate_id)
+        prior = original_forecasts.get(key)
+        if prior is not None:
+            old_owner, old_frozen = prior
+            if old_owner != owner or old_frozen != value:
+                raise ValueError(f"forecast_id_ownership_or_content_conflict:{key}")
+            # Duplicate byte-identical source does not count twice.
+            continue
+        original_forecasts[key] = (owner, value)
+        candidate_forecasts.setdefault(owner, []).append(key)
     for path in sorted(outcome_root.rglob("*.json")) if outcome_root.exists() else []:
         try:
             value = read(path)
@@ -293,7 +348,11 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
                    and item.get("status") == "MATURED"]
         eligible = [item for item in matured
                     if item.get("scientific_score_eligible") is True
-                    and item.get("result") in {"HIT", "MISS"}]
+                    and item.get("result") in {"HIT", "MISS"}
+                    and item.get("forecast_id") in original_forecasts
+                    and original_forecasts[item["forecast_id"]][0] == candidate_id
+                    and outcome_bound_to_frozen_forecast(
+                        item, original_forecasts[item["forecast_id"]][1])]
         censored = [item for item in original_outcomes
                     if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
                     and item.get("status") == "CENSORED"]
