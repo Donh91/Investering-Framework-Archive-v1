@@ -15,7 +15,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from metric_resolver import (  # noqa: E402  (path is prepared immediately above)
     CAPTURE_DOCUMENT_ROOT,
     canonical_path,
+    resolve_for_forecast,
 )
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "learning"))
+from outcome_maturation_engine import classify as classify_frozen_outcome  # noqa: E402
 
 UTC = timezone.utc
 KINDS = {"SENSOR_COMBINATION", "FORECAST_TEST", "SEQUENCE_TEST", "DATA_QUALITY_TEST"}
@@ -331,6 +334,30 @@ def outcome_bound_to_frozen_forecast(
     if binding.get("evidence_sha256") != sha(evidence) or outcome.get("evidence_sha256") != sha(evidence):
         return False
     if binding.get("settlement_target_utc") != outcome.get("settlement_target_utc"):
+        return False
+    # An internally matching binding is not independent result evidence.
+    # Recompute HIT/MISS from the original settlement metric and original
+    # frozen forecast with the EXISTING canonical maturation scorer.
+    try:
+        resolution = resolve_for_forecast(evidence, frozen)
+        if not resolution.ok:
+            return False
+        start = frozen.get("start_value")
+        end = resolution.value
+        if type(start) not in (int, float) or type(end) not in (int, float) or float(start) <= 0:
+            return False
+        if classify_frozen_outcome(frozen, float(start), float(end)) != outcome.get("result"):
+            return False
+        if type(outcome.get("start_value")) not in (int, float) or float(outcome["start_value"]) != float(start):
+            return False
+        if type(outcome.get("end_value")) not in (int, float) or float(outcome["end_value"]) != float(end):
+            return False
+        observed_return = round((float(end) / float(start) - 1.0) * 100.0, 8)
+        if type(outcome.get("return_pct")) not in (int, float):
+            return False
+        if abs(float(outcome["return_pct"]) - observed_return) > 1e-8:
+            return False
+    except (ValueError, TypeError, KeyError, ArithmeticError):
         return False
     return True
 
