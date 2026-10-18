@@ -54,14 +54,14 @@
           c.beginPath();c.moveTo(l,top);c.lineTo(rr,top);c.moveTo(l,bottom);c.lineTo(rr,bottom);c.stroke();c.setLineDash([]);
         });
       }
-      spans.forEach(({first,last,label},index)=>{
+      if(!m.daily.length)spans.forEach(({first,last,label},index)=>{
         const left=x(m.days[first].time),right=x(m.days[last].time),next=x(m.days[Math.min(first+1,6)].time),step=(next??0)-(left??0)||40;
         if(left===null||right===null)return;const l=Math.max(0,left-step*.5),rr=Math.min(size.width,right+step*.5),mid=(l+rr)/2;
         if(index){c.strokeStyle='rgba(145,162,185,.14)';c.lineWidth=1;c.setLineDash([2,5]);c.beginPath();c.moveTo(l,8);c.lineTo(l,size.height-22);c.stroke();c.setLineDash([]);}
         c.font='600 9px -apple-system,BlinkMacSystemFont,system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';const width=c.measureText(label).width+14;c.fillStyle='rgba(20,36,58,.88)';c.fillRect(mid-width/2,9,width,20);c.strokeStyle='rgba(95,150,255,.22)';c.strokeRect(mid-width/2+.5,9.5,width-1,19);c.fillStyle='rgba(181,200,227,.9)';c.fillText(label,mid,19);
       });
       const last=m.days.filter(d=>d.actual).at(-1);
-      if(last){const xx=x(last.time);if(xx!==null){c.fillStyle='rgba(160,177,198,.035)';c.fillRect(xx,0,size.width-xx,size.height);c.strokeStyle='rgba(160,177,198,.22)';c.setLineDash([3,5]);c.beginPath();c.moveTo(xx,0);c.lineTo(xx,size.height);c.stroke();c.setLineDash([]);}}
+      if(last&&!m.daily.length){const xx=x(last.time);if(xx!==null){c.fillStyle='rgba(160,177,198,.035)';c.fillRect(xx,0,size.width-xx,size.height);c.strokeStyle='rgba(160,177,198,.22)';c.setLineDash([3,5]);c.beginPath();c.moveTo(xx,0);c.lineTo(xx,size.height);c.stroke();c.setLineDash([]);}}
       m.days.forEach(d=>{if(!d.actual)return;const xx=x(d.time),hi=y(d.actual.high),lo=y(d.actual.low);if([xx,hi,lo].some(v=>v===null))return;c.strokeStyle='rgba(39,197,154,.48)';c.lineWidth=1;c.beginPath();c.moveTo(xx,hi);c.lineTo(xx,lo);c.moveTo(xx-3,hi);c.lineTo(xx+3,hi);c.moveTo(xx-3,lo);c.lineTo(xx+3,lo);c.stroke();});c.restore();
     }
   }
