@@ -163,3 +163,7 @@ Receipts prove executed state, not scientific validity by themselves.
 ```
 
 The goal is not to save everything. The goal is to preserve what future framework runs must understand, reproduce, challenge and safely improve.
+
+## Alpha Lab Project→CA Supervisor vNext (shadow research)
+
+Canonical research/build contract: [`Project→CA Intelligence Bridge — Shadow Build`](research/api_agent/meme_alpha/experiments/PROJECT_CA_INTELLIGENCE_BRIDGE_SHADOW_BUILD_CONTRACT_v1.md). Read current owner issues [#1087](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1087), [#1339](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1339), [#1340](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1340), and repair router [#1156](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156) before acting. SHADOW ONLY; no production alerts, autonomous trading, parallel scanner, duplicate scheduler, score or ledger. Require frozen point-in-time evidence, prospective denominator, exact project→CA identity binding, sellability-aware outcomes, and run/receipt/readback evidence before claiming healthy operation. A GPT-6.1 Sol High review is only complete with a verifiable model/usage/cost receipt; the $10 audit cap is not spending authorization beyond that amount.

@@ -1,0 +1,129 @@
+{
+  "authority": {
+    "automatic_external_dispatch": false,
+    "canonical_promotion": false,
+    "market_state_change": false,
+    "portfolio_action": false,
+    "sell": false,
+    "threshold_change": false,
+    "trim": false
+  },
+  "conclusion_layer": {
+    "automatic_promotion": false,
+    "review_due": false,
+    "separate_from_collection": true
+  },
+  "contract": "EDGE_COMPOUND_GOVERNOR_v1",
+  "decision": "COLLECT",
+  "decision_reason": "Natural warning evidence is accumulating; preserve pre-outcome features and await maturation.",
+  "deltas": [
+    "m6_event_count:16->19",
+    "feature_row_count:16->19",
+    "pit_verified_feature_rows:16->19",
+    "unknown_horizon_counts.24h:0->1",
+    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED"
+  ],
+  "external_routing": {
+    "automatic_dispatch": false,
+    "claude_recommended": false,
+    "sol_recommended": false
+  },
+  "generated_at_utc": "2026-10-13T07:42:06.386448Z",
+  "material_delta": true,
+  "prior_false_bootstrap_supersession": null,
+  "rules": {
+    "live_exit_rule": "NONE",
+    "negative_results_preserved": true,
+    "raw_external_output_canonical": false,
+    "warning_is_sell": false
+  },
+  "semantic_fingerprint": "3fb6727975e345c9a406a0b7cbd9dc6008f5dfc19bc13e6c12cb11c8a84ace60",
+  "semantic_state": {
+    "blockers": [],
+    "calibration_eligible_rows": 212,
+    "calibration_warning_rows": 0,
+    "distribution_risk": "UNKNOWN",
+    "economic_action_edge_claim": "NOT_ESTABLISHED",
+    "feature_integrity_revision": "v1.1_PIT_STRICT",
+    "feature_row_count": 19,
+    "information_edge_claim": "NOT_ESTABLISHED",
+    "latest_sol_verdict": "WEAKENED",
+    "m6_event_count": 19,
+    "m6_family_semantics": "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
+    "m6_integrity": {
+      "chronological": true,
+      "family_anchor_valid": true,
+      "family_lineage_fingerprint": "445521038b2c8f775c525f2684f1940e55b6b07d693ff5d0fb7bf1a59095c394",
+      "feature_cohort_parity": true,
+      "first_warning_weight_valid": true,
+      "status": "PASS"
+    },
+    "m6_integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
+    "m6_matured_payload_integrity": {
+      "checked": 48,
+      "invalid": 0,
+      "reasons": [],
+      "status": "PASS"
+    },
+    "m6_provisional_family_count": 2,
+    "matured_event_counts": {
+      "14d": 12,
+      "24h": 12,
+      "30d": 0,
+      "72h": 12,
+      "7d": 12
+    },
+    "matured_family_counts": {
+      "14d": 1,
+      "24h": 1,
+      "30d": 0,
+      "72h": 1,
+      "7d": 1
+    },
+    "pit_unverified_feature_rows": 0,
+    "pit_verified_feature_rows": 19,
+    "pullback_risk_state": "ELEVATED",
+    "unknown_horizon_counts": {
+      "14d": 0,
+      "24h": 1,
+      "30d": 0,
+      "72h": 0,
+      "7d": 0
+    },
+    "verified_independent_adverse_family_count": null
+  },
+  "source_bindings": {
+    "calibration": {
+      "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+      "sha256": "2a78033010feb103100aa7ef72acfde01121e0485b98a7a38bdd19af85156973",
+      "status": "PASS"
+    },
+    "compass_freeze": {
+      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-cb70ee1b10f3.json",
+      "sha256": "3b29686b4290cc4cc1c907950a45b079cc5fc31ff861d8f4ed3e90ee8b8c2019",
+      "status": "PASS"
+    },
+    "compass_pointer": {
+      "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+      "sha256": "424faee70cc7822731c14a5c227b782b2deb6208e2d4c067360fecda12e9bff7",
+      "status": "PASS"
+    },
+    "edge_features": {
+      "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
+      "sha256": "eb058f39669814bd17a9012eb93f484ad55cb30858f6481b0a26bbe61820c0f4",
+      "status": "PASS"
+    },
+    "latest_sol": {
+      "comment_id": 6124130988,
+      "path": "research/api_agent/outputs/research_lab_sol/RL-DISTRIBUTION-SURVIVAL-META-006/issue-1476/comment-6124130988/RESEARCH_LAB_SOL_ANALYSIS.json",
+      "sha256": "dbe5c27b308f10991699d140965c403a10d6f5ccb86cdcd95664fa4977fbc011",
+      "status": "PASS",
+      "verdict": "WEAKENED"
+    },
+    "m6_events": {
+      "path": "research/framework_memory/m6_warning_events/LATEST.json",
+      "sha256": "f92eaf347c6b46c153523ebc65f152acd766a18b1b49462f651f20df8fe4cbe1",
+      "status": "PASS"
+    }
+  }
+}

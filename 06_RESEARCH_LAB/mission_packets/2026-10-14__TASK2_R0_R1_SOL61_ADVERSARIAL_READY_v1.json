@@ -1,0 +1,131 @@
+{
+  "contract": "TASK2_RESEARCH_SOL61_ADVERSARIAL_READINESS_PACKET_v1",
+  "created_at_utc": "2026-10-14T15:37:26.417Z",
+  "status": "PREPARED_NOT_QUEUED_NOT_RUNNING",
+  "task2_execution_owner": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+  "no_new_scheduler": true,
+  "no_new_router": true,
+  "no_new_owner": true,
+  "existing_api_lane": {
+    "registry": "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json",
+    "dispatcher": "scripts/api_agent/research_lab_sol_dispatch.py",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "max_active_missions": 1,
+    "active_mission_at_inspection": "RL-DISTRIBUTION-SURVIVAL-META-006",
+    "queue_modified_by_packet": false,
+    "whitelisted_mission_id_added": false,
+    "dispatch_triggered": false,
+    "actual_API_receipt_observed": false
+  },
+  "budget": {
+    "existing_single_run_hard_stop_usd": 3,
+    "existing_monthly_hard_stop_usd": 40,
+    "short_context_standard_usd_per_million_input_tokens": 2,
+    "short_context_standard_usd_per_million_output_tokens": 10,
+    "current_account_monthly_remaining_verified": false,
+    "cost_example_only": {
+      "input_tokens": 40000,
+      "output_tokens": 12000,
+      "estimated_usd": 0.2
+    },
+    "required_gate": "CHECK_ACTUAL_REMAINING_BUDGET_AND_MODEL_ELIGIBILITY_BEFORE_ANY_CALL; RESPECT_3USD_SINGLE_AND_40USD_MONTHLY"
+  },
+  "release_sequence": [
+    {
+      "mission_id": "TASK2-R0-INDEPENDENT-REVIEW-001",
+      "priority": "P0",
+      "state": "STAGED_AFTER_EXISTING_SOL_MISSION",
+      "user_business_goal": "Independent code/science review of proposed R0 source-object reconciliation before any merge, not permission to self-approve",
+      "exact_references": [
+        "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1627",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PUBLIC_SOURCE_DRIFT_RECEIPT_v1.json"
+      ],
+      "review_falsifiers": [
+        "Create minimal synthetic counterexample bypassing original pinned base object SHA/type, tree/ancestry, path traversal and git ref validation.",
+        "Check source/test copy hashes and that 10 synthetic passing tests are not misrepresented as actual remote historical archive run.",
+        "Review v1.1 source path normalization, optional missing target semantics, fail-closed behavior and portability.",
+        "Determine whether independent reviewer can sign off from actual exact test results; no self-review is PR approval."
+      ],
+      "deliverable": "SHA-bound PASS/FAIL/NEEDS_FIX advisory report, reproducible failing fixture/test if found, exact PR head, zero code or portfolio authority",
+      "abort_on": [
+        "Original PR head changed without refresh",
+        "Provider data requested in public",
+        "Would require changing benchmark/market rules",
+        "Existing queue not free",
+        "Insufficient actual API budget"
+      ]
+    },
+    {
+      "mission_id": "TASK2-R1-CFGI-PIT-FALSIFICATION-002",
+      "priority": "P0",
+      "state": "STAGED_AFTER_R0_REVIEW_AND_AVAILABLE_LANE",
+      "user_business_goal": "Falsify historical first-known/issuer as-of claims; separate contemporaneous October 2026 v3 CFGI feature clocks from retrospectively downloaded 2025 1h CFGI data",
+      "exact_references": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_11_SOURCE_CLOCK_CASES_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_12H_CENSUS_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_FEATURE_CLOCK_AUDIT_v1.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR04_PUBLIC_RESEARCH_INTAKE_v2.md",
+        "04_RESEARCH_LAB/auto_trading/maeve/CFGI_MAEVE_DATA_INVENTORY_V1.json",
+        "scripts/data_ping/native_handlekompas.py",
+        "scripts/data_terminal/okx_swap_owner_collector.py"
+      ],
+      "review_falsifiers": [
+        "Identify whether any selected feature has original source timestamp or original independent publication beyond issue, including null retrieved-at fields.",
+        "Classify 12 OKX funding future observed_at labels as scheduled settlement semantic vs actual leakage; verify source clock prior to forecast independently.",
+        "Audit source-packet reuse 6945 seconds across original 11 v3-issue cohort under ORIGINAL freshness contract, not arbitrary current rule.",
+        "Demand original provider v3 source vintage and public publication/capture evidence; distinguish CFGI 2025 historical API backfill captured 2026.",
+        "Preserve 17 forecast attempts, v2/v3 split, nine outcomes, two absent at pinned source, abstentions, original independent event family denominator.",
+        "Explicitly compare source-clock evidence against mechanical-only baseline source needs, without computing historical edge."
+      ],
+      "deliverable": "Adversarial claim matrix (pass/fail/unknown) with source SHA, missing receipts, R1 eligibility verdict and minimum path to first actual R2 mechanical baseline; no PnL",
+      "abort_on": [
+        "No new material original evidence",
+        "Privacy boundary not met",
+        "Work overlaps ongoing Deep Research report without incremental falsifier",
+        "Existing Sol slot busy",
+        "Actual API budget not verified"
+      ]
+    },
+    {
+      "mission_id": "TASK2-AI-RULES-ECONOMIC-TRIBUNAL-003",
+      "priority": "P1",
+      "state": "BLOCKED_UNTIL_R1_ADMISSION",
+      "user_business_goal": "Blind comparison of original AI vs contemporaneous simple deterministic strategies using after-cost net wealth, calibration and risk utility",
+      "exact_references": [
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR08_AI_EDGE_TRIBUNAL_INTAKE_v1.md"
+      ],
+      "review_falsifiers": [
+        "Check original contemporaneous frozen model and prompt versions exist.",
+        "Ensure identical information sets, issued-time, attempt universe, missing values, abstentions and independent market events.",
+        "Prespecify neutral/persistence/volatility/momentum/HOLD and capital/cost matched controls.",
+        "Reject unverifiable model outputs, retrospective re-prompting, lookahead feature downloads or outcomes selected after the fact."
+      ],
+      "deliverable": "Only a preregistered experiment design until R1 cohort eligible; no fabricated simulation numbers",
+      "abort_on": [
+        "R1 not admitted",
+        "No original AI versions",
+        "No independently clustered events",
+        "No cost/slippage sources"
+      ]
+    }
+  ],
+  "mandatory_scientific_boundaries": [
+    "NO ORIGINAL FORECAST OR OUTCOME REWRITE",
+    "NO COMPLETED HISTORICAL R2-R7 CLAIM WITHOUT RECEIPT",
+    "INDEPENDENT_EVENT_FAMILY_N_NOT_SAME_AS_ROWS",
+    "NO PRIVATE_PROVIDER_RAW_IN_PUBLIC",
+    "NO MODEL SELF_APPROVAL_OR_SELF_MERGE",
+    "NO MODEL_WEIGHTS_MARKET_RULES_TRADES_BUDGET_CHANGES",
+    "NO PAID_SOURCE_ACQUISITION",
+    "NO NEW_AUTOMATION"
+  ],
+  "route_owner": "EXISTING_RESEARCH_LAB_SOL_QUEUE_RELEASE_OWNER_AND_TEMPORARY_CHAT_SUPERVISOR",
+  "owner_decision_required_to_activate": true,
+  "validated_runtime_model_at_response": "OFFICIAL_MODEL_DOCS_EXISTS_BUT_PER_ACCOUNT_API_CREDENTIALS_AND_SPEND_UNKNOWN",
+  "historical_r2_to_r7_sims_executed_by_this_packet": 0,
+  "market_first_known_admission_granted": false
+}

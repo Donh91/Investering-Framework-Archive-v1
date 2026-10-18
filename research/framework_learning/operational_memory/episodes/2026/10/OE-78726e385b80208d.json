@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/API_TASK_REGISTRY_v1.json",
+    "scripts/api_agent/temporary_bridge_pr_review.py",
+    "tests/api_agent/test_temporary_bridge_pr_review.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-78726e385b80208d",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-strict-sol-pr-review-verdict-parsing-status",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(api): accept canonical semicolon-delimited Sol review verdict without dropping valid receipts * test(api): reproduce Sol PASS_WITH_FINDINGS semicolon receipt failure and reject malformed prefixes * fix(review): require entire canonical verdict instead of accepting injected summary prefixes * test(review): reject injected FAIL, negated markers, duplicate authority claims and extra clauses * fix: use literal dot in fullmatch verdict grammar * contract: align governed Sol review verdict grammar with fail-closed parser * contract: align governed Sol review verdict grammar with fail-closed pa",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/API_TASK_REGISTRY_v1.json": "c3938966833d8ff1d89608f1ff7c1d673af21726",
+    "scripts/api_agent/temporary_bridge_pr_review.py": "89d6dd7a103b660b252a9787969cddf5cdf6ce48",
+    "tests/api_agent/test_temporary_bridge_pr_review.py": "7db6097055312edaaf7cbda56200468b8446d21d"
+  },
+  "source_commit_sha": "78726e385b80208dd9a8e78d0f3e3fcaa2799e74",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-15T19:34:00-07:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(api): strict Sol PR-review verdict parsing and status consistency"
+}

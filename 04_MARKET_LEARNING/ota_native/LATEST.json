@@ -9,12 +9,12 @@
   },
   "classification_counts": {
     "CONTEXT_ONLY": 1,
-    "EVIDENTIAL": 2,
+    "EVIDENTIAL": 1,
     "NEW_INFORMATION": 1
   },
   "classified_deltas": [
     {
-      "claim": "New settled session 2026-10-12",
+      "claim": "New settled session 2026-10-15",
       "classification": "NEW_INFORMATION",
       "id": "D-SETTLE"
     },
@@ -22,11 +22,6 @@
       "claim": "ETHBTC settled evidence advanced.",
       "classification": "EVIDENTIAL",
       "id": "D-ETHBTC"
-    },
-    {
-      "claim": "ETHBTC settled close crossed below the existing registered 0.0300 reference.",
-      "classification": "EVIDENTIAL",
-      "id": "D-GATE-BREAK"
     },
     {
       "claim": "Settled BTC/ETH relative-leadership sequence changed.",
@@ -38,63 +33,61 @@
   "early_trigger": {
     "adaptive_rotation_attention": false,
     "note": "Adaptive cadence is attention-only and does not create a rule or force a native OTA report.",
-    "reasons": [
-      "ETHBTC_SETTLED_CROSS_BELOW_REGISTERED_0_0300"
-    ],
-    "triggered": true
+    "reasons": [],
+    "triggered": false
   },
   "eth_leadership": {
     "classification": "DESCRIPTIVE_RELATIVE_LEADERSHIP_ONLY",
-    "consecutive_btc_led_settled": 1,
+    "consecutive_btc_led_settled": 0,
     "in_progress_leader": "BTC",
-    "in_progress_relative_pp": -0.02025435128629738,
+    "in_progress_relative_pp": -0.4482558446170293,
     "in_progress_semantics": "IN_PROGRESS_CONTEXT_ONLY",
-    "latest_settled_relative_pp": -1.2428859478588739,
+    "latest_settled_relative_pp": 0.15493314516372703,
     "settled_eth_led_last_4": 2,
-    "settled_eth_led_last_6": 2,
+    "settled_eth_led_last_6": 4,
     "settled_sessions_last_4": 4,
     "settled_sessions_last_6": 6
   },
   "ethbtc_gate": {
     "consecutive_settled_closes_at_or_above": 0,
     "in_progress": {
-      "close_margin_pct": -0.33333333333332993,
-      "date_utc": "2026-10-13",
-      "hour_count": 2,
-      "latest_close": 0.0299,
-      "low": 0.0297,
-      "low_margin_pct": -0.9999999999999898,
+      "close_margin_pct": -1.433333333333331,
+      "date_utc": "2026-10-16",
+      "hour_count": 21,
+      "latest_close": 0.02957,
+      "low": 0.02953,
+      "low_margin_pct": -1.5666666666666607,
       "semantics": "IN_PROGRESS_NEVER_SETTLED_EVIDENCE"
     },
     "last7_close_margin_monotonic_compression": false,
-    "last7_close_margin_slope_pp_per_session": -0.7345238095238099,
+    "last7_close_margin_slope_pp_per_session": -0.3035714285714288,
     "last7_low_margin_monotonic_compression": false,
-    "last7_low_margin_slope_pp_per_session": -0.6154761904761908,
+    "last7_low_margin_slope_pp_per_session": -0.5952380952380942,
     "last7_settled_close_margin_pct": [
-      5.100000000000016,
-      3.0000000000000027,
-      0.86666666666666,
       0.3666666666666707,
       0.6666666666666821,
       0.9666666666666712,
-      -0.33333333333332993
+      -0.33333333333332993,
+      0.13333333333334085,
+      -1.1666666666666603,
+      -0.9666666666666601
     ],
     "last7_settled_low_margin_pct": [
-      4.633333333333334,
-      1.866666666666661,
-      -0.6333333333333302,
       -0.10000000000000009,
       0.3666666666666707,
       0.29999999999998916,
-      -0.40000000000000036
+      -0.40000000000000036,
+      -0.9999999999999898,
+      -1.866666666666661,
+      -3.733333333333333
     ],
-    "latest_settled_close": 0.0299,
-    "latest_settled_close_margin_pct": -0.33333333333332993,
-    "latest_settled_date_utc": "2026-10-12",
-    "latest_settled_low": 0.02988,
-    "latest_settled_low_margin_pct": -0.40000000000000036,
+    "latest_settled_close": 0.02971,
+    "latest_settled_close_margin_pct": -0.9666666666666601,
+    "latest_settled_date_utc": "2026-10-15",
+    "latest_settled_low": 0.02888,
+    "latest_settled_low_margin_pct": -3.733333333333333,
     "registered_level_read_only": 0.03,
-    "settled_close_crossed_below_on_latest": true,
+    "settled_close_crossed_below_on_latest": false,
     "settled_close_reclaimed_on_latest": false,
     "threshold_authority": "READ_ONLY_EXISTING_REGISTERED_LEVEL"
   },
@@ -103,7 +96,7 @@
     "ota_context_gaps": [],
     "rule": "If a native owner artifact exists, absence from an external/legacy OTA context is OTA_CONTEXT_GAP, not FRAMEWORK_DATA_GAP."
   },
-  "generated_at_utc": "2026-10-13T07:08:09Z",
+  "generated_at_utc": "2026-10-16T23:02:21Z",
   "governance": {
     "canonical_state_change": false,
     "do_not_force_finding": true,
@@ -114,30 +107,30 @@
   },
   "in_progress_session": {
     "btc": {
-      "close": 82442.21,
-      "high": 82471.18,
-      "low": 81033.66,
-      "open": 81850.01,
-      "return_pct": 0.7235185432475921
+      "close": 81727.84,
+      "high": 82940.81,
+      "low": 80809.25,
+      "open": 82245.93,
+      "return_pct": -0.6299278274316977
     },
-    "date_utc": "2026-10-13",
+    "date_utc": "2026-10-16",
     "eth": {
-      "close": 2464.37,
-      "high": 2466.47,
-      "low": 2409.09,
-      "open": 2447.16,
-      "return_pct": 0.7032641919612947
+      "close": 2415.74,
+      "high": 2494.0,
+      "low": 2393.48,
+      "open": 2442.07,
+      "return_pct": -1.078183672048727
     },
-    "eth_minus_btc_return_pp": -0.02025435128629738,
+    "eth_minus_btc_return_pp": -0.4482558446170293,
     "ethbtc": {
-      "close": 0.0299,
-      "high": 0.02992,
-      "low": 0.0297,
-      "open": 0.02991,
-      "return_pct": -0.03343363423603529
+      "close": 0.02957,
+      "high": 0.03014,
+      "low": 0.02953,
+      "open": 0.0297,
+      "return_pct": -0.43771043771044793
     },
-    "hour_count": 2,
-    "last_hour_open_utc": "2026-10-13T01:00:00Z",
+    "hour_count": 21,
+    "last_hour_open_utc": "2026-10-16T20:00:00Z",
     "session_status": "IN_PROGRESS_INCOMPLETE"
   },
   "legacy_claude_ota": {
@@ -147,28 +140,28 @@
     "path": "04_MARKET_LEARNING/claude_ota/LATEST_CLAUDE_OTA_STATUS_v1.json",
     "status": "LEGACY_CONTEXT_ONLY"
   },
-  "mode": "TRIGGER_ONLY",
+  "mode": "FULL_FIXED_OR_MANUAL",
   "owner_readback": {
     "adaptive_cadence": {
       "authority": "OPERATIONAL_SAMPLING_ONLY_NON_BINDING",
       "boost_active": false,
       "boost_reasons": [],
       "ethbtc_live": null,
-      "generated_at_utc": "2026-10-13T03:03:41.431012+00:00",
-      "latest_top100_proxy_advance_ratio": 0.12,
+      "generated_at_utc": "2026-10-16T21:11:17.982148+00:00",
+      "latest_top100_proxy_advance_ratio": 0.28,
       "path": "03_DAILY_CAPTURE_LOGS/cadence/LATEST.json",
       "registered_ethbtc_level_read_only": 0.03,
       "status": "PASS"
     },
     "breadth": {
-      "advance_ratio": 0.12,
-      "advancers": 12,
-      "decliners": 84,
+      "advance_ratio": 0.33,
+      "advancers": 33,
+      "decliners": 65,
       "evidence_role": "PROXY_ONLY_DESCRIPTIVE_ZERO_EXECUTION_WEIGHT",
-      "flat": 4,
-      "membership_hash": "079cf992cc5d30416f74de28e76fea925728fc4c2e32163ce8df8a50d795d258",
-      "outperforming_btc_count": 29,
-      "outperforming_eth_count": 39,
+      "flat": 2,
+      "membership_hash": "0b3cd4909dee126e1e384fae7c7295560c2adafc059b0566bc093a368e14cf9b",
+      "outperforming_btc_count": 43,
+      "outperforming_eth_count": 50,
       "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
       "status": "PASS"
     },
@@ -177,14 +170,14 @@
       "contract": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
       "latest_final": {
         "BTC": {
-          "date": "2026-10-09",
-          "reported_total": 21.1,
+          "date": "2026-10-15",
+          "reported_total": 5.1,
           "session_final": true,
           "total_parity": true
         },
         "ETH": {
-          "date": "2026-10-09",
-          "reported_total": -56.1,
+          "date": "2026-10-15",
+          "reported_total": -60.3,
           "session_final": true,
           "total_parity": true
         }
@@ -230,7 +223,7 @@
       "daily_result": "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
       "l4_bridge_status": "PARTIAL_NATIVE_DISCOVERY_CONTEXT_NOT_FULL_L4_ATTRIBUTION_OWNER",
       "l4_evidence_rule": "NO_L4_EVIDENCE_ROW_FROM_UNVERIFIED_DISCOVERY_OR_RETROSPECTIVE_TAGGING",
-      "observation_date_utc": "2026-10-12",
+      "observation_date_utc": "2026-10-16",
       "owner_contract": "SITUATION_ROOM_DAILY_OWNER_LATEST_POINTER_v1",
       "path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/LATEST.json",
       "run_status": "DEGRADED",
@@ -247,36 +240,36 @@
     "orderbook_delta_over_60m_allowed": false,
     "settled_definition": "EXACTLY_24_UNIQUE_UTC_HOURLY_ROWS_00_THROUGH_23"
   },
-  "report_hash_sha256": "3179f85ec755a3e283fc87d2120e4bfaa80066870dc63e29ac5ab45110e7ede6",
+  "report_hash_sha256": "8b77ba8005963164de8abbdf243a5f184dab9f0cfc468ed753997a658d72e3e0",
   "schema_version": 1,
   "settled_session": {
     "btc": {
-      "close": 81850.0,
-      "high": 84352.0,
-      "low": 81750.09,
-      "open": 83773.12,
-      "return_pct": -2.295628955922846
+      "close": 82245.93,
+      "high": 82634.3,
+      "low": 79800.0,
+      "open": 81682.02,
+      "return_pct": 0.6903722508331489
     },
-    "date_utc": "2026-10-12",
+    "date_utc": "2026-10-15",
     "eth": {
-      "close": 2447.17,
-      "high": 2579.88,
-      "low": 2443.0,
-      "open": 2536.94,
-      "return_pct": -3.53851490378172
+      "close": 2442.08,
+      "high": 2467.05,
+      "low": 2318.0,
+      "open": 2421.61,
+      "return_pct": 0.8453053959968759
     },
-    "eth_minus_btc_return_pp": -1.2428859478588739,
+    "eth_minus_btc_return_pp": 0.15493314516372703,
     "ethbtc": {
-      "close": 0.0299,
-      "high": 0.03065,
-      "low": 0.02988,
-      "open": 0.03029,
-      "return_pct": -1.2875536480686733
+      "close": 0.02971,
+      "high": 0.02991,
+      "low": 0.02888,
+      "open": 0.02965,
+      "return_pct": 0.2023608768971341
     },
     "hour_count": 24,
-    "last_hour_open_utc": "2026-10-12T23:00:00Z",
+    "last_hour_open_utc": "2026-10-15T23:00:00Z",
     "session_status": "SETTLED_COMPLETE_24H"
   },
   "source_policy": "READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS",
-  "trigger": "DAILY_SETTLED_TRANSITION_CHECK"
+  "trigger": "FIXED_WEEKLY_FRIDAY"
 }

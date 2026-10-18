@@ -1,3 +1,53 @@
+# AI DISCOVERY & VALIDATION (GPT-6) — Existing Research Queue
+
+**Current operational crosswalk: 2026-10-15.** **Status: RESEARCH_ONLY / RENEWED_FOCUS, NOT NEW ACTIVATION.**
+**Historical path retained:** `ASTRA_DISCOVERY_VALIDATION_RESEARCH_QUEUE.md` remains a stable link; older "Astra" descriptions below are source-era naming, **not** a model dependency or reason to wait. Select the currently runtime-qualified GPT-6 role via `research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json` and existing budget/task registries. Do not hard-code one GPT-6 variant, create an Astra-specific owner, or rename historical receipts.
+
+## Current purpose, not another engine
+
+One cross-domain research program: **measure whether AI adds verifiable incremental discovery, falsification or investment-research value beyond deterministic baselines, per unit of cost**. It consumes existing Research Lab, AUTO_TRADING, Task 2, agent-efficiency, Experiment Lifecycle and API routing owners. It is **not** a new dispatcher, scheduler, queue authority, strategy engine, scientific judge, portfolio executor or source of truth. The sections below labelled P0/P1/P2 are the *historical research design*, not an executable queue overriding fresh source/owner state.
+
+## Fresh-state owner and evidence crosswalk (15 Oct 2026 snapshot)
+
+| Existing owner / evidence | What is already true | Current disposition |
+| --- | --- | --- |
+| `04_RESEARCH_LAB/auto_trading/experiments/E1_LEAKAGE_VALIDATION_RESULT_v1.json` plus E1X and `06_RESEARCH_LAB/m4_checkpoints/2026-10-05__RL-AUTOTRADING-EVIDENCE-004__FINAL_ADJUDICATION_v1.md` | Mechanical temporal-leakage testing has real positive/negative evidence; it does **not** certify all source lanes | **REUSE**, never rebuild as a new validation engine |
+| `04_RESEARCH_LAB/auto_trading/experiments/E3_TRIAL_N5_INDEPENDENT_RESULT.json` | AT-HYP-0019 independent result was `NOT_SUPPORTED`; local trial accounting is demonstrated | **PRESERVE NEGATIVE** |
+| `research/experiment_lifecycle/e2/results/AT-E2-911-v1/result.json`, issue #911 (closed) | One bounded GPT-5.6 Luna E2 comparison ran: 3/3 compiled rules invalid, 144 direct-policy calls, result `COMPILED_RULE_NOT_SUPPORTED`; this is **not** a GPT-6 result | **CLOSED SINGLE EXPERIMENT**, no inferred general AI strategy edge |
+| PR #1643 `Agent efficiency: reject false empirical pairs and reconcile stale Astra handoffs` | Open at this snapshot. The delegation benchmark and synthetic fixtures are proposed; synthetic fixture success must not be presented as an actual independent GPT-6 comparison | **EXISTING ENGINEERING OWNER**, review exact current head/CI before reuse, do not duplicate |
+| `07_PROMPTS_AND_AGENTS/astra/LATEST_ASTRA_LANDING_ZONE.json` and `research/api_agent/AGENT_INVOCATION_CONTRIBUTION_LEDGER_SHADOW_v1.json` | Landing zone `PREPARED_NOT_ACTIVE`; contribution sidecar `NOT_IMPLEMENTED_SIDE_CAR_OBSERVATION_ALLOWED` | **DO NOT CLAIM LIVE SWARM OR AUTOMATED AGENT-UTILITY SCORING** |
+| `research/experiment_lifecycle/SEQUENTIAL_RESEARCH_QUEUE_v1.json`, issue #1557 | One active research stage only; incremental OpenAI/CFGI allocation **zero** in this queue; cross-family proposal-time denominator remains a broad-search blocker | **NO HIGH-THROUGHPUT STRATEGY MINING** |
+| Task 2 existing execution owner and #1596 | R0 provenance / R1 first-known point-in-time and denominator admission precede investment-performance interpretation | **NO RECONSTRUCTED HISTORIC EDGE FROM UNADMITTED DATA** |
+| `research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json`, existing Sol mission dispatcher #1476, existing Supervisor/Codex owners | GPT-6 model selection, approved execution, code review and cost limits are owned already | **REUSE, NO NEW ROUTER OR PAID WATCHER** |
+
+Historical snapshots above must be re-read on current `main` before work or conclusions, particularly PR #1643, queue/admission, and Task 2 source gates.
+
+## Narrow execution sequence: what actually gets attention next
+
+**D0, now, zero new spend: OWNER RECONCILIATION.** Reuse PR #1643 and the existing agent-efficiency mission. Verify its exact-head tests/reviews and independent-receipt protections. Review E2-911 and M4 negative results so that neither synthetic validation fixtures nor previous AI losses are erased. If #1643 is not merged/reviewed, report `BLOCKED_REVIEW` rather than launching a duplicate harness.
+
+**D1, first permitted empirical test: SAME FROZEN QUESTION, ONE GPT-6 vs 2–3 bounded specialists.** When the PR/harness is admitted by existing owners and current budget/permissions permit it, pre-register one public-safe, source-pinned research question from an existing Task 2/Research Lab evidence package. Use the same immutable facts, decision clock, unknowns, holdout, rubric and information budget; separate proposer from evaluator; prohibit outcome leakage and hidden shared state. Record *actual independent* evidence roots, false findings, decisive falsifiers, omissions, correctness, repeatability, latency, token/tool cost, and whether extra roles changed the final adjudication. Use the existing contribution sidecar contract if/when its runtime is truly ready; otherwise an isolated ephemeral run receipt is sufficient and must not claim sidecar activation. **D0 synthetic fixtures are not D1 results.**
+
+**D1 kill rule:** If specialists produce no independently verifiable decision-relevant information, add only duplicates, or violate a hard safety/provenance gate, choose the simpler single-GPT-6/deterministic lane. Do not promote a costlier swarm on narrative quality.
+
+**D2, only after D1: FILTER_THEN_GPT6 versus ALL_TO_GPT6.** Reuse already-owned autonomous market/Alpha Lab observations, with matched periods and an as-of candidate universe. Evaluate cheaper deterministic/low-tier filters versus unfiltered expert calls on *both* false positives and missed later-valid candidates; track opportunity cost, recall, costs and abstentions. Do not rewrite historical observations or launch paid monitoring.
+
+**D3, separately science-gated: AI research edge and strategy compilation.** Revisit deterministic baseline vs AI-authored frozen rule vs direct per-bar AI only after #1557 trial-denominator/admission, source clocks and current Task 2 purity gates are satisfied. E2-911 is negative prior evidence, not a template for claiming GPT-6 superiority or sufficient economic sample. Existing experiment lifecycle/scientific admission remains sole research owner; keep trading authority `NONE`.
+
+**No parallel restart:** If a current owner already operates D1/D2/D3 or the same evidence family, route work there and mark this crosswalk `DUPLICATE_OWNER_REUSE`; do not register a second experiment or new run merely to increase activity.
+
+## Completion standard and priority discipline
+
+A useful D1 result requires **one actual frozen paired-run receipt** and a separate reproducible evaluation showing both models received genuinely equivalent admissible inputs. A code-only CI PASS, an issue comment, a synthetic receipt or a model narrative is not completion. Future measured D2/D3 outcomes require their own independent scientific admission.
+
+Primary metric: **correct, unique, decision-relevant evidence and surviving falsifiable research per unit of total compute**. Secondary: false positive/false negative cost, horizon correctness, independent roots, provenance completeness, latency and failure rate. Negative/no-edge and `NOT_RUN` remain valid results.
+
+Do not displace Task 2 R0/R1, P0 production reliability, approved review/merge obligations, or existing budget ceilings. No added agent, workflow, supervisor, live trading, portfolio action, source promotion, paid research, or CI bypass is authorized by this document. Scope is an existing-owner operational reminder and scientific routing, not automatic dispatch.
+
+---
+
+## Historical design (retained for source provenance)
+
 # ASTRA DISCOVERY / VALIDATION RESEARCH QUEUE
 
 Status: `RESEARCH_ONLY`

@@ -137,3 +137,14 @@ If a packet reveals a flaw in the frozen research design, STOP and route back to
 Completion of P1-P6 means SHADOW_RUNTIME_READY only.
 Prospective counters remain 0 until an explicit reviewed shadow activation receipt.
 Production remains forbidden.
+
+## Supervisor vNext execution clarification (2026-10-13; proposal pending PR review)
+
+- This contract remains SHADOW_ONLY. Research-only scheduled checks do not authorize user-facing token alerts, buy signals, production promotion, or trading.
+- Existing owner #1087 governs visibility-gap, source/identity and census integrity; #1339 governs the selective alert bridge; #1340 governs immutable prospective denominator and outcomes; #1156 owns bounded executor routing and self-healing. Do not establish duplicate schedulers, scanners, ledgers or scores.
+- Treat CODEX_ONLY above as the historical packet-executor instruction until an independent review and explicit owner ratification updates that authority. A Sol High read-only audit is permitted as analysis, but not a substitute for approved code-executor authority.
+- Before any paid audit, bind exact main SHA, current issues, existing run/receipt and authorized budget. Record model ID, reasoning effort, request/response or immutable receipt references, token usage, actual billed/estimated USD, and validator outcome. A requested audit is not a completed audit.
+- Cheapest first: deterministic health/identity/CA checks, dedupe and material-change detection. Escalate to a stronger model only for a genuinely decision-relevant ambiguity or bounded code-review problem. Healthy unchanged means NOOP; no duplicate wake.
+- Research learning: preserve immutable first-seen visibility, user-before-machine misses, negative/ordinary cases, zero-result days, source/caller attribution, CA publication/binding latency and realized sellability-aware outcomes. Only prospective leakage-safe champion-vs-shadow-challenger comparisons may support promotion proposals.
+- Explicitly reconcile any conflict between ChatGPT task enabled state, repository workflow health and supervisor handoff; none alone proves a successful run. Require current run ID plus committed receipt and consumer readback. If the evidence is absent, status is UNKNOWN rather than HEALTHY.
+- No semantic threshold/score change, live notification, production activation or autonomous merge without the existing independent review and governance gate. All changes via focused PR and tests, with rollback path.

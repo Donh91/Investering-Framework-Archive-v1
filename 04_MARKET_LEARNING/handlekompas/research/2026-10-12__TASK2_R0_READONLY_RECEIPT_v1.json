@@ -1,0 +1,179 @@
+{
+  "contract": "COMPASS_HORIZON_EDGE_TASK2_R0_RECEIPT_v1",
+  "research_only": true,
+  "canonical_market_authority": false,
+  "public_metadata_only": true,
+  "source_snapshot": {
+    "repo": "Donh91/Investering-Framework-Archive-v1",
+    "ref": "a939cf5df42f3e9a6db1503d59a55e4305fa3c38",
+    "task1_pr": 1592,
+    "task2_pr": 1573,
+    "pr1590_merged_verified": true,
+    "pr1590_merge_commit": "79d73b334e641394c4fb84c3953e136231217714",
+    "owner_issues": [
+      1530,
+      1553,
+      1557,
+      1516
+    ]
+  },
+  "evidence_bindings": {
+    "m6": {
+      "path": "research/framework_memory/m6_warning_events/LATEST.json",
+      "git_blob_sha": "1acf875c958253b44e78f23e9fd0f84208143f80"
+    },
+    "features": {
+      "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
+      "git_blob_sha": "f56a87ef2a49433a57d3838ccfa92e3a2d620a32"
+    },
+    "governor": {
+      "path": "research/framework_memory/edge_compound_governor/LATEST.json",
+      "git_blob_sha": "b45aa0465da95ebf0c1da841dbc44da81f2fe380"
+    },
+    "calibration": {
+      "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+      "git_blob_sha": "efe1cc88ade2e20a02593f31642009d68780566a"
+    },
+    "pullback": {
+      "path": "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json",
+      "git_blob_sha": "84053fac2da1800d01d5a13b24e0371152c43339"
+    },
+    "pullback_perf": {
+      "path": "04_MARKET_LEARNING/pullback_learning/PERFORMANCE_SUMMARY.json",
+      "git_blob_sha": "5007dc1ff593d585df210ac3f3f524856967b9b5"
+    },
+    "t2b": {
+      "path": "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/T2B_PROVENANCE_PREFLIGHT_v1.json",
+      "git_blob_sha": "87aeafdd0e96fe4aac7bdf54761abe8b99f208f2"
+    },
+    "manifest": {
+      "path": "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/144_VARIANT_FROZEN_MANIFEST_v1.json",
+      "git_blob_sha": "a75055851c41d2b4cd2532945c16bdecdef46c2d"
+    }
+  },
+  "source_chronology": {
+    "rows": 16,
+    "warnings_equal_knowledge": 16,
+    "candle_close_lte_commit": 16,
+    "first_commit_lte_warning": 16,
+    "declared_pit_pass": 16,
+    "missing_clock": 0,
+    "age_hours_min": 0.19333333333333333,
+    "age_hours_max": 2.8875,
+    "meaning": "PUBLIC_FEATURE_LEDGER_INTERNAL_CHRONOLOGY_ONLY; no independently ratified source availability/SLA or immutable private-provider proof"
+  },
+  "outcome_population": {
+    "official": {
+      "git_tree_sha": "b544250c5c760191a346a31652ee5d7e259d3a1d",
+      "files": 352,
+      "source_forecast_ids_from_filename": 147,
+      "horizon_counts": {
+        "12h": 130,
+        "72h": 126,
+        "168h": 96
+      },
+      "tree_complete": true
+    },
+    "shadow": {
+      "git_tree_sha": "deabe8d542e93a306ea8ce2ac3f7c814508366e7",
+      "files": 53,
+      "source_forecast_ids_from_filename": 27,
+      "horizon_counts": {
+        "12h": 23,
+        "72h": 20,
+        "168h": 10
+      },
+      "tree_complete": true
+    },
+    "scored_contract": "historical_v2_in_prior_natural_run; no all-file parsing or independent full contract census in this R0",
+    "new_v3_matured_in_task1_natural_run": 0,
+    "admitted_official_shadow_pairs_in_task1_natural_run": 0,
+    "quarantined_shadow_pairs_in_task1_natural_run": 53,
+    "scoring_eligibility": "BLOCKED_MIXED_VERSION_AND_MATURITY",
+    "full_censor_census": null
+  },
+  "m6": {
+    "event_count": 16,
+    "provisional_clusters": 2,
+    "clustered_events": {
+      "M6F-20260919T092156Z": 12,
+      "M6F-20261012T064626Z": 4
+    },
+    "matured_counts": {
+      "14d": 12,
+      "24h": 12,
+      "30d": 0,
+      "72h": 12,
+      "7d": 12
+    },
+    "matured_provisional_family_counts": {
+      "14d": 1,
+      "24h": 1,
+      "30d": 0,
+      "72h": 1,
+      "7d": 1
+    },
+    "true_independent_adverse_families": null,
+    "independent_control_families": null,
+    "feature_row_count": 16,
+    "feature_outcome_joined": false,
+    "source_governor_generated_at_utc": "2026-10-12T20:30:56.412636Z",
+    "natural_governor_m6_payload_integrity": {
+      "checked": 48,
+      "invalid": 0,
+      "reasons": [],
+      "status": "PASS"
+    },
+    "natural_governor_decision": "COLLECT"
+  },
+  "calibration": {
+    "eligible_series_rows": 212,
+    "typed_warning_series_rows": 0,
+    "source_outcomes": 352,
+    "generated_at_utc": "2026-10-12T20:30:48Z"
+  },
+  "historical_pit": {
+    "annotations": 94,
+    "claim_a": "NOT_TESTABLE_AT_PIT",
+    "actual_warning_join_performed": false
+  },
+  "pullback": {
+    "eligibility": "SUSPENDED_NO_ELIGIBILITY_CONTRACT",
+    "closed_eligible_episodes": 0,
+    "trim_reload_uplift": null
+  },
+  "synthetic": {
+    "oracle_path": "04_MARKET_LEARNING/handlekompas/research/2026-10-12__task2_synthetic_oracle_v1.mjs",
+    "frozen_manifest_git_sha": "a75055851c41d2b4cd2532945c16bdecdef46c2d",
+    "frozen_grid_variants": 144,
+    "independent_synthetic_scenarios": 14,
+    "variant_scenario_executions": 2016,
+    "invalid_input_rejections": 6,
+    "manifest_tuple_comparison": "PASS",
+    "production_harness_execution": "NOT_RUN_IN_THIS_TASK2_TOOL_RUN; prior CI and Task1 reported PASS",
+    "historical_outcomes_scored": 0,
+    "no_variant_winner_selected": true
+  },
+  "global_proposal_time_trial_denominator": null,
+  "verdicts": {
+    "R0_SOURCE_CHRONOLOGY": "PARTIAL_PUBLIC_METADATA_PASS",
+    "R0_SYNTHETIC_CONTROLS": "PASS_INDEPENDENT_ORACLE",
+    "R1_COHORT_CENSUS": "PARTIAL_FILE_INVENTORY_ONLY",
+    "R2_7D_RANGE_INCREMENT": "NOT_RUN_SOURCE_ADMISSION_PENDING",
+    "R3_14_21D_PATH": "NOT_RUN_OWNER_FREEZE_PENDING",
+    "R4_DELIVERED_ACTION_ECONOMICS": "BLOCKED",
+    "R4P_PULLBACK": "BLOCKED_SUSPENDED_ELIGIBILITY",
+    "R5_HISTORICAL_FALSIFICATION": "BLOCKED_PIT_ADMISSION",
+    "R6_PROSPECTIVE": "PENDING_MATURITY",
+    "R7_INDEPENDENT_SCIENCE_REVIEW": "PENDING"
+  },
+  "prohibitions": [
+    "NO_HISTORICAL_PERFORMANCE_CLAIM",
+    "NO_PNL_OR_ALPHA_CLAIM",
+    "NO_AUTOMATIC_TRADING",
+    "NO_WARNINGS_AS_SELL",
+    "NO_2025_2026_UNSEEN_HOLDOUT",
+    "NO_PRIVATE_PROVIDER_VALUES",
+    "NO_NEW_SCHEDULER"
+  ]
+}

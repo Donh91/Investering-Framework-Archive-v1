@@ -1,0 +1,96 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-task2-okx-funding-settlement-clock-v1",
+  "submitted_at_utc": "2026-10-14T15:32:03.646Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "Task 2 R1 native Compass funding-time timestamp semantics / 2026-10-14",
+    "source_paths": [
+      "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_FEATURE_CLOCK_AUDIT_v1.json",
+      "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_FEATURE_CLOCK_AUDIT_v1.md",
+      "scripts/data_ping/native_handlekompas.py",
+      "scripts/data_terminal/okx_swap_owner_collector.py",
+      "tests/data_ping/test_official_daily_compass.py"
+    ]
+  },
+  "title": "Fix OKX funding settlement-time provenance mislabeled as quote observed_at (research-only metadata)",
+  "objective": "Repair ONLY the provenance metadata mapping for BTC/ETH OKX funding observations in native Compass evidence_snapshot. In existing scripts/data_ping/native_handlekompas.py, live funding_time is a scheduled settlement epoch in milliseconds but currently populates observed_at, creating misleading future-observed timestamps in six of nine original v3 forecast source chains. Keep funding_rate/value, health, scoring, eligibility decision, forecast and action policy unchanged. Preserve funding settlement epoch as explicit separate settlement-time metadata if compatible with existing schema; otherwise propose a versioned backward-compatible additive note and remain NEEDS_MORE_EVIDENCE. Derive quote observed/retrieved clock only from an independently bound pre-existing upstream source capture timestamp/receipt when available; never manufacture capture/publication time from settlement, current wall-clock, Git commit date or retrospective API. Missing original quote capture clock remains UNKNOWN, not automatically fresh/predictive or a reason to rewrite historical outcomes. Add deterministic positive/negative regression tests, preserve original 2026-10-12/13 issued data. Do not self-promote historical PIT or change production trade signals. If contract semantics would change downstream model decisions, stop and escalate to existing framework owner instead of quietly altering gates.",
+  "finding_key": "TASK2_OKX_FUNDING_SETTLEMENT_TIME_MISLABELED_AS_FEATURE_OBSERVATION",
+  "primary_target": "scripts/data_ping/native_handlekompas.py",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/data_ping/native_handlekompas.py",
+    "Donh91/Investering-Framework-Archive-v1:tests/data_ping/test_official_daily_compass.py",
+    "Donh91/Investering-Framework-Archive-v1:tests/data_ping/test_funding_clock_semantics.py",
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/*TASK2_R1* only for append-only source-valued-free verification receipt"
+  ],
+  "evidence": [
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_FEATURE_CLOCK_AUDIT_v1.json",
+      "summary": "At a pinned original Git head, 12 funding field clocks in six of nine native-v3 issued forecasts show observed_at after issue because observed_at is OKX funding_time (scheduled settlement) rather than original quote capture."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/data_ping/native_handlekompas.py",
+      "summary": "Current exact main blob d00d38bed517861fa2487dce42d330bf05812f6d, source builder _feature('btc_funding'/'eth_funding', ... funding_time observed_at), independently inspected."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/data_terminal/okx_swap_owner_collector.py",
+      "summary": "Current exact main blob db67b1a429794c0b022f2f06db1e36d58b8e2b50 distinguishes fundingRate from fundingTime; no quote first-known proof is exported by that field."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_11_SOURCE_CLOCK_CASES_v1.json",
+      "summary": "Full 11-v3 original issuance population, nine outcomes and two outcome-absent attempts; share identical source/clock ambiguity."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://www.okx.com/docs-v5/en/",
+      "summary": "Vendor API documentation for fundingTime = next funding settlement; historical quote as-of must be independently anchored."
+    },
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1630",
+      "summary": "Merged historical source-clock audit; source and output remain immutable."
+    }
+  ],
+  "reproduction": "At current main, inspect scripts/data_ping/native_handlekompas.py: _feature('btc_funding'/'eth_funding') passes derivative_live[BTC/ETH-USDT-SWAP].funding.funding_time as observed_at. The collector constructs funding_time=int(row['fundingTime']). In a deterministic fixture with issue timestamp 2026-10-12T23:24:24Z and funding settlement time after issue, observe evidence_snapshot.selected_features.btc_funding/eth_funding.observed_at erroneously set to future epoch despite the original auto-state packet existing preissue. The audit receipt freezes 12 affected original labels / nine issued-v3 12h-outcome cases, without claiming actual lookahead.",
+  "acceptance_tests": {
+    "positive": [
+      "Unit fixture: current quote rate captured before issuance and settlement after issuance; output preserves funding value and all original action/score/health eligibility fields, but gives distinct capture-as-of and settlement timestamps; no future settlement is misrepresented as observed_at.",
+      "Fixture: settlement already occurred and authentic quote/capture time precedes issued_at; preserve typed settlement metadata and original economic values, and no spurious forward timestamp.",
+      "Backwards-compatible schema: unchanged original source packet/forecast blobs; deterministic repeat output hash for same input; no new external API calls, duplicate workflow or private data.",
+      "Run relevant existing tests/data_ping/test_official_daily_compass.py and new bounded regression tests; verify derived labels and no net change in original forecast/rule/action authority."
+    ],
+    "negative": [
+      "Missing original quote/capture time: NEVER copy scheduled future funding_time into observed_at, NEVER synthesize today's UTC time or Git commit time as original provider publication, and NEVER silently mark verified PIT. Use unknown provenance/fail-closed classification without mutating trade signals.",
+      "Spoofed quote-capture timestamp after issue or future relative to packet generated_at must remain not R1 admissible; detection must fail a strict PIT eligibility fixture, not rewrite past data.",
+      "Milliseconds-vs-seconds test: scheduled fundingTime epoch in ms must not pass as actual observation-time in seconds or ISO publication time.",
+      "Conflicting time-zone or invalid capture schema yields explicit unknown provenance rather than a fabricated chronological guarantee.",
+      "No legacy v1/v2 original output overwritten, no market gates, model weights, threshold changes, canonical authority or portfolio output modified; tests fail on such changes."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic trade execution",
+    "automatic buy or sell recommendations",
+    "historical forecast/outcome rewrite",
+    "Round 3 scientific activation",
+    "paid data acquisition",
+    "automatic merge",
+    "new scheduler/workflow",
+    "private raw data publication"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "EXACT_MAIN_CODE_FIX_PLUS_POSITIVE_NEGATIVE_TIMECLOCK_FIXTURES_PLUS_NATIVE_HANDLEKOMPAS_REGRESSION_SUITE_PLUS_MERGED_SOURCE_HASH_READBACK_PLUS_INDEPENDENT_REVIEW_PLUS_ZERO_HISTORICAL_FORECAST_MUTATIONS"
+}

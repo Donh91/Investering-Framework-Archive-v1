@@ -16,11 +16,6 @@ on:
       - '.github/workflows/native-handlekompas.yml'
       - '.github/workflows/cn-site-v2-gate.yml'
   workflow_dispatch:
-    inputs:
-      production_readback:
-        description: 'Read-only browser QA of the published site (main only)'
-        type: boolean
-        default: false
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -35,6 +30,8 @@ jobs:
           python3 scripts/cycle_navigator/validate_public_series.py
           node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/tests/official-compass-freshness.test.mjs
+          node 05_CYCLE_NAVIGATOR/site/tests/full-stack-readback.test.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           python3 scripts/cycle_navigator/build_public_live_precision.py
@@ -111,25 +108,3 @@ jobs:
           ! grep -q 'HANDLEKOMPAS ·' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -q 'MASTER MONDAY →' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-      - name: Install bounded browser QA tools
-        run: |
-          npm install --prefix "$RUNNER_TEMP/cn-browser-qa-tools" --no-save --ignore-scripts playwright@1.64.0
-          node "$RUNNER_TEMP/cn-browser-qa-tools/node_modules/playwright/cli.js" install --with-deps chromium webkit
-      - name: Render current PR mobile product and consumer scenarios
-        if: inputs.production_readback != true
-        env:
-          CN_BROWSER_QA_NODE_MODULES: ${{ runner.temp }}/cn-browser-qa-tools/node_modules
-        run: node 05_CYCLE_NAVIGATOR/site/validate-mobile-browser.mjs
-      - name: Render published production mobile product
-        if: github.event_name == 'workflow_dispatch' && inputs.production_readback == true && github.ref == 'refs/heads/main'
-        env:
-          CN_BROWSER_QA_NODE_MODULES: ${{ runner.temp }}/cn-browser-qa-tools/node_modules
-        run: node 05_CYCLE_NAVIGATOR/site/validate-mobile-browser.mjs --production
-      - name: Preserve browser screenshots and source-bound receipt
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cn-browser-qa-${{ github.sha }}
-          path: runtime/cn-browser-qa/
-          retention-days: 14
-          if-no-files-found: warn

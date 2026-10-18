@@ -1,0 +1,87 @@
+{
+  "cases": [
+    {
+      "case_id": "test-case",
+      "evidence_class": "SYNTHETIC_FIXTURE",
+      "evidence_path": "fixtures/evidence.txt",
+      "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000002",
+      "frozen_question_path": "fixtures/frozen_question.txt",
+      "frozen_question_sha256": "0000000000000000000000000000000000000000000000000000000000000001",
+      "rubric_path": "fixtures/frozen_rubric.txt",
+      "rubric_sha256": "0000000000000000000000000000000000000000000000000000000000000003",
+      "variants": [
+        {
+          "delegation": {
+            "agent_count": 1,
+            "question_hashes": [
+              "000000000000000000000000000000000000000000000000000000000000001e"
+            ]
+          },
+          "execution_receipt_path": "fixtures/solo_execution.json",
+          "execution_receipt_sha256": "000000000000000000000000000000000000000000000000000000000000000b",
+          "executor_id": "executor-1",
+          "mode": "SOLO",
+          "outcome": {
+            "checks_passed": 5,
+            "checks_total": 10,
+            "material_falsifier_count": 0,
+            "verified_unique_evidence_count": 1
+          },
+          "run_id": "run-1",
+          "status": "EXECUTED",
+          "usage": {
+            "cost_usd": 0.1,
+            "input_tokens": 200,
+            "output_tokens": 100,
+            "wallclock_ms": 1000
+          },
+          "verification": {
+            "method": "INDEPENDENT_REVIEW",
+            "status": "PASS",
+            "verification_receipt_path": "fixtures/solo_verification.json",
+            "verification_receipt_sha256": "0000000000000000000000000000000000000000000000000000000000000015",
+            "verifier_id": "verifier-1"
+          }
+        },
+        {
+          "delegation": {
+            "agent_count": 2,
+            "question_hashes": [
+              "000000000000000000000000000000000000000000000000000000000000001e",
+              "000000000000000000000000000000000000000000000000000000000000001f"
+            ]
+          },
+          "execution_receipt_path": "fixtures/delegated_execution.json",
+          "execution_receipt_sha256": "000000000000000000000000000000000000000000000000000000000000000c",
+          "executor_id": "executor-2",
+          "mode": "DELEGATED",
+          "outcome": {
+            "checks_passed": 6,
+            "checks_total": 10,
+            "material_falsifier_count": 1,
+            "verified_unique_evidence_count": 2
+          },
+          "run_id": "run-2",
+          "status": "EXECUTED",
+          "usage": {
+            "cost_usd": 0.2,
+            "input_tokens": 200,
+            "output_tokens": 100,
+            "wallclock_ms": 2000
+          },
+          "verification": {
+            "method": "INDEPENDENT_REVIEW",
+            "status": "PASS",
+            "verification_receipt_path": "fixtures/delegated_verification.json",
+            "verification_receipt_sha256": "0000000000000000000000000000000000000000000000000000000000000016",
+            "verifier_id": "verifier-2"
+          }
+        }
+      ]
+    }
+  ],
+  "contract": "AGENT_DELEGATION_PAIRED_BENCHMARK_v1",
+  "registered_at_utc": "2026-10-15T08:00:00Z",
+  "research_only": true,
+  "task_family": "TASK2_PIT_SOURCE_REVIEW"
+}

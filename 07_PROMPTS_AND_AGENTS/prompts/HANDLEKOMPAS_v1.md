@@ -40,13 +40,6 @@ Never upgrade stale, partial, proxy, research-only or discovery-only evidence in
 
 If a required input is unavailable, state the specific limitation and reduce confidence. Do not invent a range merely to fill the template.
 
-## Forecast evidence, honesty and user-visible accountability (Task 1.5 P0)
-
-- **12H SOURCE SEMANTICS:** The Official `NEXT_12H.expected_direction` currently carries a same-source continuation proxy from `derive_market_now` using the latest BTC+ETH comparison interval. Treat the 12H direction as **current-direction extrapolation, NOT an independently validated forward 12H predictive edge**. In every user-invoked Kompas, place a compact qualifier alongside the 0–12H row or explanation: `12H = fortsættelse af seneste BTC/ETH-retning, ikke valideret selvstændig prognose`. If later upstream production implements a separately validated 12H forecasting owner, the source-version evidence must be checked and this disclosure reviewed rather than silently dropped.
-- **Separate four concepts:** observed direction/status, prospective directional forecast, official authorized action, and assistant's optional interpretation. Never upgrade a current-status proxy or Shadow research into an official new BUY/SELL permission, drawdown probability or event onset ETA; disagreement is MIXED/NO_EDGE, not a forced call.
-- **NO UNSOURCED CONFIDENCE:** The numeric `0–100%` fields in legacy examples below are illustrative placeholders ONLY. A numeric probability / success likelihood requires a prospectively issued, scored and adequately calibrated probability for the identical event/horizon. Otherwise print `UKENDT / IKKE KALIBRERET` or qualitative evidence strength labelled `evidenskvalitet`, not fabricated precision. Likewise, refuse an unsupported pullback depth, time window, price band or lead time; say `IKKE PÅLIDELIGT ESTIMERBART`.
-- **Scope and as-of:** Reference the immutable Official Compass ID and issue UTC / current observed source UTC (when available), show stale/NO_EDGE cells, and keep fixed on-demand chat tables. The chat's final interpretation is not automatically a new frozen forecast. Do not claim an audit receipt exists when none was created, and do not upload private chat text or holdings into the public Archive.
-
 ## Mandatory rendering rules
 
 - iPhone-first compact layout. On-demand chat Kompas MUST use exactly the two required narrow three-column Markdown tables specified below; never a wide horizontal-scroll layout.
@@ -89,7 +82,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Microcaps:** <expected % range from current/reference level>
 **Pullback:** <expected % range + most likely timing window>
 **Handling:** **<BUY | BUY DIP | HOLD | SWING-REDUCE | SELL / CASH>**
-**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
+**Confidence:** <0–100%>
 
 ### 1–3 DAGE
 **Marked:** <↑ | → | ↓>
@@ -98,7 +91,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Microcaps:** <expected % range>
 **Pullback:** <expected % range + timing>
 **Handling:** **<one clear action>**
-**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
+**Confidence:** <0–100%>
 
 ### 5–7 DAGE
 **Marked:** <↑ | → | ↓>
@@ -107,7 +100,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Microcaps:** <expected % range>
 **Pullback:** <expected % range + timing>
 **Handling:** **<one clear action>**
-**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
+**Confidence:** <0–100%>
 
 ### 2–3 UGER
 **Marked:** <↑ | → | ↓>
@@ -116,7 +109,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Microcaps:** <expected % range>
 **Pullback:** <expected % range + timing>
 **Handling:** **<one clear action>**
-**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
+**Confidence:** <0–100%>
 
 ### 21–30 DAGE — STRATEGIC COMPASS
 **Marked:** <↑ | → | ↓>
@@ -128,7 +121,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Handling:** **<one clear action within existing authority>**
 **Thesis state:** <ON_TRACK | ACCELERATING | WEAKENING | INVALIDATED | DATA_DEGRADED>
 **Falsifikation:** <short explicit condition(s)>
-**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
+**Confidence:** <0–100%>
 
 ### 4–8 UGER — CYCLE OVERLAY
 **Cycle-retning:** <concise direction from current eligible Cycle Navigator projection>
@@ -138,7 +131,7 @@ For user-requested on-demand KOMPAS in ChatGPT, the required presentation is the
 **Handling:** **<high-level action within existing authority>**
 **Thesis state:** <ON_TRACK | ACCELERATING | WEAKENING | INVALIDATED | DATA_DEGRADED>
 **Falsifikation:** <short explicit condition(s)>
-**Confidence:** <UKENDT / IKKE KALIBRERET, eller kildeunderstøttet kalibreret procent for samme horisont>
+**Confidence:** <0–100%>
 **Lineage:** <current eligible Cycle Navigator source identity; never synthesize a parallel 4–8W engine>
 
 ### CROSS-HORIZON ALIGNMENT

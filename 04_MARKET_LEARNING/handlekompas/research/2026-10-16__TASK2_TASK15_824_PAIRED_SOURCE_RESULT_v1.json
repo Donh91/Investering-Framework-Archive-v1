@@ -1,0 +1,176 @@
+{
+  "contract": "TASK2_TASK15_824_PAIRED_SOURCE_RESULT_v1",
+  "issued_date_utc": "2026-10-16",
+  "status": "REAL_ORIGINAL_SOURCE_REPLAY__EXPOST_DEVELOPMENT_ONLY__NOT_CERTIFIED_PIT_OR_PERFORMANCE",
+  "authority": "EXISTING_TASK2_OWNER_1596_RESEARCH_ONLY",
+  "source": {
+    "repo": "Donh91/Investering-Framework-Archive-v1",
+    "original_actions_run_id": 38427468434,
+    "artifact_id": 11829371964,
+    "artifact_outer_sha256": "4bce43736374b8fcff7aa9ffd1fdac18c303d8b2264b8291bb6e0b80fcde23ae",
+    "original_ledger_member": "TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv",
+    "original_ledger_sha256": "616e70fd87a79acf126591c1f8e704c74da7a2bd3b3aa181838ac5f861fea5d9",
+    "original_artifact_expiry_utc": "2026-10-27T16:07:07Z",
+    "original_forecast_checkout_sha": "0e8c386b5a4ee57a5500cb3d02951c9e398b1b4f",
+    "existing_public_correction": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK15_R1_BOUND_SOURCE_PUBLICATION_CORRECTION_v2.json",
+    "original_source_preservation": "A byte-identical original Actions ZIP was also saved to the owner's ChatGPT Library, separate from GitHub and not an authoritative new source plane."
+  },
+  "method": {
+    "raw_read": "All five original ZIP members read; original 1140 CSV rows and 814 source-publication cases checked, SHA256 matched.",
+    "paired": "Same original issue+asset+horizon; compare frozen model direction and already-recorded prior-momentum baseline against independently recorded but LATER retrospective price outcome.",
+    "censor": "Never reclassify 500 original censored or ten no-receipt cases as canonical matured.",
+    "independence": "187 distinct original issue times is NOT 187 independent events; overlapping hours, BTC/ETH and horizons. Independent market family N remains unverified.",
+    "classification": "Post-outcome-exposed analysis on ex-post tape, cannot validate first provider known-time, original delivery, economic returns or investment skill."
+  },
+  "original_universe": {
+    "all_issued_asset_horizon_slots": 1140,
+    "eligible_slots": 954,
+    "missing_horizon_slots": 186,
+    "later_price_available_paired": 824,
+    "original_matured_in_paired": 314,
+    "original_censored_in_paired": 500,
+    "original_no_receipt_in_paired": 10,
+    "distinct_issue_times": 187,
+    "scientifically_admitted_independent_market_families": 0
+  },
+  "paired_totals": {
+    "n": 824,
+    "original_correct": 373,
+    "naive_price_correct": 374,
+    "same_direction": 593,
+    "different_direction": 231,
+    "original_only_correct": 115,
+    "naive_only_correct": 116,
+    "both_correct": 258,
+    "both_wrong": 335
+  },
+  "by_horizon": [
+    {
+      "h": "1H",
+      "n": 172,
+      "original_correct": 80,
+      "naive_correct": 81,
+      "different_direction": 15,
+      "original_only_correct": 7,
+      "naive_only_correct": 8
+    },
+    {
+      "h": "4H",
+      "n": 334,
+      "original_correct": 150,
+      "naive_correct": 157,
+      "different_direction": 91,
+      "original_only_correct": 42,
+      "naive_only_correct": 49
+    },
+    {
+      "h": "24H",
+      "n": 318,
+      "original_correct": 143,
+      "naive_correct": 136,
+      "different_direction": 125,
+      "original_only_correct": 66,
+      "naive_only_correct": 59
+    }
+  ],
+  "by_original_outcome_status": [
+    {
+      "status": "MATURED",
+      "n": 314,
+      "original_correct": 145,
+      "naive_correct": 142,
+      "different_direction": 111,
+      "original_only_correct": 57,
+      "naive_only_correct": 54
+    },
+    {
+      "status": "CENSORED",
+      "n": 500,
+      "original_correct": 224,
+      "naive_correct": 230,
+      "different_direction": 118,
+      "original_only_correct": 56,
+      "naive_only_correct": 62
+    },
+    {
+      "status": "NO_ORIGINAL_RECEIPT",
+      "n": 10,
+      "original_correct": 4,
+      "naive_correct": 2,
+      "different_direction": 2,
+      "original_only_correct": 2,
+      "naive_only_correct": 0
+    }
+  ],
+  "matched_frozen_vote_ablation": {
+    "price_majority": [
+      {
+        "h": "1H",
+        "n": 128,
+        "challenger_correct": 60,
+        "incumbent_correct": 61
+      },
+      {
+        "h": "4H",
+        "n": 256,
+        "challenger_correct": 117,
+        "incumbent_correct": 116
+      },
+      {
+        "h": "24H",
+        "n": 247,
+        "challenger_correct": 109,
+        "incumbent_correct": 110
+      }
+    ],
+    "price_plus_taker": [
+      {
+        "h": "1H",
+        "n": 88,
+        "challenger_correct": 45,
+        "incumbent_correct": 45
+      },
+      {
+        "h": "4H",
+        "n": 167,
+        "challenger_correct": 79,
+        "incumbent_correct": 79
+      },
+      {
+        "h": "24H",
+        "n": 160,
+        "challenger_correct": 72,
+        "incumbent_correct": 72
+      }
+    ]
+  },
+  "inference": {
+    "measured": "231 model-vs-naive decision divergences / 115 model-only correct and 116 naive-only correct, no measured aggregate improvement from this matched EXPOST dataset; model 145 vs baseline142 only in originally matured 314, not independently sourced PIT.",
+    "not_measured": [
+      "Vendor first-publication/revision clocks",
+      "Model uncertainty and calibration",
+      "Fair prospective held-out data family lift",
+      "Market event-family independence",
+      "Real user-alert delivery",
+      "Execution costs/entry liquidity/reentry/PnL"
+    ],
+    "still_available_research": "Use current original data and existing scripts now for capped horizon-wise matched sensitivity and source-family coverage; original PIT deficiency blocks only certified historic R2/performance promotion, not exploratory analysis.",
+    "data_to_backtrack": "All later API data must record endpoint/provider+response hash, retrieval start/end, first known vendor version/publication where independently evidenced, source revision, missingness and RECONSTRUCTED_EX_POST label. Never turn retrieval today into original 2026 PIT.",
+    "next_information_families": [
+      "independent derivatives OI and actual funding quote timestamp",
+      "order book imbalance and volume/taker",
+      "breadth and ETH/BTC/rotation under as-of universe",
+      "independently settled ETF and stablecoin exchange flows",
+      "CFGI residual beyond already used price/volatility"
+    ],
+    "sol61_policy": "Do not pay for a repeated old R1 review. New source/forecasts/matched family ablation with objective provenance must first produce a new unique frozen owner-gated budget-admitted mission."
+  },
+  "no_authority_change": {
+    "source_or_outcome_rewrite": false,
+    "paid_api": false,
+    "new_framework_signal": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "work_or_codex_cloud": false
+  }
+}

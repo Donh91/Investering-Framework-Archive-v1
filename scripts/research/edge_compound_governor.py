@@ -13,6 +13,7 @@ PATHS={
  "m6_events":Path("research/framework_memory/m6_warning_events/LATEST.json"),
  "edge_features":Path("research/framework_memory/edge001_tsunami_features/LATEST.json"),
  "calibration":Path("research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json"),
+ "task15_gate":Path("04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json"),
 }
 
 def canon(v:Any)->bytes:
@@ -30,6 +31,36 @@ def load(root:Path,key:str):
     if not p.exists():return None,{"path":rel.as_posix(),"status":"MISSING","sha256":None}
     value=read_json(p)
     return value,{"path":rel.as_posix(),"status":"PASS" if isinstance(value,dict) else "INVALID_JSON","sha256":file_sha(p)}
+
+def task15_advisory(gate:dict|None,binding:dict):
+    """Fail-closed research-only readback: cannot affect collection, decisions or actions."""
+    source_status=binding.get("status")
+    base={"source_status":source_status,"source_sha256":binding.get("sha256"),
+          "market_authority":False,"automatic_promotion":False,
+          "collection_policy_change":False}
+    if not isinstance(gate,dict):
+        return {**base,"status":"NOT_LOADED_NOT_ADMITTED","declared_research_status":None}
+    permissions=gate.get("permissions")
+    valid=(gate.get("contract")=="EDGE_TASK_1_5_ADMISSION_GATE_v1"
+           and isinstance(permissions,dict)
+           and permissions.get("continue_existing_market_data_collection") is True
+           and permissions.get("allow_official_model_weight_change") is False
+           and permissions.get("allow_trade_or_sell_signal") is False
+           and permissions.get("allow_historical_pullback_economic_claim") is False
+           and permissions.get("allow_legacy_censor_rewrite") is False
+           and gate.get("task15_closure_allowed") is False)
+    if not valid:
+        return {**base,"status":"INVALID_NONBINDING_RESEARCH_GATE","declared_research_status":None}
+    upstream=gate.get("status")
+    # A missing, non-string or novel status is NOT a valid research gate.
+    # Unknown research results must never be disguised as reviewed pending.
+    if type(upstream) is not str or upstream not in (
+        "BLOCKED_SCIENTIFIC_CLOSURE", "UNREVIEWED"
+    ):
+        return {**base,"status":"INVALID_NONBINDING_RESEARCH_GATE","declared_research_status":None}
+    state=("BLOCKED_RESEARCH_PREFLIGHT" if upstream=="BLOCKED_SCIENTIFIC_CLOSURE"
+           else "UNREVIEWED_RESEARCH_ONLY")
+    return {**base,"status":state,"declared_research_status":upstream}
 
 def freeze_from_pointer(root:Path,pointer:dict|None):
     if not isinstance(pointer,dict):return None,None
@@ -249,6 +280,7 @@ def latest_sol(root:Path):
 def semantic_snapshot(root:Path,now:datetime):
     pointer,pb=load(root,"compass_pointer");freeze,fb=freeze_from_pointer(root,pointer)
     m6,mb=load(root,"m6_events");features,xb=load(root,"edge_features");cal,cb=load(root,"calibration")
+    task15_gate,tgb=load(root,"task15_gate");task15_admission=task15_advisory(task15_gate,tgb)
     tracker=(freeze or {}).get("protection_tracker") if isinstance(freeze,dict) else {}
     tracker=tracker if isinstance(tracker,dict) else {}
     maturity,families,unknown=matured_counts(m6)
@@ -280,9 +312,11 @@ def semantic_snapshot(root:Path,now:datetime):
       "calibration_warning_rows":int((cal or {}).get("warning_series_row_count") or 0) if isinstance(cal,dict) else 0,
       "feature_integrity_revision":(features or {}).get("integrity_revision") if isinstance(features,dict) else None,
       "m6_integrity_revision":(m6 or {}).get("integrity_revision") if isinstance(m6,dict) else None,
-      "latest_sol_verdict":sol.get("verdict"),"blockers":sorted(blockers),
+      "latest_sol_verdict":sol.get("verdict"),
+      "task15_research_admission":task15_admission,
+      "blockers":sorted(blockers),
     }
-    bindings={"compass_pointer":pb,"compass_freeze":fb,"m6_events":mb,"edge_features":xb,"calibration":cb,"latest_sol":sol}
+    bindings={"compass_pointer":pb,"compass_freeze":fb,"m6_events":mb,"edge_features":xb,"calibration":cb,"latest_sol":sol,"task15_gate":tgb}
     return semantic,bindings
 
 def previous_state(path:Path):
@@ -304,6 +338,7 @@ def deltas(prev:dict|None,current:dict):
     if old.get("m6_matured_payload_integrity")!=current.get("m6_matured_payload_integrity"):d.append("M6_MATURED_PAYLOAD_INTEGRITY_CHANGED")
     if old.get("feature_integrity_revision")!=current.get("feature_integrity_revision"):d.append("FEATURE_INTEGRITY_REVISION_CHANGED")
     if old.get("m6_integrity_revision")!=current.get("m6_integrity_revision"):d.append("M6_INTEGRITY_REVISION_CHANGED")
+    if old.get("task15_research_admission")!=current.get("task15_research_admission"):d.append("TASK15_RESEARCH_ADMISSION_ADVISORY_CHANGED")
     return d
 
 def choose(prev:dict|None,s:dict,d:list[str]):

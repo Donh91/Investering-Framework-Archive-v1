@@ -187,17 +187,24 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       source&&source===official?.source_packet_sha256);
     if(officialValidated){
       officialSource=source;
-      // Project the HASH-VERIFIED Official owner's original freshness policy,
-      // never a newer unrelated Auto pointer or an invented site TTL.
+      // Use only the original HASH-VERIFIED Official daily owner's source
+      // freshness policy. A newer, unrelated Auto packet cannot extend this.
       const owner=target?.source_bindings?.auto_market_state?.freshness;
       const checks=owner?.checks;
       if(owner?.status==="PASS"&&Array.isArray(checks)&&checks.length>0&&checks.every(row=>
-        row?.status==="PASS"&&Number.isFinite(Date.parse(row.timestamp))&&
-        typeof row.max_age_seconds==="number"&&Number.isFinite(row.max_age_seconds)&&row.max_age_seconds>0)){
+        row?.status==="PASS"&&typeof row.timestamp==="string"&&
+        /(?:Z|[+-]\d{2}:\d{2})$/.test(row.timestamp)&&
+        Number.isFinite(Date.parse(row.timestamp))&&
+        typeof row.max_age_seconds==="number"&&Number.isFinite(row.max_age_seconds)&&
+        row.max_age_seconds>0)){
         const expiry=Math.min(...checks.map(row=>Date.parse(row.timestamp)+row.max_age_seconds*1000));
-        officialFreshness={contract:"OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1",status:"VERIFIED_OWNER_POLICY",
-          source_asof_utc:new Date(Math.min(...checks.map(row=>Date.parse(row.timestamp)))).toISOString(),
-          valid_until_utc:new Date(expiry).toISOString(),semantics:"SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA"};
+        if(Number.isFinite(expiry)){
+          officialFreshness={contract:"OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1",
+            status:"VERIFIED_OWNER_POLICY",
+            source_asof_utc:new Date(Math.min(...checks.map(row=>Date.parse(row.timestamp)))).toISOString(),
+            valid_until_utc:new Date(expiry).toISOString(),
+            semantics:"SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA"};
+        }
       }
     }
   }catch{}
@@ -327,7 +334,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       master_monday:masterAligned?"SOURCE_ALIGNED":"UNVERIFIED",
       cycle_navigator:weeklyAligned?"WEEKLY_POINTER_ALIGNED":"UNVERIFIED"
     },
-    official_freshness:officialFreshness,
+    official_freshness:officialValid?officialFreshness:{status:"UNAVAILABLE"},
     official_action:officialValid?compass.action_now:"UNAVAILABLE",
     official_data_status:String(compass?.data_status||"NOT_PUBLISHED"),
     native:nativeValidated?{now:researchEnum(nativeTarget.action.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:nativeTarget.DATA_HEALTH||"UNAVAILABLE",checked_at_utc:nativeTarget.generated_at_utc,official_source_aligned:nativeAligned}:{now:"UNAVAILABLE",data_health:"UNVERIFIED",official_source_aligned:false},
