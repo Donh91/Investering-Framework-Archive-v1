@@ -38,6 +38,56 @@ observedGap.public_live_precision.daily_observations.BTC[2]={
 };
 const gappedPlan=chartLinePlan(chartModel(observedGap,'BTC'));
 
+// Render the actual shipped PATH mount against an instrumented TradingView v5
+// and Canvas2D adapter. This catches omitted primitive attachment (a real P2)
+// instead of trusting textual assertions about an unused drawing class.
+function probeChartRender(data){
+  const paints={fills:0,whiskerStrokes:0,intervalRects:0,attached:0};
+  const ctx={
+    save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},
+    fill(){paints.fills++},stroke(){paints.whiskerStrokes++},
+    fillRect(){paints.intervalRects++},strokeRect(){},fillText(){},
+    setLineDash(){},measureText(text){return {width:text.length*7}},
+    createLinearGradient(){return {addColorStop(){}}}
+  };
+  const series=[];
+  const scale={
+    timeToCoordinate(t){return 25+(t-Date.parse('2026-10-05T00:00:00Z')/1000)/86400*58},
+    setVisibleLogicalRange(){}
+  };
+  const chart={
+    timeScale(){return scale},remove(){},subscribeCrosshairMove(){},subscribeClick(){},
+    addSeries(kind,options){
+      const record={kind,options,data:[],primitives:[]};series.push(record);
+      return {
+        setData(points){record.data=points},
+        priceToCoordinate(v){return 280-v*1.5},
+        attachPrimitive(primitive){
+          paints.attached++;record.primitives.push(primitive);
+          primitive.attached({chart,requestUpdate(){}});
+          primitive.paneViews()[0].renderer().draw({
+            useMediaCoordinateSpace(f){f({context:ctx,mediaSize:{width:470,height:320}})}
+          });
+        }
+      };
+    }
+  };
+  const el={innerHTML:'',onclick:null,setAttribute(){}},buttons=Array.from({length:7},(_,i)=>({dataset:{fwDay:String(i)},setAttribute(){},onclick:null}));
+  const host={
+    isConnected:true,innerHTML:'',
+    querySelector(selector){return el},
+    querySelectorAll(selector){return selector==='[data-fw-day]'?buttons:[]}
+  };
+  chartAPI.LightweightCharts={
+    ColorType:{Solid:'solid'},LineStyle:{Dotted:1,Solid:0,Dashed:2},
+    LineType:{Simple:0},CrosshairMode:{Normal:0},LineSeries:'line',
+    createChart(){return chart}
+  };
+  chartAPI.CNWeekChart.mount(host,data);
+  return {paints,series};
+}
+const publishedRender=probeChartRender(dailyFixture);
+const legacyRender=probeChartRender(synthetic);
 const packageSanitizer=new Function(build.slice(build.indexOf('const pick='),build.indexOf('async function readJson'))+';return sanitizePackage;')();
 const translationProjection=new Function('sanitizePackage','standaloneFreeze','publicStructureAnalysis','return '+build.slice(build.indexOf('function publicTranslations('),build.indexOf('const snapshot=')))(packageSanitizer,{},()=>null);
 const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
@@ -60,7 +110,23 @@ const checks=[
     gappedPlan.actualRuns.every(run=>run.length===1)&&
     gappedPlan.actualRuns[0][0].time===chartModel(observedGap,'BTC').days[0].time&&
     gappedPlan.actualRuns[1][0].time===chartModel(observedGap,'BTC').days[2].time],
- ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('if(!m.daily.length)scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
+ ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
+ ['P2: published 7-day PATH renders actual daily envelope AND observed source low/high whiskers',
+    publishedRender.paints.attached===1&&
+    publishedRender.paints.fills===1&&
+    publishedRender.paints.whiskerStrokes===2&&
+    publishedRender.series[0].data.length===7&&
+    publishedRender.series.some(v=>v.data.length===2&&v.options.color==='#27c59a')],
+ ['P2: legacy 3-window freeze renders authentic interval corridors with no forged daily forecast',
+    legacyRender.paints.attached===1&&
+    legacyRender.paints.fills===0&&
+    legacyRender.paints.intervalRects===3&&
+    legacyRender.series[0].data.length===0&&
+    legacyRender.paints.whiskerStrokes>=5],
+ ['P2: reset control actually measures at least 44 by 44 CSS pixels by its min-width and min-height contracts',
+    chartCss.includes('.fw-reset{font-size:18px;min-width:44px;')&&
+    chartCss.includes('.fw-assets button,.fw-reset{min-height:44px}')&&
+    !chartCss.includes('.fw-reset{font-size:18px;min-width:38px;')],
  ['DA/ENG ships before product rendering with bound public prose only',liveBuilder.includes('./i18n.js')&&build.includes('presentation_translations:publicTranslations(pkg)')&&build.includes('allowed.has(x.en)')&&build.includes('digits(x.en)===digits(x.da)')],
  ['public tab links restore PATH or PROOF without creating another forecast',product.includes("const initialView=location.hash.slice(1)")&&product.includes("['path','proof'].includes(initialView)")&&product.includes("history.replaceState(null,'','#'+b.dataset.tab)")],
  ['public near-term no-observation status has a plain-language explanation',premium.includes("s === 'UNCHANGED NO NEW OBSERVATION'")&&premium.includes("return 'NO NEW READING'")&&premium.includes('Current action unchanged · awaiting a fresh near-term reading.')],
