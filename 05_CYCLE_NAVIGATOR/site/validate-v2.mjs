@@ -90,12 +90,20 @@ function probeChartRender(data){
 }
 // The actual shipped role=img description must not advertise a daily
 // prediction when only weekly range windows were frozen. DA/EN covers VoiceOver copy.
+const notYetObserved=structuredClone(dailyFixture);
+notYetObserved.public_live_precision.daily_observations.BTC.forEach(p=>p.coverage_complete_to_date=false);
+const neitherObservedNorPublished=structuredClone(synthetic);
+neitherObservedNorPublished.public_live_precision.daily_observations.BTC.forEach(p=>p.coverage_complete_to_date=false);
 chartAPI.CNI18n={language:'en'};
 const a11yUnavailableEn=chartGraphDescription(chartModel(synthetic,'BTC'));
 const a11yPublishedEn=chartGraphDescription(chartModel(dailyFixture,'BTC'));
+const a11yPublishedNoActualEn=chartGraphDescription(chartModel(notYetObserved,'BTC'));
+const a11yLegacyNoActualEn=chartGraphDescription(chartModel(neitherObservedNorPublished,'BTC'));
 chartAPI.CNI18n.language='da';
 const a11yUnavailableDa=chartGraphDescription(chartModel(synthetic,'BTC'));
 const a11yPublishedDa=chartGraphDescription(chartModel(dailyFixture,'BTC'));
+const a11yPublishedNoActualDa=chartGraphDescription(chartModel(notYetObserved,'BTC'));
+const a11yLegacyNoActualDa=chartGraphDescription(chartModel(neitherObservedNorPublished,'BTC'));
 chartAPI.CNI18n.language='en';
 const publishedRender=probeChartRender(dailyFixture);
 const legacyRender=probeChartRender(synthetic);
@@ -123,14 +131,28 @@ const checks=[
     gappedPlan.actualRuns[1][0].time===chartModel(observedGap,'BTC').days[2].time],
  ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
  ['VoiceOver: W42-style missing daily forecast is explicitly not presented as a daily forecast curve in both languages',
-    a11yUnavailableEn.includes('No original seven-day')&&a11yUnavailableEn.includes('there is no daily forecast line')&&
-    a11yUnavailableDa.includes('Ingen oprindelig syvdagesprognose')&&a11yUnavailableDa.includes('ingen daglig prognoselinje')&&
+    a11yUnavailableEn.includes('No original seven-day')&&a11yUnavailableEn.includes('no daily forecast line')&&
+    a11yUnavailableDa.includes('Ingen oprindelig syvdagesprognose')&&a11yUnavailableDa.includes('uden daglig prognoselinje')&&
     chartSource.includes('escape(graphDescription(m))')],
  ['VoiceOver: only verified PUBLISHED forecast is described as blue dotted and actual as green solid in DA/EN',
     a11yPublishedEn.includes('Blue dotted line')&&a11yPublishedEn.includes('Green solid line')&&
     a11yPublishedEn.includes('missing days are unconnected')&&
     a11yPublishedDa.includes('Blå stiplet linje')&&a11yPublishedDa.includes('Grøn fuldt optrukken linje')&&
     !a11yPublishedEn.includes('No original seven-day')],
+ ['P2 VoiceOver: seven frozen future forecast points without eligible observations never announce an actual line or measured whiskers',
+    a11yPublishedNoActualEn.includes('Blue dotted line')&&
+    a11yPublishedNoActualEn.includes('No eligible observed daily prices yet')&&
+    a11yPublishedNoActualEn.includes('no green actual line or measured high/low whiskers')&&
+    !a11yPublishedNoActualEn.includes('Green solid line:')&&
+    a11yPublishedNoActualDa.includes('Blå stiplet linje')&&
+    a11yPublishedNoActualDa.includes('Endnu ingen gyldige observerede dagspriser')&&
+    !a11yPublishedNoActualDa.includes('Grøn fuldt optrukken linje:')],
+ ['P2 VoiceOver: range-only history with no observations advertises neither a dotted forecast nor green actual',
+    a11yLegacyNoActualEn.includes('No original seven-day')&&
+    a11yLegacyNoActualEn.includes('No eligible observed daily prices yet')&&
+    !a11yLegacyNoActualEn.includes('Blue dotted line:')&&
+    a11yLegacyNoActualDa.includes('Ingen oprindelig syvdagesprognose')&&
+    a11yLegacyNoActualDa.includes('Endnu ingen gyldige observerede dagspriser')],
  ['P2: published 7-day PATH renders actual daily envelope AND observed source low/high whiskers',
     publishedRender.paints.attached===1&&
     publishedRender.paints.fills===1&&
