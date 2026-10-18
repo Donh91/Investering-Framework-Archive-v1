@@ -141,17 +141,36 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             }
             frozen_by_id[fid]=frozen
             (fr/f"{i}.json").write_text(json.dumps(frozen))
+        bindings=root/"settlement_bindings"
+        evidence_root=root/"settlement_evidence"
+        bindings.mkdir(); evidence_root.mkdir()
         for i,original in enumerate(outcomes):
             outcome=dict(original)
-            frozen=frozen_by_id[outcome["forecast_id"]]
+            fid=outcome["forecast_id"]
+            frozen=frozen_by_id[fid]
+            evidence={"contract":"FORECAST_SETTLEMENT_EVIDENCE_v1",
+                      "forecast_id":fid,"forecast_sha256":sha(frozen),
+                      "settlement_target_utc":frozen["outcome_due_utc"]}
+            (evidence_root/f"{fid}.json").write_text(json.dumps(evidence))
             outcome.setdefault("forecast_sha256",sha(frozen))
             outcome.setdefault("settlement_contract_version",frozen["settlement_contract_version"])
             outcome.setdefault("settlement_target_utc",frozen["outcome_due_utc"])
             outcome.setdefault("settlement_observation_utc",frozen["outcome_due_utc"])
             outcome.setdefault("settlement_offset_seconds",0)
-            outcome.setdefault("evidence_path","synthetic/read-only-evidence.json")
-            outcome.setdefault("evidence_sha256","a"*64)
+            outcome.setdefault("evidence_path",f"research/framework_memory/settlement_evidence/{fid}.json")
+            outcome.setdefault("evidence_sha256",sha(evidence))
             (oc/f"{i}.json").write_text(json.dumps(outcome))
+            binding={
+                "contract":"FORECAST_SETTLEMENT_OUTCOME_BINDING_v1",
+                "forecast_id":fid,"forecast_sha256":sha(frozen),
+                "outcome_path":f"research/framework_memory/outcome_memory/{fid}.json",
+                "outcome_sha256":sha(outcome),
+                "evidence_path":f"research/framework_memory/settlement_evidence/{fid}.json",
+                "evidence_sha256":sha(evidence),
+                "settlement_target_utc":frozen["outcome_due_utc"],
+            }
+            binding["binding_sha256"]=sha(binding)
+            (bindings/f"{fid}.json").write_text(json.dumps(binding))
         return registry(cr,ob,fr,oc,rc,"2026-10-18T00:00:00Z")
 
     @staticmethod
@@ -252,6 +271,47 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"forecast_id_ownership_or_content_conflict"):
                 registry(cr,root/"observations",fr,root/"outcomes",root/"receipts",
                          "2026-10-18T00:00:00Z")
+
+    def test_mutated_hit_after_binding_is_never_score_eligible(self):
+        from scripts.experiments.experiment_lifecycle import registry
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            self.sample_registry(root,[self.outcome("EXP-FC-1",result="MISS")])
+            source=root/"outcomes/0.json"
+            altered=json.loads(source.read_text())
+            altered["result"]="HIT"
+            source.write_text(json.dumps(altered))
+            r=registry(root/"candidates",root/"observations",root/"forecasts",
+                       root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
+            row=r["candidates"][0]
+            self.assertEqual(row["matured_outcome_count"],1)
+            self.assertEqual(row["scientific_score_eligible_outcome_count"],0)
+            self.assertEqual(row["state"],"MATURED_INCONCLUSIVE")
+
+    def test_missing_or_mutated_binding_and_evidence_fail_closed(self):
+        from scripts.experiments.experiment_lifecycle import registry
+        for type_name in ("missing","mutated","missing_evidence","wrong_evidence"):
+            with self.subTest(case=type_name),tempfile.TemporaryDirectory() as td:
+                root=Path(td)
+                self.sample_registry(root,[self.outcome("EXP-FC-1",result="HIT")])
+                binding=root/"settlement_bindings/EXP-FC-1.json"
+                evidence=root/"settlement_evidence/EXP-FC-1.json"
+                if type_name=="missing":
+                    binding.unlink()
+                elif type_name=="mutated":
+                    data=json.loads(binding.read_text())
+                    data["outcome_sha256"]="f"*64
+                    binding.write_text(json.dumps(data))
+                elif type_name=="missing_evidence":
+                    evidence.unlink()
+                else:
+                    data=json.loads(evidence.read_text())
+                    data["forecast_sha256"]="f"*64
+                    evidence.write_text(json.dumps(data))
+                reg=registry(root/"candidates",root/"observations",root/"forecasts",
+                             root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
+                self.assertEqual(reg["candidates"][0]["scientific_score_eligible_outcome_count"],0)
+                self.assertEqual(reg["candidates"][0]["state"],"MATURED_INCONCLUSIVE")
 
     def test_duplicate_forecast_outcomes_are_not_order_dependent(self):
         with tempfile.TemporaryDirectory() as td:
