@@ -96,8 +96,12 @@ try {
     const bundledCSS=readBundledAsset(styleTags[0][0],'css');
     if(!bundledJS.includes('data:application/json;base64,'))
       throw new Error('Portable preview did not embed original frozen source bytes');
+    // A self-contained data: module avoids HTML parser confusion when the
+    // minified application legitimately contains literal HTML fragments.
+    // It is still one portable HTML file with no remote JavaScript request.
+    const jsDataUrl='data:text/javascript;base64,'+Buffer.from(bundledJS,'utf8').toString('base64');
     offlineHtml=offlineHtml.replace(scriptTags[0][0],
-      '<script type="module">'+bundledJS.replace(/<\/script/gi,'<\\/script')+'</script>');
+      '<script type="module" src="'+jsDataUrl+'"></script>');
     offlineHtml=offlineHtml.replace(styleTags[0][0],
       '<style>'+bundledCSS.replace(/<\/style/gi,'<\\/style')+'</style>');
     const logoPattern=/(<img class="cn-logo" src=")[^"]+(")/;
@@ -108,7 +112,9 @@ try {
     // Check only the HTML shell. Inlining compiled module code can introduce
     // literal source strings resembling <script src> or <link rel=...>.
     // Do NOT strip external script tags: only the one deliberately inlined module.
-    const shell=offlineHtml.replace(/<script type="module">[\s\S]*?<\/script>/,'')
+    const embeddedModule=offlineHtml.match(/<script type="module" src="data:text\\/javascript;base64,[A-Za-z0-9+/=]+"><\\/script>/);
+    if(!embeddedModule)throw new Error('Portable HTML did not embed an encoded module');
+    const shell=offlineHtml.replace(embeddedModule[0],'')
       .replace(/<style>[\s\S]*?<\/style>/,'');
     if(/<script\b[^>]*\bsrc=/.test(shell)||
        /<link\b[^>]*\brel="stylesheet"/.test(shell))
