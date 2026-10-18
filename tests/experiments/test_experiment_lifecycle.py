@@ -272,6 +272,20 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 registry(cr,root/"observations",fr,root/"outcomes",root/"receipts",
                          "2026-10-18T00:00:00Z")
 
+    def test_original_archived_matured_hit_matches_true_binding(self):
+        from scripts.experiments.experiment_lifecycle import (
+            read, outcome_bound_to_frozen_forecast)
+        root=Path(__file__).parents[2]
+        fid="EXP-FC-ed792257fedbaf1a4917"
+        forecast=read(root/f"research/framework_memory/forecast_memory/2026/09/{fid}.json")
+        outcome_root=root/"research/framework_memory/outcome_memory"
+        outcome=read(outcome_root/f"{fid}.json")
+        self.assertEqual(outcome["status"],"MATURED")
+        self.assertEqual(outcome["result"],"HIT")
+        self.assertTrue(outcome_bound_to_frozen_forecast(
+            outcome,forecast,outcome_root),
+            "Immutable original settlement binding must remain accepted")
+
     def test_mutated_hit_after_binding_is_never_score_eligible(self):
         from scripts.experiments.experiment_lifecycle import registry
         with tempfile.TemporaryDirectory() as td:
