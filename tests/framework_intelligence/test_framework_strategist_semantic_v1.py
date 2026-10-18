@@ -76,11 +76,11 @@ class SemanticTest(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 api_attempt_limit({"max_attempts": value})
 
-    def test_prepare_material_high_uses_terra_existing_lane(self):
+    def test_prepare_material_high_uses_sol_6_1_existing_lane(self):
         plan = self.plan()
         self.assertTrue(plan["run_allowed"])
         self.assertEqual(plan["reason"], "MATERIAL_CANDIDATE")
-        self.assertEqual(plan["model"], "gpt-5.6-terra")
+        self.assertEqual(plan["model"], "gpt-6.1-sol")
         self.assertEqual(plan["max_api_calls"], 1)
         self.assertTrue(plan["no_api_retry"])
 
