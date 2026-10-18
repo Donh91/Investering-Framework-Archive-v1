@@ -266,27 +266,83 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
     for _, value in jsons(forecast_root, "FROZEN_FORECAST_v1"):
         candidate_id = value.get("source_candidate_id"); forecast_id = value.get("forecast_id")
         if candidate_id and forecast_id: candidate_forecasts.setdefault(candidate_id, []).append(forecast_id)
-    for path in outcome_root.rglob("*.json") if outcome_root.exists() else []:
-        try: value = read(path)
-        except Exception: continue
-        if value.get("forecast_id"): outcomes[value["forecast_id"]] = value
+    for path in sorted(outcome_root.rglob("*.json")) if outcome_root.exists() else []:
+        try:
+            value = read(path)
+        except (OSError, ValueError, UnicodeError):
+            continue
+        if not isinstance(value, dict) or not value.get("forecast_id"):
+            continue
+        forecast_id = str(value["forecast_id"])
+        if forecast_id in outcomes:
+            # An ambiguous original outcome cannot be silently won by walk order.
+            raise ValueError(f"duplicate_outcome_forecast_id:{forecast_id}")
+        outcomes[forecast_id] = value
     for _, value in jsons(receipt_root, "EXPERIMENT_EXECUTION_RECEIPT_v1"): receipts.setdefault(value.get("candidate_id"), []).append(value.get("replication_status"))
     rows = []; counts = {}
     for candidate in candidates:
-        candidate_id = candidate["candidate_id"]; candidate_observations = sorted(observations.get(candidate_id, []), key=lambda item: item.get("observed_at_utc", "")); last = candidate_observations[-1] if candidate_observations else None; forecast_ids = candidate_forecasts.get(candidate_id, []); matured = [outcomes[item] for item in forecast_ids if item in outcomes]
-        if candidate.get("spec", {}).get("kind") == "FORECAST_TEST" and candidate.get("spec", {}).get("target_unit_contract_version") != UNIT_CONTRACT_VERSION: state = "TARGET_UNIT_QUARANTINED"
-        elif any(item.get("status") == "MATURED" and item.get("result") == "HIT" for item in matured): state = "MATURED_SUPPORTED"
-        elif any(item.get("status") == "MATURED" and item.get("result") == "MISS" for item in matured): state = "MATURED_NOT_SUPPORTED"
-        elif matured: state = "MATURED_INCONCLUSIVE"
-        elif forecast_ids: state = "WAITING_FOR_MATURITY"
-        elif last and last.get("evaluation_status") == "WAITING_FOR_MAPPING": state = "WAITING_FOR_MAPPING"
-        elif last and last.get("evaluation_status") == "WAITING_FOR_DATA": state = "WAITING_FOR_DATA"
-        elif last and last.get("evaluation_status") == "FIRED_NO_TARGET": state = "FIRED_NO_TARGET"
-        elif candidate_observations: state = "INCUBATING"
-        else: state = "PROPOSED"
+        candidate_id = candidate["candidate_id"]
+        candidate_observations = sorted(observations.get(candidate_id, []), key=lambda item: item.get("observed_at_utc", ""))
+        last = candidate_observations[-1] if candidate_observations else None
+        forecast_ids = candidate_forecasts.get(candidate_id, [])
+        original_outcomes = [outcomes[item] for item in sorted(set(forecast_ids)) if item in outcomes]
+        # A retained CENSORED or UNKNOWN outcome is NOT a matured/scoreable test.
+        # Keep counts disjoint and do not rewrite any original outcome file.
+        matured = [item for item in original_outcomes
+                   if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
+                   and item.get("status") == "MATURED"]
+        eligible = [item for item in matured
+                    if item.get("scientific_score_eligible") is True
+                    and item.get("result") in {"HIT", "MISS"}]
+        censored = [item for item in original_outcomes
+                    if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
+                    and item.get("status") == "CENSORED"]
+        unresolved_count = len(original_outcomes) - len(matured) - len(censored)
+        if candidate.get("spec", {}).get("kind") == "FORECAST_TEST" and candidate.get("spec", {}).get("target_unit_contract_version") != UNIT_CONTRACT_VERSION:
+            state = "TARGET_UNIT_QUARANTINED"
+        elif any(item.get("result") == "HIT" for item in eligible):
+            state = "MATURED_SUPPORTED"
+        elif any(item.get("result") == "MISS" for item in eligible):
+            state = "MATURED_NOT_SUPPORTED"
+        elif matured:
+            state = "MATURED_INCONCLUSIVE"
+        elif original_outcomes:
+            # Historical source is retained, but not a mature observation.
+            state = "WAITING_FOR_DATA"
+        elif forecast_ids:
+            state = "WAITING_FOR_MATURITY"
+        elif last and last.get("evaluation_status") == "WAITING_FOR_MAPPING":
+            state = "WAITING_FOR_MAPPING"
+        elif last and last.get("evaluation_status") == "WAITING_FOR_DATA":
+            state = "WAITING_FOR_DATA"
+        elif last and last.get("evaluation_status") == "FIRED_NO_TARGET":
+            state = "FIRED_NO_TARGET"
+        elif candidate_observations:
+            state = "INCUBATING"
+        else:
+            state = "PROPOSED"
         counts[state] = counts.get(state, 0) + 1
-        rows.append({"candidate_id": candidate_id, "title": candidate["spec"]["title"], "kind": candidate["spec"]["kind"], "state": state, "created_at_utc": candidate["created_at_utc"], "observation_count": len(candidate_observations), "forecast_ids": forecast_ids, "matured_outcome_count": len(matured), "replication_receipts": sorted(set(item for item in receipts.get(candidate_id, []) if item)), "automatic_age_expiry": False})
-    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "duplicate_candidate_file_count": duplicate_candidate_file_count, "state_counts": counts, "candidates": rows, "rules": {"candidate_id_uniqueness": "ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE", "duplicate_candidate_spec_conflict": "FAIL_CLOSED", "idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True}}
+        rows.append({
+            "candidate_id": candidate_id, "title": candidate["spec"]["title"],
+            "kind": candidate["spec"]["kind"], "state": state,
+            "created_at_utc": candidate["created_at_utc"],
+            "observation_count": len(candidate_observations),
+            "forecast_ids": forecast_ids,
+            "outcome_record_count": len(original_outcomes),
+            "matured_outcome_count": len(matured),
+            "censored_outcome_count": len(censored),
+            "unknown_outcome_count": unresolved_count,
+            "scientific_score_eligible_outcome_count": len(eligible),
+            "outcome_evidence_state": (
+                "CENSORED_ONLY" if censored and not matured and not unresolved_count
+                else "MATURED_SOME" if matured
+                else "UNRESOLVED" if original_outcomes
+                else "NO_OUTCOME_RECORD"
+            ),
+            "replication_receipts": sorted(set(item for item in receipts.get(candidate_id, []) if item)),
+            "automatic_age_expiry": False,
+        })
+    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "duplicate_candidate_file_count": duplicate_candidate_file_count, "state_counts": counts, "candidates": rows, "rules": {"candidate_id_uniqueness": "ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE", "duplicate_candidate_spec_conflict": "FAIL_CLOSED", "idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True, "matured_outcome_count_semantics": "STATUS_MATURED_ONLY", "scientific_score_eligible_outcome_count_semantics": "STATUS_MATURED_AND_SCORE_ELIGIBLE_TRUE_AND_HIT_OR_MISS", "censored_outcomes_never_matured": True}}
 
 
 def main() -> None:
