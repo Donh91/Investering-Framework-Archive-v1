@@ -19,6 +19,18 @@ const PREVIEW_UNKNOWN = Object.freeze({
 const text = (v) => typeof v === 'string' && v.trim()
   ? v.trim().replace(/\s+/g,' ').slice(0,180) : null;
 
+// Official NEXT_12H reuses observed BTC/ETH direction. It is a descriptive
+// continuation proxy, not an independently validated prospective forecast.
+export function currentDirectionMethod(language = 'da', hasCurrentDirection = false) {
+  const da = language !== 'en';
+  if (!hasCurrentDirection) return da
+    ? 'Ingen verificeret aktuel 12t-retning.'
+    : 'No verified current 12h direction.';
+  return da
+    ? '12t viderefører observeret BTC/ETH-retning, ikke en selvstændigt valideret prognose.'
+    : '12h extends observed BTC/ETH direction, not an independently validated forecast.';
+}
+
 export function summarizeCurrentPublic(latest, compass, { nowUtc = new Date().toISOString() } = {}) {
   const view = inspectOfficialPublicFeeds(latest, compass, { nowUtc });
   const action = typeof view.compass.action_now === 'string' &&
@@ -86,9 +98,11 @@ export function paintCurrentPublicPanel(language = 'da', nowUtc = new Date().toI
     ? (da?'KILDE KONTROLLERET · NU':'SOURCE VERIFIED · CURRENT')
     : (da?'UTILGÆNGELIG · IKKE LIVE':'UNAVAILABLE · NOT LIVE'));
   put('cn-current-action-label',da?'OFFICIEL HANDLING · NU':'OFFICIAL ACTION · NOW');
-  put('cn-current-direction-label',da?'RETNING · NÆSTE 12 TIMER':'DIRECTION · NEXT 12 HOURS');
+  put('cn-current-direction-label',da?'RETNINGSPROXY · 0–12 TIMER':'DIRECTION PROXY · 0–12 HOURS');
   put('cn-current-action', verified ? readback.action : 'UNAVAILABLE');
   put('cn-current-direction',verified ? readback.direction : 'UNKNOWN');
+  put('cn-current-direction-method', currentDirectionMethod(language,
+    verified && readback.direction !== 'UNKNOWN'));
   put('cn-current-risk-label',da?'PULLBACK-RISIKO':'PULLBACK RISK');
   put('cn-current-risk',verified ? readback.risk : 'UNKNOWN');
   put('cn-current-phase-label',da?'CYKLUSFASE':'CYCLE PHASE');
