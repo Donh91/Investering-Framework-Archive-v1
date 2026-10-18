@@ -4,7 +4,7 @@ const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
 const h=JSON.parse(history);
 const chartSource=await read('./frozen-week-chart.js'),chartCss=await read('./frozen-week-chart.css');
-const chartAPI={};new Function('window','document',chartSource)(chartAPI,{addEventListener(){}});const chartModel=chartAPI.CNWeekChart.model,chartLinePlan=chartAPI.CNWeekChart.linePlan;
+const chartAPI={};new Function('window','document',chartSource)(chartAPI,{addEventListener(){}});const chartModel=chartAPI.CNWeekChart.model,chartLinePlan=chartAPI.CNWeekChart.linePlan,chartGraphDescription=chartAPI.CNWeekChart.graphDescription;
 const etaStart=product.indexOf('function pathEta'),etaEnd=product.indexOf('function pathStatus');
 const productSyntaxOk=(()=>{try{new Function(product);return true}catch{return false}})();
 const etaSlice=etaStart>=0&&etaEnd>etaStart?product.slice(etaStart,etaEnd):'';
@@ -88,6 +88,15 @@ function probeChartRender(data){
   chartAPI.CNWeekChart.mount(host,data);
   return {paints,series};
 }
+// The actual shipped role=img description must not advertise a daily
+// prediction when only weekly range windows were frozen. DA/EN covers VoiceOver copy.
+chartAPI.CNI18n={language:'en'};
+const a11yUnavailableEn=chartGraphDescription(chartModel(synthetic,'BTC'));
+const a11yPublishedEn=chartGraphDescription(chartModel(dailyFixture,'BTC'));
+chartAPI.CNI18n.language='da';
+const a11yUnavailableDa=chartGraphDescription(chartModel(synthetic,'BTC'));
+const a11yPublishedDa=chartGraphDescription(chartModel(dailyFixture,'BTC'));
+chartAPI.CNI18n.language='en';
 const publishedRender=probeChartRender(dailyFixture);
 const legacyRender=probeChartRender(synthetic);
 const packageSanitizer=new Function(build.slice(build.indexOf('const pick='),build.indexOf('async function readJson'))+';return sanitizePackage;')();
@@ -113,6 +122,15 @@ const checks=[
     gappedPlan.actualRuns[0][0].time===chartModel(observedGap,'BTC').days[0].time&&
     gappedPlan.actualRuns[1][0].time===chartModel(observedGap,'BTC').days[2].time],
  ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
+ ['VoiceOver: W42-style missing daily forecast is explicitly not presented as a daily forecast curve in both languages',
+    a11yUnavailableEn.includes('No original seven-day')&&a11yUnavailableEn.includes('there is no daily forecast line')&&
+    a11yUnavailableDa.includes('Ingen oprindelig syvdagesprognose')&&a11yUnavailableDa.includes('ingen daglig prognoselinje')&&
+    chartSource.includes('escape(graphDescription(m))')],
+ ['VoiceOver: only verified PUBLISHED forecast is described as blue dotted and actual as green solid in DA/EN',
+    a11yPublishedEn.includes('Blue dotted line')&&a11yPublishedEn.includes('Green solid line')&&
+    a11yPublishedEn.includes('missing days are unconnected')&&
+    a11yPublishedDa.includes('Blå stiplet linje')&&a11yPublishedDa.includes('Grøn fuldt optrukken linje')&&
+    !a11yPublishedEn.includes('No original seven-day')],
  ['P2: published 7-day PATH renders actual daily envelope AND observed source low/high whiskers',
     publishedRender.paints.attached===1&&
     publishedRender.paints.fills===1&&
