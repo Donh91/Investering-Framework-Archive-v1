@@ -64,6 +64,11 @@ const checks=[
  ['DA/ENG ships before product rendering with bound public prose only',liveBuilder.includes('./i18n.js')&&build.includes('presentation_translations:publicTranslations(pkg)')&&build.includes('allowed.has(x.en)')&&build.includes('digits(x.en)===digits(x.da)')],
  ['public tab links restore PATH or PROOF without creating another forecast',product.includes("const initialView=location.hash.slice(1)")&&product.includes("['path','proof'].includes(initialView)")&&product.includes("history.replaceState(null,'','#'+b.dataset.tab)")],
  ['public near-term no-observation status has a plain-language explanation',premium.includes("s === 'UNCHANGED NO NEW OBSERVATION'")&&premium.includes("return 'NO NEW READING'")&&premium.includes('Current action unchanged · awaiting a fresh near-term reading.')],
+ ['PATH interval-only history cannot impersonate a frozen dotted forecast; controls are thumb-sized',
+    chartSource.includes("m.daily.length?'forecast':'interval'")&&
+    chartCss.includes('.fw-legend .interval{height:9px;')&&
+    chartCss.includes('.fw-assets button,.fw-reset{min-height:44px}')&&
+    missingForecastPlan.forecast.length===0&&positivePlan.forecast.length===7],
  ['chart legend matches actual green and frozen blue price curves',chartSource.includes("BLUE='#5f96ff',GREEN='#27c59a'")&&chartCss.includes('.fw-legend .forecast{height:0;border-top:3px dotted #5f96ff')&&chartCss.includes('.fw-legend .actual{background:#27c59a}')],
  ['arrival windows and rotation facts remain readable on mobile',css.includes('.alt-transition small{font-size:12px')&&css.includes('.rotation-readout-v3 p{font-size:13px')],
 
