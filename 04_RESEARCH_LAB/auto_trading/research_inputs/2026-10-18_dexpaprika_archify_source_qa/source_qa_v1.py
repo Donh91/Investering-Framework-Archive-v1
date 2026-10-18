@@ -87,15 +87,30 @@ def _extract(provider: str, payload: Any) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError('PAYLOAD_NOT_OBJECT')
     if provider == 'DEXPAPRIKA':
-        # Pool details endpoint, not search index: search results lack base/quote roles.
+        # Pool DETAILS carries tokens[]: older flat base_token_id/quote_token_id
+        # fields belong to a different/fictional shape and are not source proof.
         ch = _chain(payload.get('chain'))
+        tokens = payload.get('tokens')
+        if not isinstance(tokens, list) or len(tokens) != 2 or not all(isinstance(x, dict) for x in tokens):
+            raise ValueError('DEXPAPRIKA_POOL_TOKENS_UNVERIFIED')
+        if any(t.get('chain') and _chain(t['chain']) != ch for t in tokens):
+            raise ValueError('TOKEN_CHAIN_MISMATCH')
+        # Order is the provider's token array, not attested economic base/quote.
+        base = tokens[0].get('id') or tokens[0].get('address')
+        quote = tokens[1].get('id') or tokens[1].get('address')
+        period = payload.get('24h')
+        if not isinstance(period, dict):
+            period = payload.get('day')
+        volume = payload.get('volume_usd_24h')
+        if volume is None and isinstance(period, dict):
+            volume = period.get('volume_usd', period.get('volume'))
         return {'chain': ch, 'pool': _addr(ch, payload.get('id')),
-                'base': _addr(ch, payload.get('base_token_id')),
-                'quote': _addr(ch, payload.get('quote_token_id')),
+                'base': _addr(ch, base),
+                'quote': _addr(ch, quote),
                 'liquidity': payload.get('liquidity_usd'),
-                'volume': payload.get('volume_usd_24h'),
+                'volume': volume,
                 'pool_created': _time(payload.get('created_at')),
-                'market_updated': _time(payload.get('price_time'))}
+                'market_updated': _time(payload.get('price_time') or payload.get('updated_at'))}
     if provider == 'DEXSCREENER':
         pair = payload.get('pair')
         if not isinstance(pair, dict):
@@ -206,8 +221,17 @@ def evaluate_case(case: dict[str, Any], *, max_age_seconds: int = 120,
             conflicts.add('POOL_CREATION_CLAIM_CONFLICT')
     if len(parsed) < 2:
         conflicts.add('NO_MULTI_SOURCE_COMPARISON')
-    if any(set(x['flags']) & {'SOURCE_UNAVAILABLE', 'PARSE_UNAVAILABLE', 'IDENTITY_INCOMPLETE'} for x in results):
+    if any(set(x['flags']) & {'SOURCE_UNAVAILABLE', 'PARSE_UNAVAILABLE', 'IDENTITY_INCOMPLETE',
+                             'PAYLOAD_UNHASHABLE'} for x in results):
         conflicts.add('SOURCE_COVERAGE_PARTIAL')
+    # One valid provider is insufficient: require at least two comparable
+    # nonnegative finite numeric claims for SOME market field. Missing != zero.
+    metric_counts = {
+        key: sum(_amount(item.get(key))[0] in {'POSITIVE', 'ZERO'} for _, item in parsed)
+        for key in ('liquidity', 'volume')
+    }
+    if max(metric_counts.values(), default=0) < 2:
+        conflicts.add('NO_COMPARABLE_MARKET_FIELD')
     if any(set(x['flags']) & {'LIQUIDITY_INVALID', 'VOLUME_INVALID', 'SOURCE_TIME_IN_FUTURE'} for x in results):
         conflicts.add('SOURCE_FIELD_INVALID')
     if any('SOURCE_STALE' in x['flags'] for x in results):
@@ -220,7 +244,10 @@ def evaluate_case(case: dict[str, Any], *, max_age_seconds: int = 120,
         state = 'INVALID'
     elif 'SOURCE_STALE' in conflicts:
         state = 'STALE'
-    elif len(parsed) != len(observations) or len(parsed) < 2 or {'CAPTURE_WINDOW_MISMATCH', 'CAPTURE_TIME_UNKNOWN'} & conflicts:
+    elif len(parsed) != len(observations) or len(parsed) < 2 or {
+        'CAPTURE_WINDOW_MISMATCH', 'CAPTURE_TIME_UNKNOWN',
+        'SOURCE_COVERAGE_PARTIAL', 'NO_COMPARABLE_MARKET_FIELD'
+    } & conflicts:
         state = 'INCOMPLETE'
     else:
         state = 'COMPARABLE_AS_AGGREGATORS_ONLY'

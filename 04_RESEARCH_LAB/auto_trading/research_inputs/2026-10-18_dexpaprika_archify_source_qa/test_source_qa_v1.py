@@ -16,8 +16,9 @@ T = '2026-10-18T03:38:30Z'
 
 
 def sources():
-    dp = {'chain': 'solana', 'id': POOL, 'base_token_id': SOL, 'quote_token_id': USDC,
-          'liquidity_usd': 10000, 'volume_usd_24h': 5000,
+    dp = {'chain': 'solana', 'id': POOL,
+          'tokens': [{'id': SOL, 'chain': 'solana'}, {'id': USDC, 'chain': 'solana'}],
+          'liquidity_usd': 10000, '24h': {'volume_usd': 5000},
           'created_at': '2023-06-30T06:20:58Z', 'price_time': '2026-10-18T03:38:20Z'}
     ds = {'pair': {'chainId': 'solana', 'pairAddress': POOL,
                    'baseToken': {'address': SOL}, 'quoteToken': {'address': USDC},
@@ -41,8 +42,8 @@ def robinhood_sources():
     quote = '0x' + 'd' * 40
     dp = items[0]['payload']
     dp.update({'chain': 'robinhood', 'id': pool.upper().replace('0X', '0x'),
-               'base_token_id': base.upper().replace('0X', '0x'),
-               'quote_token_id': quote})
+               'tokens': [{'id': base.upper().replace('0X', '0x'), 'chain': 'robinhood'},
+                          {'id': quote, 'chain': 'robinhood'}]})
     ds = items[1]['payload']['pair']
     ds.update({'chainId': 'robinhood', 'pairAddress': pool,
                'baseToken': {'address': base},
@@ -92,6 +93,51 @@ class Tests(unittest.TestCase):
                 v = run(s)
                 self.assertEqual(v['source_qa_state'], 'INVALID')
                 self.assertIn('LIQUIDITY_INVALID', v['provider_observations'][0]['flags'])
+
+    def test_real_dexpaprika_pool_details_shape(self):
+        s = sources()
+        dp = s[0]['payload']
+        self.assertNotIn('base_token_id', dp)
+        self.assertNotIn('quote_token_id', dp)
+        self.assertNotIn('volume_usd_24h', dp)
+        v = run(s)
+        self.assertEqual(v['source_qa_state'], 'COMPARABLE_AS_AGGREGATORS_ONLY')
+        self.assertNotIn('IDENTITY_INCOMPLETE', v['provider_observations'][0]['flags'])
+        self.assertNotIn('VOLUME_UNKNOWN', v['provider_observations'][0]['flags'])
+
+    def test_legacy_flat_token_pair_not_accepted_as_pool_details(self):
+        s = sources()
+        dp = s[0]['payload']
+        dp.pop('tokens')
+        dp['base_token_id'] = SOL
+        dp['quote_token_id'] = USDC
+        v = run(s)
+        self.assertEqual(v['source_qa_state'], 'INCOMPLETE')
+        self.assertIn('PARSE_UNAVAILABLE', v['provider_observations'][0]['flags'])
+
+    def test_all_unknown_market_fields_incomplete_not_comparable(self):
+        s = sources()
+        s[0]['payload']['liquidity_usd'] = None
+        s[0]['payload']['24h']['volume_usd'] = None
+        s[0]['payload']['price_time'] = None
+        s[1]['payload']['pair'].pop('liquidity')
+        s[1]['payload']['pair'].pop('volume')
+        s[2]['payload']['data']['attributes'].pop('reserve_in_usd')
+        s[2]['payload']['data']['attributes'].pop('volume_usd')
+        v = run(s)
+        self.assertIn('NO_COMPARABLE_MARKET_FIELD', v['comparison_flags'])
+        self.assertEqual(v['source_qa_state'], 'INCOMPLETE')
+        self.assertTrue(all('SOURCE_FRESHNESS_UNKNOWN' in p['flags']
+                            for p in v['provider_observations']))
+
+    def test_unhashable_uninspected_field_forces_incomplete(self):
+        s = sources()
+        s[0]['payload']['unused_untrusted_field'] = float('nan')
+        v = run(s)
+        self.assertIn('PAYLOAD_UNHASHABLE', v['provider_observations'][0]['flags'])
+        self.assertIsNone(v['provider_observations'][0]['payload_sha256'])
+        self.assertIn('SOURCE_COVERAGE_PARTIAL', v['comparison_flags'])
+        self.assertEqual(v['source_qa_state'], 'INCOMPLETE')
 
     def test_reversed_tokens_conflict(self):
         s = sources()
@@ -174,7 +220,7 @@ class Tests(unittest.TestCase):
 
     def test_empty_token_identity(self):
         s = sources()
-        s[0]['payload']['base_token_id'] = ''
+        s[0]['payload']['tokens'][0]['id'] = ''
         x = run(s)
         self.assertIn('IDENTITY_INCOMPLETE', x['provider_observations'][0]['flags'])
         self.assertEqual(x['source_qa_state'], 'INCOMPLETE')
