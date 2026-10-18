@@ -7,7 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import tests.framework_intelligence.test_framework_strategist_v1 as fixtures
-from scripts.api_agent.api_gateway import api_attempt_limit
+from scripts.api_agent.api_gateway import api_attempt_limit, estimate_cost, PRICES_PER_MILLION
 from scripts.framework_intelligence.framework_strategist_semantic_v1 import (
     CONTRACT, LATEST, MODEL, OUTPUT_PATH, RESERVATIONS, RUNTIME,
     TASK, canonical, check_output, create_plan, reservation_payload, sha,
@@ -68,6 +68,27 @@ class SemanticTest(unittest.TestCase):
         self.fixture.write(str(output.relative_to(self.root) / "output.json"),result)
         self.fixture.write(str(output.relative_to(self.root) / "receipt.json"),receipt)
         return plan, row, receipt, result
+
+    def test_current_sol_is_stronger_tier_at_equal_or_lower_api_price_than_terra(self):
+        source = json.loads(Path("research/api_agent/API_TASK_REGISTRY_v1.json").read_text())
+        task = source["tasks"][TASK]
+        self.assertEqual(task["model"], "gpt-6.1-sol")
+        self.assertEqual(task["reasoning_effort"], "high")
+        self.assertEqual(task["max_attempts"], 1)
+        self.assertGreaterEqual(task["max_output_tokens"], 4500)
+        sol = PRICES_PER_MILLION["gpt-6.1-sol"]
+        terra = PRICES_PER_MILLION["gpt-5.6-terra"]
+        self.assertLessEqual(sol["input"], terra["input"])
+        self.assertLess(sol["output"], terra["output"])
+        self.assertLess(estimate_cost("gpt-6.1-sol", 2200, 1700),
+                        estimate_cost("gpt-5.6-terra", 2200, 1700))
+
+    def test_existing_strategist_model_spend_caps_are_not_expanded(self):
+        policy = json.loads(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json").read_text())
+        self.assertEqual(policy["monthly_hard_stop_usd"], 40)
+        self.assertEqual(policy["global_reserve_usd"], 4)
+        self.assertEqual(policy["lane_caps_usd"][TASK], 0.75)
+        self.assertFalse(policy["framework_strategist_semantic"]["no_automatic_escalation"] is False)
 
     def test_gateway_one_attempt_override_does_not_change_other_tasks(self):
         self.assertEqual(api_attempt_limit({"max_attempts": 1}), 1)
