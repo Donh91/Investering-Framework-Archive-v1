@@ -389,7 +389,7 @@ assert.match(js,/cn-path-actual-clip-rect/);
 assert.match(js,/function straightDailyPath\(points\)/);
 assert.match(js,/straightDailyPath\(pathPoints\)/);
 assert.doesNotMatch(js,/const midpointGuide=|const forecastCenters=|cn-chart-forecast-midpoint/);
-assert.ok(!js.includes("svg.append(chartElement('path',{d:monotoneClosePath(highGuide),class:'cn-chart-boundary'}))",
+assert.ok(!js.includes("svg.append(chartElement('path',{d:monotoneClosePath(highGuide),class:'cn-chart-boundary'}))"),
   'Archived W40 range windows cannot become a fabricated daily forecast line');
 assert.equal((html.match(/class="cn-legend-line cn-legend-line-forecast"/g)||[]).length,1);
 assert.equal((html.match(/class="cn-legend-line cn-legend-line-observed"/g)||[]).length,1);
@@ -398,7 +398,7 @@ assert.ok(html.includes('3 FROSNE INTERVALLER <small>(se nedenfor)</small>'),
 assert.ok(html.indexOf('id="range-visualization"') < html.indexOf('id="range-replay"'),
   'Historical observed price chart precedes playback controls');
 assert.match(js,/windows\[i<2\?0:i<4\?1:2\]/);
-assert.match(js,/no authentic daily forecast line was published/);
+assert.match(js,/No authentic daily forecast line was published/i);
 for(const asset of ['BTC','ETH']) {
   const days=source.completed_score.daily_observations_w40.days;
   const step=asset==='BTC'?1000:100;
