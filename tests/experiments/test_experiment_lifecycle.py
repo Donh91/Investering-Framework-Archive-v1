@@ -138,6 +138,10 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 "outcome_due_utc":"2026-09-02T00:00:00Z",
                 "settlement_contract_version":"FORECAST_SETTLEMENT_EXACT_TARGET_TIME_v1",
                 "scientific_admission":{"status":"QUALIFIED_FOR_FORWARD_TEST"},
+                "metric_path":"market_metrics.spot.BTCUSDT.close",
+                "metric_path_root":"CAPTURE_DOCUMENT_ROOT",
+                "direction":"UP","start_value":100.0,
+                "threshold_pct":1.0,"target_mode":"PCT_MOVE",
             }
             frozen_by_id[fid]=frozen
             (fr/f"{i}.json").write_text(json.dumps(frozen))
@@ -148,15 +152,21 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             outcome=dict(original)
             fid=outcome["forecast_id"]
             frozen=frozen_by_id[fid]
+            expected=original.get("result")
+            price=102.0 if expected=="HIT" else 100.2 if expected=="MISS" else 100.0
             evidence={"contract":"FORECAST_SETTLEMENT_EVIDENCE_v1",
                       "forecast_id":fid,"forecast_sha256":sha(frozen),
-                      "settlement_target_utc":frozen["outcome_due_utc"]}
+                      "settlement_target_utc":frozen["outcome_due_utc"],
+                      "market_metrics":{"spot":{"BTCUSDT":{"close":price}}}}
             (evidence_root/f"{fid}.json").write_text(json.dumps(evidence))
             outcome.setdefault("forecast_sha256",sha(frozen))
             outcome.setdefault("settlement_contract_version",frozen["settlement_contract_version"])
             outcome.setdefault("settlement_target_utc",frozen["outcome_due_utc"])
             outcome.setdefault("settlement_observation_utc",frozen["outcome_due_utc"])
             outcome.setdefault("settlement_offset_seconds",0)
+            outcome.setdefault("start_value",100.0)
+            outcome.setdefault("end_value",price)
+            outcome.setdefault("return_pct",round((price/100.0-1.0)*100.0,8))
             outcome.setdefault("evidence_path",f"research/framework_memory/settlement_evidence/{fid}.json")
             outcome.setdefault("evidence_sha256",sha(evidence))
             (oc/f"{i}.json").write_text(json.dumps(outcome))
@@ -295,6 +305,28 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             altered=json.loads(source.read_text())
             altered["result"]="HIT"
             source.write_text(json.dumps(altered))
+            r=registry(root/"candidates",root/"observations",root/"forecasts",
+                       root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
+            row=r["candidates"][0]
+            self.assertEqual(row["matured_outcome_count"],1)
+            self.assertEqual(row["scientific_score_eligible_outcome_count"],0)
+            self.assertEqual(row["state"],"MATURED_INCONCLUSIVE")
+
+    def test_joint_mutation_of_outcome_and_binding_cannot_forge_hit(self):
+        from scripts.experiments.experiment_lifecycle import registry, sha
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            self.sample_registry(root,[self.outcome("EXP-FC-1",result="MISS")])
+            source=root/"outcomes/0.json"
+            binding=root/"settlement_bindings/EXP-FC-1.json"
+            fake=json.loads(source.read_text())
+            fake["result"]="HIT"
+            source.write_text(json.dumps(fake))
+            changed=json.loads(binding.read_text())
+            changed["outcome_sha256"]=sha(fake)
+            changed["binding_sha256"]=sha({k:v for k,v in changed.items()
+                                            if k!="binding_sha256"})
+            binding.write_text(json.dumps(changed))
             r=registry(root/"candidates",root/"observations",root/"forecasts",
                        root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
             row=r["candidates"][0]
