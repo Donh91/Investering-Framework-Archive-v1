@@ -112,7 +112,7 @@ try {
     // Check only the HTML shell. Inlining compiled module code can introduce
     // literal source strings resembling <script src> or <link rel=...>.
     // Do NOT strip external script tags: only the one deliberately inlined module.
-    const embeddedModule=offlineHtml.match(/<script type="module" src="data:text\\/javascript;base64,[A-Za-z0-9+/=]+"><\\/script>/);
+    const embeddedModule=offlineHtml.match(/<script type="module" src="data:text[/]javascript;base64,[A-Za-z0-9+/=]+"><[/]script>/);
     if(!embeddedModule)throw new Error('Portable HTML did not embed an encoded module');
     const shell=offlineHtml.replace(embeddedModule[0],'')
       .replace(/<style>[\s\S]*?<\/style>/,'');
