@@ -192,6 +192,40 @@ class Tests(unittest.TestCase):
         self.assertIn('PARSE_UNAVAILABLE', x['provider_observations'][2]['flags'])
         self.assertNotIn('PRIVATE_PROVIDER_VALUE', str(x))
 
+    def test_robinhood_v4_64hex_pool_identity(self):
+        items = sources()
+        pool = '0x' + 'a1' * 32
+        base = '0x' + 'c' * 40
+        quote = '0x' + 'd' * 40
+        dp = items[0]['payload']
+        dp.update({'chain': 'robinhood', 'id': pool.upper().replace('0X', '0x'),
+                   'base_token_id': base.upper().replace('0X', '0x'),
+                   'quote_token_id': quote})
+        ds = items[1]['payload']['pair']
+        ds.update({'chainId': 'robinhood', 'pairAddress': pool,
+                   'baseToken': {'address': base},
+                   'quoteToken': {'address': quote}})
+        gt = items[2]['payload']['data']
+        gt.update({'id': 'robinhood_' + pool,
+                   'relationships': {
+                       'base_token': {'data': {'id': 'robinhood_' + base}},
+                       'quote_token': {'data': {'id': 'robinhood_' + quote}}
+                   }})
+        gt['attributes']['address'] = pool
+        x = run(items)
+        self.assertEqual(x['source_qa_state'], 'COMPARABLE_AS_AGGREGATORS_ONLY')
+        self.assertFalse(x['independent_onchain_validation'])
+
+    def test_robinhood_v4_zero_vs_absent_liquidity(self):
+        items = sources()
+        items[0]['payload']['liquidity_usd'] = 0
+        items[1]['payload']['pair'].pop('liquidity')
+        x = run(items)
+        self.assertIn('LIQUIDITY_ZERO', x['provider_observations'][0]['flags'])
+        self.assertIn('LIQUIDITY_UNKNOWN', x['provider_observations'][1]['flags'])
+        self.assertNotIn('LIQUIDITY_ZERO', x['provider_observations'][1]['flags'])
+        self.assertFalse(x['sellability_proven'])
+
     def test_deterministic_malformed_provider_fuzz(self):
         rng = random.Random(20261018)
         choices = [None, True, False, 0, -1, 1e308, 'NaN', '', {}, [], {'unexpected': 'payload'}]
