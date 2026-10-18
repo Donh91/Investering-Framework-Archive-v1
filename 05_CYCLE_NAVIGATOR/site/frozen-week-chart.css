@@ -32,3 +32,8 @@
 @media(prefers-reduced-motion:reduce){
   .frozen-week-chart *{scroll-behavior:auto;transition:none!important;animation:none!important}
 }
+
+/* Frozen-range swatch is a small bounded interval, never a dotted daily path. */
+.fw-legend .interval{height:9px;width:21px;border:1px solid rgba(95,150,255,.62);border-radius:2px;background:rgba(95,150,255,.12)}
+.fw-assets button,.fw-reset{min-height:44px}
+@media(max-width:600px){.fw-assets button,.fw-reset{min-height:44px}}
