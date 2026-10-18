@@ -38,7 +38,7 @@ try{
   const runtimeErrors=[];
   ws.addEventListener('message',event=>{
     const e=JSON.parse(event.data);
-    if(e.method==='Runtime.exceptionThrown')runtimeErrors.push(e.params?.exceptionDetails?.text??'unknown');
+    if(e.method==='Runtime.exceptionThrown')runtimeErrors.push(String(e.params?.exceptionDetails?.exception?.description||e.params?.exceptionDetails?.text||'unknown').slice(0,1200));
     if(e.id&&pending.has(e.id)){
       const {ok,bad}=pending.get(e.id);pending.delete(e.id);
       e.error?bad(Error(JSON.stringify(e.error))):ok(e.result??{});
@@ -153,7 +153,7 @@ try{
         scripts:[...document.scripts].map(e=>({type:e.type,src:e.src?.slice(0,100)})),
         documentLanguage:document.documentElement.lang
       }))()`);
-      throw new Error('Observed daily chart did not render at '+width+': '+JSON.stringify(diagnostic));
+      throw new Error('Observed daily chart did not render at '+width+': '+JSON.stringify({diagnostic,runtimeErrors}));
     }
     const mobileTap=await evaluate(inspectMobileTapTargets);
     assert.ok(mobileTap.scrollWidth<=width+1&&mobileTap.undersized.length===0,
