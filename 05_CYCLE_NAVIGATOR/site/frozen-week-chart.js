@@ -106,7 +106,10 @@
     const plan=linePlan(m);
     const baseline=chart.addSeries(lib.LineSeries,{...opts,color:BLUE,lineType:lib.LineType.Simple,lineStyle:lib.LineStyle.Dotted,lineWidth:3});baseline.setData(plan.forecast);
     const scaleAnchor=chart.addSeries(lib.LineSeries,{...opts,color:'transparent',lineVisible:false,crosshairMarkerVisible:false});scaleAnchor.setData(m.days.map(d=>({time:d.time,value:d.forecast?.high??d.range.forecast_high})));
-    if(!m.daily.length)scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor));
+    // One original-source overlay in BOTH modes: exact 7d daily low/high envelope
+    // plus observed high/low whiskers, or the three genuine legacy intervals.
+    // Visual hierarchy remains just two primary closing-price strokes.
+    scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor));
     // Separate observed runs rather than trusting a line to bridge missing evidence.
     plan.actualRuns.forEach((points,i)=>{const latest=i===plan.actualRuns.length-1;const series=chart.addSeries(lib.LineSeries,{...opts,color:GREEN,lineStyle:lib.LineStyle.Solid,lineWidth:3,pointMarkersVisible:true,pointMarkersRadius:3,lastValueVisible:latest,priceLineVisible:latest,priceLineColor:'rgba(39,197,154,.30)',priceLineStyle:lib.LineStyle.Dashed});series.setData(points);});
     chart.timeScale().setVisibleLogicalRange({from:-.65,to:6.65});
