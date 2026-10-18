@@ -29,7 +29,7 @@ git hash-object test_source_qa_v1.py
 
 ## Evidence scope, important exclusions
 
-This receipt proves exact-file execution of the 24 **synthetic** tests, not actual Alpha Lab value, correctness on arbitrary malformed records, real API provider availability, independent onchain verification, stream freshness, market liquidity, first launch block, sellability or portfolio performance. Existing GitHub status checks are not assumed to run this Python suite. The PR remains draft pending exact-head independent review and acceptance by the canonical domain owners.
+This receipt proves exact-file execution of the 26 **synthetic** tests, not actual Alpha Lab value, correctness on arbitrary malformed records, real API provider availability, independent onchain verification, stream freshness, market liquidity, first launch block, sellability or portfolio performance. Existing GitHub status checks are not assumed to run this Python suite. The PR remains draft pending exact-head independent review and acceptance by the canonical domain owners.
 
 ## Next adversarial acceptance before any integration
 
