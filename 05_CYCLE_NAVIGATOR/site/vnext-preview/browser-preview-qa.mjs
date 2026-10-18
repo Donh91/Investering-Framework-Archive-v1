@@ -144,7 +144,17 @@ try{
       ready=await evaluate("Boolean(document.querySelector('#range-visualization .cn-chart-close-path'))");
       if(ready)break;await wait(100);
     }
-    assert.ok(ready,'Source-authentic observed daily path must render at '+width);
+    if(!ready){
+      const diagnostic=await evaluate(`(()=>({
+        sourceHealth:document.getElementById('source-health')?.textContent?.trim(),
+        sourceDetail:document.getElementById('source-detail')?.textContent?.trim().slice(0,250),
+        pathHtml:document.getElementById('range-visualization')?.innerHTML?.slice(0,350),
+        rangeHidden:document.getElementById('cn-source-chart')?.hidden,
+        scripts:[...document.scripts].map(e=>({type:e.type,src:e.src?.slice(0,100)})),
+        documentLanguage:document.documentElement.lang
+      }))()`);
+      throw new Error('Observed daily chart did not render at '+width+': '+JSON.stringify(diagnostic));
+    }
     const mobileTap=await evaluate(inspectMobileTapTargets);
     assert.ok(mobileTap.scrollWidth<=width+1&&mobileTap.undersized.length===0,
       'Phone tap/overflow regression at '+width+'px '+JSON.stringify(mobileTap));
