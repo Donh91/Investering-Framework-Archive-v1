@@ -20,14 +20,26 @@ function fixture(){
  const officialPath='04_MARKET_LEARNING/handlekompas/official/daily/c.json';
  const official={contract:'OFFICIAL_DAILY_COMPASS_v1',compass_id:'c',issued_at_utc:now,data_status:'OK',source_bindings:{auto_market_state:{packet_sha256:auto.hash}}};
  const officialRaw=JSON.stringify(official);files.set(resolve(root,officialPath),officialRaw);
- pointers.set('official',{contract:'OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1',compass_path:officialPath,compass_id:'c',issued_at_utc:now,data_status:'OK',compass_content_sha256:hash(officialRaw),source_packet_sha256:auto.hash});
+ const projectionPath='04_MARKET_LEARNING/handlekompas/official/public/c.json';
+ const projectionCore={contract:'PUBLIC_COMPASS_PROJECTION_v1',compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'};
+ const projectionSemanticHash=hash(JSON.stringify(sort(projectionCore)));
+ const projectionRaw=JSON.stringify({...projectionCore,projection_sha256:projectionSemanticHash});
+ files.set(resolve(root,projectionPath),projectionRaw);
+ const projectionBytesHash=hash(projectionRaw);
+ const projectionFields={public_projection_path:projectionPath,public_projection_content_sha256:projectionBytesHash,
+  public_projection_sha256:projectionSemanticHash};
+ pointers.set('public',{contract:'PUBLIC_COMPASS_LATEST_POINTER_v1',compass_id:'c',
+  issued_at_utc:now,data_status:'OK',...projectionFields});
+ pointers.set('official',{contract:'OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1',compass_path:officialPath,
+  compass_id:'c',issued_at_utc:now,data_status:'OK',compass_content_sha256:hash(officialRaw),
+  source_packet_sha256:auto.hash,...projectionFields});
  pointers.set('auto',{packet_path:autoPath,packet_sha256:auto.hash,packet_generated_at_utc:now});
  const forecastPath='04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/f.json';
  const forecast={contract:'SHADOW_COMPASS_V2_FORECAST_v1',forecast_id:'f',issued_at_utc:now,source_fingerprint:'fp',authority:{automatic_promotion:false},source_bindings:{auto_market_state:{packet_path:autoPath,packet_sha256:auto.hash,packet_generated_at_utc:now},cycle_navigator:{iso_year:2026,iso_week:41,issue_number:29,machine_package_sha256:wp.machine_package_sha256}},model_output:{horizons:{'12h':{direction:'UP'}}}};
  const installForecast=()=>{const f=signed(forecast,'forecast_sha256');files.set(resolve(root,forecastPath),f.raw);pointers.set('shadow',{contract:'SHADOW_COMPASS_V2_LATEST_POINTER_v1',forecast_path:forecastPath,forecast_sha256:f.hash,forecast_id:'f',source_fingerprint:'fp'});};installForecast();
- const context={resolve,relative,createHash,Date,repoRoot:root,INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
+ const context={resolve,relative,createHash,Date,repoRoot:root,COMPASS_POINTER_PATH:'public',INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
  vm.createContext(context);vm.runInContext(source.slice(source.indexOf('function verifiedRelative'),source.indexOf('\nasync function buildCompassEventSnapshot'))+';globalThis.run=buildFullStackReadback;globalThis.digest=verifiedRawDigest;',context);
- return {root,files,pointers,forecast,installForecast,autoPath,officialPath,weeklyPath,context,run:()=>context.run({compass_id:'c',data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
+ return {root,files,pointers,forecast,installForecast,autoPath,officialPath,projectionPath,weeklyPath,context,run:()=>context.run({compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
 }
 let f=fixture();assert.equal((await f.run()).shadow.status,'ALIGNED_RESEARCH');
 f=fixture();f.pointers.get('official').source_packet_sha256='a'.repeat(64);let result=await f.run();assert.equal(result.source_status.official,'DEGRADED');assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH');
@@ -42,6 +54,30 @@ for(const mode of ['missing','tampered','wrong-issue','valid']){
  if(mode==='wrong-issue'){f.files.set(path,JSON.stringify({issue_number:27}));f.forecast.source_bindings.cycle_navigator.machine_package_sha256=hash(f.files.get(path));}
  f.installForecast();result=await f.run();assert.equal(result.shadow.status,mode==='valid'?'STALE_RESEARCH':'UNVERIFIED');
  assert.equal(result.shadow.horizons['12h']?.direction,mode==='valid'?'UP':undefined);
+}
+// The original public bytes must be independently bound to the same Official
+// pointer and public projection identity. Exact ID only is never sufficient.
+for(const mode of ['missing-pointer','missing-file','wrong-public-digest','wrong-internal-digest',
+ 'wrong-semantic-hash','wrong-public-id','wrong-internal-id','wrong-public-time',
+ 'different-public-bytes','wrong-public-contract','missing-pointer-hash','wrong-source-status']){
+ f=fixture();
+ const pub=f.pointers.get('public'),internal=f.pointers.get('official');
+ const path=resolve(f.root,f.projectionPath);
+ if(mode==='missing-pointer')f.pointers.delete('public');
+ if(mode==='missing-file')f.files.delete(path);
+ if(mode==='wrong-public-digest')pub.public_projection_content_sha256='a'.repeat(64);
+ if(mode==='wrong-internal-digest')internal.public_projection_content_sha256='a'.repeat(64);
+ if(mode==='wrong-semantic-hash')pub.public_projection_sha256='b'.repeat(64);
+ if(mode==='wrong-public-id')pub.compass_id='WRONG';
+ if(mode==='wrong-internal-id')internal.compass_id='WRONG';
+ if(mode==='wrong-public-time')pub.issued_at_utc='2025-01-01T00:00:00Z';
+ if(mode==='different-public-bytes')f.files.set(path,f.files.get(path).replace('HOLD','BUY'));
+ if(mode==='wrong-public-contract')f.files.set(path,f.files.get(path).replace('PUBLIC_COMPASS_PROJECTION_v1','UNVERIFIED'));
+ if(mode==='missing-pointer-hash')delete pub.public_projection_content_sha256;
+ if(mode==='wrong-source-status')internal.data_status='DEGRADED';
+ result=await f.run();
+ assert.equal(result.source_status.official,'DEGRADED','Public projection binding: '+mode);
+ assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH','No validated shadow source when public pointer mismatched: '+mode);
 }
 // Native metadata must come from the hash-verified target, not a mutable pointer.
 for(const mode of ['valid','health','time']){
