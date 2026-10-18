@@ -105,8 +105,13 @@ try {
     const svgDataUrl='data:image/svg+xml;base64,'+
       readFileSync(resolve(base,'CN_LOGO.svg')).toString('base64');
     offlineHtml=offlineHtml.replace(logoPattern,(_,first,last)=>first+svgDataUrl+last);
-    if(/<script\b[^>]*\bsrc=/.test(offlineHtml)||
-       /<link\b[^>]*\brel="stylesheet"/.test(offlineHtml))
+    // Check only the HTML shell. Inlining compiled module code can introduce
+    // literal source strings resembling <script src> or <link rel=...>.
+    // Do NOT strip external script tags: only the one deliberately inlined module.
+    const shell=offlineHtml.replace(/<script type="module">[\s\S]*?<\/script>/,'')
+      .replace(/<style>[\s\S]*?<\/style>/,'');
+    if(/<script\b[^>]*\bsrc=/.test(shell)||
+       /<link\b[^>]*\brel="stylesheet"/.test(shell))
       throw new Error('Portable HTML still depends on external JS or CSS assets');
     writeFileSync(join(artifactDir,'CYCLE_NAVIGATOR_OFFLINE_PREVIEW.html'),offlineHtml);
     console.log('PASS: single-file offline HTML includes source, JS, CSS and SVG logo');
