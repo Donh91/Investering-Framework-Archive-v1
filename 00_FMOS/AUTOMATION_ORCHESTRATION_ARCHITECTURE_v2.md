@@ -91,6 +91,45 @@ Lifecycle directives live with the workflow instead of in a parallel registry:
 
 Lifecycle state never converts a genuine active failure into success. Invalid lifecycle declarations, an `EXPECTED_BLOCK` workflow with a schedule, an invalid/missing lifecycle timestamp, a missing reason/exit contract, or a successful run after the expected-block lifecycle became authoritative remain actionable health defects.
 
+
+
+## Universal GitHub queue continuity — NON-BINDING proposal (2026-10-14; revised 2026-10-18)
+
+**Review status: PROPOSED / NO OWNER RATIFICATION VERIFIED / NOT CURRENT GOVERNING POLICY.** This bounded cross-domain note describes a possible consistency principle for existing GitHub queues. It does **not** amend operative contracts of Codex/remediation, scientific experiments, Research Lab, Alpha Lab, Compass/Cycle Navigator, FMOS or Supervisor. Current AGENTS.md, per-domain contracts, schedules and documented receipts retain precedence.
+
+### Suggested interpretation, not a new lifecycle
+
+> A queue entry identifies proposed or admitted work; it is never evidence that execution, scientific validation, notification or downstream consumption occurred.
+
+When an **existing authorized owner** next updates its ordinary record, useful fields *within that owner's current schema* include: stable source/ref and evidence class, accountable owner, next admissible action, dependencies/eligibility/revisit condition, budget/security/review limits, and completion or blocked-state evidence. Exact fields, state labels and required events differ by domain. This is **not** a newly mandatory schema, extra durable registry or independent runner.
+
+Illustrative owner-specific lifecycle only:
+
+~~~text
+SOURCE / INTAKE
+  -> existing domain owner + deduplication (if admitted)
+  -> eligibility/readiness under that owner's rules
+  -> real execution + source/commit evidence OR explicit wait/block
+  -> applicable independent review, maturation and consumer readback
+  -> domain-authorized closed/rejected/superseded outcome OR continued wait
+~~~
+
+**Do not conflate:** an issue comment, a merged PR, GitHub Actions success, CODEX_READY, a model technical review comment and a verified natural production outcome. Each establishes a different fact. A research note that was never admitted is not an overdue operational task. An expected wait for first-known market data, a qualified source or available approved budget is not automatically failure.
+
+### Existing authority and permitted follow-up
+
+- Preserve existing domain-owned processes. Route bounded reproducible code defects only through the existing Codex intake and remediation controller; method candidates via Research Lab/Experiment Lifecycle; rendering defects via current SITE/CN owners. Do not add a global queue, scheduler, supervisor obligation, starvation scanner, source-of-truth index or unattended execution trigger.
+- **No new standing Supervisor requirement is established here.** Sampling blocked/eligible records, reporting age or implementing starvation detection are only candidate practices for a separately authorized, measurable, domain-owned pilot. First establish true eligibility and owner from canonical sources.
+- An owner may preserve explicit WAITING/UNVERIFIED/NO_SOURCE or native equivalents where its authoritative contract supports them. An issue comment cannot authenticate spending, permissions, private-data access, merges or portfolio actions.
+- Future workflow/code changes require separate scoped PRs obeying then-current ownership, safety, CI, review and post-merge readback gates. This document is not that implementation.
+- The existing code-delivery topology QUEUED -> IN_PR -> MERGED -> READBACK_VERIFIED -> DONE remains applicable **only where the existing owner contract adopts it**. Rejected, superseded, non-actionable or pending research must not be relabelled successful.
+
+### Review and adoption boundaries
+
+The 2026-10-16 AGENTS.md owner-approved single-account merge exception, where applicable, differs from a formal independent GitHub APPROVED review. Owner authorization is not an independent endorsement; model reviews (including Grok/Codex technical comments) are advisory evidence, not a GitHub approval or authority change.
+
+This section is **a reviewable proposal only**. Future adoption into operational instructions requires an authenticated domain-owner decision, exact current-main applicability, identified consumer, independent technical review where required, and bounded post-adoption readback. There is no presumption old unprocessed issues are automatically monitored or that this documentation authorizes action.
+
 ## Remediation and Codex
 
 `CODEX_READY` means the problem has sufficient evidence for a bounded code task. It does not mean that code has been changed or merged.
