@@ -34,6 +34,29 @@ def sources():
             {'provider': 'GECKOTERMINAL', 'captured_at_utc': T, 'payload': gt}]
 
 
+def robinhood_sources():
+    items = sources()
+    pool = '0x' + 'a1' * 32
+    base = '0x' + 'c' * 40
+    quote = '0x' + 'd' * 40
+    dp = items[0]['payload']
+    dp.update({'chain': 'robinhood', 'id': pool.upper().replace('0X', '0x'),
+               'base_token_id': base.upper().replace('0X', '0x'),
+               'quote_token_id': quote})
+    ds = items[1]['payload']['pair']
+    ds.update({'chainId': 'robinhood', 'pairAddress': pool,
+               'baseToken': {'address': base},
+               'quoteToken': {'address': quote}})
+    gt = items[2]['payload']['data']
+    gt.update({'id': 'robinhood_' + pool,
+               'relationships': {
+                   'base_token': {'data': {'id': 'robinhood_' + base}},
+                   'quote_token': {'data': {'id': 'robinhood_' + quote}}
+               }})
+    gt['attributes']['address'] = pool
+    return items
+
+
 def run(s):
     return qa.evaluate_case({'case_id': 'SYNTHETIC_SOL', 'observations': s})
 
@@ -193,31 +216,13 @@ class Tests(unittest.TestCase):
         self.assertNotIn('PRIVATE_PROVIDER_VALUE', str(x))
 
     def test_robinhood_v4_64hex_pool_identity(self):
-        items = sources()
-        pool = '0x' + 'a1' * 32
-        base = '0x' + 'c' * 40
-        quote = '0x' + 'd' * 40
-        dp = items[0]['payload']
-        dp.update({'chain': 'robinhood', 'id': pool.upper().replace('0X', '0x'),
-                   'base_token_id': base.upper().replace('0X', '0x'),
-                   'quote_token_id': quote})
-        ds = items[1]['payload']['pair']
-        ds.update({'chainId': 'robinhood', 'pairAddress': pool,
-                   'baseToken': {'address': base},
-                   'quoteToken': {'address': quote}})
-        gt = items[2]['payload']['data']
-        gt.update({'id': 'robinhood_' + pool,
-                   'relationships': {
-                       'base_token': {'data': {'id': 'robinhood_' + base}},
-                       'quote_token': {'data': {'id': 'robinhood_' + quote}}
-                   }})
-        gt['attributes']['address'] = pool
+        items = robinhood_sources()
         x = run(items)
         self.assertEqual(x['source_qa_state'], 'COMPARABLE_AS_AGGREGATORS_ONLY')
         self.assertFalse(x['independent_onchain_validation'])
 
     def test_robinhood_v4_zero_vs_absent_liquidity(self):
-        items = sources()
+        items = robinhood_sources()
         items[0]['payload']['liquidity_usd'] = 0
         items[1]['payload']['pair'].pop('liquidity')
         x = run(items)
