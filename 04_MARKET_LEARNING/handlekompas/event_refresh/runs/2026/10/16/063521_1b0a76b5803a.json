@@ -1,0 +1,118 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "MARKET_STATE_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT",
+  "current_data_status": "OK",
+  "current_ladder": [
+    [
+      "BTC",
+      "HOLD"
+    ],
+    [
+      "ETH",
+      "HOLD"
+    ],
+    [
+      "LARGE_CAPS",
+      "WAIT"
+    ],
+    [
+      "MID_CAPS",
+      "WAIT"
+    ],
+    [
+      "SMALL_CAPS",
+      "WAIT"
+    ],
+    [
+      "MICROCAPS",
+      "HARD_WAIT"
+    ],
+    [
+      "MEMES",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "action_permission": "HOLD_WAIT",
+    "btc_delta_pct": 0.08630559782858427,
+    "directional_state": "BULLISH",
+    "eth_delta_pct": 0.5815626155932785,
+    "eth_relative_state": "STRENGTHENING",
+    "ethbtc_delta_pct": 0.47217537942665366,
+    "market_observation_open_utc": "2026-10-16T05:00:00Z",
+    "new_price_observation": true,
+    "predecessor_market_observation_open_utc": "2026-10-16T01:00:00Z",
+    "regime": "BULLISH",
+    "summary": "BTC and ETH are both advancing over the latest governed comparison interval; action authority remains separate."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "LOW",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "OK",
+    "decisive_public_drivers": [
+      "BTC fell from 86,530.00 to 83,773.12 and ETH from 2,726.93 to 2,536.94 during completed W41, after deeper intrawEEK lows and a partial late recovery.",
+      "ETH/BTC declined from 0.03152 to 0.03029.",
+      "Five settled ETF sessions totaled \u2212678.9 BTC and \u2212542.2 ETH in reported units.",
+      "The 30d shadow rotation score fell from its first passing W41 reading of 61 to 49; the 90d and 365d source states remained between published thresholds."
+    ],
+    "distribution_risk": "UNKNOWN",
+    "eta_window": "Possible renewed retest during W42; onset timing is unsupported.",
+    "invalidation": "The retest watch weakens if the recovery persists with ETH/BTC stabilization, resilient breadth and improved settled flows. A breached forecast band alone does not establish distribution.",
+    "last_material_change_at": "2026-10-15T22:22:19Z",
+    "public_explanation": {
+      "action_authority": false,
+      "contract": "CN_PUBLIC_PROTECTION_COPY_v1",
+      "forecast_week": "2026-W42",
+      "method": "EXISTING_WEEKLY_LLM_PUBLIC_LANGUAGE_FILTER",
+      "onset_end_utc": null,
+      "onset_start_utc": null,
+      "risk_class": "RENEWED-RET\u200bEST RISK AFTER A SHARP DRAWDOWN; SEVERITY AND ONSET UNQUANTIFIED.",
+      "risk_state": "ELEVATED",
+      "summary": "Pullback risk is elevated after a sharp decline and only a partial recovery; distribution is not confirmed.",
+      "watch_for": "Watch whether the recovery holds while Ethereum strengthens relative to Bitcoin and participation broadens.",
+      "weakens_if": "The concern eases if the recovery persists and relative strength, participation and flows improve together."
+    },
+    "pullback_class": "RENEWED-RET\u200bEST RISK AFTER A SHARP DRAWDOWN; SEVERITY AND ONSET UNQUANTIFIED.",
+    "pullback_risk_state": "ELEVATED",
+    "reentry_message": "No re-entry review is active.",
+    "reentry_state": "INACTIVE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-10-16T06:35:21Z",
+  "heat_detail": {
+    "btc_return_24h_pct": 0.58745,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": 2.37609,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": 2.434895
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 18595.0,
+  "last_requested_source_sha": "a7a1a4d3381100eebfc3ccd8215a74d2b3a81df10d572e66bf976914ffad53e8",
+  "latest_compass_source_packet_sha256": "a7a1a4d3381100eebfc3ccd8215a74d2b3a81df10d572e66bf976914ffad53e8",
+  "missing_freeze_observation_only": true,
+  "missing_scheduled_freeze": null,
+  "protective_bypass": false,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 42099.0,
+  "source_packet_sha256": "1b0a76b5803ab90feae80169589975601f9d04605fe735a488ff55bd55bd304f",
+  "suppressed_cause_codes": [],
+  "upstream_refresh_required": false
+}

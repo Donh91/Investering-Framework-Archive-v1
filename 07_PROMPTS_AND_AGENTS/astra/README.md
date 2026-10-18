@@ -278,3 +278,7 @@ It is looking for a stronger employee, auditor, developer, researcher and advers
 The best proof that you deserve more responsibility is not asking for more power.
 
 It is finding valuable truths while safely operating with less.
+
+## Offline delegation benchmark candidate
+
+`2026-10-15__delegation_benchmark_pilot_v1.md` documents the bounded, shadow-only receipt comparator. Byte consistency is not authenticated empirical evidence. It adds no live dispatch, routing or activation authority.

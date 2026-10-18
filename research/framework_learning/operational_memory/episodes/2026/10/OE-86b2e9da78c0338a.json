@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/api-agent-gateway-gate.yml",
+    ".github/workflows/research-lab-sol-dispatch.yml",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json",
+    "scripts/api_agent/research_lab_sol_dispatch.py",
+    "tests/api_agent/test_research_lab_sol_paid_admission.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-86b2e9da78c0338a",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "sol61-stop-repeat-paid-r1-audits-after-verified",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* governance(sol61): hold already-completed Task2 R1 paid mission and bind exact receipt * fix(sol61): forbid repeat paid mission when receipt or prior liability already exists * ci(sol61): fail-closed paid admission before budgets and provider POST * test(sol61): prove new comments, held missions and ambiguous billing cannot re-trigger API * ci(sol61): exercise 7 no-repeat paid-admission regression tests on gated PRs",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/api-agent-gateway-gate.yml": "89f5bda210adfeaa39e4f2119b35e8791ef958ed",
+    ".github/workflows/research-lab-sol-dispatch.yml": "c468185a2833c0afb0a68443a6319b162bacba08",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json": "db8c0f50a0f84e4155a3c6177d5f65dff9287d33",
+    "scripts/api_agent/research_lab_sol_dispatch.py": "ac535f24ab1d8279006f8bfb5f50fba17b69c7e3",
+    "tests/api_agent/test_research_lab_sol_paid_admission.py": "49411778c557277c0603ce169dc4e7eacff60eca"
+  },
+  "source_commit_sha": "86b2e9da78c0338a1b97c19ddce2f9733c1cafe6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-15T23:57:42-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(sol61): stop repeat paid R1 audits after verified completed receipt"
+}

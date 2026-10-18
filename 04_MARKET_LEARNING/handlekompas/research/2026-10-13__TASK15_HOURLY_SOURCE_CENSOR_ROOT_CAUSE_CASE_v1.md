@@ -1,0 +1,32 @@
+# EDGE Task 1.5 | Original owner-candle censor, causal publication-clock case | 2026-10-13
+
+**Authority:** `RESEARCH_ONLY`, source-backed one-case diagnosis; no retroactive re-score, source rewrite, schedule, trading change, or proof of model alpha.
+
+## Sample: 2026-09-15 issued 18:07:30Z, BTC 1H
+
+- Original frozen prediction: [20260915T180730Z.json](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/09/15/20260915T180730Z.json). `issued_at_utc=2026-09-15T18:07:30.974497Z`, exact `due_at_utc=19:00:00Z`, source observation 18:00:00Z.
+- Original immutable outcome: [20260915T180730Z_1H_BTC.json](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/04_MARKET_LEARNING/intraday_execution/direction_outcomes/2026/09/15/20260915T180730Z_1H_BTC.json), `status=CENSORED`, `reason=EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE`, `evidence_deadline_utc=2026-09-15T20:30:00Z`, `measured_at_utc=2026-09-15T22:07:42.632410Z`. Historic censor is retained, never converted to HIT/MISS based on later price.
+- The canonical hourly [owner CSV as of commit ad5af3b, 18:07:11Z](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/ad5af3b51fb93066bb0b05fd9b9af13b95017cac/03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-15.csv) ended at candle open 17:00Z. The **required** candle open 18:00Z, closing at due 19:00Z, was not present.
+- The **first subsequent commit touching that owner's CSV** in GitHub path-specific commit history after 18:07 and before the next day was [5ac6983, committed 22:07:22Z](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/5ac6983e982ee528d39f4174e166cbcfb40b57a4/03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-15.csv). It included candle-open 18:00Z and later hours. That is **1h37m22s after** the original 20:30Z cutoff, so not legally admissible to the historic outcome.
+- Both observed hourly-capture workflow runs were **schedule-success**, [run #35005443630 at 18:06:52Z](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35005443630) and [run #35029293532 at 22:07:04Z](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35029293532). That proves the 18Z -> 22Z publication gap for the specific source; it does **not** identify whether intervening schedules were missed, queued, failed, blocked, or produced no source delta.
+- The hourly capture workflow **at that historic source commit** had `cron: '5 * * * *'`. It is **not** correct to apply today's later `:12` schedule to this historical period.
+- `scripts/intraday_execution/shadow_direction_confidence.py::exact_hourly_close_at_commit` correctly checks a source snapshot published by the original deadline, not a subsequent historical backfill. `mature_predictions` uses 1.5h grace. The original censor is expected behavior under this historical gap, not a scorer bug we should remove by retroactive substitution.
+
+## Larger 28d findings (not per-event root-cause proofs)
+
+Reproducible replay: [research CI run #38365749954](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/38365749954), full 1,140-row freeze/owner-censor/tape ledger artifact `task15-readonly-ledger-38365749954`, [machine receipt](./2026-10-13__TASK15_R0_ISSUED_FORECAST_CENSOR_BASELINE_RECEIPT_v1.json). In forecast cohort issued through 12 October: 1H 132/170, 4H 202/330 and 24H 170/318 eligible tape-sensitive observations had original CENSORED outcomes. Every original censor in the corpus states `EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE`; **this does not prove that every censor had the same publication-gap mechanism as the sampled case**. No independent event N or end-to-end original availability census yet.
+
+## As-of recovery check (2026-10-13 07:46Z, NOT a 24h uptime proof)
+
+- Existing **Native Market Recovery** has `:24` hourly schedule and `scripts/health/native_market_recovery.py` fail-safe owner-dispatch logic. Existing primary owner currently has `:12` hourly schedule. Neither was the historical :05 configuration.
+- Last saved recovery [STATE.json](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/09_SOURCE_QA/native_market_recovery/STATE.json) at **02:08Z** showed hourly_market DEGRADED with 14 consecutive nonpass and a dispatched retry, but does **not** establish the source remained degraded later.
+- The fresh [hourly owner LATEST.json](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/03_DAILY_CAPTURE_LOGS/hourly/LATEST.json) was COMPLETE, retrieved 07:42:02Z with observation window through 07:00Z; latest Official Compass [pointer](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json) issued 07:46:16Z with `data_status=OK`. This is a successful current snapshot, not proof of zero missed hours in the preceding days.
+
+## Follow-up for existing owners, not a duplicate automated schedule
+
+1. **#1553 risk/action and existing Hourly/Recovery owner:** Use authoritative schedule-run event timelines, path-specific first-main-publication times and exact outcome evidence deadline to measure prospective `on_time_exact_candle_count / due_candle_count` by hour/day/market condition. Join on first-knowing UTC, not newest backfilled CSV. Pin a risk-weighted backlog/incident alert when grace deadline violations repeat.
+2. **Task 1.5 #1596 / research #1597:** Retain CENSORED/NO_EDGE/PENDING denominators and compare mature-only versus later-tape sensitivity without selection-bias claims. Compare before/after real hourly/recovery deployment by **issuance cohort**, not by updated file mtimes.
+3. **Supervisor:** Audit the existing primary :12 plus recovery :24 run chain, ensure that a skipped scheduled workflow gets a bounded retry within 90 minutes when permitted, and demonstrate natural recovery (source committed/verified before outcome evidence deadline). If GitHub scheduled-run nondelivery is structural, log the limitation and evaluate the existing fallback policy, without relaxing censor governance or adding duplicate cron.
+4. No auto reweight, historic score rewrite, trade authority or public risk ETA from this research observation.
+
+**Disposition:** one source-publication-timing failure CONFIRMED for 15 Sep. Global historical source timing and recent recovery reliability remain **OPEN**, not scientifically cleared.

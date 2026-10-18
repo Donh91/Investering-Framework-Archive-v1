@@ -1,5 +1,8 @@
 # Astra BlockHorizon Research Mission Pointer v1
 
+> **2026-10-15 model-neutral mission continuity (BlockHorizon).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. Do not wait for a specific Astra launch. Existing BlockHorizon Research Lab owner/readiness/private-data gates determine which **bounded** GPT-6/deterministic tasks are eligible. Previous first-pass and completed evidence must not be repeated; no speculative historical outcomes or private values may be published. Follow the existing [Framework Mission Continuity owner](ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 **Status:** NAVIGATION_ONLY_POINTER  
 **Authority:** NONE_BY_ITSELF  
 **Mission bundle:** `ASTRA_BLOCKHORIZON_HISTORICAL_FEATURE_SURVIVAL_V1`

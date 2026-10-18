@@ -57,6 +57,49 @@ def mission_row(queue: dict[str, Any], mission_id: str) -> dict[str, Any]:
     return row
 
 
+
+def paid_attempt_admission(repo_root: Path, mission_id: str, issue_number: int) -> tuple[bool, str]:
+    """Fail closed BEFORE payment on already-completed/ambiguous mission evidence.
+
+    An issue comment is not a new owner release. Mission IDs are single paid
+    attempts unless a separate new frozen mission/packet is explicitly created.
+    Any prior output directory can represent an uncertain paid liability; do
+    not retry until existing owner reconciles provider charges and releases a
+    truly new mission identity. No provider/network calls here.
+    """
+    try:
+        queue = load_json(repo_root / QUEUE_PATH)
+    except (OSError, ValueError, TypeError):
+        return False, "QUEUE_UNREADABLE"
+    if (queue.get("status") != "ACTIVE" or
+            queue.get("trigger_issue") != issue_number or
+            queue.get("model") != MODEL or
+            queue.get("task_name") != TASK_NAME or
+            not zero_authority(queue.get("authority"))):
+        return False, "QUEUE_AUTHORITY_NOT_VERIFIED"
+    missions = queue.get("missions")
+    if not isinstance(missions, list):
+        return False, "MISSION_CENSUS_INVALID"
+    active = [row for row in missions if isinstance(row, dict)
+              and row.get("state") == "ACTIVE_RELEASED"]
+    if (len(active) != 1 or queue.get("active_mission") != mission_id or
+            active[0].get("mission_id") != mission_id):
+        return False, "MISSION_NOT_CURRENTLY_RELEASED"
+    row = active[0]
+    if row.get("new_paid_attempts_authorized") is False:
+        return False, "PAID_MISSION_HOLD"
+    root = repo_root / "research/api_agent/outputs/research_lab_sol" / mission_id
+    if root.exists():
+        if not root.is_dir() or root.is_symlink():
+            return False, "PRIOR_PAID_LIABILITY_AMBIGUOUS"
+        # No matter which earlier comment/trigger or receipt status: an
+        # existing output path can mean the provider already incurred cost.
+        if any(root.rglob("*")):
+            return False, "PRIOR_MISSION_ATTEMPT_OR_LIABILITY_EXISTS"
+    return True, "NEW_OWNER_RELEASE"
+
+
+
 def clipped_file(repo_root: Path, rel: str) -> dict[str, Any]:
     path = repo_root / rel
     if not path.is_file():
@@ -258,6 +301,14 @@ def main() -> None:
     parse.add_argument("--comment-body", required=True)
     parse.add_argument("--output", type=Path, required=True)
 
+
+    admission = sub.add_parser("check-paid-admission")
+    admission.add_argument("--repo-root", type=Path, default=Path("."))
+    admission.add_argument("--mission-id", required=True)
+    admission.add_argument("--issue-number", type=int, required=True)
+    admission.add_argument("--comment-id", required=True)
+    admission.add_argument("--github-output", type=Path, required=True)
+
     build_p = sub.add_parser("build")
     build_p.add_argument("--repo-root", type=Path, default=Path("."))
     build_p.add_argument("--output-dir", type=Path, required=True)
@@ -287,6 +338,18 @@ def main() -> None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(mission + "\n")
         print(mission)
+    elif args.cmd == "check-paid-admission":
+        admitted, reason = paid_attempt_admission(args.repo_root, args.mission_id,
+                                                  args.issue_number)
+        dest = (f"research/api_agent/outputs/research_lab_sol/{args.mission_id}"
+                f"/issue-{args.issue_number}/comment-{args.comment_id}")
+        # Own the workflow step outputs; do not accidentally append duplicate
+        # runner output names across two contradictory admissions.
+        with args.github_output.open("a", encoding="utf-8") as out:
+            out.write(f"run_analysis={str(admitted).lower()}\n")
+            out.write(f"dest={dest}\n")
+        print(json.dumps({"admitted": admitted, "reason": reason,
+                          "mission": args.mission_id}, sort_keys=True))
     elif args.cmd == "build":
         print(json.dumps(build(args.repo_root, args.output_dir, args.mission_id, args.issue_number, args.comment_id), sort_keys=True))
     elif args.cmd == "validate":

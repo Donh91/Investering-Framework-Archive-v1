@@ -1,0 +1,485 @@
+{
+  "contract": "COMPASS_HORIZON_EDGE_MULTI_RUN_MISSION_v1",
+  "mission_id": "COMPASS-HORIZON-EDGE-20261011",
+  "issued_date": "2026-10-11",
+  "locale": "da-DK",
+  "status": "DESIGN_STAGED_NOT_EXECUTED",
+  "owner_repo": "Donh91/Investering-Framework-Archive-v1",
+  "parent_research_pr": 1573,
+  "existing_owner_issues": [
+    1516,
+    1553,
+    1530
+  ],
+  "docs": {
+    "read_first": "04_MARKET_LEARNING/handlekompas/research/2026-10-11__HORIZON_EDGE_EXTREME_MULTI_RUN_MASTER_MISSION_v1.md",
+    "evidence_note": "04_MARKET_LEARNING/handlekompas/research/2026-10-11__weekly_vs_2_3w_horizon_edge_and_portfolio_utility__shadow.md",
+    "prompt": "04_MARKET_LEARNING/handlekompas/research/2026-10-11__HORIZON_EDGE_NEW_THREAD_EXECUTION_PROMPT_v1.md",
+    "pullback_addendum": "04_MARKET_LEARNING/handlekompas/research/2026-10-12__R4P_PULLBACK_INVESTOR_DECISION_EDGE_DEEP_AUDIT_v1.md"
+  },
+  "owner_boundaries": {
+    "tactical": [
+      "04_MARKET_LEARNING/handlekompas/official/",
+      "04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v2.md"
+    ],
+    "strategic": [
+      "04_MARKET_LEARNING/handlekompas/strategic/",
+      "05_CYCLE_NAVIGATOR/weekly/"
+    ],
+    "weekly_range": [
+      "05_CYCLE_NAVIGATOR/range_baselines/",
+      "05_CYCLE_NAVIGATOR/internal_learning/"
+    ],
+    "action_economics": [
+      "GitHub issue #1553",
+      "DEL",
+      "M6",
+      "EDGE-001",
+      "AATA"
+    ],
+    "display": [
+      "07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json",
+      "07_PROMPTS_AND_AGENTS/action_compass/2026-09-16__global-action-compass-invocation-contract-v1__canonical.md"
+    ],
+    "data_plane": "Donh91/secrets - restricted, authorize and independently resolve; public receipts must be value-free"
+  },
+  "execution_sessions": [
+    {
+      "run": "A",
+      "stages": [
+        "R0",
+        "R1",
+        "UX0"
+      ],
+      "description": "Owner governance, provenance/denominators, and bounded chat-only presentation candidate",
+      "restriction": "Single code integration writer; UX0 may progress independently after R0"
+    },
+    {
+      "run": "B",
+      "stages": [
+        "R2",
+        "R3"
+      ],
+      "description": "Frozen 7D range benchmarks; multiweek direction/path and temporal validity"
+    },
+    {
+      "run": "C",
+      "stages": [
+        "R4",
+        "R5"
+      ],
+      "description": "Warning-to-action economics if admitted; adversarial baselines and clustered tests"
+    },
+    {
+      "run": "D",
+      "stages": [
+        "R6",
+        "R7"
+      ],
+      "description": "Prospective owner integration, maturation, independent adjudication and closed-loop learning"
+    }
+  ],
+  "stages": [
+    {
+      "id": "R0",
+      "title": "Owner source boundary & pre-registration",
+      "depends_on": [],
+      "owner": "#1516 / current Compass governance",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "exact-head owner graph",
+        "existing PR+issue dedup",
+        "privacy/source-authority receipt",
+        "pre-outcome frozen protocol identity"
+      ],
+      "gates": [
+        "HEAD_BOUND",
+        "PRIVACY_GUARD_PASS",
+        "NON_DUPLICATE",
+        "PREREGISTERED"
+      ]
+    },
+    {
+      "id": "R1",
+      "title": "Reproduce PIT/denominator and episode universe",
+      "depends_on": [
+        "R0"
+      ],
+      "owner": "existing Official Compass/CN scorer and audit",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "source-graded population census",
+        "nominal/effective time audit",
+        "non-independent family IDs",
+        "inclusion/exclusion accounting",
+        "negative replay fixtures"
+      ],
+      "gates": [
+        "NO_HINDSIGHT",
+        "EXACT_REPLAY",
+        "FIRST_KNOWLEDGE_ELIGIBLE_OR_EXPLICIT_UNKNOWN",
+        "MISSINGNESS_ACCOUNTED"
+      ]
+    },
+    {
+      "id": "UX0",
+      "title": "Scoped mobile on-demand Kompas interpretation clarity",
+      "depends_on": [
+        "R0"
+      ],
+      "owner": "global Action Compass renderer & contract",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "separate presentation-only PR",
+        "two-table backwards-compatibility tests",
+        "three-horizon role reading line",
+        "exact-head independent review",
+        "main readback OR OPEN_REVIEW",
+        "R4P site-only compact categorical severity escalator plus existing Pullback disclosure, no redesign"
+      ],
+      "gates": [
+        "NO_SIGNAL_CHANGE",
+        "NO_ACTION_CHANGE",
+        "NO_WIDGETS",
+        "UNKNOWN_FAIL_CLOSED",
+        "TWO_TABLES_PRESERVED",
+        "PRIVACY_PASS"
+      ]
+    },
+    {
+      "id": "R2",
+      "title": "7D price interval vs frozen simple baselines",
+      "depends_on": [
+        "R1"
+      ],
+      "owner": "M3/CN range_baselines",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "W41+ admissible prospective range tournament",
+        "coverage and sharpness separately",
+        "per-asset/horizon misses",
+        "stress/leave-one-family-out",
+        "negative conclusions"
+      ],
+      "gates": [
+        "PIT_NATIVE_BASELINES",
+        "MATCHED_HORIZON",
+        "PUBLIC_SCORE_UNTOUCHED",
+        "INSUFFICIENT_N_DISCLOSED"
+      ]
+    },
+    {
+      "id": "R3",
+      "title": "14/21D direction and ordered-path challenger",
+      "depends_on": [
+        "R0",
+        "R1"
+      ],
+      "owner": "#1516",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "fresh owner 14/21D freeze eligibility ledger",
+        "directional participation and abstention score",
+        "path/turning/tail risk tests",
+        "same-clock naive comparator",
+        "explicit insufficient if no 14/21D freeze",
+        "R4P conditional dip-versus-14/21D-downtrend path classification, with original source clocks"
+      ],
+      "gates": [
+        "14_21D_NOT_21_30D",
+        "MIXED_NOT_SILENT_SUCCESS",
+        "NO_FABRICATED_RANGE",
+        "PROSPECTIVE_BEFORE_OUTCOME"
+      ]
+    },
+    {
+      "id": "R4",
+      "title": "Warnings and matched portfolio economic utility",
+      "depends_on": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "owner": "#1553 / DEL / M6 / EDGE-001",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "holder/cash segregated comparator panel",
+        "price-only versus horizon-only versus hybrid",
+        "emission-delivery-execution time lineage",
+        "frictions/turnover/missed-upside/false alarms",
+        "NO_TRADE_AUTHORITY",
+        "R4P investor-oriented onset/size/stablecoin/reentry case study: two separately legal populations; no numeric odds without calibration",
+        "source-graded pullback severity, horizon, duration, alt-tier impact and holder/cash economics - or explicit NOT_MEASURABLE"
+      ],
+      "gates": [
+        "ADMITTED_ACTION_DIFFERENCE",
+        "DELIVERY_TIME_VERIFIED",
+        "TRADABILITY_ELIGIBLE",
+        "SAME_CAPITAL_POST_COST",
+        "WARNING_NOT_SELL"
+      ],
+      "on_block": "ECONOMIC_EDGE_NOT_MEASURABLE"
+    },
+    {
+      "id": "R5",
+      "title": "Falsification, mechanism and clustered validity",
+      "depends_on": [
+        "R2",
+        "R3"
+      ],
+      "owner": "Research Lab owner / independent adversary",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "blind independent replay",
+        "leave-one-event-out and negative controls",
+        "regime and source vintage breakdown",
+        "time-series family-aware uncertainty",
+        "full trial denominator",
+        "kill/retain recommendation",
+        "R4P scenario A–T adversarial replay including false alarms, false confidence, high-beta alts and bear traps"
+      ],
+      "gates": [
+        "NO_DUPLICATE_TRIALS",
+        "NO_POST_HOC_TUNING",
+        "NEGATIVE_RESULTS_PRESERVED",
+        "FAMILY_CLUSTERED"
+      ]
+    },
+    {
+      "id": "R6",
+      "title": "Forward maturation and compound learning integration",
+      "depends_on": [
+        "R3",
+        "R5"
+      ],
+      "owner": "#1516 / CN precision / Master Monday / #1530",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "reuse existing scorer/schedule",
+        "immutable prospective outcome joins",
+        "weekly matured learning only",
+        "no-new-engine QA receipts",
+        "R4P prospective forward maturity/false-negative controls and no-warning baseline",
+        "research-to-approved-official-to-site release gates for pullback profile, with publication/phone verification"
+      ],
+      "gates": [
+        "NO_NEW_CRON",
+        "EXISTING_OWNER",
+        "NO_AUTO_PROMOTION",
+        "PENDING_NOT_SCORED"
+      ]
+    },
+    {
+      "id": "R7",
+      "title": "Bounded final governance adjudication",
+      "depends_on": [
+        "UX0",
+        "R2",
+        "R3",
+        "R5"
+      ],
+      "owner": "existing approved independent reviewers",
+      "state": "NOT_STARTED",
+      "outputs": [
+        "separate verdicts per economic and scientific dimension",
+        "reviewed branch/PR/CI/main proof",
+        "owner handover for still-maturing evidence",
+        "Danish mobile final status and next step"
+      ],
+      "gates": [
+        "EXACT_HEAD_INDEPENDENT_REVIEW",
+        "SOURCE_BOUND_VERDICT",
+        "NO_ALPHA_OVERCLAIM",
+        "PRODUCTION_SIGNAL_UNCHANGED"
+      ]
+    }
+  ],
+  "independent_outcomes": [
+    "weekly_range_incremental_alpha",
+    "14_21d_directional_skill",
+    "ordered_path_timing",
+    "warning_information_lead",
+    "incumbent_net_utility",
+    "fresh_cash_net_utility",
+    "presentation_clarity"
+  ],
+  "test_arms": [
+    "HOLDER_PASSIVE_HOLD",
+    "FRESH_CASH_WAIT",
+    "NAIVE_SAME_HORIZON_VOL_PRICE",
+    "WEEKLY_7D",
+    "MULTIWEEK_14_21D",
+    "HYBRID_21D_CONTEXT_7D_BAND_12_72H_PERMISSION"
+  ],
+  "score_guard": {
+    "no_composite": true,
+    "public_price_precision_immutable": true,
+    "missing_not_negative": true,
+    "abstentions_reported": true,
+    "overlap_not_independent": true,
+    "first_knowledge_required": true
+  },
+  "high_impact_actions": {
+    "portfolio_trade": false,
+    "live_buy_sell_override": false,
+    "threshold_change": false,
+    "model_weight_change": false,
+    "new_scheduler": false,
+    "private_data_publication": false,
+    "site_change_by_default": false,
+    "chat_presentation_additive_only": true
+  },
+  "evidence_seed": {
+    "m3_weekly_range_alpha": "NOT_DEMONSTRATED",
+    "two_three_week_direction_edge": "NOT_ESTABLISHED",
+    "paired_portfolio_action_economics": "NOT_ESTABLISHED",
+    "audit_public_population": "142 freezes / 426 horizon rows / 319 outcomes / 107 missing, source-publication time unresolved",
+    "btc_168h_selected": "29 scored / 27 correct / all SIDEWAYS / 55 abstentions - not tradable directional alpha"
+  },
+  "checkpoint_policy": {
+    "branch_work": "reviewed owner-scoped PRs",
+    "path_hint": "04_MARKET_LEARNING/handlekompas/research/runs/YYYY/MM/DD/<run-id>/",
+    "required": [
+      "mission_id",
+      "run_id",
+      "parent_receipt",
+      "main_head_sha",
+      "input_source_hashes",
+      "stage_status",
+      "verified_eligible_n",
+      "rejected_n_by_reason",
+      "independent_family_n",
+      "tests_receipts",
+      "claims_pro_and_con",
+      "cost_when_known",
+      "next_exact_owner_action",
+      "links"
+    ],
+    "lifecycle": [
+      "NOT_STARTED",
+      "BLOCKED",
+      "DESIGN_STAGED",
+      "EXECUTED_NEEDS_REVIEW",
+      "VERIFIED",
+      "MATURED",
+      "NEGATIVE_EVIDENCE",
+      "INSUFFICIENT_DATA",
+      "NOOP"
+    ],
+    "never_claim_async_completion": true
+  },
+  "default_decision": "NO_CHANGE_TO_CANONICAL_COMPASS",
+  "additive_study": {
+    "id": "R4P_PULLBACK_INVESTOR_DECISION_EDGE_20261012",
+    "status": "DESIGN_STAGED_NOT_EXECUTED",
+    "parent_mission_id": "COMPASS-HORIZON-EDGE-20261011",
+    "attachment_to": [
+      "R0",
+      "R1",
+      "R3",
+      "R4",
+      "R5",
+      "R6",
+      "UX0"
+    ],
+    "read_first": "04_MARKET_LEARNING/handlekompas/research/2026-10-12__R4P_PULLBACK_INVESTOR_DECISION_EDGE_DEEP_AUDIT_v1.md",
+    "existing_owners": [
+      "#1553",
+      "#1516",
+      "#1530",
+      "#1578"
+    ],
+    "required_investor_axes": [
+      "event_proximity_with_source_clock",
+      "conditional_likelihood_calibration_1_to_10_or_NOT_CALIBRATED",
+      "BTC_ETH_alt_tier_size_separate",
+      "duration_and_bear_regime_14_21d",
+      "incumbent_holder_vs_fresh_cash_stablecoin_decision",
+      "SELL_authority_separate",
+      "false_warnings_and_missed_material_events",
+      "reentry_reclaim_vs_bear_trap"
+    ],
+    "hypothesis_status": "NOT_PROVEN",
+    "forward_scoring": "PREREGISTERED_ONLY",
+    "current_official_sell_owner": "UNAVAILABLE",
+    "site_change": "SOURCE_ONLY_PRESENTATION_SEPARATE_DRAFT_PR_1576",
+    "no_new_scheduler": true,
+    "no_new_api_execution_claim": true,
+    "blocked_until": [
+      "point_in_time_source_clock",
+      "independent_event_family_denominator",
+      "prospective_source_admission",
+      "consumer_delivery_and_execution_feasibility_for_economics"
+    ],
+    "required_outputs": [
+      "eligible_vs_ineligible_event_census",
+      "stage_vs_timing_likelihood_size_separation",
+      "scenario_A_through_T_falsification",
+      "14_21d_dip_vs_regime_verification",
+      "1_to_10_calibration_if_admissible_otherwise_NOT_CALIBRATED",
+      "alt_tier_and_stablecoin_after_cost_utility_if_admissible_otherwise_NOT_MEASURABLE",
+      "existing_site_no_redesign_readback",
+      "independent_review_receipt"
+    ],
+    "prohibited": [
+      "HIGH_IS_IMMINENT",
+      "RISK_STAGE_AS_PROBABILITY",
+      "WARN_IS_SELL",
+      "PORTFOLIO_TRADE_AUTOMATION",
+      "PUBLIC_PRIVATE_DATA",
+      "POST_HOC_SCORE_PROMOTION",
+      "ASSUME_ACTIVE_API_INVOCATION"
+    ],
+    "pullback_status_profile_v1": {
+      "status": "HANDOVER_DESIGN_STAGED_NOT_EXECUTED",
+      "parent": "R4P_PULLBACK_INVESTOR_DECISION_EDGE_20261012",
+      "doc": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_PULLBACK_DECISION_PROFILE_AND_SITE_CONSUMER_HANDOVER_v1.md",
+      "machine_contract": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_PULLBACK_STATUS_PROFILE_SITE_BRIDGE_v1.json",
+      "task2_insertion": [
+        "R0/PDP0",
+        "R1/PDP1",
+        "R3/PDP2",
+        "R4/PDP3",
+        "R5/PDP5",
+        "R6/PDP4",
+        "UX0/PDP4"
+      ],
+      "site_pr": 1576,
+      "site_issue": 1578,
+      "original_research_owner_issue": 1530,
+      "risk_action_owner_issue": 1553,
+      "strategic_owner_issue": 1516,
+      "stage_classes_source_owner": [
+        "NORMAL",
+        "BUILDING",
+        "ELEVATED",
+        "HIGH",
+        "CONFIRMED",
+        "UNAVAILABLE"
+      ],
+      "source_status": "OFFICIAL_ONLY",
+      "research_display": "SEPARATE_NOT_AUTHORITY",
+      "required_dimensions": [
+        "severity",
+        "event_target_and_timing",
+        "asset_tier_magnitude",
+        "duration_and_regime",
+        "action_new_cash",
+        "sell_incumbent",
+        "reentry",
+        "evidence_age_and_quality"
+      ],
+      "critical": "site may update only when owner-ratified versioned official source changes, NEVER directly from research candidate",
+      "negative_tests": 16,
+      "status_scope": "SCIENTIFIC_CALIBRATION_PENDING_PIT_AND_OUTCOMES",
+      "prohibit": [
+        "RESEARCH_TO_SITE_STAGE_PROMOTION",
+        "RISK_STAGE_TO_IMMINENT",
+        "RISK_STAGE_TO_PROBABILITY",
+        "HOLD_WAIT_AS_INCUMBENT_HOLD_SAFETY",
+        "WARNING_TO_SELL",
+        "NEW_CRON"
+      ]
+    }
+  }
+}

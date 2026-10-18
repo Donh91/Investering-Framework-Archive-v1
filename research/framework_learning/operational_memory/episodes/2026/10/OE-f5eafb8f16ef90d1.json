@@ -1,0 +1,58 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/compass-outcomes.yml",
+    "04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v3.md",
+    "04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v3.md",
+    "scripts/api_agent/build_weekly_calibration_context.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "scripts/learning/compass_outcomes.py",
+    "scripts/learning/shadow_compass_v2.py",
+    "scripts/learning/shadow_compass_v2_compare.py",
+    "scripts/learning/shadow_compass_v2_outcomes.py",
+    "tests/api_agent/test_weekly_calibration_context_v4.py",
+    "tests/learning/test_compass_outcomes.py",
+    "tests/learning/test_shadow_compass_v2_compare.py",
+    "tests/learning/test_shadow_compass_v2_outcomes.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-f5eafb8f16ef90d1",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "scientific-frozen-scoring-contracts-hourly-outcome-integrity-1581",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(scoring): anchor hourly outcome endpoints to candle close, not batch end * fix(shadow): use corrected hourly endpoint and version scoring contract * test: expect corrected Official outcome scoring v3 * test: batch boundary must not shift target candle; wait for collection * test: reject inconsistent collection clock without publishing an outcome * test: expect corrected Shadow scoring v3 * test(shadow): batch-close collision, pending early evidence, exact target close * docs(scoring): version corrected candle/batch time semantics for prospective outcomes * docs(shadow): proposed v3 batch",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/compass-outcomes.yml": "90e127bdbe3413f286f02aec918801a5c69ac7f6",
+    "04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v3.md": "4487fe8a205e45fb8c25beb0bec16e115fd931ca",
+    "04_MARKET_LEARNING/handlekompas/shadow_v2/SCORING_CONTRACT_v3.md": "39837c6eb24ebe6fe5ca4a7824787a792dfafa21",
+    "scripts/api_agent/build_weekly_calibration_context.py": "c82d0edd3ee387b55a7f259fa8b9ebf04decbce9",
+    "scripts/data_ping/native_handlekompas.py": "d00d38bed517861fa2487dce42d330bf05812f6d",
+    "scripts/learning/compass_outcomes.py": "756d271a1a9897d5dc1c6292b998093192d682e5",
+    "scripts/learning/shadow_compass_v2.py": "d6e238520864eff00ab6624a5630fef7211bf6a8",
+    "scripts/learning/shadow_compass_v2_compare.py": "05235152535f7b5f5e67184e1887ad99f907889d",
+    "scripts/learning/shadow_compass_v2_outcomes.py": "54be71c23860ccb46184aa263d7d708fa3fc6a50",
+    "tests/api_agent/test_weekly_calibration_context_v4.py": "b14667b8a6608a6b787824f555acc85a12dccf02",
+    "tests/learning/test_compass_outcomes.py": "28b8f7bec5ba49379e055b2df3491105cf81c8ea",
+    "tests/learning/test_shadow_compass_v2_compare.py": "76da8f4e881e6644c3b4ecb3c236380ea17e05e6",
+    "tests/learning/test_shadow_compass_v2_outcomes.py": "dadbfff83f42d711f83f606c3b77595594949323"
+  },
+  "source_commit_sha": "f5eafb8f16ef90d1bc68c96d2d6fe384dc697cab",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-12T10:38:26-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(scientific): preserve frozen scoring contracts and v3 hourly-close outcome integrity (#1581)"
+}

@@ -1,0 +1,116 @@
+{
+  "contract": "EDGE_TASK_1_5_ADMISSION_GATE_v1",
+  "recorded_at_utc": "2026-10-13",
+  "provenance": {
+    "research_pr": 1597,
+    "task_issue": 1596,
+    "edge_governor_issue": 1530,
+    "action_owner_issue": 1553,
+    "full_publication_census_receipt": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK15_R1_BOUND_SOURCE_PUBLICATION_CORRECTION_v2.json",
+    "census_main_first_parent_sha": "f55cfd5fa97b7225fe6cbe842f25c4768a831633",
+    "census_ci_run": 38377408012,
+    "census_original_receipt_status": "SUPERSEDED_BY_SHA_BOUND_CORRECTION_V2",
+    "new_exact_head_replay_status": "REPRODUCED_HISTORICAL_PRICE_TAPE_RESEARCH_ONLY_PIT_UNVERIFIED",
+    "census_source_head_sha": "1522cb25cfbfd35823d4ef2666ed835fab4b119d"
+  },
+  "classification": "PREFLIGHT_NEGATIVE_GATE_NOT_A_MARKET_SIGNAL",
+  "status": "BLOCKED_SCIENTIFIC_CLOSURE",
+  "permissions": {
+    "continue_existing_market_data_collection": true,
+    "continue_existing_research_negative_controls": true,
+    "allow_official_model_weight_change": false,
+    "allow_trade_or_sell_signal": false,
+    "allow_historical_pullback_economic_claim": false,
+    "allow_legacy_censor_rewrite": false,
+    "allow_premature_source_ETA_or_probability": false
+  },
+  "checks": {
+    "original_forecast_cohort_replay": {
+      "status": "SHA_BOUND_EX_POST_RESEARCH_REPLAY_NOT_SCIENTIFIC_EDGE",
+      "slots": 1140,
+      "eligible_issued_asset_horizon_pairs_2026_09_15_to_2026_10_13_06Z": 824,
+      "independent_event_trials": null,
+      "owner_receipts_count": 814,
+      "missing_original_outcome_receipt_count": 10
+    },
+    "owner_publication_by_exact_due_cutoff": {
+      "status": "HEAD_BOUND_814_RECEIPT_MAIN_ARCHIVE_PROXY_PIT_UNVERIFIED",
+      "original_censored_count": 500,
+      "late_archive_count": 500,
+      "original_matured_count": 314,
+      "on_time_archive_count": 314,
+      "source_first_known_provider_proven": false,
+      "original_receipt_missing": 10
+    },
+    "original_scoring": {
+      "status": "IMMUTABLE_ORIGINAL_RECEIPTS_PRESERVED_WITH_MISSINGNESS",
+      "censored_count": 500,
+      "late_ex_post_market_data_may_change_outcome": false
+    },
+    "intraday_performance": {
+      "status": "PROVISIONAL_EX_POST_RECONSTRUCTION_NOT_REGISTERED_OUTCOME_SCORE",
+      "baseline_clock_matched": false,
+      "event_family_adjusted_uncertainty": false,
+      "independent_holdout_pass": false
+    },
+    "vote_family_challengers": {
+      "status": "IN_SAMPLE_CONTROL_ONLY",
+      "benchmark_winner_selected": false,
+      "promoted_model": null,
+      "ablation_sensitivity_not_trade_edge": true
+    },
+    "kalibrering_causality": {
+      "status": "AUTOMATIC_T12_REWEIGHT_NOT_ACTIVE",
+      "automated_vote_reweight": false,
+      "other_policy_version_causality_proven": false
+    },
+    "official_shadow_comparability": {
+      "status": "BLOCKED_LEGACY_SCORING_CENSOR",
+      "admitted_version_paired_outcome_count": 0
+    },
+    "delivered_chat_compass_prospective_receipts": {
+      "status": "MISSING_ON_DEMAND_CHAT_FREEZE",
+      "safe_auto_logged_user_visible_forecast_count": null
+    },
+    "cn_site_parity": {
+      "status": "OPEN_SEPARATE_SOURCE_DELIVERY_QA",
+      "presentation_guard_pr": 1598,
+      "reviewed_merged": false
+    },
+    "pullback_event_eligibility": {
+      "status": "SUSPENDED_NO_ELIGIBILITY_CONTRACT",
+      "closed_eligible_episode_count": 0
+    }
+  },
+  "sequenced_owner_actions": [
+    {
+      "owner_issue": 1553,
+      "priority": "P0",
+      "task": "Prospectively measure exact due-clock owner-candle publication by due+90m and root cause of delayed/queued/missing Hourly/Native Recovery runs. Preserve immutable original outcome statuses."
+    },
+    {
+      "owner_issue": 1596,
+      "priority": "P0",
+      "task": "Independently review first-parent Git timestamp methodology, provider PIT proof, missingness and source-driven maturity selection; finalize matched baseline/event-family/holdout methods."
+    },
+    {
+      "owner_issue": 1530,
+      "priority": "P0",
+      "task": "Route BLOCKED admission state as non-binding research advisory only; never suspend existing EDGE/M6 collection and never promote challenger without prospective evidence."
+    },
+    {
+      "owner_issue": 1553,
+      "priority": "P0",
+      "task": "Independently review/QA PR 1598 and verify chat/CN/site exact current official source parity and truthful time/probability/12H semantics."
+    }
+  ],
+  "task15_closure_allowed": false,
+  "task2_pullback_edge_claim_allowed": false,
+  "maintainer_note": "Source pin and original-receipt status divergence reconciled on research CI #38377408012: 824 ex-post spot joins = 500 originally CENSORED + 314 originally MATURED + 10 with NO_ORIGINAL_RECEIPT. 824 is NOT 824 registered outcomes; earlier 510 CENSORED claim is superseded by v2 correction. No forecast alpha/predictive skill certified. Task1.5 OPEN, Task2 BLOCKED, advisory does not grant trading action or change collection.",
+  "prior_invalidated_report": {
+    "prior_workflow_derived_claim": "824 owner outcomes including 510 censored",
+    "corrected_shabound_result": "824 retrospective price-joined predictions, 814 originally registered outcome receipts (500 censored and 314 matured), 10 missing original outcome receipts",
+    "correction_evidence": "2026-10-13__TASK15_R1_BOUND_SOURCE_PUBLICATION_CORRECTION_v2.json",
+    "prior_science_verdict": "RETRACTED_AND_SUPERSEDED"
+  }
+}

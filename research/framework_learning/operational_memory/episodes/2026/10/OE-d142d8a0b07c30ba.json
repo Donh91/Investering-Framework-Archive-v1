@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/data-architecture-gate.yml",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_EXACT_GIT_OBJECT_CI_RECEIPT_v1.json",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PR1614_1617_REVIEW_AND_ADMISSION_v1.md",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_MARKET_LEARNING",
+  "episode_id": "OE-d142d8a0b07c30ba",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(Task2 R0): rebase original pinned-source verifier / negative regression suite from #1617 * research(Task2 R0): rebase original pinned-source verifier / negative regression suite from #1617 * research(Task2): record safe rebase and independent R0 verifier review gate for #1614/#1617 * test(Task2 R0): record exact PR Git-blob SHA and successful 10/10 local negative controls * fix(task2 R0): reference exact versioned verifier in 10 offline tests * docs(task2 R0): align admission evidence with corrected exact test blob * fix(Task2 R0): reject Git replace ancestry and non-commit SHA anch",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/data-architecture-gate.yml": "192bdc674b5e6716c8c796b72050275a0519ecab",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_EXACT_GIT_OBJECT_CI_RECEIPT_v1.json": "58656bd556ab5ba198a537d0e3643ff031a8d4d7",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PR1614_1617_REVIEW_AND_ADMISSION_v1.md": "503be3a9fc965445d704a1863b38d196071e022b",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs": "f018de43091e225c7820f39415fdc91cd69b4355",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs": "9739cabfa4a54bda222eb391f006b9111a0d0add"
+  },
+  "source_commit_sha": "d142d8a0b07c30babc1e120ee165d843ce2ce323",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-15T19:35:26-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(Task2 R0): verify pinned Git source objects with fail-closed tests"
+}

@@ -134,7 +134,7 @@
     {
       "sequence": 6,
       "mission_id": "RL-DISTRIBUTION-SURVIVAL-META-006",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_LAST_VERIFIED_API_RESULT",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-07__RL-DISTRIBUTION-SURVIVAL-META-006__EDGE001-sol-cross-exam-v1.json",
       "context_status": "EDGE001_PROSPECTIVE_DESIGN_CROSS_EXAM_FRESH_BOUND",
       "context_paths": [
@@ -153,7 +153,75 @@
       "previous_attempt": "FAILED_CLOSED_BEFORE_API_QUEUE_STATUS_CONTRACT_NO_PAID_RECEIPT",
       "cross_exam_reason": "MATERIAL_NEW_EVIDENCE: 54/504 rows changed, historical model-selection ranking flips",
       "additional_sol_pass_limit": 1,
-      "selected_live_rules": []
+      "selected_live_rules": [],
+      "owner_hold_reason": "Historical last SOL receipt confirmed 2026-10-12 via existing issue #1476; owner priority lease moved to Task2 R0 exact adversarial independent review; preserve existing evidence and release later only on new material case."
+    },
+    {
+      "sequence": 7,
+      "mission_id": "TASK2-R0-INDEPENDENT-REVIEW-001",
+      "state": "OWNER_HELD_AFTER_LAST_VERIFIED_API_RESULT",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_REVIEW_v1.json",
+      "context_status": "EXACT_PR1627_HEAD_52D4_SOURCE7AE538_TESTB6DC5_ONE_MATERIAL_RECHECK",
+      "context_paths": [
+        "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_EVIDENCE_v1.md",
+        "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_SOL61_EXACT_PR_REVIEW_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R0_PUBLIC_SOURCE_DRIFT_RECEIPT_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1.mjs",
+        "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R0_R1_SOL61_ADVERSARIAL_READY_v1.md",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "AGENTS.md"
+      ],
+      "release_gate": "OWNER_AUTHORIZED_TASK2_R0_P0_AFTER_PRIOR_MISSION_COMPLETE",
+      "no_early_sol_opinion": true,
+      "pass_scope": "ONE_RECHECK_OF_CORRECTED_EXACT_R0_CODE_ONLY_NOT_FULL_R1_OR_HISTORICAL_MARKET",
+      "previous_attempt": "COMPLETED_API_REVIEW_2026_10_14_TRIGGER_6172934053_RECEIPT_6173001365_VERDICT_INSUFFICIENT_EVIDENCE",
+      "selected_live_rules": [],
+      "no_further_sol_passes_unless_new_material_evidence": true,
+      "cross_exam_reason": "NEW_MATERIAL_CORRECTIVE_SOURCE_AND_TEST_BLOBS_AFTER_FIRST_SOL_R0_REVIEW__THREE_IDENTIFIED_FALSIFIERS_FIXED_OR_TARGETED",
+      "additional_sol_pass_limit": 1,
+      "completed_api_results": [
+        "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6172934053/receipt.json",
+        "research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6175760286/receipt.json"
+      ],
+      "last_advisory_verdict": "WEAKENED_CODEX_FOLLOWUP_READY_NOT_INDEPENDENT_PR_APPROVAL"
+    },
+    {
+      "sequence": 8,
+      "mission_id": "TASK2-R1-CFGI-PIT-FALSIFICATION-002",
+      "state": "OWNER_HELD_AFTER_LAST_VERIFIED_API_RESULT",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R1_CFGI_SOL61_SOURCE_PIT_REVIEW_v1.json",
+      "context_status": "ORIGINAL_V3_R1_CFGI_SOURCE_CLOCKS_PLUS_8_PUBLIC_SAFE_DEEP_RESEARCH_INTAKES",
+      "context_paths": [
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DEEP_RESEARCH_INDEPENDENT_REVIEW_PACKET_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR04_PUBLIC_RESEARCH_INTAKE_v2.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR01_DR05_PUBLIC_RESEARCH_INTAKE_v3.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR06_DERIVATIVES_RESEARCH_INTAKE_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR07_ROTATION_RESEARCH_INTAKE_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DR08_AI_EDGE_TRIBUNAL_INTAKE_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_RESUME_PDF_CLAIM_REVIEW_AND_CFGI_PRIORITIES_v1.md",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_11_SOURCE_CLOCK_CASES_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_12H_CENSUS_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_FEATURE_CLOCK_AUDIT_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_EXPLORATORY_BASELINE_AND_SIMULATION_RELEASE_v1.json",
+        "04_RESEARCH_LAB/auto_trading/maeve/CFGI_MAEVE_DATA_INVENTORY_V1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+        "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md",
+        "AGENTS.md",
+        "06_RESEARCH_LAB/mission_packets/2026-10-14__TASK2_R1_CFGI_SOL61_SOURCE_PIT_REVIEW_v1.json"
+      ],
+      "release_gate": "EXPLICIT_USER_MANDATE_EXISTING_RESEARCH_LAB_SOL_QUEUE_SEQUENTIAL_ONLY",
+      "no_early_sol_opinion": true,
+      "pass_scope": "ADVERSARIAL_R1_SOURCE_CLOCK_RESEARCH_ONLY_NO_HISTORICAL_R2_OR_PORTFOLIO_ACTION",
+      "additional_sol_pass_limit": 1,
+      "selected_live_rules": [],
+      "prior_sol_r0_resolved_only_as_api_review": true,
+      "completed_api_results": ["research/api_agent/outputs/research_lab_sol/TASK2-R1-CFGI-PIT-FALSIFICATION-002/issue-1476/comment-6176416300/receipt.json"],
+      "last_verified_api_model": "gpt-6.1-sol",
+      "last_advisory_verdict": "INSUFFICIENT_EVIDENCE_NOT_SCIENTIFICALLY_ADMITTED",
+      "new_paid_attempts_authorized": false,
+      "owner_hold_reason": "Genuine PASS receipt already persisted; no repeat until separately released against verifiably NEW, independently source-bound PIT or delivery evidence. Owner must adjudicate rather than replay identical R1 packet."
     }
   ],
   "authority": {
@@ -166,6 +234,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "RL-DISTRIBUTION-SURVIVAL-META-006",
-  "program_phase": "M6_EDGE001_PROSPECTIVE_DESIGN_CROSS_EXAM"
+  "active_mission": null,
+  "program_phase": "TASK2_R1_SOL61_API_COMPLETED_INSUFFICIENT_EVIDENCE__PIT_AND_DELIVERY_STILL_BLOCKED"
 }

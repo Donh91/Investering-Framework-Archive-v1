@@ -1,0 +1,180 @@
+{
+  "contract": "TASK2_SUPPLEMENTAL_RESUME_PDF_CLAIM_COURT_AND_CFGI_ARCHIVE_v1",
+  "date": "2026-10-14",
+  "authority": "RESEARCH_ONLY_SECONDARY_REPORT_FACTCHECK",
+  "pdf": {
+    "title": "Resumé",
+    "pages": 7,
+    "sha256": "a6205840138c8ff063f4f94f73ea221db5ffafa1b5fa27ec7422e5cf746dc7fe",
+    "original_pdf_committed_to_public_repo": false,
+    "independent_deep_research_DR09": false
+  },
+  "original_deep_research_reports_already_indexed": 8,
+  "existing_master_research_index": "06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DEEP_RESEARCH_INDEPENDENT_REVIEW_PACKET_v1.json",
+  "base_commit": "05a1b54727a1a7926413d2d213a7834c4adb330f",
+  "claims": [
+    {
+      "id": "SUP01",
+      "pdf_pages": [
+        1,
+        2
+      ],
+      "claim": "Named generic market/derivatives/CFGI/CN/M6 data CSV paths are existing data sources",
+      "verification": "NOT_PRESENT_AT_STATED_PATHS_ON_MAIN",
+      "original_primary_receipts_attached_to_pdf": false,
+      "task2_admitted": false
+    },
+    {
+      "id": "SUP02",
+      "pdf_pages": [
+        2,
+        3,
+        4
+      ],
+      "claim": "Python no-hindsight script implemented and four September forecasts executed and reproduced",
+      "verification": "NOT_VERIFIED_SCRIPT_ABSENT_AT_ROOT_AND_SCRIPTS_DIR_ON_MAIN",
+      "reported_results_are_examples_only": true,
+      "task2_admitted": false
+    },
+    {
+      "id": "SUP03",
+      "pdf_pages": [
+        3,
+        7
+      ],
+      "claim": "R1 sealed PIT validated and historical R2/R3 now runnable",
+      "verification": "CONTRADICTED_BY_EXISTING_CANONICAL_R1_LIVE_PIT_BLOCK",
+      "task2_admitted": false
+    },
+    {
+      "id": "SUP04",
+      "pdf_pages": [
+        2,
+        4,
+        5
+      ],
+      "claim": "Continuous native CFGI 2020-2026 historical observations available",
+      "verification": "CONTRADICTED_BY_PROVEN_NATIVE_SOURCE_COVERAGE_START_CIRCA_2022_03_AND_LOCAL_GAPS",
+      "task2_admitted": false
+    },
+    {
+      "id": "SUP05",
+      "pdf_pages": [
+        2,
+        4
+      ],
+      "claim": "Originally issued CN from 2017/2018 and typed M6 from 2023",
+      "verification": "NO_AUTHENTIC_ISSUE_TIME_LEDGER_FOR_CLAIMED_YEARS",
+      "task2_admitted": false
+    },
+    {
+      "id": "SUP06",
+      "pdf_pages": [
+        6
+      ],
+      "claim": "Need new per-merge snapshot action and OI/funding collectors",
+      "verification": "POTENTIAL_DUPLICATE_AND_COST_OR_GOVERNANCE_CHANGE_NOT_AUTHORIZED_BY_REPORT",
+      "task2_admitted": false
+    },
+    {
+      "id": "SUP07",
+      "pdf_pages": [
+        4,
+        5
+      ],
+      "claim": "CFGI nonprice incremental information, MAEVE time fidelity, CN vs momentum and OI/funding conditional warning deserve testing",
+      "verification": "RESEARCH_HYPOTHESES_CONSISTENT_WITH_EXISTING_DR01_TO_DR08_BUT_NOT_EXECUTED",
+      "task2_admitted": false
+    }
+  ],
+  "cfgi": {
+    "routing_inventory": "04_RESEARCH_LAB/auto_trading/maeve/CFGI_MAEVE_DATA_INVENTORY_V1.json",
+    "routing_inventory_git_blob": "a263a33ab0d92a4567d70d4290e1e6ffe71cbea6",
+    "archived_1h_btc_eth_rows": 478,
+    "historical_selected_event_count": 2,
+    "expected_BTC_ETH_MARKET_symbol_hour_slots": 726,
+    "available_slots": 478,
+    "all_symbol_coverage_ratio": 0.6584022038567493,
+    "market_rows_in_frozen_event_windows": 0,
+    "source_coverage_authority": "06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_FIELD_COVERAGE.json",
+    "provider_metadata_only_first_seen_approx": "2022-03-29/30",
+    "historical_2021_cfgi_available": false,
+    "PDLT_4h_1d_observation_count": 1230,
+    "PDLT_observation_cadence_not_native_algorithm": "~15m observations of 4h/1d states",
+    "free_market_context_hourly_rows_not_cfgi": 851882,
+    "maeve_fills": 1073,
+    "maeve_parent_positions": 432,
+    "maeve_closed_parent_positions": 426,
+    "maeve_dca_legs": 641,
+    "maeve_social_matches": 318,
+    "maeve_post_entry_component_leakage_pending": true,
+    "cfgi_provider_engine_break_2026_07_08": "PRIMARY_VENDOR_DOCUMENTED_FROM_2026_07_08_NOT_PER_OBSERVATION_PIT_CERTIFIED",
+    "source_first_known_per_observation_independently_verified": false,
+    "after_cost_economic_edge_established": false,
+    "buy_more_historical_data_authorized": false,
+    "vendor_primary_evidence": {
+      "url": "https://cfgi.io/developer/",
+      "inspected_utc_date": "2026-10-14",
+      "statement": "Readings from 8 Jul 2026 onward come from the upgraded scoring engine",
+      "vendor_v2_timestamp_semantics": "MADRID_LOCAL_DATETIME",
+      "vendor_v3_timestamp_semantics": "ISO_8601_UTC",
+      "vendor_reported_api_v2_sunset_date": "2026-08-01",
+      "vendor_confirmed_signal_schema_field_name_changes": [
+        "cfgi->score",
+        "search->trends",
+        "orderbook->orders"
+      ],
+      "not_verified_by_vendor_page": [
+        "pre_2026_component_weights",
+        "historical_provider_first_known_per_row",
+        "past_v2_timestamp_independently_attested",
+        "proprietary_historical_component_versions",
+        "independent_performance_or_net_wealth_edge"
+      ],
+      "classification": "PRIMARY_VENDOR_CURRENT_DOCUMENTATION__NOT_HISTORICAL_SOURCE_ATTESTATION"
+    }
+  },
+  "new_native_v3_census": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_12H_CENSUS_v1.json",
+  "tasks": [
+    {
+      "priority": 0,
+      "owner_issue": 1596,
+      "task": "independent_provider_first_known_and_original_forecast_issued_at_adjudication",
+      "ready_for_historical_r2": false
+    },
+    {
+      "priority": 0,
+      "owner_issue": 1596,
+      "task": "restricted_cfgi_vintage_and_timeframe_coverage_matrix_with_no_private_values_published",
+      "ready_for_historical_r2": false
+    },
+    {
+      "priority": 1,
+      "owner_issue": 1596,
+      "task": "CFGI_baseline_price_volume_vol_vs_CFGI_composite_components_train_only_residual",
+      "ready_for_historical_r2": false
+    },
+    {
+      "priority": 1,
+      "owner_issue": null,
+      "task": "MAEVE_NONE_vs_ENTRY_and_DCA_parent_level_capital_matched_backtests_after_PIT",
+      "ready_for_historical_r2": false,
+      "owner_path": "04_RESEARCH_LAB/auto_trading/maeve/"
+    },
+    {
+      "priority": 1,
+      "owner_issue": 1553,
+      "task": "CN_compass_vs_simple_momentum_and_derivative_causality_falsification",
+      "ready_for_historical_r2": false
+    }
+  ],
+  "r0_source_inventory_families": 17,
+  "r0_source_references": 37,
+  "r0_source_paths": 36,
+  "r1_live_PIT_gate": "BLOCKED",
+  "r2_to_r7_historical_replay_executed_in_this_intake": 0,
+  "original_forecasts_or_outcomes_rewritten": false,
+  "new_automations": 0,
+  "private_raw_values_in_public": false,
+  "trade_actions": 0
+}

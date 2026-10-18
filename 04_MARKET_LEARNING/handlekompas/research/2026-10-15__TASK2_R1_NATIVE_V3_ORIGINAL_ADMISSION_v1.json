@@ -1,0 +1,3061 @@
+{
+  "contract": "TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v1",
+  "status": "RESEARCH_ONLY_NOT_ADMITTED",
+  "generated_from_main_sha": "c25d77c88557103880599c69caf956743ce5a293",
+  "original_snapshot_sha": "098c50d36b222c4c8ffa179a5879d36a74194bc4",
+  "source_census_path": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_11_SOURCE_CLOCK_CASES_v1.json",
+  "owner_issue": 1596,
+  "cohort": {
+    "original_attempts": 11,
+    "original_outcomes_present": 9,
+    "original_outcomes_absent": 2,
+    "unique_source_blobs": 10,
+    "unique_raw_capture_blobs": 7,
+    "admitted": 0,
+    "independent_market_event_families_certified": 0
+  },
+  "clock_interpretation": "Internal Git and collector retrieval precede issue, but this does not independently certify vendor publication/revision or user delivery. OKX funding_time is future settlement, not the quote observation clock. CFGI is v3 4h lookback refreshed about every 15 minutes; October 2026 is post July 8 scoring era. No retrospective static=true or 2025 backfill is joined.",
+  "absence_universe": {
+    "registered_original_forecasts": 11,
+    "abstentions": "RETAIN_IN_ORIGINAL_OUTCOME_NO_RESCORE",
+    "no_forecast_hours": "UNKNOWN_NOT_ENUMERATED",
+    "no_warning_opportunities": "UNKNOWN_NOT_ENUMERATED",
+    "negative_event_families": "UNKNOWN_NOT_CERTIFIED"
+  },
+  "historical_backtest_release": "BLOCKED_NOT_IDENTIFIABLE_YET",
+  "after_cost_action_simulation": "NOT_EXECUTED",
+  "rows": [
+    {
+      "forecast_id": "CMP-20261012-468da783e9d8",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-468da783e9d8.json",
+      "original_forecast_git_blob_sha": "5239ba0450c97e425e5d5791e9c6c6cfa07e1613",
+      "original_forecast_declared_sha256": "94c0f9d25c98fb69e0a2d38a675fbedafb17869eb84b6c89571a6f7a79262e76",
+      "issued_at_utc": "2026-10-12T23:24:24Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "b7b677f4565bf13a775af3189d1b53de75c249e7",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/12/232245_a3021c904445.json",
+        "git_blob_sha": "48a061318da52279c761cff46456a17f0822954f",
+        "first_git_commit_sha": "7ed9e997573fc23b2b89fd4998b69391e4063306",
+        "first_git_commit_at_utc": "2026-10-12T23:22:45Z",
+        "generated_at_utc": "2026-10-12T23:22:45Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/12/225702_gh-38319475122-1.json",
+        "commit_sha": "1ca03efa99b7a48f69b015e42c23c099384d693b",
+        "git_blob_sha": "61875b5ebe5d7b0de736fd62a9f2615283113b74",
+        "captured_at_utc": "2026-10-12T22:57:02Z",
+        "git_commit_at_utc": "2026-10-12T23:22:17Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-12T22:57:02Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-12T22:50:52Z",
+          "BTC": "2026-10-12T22:50:52Z",
+          "ETH": "2026-10-12T22:50:52Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-12T22:56:55.971284Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T00:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T00:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T22:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T22:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T22:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-12T22:56:57.298943Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-12T22:56:57.298943Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-12T22:56:57.298943Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-12T18:01:30Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-11T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:28:27Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:18:43Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-12T22:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-12T22:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791849600000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791849600000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T22:50:52Z",
+          "declared_retrieved_at": "2026-10-12T22:57:02Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T22:50:52Z",
+          "declared_retrieved_at": "2026-10-12T22:57:02Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T22:50:52Z",
+          "declared_retrieved_at": "2026-10-12T22:57:02Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T22:50:52Z",
+          "declared_retrieved_at": "2026-10-12T22:57:02Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-12",
+          "declared_retrieved_at": "2026-10-12T22:56:57.298943Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-12T23:17:04.549205+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T22:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T22:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T22:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:61875b5ebe5d7b0de736fd62a9f2615283113b74",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-13T11:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-12T23:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 41736,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "34b7ed2820c07c7cdd221e547f26891e0f2ce426",
+      "original_direction_result_only_not_admitted": {
+        "btc": "INCORRECT",
+        "eth": "INCORRECT"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "34b7ed2820c07c7cdd221e547f26891e0f2ce426",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261012-904299b09eca",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-904299b09eca.json",
+      "original_forecast_git_blob_sha": "1e2ffaac86e4837de9ebb1813a5971cb596f2f3a",
+      "original_forecast_declared_sha256": "9149d23e55f530491879eceff76d2ddf8ad7dfa4494382f77a15bc2f4abaab24",
+      "issued_at_utc": "2026-10-12T19:59:38Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "4dc4a52d897b298b3b016b622b4315f52b30ec54",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/12/195803_d6d9ee28ede4.json",
+        "git_blob_sha": "2612c9b8272ad375c6a75ba917351f2465e1fd1b",
+        "first_git_commit_sha": "6495f36225e51d4bab9c3afafb9bd27ce56e4bfc",
+        "first_git_commit_at_utc": "2026-10-12T19:58:03Z",
+        "generated_at_utc": "2026-10-12T19:58:03Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/12/175549_gh-38287411350-1.json",
+        "commit_sha": "74130fa250fe47309ca963fe8707f5846507d82a",
+        "git_blob_sha": "8cf11be4f9488642c1b972b57fb211752900bf42",
+        "captured_at_utc": "2026-10-12T17:55:49Z",
+        "git_commit_at_utc": "2026-10-12T19:57:34Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-12T17:55:49Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-12T17:52:09Z",
+          "BTC": "2026-10-12T17:52:09Z",
+          "ETH": "2026-10-12T17:52:09Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-12T17:55:45.207700Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T00:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T00:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T18:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T18:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T18:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-12T18:01:30Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-12T18:01:30Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-12T18:01:30Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-12T18:01:30Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-11T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:28:27Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:18:43Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-12T18:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-12T18:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791849600000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791849600000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T17:52:09Z",
+          "declared_retrieved_at": "2026-10-12T17:55:49Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T17:52:09Z",
+          "declared_retrieved_at": "2026-10-12T17:55:49Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T17:52:09Z",
+          "declared_retrieved_at": "2026-10-12T17:55:49Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T17:52:09Z",
+          "declared_retrieved_at": "2026-10-12T17:55:49Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-12",
+          "declared_retrieved_at": "2026-10-12T17:55:46.126888Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-12T17:57:11.450182+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T18:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T18:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T18:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:8cf11be4f9488642c1b972b57fb211752900bf42",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-13T07:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-12T19:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 39622,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "ad6ec434825e3fc9e407ea48be59f1459c63d354",
+      "original_direction_result_only_not_admitted": {
+        "btc": "ABSTAINED",
+        "eth": "ABSTAINED"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "ad6ec434825e3fc9e407ea48be59f1459c63d354",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-88618d3ad2a7",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-88618d3ad2a7.json",
+      "original_forecast_git_blob_sha": "dd10707a3fb9d2e3bd8a2ca9ba2c1d73e2de6577",
+      "original_forecast_declared_sha256": "9d8cf650f514df8273d134a6e63f28630c1ac82920a2b03985bc1f5dcdd34ddc",
+      "issued_at_utc": "2026-10-13T07:46:16Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "2ec34cb9e2388a5699385b21c0f451d92f1000ee",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/074509_fcc23e903bb3.json",
+        "git_blob_sha": "b4480d84b1376774839bb6a4d26147b248dd54ee",
+        "first_git_commit_sha": "3181f397cd9f57f644d3ea55c9ab7c47901f33d2",
+        "first_git_commit_at_utc": "2026-10-13T07:45:10Z",
+        "generated_at_utc": "2026-10-13T07:45:09Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/064800_gh-38358722066-1.json",
+        "commit_sha": "a6bd7dd456f720b3d0d830b09441665fba6e2284",
+        "git_blob_sha": "c70cf0a28f3c0c32a560be76e8cf6f84e8c10c3f",
+        "captured_at_utc": "2026-10-13T06:48:00Z",
+        "git_commit_at_utc": "2026-10-13T07:44:43Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-13T06:48:00Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-13T06:37:12Z",
+          "BTC": "2026-10-13T06:37:12Z",
+          "ETH": "2026-10-13T06:37:12Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-13T06:47:51.963468Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T08:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T08:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T06:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T06:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T06:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T06:47:53.424077Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T06:47:53.424077Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T06:47:53.424077Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T02:06:22Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-11T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:28:27Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:18:43Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T06:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T06:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791878400000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791878400000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T06:37:12Z",
+          "declared_retrieved_at": "2026-10-13T06:48:00Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T06:37:12Z",
+          "declared_retrieved_at": "2026-10-13T06:48:00Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T06:37:12Z",
+          "declared_retrieved_at": "2026-10-13T06:48:00Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T06:37:12Z",
+          "declared_retrieved_at": "2026-10-13T06:48:00Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-13",
+          "declared_retrieved_at": "2026-10-13T06:47:53.424077Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-13T03:57:52.031116+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T06:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T06:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T06:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:c70cf0a28f3c0c32a560be76e8cf6f84e8c10c3f",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-13T19:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-13T07:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 40424,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "c579e378172ee6c6b7139fd4f290db3fb06d8ec8",
+      "original_direction_result_only_not_admitted": {
+        "btc": "INCORRECT",
+        "eth": "INCORRECT"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "c579e378172ee6c6b7139fd4f290db3fb06d8ec8",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-aa70b21fc6b0",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-aa70b21fc6b0.json",
+      "original_forecast_git_blob_sha": "0e0de03fd8c1b77dbd29fe1b780c293d4df173d1",
+      "original_forecast_declared_sha256": "2101ded0eedf88169a4812956690a1eabf0802c8ec65d198c0e1dd5e90b33ea0",
+      "issued_at_utc": "2026-10-13T12:20:35Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "4b47609305e19d910b794c3e73fff93b18277e95",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/121858_d2568ca43db0.json",
+        "git_blob_sha": "f9a225a3dec1da892c25a1f5d5f0d82d2d86f2fb",
+        "first_git_commit_sha": "fcb150a123cbbefd5827393f67a4935113bbefdd",
+        "first_git_commit_at_utc": "2026-10-13T12:18:59Z",
+        "generated_at_utc": "2026-10-13T12:18:58Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/114144_gh-38391925487-1.json",
+        "commit_sha": "c703bcbc05dee32a240634240a2a04b07075426c",
+        "git_blob_sha": "d35109503668f571ac45a45613d0410e19418b94",
+        "captured_at_utc": "2026-10-13T11:41:44Z",
+        "git_commit_at_utc": "2026-10-13T12:18:29Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-13T11:41:42Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-13T11:35:28Z",
+          "BTC": "2026-10-13T11:35:28Z",
+          "ETH": "2026-10-13T11:35:28Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-13T11:41:37.868106Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T16:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T16:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T11:55:08Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T11:55:08Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T11:55:08Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T11:55:08Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-11T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:28:27Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:18:43Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791907200000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791907200000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T11:35:28Z",
+          "declared_retrieved_at": "2026-10-13T11:41:42Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T11:35:28Z",
+          "declared_retrieved_at": "2026-10-13T11:41:42Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T11:35:28Z",
+          "declared_retrieved_at": "2026-10-13T11:41:42Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T11:35:28Z",
+          "declared_retrieved_at": "2026-10-13T11:41:42Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-13",
+          "declared_retrieved_at": "2026-10-13T11:41:39.245062Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-13T12:14:10.041562+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:d35109503668f571ac45a45613d0410e19418b94",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-14T00:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-13T12:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 41965,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "db7f0421cb06a5b350e72b962b816fc4153604ca",
+      "original_direction_result_only_not_admitted": {
+        "btc": "CORRECT",
+        "eth": "CORRECT"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "db7f0421cb06a5b350e72b962b816fc4153604ca",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-aecf113aab74",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-aecf113aab74.json",
+      "original_forecast_git_blob_sha": "dbcdb9d32801255b83f420f008f254c84b1305d6",
+      "original_forecast_declared_sha256": "98a86e4e9b5a8bc282579b3ba7dd491ce1cbb21e30acce8b8305e12dcb0e7721",
+      "issued_at_utc": "2026-10-13T21:21:40Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "0049766598c1ba71f6628bbd91efa5545d39e237",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/211822_df7a882c9f85.json",
+        "git_blob_sha": "eb9a8257de8ab3b89121a49af0f1977ab40c1eff",
+        "first_git_commit_sha": "0007599f1301d2ec9c8763f641799b0782265633",
+        "first_git_commit_at_utc": "2026-10-13T21:18:23Z",
+        "generated_at_utc": "2026-10-13T21:18:22Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/211351_gh-38468922395-1.json",
+        "commit_sha": "86ac57043b7b283704c68543e2bd35a3bc232342",
+        "git_blob_sha": "87cca41109b1e1b97400a25be68d61c5c40a54d0",
+        "captured_at_utc": "2026-10-13T21:13:51Z",
+        "git_commit_at_utc": "2026-10-13T21:17:47Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-13T21:13:51Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-13T21:06:09Z",
+          "BTC": "2026-10-13T21:06:09Z",
+          "ETH": "2026-10-13T21:06:09Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-13T21:13:46.231428Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-14T00:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-14T00:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T20:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T20:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T20:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T21:13:47.702030Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T21:13:47.702030Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T21:13:47.702030Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T19:21:30Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-13T12:55:29Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-13T00:00:00Z",
+          "declared_retrieved_at": "2026-10-13T12:47:48Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T20:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T20:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791936000000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791936000000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T21:06:09Z",
+          "declared_retrieved_at": "2026-10-13T21:13:51Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T21:06:09Z",
+          "declared_retrieved_at": "2026-10-13T21:13:51Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T21:06:09Z",
+          "declared_retrieved_at": "2026-10-13T21:13:51Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T21:06:09Z",
+          "declared_retrieved_at": "2026-10-13T21:13:51Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-13",
+          "declared_retrieved_at": "2026-10-13T21:13:47.702030Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-13T19:34:36.579388+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T20:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T20:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T20:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:87cca41109b1e1b97400a25be68d61c5c40a54d0",
+      "independent_market_event_family": null,
+      "original_target_at_utc": null,
+      "later_target_at_utc_unadmitted": "2026-10-14T09:00:00Z",
+      "original_target_reference_at_utc": null,
+      "nominal_reference_to_target_seconds": null,
+      "issue_to_original_target_seconds": null,
+      "original_outcome_status": "ABSENT_AT_ORIGINAL_SNAPSHOT",
+      "original_outcome_git_blob_sha": null,
+      "original_direction_result_only_not_admitted": null,
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "6f21dd133c192df14baf5a9a8721c17d4f2dae20",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION",
+        "ORIGINAL_OUTCOME_ABSENT_AT_FROZEN_SNAPSHOT"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-af3bcdea9173",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-af3bcdea9173.json",
+      "original_forecast_git_blob_sha": "3e9df922dc4606f576d8c0e63031fc62dfeb3d9d",
+      "original_forecast_declared_sha256": "37cae560806eb0f423b39708f5a3c98770f790b0745a70e8de6d90352b2b64ae",
+      "issued_at_utc": "2026-10-13T23:03:36Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "d3f5f0e6dc43e631bf8dace8b438c3c5d301357a",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/230123_b6bd94c25381.json",
+        "git_blob_sha": "c4427d270cd92ec8ee7efb77c01f79e7fb8aac19",
+        "first_git_commit_sha": "3224bb80ba088ddeb0d40c55aa23822c26546308",
+        "first_git_commit_at_utc": "2026-10-13T23:01:24Z",
+        "generated_at_utc": "2026-10-13T23:01:23Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/211351_gh-38468922395-1.json",
+        "commit_sha": "fd70492b3b23e45b0df5cd15395de8c33b713a2a",
+        "git_blob_sha": "87cca41109b1e1b97400a25be68d61c5c40a54d0",
+        "captured_at_utc": "2026-10-13T21:13:51Z",
+        "git_commit_at_utc": "2026-10-13T23:00:55Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-13T21:13:51Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-13T21:06:09Z",
+          "BTC": "2026-10-13T21:06:09Z",
+          "ETH": "2026-10-13T21:06:09Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-13T21:13:46.231428Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-14T00:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-14T00:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T21:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T21:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T21:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T21:13:47.702030Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T21:13:47.702030Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T21:13:47.702030Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T19:21:30Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-13T12:55:29Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-13T00:00:00Z",
+          "declared_retrieved_at": "2026-10-13T12:47:48Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T21:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T21:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791936000000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791936000000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T21:06:09Z",
+          "declared_retrieved_at": "2026-10-13T21:13:51Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T21:06:09Z",
+          "declared_retrieved_at": "2026-10-13T21:13:51Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T21:06:09Z",
+          "declared_retrieved_at": "2026-10-13T21:13:51Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T21:06:09Z",
+          "declared_retrieved_at": "2026-10-13T21:13:51Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-13",
+          "declared_retrieved_at": "2026-10-13T21:13:47.702030Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-13T21:18:22.791735+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T21:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T21:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T21:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:87cca41109b1e1b97400a25be68d61c5c40a54d0",
+      "independent_market_event_family": null,
+      "original_target_at_utc": null,
+      "later_target_at_utc_unadmitted": "2026-10-14T10:00:00Z",
+      "original_target_reference_at_utc": null,
+      "nominal_reference_to_target_seconds": null,
+      "issue_to_original_target_seconds": null,
+      "original_outcome_status": "ABSENT_AT_ORIGINAL_SNAPSHOT",
+      "original_outcome_git_blob_sha": null,
+      "original_direction_result_only_not_admitted": null,
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "722c5d328846524b6a0e991a6aaed8db82239c4b",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION",
+        "ORIGINAL_OUTCOME_ABSENT_AT_FROZEN_SNAPSHOT"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-b1af85bff6f8",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-b1af85bff6f8.json",
+      "original_forecast_git_blob_sha": "13e28b56eb2623c45d4f0e5ce1b00cd9b6d7c819",
+      "original_forecast_declared_sha256": "5ca2cc497e4675392ef4d8985bb2ae2a9a6e5737d84b160a9f2e17e0c05e6cab",
+      "issued_at_utc": "2026-10-13T16:10:20Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "c1f0e4d27a1c27727dbdb7fb4216b1a0678781f2",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/160117_37c1557169db.json",
+        "git_blob_sha": "3b32df58b5a13148b5c983e353dccb31d4fd53c1",
+        "first_git_commit_sha": "ca5374a06278c568db03c08b9b3755aac05036df",
+        "first_git_commit_at_utc": "2026-10-13T16:01:17Z",
+        "generated_at_utc": "2026-10-13T16:01:17Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/155958_gh-38426750300-1.json",
+        "commit_sha": "f6750593696d2b571f06b128ab94c3da9985a0f2",
+        "git_blob_sha": "bd6a4137d1c4c3957d5fe0a1d2924aa98d99ca4c",
+        "captured_at_utc": "2026-10-13T15:59:58Z",
+        "git_commit_at_utc": "2026-10-13T16:00:53Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-13T15:59:58Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-13T15:51:20Z",
+          "BTC": "2026-10-13T15:51:20Z",
+          "ETH": "2026-10-13T15:51:20Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-13T15:59:53.728287Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T16:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T16:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T14:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T14:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T14:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T15:59:54.776167Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T15:59:54.776167Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T15:59:54.776167Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": null,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-13T12:55:29Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-13T00:00:00Z",
+          "declared_retrieved_at": "2026-10-13T12:47:48Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T14:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T14:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791907200000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791907200000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T15:51:20Z",
+          "declared_retrieved_at": "2026-10-13T15:59:58Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T15:51:20Z",
+          "declared_retrieved_at": "2026-10-13T15:59:58Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T15:51:20Z",
+          "declared_retrieved_at": "2026-10-13T15:59:58Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T15:51:20Z",
+          "declared_retrieved_at": "2026-10-13T15:59:58Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-13",
+          "declared_retrieved_at": "2026-10-13T15:59:54.776167Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-13T12:18:58.915021+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T14:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T14:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T14:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:bd6a4137d1c4c3957d5fe0a1d2924aa98d99ca4c",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-14T03:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-13T15:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 38980,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "6971465369195bf878caa1b5cf3f1e6777211f94",
+      "original_direction_result_only_not_admitted": {
+        "btc": "CORRECT",
+        "eth": "INCORRECT"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "6971465369195bf878caa1b5cf3f1e6777211f94",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-bfb7ff123449",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-bfb7ff123449.json",
+      "original_forecast_git_blob_sha": "ef379fef88597cb3336303e736e81c2699fd2acf",
+      "original_forecast_declared_sha256": "b91c499857f1b9f06707d6ae62363a533f40b481dfd6e61091cf1280e66c885a",
+      "issued_at_utc": "2026-10-13T14:14:43Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "e7408b8efb40a9360158f756a2e4cb0d417ff8c0",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/121858_d2568ca43db0.json",
+        "git_blob_sha": "f9a225a3dec1da892c25a1f5d5f0d82d2d86f2fb",
+        "first_git_commit_sha": "fcb150a123cbbefd5827393f67a4935113bbefdd",
+        "first_git_commit_at_utc": "2026-10-13T12:18:59Z",
+        "generated_at_utc": "2026-10-13T12:18:58Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/114144_gh-38391925487-1.json",
+        "commit_sha": "c703bcbc05dee32a240634240a2a04b07075426c",
+        "git_blob_sha": "d35109503668f571ac45a45613d0410e19418b94",
+        "captured_at_utc": "2026-10-13T11:41:44Z",
+        "git_commit_at_utc": "2026-10-13T12:18:29Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-13T11:41:42Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-13T11:35:28Z",
+          "BTC": "2026-10-13T11:35:28Z",
+          "ETH": "2026-10-13T11:35:28Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-13T11:41:37.868106Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T16:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T16:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T11:55:08Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T11:55:08Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T11:55:08Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T11:55:08Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-11T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:28:27Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:18:43Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791907200000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791907200000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T11:35:28Z",
+          "declared_retrieved_at": "2026-10-13T11:41:42Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T11:35:28Z",
+          "declared_retrieved_at": "2026-10-13T11:41:42Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T11:35:28Z",
+          "declared_retrieved_at": "2026-10-13T11:41:42Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T11:35:28Z",
+          "declared_retrieved_at": "2026-10-13T11:41:42Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-13",
+          "declared_retrieved_at": "2026-10-13T11:41:39.245062Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-13T12:14:10.041562+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T11:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:d35109503668f571ac45a45613d0410e19418b94",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-14T00:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-13T12:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 35117,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "577ce8ba3823125ab1655fe6f422c6616d47a804",
+      "original_direction_result_only_not_admitted": {
+        "btc": "CORRECT",
+        "eth": "CORRECT"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "577ce8ba3823125ab1655fe6f422c6616d47a804",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-cb70ee1b10f3",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-cb70ee1b10f3.json",
+      "original_forecast_git_blob_sha": "3c13349cd17c2ec3fff90ced8d6ee792e4b44130",
+      "original_forecast_declared_sha256": "11cf18bae28333a2c8a3e8cb61d3a632d762ea5aaeed95cd7d95d09b0be57e7b",
+      "issued_at_utc": "2026-10-13T02:13:56Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "b10a512d73b88d6fe289b80961c53f87704a8ba6",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/021214_03807fcf7dbd.json",
+        "git_blob_sha": "d8d1524093a77987cf16561f16960aeb67c7fbc6",
+        "first_git_commit_sha": "380c5c97bb573017133b1ca8707a0dbe6b7532f9",
+        "first_git_commit_at_utc": "2026-10-13T02:12:14Z",
+        "generated_at_utc": "2026-10-13T02:12:14Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/020116_gh-38334853408-1.json",
+        "commit_sha": "7bb210c810c76854cc62a3c55bc7048bf08d3110",
+        "git_blob_sha": "87d5c3f2d294ee06ac6e8bc218ecfeeca725ad02",
+        "captured_at_utc": "2026-10-13T02:01:16Z",
+        "git_commit_at_utc": "2026-10-13T02:11:51Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-13T02:01:15Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-13T01:51:12Z",
+          "BTC": "2026-10-13T01:51:12Z",
+          "ETH": "2026-10-13T01:51:12Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-13T02:01:11.437722Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T08:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T08:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T01:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T01:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T01:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T02:06:22Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T02:06:22Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T02:06:22Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-13T02:06:22Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-11T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:28:27Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:18:43Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T01:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T01:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791878400000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791878400000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T01:51:12Z",
+          "declared_retrieved_at": "2026-10-13T02:01:15Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T01:51:12Z",
+          "declared_retrieved_at": "2026-10-13T02:01:15Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T01:51:12Z",
+          "declared_retrieved_at": "2026-10-13T02:01:15Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T01:51:12Z",
+          "declared_retrieved_at": "2026-10-13T02:01:15Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-13",
+          "declared_retrieved_at": "2026-10-13T02:01:12.948547Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-13T00:42:04.377692+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T01:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T01:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T01:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:87d5c3f2d294ee06ac6e8bc218ecfeeca725ad02",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-13T14:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-13T02:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 42364,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "94e9f27afd238ffb4f65cd74a93f1c2f85d2b3b6",
+      "original_direction_result_only_not_admitted": {
+        "btc": "CORRECT",
+        "eth": "CORRECT"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "94e9f27afd238ffb4f65cd74a93f1c2f85d2b3b6",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-d649788e5270",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-d649788e5270.json",
+      "original_forecast_git_blob_sha": "a40d03f651117f3518940698e0f4ca248dd5a66c",
+      "original_forecast_declared_sha256": "73cc01f9303f8fdb5a4556064a4dbb5700c1d8f0d6a77a395fcf5b155f9dcdaa",
+      "issued_at_utc": "2026-10-13T00:49:07Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "750e163d45c1ed555824cd2ed91b988d561850ed",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/004204_da8a7843635f.json",
+        "git_blob_sha": "cfc95696b8a1a11aa40da265f21ef221cc684abb",
+        "first_git_commit_sha": "6e92ff2ddca254a889d366a54fff41e512b87217",
+        "first_git_commit_at_utc": "2026-10-13T00:42:04Z",
+        "generated_at_utc": "2026-10-13T00:42:04Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/12/225702_gh-38319475122-1.json",
+        "commit_sha": "d60c18256d154198390884dba4a3597c518a47fc",
+        "git_blob_sha": "61875b5ebe5d7b0de736fd62a9f2615283113b74",
+        "captured_at_utc": "2026-10-12T22:57:02Z",
+        "git_commit_at_utc": "2026-10-13T00:41:41Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-12T22:57:02Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-12T22:50:52Z",
+          "BTC": "2026-10-12T22:50:52Z",
+          "ETH": "2026-10-12T22:50:52Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-12T22:56:55.971284Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T00:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T00:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T23:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T23:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-12T23:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-12T22:56:57.298943Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-12T22:56:57.298943Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-12T22:56:57.298943Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": "2026-10-12T18:01:30Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-11T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:28:27Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-12T13:18:43Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-12T23:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-12T23:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791849600000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791849600000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T22:50:52Z",
+          "declared_retrieved_at": "2026-10-12T22:57:02Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T22:50:52Z",
+          "declared_retrieved_at": "2026-10-12T22:57:02Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T22:50:52Z",
+          "declared_retrieved_at": "2026-10-12T22:57:02Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-12T22:50:52Z",
+          "declared_retrieved_at": "2026-10-12T22:57:02Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-12",
+          "declared_retrieved_at": "2026-10-12T22:56:57.298943Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-12T23:22:44.911021+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T23:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T23:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-12T23:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:61875b5ebe5d7b0de736fd62a9f2615283113b74",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-13T12:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-13T00:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 40253,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "8391587f105a81f9be816862430a0edae30d1983",
+      "original_direction_result_only_not_admitted": {
+        "btc": "INCORRECT",
+        "eth": "INCORRECT"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "8391587f105a81f9be816862430a0edae30d1983",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261013-f34752e8e3c4",
+      "original_forecast_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-f34752e8e3c4.json",
+      "original_forecast_git_blob_sha": "6edf7a23dfc9d24c6f8cfb0475bfca0708a301f6",
+      "original_forecast_declared_sha256": "5947144b6dab94b11229a05bf287117ef5a6a335bae4d5adb3fd49340f41ba5d",
+      "issued_at_utc": "2026-10-13T17:48:02Z",
+      "first_user_delivery_at_utc": null,
+      "first_actionable_at_utc": null,
+      "original_bound_main_sha": "e8e5e3f2dd6d48546d0d4f57454c18ce54a82dde",
+      "model_version": {
+        "schema": 4,
+        "policy": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+        "scoring": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "engine_path": "scripts/data_ping/native_handlekompas.py",
+        "engine_git_blob_sha_at_bound_main": "d00d38bed517861fa2487dce42d330bf05812f6d"
+      },
+      "source_packet": {
+        "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/13/174618_c5514d280282.json",
+        "git_blob_sha": "42186ec26819437d65242d62d54460b66307d0c9",
+        "first_git_commit_sha": "37d08642dfa9c634eb07138cd668020df0ed6536",
+        "first_git_commit_at_utc": "2026-10-13T17:46:19Z",
+        "generated_at_utc": "2026-10-13T17:46:18Z"
+      },
+      "raw_capture": {
+        "path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/13/155958_gh-38426750300-1.json",
+        "commit_sha": "00acb3d3da7e0e50e904a3cca7296b0136604ec4",
+        "git_blob_sha": "bd6a4137d1c4c3957d5fe0a1d2924aa98d99ca4c",
+        "captured_at_utc": "2026-10-13T15:59:58Z",
+        "git_commit_at_utc": "2026-10-13T17:45:48Z",
+        "raw_provider_response_sha256_independently_rehashed": false
+      },
+      "collector_clocks": {
+        "CFGI_v3_4h_retrieved_at_utc": "2026-10-13T15:59:58Z",
+        "CFGI_observation_at_utc": {
+          "MARKET": "2026-10-13T15:51:20Z",
+          "BTC": "2026-10-13T15:51:20Z",
+          "ETH": "2026-10-13T15:51:20Z"
+        },
+        "OKX_swap_retrieved_at_utc": "2026-10-13T15:59:53.728287Z",
+        "OKX_funding_settlement_at_utc": {
+          "BTC-USDT-SWAP": "2026-10-13T16:00:00Z",
+          "ETH-USDT-SWAP": "2026-10-13T16:00:00Z"
+        },
+        "selected_CFGI_scores_match_capture": true,
+        "selected_OKX_funding_quotes_match_capture": true
+      },
+      "selected_feature_clocks": [
+        {
+          "feature_id": "btc_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T16:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_usdt",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T16:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc",
+          "source_owner": "HOURLY_SEQUENCE",
+          "declared_observed_at": "2026-10-13T16:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advance_ratio",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T15:59:54.776167Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_advancers",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T15:59:54.776167Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_decliners",
+          "source_owner": "LIVE_ANCHOR_BREADTH_REFERENCE",
+          "declared_observed_at": "2026-10-13T15:59:54.776167Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "breadth_equal_weight_24h",
+          "source_owner": "RICH_BREADTH_OWNER",
+          "declared_observed_at": null,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_dominance_pct",
+          "source_owner": "COINMARKETCAP_BTC_D",
+          "declared_observed_at": "2026-10-12T00:00:00Z",
+          "declared_retrieved_at": "2026-10-13T12:55:29Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_etf_musd",
+          "source_owner": "FARSIDE_SETTLED_ETF",
+          "declared_observed_at": "2026-10-09",
+          "declared_retrieved_at": "2026-10-10T12:24:18.817745Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "stablecoin_total_usd",
+          "source_owner": "DEFILLAMA_STABLECOINS",
+          "declared_observed_at": "2026-10-13T00:00:00Z",
+          "declared_retrieved_at": "2026-10-13T12:47:48Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T16:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_open_interest",
+          "source_owner": "OKX_HOURLY_DERIVATIVES",
+          "declared_observed_at": "2026-10-13T16:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791907200000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_funding",
+          "source_owner": "OKX_LIVE_SWAP",
+          "declared_observed_at": 1791907200000,
+          "declared_retrieved_at": null,
+          "observation_clock_status": "SETTLEMENT_IS_NOT_QUOTE_OBSERVATION",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_state",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T15:51:20Z",
+          "declared_retrieved_at": "2026-10-13T15:59:58Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_market_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T15:51:20Z",
+          "declared_retrieved_at": "2026-10-13T15:59:58Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_btc_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T15:51:20Z",
+          "declared_retrieved_at": "2026-10-13T15:59:58Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "sentiment_eth_score",
+          "source_owner": "CFGI",
+          "declared_observed_at": "2026-10-13T15:51:20Z",
+          "declared_retrieved_at": "2026-10-13T15:59:58Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "altseason_score_90d",
+          "source_owner": "BLOCKCHAINCENTER",
+          "declared_observed_at": "2026-10-13",
+          "declared_retrieved_at": "2026-10-13T15:59:54.776167Z",
+          "observation_clock_status": "ARCHIVE_CLOCK_PREISSUE_PROVIDER_FIRST_KNOWN_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "entry_signal_state",
+          "source_owner": "ENTRY_SIGNAL_LEDGER",
+          "declared_observed_at": "2026-10-13T16:01:17.110186+00:00",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "btc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T16:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "eth_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T16:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        },
+        {
+          "feature_id": "ethbtc_delta_since_prior_packet_pct",
+          "source_owner": "AUTO_MARKET_STATE_DELTA",
+          "declared_observed_at": "2026-10-13T16:00:00Z",
+          "declared_retrieved_at": null,
+          "observation_clock_status": "RETRIEVAL_CLOCK_UNKNOWN",
+          "vendor_first_publication_at": null
+        }
+      ],
+      "data_quality": {
+        "internal_packet_and_capture_blobs_verified": true,
+        "collector_to_selected_CFGI_and_OKX_value_equality_verified_without_export": true,
+        "selected_feature_count": 24,
+        "feature_retrieval_clock_explicit_count": 9,
+        "provider_publication_or_revision_verified": false
+      },
+      "provisional_dependency_id": "raw_capture_blob:bd6a4137d1c4c3957d5fe0a1d2924aa98d99ca4c",
+      "independent_market_event_family": null,
+      "original_target_at_utc": "2026-10-14T05:00:00Z",
+      "later_target_at_utc_unadmitted": null,
+      "original_target_reference_at_utc": "2026-10-13T17:00:00Z",
+      "nominal_reference_to_target_seconds": 43200,
+      "issue_to_original_target_seconds": 40318,
+      "original_outcome_status": "PRESENT",
+      "original_outcome_git_blob_sha": "20e94c269c032df04a1383ed85e7075d5a8b9778",
+      "original_direction_result_only_not_admitted": {
+        "btc": "INCORRECT",
+        "eth": "INCORRECT"
+      },
+      "current_main_outcome_status": "PRESENT_ON_CURRENT_MAIN",
+      "current_main_outcome_git_blob_sha": "20e94c269c032df04a1383ed85e7075d5a8b9778",
+      "admissibility": "NOT_ADMITTED",
+      "reason": [
+        "PROVIDER_FIRST_PUBLICATION_UNVERIFIED",
+        "FIRST_USER_DELIVERY_UNVERIFIED",
+        "INDEPENDENT_EVENT_FAMILY_UNVERIFIED",
+        "HORIZON_BAR_ANCHOR_NEEDS_SAME_CLOCK_RECONCILIATION"
+      ],
+      "next_required_evidence": [
+        "per-field vendor revision and first-publication or independent immutable original response binding",
+        "original investor visibility/action clock",
+        "target bar origin and same-clock control",
+        "independent event and negative/no-warning universe"
+      ]
+    }
+  ]
+}

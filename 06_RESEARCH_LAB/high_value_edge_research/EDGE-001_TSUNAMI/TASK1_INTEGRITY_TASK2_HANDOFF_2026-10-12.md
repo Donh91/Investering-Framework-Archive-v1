@@ -1,5 +1,14 @@
 # Task 1 integrity checkpoint → Task 2 research handoff (2026-10-12)
 
+> **HISTORICAL-ONLY SOURCE SNAPSHOT · supersession annotated 18 Oct 2026.** This document preserves a limited October 12 research snapshot and its original counts, as-of merge states and failed scientific admissions. It is **not** today's Task 1/Task 2 governing status, score, forecast performance or permission.
+>
+> Four original source blob hashes were independently checked at the original baseline commit `5dee4373f7b437f2d904328bab6f28a0dbd43a1f`: M6, feature ledger, warning calibration and T2B **all match** their frozen 2026-10-12 evidence references. The latest original natural run represented here ended **19:55:20 UTC**. An independently logged exact document capture time is **unavailable** and is not fabricated.
+>
+> **Known later event:** Supervisor-owned PR [#1590](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1590) was subsequently **merged on 12 October at 20:30:05 UTC**, commit `79d73b334e641394c4fb84c3953e136231217714`. The statements below saying #1590 is unmerged / independent review pending are retained unchanged as historical, **superseded** observations, not current blockers. Task 2 R0–R7, original forecast PIT, independent adverse/control N, and current valid trial denominators must be read fresh from the current research owners; no original data, gate, model or performance result is retroactively upgraded by this annotation.
+>
+> Machine-readable status: `TASK1_INTEGRITY_TASK2_HANDOFF_2026-10-12.json.retrospective_annotation_2026_10_18`. Research-only, no portfolio authority.
+
+
 **Status: TASK1_PARTIAL — TASK2_R0_SYNTHETIC_ALLOWED — HISTORICAL_PERFORMANCE_BLOCKED.**
 Existing owners: EDGE #1530, Compass risk/action #1553, experiment lifecycle/trial denominator #1557, self-healing supervisor #1156, Pullback original eligibility owner, Compass 2–3W owner #1516. This is a **read-only evidence snapshot and continuation handoff**, not a new owner, code release, action permission, backtest, scheduler, or market signal. It intentionally does **not** approve or merge #1590: the user delegated its release to the existing Supervisor, separately.
 

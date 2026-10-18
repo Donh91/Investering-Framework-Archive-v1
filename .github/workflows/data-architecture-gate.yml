@@ -12,6 +12,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Offline DexPaprika source identity and malformed-provider controls
+        run: |
+          python -m py_compile 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/source_qa_v1.py 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/test_source_qa_v1.py
+          python 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/test_source_qa_v1.py
+      - name: Verify Task 2 R0 pinned-source Git-object fail-closed cases
+        run: node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs
       - run: python -m unittest tests.data_storage.test_durable_promotion_controller tests.data_storage.test_storage_telemetry
       - run: python scripts/data_storage/storage_telemetry.py --root . --output storage-telemetry.json
       - uses: actions/upload-artifact@v4

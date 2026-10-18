@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, hashlib
+import argparse, json, hashlib, re, subprocess
+from pathlib import Path
 from typing import Any, Dict, List
-from research_governance_common import GOV, load_json, specialist_states, specialist_binding_report, action_of, target_of, evidence_fp, digest, persist_json, append_csv
+from research_governance_common import ROOT, GOV, load_json, specialist_states, specialist_binding_report, action_of, target_of, evidence_fp, digest, persist_json, append_csv
 
 BASE=GOV/"meta_orchestrator_v1"
 POLICY=BASE/"POLICY.json"
@@ -134,6 +135,151 @@ def orchestrate(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dic
         "deep_research_authorized":False,"external_provider_calls_authorized":False,
     }
 
+
+SPECIALIST_QUEUE_REL="04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json"
+SPECIALIST_NOTES_DIR="04_RESEARCH_LAB/external_specialist_dissection/"
+INTAKE_ID_RE=re.compile(r"^[A-Z][A-Z0-9_]{5,100}$")
+MAX_METHOD_INTAKES=20
+
+
+def _git_bytes(root:Path,*args:str)->bytes|None:
+    try:
+        p=subprocess.run(["git","-C",str(root),*args],stdout=subprocess.PIPE,
+                         stderr=subprocess.DEVNULL,check=False,timeout=12)
+        return p.stdout if p.returncode==0 else None
+    except (OSError,subprocess.SubprocessError):
+        return None
+
+
+def _main_checkout_verified(root:Path)->bool:
+    """Only a clean source checkout at the advertised public origin/main may admit notes.
+
+    This is not a PR-merge detector on its own: the exact tracked bytes and
+    source queue are independently compared with committed main below.
+    """
+    top=_git_bytes(root,"rev-parse","--show-toplevel")
+    head=_git_bytes(root,"rev-parse","HEAD")
+    main=_git_bytes(root,"rev-parse","refs/remotes/origin/main")
+    return (bool(top and head and main) and
+            Path(top.decode().strip()).resolve()==root.resolve() and
+            head.strip()==main.strip())
+
+
+def specialist_intake_handoff(root:Path=ROOT)->dict:
+    """Observe only immutable public origin/main queue and note bytes.
+
+    A PR checkout, modified worktree note, symlink escape or untracked note
+    cannot acquire even low-priority observation eligibility. All rejections
+    preserve the existing execution/market authority at zero.
+    """
+    result={"contract":"RESEARCH_SPECIALIST_INTAKE_HANDOFF_v1",
+            "authority":"RESEARCH_ONLY_NON_CANONICAL",
+            "source_queue":SPECIALIST_QUEUE_REL,
+            "status":"NO_REGISTERED_INTAKES","entries":[],
+            "source_notes_verified_as_market_evidence":False,
+            "source_license_or_api_admission":False,
+            "canonical_effect":False,"portfolio_execution":False,
+            "paid_data_authorized":False}
+    root=root.resolve()
+    queue_file=root/SPECIALIST_QUEUE_REL
+    allowed_directory=root/SPECIALIST_NOTES_DIR
+    if not queue_file.is_file():
+        return {**result,"status":"SOURCE_QUEUE_UNAVAILABLE"}
+    if (not queue_file.resolve().is_relative_to(root) or
+            not allowed_directory.resolve().is_relative_to(root)):
+        return {**result,"status":"SOURCE_QUEUE_OUTSIDE_REPO"}
+    if not _main_checkout_verified(root):
+        return {**result,"status":"MAIN_CHECKOUT_NOT_VERIFIED"}
+    try:
+        # The queue itself must be the bytes in the exact main commit.
+        queue_bytes=queue_file.read_bytes()
+        if _git_bytes(root,"show",f"HEAD:{SPECIALIST_QUEUE_REL}")!=queue_bytes:
+            return {**result,"status":"SOURCE_QUEUE_NOT_COMMITTED"}
+        source=json.loads(queue_bytes.decode("utf-8"))
+        if not isinstance(source,dict):
+            return {**result,"status":"INVALID_SOURCE_QUEUE_TYPE"}
+        if source.get("contract")!="RESEARCH_LAB_EXTERNAL_SPECIALIST_DISSECTION_QUEUE_V1":
+            return {**result,"status":"INVALID_SOURCE_QUEUE_CONTRACT"}
+        lanes={x["id"] for x in source.get("lanes",[]) if isinstance(x,dict) and isinstance(x.get("id"),str)}
+        raw=source.get("method_intakes",[])
+        if not isinstance(raw,list) or len(raw)>MAX_METHOD_INTAKES:
+            return {**result,"status":"INVALID_INTAKE_COUNT_OR_TYPE"}
+        seen=set()
+        for item in raw:
+            if not isinstance(item,dict):
+                return {**result,"status":"INVALID_INTAKE_ENTRY","entries":[]}
+            iid=item.get("id"); owner=item.get("owner_lane"); note=item.get("evidence_note")
+            if (not isinstance(iid,str) or not INTAKE_ID_RE.fullmatch(iid) or iid in seen or
+                    not isinstance(owner,str) or
+                    owner not in lanes|{"TASK2_R1_EXISTING_SOURCE_ADMISSION"} or
+                    item.get("execution_permission") is not False or
+                    not isinstance(note,str) or not note.startswith(SPECIALIST_NOTES_DIR) or
+                    not note.endswith(".md") or ".." in Path(note).parts):
+                return {**result,"status":"INVALID_INTAKE_AUTHORITY_OR_PATH","entries":[]}
+            seen.add(iid)
+            p=(root/note).resolve()
+            if not p.is_relative_to(allowed_directory.resolve()) or not p.is_relative_to(root):
+                return {**result,"status":"PATH_OUTSIDE_SPECIALIST_PUBLIC_NOTES","entries":[]}
+            # One atomic local file read: no has-file/read-hash race.
+            try:
+                note_bytes=p.read_bytes()
+            except OSError:
+                note_bytes=None
+            committed=_git_bytes(root,"show",f"HEAD:{note}") if note_bytes is not None else None
+            verified=(note_bytes is not None and committed is not None and note_bytes==committed)
+            sha=hashlib.sha256(note_bytes).hexdigest() if verified else None
+            result["entries"].append({
+                "id":iid,"owner_lane":owner,"related_lane":item.get("related_lane"),
+                "evidence_note":note,"note_sha256":sha,
+                "status":"NOTE_PRESENT_NOT_SOURCE_ADMITTED" if verified else "NOTE_NOT_MERGED_OR_MISSING",
+                "review_state":item.get("review_state","REVIEW_PENDING"),
+                "incremental_value":item.get("incremental_value","UNPROVEN"),
+                "source_access":item.get("source_access","UNVERIFIED"),
+                "execution_mode":"AUTO_OBSERVE","requires_owner_review":True,
+                "market_source_admitted":False,"automatic_promotion":False})
+        result["status"]="PUBLIC_NOTES_READ_ONLY" if raw else "NO_REGISTERED_INTAKES"
+        return result
+    except (OSError,UnicodeError,TypeError,ValueError,KeyError):
+        return {**result,"status":"INVALID_OR_UNREADABLE_INTAKE","entries":[]}
+
+
+def attach_specialist_intakes(state:dict,root:Path=ROOT)->dict:
+    """Add low-priority observations to the EXISTING research queue, never work orders."""
+    report=specialist_intake_handoff(root)
+    updated={**state,"specialist_intake_handoff":report}
+    if (report["status"]!="PUBLIC_NOTES_READ_ONLY" or
+            state.get("sentinel_verdict")!="PASS" or
+            state.get("binding_integrity")!="PRIMARY_COMPLETE"):
+        return updated
+    observations=[]
+    for row in report["entries"]:
+        if (row["status"]!="NOTE_PRESENT_NOT_SOURCE_ADMITTED" or
+                not isinstance(row.get("note_sha256"),str) or len(row["note_sha256"])!=64):
+            continue
+        observations.append({
+            "orchestrator_action":"WAIT_FOR_EVIDENCE",
+            "source":"EXTERNAL_SPECIALIST_INTAKE",
+            "specialist_action":"EXISTING_OWNER_REVIEW_ONLY",
+            "target":row["id"],
+            "owner_lane":row["owner_lane"],
+            "evidence_note":row["evidence_note"],
+            "evidence_fingerprint":row["note_sha256"],
+            "impact_tier":"LOW",
+            "execution_mode":"AUTO_OBSERVE",
+            "reason":"Public method description is not verified independent market evidence",
+            "canonical_effect":False,
+            "portfolio_execution":False,
+            "paid_data_authorized":False,
+        })
+    # Preserve the existing high-value priority ordering and heavy workstream.
+    updated["queue"]=[*state["queue"],*observations]
+    updated["queue_n"]=len(updated["queue"])
+    updated["evidence_fingerprint"]=digest({
+        "prior_fingerprint":state["evidence_fingerprint"],
+        "specialist_intake_handoff":report,
+    })
+    return updated
+
 def persist(state):
     persist_json(STATE,state)
     persist_json(QUEUE,{"contract":"RESEARCH_META_EXECUTION_QUEUE_v1","authority":"RESEARCH_ONLY_NON_CANONICAL","queue":state["queue"],"active_heavy_workstreams":state["active_heavy_workstreams"],"binding_integrity":state["binding_integrity"],"canonical_effect":False})
@@ -153,6 +299,7 @@ def main():
     states=specialist_states()
     bindings=specialist_binding_report()
     state=orchestrate(policy,states,load_json(MEMORY,{}),load_json(VOI,{}),load_json(SENTINEL,{}),bindings)
+    state=attach_specialist_intakes(state)
     if args.dry_run: print(json.dumps(state,indent=2,sort_keys=True)); return
     persist(state); print(json.dumps(state,indent=2,sort_keys=True))
 if __name__=="__main__": main()

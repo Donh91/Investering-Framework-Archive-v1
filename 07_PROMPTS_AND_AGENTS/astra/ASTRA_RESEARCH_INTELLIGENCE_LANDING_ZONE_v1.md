@@ -1,5 +1,8 @@
 # Astra Research Intelligence Landing Zone v1
 
+> **2026-10-15 model-neutral mission continuity (Research Intelligence Landing Zone).** Historical `Astra` wording, filenames and model-era labels are compatibility references only, not an authority to wait for a new model. Its `PREPARED_NOT_ACTIVE` status remains an actual optional landing-zone activation state, not a global block on GPT-6 research. Ordinary current-owner audit/analysis/implementation may continue independently through qualified existing lanes. Do not silently activate experimental orchestration or grant new market/portfolio/merge authority. Follow the existing Framework Mission Continuity owner and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 **Status:** PREPARED_NOT_ACTIVE  
 **Authority:** NONE BY ITSELF  
 **Date:** 2026-09-09  

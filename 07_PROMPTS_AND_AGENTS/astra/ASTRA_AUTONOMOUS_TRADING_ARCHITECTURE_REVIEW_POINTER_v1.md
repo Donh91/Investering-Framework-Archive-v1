@@ -1,5 +1,8 @@
 # Astra Autonomous Trading Architecture Review Pointer v1
 
+> **2026-10-15 model-neutral mission continuity (Auto Trading architecture review).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. Model naming is not a future-availability dependency. Carry out only the smallest owner-approved, source-first review via current GPT-6/qualified lanes. Current Auto Trading/Task 2 empirical science, data admission, no-execution and no-duplicate-engine gates still override this historical pointer. Follow the existing [Framework Mission Continuity owner](ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 **Date:** 2026-09-12  
 **Status:** DISCOVERABLE_HIGH_VALUE_RESEARCH_MISSION  
 **Mode:** READ_ONLY_RESEARCH_PREP_FIRST  

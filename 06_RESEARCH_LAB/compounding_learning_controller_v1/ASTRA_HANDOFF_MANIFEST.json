@@ -1,7 +1,7 @@
 {
   "contract": "COMPOUNDING_LEARNING_CONTROLLER_ASTRA_HANDOFF_v1",
   "prepared_date": "2026-09-05",
-  "status": "HOLD_FOR_ASTRA_REVIEW",
+  "status": "HISTORICAL_BUILD_HANDOFF_EXISTING_RUNTIME_ON_MAIN",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "implementation_allowed_now": false,
   "activation_allowed_now": false,
@@ -44,6 +44,20 @@
     "NEXT_BEST_TEST_PROPOSAL_v1",
     "LEARNING_BACKLOG_v1"
   ],
-  "restart_instruction": "Run the plan from fresh current main. Audit first. Rebuild rather than blindly rebase the exploratory branch. Then implement through governed branch, PR, CI, merge and readback only after Astra review.",
-  "owner_pause": "WAIT_FOR_ASTRA"
+  "restart_instruction": "Do not rebuild the exploratory branch or repeat the historical implementation plan. Read current Compounding Learning runtime, governed Unified Adjudication owner and exact current health/state/backlog/proposal first. Successor research uses current capability and task authority. This handoff grants no activation or implementation permission.",
+  "owner_pause": "SUPERSEDED_MODEL_ONLY_WAIT_NOT_A_CURRENT_RUNTIME_LOCK",
+  "historical_status_at_plan_creation": "HOLD_FOR_ASTRA_REVIEW",
+  "historical_owner_pause": "WAIT_FOR_ASTRA",
+  "reconciliation": {
+    "date": "2026-10-15",
+    "source_commit": "77537b33285ff55daaaebefc74d2dcfd2f91b8b5",
+    "scope": "RETIRE_MODEL_ONLY_IMPLEMENTATION_WAIT_NOT_ACTIVATE_RESEARCH",
+    "runtime_core": "scripts/research/compounding_learning_v1_core.py",
+    "runtime_entrypoint": "scripts/research/compounding_learning_controller.py",
+    "health": "research/architecture_health/LATEST_COMPOUNDING_LEARNING_HEALTH.json",
+    "health_generated_at_utc": "2026-10-12T16:35:50.860771Z",
+    "observed_health_status": "PASS",
+    "observed_learning_event_count": 7,
+    "proof_limit": "Code and persisted health/products verified at source commit; no new production run or independent deployment acceptance asserted."
+  }
 }
