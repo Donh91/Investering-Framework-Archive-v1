@@ -69,6 +69,26 @@ class SensorRelationshipCompressionTests(unittest.TestCase):
         self.assertEqual(row["presentation_role"], "UNRESOLVED")
         self.assertNotIn("UNIQUE", row["relationship_classes"])
 
+    def test_censored_and_legacy_maturity_cannot_be_current_validation(self):
+        for fields in (
+            {"matured_outcome_count": 0, "censored_outcome_count": 1,
+             "scientific_score_eligible_outcome_count": 0},
+            {"matured_outcome_count": 20},
+            {"matured_outcome_count": 1, "scientific_score_eligible_outcome_count": 1},
+        ):
+            row=prospective_row({
+                "candidate_id":"EC-censor","title":"Unverified pair",
+                "kind":"SENSOR_COMBINATION",
+                "state":"MATURED_INCONCLUSIVE",
+                "scientific_admission_status":"QUALIFIED_FOR_FORWARD_TEST",
+                **fields,
+            })
+            self.assertFalse(row["current_prospective_validation"])
+        legacy=prospective_row({"candidate_id":"EC-old","kind":"SENSOR_COMBINATION",
+                                "matured_outcome_count":27})
+        self.assertIsNone(legacy["sample_status"]["scientific_score_eligible_outcome_count"])
+        self.assertFalse(legacy["has_eligible_matured_outcome"])
+
     def test_historical_proxy_is_not_current_prospective_validation(self) -> None:
         readout = build_readout({"generated_at_utc": "2026-09-23T00:00:00Z", "candidates": []}, AUDIT)
         self.assertEqual(len(readout["historical_rows"]), 2)
