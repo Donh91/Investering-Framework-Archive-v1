@@ -29,7 +29,7 @@ Run offline: python source_qa_v1.py --input LOCAL_CASE.json --output LOCAL_SOURC
 
 The implementation uses only Python standard library and does not call network, wallets or exchanges. It emits provider-value-free comparison flags plus stable payload digests. It does not persist raw payloads, normalized prices, liquidity amounts or token identifiers. It is deliberately **not** a live adapter/scanner or sellability engine. Input data must remain local to its authorized evidence plane.
 
-Twenty-six local synthetic regression tests passed on 2026-10-18, checking valid tri-provider structure, missing vs zero, bad/negative/NaN/bool values, token role conflicts, Solana case sensitivity, creation-time dispute, HTTP429, stale/future time, malformed payloads, deterministic digest, output-leak check, duplicate source rejection, no second source, capture-window mismatch, chain identity and no sellability inference. CI and merged-main readback have not yet been proven.
+Twenty-seven local synthetic regression tests passed on 2026-10-18, checking valid tri-provider structure, missing vs zero, bad/negative/NaN/bool values, token role conflicts, Solana case sensitivity, creation-time dispute, HTTP429, stale/future time, malformed payloads, deterministic digest, output-leak check, duplicate source rejection, no second source, capture-window mismatch, chain identity and no sellability inference. CI and merged-main readback have not yet been proven.
 
 ## 4. OBSERVED / INFERRED / UNKNOWN / UNAVAILABLE
 
