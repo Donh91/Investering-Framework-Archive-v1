@@ -139,7 +139,7 @@ def _digest(value: Any) -> str:
 
 def evaluate_case(case: dict[str, Any], *, max_age_seconds: int = 120,
                   max_birth_disagreement_seconds: int = 3600) -> dict[str, Any]:
-    if not isinstance(case, dict) or not isinstance(case.get('case_id'), str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', case['case_id']):
+    if not isinstance(case, dict) or not isinstance(case.get('case_id'), str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]{0,23}', case['case_id']) or re.fullmatch(r'[A-Fa-f0-9]{24}', case['case_id']):
         raise ValueError('CASE_ID_REQUIRED')
     observations = case.get('observations')
     if not isinstance(observations, list) or not observations:
@@ -215,7 +215,7 @@ def evaluate_case(case: dict[str, Any], *, max_age_seconds: int = 120,
         conflicts.add('SOURCE_STALE')
     if any('CAPTURE_TIME_UNKNOWN' in x['flags'] for x in results):
         conflicts.add('CAPTURE_TIME_UNKNOWN')
-    if 'POOL_OR_TOKEN_IDENTITY_CONFLICT' in conflicts:
+    if {'POOL_OR_TOKEN_IDENTITY_CONFLICT', 'POOL_CREATION_CLAIM_CONFLICT'} & conflicts:
         state = 'CONFLICT'
     elif 'SOURCE_FIELD_INVALID' in conflicts:
         state = 'INVALID'
