@@ -47,11 +47,20 @@
   // Screen-reader contract mirrors what is actually plotted. Source-absent
   // seven-day forecasts are intervals, not a daily forecast curve.
   function graphDescription(m){
-    return m.daily.length
-      ?txt('Blue dotted line: seven original frozen daily expected closing prices. Green solid line: eligible observed prices only; missing days are unconnected. The forecast low/high envelope and measured low/high whiskers show source evidence.',
-           'Blå stiplet linje: syv oprindeligt frosne forventede dagslukkepriser. Grøn fuldt optrukken linje: kun gyldige observerede priser; manglende dage forbindes ikke. Prognosens lav/høj-interval og målte lav/høj-markeringer viser kildegrundlaget.')
-      :txt('No original seven-day closing-price forecast was published. Only three frozen price-range intervals and any eligible observed prices are shown; there is no daily forecast line.',
-           'Ingen oprindelig syvdagesprognose for dagslukkepriser blev offentliggjort. Kun tre frosne prisintervaller og eventuelle gyldige observerede priser vises; der er ingen daglig prognoselinje.');
+    const observed=m.days.some(d=>d.actual);
+    const observationCopy=observed
+      ?txt('Green solid line: eligible observed daily prices; missing days are unconnected. Measured high/low whiskers are shown only for those observations.',
+           'Grøn fuldt optrukken linje: gyldige observerede dagspriser; manglende dage forbindes ikke. Målte lav/høj-markeringer vises kun ved disse observationer.')
+      :txt('No eligible observed daily prices yet: no green actual line or measured high/low whiskers are displayed.',
+           'Endnu ingen gyldige observerede dagspriser: ingen grøn faktisk kurve eller målte lav/høj-markeringer vises.');
+    if(m.daily.length){
+      return txt('Blue dotted line: seven original frozen daily expected closing prices, with original forecast low/high envelope.',
+                 'Blå stiplet linje: syv oprindeligt frosne forventede dagslukkepriser med oprindeligt lav/høj-prognoseinterval.')
+        +' '+observationCopy;
+    }
+    return txt('No original seven-day closing-price forecast was published. Only three frozen price-range intervals are shown, with no daily forecast line.',
+               'Ingen oprindelig syvdagesprognose for dagslukkepriser blev offentliggjort. Kun tre frosne prisintervaller vises uden daglig prognoselinje.')
+      +' '+observationCopy;
   }
   // A series primitive uses only public coordinate APIs. Forecast geometry is never a fitted curve.
   class EvidenceOverlay {
