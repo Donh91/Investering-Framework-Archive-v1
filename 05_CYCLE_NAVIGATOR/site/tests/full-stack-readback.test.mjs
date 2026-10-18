@@ -22,8 +22,9 @@ function fixture(){
  const officialRaw=JSON.stringify(official);files.set(resolve(root,officialPath),officialRaw);
  const projectionPath='04_MARKET_LEARNING/handlekompas/official/public/c.json';
  const projectionCore={contract:'PUBLIC_COMPASS_PROJECTION_v1',compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'};
- const projectionSemanticHash=hash(JSON.stringify(sort(projectionCore)));
- const projectionRaw=JSON.stringify({...projectionCore,projection_sha256:projectionSemanticHash});
+ const projectionSigned=signed(projectionCore,'projection_sha256');
+ const projectionSemanticHash=projectionSigned.hash;
+ const projectionRaw=projectionSigned.raw;
  files.set(resolve(root,projectionPath),projectionRaw);
  const projectionBytesHash=hash(projectionRaw);
  const projectionFields={public_projection_path:projectionPath,public_projection_content_sha256:projectionBytesHash,
@@ -59,7 +60,7 @@ for(const mode of ['missing','tampered','wrong-issue','valid']){
 // pointer and public projection identity. Exact ID only is never sufficient.
 for(const mode of ['missing-pointer','missing-file','wrong-public-digest','wrong-internal-digest',
  'wrong-semantic-hash','wrong-public-id','wrong-internal-id','wrong-public-time',
- 'different-public-bytes','wrong-public-contract','missing-pointer-hash','wrong-source-status']){
+ 'different-public-bytes','correlated-public-tamper','wrong-public-contract','missing-pointer-hash','wrong-source-status']){
  f=fixture();
  const pub=f.pointers.get('public'),internal=f.pointers.get('official');
  const path=resolve(f.root,f.projectionPath);
@@ -72,6 +73,17 @@ for(const mode of ['missing-pointer','missing-file','wrong-public-digest','wrong
  if(mode==='wrong-internal-id')internal.compass_id='WRONG';
  if(mode==='wrong-public-time')pub.issued_at_utc='2025-01-01T00:00:00Z';
  if(mode==='different-public-bytes')f.files.set(path,f.files.get(path).replace('HOLD','BUY'));
+ if(mode==='correlated-public-tamper'){
+  const changed=JSON.parse(f.files.get(path));
+  changed.action_now='BUY';
+  const mutatedRaw=JSON.stringify(sort(changed));
+  f.files.set(path,mutatedRaw);
+  const mutatedHash=hash(mutatedRaw);
+  pub.public_projection_content_sha256=mutatedHash;
+  internal.public_projection_content_sha256=mutatedHash;
+  // All three copies of projection_sha256 still agree, but the actual
+  // mutated source bytes no longer match its signed semantic digest.
+ }
  if(mode==='wrong-public-contract')f.files.set(path,f.files.get(path).replace('PUBLIC_COMPASS_PROJECTION_v1','UNVERIFIED'));
  if(mode==='missing-pointer-hash')delete pub.public_projection_content_sha256;
  if(mode==='wrong-source-status')internal.data_status='DEGRADED';

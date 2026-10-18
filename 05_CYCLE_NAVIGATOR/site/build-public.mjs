@@ -194,7 +194,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       typeof originalHash==="string"&&/^[0-9a-f]{64}$/.test(originalHash)&&
       bytes&&actualHash===hashField&&
       projection?.contract==="PUBLIC_COMPASS_PROJECTION_v1"&&
-      projection?.projection_sha256===originalHash&&
+      verifiedRawDigest(bytes.toString('utf8'),projection,'projection_sha256',originalHash)&&
       projection?.compass_id===publicPointer?.compass_id&&
       projection?.issued_at_utc===publicPointer?.issued_at_utc&&
       projection?.data_status===publicPointer?.data_status&&
