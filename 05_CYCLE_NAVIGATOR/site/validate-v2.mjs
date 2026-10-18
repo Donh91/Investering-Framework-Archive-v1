@@ -46,7 +46,9 @@ function probeChartRender(data){
   const ctx={
     save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},
     fill(){paints.fills++},stroke(){paints.whiskerStrokes++},
-    fillRect(x,y,width,height){if(height>20)paints.intervalRects++},strokeRect(){},fillText(){},
+    // Corridor price-band rectangles are 30px in this deterministic scale;
+    // 20px label capsules and 320px future-time shading are not corridors.
+    fillRect(x,y,width,height){if(height>20&&height<100)paints.intervalRects++},strokeRect(){},fillText(){},
     setLineDash(){},measureText(text){return {width:text.length*7}},
     createLinearGradient(){return {addColorStop(){}}}
   };
