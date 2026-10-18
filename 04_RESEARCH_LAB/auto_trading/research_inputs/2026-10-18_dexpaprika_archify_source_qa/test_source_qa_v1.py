@@ -178,6 +178,19 @@ class Tests(unittest.TestCase):
         self.assertEqual(x['source_qa_state'], 'INCOMPLETE')
         self.assertIn('PARSE_UNAVAILABLE', x['provider_observations'][2]['flags'])
 
+    def test_case_reference_is_hashed(self):
+        x = qa.evaluate_case({'case_id': 'CONFIDENTIAL_CASE', 'observations': sources()})
+        self.assertNotIn('case_id', x)
+        self.assertNotIn('CONFIDENTIAL_CASE', str(x))
+        self.assertEqual(len(x['case_ref_sha256']), 64)
+
+    def test_parser_never_echoes_provider_error(self):
+        s = sources()
+        s[2]['payload'] = {'data': 'PRIVATE_PROVIDER_VALUE'}
+        x = run(s)
+        self.assertIn('PARSE_UNAVAILABLE', x['provider_observations'][2]['flags'])
+        self.assertNotIn('PRIVATE_PROVIDER_VALUE', str(x))
+
     def test_source_time_unknown_not_claimed_fresh(self):
         x = run(sources())
         self.assertIn('SOURCE_FRESHNESS_UNKNOWN', x['provider_observations'][2]['flags'])
