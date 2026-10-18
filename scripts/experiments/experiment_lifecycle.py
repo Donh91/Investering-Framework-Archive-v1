@@ -259,7 +259,9 @@ def unique_candidate_rows(candidate_root: Path) -> tuple[list[tuple[Path, dict[s
     return rows, duplicate_count
 
 
-def outcome_bound_to_frozen_forecast(outcome: dict[str, Any], frozen: dict[str, Any]) -> bool:
+def outcome_bound_to_frozen_forecast(
+    outcome: dict[str, Any], frozen: dict[str, Any], outcome_root: Path,
+) -> bool:
     """Narrow status-eligible evidence: a self-declared score flag is insufficient.
 
     Uses the original frozen forecast's canonical SHA, first-frozen scientific
@@ -293,7 +295,42 @@ def outcome_bound_to_frozen_forecast(outcome: dict[str, Any], frozen: dict[str, 
         return False
     if not isinstance(outcome.get("evidence_sha256"), str) or len(outcome["evidence_sha256"]) != 64:
         return False
-    if not isinstance(outcome.get("evidence_path"), str) or not outcome["evidence_path"]:
+    forecast_id = str(frozen["forecast_id"])
+    original = outcome_root.parent
+    # Canonical settlement producer writes immutable binding and evidence
+    # beside outcome_memory; do not trust a self-declared outcome result.
+    binding_path = original / "settlement_bindings" / f"{forecast_id}.json"
+    evidence_file = original / "settlement_evidence" / f"{forecast_id}.json"
+    try:
+        binding = read(binding_path)
+        evidence = read(evidence_file)
+    except (OSError, ValueError, UnicodeError):
+        return False
+    if not isinstance(binding, dict) or not isinstance(evidence, dict):
+        return False
+    if binding.get("contract") != "FORECAST_SETTLEMENT_OUTCOME_BINDING_v1":
+        return False
+    if evidence.get("contract") != "FORECAST_SETTLEMENT_EVIDENCE_v1":
+        return False
+    # Recompute producer's signed-by-source JSON content digest, including
+    # original result HIT/MISS, not just an outcome-supplied 64-char claim.
+    expected = sha({k: v for k, v in binding.items() if k != "binding_sha256"})
+    if binding.get("binding_sha256") != expected:
+        return False
+    if binding.get("outcome_sha256") != sha(outcome):
+        return False
+    if binding.get("forecast_id") != forecast_id or binding.get("forecast_sha256") != sha(frozen):
+        return False
+    if binding.get("outcome_path") != f"research/framework_memory/outcome_memory/{forecast_id}.json":
+        return False
+    evidence_ref = f"research/framework_memory/settlement_evidence/{forecast_id}.json"
+    if binding.get("evidence_path") != evidence_ref or outcome.get("evidence_path") != evidence_ref:
+        return False
+    if evidence.get("forecast_id") != forecast_id or evidence.get("forecast_sha256") != sha(frozen):
+        return False
+    if binding.get("evidence_sha256") != sha(evidence) or outcome.get("evidence_sha256") != sha(evidence):
+        return False
+    if binding.get("settlement_target_utc") != outcome.get("settlement_target_utc"):
         return False
     return True
 
@@ -352,7 +389,7 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
                     and item.get("forecast_id") in original_forecasts
                     and original_forecasts[item["forecast_id"]][0] == candidate_id
                     and outcome_bound_to_frozen_forecast(
-                        item, original_forecasts[item["forecast_id"]][1])]
+                        item, original_forecasts[item["forecast_id"]][1], outcome_root)]
         censored = [item for item in original_outcomes
                     if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
                     and item.get("status") == "CENSORED"]
