@@ -85,7 +85,7 @@ class Tests(unittest.TestCase):
         s[2]['payload']['data']['attributes']['pool_created_at'] = '2023-07-05T14:34:02Z'
         x = run(s)
         self.assertIn('POOL_CREATION_CLAIM_CONFLICT', x['comparison_flags'])
-        self.assertNotEqual(x['source_qa_state'], 'CONFLICT')
+        self.assertEqual(x['source_qa_state'], 'CONFLICT')
 
     def test_unavailable_does_not_become_agreement(self):
         s = sources()
