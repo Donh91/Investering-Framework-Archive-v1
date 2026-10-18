@@ -208,6 +208,29 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                     self.outcome("EXP-FC-1",result="MISS")
                 ],forecasts=["EXP-FC-1"])
 
+    def test_real_archived_censored_case_stays_nonmatured(self):
+        from scripts.experiments.experiment_lifecycle import registry
+        repo=Path(__file__).parents[2]
+        rootid="EXP-FC-40f5d94a716bbd284cd7"
+        fixture=[
+            ("candidates",f"research/experiment_lifecycle/candidates/2026/08/EC-01d8e20aee64058a00b7.json"),
+            ("forecasts",f"research/framework_memory/forecast_memory/2026/08/{rootid}.json"),
+            ("outcomes",f"research/framework_memory/outcome_memory/{rootid}.json"),
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            for folder,relpath in fixture:
+                (root/folder).mkdir(parents=True,exist_ok=True)
+                (root/folder/"one.json").write_bytes((repo/relpath).read_bytes())
+            observed=json.loads((root/"outcomes/one.json").read_text())
+            self.assertEqual(observed["status"],"CENSORED")
+            r=registry(root/"candidates",root/"observations",root/"forecasts",
+                       root/"outcomes",root/"receipts","2026-10-18T00:00:00Z")
+            c=r["candidates"][0]
+            self.assertEqual((c["outcome_record_count"],c["matured_outcome_count"],
+                              c["censored_outcome_count"]),(1,0,1))
+            self.assertEqual(c["state"],"WAITING_FOR_DATA")
+
     def test_missing_forecast_outcome_is_not_inferred_from_any_receipt(self):
         with tempfile.TemporaryDirectory() as td:
             r=self.sample_registry(Path(td),[],forecasts=["EXP-FC-missing"])
