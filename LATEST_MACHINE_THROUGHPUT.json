@@ -1,38 +1,38 @@
 {
   "ai_analysis": {
-    "actual_model_calls": 7,
-    "api_agent_receipts": 7,
+    "actual_model_calls": 6,
+    "api_agent_receipts": 6,
     "daily_conflict_review_model_calls": 0,
     "daily_director_model_calls": 4,
     "daily_director_receipts": 4,
-    "estimated_cost_usd": 0.162519,
-    "input_tokens": 378518,
-    "output_tokens": 24131,
+    "estimated_cost_usd": 0.161046,
+    "input_tokens": 378447,
+    "output_tokens": 23354,
     "zero_cost_skips": 0
   },
   "authority": "OPERATIONAL_OBSERVABILITY_ONLY",
   "contract": "DAILY_MACHINE_THROUGHPUT_RECEIPT_v1",
   "durable_repository_throughput": {
-    "created_evidence_paths": 4550,
-    "durable_end_state_bytes": 10368328,
+    "created_evidence_paths": 4609,
+    "durable_end_state_bytes": 10959268,
     "modified_evidence_paths": 9,
-    "normalized_json_scalar_values": 194677,
-    "normalized_values_total_structural": 195954,
-    "touched_evidence_paths": 4559,
-    "unique_end_state_content_hashes": 4557
+    "normalized_json_scalar_values": 205612,
+    "normalized_values_total_structural": 206779,
+    "touched_evidence_paths": 4618,
+    "unique_end_state_content_hashes": 4616
   },
   "efficiency": {
-    "actual_model_calls_per_100_core_observation_units": 24.137931,
-    "api_cost_usd_per_100_core_observation_units": 0.56041,
-    "new_experiment_candidates_per_1000_normalized_values": 0.040826,
-    "new_experiment_candidates_per_100_core_observation_units": 27.586207
+    "actual_model_calls_per_100_core_observation_units": 22.222222,
+    "api_cost_usd_per_100_core_observation_units": 0.596467,
+    "new_experiment_candidates_per_1000_normalized_values": 0.038689,
+    "new_experiment_candidates_per_100_core_observation_units": 29.62963
   },
   "failures": {
     "owner_failures": 0,
     "scheduled_workflow_failed_runs": 0,
-    "workflow_failed_runs": 13
+    "workflow_failed_runs": 20
   },
-  "generated_at_utc": "2026-10-17T00:50:55.834957Z",
+  "generated_at_utc": "2026-10-18T00:29:31.647316Z",
   "instrumentation": {
     "exact_metrics": [
       "workflow run counts within the closed window",
@@ -55,63 +55,63 @@
   },
   "learning_activity": {
     "experiment_candidates_created": 8,
-    "experiment_dispatch_artifacts_created": 1008,
-    "experiment_observations_created": 2104,
+    "experiment_dispatch_artifacts_created": 1013,
+    "experiment_observations_created": 2136,
     "forecast_memory_created": 20,
     "outcome_memory_created": 20
   },
   "market_observation_throughput": {
-    "core_observation_units": 29,
-    "hourly_nonempty_normalized_cells": 1277,
+    "core_observation_units": 27,
+    "hourly_nonempty_normalized_cells": 1167,
     "hourly_sequence_runs": 11,
     "instrumented_physical_source_calls": 99,
-    "instrumented_source_response_bytes": 640246,
-    "instrumented_source_rows_returned": 2078,
+    "instrumented_source_response_bytes": 639554,
+    "instrumented_source_rows_returned": 2072,
     "live_anchor_captures": 6,
     "live_anchor_normalized_scalar_values": 1372,
     "owner_collection_attempts": 36,
-    "owner_declared_artifact_bytes": 12452418,
-    "owner_declared_raw_source_bytes": 2760291,
+    "owner_declared_artifact_bytes": 12464955,
+    "owner_declared_raw_source_bytes": 2761302,
     "owner_expected_skips": 11,
     "owner_failures": 0,
     "owner_successes": 25,
-    "unique_hourly_observation_rows": 23
+    "unique_hourly_observation_rows": 21
   },
   "market_rule_change": false,
   "model_weight_change": false,
   "portfolio_action": false,
-  "receipt_sha256": "b4bafee794a142a325908bfb7a103a1cb9c4d9fe3e8f47a7ec0885af5e89029e",
+  "receipt_sha256": "71d885c230e89ec910afe7ef997b1cefc053e0eb1ede9df85cf4ba1647a1806e",
   "status": "PASS",
   "window": {
     "closed_window": true,
-    "end_commit_sha": "1d59f7c69d5cafe02fbe8f8cbe7f6c8e0dfd8757",
-    "end_utc": "2026-10-16T22:00:00Z",
-    "local_date": "2026-10-16",
-    "start_commit_sha": "b02a6d229cad408358976b37c9a483ca555213a3",
-    "start_utc": "2026-10-15T22:00:00Z",
+    "end_commit_sha": "03f120c709e4c41ae541102a66d9b3acfa4b3543",
+    "end_utc": "2026-10-17T22:00:00Z",
+    "local_date": "2026-10-17",
+    "start_commit_sha": "1d59f7c69d5cafe02fbe8f8cbe7f6c8e0dfd8757",
+    "start_utc": "2026-10-16T22:00:00Z",
     "timezone": "Europe/Copenhagen"
   },
   "workflow_activity": {
     "by_conclusion": {
-      "cancelled": 5,
-      "failure": 13,
-      "skipped": 548,
-      "success": 434
+      "cancelled": 1,
+      "failure": 20,
+      "skipped": 615,
+      "success": 364
     },
     "by_event": {
-      "issue_comment": 550,
-      "pull_request": 287,
-      "push": 1,
+      "issue_comment": 615,
+      "pull_request": 247,
+      "push": 4,
       "repository_dispatch": 2,
-      "schedule": 82,
-      "workflow_dispatch": 64,
-      "workflow_run": 14
+      "schedule": 69,
+      "workflow_dispatch": 53,
+      "workflow_run": 10
     },
-    "cancelled_runs": 5,
-    "failed_runs": 13,
+    "cancelled_runs": 1,
+    "failed_runs": 20,
     "runs_started": 1000,
     "scheduled_failed_runs": 0,
-    "scheduled_runs": 82,
+    "scheduled_runs": 69,
     "scheduled_success_rate_pct": 100.0
   }
 }
