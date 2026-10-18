@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-18. **Status:** RESEARCH_DESIGN_FROZEN / NOT_EXECUTED_AS_PROSPECTIVE_EXPERIMENT.  
 **Existing owners:** Archive #1017, #1087, #1340; Meme Alpha #126.  
-**Performed:** 3-chain anonymous coverage/smoke checks, selective cross-aggregator reads and a separate exact-blob local 26-case synthetic unit test suite in `LOCAL_TEST_RECEIPT_2026-10-18.md`. The 30-row test matrix below is still not executed as a full prospective/cohort test.  
+**Performed:** 3-chain anonymous coverage/smoke checks, selective cross-aggregator reads and a separate exact-blob local 27-case synthetic unit test suite in `LOCAL_TEST_RECEIPT_2026-10-18.md`. The 30-row test matrix below is still not executed as a full prospective/cohort test.  
 **Do not claim:** this entire 30-case matrix is a passed production regression suite. No collector, runner, historical backfill, source contract patch, market admission or API spend created.
 
 ## A. Bound experiment
@@ -83,4 +83,4 @@ Otherwise return `KILL_NO_INCREMENTAL_VALUE` or `BLOCKED_SOURCE_PRECONDITION`. N
 - If incremental field truth survives, propose **a read-only source adapter into the existing owner** with narrowed privileges and original negative tests. If not, close research without integration.
 - After a separately accepted Archify security/visual assessment, create at most a static public-safe diagram in the appropriate current site owner, never change production as a side effect of this study.
 
-**Reporting:** `SOURCE_QA_SMOKE_COMPLETED` plus `LOCAL_SYNTHETIC_TESTS_26_PASS` are the demonstrated results. Not `30_PROSPECTIVE_CASES_TESTED`, `SOURCE_ADMITTED`, `ALPHA_UPLIFT`, `TASK2_ADMISSION` or `PRODUCTION_ACTIVE`. Exact blob/test evidence is in `LOCAL_TEST_RECEIPT_2026-10-18.md`.
+**Reporting:** `SOURCE_QA_SMOKE_COMPLETED` plus `LOCAL_SYNTHETIC_TESTS_27_PASS` are the demonstrated results. Not `30_PROSPECTIVE_CASES_TESTED`, `SOURCE_ADMITTED`, `ALPHA_UPLIFT`, `TASK2_ADMISSION` or `PRODUCTION_ACTIVE`. Exact blob/test evidence is in `LOCAL_TEST_RECEIPT_2026-10-18.md`.
