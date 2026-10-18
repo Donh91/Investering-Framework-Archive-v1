@@ -6,8 +6,8 @@
 - Repository: `Donh91/Investering-Framework-Archive-v1`
 - Research PR: [#1668](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1668)
 - Branch: `research/2026-10-18-dexpaprika-archify-source-qa`
-- Tested `source_qa_v1.py` Git blob SHA-1: `b42337c1e0e11a62da8f3be8f817a69889316cd6`
-- Tested `test_source_qa_v1.py` Git blob SHA-1: `eb4f704e86f3ee3ae48eceb3c5c4357b276bc87e`
+- Tested `source_qa_v1.py` Git blob SHA-1: `608c4a24a3ef973bd3e030c5bf00581bf2a943b8`
+- Tested `test_source_qa_v1.py` Git blob SHA-1: `76c7ebf64e2464f430fca180771506d78d439000`
 - Both SHA-1 blob identities verified against actual GitHub files via current branch readback, not merely filenames or byte counts.
 - Environment: Linux, Python 3.13.5, Git 2.47.3.
 - Standard-library only, no network access and no external API keys or third-party installs.
@@ -21,7 +21,7 @@ git hash-object source_qa_v1.py
 git hash-object test_source_qa_v1.py
 ```
 
-- `python -m unittest`: **Ran 24 tests in 0.004s, OK.**
+- `python -m unittest`: **Ran 26 tests in 0.006s, OK.**
 - `py_compile`: **PASS**, no syntax errors.
 - Git hashes exactly matched PR files.
 - Tests used constructed fixtures, not real historical observations or restricted/provider market payloads.
