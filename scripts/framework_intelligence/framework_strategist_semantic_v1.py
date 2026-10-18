@@ -29,7 +29,7 @@ from scripts.framework_intelligence.framework_strategist_v1 import (
 )
 
 TASK = "FRAMEWORK_STRATEGIST_SEMANTIC"
-MODEL = "gpt-5.6-terra"
+MODEL = "gpt-6.1-sol"
 CONTRACT = "FRAMEWORK_STRATEGIST_SEMANTIC_v1"
 RUNTIME = "runtime/framework-learning-supervisor/strategist-semantic"
 LATEST = "research/framework_learning/strategist/semantic/LATEST.json"
