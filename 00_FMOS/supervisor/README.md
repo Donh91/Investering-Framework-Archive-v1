@@ -10,6 +10,23 @@ This is documentation for the existing supervisor, not a new executor, queue, sc
 
 Until this document is independently accepted and merged, retain the currently enabled automation instruction. After governed merge, read back exact main bytes and bind its path in the existing automation, keeping schedule, enabled state and notification settings unchanged. The short bootstrap must retain essential privacy, authority, cost and fail-closed constraints so a missing/unreadable runbook cannot permit unsafe action. An unreadable runbook is SOURCE_UNAVAILABLE, not permission to improvise or disable the entire supervisor. Revert documentation through a governed PR; never history-rewrite.
 
+## CLOSURE-001 | owner-authorized existing-PR completion pilot (2026-10-19)
+
+**Authority and owner:** authenticated owner approval 2026-10-19, tracked only in existing #1156 (execution/continuity) and #1157 (measured outcome). This is not a new agent, queue, scheduler, budget, policy to self-merge, or evidence authority. Current AGENTS.md, exact domain rules, actual GitHub protection and safety/recovery separation override this runbook. The existing S1 RESET/EXECUTION/CLOSURE slots are the continuation surface. A host prompt alone cannot certify zero Work-credit usage.
+
+**Action on every material run, using only the existing owner and receipts:**
+
+1. Fresh read current main/AGENTS/cockpit, #1156's latest *CLOSURE-001* checkpoint, active original issue/candidate, existing PR exact head, real review/checks and post-fix status. Reconcile in-flight work *before* proposing or dispatching anything new.
+2. Determine the **one highest-value eligible next action** to finish an existing problem. Deduplicate by root-cause/signature/current PR and prefer correction on that PR. An actually merged stronger implementation yields `SUPERSEDED` for its stale draft, not a second fix or a false `RESOLVED` claim.
+3. One accountable original owner stays responsible through safe code change, positive/negative regression, risk-appropriate review, explicitly authorized release, exact main blob and applicable natural producer/consumer evidence. Reviewer opinion is advisory, `COMMENTED` is not a formal `APPROVED`, and owner consent cannot waive unmitigated P0/P1, source integrity or real branch rules.
+4. **Loopbreaker:** after two speculative fix/review attempts without new causal evidence, stop further edits/paid reviews. Return to original reproduction and root-cause boundary; name one falsifiable hypothesis and one admissible next action or a truthful source/authority/resource blocker. New genuine defects and mandatory security checks still require correction, not forced closure.
+5. Use existing states/contracts only. For unmerged work, give exact actionable blocker and next gate. For merged work, require exact tested-main blob and the original post-fix gate. Until naturally due verified observation, retain `POST_FIX_OBSERVATION`; do not invent `DONE`/scientific evidence or weaken mission convergence. If completion is impossible under current constraints, classify `BLOCKED_EXTERNAL` with precise release condition, not a fresh design-PR.
+6. Post **one material-only** checkpoint in existing #1156: current main/head SHAs, prior blocker -> new verified evidence, real tests/review/CI, actual release/main/consumer result, next owned action, cost measured/UNKNOWN. Unchanged state => `SILENT_NOOP`. #1157 compares correct verified closures, churn/rework, elapsed time, reopen and real cost against the existing frozen baseline.
+
+**Initial concrete pilot reconciliation:** #1435's obsolete supersession draft has been closed as `SUPERSEDED_BY_MERGED_1511` with no production-heal claim; the separate real convergence blockers remain until individual receipts qualify. Follow `research/codex/post_fix_verification/LATEST.json` and original completion/convergence owners rather than re-opening #1435. The 29 unconfigured specs need eligibility classification; no bulk auto-resolve. Existing Task2 #1675 retains its own scientific owner/review and must not be absorbed into CLOSURE-001.
+
+**Termination:** one verified real end-to-end closure and measurable improvement against #1157, followed by bounded evaluation on eligible next cases; report `ADOPT`, `REVISE_ONCE`, `REJECT` or explicit `BLOCKED_EXTERNAL`. Do not keep writing new design proposals merely to prolong this pilot. After terminal disposition, S1 returns to its normal duties and stays enabled.
+
 ## Operating procedure
 
 PERMANENT SENIOR SUPERVISOR — consolidated owner-authorized revision 2026-10-11.
