@@ -63,6 +63,27 @@ const TIER=[
 const validWeek=(x)=>typeof x==='string'&&/^20\d{2}-W(?:0[1-9]|[1-4][0-9]|5[0-3])$/.test(x);
 const ss=(x)=>typeof x==='string'&&x.trim()?x.trim():null;
 
+// Conservative, source-only FROZEN BTC reference. Natural language is NOT a
+// market-classification engine: explicit negation/uncertainty vetoes the
+// reference, and anything ambiguous stays neutral on the cycle rail.
+export function verifiedBtcFrozenReference(marketState,btcStatus){
+ if(!ss(marketState)||!ss(btcStatus))return false;
+ if(!/\bBTC[\s-]+led\b/i.test(marketState)||
+    !/\b(?:led|leader|leadership)\b/i.test(btcStatus))return false;
+ const negative=/\b(?:no|not|never|without|unconfirmed|unverified|unestablished|unsupported|unclear|failed|denied|insufficient)\b/i;
+ const leadership=/\bBTC[\s-]*(?:led|lead(?:er(?:ship)?)?|leading)\b/i;
+ const test=[marketState,btcStatus];
+ if(test.some(str=>
+    /\bBTC\b.{0,75}\b(?:did not|not|unconfirmed|unverified|unestablished|unsupported|unclear|failed|denied)\b/i.test(str)&&leadership.test(str)))return false;
+ if(test.some(str=>{
+    const i=str.search(leadership);if(i<0)return false;
+    const nearby=str.slice(Math.max(0,i-90),i+150);
+    return negative.test(nearby);
+ }))return false;
+ return true;
+}
+
+
 function empty(t){
   return {contract:PATH_CONTRACT,status:'UNAVAILABLE',is_live:false,
     source_issue:null,source_week:null,source_health:'UNAVAILABLE',source_identity:null,
@@ -107,8 +128,7 @@ export function officialPathView(bundle,{lang='da',mode='archived',verifiedAlign
   // The historical BTC phase is supported by the frozen weekly
   // market-state text plus a separately recorded BTC leadership row.
   const btcEntry=weekly.rotation_ladder.find(x=>x.segment==='BTC');
-  const btcEvidence=ss(weekly.market_state)&&/BTC.led|BTC-led/i.test(weekly.market_state)&&
-    ss(btcEntry?.status)&&/led|leader|leadership/i.test(btcEntry.status);
+  const btcEvidence=verifiedBtcFrozenReference(weekly.market_state,btcEntry?.status);
   const ethStatus=weekly.rotation_ladder.find(x=>x.segment==='ETH')?.status||'';
   const ethGate=weekly.altseason_countdown.find(x=>/ETH-relative stabiliz/i.test(x.phase||''));
   const tierGate=weekly.altseason_countdown.find(x=>/Large-cap to midcap/i.test(x.phase||''));
