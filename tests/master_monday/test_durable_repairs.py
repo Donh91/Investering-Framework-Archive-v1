@@ -131,4 +131,58 @@ class DurableRepairTests(unittest.TestCase):
                 self.assertEqual(value['cfgi'],{})
 
 
+
+class WeeklyIntelligenceAuditTests(unittest.TestCase):
+    def _fixture(self):
+        machine={
+            'iso_year':2026,'iso_week':42,'package_sha256':'a'*64,
+            'freeze_sha256':'b'*64,'preflight_sha256':'c'*64,
+            'context_hash':'d'*64,'api_status':'failure',
+            'api_receipt':{'model':'gpt-6.1-sol','estimated_cost_usd':0.25,
+                           'api_key':'PRIVATE_API_SECRET_SHOULD_NOT_APPEAR'},
+            'analysis':{'wallet_address':'PRIVATE_WALLET_SHOULD_NOT_APPEAR'},
+            'learning_decision_impact':{'assessment_status':'NOT_EVALUABLE_NOVEL_INPUT_NOT_CONSUMED'},
+        }
+        pointer={
+            'iso_year':2026,'iso_week':42,'machine_package_sha256':'a'*64,
+            'status':'READY_WITH_API_FAILURE','producer_status':'READY_WITH_API_FAILURE',
+            'preflight_status':'FULL_MASTER_MONDAY_INPUT',
+            'consumer_receipt_status':'PASS','consumer_receipt_state':'VERIFIED',
+            'scorecard_status':'UNAVAILABLE_API_CONTRACT',
+            'operational_translation_status':'UNAVAILABLE_API_CONTRACT',
+            'experiment_learning_status':'AVAILABLE',
+        }
+        return machine,pointer
+
+    def test_weekly_audit_is_deterministic_private_safe_and_failure_honest(self):
+        from scripts.master_monday.publish_master_monday_outputs import build_weekly_intelligence_audit
+        machine,pointer=self._fixture()
+        out=build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64)
+        self.assertEqual(out,build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64))
+        self.assertIn('\\n\\n```json\\n',out)
+        payload=json.loads(out.split('```json\\n')[1].split('\\n```')[0])
+        self.assertEqual(payload['completed_week'],'2026-W42')
+        self.assertEqual(payload['delivery']['api'],'FAILURE')
+        self.assertEqual(payload['analysis_completeness']['scorecard'],'UNAVAILABLE_API_CONTRACT')
+        self.assertEqual(payload['downstream_not_yet_claimed']['site'],'PENDING_DOWNSTREAM_OWNER')
+        self.assertEqual(payload['source_provenance']['machine_self_sha256'],'a'*64)
+        self.assertEqual(payload['source_provenance']['machine_file_sha256'],'e'*64)
+        self.assertFalse(payload['restricted_payloads_included'])
+        for private in ('PRIVATE_API_SECRET_SHOULD_NOT_APPEAR','PRIVATE_WALLET_SHOULD_NOT_APPEAR'):
+            self.assertNotIn(private,out)
+
+    def test_weekly_audit_rejects_cross_week_and_unbound_machine(self):
+        from scripts.master_monday.publish_master_monday_outputs import build_weekly_intelligence_audit
+        machine,pointer=self._fixture()
+        pointer['iso_week']=41
+        with self.assertRaisesRegex(ValueError,'week_mismatch'):
+            build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64)
+        pointer['iso_week']=42
+        pointer['machine_package_sha256']='0'*64
+        with self.assertRaisesRegex(ValueError,'digest_mismatch'):
+            build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64)
+        pointer['machine_package_sha256']='a'*64
+        with self.assertRaisesRegex(ValueError,'file_hash_invalid'):
+            build_weekly_intelligence_audit(machine,pointer,'not-a-hash','f'*64)
+
 if __name__=='__main__': unittest.main()
