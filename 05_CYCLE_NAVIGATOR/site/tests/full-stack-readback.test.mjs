@@ -44,17 +44,19 @@ function fixture(){
 }
 // A verified weekly delivery pointer is insufficient: the referenced Master
 // Monday machine package must itself be readable and match its declared SHA.
-for (const mode of ['valid','missing','tampered','wrong-digest','wrong-week','not-ready','escaped-path','wrong-freeze','missing-freeze']) {
+for (const mode of ['valid','missing','tampered','wrong-digest','wrong-week','not-ready','escaped-path','wrong-freeze','missing-freeze','complete','sensitive']) {
  const f=fixture();
  const pointerPath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json';
  const packagePath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_MACHINE_PACKAGE.json';
- const signedMachine=signed({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',iso_year:2026,iso_week:40,freeze_sha256:'a'.repeat(64)},'package_sha256');
+ const signedMachine=signed({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',iso_year:2026,iso_week:40,freeze_sha256:'a'.repeat(64),api_status:'success',analysis:mode==='sensitive'?'PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC':'Shadow-only weekly context'},'package_sha256');
  const machine=signedMachine.raw;
  const pointer={contract:'MASTER_MONDAY_DELIVERY_POINTER_v1',status:mode==='not-ready'?'PARTIAL':'READY',
    iso_year:2026,iso_week:mode==='wrong-week'?39:40,
    ...(mode==='missing-freeze'?{}:{freeze_sha256:mode==='wrong-freeze'?'b'.repeat(64):'a'.repeat(64)}),
    machine_package_path:mode==='escaped-path'?'../../private/secret.json':packagePath,
-   machine_package_sha256:mode==='wrong-digest'?'f'.repeat(64):signedMachine.hash};
+   machine_package_sha256:mode==='wrong-digest'?'f'.repeat(64):signedMachine.hash,
+   scorecard_status:mode==='complete'?'READY':'UNAVAILABLE_API_CONTRACT',
+   operational_translation_status:mode==='complete'?'READY':'UNAVAILABLE_API_CONTRACT'};
  const raw=JSON.stringify(pointer);
  f.weeklyPointer.completed_source_year=2026;
  f.weeklyPointer.completed_source_week=40;
@@ -63,8 +65,12 @@ for (const mode of ['valid','missing','tampered','wrong-digest','wrong-week','no
  f.files.set(resolve(f.root,packagePath),mode==='tampered'?machine.replace('"iso_week":40','"iso_week":39'):machine);
  if(mode==='missing')f.files.delete(resolve(f.root,packagePath));
  f.pointers.set('handoff',{pointers:{latest_weekly_output:{path:pointerPath,sha256:hash(raw)}}});
- const got=(await f.run()).source_status.master_monday;
- assert.equal(got,mode==='valid'?'SOURCE_ALIGNED':'UNVERIFIED','Master Monday target readback: '+mode);
+ const result=await f.run();
+ const got=result.source_status.master_monday;
+ assert.equal(got,['valid','complete','sensitive'].includes(mode)?'SOURCE_ALIGNED':'UNVERIFIED','Master Monday target readback: '+mode);
+ assert.equal(result.source_status.master_monday_analysis,mode==='complete'?'COMPLETE':got==='SOURCE_ALIGNED'?'PARTIAL_ANALYTICS':'UNVERIFIED');
+ assert.equal(result.master_monday?.authority,'WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION');
+ assert.doesNotMatch(JSON.stringify(result.master_monday),/PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC/);
 }
 
 let f=fixture();assert.equal((await f.run()).shadow.status,'ALIGNED_RESEARCH');
