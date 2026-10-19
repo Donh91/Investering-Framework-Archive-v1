@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const siteDir = dirname(fileURLToPath(import.meta.url));
 const sourcePath = resolve(siteDir, "apple-prototype.html");
 const prototypeOutput = resolve(siteDir, "dist/apple-prototype.html");
-const productionOutput = resolve(siteDir, "dist/index.html");
+const productionOutput = resolve(siteDir, "dist/legacy/index.html");
 let html = await readFile(sourcePath, "utf8");
 
 function requireAnchor(source, anchor, label) {

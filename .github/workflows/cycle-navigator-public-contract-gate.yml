@@ -216,7 +216,16 @@ jobs:
           if public_receipt.get('x_distribution_required') is not False:
               raise SystemExit('public_freeze_receipt_x_dependency_regression')
 
-          index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
+          # Main homepage is premium; all historic classic integration lives
+          # at /legacy/ and is never injected on the premium root.
+          premium_root=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
+          if '<base href="./vnext/">' not in premium_root or 'PREMIUM LIVE' not in premium_root or 'id="view-results"' not in premium_root:
+              raise SystemExit('premium_root_release_contract_missing')
+          if './live-observation.js' in premium_root or './public-product.js' in premium_root or './quiet-production.js' in premium_root:
+              raise SystemExit('classic_runtime_leaked_into_premium_root')
+          if 'href="../legacy/"' not in premium_root:
+              raise SystemExit('premium_rollback_link_missing')
+          index=Path('05_CYCLE_NAVIGATOR/site/dist/legacy/index.html').read_text()
           required_scripts=('./quiet-production.js','./shortcut.js','./live-observation.js','./public-copy.js','./market-compass-premium.js','./precision-accountability.js')
           for script in required_scripts:
               if script not in index:

@@ -2,6 +2,7 @@ import './tests/full-stack-readback.test.mjs';
 import './vnext-live/validate.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { preserveLegacyShell, releasePremiumShell } from './premium-release.mjs';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
 const h=JSON.parse(history);
@@ -330,6 +331,27 @@ const checks=[
  ['raw history remains locked',h.policy?.historical_scores_locked===true&&h.policy?.retroactive_rescoring===false],
  ['history coverage matches records',Number(h.coverage?.completed_issues)===Math.max(...h.records.map(r=>Number(r.cn)))&&Number(h.coverage?.latest_open_issue)===Number(h.coverage?.completed_issues)+1&&Number(h.coverage?.rows_with_published_or_canonical_score_evidence)===h.records.length]
 ];
+
+// Premium release checks execute against the actual shipped same-origin HTML,
+// not a mock redesign. Negative controls must fail before any root promotion.
+const vnextRoot=await read('./vnext-live/index.html');
+const releasedRoot=releasePremiumShell(vnextRoot);
+const preservedLegacy=preserveLegacyShell(html);
+const base='https://donh91.github.io/Investering-Framework-Archive-v1/';
+const sourceResolved=new URL('../data/latest.json',new URL('./vnext/',base)).href;
+let missingTabRejected=false,missingBundleRejected=false;
+try{releasePremiumShell(vnextRoot.replace('id="view-results"','id="removed-results"'))}catch{missingTabRejected=true}
+try{releasePremiumShell(vnextRoot.replace('src="./app.mjs"','src="./missing.mjs"'))}catch{missingBundleRejected=true}
+checks.push(
+ ['premium canonical home is a real shell, not redirect',releasedRoot.includes('<base href="./vnext/">')&&releasedRoot.includes('PREMIUM LIVE')&&releasedRoot.includes('id="view-results"')&&!releasedRoot.includes('src="./app.js"')],
+ ['premium source path stays original same-origin public data',sourceResolved===base+'data/latest.json'&&releasedRoot.includes('src="./app.mjs"')],
+ ['legacy rollback shell points to root assets',preservedLegacy.includes('<base href="../">')&&preservedLegacy.includes('src="./app.js"')&&preservedLegacy.includes('href="./legacy/#now"')&&preservedLegacy.includes('href="./legacy/#top"')],
+ ['premium links to real rollback and no preview copy',releasedRoot.includes('href="../legacy/"')&&releasedRoot.includes('href="../#content"')&&!releasedRoot.includes('PREMIUM PREVIEW')&&!releasedRoot.includes('data-t="previewOnly"')],
+ ['cutover never changes production data ownership',build.includes('releasePremiumShell(premiumShell)')&&build.includes('preserveLegacyShell(index)')&&build.includes('resolve(dataDir,"latest.json")')],
+ ['legacy-only client injection cannot corrupt premium root',liveBuilder.includes('indexPath=resolve(distDir,"legacy/index.html")')],
+ ['premium fails closed for missing primary tab',missingTabRejected],
+ ['premium fails closed for missing app bundle',missingBundleRejected]
+);
 let failed=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
 if(failed)process.exit(1);console.log(`PASS ${checks.length}/${checks.length} Cycle Navigator public product release checks`);
 

@@ -38,7 +38,19 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Verify public investor product
         run: |
-          test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/vnext/index.html
+          grep -q '<base href="./vnext/">' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'PREMIUM LIVE' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'role="tablist"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-overview"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-compass"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-results"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="../legacy/"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'src="./app.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          ! grep -q 'PREMIUM PREVIEW' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          ! grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
@@ -53,7 +65,7 @@ jobs:
           ! grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
