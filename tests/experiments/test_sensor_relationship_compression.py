@@ -69,6 +69,47 @@ class SensorRelationshipCompressionTests(unittest.TestCase):
         self.assertEqual(row["presentation_role"], "UNRESOLVED")
         self.assertNotIn("UNIQUE", row["relationship_classes"])
 
+    def test_censored_legacy_registry_does_not_claim_prospective_validation(self) -> None:
+        row = prospective_row({
+            "candidate_id": "EC-censored-original",
+            "title": "Source-bound censored research candidate",
+            "kind": "SENSOR_COMBINATION",
+            "state": "MATURED_INCONCLUSIVE",
+            "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+            "observation_count": 17,
+            "matured_outcome_count": 1,
+        })
+        self.assertIs(row["current_prospective_validation"], False)
+        self.assertEqual(row["sample_status"]["matured_counter_integrity"], "LEGACY_UNVERIFIED")
+        self.assertEqual(row["sample_status"]["prospective_skill_evidence"], "NOT_ADMITTED")
+        self.assertEqual(row["sample_status"]["matured_outcome_count"], 1)
+
+    def test_even_eligible_hit_is_not_independent_sensor_validation(self) -> None:
+        row = prospective_row({
+            "candidate_id": "EC-unreplicated",
+            "kind": "SENSOR_COMBINATION",
+            "state": "MATURED_SUPPORTED",
+            "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+            "matured_outcome_count": 1,
+            "scientific_score_eligible_outcome_count": 1,
+            "current_prospective_validation": True,
+        })
+        self.assertFalse(row["current_prospective_validation"])
+        self.assertEqual(row["sample_status"]["prospective_skill_evidence"], "NOT_ADMITTED")
+
+    def test_missing_or_invalid_legacy_maturity_count_fails_closed(self) -> None:
+        for count in (None, "1", True, -2, float("nan"), [], {}):
+            with self.subTest(count=count):
+                row = prospective_row({
+                    "candidate_id": "EC-unknown",
+                    "kind": "SENSOR_COMBINATION",
+                    "state": "MATURED_INCONCLUSIVE",
+                    "matured_outcome_count": count,
+                })
+                self.assertIsNone(row["sample_status"]["matured_outcome_count"])
+                self.assertEqual(row["sample_status"]["matured_counter_integrity"], "UNKNOWN")
+                self.assertFalse(row["current_prospective_validation"])
+
     def test_historical_proxy_is_not_current_prospective_validation(self) -> None:
         readout = build_readout({"generated_at_utc": "2026-09-23T00:00:00Z", "candidates": []}, AUDIT)
         self.assertEqual(len(readout["historical_rows"]), 2)
