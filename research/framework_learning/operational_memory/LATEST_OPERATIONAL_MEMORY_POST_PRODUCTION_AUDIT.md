@@ -1,11 +1,11 @@
 # Operational Memory Post-Production Audit
 
 Status: **WARN**
-Source head: `d7d5ac4ff7e0df6ed24a85bbefd4851b5301a291`
-Episodes: 4836
-New episodes this run: 7
+Source head: `eeb298aba14d3d0763aef674ca61113a6eb0bfa1`
+Episodes: 4873
+New episodes this run: 37
 Procedural candidates: 22
-Compatibility: `{"DRIFTED": 778, "EXACT": 673, "PARTIAL": 3345, "REMOVED": 11, "UNKNOWN": 29}`
+Compatibility: `{"DRIFTED": 784, "EXACT": 677, "PARTIAL": 3372, "REMOVED": 11, "UNKNOWN": 29}`
 Retrieval probe precision: 1.0
 Recommended action: `CONTINUE_SHADOW_AND_ACCUMULATE_BASELINE`
 

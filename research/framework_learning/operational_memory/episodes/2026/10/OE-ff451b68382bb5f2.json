@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/framework_intelligence/framework_strategist_v1.py",
+    "scripts/framework_intelligence/resource_budget_guard_v1.py",
+    "tests/framework_intelligence/test_framework_strategist_v1.py",
+    "tests/framework_intelligence/test_resource_budget_guard_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-ff451b68382bb5f2",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "resource-conservative-budget-receipt-1681",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE 2026-10-19. PR rebased non-destructively preserving original ancestry and current main cdec27d. Exactly four P2 hardening files, three exact-head workflow checks success. No P0/P1 findings in available review census. Existing safepoint backup-safepoint/2026-10-19-chat-controlled-resource-release before #1678 and merged main; no rule bypass or force push; natural producer/consumer still POST_FIX_OBSERVATION. Automated external review absent, owner-authorized release not formal approval.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/framework_intelligence/framework_strategist_v1.py": "379eb41b5fcce7a78d05c50144565aa4ea809546",
+    "scripts/framework_intelligence/resource_budget_guard_v1.py": "fbc0eb50b651892a5915034feb121429254b8d23",
+    "tests/framework_intelligence/test_framework_strategist_v1.py": "0907a97ad1880b0de548d7f7356ed30593f8b242",
+    "tests/framework_intelligence/test_resource_budget_guard_v1.py": "cae8225e586dba6f1ff9c0ddaff73ab95b571fc8"
+  },
+  "source_commit_sha": "ff451b68382bb5f2e69f0d9083158b2b04e8dbe2",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-19T07:44:36-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(resource): conservative budget receipt hardening (#1681)"
+}
