@@ -367,7 +367,7 @@ function compositeIntel(compass, readingState='UNAVAILABLE'){
  const lanes=[['12H',d('12h')],['1–3D',d('1_3d')],['5–7D',d('5_7d')],['2–3W',f.weekly?.direction_2_3w||'UNAVAILABLE'],['21–30D',st.horizon_21_30d?.direction||'UNAVAILABLE'],['4–8W',st.horizon_4_8w?.direction||'UNAVAILABLE']];
  const monday=f.master_monday||{};
  const mondayReading=monday.status==='SOURCE_ALIGNED'
-   ?String(monday.completed_week||'UNKNOWN')+' · '+(monday.analytics_status==='COMPLETE'?'ANALYSIS COMPLETE':'ANALYSIS PARTIAL')
+   ?String(monday.completed_week||'UNKNOWN')+' · '+(monday.analytics_status==='COMPLETE'?'ANALYSIS COMPLETE':monday.analytics_status==='CONFLICTING_ANALYTICS'?'ANALYTICAL SOURCE CONFLICT':'ANALYSIS PARTIAL')
    :'SOURCE UNVERIFIED';
  return '<section class="compass-synthesis" data-contract="PUBLIC_COMPASS_FULL_STACK_READBACK_v1" aria-label="Combined Compass intelligence">'
  +'<div class="synthesis-head"><div><span>COMBINED COMPASS INTELLIGENCE</span><strong>Official actions + independent model research</strong></div><small>'+esc(f.status==='COMPLETE'?'SOURCE-ALIGNED':'PARTIAL EVIDENCE')+'</small></div>'
