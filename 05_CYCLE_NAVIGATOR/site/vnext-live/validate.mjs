@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
 import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
+import {sourceTrace} from './source-trace.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {verifiedBtcFrozenReference} from './official-path.mjs';
 const dir=dirname(fileURLToPath(import.meta.url));
@@ -152,6 +153,69 @@ assert.equal(mondayRead(staleDelivery).source_state,'UNVERIFIED');
 const noCompass=structuredClone(mondayCompass);
 noCompass.full_stack.contract='INVALID';
 assert.equal(mondayRead(mondayLatest,noCompass).source_state,'UNVERIFIED');
+// Executed full-stack evidence tests. This never makes research tradeable.
+const traceCompass=structuredClone(mondayCompass);
+traceCompass.full_stack.status='PARTIAL_OR_DEGRADED';
+traceCompass.full_stack.source_status={
+ official:'VERIFIED',auto_market_state:'HASH_VERIFIED',
+ native:'SOURCE_ALIGNED',shadow:'STALE_RESEARCH',
+ strategic:'BOUND_WEEKLY_ANCHOR',master_monday:'SOURCE_ALIGNED',
+ cycle_navigator:'WEEKLY_POINTER_ALIGNED'
+};
+traceCompass.full_stack.weekly={iso_week:43,iso_year:2026,direction_2_3w:'MIXED'};
+traceCompass.full_stack.strategic={
+ status:'BOUND_WEEKLY_ANCHOR',authority:'CYCLE_NAVIGATOR_OWNED_NOT_NEW_SITE_FORECAST',
+ horizon_21_30d:{direction:'UP'},horizon_4_8w:{direction:'UNCLEAR'}
+};
+const trace=(l=mondayLatest,c=traceCompass,t=now)=>sourceTrace(l,c,run(l,c,t));
+const sourceGood=trace();
+assert.equal(sourceGood.status,'PARTIAL_OR_DEGRADED');
+assert.equal(sourceGood.decision_authority,'OFFICIAL_COMPASS_ONLY');
+assert.deepEqual(sourceGood.long_horizons.map(x=>x.direction),['MIXED','UP','UNCLEAR']);
+assert.equal(sourceGood.sources.length,7);
+assert.equal(sourceGood.sources.find(x=>x.id==='shadow').status,'STALE_RESEARCH');
+assert.notEqual(sourceGood.status,'COMPLETE','Stale research is not a complete source inventory');
+const traceComplete=structuredClone(traceCompass);
+traceComplete.full_stack.status='COMPLETE';
+assert.equal(trace(mondayLatest,traceComplete).status,'COMPLETE');
+const badWeek=structuredClone(mondayLatest);
+badWeek.public_series.current_public_projection.forecast_week='2026-W42';
+assert.deepEqual(trace(badWeek).long_horizons.map(x=>x.direction),['UNAVAILABLE','UNAVAILABLE','UNAVAILABLE']);
+const wrongIssue=structuredClone(traceCompass);
+wrongIssue.weekly_context.public_issue_number=29;
+assert.equal(trace(mondayLatest,wrongIssue).status,'UNVERIFIED');
+const expiredTrace=structuredClone(traceCompass);
+expiredTrace.full_stack.official_freshness.valid_until_utc='2026-10-19T08:59:00Z';
+assert.equal(trace(mondayLatest,expiredTrace).status,'UNVERIFIED');
+const missingStack=structuredClone(traceCompass);
+delete missingStack.full_stack;
+assert.equal(trace(mondayLatest,missingStack).status,'UNVERIFIED');
+const contradictoryResearch=structuredClone(traceCompass);
+contradictoryResearch.full_stack.source_status.strategic='UNVERIFIED';
+assert.deepEqual(trace(mondayLatest,contradictoryResearch).long_horizons.map(x=>x.direction),
+ ['MIXED','UNAVAILABLE','UNAVAILABLE']);
+const mutatedResearchAuthority=structuredClone(traceCompass);
+mutatedResearchAuthority.full_stack.strategic.authority='OFFICIAL_ACTION';
+assert.deepEqual(trace(mondayLatest,mutatedResearchAuthority).long_horizons.map(x=>x.direction),
+ ['MIXED','UNAVAILABLE','UNAVAILABLE']);
+const wrongWeeklySource=structuredClone(traceCompass);
+wrongWeeklySource.full_stack.weekly.iso_week=42;
+assert.equal(trace(mondayLatest,wrongWeeklySource).long_horizons[0].direction,'UNAVAILABLE');
+const unsafeDirection=structuredClone(traceCompass);
+unsafeDirection.full_stack.strategic.horizon_21_30d.direction='BUY NOW 99%';
+assert.equal(trace(mondayLatest,unsafeDirection).long_horizons[1].direction,'UNAVAILABLE');
+const stalePublic=structuredClone(mondayLatest);
+stalePublic.generated_at='2026-10-18T06:00:00Z';
+assert.equal(trace(stalePublic).status,'UNVERIFIED');
+assert.equal(sourceTrace(null,null,null).sources.every(x=>x.status==='UNAVAILABLE'),true);
+assert.equal(JSON.stringify(sourceGood).includes('PRIVATE_DO_NOT_SHOW'),false);
+assert.match(html,/data-contract="CN_PREMIUM_SOURCE_TRACE_v1"/);
+assert.match(html,/id="long-horizon-body"/);
+assert.match(html,/id="source-trace-body"/);
+assert.match(client,/sourceTrace\(feeds\?\.latest,feeds\?\.compass,view\)/);
+assert.match(client,/drawSourceTrace\(\)/);
+assert.match(site,/"monday-public-bridge.mjs","source-trace.mjs"/);
+assert.doesNotMatch(read('source-trace.mjs'),/fetch\(|\bwallet\b|\bOPENAI_API_KEY\b|eval\(/i);
 const stale=structuredClone(latest);stale.generated_at='2026-10-18T06:00:00Z';
 assert.equal(run(stale).compass.action_now,'UNAVAILABLE');
 const misjoined=structuredClone(latest);misjoined.public_series.current_public_projection.forecast_week='2026-W42';
