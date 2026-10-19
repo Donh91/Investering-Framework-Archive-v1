@@ -70,6 +70,9 @@ for (const mode of ['valid','missing','tampered','wrong-digest','wrong-week','no
  assert.equal(got,['valid','complete','sensitive','conflicting-status'].includes(mode)?'SOURCE_ALIGNED':'UNVERIFIED','Master Monday target readback: '+mode);
  assert.equal(result.source_status.master_monday_analysis,mode==='complete'?'COMPLETE':mode==='conflicting-status'?'CONFLICTING_ANALYTICS':got==='SOURCE_ALIGNED'?'PARTIAL_ANALYTICS':'UNVERIFIED');
  assert.equal(result.master_monday?.authority,'WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION');
+ assert.equal(result.master_monday?.machine_package_sha256,undefined);
+ assert.equal(result.master_monday?.freeze_sha256,undefined);
+ assert.equal(result.master_monday?.machine_package_path,undefined);
  assert.doesNotMatch(JSON.stringify(result.master_monday),/PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC/);
 }
 
