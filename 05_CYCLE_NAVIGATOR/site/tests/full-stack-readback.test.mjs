@@ -175,6 +175,8 @@ assert.doesNotMatch(render('OK'),/SCHEDULED UPDATE DELAYED/);
  assert.match(html,/MONDAY BASELINE/);
  assert.match(html,/2026-W42/);
  assert.match(html,/ANALYSIS PARTIAL/);
+ const conflict=context.render({data_status:'OK',action_now:'HOLD',full_stack:{...weekly,master_monday:{status:'SOURCE_ALIGNED',completed_week:'2026-W42',analytics_status:'CONFLICTING_ANALYTICS'}}},'CURRENT');
+ assert.match(conflict,/ANALYTICAL SOURCE CONFLICT/);
  assert.match(html,/OFFICIAL ACTION/);
  const missing=context.render({data_status:'OK',action_now:'HOLD',full_stack:{...weekly,master_monday:{status:'UNVERIFIED'}}},'CURRENT');
  assert.match(missing,/MONDAY BASELINE · SOURCE UNVERIFIED/);
