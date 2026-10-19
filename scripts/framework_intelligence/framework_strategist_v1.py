@@ -230,6 +230,18 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
                 "Require explicit bounded value-and-cost approval before any new Codex Cloud or paid delegation; preserve mandatory CI and critical source integrity.",
                 context=("Existing owner resource advisory only; budget hard cap "
                          "not provider-verified, no self-authorized dispatch or schedule changes.")))
+        elif budget["status"] == "UNKNOWN":
+            observations.append(_observation(
+                "RESOURCE_BUDGET_UNKNOWN", "INFO", "EFFICIENCY",
+                "Framework Learning Supervisor / Strategist", ["resource_budget"],
+                "Budget consumption is unverified; no passive paid/Cloud dispatch may be inferred from this advisory.",
+                context="UNKNOWN is not NORMAL and has no permission to spend."))
+    if docs["resource_budget"] is None:
+        observations.append(_observation(
+            "RESOURCE_BUDGET_UNAVAILABLE", "INFO", "EFFICIENCY",
+            "Framework Learning Supervisor / Strategist", ["resource_budget"],
+            "Budget receipt missing, stale or invalid; verify before proposing new paid/Cloud work.",
+            context="Optional receipt unavailable never implies spare quota."))
 
     # False-green and integrity: only authority-bound, not self-classified AI prose.
     health = docs["health"]
