@@ -8,6 +8,8 @@ This is a new **live-source-connected candidate**, not the historical W40/W41 de
 
 ## Origin and authority
 
+- A visible vNext candidate re-fetches the same two first-party public documents every five minutes and after resume/focus (single-flight); it separately re-evaluates owner expiry every minute without HTTP requests. Network failures fail closed and retry; no new server job or external API.
+- The five-step PATH rail is source-neutral by default and highlights only a source-verified **frozen BTC reference** when available; it never infers active BTC leadership or an ETA.
 - The existing `site/build-public.mjs` writes the same original first-party public `dist/data/latest.json` and `dist/data/compass.json` used by the main website. This candidate fetches only `../data/latest.json` + `../data/compass.json`.
 - `official-feed-parity.mjs` remains strict: public CN week, machine issue, Official Compass alignment, owner source expiry, completed score identity and 168 eligible hours are verified before corresponding values appear. False/late/wrong-week action is `UNAVAILABLE`. The 0–12h direction is explicitly labelled an observation proxy, not predictive edge.
 - **All three primary views** Overblik / Kompas / Resultater use CURRENT first-party data, not the frozen archived `seed.json`. Horizon and 7-tier asset action tables only render when current Official Compass permits it; otherwise unavailable. The completed score is historic (latest completed week), properly separated from current frozen week, and market/structure scores are never fabricated.
