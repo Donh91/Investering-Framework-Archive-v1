@@ -177,7 +177,17 @@ assert.equal(sourceGood.sources.find(x=>x.id==='shadow').status,'STALE_RESEARCH'
 assert.notEqual(sourceGood.status,'COMPLETE','Stale research is not a complete source inventory');
 const traceComplete=structuredClone(traceCompass);
 traceComplete.full_stack.status='COMPLETE';
+traceComplete.full_stack.source_status.shadow='ALIGNED_RESEARCH';
+traceComplete.full_stack.source_status.master_monday_analysis='COMPLETE';
 assert.equal(trace(mondayLatest,traceComplete).status,'COMPLETE');
+const forgedComplete=structuredClone(traceCompass);
+forgedComplete.full_stack.status='COMPLETE';
+assert.equal(trace(mondayLatest,forgedComplete).status,'UNVERIFIED',
+  'A claimed COMPLETE with stale Shadow is a contradiction, not a green badge');
+const invalidStatus=structuredClone(traceCompass);
+invalidStatus.full_stack.source_status.shadow='BUY';
+assert.equal(trace(mondayLatest,invalidStatus).sources.find(x=>x.id==='shadow').status,'UNAVAILABLE',
+  'Unrecognized public source enums must never render as action signals');
 const badWeek=structuredClone(mondayLatest);
 badWeek.public_series.current_public_projection.forecast_week='2026-W42';
 assert.deepEqual(trace(badWeek).long_horizons.map(x=>x.direction),['UNAVAILABLE','UNAVAILABLE','UNAVAILABLE']);
@@ -210,6 +220,7 @@ assert.equal(trace(stalePublic).status,'UNVERIFIED');
 assert.equal(sourceTrace(null,null,null).sources.every(x=>x.status==='UNAVAILABLE'),true);
 assert.equal(JSON.stringify(sourceGood).includes('PRIVATE_DO_NOT_SHOW'),false);
 assert.match(html,/data-contract="CN_PREMIUM_SOURCE_TRACE_v1"/);
+assert.match(css,/\.source-trace-details summary\{min-height:44px/);
 assert.match(html,/id="long-horizon-body"/);
 assert.match(html,/id="source-trace-body"/);
 assert.match(client,/sourceTrace\(feeds\?\.latest,feeds\?\.compass,view\)/);
