@@ -81,6 +81,21 @@ class CanonicalSourceAnchorTests(unittest.TestCase):
         git(self.root, "branch", "-f", "main", "HEAD")
         self.assertFalse(self.check(hashlib.sha256(b"counterfeit").hexdigest()))
 
+    def test_remote_main_advances_without_trusting_stale_local_ref(self):
+        writer = Path(self.tmp.name) / "independent-writer"
+        subprocess.run(("git", "clone", "-q", "-b", "main", self.origin.as_uri(),
+                        str(writer)), check=True, capture_output=True, timeout=10)
+        git(writer, "config", "user.name", "IndependentSyntheticPublisher")
+        git(writer, "config", "user.email", "independent@example.invalid")
+        (writer / "unrelated.txt").write_text("unrelated new official main publication")
+        git(writer, "add", "unrelated.txt")
+        git(writer, "commit", "-qm", "legitimate later unrelated update")
+        git(writer, "push", "-q", "origin", "main")
+        first_local_main = git(self.root, "rev-parse", "main").decode().strip()
+        self.assertTrue(self.check())
+        self.assertEqual(git(self.root, "rev-parse", "main").decode().strip(),
+                         first_local_main)
+
     def test_untrusted_remote_and_missing_remote_fail_closed(self):
         self.assertFalse(self.check(fixture=False))
         git(self.root, "remote", "remove", "origin")
