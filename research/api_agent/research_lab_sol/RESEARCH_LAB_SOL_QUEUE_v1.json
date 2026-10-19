@@ -228,7 +228,7 @@
     {
       "sequence": 9,
       "mission_id": "SITE-COMPASS-P0-SOL61-20261019-001",
-      "state": "ACTIVE_RELEASED",
+      "state": "FINAL_ADJUDICATED_WITH_OPEN_P1_REPAIR",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_RELEASE_REVIEW_v1.json",
       "context_status": "EXACT_1683_AND_1680_PATCH_SNAPSHOT_SITE_COMPASS_SOURCE_REVIEW",
       "context_paths": [
@@ -243,12 +243,17 @@
       "pass_scope": "ONE_PAID_REVIEW_OF_TWO_RELATED_PR_DIFFS_ADVISORY_ONLY",
       "additional_sol_pass_limit": 1,
       "selected_live_rules": [],
-      "new_paid_attempts_authorized": true
+      "new_paid_attempts_authorized": false,
+      "completed_api_results": [
+        "research/api_agent/outputs/research_lab_sol/SITE-COMPASS-P0-SOL61-20261019-001/issue-1476/comment-6270395405/receipt.json"
+      ],
+      "last_advisory_verdict": "INSUFFICIENT_EVIDENCE_TWO_VERIFIED_STATIC_P1_AND_DIGEST_TEST_GAP",
+      "owner_adjudication": "Exact first Sol output reviewed; two P1 classifications plus isolated digest-test hole repaired on existing #1683 branch head 38263dfc5f77ea1ca57d775169a5fd5a3cddf703. Exact new CI and publication still separate. No model-based merge approval, no scientific admission."
     },
     {
       "sequence": 10,
       "mission_id": "TASK2-PIT-P0-SOL61-20261019-002",
-      "state": "OWNER_HELD_PENDING_SEQUENTIAL_RELEASE",
+      "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json",
       "context_status": "EXACT_PR1675_2026_10_19_REVISION",
       "context_paths": [
@@ -256,12 +261,13 @@
         "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json",
         "AGENTS.md"
       ],
-      "release_gate": "FIRST_MISSION_RECEIPT_AND_FRESH_HEAD_REVALIDATION",
+      "release_gate": "FIRST_SITE_SOL_RECEIPT_FINAL_AND_EXACT_TASK2_HEAD_VERIFIED_2026_10_19",
       "no_early_sol_opinion": true,
       "pass_scope": "SEPARATE_NEW_MATERIAL_TASK2_PIT_FALSIFIER_ONE_PAID_PASS",
       "additional_sol_pass_limit": 1,
       "selected_live_rules": [],
-      "new_paid_attempts_authorized": false
+      "new_paid_attempts_authorized": true,
+      "owner_release_reason": "USER_AUTHORIZED_DISTINCT_TASK2_SCIENTIFIC_PIT_ADVERSARIAL_REVIEW_2026_10_19_EXACT_PR1675_HEAD_0e7ac446edd51063d2a4aa2a41a71c8abe27bf0f"
     }
   ],
   "authority": {
@@ -274,6 +280,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "SITE-COMPASS-P0-SOL61-20261019-001",
-  "program_phase": "2026_10_19_SITE_COMPASS_REVIEW_ACTIVE_SECOND_TASK2_PIT_HELD"
+  "active_mission": "TASK2-PIT-P0-SOL61-20261019-002",
+  "program_phase": "2026_10_19_TASK2_PIT_SOL61_REVIEW_OWNER_RELEASED_SITE_P1_UNMERGED"
 }
