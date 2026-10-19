@@ -277,8 +277,14 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     const p=verifiedRelative(mp?.machine_package_path,"research/api_agent/outputs/weekly/");
     const expected=mp?.machine_package_sha256;
     if(p&&typeof expected==="string"&&/^[0-9a-f]{64}$/.test(expected)){
-      const bytes=await readFile(p);
-      masterTargetVerified=createHash("sha256").update(bytes).digest("hex")===expected;
+      // This producer pointer declares the canonical self-digest of the
+      // machine package, NOT the SHA-256 of the entire JSON file bytes.
+      const raw=await readFile(p,"utf8");
+      const target=JSON.parse(raw);
+      masterTargetVerified=target?.contract==="MASTER_MONDAY_MACHINE_PACKAGE_v1"&&
+        Number(target?.iso_year)===Number(mp?.iso_year)&&
+        Number(target?.iso_week)===Number(mp?.iso_week)&&
+        verifiedRawDigest(raw,target,"package_sha256",expected);
     }
   }catch{}
   const masterAligned=Boolean(mp?.contract==="MASTER_MONDAY_DELIVERY_POINTER_v1"&&mp?.status==="READY"&&
