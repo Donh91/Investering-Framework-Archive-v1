@@ -70,6 +70,45 @@ class StrategistTest(unittest.TestCase):
     def run_brain(self):
         return build(self.root, self.output, now=NOW)
 
+    def test_unknown_budget_is_not_silently_green(self):
+        result = self.run_brain()
+        self.assertIn("RESOURCE_BUDGET_UNKNOWN", [x["code"] for x in result["proposals"]])
+        self.assertTrue(all(not x["dispatch_allowed"] for x in result["proposals"]))
+
+    def test_absent_optional_budget_emits_low_urgency_gap_not_paid_dispatch(self):
+        (self.root / SOURCES["resource_budget"][0]).unlink()
+        packet = self.run_brain()
+        self.assertEqual(packet["input_status"], "CURRENT")
+        self.assertEqual(packet["source_receipts"]["resource_budget"]["status"], "MISSING")
+        self.assertIn("RESOURCE_BUDGET_UNAVAILABLE", [x["code"] for x in packet["proposals"]])
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"],
+                         "ADVISORY_PREVIOUS_EVIDENCE")
+
+    def test_supervisor_five_resource_receipt_integrity_cases(self):
+        self.run_brain()
+        budget = self.root / SOURCES["resource_budget"][0]
+        packet = json.loads(self.output.read_text())
+        # A: exact CURRENT receipt.
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"],
+                         "ADVISORY_PREVIOUS_EVIDENCE")
+        # B: change source bytes after brief.
+        original = budget.read_bytes()
+        budget.write_bytes(original + b" ")
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"], "SOURCE_MOVED")
+        budget.write_bytes(original)
+        # C: unlisted receipt is rejected (no arbitrary file reads).
+        packet["source_receipts"]["secret_extra"] = {"path": "AGENTS.md", "status": "CURRENT"}
+        self.output.write_text(json.dumps(packet))
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"], "INVALID")
+        # D: optional receipt present and CURRENT must still exist on disk.
+        self.run_brain()
+        budget.unlink()
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"], "SOURCE_MOVED")
+        # E: if producer marks budget optional MISSING, consumer accepts packet.
+        self.run_brain()
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"],
+                         "ADVISORY_PREVIOUS_EVIDENCE")
+
     def test_resource_budget_critical_becomes_first_advisory_not_cloud_execution(self):
         self.sources["resource_budget"]["status"] = "CRITICAL"
         self.flush_sources()
@@ -114,7 +153,9 @@ class StrategistTest(unittest.TestCase):
         second = self.run_brain()
         self.assertEqual(first["proposals"], second["proposals"])
         self.assertEqual(first["source_receipts"], second["source_receipts"])
-        self.assertEqual(len(first["proposals"]), 1)
+        self.assertGreaterEqual(len(first["proposals"]), 1)
+        self.assertIn("RESOURCE_BUDGET_UNKNOWN",
+                      [p["code"] for p in first["proposals"]])
         self.assertFalse(first["proposals"][0]["dispatch_allowed"])
 
     def test_amber_is_warning_not_p0(self):

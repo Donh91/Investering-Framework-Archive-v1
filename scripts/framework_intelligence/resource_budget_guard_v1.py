@@ -39,8 +39,15 @@ def strict_read(path: Path, limit: int = 100000) -> dict:
         if not math.isfinite(x):
             raise ValueError("NONFINITE_FLOAT")
         return x
+    def unique_pairs(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("DUPLICATE_JSON_KEY:" + key)
+            value[key] = item
+        return value
     result = json.loads(path.read_bytes(), parse_constant=reject_constant,
-                        parse_float=finite_float)
+                        parse_float=finite_float, object_pairs_hook=unique_pairs)
     if not isinstance(result, dict):
         raise ValueError("INVALID_OBJECT")
     return result
@@ -87,6 +94,8 @@ def assess(root: Path, *, now: datetime, snapshot: Path | None = None) -> dict:
             else:
                 gb = evidence.get("github_actions", {})
                 cb = evidence.get("codex", {})
+                if not isinstance(gb, dict) or not isinstance(cb, dict):
+                    raise ValueError("INVALID_SNAPSHOT_OBJECT")
                 used = gb.get("used_minutes")
                 included = gb.get("included_minutes")
                 remaining = cb.get("remaining_pct")
@@ -96,13 +105,17 @@ def assess(root: Path, *, now: datetime, snapshot: Path | None = None) -> dict:
                 if (not valid(used) or not valid(included) or included <= 0
                         or used < 0 or not valid(remaining) or not 0 <= remaining <= 100):
                     snapshot_status = "INVALID_VALUES"
+                elif used / included < .75 and remaining > 50:
+                    # Unauthenticated owner-reported inputs can signal
+                    # conservation, but cannot attest budget recovery.
+                    snapshot_status = "UNVERIFIED_OWNER_GREEN_CLAIM"
                 else:
                     actions_usage = {"fraction_used": round(used / included, 4),
                                      "source_type": evidence["source_type"],
                                      "as_of_utc": evidence["as_of_utc"]}
                     codex_remaining_pct = remaining
                     snapshot_status = "CURRENT_OWNER_REPORTED"
-        except (OSError, ValueError, TypeError, KeyError, OverflowError):
+        except (OSError, ValueError, TypeError, KeyError, OverflowError, AttributeError):
             snapshot_status = "INVALID_OR_UNREADABLE"
 
     actions_state = "UNKNOWN"

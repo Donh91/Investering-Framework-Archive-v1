@@ -116,7 +116,48 @@ class ResourceBudgetGuardTests(unittest.TestCase):
         t = datetime(2026, 11, 2, tzinfo=timezone.utc)
         p = self.snapshot(used=100, total=3000, codex=95, as_of="2026-11-02T00:00:00Z")
         d = assess(self.root, now=t, snapshot=p)
-        self.assertEqual(d["status"], "NORMAL")
+        self.assertEqual(d["status"], "UNKNOWN")
+        self.assertEqual(d["snapshot_status"], "UNVERIFIED_OWNER_GREEN_CLAIM")
+
+    def test_owner_reported_zero_use_cannot_signal_provider_verified_recovery(self):
+        t = datetime(2026, 11, 2, tzinfo=timezone.utc)
+        d = assess(self.root, now=t, snapshot=self.snapshot(
+            used=0, codex=100, as_of="2026-11-02T00:00:00Z"))
+        self.assertEqual(d["status"], "UNKNOWN")
+        self.assertEqual(d["snapshot_status"], "UNVERIFIED_OWNER_GREEN_CLAIM")
+        self.assertIsNone(d["github_actions"]["usage"])
+
+    def test_invalid_nested_snapshot_shapes_do_not_crash(self):
+        t = datetime(2026, 11, 2, tzinfo=timezone.utc)
+        for fragment in (
+            '"github_actions":null,"codex":{}',
+            '"github_actions":{},"codex":[1]',
+            '"github_actions":{},"codex":{}',
+        ):
+            with self.subTest(fragment=fragment):
+                self.source.write_text('{"contract":"RESOURCE_USAGE_SNAPSHOT_v1",'
+                                       '"source_type":"OWNER_SCREENSHOT",'
+                                       '"as_of_utc":"2026-11-02T00:00:00Z",'
+                                       + fragment + '}')
+                d = assess(self.root, now=t, snapshot=self.source)
+                self.assertEqual(d["status"], "UNKNOWN")
+                self.assertFalse(d["billing_hard_stop_verified"])
+
+    def test_malformed_timestamp_and_duplicate_keys_fail_closed(self):
+        t = datetime(2026, 11, 2, tzinfo=timezone.utc)
+        for raw in (
+            '{"contract":"RESOURCE_USAGE_SNAPSHOT_v1","source_type":"OWNER_SCREENSHOT",'
+            '"as_of_utc":"2026-11-02Z","github_actions":{}, "codex":{}}',
+            '{"contract":"RESOURCE_USAGE_SNAPSHOT_v1","source_type":"OWNER_SCREENSHOT",'
+            '"as_of_utc":"2026-11-02T00:00:00Z",'
+            '"github_actions":{"used_minutes":2999,"used_minutes":0,"included_minutes":3000},'
+            '"codex":{"remaining_pct":100}}',
+        ):
+            with self.subTest(raw=raw[:65]):
+                self.source.write_text(raw)
+                d = assess(self.root, now=t, snapshot=self.source)
+                self.assertEqual(d["status"], "UNKNOWN")
+                self.assertEqual(d["snapshot_status"], "INVALID_OR_UNREADABLE")
 
     def test_utc_enforced(self):
         with self.assertRaises(ValueError):
