@@ -10,7 +10,10 @@ export function preserveLegacyShell(html){
   requireOnce(html,'src="./app.js"','LEGACY_PRODUCT');
   // The archived /legacy/ document must keep loading root-level shared assets,
   // public snapshots and the existing frozen weekly chart without copying data.
-  return html.replace('<head>','<head><base href="../">');
+  return html.replace('<head>','<head><base href="../">')
+    // A document base for shared root assets must not hijack in-page classic
+    // navigation from /legacy/ back to the new canonical root.
+    .replace(/href="#([a-z][a-z0-9_-]*)"/gi,'href="./legacy/#$1"');
 }
 export function releasePremiumShell(html){
   requireOnce(html,'<head>','PREMIUM_HEAD');
