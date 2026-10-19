@@ -163,10 +163,10 @@ def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
         'scientific_firewall':'FORECAST_SKILL_NOT_INFERRED_FROM_WEEKLY_SCORE_OR_MATURED_COUNT',
         'restricted_payloads_included':False,
     }
-    return '# MASTER MONDAY WEEKLY INTELLIGENCE AUDIT — '+index['completed_week']+'\\n\\n'+(
+    return '# MASTER MONDAY WEEKLY INTELLIGENCE AUDIT — '+index['completed_week']+'\n\n'+(
         'Derived metadata only. Original immutable producer files and downstream '
-        'consumer receipts remain authoritative.\\n\\n```json\\n'+
-        json.dumps(index,sort_keys=True,ensure_ascii=False,indent=2)+'\\n```\\n')
+        'consumer receipts remain authoritative.\n\n```json\n'+
+        json.dumps(index,sort_keys=True,ensure_ascii=False,indent=2)+'\n```\n')
 
 
 def main():
