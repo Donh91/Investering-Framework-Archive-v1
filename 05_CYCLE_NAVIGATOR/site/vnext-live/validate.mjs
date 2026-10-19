@@ -107,7 +107,11 @@ assert.match(css, /prefers-reduced-motion/);
 assert.match(html, /role="tablist"/);
 assert.equal((html.match(/role="tabpanel"/g)||[]).length,3);
 assert.equal((html.match(/role="tab"/g)||[]).length,3);
-assert.match(client, /lastChartFeed!==chartData\|\|lastChartLang!==lang/);
+// Chart redraw must track semantic source changes (not just fetch object identity),
+ // otherwise a refresh can destroy zoom, selected UTC day and the chosen asset.
+assert.match(client, /lastChartFingerprint!==fingerprint\|\|lastChartLang!==lang/);
+assert.match(client, /JSON\.stringify\(\[v\.public_issue_number,v\.forecast_week/);
+assert.match(client, /v\.daily_observations,v\.live_as_of_utc/);
 assert.match(client, /event\.key==='ArrowRight'/);
 assert.match(client, /event\.key==='ArrowLeft'/);
 
