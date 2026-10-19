@@ -523,6 +523,17 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             self.assertEqual(row["scientific_score_eligible_outcome_count"], 0)
             self.assertEqual(row["state"], "MATURED_INCONCLUSIVE")
 
+    def test_relative_existing_registry_paths_preserve_anchored_positive(self):
+        from contextlib import chdir
+        from scripts.experiments.experiment_lifecycle import registry
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.sample_registry(root, [self.outcome("EXP-FC-relative", result="HIT")])
+            with chdir(root):
+                result = registry(Path("candidates"), Path("observations"), Path("forecasts"),
+                                  Path("outcomes"), Path("receipts"), "2026-10-19T12:00:00Z")
+            self.assertEqual(result["candidates"][0]["scientific_score_eligible_outcome_count"], 1)
+
     def test_forecast_first_published_after_due_is_unscoreable(self):
         from scripts.experiments.experiment_lifecycle import registry
         with tempfile.TemporaryDirectory() as td:

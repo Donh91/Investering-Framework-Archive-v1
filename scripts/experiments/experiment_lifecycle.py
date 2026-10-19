@@ -385,11 +385,13 @@ def outcome_bound_to_frozen_forecast(
         if forecast_path is None:
             at = dt(frozen_at)
             forecast_path = root / "research/framework_memory/forecast_memory" / f"{at.year:04d}" / f"{at.month:02d}" / f"{forecast_id}.json"
+        forecast_path = forecast_path.absolute()
+        relative_forecast_path = forecast_path.relative_to(root)
         if forecast_path.is_symlink() or forecast_path.resolve() != forecast_path.absolute():
             return False
         if read(forecast_path) != frozen:
             return False
-        if not anchor.matches(forecast_path.relative_to(root),
+        if not anchor.matches(relative_forecast_path,
                               hashlib.sha256(forecast_path.read_bytes()).hexdigest(),
                               accepted_before=dt(due)):
             return False
