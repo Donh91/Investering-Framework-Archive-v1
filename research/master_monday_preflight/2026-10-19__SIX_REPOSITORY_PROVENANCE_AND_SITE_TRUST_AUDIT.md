@@ -34,9 +34,9 @@ Archive routing anchors reviewed: `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, `INDE
 **Tests:** extended `05_CYCLE_NAVIGATOR/site/tests/full-stack-readback.test.mjs` with valid, missing, tampered, wrong-digest, wrong-week, not-ready and escaped-path cases. Site Product Gate ran successfully on commit `9aa322dd7ac893933a5e0055a839c94a71223bec` (run 39254676066).
 
 ## Derived weekly machine audit implementation in PR #1683 (unmerged)
-- `scripts/master_monday/publish_master_monday_outputs.py` now writes `MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_<machine_self_digest_prefix>.md` in the **existing** weekly output directory, after the existing consumer receipt and delivery pointer.
+- `scripts/master_monday/publish_master_monday_outputs.py` now writes `MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_<delivery_pointer_file_sha256_prefix>.md` in the **existing** weekly output directory, after the existing consumer receipt and delivery pointer.
 - One metadata-only JSON fenced section: exact completed ISO week, freeze/preflight/context self-digests, machine self-digest vs file-byte digest (explicitly distinct), pointer byte digest, API/model/cost-estimate status, analytical completeness, learning impact and truthful `PENDING_DOWNSTREAM_OWNER` for CN/SITE.
-- New machine digest → new filename; same digest with different bytes is a hard collision. No extra `LATEST`, cron, queue, model call, score, portfolio action, source promotion, retrospective backfill or private values.
+- New delivery-pointer bytes → new filename, even when the machine self-digest stays unchanged; same filename with different bytes is a hard collision. No extra `LATEST`, cron, queue, model call, score, portfolio action, source promotion, retrospective backfill or private values.
 - Existing `.github/workflows/weekly-api-calibration-shadow.yml` publish readback manifest includes this sidecar; existing GitHub Actions writer remains sole durable publisher.
 - Added positive/negative tests to `tests/master_monday/test_durable_repairs.py`: deterministic metadata, no private payload, API failure honesty, wrong week, digest mismatch and invalid file hash.
 - Master Monday Preflight Gate successful on `9aa322dd7ac893933a5e0055a839c94a71223bec` (run 39254676075).
