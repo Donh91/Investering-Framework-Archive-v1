@@ -66,7 +66,7 @@ const stale=structuredClone(latest);stale.generated_at='2026-10-18T06:00:00Z';
 assert.equal(run(stale).compass.action_now,'UNAVAILABLE');
 const misjoined=structuredClone(latest);misjoined.public_series.current_public_projection.forecast_week='2026-W42';
 assert.equal(run(misjoined).compass.permit_path_live_gates,false);
-assert.equal(run(misjoined).completed_score.state,'MISMATCH_OR_INCOMPLETE');
+assert.equal(run(misjoined).completed_score.state,'FINAL_PUBLIC_SCORECARD'); // Past completed result has its own exact source identity; never promoted into live action.
 const expired=structuredClone(compass);expired.full_stack.official_freshness.valid_until_utc='2026-10-19T08:59:00Z';
 assert.equal(run(latest,expired).compass.action_now,'UNAVAILABLE');
 const wrongWeek=structuredClone(compass);wrongWeek.weekly_context.public_issue_number=29;
