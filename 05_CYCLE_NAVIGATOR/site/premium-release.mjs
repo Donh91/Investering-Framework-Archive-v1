@@ -24,6 +24,8 @@ export function releasePremiumShell(html){
   for(const id of ['view-overview','view-compass','view-results'])
     requireOnce(html,'id="'+id+'"','MISSING_'+id.toUpperCase());
   requireOnce(html,'PREMIUM PREVIEW','PREVIEW_MARK');
+  requireOnce(html,'<title>Cycle Navigator · Premium Preview</title>','PREVIEW_TITLE');
+  requireOnce(html,'current-source premium candidate, not the canonical production home','PREVIEW_DESCRIPTION');
   requireOnce(html,'CN / PREMIUM CANDIDATE','CANDIDATE_MARK');
   requireOnce(html,'data-t="previewOnly"','PREVIEW_TRANSLATION');
   requireOnce(html,'data-t="legacySite"','LEGACY_TRANSLATION');
@@ -34,6 +36,8 @@ export function releasePremiumShell(html){
   return html
     .replace('<head>','<head><base href="./vnext/">')
     .replace('PREMIUM PREVIEW','PREMIUM LIVE')
+    .replace('<title>Cycle Navigator · Premium Preview</title>','<title>Cycle Navigator · Premium</title>')
+    .replace('current-source premium candidate, not the canonical production home','current-source premium market cycle, compass and verified results')
     .replace('aria-label="Cycle Navigator vNext"','aria-label="Cycle Navigator"')
     .replace('href="./" class="brand"','href="../" class="brand"')
     .replace('href="#content"','href="../#content"')
