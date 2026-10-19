@@ -103,12 +103,14 @@ let loading=false;
 async function load(){
  if(loading)return;
  loading=true;
+ const controller=new AbortController();
+ const deadline=setTimeout(()=>controller.abort(),10000);
  try{
   const files=['../data/latest.json','../data/compass.json'];
-  const [latest,compass]=await Promise.all(files.map(async path=>{const r=await fetch(path,{cache:'no-store',redirect:'error'});if(!r.ok)throw Error('OFFICIAL_PUBLIC_SOURCE_UNAVAILABLE');return r.json()}));
+  const [latest,compass]=await Promise.all(files.map(async path=>{const r=await fetch(path,{cache:'no-store',redirect:'error',signal:controller.signal});if(!r.ok)throw Error('OFFICIAL_PUBLIC_SOURCE_UNAVAILABLE');return r.json()}));
   feeds={latest,compass};error=false;
  }catch{feeds=null;error=true}
- finally{loading=false;refresh()}
+ finally{clearTimeout(deadline);loading=false;refresh()}
 }
 document.querySelectorAll('[data-tab]').forEach(b=>{
  b.addEventListener('click',()=>selectTab(b.dataset.tab));
