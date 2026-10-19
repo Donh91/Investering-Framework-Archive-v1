@@ -13,7 +13,7 @@ This is **already required** by `07_PROMPTS_AND_AGENTS/action_compass/2026-09-16
 - `05_CYCLE_NAVIGATOR/site/build-public.mjs` already reads official public/internal Compass, CN, Native, Shadow, Strategic, Auto Market State, weekly handoff and public series. `05_CYCLE_NAVIGATOR/site/compass-product-v5.js` already renders `PUBLIC_COMPASS_FULL_STACK_READBACK_v1` with official/shadow/strategic/weekly status and horizons. `05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs` already checks full-stack readback, authority, source hashes and freshness.
 - Current Official public and internal pointers share `compass_id=CMP-20261019-8ca1978b5bd2` and issuance `2026-10-19T11:06:58Z` at inspection; do not assume current at later execution.
 - `05_CYCLE_NAVIGATOR/site/SITE_CONTRACT.md` rules 1–28 already establish canonical weekly/Official Compass ownership, site delivery-only authority, current-week alignment, protection/sell/re-entry owners, source-supported ETA and public issue identity. Preserve them.
-- `05_CYCLE_NAVIGATOR/site/compass-product-v5.js` has `friendlyAction` mapping `DE_RISK|PROTECT|EXIT|SELL` to displayed `HOLD`. This **requires explicit safety review**: confirm the source semantics and whether the public presentation hides material protective state. Do NOT blindly change to SELL (public portfolio execution is not authorized), but do not silently dilute a confirmed protective risk instruction either.
+- CORRECTED BY SOURCE REVIEW: `compass-product-v5.js` is a legacy renderer suppressed while the active premium owner is installed. The active `market-compass-premium.js` maps `DE_RISK|PROTECT|EXIT` to `PROTECT CAPITAL`, and the canonical SELL assessment is a distinct lane. Do not treat the legacy mapping as a confirmed active-site defect; test the effective renderer and public projection semantics before considering a code change.
 - The site `fullStackSection` reports `COMPLETE` vs `PARTIAL EVIDENCE`; verify that COMPLETE truly means all *required* current layers were checked, not merely a small subset. Source presence alone does not imply source freshness or eligibility.
 
 ## Non-negotiable invariants
@@ -58,3 +58,7 @@ Use **only** an already approved existing owner-gated API task/gateway, after ve
 
 ## Definition of success
 On any weekday, the same official frozen/current source identities yield matching chat/SITE decisions across all relevant assets, horizons and protection layers. Monday report is source-bound context, not a competing current decision. Missing data is explicit; private data stays private; weekly freezes and Task 4 remain immutable. Every critical assertion is tested with a failing mutation case and verified actual CI receipt.
+
+
+## Owner correction — 2026-10-19
+The owner declined the newly proposed “Frozen weekly forecast vs actual market” illustrative chart. **Do not implement that proposed chart or use it as an acceptance criterion.** Do not delete or alter any pre-existing, source-verified charts or the independently owned PR #1680 visual work without a separate explicit change request. Prioritize data-integrity fixes, regression tests and the existing site information architecture.
