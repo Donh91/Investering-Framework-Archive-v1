@@ -1,6 +1,6 @@
 # Shared Row Tournament Weekly
 
-- Week: `2026-W42`
+- Week: `2026-W43`
 - Eligible rows: **0**
 - Divergences: **0**
 - Matured 24h / 72h / 7d: **0 / 0 / 0**

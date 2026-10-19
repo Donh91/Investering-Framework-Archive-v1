@@ -269,9 +269,78 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       Number(weeklyPointer?.issue_number)===Number(weeklyPackage?.issue_number));
   }catch{}
   const mp=master?.pointer;
+  // A pointer digest proves only pointer bytes. Never call the weekly source
+  // aligned unless its referenced immutable machine package is also readable
+  // and matches the exact producer-declared SHA-256.
+  let masterTargetVerified=false,masterMachine=null;
+  try{
+    const p=verifiedRelative(mp?.machine_package_path,"research/api_agent/outputs/weekly/");
+    const expected=mp?.machine_package_sha256;
+    if(p&&typeof expected==="string"&&/^[0-9a-f]{64}$/.test(expected)){
+      // This producer pointer declares the canonical self-digest of the
+      // machine package, NOT the SHA-256 of the entire JSON file bytes.
+      const raw=await readFile(p,"utf8");
+      const target=JSON.parse(raw);
+      masterTargetVerified=target?.contract==="MASTER_MONDAY_MACHINE_PACKAGE_v1"&&
+        Number(target?.iso_year)===Number(mp?.iso_year)&&
+        Number(target?.iso_week)===Number(mp?.iso_week)&&
+        // A valid package from the right week but a different evidence freeze
+        // must not be promoted to the current Monday baseline.
+        typeof mp?.freeze_sha256==="string"&&/^[0-9a-f]{64}$/.test(mp.freeze_sha256)&&
+        target?.freeze_sha256===mp.freeze_sha256&&
+        verifiedRawDigest(raw,target,"package_sha256",expected);
+      if(masterTargetVerified)masterMachine=target;
+    }
+  }catch{}
   const masterAligned=Boolean(mp?.contract==="MASTER_MONDAY_DELIVERY_POINTER_v1"&&mp?.status==="READY"&&
     mp?.iso_week===weeklyPointer?.completed_source_week&&mp?.iso_year===weeklyPointer?.completed_source_year&&
-    master.digest===weeklyPointer?.master_monday_pointer_sha256);
+    master.digest===weeklyPointer?.master_monday_pointer_sha256&&masterTargetVerified);
+  // Source alignment, analytical completeness, and decision authority are
+  // independent. A successful API delivery does not fill absent scorecard or
+  // operational translation fields. Never copy raw API prose to public SITE.
+  // Never echo arbitrary machine/provider metadata into the public projection.
+  const validMondayStatuses=new Set([
+    "READY","PASS","AVAILABLE","COMPLETE","SCORED","PENDING_MATURED_OUTCOMES",
+    "UNAVAILABLE_API_CONTRACT","INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION",
+    "UNAVAILABLE_EXPERIMENT_REGISTRY","UNAVAILABLE_API_FAILURE","UNAVAILABLE",
+    "BLOCKED","DEGRADED","UNKNOWN"
+  ]);
+  const mondayStatus=v=>typeof v==="string"&&validMondayStatuses.has(v)?v:"UNAVAILABLE";
+  const scoreStatus=masterAligned?mondayStatus(mp?.scorecard_status):"UNVERIFIED";
+  const translationStatus=masterAligned?mondayStatus(mp?.operational_translation_status):"UNVERIFIED";
+  // A successful API transport is not substantive analysis when its receipt,
+  // content or model-level status explicitly reports unavailable/failed data.
+  const mondayAnalysis=masterMachine?.analysis;
+  const invalidAnalysisMarkers=["UNAVAILABLE","FAILED","FAILURE","FAIL","ERROR","BLOCKED","SKIPPED","UNKNOWN"];
+  const validAnalysisText=v=>{
+    if(typeof v!=="string"||!v.trim())return false;
+    const t=v.trim().toUpperCase();
+    return !invalidAnalysisMarkers.some(k=>t===k||t.startsWith(k+"_")||t.startsWith(k+":")||t.startsWith(k+" "));
+  };
+  const apiAnalysisAvailable=Boolean(masterAligned&&masterMachine?.api_status==="success"&&
+    masterMachine?.api_receipt?.status==="PASS"&&(
+      validAnalysisText(mondayAnalysis)||
+      (mondayAnalysis&&!Array.isArray(mondayAnalysis)&&typeof mondayAnalysis==="object"&&
+       ["READY","DEGRADED"].includes(mondayAnalysis.status)&&
+       validAnalysisText(mondayAnalysis.summary))));
+  const analyticalStatuses=new Set(["READY","PASS","AVAILABLE","COMPLETE","SCORED"]);
+  const statusConflict=masterAligned&&(
+    scoreStatus!==mondayStatus(masterMachine?.scorecard?.status)||
+    translationStatus!==mondayStatus(masterMachine?.operational_translation?.status));
+  const mondayAnalytics=masterAligned?
+    (statusConflict?"CONFLICTING_ANALYTICS":
+     apiAnalysisAvailable&&analyticalStatuses.has(scoreStatus)&&analyticalStatuses.has(translationStatus)?"COMPLETE":"PARTIAL_ANALYTICS"):
+    "UNVERIFIED";
+  const mondayPublic=masterAligned?{
+    contract:"PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1",
+    completed_week:`${mp.iso_year}-W${String(mp.iso_week).padStart(2,"0")}`,
+    status:"SOURCE_ALIGNED",analytics_status:mondayAnalytics,
+    api_analysis_status:apiAnalysisAvailable?"AVAILABLE_SHADOW_ONLY":"UNAVAILABLE",
+    scorecard_status:scoreStatus,operational_translation_status:translationStatus,
+    // Source hashes remain internal verification inputs; SITE_CONTRACT forbids
+    // publishing machine hashes or internal paths in the public projection.
+    authority:"WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION"
+  }:{contract:"PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1",status:"UNVERIFIED",analytics_status:"UNVERIFIED",authority:"WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION"};
   let shadow=null,shadowAligned=false;
   try{
     if(shadowPtr?.contract==="SHADOW_COMPASS_V2_LATEST_POINTER_v1"){
@@ -353,7 +422,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     }
   }catch{}
   const officialValid=officialValidated&&compass?.data_status==="OK"&&official?.compass_id===compass?.compass_id;
-  const quality=officialValid&&nativeAligned&&shadow?.status==="ALIGNED_RESEARCH"&&masterAligned&&strategic&&weeklyAligned?"COMPLETE":"PARTIAL_OR_DEGRADED";
+  const quality=officialValid&&nativeAligned&&shadow?.status==="ALIGNED_RESEARCH"&&masterAligned&&mondayAnalytics==="COMPLETE"&&strategic&&weeklyAligned?"COMPLETE":"PARTIAL_OR_DEGRADED";
   return {
     contract:"PUBLIC_COMPASS_FULL_STACK_READBACK_v1",
     status:quality,
@@ -365,11 +434,13 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       shadow:shadow?.status||"UNVERIFIED",
       strategic:strategic?.status||"UNVERIFIED",
       master_monday:masterAligned?"SOURCE_ALIGNED":"UNVERIFIED",
+      master_monday_analysis:mondayAnalytics,
       cycle_navigator:weeklyAligned?"WEEKLY_POINTER_ALIGNED":"UNVERIFIED"
     },
     official_freshness:officialValid?officialFreshness:{status:"UNAVAILABLE"},
     official_action:officialValid?compass.action_now:"UNAVAILABLE",
     official_data_status:String(compass?.data_status||"NOT_PUBLISHED"),
+    master_monday:mondayPublic,
     native:nativeValidated?{now:researchEnum(nativeTarget.action.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:nativeTarget.DATA_HEALTH||"UNAVAILABLE",checked_at_utc:nativeTarget.generated_at_utc,official_source_aligned:nativeAligned}:{now:"UNAVAILABLE",data_health:"UNVERIFIED",official_source_aligned:false},
     shadow:shadow||{status:"UNVERIFIED",authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons:{}},
     strategic:strategic||{status:"UNVERIFIED",authority:"CYCLE_NAVIGATOR_ONLY"},
