@@ -319,7 +319,8 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     status:"SOURCE_ALIGNED",analytics_status:mondayAnalytics,
     api_analysis_status:apiAnalysisAvailable?"AVAILABLE_SHADOW_ONLY":"UNAVAILABLE",
     scorecard_status:scoreStatus,operational_translation_status:translationStatus,
-    machine_package_sha256:mp.machine_package_sha256,freeze_sha256:mp.freeze_sha256,
+    // Source hashes remain internal verification inputs; SITE_CONTRACT forbids
+    // publishing machine hashes or internal paths in the public projection.
     authority:"WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION"
   }:{contract:"PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1",status:"UNVERIFIED",analytics_status:"UNVERIFIED",authority:"WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION"};
   let shadow=null,shadowAligned=false;
