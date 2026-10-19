@@ -101,11 +101,13 @@ function drawMonday(){
 }
 function drawSourceTrace(){
  const result=sourceTrace(feeds?.latest,feeds?.compass,view);
- const trust=result.status==='COMPLETE'
-   ?tr('Alle krævede kilder verificeret','All required sources verified')
-   :result.status==='PARTIAL_OR_DEGRADED'
-     ?tr('Delvist kildegrundlag','Partial source evidence')
-     :tr('Kildestatus utilgængelig','Source status unavailable');
+ const trust=result.reason==='OFFICIAL_NOT_CURRENT_CONTEXT_ONLY'
+   ?tr('Official ikke aktuelt · kun frossen/research-kontekst','Official not current · frozen/research context only')
+   :result.status==='COMPLETE'
+     ?tr('Alle krævede kilder verificeret','All required sources verified')
+     :result.status==='PARTIAL_OR_DEGRADED'
+       ?tr('Delvist kildegrundlag','Partial source evidence')
+       :tr('Kildestatus utilgængelig','Source status unavailable');
  show('source-trace-status',trust);
  clear('long-horizon-body');
  const labels={'2_3w':'2–3u','21_30d':'21–30d','4_8w':'4–8u'};
@@ -113,7 +115,9 @@ function drawSourceTrace(){
    row('long-horizon-body',[labels[h.id]||h.id,h.direction,
      h.owner==='CYCLE_NAVIGATOR_WEEKLY'
        ?tr('Cycle Navigator · frossen uge','Cycle Navigator · frozen week')
-       :tr('Strategisk research · ikke-bindende','Strategic research · nonbinding')]);
+       :h.owner==='CYCLE_NAVIGATOR_STRATEGIC_CONTEXT'
+         ?tr('Cycle Navigator · strategisk kontekst','Cycle Navigator · strategic context')
+         :tr('Strategisk research · ikke-bindende','Strategic research · nonbinding')]);
  }
  clear('source-trace-body');
  const da={
