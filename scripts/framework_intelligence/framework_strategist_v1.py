@@ -36,8 +36,10 @@ SOURCES = {
                  "METHOD_STALENESS_REGISTER_v1", 48),
     "weekly_forensics": ("research/framework_learning/weekly_forensics/LATEST.json",
                          "WEEKLY_FORENSICS_PACK_v1", 14 * 24),
+    "resource_budget": ("research/framework_learning/resource_budget/LATEST.json",
+                        "FRAMEWORK_RESOURCE_BUDGET_ADVISORY_v1", 48),
 }
-REQUIRED = set(SOURCES) - {"weekly_forensics"}
+REQUIRED = set(SOURCES) - {"weekly_forensics", "resource_budget"}
 ROW_FIELDS = {"weekly_delta": "changes", "unconsumed": "items",
               "staleness": "items", "weekly_forensics": "findings"}
 ALLOWED_ROUTES = {"SUPERVISOR_ATTENTION", "EXISTING_SOURCE_OWNER", "GROK_REVIEW_CANDIDATE"}
@@ -204,6 +206,42 @@ def build(root: Path, output: Path, *, now: datetime | None = None) -> dict[str,
         docs["self_improvement"] = None
         receipts["self_improvement"]["status"] = "INVALID_SCHEMA"
     observations: list[dict] = []
+
+    # Resource Steward is a ZERO-CALL optional stage inside the same Supervisor.
+    # It can advise against new paid work, but cannot stop core jobs, pay, dispatch,
+    # edit market state or override existing safety/CI/review requirements.
+    budget = docs["resource_budget"]
+    if budget is not None:
+        a = budget.get("authority")
+        if (not isinstance(a, dict)
+                or a.get("automatic_dispatch") is not False
+                or a.get("automatic_spend") is not False
+                or a.get("ci_bypass") is not False
+                or budget.get("status") not in {"CRITICAL", "CONSERVE", "NORMAL", "UNKNOWN"}):
+            docs["resource_budget"] = None
+            receipts["resource_budget"]["status"] = "INVALID_SCHEMA"
+        elif budget["status"] in {"CRITICAL", "CONSERVE"}:
+            classification = budget["status"]
+            observations.append(_observation(
+                "RESOURCE_BUDGET_" + classification,
+                "CRITICAL" if classification == "CRITICAL" else "HIGH",
+                "EFFICIENCY", "Framework Learning Supervisor / Strategist",
+                ["resource_budget"],
+                "Require explicit bounded value-and-cost approval before any new Codex Cloud or paid delegation; preserve mandatory CI and critical source integrity.",
+                context=("Existing owner resource advisory only; budget hard cap "
+                         "not provider-verified, no self-authorized dispatch or schedule changes.")))
+        elif budget["status"] == "UNKNOWN":
+            observations.append(_observation(
+                "RESOURCE_BUDGET_UNKNOWN", "INFO", "EFFICIENCY",
+                "Framework Learning Supervisor / Strategist", ["resource_budget"],
+                "Budget consumption is unverified; no passive paid/Cloud dispatch may be inferred from this advisory.",
+                context="UNKNOWN is not NORMAL and has no permission to spend."))
+    if docs["resource_budget"] is None:
+        observations.append(_observation(
+            "RESOURCE_BUDGET_UNAVAILABLE", "INFO", "EFFICIENCY",
+            "Framework Learning Supervisor / Strategist", ["resource_budget"],
+            "Budget receipt missing, stale or invalid; verify before proposing new paid/Cloud work.",
+            context="Optional receipt unavailable never implies spare quota."))
 
     # False-green and integrity: only authority-bound, not self-classified AI prose.
     health = docs["health"]

@@ -75,8 +75,9 @@ def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
             "unconsumed": "research/framework_learning/LATEST_UNCONSUMED_INFORMATION.json",
             "staleness": "research/framework_learning/LATEST_METHOD_STALENESS_REGISTER.json",
             "weekly_forensics": "research/framework_learning/weekly_forensics/LATEST.json",
+            "resource_budget": "research/framework_learning/resource_budget/LATEST.json",
         }
-        optional = {"weekly_forensics"}
+        optional = {"weekly_forensics", "resource_budget"}
         if set(receipts) != set(expected):
             return {**empty, "status": "INVALID"}
         for name, relative in expected.items():
