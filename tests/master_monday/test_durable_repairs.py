@@ -157,8 +157,15 @@ class WeeklyIntelligenceAuditTests(unittest.TestCase):
     def test_weekly_audit_is_deterministic_private_safe_and_failure_honest(self):
         from scripts.master_monday.publish_master_monday_outputs import build_weekly_intelligence_audit
         machine,pointer=self._fixture()
-        out=build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64)
-        self.assertEqual(out,build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64))
+        freeze={'final_week_close':{'package_sha256':'9'*64,'raw_private':'SECRET_SOURCE_VALUE'},
+                'weekly_capture_bridge':{'sha256':'8'*64}}
+        preflight={'meta':{'blocking_gap_count':0,'confidence_reducing_gap_count':24,
+                           'planned_core_actions':60},
+                   'quality':{'PASS':36,'PARTIAL':8,'UNAVAILABLE':16},
+                   'private_raw':'SECRET_PREFLIGHT_VALUE'}
+        machine['scorecard']={'matured_outcome_count':140,'private':'SECRET_SCORECARD_VALUE'}
+        out=build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64,freeze,preflight)
+        self.assertEqual(out,build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64,freeze,preflight))
         self.assertIn('\n\n```json\n',out)
         payload=json.loads(out.split('```json\n')[1].split('\n```')[0])
         self.assertEqual(payload['completed_week'],'2026-W42')
@@ -167,8 +174,12 @@ class WeeklyIntelligenceAuditTests(unittest.TestCase):
         self.assertEqual(payload['downstream_not_yet_claimed']['site'],'PENDING_DOWNSTREAM_OWNER')
         self.assertEqual(payload['source_provenance']['machine_self_sha256'],'a'*64)
         self.assertEqual(payload['source_provenance']['machine_file_sha256'],'e'*64)
+        self.assertEqual(payload['evidence_quality']['confidence_reducing_gap_count'],24)
+        self.assertEqual(payload['evidence_quality']['core_pass'],36)
+        self.assertEqual(payload['outcome_and_learning']['registry_matured_count_not_scored_or_admitted'],140)
+        self.assertEqual(payload['source_provenance']['settled_week_close_sha256'],'9'*64)
         self.assertFalse(payload['restricted_payloads_included'])
-        for private in ('PRIVATE_API_SECRET_SHOULD_NOT_APPEAR','PRIVATE_WALLET_SHOULD_NOT_APPEAR'):
+        for private in ('PRIVATE_API_SECRET_SHOULD_NOT_APPEAR','PRIVATE_WALLET_SHOULD_NOT_APPEAR','SECRET_SOURCE_VALUE','SECRET_PREFLIGHT_VALUE','SECRET_SCORECARD_VALUE'):
             self.assertNotIn(private,out)
 
     def test_weekly_audit_rejects_cross_week_and_unbound_machine(self):
