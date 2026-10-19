@@ -599,4 +599,62 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             self.assertEqual(c["matured_outcome_count"],0)
             self.assertEqual(c["state"],"WAITING_FOR_MATURITY")
 
+    def test_corrected_censored_registry_is_compatible_with_existing_consumers(self):
+        from scripts.experiments.build_experiment_yield_shadow import build_shadow
+        from scripts.experiments.unified_experimental_adjudication import candidate_action
+        from scripts.research.monthly_ai_learning_council import compact_experiment_registry
+        with tempfile.TemporaryDirectory() as td:
+            r = self.sample_registry(Path(td), [self.outcome(
+                "EXP-FC-1", status="CENSORED", result=None, score=False)])
+            self.assertEqual(r["contract"], "EXPERIMENT_LIFECYCLE_REGISTRY_v1")
+            self.assertEqual(r["contract_revision"], "1.1")
+            self.assertEqual(r["outcome_count_contract"], "EXPERIMENT_OUTCOME_COUNTS_v2")
+            before = json.dumps(r, sort_keys=True)
+            compact = compact_experiment_registry(r)
+            shadow = build_shadow(r, {"rows": []})
+            action = candidate_action(r["candidates"][0], None)
+            self.assertEqual(compact["matured_candidates"], [])
+            self.assertEqual(shadow["summary"]["waiting_count"], 1)
+            self.assertEqual(shadow["summary"]["matured_count"], 0)
+            self.assertEqual(shadow["summary"]["with_matured_outcomes_count"], 0)
+            self.assertEqual(action["selected_action"], "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE")
+            self.assertFalse(action["canonical_effect"])
+            self.assertFalse(action["portfolio_execution"])
+            self.assertEqual(json.dumps(r, sort_keys=True), before)
+
+    def test_true_matured_registry_retains_existing_review_only_consumer_behavior(self):
+        from scripts.experiments.build_experiment_yield_shadow import build_shadow
+        from scripts.experiments.unified_experimental_adjudication import candidate_action
+        from scripts.research.monthly_ai_learning_council import compact_experiment_registry
+        with tempfile.TemporaryDirectory() as td:
+            r = self.sample_registry(Path(td), [self.outcome("EXP-FC-1")])
+            self.assertEqual(len(compact_experiment_registry(r)["matured_candidates"]), 1)
+            self.assertEqual(build_shadow(r, {"rows": []})["summary"]["matured_count"], 1)
+            action = candidate_action(r["candidates"][0], None)
+            self.assertEqual(action["selected_action"], "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW")
+            self.assertFalse(action["canonical_effect"])
+            self.assertFalse(action["portfolio_execution"])
+
+    def test_old_adjudication_fails_existing_state_and_count_drift_gates(self):
+        # The existing CLI consumer uses a sibling-module import.
+        sys.path.insert(0, str(Path(__file__).parents[2] / "scripts/research"))
+        try:
+            from scripts.research.compounding_learning_v1_core import _current
+        finally:
+            sys.path.pop(0)
+        with tempfile.TemporaryDirectory() as td:
+            r = self.sample_registry(Path(td), [self.outcome(
+                "EXP-FC-1", status="CENSORED", result=None, score=False)])
+            candidate = r["candidates"][0]
+            prior = {"lifecycle_state": "MATURED_INCONCLUSIVE",
+                     "matured_outcome_count": 1, "canonical_effect": False,
+                     "portfolio_execution": False}
+            original = dict(prior)
+            self.assertEqual(_current(candidate, {}, prior), (False, "LIFECYCLE_STATE_DRIFT"))
+            self.assertEqual(prior, original)
+            prior["lifecycle_state"] = candidate["state"]
+            self.assertEqual(_current(candidate, {}, prior), (False, "MATURED_COUNT_DRIFT"))
+            prior["matured_outcome_count"] = 0
+            self.assertEqual(_current(candidate, {}, prior), (True, "CURRENT"))
+
 if __name__ == "__main__": unittest.main()

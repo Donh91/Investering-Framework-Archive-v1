@@ -571,7 +571,11 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
             "replication_receipts": sorted(set(item for item in receipts.get(candidate_id, []) if item)),
             "automatic_age_expiry": False,
         })
-    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "duplicate_candidate_file_count": duplicate_candidate_file_count, "state_counts": counts, "candidates": rows, "rules": {"candidate_id_uniqueness": "ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE", "duplicate_candidate_spec_conflict": "FAIL_CLOSED", "idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True, "matured_outcome_count_semantics": "STATUS_MATURED_ONLY", "scientific_score_eligible_outcome_count_semantics": "STATUS_MATURED_AND_SCORE_ELIGIBLE_TRUE_AND_HIT_OR_MISS", "censored_outcomes_never_matured": True}}
+    # Retain the existing container contract for current readers, while making
+    # the corrected count semantics explicitly versioned. Historical snapshots
+    # are not rewritten; their adjudications must pass each consumer's existing
+    # state/count drift checks before reuse.
+    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "contract_revision": "1.1", "outcome_count_contract": "EXPERIMENT_OUTCOME_COUNTS_v2", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "duplicate_candidate_file_count": duplicate_candidate_file_count, "state_counts": counts, "candidates": rows, "rules": {"candidate_id_uniqueness": "ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE", "duplicate_candidate_spec_conflict": "FAIL_CLOSED", "idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True, "matured_outcome_count_semantics": "STATUS_MATURED_ONLY", "scientific_score_eligible_outcome_count_semantics": "STATUS_MATURED_AND_SCORE_ELIGIBLE_TRUE_AND_HIT_OR_MISS", "censored_outcomes_never_matured": True, "legacy_snapshot_reinterpretation": "FORBIDDEN", "prior_adjudication_reuse": "REQUIRES_CURRENT_STATE_AND_COUNT_MATCH"}}
 
 
 def main() -> None:
