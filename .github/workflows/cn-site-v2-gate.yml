@@ -47,7 +47,7 @@ jobs:
           grep -q 'id="view-compass"' 05_CYCLE_NAVIGATOR/site/dist/index.html
           grep -q 'id="view-results"' 05_CYCLE_NAVIGATOR/site/dist/index.html
           grep -q 'href="../legacy/"' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          grep -q 'src="./app.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           ! grep -q 'PREMIUM PREVIEW' 05_CYCLE_NAVIGATOR/site/dist/index.html
           ! grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
