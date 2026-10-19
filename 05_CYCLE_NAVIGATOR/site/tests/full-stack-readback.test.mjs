@@ -160,4 +160,20 @@ const oldEvent=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
   ...scheduled,detected_at_utc:'2026-10-11T06:30:00Z'});
 assert.doesNotMatch(oldEvent,/SCHEDULED UPDATE DELAYED/);
 assert.doesNotMatch(render('OK'),/SCHEDULED UPDATE DELAYED/);
+// SITE must show Monday provenance/completeness without substituting it for
+// the current official action or leaking raw API narrative.
+{
+ const context={esc:String,publicState:String,publicCompassText:String,recommendation:()=>({action:'HOLD'})};
+ vm.createContext(context);
+ vm.runInContext(premium.slice(premium.indexOf('function compositeIntel('),premium.indexOf('function refreshStatusBanner('))+';globalThis.render=compositeIntel;',context);
+ const weekly={contract:'PUBLIC_COMPASS_FULL_STACK_READBACK_v1',status:'PARTIAL_OR_DEGRADED',source_status:{official:'VERIFIED'},
+   master_monday:{status:'SOURCE_ALIGNED',completed_week:'2026-W42',analytics_status:'PARTIAL_ANALYTICS'}};
+ const html=context.render({data_status:'OK',action_now:'HOLD',full_stack:weekly},'CURRENT');
+ assert.match(html,/MONDAY BASELINE/);
+ assert.match(html,/2026-W42/);
+ assert.match(html,/ANALYSIS PARTIAL/);
+ assert.match(html,/OFFICIAL ACTION/);
+ const missing=context.render({data_status:'OK',action_now:'HOLD',full_stack:{...weekly,master_monday:{status:'UNVERIFIED'}}},'CURRENT');
+ assert.match(missing,/MONDAY BASELINE · SOURCE UNVERIFIED/);
+}
 console.log('FULL_STACK_READBACK_REGRESSION_PASS');
