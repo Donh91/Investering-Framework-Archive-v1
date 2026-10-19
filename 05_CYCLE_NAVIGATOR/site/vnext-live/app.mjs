@@ -41,7 +41,14 @@ function drawOverview(){
  show('cycle-summary',official&&p.state==='SOURCE_BOUND'?(val(official.market_now?.summary)||tr('Cyklusfase afventer bekræftelse','Cycle phase awaiting confirmation')):tr('Aktuel cyklusfase er ikke kildeverificeret. Det frosne ugeinterval vises nedenfor.','Current cycle phase is not source verified. The frozen weekly range remains below.'));
  clear('cycle-steps');
  const names=lang==='da'?['BTC-ledelse','ETH-ledelse','Large + mid','Altseason','Exit / beskyttelse']:['BTC leadership','ETH leadership','Large + mid','Altseason','Exit / protection'];
- names.forEach(x=>{const el=document.createElement('div'),s=document.createElement('strong');el.className='cycle-step';s.textContent=x;el.append(s);$('cycle-steps').append(el)});
+ const phaseKeys=['BTC','ETH','LARGE_MID','ALT_IGNITION','PROTECTION'];
+ names.forEach((x,i)=>{const el=document.createElement('div'),s=document.createElement('strong');el.className='cycle-step';
+  const sourceReference=verified&&p.state==='SOURCE_BOUND'&&
+    p.current_checkpoint?.key===phaseKeys[i]&&p.current_checkpoint?.status==='FROZEN_WEEK_REFERENCE';
+  el.dataset.reference=String(sourceReference);
+  s.textContent=x;el.append(s);
+  if(sourceReference){const note=document.createElement('small');note.textContent=tr('Frossen reference','Frozen reference');el.append(note)}
+  $('cycle-steps').append(el)});
  show('btc-range',w.state==='OK'||w.state==='DEGRADED'?range(w.btc_range?.low,w.btc_range?.high):'—');
  show('eth-range',w.state==='OK'||w.state==='DEGRADED'?range(w.eth_range?.low,w.eth_range?.high):'—');
  show('freeze-identity',(w.forecast_week||'—')+' · CN #'+(w.public_issue_number??'—'));
@@ -87,17 +94,22 @@ function refresh(){
  document.querySelectorAll('[data-lang]').forEach(e=>e.setAttribute('aria-pressed',String(e.dataset.lang===lang)));
  drawStatus();drawOverview();drawCompass();drawResults();
 }
+let loading=false;
 async function load(){
+ if(loading)return;
+ loading=true;
  try{
   const files=['../data/latest.json','../data/compass.json'];
   const [latest,compass]=await Promise.all(files.map(async path=>{const r=await fetch(path,{cache:'no-store',redirect:'error'});if(!r.ok)throw Error('OFFICIAL_PUBLIC_SOURCE_UNAVAILABLE');return r.json()}));
   feeds={latest,compass};error=false;
  }catch{feeds=null;error=true}
- refresh();
+ finally{loading=false;refresh()}
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>selectTab(b.dataset.tab)));
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{lang=b.dataset.lang;try{localStorage.setItem('cnPremiumLanguage',lang)}catch{}refresh()}));
 try{const stored=localStorage.getItem('cnPremiumLanguage');if(stored==='da'||stored==='en')lang=stored}catch{}
 const initial=location.hash.slice(1);selectTab(keys.includes(initial)?initial:'overview');refresh();load();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
-setInterval(refresh,60000); // Re-check cached source freshness, NO network polling or scheduler.
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+window.addEventListener('focus',()=>{if(!document.hidden)load()});
+setInterval(refresh,60000); // Cached source-owner expiry check (no HTTP).
+setInterval(()=>{if(!document.hidden)load()},300000); // One first-party re-fetch / 5 minutes, visible tabs only.
