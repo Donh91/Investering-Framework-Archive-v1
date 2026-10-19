@@ -33,12 +33,19 @@ export function mondayContext(latest,compass,parsed){
   const currentWeek=latest?.public_series?.current_public_projection?.forecast_week;
   const current=weekInfo(currentWeek);
   const completedNumber=latest?.pointer?.completed_source_week;
+  const sourceYear=latest?.pointer?.completed_source_year;
   const iso=latest?.pointer?.iso_year;
+  const isoWeek=latest?.pointer?.iso_week;
+  // Never accept a year-old "W42" just because its week number matches.
+  // completed_source_year is preserved from the SAME verified weekly pointer
+  // used by the SITE producer. There is no local calendar inference.
   const matching=Boolean(
     completed&&current&&Number.isInteger(completedNumber)&&
-    completed.week===completedNumber&&Number.isInteger(iso)&&
-    completed.year<=iso&&completed.year>=iso-1&&
-    mon.completed_week!==currentWeek
+    Number.isInteger(sourceYear)&&Number.isInteger(iso)&&Number.isInteger(isoWeek)&&
+    current.year===iso&&current.week===isoWeek&&
+    completed.week===completedNumber&&completed.year===sourceYear&&
+    ((current.week>1&&sourceYear===current.year&&completed.week===current.week-1)||
+      (current.week===1&&sourceYear===current.year-1&&[52,53].includes(completed.week)))
   );
   const allowedAnalytics=ANALYTICS.has(mon?.analytics_status);
   const crossStatus=source?.master_monday_analysis===mon?.analytics_status;
