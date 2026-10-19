@@ -7,7 +7,7 @@ const requireOnce=(html,needle,label)=>{
 };
 export function preserveLegacyShell(html){
   requireOnce(html,'<head>','LEGACY_HEAD');
-  requireOnce(html,'public-product.js','LEGACY_PRODUCT');
+  requireOnce(html,'src="./app.js"','LEGACY_PRODUCT');
   // The archived /legacy/ document must keep loading root-level shared assets,
   // public snapshots and the existing frozen weekly chart without copying data.
   return html.replace('<head>','<head><base href="../">');
