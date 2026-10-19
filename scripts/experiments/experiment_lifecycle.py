@@ -11,6 +11,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    from scripts.experiments.source_git_anchor import AcceptedMainSource
+except ModuleNotFoundError:  # Direct script invocation from the existing workflow.
+    from source_git_anchor import AcceptedMainSource
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from metric_resolver import (  # noqa: E402  (path is prepared immediately above)
@@ -273,6 +278,8 @@ def unique_candidate_rows(candidate_root: Path) -> tuple[list[tuple[Path, dict[s
 
 def outcome_bound_to_frozen_forecast(
     outcome: dict[str, Any], frozen: dict[str, Any], outcome_root: Path,
+    *, source_anchor: AcceptedMainSource | None = None,
+    forecast_path: Path | None = None,
 ) -> bool:
     """Narrow status-eligible evidence: a self-declared score flag is insufficient.
 
@@ -319,6 +326,9 @@ def outcome_bound_to_frozen_forecast(
     binding_path = original / "settlement_bindings" / f"{forecast_id}.json"
     evidence_file = original / "settlement_evidence" / f"{forecast_id}.json"
     try:
+        for path in (binding_path, evidence_file):
+            if path.is_symlink() or path.resolve() != path.absolute():
+                return False
         binding = read(binding_path)
         evidence = read(evidence_file)
     except (OSError, ValueError, UnicodeError):
@@ -362,6 +372,32 @@ def outcome_bound_to_frozen_forecast(
     raw_file = (repo_root / raw_ref).resolve(strict=False)
     if not raw_file.is_relative_to(repo_root.resolve(strict=False)):
         return False
+    # A coordinated rewrite of raw/evidence/outcome/binding must not create
+    # a historical HIT. Pin both the original forecast and raw bytes to their
+    # FIRST accepted canonical main objects, outside this mutable worktree.
+    # Shallow/missing history produces zero eligible scores, not a CI bypass.
+    try:
+        root = repo_root.resolve()
+        anchor = source_anchor if source_anchor is not None else AcceptedMainSource(root)
+        frozen_at = frozen.get("frozen_at_utc")
+        if not isinstance(frozen_at, str) or not frozen_at.endswith("Z") or dt(frozen_at) >= dt(due):
+            return False
+        if forecast_path is None:
+            at = dt(frozen_at)
+            forecast_path = root / "research/framework_memory/forecast_memory" / f"{at.year:04d}" / f"{at.month:02d}" / f"{forecast_id}.json"
+        if forecast_path.is_symlink() or forecast_path.resolve() != forecast_path.absolute():
+            return False
+        if read(forecast_path) != frozen:
+            return False
+        if not anchor.matches(forecast_path.relative_to(root),
+                              hashlib.sha256(forecast_path.read_bytes()).hexdigest(),
+                              accepted_before=dt(due)):
+            return False
+        if not anchor.matches(Path(raw_ref), evidence.get("source_raw_sha256"),
+                              accepted_after=dt(due)):
+            return False
+    except (OSError, ValueError, TypeError, UnicodeError):
+        return False
     try:
         validate_original_settlement_evidence(frozen, evidence, repo_root)
         # The producer validator binds the raw *bytes*, but must not be used
@@ -388,7 +424,7 @@ def outcome_bound_to_frozen_forecast(
         return False
     # Recompute HIT/MISS from the validated original settlement metric with
     # the EXISTING canonical maturation scorer. This is still not an
-    # independently Git-anchored proof of first-known publication.
+    # independent provider publication, delivery or scientific skill proof.
     try:
         resolution = resolve_for_forecast(evidence, frozen)
         if not resolution.ok:
@@ -427,6 +463,11 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
     candidates = [value for _, value in candidate_rows]
     observations = {}; candidate_forecasts = {}; outcomes = {}; receipts = {}
     original_forecasts = {}
+    original_forecast_paths = {}
+    source_root = outcome_root.parent
+    if source_root.name == "framework_memory" and source_root.parent.name == "research":
+        source_root = source_root.parent.parent
+    source_anchor = AcceptedMainSource(source_root)
     for _, value in jsons(observation_root, "EXPERIMENT_OBSERVATION_v1"):
         observations.setdefault(value["candidate_id"], []).append(value)
     for path, value in sorted(jsons(forecast_root, "FROZEN_FORECAST_v1"), key=lambda x: x[0].as_posix()):
@@ -444,6 +485,7 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
             # Duplicate byte-identical source does not count twice.
             continue
         original_forecasts[key] = (owner, value)
+        original_forecast_paths[key] = path
         candidate_forecasts.setdefault(owner, []).append(key)
     for path in sorted(outcome_root.rglob("*.json")) if outcome_root.exists() else []:
         try:
@@ -476,7 +518,9 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
                     and item.get("forecast_id") in original_forecasts
                     and original_forecasts[item["forecast_id"]][0] == candidate_id
                     and outcome_bound_to_frozen_forecast(
-                        item, original_forecasts[item["forecast_id"]][1], outcome_root)]
+                        item, original_forecasts[item["forecast_id"]][1], outcome_root,
+                        source_anchor=source_anchor,
+                        forecast_path=original_forecast_paths[item["forecast_id"]])]
         censored = [item for item in original_outcomes
                     if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
                     and item.get("status") == "CENSORED"]

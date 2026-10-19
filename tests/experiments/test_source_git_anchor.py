@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.experiments.source_git_anchor import first_accepted_main_raw
+from scripts.experiments.source_git_anchor import AcceptedMainSource, first_accepted_main_raw
 
 
 def git(root, *args):
@@ -92,6 +92,8 @@ class CanonicalSourceAnchorTests(unittest.TestCase):
         git(writer, "commit", "-qm", "legitimate later unrelated update")
         git(writer, "push", "-q", "origin", "main")
         first_local_main = git(self.root, "rev-parse", "main").decode().strip()
+        self.assertFalse(self.check(), "Missing current-main objects must not trigger an implicit fetch")
+        git(self.root, "fetch", "-q", "origin", "main")
         self.assertTrue(self.check())
         self.assertEqual(git(self.root, "rev-parse", "main").decode().strip(),
                          first_local_main)
@@ -122,3 +124,29 @@ class CanonicalSourceAnchorTests(unittest.TestCase):
                         capture_output=True, timeout=10)
         self.assertFalse(first_accepted_main_raw(
             clone, self.rel, self.digest, fixture_origin=self.origin.as_uri()))
+
+    def test_remote_main_is_pinned_once_per_build(self):
+        from unittest.mock import patch
+        from scripts.experiments import source_git_anchor as module
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        with patch.object(module, "_git", wraps=module._git) as calls:
+            self.assertTrue(anchor.matches(self.rel, self.digest))
+            self.assertTrue(anchor.matches(self.rel, self.digest))
+        self.assertEqual(sum(call.args[1:2] == ("ls-remote",) for call in calls.call_args_list), 1)
+
+    def test_first_acceptance_clock_cannot_be_backdated_by_json(self):
+        from datetime import datetime, timezone
+        stamp = int(git(self.root, "show", "-s", "--format=%ct", "HEAD"))
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        self.assertFalse(anchor.matches(self.rel, self.digest,
+                         accepted_before=datetime.fromtimestamp(stamp, timezone.utc)))
+        self.assertTrue(anchor.matches(self.rel, self.digest,
+                        accepted_before=datetime.fromtimestamp(stamp + 1, timezone.utc)))
+
+    def test_parent_symlink_and_exhausted_lookup_budget_fail_closed(self):
+        alias = self.root / "alias"
+        alias.symlink_to(self.root / "raw", target_is_directory=True)
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        self.assertFalse(anchor.matches(Path("alias/EXP-FC-test/source.json"), self.digest))
+        anchor.lookups = 128
+        self.assertFalse(anchor.matches(self.rel, self.digest))

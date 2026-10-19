@@ -8,7 +8,7 @@
     "portfolio_action": false,
     "type": "ADVISORY_DERIVED_READ_ONLY"
   },
-  "candidate_count": 561,
+  "candidate_count": 562,
   "challengers": [
     {
       "automatic_promotion": false,
@@ -23,7 +23,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-0258e3807909a4d1987f",
       "evidence_direction": "POSITIVE_UNVERIFIED",
-      "matured_outcome_count": 71,
+      "matured_outcome_count": 75,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_SUPPORTED",
       "verdict": "UNPROVEN"
@@ -32,7 +32,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-031fe5e419bd0096db4d",
       "evidence_direction": "POSITIVE_UNVERIFIED",
-      "matured_outcome_count": 29,
+      "matured_outcome_count": 33,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_SUPPORTED",
       "verdict": "UNPROVEN"
@@ -41,7 +41,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-03d0c1a48139b386534c",
       "evidence_direction": "POSITIVE_UNVERIFIED",
-      "matured_outcome_count": 97,
+      "matured_outcome_count": 101,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_SUPPORTED",
       "verdict": "UNPROVEN"
@@ -50,7 +50,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-05f05e742b6cd1ed61f0",
       "evidence_direction": "POSITIVE_UNVERIFIED",
-      "matured_outcome_count": 37,
+      "matured_outcome_count": 41,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_SUPPORTED",
       "verdict": "UNPROVEN"
@@ -68,7 +68,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-065c78e4af0270a9d365",
       "evidence_direction": "POSITIVE_UNVERIFIED",
-      "matured_outcome_count": 154,
+      "matured_outcome_count": 158,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_SUPPORTED",
       "verdict": "UNPROVEN"
@@ -610,10 +610,10 @@
     "adaptive_evolution": 1157,
     "self_healing": 1156
   },
-  "generated_at_utc": "2026-10-18T18:18:50.875214Z",
+  "generated_at_utc": "2026-10-19T09:13:55.796812Z",
   "health_consistency": "OK",
   "health_live_coverage": 0.9949,
-  "incident_count": 6,
+  "incident_count": 5,
   "incident_history": [
     {
       "automatic_code_write_allowed": false,
@@ -858,28 +858,6 @@
       "route": "EXISTING_REMEDIATION_OWNER",
       "severity": "AMBER",
       "workflow": "pdlt-maturation.yml"
-    },
-    {
-      "automatic_code_write_allowed": false,
-      "automatic_retry_allowed": false,
-      "classification": "UNKNOWN",
-      "counted_in_this_snapshot": false,
-      "findings": [
-        "RECOVERING_AFTER_RECENT_FAILURES"
-      ],
-      "fingerprint": "99e690eef8574ffc7c37c354b6b4c536da413f130e04fd04c0112a117007edae",
-      "first_seen_at_utc": "2026-10-17T07:10:00.563917Z",
-      "last_seen_at_utc": "2026-10-17T17:57:55.453716Z",
-      "observation_count": 1,
-      "observed_keys": [
-        "run:38208922727"
-      ],
-      "observed_run_id": 38208922727,
-      "owner_issue": 1156,
-      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
-      "route": "EXISTING_REMEDIATION_OWNER",
-      "severity": "AMBER",
-      "workflow": "sunday-market-close-and-cfgi.yml"
     }
   ],
   "input_freshness": {
@@ -895,13 +873,13 @@
   "scoreboard": {
     "DOCUMENTED_IMPROVEMENT": 0,
     "FALSIFIED": 0,
-    "INSUFFICIENT_EVIDENCE": 495,
+    "INSUFFICIENT_EVIDENCE": 496,
     "KILLED": 0,
     "REGRESSED": 0,
     "UNPROVEN": 66
   },
   "source_generated_at_utc": {
-    "automation_health": "2026-10-18T18:13:38.852718Z"
+    "automation_health": "2026-10-19T09:08:34.310369Z"
   },
   "source_observation_counted": true,
   "source_paths": {
@@ -909,8 +887,8 @@
     "experiment_registry": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
   },
   "source_sha256": {
-    "automation_health": "da870ef0957c3232c503f59cc07e9200a41c6de273e19d55ac0f5db81648bb7a",
-    "experiment_registry": "3e69a5a63dbe1a90057b6200036d98795910feeee917cabf96ad9eada1c2478d"
+    "automation_health": "c297b45661953bcf50bb080d12443b9e0bd999c2fac9b5f3ba7009a80ea82d46",
+    "experiment_registry": "ad6c0b46c21b231a7d91bc04a0e07e78c8dd1323d3789a0af6fb6316805b8c2f"
   },
   "workflow_census_count": 198
 }

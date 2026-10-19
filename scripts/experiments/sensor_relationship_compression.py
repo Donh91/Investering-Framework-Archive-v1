@@ -91,6 +91,8 @@ def prospective_row(candidate: dict[str, Any]) -> dict[str, Any]:
             "censored_outcome_count": candidate.get("censored_outcome_count"),
             "scientific_score_eligible_outcome_count": eligible_count,
             "outcome_evidence_state": candidate.get("outcome_evidence_state") or "UNKNOWN_LEGACY_REGISTRY",
+            "matured_counter_integrity": "LEGACY_UNVERIFIED" if matured_count is not None else "UNKNOWN",
+            "prospective_skill_evidence": "NOT_ADMITTED",
         },
         "has_eligible_matured_outcome": bool(eligible_count and admission == "QUALIFIED_FOR_FORWARD_TEST"),
         "current_prospective_validation": False,

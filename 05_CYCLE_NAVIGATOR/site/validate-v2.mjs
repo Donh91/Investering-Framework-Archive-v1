@@ -1,9 +1,28 @@
 import './tests/full-stack-readback.test.mjs';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
 const h=JSON.parse(history);
 const chartSource=await read('./frozen-week-chart.js'),chartCss=await read('./frozen-week-chart.css');
+
+const proofSource=await read('./validate-compass-site-v5.mjs');
+const helperStart=proofSource.indexOf('function verifiedRawDigest(');
+const helperEnd=proofSource.indexOf('const [op,ap,wp,shp,stp]',helperStart);
+const rawDigest=helperStart>=0&&helperEnd>helperStart
+ ?new Function('createHash',proofSource.slice(helperStart,helperEnd)+';return verifiedRawDigest;')(createHash)
+ :()=>false;
+// A real producer preserves the numeric token 82116.0; JS JSON.stringify turns
+// it into 82116. Valid bytes MUST pass; any reserialised or mutated bytes FAIL.
+const sourceWithoutDigest='{"anchor_id":"proof","market_reference":{"btc_usdt":82116.0}}\n';
+const frozenDigest=createHash('sha256').update(sourceWithoutDigest,'utf8').digest('hex');
+const originalRaw='{"anchor_id":"proof","anchor_sha256":"'+frozenDigest+'","market_reference":{"btc_usdt":82116.0}}\n';
+const originalData=JSON.parse(originalRaw);
+const hashAcceptsOriginal=rawDigest(originalRaw,originalData,'anchor_sha256',frozenDigest);
+const hashRejectsJsRewrite=!rawDigest(originalRaw.replace('82116.0','82116'),originalData,'anchor_sha256',frozenDigest);
+const hashRejectsCorruptedFingerprint=!rawDigest(originalRaw.replace('"proof"','"evil"'),originalData,'anchor_sha256',frozenDigest);
+const hashRejectsWrongExpected=!rawDigest(originalRaw,originalData,'anchor_sha256','0'.repeat(64));
+
 const chartAPI={};new Function('window','document',chartSource)(chartAPI,{addEventListener(){}});const chartModel=chartAPI.CNWeekChart.model,chartLinePlan=chartAPI.CNWeekChart.linePlan,chartGraphDescription=chartAPI.CNWeekChart.graphDescription;
 const etaStart=product.indexOf('function pathEta'),etaEnd=product.indexOf('function pathStatus');
 const productSyntaxOk=(()=>{try{new Function(product);return true}catch{return false}})();
@@ -112,6 +131,7 @@ const translationProjection=new Function('sanitizePackage','standaloneFreeze','p
 const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
 const acceptedTranslations=translationProjection(bilingualFixture);
 const checks=[
+ ['W43 Pages byte-true anchor integrity accepts producer numeric spelling 82116.0 and rejects any altered source',hashAcceptsOriginal&&hashRejectsJsRewrite&&hashRejectsCorruptedFingerprint&&hashRejectsWrongExpected],
  ['Danish projection accepts public prose and rejects changed numeric signs',acceptedTranslations.length===1&&acceptedTranslations[0].da==='BTC steg +2.44% i uge 40.'],
  ['Danish projection cannot publish untranslated private-scenario source content',!acceptedTranslations.some(x=>x.en.includes('9000'))&&translationProjection({market_state:'Legacy source without translations.'}).length===0],
  ['weekly chart rejects future timestamps and wrong UTC day identity',!chartModel(futureFixture,'BTC').days[6].actual&&!chartModel(badDate,'BTC').days[0].actual],

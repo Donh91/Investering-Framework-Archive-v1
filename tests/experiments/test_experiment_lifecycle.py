@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -135,6 +136,7 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 "contract":"FROZEN_FORECAST_v1",
                 "source_candidate_id":"EC-censor","forecast_id":fid,
                 "unit_contract_version":"FORECAST_TARGET_UNITS_v2",
+                "frozen_at_utc":"2026-09-01T00:00:00Z",
                 "outcome_due_utc":"2026-09-02T00:00:00Z",
                 "settlement_contract_version":"FORECAST_SETTLEMENT_EXACT_TARGET_TIME_v1",
                 "scientific_admission":{"status":"QUALIFIED_FOR_FORWARD_TEST"},
@@ -145,6 +147,24 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             }
             frozen_by_id[fid]=frozen
             (fr/f"{i}.json").write_text(json.dumps(frozen))
+        # Establish an isolated accepted-main trust root BEFORE outcome data.
+        # Production never accepts this test remote from a forecast field.
+        from unittest.mock import patch
+        origin = root / ".fixture-origin.git"
+        subprocess.run(["git", "init", "-q", "--bare", str(origin)], check=True)
+        def fixture_git(*args, stamp="2026-09-01T00:00:01Z"):
+            return subprocess.run(["git", "-C", str(root), *args], check=True,
+                capture_output=True, env=dict(os.environ, GIT_AUTHOR_NAME="Fixture",
+                GIT_AUTHOR_EMAIL="fixture@example.invalid", GIT_COMMITTER_NAME="Fixture",
+                GIT_COMMITTER_EMAIL="fixture@example.invalid", GIT_AUTHOR_DATE=stamp,
+                GIT_COMMITTER_DATE=stamp))
+        fixture_git("init", "-q", "-b", "main")
+        fixture_git("remote", "add", "origin", origin.as_uri())
+        fixture_git("add", "forecasts", "candidates")
+        fixture_git("commit", "-qm", "first prospective forecast fixture")
+        allow = patch("scripts.experiments.source_git_anchor.ALLOWED_ORIGINS", {origin.as_uri()})
+        allow.start()
+        self.addCleanup(allow.stop)
         bindings=root/"settlement_bindings"
         evidence_root=root/"settlement_evidence"
         bindings.mkdir(); evidence_root.mkdir()
@@ -214,6 +234,10 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             }
             binding["binding_sha256"]=sha(binding)
             (bindings/f"{fid}.json").write_text(json.dumps(binding))
+        if outcomes:
+            fixture_git("add", "raw", "outcomes", "settlement_bindings", "settlement_evidence")
+            fixture_git("commit", "-qm", "first original settlement fixture", stamp="2026-09-02T00:00:06Z")
+        fixture_git("push", "-q", "origin", "main")
         return registry(cr,ob,fr,oc,rc,"2026-10-18T00:00:00Z")
 
     @staticmethod
@@ -315,7 +339,7 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 registry(cr,root/"observations",fr,root/"outcomes",root/"receipts",
                          "2026-10-18T00:00:00Z")
 
-    def test_original_archived_matured_hit_matches_true_binding(self):
+    def test_original_archived_matured_hit_requires_independent_git_custody(self):
         from scripts.experiments.experiment_lifecycle import (
             read, outcome_bound_to_frozen_forecast)
         root=Path(__file__).parents[2]
@@ -325,9 +349,13 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
         outcome=read(outcome_root/f"{fid}.json")
         self.assertEqual(outcome["status"],"MATURED")
         self.assertEqual(outcome["result"],"HIT")
-        self.assertTrue(outcome_bound_to_frozen_forecast(
-            outcome,forecast,outcome_root),
-            "Immutable original settlement binding must remain accepted")
+        # True historical status remains preserved. A matching binding alone
+        # cannot establish first acceptance in the existing shallow CI clone.
+        from unittest.mock import patch
+        from scripts.experiments.source_git_anchor import SourceGitAnchorUnavailable
+        with patch("scripts.experiments.source_git_anchor._git",
+                   side_effect=SourceGitAnchorUnavailable("unavailable")):
+            self.assertFalse(outcome_bound_to_frozen_forecast(outcome,forecast,outcome_root))
 
     def test_mutated_hit_after_binding_is_never_score_eligible(self):
         from scripts.experiments.experiment_lifecycle import registry
@@ -461,6 +489,65 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             r=registry(root/"candidates",root/"observations",root/"forecasts",
                        root/"outcomes",root/"receipts","2026-10-18T01:00:00Z")
             self.assertEqual(r["candidates"][0]["scientific_score_eligible_outcome_count"],0)
+
+    def test_joint_raw_evidence_outcome_binding_rewrite_cannot_forge_hit(self):
+        import hashlib
+        from scripts.experiments.experiment_lifecycle import registry, sha
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            fid = "EXP-FC-joint"
+            original = self.sample_registry(root, [self.outcome(fid, result="MISS")])
+            self.assertEqual(original["candidates"][0]["scientific_score_eligible_outcome_count"], 1)
+            raw = root / "raw" / fid / "source.json"
+            raw.write_bytes(raw.read_bytes().replace(b'"100.2"', b'"102.0"'))
+            ep = root / "settlement_evidence" / f"{fid}.json"
+            evidence = json.loads(ep.read_text())
+            evidence["source_raw_bytes"] = len(raw.read_bytes())
+            evidence["source_raw_sha256"] = hashlib.sha256(raw.read_bytes()).hexdigest()
+            evidence["market_metrics"]["spot"]["BTCUSDT"]["close"] = 102.0
+            ep.write_text(json.dumps(evidence))
+            op = root / "outcomes/0.json"
+            outcome = json.loads(op.read_text())
+            outcome.update(result="HIT", end_value=102.0, return_pct=2.0,
+                           evidence_sha256=sha(evidence))
+            op.write_text(json.dumps(outcome))
+            bp = root / "settlement_bindings" / f"{fid}.json"
+            binding = json.loads(bp.read_text())
+            binding.update(outcome_sha256=sha(outcome), evidence_sha256=sha(evidence))
+            binding["binding_sha256"] = sha({k: v for k, v in binding.items() if k != "binding_sha256"})
+            bp.write_text(json.dumps(binding))
+            result = registry(root/"candidates", root/"observations", root/"forecasts",
+                              root/"outcomes", root/"receipts", "2026-10-19T12:00:00Z")
+            row = result["candidates"][0]
+            self.assertEqual(row["matured_outcome_count"], 1)
+            self.assertEqual(row["scientific_score_eligible_outcome_count"], 0)
+            self.assertEqual(row["state"], "MATURED_INCONCLUSIVE")
+
+    def test_forecast_first_published_after_due_is_unscoreable(self):
+        from scripts.experiments.experiment_lifecycle import registry
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.sample_registry(root, [self.outcome("EXP-FC-late", result="HIT")])
+            # Move canonical first acceptance to AFTER the forecast horizon.
+            # A new Git trust root cannot backdate first-known merely via JSON.
+            import subprocess
+            tree = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD^{tree}"],
+                                  check=True, capture_output=True, text=True).stdout.strip()
+            late = subprocess.run(["git", "-C", str(root), "commit-tree", tree], input="late synthetic root\n",
+                check=True, capture_output=True, text=True, env=dict(os.environ,
+                GIT_AUTHOR_NAME="Fixture", GIT_AUTHOR_EMAIL="fixture@example.invalid",
+                GIT_COMMITTER_NAME="Fixture", GIT_COMMITTER_EMAIL="fixture@example.invalid",
+                GIT_AUTHOR_DATE="2026-09-03T00:00:00Z", GIT_COMMITTER_DATE="2026-09-03T00:00:00Z")).stdout.strip()
+            # Only this isolated temporary test repository is rewritten.
+            subprocess.run(["git", "--git-dir", str(root/".fixture-origin.git"),
+                            "fetch", "-q", str(root), late+":refs/heads/late"], check=True)
+            subprocess.run(["git", "--git-dir", str(root/".fixture-origin.git"),
+                            "symbolic-ref", "HEAD", "refs/heads/late"], check=True)
+            subprocess.run(["git", "--git-dir", str(root/".fixture-origin.git"),
+                            "update-ref", "refs/heads/main", late], check=True)
+            result = registry(root/"candidates", root/"observations", root/"forecasts",
+                              root/"outcomes", root/"receipts", "2026-10-19T12:00:00Z")
+            self.assertEqual(result["candidates"][0]["scientific_score_eligible_outcome_count"], 0)
 
     def test_duplicate_forecast_outcomes_are_not_order_dependent(self):
         with tempfile.TemporaryDirectory() as td:
