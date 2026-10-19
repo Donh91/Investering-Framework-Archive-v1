@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, hashlib, json, subprocess, sys
+import argparse, hashlib, json, re, subprocess, sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -98,6 +98,77 @@ def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
         'matured_outcome_count':len(matured),
         'reason':'WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include a scorecard field.' if matured else 'A valid experiment registry supplied zero newly matured outcomes; formal outcome scoring remains pending.',
     }
+def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
+                                    machine_file_sha256:str,pointer_file_sha256:str)->str:
+    """Compact derived evidence index; NEVER a new market or scientific authority.
+
+    Master Monday runs before CN/SITE final publication. Downstream states
+    therefore remain PENDING_DOWNSTREAM instead of falsely claiming success.
+    Only allowlisted metadata is copied; API analysis and restricted payloads
+    are deliberately excluded.
+    """
+    def safe_status(value:Any)->str:
+        s=str(value or 'UNAVAILABLE').upper()
+        return s if re.fullmatch(r'[A-Z0-9_:-]{1,96}',s) else 'UNAVAILABLE'
+    def safe_sha(value:Any)->str|None:
+        return value if isinstance(value,str) and re.fullmatch(r'[0-9a-f]{64}',value) else None
+    year=int(machine['iso_year']);week=int(machine['iso_week'])
+    if not 1<=week<=53 or year<2000 or year>9999:
+        raise ValueError('weekly_audit_invalid_iso_week')
+    if year!=int(pointer['iso_year']) or week!=int(pointer['iso_week']):
+        raise ValueError('weekly_audit_pointer_week_mismatch')
+    digest=safe_sha(machine.get('package_sha256'))
+    if digest is None or digest!=safe_sha(pointer.get('machine_package_sha256')):
+        raise ValueError('weekly_audit_machine_digest_mismatch')
+    if not safe_sha(machine_file_sha256) or not safe_sha(pointer_file_sha256):
+        raise ValueError('weekly_audit_file_hash_invalid')
+    receipt=machine.get('api_receipt') if isinstance(machine.get('api_receipt'),dict) else {}
+    model=str(receipt.get('model') or 'UNAVAILABLE')
+    model=model if re.fullmatch(r'[a-zA-Z0-9_.-]{1,80}',model) else 'UNAVAILABLE'
+    cost=receipt.get('estimated_cost_usd')
+    cost=round(float(cost),6) if isinstance(cost,(int,float)) and not isinstance(cost,bool) and 0<=cost<=1000 else None
+    learning=machine.get('learning_decision_impact') if isinstance(machine.get('learning_decision_impact'),dict) else {}
+    index={
+        'contract':'MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_v1',
+        'authority':'DERIVED_EVIDENCE_INDEX_ONLY_NO_NEW_FORECAST_OR_ACTION',
+        'completed_week':f'{year}-W{week:02d}',
+        'source_provenance':{
+            'freeze_self_sha256':safe_sha(machine.get('freeze_sha256')),
+            'preflight_self_sha256':safe_sha(machine.get('preflight_sha256')),
+            'context_sha256':safe_sha(machine.get('context_hash')),
+            'machine_self_sha256':digest,
+            'machine_file_sha256':machine_file_sha256,
+            'delivery_pointer_file_sha256':pointer_file_sha256,
+        },
+        'delivery':{
+            'preflight':safe_status(pointer.get('preflight_status')),
+            'api':safe_status(machine.get('api_status')),
+            'producer':safe_status(pointer.get('producer_status')),
+            'consumer':safe_status(pointer.get('consumer_receipt_status')),
+            'consumer_state':safe_status(pointer.get('consumer_receipt_state')),
+            'overall':safe_status(pointer.get('status')),
+        },
+        'analysis_completeness':{
+            'scorecard':safe_status(pointer.get('scorecard_status')),
+            'operational_translation':safe_status(pointer.get('operational_translation_status')),
+            'learning_decision_impact':safe_status(learning.get('assessment_status')),
+            'experiment_learning':safe_status(pointer.get('experiment_learning_status')),
+        },
+        'api_accounting':{'model':model,'estimated_cost_usd':cost},
+        'downstream_not_yet_claimed':{
+            'cycle_navigator':'PENDING_DOWNSTREAM_OWNER',
+            'site':'PENDING_DOWNSTREAM_OWNER',
+            'official_compass':'SEPARATE_CURRENT_ACTION_OWNER',
+        },
+        'scientific_firewall':'FORECAST_SKILL_NOT_INFERRED_FROM_WEEKLY_SCORE_OR_MATURED_COUNT',
+        'restricted_payloads_included':False,
+    }
+    return '# MASTER MONDAY WEEKLY INTELLIGENCE AUDIT — '+index['completed_week']+'\\n\\n'+(
+        'Derived metadata only. Original immutable producer files and downstream '
+        'consumer receipts remain authoritative.\\n\\n```json\\n'+
+        json.dumps(index,sort_keys=True,ensure_ascii=False,indent=2)+'\\n```\\n')
+
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--freeze',type=Path,required=True);ap.add_argument('--preflight',type=Path,required=True);ap.add_argument('--context',type=Path,required=True);ap.add_argument('--api-output',type=Path);ap.add_argument('--api-receipt',type=Path);ap.add_argument('--api-status',required=True);ap.add_argument('--output-dir',type=Path,required=True);ap.add_argument('--learning-packet',type=Path,default=Path('research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json'));a=ap.parse_args()
     freeze=load(a.freeze);preflight=load(a.preflight);context=load(a.context);api=load(a.api_output) if a.api_output and a.api_output.exists() else {};receipt=load(a.api_receipt) if a.api_receipt and a.api_receipt.exists() else {}
@@ -146,5 +217,17 @@ def main():
     report=f"# MASTER MONDAY — {freeze['iso_year']}-W{int(freeze['iso_week']):02d}\n\nPreflight: **{preflight['packet']['status']}**\n\nAPI calibration: **{a.api_status.upper()}**\n\nExperiment registry evidence: **{experiment_status}**\n\nConsumer receipt: **{consumer_receipt.get('status','UNAVAILABLE')}**\n\nLearning decision impact: **{learning_impact.get('assessment_status','UNKNOWN')}**\n\n## Analysis layer\n\n```json\n{json.dumps(analysis,ensure_ascii=False,indent=2)}\n```\n\n## Operational translation\n\n```json\n{json.dumps(translation,ensure_ascii=False,indent=2)}\n```\n\n## Calibration scorecard\n\n```json\n{json.dumps(scorecard,ensure_ascii=False,indent=2)}\n```\n\n## Learning decision impact — 8 week shadow measurement\n\n```json\n{json.dumps(learning_impact,ensure_ascii=False,indent=2)}\n```\n\n## Autonomous shadow admission\n\nThis section is reporting-only. The OpenAI API lifecycle decision does not require owner confirmation.\n\n```json\n{json.dumps(shadow,ensure_ascii=False,indent=2)}\n```\n"
     (a.output_dir/'MASTER_MONDAY_REPORT.md').write_text(report)
     pointer={'contract':'MASTER_MONDAY_DELIVERY_POINTER_v1','iso_year':freeze['iso_year'],'iso_week':freeze['iso_week'],'status':effective_status,'producer_status':producer_status,'machine_package_path':str(machine_path),'machine_package_sha256':machine['package_sha256'],'report_path':str(a.output_dir/'MASTER_MONDAY_REPORT.md'),'preflight_status':preflight['packet']['status'],'freeze_sha256':freeze['freeze_sha256'],'experiment_learning_status':experiment_status,'scorecard_status':scorecard.get('status','UNKNOWN'),'operational_translation_status':translation.get('status','UNKNOWN'),'shadow_admission_status':shadow.get('overall_status','UNKNOWN'),'shadow_admission_human_confirmation_required':False,'consumer_receipt_status':consumer_receipt.get('status','UNAVAILABLE'),'consumer_receipt_state':consumer_receipt.get('consumption_state','UNKNOWN'),'learning_decision_impact_status':learning_impact.get('assessment_status'),'learning_changed_calibration_decision':learning_impact.get('changed_calibration_decision')}
-    (a.output_dir/'MASTER_MONDAY_DELIVERY_POINTER.json').write_bytes(canon(pointer))
+    pointer_path=a.output_dir/'MASTER_MONDAY_DELIVERY_POINTER.json'
+    pointer_path.write_bytes(canon(pointer))
+    # Version by the immutable machine self-digest: retries/corrections create
+    # a new sidecar without rewriting the previous week's historical evidence.
+    audit_path=a.output_dir/f"MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_{machine['package_sha256'][:16]}.md"
+    audit=build_weekly_intelligence_audit(
+        machine,pointer,
+        hashlib.sha256(machine_path.read_bytes()).hexdigest(),
+        hashlib.sha256(pointer_path.read_bytes()).hexdigest(),
+    )
+    if audit_path.exists() and audit_path.read_text()!=audit:
+        raise ValueError('weekly_audit_immutable_snapshot_collision')
+    audit_path.write_text(audit)
 if __name__=='__main__':main()
