@@ -81,6 +81,7 @@ assert.match(good.completed_score.proof_state,/NOT_INDEPENDENTLY_SEALED/);
 // These are actual executable parity tests, not just checks for function names.
 const mondayLatest=structuredClone(latest);
 mondayLatest.pointer.completed_source_week=42;
+mondayLatest.pointer.completed_source_year=2026;
 const mondayCompass=structuredClone(compass);
 mondayCompass.full_stack.contract='PUBLIC_COMPASS_FULL_STACK_READBACK_v1';
 mondayCompass.full_stack.source_status={master_monday:'SOURCE_ALIGNED',master_monday_analysis:'COMPLETE'};
@@ -123,6 +124,22 @@ assert.equal(mondayRead(mondayLatest,wrongSourceStatus).source_state,'UNVERIFIED
 const wrongCompletedWeek=structuredClone(mondayCompass);
 wrongCompletedWeek.full_stack.master_monday.completed_week='2026-W43';
 assert.equal(mondayRead(mondayLatest,wrongCompletedWeek).source_state,'UNVERIFIED');
+const yearOldMonday=structuredClone(mondayCompass);
+yearOldMonday.full_stack.master_monday.completed_week='2025-W42';
+assert.equal(mondayRead(mondayLatest,yearOldMonday).source_state,'UNVERIFIED',
+  'Year-old completed W42 must not masquerade as current W42');
+const wrongSourceYear=structuredClone(mondayLatest);
+wrongSourceYear.pointer.completed_source_year=2025;
+assert.equal(mondayRead(wrongSourceYear).source_state,'UNVERIFIED',
+  'Publicly declared source year must match its immutable completed week');
+const missingSourceYear=structuredClone(mondayLatest);
+delete missingSourceYear.pointer.completed_source_year;
+assert.equal(mondayRead(missingSourceYear).source_state,'UNVERIFIED',
+  'Absent explicit completed source-year is not permission to infer one');
+const inconsistentSourceWeek=structuredClone(mondayLatest);
+inconsistentSourceWeek.pointer.completed_source_week=40;
+assert.equal(mondayRead(inconsistentSourceWeek).source_state,'UNVERIFIED',
+  'An old week cannot be presented as current weekly baseline');
 const wrongPointerWeek=structuredClone(mondayLatest);
 wrongPointerWeek.pointer.completed_source_week=41;
 assert.equal(mondayRead(wrongPointerWeek).source_state,'UNVERIFIED');
@@ -162,6 +179,7 @@ assert.match(client,/mondayContext\(feeds\?\.latest,feeds\?\.compass,view\)/);
 assert.match(client,/function drawMonday\(\)/);
 assert.match(client,/function drawCompass\(\)\{\s*drawMonday\(\);/);
 assert.match(site,/"chart-source-key.mjs","monday-public-bridge.mjs"/);
+assert.match(site,/"iso_year","iso_week","completed_source_year","completed_source_week"/);
 assert.doesNotMatch(read('monday-public-bridge.mjs'),/fetch\(|\bwallet\b|\bsecret\b|\bOPENAI_API_KEY\b/i);
 
 assert.match(html,/aria-label="Vælg sprog"/);
