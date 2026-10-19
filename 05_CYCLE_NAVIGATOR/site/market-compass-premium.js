@@ -365,12 +365,17 @@ function compositeIntel(compass, readingState='UNAVAILABLE'){
  stale?'A previous model outlook exists, but its market observations are stale. No fresh directional model edge is claimed.':
  'An independent current model direction has not been verified.';
  const lanes=[['12H',d('12h')],['1–3D',d('1_3d')],['5–7D',d('5_7d')],['2–3W',f.weekly?.direction_2_3w||'UNAVAILABLE'],['21–30D',st.horizon_21_30d?.direction||'UNAVAILABLE'],['4–8W',st.horizon_4_8w?.direction||'UNAVAILABLE']];
+ const monday=f.master_monday||{};
+ const mondayReading=monday.status==='SOURCE_ALIGNED'
+   ?String(monday.completed_week||'UNKNOWN')+' · '+(monday.analytics_status==='COMPLETE'?'ANALYSIS COMPLETE':'ANALYSIS PARTIAL')
+   :'SOURCE UNVERIFIED';
  return '<section class="compass-synthesis" data-contract="PUBLIC_COMPASS_FULL_STACK_READBACK_v1" aria-label="Combined Compass intelligence">'
  +'<div class="synthesis-head"><div><span>COMBINED COMPASS INTELLIGENCE</span><strong>Official actions + independent model research</strong></div><small>'+esc(f.status==='COMPLETE'?'SOURCE-ALIGNED':'PARTIAL EVIDENCE')+'</small></div>'
  +'<div class="synthesis-proof"><div><span>OFFICIAL ACTION</span><strong>'+esc(verified?recommendation(compass.action_now).action:'UNAVAILABLE · NOT CURRENT')+'</strong></div>'
  +'<div><span>RESEARCH PERSPECTIVE</span><strong>'+esc(current?'Source-aligned model view':stale?'Stale model observation':'Not verified')+'</strong></div></div>'
  +'<div class="synthesis-horizons">'+lanes.map(([label,value])=>'<div><span>'+esc(label)+'</span><strong>'+esc(publicState(value))+'</strong></div>').join('')+'</div>'
  +'<p class="synthesis-analysis">'+esc(analysis)+'</p>'
+ +'<small class="synthesis-boundary">MONDAY BASELINE · '+esc(mondayReading)+' · Frozen weekly context, not a current action.</small>'
  +'<small class="synthesis-boundary">Research direction is not a BUY / SELL instruction. Approved action and market-cycle phase remain governed by the official signals.</small></section>';
 }
 function refreshStatusBanner(compass, event) {
