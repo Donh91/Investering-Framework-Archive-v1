@@ -82,6 +82,7 @@ assert.match(good.completed_score.proof_state,/NOT_INDEPENDENTLY_SEALED/);
 const mondayLatest=structuredClone(latest);
 mondayLatest.pointer.completed_source_week=42;
 const mondayCompass=structuredClone(compass);
+mondayCompass.full_stack.contract='PUBLIC_COMPASS_FULL_STACK_READBACK_v1';
 mondayCompass.full_stack.source_status={master_monday:'SOURCE_ALIGNED',master_monday_analysis:'COMPLETE'};
 mondayCompass.full_stack.master_monday={
  contract:'PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1',
