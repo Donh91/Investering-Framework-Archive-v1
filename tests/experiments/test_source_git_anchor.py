@@ -164,8 +164,20 @@ class CanonicalSourceAnchorTests(unittest.TestCase):
 
                 with patch.object(module, "_git", side_effect=expire_after_git):
                     with self.assertRaises(module.SourceGitAnchorBudgetExceeded):
-                        anchor.matches(self.rel, self.digest, accepted_before=datetime.now(timezone.utc))
+                        anchor.matches(self.rel, self.digest)
                 self.assertEqual(anchor.lookups, 1)
+
+    def test_missing_trusted_acceptance_clock_refuses_without_git_calls(self):
+        from datetime import datetime, timezone
+        from unittest.mock import patch
+        from scripts.experiments import source_git_anchor as module
+        anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+        cutoff = datetime.now(timezone.utc)
+        with patch.object(module, "_git", side_effect=AssertionError("NO_GIT_FOR_UNPROVABLE_PIT")):
+            self.assertFalse(anchor.matches(self.rel, self.digest, accepted_before=cutoff))
+            self.assertFalse(anchor.matches(self.rel, self.digest, accepted_after=cutoff))
+        self.assertEqual(anchor.lookups, 0)
+        self.assertFalse(anchor.initialized)
 
     def test_parent_symlink_and_exhausted_lookup_budget_fail_closed(self):
         alias = self.root / "alias"

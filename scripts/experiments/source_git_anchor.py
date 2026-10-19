@@ -86,6 +86,13 @@ class AcceptedMainSource:
     def matches(self, relative_path: Path, expected_sha256: str, *,
                 accepted_before: datetime | None = None,
                 accepted_after: datetime | None = None) -> bool:
+        # No authenticated server-side acceptance clock exists in this owner.
+        # A time-bounded scientific claim is therefore deterministically
+        # UNADMITTED regardless of Git history, which has forgeable clocks.
+        # Refuse BEFORE launching potentially hundreds of pointless Git calls.
+        # A later trusted timing receipt needs a separately governed extension.
+        if accepted_before is not None or accepted_after is not None:
+            return False
         try:
             if self.lookups >= 128:
                 raise SourceGitAnchorBudgetExceeded("SOURCE_ANCHOR_LOOKUP_BUDGET_EXCEEDED")
@@ -125,12 +132,7 @@ class AcceptedMainSource:
                 self.originals[key] = (original, 0)
             original, _untrusted_commit_clock = self.originals[key]
             self._check_budget()
-            # Git author/committer timestamps are contributor-controlled. They
-            # prove object custody, not when GitHub accepted an object to main.
-            # Until a separately authenticated server-side acceptance receipt
-            # is supplied, temporal/PIT predicates must remain UNKNOWN/false.
-            if accepted_before is not None or accepted_after is not None:
-                return False
+            # Untimed object custody is allowed; it is not temporal admission.
             current = path.read_bytes()
             self._check_budget()
             return (current == original
