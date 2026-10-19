@@ -91,6 +91,13 @@ assert.match(client,/setInterval\(refresh,60000\)/);
 assert.doesNotMatch(client,/seed\.json|localhost|private\/|secrets\/|api\.coingecko|wallet/i);
 assert.match(css,/@media\(max-width:520px\)/);
 assert.match(css, /prefers-reduced-motion/);
+assert.match(html, /role="tablist"/);
+assert.equal((html.match(/role="tabpanel"/g)||[]).length,3);
+assert.equal((html.match(/role="tab"/g)||[]).length,3);
+assert.match(client, /lastChartFeed!==chartData\|\|lastChartLang!==lang/);
+assert.match(client, /event\.key==='ArrowRight'/);
+assert.match(client, /event\.key==='ArrowLeft'/);
+
 assert.match(css, /\.cycle-step\[data-reference="true"\]/);
 assert.doesNotMatch(css, /\.cycle-step:first-child\{/);
 assert.match(client, /p\.current_checkpoint\?\.key===phaseKeys\[i\]/);
