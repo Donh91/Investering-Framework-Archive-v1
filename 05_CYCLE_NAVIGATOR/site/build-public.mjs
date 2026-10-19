@@ -2,6 +2,7 @@ import { mkdir, readFile, rm, writeFile, copyFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { preserveLegacyShell, releasePremiumShell } from "./premium-release.mjs";
 const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(siteDir,"../.."); const outputDir=resolve(siteDir,"dist"); const dataDir=resolve(outputDir,"data");
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
@@ -583,6 +584,15 @@ for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolv
 const indexPath=resolve(outputDir,"index.html"); let index=await readFile(indexPath,"utf8");
 if(!index.includes("./compass-product-v5.css")) index=index.replace("</head>",'  <link rel="stylesheet" href="./compass-product-v5.css" />\n</head>');
 if(!index.includes("./compass-product-v5.js")) index=index.replace("</body>",'  <script src="./compass-product-v5.js" defer></script>\n</body>');
-await writeFile(indexPath,index,"utf8");
+// Preserve the previously deployed homepage as a fully functional, same-origin
+// rollback. Relative URLs are rebased to the existing root static assets/data.
+const legacyDir=resolve(outputDir,"legacy");
+await mkdir(legacyDir,{recursive:true});
+await writeFile(resolve(legacyDir,"index.html"),preserveLegacyShell(index),"utf8");
+// Premium uses precisely the already-tested /vnext/ client and shared public
+// sources. No second writer, service, forecast or provider is introduced.
+const premiumShell=await readFile(resolve(vnextDir,"index.html"),"utf8");
+await writeFile(indexPath,releasePremiumShell(premiumShell),"utf8");
+console.log("CN premium v1.0 root released in bundle; legacy rollback at /legacy/");
 console.log(`Cycle Navigator public v2 built: issue #${pkg.issue_number}; Compass ${compass.compass_id||compass.data_status}`);
 
