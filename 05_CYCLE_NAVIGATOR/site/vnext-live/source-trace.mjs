@@ -74,12 +74,14 @@ export function sourceTrace(latest,compass,parsed){
   result.sources=STATES.map(([id,name])=>({
     id,name,status:id==='official'&&!currentOfficial?'UNAVAILABLE':clean(id,f.source_status?.[id])
   }));
-  if(f.source_status?.cycle_navigator==='WEEKLY_POINTER_ALIGNED'&&
-     Number.isInteger(f.weekly?.iso_week)&&Number.isInteger(f.weekly?.iso_year)&&
-     f.weekly.iso_week===latest.pointer?.iso_week&&f.weekly.iso_year===latest.pointer?.iso_year){
+  const weeklySourceAligned=f.source_status?.cycle_navigator==='WEEKLY_POINTER_ALIGNED'&&
+    Number.isInteger(f.weekly?.iso_week)&&Number.isInteger(f.weekly?.iso_year)&&
+    f.weekly.iso_week===latest.pointer?.iso_week&&f.weekly.iso_year===latest.pointer?.iso_year;
+  if(weeklySourceAligned)
     result.long_horizons[0].direction=validDirection(f.weekly.direction_2_3w);
-  }
-  if(f.source_status?.strategic==='BOUND_WEEKLY_ANCHOR'&&
+  // Strategic context is CN-owned for 4–8w; it cannot outrun the exact
+  // original weekly source it is bound to.
+  if(weeklySourceAligned&&f.source_status?.strategic==='BOUND_WEEKLY_ANCHOR'&&
      f.strategic?.status==='BOUND_WEEKLY_ANCHOR'&&
      f.strategic?.authority==='CYCLE_NAVIGATOR_OWNED_NOT_NEW_SITE_FORECAST'){
     result.long_horizons[1].direction=validDirection(f.strategic.horizon_21_30d?.direction);
