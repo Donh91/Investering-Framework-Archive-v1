@@ -1,20 +1,20 @@
 # Operations Dashboard
 
 Overall: **AMBER**
-Generated: `2026-10-19T20:45:17.645001Z`
+Generated: `2026-10-19T20:53:38.774687Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.041 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.264 |
-| `weekly_output` | **GREEN** | FRESH | 15.498 |
-| `automation_health` | **AMBER** | AMBER | 0.092 |
-| `architecture_health` | **GREEN** | GREEN | 0.029 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 1.263 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 14.461 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.013 |
+| `daily_capture` | **GREEN** | FRESH | 2.18 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.403 |
+| `weekly_output` | **GREEN** | FRESH | 15.637 |
+| `automation_health` | **AMBER** | AMBER | 0.232 |
+| `architecture_health` | **GREEN** | GREEN | 0.168 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 1.402 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 14.6 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.152 |
 
 ## AI and learning activity
 
@@ -39,7 +39,7 @@ Open incident references: **22**
 | `RESEARCH_LAB_SOL_ANALYSIS` | 18 | $2.476158 | 0 | 18 | 1 |
 | `MONTHLY_LEARNING_ADVERSARIAL` | 4 | $1.036608 | 0 | 4 | 0 |
 | `MONTHLY_LEARNING_ANALYST` | 4 | $1.026470 | 0 | 4 | 0 |
-| `DAILY_DIRECTOR_SHADOW` | 76 | $0.777129 | 0 | 76 | 75 |
+| `DAILY_DIRECTOR_SHADOW` | 76 | $0.777128 | 0 | 76 | 75 |
 | `FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT` | 3 | $0.718824 | 0 | 3 | 0 |
 | `TEMP_SOL_PR_REVIEW` | 6 | $0.427192 | 0 | 6 | 2 |
 | `DECISION_MISS_AUDIT` | 19 | $0.238964 | 0 | 13 | 0 |
@@ -54,4 +54,4 @@ A gateway PASS alone is not measured downstream value or investment edge.
 - **P1** `automation_health` - SEMANTIC_STATUS_AMBER
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `52ec31513f242e99fc6fac95dfeaa326f56830244e10d93e6bba87cdf8bb5b0e`
+Dashboard SHA-256: `3a1d31faeda001990be483269b02b9a2dff2736f65f9e7b1efc6c765978bbda0`
