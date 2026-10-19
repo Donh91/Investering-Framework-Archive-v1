@@ -48,17 +48,18 @@ for (const mode of ['valid','missing','tampered','wrong-digest','wrong-week','no
  const f=fixture();
  const pointerPath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json';
  const packagePath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_MACHINE_PACKAGE.json';
- const machine=JSON.stringify({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',week:'2026-W40'});
+ const signedMachine=signed({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',iso_year:2026,iso_week:40},'package_sha256');
+ const machine=signedMachine.raw;
  const pointer={contract:'MASTER_MONDAY_DELIVERY_POINTER_v1',status:mode==='not-ready'?'PARTIAL':'READY',
    iso_year:2026,iso_week:mode==='wrong-week'?39:40,
    machine_package_path:mode==='escaped-path'?'../../private/secret.json':packagePath,
-   machine_package_sha256:mode==='wrong-digest'?'f'.repeat(64):hash(machine)};
+   machine_package_sha256:mode==='wrong-digest'?'f'.repeat(64):signedMachine.hash};
  const raw=JSON.stringify(pointer);
  f.weeklyPointer.completed_source_year=2026;
  f.weeklyPointer.completed_source_week=40;
  f.weeklyPointer.master_monday_pointer_sha256=hash(raw);
  f.files.set(resolve(f.root,pointerPath),raw);
- f.files.set(resolve(f.root,packagePath),mode==='tampered'?machine.replace('W40','W39'):machine);
+ f.files.set(resolve(f.root,packagePath),mode==='tampered'?machine.replace('"iso_week":40','"iso_week":39'):machine);
  if(mode==='missing')f.files.delete(resolve(f.root,packagePath));
  f.pointers.set('handoff',{pointers:{latest_weekly_output:{path:pointerPath,sha256:hash(raw)}}});
  const got=(await f.run()).source_status.master_monday;
