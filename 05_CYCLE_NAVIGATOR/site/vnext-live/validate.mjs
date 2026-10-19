@@ -6,6 +6,7 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
+import {verifiedBtcFrozenReference} from './official-path.mjs';
 const dir=dirname(fileURLToPath(import.meta.url));
 const read=name=>readFileSync(resolve(dir,name),'utf8');
 const site=readFileSync(resolve(dir,'../build-public.mjs'),'utf8');
@@ -49,6 +50,18 @@ const compass={
  sell_assessment:{state:'UNAVAILABLE'}
 };
 const run=(l=latest,c=compass,clock=now)=>inspectOfficialPublicFeeds(l,c,{nowUtc:clock});
+
+// An explicit denial must NEVER become a blue CURRENT/LEADERSHIP badge.
+assert.equal(verifiedBtcFrozenReference(
+ 'BTC-led rotation was not confirmed','BTC leadership is unconfirmed'),false);
+assert.equal(verifiedBtcFrozenReference(
+ 'BTC led on the completed week','BTC leadership was not confirmed'),false);
+assert.equal(verifiedBtcFrozenReference(
+ 'BTC did not lead during the completed week','BTC was the leader'),false);
+assert.equal(verifiedBtcFrozenReference(
+ 'The market has no confirmed leader','BTC lead remains unknown'),false);
+assert.equal(verifiedBtcFrozenReference(
+ 'BTC led the completed week','BTC leadership was confirmed'),true);
 const good=run();
 assert.equal(good.weekly.forecast_week,'2026-W43');
 assert.equal(good.weekly.state,'DEGRADED');
@@ -104,6 +117,9 @@ assert.match(client, /p\.current_checkpoint\?\.key===phaseKeys\[i\]/);
 assert.match(client, /FROZEN_WEEK_REFERENCE/);
 assert.match(client, /document\.addEventListener\('visibilitychange',\(\)=>\{if\(!document.hidden\)load\(\)\}\)/);
 assert.match(client, /setInterval\(\(\)=>\{if\(!document.hidden\)load\(\)\},300000\)/);
+assert.match(client,/setTimeout\(\(\)=>controller\.abort\(\),10000\)/);
+assert.match(client,/signal:controller\.signal/);
+assert.match(client,/finally\{clearTimeout\(deadline\);loading=false;refresh\(\)\}/);
 
 assert.match(site,/resolve\(outputDir,"vnext"\)/);
 assert.match(site,/await copyFile\(resolve\(siteDir,"vnext-live",file\),resolve\(vnextDir,file\)\)/);
