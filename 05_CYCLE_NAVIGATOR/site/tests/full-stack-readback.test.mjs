@@ -40,8 +40,31 @@ function fixture(){
  const installForecast=()=>{const f=signed(forecast,'forecast_sha256');files.set(resolve(root,forecastPath),f.raw);pointers.set('shadow',{contract:'SHADOW_COMPASS_V2_LATEST_POINTER_v1',forecast_path:forecastPath,forecast_sha256:f.hash,forecast_id:'f',source_fingerprint:'fp'});};installForecast();
  const context={resolve,relative,createHash,Date,repoRoot:root,COMPASS_POINTER_PATH:'public',INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
  vm.createContext(context);vm.runInContext(source.slice(source.indexOf('function verifiedRelative'),source.indexOf('\nasync function buildCompassEventSnapshot'))+';globalThis.run=buildFullStackReadback;globalThis.digest=verifiedRawDigest;',context);
- return {root,files,pointers,forecast,installForecast,autoPath,officialPath,projectionPath,weeklyPath,context,run:()=>context.run({compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
+ return {root,files,pointers,forecast,installForecast,autoPath,officialPath,projectionPath,weeklyPath,weeklyPointer:wp,context,run:()=>context.run({compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
 }
+// A verified weekly delivery pointer is insufficient: the referenced Master
+// Monday machine package must itself be readable and match its declared SHA.
+for (const mode of ['valid','missing','tampered','wrong-digest','wrong-week','not-ready','escaped-path']) {
+ const f=fixture();
+ const pointerPath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json';
+ const packagePath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_MACHINE_PACKAGE.json';
+ const machine=JSON.stringify({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',week:'2026-W40'});
+ const pointer={contract:'MASTER_MONDAY_DELIVERY_POINTER_v1',status:mode==='not-ready'?'PARTIAL':'READY',
+   iso_year:2026,iso_week:mode==='wrong-week'?39:40,
+   machine_package_path:mode==='escaped-path'?'../../private/secret.json':packagePath,
+   machine_package_sha256:mode==='wrong-digest'?'f'.repeat(64):hash(machine)};
+ const raw=JSON.stringify(pointer);
+ f.weeklyPointer.completed_source_year=2026;
+ f.weeklyPointer.completed_source_week=40;
+ f.weeklyPointer.master_monday_pointer_sha256=hash(raw);
+ f.files.set(resolve(f.root,pointerPath),raw);
+ f.files.set(resolve(f.root,packagePath),mode==='tampered'?machine.replace('W40','W39'):machine);
+ if(mode==='missing')f.files.delete(resolve(f.root,packagePath));
+ f.pointers.set('handoff',{pointers:{latest_weekly_output:{path:pointerPath,sha256:hash(raw)}}});
+ const got=(await f.run()).source_status.master_monday;
+ assert.equal(got,mode==='valid'?'SOURCE_ALIGNED':'UNVERIFIED','Master Monday target readback: '+mode);
+}
+
 let f=fixture();assert.equal((await f.run()).shadow.status,'ALIGNED_RESEARCH');
 f=fixture();f.pointers.get('official').source_packet_sha256='a'.repeat(64);let result=await f.run();assert.equal(result.source_status.official,'DEGRADED');assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH');
 f=fixture();f.pointers.get('auto').packet_generated_at_utc='2099-01-01T00:00:00Z';result=await f.run();assert.equal(result.source_status.auto_market_state,'UNVERIFIED');assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH');
