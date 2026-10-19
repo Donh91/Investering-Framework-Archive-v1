@@ -30,6 +30,30 @@ const root=resolve(site,'../..');
 const j=async p=>JSON.parse(await readFile(resolve(root,p),'utf8'));
 const sortKeys=v=>Array.isArray(v)?v.map(sortKeys):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,sortKeys(v[k])])):v;
 const digest=(o,key)=>{const value={...o};delete value[key];return createHash('sha256').update(JSON.stringify(sortKeys(value))+'\n').digest('hex');};
+
+// Producer canonical JSON can contain numbers such as 82116.0. Parsing into
+// JavaScript collapses that spelling to 82116, changing a JSON-rehashed digest.
+// Verify the IMMUTABLE producer bytes, with exactly the top-level hash field
+// removed, as the public builder already does. Fail closed on altered bytes.
+function verifiedRawDigest(raw, data, field, expected) {
+  if (!data || !/^[a-f0-9]{64}$/.test(String(expected || '')) || data[field] !== expected) return false;
+  const needle=JSON.stringify(field)+':'+JSON.stringify(expected);
+  let depth=0,inString=false,escaped=false,pos=-1;
+  for(let i=0;i<raw.length;i++){
+    const c=raw[i];
+    if(!inString&&depth===1&&c==='"'&&raw.startsWith(needle,i)){pos=i;break;}
+    if(inString){
+      if(escaped)escaped=false;
+      else if(c==='\\')escaped=true;
+      else if(c==='"')inString=false;
+    }else if(c==='"')inString=true;
+    else if(c==='{'||c==='[')depth++;
+    else if(c==='}'||c===']')depth--;
+  }
+  if(pos<0||raw[pos-1]!==',')return false;
+  return createHash('sha256').update(raw.slice(0,pos-1)+raw.slice(pos+needle.length),'utf8').digest('hex')===expected;
+}
+
 const [op,ap,wp,shp,stp]=await Promise.all([
  j('04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json'),
  j('04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json'),
@@ -43,26 +67,32 @@ if(rawAuto.indexOf(autoToken)<0)throw Error('Auto SHA marker missing');
 const actualAutoHash=createHash('sha256').update(rawAuto.replace(autoToken,''),'utf8').digest('hex');
 if(actualAutoHash!==ap.packet_sha256)throw Error('Auto packet immutable source digest mismatch');
 if(f.source_status.auto_market_state!=='HASH_VERIFIED')throw Error('valid Auto State incorrectly declared unverified');
-const sh=await j(shp.forecast_path),st=await j(stp.anchor_path);
+const [shRaw,stRaw]=await Promise.all([readFile(resolve(root,shp.forecast_path),'utf8'),readFile(resolve(root,stp.anchor_path),'utf8')]);
+const sh=JSON.parse(shRaw),st=JSON.parse(stRaw);
 const shCurrent=sh.source_bindings?.auto_market_state?.packet_sha256===ap.packet_sha256
  && ap.packet_sha256===op.source_packet_sha256
  && sh.source_bindings?.cycle_navigator?.machine_package_sha256===wp.machine_package_sha256
  && Number(sh.source_bindings?.cycle_navigator?.iso_week)===Number(wp.iso_week);
-const shHash=digest(sh,'forecast_sha256')===shp.forecast_sha256;
+const shHash=verifiedRawDigest(shRaw,sh,'forecast_sha256',shp.forecast_sha256);
 if(shCurrent&&shHash&&!['ALIGNED_RESEARCH','STALE_RESEARCH'].includes(f.shadow.status))throw Error('valid current Shadow suppressed');
 if(shCurrent&&!shHash&&f.shadow.status!=='UNVERIFIED')throw Error('tampered Shadow promoted');
 if(!shCurrent&&f.shadow?.status==='ALIGNED_RESEARCH')throw Error('historical Shadow promoted as current research');
 if(f.shadow?.status==='STALE_RESEARCH'&&f.shadow?.current_source_aligned!==false&&
   !shCurrent)throw Error('source diverged but stale flag omitted');
 if(f.shadow?.status==='ALIGNED_RESEARCH'&&f.shadow?.current_source_aligned!==true)throw Error('aligned Shadow lacks exact source proof');
-if(shHash){const mut=structuredClone(sh);mut.model_output={...sh.model_output,tampered:true};if(digest(mut,'forecast_sha256')===shp.forecast_sha256)throw Error('tampered Shadow not detected');}
+if(shHash){const altered=shRaw.replace(/}\s*$/,',"tampered":true}\n');if(verifiedRawDigest(altered,{...sh,tampered:true},'forecast_sha256',shp.forecast_sha256))throw Error('tampered Shadow not detected');}
 const stBound=st.source_bindings?.cycle_navigator||{};
 const stCurrent=Number(stBound.iso_year)===Number(wp.iso_year)&&Number(stBound.iso_week)===Number(wp.iso_week)
  && Number(stBound.issue_number)===Number(wp.issue_number)&&stBound.sha256===wp.machine_package_sha256;
-const stHash=digest(st,'anchor_sha256')===stp.anchor_sha256;
+const stHash=verifiedRawDigest(stRaw,st,'anchor_sha256',stp.anchor_sha256);
+// Regression: producer evidence with an original decimal "N.0" must still
+// hash-pass, but a one-byte source change cannot pass the same digest.
+if(stRaw.includes('"btc_usdt":82116.0')&&
+   (!stHash||verifiedRawDigest(stRaw.replace('"btc_usdt":82116.0','"btc_usdt":82116'),st,'anchor_sha256',stp.anchor_sha256)))
+  throw Error('original numeric spelling / byte integrity regression');
 if(stCurrent&&stHash&&f.strategic.status!=='BOUND_WEEKLY_ANCHOR')throw Error('current strategic source suppressed');
 if((!stCurrent||!stHash)&&f.strategic.status!=='UNVERIFIED')throw Error('stale or tampered strategic anchor promoted');
-if(stHash){const mut=structuredClone(st);mut.strategic_21_30d={...st.strategic_21_30d,tampered:true};if(digest(mut,'anchor_sha256')===stp.anchor_sha256)throw Error('tampered strategic not detected');}
+if(stHash){const altered=stRaw.replace(/}\s*$/,',"tampered":true}\n');if(verifiedRawDigest(altered,{...st,tampered:true},'anchor_sha256',stp.anchor_sha256))throw Error('tampered strategic not detected');}
 if(/source_bindings|packet_sha256|wallet_address|portfolio_actions|api_key/i.test(JSON.stringify(f)))throw Error('restricted evidence leaked');
 if(compass.contract!=='PUBLIC_COMPASS_PROJECTION_v1') throw Error('wrong Compass contract');
 if(event.contract!=='PUBLIC_COMPASS_EVENT_STATUS_v1') throw Error('wrong Compass event status contract');
