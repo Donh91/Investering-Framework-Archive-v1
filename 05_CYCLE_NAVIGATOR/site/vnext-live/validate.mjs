@@ -135,6 +135,17 @@ assert.notEqual(chartSourceFingerprint(wronglyJoined),validKey,
 wronglyJoined.public_series.current_public_projection.forecast_week='2026-W43';
 assert.equal(chartSourceFingerprint(wronglyJoined),validKey,
   'Correct source restoration must invalidate a prior misjoined screen');
+// A cached chart's OBSERVED/STALE badge must change when the immutable
+// source evidence crosses its own 90-minute freshness limit, even when no
+// public JSON bytes change. It must NOT redraw every 60s while still fresh.
+const cutoffMillis=Date.parse(now);
+const freshAt1=chartSourceFingerprint(liveChartFixture,cutoffMillis+60000);
+const freshAt2=chartSourceFingerprint(liveChartFixture,cutoffMillis+45*60000);
+const staleAt=chartSourceFingerprint(liveChartFixture,cutoffMillis+91*60000);
+assert.equal(freshAt1,freshAt2,'Stable fresh source must not reset zoom on timer');
+assert.notEqual(freshAt1,staleAt,'A source must lose its fresh chart badge after SLA expiry');
+assert.equal(staleAt,chartSourceFingerprint(liveChartFixture,cutoffMillis+120*60000),
+  'After stale transition keep chart zoom stable until the source changes');
 const wrongPublicIssue=structuredClone(liveChartFixture);
 wrongPublicIssue.public_series.current_public_projection.public_issue_number=29;
 assert.notEqual(chartSourceFingerprint(wrongPublicIssue),validKey,
