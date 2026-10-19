@@ -123,17 +123,17 @@ liveChartFixture.public_live_precision={
   daily_price_path:{BTC:{status:'UNAVAILABLE'}},
   daily_observations:{BTC:[]}
 };
-const validKey=chartSourceFingerprint(liveChartFixture);
+const validKey=chartSourceFingerprint(liveChartFixture,Date.parse(now));
 const reloaded=structuredClone(liveChartFixture);
 reloaded.generated_at='2026-10-19T09:01:00Z';
-assert.equal(chartSourceFingerprint(reloaded),validKey,
+assert.equal(chartSourceFingerprint(reloaded,Date.parse(now)),validKey,
   'Fresh fetch of unchanged chart must preserve zoom and asset selection');
 const wronglyJoined=structuredClone(liveChartFixture);
 wronglyJoined.public_series.current_public_projection.forecast_week='2026-W42';
-assert.notEqual(chartSourceFingerprint(wronglyJoined),validKey,
+assert.notEqual(chartSourceFingerprint(wronglyJoined,Date.parse(now)),validKey,
   'Wrong-week public projection must invalidate old chart even with identical observation bytes');
 wronglyJoined.public_series.current_public_projection.forecast_week='2026-W43';
-assert.equal(chartSourceFingerprint(wronglyJoined),validKey,
+assert.equal(chartSourceFingerprint(wronglyJoined,Date.parse(now)),validKey,
   'Correct source restoration must invalidate a prior misjoined screen');
 // A cached chart's OBSERVED/STALE badge must change when the immutable
 // source evidence crosses its own 90-minute freshness limit, even when no
@@ -148,15 +148,15 @@ assert.equal(staleAt,chartSourceFingerprint(liveChartFixture,cutoffMillis+120*60
   'After stale transition keep chart zoom stable until the source changes');
 const wrongPublicIssue=structuredClone(liveChartFixture);
 wrongPublicIssue.public_series.current_public_projection.public_issue_number=29;
-assert.notEqual(chartSourceFingerprint(wrongPublicIssue),validKey,
+assert.notEqual(chartSourceFingerprint(wrongPublicIssue,Date.parse(now)),validKey,
   'Wrong public issue must invalidate old chart');
 const wrongMachineIssue=structuredClone(liveChartFixture);
 wrongMachineIssue.pointer.issue_number=30;
-assert.notEqual(chartSourceFingerprint(wrongMachineIssue),validKey,
+assert.notEqual(chartSourceFingerprint(wrongMachineIssue,Date.parse(now)),validKey,
   'Wrong machine issue must invalidate old chart');
 const freshDaily=structuredClone(liveChartFixture);
 freshDaily.public_live_precision.daily_observations.BTC=[{day:1,close:81111}];
-assert.notEqual(chartSourceFingerprint(freshDaily),validKey,
+assert.notEqual(chartSourceFingerprint(freshDaily,Date.parse(now)),validKey,
   'A real new observation must update the chart');
 
 assert.match(client, /event\.key==='ArrowRight'/);
