@@ -77,7 +77,12 @@ def assess(root: Path, *, now: datetime, snapshot: Path | None = None) -> dict:
             age = (now - at).total_seconds()
             if age < -900 or age > 24 * 3600:
                 snapshot_status = "STALE_OR_FUTURE"
-            elif evidence.get("source_type") not in {"OWNER_SCREENSHOT", "GITHUB_BILLING_DIRECT"}:
+            elif evidence.get("source_type") == "GITHUB_BILLING_DIRECT":
+                # This local JSON is self-declared. Without an authenticated
+                # provider fetch/receipt, it MUST NOT count as provider-verified
+                # billing, even if its source_type string says it does.
+                snapshot_status = "UNAUTHENTICATED_BILLING_CLAIM"
+            elif evidence.get("source_type") != "OWNER_SCREENSHOT":
                 snapshot_status = "SOURCE_UNVERIFIED"
             else:
                 gb = evidence.get("github_actions", {})
@@ -96,9 +101,7 @@ def assess(root: Path, *, now: datetime, snapshot: Path | None = None) -> dict:
                                      "source_type": evidence["source_type"],
                                      "as_of_utc": evidence["as_of_utc"]}
                     codex_remaining_pct = remaining
-                    snapshot_status = ("CURRENT_BILLING_SOURCE"
-                                       if evidence["source_type"] == "GITHUB_BILLING_DIRECT"
-                                       else "CURRENT_OWNER_REPORTED")
+                    snapshot_status = "CURRENT_OWNER_REPORTED"
         except (OSError, ValueError, TypeError, KeyError, OverflowError):
             snapshot_status = "INVALID_OR_UNREADABLE"
 
