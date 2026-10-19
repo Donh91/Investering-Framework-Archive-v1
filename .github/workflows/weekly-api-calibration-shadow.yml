@@ -265,8 +265,8 @@ jobs:
           import hashlib,json,subprocess
           from pathlib import Path
           out=Path(Path('runtime/publish_output_dir.txt').read_text().strip())
-          published=json.loads((out/'MASTER_MONDAY_DELIVERY_POINTER.json').read_text())
-          audit=out/f"MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_{published['machine_package_sha256'][:16]}.md"
+          pointer_bytes=(out/'MASTER_MONDAY_DELIVERY_POINTER.json').read_bytes()
+          audit=out/f"MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_{hashlib.sha256(pointer_bytes).hexdigest()[:16]}.md"
           paths=[out/'MASTER_MONDAY_MACHINE_PACKAGE.json',out/'MASTER_MONDAY_REPORT.md',out/'MASTER_MONDAY_CALIBRATION_SCORECARD.json',out/'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json',out/'MASTER_MONDAY_DELIVERY_POINTER.json',audit,Path('research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json')]
           rows=[]
           for p in paths:
