@@ -223,6 +223,11 @@ const mutatedResearchAuthority=structuredClone(traceCompass);
 mutatedResearchAuthority.full_stack.strategic.authority='OFFICIAL_ACTION';
 assert.deepEqual(trace(mondayLatest,mutatedResearchAuthority).long_horizons.map(x=>x.direction),
  ['MIXED','UNAVAILABLE','UNAVAILABLE']);
+const noCNProvenance=structuredClone(traceCompass);
+noCNProvenance.full_stack.source_status.cycle_navigator='UNVERIFIED';
+assert.deepEqual(trace(mondayLatest,noCNProvenance).long_horizons.map(x=>x.direction),
+ ['UNAVAILABLE','UNAVAILABLE','UNAVAILABLE'],
+ 'Neither the 4–8w CN outlook nor strategic overlays can outlive invalid weekly provenance');
 const wrongWeeklySource=structuredClone(traceCompass);
 wrongWeeklySource.full_stack.weekly.iso_week=42;
 assert.equal(trace(mondayLatest,wrongWeeklySource).long_horizons[0].direction,'UNAVAILABLE');
