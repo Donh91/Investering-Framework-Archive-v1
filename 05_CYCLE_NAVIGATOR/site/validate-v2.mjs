@@ -346,7 +346,7 @@ checks.push(
  ['premium canonical home is a real shell, not redirect',releasedRoot.includes('<base href="./vnext/">')&&releasedRoot.includes('PREMIUM LIVE')&&releasedRoot.includes('id="view-results"')&&!releasedRoot.includes('src="./app.js"')],
  ['premium source path stays original same-origin public data',sourceResolved===base+'data/latest.json'&&releasedRoot.includes('src="./app.mjs"')],
  ['legacy rollback shell points to root assets',preservedLegacy.includes('<base href="../">')&&preservedLegacy.includes('src="./app.js"')],
- ['premium links to real rollback and no preview copy',releasedRoot.includes('href="../legacy/"')&&!releasedRoot.includes('PREMIUM PREVIEW')&&!releasedRoot.includes('data-t="previewOnly"')],
+ ['premium links to real rollback and no preview copy',releasedRoot.includes('href="../legacy/"')&&releasedRoot.includes('href="../#content"')&&!releasedRoot.includes('PREMIUM PREVIEW')&&!releasedRoot.includes('data-t="previewOnly"')],
  ['cutover never changes production data ownership',build.includes('releasePremiumShell(premiumShell)')&&build.includes('preserveLegacyShell(index)')&&build.includes('data/latest.json')],
  ['legacy-only client injection cannot corrupt premium root',liveBuilder.includes('indexPath=resolve(distDir,"legacy/index.html")')],
  ['premium fails closed for missing primary tab',missingTabRejected],
