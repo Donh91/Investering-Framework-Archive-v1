@@ -6,6 +6,7 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
+import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {verifiedBtcFrozenReference} from './official-path.mjs';
 const dir=dirname(fileURLToPath(import.meta.url));
@@ -76,6 +77,81 @@ assert.equal(good.completed_score.price_range_precision,85.25);
 assert.equal(good.completed_score.rows.length,6);
 assert.equal(good.completed_score.market_structure_precision,null);
 assert.match(good.completed_score.proof_state,/NOT_INDEPENDENTLY_SEALED/);
+// Master Monday is verified WEEKLY context, never an alternative live action.
+// These are actual executable parity tests, not just checks for function names.
+const mondayLatest=structuredClone(latest);
+mondayLatest.pointer.completed_source_week=42;
+mondayLatest.pointer.completed_source_year=2026;
+const mondayCompass=structuredClone(compass);
+mondayCompass.full_stack.contract='PUBLIC_COMPASS_FULL_STACK_READBACK_v1';
+mondayCompass.full_stack.source_status={master_monday:'SOURCE_ALIGNED',master_monday_analysis:'COMPLETE'};
+mondayCompass.full_stack.master_monday={
+ contract:'PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1',
+ completed_week:'2026-W42',status:'SOURCE_ALIGNED',analytics_status:'COMPLETE',
+ scorecard_status:'COMPLETE',operational_translation_status:'COMPLETE',
+ api_analysis_status:'AVAILABLE_SHADOW_ONLY',authority:'WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION',
+ internal_secret:'PRIVATE_DO_NOT_SHOW'
+};
+const mondayRead=(l=mondayLatest,c=mondayCompass,t=now)=>mondayContext(l,c,run(l,c,t));
+const mondayGood=mondayRead();
+assert.equal(mondayGood.source_state,'SOURCE_ALIGNED');
+assert.equal(mondayGood.completed_week,'2026-W42');
+assert.equal(mondayGood.analytics_status,'COMPLETE');
+assert.equal(mondayGood.current_action_authority,false);
+assert.equal(mondayGood.api_analysis_status,'AVAILABLE_SHADOW_ONLY');
+assert.equal(JSON.stringify(mondayGood).includes('PRIVATE_DO_NOT_SHOW'),false);
+assert.match(mondayLabels(mondayGood,'da').title,/komplet/);
+assert.match(mondayLabels(mondayGood,'en').title,/complete/);
+const monPartial=structuredClone(mondayCompass);
+monPartial.full_stack.master_monday.analytics_status='PARTIAL_ANALYTICS';
+monPartial.full_stack.source_status.master_monday_analysis='PARTIAL_ANALYTICS';
+assert.equal(mondayRead(mondayLatest,monPartial).analytics_status,'PARTIAL_ANALYTICS');
+assert.match(mondayLabels(mondayRead(mondayLatest,monPartial),'da').title,/delvist/);
+const monConflict=structuredClone(mondayCompass);
+monConflict.full_stack.master_monday.analytics_status='CONFLICTING_ANALYTICS';
+monConflict.full_stack.source_status.master_monday_analysis='CONFLICTING_ANALYTICS';
+assert.equal(mondayRead(mondayLatest,monConflict).analytics_status,'CONFLICTING_ANALYTICS');
+assert.match(mondayLabels(mondayRead(mondayLatest,monConflict),'en').title,/Conflicting/);
+const mismatchAnalytics=structuredClone(monPartial);
+mismatchAnalytics.full_stack.source_status.master_monday_analysis='COMPLETE';
+assert.equal(mondayRead(mondayLatest,mismatchAnalytics).source_state,'UNVERIFIED');
+const missingMachine=structuredClone(mondayCompass);
+delete missingMachine.full_stack.master_monday;
+assert.equal(mondayRead(mondayLatest,missingMachine).analytics_status,'UNVERIFIED');
+const wrongSourceStatus=structuredClone(mondayCompass);
+wrongSourceStatus.full_stack.source_status.master_monday='UNVERIFIED';
+assert.equal(mondayRead(mondayLatest,wrongSourceStatus).source_state,'UNVERIFIED');
+const wrongCompletedWeek=structuredClone(mondayCompass);
+wrongCompletedWeek.full_stack.master_monday.completed_week='2026-W43';
+assert.equal(mondayRead(mondayLatest,wrongCompletedWeek).source_state,'UNVERIFIED');
+const yearOldMonday=structuredClone(mondayCompass);
+yearOldMonday.full_stack.master_monday.completed_week='2025-W42';
+assert.equal(mondayRead(mondayLatest,yearOldMonday).source_state,'UNVERIFIED',
+  'Year-old completed W42 must not masquerade as current W42');
+const wrongSourceYear=structuredClone(mondayLatest);
+wrongSourceYear.pointer.completed_source_year=2025;
+assert.equal(mondayRead(wrongSourceYear).source_state,'UNVERIFIED',
+  'Publicly declared source year must match its immutable completed week');
+const missingSourceYear=structuredClone(mondayLatest);
+delete missingSourceYear.pointer.completed_source_year;
+assert.equal(mondayRead(missingSourceYear).source_state,'UNVERIFIED',
+  'Absent explicit completed source-year is not permission to infer one');
+const inconsistentSourceWeek=structuredClone(mondayLatest);
+inconsistentSourceWeek.pointer.completed_source_week=40;
+assert.equal(mondayRead(inconsistentSourceWeek).source_state,'UNVERIFIED',
+  'An old week cannot be presented as current weekly baseline');
+const wrongPointerWeek=structuredClone(mondayLatest);
+wrongPointerWeek.pointer.completed_source_week=41;
+assert.equal(mondayRead(wrongPointerWeek).source_state,'UNVERIFIED');
+const deniedAuthority=structuredClone(mondayCompass);
+deniedAuthority.full_stack.master_monday.authority='CURRENT_ACTION';
+assert.equal(mondayRead(mondayLatest,deniedAuthority).source_state,'UNVERIFIED');
+const staleDelivery=structuredClone(mondayLatest);
+staleDelivery.generated_at='2026-10-17T08:00:00Z';
+assert.equal(mondayRead(staleDelivery).source_state,'UNVERIFIED');
+const noCompass=structuredClone(mondayCompass);
+noCompass.full_stack.contract='INVALID';
+assert.equal(mondayRead(mondayLatest,noCompass).source_state,'UNVERIFIED');
 const stale=structuredClone(latest);stale.generated_at='2026-10-18T06:00:00Z';
 assert.equal(run(stale).compass.action_now,'UNAVAILABLE');
 const misjoined=structuredClone(latest);misjoined.public_series.current_public_projection.forecast_week='2026-W42';
@@ -95,6 +171,17 @@ assert.equal(resultWithoutSource.completed_score.price_range_precision,null);
 assert.match(html,/<section id="view-overview"/);
 assert.match(html,/<section id="view-compass"/);
 assert.match(html,/<section id="view-results"/);
+assert.match(html,/data-contract="PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1"/);
+assert.match(html,/id="monday-reading"/);
+assert.match(html,/id="monday-week"/);
+assert.match(html,/id="monday-api"/);
+assert.match(client,/mondayContext\(feeds\?\.latest,feeds\?\.compass,view\)/);
+assert.match(client,/function drawMonday\(\)/);
+assert.match(client,/function drawCompass\(\)\{\s*drawMonday\(\);/);
+assert.match(site,/"chart-source-key.mjs","monday-public-bridge.mjs"/);
+assert.match(site,/"iso_year","iso_week","completed_source_year","completed_source_week"/);
+assert.doesNotMatch(read('monday-public-bridge.mjs'),/fetch\(|\bwallet\b|\bsecret\b|\bOPENAI_API_KEY\b/i);
+
 assert.match(html,/aria-label="Vælg sprog"/);
 assert.match(html,/href="\.\.\/frozen-week-chart.css"/);
 assert.match(client,/\.\.\/data\/latest.json/);
