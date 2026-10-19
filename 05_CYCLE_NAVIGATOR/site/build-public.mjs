@@ -269,9 +269,21 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       Number(weeklyPointer?.issue_number)===Number(weeklyPackage?.issue_number));
   }catch{}
   const mp=master?.pointer;
+  // A pointer digest proves only pointer bytes. Never call the weekly source
+  // aligned unless its referenced immutable machine package is also readable
+  // and matches the exact producer-declared SHA-256.
+  let masterTargetVerified=false;
+  try{
+    const p=verifiedRelative(mp?.machine_package_path,"research/api_agent/outputs/weekly/");
+    const expected=mp?.machine_package_sha256;
+    if(p&&typeof expected==="string"&&/^[0-9a-f]{64}$/.test(expected)){
+      const bytes=await readFile(p);
+      masterTargetVerified=createHash("sha256").update(bytes).digest("hex")===expected;
+    }
+  }catch{}
   const masterAligned=Boolean(mp?.contract==="MASTER_MONDAY_DELIVERY_POINTER_v1"&&mp?.status==="READY"&&
     mp?.iso_week===weeklyPointer?.completed_source_week&&mp?.iso_year===weeklyPointer?.completed_source_year&&
-    master.digest===weeklyPointer?.master_monday_pointer_sha256);
+    master.digest===weeklyPointer?.master_monday_pointer_sha256&&masterTargetVerified);
   let shadow=null,shadowAligned=false;
   try{
     if(shadowPtr?.contract==="SHADOW_COMPASS_V2_LATEST_POINTER_v1"){
