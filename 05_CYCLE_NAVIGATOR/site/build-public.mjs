@@ -311,8 +311,12 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
   // A successful API transport is not substantive analysis when its receipt,
   // content or model-level status explicitly reports unavailable/failed data.
   const mondayAnalysis=masterMachine?.analysis;
-  const validAnalysisText=v=>typeof v==="string"&&v.trim().length>0&&
-    !/^(?:UNAVAILABLE|FAIL(?:ED|URE)?|ERROR|BLOCKED|SKIPPED|UNKNOWN)(?:\\b|[_:])/i.test(v.trim());
+  const invalidAnalysisMarkers=["UNAVAILABLE","FAILED","FAILURE","FAIL","ERROR","BLOCKED","SKIPPED","UNKNOWN"];
+  const validAnalysisText=v=>{
+    if(typeof v!=="string"||!v.trim())return false;
+    const t=v.trim().toUpperCase();
+    return !invalidAnalysisMarkers.some(k=>t===k||t.startsWith(k+"_")||t.startsWith(k+":")||t.startsWith(k+" "));
+  };
   const apiAnalysisAvailable=Boolean(masterAligned&&masterMachine?.api_status==="success"&&
     masterMachine?.api_receipt?.status==="PASS"&&(
       validAnalysisText(mondayAnalysis)||
