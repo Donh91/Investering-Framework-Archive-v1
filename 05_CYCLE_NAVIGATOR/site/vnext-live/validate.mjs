@@ -6,6 +6,7 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
+import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {verifiedBtcFrozenReference} from './official-path.mjs';
 const dir=dirname(fileURLToPath(import.meta.url));
 const read=name=>readFileSync(resolve(dir,name),'utf8');
@@ -110,8 +111,43 @@ assert.equal((html.match(/role="tab"/g)||[]).length,3);
 // Chart redraw must track semantic source changes (not just fetch object identity),
  // otherwise a refresh can destroy zoom, selected UTC day and the chosen asset.
 assert.match(client, /lastChartFingerprint!==fingerprint\|\|lastChartLang!==lang/);
-assert.match(client, /JSON\.stringify\(\[v\.public_issue_number,v\.forecast_week/);
-assert.match(client, /v\.daily_observations,v\.live_as_of_utc/);
+assert.match(client, /chartSourceFingerprint\(chartData\)/);
+// Behavioral counterexample (Codex P2): a frozen source keeps its live
+// observation bytes while the weekly public projection is temporarily
+// misjoined, then repaired. Both transitions MUST invalidate the view.
+const liveChartFixture=structuredClone(latest);
+liveChartFixture.public_live_precision={
+  public_issue_number:30,forecast_week:'2026-W43',live_as_of_utc:now,
+  window_scores:{day_1_2:{window_start_utc:'2026-10-19T00:00:00Z'}},
+  rows:[{asset:'BTC',window:'day_1_2',forecast_low:77000,forecast_high:86500}],
+  daily_price_path:{BTC:{status:'UNAVAILABLE'}},
+  daily_observations:{BTC:[]}
+};
+const validKey=chartSourceFingerprint(liveChartFixture);
+const reloaded=structuredClone(liveChartFixture);
+reloaded.generated_at='2026-10-19T09:01:00Z';
+assert.equal(chartSourceFingerprint(reloaded),validKey,
+  'Fresh fetch of unchanged chart must preserve zoom and asset selection');
+const wronglyJoined=structuredClone(liveChartFixture);
+wronglyJoined.public_series.current_public_projection.forecast_week='2026-W42';
+assert.notEqual(chartSourceFingerprint(wronglyJoined),validKey,
+  'Wrong-week public projection must invalidate old chart even with identical observation bytes');
+wronglyJoined.public_series.current_public_projection.forecast_week='2026-W43';
+assert.equal(chartSourceFingerprint(wronglyJoined),validKey,
+  'Correct source restoration must invalidate a prior misjoined screen');
+const wrongPublicIssue=structuredClone(liveChartFixture);
+wrongPublicIssue.public_series.current_public_projection.public_issue_number=29;
+assert.notEqual(chartSourceFingerprint(wrongPublicIssue),validKey,
+  'Wrong public issue must invalidate old chart');
+const wrongMachineIssue=structuredClone(liveChartFixture);
+wrongMachineIssue.pointer.issue_number=30;
+assert.notEqual(chartSourceFingerprint(wrongMachineIssue),validKey,
+  'Wrong machine issue must invalidate old chart');
+const freshDaily=structuredClone(liveChartFixture);
+freshDaily.public_live_precision.daily_observations.BTC=[{day:1,close:81111}];
+assert.notEqual(chartSourceFingerprint(freshDaily),validKey,
+  'A real new observation must update the chart');
+
 assert.match(client, /event\.key==='ArrowRight'/);
 assert.match(client, /event\.key==='ArrowLeft'/);
 
