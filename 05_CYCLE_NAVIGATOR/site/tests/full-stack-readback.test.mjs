@@ -44,14 +44,15 @@ function fixture(){
 }
 // A verified weekly delivery pointer is insufficient: the referenced Master
 // Monday machine package must itself be readable and match its declared SHA.
-for (const mode of ['valid','missing','tampered','wrong-digest','wrong-week','not-ready','escaped-path']) {
+for (const mode of ['valid','missing','tampered','wrong-digest','wrong-week','not-ready','escaped-path','wrong-freeze','missing-freeze']) {
  const f=fixture();
  const pointerPath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json';
  const packagePath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_MACHINE_PACKAGE.json';
- const signedMachine=signed({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',iso_year:2026,iso_week:40},'package_sha256');
+ const signedMachine=signed({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',iso_year:2026,iso_week:40,freeze_sha256:'a'.repeat(64)},'package_sha256');
  const machine=signedMachine.raw;
  const pointer={contract:'MASTER_MONDAY_DELIVERY_POINTER_v1',status:mode==='not-ready'?'PARTIAL':'READY',
    iso_year:2026,iso_week:mode==='wrong-week'?39:40,
+   ...(mode==='missing-freeze'?{}:{freeze_sha256:mode==='wrong-freeze'?'b'.repeat(64):'a'.repeat(64)}),
    machine_package_path:mode==='escaped-path'?'../../private/secret.json':packagePath,
    machine_package_sha256:mode==='wrong-digest'?'f'.repeat(64):signedMachine.hash};
  const raw=JSON.stringify(pointer);
