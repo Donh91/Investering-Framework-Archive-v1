@@ -298,13 +298,27 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
   // Source alignment, analytical completeness, and decision authority are
   // independent. A successful API delivery does not fill absent scorecard or
   // operational translation fields. Never copy raw API prose to public SITE.
-  const mondayStatus=v=>typeof v==="string"&&/^[A-Z0-9_]{1,80}$/.test(v)?v:"UNAVAILABLE";
+  // Never echo arbitrary machine/provider metadata into the public projection.
+  const validMondayStatuses=new Set([
+    "READY","PASS","AVAILABLE","COMPLETE","SCORED","PENDING_MATURED_OUTCOMES",
+    "UNAVAILABLE_API_CONTRACT","INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION",
+    "UNAVAILABLE_EXPERIMENT_REGISTRY","UNAVAILABLE_API_FAILURE","UNAVAILABLE",
+    "BLOCKED","DEGRADED","UNKNOWN"
+  ]);
+  const mondayStatus=v=>typeof v==="string"&&validMondayStatuses.has(v)?v:"UNAVAILABLE";
   const scoreStatus=masterAligned?mondayStatus(mp?.scorecard_status):"UNVERIFIED";
   const translationStatus=masterAligned?mondayStatus(mp?.operational_translation_status):"UNVERIFIED";
-  const apiAnalysisAvailable=masterAligned&&masterMachine?.api_status==="success"&&
-    (typeof masterMachine?.analysis==="string"&&masterMachine.analysis.trim().length>0 ||
-     masterMachine?.analysis&&typeof masterMachine.analysis==="object"&&
-     !String(masterMachine.analysis.status||"").startsWith("UNAVAILABLE"));
+  // A successful API transport is not substantive analysis when its receipt,
+  // content or model-level status explicitly reports unavailable/failed data.
+  const mondayAnalysis=masterMachine?.analysis;
+  const validAnalysisText=v=>typeof v==="string"&&v.trim().length>0&&
+    !/^(?:UNAVAILABLE|FAIL(?:ED|URE)?|ERROR|BLOCKED|SKIPPED|UNKNOWN)(?:\\b|[_:])/i.test(v.trim());
+  const apiAnalysisAvailable=Boolean(masterAligned&&masterMachine?.api_status==="success"&&
+    masterMachine?.api_receipt?.status==="PASS"&&(
+      validAnalysisText(mondayAnalysis)||
+      (mondayAnalysis&&!Array.isArray(mondayAnalysis)&&typeof mondayAnalysis==="object"&&
+       ["READY","DEGRADED"].includes(mondayAnalysis.status)&&
+       validAnalysisText(mondayAnalysis.summary))));
   const analyticalStatuses=new Set(["READY","PASS","AVAILABLE","COMPLETE","SCORED"]);
   const statusConflict=masterAligned&&(
     scoreStatus!==mondayStatus(masterMachine?.scorecard?.status)||
