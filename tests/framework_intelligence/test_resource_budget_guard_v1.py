@@ -59,10 +59,20 @@ class ResourceBudgetGuardTests(unittest.TestCase):
         self.assertEqual(d["codex_cloud"]["remaining_pct"], 29)
         self.assertFalse(d["authority"]["automatic_dispatch"])
 
-    def test_provider_verified_source_separate_from_hard_cap(self):
+    def test_untrusted_local_direct_billing_claim_never_authenticates_itself(self):
         d = assess(self.root, now=T, snapshot=self.snapshot(source_type="GITHUB_BILLING_DIRECT"))
-        self.assertEqual(d["snapshot_status"], "CURRENT_BILLING_SOURCE")
+        self.assertEqual(d["snapshot_status"], "UNAUTHENTICATED_BILLING_CLAIM")
+        self.assertIsNone(d["github_actions"]["usage"])
+        self.assertIsNone(d["codex_cloud"]["remaining_pct"])
         self.assertFalse(d["billing_hard_stop_verified"])
+
+    def test_durable_readback_covers_resource_advisory(self):
+        repo = Path(__file__).resolve().parents[2]
+        workflow = (repo / ".github/workflows/framework-learning-supervisor.yml").read_text()
+        readback = workflow.split("Commit learning products with bounded retry and main readback", 1)[1]
+        readback = readback.split("git show origin/main:", 1)[0]
+        self.assertIn("research/framework_learning/resource_budget/LATEST.json", readback)
+        self.assertIn("research/framework_learning/strategist/LATEST.json", readback)
 
     def test_stale_claim_does_not_become_current_usage(self):
         d = assess(self.root, now=T, snapshot=self.snapshot(as_of="2026-10-16T00:00:00Z"))
