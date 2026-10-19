@@ -284,6 +284,10 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       masterTargetVerified=target?.contract==="MASTER_MONDAY_MACHINE_PACKAGE_v1"&&
         Number(target?.iso_year)===Number(mp?.iso_year)&&
         Number(target?.iso_week)===Number(mp?.iso_week)&&
+        // A valid package from the right week but a different evidence freeze
+        // must not be promoted to the current Monday baseline.
+        typeof mp?.freeze_sha256==="string"&&/^[0-9a-f]{64}$/.test(mp.freeze_sha256)&&
+        target?.freeze_sha256===mp.freeze_sha256&&
         verifiedRawDigest(raw,target,"package_sha256",expected);
     }
   }catch{}
