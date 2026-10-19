@@ -68,7 +68,19 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Verify final investor-facing shell and privacy
         run: |
-          grep -q 'public-product.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/vnext/index.html
+          grep -q '<base href="./vnext/">' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'PREMIUM LIVE' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'role="tablist"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-overview"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-compass"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-results"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="../legacy/"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          ! grep -q 'PREMIUM PREVIEW' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          ! grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'public-product.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
@@ -77,7 +89,7 @@ jobs:
           test -f 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.css
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/public-freezes/index.json
-          grep -q 'precision-accountability.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'precision-accountability.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           grep -q 'Frozen Monday. Scored live. Verified after close.' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
@@ -86,8 +98,8 @@ jobs:
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"refresh_cadence": "HOURLY_OWNER_CHAIN"' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'market-compass-premium.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          grep -q 'market-compass-premium.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           grep -q 'CYCLE NAVIGATOR · CONCLUSION' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
           grep -q 'HOW THIS READING IS BUILT' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
           grep -q '2–3 WEEKS' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
