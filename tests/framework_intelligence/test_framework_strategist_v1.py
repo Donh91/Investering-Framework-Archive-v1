@@ -42,6 +42,11 @@ class StrategistTest(unittest.TestCase):
             "unconsumed": {"items": []},
             "staleness": {"items": []},
             "weekly_forensics": {"findings": []},
+            "resource_budget": {
+                "status": "UNKNOWN",
+                "authority": {"automatic_dispatch": False, "automatic_spend": False,
+                              "ci_bypass": False},
+            },
         }
         self.write(INTENT_PATH, self.intent)
         self.flush_sources()
@@ -64,6 +69,26 @@ class StrategistTest(unittest.TestCase):
 
     def run_brain(self):
         return build(self.root, self.output, now=NOW)
+
+    def test_resource_budget_critical_becomes_first_advisory_not_cloud_execution(self):
+        self.sources["resource_budget"]["status"] = "CRITICAL"
+        self.flush_sources()
+        packet = self.run_brain()
+        self.assertEqual(packet["proposals"][0]["code"], "RESOURCE_BUDGET_CRITICAL")
+        self.assertEqual(packet["proposals"][0]["severity"], "CRITICAL")
+        self.assertFalse(packet["proposals"][0]["dispatch_allowed"])
+        self.assertFalse(packet["proposals"][0]["automatic_grok_call"])
+        self.assertFalse(packet["authority"]["autonomous_api_payment"])
+
+    def test_injected_resource_dispatch_authority_is_rejected(self):
+        self.sources["resource_budget"]["status"] = "CRITICAL"
+        self.sources["resource_budget"]["authority"]["automatic_dispatch"] = True
+        self.flush_sources()
+        packet = self.run_brain()
+        self.assertEqual(packet["source_receipts"]["resource_budget"]["status"],
+                         "INVALID_SCHEMA")
+        self.assertNotIn("RESOURCE_BUDGET_CRITICAL",
+                         [p["code"] for p in packet["proposals"]])
 
     def test_baseline_cannot_claim_independent_positive_progress(self):
         result = self.run_brain()
