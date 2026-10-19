@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    "05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-e4b784d2f4a34c3b",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-validate-premium-root-classic-rollback-pages",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Resolve real post-release Pages failure 39318717735. Run exact Pages Compass validation in PR gate before merge, preserve current Official source safety.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "de6ce73c1af3c08d6c05fa18901b99c7111bfc57",
+    "05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs": "bb68a0d4d6a08f390d138c6562c378201b781704"
+  },
+  "source_commit_sha": "e4b784d2f4a34c3b7d1e6cdd0a15b499ffff81bd",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-19T13:25:31-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site): validate premium root and classic rollback on Pages"
+}
