@@ -2,6 +2,7 @@
 /* Premium candidate only. Same-origin read-only official public data.
  * Never synthesize a market action, forecast, score or hidden source. */
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
+import {chartSourceFingerprint} from './chart-source-key.mjs';
 const $=id=>document.getElementById(id),keys=['overview','compass','results'];
 const H=[['NEXT_12H','0–12h'],['NEXT_1_3D','1–3d'],['NEXT_5_7D','5–7d'],['NEXT_2_3W','2–3u'],['CYCLE_ALTCOINS_3_8W','3–8u']];
 const T=['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'];
@@ -61,9 +62,7 @@ function drawOverview(){
    // Parse-object identity changes on every fetch. Source fingerprint excludes
    // unrelated public data and generated_at so an unchanged chart keeps
    // scroll, zoom, selected day and BTC/ETH user interaction intact.
-   const v=chartData.public_live_precision;
-   const fingerprint=JSON.stringify([v.public_issue_number,v.forecast_week,
-     v.window_scores,v.rows,v.daily_price_path,v.daily_observations,v.live_as_of_utc]);
+   const fingerprint=chartSourceFingerprint(chartData);
    if(lastChartFingerprint!==fingerprint||lastChartLang!==lang)window.CNWeekChart.mount(host,chartData);
    lastChartFingerprint=fingerprint;lastChartLang=lang;
  }else{
