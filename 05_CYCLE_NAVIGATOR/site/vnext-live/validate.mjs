@@ -85,7 +85,7 @@ assert.match(html,/aria-label="Vælg sprog"/);
 assert.match(html,/href="\.\.\/frozen-week-chart.css"/);
 assert.match(client,/\.\.\/data\/latest.json/);
 assert.match(client,/\.\.\/data\/compass.json/);
-assert.match(client,/CNWeekChart\.mount\(host,feeds.latest\)/);
+assert.match(client,/CNWeekChart\.mount\(host,chartData\)/);
 assert.match(client,/inspectOfficialPublicFeeds\(feeds.latest,feeds.compass\)/);
 assert.match(client,/setInterval\(refresh,60000\)/);
 assert.doesNotMatch(client,/seed\.json|localhost|private\/|secrets\/|api\.coingecko|wallet/i);
