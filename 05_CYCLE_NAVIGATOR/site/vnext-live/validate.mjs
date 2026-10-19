@@ -91,6 +91,13 @@ assert.match(client,/setInterval\(refresh,60000\)/);
 assert.doesNotMatch(client,/seed\.json|localhost|private\/|secrets\/|api\.coingecko|wallet/i);
 assert.match(css,/@media\(max-width:520px\)/);
 assert.match(css, /prefers-reduced-motion/);
+assert.match(css, /\.cycle-step\[data-reference="true"\]/);
+assert.doesNotMatch(css, /\.cycle-step:first-child\{/);
+assert.match(client, /p\.current_checkpoint\?\.key===phaseKeys\[i\]/);
+assert.match(client, /FROZEN_WEEK_REFERENCE/);
+assert.match(client, /document\.addEventListener\('visibilitychange',\(\)=>\{if\(!document.hidden\)load\(\)\}\)/);
+assert.match(client, /setInterval\(\(\)=>\{if\(!document.hidden\)load\(\)\},300000\)/);
+
 assert.match(site,/resolve\(outputDir,"vnext"\)/);
 assert.match(site,/await copyFile\(resolve\(siteDir,"vnext-live",file\),resolve\(vnextDir,file\)\)/);
 execFileSync(process.execPath,['--check',resolve(dir,'app.mjs')],{stdio:'pipe'});
