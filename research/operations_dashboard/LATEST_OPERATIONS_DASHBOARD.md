@@ -1,28 +1,28 @@
 # Operations Dashboard
 
 Overall: **AMBER**
-Generated: `2026-10-19T09:44:37.991086Z`
+Generated: `2026-10-19T20:45:17.645001Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 5.046 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 10.167 |
-| `weekly_output` | **GREEN** | FRESH | 4.487 |
-| `automation_health` | **AMBER** | AMBER | 0.601 |
-| `architecture_health` | **GREEN** | GREEN | 0.532 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 3.444 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 3.45 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.412 |
+| `daily_capture` | **GREEN** | FRESH | 2.041 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.264 |
+| `weekly_output` | **GREEN** | FRESH | 15.498 |
+| `automation_health` | **AMBER** | AMBER | 0.092 |
+| `architecture_health` | **GREEN** | GREEN | 0.029 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 1.263 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 14.461 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.013 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **254**
-- OpenAI estimated cost this month: **$12.322115 from receipts**
+- OpenAI receipts this month: **260**
+- OpenAI estimated cost this month: **$12.658069 from receipts**
 - Pending forecast candidates: **249**
-- Experiment candidates: **562**
-- Experiment dispatch requests: **32350**
+- Experiment candidates: **567**
+- Experiment dispatch requests: **33118**
 - Codex-ready remediation tasks: **6**
 - Needs-more-evidence items: **1**
 
@@ -35,11 +35,11 @@ Open incident references: **22**
 | Task | Receipts | Known estimated USD | Unknown-cost receipts | Gateway PASS | Retries |
 |---|---:|---:|---:|---:|---:|
 | `DAILY_CONFLICT_REVIEW` | 32 | $2.936662 | 0 | 32 | 0 |
-| `SHADOW_COMPASS_V2` | 41 | $2.520172 | 0 | 41 | 0 |
-| `RESEARCH_LAB_SOL_ANALYSIS` | 16 | $2.232892 | 0 | 16 | 1 |
+| `SHADOW_COMPASS_V2` | 42 | $2.580200 | 0 | 42 | 0 |
+| `RESEARCH_LAB_SOL_ANALYSIS` | 18 | $2.476158 | 0 | 18 | 1 |
 | `MONTHLY_LEARNING_ADVERSARIAL` | 4 | $1.036608 | 0 | 4 | 0 |
 | `MONTHLY_LEARNING_ANALYST` | 4 | $1.026470 | 0 | 4 | 0 |
-| `DAILY_DIRECTOR_SHADOW` | 73 | $0.744468 | 0 | 73 | 72 |
+| `DAILY_DIRECTOR_SHADOW` | 76 | $0.777129 | 0 | 76 | 75 |
 | `FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT` | 3 | $0.718824 | 0 | 3 | 0 |
 | `TEMP_SOL_PR_REVIEW` | 6 | $0.427192 | 0 | 6 | 2 |
 | `DECISION_MISS_AUDIT` | 19 | $0.238964 | 0 | 13 | 0 |
@@ -54,4 +54,4 @@ A gateway PASS alone is not measured downstream value or investment edge.
 - **P1** `automation_health` - SEMANTIC_STATUS_AMBER
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `cb856b76d8dce5c33c2f2b5524a71cbf384ba266999cf5dea0bd369de5890dee`
+Dashboard SHA-256: `52ec31513f242e99fc6fac95dfeaa326f56830244e10d93e6bba87cdf8bb5b0e`
