@@ -52,6 +52,12 @@ class AcceptedMainSource:
         self.lookups = 0
         self.deadline = time.monotonic() + 15
 
+    def _check_budget(self) -> None:
+        # Subprocess timeout is per Git invocation; aggregate calls must also
+        # have a checked build-level deadline even on an early False return.
+        if time.monotonic() > self.deadline or self.lookups > 128:
+            raise SourceGitAnchorBudgetExceeded("SOURCE_ANCHOR_LOOKUP_BUDGET_EXCEEDED")
+
     def _main(self) -> str:
         if not self.initialized:
             self.initialized = True
@@ -81,8 +87,9 @@ class AcceptedMainSource:
                 accepted_before: datetime | None = None,
                 accepted_after: datetime | None = None) -> bool:
         try:
-            if time.monotonic() > self.deadline or self.lookups >= 128:
+            if self.lookups >= 128:
                 raise SourceGitAnchorBudgetExceeded("SOURCE_ANCHOR_LOOKUP_BUDGET_EXCEEDED")
+            self._check_budget()
             if not isinstance(expected_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
                 return False
             rel = Path(relative_path)
@@ -93,30 +100,40 @@ class AcceptedMainSource:
                     or path.stat().st_size > 10_000_000):
                 return False
             head = self._main()
+            self._check_budget()
             key = rel.as_posix()
             if key not in self.originals:
                 self.lookups += 1
                 revisions = _git(self.root, "rev-list", "--reverse", "--first-parent",
                                  head, "--", key).splitlines()
+                self._check_budget()
                 if not revisions:
                     return False
                 first = revisions[0].decode("ascii")
                 _git(self.root, "merge-base", "--is-ancestor", first, head)
+                self._check_budget()
                 entry = _git(self.root, "ls-tree", first, "--", key).decode()
+                self._check_budget()
                 if not entry.startswith(("100644 blob ", "100755 blob ")):
                     return False
-                if int(_git(self.root, "cat-file", "-s", f"{first}:{key}")) > 10_000_000:
+                size = int(_git(self.root, "cat-file", "-s", f"{first}:{key}"))
+                self._check_budget()
+                if size > 10_000_000:
                     return False
                 original = _git(self.root, "show", f"{first}:{key}")
+                self._check_budget()
                 self.originals[key] = (original, 0)
             original, _untrusted_commit_clock = self.originals[key]
+            self._check_budget()
             # Git author/committer timestamps are contributor-controlled. They
             # prove object custody, not when GitHub accepted an object to main.
             # Until a separately authenticated server-side acceptance receipt
             # is supplied, temporal/PIT predicates must remain UNKNOWN/false.
             if accepted_before is not None or accepted_after is not None:
                 return False
-            return (path.read_bytes() == original
+            current = path.read_bytes()
+            self._check_budget()
+            return (current == original
                     and hashlib.sha256(original).hexdigest() == expected_sha256)
         except SourceGitAnchorBudgetExceeded:
             raise

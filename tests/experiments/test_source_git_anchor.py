@@ -143,6 +143,30 @@ class CanonicalSourceAnchorTests(unittest.TestCase):
         self.assertFalse(anchor.matches(self.rel, self.digest,
                          accepted_before=datetime.fromtimestamp(stamp + 1, timezone.utc)))
 
+    def test_aggregate_deadline_expiry_after_successful_git_call_fails_whole_build(self):
+        from datetime import datetime, timezone
+        from unittest.mock import patch
+        from scripts.experiments import source_git_anchor as module
+
+        # A single Git command can finish successfully after the shared
+        # deadline, or a sequence can exhaust it. The first accepted snapshot
+        # must NOT be stored or counted as an innocuous negative PIT result.
+        for command in ("cat-file", "show"):
+            with self.subTest(expire_after=command):
+                anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
+                original_git = module._git
+
+                def expire_after_git(root, *args):
+                    result = original_git(root, *args)
+                    if args[0] == command and (command != "cat-file" or args[1] == "-s"):
+                        anchor.deadline = module.time.monotonic() - 1
+                    return result
+
+                with patch.object(module, "_git", side_effect=expire_after_git):
+                    with self.assertRaises(module.SourceGitAnchorBudgetExceeded):
+                        anchor.matches(self.rel, self.digest, accepted_before=datetime.now(timezone.utc))
+                self.assertEqual(anchor.lookups, 1)
+
     def test_parent_symlink_and_exhausted_lookup_budget_fail_closed(self):
         alias = self.root / "alias"
         alias.symlink_to(self.root / "raw", target_is_directory=True)
