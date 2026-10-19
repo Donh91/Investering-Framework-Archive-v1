@@ -347,6 +347,8 @@ checks.push(
  ['premium source path stays original same-origin public data',sourceResolved===base+'data/latest.json'&&releasedRoot.includes('src="./app.mjs"')],
  ['legacy rollback shell points to root assets',preservedLegacy.includes('<base href="../">')&&preservedLegacy.includes('src="./app.js"')&&preservedLegacy.includes('href="./legacy/#now"')&&preservedLegacy.includes('href="./legacy/#top"')],
  ['premium links to real rollback and no preview copy',releasedRoot.includes('href="../legacy/"')&&releasedRoot.includes('href="../#content"')&&!releasedRoot.includes('PREMIUM PREVIEW')&&!releasedRoot.includes('data-t="previewOnly"')],
+ ['premium canonical metadata is not mislabelled preview',releasedRoot.includes('<title>Cycle Navigator · Premium</title>')&&releasedRoot.includes('current-source premium market cycle, compass and verified results')&&!releasedRoot.includes('not the canonical production home')],
+ ['staged /vnext/ preview metadata remains separately honest',vnextRoot.includes('<title>Cycle Navigator · Premium Preview</title>')],
  ['cutover never changes production data ownership',build.includes('releasePremiumShell(premiumShell)')&&build.includes('preserveLegacyShell(index)')&&build.includes('resolve(dataDir,"latest.json")')],
  ['legacy-only client injection cannot corrupt premium root',liveBuilder.includes('indexPath=resolve(distDir,"legacy/index.html")')],
  ['premium fails closed for missing primary tab',missingTabRejected],
