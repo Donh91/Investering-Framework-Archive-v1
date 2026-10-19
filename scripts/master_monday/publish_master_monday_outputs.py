@@ -99,7 +99,8 @@ def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
         'reason':'WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include a scorecard field.' if matured else 'A valid experiment registry supplied zero newly matured outcomes; formal outcome scoring remains pending.',
     }
 def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
-                                    machine_file_sha256:str,pointer_file_sha256:str)->str:
+                                    machine_file_sha256:str,pointer_file_sha256:str,
+                                    freeze:dict[str,Any]|None=None,preflight:dict[str,Any]|None=None)->str:
     """Compact derived evidence index; NEVER a new market or scientific authority.
 
     Master Monday runs before CN/SITE final publication. Downstream states
@@ -132,6 +133,13 @@ def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
     cost=receipt.get('estimated_cost_usd')
     cost=round(float(cost),6) if isinstance(cost,(int,float)) and not isinstance(cost,bool) and 0<=cost<=1000 else None
     learning=machine.get('learning_decision_impact') if isinstance(machine.get('learning_decision_impact'),dict) else {}
+    scorecard=machine.get('scorecard') if isinstance(machine.get('scorecard'),dict) else {}
+    freeze=freeze if isinstance(freeze,dict) else {}
+    preflight=preflight if isinstance(preflight,dict) else {}
+    meta=preflight.get('meta') if isinstance(preflight.get('meta'),dict) else {}
+    quality=preflight.get('quality') if isinstance(preflight.get('quality'),dict) else {}
+    def safe_count(value:Any)->int|None:
+        return value if type(value) is int and 0<=value<=10000000 else None
     index={
         'contract':'MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_v1',
         'authority':'DERIVED_EVIDENCE_INDEX_ONLY_NO_NEW_FORECAST_OR_ACTION',
@@ -143,6 +151,8 @@ def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
             'machine_self_sha256':digest,
             'machine_file_sha256':machine_file_sha256,
             'delivery_pointer_file_sha256':pointer_file_sha256,
+            'settled_week_close_sha256':safe_sha((freeze.get('final_week_close') or {}).get('package_sha256')) if isinstance(freeze.get('final_week_close'),dict) else None,
+            'weekly_capture_bridge_sha256':safe_sha((freeze.get('weekly_capture_bridge') or {}).get('sha256')) if isinstance(freeze.get('weekly_capture_bridge'),dict) else None,
         },
         'delivery':{
             'preflight':safe_status(pointer.get('preflight_status')),
@@ -157,6 +167,21 @@ def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
             'operational_translation':safe_status(pointer.get('operational_translation_status')),
             'learning_decision_impact':safe_status(learning.get('assessment_status')),
             'experiment_learning':safe_status(pointer.get('experiment_learning_status')),
+        },
+        'evidence_quality':{
+            'blocking_gap_count':safe_count(meta.get('blocking_gap_count')),
+            'confidence_reducing_gap_count':safe_count(meta.get('confidence_reducing_gap_count')),
+            'planned_core_actions':safe_count(meta.get('planned_core_actions')),
+            'core_pass':safe_count(quality.get('PASS')),
+            'core_partial':safe_count(quality.get('PARTIAL')),
+            'core_unavailable':safe_count(quality.get('UNAVAILABLE')),
+        },
+        'outcome_and_learning':{
+            'registry_matured_count_not_scored_or_admitted':safe_count(scorecard.get('matured_outcome_count')),
+            'baseline_semantic_identity_count':safe_count(learning.get('baseline_semantic_identity_count')),
+            'learning_semantic_identity_count':safe_count(learning.get('learning_semantic_identity_count')),
+            'changed_calibration_decision':learning.get('changed_calibration_decision') if type(learning.get('changed_calibration_decision')) is bool else None,
+            'forecast_skill':'UNPROVEN_NOT_INFERRED',
         },
         'api_accounting':{'model':model,'estimated_cost_usd':cost},
         'downstream_not_yet_claimed':{
@@ -231,6 +256,7 @@ def main():
         machine,pointer,
         hashlib.sha256(machine_path.read_bytes()).hexdigest(),
         pointer_file_sha256,
+        freeze,preflight,
     )
     if audit_path.exists() and audit_path.read_text()!=audit:
         raise ValueError('weekly_audit_immutable_snapshot_collision')
