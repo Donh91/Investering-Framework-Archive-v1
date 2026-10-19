@@ -184,5 +184,11 @@ class WeeklyIntelligenceAuditTests(unittest.TestCase):
         pointer['machine_package_sha256']='a'*64
         with self.assertRaisesRegex(ValueError,'file_hash_invalid'):
             build_weekly_intelligence_audit(machine,pointer,'not-a-hash','f'*64)
+        machine['iso_year']=2025
+        machine['iso_week']=53
+        pointer['iso_year']=2025
+        pointer['iso_week']=53
+        with self.assertRaisesRegex(ValueError,'invalid_iso_week'):
+            build_weekly_intelligence_audit(machine,pointer,'e'*64,'f'*64)
 
 if __name__=='__main__': unittest.main()
