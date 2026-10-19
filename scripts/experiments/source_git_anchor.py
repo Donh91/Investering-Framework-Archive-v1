@@ -24,6 +24,10 @@ class SourceGitAnchorUnavailable(RuntimeError):
     pass
 
 
+class SourceGitAnchorBudgetExceeded(SourceGitAnchorUnavailable):
+    """The whole registry build must stop; partial source coverage is unsafe."""
+
+
 def _git(root: Path, *args: str) -> bytes:
     try:
         env = dict(os.environ, GIT_NO_REPLACE_OBJECTS="1",
@@ -78,7 +82,7 @@ class AcceptedMainSource:
                 accepted_after: datetime | None = None) -> bool:
         try:
             if time.monotonic() > self.deadline or self.lookups >= 128:
-                return False
+                raise SourceGitAnchorBudgetExceeded("SOURCE_ANCHOR_LOOKUP_BUDGET_EXCEEDED")
             if not isinstance(expected_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
                 return False
             rel = Path(relative_path)
@@ -104,17 +108,18 @@ class AcceptedMainSource:
                 if int(_git(self.root, "cat-file", "-s", f"{first}:{key}")) > 10_000_000:
                     return False
                 original = _git(self.root, "show", f"{first}:{key}")
-                stamp = int(_git(self.root, "show", "-s", "--format=%ct", first))
-                self.originals[key] = (original, stamp)
-            original, stamp = self.originals[key]
-            if accepted_before is not None:
-                if accepted_before.tzinfo is None or stamp >= accepted_before.timestamp():
-                    return False
-            if accepted_after is not None:
-                if accepted_after.tzinfo is None or stamp < accepted_after.timestamp():
-                    return False
+                self.originals[key] = (original, 0)
+            original, _untrusted_commit_clock = self.originals[key]
+            # Git author/committer timestamps are contributor-controlled. They
+            # prove object custody, not when GitHub accepted an object to main.
+            # Until a separately authenticated server-side acceptance receipt
+            # is supplied, temporal/PIT predicates must remain UNKNOWN/false.
+            if accepted_before is not None or accepted_after is not None:
+                return False
             return (path.read_bytes() == original
                     and hashlib.sha256(original).hexdigest() == expected_sha256)
+        except SourceGitAnchorBudgetExceeded:
+            raise
         except (OSError, UnicodeError, ValueError, SourceGitAnchorUnavailable):
             return False
 

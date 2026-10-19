@@ -257,14 +257,14 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             self.assertEqual(c["state"],"WAITING_FOR_DATA")
             self.assertNotIn("MATURED_INCONCLUSIVE",r["state_counts"])
 
-    def test_true_eligible_matured_hit_and_miss_are_distinct(self):
+    def test_commit_clock_only_cannot_admit_matured_hit_or_miss(self):
         for result,expected in [("HIT","MATURED_SUPPORTED"),("MISS","MATURED_NOT_SUPPORTED")]:
             with self.subTest(result=result),tempfile.TemporaryDirectory() as td:
                 r=self.sample_registry(Path(td),[self.outcome("EXP-FC-1",result=result)])
                 c=r["candidates"][0]
-                self.assertEqual(c["state"],expected)
+                self.assertEqual(c["state"],"MATURED_INCONCLUSIVE")
                 self.assertEqual(c["matured_outcome_count"],1)
-                self.assertEqual(c["scientific_score_eligible_outcome_count"],1)
+                self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
                 self.assertEqual(c["censored_outcome_count"],0)
 
     def test_physical_maturity_without_scientific_eligibility_never_promotes(self):
@@ -283,11 +283,11 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as td:
                 r=self.sample_registry(Path(td),list(records))
                 c=r["candidates"][0]
-                self.assertEqual(c["state"],"MATURED_NOT_SUPPORTED")
+                self.assertEqual(c["state"],"MATURED_INCONCLUSIVE")
                 self.assertEqual(c["outcome_record_count"],2)
                 self.assertEqual(c["matured_outcome_count"],1)
                 self.assertEqual(c["censored_outcome_count"],1)
-                self.assertEqual(c["scientific_score_eligible_outcome_count"],1)
+                self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
                 self.assertEqual(c["unknown_outcome_count"],0)
 
     def test_unknown_or_invalid_contract_is_not_a_matured_success(self):
@@ -400,7 +400,7 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td)
             positive=self.sample_registry(root,[self.outcome("EXP-FC-1",result="HIT")])
-            self.assertEqual(positive["candidates"][0]["scientific_score_eligible_outcome_count"],1)
+            self.assertEqual(positive["candidates"][0]["scientific_score_eligible_outcome_count"],0)
             evidence_file=root/"settlement_evidence/EXP-FC-1.json"
             outcome_file=root/"outcomes/0.json"
             binding_file=root/"settlement_bindings/EXP-FC-1.json"
@@ -497,7 +497,7 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             root = Path(td)
             fid = "EXP-FC-joint"
             original = self.sample_registry(root, [self.outcome(fid, result="MISS")])
-            self.assertEqual(original["candidates"][0]["scientific_score_eligible_outcome_count"], 1)
+            self.assertEqual(original["candidates"][0]["scientific_score_eligible_outcome_count"], 0)
             raw = root / "raw" / fid / "source.json"
             raw.write_bytes(raw.read_bytes().replace(b'"100.2"', b'"102.0"'))
             ep = root / "settlement_evidence" / f"{fid}.json"
@@ -532,7 +532,7 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             with chdir(root):
                 result = registry(Path("candidates"), Path("observations"), Path("forecasts"),
                                   Path("outcomes"), Path("receipts"), "2026-10-19T12:00:00Z")
-            self.assertEqual(result["candidates"][0]["scientific_score_eligible_outcome_count"], 1)
+            self.assertEqual(result["candidates"][0]["scientific_score_eligible_outcome_count"], 0)
 
     def test_forecast_first_published_after_due_is_unscoreable(self):
         from scripts.experiments.experiment_lifecycle import registry
@@ -631,7 +631,7 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             self.assertEqual(len(compact_experiment_registry(r)["matured_candidates"]), 1)
             self.assertEqual(build_shadow(r, {"rows": []})["summary"]["matured_count"], 1)
             action = candidate_action(r["candidates"][0], None)
-            self.assertEqual(action["selected_action"], "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW")
+            self.assertEqual(action["selected_action"], "KEEP_SHADOW_INCONCLUSIVE")
             self.assertFalse(action["canonical_effect"])
             self.assertFalse(action["portfolio_execution"])
 

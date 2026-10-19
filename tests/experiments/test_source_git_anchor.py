@@ -134,19 +134,21 @@ class CanonicalSourceAnchorTests(unittest.TestCase):
             self.assertTrue(anchor.matches(self.rel, self.digest))
         self.assertEqual(sum(call.args[1:2] == ("ls-remote",) for call in calls.call_args_list), 1)
 
-    def test_first_acceptance_clock_cannot_be_backdated_by_json(self):
+    def test_contributor_controlled_git_clock_never_proves_server_acceptance(self):
         from datetime import datetime, timezone
         stamp = int(git(self.root, "show", "-s", "--format=%ct", "HEAD"))
         anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
         self.assertFalse(anchor.matches(self.rel, self.digest,
                          accepted_before=datetime.fromtimestamp(stamp, timezone.utc)))
-        self.assertTrue(anchor.matches(self.rel, self.digest,
-                        accepted_before=datetime.fromtimestamp(stamp + 1, timezone.utc)))
+        self.assertFalse(anchor.matches(self.rel, self.digest,
+                         accepted_before=datetime.fromtimestamp(stamp + 1, timezone.utc)))
 
     def test_parent_symlink_and_exhausted_lookup_budget_fail_closed(self):
         alias = self.root / "alias"
         alias.symlink_to(self.root / "raw", target_is_directory=True)
         anchor = AcceptedMainSource(self.root, fixture_origin=self.origin.as_uri())
         self.assertFalse(anchor.matches(Path("alias/EXP-FC-test/source.json"), self.digest))
+        from scripts.experiments.source_git_anchor import SourceGitAnchorBudgetExceeded
         anchor.lookups = 128
-        self.assertFalse(anchor.matches(self.rel, self.digest))
+        with self.assertRaises(SourceGitAnchorBudgetExceeded):
+            anchor.matches(self.rel, self.digest)
