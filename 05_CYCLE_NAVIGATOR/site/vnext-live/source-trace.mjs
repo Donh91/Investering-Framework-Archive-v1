@@ -9,7 +9,16 @@ const STATES=Object.freeze([
   ['strategic','Strategic Compass'],['master_monday','Master Monday'],
   ['cycle_navigator','Cycle Navigator']
 ]);
-const clean=v=>typeof v==='string'&&/^[A-Z][A-Z0-9_]{1,49}$/.test(v)?v:'UNAVAILABLE';
+const ACCEPTED=Object.freeze({
+ official:['VERIFIED','DEGRADED'],
+ auto_market_state:['HASH_VERIFIED','UNVERIFIED'],
+ native:['SOURCE_ALIGNED','VERIFIED_NEWER_OR_DIFFERENT_SOURCE','UNVERIFIED'],
+ shadow:['ALIGNED_RESEARCH','STALE_RESEARCH','UNVERIFIED'],
+ strategic:['BOUND_WEEKLY_ANCHOR','UNVERIFIED'],
+ master_monday:['SOURCE_ALIGNED','UNVERIFIED'],
+ cycle_navigator:['WEEKLY_POINTER_ALIGNED','UNVERIFIED']
+});
+const clean=(id,v)=>ACCEPTED[id]?.includes(v)?v:'UNAVAILABLE';
 const validDirection=v=>typeof v==='string'&&/^[A-Z][A-Z_]{1,39}$/.test(v)&&v!=='UNAVAILABLE'?v:'UNAVAILABLE';
 const closed=(reason='SOURCE_UNVERIFIED')=>({
   contract:'CN_PREMIUM_SOURCE_TRACE_v1',status:'UNVERIFIED',reason,
@@ -42,9 +51,20 @@ export function sourceTrace(latest,compass,parsed){
     wc?.public_issue_number===cp?.public_issue_number&&
     f.source_status?.official==='VERIFIED';
   if(!eligible)return result;
+  // A producer-declared COMPLETE must not coexist with source-owner denial,
+  // stale research or incomplete Monday analytics. Reject contradiction,
+  // rather than laundering a green site badge through a public object.
+  if(f.status==='COMPLETE'&&!(
+    f.source_status.native==='SOURCE_ALIGNED'&&
+    f.source_status.shadow==='ALIGNED_RESEARCH'&&
+    f.source_status.strategic==='BOUND_WEEKLY_ANCHOR'&&
+    f.source_status.master_monday==='SOURCE_ALIGNED'&&
+    f.source_status.master_monday_analysis==='COMPLETE'&&
+    f.source_status.cycle_navigator==='WEEKLY_POINTER_ALIGNED'
+  ))return closed('CONTRADICTORY_COMPLETE_STATUS');
   result.status=f.status;
   result.reason=f.status==='COMPLETE'?'VERIFIED_ALL_REQUIRED_LAYERS':'SOME_LAYERS_MISSING_OR_DEGRADED';
-  result.sources=STATES.map(([id,name])=>({id,name,status:clean(f.source_status?.[id])}));
+  result.sources=STATES.map(([id,name])=>({id,name,status:clean(id,f.source_status?.[id])}));
   if(f.source_status?.cycle_navigator==='WEEKLY_POINTER_ALIGNED'&&
      Number.isInteger(f.weekly?.iso_week)&&Number.isInteger(f.weekly?.iso_year)&&
      f.weekly.iso_week===latest.pointer?.iso_week&&f.weekly.iso_year===latest.pointer?.iso_year){
