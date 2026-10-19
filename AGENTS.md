@@ -132,12 +132,6 @@ A candidate merged to the intake path triggers remediation maturation immediatel
 
 The operational contract is `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`. If a research thread lacks GitHub write capability, it must return a schema-complete candidate payload and explicitly state that it was not persisted.
 
-### 0.2b Resource conservation and Codex Cloud authority — owner-approved 2026-10-19 (proposed until governed PR merge)
-
-**Codex Cloud is opt-in per mission, never passive.** Neither CODEX_READY, a scheduled Supervisor run, Codex environment creation, a PR review request, a comment, a model/router suggestion nor a queued remediation record authorizes Codex Cloud execution. Launch requires a separately recorded, explicit, bounded task from the currently authorized Supervisor or a normal Chat agent acting on the owner's mandate; validate fresh task ID, expected result, exact scope, available weekly quota, likely marginal value, maximum retries, and cloud-mode identity before submission. Without evidence, `CLOUD_DISPATCH_NOT_AUTHORIZED`. Do not automatically spin up repeated cloud reviews or use Work credits as fallback.
-
-The existing public `00_FMOS/framework_strategist/RESOURCE_CONSERVATION_POLICY_v1.json`, deterministic resource advisory and Strategist/Supervisor are the *only proposed* resource routing extension. No new scheduled resource agent, workflow, quota polling job, paid vendor, API gateway, owner or queue. An advisory is not a billing hard stop and must not claim authenticated GitHub account/Codex quota readback. Account-level hard caps require owner-authorized billing access. Protect mandatory CI, source continuity, scientific integrity, private/public boundaries and expected source gaps even under CRITICAL resource status.
-
 ### 0.2a Development quality and PR release authority — owner-approved 2026-10-16
 
 This is a constraint on the EXISTING Codex intake, Supervisor and GitHub PR/CI process, not a new executor, reviewer account, scheduler, queue or authority plane. For consequential code work, freeze owner/source contract, failure matrix, positive and adversarial negative cases before implementation; prove critical tests catch removed guards. No fabricated GitHub `APPROVED`, model-as-human impersonation, silent budget increase, portfolio action or private-data leak.
