@@ -7,7 +7,7 @@ Architecture direction is correct but implementation mission was NOT sufficient 
 ## Verified current-code observations
 - Global Action Compass §3.1 already requires full cross-read for chat and site; duplicate engine is prohibited.
 - Site contract has strong typed ownership, public issue identity, Compass weekly alignment and no invented countdown.
-- `compass-product-v5.js` `friendlyAction` currently maps `DE_RISK|PROTECT|EXIT|SELL` to displayed `HOLD`; a concrete **potential severity-high display ambiguity** requiring source-contract review and test. Never automatically convert this to portfolio SELL.
+- CORRECTED AFTER MAIN CODE REVIEW: `compass-product-v5.js` has a legacy `friendlyAction` mapping `DE_RISK|PROTECT|EXIT|SELL` to `HOLD`, but it does **not** own the active NOW view while `CN_PREMIUM_COMPASS_OWNER` is true. The active `market-compass-premium.js` maps `DE_RISK|PROTECT|EXIT` to `PROTECT CAPITAL`. Official `action_now` is separate from the typed SELL assessment. This is a regression-test target, **not a proven active P0 production mislabel**. Do not rewrite the working renderer speculatively.
 - `market-compass-premium.js` uses `publicCompassText` and hardcoded regex replacements for explanatory copy. Verify these cannot alter essential risk, thresholds, dates, units, source attribution or decision meaning. Formatting must not become a second semantic decision engine.
 - Full-stack readback `COMPLETE` vs `PARTIAL_OR_DEGRADED` exists; prove completeness against the full mandatory source inventory, not just successfully loaded subset.
 - The previous Sol mission did not explicitly specify a dedicated visual truthfulness acceptance matrix, per-chart observational completeness, personal-vs-share privacy model, or cross-client normalized decision parity with timed source snapshots.
@@ -78,3 +78,7 @@ M. SITE static screenshot shared externally contains no secret or misleading fre
 
 ## Final acceptance
 The user can open SITE daily and receive a beautiful but evidence-faithful complete Compass summary; same-source chat output agrees on official decisions; weekly forecast stays frozen; visual gaps are honestly shown; risks are never softened; friends can read the public market analysis without receiving the owner's private information. Report verified tests and first natural production readback before claiming DONE.
+
+
+## Owner correction — 2026-10-19
+The owner declined the newly proposed “Frozen weekly forecast vs actual market” illustrative chart. **Do not implement that proposed chart or use it as an acceptance criterion.** Do not delete or alter any pre-existing, source-verified charts or the independently owned PR #1680 visual work without a separate explicit change request. Prioritize data-integrity fixes, regression tests and the existing site information architecture.
