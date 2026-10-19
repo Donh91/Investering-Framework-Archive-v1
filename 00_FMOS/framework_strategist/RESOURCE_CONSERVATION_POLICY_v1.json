@@ -1,0 +1,27 @@
+{
+  "contract": "RESOURCE_CONSERVATION_OWNER_POLICY_v1",
+  "created_at_utc": "2026-10-19T08:25:00Z",
+  "owner": "Donh91",
+  "classification": "PUBLIC_OPERATIONAL_POLICY_NO_PRIVATE_BILLING_VALUES",
+  "operating_mode": "TEMPORARY_CRITICAL_CONSERVATION",
+  "actions_critical_until_utc": "2026-11-01T00:00:00Z",
+  "codex_cloud_critical_until_utc": "2026-10-25T00:00:00Z",
+  "codex_cloud_default": "DISABLED_PASSIVE",
+  "codex_cloud_invocation_requires": "EXPLICIT_BOUNDED_SUPERVISOR_OR_CHAT_AGENT_TASK_OWNER_AUTHORIZATION",
+  "strategist_role": "READ_ONLY_RESOURCE_ADVISOR_TO_EXISTING_SUPERVISOR",
+  "supervisor_role": "GOVERNED_EXISTING_DOMAIN_OWNER_ROUTING",
+  "automatic_spend_authority": false,
+  "automatic_work_or_codex_cloud_authority": false,
+  "new_workflows_or_agent_schedules": false,
+  "never_bypass_required_ci": true,
+  "never_change_trading_or_scientific_rules": true,
+  "private_billing_snapshot_optional": true,
+  "unknown_usage_fails_closed_for_new_cloud": "REQUIRE_VERIFIED_BUDGET_BEFORE_ANY_NEW_PAID_DELEGATION",
+  "review_policy": "Reassess with actual GitHub billed-minute data before 2026-11-01; preserved source gaps must be explicitly classified.",
+  "cost_classes": {
+    "NORMAL": "eligible ordinary planned noncloud work if source admissible",
+    "CONSERVE": "P0/P1 and materially valuable tasks only; no repeated cloud review",
+    "CRITICAL": "required safety, essential observations and bounded blocking fixes only",
+    "UNKNOWN": "no passive cloud or new spending until budget verified"
+  }
+}
