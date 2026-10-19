@@ -16,6 +16,8 @@ on:
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
       - 'scripts/framework_intelligence/self_improvement_v1.py'
       - 'scripts/framework_intelligence/framework_strategist_v1.py'
+      - 'scripts/framework_intelligence/resource_budget_guard_v1.py'
+      - 'tests/framework_intelligence/test_resource_budget_guard_v1.py'
       - 'tests/framework_intelligence/test_framework_strategist_v1.py'
       - '00_FMOS/framework_strategist/**'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
@@ -82,6 +84,7 @@ jobs:
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/self_improvement_v1.py \
             scripts/framework_intelligence/framework_strategist_v1.py \
+            scripts/framework_intelligence/resource_budget_guard_v1.py \
             scripts/framework_intelligence/supervisor_mission_intake_v1.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
@@ -95,6 +98,7 @@ jobs:
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_self_improvement_v1 \
             tests.framework_intelligence.test_framework_strategist_v1 \
+            tests.framework_intelligence.test_resource_budget_guard_v1 \
             tests.framework_intelligence.test_supervisor_mission_intake_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
@@ -118,6 +122,9 @@ jobs:
           python scripts/framework_intelligence/self_improvement_v1.py \
             --repo-root . \
             --output runtime/framework-learning-supervisor/LATEST_SELF_IMPROVEMENT_V1.json
+          python scripts/framework_intelligence/resource_budget_guard_v1.py \
+            --repo-root . \
+            --output runtime/framework-learning-supervisor/resource_budget/LATEST.json
           python scripts/framework_intelligence/framework_strategist_v1.py \
             --repo-root . \
             --output runtime/framework-learning-supervisor/strategist/LATEST.json
@@ -684,6 +691,7 @@ jobs:
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/self_improvement_v1.py \
             scripts/framework_intelligence/framework_strategist_v1.py \
+            scripts/framework_intelligence/resource_budget_guard_v1.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
             scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
@@ -692,6 +700,7 @@ jobs:
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_self_improvement_v1 \
             tests.framework_intelligence.test_framework_strategist_v1 \
+            tests.framework_intelligence.test_resource_budget_guard_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_capability_router \
@@ -718,6 +727,9 @@ jobs:
           python scripts/framework_intelligence/self_improvement_v1.py \
             --repo-root . \
             --output research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json
+          python scripts/framework_intelligence/resource_budget_guard_v1.py \
+            --repo-root . \
+            --output research/framework_learning/resource_budget/LATEST.json
           python scripts/framework_intelligence/framework_strategist_v1.py \
             --repo-root . \
             --output research/framework_learning/strategist/LATEST.json
