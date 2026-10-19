@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light"><meta name="theme-color" content="#f6f7f8">
+<meta name="description" content="Cycle Navigator · current-source premium candidate, not the canonical production home">
+<title>Cycle Navigator · Premium Preview</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./premium.css"><link rel="stylesheet" href="../frozen-week-chart.css">
+<script src="../vendor/lightweight-charts-5.2.0.js" defer></script>
+<script src="../frozen-week-chart.js" defer></script>
+<script type="module" src="./app.mjs"></script></head>
+<body>
+<a class="skip" href="#content">Spring til indhold</a>
+<header class="top"><div class="shell topbar">
+ <a href="./" class="brand" aria-label="Cycle Navigator vNext"><span class="logo">CN<span class="logo-dot">.</span></span><span><strong>CYCLE NAVIGATOR</strong><small>THE MARKET, MADE LEGIBLE</small></span></a>
+ <div class="topend"><span class="release">PREMIUM PREVIEW</span><div class="languages" aria-label="Vælg sprog" role="group"><button data-lang="da" aria-pressed="true">DA</button><button data-lang="en" aria-pressed="false">EN</button></div></div>
+</div></header>
+<nav class="tabs shell" role="tablist" aria-label="Hovednavigation"><button id="tab-overview" type="button" role="tab" aria-controls="view-overview" data-tab="overview" aria-selected="true" tabindex="0"><span data-t="tabOverview">Overblik</span></button><button id="tab-compass" type="button" role="tab" aria-controls="view-compass" data-tab="compass" aria-selected="false" tabindex="-1"><span data-t="tabCompass">Kompas</span></button><button id="tab-results" type="button" role="tab" aria-controls="view-results" data-tab="results" aria-selected="false" tabindex="-1"><span data-t="tabResults">Resultater</span></button></nav>
+<main id="content" class="shell" tabindex="-1">
+ <div class="statusbar"><div><span id="source-dot" class="statusdot"></span><span id="source-status" role="status">Kontrollerer officielle kilder…</span></div><span id="source-clock">—</span></div>
+ <section id="view-overview" class="view" role="tabpanel" aria-labelledby="tab-overview">
+  <div class="hero"><div class="hero-text"><p class="eyebrow" data-t="overviewEyebrow">MARKEDSBILLEDE / LIGE NU</p><h1 id="overview-title"><span data-t="heroOne">Forstå</span><br><em data-t="heroTwo">retningen.</em></h1><p class="intro" data-t="heroIntro">Én tydelig læsning. Én officiel handling. Ægte markedsdata.</p></div>
+   <div class="hero-indicator"><span class="micro" data-t="weeklyState">UGENS MARKEDSSTATUS</span><div id="headline" class="hero-value">—</div><span id="week-label" class="hero-meta">—</span></div>
+  </div>
+  <div class="decision"><article class="decision-main"><span class="eyebrow" data-t="actionLabel">OFFICIEL HANDLING · NU</span><div id="action" class="action-value">—</div><p id="action-note" class="small">—</p></article>
+  <article class="decision-side"><span class="eyebrow" data-t="proxyLabel">RETNINGSPROXY · 0–12 TIMER</span><div id="direction">—</div><p data-t="proxyCaveat" class="small">Observeret bevægelse, ikke selvstændigt valideret prognose.</p></article></div>
+  <div class="triple"><article class="fact"><span data-t="riskLabel">PULLBACK-RISIKO</span><strong id="risk">—</strong></article><article class="fact"><span data-t="distributionLabel">DISTRIBUTION</span><strong id="distribution">—</strong></article><article class="fact"><span data-t="nextGateLabel">NÆSTE BEKRÆFTELSE</span><strong id="next-gate">—</strong></article></div>
+  <section class="section"><div class="section-heading"><div><p class="eyebrow">01 / MARKET CYCLE</p><h2 data-t="cycleHeading">Hvor i cyklussen?</h2></div><span class="subtle" data-t="noEta">Ingen udokumenteret ETA</span></div><p id="cycle-summary" class="prose">—</p><div class="cycle-steps" id="cycle-steps"></div></section>
+  <section class="section"><div class="section-heading"><div><p class="eyebrow">02 / FROZEN WEEK</p><h2 data-t="forecastHeading">Prognose møder virkelighed.</h2></div><span id="freeze-identity" class="subtle">—</span></div>
+   <div class="range-grid"><article class="range"><span>BITCOIN / BTC</span><strong id="btc-range">—</strong><small data-t="frozenRange">Oprindeligt fastlåst interval</small></article><article class="range"><span>ETHEREUM / ETH</span><strong id="eth-range">—</strong><small data-t="frozenRange">Oprindeligt fastlåst interval</small></article></div>
+   <div class="chart-area"><div class="chart-kicker"><span data-t="chartTitle">Frossen prognose / faktiske priser</span><span id="chart-evidence" class="subtle">—</span></div><div id="official-path-chart" aria-label="Kildeverificeret ugerejse"></div></div>
+   <p class="small" data-t="chartTrust">Grafen viser kun frosne kildepunkter og gyldige observationer. Manglende dagsprognoser tegnes ikke.</p></section>
+ </section>
+ <section id="view-compass" class="view" hidden role="tabpanel" aria-labelledby="tab-compass"><div class="page-head"><p class="eyebrow">OFFICIAL COMPASS / CURRENT SOURCE</p><h1 id="compass-title" data-t="compassHeading">Tydeligere beslutninger.</h1><p data-t="compassSub" class="intro">Markedsretning, handling og tid adskilles. Ingen nye handelssignaler skabes her.</p></div>
+  <section class="section"><div class="section-heading"><h2 data-t="horizonsHeading">Tidshorisonter</h2><span data-t="ownerOfficial" class="subtle">Kun officielt Kompas</span></div><div class="table-scroll"><table><thead><tr><th data-t="time">Tid</th><th data-t="direction">Retning</th><th data-t="actionShort">Handling</th></tr></thead><tbody id="horizon-body"></tbody></table></div></section>
+  <section class="section"><div class="section-heading"><h2 data-t="tiersHeading">Kapitalrotation</h2><span class="subtle">BTC → MEMES</span></div><div class="table-scroll"><table><thead><tr><th data-t="asset">Aktiv</th><th data-t="state">Status</th><th data-t="actionShort">Handling</th></tr></thead><tbody id="tier-body"></tbody></table></div></section>
+  <section class="section"><div class="section-heading"><h2 data-t="protectionHeading">Beskyttelse og re-entry</h2></div><div class="triple"><article class="fact"><span>SELL / TRIM</span><strong id="sell-state">—</strong></article><article class="fact"><span>RE-ENTRY</span><strong id="reentry-state">—</strong></article><article class="fact"><span data-t="pullback">PULLBACK</span><strong id="risk-2">—</strong></article></div><p id="sell-note" class="prose">—</p></section>
+ </section>
+ <section id="view-results" class="view" hidden role="tabpanel" aria-labelledby="tab-results"><div class="page-head"><p class="eyebrow">PUBLIC ACCOUNTABILITY</p><h1 id="results-title" data-t="resultsHeading">Beviser frem for hype.</h1><p class="intro" data-t="resultsSub">Den senest afsluttede uge, dens reelle dækning og de seks frosne intervaller. Ikke en opdigtet samlet præcision.</p></div>
+  <div class="result-hero"><div><span class="eyebrow" data-t="completedPrecision">SENEST AFSLUTTEDE PRISPRÆCISION</span><div id="score-value" class="score">—</div><p id="score-identity" class="subtle">—</p></div><div class="proof-stat"><span data-t="coverage">KILDEDÆKNING</span><strong id="coverage-value">—</strong><small data-t="hours">Kvalificerede observationstimer</small></div></div>
+  <section class="section"><div class="section-heading"><h2 data-t="weeklyScoreTable">Frossent interval vs. faktisk</h2><span data-t="sixWindows" class="subtle">BTC / ETH · 3 vinduer</span></div><div class="table-scroll"><table><thead><tr><th data-t="assetWindow">Aktiv / vindue</th><th data-t="frozenForecast">Frossen prognose</th><th data-t="observed">Observeret</th><th data-t="precision">Præcision</th></tr></thead><tbody id="score-body"></tbody></table></div></section>
+  <section class="section proof-note"><h2 data-t="methodHeading">Hvad er egentlig verificeret?</h2><p data-t="methodText">Prisintervaller måles med den etablerede 70/30-metode. Strukturanalyse er ikke en procent-score efter CN #26. Uafhængig forsegling må ikke påstås uden bevis.</p><p id="score-proof" class="small">—</p><a class="quiet-link" href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer" data-t="openScoreRepo">Åbn det offentlige kildearkiv ↗</a></section>
+ </section>
+ <footer class="footer"><span>CN / PREMIUM CANDIDATE · <span data-t="previewOnly">Ikke standardforsiden</span></span><a href="../index.html" data-t="legacySite">Åbn eksisterende site ↗</a></footer>
+</main></body></html>

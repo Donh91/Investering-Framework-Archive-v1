@@ -1,4 +1,5 @@
 import './tests/full-stack-readback.test.mjs';
+import './vnext-live/validate.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');

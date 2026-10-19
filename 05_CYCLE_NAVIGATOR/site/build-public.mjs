@@ -562,6 +562,24 @@ await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
+ // vNext is a read-only first-party *candidate*, deployed below /vnext/
+ // on the EXISTING Pages host. Canonical /index.html remains untouched.
+ const vnextDir=resolve(outputDir,"vnext"); await mkdir(vnextDir,{recursive:true});
+ for(const file of ["index.html","premium.css","app.mjs","chart-source-key.mjs","official-bullbear.mjs",
+  "official-pullback-eta.mjs","official-pullback-stage.mjs","official-pullback-investor-view.mjs",
+  "official-path.mjs","official-feed-parity.mjs"])
+   await copyFile(resolve(siteDir,"vnext-live",file),resolve(vnextDir,file));
+ // A direct build-public.mjs deployment must also include every shared chart
+ // dependency referenced by /vnext/index.html, without relying on later
+ // Pages-only build-live-observation staging.
+ await mkdir(resolve(outputDir,"vendor"),{recursive:true});
+ for(const shared of ["frozen-week-chart.js","frozen-week-chart.css",
+  "vendor/lightweight-charts-5.2.0.js","vendor/lightweight-charts-LICENSE.txt",
+  "vendor/lightweight-charts-NOTICE.txt"]){
+    await copyFile(resolve(siteDir,shared),resolve(outputDir,shared));
+ }
+
+
 const indexPath=resolve(outputDir,"index.html"); let index=await readFile(indexPath,"utf8");
 if(!index.includes("./compass-product-v5.css")) index=index.replace("</head>",'  <link rel="stylesheet" href="./compass-product-v5.css" />\n</head>');
 if(!index.includes("./compass-product-v5.js")) index=index.replace("</body>",'  <script src="./compass-product-v5.js" defer></script>\n</body>');
