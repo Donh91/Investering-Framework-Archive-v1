@@ -306,8 +306,12 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
      masterMachine?.analysis&&typeof masterMachine.analysis==="object"&&
      !String(masterMachine.analysis.status||"").startsWith("UNAVAILABLE"));
   const analyticalStatuses=new Set(["READY","PASS","AVAILABLE","COMPLETE","SCORED"]);
+  const statusConflict=masterAligned&&(
+    scoreStatus!==mondayStatus(masterMachine?.scorecard?.status)||
+    translationStatus!==mondayStatus(masterMachine?.operational_translation?.status));
   const mondayAnalytics=masterAligned?
-    (apiAnalysisAvailable&&analyticalStatuses.has(scoreStatus)&&analyticalStatuses.has(translationStatus)?"COMPLETE":"PARTIAL_ANALYTICS"):
+    (statusConflict?"CONFLICTING_ANALYTICS":
+     apiAnalysisAvailable&&analyticalStatuses.has(scoreStatus)&&analyticalStatuses.has(translationStatus)?"COMPLETE":"PARTIAL_ANALYTICS"):
     "UNVERIFIED";
   const mondayPublic=masterAligned?{
     contract:"PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1",
