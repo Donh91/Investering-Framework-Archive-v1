@@ -610,10 +610,10 @@
     "adaptive_evolution": 1157,
     "self_healing": 1156
   },
-  "generated_at_utc": "2026-10-19T08:03:38.273639Z",
+  "generated_at_utc": "2026-10-19T09:13:55.796812Z",
   "health_consistency": "OK",
   "health_live_coverage": 0.9949,
-  "incident_count": 6,
+  "incident_count": 5,
   "incident_history": [
     {
       "automatic_code_write_allowed": false,
@@ -858,28 +858,6 @@
       "route": "EXISTING_REMEDIATION_OWNER",
       "severity": "AMBER",
       "workflow": "pdlt-maturation.yml"
-    },
-    {
-      "automatic_code_write_allowed": false,
-      "automatic_retry_allowed": false,
-      "classification": "UNKNOWN",
-      "counted_in_this_snapshot": false,
-      "findings": [
-        "RECOVERING_AFTER_RECENT_FAILURES"
-      ],
-      "fingerprint": "99e690eef8574ffc7c37c354b6b4c536da413f130e04fd04c0112a117007edae",
-      "first_seen_at_utc": "2026-10-17T07:10:00.563917Z",
-      "last_seen_at_utc": "2026-10-17T17:57:55.453716Z",
-      "observation_count": 1,
-      "observed_keys": [
-        "run:38208922727"
-      ],
-      "observed_run_id": 38208922727,
-      "owner_issue": 1156,
-      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
-      "route": "EXISTING_REMEDIATION_OWNER",
-      "severity": "AMBER",
-      "workflow": "sunday-market-close-and-cfgi.yml"
     }
   ],
   "input_freshness": {
@@ -901,15 +879,15 @@
     "UNPROVEN": 66
   },
   "source_generated_at_utc": {
-    "automation_health": "2026-10-18T18:13:38.852718Z"
+    "automation_health": "2026-10-19T09:08:34.310369Z"
   },
-  "source_observation_counted": false,
+  "source_observation_counted": true,
   "source_paths": {
     "automation_health": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
     "experiment_registry": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
   },
   "source_sha256": {
-    "automation_health": "da870ef0957c3232c503f59cc07e9200a41c6de273e19d55ac0f5db81648bb7a",
+    "automation_health": "c297b45661953bcf50bb080d12443b9e0bd999c2fac9b5f3ba7009a80ea82d46",
     "experiment_registry": "ad6c0b46c21b231a7d91bc04a0e07e78c8dd1323d3789a0af6fb6316805b8c2f"
   },
   "workflow_census_count": 198
