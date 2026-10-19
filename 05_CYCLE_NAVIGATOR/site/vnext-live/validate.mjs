@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
 import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
+import {sourceTrace} from './source-trace.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {verifiedBtcFrozenReference} from './official-path.mjs';
 const dir=dirname(fileURLToPath(import.meta.url));
@@ -152,6 +153,102 @@ assert.equal(mondayRead(staleDelivery).source_state,'UNVERIFIED');
 const noCompass=structuredClone(mondayCompass);
 noCompass.full_stack.contract='INVALID';
 assert.equal(mondayRead(mondayLatest,noCompass).source_state,'UNVERIFIED');
+// Executed full-stack evidence tests. This never makes research tradeable.
+const traceCompass=structuredClone(mondayCompass);
+traceCompass.full_stack.status='PARTIAL_OR_DEGRADED';
+traceCompass.full_stack.source_status={
+ official:'VERIFIED',auto_market_state:'HASH_VERIFIED',
+ native:'SOURCE_ALIGNED',shadow:'STALE_RESEARCH',
+ strategic:'BOUND_WEEKLY_ANCHOR',master_monday:'SOURCE_ALIGNED',
+ cycle_navigator:'WEEKLY_POINTER_ALIGNED'
+};
+traceCompass.full_stack.weekly={iso_week:43,iso_year:2026,direction_2_3w:'MIXED'};
+traceCompass.full_stack.strategic={
+ status:'BOUND_WEEKLY_ANCHOR',authority:'CYCLE_NAVIGATOR_OWNED_NOT_NEW_SITE_FORECAST',
+ horizon_21_30d:{direction:'UP'},horizon_4_8w:{direction:'UNCLEAR'}
+};
+const trace=(l=mondayLatest,c=traceCompass,t=now)=>sourceTrace(l,c,run(l,c,t));
+const sourceGood=trace();
+assert.equal(sourceGood.status,'PARTIAL_OR_DEGRADED');
+assert.equal(sourceGood.decision_authority,'OFFICIAL_COMPASS_ONLY');
+assert.deepEqual(sourceGood.long_horizons.map(x=>x.direction),['MIXED','UP','UNCLEAR']);
+assert.equal(sourceGood.official_current,true);
+assert.equal(sourceGood.long_horizons[2].owner,'CYCLE_NAVIGATOR_STRATEGIC_CONTEXT',
+  'The 4–8w owner is CN, even when an authorized strategic overlay supplies context');
+assert.equal(sourceGood.sources.length,7);
+assert.equal(sourceGood.sources.find(x=>x.id==='shadow').status,'STALE_RESEARCH');
+assert.notEqual(sourceGood.status,'COMPLETE','Stale research is not a complete source inventory');
+const traceComplete=structuredClone(traceCompass);
+traceComplete.full_stack.status='COMPLETE';
+traceComplete.full_stack.source_status.shadow='ALIGNED_RESEARCH';
+traceComplete.full_stack.source_status.master_monday_analysis='COMPLETE';
+assert.equal(trace(mondayLatest,traceComplete).status,'COMPLETE');
+const forgedComplete=structuredClone(traceCompass);
+forgedComplete.full_stack.status='COMPLETE';
+assert.equal(trace(mondayLatest,forgedComplete).status,'UNVERIFIED',
+  'A claimed COMPLETE with stale Shadow is a contradiction, not a green badge');
+const invalidStatus=structuredClone(traceCompass);
+invalidStatus.full_stack.source_status.shadow='BUY';
+assert.equal(trace(mondayLatest,invalidStatus).sources.find(x=>x.id==='shadow').status,'UNAVAILABLE',
+  'Unrecognized public source enums must never render as action signals');
+const badWeek=structuredClone(mondayLatest);
+badWeek.public_series.current_public_projection.forecast_week='2026-W42';
+assert.deepEqual(trace(badWeek).long_horizons.map(x=>x.direction),['UNAVAILABLE','UNAVAILABLE','UNAVAILABLE']);
+const wrongIssue=structuredClone(traceCompass);
+wrongIssue.weekly_context.public_issue_number=29;
+assert.equal(trace(mondayLatest,wrongIssue).status,'UNVERIFIED');
+const expiredTrace=structuredClone(traceCompass);
+expiredTrace.full_stack.official_freshness.valid_until_utc='2026-10-19T08:59:00Z';
+const expiredContext=trace(mondayLatest,expiredTrace);
+assert.equal(expiredContext.status,'PARTIAL_OR_DEGRADED');
+assert.equal(expiredContext.official_current,false);
+assert.equal(expiredContext.reason,'OFFICIAL_NOT_CURRENT_CONTEXT_ONLY');
+assert.equal(expiredContext.sources.find(x=>x.id==='official').status,'UNAVAILABLE');
+assert.deepEqual(expiredContext.long_horizons.map(x=>x.direction),['MIXED','UP','UNCLEAR'],
+  'Official expiry must not erase independently eligible CN / strategic source evidence');
+const staleOfficial=structuredClone(traceCompass);
+staleOfficial.data_status='DEGRADED';
+const staleOfficialContext=trace(mondayLatest,staleOfficial);
+assert.equal(staleOfficialContext.official_current,false);
+assert.equal(staleOfficialContext.sources.find(x=>x.id==='official').status,'UNAVAILABLE');
+assert.equal(staleOfficialContext.long_horizons[0].direction,'MIXED');
+const missingStack=structuredClone(traceCompass);
+delete missingStack.full_stack;
+assert.equal(trace(mondayLatest,missingStack).status,'UNVERIFIED');
+const contradictoryResearch=structuredClone(traceCompass);
+contradictoryResearch.full_stack.source_status.strategic='UNVERIFIED';
+assert.deepEqual(trace(mondayLatest,contradictoryResearch).long_horizons.map(x=>x.direction),
+ ['MIXED','UNAVAILABLE','UNAVAILABLE']);
+const mutatedResearchAuthority=structuredClone(traceCompass);
+mutatedResearchAuthority.full_stack.strategic.authority='OFFICIAL_ACTION';
+assert.deepEqual(trace(mondayLatest,mutatedResearchAuthority).long_horizons.map(x=>x.direction),
+ ['MIXED','UNAVAILABLE','UNAVAILABLE']);
+const noCNProvenance=structuredClone(traceCompass);
+noCNProvenance.full_stack.source_status.cycle_navigator='UNVERIFIED';
+assert.deepEqual(trace(mondayLatest,noCNProvenance).long_horizons.map(x=>x.direction),
+ ['UNAVAILABLE','UNAVAILABLE','UNAVAILABLE'],
+ 'Neither the 4–8w CN outlook nor strategic overlays can outlive invalid weekly provenance');
+const wrongWeeklySource=structuredClone(traceCompass);
+wrongWeeklySource.full_stack.weekly.iso_week=42;
+assert.equal(trace(mondayLatest,wrongWeeklySource).long_horizons[0].direction,'UNAVAILABLE');
+const unsafeDirection=structuredClone(traceCompass);
+unsafeDirection.full_stack.strategic.horizon_21_30d.direction='BUY NOW 99%';
+assert.equal(trace(mondayLatest,unsafeDirection).long_horizons[1].direction,'UNAVAILABLE');
+const stalePublic=structuredClone(mondayLatest);
+stalePublic.generated_at='2026-10-18T06:00:00Z';
+assert.equal(trace(stalePublic).status,'UNVERIFIED');
+assert.equal(sourceTrace(null,null,null).sources.every(x=>x.status==='UNAVAILABLE'),true);
+assert.equal(JSON.stringify(sourceGood).includes('PRIVATE_DO_NOT_SHOW'),false);
+assert.match(html,/data-contract="CN_PREMIUM_SOURCE_TRACE_v1"/);
+assert.match(css,/\.source-trace-details summary\{min-height:44px/);
+assert.match(html,/id="long-horizon-body"/);
+assert.match(html,/id="source-trace-body"/);
+assert.match(client,/sourceTrace\(feeds\?\.latest,feeds\?\.compass,view\)/);
+assert.match(client,/drawSourceTrace\(\)/);
+assert.match(client,/OFFICIAL_NOT_CURRENT_CONTEXT_ONLY/);
+assert.match(client,/CYCLE_NAVIGATOR_STRATEGIC_CONTEXT/);
+assert.match(site,/"monday-public-bridge.mjs","source-trace.mjs"/);
+assert.doesNotMatch(read('source-trace.mjs'),/fetch\(|\bwallet\b|\bOPENAI_API_KEY\b|eval\(/i);
 const stale=structuredClone(latest);stale.generated_at='2026-10-18T06:00:00Z';
 assert.equal(run(stale).compass.action_now,'UNAVAILABLE');
 const misjoined=structuredClone(latest);misjoined.public_series.current_public_projection.forecast_week='2026-W42';
