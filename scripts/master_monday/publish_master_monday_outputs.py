@@ -113,8 +113,12 @@ def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
     def safe_sha(value:Any)->str|None:
         return value if isinstance(value,str) and re.fullmatch(r'[0-9a-f]{64}',value) else None
     year=int(machine['iso_year']);week=int(machine['iso_week'])
-    if not 1<=week<=53 or year<2000 or year>9999:
+    if year<2000 or year>9999:
         raise ValueError('weekly_audit_invalid_iso_week')
+    try:
+        datetime.fromisocalendar(year,week,1)
+    except ValueError as exc:
+        raise ValueError('weekly_audit_invalid_iso_week') from exc
     if year!=int(pointer['iso_year']) or week!=int(pointer['iso_week']):
         raise ValueError('weekly_audit_pointer_week_mismatch')
     digest=safe_sha(machine.get('package_sha256'))
@@ -219,13 +223,14 @@ def main():
     pointer={'contract':'MASTER_MONDAY_DELIVERY_POINTER_v1','iso_year':freeze['iso_year'],'iso_week':freeze['iso_week'],'status':effective_status,'producer_status':producer_status,'machine_package_path':str(machine_path),'machine_package_sha256':machine['package_sha256'],'report_path':str(a.output_dir/'MASTER_MONDAY_REPORT.md'),'preflight_status':preflight['packet']['status'],'freeze_sha256':freeze['freeze_sha256'],'experiment_learning_status':experiment_status,'scorecard_status':scorecard.get('status','UNKNOWN'),'operational_translation_status':translation.get('status','UNKNOWN'),'shadow_admission_status':shadow.get('overall_status','UNKNOWN'),'shadow_admission_human_confirmation_required':False,'consumer_receipt_status':consumer_receipt.get('status','UNAVAILABLE'),'consumer_receipt_state':consumer_receipt.get('consumption_state','UNKNOWN'),'learning_decision_impact_status':learning_impact.get('assessment_status'),'learning_changed_calibration_decision':learning_impact.get('changed_calibration_decision')}
     pointer_path=a.output_dir/'MASTER_MONDAY_DELIVERY_POINTER.json'
     pointer_path.write_bytes(canon(pointer))
-    # Version by the immutable machine self-digest: retries/corrections create
-    # a new sidecar without rewriting the previous week's historical evidence.
-    audit_path=a.output_dir/f"MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_{machine['package_sha256'][:16]}.md"
+    # Version by exact delivered pointer bytes: retries or receipt corrections
+    # get new immutable sidecars even if the machine self-digest is unchanged.
+    pointer_file_sha256=hashlib.sha256(pointer_path.read_bytes()).hexdigest()
+    audit_path=a.output_dir/f"MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_{pointer_file_sha256[:16]}.md"
     audit=build_weekly_intelligence_audit(
         machine,pointer,
         hashlib.sha256(machine_path.read_bytes()).hexdigest(),
-        hashlib.sha256(pointer_path.read_bytes()).hexdigest(),
+        pointer_file_sha256,
     )
     if audit_path.exists() and audit_path.read_text()!=audit:
         raise ValueError('weekly_audit_immutable_snapshot_collision')
