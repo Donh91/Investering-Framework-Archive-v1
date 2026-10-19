@@ -3,6 +3,7 @@
  * Never synthesize a market action, forecast, score or hidden source. */
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
 import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
+import {sourceTrace} from './source-trace.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 const $=id=>document.getElementById(id),keys=['overview','compass','results'];
 const H=[['NEXT_12H','0–12h'],['NEXT_1_3D','1–3d'],['NEXT_5_7D','5–7d'],['NEXT_2_3W','2–3u'],['CYCLE_ALTCOINS_3_8W','3–8u']];
@@ -10,6 +11,20 @@ const T=['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'];
 const dict={
 da:{tabOverview:'Overblik',tabCompass:'Kompas',tabResults:'Resultater',overviewEyebrow:'MARKEDSBILLEDE / LIGE NU',heroOne:'Forstå',heroTwo:'retningen.',heroIntro:'Én tydelig læsning. Én officiel handling. Ægte markedsdata.',weeklyState:'UGENS MARKEDSSTATUS',actionLabel:'OFFICIEL HANDLING · NU',proxyLabel:'RETNINGSPROXY · 0–12 TIMER',proxyCaveat:'Observeret bevægelse, ikke selvstændigt valideret prognose.',riskLabel:'PULLBACK-RISIKO',distributionLabel:'DISTRIBUTION',nextGateLabel:'NÆSTE BEKRÆFTELSE',cycleHeading:'Hvor i cyklussen?',noEta:'Ingen udokumenteret ETA',forecastHeading:'Prognose møder virkelighed.',frozenRange:'Oprindeligt fastlåst interval',chartTitle:'Frossen prognose / faktiske priser',chartTrust:'Grafen viser kun frosne kildepunkter og gyldige observationer. Manglende dagsprognoser tegnes ikke.',compassHeading:'Tydeligere beslutninger.',compassSub:'Markedsretning, handling og tid adskilles. Ingen nye handelssignaler skabes her.',horizonsHeading:'Tidshorisonter',ownerOfficial:'Kun officielt Kompas',time:'Tid',direction:'Retning',actionShort:'Handling',tiersHeading:'Kapitalrotation',asset:'Aktiv',state:'Status',protectionHeading:'Beskyttelse og re-entry',pullback:'PULLBACK',resultsHeading:'Beviser frem for hype.',resultsSub:'Den senest afsluttede uge, dens reelle dækning og seks frosne intervaller. Ikke en opdigtet samlet præcision.',completedPrecision:'SENEST AFSLUTTEDE PRISPRÆCISION',coverage:'KILDEDÆKNING',hours:'Kvalificerede observationstimer',weeklyScoreTable:'Frossent interval vs. faktisk',sixWindows:'BTC / ETH · 3 vinduer',assetWindow:'Aktiv / vindue',frozenForecast:'Frossen prognose',observed:'Observeret',precision:'Præcision',methodHeading:'Hvad er egentlig verificeret?',methodText:'Prisintervaller måles med 70/30-metoden. Strukturanalyse scores ikke i procent efter CN #26. Uafhængig forsegling må ikke påstås uden bevis.',openScoreRepo:'Åbn offentligt kildearkiv ↗',previewOnly:'Ikke standardforsiden',legacySite:'Åbn eksisterende site ↗',mondayTitle:'Hvad viser mandagens grundlag?',mondayAnalytics:'ANALYSEGRUNDLAG',mondayEvidence:'KILDESTATUS · IKKE HANDELSSIGNAL',mondayScore:'SCORECARD',mondayTranslation:'OPERATIONEL ANALYSE',mondayApi:'AI-FORSKNING · SHADOW',mondayBoundary:'Frosset ugegrundlag er historisk kontekst. Kun et friskt, kildeverificeret Official Compass kan eje handlingen NU.'},
 en:{tabOverview:'Overview',tabCompass:'Compass',tabResults:'Results',overviewEyebrow:'MARKET OVERVIEW / RIGHT NOW',heroOne:'Read',heroTwo:'the shift.',heroIntro:'One clear reading. One official action. Real market evidence.',weeklyState:'THIS WEEK’S MARKET STATUS',actionLabel:'OFFICIAL ACTION · NOW',proxyLabel:'DIRECTION PROXY · 0–12 HOURS',proxyCaveat:'Observed continuation, not an independently validated forecast.',riskLabel:'PULLBACK RISK',distributionLabel:'DISTRIBUTION',nextGateLabel:'NEXT CONFIRMATION',cycleHeading:'Where are we in the cycle?',noEta:'No unsupported ETA',forecastHeading:'Forecast meets reality.',frozenRange:'Originally frozen weekly range',chartTitle:'Frozen forecast / actual prices',chartTrust:'Only original frozen points and eligible observations are shown. Missing daily forecasts are not drawn.',compassHeading:'Clearer decisions.',compassSub:'Direction, action and timing remain separate. No new trading signals are created here.',horizonsHeading:'Time horizons',ownerOfficial:'Official Compass only',time:'Horizon',direction:'Direction',actionShort:'Action',tiersHeading:'Capital rotation',asset:'Asset',state:'Status',protectionHeading:'Protection and re-entry',pullback:'PULLBACK',resultsHeading:'Receipts, not hype.',resultsSub:'Last completed week, real evidence coverage and six original frozen windows. No invented overall accuracy.',completedPrecision:'LATEST COMPLETED PRICE PRECISION',coverage:'SOURCE COVERAGE',hours:'Eligible observation hours',weeklyScoreTable:'Frozen range vs actual',sixWindows:'BTC / ETH · 3 windows',assetWindow:'Asset / window',frozenForecast:'Frozen forecast',observed:'Observed',precision:'Precision',methodHeading:'What is actually verified?',methodText:'Price ranges use the established 70/30 method. Structure analysis has no percentage score after CN #26. No claim of independent sealing without proof.',openScoreRepo:'Open public source archive ↗',previewOnly:'Not the default homepage',legacySite:'Open existing site ↗',mondayTitle:'What does Monday’s evidence show?',mondayAnalytics:'ANALYTICAL CONTEXT',mondayEvidence:'SOURCE STATUS · NOT A TRADE SIGNAL',mondayScore:'SCORECARD',mondayTranslation:'OPERATIONAL ANALYSIS',mondayApi:'AI RESEARCH · SHADOW',mondayBoundary:'Frozen completed-week evidence is historical context. Only a fresh, source-verified Official Compass owns the action NOW.'}};
+Object.assign(dict.da,{
+ longHorizonEyebrow:'FROSSET / RESEARCH · IKKE HANDLING NU',
+ longHorizonTitle:'Længere tidshorisonter',
+ longHorizonDisclaimer:'Viser kun kildeudstedt ugentlig og strategisk kontekst, ikke nye køb/sælg-signaler eller bekræftede startdatoer.',
+ sourceOwner:'Kildeansvar',sourceStatusSummary:'Se de underliggende kildeled',
+ sourceStatusDisclaimer:'Hver datakilde har sin egen status. Shadow og strategi er ikke-bindende og kan aldrig ændre den officielle handling.'
+});
+Object.assign(dict.en,{
+ longHorizonEyebrow:'FROZEN / RESEARCH · NOT CURRENT ACTION',
+ longHorizonTitle:'Longer time horizons',
+ longHorizonDisclaimer:'Only original weekly and strategic source context, not new buy/sell signals or confirmed start dates.',
+ sourceOwner:'Source owner',sourceStatusSummary:'Inspect underlying source layers',
+ sourceStatusDisclaimer:'Each owner has an independent status. Shadow and strategic research are nonbinding and cannot change the official action.'
+});
 let lang='da',tab='overview',feeds=null,view=null,error=false,lastChartFingerprint=null,lastChartLang=null;
 const tr=(da,en)=>lang==='da'?da:en, val=x=>typeof x==='string'&&x.trim()?x.trim().slice(0,600):null;
 const num=x=>typeof x==='number'&&Number.isFinite(x);
@@ -84,8 +99,35 @@ function drawMonday(){
  show('monday-api',verified&&m.api_analysis_status==='AVAILABLE_SHADOW_ONLY'
    ?tr('Tilgængelig · ikke-bindende','Available · nonbinding'):'UNAVAILABLE');
 }
+function drawSourceTrace(){
+ const result=sourceTrace(feeds?.latest,feeds?.compass,view);
+ const trust=result.status==='COMPLETE'
+   ?tr('Alle krævede kilder verificeret','All required sources verified')
+   :result.status==='PARTIAL_OR_DEGRADED'
+     ?tr('Delvist kildegrundlag','Partial source evidence')
+     :tr('Kildestatus utilgængelig','Source status unavailable');
+ show('source-trace-status',trust);
+ clear('long-horizon-body');
+ const labels={'2_3w':'2–3u','21_30d':'21–30d','4_8w':'4–8u'};
+ for(const h of result.long_horizons){
+   row('long-horizon-body',[labels[h.id]||h.id,h.direction,
+     h.owner==='CYCLE_NAVIGATOR_WEEKLY'
+       ?tr('Cycle Navigator · frossen uge','Cycle Navigator · frozen week')
+       :tr('Strategisk research · ikke-bindende','Strategic research · nonbinding')]);
+ }
+ clear('source-trace-body');
+ const da={
+   'Official Compass':'Official Compass','Auto Market State':'Auto Market State',
+   'Native Handlekompas':'Native Handlekompas','Shadow research':'Shadow · research',
+   'Strategic Compass':'Strategisk Kompas','Master Monday':'Master Monday',
+   'Cycle Navigator':'Cycle Navigator'
+ };
+ for(const item of result.sources)
+   row('source-trace-body',[lang==='da'?(da[item.name]||item.name):item.name,item.status]);
+}
 function drawCompass(){
  drawMonday();
+ drawSourceTrace();
  const verified=view?.compass?.state==='FRESH'&&view.compass.permit_path_live_gates===true,official=verified?feeds.compass:null;
  if(!official){missing('horizon-body');missing('tier-body')}
  else{
