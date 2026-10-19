@@ -217,11 +217,51 @@
       "additional_sol_pass_limit": 1,
       "selected_live_rules": [],
       "prior_sol_r0_resolved_only_as_api_review": true,
-      "completed_api_results": ["research/api_agent/outputs/research_lab_sol/TASK2-R1-CFGI-PIT-FALSIFICATION-002/issue-1476/comment-6176416300/receipt.json"],
+      "completed_api_results": [
+        "research/api_agent/outputs/research_lab_sol/TASK2-R1-CFGI-PIT-FALSIFICATION-002/issue-1476/comment-6176416300/receipt.json"
+      ],
       "last_verified_api_model": "gpt-6.1-sol",
       "last_advisory_verdict": "INSUFFICIENT_EVIDENCE_NOT_SCIENTIFICALLY_ADMITTED",
       "new_paid_attempts_authorized": false,
       "owner_hold_reason": "Genuine PASS receipt already persisted; no repeat until separately released against verifiably NEW, independently source-bound PIT or delivery evidence. Owner must adjudicate rather than replay identical R1 packet."
+    },
+    {
+      "sequence": 9,
+      "mission_id": "SITE-COMPASS-P0-SOL61-20261019-001",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_RELEASE_REVIEW_v1.json",
+      "context_status": "EXACT_1683_AND_1680_PATCH_SNAPSHOT_SITE_COMPASS_SOURCE_REVIEW",
+      "context_paths": [
+        "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_EXACT_PR_PATCHES_A.md",
+        "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_EXACT_PR_TESTS_AND_VNEXT_B.md",
+        "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_RELEASE_REVIEW_v1.json",
+        "AGENTS.md",
+        "05_CYCLE_NAVIGATOR/site/SITE_CONTRACT.md"
+      ],
+      "release_gate": "NEW_2026_10_19_OWNER_DIRECTED_P0_SITE_SOURCE_ADVERSARIAL_REVIEW",
+      "no_early_sol_opinion": true,
+      "pass_scope": "ONE_PAID_REVIEW_OF_TWO_RELATED_PR_DIFFS_ADVISORY_ONLY",
+      "additional_sol_pass_limit": 1,
+      "selected_live_rules": [],
+      "new_paid_attempts_authorized": true
+    },
+    {
+      "sequence": 10,
+      "mission_id": "TASK2-PIT-P0-SOL61-20261019-002",
+      "state": "OWNER_HELD_PENDING_SEQUENTIAL_RELEASE",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json",
+      "context_status": "EXACT_PR1675_2026_10_19_REVISION",
+      "context_paths": [
+        "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_EXACT_PR_PATCHES_A.md",
+        "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json",
+        "AGENTS.md"
+      ],
+      "release_gate": "FIRST_MISSION_RECEIPT_AND_FRESH_HEAD_REVALIDATION",
+      "no_early_sol_opinion": true,
+      "pass_scope": "SEPARATE_NEW_MATERIAL_TASK2_PIT_FALSIFIER_ONE_PAID_PASS",
+      "additional_sol_pass_limit": 1,
+      "selected_live_rules": [],
+      "new_paid_attempts_authorized": false
     }
   ],
   "authority": {
@@ -234,6 +274,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": null,
-  "program_phase": "TASK2_R1_SOL61_API_COMPLETED_INSUFFICIENT_EVIDENCE__PIT_AND_DELIVERY_STILL_BLOCKED"
+  "active_mission": "SITE-COMPASS-P0-SOL61-20261019-001",
+  "program_phase": "2026_10_19_SITE_COMPASS_REVIEW_ACTIVE_SECOND_TASK2_PIT_HELD"
 }
