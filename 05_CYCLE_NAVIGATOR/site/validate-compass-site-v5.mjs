@@ -6,7 +6,10 @@ import { fileURLToPath } from 'node:url';
 const site=dirname(fileURLToPath(import.meta.url));
 const dist=resolve(site,'dist');
 const compass=JSON.parse(await readFile(resolve(dist,'data/compass.json'),'utf8'));
-const index=await readFile(resolve(dist,'index.html'),'utf8');
+const index=await readFile(resolve(dist,'legacy/index.html'),'utf8');
+// Premium is now the canonical homepage. The former integrated Compass renderer
+// intentionally belongs exclusively to /legacy/, not the premium root.
+const premiumHome=await readFile(resolve(dist,'index.html'),'utf8');
 const renderer=await readFile(resolve(dist,'compass-product-v5.js'),'utf8');
 const premiumRenderer=await readFile(resolve(site,'market-compass-premium.js'),'utf8');
 const event=JSON.parse(await readFile(resolve(dist,'data/compass-event.json'),'utf8'));
@@ -132,7 +135,11 @@ if(compass.data_status==='OK'){
   const meme=(compass.capitalization_ladder||[]).find(x=>x.segment==='MEMES');
   if(!meme||meme.status!=='UNAVAILABLE'||meme.action!=='UNAVAILABLE'||meme.direction!=='UNAVAILABLE') throw Error('meme rung must fail closed');
 }
-if(!index.includes('./compass-product-v5.js')) throw Error('Compass renderer not activated');
+if(!index.includes('./compass-product-v5.js')) throw Error('Legacy Compass renderer not activated');
+if(!premiumHome.includes('<base href="./vnext/">')||!premiumHome.includes('PREMIUM LIVE')||!premiumHome.includes('role="tablist"'))
+ throw Error('Premium canonical homepage shell not activated');
+if(!premiumHome.includes('src="./app.mjs"')||premiumHome.includes('src="./public-product.js"')||premiumHome.includes('src="./compass-product-v5.js"'))
+ throw Error('Premium homepage contaminated by legacy renderer');
 for(const token of ['MARKET COMPASS','NEXT 12 HOURS','NEXT 1–3 DAYS','NEXT 5–7 DAYS','ALTCOIN ACTION · OFFICIAL COMPASS','Bitcoin → memes','CURRENT POSITION','NEXT IF CONFIRMED','NEXT WINDOW','Time horizon: now → 5–7 days.','ROTATION POSITION','EXPECTED WINDOW','08:17 / 20:17 CPH','nextCompassAt','MARKET MOVE DETECTED','Compass reassessment in progress','NEXT SCHEDULED COMPASS','event refresh can publish earlier','PROTECTION & RE-ENTRY','PULLBACK RISK','RE-ENTRY','portfolio actions stay private','MARKET WEATHER · LIVE COMPASS','Directional pressure','1–3 DAYS','5–7 DAYS','2–3 WEEKS','Evidence balance · not probability','AWAITING COMPASS']) if(!renderer.includes(token)) throw Error(`renderer missing ${token}`);
 if(/HANDLEKOMPAS|MASTER MONDAY/.test(renderer)) throw Error('internal product language leaked');
 if(/source_bindings|evidence_snapshot/.test(JSON.stringify(compass))) throw Error('private Compass evidence leaked');
