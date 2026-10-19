@@ -17,6 +17,7 @@ export function releasePremiumShell(html){
   requireOnce(html,'href="./premium.css"','PREMIUM_CSS');
   requireOnce(html,'src="./app.mjs"','PREMIUM_APP');
   requireOnce(html,'role="tablist"','PREMIUM_TABS');
+  requireOnce(html,'href="#content"','SKIP_LINK');
   for(const id of ['view-overview','view-compass','view-results'])
     requireOnce(html,'id="'+id+'"','MISSING_'+id.toUpperCase());
   requireOnce(html,'PREMIUM PREVIEW','PREVIEW_MARK');
@@ -32,6 +33,7 @@ export function releasePremiumShell(html){
     .replace('PREMIUM PREVIEW','PREMIUM LIVE')
     .replace('aria-label="Cycle Navigator vNext"','aria-label="Cycle Navigator"')
     .replace('href="./" class="brand"','href="../" class="brand"')
+    .replace('href="#content"','href="../#content"')
     .replace('CN / PREMIUM CANDIDATE','CN / PREMIUM 1.0')
     .replace('data-t="previewOnly">Ikke standardforsiden','>Premium 1.0')
     .replace('href="../index.html" data-t="legacySite">Åbn eksisterende site ↗','href="../legacy/">Legacy ↗');
