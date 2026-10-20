@@ -38,3 +38,11 @@
 /* Archived CN_LOGO.svg keeps its original compass and wordmark proportions. */
 .brand-logo{display:block;width:218px;max-width:100%;height:auto}
 @media(max-width:520px){.brand-logo{width:190px}}
+
+/* Official owner expiry is longer than a Pages build time. At 390px it must wrap
+ * within the screen rather than compress the left source status or overflow. */
+@media(max-width:520px){
+ .statusbar{flex-wrap:wrap;gap:4px 12px}
+ .statusbar>div{flex:1 1 180px;min-width:0}
+ .statusbar #source-clock{flex:0 1 auto;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:right}
+}
