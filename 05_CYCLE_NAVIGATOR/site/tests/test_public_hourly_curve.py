@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 import json
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from scripts.cycle_navigator.build_public_live_precision import public_hourly_price_path
 
 def dt(t: str) -> datetime:
