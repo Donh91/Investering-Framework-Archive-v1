@@ -135,6 +135,19 @@ class CompoundingLearningControllerTest(unittest.TestCase):
                 datetime(2026, 1, 8, tzinfo=UTC))
             self.assertFalse(any("SCIENTIFIC_ELIGIBLE" in k for k in keys))
 
+    def test_inconclusive_physical_outcomes_do_not_create_material_evidence(self):
+        row = candidate(state="MATURED_INCONCLUSIVE", matured_outcome_count=25,
+                        scientific_score_eligible_outcome_count=0)
+        adj = adjudication(action="KEEP_SHADOW_INCONCLUSIVE",
+                           state="MATURED_INCONCLUSIVE", matured=25)
+        adj["candidate_actions"][0]["scientific_score_eligible_outcome_count"] = 0
+        families = controller.build_hypothesis_families(registry(row), admission(), adj)
+        self.assertEqual(len(families), 1)
+        self.assertFalse(families[0]["material_evidence"])
+        self.assertEqual(families[0]["current_evidence_status"], "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE")
+        self.assertEqual(families[0]["matured_outcome_count_total"], 25)
+        self.assertEqual(families[0]["scientific_score_eligible_outcome_count_total"], 0)
+
     def test_stale_adjudication_cannot_reinterpret_newer_registry(self):
         row = candidate(state="MATURED_SUPPORTED", matured_outcome_count=10)
         stale = adjudication(
