@@ -94,7 +94,7 @@ function probeChartRender(data){
   const series=[];
   const scale={
     timeToCoordinate(t){return 25+(t-Date.parse('2026-10-05T00:00:00Z')/1000)/86400*58},
-    setVisibleLogicalRange(){}
+    setVisibleLogicalRange(){},fitContent(){}
   };
   const chart={
     timeScale(){return scale},remove(){},subscribeCrosshairMove(){},subscribeClick(){},
@@ -146,11 +146,17 @@ const a11yLegacyNoActualDa=chartGraphDescription(chartModel(neitherObservedNorPu
 chartAPI.CNI18n.language='en';
 const publishedRender=probeChartRender(dailyFixture);
 const legacyRender=probeChartRender(synthetic);
+const hourlyRender=probeChartRender(hourlyActual);
 const packageSanitizer=new Function(build.slice(build.indexOf('const pick='),build.indexOf('async function readJson'))+';return sanitizePackage;')();
 const translationProjection=new Function('sanitizePackage','standaloneFreeze','publicStructureAnalysis','return '+build.slice(build.indexOf('function publicTranslations('),build.indexOf('const snapshot=')))(packageSanitizer,{},()=>null);
 const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
 const acceptedTranslations=translationProjection(bilingualFixture);
 const checks=[
+ ['Real TradingView mount draws two independent GREEN 1h runs, BLUE daily series stays absent without source',
+   hourlyRender.series.filter(s=>s.options?.color==='#27c59a').length===2&&
+   hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
+   hourlyRender.series.filter(s=>s.options?.color==='#5f96ff').every(s=>s.data.length===0)&&
+   chartSource.includes('chart.timeScale().fitContent()')],
  ['TRUE hourly observations render actual line with missing hours disconnected and no fake future forecast',
    hourlySourceModel.hourly.length===5&&actualHourlyPlan.forecast.length===0&&
    actualHourlyPlan.actualRuns.length===2&&actualHourlyPlan.actualRuns[0].length===3&&
