@@ -140,10 +140,14 @@ jobs:
             --repo-root . \
             --output-root runtime/framework-learning-supervisor \
             --finalize-strategist
+          if python -c "import json; from pathlib import Path; p=json.loads(Path('runtime/framework-learning-supervisor/strategist/LATEST.json').read_text()); exit(0 if p.get('input_status') == 'CURRENT' else 1)"; then
           python scripts/framework_intelligence/framework_strategist_semantic_v1.py prepare \
             --repo-root . \
             --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
             --strategist-path runtime/framework-learning-supervisor/strategist/LATEST.json
+          else
+            echo 'Semantic strategist not qualified in PR dry-run: paid preparation correctly skipped'
+          fi
           python scripts/framework_intelligence/operational_memory_v1.py \
             --repo-root . \
             --output-root runtime/operational-memory \
