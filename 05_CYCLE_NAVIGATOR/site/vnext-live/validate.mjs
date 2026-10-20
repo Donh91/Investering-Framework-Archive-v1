@@ -376,8 +376,11 @@ assert.match(client,/inspectOfficialPublicFeeds\(feeds\.latest,feeds\.compass,\{
 
 assert.match(css, /\.cycle-step\[data-reference="true"\]/);
 assert.doesNotMatch(css, /\.cycle-step:first-child\{/);
-assert.match(client, /p\.current_checkpoint\?\.key===phaseKeys\[i\]/);
-assert.match(client, /FROZEN_WEEK_REFERENCE/);
+// The old five-node Overview rail was intentionally retired. Assert that the
+// product now binds the source checkpoint to the full ten-stage PATH rail.
+assert.match(read('premium-experience.mjs'), /p\.current_checkpoint\?\.key===x\.key/);
+assert.match(read('premium-experience.mjs'), /FROZEN_WEEK_REFERENCE/);
+assert.match(html, /id="premium-path-rail"/);
 assert.match(client, /document\.addEventListener\('visibilitychange',\(\)=>\{if\(!document.hidden\)load\(\)\}\)/);
 assert.match(client, /setInterval\(\(\)=>\{if\(!document.hidden\)load\(\)\},300000\)/);
 assert.match(client,/setTimeout\(\(\)=>controller\.abort\(\),10000\)/);
@@ -387,4 +390,4 @@ assert.match(client,/finally\{clearTimeout\(deadline\);loading=false;refresh\(\)
 assert.match(site,/resolve\(outputDir,"vnext"\)/);
 assert.match(site,/await copyFile\(resolve\(siteDir,"vnext-live",file\),resolve\(vnextDir,file\)\)/);
 execFileSync(process.execPath,['--check',resolve(dir,'app.mjs')],{stdio:'pipe'});
-console.log('PASS vNext: W43 source truth, official freshness, score isolation, negative gates, three-view shell, i18n and syntax');
+console.log('PASS vNext: W43 source truth, official freshness, score isolation, negative gates, four-view product shell, i18n and syntax');
