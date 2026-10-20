@@ -25,6 +25,17 @@ PROFILE_DEFAULTS = {
     "CONFIRMATORY": {"day_checkpoints": DESCRIPTIVE_CHECKPOINT_DAYS, "matured_checkpoints": []},
 }
 ESCALATIONS = {"RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW", "RUN_FAILURE_AND_RETIREMENT_REVIEW"}
+
+
+def _eligible(row):
+    """Fail closed on missing, noninteger, or physically impossible eligibility."""
+    value, physical = row.get("scientific_score_eligible_outcome_count"), row.get("matured_outcome_count")
+    return value if type(value) is int and value >= 0 and type(physical) is int and value <= physical else 0
+
+
+def _science_floor(profile, cfg):
+    checkpoints = cfg.get("matured_checkpoints", [])
+    return min(checkpoints) if checkpoints and profile != "CONFIRMATORY" else None
 PRIORITY = {
     "CONTESTED": 0, "SUPPORTED_NEEDS_INCREMENTAL_VALUE": 1,
     "NEGATIVE_EVIDENCE_NEEDS_FAILURE_REVIEW": 2, "INCONCLUSIVE_KEEP_FROZEN": 3,
@@ -97,6 +108,10 @@ def _current(candidate, admission_row, row):
         return False, "LIFECYCLE_STATE_DRIFT"
     if int(row.get("matured_outcome_count") or 0) != int(candidate.get("matured_outcome_count") or 0):
         return False, "MATURED_COUNT_DRIFT"
+    if _eligible(row) != _eligible(candidate):
+        return False, "SCIENTIFIC_ELIGIBILITY_DRIFT"
+    if str(row.get("selected_action") or "") in ESCALATIONS and _eligible(candidate) == 0:
+        return False, "NO_SCIENTIFIC_ELIGIBLE_OUTCOMES"
     current_admission = str(admission_row.get("status") or candidate.get("scientific_admission_status") or "")
     row_admission = str(row.get("scientific_admission_status") or "")
     if current_admission and row_admission and current_admission != row_admission:
@@ -148,24 +163,26 @@ def evaluate_candidates(registry, admission, adjudication, policy, previous_stat
         cfg = (policy.get("profiles") or PROFILE_DEFAULTS).get(profile, PROFILE_DEFAULTS["STANDARD"])
         age, basis = _age(candidate, admission_row, as_of)
         matured = int(candidate.get("matured_outcome_count") or 0)
+        eligible_count = _eligible(candidate)
+        floor = _science_floor(profile, cfg)
         keys = []
         for day in cfg.get("day_checkpoints", []):
             key = f"{cid}:CHECKPOINT:DAY:{int(day)}"
             if age is not None and age >= int(day) and key not in prior:
                 keys.append(key)
         for count in cfg.get("matured_checkpoints", []):
-            key = f"{cid}:CHECKPOINT:MATURED:{int(count)}"
-            if matured >= int(count) and key not in prior:
+            key = f"{cid}:CHECKPOINT:SCIENTIFIC_ELIGIBLE:{int(count)}"
+            if eligible_count >= int(count) and key not in prior:
                 keys.append(key)
         row = jmap.get(cid)
         current, freshness = _current(candidate, admission_row, row)
-        if current and str(row.get("selected_action") or "") in ESCALATIONS:
-            key = f"{cid}:ADJUDICATION:{row['selected_action']}:{matured}"
+        if current and floor is not None and eligible_count >= floor and str(row.get("selected_action") or "") in ESCALATIONS:
+            key = f"{cid}:ADJUDICATION:{row['selected_action']}:{eligible_count}"
             if key not in prior:
                 keys.append(key)
         if not keys:
             continue
-        state, action, why, eligible, question = _learning(row, current)
+        state, action, why, eligible, question = _learning(row, bool(current and floor is not None and eligible_count >= floor))
         packets.append({
             "contract": "COMPOUNDING_LEARNING_CHECKPOINT_PACKET_v1",
             "candidate_id": cid,
@@ -180,6 +197,7 @@ def evaluate_candidates(registry, admission, adjudication, policy, previous_stat
             "age_basis": basis,
             "observation_count": int(candidate.get("observation_count") or 0),
             "matured_outcome_count": matured,
+            "scientific_score_eligible_outcome_count": eligible_count,
             "semantic_fingerprint": str(admission_row.get("semantic_fingerprint") or candidate.get("semantic_fingerprint") or ""),
             "trigger_event_keys": sorted(keys),
             "descriptive_checkpoint_days_reached_this_run": sorted(int(k.rsplit(":", 1)[-1]) for k in keys if ":CHECKPOINT:DAY:" in k),
@@ -205,7 +223,7 @@ def evaluate_candidates(registry, admission, adjudication, policy, previous_stat
     packets.sort(key=lambda x: (
         0 if x["proposal_eligible"] else 1,
         PRIORITY.get(x["learning_state"], 99),
-        -x["matured_outcome_count"], -x["observation_count"], x["candidate_id"],
+        -x["scientific_score_eligible_outcome_count"], -x["observation_count"], x["candidate_id"],
     ))
     selected = packets[: int(policy.get("max_checkpoint_candidates_per_run", 25))]
     return selected, sorted({key for packet in selected for key in packet["trigger_event_keys"]})
@@ -226,7 +244,7 @@ def build_hypothesis_families(registry, admission, adjudication):
         support, negative, inconclusive, duplicate = [], [], [], []
         stale, quarantine, mapping, signatures = [], [], [], []
         titles, kinds, profiles, regimes = set(), set(), set(), set()
-        matured_total = observation_total = 0
+        matured_total = eligible_total = observation_total = 0
         max_observations = 0
         for candidate, admission_row, row in members:
             cid = str(candidate["candidate_id"])
@@ -238,6 +256,8 @@ def build_hypothesis_families(registry, admission, adjudication):
             matured = int(candidate.get("matured_outcome_count") or 0)
             observations = int(candidate.get("observation_count") or 0)
             matured_total += matured
+            eligible_count = _eligible(candidate)
+            eligible_total += eligible_count
             observation_total += observations
             max_observations = max(max_observations, observations)
             current, _ = _current(candidate, admission_row, row)
@@ -245,6 +265,11 @@ def build_hypothesis_families(registry, admission, adjudication):
                 stale.append(cid)
                 continue
             action = str(row.get("selected_action") or "")
+            member_profile = _profile(candidate, {"profiles": PROFILE_DEFAULTS, "default_profile": "STANDARD"})
+            family_floor = _science_floor(member_profile, PROFILE_DEFAULTS.get(member_profile, PROFILE_DEFAULTS["STANDARD"]))
+            if action in ESCALATIONS and (family_floor is None or eligible_count < family_floor):
+                stale.append(cid)
+                continue
             if action == "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW":
                 support.append(cid)
             elif action == "RUN_FAILURE_AND_RETIREMENT_REVIEW":
@@ -263,6 +288,7 @@ def build_hypothesis_families(registry, admission, adjudication):
                     "selected_action": action,
                     "lifecycle_state": candidate.get("state"),
                     "matured_outcome_count": matured,
+                    "scientific_score_eligible_outcome_count": eligible_count,
                 })
 
         if support and negative:
@@ -311,6 +337,7 @@ def build_hypothesis_families(registry, admission, adjudication):
             "complexity_burden": complexity,
             "confidence_class": "LOW" if status in {"CONTESTED", "INCONCLUSIVE_KEEP_FROZEN", "WAIT_FOR_REFRESHED_UNIFIED_ADJUDICATION"} else "LOW_TO_MODERATE" if material else "LOW",
             "matured_outcome_count_total": matured_total,
+            "scientific_score_eligible_outcome_count_total": eligible_total,
             "observation_count_total": observation_total,
             "max_candidate_observation_count": max_observations,
             "material_evidence": material,
