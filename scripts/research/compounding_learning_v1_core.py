@@ -267,8 +267,11 @@ def build_hypothesis_families(registry, admission, adjudication):
             action = str(row.get("selected_action") or "")
             member_profile = _profile(candidate, {"profiles": PROFILE_DEFAULTS, "default_profile": "STANDARD"})
             family_floor = _science_floor(member_profile, PROFILE_DEFAULTS.get(member_profile, PROFILE_DEFAULTS["STANDARD"]))
+            # A current but scientifically ineligible physical outcome remains
+            # operationally visible; it must NOT become a material learning event.
             if action in ESCALATIONS and (family_floor is None or eligible_count < family_floor):
-                stale.append(cid)
+                continue
+            if action == "KEEP_SHADOW_INCONCLUSIVE" and eligible_count == 0:
                 continue
             if action == "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW":
                 support.append(cid)
