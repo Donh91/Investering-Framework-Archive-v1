@@ -156,7 +156,7 @@ function drawResults(){
 function selectTab(id){
  if(!keys.includes(id))return;tab=id;
  for(const key of keys){$('view-'+key).hidden=key!==tab;const b=document.querySelector('[data-tab="'+key+'"]');b.setAttribute('aria-selected',String(key===tab));b.tabIndex=key===tab?0:-1}
- try{history.replaceState(null,'','#'+id)}catch{}
+ try{const url=new URL(location.href);url.hash=id;history.replaceState(null,'',url.href)}catch{}
 }
 function refresh(){
  if(feeds){try{view=inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang})}catch{view=null}}else view=null;
