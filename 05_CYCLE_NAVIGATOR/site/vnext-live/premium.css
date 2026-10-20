@@ -24,3 +24,7 @@
 .source-trace-details summary{min-height:44px;display:flex;align-items:center;padding:9px 4px;color:#2f6fda;font-weight:650;cursor:pointer}
 .source-trace-details .table-scroll{margin-top:12px}
 .source-trace-details summary:focus-visible{outline:3px solid #2f6fda;outline-offset:2px}
+
+/* Acceptance #1578: links need the same 44px target as buttons. */
+.brand,.skip,.quiet-link,.footer a,.fw-footer a,.fw-canvas a{min-width:44px;min-height:44px}
+.skip,.quiet-link,.footer a,.fw-footer a{display:inline-flex;align-items:center}
