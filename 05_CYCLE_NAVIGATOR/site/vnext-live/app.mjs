@@ -178,6 +178,10 @@ async function load(){
  }catch{feeds=null;error=true}
  finally{clearTimeout(deadline);loading=false;refresh()}
 }
+// The shared document base must not turn the skip link into a page reload.
+document.querySelector('.skip').addEventListener('click',event=>{
+ event.preventDefault();$('content').focus();
+});
 document.querySelectorAll('[data-tab]').forEach(b=>{
  b.addEventListener('click',()=>selectTab(b.dataset.tab));
  b.addEventListener('keydown',event=>{
