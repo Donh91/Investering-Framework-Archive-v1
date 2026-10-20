@@ -95,8 +95,9 @@ def _read(root: Path, rel: str, expected: str, now: datetime):
                 return out, None
         stamp = data.get("generated_at_utc") or data.get("issued_at_utc")
         if stamp is None:
-            out["source_status"] = "VALID_UNDATED_POLICY"
-            return out, data
+            # Mutable research sources without a clock cannot prove freshness.
+            out["source_status"] = "MISSING_SOURCE_CLOCK"
+            return out, None
         dt = _clock(stamp)
         if dt is None:
             out["source_status"] = "INVALID_SOURCE_CLOCK"
@@ -132,11 +133,11 @@ def build(root: Path, now: datetime) -> dict:
             source, data = _read(root, rel, contract, now)
             evidence.append(source)
             if data is not None and source["source_status"] in (
-                "CURRENT_CONTRACT_VALID", "VALID_UNDATED_POLICY"
+                "CURRENT_CONTRACT_VALID"
             ):
                 admitted[contract] = data
         source_ok = all(e["source_status"] in (
-            "CURRENT_CONTRACT_VALID", "VALID_UNDATED_POLICY"
+            "CURRENT_CONTRACT_VALID"
         ) for e in evidence)
         if lane_id == "COMPASS":
             calibration = admitted.get("ACTION_COMPASS_PROTECTION_CALIBRATION_v2", {})
