@@ -66,6 +66,8 @@ jobs:
         run: python3 scripts/cycle_navigator/build_public_live_precision.py
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Verify real 390/430 Premium Chrome mobile behavior
+        run: node 05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs
       - name: Verify final investor-facing shell and privacy
         run: |
           test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
