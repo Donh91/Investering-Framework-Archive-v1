@@ -881,10 +881,10 @@ jobs:
           if ! python scripts/api_agent/check_api_lane_budget.py \
               --receipt-root research/api_agent/outputs \
               --task FRAMEWORK_STRATEGIST_SEMANTIC \
-              --cap-usd 0.75 --reserve-usd 0.05 ||
+              --cap-usd 0.75 --reserve-usd 0.20 ||
              ! python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs \
-              --hard-stop-usd 40 --reserve-usd 4.0; then
+              --hard-stop-usd 40 --reserve-usd 4.15; then
             echo "Semantic lane/global budget not verified: no API call."
             exit 0
           fi
@@ -906,6 +906,70 @@ jobs:
           print(json.load(open(sys.argv[1]))["path"])
           PY
           )"
+          # Reserve the WORST-CASE model cost in one shared, month-scoped
+          # GitHub blob before fingerprint reservation or any billable call.
+          # The same path + expected old SHA serializes DIFFERENT fingerprints;
+          # competing writes fail, instead of double-spending the same cap.
+          month="$(date -u +%Y-%m)"
+          monthly="research/framework_learning/strategist/semantic/reservations/monthly/$month.json"
+          absence_flag=()
+          if gh api "repos/$GITHUB_REPOSITORY/contents/$monthly?ref=main" \
+              > "$RUNNER_TEMP/strat-monthly-get.json" 2>"$RUNNER_TEMP/strat-monthly-get.err"; then
+            :
+          elif grep -q 'HTTP 404' "$RUNNER_TEMP/strat-monthly-get.err"; then
+            printf '{}' > "$RUNNER_TEMP/strat-monthly-get.json"
+            absence_flag=(--confirmed-absent)
+          else
+            echo "Cannot verify remote budget ledger; no payment."
+            exit 0
+          fi
+          if ! python -m scripts.framework_intelligence.strategist_budget_claim_v1 \
+                --repo-root . \
+                --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
+                --remote-get "$RUNNER_TEMP/strat-monthly-get.json" \
+                --month "$month" --run-id "$GITHUB_RUN_ID" \
+                "${absence_flag[@]}" > "$RUNNER_TEMP/strat-monthly-row.json"; then
+            echo "Atomic monthly budget admission failed; no payment."
+            exit 0
+          fi
+          python - "$RUNNER_TEMP/strat-monthly-row.json" "$RUNNER_TEMP/strat-monthly-request.json" <<'PY'
+          import json,sys
+          with open(sys.argv[2],"w") as out:
+              json.dump(json.load(open(sys.argv[1]))["request"],out)
+          PY
+          if ! gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$monthly" \
+                --input "$RUNNER_TEMP/strat-monthly-request.json" \
+                > "$RUNNER_TEMP/strat-monthly-put.json"; then
+            echo "Monthly budget CAS lost or rejected; no payment."
+            exit 0
+          fi
+          if ! gh api "repos/$GITHUB_REPOSITORY/contents/$monthly?ref=main" \
+                > "$RUNNER_TEMP/strat-monthly-readback.json"; then
+            echo "No remote month-ledger readback; no payment."
+            exit 0
+          fi
+          if ! python - "$RUNNER_TEMP/strat-monthly-row.json" \
+                "$RUNNER_TEMP/strat-monthly-put.json" \
+                "$RUNNER_TEMP/strat-monthly-readback.json" "$monthly" <<'PY'
+          import base64,hashlib,json,re,sys
+          row=json.load(open(sys.argv[1]))
+          put=json.load(open(sys.argv[2]))
+          get=json.load(open(sys.argv[3]))
+          rel=sys.argv[4]
+          raw=base64.b64decode(row["request"]["content"])
+          digest=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          assert row["path"]==rel and put["content"]["path"]==rel
+          assert put["content"]["sha"]==digest
+          assert isinstance(put["commit"]["sha"],str) and re.fullmatch("[0-9a-f]{40}",put["commit"]["sha"])
+          assert get["sha"]==digest
+          assert base64.b64decode(get["content"])==raw
+          assert row["liability_usd"]>0
+
+          PY
+          then
+            echo "Monthly claim verification failed; no payment."
+            exit 0
+          fi
           # Atomic first-create in GitHub main; rejected duplicate means NO payment.
           if ! gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$rel" \
               --input "$RUNNER_TEMP/strat-reserve-request.json" > "$RUNNER_TEMP/strat-put-response.json"; then
