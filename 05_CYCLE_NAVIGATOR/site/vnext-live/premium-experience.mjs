@@ -27,6 +27,7 @@ const TXT={
   proofButton:'Kopiér auditinstruks',proofCopied:'Auditinstruks kopieret',proofFailure:'Markér og kopiér teksten nedenfor',
   proofStatus:'Uafhængig ex-ante-forsegling afventer dokumentation. Price Range ≠ Direction/Rotation/Pullback Edge.',
   proofOpen:'Åbn ChatGPT',proofArchive:'Åbn offentligt proof-arkiv',
+  pathPage:'Markeds­cyklussen',pathIntro:'Cyklusrejsen og kapitalrotationen. Ingen selvstændige handlesignaler eller opdigtede datoer.',pathStepsTitle:'10 trin. Én sammenhængende rejse.',pathConditional:'Et observationsvindue er ikke en bekræftet dato.',rotationCaveat:'Et HOLD er ikke en bekræftet fase. Memes kræver særskilt kilde.',altNote:'Kun et betinget observationsmål, aldrig en automatisk nedtælling.',interpretation:'Min fortolkning · ugegrundlag og kilder',protection:'Pullback, beskyttelse & re-entry',contextNote:'Master Monday og forskning er baggrund, ikke officielle køb/sælg-signaler.',
   proofPrompt:'Uafhængig kildeaudit af Cycle Navigator: Åbn følgende OFFENTLIGE arkiver. Læs README, v2/scorebook-index.json og latest_readback. For hver påstand: hent ORIGINAL prognose ved præcist source_commit, kontroller offentlig CN-identitet, forecast_week, offentliggørelsestid før outcome, byte-eksakt SHA-256, gældende 70/30-metode, 168-timers dækning og seks frosne BTC/ETH-vinduer. Skeln Price Range-præcision fra Direction/Flow/Rotation og Pullback Edge, som kan være ABSTAIN/PENDING. Kontroller censur, fejl, datamangler og baseline. Kræv uafhængigt verificeret timestamp og immutable release før VERIFIED. Rapporter PASS/FAIL/UNVERIFIED med konkrete kilde-URL\'er; gæt aldrig manglende data.'
  },
  en:{
@@ -49,6 +50,7 @@ const TXT={
   proofButton:'Copy audit instructions',proofCopied:'Audit instructions copied',proofFailure:'Select and copy the prompt below',
   proofStatus:'Independent ex-ante sealing remains unproven. Price Range ≠ Direction/Rotation/Pullback Edge.',
   proofOpen:'Open ChatGPT',proofArchive:'Open public proof archive',
+  pathPage:'The market cycle',pathIntro:'The cycle journey and capital rotation. No independent trading signals or invented dates.',pathStepsTitle:'Ten stages. One coherent journey.',pathConditional:'A watch window is not a confirmed arrival date.',rotationCaveat:'HOLD is not a confirmed phase. MEMES require a dedicated source.',altNote:'Only a conditional watch target, never an automatic countdown.',interpretation:'My interpretation · weekly evidence and sources',protection:'Pullback, protection & re-entry',contextNote:'Master Monday and research are context, not official buy/sell signals.',
   proofPrompt:'Independently audit Cycle Navigator using these PUBLIC GitHub archives. Read README, v2/scorebook-index.json and latest_readback. For each claim fetch ORIGINAL frozen forecast at its exact source_commit; check public CN identity, forecast_week, pre-outcome publication, byte-exact SHA-256, established 70/30 Price Range method, 168-hour eligibility and six original BTC/ETH forecast windows. Keep Price Range precision separate from Direction/Flow/Rotation and Pullback Edge, which can be ABSTAIN/PENDING. Inspect censoring, missing evidence, base rates and controls. Require independently verifiable timestamp and immutable release before saying VERIFIED. Output PASS/FAIL/UNVERIFIED with primary-source URLs. Never fill missing data.'
  }
 };
@@ -108,6 +110,9 @@ function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.clas
 let selectedLens='holder';
 export function renderProductExperience(view,feeds,lang='da'){
  const t=txt(lang),decision=decisionModel(view,feeds?.compass,lang),path=pathModel(view,lang);
+ for(const el of document.querySelectorAll('[data-exp-t]')){
+  const value=t[el.dataset.expT];if(typeof value==='string')el.textContent=value;
+ }
  set('premium-now-action',decision.action);set('premium-now-direction',decision.direction);
  set('premium-sell',decision.sell);set('premium-distribution',decision.distribution);
  set('premium-bull',decision.bull===null?t.unavailable:String(decision.bull));
