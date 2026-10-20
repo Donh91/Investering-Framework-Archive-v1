@@ -314,7 +314,7 @@ def main():
         result = daily_hourly_owner_source_sla(Path(args.root), args.ref, day)
         output = Path(args.out)
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\\n", encoding="utf-8")
+        output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n", encoding="utf-8")
         print(json.dumps({k: v for k, v in result.items() if k != "records"}, sort_keys=True))
         return
     r = census(Path(args.root), Path(args.input), Path(args.out), args.ref, full_census=args.full_census)
