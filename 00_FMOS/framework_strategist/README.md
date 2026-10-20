@@ -1,6 +1,8 @@
 # Framework Strategist v1 — strategic reasoning over existing owner evidence
 
-**STATE: IMPLEMENTATION_CANDIDATE / NOT ACTIVE / BLOCKED ON INDEPENDENT GROK EXACT-HEAD REVIEW.**
+**STATE: DETERMINISTIC V1 MERGED. Semantic V2 remains a separate unmerged candidate.**
+
+Production evidence must distinguish generated advice from accepted consumer intake. Known residual A001 is `SOURCE_MOVED` on the previous-brief consumer. The pending #1667 integration prepares same-run source-verified finalization; until governed merge and natural readback it is not a production fix.
 
 **Owner:** existing Framework Learning Supervisor (no new supervisor/queue/cron/model router).
 **Advisory client:** existing cross-repository Supervisor; optional existing Grok bridge only after bridge independently authenticated and source/budget gates passed.
@@ -28,7 +30,7 @@ Strategist is one deterministic, side-effect-constrained stage in the EXISTING F
 5. Show UNKNOWN prominently when cross-repository proof or multiweek evidence is missing.
 
 ## Deployment
-This PR includes a prepared integration into the **existing** `.github/workflows/framework-learning-supervisor.yml`. The PR MUST remain unmerged until exact-head independent Grok code + threat-model review is available, material findings remediated, full relevant CI PASS and explicit owner-governed release allowed. Never treat a PR comment, external model answer or self-review as GitHub APPROVED. No new automation is created.
+Deterministic v1 was released through PR #1666 after its recorded exact-head Grok delta review. Any follow-up, including unmerged semantic #1667 and the consumer finalizer, still requires its own independent exact-head review, material findings remediated, full relevant CI PASS and explicit owner-governed release. Never treat a PR comment, external model answer or self-review as GitHub APPROVED. No new automation is created.
 
 ## Scope and measurable complexity declaration
 This is a material extension under `00_FMOS/SUBSYSTEM_SUNSET_CONTRACT_v1.md`.
@@ -44,3 +46,11 @@ This is a material extension under `00_FMOS/SUBSYSTEM_SUNSET_CONTRACT_v1.md`.
 ## Operational contract
 `scripts/framework_intelligence/framework_strategist_v1.py` -> `research/framework_learning/strategist/LATEST.json`.
 Advisory-only and deterministic first. Source receipts include immutable hash and UTC age. A green workflow is never proof of investment alpha. Missing/partial/stale receipts force DEGRADED/UNKNOWN, never inferred health or positive progress. Do not publish the briefing as a new market indicator.
+
+## Current owner resource and release clarification — 20 October 2026
+
+Owner reports that Work/Codex share included usage, Codex has no linked payment card or automatic paid top-up, and three unwanted Cloud environments were deleted. These facts are owner-reported, not provider-verified quota/configuration telemetry. Only OpenAI API has the USD40 monthly ceiling; existing lane caps/reserves remain stricter constraints. Deleting environments alone does not establish that PR auto-review is disabled.
+
+Use included Codex only when useful for a concrete blocker; prefer deterministic local/GitHub work while Work is active. No automatic Cloud coding from open queues, duplicate unchanged-head reviews, new agents/automations or unapproved API bills. Shared usage is finite even without automatic dollar exposure.
+
+The authenticated owner authorizes inspection, fixes, tests, self-review and expected-head governed merges for the current mission without recursive handoffs. Record SELF_REVIEW / SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE, never independent review or GitHub APPROVED. Preserve real GitHub safeguards, source/recovery separation, privacy and scientific gates. Current instructions and canonical sources outrank old issue claims. Existing Supervisor #1156 and S1 prompt carry the matching durable receipt and weekly audit mandate.
