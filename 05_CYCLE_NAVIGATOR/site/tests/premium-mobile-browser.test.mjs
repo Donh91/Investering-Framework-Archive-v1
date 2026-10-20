@@ -116,9 +116,14 @@ try{
    const daPath=$('[data-exp-t="pathPage"]').textContent;
    const prompt=$('#premium-proof-prompt').value;
    const sourceClock=$('#source-clock').getBoundingClientRect();
-   const checks=Array.from(document.querySelectorAll('.tabs button,.languages button,[data-investor-lens],#premium-proof-copy,.product-more>summary')).map(e=>{
+   // Only measure touch targets when their owning tab is actually visible.
+   // A hidden tab's DOM elements correctly report 0x0, not a 0px product bug.
+   const sizes=els=>Array.from(els).map(e=>{
     const q=e.getBoundingClientRect();return {label:e.textContent.trim().slice(0,24),width:q.width,height:q.height}
    });
+   const checks=sizes(document.querySelectorAll('.tabs button,.languages button,#premium-proof-copy'));
+   $('[data-tab="compass"]').click();
+   checks.push(...sizes(document.querySelectorAll('[data-investor-lens],.product-more>summary')));
    $('[data-tab="overview"]').click();
    const chartButtons=Array.from(document.querySelectorAll('[data-fw-asset]'));
    let chart='ABSTAIN_NO_ELIGIBLE_CHART_CONTROLS';
@@ -152,7 +157,9 @@ try{
   assert.equal(report.daPath,'Markeds­cyklussen','Danish PATH restoration missing');
   assert.ok(report.promptHasProof,'Proof AI prompt lacks original source/hash anchors');
   assert.ok(report.scoreDirection&&report.scorePullback,'Edge status must never be a fabricated number');
-  assert.ok(report.buttons.every(x=>x.width>=43&&x.height>=43),'Mobile touch target smaller than 44px');
+  assert.ok(report.buttons.every(x=>x.width>=43&&x.height>=43),
+   'Mobile touch target smaller than 44px '+JSON.stringify(report.buttons.filter(x=>x.width<43||x.height<43)));
+
   assert.ok(report.chart!=='FAIL','BTC/ETH chart asset toggling failed');
   assert.equal(report.reducedMotion,'auto','Reduced-motion page scrolling is not disabled');
  }
