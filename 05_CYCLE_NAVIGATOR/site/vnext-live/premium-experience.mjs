@@ -4,8 +4,16 @@
  */
 import {officialBullBear} from './official-bullbear.mjs';
 import {officialPullbackStage} from './official-pullback-stage.mjs';
+import {officialPathView} from './official-path.mjs';
 
 const RISK=['NORMAL','BUILDING','ELEVATED','HIGH','CONFIRMED'];
+const STAGE_LABELS={
+ da:['Normal','Opbygning','Forhøjet','Høj','Bekræftet'],
+ en:['Normal','Building','Elevated','High','Confirmed']
+};
+export function riskStageLabel(stage,lang='da'){
+ const index=RISK.indexOf(stage);return index<0?'UNAVAILABLE':STAGE_LABELS[lang==='en'?'en':'da'][index];
+}
 const TXT={
  da:{
   unavailable:'UTILGÆNGELIG',action:'Handling nu',direction:'0–12t · observeret retning',bull:'Bull',bear:'Bear',
@@ -92,10 +100,11 @@ export function pathModel(view,lang='da'){
    p.source_issue===view?.weekly?.public_issue_number&&
    p.source_week===view?.weekly?.forecast_week&&
    p.source_identity===view?.compass?.compass_id;
- const phases=Array.isArray(p?.full_phases)&&p.full_phases.length===10?
-   p.full_phases.map((x,i)=>({key:safe(x.key)||String(i),label:safe(x.label)||t.unavailable,
+ const sourcePhases=Array.isArray(p?.full_phases)&&p.full_phases.length===10?
+   p.full_phases:officialPathView(null,{lang}).full_phases;
+ const phases=sourcePhases.map((x,i)=>({key:safe(x.key)||String(i),label:safe(x.label)||t.unavailable,
     kind:eligible&&p.current_checkpoint?.key===x.key&&p.current_checkpoint?.status==='FROZEN_WEEK_REFERENCE'?'reference':
-      eligible&&p.next_checkpoint?.key===x.key?'next':'unverified'})):[];
+      eligible&&p.next_checkpoint?.key===x.key?'next':'unverified'}));
  return {eligible,phases,now:eligible?(safe(p.current_checkpoint?.label)||t.pathUnavailable):t.pathUnavailable,
    next:eligible?(safe(p.next_checkpoint?.label)||t.wait):t.wait,
    gate:eligible?(safe(p.next_gate)||t.wait):t.wait,
@@ -136,7 +145,8 @@ export function renderProductExperience(view,feeds,lang='da'){
  set('premium-risk-impact',t.impact);
  set('premium-sell-caveat',t.noSell);
  const steps=reset('premium-risk-steps');
- if(steps){RISK.forEach((s,i)=>{const e=element('span','risk-step',s);
+ if(steps){RISK.forEach((s,i)=>{const e=element('span','risk-step',riskStageLabel(s,lang));
+   e.dataset.sourceState=s;
    e.dataset.current=String(i===decision.riskIndex);e.dataset.prior=String(i<decision.riskIndex);
    steps.append(e)})}
  set('premium-lens-heading',t[selectedLens]);set('premium-lens-note',t[selectedLens+'Note']);
