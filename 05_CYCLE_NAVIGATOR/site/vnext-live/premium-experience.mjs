@@ -85,7 +85,11 @@ export function decisionModel(view,official,lang='da'){
 }
 export function pathModel(view,lang='da'){
  const t=txt(lang),p=view?.path;
- const eligible=p?.state==='SOURCE_BOUND'&&p.is_live===true&&view?.compass?.state==='FRESH';
+ const eligible=p?.state==='SOURCE_BOUND'&&view?.compass?.state==='FRESH'&&
+   view?.compass?.permit_path_live_gates===true&&
+   p.source_issue===view?.weekly?.public_issue_number&&
+   p.source_week===view?.weekly?.forecast_week&&
+   p.source_identity===view?.compass?.compass_id;
  const phases=Array.isArray(p?.full_phases)&&p.full_phases.length===10?
    p.full_phases.map((x,i)=>({key:safe(x.key)||String(i),label:safe(x.label)||t.unavailable,
     kind:eligible&&p.current_checkpoint?.key===x.key&&p.current_checkpoint?.status==='FROZEN_WEEK_REFERENCE'?'reference':
