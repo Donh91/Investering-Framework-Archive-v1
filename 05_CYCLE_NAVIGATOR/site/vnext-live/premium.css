@@ -29,3 +29,6 @@
 .brand,.skip,.quiet-link,.footer a,.fw-footer a,.fw-canvas a{min-width:44px;min-height:44px}
 .skip,.quiet-link,.footer a,.fw-footer a{display:inline-flex;align-items:center}
 .fw-canvas a#tv-attr-logo{width:44px;height:44px;display:flex;align-items:flex-end}
+
+/* Keep every day selectable at 44px on the narrow mobile chart. */
+.chart-area .fw-days{grid-template-columns:repeat(7,minmax(44px,1fr));overflow-x:auto}
