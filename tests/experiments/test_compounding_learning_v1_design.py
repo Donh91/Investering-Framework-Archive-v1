@@ -34,7 +34,9 @@ def policy():
 
 def c(cid="EC-1", **kw):
     row = {"candidate_id": cid, "title": "Prospective X", "kind": "FORECAST_TEST", "created_at_utc": "2026-01-01T00:00:00Z", "state": "INCUBATING", "matured_outcome_count": 0, "observation_count": 1, "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST"}
-    row.update(kw); return row
+    row.update(kw)
+    row.setdefault("scientific_score_eligible_outcome_count", row["matured_outcome_count"])
+    return row
 
 
 def registry(*rows):
@@ -47,11 +49,13 @@ def admissions(*rows):
 
 def a(cid="EC-1", fingerprint="abc", **kw):
     row = {"candidate_id": cid, "status": "QUALIFIED_FOR_FORWARD_TEST", "historical_candidate_requalification": False, "semantic_fingerprint": fingerprint}
-    row.update(kw); return row
+    row.update(kw)
+    row.setdefault("scientific_score_eligible_outcome_count", row["matured_outcome_count"])
+    return row
 
 
 def ar(cid, action, state, matured):
-    return {"candidate_id": cid, "lifecycle_state": state, "matured_outcome_count": matured, "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST", "selected_action": action, "reason": "test", "canonical_effect": False, "portfolio_execution": False}
+    return {"candidate_id": cid, "lifecycle_state": state, "matured_outcome_count": matured, "scientific_score_eligible_outcome_count": matured, "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST", "selected_action": action, "reason": "test", "canonical_effect": False, "portfolio_execution": False}
 
 
 def adjudication(*rows):
