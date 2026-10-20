@@ -159,7 +159,7 @@ function selectTab(id){
  try{history.replaceState(null,'','#'+id)}catch{}
 }
 function refresh(){
- if(feeds){try{view=inspectOfficialPublicFeeds(feeds.latest,feeds.compass)}catch{view=null}}else view=null;
+ if(feeds){try{view=inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang})}catch{view=null}}else view=null;
  document.documentElement.lang=lang;
  document.querySelectorAll('[data-t]').forEach(e=>{if(dict[lang][e.dataset.t])e.textContent=dict[lang][e.dataset.t]});
  document.querySelectorAll('[data-lang]').forEach(e=>e.setAttribute('aria-pressed',String(e.dataset.lang===lang)));
