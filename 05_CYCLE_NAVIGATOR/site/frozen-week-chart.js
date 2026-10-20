@@ -37,7 +37,7 @@
         const time=Date.parse(p?.observed_at_utc)/1000;
         const prev=i?Date.parse(hourlyRaw[i-1]?.observed_at_utc)/1000:-Infinity;
         return typeof p?.observed_at_utc==='string'&&
-          /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:00:00Z$/.test(p.observed_at_utc)&&
+          /^\d{4}-\d{2}-\d{2}T\d{2}:00:00Z$/.test(p.observed_at_utc)&&
           num(p.close)&&Number.isFinite(time)&&
           time>hourStart&&time<=hourEnd&&time<=cutoffSec&&time<=nowSec&&time>prev;
       });
@@ -82,13 +82,13 @@
   function graphDescription(m){
     const observed=(m.hourly?.length||0)>0||m.days.some(d=>d.actual);
     const observationCopy=m.hourly?.length
-      ?txt('Green solid line: verified 1h closing observations only. Missing hours break the line. Daily high/low whiskers require complete coverage.',
-           'Grøn fuldt optrukken linje: kun verificerede timeslukkepriser. Manglende timer afbryder kurven. Dagens høj/lav kræver komplet dækning.')
+      ?txt('Green solid line: verified hourly closing prices only; missing hours break the line. Measured daily high/low whiskers require complete coverage.',
+           'Grøn fuldt optrukken linje: kun verificerede timeslukkepriser; manglende timer afbryder kurven. Dagens høj/lav kræver komplet dækning.')
       :observed
-      ?txt('Green line: eligible observed daily closes only; missing days are unconnected. Daily high/low bars require complete coverage.',
-           'Grøn kurve: kun gyldige observerede dagslukkepriser; manglende dage forbindes ikke. Dagens høj/lav kræver komplet dækning.')
-      :txt('No eligible observed prices: no green actual line is shown.',
-           'Ingen gyldige observerede priser: ingen grøn faktisk-kurve vises.');
+      ?txt('Green solid line: eligible observed daily prices; missing days are unconnected. Measured high/low whiskers are shown only for those observations.',
+           'Grøn fuldt optrukken linje: gyldige observerede dagspriser; manglende dage forbindes ikke. Målte lav/høj-markeringer vises kun ved disse observationer.')
+      :txt('No eligible observed daily prices yet: no green actual line or measured high/low whiskers are displayed.',
+           'Endnu ingen gyldige observerede dagspriser: ingen grøn faktisk kurve eller målte lav/høj-markeringer vises.');
     if(m.daily.length){
       return txt('Blue dotted line: seven original frozen daily expected closing prices, with original forecast low/high envelope.',
                  'Blå stiplet linje: syv oprindeligt frosne forventede dagslukkepriser med oprindeligt lav/høj-prognoseinterval.')
