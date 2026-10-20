@@ -192,6 +192,73 @@ def census(root, ledger, output, ref, *, full_census=False):
     output.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     return receipt
 
+def daily_hourly_owner_source_sla(root, ref, day, *, now=None):
+    """Research-only paired BTC+ETH first-parent commit-clock audit of 24 due hours.
+
+    Never asserts provider first-known, push receipt, actual cron scheduling or
+    original forecast eligibility. Reuses the existing first-parent file reader.
+    """
+    from datetime import date
+    now = now or datetime.now(timezone.utc)
+    if now.utcoffset() != timedelta(0) or day >= now.date():
+        raise ValueError("ONLY_PREVIOUS_COMPLETE_UTC_DAYS")
+    if git(root, "rev-parse", "--is-shallow-repository").stdout.strip() != "false":
+        raise RuntimeError("FULL_FIRST_PARENT_GIT_HISTORY_REQUIRED")
+    main_sha = git(root, "rev-parse", "--verify", ref).stdout.strip()
+    if len(main_sha) != 40:
+        raise RuntimeError("MAIN_REF_SHA_UNAVAILABLE")
+    cache, records = {}, []
+    midnight = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
+    for hour in range(24):
+        due = midnight + timedelta(hours=hour)
+        source_path = path_at_due(due)
+        first_sha, first = None, None
+        for commit, clock in provenance_history(root, main_sha, source_path, cache):
+            key = ("file", commit, source_path)
+            if key not in cache:
+                result = git(root, "show", f"{commit}:{source_path}", check=False)
+                cache[key] = result.stdout if result.returncode == 0 else None
+            contents = cache[key]
+            if (contents is not None
+                and contains_exact_candle(contents, due, "BTC")
+                and contains_exact_candle(contents, due, "ETH")):
+                first_sha, first = commit, clock
+                break
+        if first is None:
+            verdict = "NOT_PRESENT_IN_FIRST_PARENT_HISTORY"
+        elif first < due:
+            verdict = "CLOCK_ANOMALY_NOT_ADMITTED"
+        elif first <= due + timedelta(minutes=90):
+            verdict = "FIRST_COMMIT_CLOCK_WITHIN_90M"
+        else:
+            verdict = "FIRST_COMMIT_CLOCK_AFTER_90M"
+        records.append({
+            "due_at_utc": iso(due),
+            "source_open_at_utc": iso(due - timedelta(hours=1)),
+            "source_path": source_path,
+            "first_present_main_commit": first_sha,
+            "first_present_committer_utc": iso(first) if first else None,
+            "minutes_after_due": round((first - due).total_seconds() / 60, 3) if first else None,
+            "classification": verdict,
+        })
+    counts = Counter(row["classification"] for row in records)
+    return {
+        "contract": "TASK2_HOURLY_SOURCE_COMMIT_CLOCK_SLA_v1",
+        "authority": {"research_only": True, "original_outcome_rescore": False,
+                      "model_promotion": False, "portfolio_action": False},
+        "utc_due_day": day.isoformat(),
+        "main_first_parent_ref_sha": main_sha,
+        "evaluated_at_utc": iso(now),
+        "expected_due_hours": 24,
+        "first_commit_clock_within_90m": counts["FIRST_COMMIT_CLOCK_WITHIN_90M"],
+        "first_commit_clock_after_90m": counts["FIRST_COMMIT_CLOCK_AFTER_90M"],
+        "not_present_in_first_parent_history": counts["NOT_PRESENT_IN_FIRST_PARENT_HISTORY"],
+        "clock_anomalies": counts["CLOCK_ANOMALY_NOT_ADMITTED"],
+        "evidence_semantics": "GIT_COMMITTER_CLOCK_PROXY_NOT_VERIFIED_PUSH_OR_PROVIDER_FIRST_KNOWN",
+        "records": records,
+    }
+
+
 def self_test():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -236,9 +303,19 @@ def main():
     ap.add_argument("--ref", default="origin/main")
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--full-census", action="store_true")
+    ap.add_argument("--daily-hourly-owner-sla-day")
     args = ap.parse_args()
     if args.self_test:
         print(self_test())
+        return
+    if args.daily_hourly_owner_sla_day:
+        from datetime import date
+        day = date.fromisoformat(args.daily_hourly_owner_sla_day)
+        result = daily_hourly_owner_source_sla(Path(args.root), args.ref, day)
+        output = Path(args.out)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\\n", encoding="utf-8")
+        print(json.dumps({k: v for k, v in result.items() if k != "records"}, sort_keys=True))
         return
     r = census(Path(args.root), Path(args.input), Path(args.out), args.ref, full_census=args.full_census)
     print(json.dumps({"sampled_rows": r["sampled_rows"],
