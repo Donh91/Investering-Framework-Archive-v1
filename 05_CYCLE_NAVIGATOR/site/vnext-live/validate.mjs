@@ -1,6 +1,7 @@
 // Premium vNext candidate production-source contract tests.
 // Runs in current SITE gate; synthetic source fixtures NEVER reach public dist.
 import assert from 'node:assert/strict';
+import './test-premium-experience.mjs';
 import {readFileSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
