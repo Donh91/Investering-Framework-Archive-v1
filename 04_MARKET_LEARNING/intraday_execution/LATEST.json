@@ -3,13 +3,13 @@
     "breadth_delta_vs_prior_observation": 0.0,
     "breadth_rank": 89.28571428571429,
     "btc_accel_rank": 24.404761904761905,
-    "btc_ret4_rank": 53.273809523809526,
-    "btc_rvol_rank": 16.666666666666668,
-    "btc_vwap_rank": 14.880952380952381,
-    "eth_accel_rank": 33.92857142857143,
-    "eth_ret4_rank": 76.78571428571429,
-    "eth_rvol_rank": 12.797619047619047,
-    "eth_vwap_rank": 27.976190476190474,
+    "btc_ret4_rank": 22.61904761904762,
+    "btc_rvol_rank": 70.83333333333333,
+    "btc_vwap_rank": 54.464285714285715,
+    "eth_accel_rank": 17.55952380952381,
+    "eth_ret4_rank": 48.80952380952381,
+    "eth_rvol_rank": 42.26190476190476,
+    "eth_vwap_rank": 59.523809523809526,
     "observation_count": 336,
     "research_eligibility": {
       "breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
@@ -39,8 +39,8 @@
   },
   "contract": "INTRADAY_EXECUTION_LATEST_v1",
   "data_ping_bridge": {
-    "display_line": "EXECUTION RESEARCH: NORMAL | eligibility=ELIGIBLE_RESEARCH_CONTEXT | BTC vwap=-0.5619571777006005% | ETH vwap=-0.33128874543996156% | breadth=79% | sample=337",
-    "shadow_direction_display_line": "SHADOW DIRECTION: 1H BTC DOWN(UNCAL) [status=WARMUP; independent_n=8; agreement=66.67% (not probability)] | 1H ETH NO_EDGE(UNCAL) [status=ABSTAIN_NO_EDGE; independent_n=0; agreement=50.0% (not probability)] | 4H BTC DOWN(UNCAL) [status=WARMUP; independent_n=19; agreement=66.67% (not probability)] | 4H ETH NO_EDGE(UNCAL) [status=ABSTAIN_NO_EDGE; independent_n=0; agreement=50.0% (not probability)] | 24H BTC DOWN(43.5) [status=EARLY_CALIBRATION; independent_n=21; agreement=66.67% (not probability)] | 24H ETH NO_EDGE(UNCAL) [status=ABSTAIN_NO_EDGE; independent_n=0; agreement=50.0% (not probability)] | Large UP | Mid UP | Small UP | Micro NO_EDGE(DATA_GAP)"
+    "display_line": "EXECUTION RESEARCH: NORMAL | eligibility=ELIGIBLE_RESEARCH_CONTEXT | BTC vwap=0.04914685855215151% | ETH vwap=0.1209554828535575% | breadth=79% | sample=337",
+    "shadow_direction_display_line": "SHADOW DIRECTION: 1H BTC NO_EDGE(UNAVAILABLE) [status=NO_PROSPECTIVE_FREEZE_INSUFFICIENT_REMAINING_FORWARD_SPAN; independent_n=0; agreement=83.33% (not probability)] | 1H ETH NO_EDGE(UNAVAILABLE) [status=NO_PROSPECTIVE_FREEZE_INSUFFICIENT_REMAINING_FORWARD_SPAN; independent_n=0; agreement=62.5% (not probability)] | 4H BTC DOWN(UNCAL) [status=WARMUP; independent_n=17; agreement=83.33% (not probability)] | 4H ETH UP(UNCAL) [status=WARMUP; independent_n=16; agreement=62.5% (not probability)] | 24H BTC DOWN(UNCAL) [status=WARMUP; independent_n=12; agreement=83.33% (not probability)] | 24H ETH UP(UNCAL) [status=WARMUP; independent_n=16; agreement=62.5% (not probability)] | Large UP | Mid UP | Small UP | Micro NO_EDGE(DATA_GAP)"
   },
   "duplicate_price_observation_skipped": false,
   "event_summary": {
@@ -63,7 +63,7 @@
     },
     "contract": "INTRADAY_EXECUTION_EVENT_SUMMARY_v1",
     "event_count": 0,
-    "generated_at_utc": "2026-10-20T00:20:00.388682+00:00",
+    "generated_at_utc": "2026-10-20T01:58:18.761701+00:00",
     "governance": {
       "automatic_rule_changes": false,
       "promotion_requires_separate_review": true,
@@ -71,7 +71,7 @@
     },
     "matured_24h_count": 0
   },
-  "generated_at_utc": "2026-10-20T00:20:00.388682+00:00",
+  "generated_at_utc": "2026-10-20T01:58:18.761701+00:00",
   "legacy_execution_event_ledger": {
     "authority": "RESEARCH_TELEMETRY_ONLY_NO_NEW_PROSPECTIVE_EVENT_OUTCOMES",
     "historical_rows_preserved": true,
@@ -85,13 +85,13 @@
       "breadth_delta_vs_prior_observation": 0.0,
       "breadth_rank": 89.28571428571429,
       "btc_accel_rank": 24.404761904761905,
-      "btc_ret4_rank": 53.273809523809526,
-      "btc_rvol_rank": 16.666666666666668,
-      "btc_vwap_rank": 14.880952380952381,
-      "eth_accel_rank": 33.92857142857143,
-      "eth_ret4_rank": 76.78571428571429,
-      "eth_rvol_rank": 12.797619047619047,
-      "eth_vwap_rank": 27.976190476190474,
+      "btc_ret4_rank": 22.61904761904762,
+      "btc_rvol_rank": 70.83333333333333,
+      "btc_vwap_rank": 54.464285714285715,
+      "eth_accel_rank": 17.55952380952381,
+      "eth_ret4_rank": 48.80952380952381,
+      "eth_rvol_rank": 42.26190476190476,
+      "eth_vwap_rank": 59.523809523809526,
       "observation_count": 336,
       "research_eligibility": {
         "breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
@@ -123,27 +123,27 @@
     "btc": {
       "above_opening_range_high": false,
       "above_previous_day_high": false,
-      "below_opening_range_low": true,
-      "below_previous_day_low": false,
-      "close": 81938.4,
-      "distance_from_24h_high_pct": -1.4666057384737585,
-      "distance_from_24h_low_pct": 0.23186870518665526,
-      "funding_event_rate_latest": 0.0001,
-      "momentum_acceleration_1h_vs_prior3h_pp": -0.21355151198243333,
-      "oi_change_1h_pct": -0.06086506531,
-      "opening_range_high_2h": 82570.0,
-      "opening_range_low_2h": 82010.58,
-      "previous_day_high": 82227.28,
-      "previous_day_low": 81218.23,
-      "return_1h_pct": -0.142525746341,
-      "return_4h_pct": 0.07032171881031779,
-      "rolling_relative_quote_volume": 0.5925541017002164,
-      "session_vwap": 82401.46092419366,
-      "taker_buy_quote_share": 0.533117457258,
-      "taker_buy_share_delta_vs_prior3h": -0.028919655760666685,
-      "vwap_deviation_pct": -0.5619571777006005
+      "below_opening_range_low": false,
+      "below_previous_day_low": true,
+      "close": 81736.93,
+      "distance_from_24h_high_pct": -1.7088794824310471,
+      "distance_from_24h_low_pct": 0.34052487897673345,
+      "funding_event_rate_latest": 8.21037876006e-05,
+      "momentum_acceleration_1h_vs_prior3h_pp": -0.21189881233010002,
+      "oi_change_1h_pct": 0.0815741050662,
+      "opening_range_high_2h": 82027.05,
+      "opening_range_low_2h": 81459.54,
+      "previous_day_high": 83158.0,
+      "previous_day_low": 81748.85,
+      "return_1h_pct": -0.245879831678,
+      "return_4h_pct": -0.3476259923245073,
+      "rolling_relative_quote_volume": 1.428690086229602,
+      "session_vwap": 81696.7785997799,
+      "taker_buy_quote_share": 0.452771282256,
+      "taker_buy_share_delta_vs_prior3h": -0.09366797966133339,
+      "vwap_deviation_pct": 0.04914685855215151
     },
-    "captured_at_utc": "2026-10-20T00:20:00.357795+00:00",
+    "captured_at_utc": "2026-10-20T01:58:18.737597+00:00",
     "contract": "INTRADAY_EXECUTION_OBSERVATION_v1",
     "entry_context": {
       "breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
@@ -166,31 +166,31 @@
       "above_previous_day_high": false,
       "below_opening_range_low": false,
       "below_previous_day_low": false,
-      "close": 2408.01,
-      "distance_from_24h_high_pct": -1.564013784251117,
-      "distance_from_24h_low_pct": 0.9571604658768162,
-      "funding_event_rate_latest": 7.25198215006e-05,
-      "momentum_acceleration_1h_vs_prior3h_pp": -0.12924330143546667,
-      "oi_change_1h_pct": 0.112990581015,
-      "opening_range_high_2h": 2428.44,
-      "opening_range_low_2h": 2403.47,
-      "previous_day_high": 2414.0,
-      "previous_day_low": 2370.66,
-      "return_1h_pct": 0.0382204238313,
-      "return_4h_pct": 0.5415358407375281,
-      "rolling_relative_quote_volume": 0.4949306390423429,
-      "session_vwap": 2416.013982411987,
-      "taker_buy_quote_share": 0.416992032259,
-      "taker_buy_share_delta_vs_prior3h": -0.11104416257833333,
-      "vwap_deviation_pct": -0.33128874543996156
+      "close": 2401.95,
+      "distance_from_24h_high_pct": -1.8117378703086828,
+      "distance_from_24h_low_pct": 0.7030915905717805,
+      "funding_event_rate_latest": 7.66694307637e-05,
+      "momentum_acceleration_1h_vs_prior3h_pp": -0.3447394492638666,
+      "oi_change_1h_pct": -0.385715362989,
+      "opening_range_high_2h": 2409.92,
+      "opening_range_low_2h": 2392.3,
+      "previous_day_high": 2446.27,
+      "previous_day_low": 2385.18,
+      "return_1h_pct": -0.251660084468,
+      "return_4h_pct": 0.02706867113644318,
+      "rolling_relative_quote_volume": 0.8745299505502099,
+      "session_vwap": 2399.048219642042,
+      "taker_buy_quote_share": 0.489566965086,
+      "taker_buy_share_delta_vs_prior3h": 0.01745039108366664,
+      "vwap_deviation_pct": 0.1209554828535575
     },
     "ethbtc": {
-      "close": 0.02938,
-      "distance_from_24h_high_pct": -0.305395317271806,
-      "return_1h_pct": 0.13633265167,
-      "return_4h_pct": 0.41011619958988277
+      "close": 0.02939,
+      "distance_from_24h_high_pct": -0.2714625042416041,
+      "return_1h_pct": 0.0340367597005,
+      "return_4h_pct": 0.37568306010928865
     },
-    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20261020T001921Z_4cb28eb2a1c3",
+    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20261020T015744Z_12784c28583c",
     "limitations": {
       "breadth_is_snapshot_context": true,
       "btc_eth_execution_features_use_hourly_archive": true,
@@ -199,7 +199,7 @@
       "top100_intraday_vwap": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE",
       "top100_opening_range": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE"
     },
-    "price_observation_utc": "2026-10-19T23:00:00+00:00",
+    "price_observation_utc": "2026-10-20T00:00:00+00:00",
     "pullback_research_state": "REGIME_NOT_ACTIVE",
     "research_state": "NORMAL"
   },
@@ -218,119 +218,119 @@
       "automatic_signal_reweighting": false,
       "contract": "INTRADAY_DIRECTION_CALIBRATION_v1",
       "path": "04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json",
-      "scored_outcome_count": 581
+      "scored_outcome_count": 586
     },
     "contract": "SHADOW_DIRECTION_CONFIDENCE_v1",
     "data_ping_bridge": {
-      "display_line": "SHADOW DIRECTION: 1H BTC DOWN(UNCAL) [status=WARMUP; independent_n=8; agreement=66.67% (not probability)] | 1H ETH NO_EDGE(UNCAL) [status=ABSTAIN_NO_EDGE; independent_n=0; agreement=50.0% (not probability)] | 4H BTC DOWN(UNCAL) [status=WARMUP; independent_n=19; agreement=66.67% (not probability)] | 4H ETH NO_EDGE(UNCAL) [status=ABSTAIN_NO_EDGE; independent_n=0; agreement=50.0% (not probability)] | 24H BTC DOWN(43.5) [status=EARLY_CALIBRATION; independent_n=21; agreement=66.67% (not probability)] | 24H ETH NO_EDGE(UNCAL) [status=ABSTAIN_NO_EDGE; independent_n=0; agreement=50.0% (not probability)] | Large UP | Mid UP | Small UP | Micro NO_EDGE(DATA_GAP)"
+      "display_line": "SHADOW DIRECTION: 1H BTC NO_EDGE(UNAVAILABLE) [status=NO_PROSPECTIVE_FREEZE_INSUFFICIENT_REMAINING_FORWARD_SPAN; independent_n=0; agreement=83.33% (not probability)] | 1H ETH NO_EDGE(UNAVAILABLE) [status=NO_PROSPECTIVE_FREEZE_INSUFFICIENT_REMAINING_FORWARD_SPAN; independent_n=0; agreement=62.5% (not probability)] | 4H BTC DOWN(UNCAL) [status=WARMUP; independent_n=17; agreement=83.33% (not probability)] | 4H ETH UP(UNCAL) [status=WARMUP; independent_n=16; agreement=62.5% (not probability)] | 24H BTC DOWN(UNCAL) [status=WARMUP; independent_n=12; agreement=83.33% (not probability)] | 24H ETH UP(UNCAL) [status=WARMUP; independent_n=16; agreement=62.5% (not probability)] | Large UP | Mid UP | Small UP | Micro NO_EDGE(DATA_GAP)"
     },
-    "generated_at_utc": "2026-10-20T00:20:00.388682Z",
+    "generated_at_utc": "2026-10-20T01:58:18.761701Z",
     "horizons": {
       "1H": {
-        "display_basis": "FROZEN_PREDICTION",
-        "frozen_issued_at_utc": "2026-10-20T00:20:00.388682Z",
+        "display_basis": "NO_ELIGIBLE_FROZEN_PREDICTION",
+        "frozen_issued_at_utc": null,
         "horizon_hours": 1,
         "prediction_eligibility": {
-          "due_at_utc": "2026-10-20T01:00:00Z",
+          "due_at_utc": "2026-10-20T02:00:00Z",
           "minimum_remaining_forward_hours": 0.5,
-          "remaining_forward_hours_at_issue": 0.666559,
-          "source_cutoff_utc": "2026-10-20T00:00:00Z",
-          "status": "ELIGIBLE"
+          "remaining_forward_hours_at_issue": 0.028122,
+          "source_cutoff_utc": "2026-10-20T01:00:00Z",
+          "status": "INSUFFICIENT_REMAINING_FORWARD_SPAN"
         },
         "targets": {
           "BTC": {
             "calibrated_probability": null,
-            "calibration_group": "BTC:1H:DOWN:4_of_6",
-            "confidence_status": "WARMUP",
-            "direction": "DOWN",
-            "down_votes": 4,
-            "evidence_agreement_pct": 66.67,
-            "independent_calibration_samples": 8,
-            "up_votes": 2,
-            "wilson_lower_95_pct": 21.5
+            "calibration_group": null,
+            "confidence_status": "NO_PROSPECTIVE_FREEZE_INSUFFICIENT_REMAINING_FORWARD_SPAN",
+            "direction": "NO_EDGE",
+            "down_votes": 5,
+            "evidence_agreement_pct": 83.33,
+            "independent_calibration_samples": 0,
+            "up_votes": 1,
+            "wilson_lower_95_pct": null
           },
           "ETH": {
             "calibrated_probability": null,
-            "calibration_group": "ETH:1H:NO_EDGE:4_of_8",
-            "confidence_status": "ABSTAIN_NO_EDGE",
+            "calibration_group": null,
+            "confidence_status": "NO_PROSPECTIVE_FREEZE_INSUFFICIENT_REMAINING_FORWARD_SPAN",
             "direction": "NO_EDGE",
-            "down_votes": 4,
-            "evidence_agreement_pct": 50.0,
+            "down_votes": 3,
+            "evidence_agreement_pct": 62.5,
             "independent_calibration_samples": 0,
-            "up_votes": 4,
+            "up_votes": 5,
             "wilson_lower_95_pct": null
           }
         }
       },
       "24H": {
         "display_basis": "FROZEN_PREDICTION",
-        "frozen_issued_at_utc": "2026-10-20T00:20:00.388682Z",
+        "frozen_issued_at_utc": "2026-10-20T01:58:18.761701Z",
         "horizon_hours": 24,
         "prediction_eligibility": {
-          "due_at_utc": "2026-10-21T00:00:00Z",
+          "due_at_utc": "2026-10-21T01:00:00Z",
           "minimum_remaining_forward_hours": 12.0,
-          "remaining_forward_hours_at_issue": 23.666559,
-          "source_cutoff_utc": "2026-10-20T00:00:00Z",
+          "remaining_forward_hours_at_issue": 23.028122,
+          "source_cutoff_utc": "2026-10-20T01:00:00Z",
           "status": "ELIGIBLE"
         },
         "targets": {
           "BTC": {
-            "calibrated_probability": 43.5,
-            "calibration_group": "BTC:24H:DOWN:4_of_6",
-            "confidence_status": "EARLY_CALIBRATION",
+            "calibrated_probability": null,
+            "calibration_group": "BTC:24H:DOWN:5_of_6",
+            "confidence_status": "WARMUP",
             "direction": "DOWN",
-            "down_votes": 4,
-            "evidence_agreement_pct": 66.67,
-            "independent_calibration_samples": 21,
-            "up_votes": 2,
-            "wilson_lower_95_pct": 24.5
+            "down_votes": 5,
+            "evidence_agreement_pct": 83.33,
+            "independent_calibration_samples": 12,
+            "up_votes": 1,
+            "wilson_lower_95_pct": 39.1
           },
           "ETH": {
             "calibrated_probability": null,
-            "calibration_group": "ETH:24H:NO_EDGE:4_of_8",
-            "confidence_status": "ABSTAIN_NO_EDGE",
-            "direction": "NO_EDGE",
-            "down_votes": 4,
-            "evidence_agreement_pct": 50.0,
-            "independent_calibration_samples": 0,
-            "up_votes": 4,
-            "wilson_lower_95_pct": null
+            "calibration_group": "ETH:24H:UP:5_of_8",
+            "confidence_status": "WARMUP",
+            "direction": "UP",
+            "down_votes": 3,
+            "evidence_agreement_pct": 62.5,
+            "independent_calibration_samples": 16,
+            "up_votes": 5,
+            "wilson_lower_95_pct": 18.5
           }
         }
       },
       "4H": {
         "display_basis": "FROZEN_PREDICTION",
-        "frozen_issued_at_utc": "2026-10-20T00:20:00.388682Z",
+        "frozen_issued_at_utc": "2026-10-20T01:58:18.761701Z",
         "horizon_hours": 4,
         "prediction_eligibility": {
-          "due_at_utc": "2026-10-20T04:00:00Z",
+          "due_at_utc": "2026-10-20T05:00:00Z",
           "minimum_remaining_forward_hours": 2.0,
-          "remaining_forward_hours_at_issue": 3.666559,
-          "source_cutoff_utc": "2026-10-20T00:00:00Z",
+          "remaining_forward_hours_at_issue": 3.028122,
+          "source_cutoff_utc": "2026-10-20T01:00:00Z",
           "status": "ELIGIBLE"
         },
         "targets": {
           "BTC": {
             "calibrated_probability": null,
-            "calibration_group": "BTC:4H:DOWN:4_of_6",
+            "calibration_group": "BTC:4H:DOWN:5_of_6",
             "confidence_status": "WARMUP",
             "direction": "DOWN",
-            "down_votes": 4,
-            "evidence_agreement_pct": 66.67,
-            "independent_calibration_samples": 19,
-            "up_votes": 2,
-            "wilson_lower_95_pct": 15.4
+            "down_votes": 5,
+            "evidence_agreement_pct": 83.33,
+            "independent_calibration_samples": 17,
+            "up_votes": 1,
+            "wilson_lower_95_pct": 26.2
           },
           "ETH": {
             "calibrated_probability": null,
-            "calibration_group": "ETH:4H:NO_EDGE:4_of_8",
-            "confidence_status": "ABSTAIN_NO_EDGE",
-            "direction": "NO_EDGE",
-            "down_votes": 4,
-            "evidence_agreement_pct": 50.0,
-            "independent_calibration_samples": 0,
-            "up_votes": 4,
-            "wilson_lower_95_pct": null
+            "calibration_group": "ETH:4H:UP:5_of_8",
+            "confidence_status": "WARMUP",
+            "direction": "UP",
+            "down_votes": 3,
+            "evidence_agreement_pct": 62.5,
+            "independent_calibration_samples": 16,
+            "up_votes": 5,
+            "wilson_lower_95_pct": 23.1
           }
         }
       }
@@ -369,17 +369,17 @@
       "warning": "Rank segments are transmission proxies, not canonical market-cap bands."
     },
     "outcome_maturation": {
-      "abstained": 0,
+      "abstained": 1,
       "censored": 0,
-      "matured": 4,
+      "matured": 5,
       "pending": 20
     },
     "prediction_freeze": {
-      "path": "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/20/20261020T002000Z.json",
+      "path": "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/20/20261020T015818Z.json",
       "status": "PREDICTION_FROZEN"
     },
     "source_observation_semantics": "CLOSED_1H_CANDLE_CLOSE_OBSERVABLE_TIME",
-    "source_price_observation_utc": "2026-10-20T00:00:00Z",
+    "source_price_observation_utc": "2026-10-20T01:00:00Z",
     "status": "SHADOW_ONLY"
   }
 }
