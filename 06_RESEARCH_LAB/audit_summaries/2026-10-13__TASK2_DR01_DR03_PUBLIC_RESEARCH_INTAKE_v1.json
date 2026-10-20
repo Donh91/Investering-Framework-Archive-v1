@@ -1,0 +1,339 @@
+{
+  "contract": "TASK2_DEEP_RESEARCH_PUBLIC_INTAKE_v1",
+  "evidence_class": "SECONDARY_REPORT_CLAIMS_RESEARCH_ONLY",
+  "source_anchor_public_main_sha": "6ce2fb957b25c0e2d19041e1dd122dbab9634c61",
+  "user_report_source_location": "USER_CONVERSATION_ATTACHMENTS_NOT_COMMITTED_TO_PUBLIC_GITHUB",
+  "source_report_pdf_sha256": [
+    {
+      "id": "DR01",
+      "pages": 19,
+      "sha256": "b223e08ff91226a6aed96056c6141c2438ca99857b9f01b620cf9ff85416b1ef"
+    },
+    {
+      "id": "DR02",
+      "pages": 25,
+      "sha256": "984a3db08bb81166b2f7eaf19390b72e905b3b0f74b83c2652cf6ff248dfd46a"
+    },
+    {
+      "id": "DR03",
+      "pages": 28,
+      "sha256": "110e188d3a2c81c1796566310f879fbf1c4190db22b5e7f18d735655dbb5ed59"
+    }
+  ],
+  "primary_source_lineage": "REQUIRES_AUTHORIZED_INDEPENDENT_PRIVATE_BINDING",
+  "research_only": true,
+  "actual_historical_simulations_executed_by_this_intake": 0,
+  "approved_spend_usd": 0,
+  "round3_test_authorized": false,
+  "active_task2_stage_at_intake": "R0_R1_TECHNICAL_PREFLIGHT_R1_LIVE_PIT_BLOCKED",
+  "audit_summary_md": "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.md",
+  "experiment_readiness_source_report": "DR03_PDF_PAGES_16_TO_19",
+  "readiness_is_task2_admission": false,
+  "experiments": [
+    {
+      "id": "S01",
+      "hypothesis": "Alt-tail deterioration leads systemic stress",
+      "baseline": "BTC trend/volatility",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S02",
+      "hypothesis": "Breadth collapse gives earlier warning than BTC alone",
+      "baseline": "BTC-only warning",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S03",
+      "hypothesis": "Liquidity rank deterioration leads drawdowns",
+      "baseline": "Simple realized volatility",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S04",
+      "hypothesis": "Taker buy share collapse adds warning value",
+      "baseline": "Price/volume only",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S05",
+      "hypothesis": "Recovery breadth improves re-entry timing",
+      "baseline": "Fixed-day rebuy",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S06",
+      "hypothesis": "Rotation sequence stable across 2020–21 and 2025–26",
+      "baseline": "Momentum ranking",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S07",
+      "hypothesis": "Altseason robust across alternative historical universes",
+      "baseline": "Frozen 35-asset universe",
+      "report_claimed_status": "BLOCKED_MISSING_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S08",
+      "hypothesis": "MAEVE first ENTRY beats matched no-entry states",
+      "baseline": "Random/dip buy matched",
+      "report_claimed_status": "BLOCKED_MISSING_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S09",
+      "hypothesis": "MAEVE DCA improves wealth vs first-entry only",
+      "baseline": "No DCA / hold first entry",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S10",
+      "hypothesis": "MAEVE DCA depth follows systematic rule",
+      "baseline": "Fixed-percentage grid",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S11",
+      "hypothesis": "MAEVE EXIT improves on fixed horizons",
+      "baseline": "24h/3d/7d/fixed target",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S12",
+      "hypothesis": "CFGI composite improves on price-dip momentum",
+      "baseline": "Price dip + momentum",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": "bounded subset",
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S13",
+      "hypothesis": "CFGI components improve on aggregate",
+      "baseline": "Aggregate-only CFGI",
+      "report_claimed_status": "BLOCKED_TEMPORAL_INTEGRITY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S14",
+      "hypothesis": "Minimal MAEVE clone generalizes",
+      "baseline": "Random/dip buy",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": "bounded subset",
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S15",
+      "hypothesis": "Behavioral MAEVE clone generalizes",
+      "baseline": "Minimal clone",
+      "report_claimed_status": "BLOCKED_MISSING_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S16",
+      "hypothesis": "Improved MAEVE clone reduces drawdown",
+      "baseline": "Behavioral clone",
+      "report_claimed_status": "BLOCKED_MISSING_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S17",
+      "hypothesis": "analisis_hora has usable entry-time information",
+      "baseline": "Provider snapshot at entry",
+      "report_claimed_status": "BLOCKED_TEMPORAL_INTEGRITY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S18",
+      "hypothesis": "Original Compass beats persistence",
+      "baseline": "Persistence",
+      "report_claimed_status": "BLOCKED_TEMPORAL_INTEGRITY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S19",
+      "hypothesis": "Original Compass beats volatility/range baselines",
+      "baseline": "Naive bands",
+      "report_claimed_status": "BLOCKED_TEMPORAL_INTEGRITY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S20",
+      "hypothesis": "Cycle Navigator envelope beats DUMB1.5/DUMB2",
+      "baseline": "DUMB bands",
+      "report_claimed_status": "READY_NOW",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S21",
+      "hypothesis": "Cycle Navigator copy-forward inertia hurts accuracy",
+      "baseline": "Forecast persistence",
+      "report_claimed_status": "READY_NOW",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S22",
+      "hypothesis": "AI interpretation adds incremental value",
+      "baseline": "Deterministic matched inputs",
+      "report_claimed_status": "BLOCKED_MISSING_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S23",
+      "hypothesis": "BlockHorizon features add incremental pullback/cycle value",
+      "baseline": "Price-only",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": "after metric reconciliation",
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S24",
+      "hypothesis": "M6/Tsunami warnings increase drawdown likelihood",
+      "baseline": "Matched no-warning",
+      "report_claimed_status": "PROSPECTIVE_ONLY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S25",
+      "hypothesis": "Tsunami exit and re-entry increases net wealth",
+      "baseline": "HOLD",
+      "report_claimed_status": "PROSPECTIVE_ONLY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S26",
+      "hypothesis": "Re-entry engine beats fixed waiting periods",
+      "baseline": "1d/3d/7d rebuy",
+      "report_claimed_status": "PROSPECTIVE_ONLY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S27",
+      "hypothesis": "Round-3 OI/funding divergence adds edge",
+      "baseline": "Price/volatility",
+      "report_claimed_status": "PROSPECTIVE_ONLY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S28",
+      "hypothesis": "Alpha Lab candidates have executable sellable alpha",
+      "baseline": "No-buy/market benchmark",
+      "report_claimed_status": "PROSPECTIVE_ONLY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S29",
+      "hypothesis": "Alpha source/wallet intelligence adds lift",
+      "baseline": "Token-native features",
+      "report_claimed_status": "PROSPECTIVE_ONLY",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    },
+    {
+      "id": "S30",
+      "hypothesis": "Auto Trading E2/911 negative finding reproduces",
+      "baseline": "Deterministic baseline",
+      "report_claimed_status": "READY_WITH_RESTRICTED_DATA",
+      "reported_qualifier": null,
+      "task2_admitted": false,
+      "executed_by_this_intake": false
+    }
+  ],
+  "reported_reference_populations": {
+    "maeve_parents": 432,
+    "maeve_fills": 1073,
+    "alt_panel_asset_hours": 851882,
+    "alt_panel_clock_hours": 25506,
+    "prior_round2_event_units": 91,
+    "cfgi_btc_eth_1h_rows": 478,
+    "blockhorizon_scoped_files": 32,
+    "blockhorizon_unique_hashes": 29,
+    "original_forecast_slots": 1140
+  },
+  "independent_event_denominator": "NOT_ESTABLISHED",
+  "all_archives_complete": false,
+  "framework_predictive_edge_established": false,
+  "economic_action_edge_established": false,
+  "closed_eligible_pullback_economic_episodes_at_report_checkpoint": 0,
+  "priority_packets": [
+    "ARCHIVE_CENSUS_CLOSURE",
+    "MAEVE_FIRST_KNOWN_SNAPSHOT_ADJUDICATION",
+    "MAEVE_MATCHED_NONE_UNIVERSE",
+    "ALT_EVENT_FAMILY_COMPILER",
+    "PARENT_FIRST_SAME_CAPITAL_DCA_COUNTERFACTUAL",
+    "CN_DUMB_REPLICATION_AND_COPY_FORWARD",
+    "ALT_TAIL_WARNING_VS_BTC_ONLY"
+  ],
+  "owner_issues": [
+    1530,
+    1596,
+    1553,
+    937,
+    1516
+  ],
+  "promotion": "NO_ALPHA_CLAIM_NO_SELL_SIGNAL_NO_PRODUCTION_CHANGE",
+  "append_policy": "NEW_VERSION_FOR_DR04_PLUS_PRESERVE_THIS_RECEIPT",
+  "status_semantics": "Report status READY_NOW means mechanical RESEARCH replication only; READY_WITH_RESTRICTED_DATA requires authorized private access and independent Task 2 R0/R1 admission. BLOCKED and PROSPECTIVE_ONLY remain non-admitted. These labels preserve DR03 page 16-19 distinctions."
+}

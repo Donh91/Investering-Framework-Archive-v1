@@ -17,6 +17,7 @@ RANK = {"NORMAL": 0, "BUILDING": 1, "ELEVATED": 2, "HIGH": 3, "CONFIRMED": 4}
 FIELDS = {"asset", "timestamp_utc", "knowledge_time_utc", "pullback_risk_state",
           "source_status", "continuity_segment_id", "decision_policy_version"}
 ALLOWED_STATUS = {"PASS", "OK"}
+NONASSESSABLE_STATES = {"UNKNOWN", "UNAVAILABLE"}
 
 
 def variants():
@@ -62,8 +63,8 @@ def validated_rows(rows):
         previous[asset] = observation, known
         status = row["source_status"]
         state = row["pullback_risk_state"]
-        if status in ALLOWED_STATUS and state not in RANK:
-            raise ValueError("unknown state cannot be treated as warning")
+        if status in ALLOWED_STATUS and state not in RANK and state not in NONASSESSABLE_STATES:
+            raise ValueError("unregistered state cannot be treated as warning")
         result[asset].append((observation, known, state, status,
                               row["continuity_segment_id"], row["decision_policy_version"]))
     return result
@@ -158,6 +159,26 @@ def self_test():
     got = checked(series, v)
     assert len(got) == 1 and got[0]["decision_utc"].startswith("2026-01-01T04:05")
     assert not checked(validated_rows([row(0, "HIGH"), row(1, "HIGH", "DEGRADED")]), v)
+    # Healthy source with explicitly unassessable policy states means NO DATA,
+    # not a corrupt row or a bearish vote. Both must reset the streak.
+    for no_data_state in ("UNKNOWN", "UNAVAILABLE"):
+        no_data = validated_rows([row(0, "HIGH"), row(1, no_data_state),
+                                  row(2, "HIGH")])
+        assert not checked(no_data, v)
+    # One genuinely assessable warning after a no-data slot is still usable
+    # for the one-confirmation variant, never counted as a 2-hour streak.
+    p1_nodata = {"minimum_state": "HIGH", "persistence_hours": 1,
+                 "delay_hours": 0, "cooldown_hours": 0}
+    assert len(checked(validated_rows([
+        row(0, "UNAVAILABLE"), row(1, "HIGH")]), p1_nodata)) == 1
+    # A mistyped or unauthorized state must not be silently interpreted as
+    # no-data, as that could erase real alerts during historical replay.
+    try:
+        validated_rows([row(0, "UNREGISTERED_BEARISH")])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("unregistered risk state must fail closed")
     assert not checked(validated_rows([row(0, "HIGH"), row(2, "HIGH")]), v)
     try:
         validated_rows([row(0, "HIGH"), row(0, "HIGH")])

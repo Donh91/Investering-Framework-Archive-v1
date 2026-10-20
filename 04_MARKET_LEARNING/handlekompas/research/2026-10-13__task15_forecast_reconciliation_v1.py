@@ -1,0 +1,598 @@
+#!/usr/bin/env python3
+"""EDGE Task 1.5: immutable intraday issuance/censor/baseline reconciliation.
+
+Research-only. The independent Binance spot CSV is an EX-POST outcome tape:
+it never changes the original registered scorer or proves provider PIT.
+
+Run from repository root:
+ python3 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_forecast_reconciliation_v1.py --out /tmp/task15
+ python3 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_forecast_reconciliation_v1.py --self-test
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import math
+import os
+import subprocess
+import sys
+import tempfile
+from collections import Counter
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from statistics import median
+
+WINDOW_START = datetime(2026, 9, 15, 6, tzinfo=timezone.utc)
+WINDOW_END = datetime(2026, 10, 13, 6, tzinfo=timezone.utc)
+OCT13 = datetime(2026, 10, 13, 0, tzinfo=timezone.utc)
+PRED = Path("04_MARKET_LEARNING/intraday_execution/direction_predictions")
+OUTCOME = Path("04_MARKET_LEARNING/intraday_execution/direction_outcomes")
+TAPE = Path("04_MARKET_LEARNING/handlekompas/research/evidence/2026-09-15_to_2026-10-13__HOURLY_SPOT_OUTCOME_CROSSCHECK_28D.csv")
+HORIZONS = {"1H": 1, "4H": 4, "24H": 24}
+ASSETS = ("BTC", "ETH")
+COLUMNS = (
+    "prediction_id", "asset", "horizon", "issue_utc", "source_cutoff_utc",
+    "due_utc", "prediction_sha256", "binding_source_commit", "forecast_status",
+    "direction", "original_outcome_status", "original_outcome_result", "original_outcome_reason",
+    "original_outcome_evidence_wait_hours", "original_outcome_measured_at_utc",
+    "original_outcome_measurement_delay_hours", "original_outcome_sha256", "original_outcome_binding_sha256",
+    "frozen_start", "tape_start_at_cutoff", "tape_actual_at_due",
+    "tape_start_conflict", "observed_direction", "descriptive_hit",
+    "prior_momentum_pct", "baseline_direction", "baseline_hit",
+    "original_scoring_preserved", "pit_status", "research_admission",
+)
+
+def parse_utc(value: str) -> datetime:
+    if not isinstance(value, str) or not value.endswith("Z"):
+        raise ValueError("UTC timestamp must end Z")
+    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if dt.utcoffset() != timedelta(0):
+        raise ValueError("non UTC time")
+    return dt
+
+def utc(dt: datetime) -> str:
+    return dt.isoformat(timespec="seconds").replace("+00:00", "Z")
+
+def read_json(path: Path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+def digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def direction_change(start, end):
+    if start is None or end is None:
+        return None
+    if end > start:
+        return "UP"
+    if end < start:
+        return "DOWN"
+    return "FLAT"
+
+def read_tape(path: Path) -> dict[datetime, dict]:
+    if not path.is_file():
+        raise ValueError(f"OUTCOME_TAPE_MISSING:{path}")
+    out = {}
+    with path.open(newline="", encoding="utf-8") as file:
+        for row in csv.DictReader(file):
+            dt = parse_utc(row["close_time_utc"])
+            if dt in out:
+                raise ValueError(f"DUPLICATE_TAPE_CLOCK:{utc(dt)}")
+            if row.get("forecast_pairing_status") != "NOT_JOINED_TO_ORIGINAL_FORECAST":
+                raise ValueError("TAPE_NOT_RESEARCH_ONLY")
+            out[dt] = row
+    stamps = sorted(out)
+    expected = [WINDOW_START + timedelta(hours=i) for i in range(1, 673)]
+    if stamps != expected:
+        raise ValueError(f"TAPE_GAP_OR_WRONG_WINDOW:{len(stamps)}")
+    return out
+
+def tape_value(tape: dict, dt, asset: str):
+    if dt not in tape:
+        return None
+    value = tape[dt].get(f"{asset.lower()}_usdt_spot_close")
+    if not value:
+        return None
+    try:
+        n = float(value)
+    except (ValueError, TypeError):
+        return None
+    if not math.isfinite(n):
+        raise ValueError('NONFINITE_TAPE_PRICE')
+    return n if n > 0 else None
+
+def tape_momentum(tape: dict, cutoff, asset, horizon):
+    if cutoff not in tape:
+        return None
+    value = tape[cutoff].get(f"{asset.lower()}_trailing_{horizon.lower()}_return_pct")
+    if value in ("", None):
+        return None
+    try:
+        n = float(value)
+    except (ValueError, TypeError):
+        return None
+    if not math.isfinite(n):
+        raise ValueError('NONFINITE_TAPE_MOMENTUM')
+    return n
+
+def outcome_file(root: Path, issued: datetime, slug: str, horizon: str, asset: str) -> Path:
+    return root / OUTCOME / issued.strftime("%Y/%m/%d") / f"{slug}_{horizon}_{asset}.json"
+
+def require_bound_original_outcome(root: Path, prediction_file: Path,
+                                   prediction_sha: str, prediction: dict,
+                                   horizon: dict, asset: str, hours: int,
+                                   target: dict, receipt: dict):
+    """Mirror the core immutable owner linkage; never score a misbound receipt.
+
+    This is a fail-closed research intake precheck, NOT an alternative canonical
+    registered validator/scorer. Full registered validation remains external.
+    """
+    relative = prediction_file.relative_to(root).as_posix()
+    required = {
+        "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+        "prediction_path": relative,
+        "prediction_sha256": prediction_sha,
+        "target": asset,
+        "horizon_hours": hours,
+        "issued_at_utc": prediction.get("issued_at_utc"),
+        "due_at_utc": horizon.get("due_at_utc"),
+        "source_price_observation_utc": horizon.get("source_cutoff_utc"),
+        "predicted_direction": target.get("direction"),
+        "registered_test_id": prediction.get("registered_test_id"),
+        "registration_receipt_sha256": prediction.get("registration_receipt_sha256"),
+    }
+    # Mirror every frozen linkage field used by the registered scorer.
+    # Comparing a subset would allow a valid receipt with drifted votes,
+    # calibration, provenance or deadline to enter a research denominator.
+    key = target.get("calibration_key")
+    direction = target.get("direction")
+    if key is None or direction is None:
+        raise ValueError("ORIGINAL_OUTCOME_CALIBRATION_SOURCE_MISSING")
+    required.update({
+        "source_candle_open_utc": prediction.get("source_candle_open_utc"),
+        "calibration_key": key,
+        "calibration_group": f"{asset}:{hours}H:{direction}:{key}",
+        "votes": target.get("votes"),
+        "evidence_deadline_utc": utc(parse_utc(horizon["due_at_utc"]) + timedelta(hours=1.5)),
+    })
+    for field, expected in required.items():
+        if expected is None or receipt.get(field) != expected:
+            raise ValueError(f"ORIGINAL_OUTCOME_LINKAGE_INVALID:{field}:{relative}:{hours}H:{asset}")
+    # Forecast issuing and later outcome scoring are SEPARATE registered
+    # GitHub Actions runs: their production contexts MUST NOT be identical.
+    # Check each against the registered context contract, not each other.
+    for context_label, context in (
+        ("FORECAST", prediction.get("production_context")),
+        ("OUTCOME", receipt.get("production_context")),
+    ):
+        if not isinstance(context, dict):
+            raise ValueError(f"ORIGINAL_{context_label}_CONTEXT_MISSING")
+        commit = context.get("commit_sha")
+        if (
+            context.get("repository") != "Donh91/Investering-Framework-Archive-v1"
+            or context.get("ref") != "refs/heads/main"
+            or context.get("event") not in ("schedule", "workflow_dispatch")
+            or not str(context.get("run_id", "")).isdigit()
+            or not isinstance(commit, str)
+            or len(commit) != 40
+            or any(char not in "0123456789abcdef" for char in commit)
+        ):
+            raise ValueError(f"ORIGINAL_{context_label}_CONTEXT_INVALID")
+    # Null probabilities are valid in WARMUP, but even a null must remain
+    # frozen and must not be substituted with a post-outcome estimate.
+    if receipt.get("frozen_calibrated_probability_pct", object()) != target.get(
+        "frozen_calibrated_probability_pct", object()
+    ):
+        raise ValueError("ORIGINAL_OUTCOME_FROZEN_PROBABILITY_DRIFT")
+    if receipt.get("authority", {}).get("shadow_only") is not True or receipt.get("authority", {}).get("portfolio_execution") is not False:
+        raise ValueError("ORIGINAL_OUTCOME_AUTHORITY_INVALID")
+    start, owner_start = target.get("start_value"), receipt.get("start_value")
+    if not (isinstance(start, (int, float)) and not isinstance(start, bool)
+            and isinstance(owner_start, (int, float)) and not isinstance(owner_start, bool)
+            and math.isfinite(float(start)) and math.isfinite(float(owner_start))
+            and float(start) == float(owner_start)):
+        raise ValueError("ORIGINAL_OUTCOME_START_BINDING_INVALID")
+    status = receipt.get("status")
+    if status not in ("CENSORED", "MATURED"):
+        raise ValueError("ORIGINAL_OUTCOME_STATUS_INVALID")
+    if status == "CENSORED" and (
+        receipt.get("reason") != "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE"
+        or receipt.get("substitute_later_price_forbidden") is not True
+        or receipt.get("result") is not None
+    ):
+        raise ValueError("ORIGINAL_OUTCOME_CENSOR_CONTRACT_INVALID")
+    if status == "MATURED" and receipt.get("result") not in ("HIT", "MISS", "ABSTAINED"):
+        raise ValueError("ORIGINAL_OUTCOME_MATURITY_CONTRACT_INVALID")
+
+
+def scan(root: Path, tape: dict):
+    rows = []
+    pred_files = sorted((root / PRED).glob("2026/*/*/*.json"))
+    seen = set()
+    for file in pred_files:
+        p = read_json(file)
+        issued = parse_utc(p["issued_at_utc"])
+        if not WINDOW_START <= issued < WINDOW_END:
+            continue
+        if p.get("contract") != "INTRADAY_DIRECTION_PREDICTION_v1":
+            raise ValueError(f"INVALID_FORECAST_CONTRACT:{file}")
+        sha = digest(file)
+        stem = file.stem
+        for hname, hours in HORIZONS.items():
+            h = (p.get("horizons") or {}).get(hname) or {}
+            cutoff_text, due_text = h.get("source_cutoff_utc"), h.get("due_at_utc")
+            cutoff = parse_utc(cutoff_text) if cutoff_text else None
+            due = parse_utc(due_text) if due_text else None
+            for asset in ASSETS:
+                target = (h.get("targets") or {}).get(asset) or {}
+                original = outcome_file(root, issued, stem, hname, asset)
+                receipt = read_json(original) if original.is_file() else {}
+                if receipt:
+                    require_bound_original_outcome(
+                        root, file, sha, p, h, asset, hours, target, receipt
+                    )
+                forecast_state = str(h.get("status") or "MISSING_HORIZON")
+                predicted = target.get("direction")
+                key = (str(file.relative_to(root)), asset, hname)
+                if key in seen:
+                    raise ValueError(f"DUPLICATE_FORECAST_ID:{key}")
+                seen.add(key)
+                valid_issued = bool(
+                    cutoff and due
+                    and cutoff < issued < due
+                    and (due - cutoff) == timedelta(hours=hours)
+                )
+                matured = valid_issued and due <= WINDOW_END
+                permitted = forecast_state == "ELIGIBLE" and predicted in ("UP", "DOWN")
+                start_raw = target.get("start_value")
+                start = float(start_raw) if isinstance(start_raw, (float, int)) and not isinstance(start_raw, bool) else None
+                if start is not None and (not math.isfinite(start) or start <= 0):
+                    raise ValueError('NONFINITE_OR_INVALID_FROZEN_START')
+                basis = tape_value(tape, cutoff, asset) if cutoff else None
+                finish = tape_value(tape, due, asset) if matured else None
+                actual = direction_change(start, finish) if matured else None
+                prior = tape_momentum(tape, cutoff, asset, hname) if cutoff else None
+                reference = direction_change(0, prior) if prior is not None else None
+                descriptive = predicted == actual if permitted and actual in ("UP", "DOWN") else None
+                baseline_hit = reference == actual if permitted and reference in ("UP", "DOWN") and actual in ("UP", "DOWN") else None
+                eligible = valid_issued and matured and permitted and start is not None and finish is not None
+                admission = (
+                    "RESEARCH_TAPE_SENSITIVITY_ONLY" if eligible else
+                    "PENDING_FUTURE_MATURITY" if permitted and valid_issued and not matured else
+                    "NO_EDGE_OR_MISSING" if not permitted else
+                    "CLOCK_OR_TAPE_UNAVAILABLE"
+                )
+                if receipt.get("status") == "CENSORED":
+                    admission = "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY" if eligible else "CENSORED_ORIGINAL_NO_RESEARCH_SCORE"
+                rows.append({
+                    "prediction_id": str(file.relative_to(root)) + f"#{hname}:{asset}",
+                    "asset": asset, "horizon": hname,
+                    "issue_utc": p["issued_at_utc"], "source_cutoff_utc": cutoff_text or "",
+                    "due_utc": due_text or "",
+                    "prediction_sha256": sha,
+                    "binding_source_commit": (p.get("production_context") or {}).get("commit_sha") or "",
+                    "forecast_status": forecast_state,
+                    "direction": predicted or "",
+                    "original_outcome_status": receipt.get("status") or "NO_ORIGINAL_RECEIPT",
+                    "original_outcome_result": receipt.get("result") or "",
+                    "original_outcome_reason": receipt.get("reason") or "",
+                    "original_outcome_evidence_wait_hours": receipt.get("evidence_wait_hours"),
+                    "original_outcome_measured_at_utc": receipt.get("measured_at_utc") or "",
+                    "original_outcome_measurement_delay_hours": round((parse_utc(receipt["measured_at_utc"]) - due).total_seconds() / 3600, 6) if due and receipt.get("measured_at_utc") else None,
+                    "original_outcome_sha256": digest(original) if original.is_file() else "",
+                    "original_outcome_binding_sha256": receipt.get("prediction_sha256") or "",
+                    "frozen_start": start,
+                    "tape_start_at_cutoff": basis, "tape_actual_at_due": finish,
+                    "tape_start_conflict": bool(start is not None and basis is not None and abs(start - basis) > 0.02),
+                    "observed_direction": actual or "",
+                    "descriptive_hit": descriptive,
+                    "prior_momentum_pct": prior,
+                    "baseline_direction": reference or "",
+                    "baseline_hit": baseline_hit,
+                    "original_scoring_preserved": True,
+                    "pit_status": "INDEPENDENT_PROVIDER_FIRST_KNOWABLE_NOT_VERIFIED",
+                    "research_admission": admission,
+                })
+    return rows, len(pred_files)
+
+def detail(rows):
+    """Paired descriptive sensitivity in one fixed cohort, not causal trial count."""
+    scored = [r for r in rows if r["descriptive_hit"] is not None and
+              r["research_admission"] in
+              ("RESEARCH_TAPE_SENSITIVITY_ONLY", "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY")]
+    pairs = [r for r in scored if r["baseline_hit"] is not None]
+    return {
+        "ex_post_tape_eligible": len(scored),
+        "model_hits": sum(r["descriptive_hit"] for r in scored),
+        "matched_baseline_pairs": len(pairs),
+        "model_hits_on_pairs": sum(r["descriptive_hit"] for r in pairs),
+        "prior_momentum_hits_on_pairs": sum(r["baseline_hit"] for r in pairs),
+        "original_censored_in_ex_post_cohort": sum(r["original_outcome_status"] == "CENSORED" for r in scored),
+        "original_matured_in_ex_post_cohort": sum(r["original_outcome_status"] == "MATURED" for r in scored),
+    }
+
+def latency_diagnostic(values):
+    """Original outcome-run delay, not provider first-availability proof."""
+    nums = sorted(float(x) for x in values if isinstance(x, (int, float)) and not isinstance(x, bool))
+    if not nums:
+        return {"n": 0, "min": None, "median": None, "p90": None, "max": None}
+    return {"n": len(nums), "min": round(nums[0], 3), "median": round(median(nums), 3),
+            "p90": round(nums[min(len(nums) - 1, int(len(nums) * .90))], 3), "max": round(nums[-1], 3)}
+
+def summarize(rows):
+    results = {}
+    for cohort, subset in (
+        ("ISSUED_SEP15_TO_OCT12_235959", [r for r in rows if parse_utc(r["issue_utc"]) < OCT13]),
+        ("ISSUED_SEP15_TO_OCT13_055959", rows),
+    ):
+        entry = {}
+        for h in HORIZONS:
+            sub = [r for r in subset if r["horizon"] == h]
+            scorable = [r for r in sub if r["research_admission"] in ("RESEARCH_TAPE_SENSITIVITY_ONLY", "CENSORED_ORIGINAL_RESEARCH_TAPE_SENSITIVITY_ONLY") and r["descriptive_hit"] is not None]
+            paired = [r for r in scorable if r["baseline_hit"] is not None]
+            entry[h] = {
+                "forecast_slots": len(sub),
+                "eligible_directional_tape_sensitivities": len(scorable),
+                "directional_tape_hits": sum(r["descriptive_hit"] for r in scorable),
+                "same_clock_prior_momentum_pairs": len(paired),
+                "baseline_hits_on_exact_pairs": sum(r["baseline_hit"] for r in paired),
+                "model_hits_on_exact_pairs": sum(r["descriptive_hit"] for r in paired),
+                "original_outcome_status": dict(Counter(r["original_outcome_status"] for r in sub)),
+                "original_censor_reasons": dict(Counter(r["original_outcome_reason"] or "UNSPECIFIED" for r in sub if r["original_outcome_status"] == "CENSORED")),
+                "original_censor_wait_hours": latency_diagnostic([r["original_outcome_evidence_wait_hours"] for r in sub if r["original_outcome_status"] == "CENSORED"]),
+                "original_maturity_delay_hours": latency_diagnostic([r["original_outcome_measurement_delay_hours"] for r in sub if r["original_outcome_status"] == "MATURED"]),
+                "original_censor_by_due_utc_hour": dict(sorted(Counter(parse_utc(r["due_utc"]).strftime("%H") for r in sub if r["original_outcome_status"] == "CENSORED" and r["due_utc"]).items())),
+                "admission_status": dict(Counter(r["research_admission"] for r in sub)),
+                "tape_start_conflicts": sum(bool(r["tape_start_conflict"]) for r in sub),
+                "by_asset": {asset: detail([r for r in sub if r["asset"] == asset]) for asset in ASSETS},
+                "by_predicted_direction": {direction: detail([r for r in sub if r["direction"] == direction]) for direction in ("UP", "DOWN")},
+                "by_original_outcome_status": {status: detail([r for r in sub if r["original_outcome_status"] == status]) for status in ("MATURED", "CENSORED", "NO_ORIGINAL_RECEIPT")},
+                "by_7day_issuance_cohort_utc": {
+                    utc(WINDOW_START + timedelta(days=7 * k)): detail([
+                        r for r in sub
+                        if WINDOW_START + timedelta(days=7 * k)
+                        <= parse_utc(r["issue_utc"])
+                        < WINDOW_START + timedelta(days=7 * (k + 1))
+                    ]) for k in range(4)
+                },
+            }
+        results[cohort] = entry
+    return results
+
+def run(root: Path, out: Path, expected_source_commit: str | None = None):
+    """Admit original statuses only after the complete registered validator.
+
+    Includes outcome semantics, exact-due evidence at original production commits,
+    registration and calibration, not just this module's linkage precheck.
+    Missing/corrupt history fails before an output ledger can be written.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    from scripts.intraday_execution import validate_direction_confidence as registered
+    root = root.resolve()
+    pr_boundary = "NOT_A_PR_ACTIONS_CONTEXT"
+    try:
+        # The frozen source worktree differs from GITHUB_WORKSPACE. Validate
+        # the actual synthetic PR checkout first so the owner's complete
+        # canonical-base diff check cannot silently skip frozen ledger edits.
+        if (os.environ.get("GITHUB_ACTIONS") == "true"
+                and os.environ.get("GITHUB_EVENT_NAME") == "pull_request"):
+            workspace = os.environ.get("GITHUB_WORKSPACE")
+            if not workspace:
+                raise registered.ValidationError("PR_CANONICAL_WORKSPACE_UNAVAILABLE")
+            registered.validate_pr_ledger_boundary(Path(workspace).resolve())
+            pr_boundary = "PASS_EXISTING_VALIDATOR_ON_ACTUAL_PR_WORKSPACE"
+        validation = registered.validate_repository(root, write_receipt=False)
+    except registered.ValidationError as exc:
+        raise ValueError(f"TASK15_REGISTERED_VALIDATION_FAILED:{exc}") from exc
+    if validation.get("status") != "PASS":
+        raise ValueError("TASK15_REGISTERED_VALIDATION_NOT_PASS")
+    validation = {
+        **validation,
+        "pr_ledger_boundary": pr_boundary,
+        "validator_path": registered.VALIDATOR_PATH,
+        "validator_sha256": digest(root / registered.VALIDATOR_PATH),
+        "scorer_path": registered.SCORER_PATH,
+        "scorer_sha256": digest(root / registered.SCORER_PATH),
+    }
+    return _reconcile_validated_research(root, out, expected_source_commit, validation)
+
+
+def _reconcile_validated_research(root: Path, out: Path,
+                                  expected_source_commit: str | None,
+                                  registered_validation: dict):
+    git_proc = subprocess.run(['git','-C',str(root),'rev-parse','HEAD'],capture_output=True,text=True,timeout=15)
+    source_commit = git_proc.stdout.strip() if git_proc.returncode == 0 else None
+    if expected_source_commit is not None and (source_commit is None or source_commit != expected_source_commit or len(expected_source_commit) != 40):
+        raise ValueError('TASK15_SOURCE_COMMIT_MISMATCH_FAIL_CLOSED')
+    tape = read_tape(root / TAPE)
+    rows, prediction_files = scan(root, tape)
+    out.mkdir(parents=True, exist_ok=True)
+    ledger = out / "TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv"
+    with ledger.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=COLUMNS)
+        writer.writeheader()
+        writer.writerows(rows)
+    manifest = {
+        "contract": "TASK15_INTRADAY_RESEARCH_RECONCILIATION_v1",
+        "authority": "RESEARCH_ONLY_NOT_REGISTERED_SCORING_OR_MODEL_PROMOTION",
+        "original_owner_validation": registered_validation,
+        "study_start_utc": utc(WINDOW_START), "study_end_utc": utc(WINDOW_END),
+        "boundary_semantics": "ISSUED_START_INCLUSIVE_END_EXCLUSIVE;_DUE_END_INCLUSIVE",
+        "tape_path": str(TAPE), "tape_sha256": digest(root / TAPE),
+        "source_checkout_commit": source_commit,
+        "expected_bound_commit": expected_source_commit,
+        "source_commit_verified": bool(source_commit and expected_source_commit and source_commit == expected_source_commit),
+        "tape_rows": len(tape),
+        "prediction_files_total_before_date_filter": prediction_files,
+        "forecast_asset_horizon_slots_in_window": len(rows),
+        "ledger_sha256": digest(ledger),
+        "results": summarize(rows),
+        "limitations": [
+            "Independent Binance tape is later-retrieved ex-post outcome, not original owner-time evidence.",
+            "Original CENSORED receipts are immutable and never converted to canonical HIT or MISS.",
+            "No first-parent canonical publication verification, feature-source-vintage proof, or legal PIT admission in this standalone script.",
+            "Censor evidence_wait_hours and maturity delay measure observed scoring attempts; they do NOT prove initial provider candle availability or identify exact ingestion failure.",
+            "Forecasts overlap by horizon, time and asset; observations are not independent event families.",
+            "No original Official/Shadow 12H/72H/168H comparison, trade fills, economics or site/chat delivery.",
+            "Provider spot close and frozen owner close might disagree; start discrepancies remain explicit.",
+            "Missing baseline clocks are excluded from paired comparison, NOT backfilled or zero-counted.",
+        ],
+        "closure_verdict": "PARTIAL_RESEARCH_EXECUTION_NOT_TASK_1_5_SCIENTIFIC_PASS",
+    }
+    (out / "TASK15_R0_RECEIPT.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return manifest
+
+def self_test():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        tape = root / TAPE
+        tape.parent.mkdir(parents=True)
+        with tape.open("w", newline="", encoding="utf-8") as handle:
+            w = csv.DictWriter(handle, fieldnames=["close_time_utc", "btc_usdt_spot_close", "eth_usdt_spot_close", "btc_trailing_1h_return_pct", "eth_trailing_1h_return_pct", "btc_trailing_4h_return_pct", "eth_trailing_4h_return_pct", "btc_trailing_24h_return_pct", "eth_trailing_24h_return_pct", "forecast_pairing_status"])
+            w.writeheader()
+            for i in range(1, 673):
+                w.writerow({"close_time_utc": utc(WINDOW_START + timedelta(hours=i)), "btc_usdt_spot_close": 100 + i, "eth_usdt_spot_close": 200 + i, "btc_trailing_1h_return_pct": 1.0, "eth_trailing_1h_return_pct": 1.0, "btc_trailing_4h_return_pct": 1.0, "eth_trailing_4h_return_pct": 1.0, "btc_trailing_24h_return_pct": 1.0, "eth_trailing_24h_return_pct": 1.0, "forecast_pairing_status": "NOT_JOINED_TO_ORIGINAL_FORECAST"})
+        pred_dir = root / PRED / "2026/09/15"
+        pred_dir.mkdir(parents=True)
+        forecast = {
+            "contract": "INTRADAY_DIRECTION_PREDICTION_v1",
+            "issued_at_utc": utc(WINDOW_START + timedelta(hours=1, minutes=5)),
+            "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+            "registration_receipt_sha256": "fixture-registry-hash",
+            "source_price_observation_utc": utc(WINDOW_START + timedelta(hours=1)),
+            "source_candle_open_utc": utc(WINDOW_START),
+            "production_context": {
+                "commit_sha": "a" * 40, "event": "schedule",
+                "ref": "refs/heads/main",
+                "repository": "Donh91/Investering-Framework-Archive-v1",
+                "run_id": "1",
+            },
+            "horizons": {
+                "1H": {"status": "ELIGIBLE", "source_cutoff_utc": utc(WINDOW_START + timedelta(hours=1)), "due_at_utc": utc(WINDOW_START + timedelta(hours=2)), "targets": {"BTC": {"direction": "UP", "start_value": 101, "calibration_key": "fixture", "votes": [], "frozen_calibrated_probability_pct": None}, "ETH": {"direction": "DOWN", "start_value": 201, "calibration_key": "fixture", "votes": [], "frozen_calibrated_probability_pct": None}}},
+                "4H": {"status": "NO_EDGE", "source_cutoff_utc": utc(WINDOW_START + timedelta(hours=1)), "due_at_utc": utc(WINDOW_START + timedelta(hours=5)), "targets": {}},
+            },
+        }
+        pf = pred_dir / "20260915T070500Z.json"
+        pf.write_text(json.dumps(forecast), encoding="utf-8")
+        of = outcome_file(root, parse_utc(forecast["issued_at_utc"]), pf.stem, "1H", "BTC")
+        of.parent.mkdir(parents=True)
+        bound = {
+            "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+            "prediction_path": pf.relative_to(root).as_posix(),
+            "prediction_sha256": digest(pf),
+            "target": "BTC",
+            "horizon_hours": 1,
+            "issued_at_utc": forecast["issued_at_utc"],
+            "due_at_utc": forecast["horizons"]["1H"]["due_at_utc"],
+            "source_price_observation_utc": forecast["source_price_observation_utc"],
+            "source_candle_open_utc": forecast["source_candle_open_utc"],
+            "production_context": {
+                **forecast["production_context"],
+                "commit_sha": "b" * 40,
+                "run_id": "2",
+            },
+            "calibration_key": "fixture",
+            "calibration_group": "BTC:1H:UP:fixture",
+            "votes": [],
+            "frozen_calibrated_probability_pct": None,
+            "evidence_deadline_utc": utc(parse_utc(forecast["horizons"]["1H"]["due_at_utc"]) + timedelta(hours=1.5)),
+            "predicted_direction": "UP",
+            "registered_test_id": forecast["registered_test_id"],
+            "registration_receipt_sha256": forecast["registration_receipt_sha256"],
+            "start_value": 101,
+            "authority": {"shadow_only": True, "portfolio_execution": False},
+            "status": "CENSORED", "reason": "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE",
+            "substitute_later_price_forbidden": True,
+        }
+        of.write_text(json.dumps(bound), encoding="utf-8")
+        try:
+            run(root, root / "canonical-rejected")
+        except ValueError as exc:
+            assert "TASK15_REGISTERED_VALIDATION_FAILED" in str(exc), exc
+        else:
+            raise AssertionError("synthetic receipt must not bypass the registered validator")
+        assert not (root / "canonical-rejected").exists()
+        result = _reconcile_validated_research(root, root / "audit", None, {"status": "SYNTHETIC_PRECHECK_ONLY_NOT_REGISTERED_EVIDENCE"})
+        for bad in ("forecast_hash", "target", "horizon", "contract", "status",
+                    "production_context", "source_candle_open_utc",
+                    "calibration_key", "calibration_group", "votes",
+                    "frozen_calibrated_probability_pct", "evidence_deadline_utc"):
+            corrupt = dict(bound)
+            if bad == "forecast_hash": corrupt["prediction_sha256"] = "tampered"
+            if bad == "target": corrupt["target"] = "ETH"
+            if bad == "horizon": corrupt["horizon_hours"] = 4
+            if bad == "contract": corrupt["contract"] = "LEGACY_STALE_OUTCOME"
+            if bad == "status": corrupt["status"] = "MATURED"
+            if bad == "production_context": corrupt["production_context"] = {**bound["production_context"], "ref": "refs/heads/side-branch"}
+            if bad == "source_candle_open_utc": corrupt["source_candle_open_utc"] = "2026-09-14T12:00:00Z"
+            if bad == "calibration_key": corrupt["calibration_key"] = "other"
+            if bad == "calibration_group": corrupt["calibration_group"] = "ETH:1H:UP:fixture"
+            if bad == "votes": corrupt["votes"] = [{"direction": "UP", "value": 1.0}]
+            if bad == "frozen_calibrated_probability_pct": corrupt["frozen_calibrated_probability_pct"] = 72.5
+            if bad == "evidence_deadline_utc": corrupt["evidence_deadline_utc"] = "2026-09-16T00:00:00Z"
+            of.write_text(json.dumps(corrupt), encoding="utf-8")
+            try:
+                _reconcile_validated_research(root, root / "rejected", None, {"status": "SYNTHETIC_PRECHECK_ONLY_NOT_REGISTERED_EVIDENCE"})
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"tampered original outcome must fail closed: {bad}")
+        of.write_text(json.dumps(bound), encoding="utf-8")
+        cutoff = WINDOW_START + timedelta(hours=1)
+        for data, fn, signature in (
+            ({cutoff: {"btc_usdt_spot_close": "nan"}}, lambda x: tape_value(x, cutoff, "BTC"), "price nan"),
+            ({cutoff: {"btc_trailing_4h_return_pct": "Infinity"}}, lambda x: tape_momentum(x, cutoff, "BTC", "4H"), "momentum inf"),
+        ):
+            try:
+                fn(data)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"invalid non-finite input must fail: {signature}")
+        original_start = forecast["horizons"]["1H"]["targets"]["BTC"]["start_value"]
+        forecast["horizons"]["1H"]["targets"]["BTC"]["start_value"] = float("inf")
+        pf.write_text(json.dumps(forecast), encoding="utf-8")
+        try:
+            _reconcile_validated_research(root, root / "rejected", None, {"status": "SYNTHETIC_PRECHECK_ONLY_NOT_REGISTERED_EVIDENCE"})
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("invalid frozen start must fail")
+        forecast["horizons"]["1H"]["targets"]["BTC"]["start_value"] = original_start
+        pf.write_text(json.dumps(forecast), encoding="utf-8")
+        of.write_text(json.dumps(bound), encoding="utf-8")
+        cohort = result["results"]["ISSUED_SEP15_TO_OCT13_055959"]["1H"]
+        assert cohort["eligible_directional_tape_sensitivities"] == 2, cohort
+        assert cohort["directional_tape_hits"] == 1, cohort
+        assert cohort["same_clock_prior_momentum_pairs"] == 2, cohort
+        assert cohort["baseline_hits_on_exact_pairs"] == 2, cohort
+        assert cohort["original_outcome_status"]["CENSORED"] == 1, cohort
+        assert "CENSORED" in of.read_text(), "Original outcome mutated"
+        assert result["closure_verdict"].startswith("PARTIAL"), result
+        assert result["tape_rows"] == 672, result
+        try:
+            fake = root / "bad.csv"
+            fake.write_text("close_time_utc,forecast_pairing_status\n2026-10-13T06:00:00Z,NOT_JOINED_TO_ORIGINAL_FORECAST\n")
+            read_tape(fake)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("gap negative control was not rejected")
+    return "SELF_TEST_PASS: original CENSORED protected, 2/2 paired baseline, 672 hourly candles, bad tape fails closed"
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", default=".")
+    parser.add_argument("--out", default="/tmp/task15-compass-audit")
+    parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--expect-source-commit", default=None)
+    args = parser.parse_args()
+    if args.self_test:
+        print(self_test())
+        return
+    receipt = run(Path(args.root), Path(args.out), expected_source_commit=args.expect_source_commit)
+    print(json.dumps(receipt, indent=2))
+
+if __name__ == "__main__":
+    main()

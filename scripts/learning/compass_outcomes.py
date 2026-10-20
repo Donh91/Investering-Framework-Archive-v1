@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 CONTRACT = "OFFICIAL_DAILY_COMPASS_OUTCOME_v1"
-SCORING_CONTRACT = "OFFICIAL_DAILY_COMPASS_SCORING_v2"
+SCORING_CONTRACT = "OFFICIAL_DAILY_COMPASS_SCORING_v3"
 DEFAULT_ROOT = Path("04_MARKET_LEARNING/handlekompas/official")
 HANDLEKOMPAS_RUNS = Path("04_MARKET_LEARNING/handlekompas/runs")
 HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
@@ -79,7 +79,7 @@ def row_close_time(row: Mapping[str, Any]) -> datetime | None:
     return stamp + HOURLY_CLOSE_OFFSET if isinstance(stamp, datetime) else None
 
 
-def load_hourly(repo_root: Path, start: datetime, end: datetime) -> list[dict[str, Any]]:
+def load_hourly(repo_root: Path, start: datetime, end: datetime, *, as_of: datetime | None = None) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for rel in hourly_paths(start, end):
         path = repo_root / rel
@@ -89,9 +89,20 @@ def load_hourly(repo_root: Path, start: datetime, end: datetime) -> list[dict[st
             raw = path.read_text(encoding="utf-8-sig")
             for row in csv.DictReader(io.StringIO(raw)):
                 stamp = parse_utc(row.get("timestamp_utc"))
-                if stamp is None:
-                    continue
-                close_stamp = parse_utc(row.get("source_window_end_utc")) or (stamp + HOURLY_CLOSE_OFFSET)
+                if stamp is None or stamp.minute or stamp.second or stamp.microsecond:
+                    continue  # Only canonical hour-aligned candle opens are eligible.
+                # timestamp_utc is the opening time of THIS candle. The CSV's
+                # source_window_end_utc is the collection/batch boundary, which
+                # can be identical for several different hourly candles.
+                close_stamp = stamp + HOURLY_CLOSE_OFFSET
+                raw_source_end = row.get("source_window_end_utc")
+                source_end = parse_utc(raw_source_end)
+                if raw_source_end not in (None, "") and source_end is None:
+                    continue  # Present but unparseable collection clock: fail closed.
+                if source_end is not None and source_end < close_stamp:
+                    continue  # Inconsistent collection clock: fail closed.
+                if as_of is not None and (close_stamp > as_of or (source_end is not None and source_end > as_of)):
+                    continue  # Never admit an unfinished or not-yet-collected candle.
                 if close_stamp < start - TARGET_TOLERANCE or close_stamp > end + TARGET_TOLERANCE:
                     continue
                 def f(key: str) -> float | None:
@@ -102,6 +113,7 @@ def load_hourly(repo_root: Path, start: datetime, end: datetime) -> list[dict[st
                 rows.append({
                     "timestamp_utc": stamp,
                     "observation_close_utc": close_stamp,
+                    "source_window_end_utc": source_end,
                     "btc": f("btc_close"),
                     "eth": f("eth_close"),
                     "ethbtc": f("ethbtc_close"),
@@ -219,6 +231,21 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     issued = parse_utc(freeze.get("issued_at_utc"))
     if issued is None:
         return None
+    outcome_rel = output_root / "outcomes" / issued.strftime("%Y/%m/%d") / f"{freeze.get('compass_id')}_{horizon}.json"
+    outcome_path = repo_root / outcome_rel
+    if outcome_path.exists():
+        return {"status": "ALREADY_MATURED", "path": outcome_rel.as_posix()}
+    # A forecast's frozen scoring contract is immutable. Never silently score
+    # v1/v2 forecasts under new v3 candle semantics after deployment.
+    if freeze.get("scoring_contract") != SCORING_CONTRACT:
+        return {
+            "status": "PENDING_SCORING_CONTRACT_MISMATCH",
+            "horizon": horizon,
+            "compass_id": freeze.get("compass_id"),
+            "frozen_scoring_contract": freeze.get("scoring_contract"),
+            "required_scoring_contract": SCORING_CONTRACT,
+            "reason": "PROSPECTIVE_V3_ONLY_LEGACY_REQUIRES_SEPARATE_GOVERNED_SCORER",
+        }
     hours = HORIZONS[horizon]
     ref = freeze.get("market_reference") or {}
     start_reference = reference_close_time(ref)
@@ -233,12 +260,8 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     if now < target:
         return None
 
-    outcome_rel = output_root / "outcomes" / issued.strftime("%Y/%m/%d") / f"{freeze.get('compass_id')}_{horizon}.json"
-    outcome_path = repo_root / outcome_rel
-    if outcome_path.exists():
-        return {"status": "ALREADY_MATURED", "path": outcome_rel.as_posix()}
 
-    rows = load_hourly(repo_root, start_reference, target + TARGET_TOLERANCE)
+    rows = load_hourly(repo_root, start_reference, target + TARGET_TOLERANCE, as_of=now)
     target_row = closest_target(rows, target)
     if target_row is None:
         return {
@@ -298,6 +321,7 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
         "matured_at_utc": now.isoformat().replace("+00:00", "Z"),
         "target_observation_at_utc": target_close.isoformat().replace("+00:00", "Z") if target_close else None,
         "target_observation_open_at_utc": target_row["timestamp_utc"].isoformat().replace("+00:00", "Z") if target_row else None,
+        "target_source_window_end_utc": target_row["source_window_end_utc"].isoformat().replace("+00:00", "Z") if target_row and target_row.get("source_window_end_utc") else None,
         "time_basis": {
             "status": "PASS",
             "nominal_horizon_hours": hours,
@@ -306,6 +330,8 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
             "effective_window_hours": round(effective_window_hours, 6),
             "window_deviation_hours": round(window_deviation_hours, 6),
             "endpoint_semantics": "HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON",
+            "source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE",
+            "source_first_knowledge_status": "UNKNOWN_NOT_PROVEN_BY_BATCH_END",
         },
         "realized": {
             "btc_return_pct": btc_return,

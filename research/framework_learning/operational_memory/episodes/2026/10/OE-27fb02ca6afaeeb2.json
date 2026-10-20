@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/edge001_tsunami_feature_ledger.py",
+    "tests/learning/test_edge001_tsunami_feature_ledger.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-27fb02ca6afaeeb2",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "edge-fail-closed-missing-invalid-hourly-source-availability",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(edge): reject hourly source rows without legal window-end clock * test(edge): verify missing and invalid hourly availability fail closed",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/edge001_tsunami_feature_ledger.py": "813c61502eda3eb05c7f7d0bafd2a746f6f0e129",
+    "tests/learning/test_edge001_tsunami_feature_ledger.py": "bb1355184160c68fa863535869b1fbe859570307"
+  },
+  "source_commit_sha": "27fb02ca6afaeeb2eb620eb142904ab3f58f9873",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-12T08:57:35-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(edge): fail closed on missing or invalid hourly source availability"
+}

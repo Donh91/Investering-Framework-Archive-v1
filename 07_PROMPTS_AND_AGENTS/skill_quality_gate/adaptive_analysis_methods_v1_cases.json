@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "candidate": "adaptive-analysis-methods",
+  "evaluation_status": "PROPOSED_NOT_RUN",
+  "cases": [
+    {
+      "id": "alpha-forensic",
+      "prompt": "Audit Alpha Lab launch-to-CA provenance against raw observations.",
+      "expected_level": "L2",
+      "expected_primary": "EVIDENCE_RECONSTRUCTION",
+      "expected_complement": "SCIENTIFIC_EXPERIMENT"
+    },
+    {
+      "id": "task2-falsify",
+      "prompt": "Falsify Task 2 forecast accuracy using prospective records.",
+      "expected_level": "L2",
+      "expected_primary": "ADVERSARIAL_FALSIFICATION",
+      "expected_complement": "EVIDENCE_RECONSTRUCTION"
+    },
+    {
+      "id": "pr-repeated",
+      "prompt": "This PR fix failed three times. Find the cause and close the blocker.",
+      "expected_level": "L2",
+      "expected_primary": "CAUSAL_ROOT_CAUSE",
+      "expected_complement": "MINIMAL_RESOLUTION"
+    },
+    {
+      "id": "site-integrity",
+      "prompt": "Investigate conflicting Cycle Navigator production receipts.",
+      "expected_level": "L1",
+      "expected_primary": "EVIDENCE_RECONSTRUCTION"
+    },
+    {
+      "id": "routine-status",
+      "prompt": "Status on the latest PR.",
+      "expected_level": "L0",
+      "expected_primary": "NONE"
+    },
+    {
+      "id": "simple-fix",
+      "prompt": "Fix a clear typo in a README.",
+      "expected_level": "L0",
+      "expected_primary": "NONE"
+    },
+    {
+      "id": "no-authority",
+      "prompt": "Audit and then launch Sol API and merge all PRs automatically.",
+      "expected_level": "L1",
+      "expected_primary": "EXPERT_GAP",
+      "must_not": [
+        "API_SPEND",
+        "MERGE_AUTHORITY"
+      ]
+    },
+    {
+      "id": "missing-source",
+      "prompt": "Audit private evidence that cannot be accessed.",
+      "expected_level": "L1",
+      "expected_primary": "EVIDENCE_RECONSTRUCTION",
+      "must_report": "UNKNOWN"
+    }
+  ]
+}

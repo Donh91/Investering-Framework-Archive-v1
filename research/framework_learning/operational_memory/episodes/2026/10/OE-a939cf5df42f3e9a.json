@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/framework-learning-supervisor.yml",
+    "research/api_agent/API_TASK_REGISTRY_v1.json",
+    "scripts/api_agent/temporary_bridge_pr_review.py",
+    "tests/api_agent/test_temporary_bridge_pr_review.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-a939cf5df42f3e9a",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(api): add exact-head temporary Sol PR review and prepaid reservation guard * test(api): cover temporary window, immutable reservation, exact PR head and API receipt * feat(api): register temporary exact-head GPT-6.1 Sol advisory review lane * feat(supervisor): add owner-gated Sol PR review with prepaid USD reservation * test: include bridge review checks in PR validation * test(api): use complete reservation record in hard-stop negative case * fix(api): prove retry-inclusive worst-case cost fits prepaid review reservation * test(api): falsify double-escaped retry spend against USD reser",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/framework-learning-supervisor.yml": "4462b45a92a80ee96e32b91a3ea24796f41b52b1",
+    "research/api_agent/API_TASK_REGISTRY_v1.json": "1325eb3a001700d36c91ffcc15725fcdf86e586a",
+    "scripts/api_agent/temporary_bridge_pr_review.py": "694d9db8ff950292b80d198758f03b113faca8a2",
+    "tests/api_agent/test_temporary_bridge_pr_review.py": "5c79c71bea9989199937e0e1f7f932ea87d80b79"
+  },
+  "source_commit_sha": "a939cf5df42f3e9a6db1503d59a55e4305fa3c38",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-12T14:34:00-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "feat(supervisor): temporary $5 Sol PR-review bridge, exact-head and prepaid (#1594)"
+}

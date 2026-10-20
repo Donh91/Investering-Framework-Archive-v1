@@ -1,0 +1,60 @@
+# Task 2 · R0 consolidation review and independent-approval gate
+
+**Date:** 2026-10-14. **Class:** `RESEARCH_ONLY_SOURCE_OBJECT_INTEGRITY`. **Branch baseline:** exact original source control-plane main `fe24da3e1d49ab325c007d9b432fc058ff06669a` (refresh before final merge). **Canonical:** `04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md`.
+
+## Why consolidation is necessary
+
+- [PR #1614](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1614) is an older **dirty/conflicted** proposal: source census plus a different pinned comparison receipt and dated restricted-metadata research summary. The comparison receipt describes `17` families/`37` refs/`36` paths; the existing `2026-10-14__TASK2_R0_PUBLIC_SOURCE_DRIFT_RECEIPT_v1.json` on main already covers exact `36/36` source paths at its own separately pinned revision. These are two **different historical exact targets**, not two inconsistent proofs.
+- [PR #1617](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1617) is also now dirty; its improved versioned verifier checks original **per-source SHA/type** (not merely top-level root trees), exact immutable target tree, ancestry, namespace/path syntax, shared-path SHA conflicts. It includes a bounded synthetic Git negative-control test suite. User requested a coherent Task 2 without overlapping tools.
+- This PR reuses **exact Git blobs** from #1617, not silently rewritten code: `task2_r0_git_object_reconcile_v1_1.mjs` blob `f1fb6331173820a539ecfa688fcc7a4fda264767` and `task2_r0_git_object_reconcile_v1_1.test.mjs` blob `d1955ff930a96917fdfd40b12e62447a58fb8c58`. Both have been independently GitHub read back after writing on this new clean branch.
+- The old #1614 dated restricted-source metadata (private health 1,043 reported files, 11 legacy capture gaps) remains viewable in that PR until owner decides whether to separately archive a **refreshed** value-free private health receipt. No raw or restricted provider records are transferred. A count from a dated health snapshot does **not** certify individual source first-known.
+
+## Executable verification
+
+On a checked-out repo with **both original historical commits** accessible, run:
+
+```bash
+node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs
+node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs \
+  --inventory 04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json \
+  --head 05f9daba3a8648c1d7c744fa5665b1014c968639 \
+  --expected-tree 8a632948eb8515c023196271a2299259cb8bc607 \
+  --repo-dir .
+```
+
+The exact historical comparison pins above are **previously archived research inputs**, not values inferred from moving `HEAD`. Do not rewrite original receipt if a newer comparison changes. The reconciler returns exit `0` only when all source paths exist with the original type and SHA; `2` for verified content drift or a genuinely absent path in an intact target tree; `1` for invalid or unverifiable arguments/objects, including type mismatch and unreadable target tree/blob, without reconciliation JSON. `verified_all_paths` means the registered paths remain present with the expected kind; the separate `verified_unchanged_source_set` is the exit-0 predicate and is false for content-only changes. Full original and target object contents are read with stdout discarded, so a readable compressed header cannot certify a truncated body and large legitimate sources do not overflow a result buffer. `CHANGED` is source-object drift, not data correctness or market predictive skill. Run the standalone test suite again in CI or an isolated reviewer environment; this discussion is **not** an independent CI-run receipt.
+
+A locally isolated, functionally matching mirror of the proposed Git-object checks was independently re-implemented and executed (Node 22 / Git 2.47) with **10/10 synthetic regression tests PASS** for original SHAs/types, deleted paths, head tree, moving references, ancestry, conflicting refs and unsafe paths. Since the standalone source copied here was not programmatically materialized into that isolated fixture from GitHub bytes, **do not misstate that mirror as proof the exact committed test blob executed in CI**. Exact source-object-copy verification and bounded mirror-test verification are distinct.
+
+## Scientific status and closure policy
+
+**R0 public Git objects:** prior source-drift receipt exists, new verifier under code review. **R1 actual original first-known:** still BLOCKED. **Historical R2–R7 simulations from this work:** `0`. **Independent market family count:** unverified. **Private source values:** not read or published. **Live models/signals/actions:** unchanged.
+
+This addendum is an R0 **execution utility**, not a new canonical source owner, workflow, scheduler or automatic model optimizer. Existing Codex review invocation on old PR #1617 was previously quota-blocked. The 10 local mirror tests and basic GitHub CI do not substitute for an **independent code/source review** if required by the existing research-to-code governance. Request the existing Supervisor or independent reviewer to inspect the exact new head, verify reproducibility and merge only after its own code/data-boundary gates. Then mark old #1614/#1617 superseded **only when no unique evidence is lost**. Do not force-merge either dirty PR.
+
+**Priority after R0 code review:** R1 provider first-known and original issuance/outcome receipts, followed by cheap matched price/volatility baselines; CFGI pre/post 2026-07-08 vendor scoring eras must not be silently pooled. None of the 2025 1h CFGI rows retrieved retrospectively in Aug 2026 is automatically an authenticated 2025 tradable source.
+
+
+## Exact 1:1 Git blob test execution — 2026-10-14
+
+**Update on earlier mirror-only limitation:** After the first draft of this note, both EXACT source bytes were obtained from the versioned GitHub branch, reconstructed in a local isolated Linux scratch directory and independently checked with `git hash-object`. At the current corrected test blob the versioned verifier import path resolves correctly. The 10/10 synthetic tests were rerun from locally byte-identical source/test Git blobs on Node 22.16.0 / Git 2.47.3. This supersedes the earlier *mirror-only* limitation for test execution, but does **not** constitute a second-principal independent reviewer approval.
+
+| Test artifact | Exact Git blob read back from PR branch | Local byte length | Local SHA-256 |
+| --- | --- | ---: | --- |
+| `task2_r0_git_object_reconcile_v1_1.mjs` | `f1fb6331173820a539ecfa688fcc7a4fda264767` | 4,577 | `d0350a33d4437739e9dacac954f4d92814c341b453e2a7cc932717c0adad4879` |
+| `task2_r0_git_object_reconcile_v1_1.test.mjs` | `d1955ff930a96917fdfd40b12e62447a58fb8c58` | 4,627 | `fd4ba4263b4ec8e3c6bc6fa87ba0e90c4e0fad13579c97825d04c1f8bed05ba1` |
+
+Exact-command reproduction: `node task2_r0_git_object_reconcile_v1_1.test.mjs` on **Node v22.16.0 / Git 2.47.3 / Linux**. Outcome: **10 of 10 synthetic Git-fixture tests PASS** (changed + missing + shared references, tampered source SHA, original type mismatch, absent baseline source, wrong expected target tree, moving ref, non-ancestor target, conflicting shared path, unsafe traversal, newline path). No credential, private data or live production checkout was needed. Full 36-path historical Git repository reconciliation **was not rerun** in this isolated environment because historical remote Git commits were not available there.
+
+**Governance limitation remains:** Exact test execution is useful evidence that code is runnable and rejects designed synthetic failures, but no independent external reviewer has approved this PR. General `gate/validate/storage-health` CI checks succeeding are not a substitute for a code-level security/science review. Reviewer must verify exact PR head and run the test suite independently before merge. This receipt changes no original R0 inventory or historical data.
+
+
+## 2026-10-14 GPT-6.1 Sol API receipt, actual counterexamples and remediation
+
+**Actual API event (not a hypothetical task):** Existing owner-gated Research Lab dispatcher issue #1476 triggered `[RESEARCH_LAB_SOL] mission=TASK2-R0-INDEPENDENT-REVIEW-001` (comment `6172934053`). Workflow [run 38596906940](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/38596906940) finished **SUCCESS** with all budget/context/receipt gates passing. Immutable gateway receipt and output: `research/api_agent/outputs/research_lab_sol/TASK2-R0-INDEPENDENT-REVIEW-001/issue-1476/comment-6172934053/{receipt.json,RESEARCH_LAB_SOL_ANALYSIS.json,context_manifest.json}`; model `gpt-6.1-sol` `high`; **34,565 input / 7,294 output tokens; $0.142070 estimated API cost**; scientific verdict **`INSUFFICIENT_EVIDENCE`**. The model **did not execute code** or authenticate raw Git objects itself: its predicted counterexamples were explicitly hypotheses, not observed results. Nor is an API response a self-authorizing independent GitHub code approval.
+
+**Separate manual synthetic Git reproduction executed after the model report:** on Git **2.47.3** in an ephemeral independently initialized repository (no original framework market/private data), original base commit `B` and a completely unrelated root commit `T` shared the same tree and source blob. `git merge-base --is-ancestor B T` returned **1** before a synthetic `git replace T R` (where `R` had parent B); with replacement it returned **0**, but `git --no-replace-objects merge-base --is-ancestor B T` correctly returned **1**. Root-tree and source-path SHA checks still agreed, demonstrating a genuine **Git replacement-object ancestry bypass** for the original default-git semantics. In a second independently executed case, an **annotated tag object's raw type was `tag`**, yet `git rev-parse <tag-object>^{tree}`, `git merge-base --is-ancestor B <tag-object>` and `git rev-parse <tag-object>:path` all succeeded by peeling, demonstrating a non-commit anchor could be accepted as a commit ref. Neither was observed in the public repository. This is a real *synthetic* source-integrity code defect, **not** evidence of R1 market hindsight or R2 edge.
+
+**Bounded repair now committed to this PR branch (post-SOL-head code, preserve original reviewed blobs in Git history):** patched `task2_r0_git_object_reconcile_v1_1.mjs` to invoke **all Git commands using `git --no-replace-objects`** and require `git cat-file -t` direct object type `commit` for both the frozen inventory baseline anchor and supplied target SHA. Added test-harness `fileURLToPath` instead of percent-encoded URL pathname for files in directories with spaces. Four extra regression cases cover a positive all-UNCHANGED exit 0, synthetic replacement-object ancestry attack, annotated-tag-as-SHA rejection, and percent-encoded spaced file paths. This builds on the ten original negative fixtures; **the amended 14-test exact GitHub blob has NOT YET been independently executed in a remote checkout** at this point of documentation. Generic CI `validate/gate/storage-health` SUCCESS is *not* a substitute for explicitly running `node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs` on the current exact PR head.
+
+**Remaining gates:** independent code review of the **new**, post-SOL head; explicit exact-file 14-test execution with log and blob readback; failure-mode diagnostic distinction (target missing vs Git operational error); source inventory completeness (no vacuous empty candidate) and environment/Git config assumptions; then reviewer-approved merge if and only if successful. Preserve #1614 unique historical dated metadata and older R0 receipts; do not close/erase them merely because this patch exists. **R1 provider first-known remains BLOCKED; zero real Task2 R2–R7 historical simulations and no economic edge established.** No forecast/outcome rewrite, private data release, model/trading policy or autonomous scheduling changed.

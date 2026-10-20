@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light"><meta name="theme-color" content="#f6f7f8">
+<meta name="description" content="Cycle Navigator · current-source premium candidate, not the canonical production home">
+<title>Cycle Navigator · Premium Preview</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./premium.css"><link rel="stylesheet" href="./premium-experience.css"><link rel="stylesheet" href="../frozen-week-chart.css">
+<script src="../vendor/lightweight-charts-5.2.0.js" defer></script>
+<script src="../frozen-week-chart.js" defer></script>
+<script type="module" src="./app.mjs"></script></head>
+<body>
+<a class="skip" href="#content">Spring til indhold</a>
+<header class="top"><div class="shell topbar">
+ <a href="./" class="brand" aria-label="Cycle Navigator vNext"><img class="brand-logo" src="./CN_LOGO.svg" alt="" aria-hidden="true" width="218" height="36"></a>
+ <div class="topend"><span class="release">PREMIUM PREVIEW</span><div class="languages" aria-label="Vælg sprog" role="group"><button data-lang="da" aria-pressed="true">DA</button><button data-lang="en" aria-pressed="false">EN</button></div></div>
+</div></header>
+<nav class="tabs shell" role="tablist" aria-label="Hovednavigation"><button id="tab-overview" type="button" role="tab" aria-controls="view-overview" data-tab="overview" aria-selected="true" tabindex="0"><span data-t="tabOverview">Overblik</span></button><button id="tab-compass" type="button" role="tab" aria-controls="view-compass" data-tab="compass" aria-selected="false" tabindex="-1"><span data-t="tabCompass">Kompas</span></button><button id="tab-path" type="button" role="tab" aria-controls="view-path" data-tab="path" aria-selected="false" tabindex="-1"><span data-t="tabPath">PATH</span></button><button id="tab-results" type="button" role="tab" aria-controls="view-results" data-tab="results" aria-selected="false" tabindex="-1"><span data-t="tabResults">Resultater</span></button></nav>
+<main id="content" class="shell" tabindex="-1">
+ <div class="statusbar"><div><span id="source-dot" class="statusdot"></span><span id="source-status" role="status">Kontrollerer officielle kilder…</span></div><span id="source-clock">—</span></div>
+ <section id="view-overview" class="view" role="tabpanel" aria-labelledby="tab-overview">
+  <div class="hero"><div class="hero-text"><p class="eyebrow" data-t="overviewEyebrow">MARKEDSBILLEDE / LIGE NU</p><h1 id="overview-title"><span data-t="heroOne">Forstå</span><br><em data-t="heroTwo">retningen.</em></h1><p class="intro" data-t="heroIntro">Én tydelig læsning. Én officiel handling. Ægte markedsdata.</p></div>
+   <div class="hero-indicator"><span class="micro" data-t="weeklyState">UGENS MARKEDSSTATUS</span><div id="headline" class="hero-value">—</div><span id="week-label" class="hero-meta">—</span></div>
+  </div>
+  <div class="decision"><article class="decision-main"><span class="eyebrow" data-t="actionLabel">OFFICIEL HANDLING · NU</span><div id="action" class="action-value">—</div><p id="action-note" class="small">—</p></article>
+  <article class="decision-side"><span class="eyebrow" data-t="proxyLabel">RETNINGSPROXY · 0–12 TIMER</span><div id="direction">—</div><p data-t="proxyCaveat" class="small">Observeret bevægelse, ikke selvstændigt valideret prognose.</p></article></div>
+  <div class="triple"><article class="fact"><span data-t="riskLabel">PULLBACK-RISIKO</span><strong id="risk">—</strong></article><article class="fact"><span data-t="distributionLabel">DISTRIBUTION</span><strong id="distribution">—</strong></article><article class="fact"><span data-t="nextGateLabel">NÆSTE BEKRÆFTELSE</span><strong id="next-gate">—</strong></article></div>
+  <section class="section"><div class="section-heading"><div><p class="eyebrow">01 / MARKET CYCLE</p><h2 data-t="cycleHeading">Hvor i cyklussen?</h2></div><span class="subtle" data-t="noEta">Ingen udokumenteret ETA</span></div><p id="cycle-summary" class="prose">—</p><a href="#path" data-nav-to="path" class="quiet-link" data-t="openPath">Se den fulde cyklusrejse →</a></section>
+  <section class="section"><div class="section-heading"><div><p class="eyebrow">02 / FROZEN WEEK</p><h2 data-t="forecastHeading">Prognose møder virkelighed.</h2></div><span id="freeze-identity" class="subtle">—</span></div>
+   <div class="range-grid"><article class="range"><span>BITCOIN / BTC</span><strong id="btc-range">—</strong><small data-t="frozenRange">Oprindeligt fastlåst interval</small></article><article class="range"><span>ETHEREUM / ETH</span><strong id="eth-range">—</strong><small data-t="frozenRange">Oprindeligt fastlåst interval</small></article></div>
+   <div class="chart-area"><div class="chart-kicker"><span data-t="chartTitle">Frossen prognose / faktiske priser</span><span id="chart-evidence" class="subtle">—</span></div><div id="official-path-chart" aria-label="Kildeverificeret ugerejse"></div></div>
+   <p class="small" data-t="chartTrust">Grafen viser kun frosne kildepunkter og gyldige observationer. Manglende dagsprognoser tegnes ikke.</p></section>
+ </section>
+ <section id="view-compass" class="view" hidden role="tabpanel" aria-labelledby="tab-compass"><div class="page-head"><p class="eyebrow">OFFICIAL COMPASS / CURRENT SOURCE</p><h1 id="compass-title" data-t="compassHeading">Tydeligere beslutninger.</h1><p data-t="compassSub" class="intro">Markedsretning, handling og tid adskilles. Ingen nye handelssignaler skabes her.</p></div>
+
+  <section class="product-first" aria-label="Official Compass decision">
+   <p class="product-kicker" data-exp-t="action">Handling nu · OFFICIAL COMPASS</p>
+   <div class="product-decision"><div class="product-cell"><small data-exp-t="action">Handling nu</small><strong id="premium-now-action">—</strong></div>
+   <div class="product-cell"><small data-exp-t="direction">0–12t · observeret retning</small><strong id="premium-now-direction">—</strong></div></div>
+   <div class="balance"><div class="balance-summary"><strong><span data-exp-t="bull">Bull</span> <span id="premium-bull">—</span> / <span data-exp-t="bear">Bear</span> <span id="premium-bear">—</span></strong><span>1–3d · <span id="premium-bias">—</span></span></div><div id="premium-balance-bars" class="balance-bars" aria-label="Official evidence balance"></div><small id="premium-balance-note">—</small></div>
+   <div class="product-risk" aria-label="Official pullback risk classification"><div class="product-risk-heading"><div><small id="premium-risk-title">Pullback</small><h3 id="premium-risk-name">—</h3></div><span class="product-risk-label" id="premium-risk-state">—</span></div>
+    <div id="premium-risk-steps" class="risk-class-rail" aria-label="Ordinal stages, not probability"></div><small id="premium-risk-detail">—</small>
+    <div class="product-risk-facts"><span id="premium-risk-window">—</span><span id="premium-risk-quality">—</span></div>
+    <small id="premium-risk-impact">—</small><small id="premium-sell-caveat">—</small></div>
+   <div class="product-protection"><div><span data-exp-t="sell">SELL / TRIM</span><strong id="premium-sell">—</strong></div><div><span data-exp-t="distribution">Distribution</span><strong id="premium-distribution">—</strong></div></div>
+   <div class="product-investor"><div class="product-lenses" role="group" aria-label="Investor reading focus">
+    <button type="button" data-investor-lens="holder" aria-pressed="true">HODL / beskyttelse</button>
+    <button type="button" data-investor-lens="active" aria-pressed="false">Aktiv / swing</button>
+    <button type="button" data-investor-lens="micro" aria-pressed="false">Micro / meme</button></div>
+    <strong id="premium-lens-heading">—</strong><p id="premium-lens-note">—</p><p class="product-caveat" id="premium-lens-caveat">—</p></div>
+  </section>
+  <section class="section"><div class="section-heading"><h2 data-t="horizonsHeading">Tidshorisonter</h2><span data-t="ownerOfficial" class="subtle">Kun officielt Kompas</span></div><div class="table-scroll"><table><thead><tr><th data-t="time">Tid</th><th data-t="direction">Retning</th><th data-t="actionShort">Handling</th></tr></thead><tbody id="horizon-body"></tbody></table></div></section>
+  <section class="section"><div class="section-heading"><h2 data-t="tiersHeading">Kapitalrotation</h2><span class="subtle">BTC → MEMES</span></div><div class="table-scroll"><table><thead><tr><th data-t="asset">Aktiv</th><th data-t="state">Status</th><th data-t="actionShort">Handling</th></tr></thead><tbody id="tier-body"></tbody></table></div></section>
+
+  <details class="product-more"><summary data-exp-t="interpretation">Min fortolkning · ugentlig kontekst og kildebevis</summary>
+      <section class="section" aria-labelledby="source-trace-title" data-contract="CN_PREMIUM_SOURCE_TRACE_v1">
+    <div class="section-heading"><div><p class="eyebrow" data-t="longHorizonEyebrow">FROZEN / RESEARCH · NOT CURRENT ACTION</p><h2 id="source-trace-title" data-t="longHorizonTitle">Længere tidshorisonter</h2></div><span id="source-trace-status" class="subtle" role="status">—</span></div>
+    <p class="small" data-t="longHorizonDisclaimer">Disse kildeudstedte vurderinger er ugentlig eller strategisk kontekst, ikke nye køb/sælg-signaler eller bekræftede startdatoer.</p>
+    <div class="table-scroll"><table><thead><tr><th data-t="time">Tid</th><th data-t="direction">Retning</th><th data-t="sourceOwner">Kildeansvar</th></tr></thead><tbody id="long-horizon-body"></tbody></table></div>
+    <details class="source-trace-details"><summary data-t="sourceStatusSummary">Se verificerede kildeled</summary>
+      <p class="small" data-t="sourceStatusDisclaimer">Hvert kildeled har sin egen status. Shadow og strategi er ikke-bindende og kan aldrig ændre den officielle handling.</p>
+      <div class="table-scroll"><table><thead><tr><th data-t="sourceOwner">Kildeansvar</th><th data-t="state">Status</th></tr></thead><tbody id="source-trace-body"></tbody></table></div>
+    </details>
+  </section>
+
+      <section class="section" aria-labelledby="monday-title" data-contract="PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1">
+    <div class="section-heading"><div><p class="eyebrow">MASTER MONDAY / WEEKLY EVIDENCE</p><h2 id="monday-title" data-t="mondayTitle">Hvad viser mandagens grundlag?</h2></div><span id="monday-week" class="subtle">—</span></div>
+    <div class="decision"><article class="decision-main"><span class="eyebrow" data-t="mondayAnalytics">ANALYSEGRUNDLAG</span><div id="monday-reading" class="action-value">—</div><p id="monday-explanation" class="small">—</p></article>
+    <article class="decision-side"><span class="eyebrow" data-t="mondayEvidence">KILDESTATUS · IKKE HANDELSSIGNAL</span><div id="monday-source">—</div><p id="monday-source-explanation" class="small">—</p></article></div>
+    <div class="triple"><article class="fact"><span data-t="mondayScore">SCORECARD</span><strong id="monday-scorecard">—</strong></article>
+    <article class="fact"><span data-t="mondayTranslation">OVERSÆTTELSE TIL HANDLING</span><strong id="monday-translation">—</strong></article>
+    <article class="fact"><span data-t="mondayApi">AI-FORSKNING · SHADOW</span><strong id="monday-api">—</strong></article></div>
+    <p class="small" data-t="mondayBoundary">Frosset ugegrundlag er historisk kontekst. Kun et friskt, kildeverificeret Official Compass kan eje handlingen NU.</p>
+  </section>
+
+    <p class="product-caveat" data-exp-t="contextNote">Master Monday og forskning er baggrund, ikke officielle køb/sælg-signaler.</p>
+  </details>
+  <details class="product-more"><summary data-exp-t="protection">Pullback, beskyttelse & re-entry</summary>
+      <section class="section"><div class="section-heading"><h2 data-t="protectionHeading">Beskyttelse og re-entry</h2></div><div class="triple"><article class="fact"><span>SELL / TRIM</span><strong id="sell-state">—</strong></article><article class="fact"><span>RE-ENTRY</span><strong id="reentry-state">—</strong></article><article class="fact"><span data-t="pullback">PULLBACK</span><strong id="risk-2">—</strong></article></div><p id="sell-note" class="prose">—</p></section>
+
+  </details>
+ </section>
+
+ <section id="view-path" class="view" hidden role="tabpanel" aria-labelledby="tab-path">
+  <div class="page-head"><p class="eyebrow">CYCLE NAVIGATOR / PATH v3</p><h1 data-exp-t="pathPage">Markeds­cyklussen.</h1><p class="intro" data-exp-t="pathIntro">Cyklusrejsen og kapitalrotationen. Ingen selvstændige handlesignaler eller opdigtede datoer.</p></div>
+  <div class="path-hero"><small data-exp-t="pathNow">Aktuelt checkpoint</small><strong id="premium-path-now">—</strong><p id="premium-path-source">—</p></div>
+  <div class="path-main-row"><article><span data-exp-t="pathNext">Næste bekræftelse</span><strong id="premium-path-next">—</strong><small id="premium-path-gate">—</small></article>
+   <article><span>ETA / SOURCE</span><strong id="premium-path-eta">—</strong><small data-exp-t="pathConditional">En kildevagt er ikke en bekræftet dato.</small></article></div>
+  <section class="section"><div class="section-heading"><div><p class="eyebrow">01 / MARKET CYCLE</p><h2 data-exp-t="pathStepsTitle">10 trin. Én sammenhængende rejse.</h2></div><span class="subtle">SOURCE ONLY</span></div>
+   <ol class="path-route" id="premium-path-rail"></ol><p class="small" id="premium-path-explainer">—</p></section>
+  <section class="section"><div class="section-heading"><div><p class="eyebrow">02 / ROTATION</p><h2 data-exp-t="rotation">Denne uges kapitalrotation</h2></div><span class="subtle">BTC → MEMES</span></div><ol class="path-rotation" id="premium-rotation"></ol>
+    <p class="small" data-exp-t="rotationCaveat">Et HOLD er ikke en bekræftet fase. Memes kræver særskilt kilde.</p></section>
+  <section class="section"><div class="section-heading"><div><p class="eyebrow">03 / ALTSEASON WATCH</p><h2 data-exp-t="pathWatch">Altseason-watch</h2></div></div>
+   <div class="path-watch"><span id="premium-path-alt-status">—</span><strong id="premium-path-alt">—</strong><p class="small" data-exp-t="altNote">Kun et betinget observationsmål, aldrig en automatisk nedtælling.</p></div></section>
+ </section>
+ <section id="view-results" class="view" hidden role="tabpanel" aria-labelledby="tab-results"><div class="page-head"><p class="eyebrow">PUBLIC ACCOUNTABILITY</p><h1 id="results-title" data-t="resultsHeading">Beviser frem for hype.</h1><p class="intro" data-t="resultsSub">Den senest afsluttede uge, dens reelle dækning og de seks frosne intervaller. Ikke en opdigtet samlet præcision.</p></div>
+  <div class="result-hero"><div><span class="eyebrow" data-t="completedPrecision">SENEST AFSLUTTEDE PRISPRÆCISION</span><div id="score-value" class="score">—</div><p id="score-identity" class="subtle">—</p></div><div class="proof-stat"><span data-t="coverage">KILDEDÆKNING</span><strong id="coverage-value">—</strong><small data-t="hours">Kvalificerede observationstimer</small></div></div>
+  <section class="section"><div class="section-heading"><h2 data-t="weeklyScoreTable">Frossent interval vs. faktisk</h2><span data-t="sixWindows" class="subtle">BTC / ETH · 3 vinduer</span></div><div class="table-scroll"><table><thead><tr><th data-t="assetWindow">Aktiv / vindue</th><th data-t="frozenForecast">Frossen prognose</th><th data-t="observed">Observeret</th><th data-t="precision">Præcision</th></tr></thead><tbody id="score-body"></tbody></table></div></section>
+  <section class="section proof-note"><h2 data-t="methodHeading">Hvad er egentlig verificeret?</h2><p data-t="methodText">Prisintervaller måles med den etablerede 70/30-metode. Strukturanalyse er ikke en procent-score efter CN #26. Uafhængig forsegling må ikke påstås uden bevis.</p><p id="score-proof" class="small">—</p><a class="quiet-link" href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer" data-t="openScoreRepo">Åbn det offentlige kildearkiv ↗</a>
+   <div class="proof-families" aria-label="Scorefamilier"><article><strong data-exp-t="rangeFamily">Price Range · original score</strong><span id="premium-proof-price-status">—</span></article><article><strong data-exp-t="directionFamily">Direction / Flow / Rotation</strong><span id="premium-proof-direction-status">—</span></article><article><strong data-exp-t="pullbackFamily">Pullback Edge</strong><span id="premium-proof-pullback-status">—</span></article></div><div class="ai-verifier"><h3 id="premium-proof-title">AI-kildeaudit</h3><p id="premium-proof-info">—</p>
+    <p class="proof-source" id="premium-proof-status">—</p>
+    <textarea readonly id="premium-proof-prompt" rows="5" aria-label="Public audit instructions to give an AI"></textarea>
+    <div><button type="button" id="premium-proof-copy">Kopiér auditinstruks</button>
+    <a id="premium-proof-open" class="proof-link" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Åbn ChatGPT</a>
+    <a id="premium-proof-archive" class="proof-link" href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer">Arkiv</a></div>
+    <p id="premium-copy-status" role="status" aria-live="polite"></p>
+   </div></section>
+ </section>
+ <footer class="footer"><span>CN / PREMIUM CANDIDATE · <span data-t="previewOnly">Ikke standardforsiden</span></span><a href="../index.html" data-t="legacySite">Åbn eksisterende site ↗</a></footer>
+</main></body></html>

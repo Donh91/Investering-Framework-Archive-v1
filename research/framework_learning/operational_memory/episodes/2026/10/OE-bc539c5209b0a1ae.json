@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/native-handlekompas.yml",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R0_R7_EXECUTION_ROADMAP_AND_RELEASE_GATES_v1.md",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v1.json",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_ORIGINAL_CLOCK_ADJUDICATION_v1.md",
+    "scripts/research/task2_r1_original_admission.py",
+    "tests/research/test_task2_r1_original_admission.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_MARKET_LEARNING",
+  "episode_id": "OE-bc539c5209b0a1ae",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(Task2 R1): bind original collector clocks and fail-closed admission * research(Task2 R1): cross-bind 11 originals to independent frozen forecast/outcome SHA census * test(Task2 R1): block forged forecast SHA, missing attempts and original outcome drift * docs(Task2): freeze executable R0-R7 research gates and cheap-first phased backtest roadmap * ci(Task2 R1): run historical-source-clock negative tests on full Git history in existing PR validator * research(Task2 R1): separate source-known information admission from investor delivery/economics * test(Task2 R1): information-only comp",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/native-handlekompas.yml": "3bd59e363ba38ed28340656d40ffd628206d6c0e",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R0_R7_EXECUTION_ROADMAP_AND_RELEASE_GATES_v1.md": "b2d737fe17433a1e662f1e58a42559313024ac04",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v1.json": "2a474ca2222f0b51824cd740660fa8af14479958",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json": "9e728b835de294e5777222c171a89874a69dae95",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_ORIGINAL_CLOCK_ADJUDICATION_v1.md": "58d85897bf64d466287630345ba98f2d710b5f4f",
+    "scripts/research/task2_r1_original_admission.py": "ccb4dee662bc97253cd63a40818a1aff9ffbe8d3",
+    "tests/research/test_task2_r1_original_admission.py": "f1de4ba156616d216cc7c783a387f93a23cb475c"
+  },
+  "source_commit_sha": "bc539c5209b0a1ae597630bd908ac2927c860a2d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-15T19:35:56-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(Task2 R1): preserve frozen source clocks and audit-only admission"
+}

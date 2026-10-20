@@ -1,0 +1,110 @@
+{
+  "contract": "TASK2_R1_PAIRED_B2_DIRECTIONAL_DIAGNOSTIC_v1",
+  "date_utc": "2026-10-16",
+  "status": "MEASURED_OUTCOME_AWARE_DEVELOPMENT_ONLY_NOT_CLAIM_OF_FORECAST_SKILL",
+  "existing_owner_issue": 1596,
+  "source_inputs": [
+    {
+      "path": "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_EXPLORATORY_BASELINE_AND_SIMULATION_RELEASE_v1.json",
+      "git_blob_sha": "656c2c9db472ba7f42a548bb932e244d93ca5890",
+      "role": "IMMUTABLE_DEVELOPMENT_ORIGINAL_12H_PAIRS"
+    },
+    {
+      "path": "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json",
+      "git_blob_sha": "9e728b835de294e5777222c171a89874a69dae95",
+      "role": "ORIGINAL_ELEVEN_ATTEMPTS_SOURCE_DEPENDENCY_CENSUS"
+    }
+  ],
+  "population": {
+    "original_v3_attempts": 11,
+    "original_outcome_rows_at_pin": 9,
+    "original_outcomes_missing_at_pin": 2,
+    "development_rows_with_outcomes": 9,
+    "abstained_forecast_issuances": 1,
+    "original_outcome_free_observation_rows": 0,
+    "certified_independent_market_event_families": 0,
+    "unique_raw_capture_blobs_in_eight_nonabstained_issuances": 5
+  },
+  "matched_same_original_issuance_12h": {
+    "unit": "ASSET_X_ISSUANCE_NOT_INDEPENDENT_MARKET_EVENT",
+    "baseline_id": "B2_SIGN_OF_PREVIOUS_AUTO_MARKET_STATE_PACKET_DELTA_NOT_A_FIXED_1H_RETURN",
+    "matched_nonabstained_slots": 16,
+    "model_and_price_B2_direction_identical": 16,
+    "model_and_price_B2_direction_disagree": 0,
+    "model_correct_slots": 7,
+    "price_B2_correct_slots": 7,
+    "paired_correctness_delta_count": 0,
+    "paired_correctness_delta_percentage_points": 0,
+    "model_and_B2_accuracy_on_matched_pct": 43.75,
+    "post_hoc_window_selected": true,
+    "not_independent_sample": true
+  },
+  "baseline_all_original_outcome_slots": {
+    "denominator": 18,
+    "B2_correct": 8,
+    "excludes_original_model_abstention_only_for_B2": false,
+    "do_not_compare_against_model_matched_rate": true
+  },
+  "by_asset": {
+    "BTC": {
+      "recorded_outcome_slots": 9,
+      "paired_nonabstained": 8,
+      "original_correct": 4,
+      "B2_correct_on_matched": 4,
+      "B2_correct_all": 4,
+      "original_abstained": 1,
+      "issued_matches_B2": 8
+    },
+    "ETH": {
+      "recorded_outcome_slots": 9,
+      "paired_nonabstained": 8,
+      "original_correct": 3,
+      "B2_correct_on_matched": 3,
+      "B2_correct_all": 4,
+      "original_abstained": 1,
+      "issued_matches_B2": 8
+    }
+  },
+  "leave_one_original_nonabstained_issuance_out_sensitivity": {
+    "remaining_matched_slots": 14,
+    "minimum_correct": 5,
+    "maximum_correct": 7,
+    "method": "OMIT_BOTH_ASSET_ROWS_OF_ONE_FORECAST; descriptive only, not standard error",
+    "independent_family_adjusted_confidence_interval": "UNAVAILABLE_INDEPENDENT_EVENT_FAMILY_0"
+  },
+  "measurement_scope": {
+    "measured_here": [
+      "SAME_ISSUANCE_DIRECTIONAL_DECISION_EQUIVALENCE",
+      "PAIRED_ORIGINAL_RECORDED_DIRECTIONAL_CORRECTNESS",
+      "ORIGINAL_OUTCOME_COVERAGE",
+      "SOURCE_DEPENDENCY_OVERLAP",
+      "LEAVE_ONE_ISSUANCE_OUT_SENSITIVITY"
+    ],
+    "not_measured": [
+      "Genuine provider first-known PIT",
+      "Independent or out-of-sample prediction skill",
+      "Fees/slippage/investor delivery/PnL",
+      "CFGI/ETF/breadth/OI/funding marginal information gain on wider samples",
+      "Forecast calibration or action utility"
+    ],
+    "feature_family_incremental_lift": "UNKNOWN_NOT_MEASURED",
+    "profit_or_sell_signal": "NONE"
+  },
+  "next_use_existing_data": [
+    "Compare predeclared original 1/4/24H, 12/72/168H and frozen CN/W41-W42 cohorts separately against horizon-matched price, persistence and no-warning controls, only with source and outcome clocks disclosed",
+    "Count every abstention and missing original outcome; report included/excluded denominator and provider clocks",
+    "For each feature family, pair exact same cohort/horizon with price-only + additional family, lock model and selection before truly future observations",
+    "Backfilled API data are labeled RECONSTRUCTED_EX_POST, never retro-promoted to original first-known",
+    "Only new objective source-version or matched prospective outcome evidence justifies one new budget-authorized Sol 6.1 review"
+  ],
+  "authority": {
+    "scientific_R1_admission": false,
+    "certified_R2_release": false,
+    "rewrite_original_forecasts": false,
+    "rewrite_original_outcomes": false,
+    "model_or_market_rule_change": false,
+    "paid_api_call": false,
+    "portfolio_action": false
+  },
+  "falsifiable_conclusion": "On the 16 non-abstained asset-decision slots drawn from this selected development cohort, original issued direction never differs from sign of prior market-packet price delta; observed conditional correct-count lift over B2 is exactly 0, not evidence that other features have zero prospective informational value."
+}

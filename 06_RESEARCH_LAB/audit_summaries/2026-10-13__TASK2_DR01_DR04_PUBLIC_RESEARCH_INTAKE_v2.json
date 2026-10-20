@@ -1,0 +1,182 @@
+{
+  "contract": "TASK2_DEEP_RESEARCH_PUBLIC_INTAKE_v2",
+  "status": "REPORT_CLAIMS_ONLY_RESEARCH_NOT_PIT_ADMITTED",
+  "recorded_date_utc": "2026-10-13",
+  "source_anchor_public_main_sha": "4f55f4a499bbee1034aeb81da1598fb7da0c488b",
+  "previous_intake_md": "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.md",
+  "previous_intake_json": "06_RESEARCH_LAB/audit_summaries/2026-10-13__TASK2_DR01_DR03_PUBLIC_RESEARCH_INTAKE_v1.json",
+  "prior_proposals_preserved_by_reference": 30,
+  "new_proposals": 12,
+  "all_proposals_total_reference": 42,
+  "report": {
+    "id": "DR04",
+    "title": "CFGI Predictive Edge Laboratory",
+    "pages": 17,
+    "pdf_sha256": "198fb059396338b02681addc34f6743a232648dff1cf765cfc7f88e6ee17ffb4",
+    "source": "user_conversation_attachment_not_publicly_committed",
+    "date": "2026-10-13",
+    "provenance_status": "SECONDARY_SOURCE_ONLY"
+  },
+  "reported_vendor_engine_change": "2026-07-08",
+  "engine_change_independently_certified_by_this_intake": false,
+  "proposed_vintage_labels": [
+    "LEGACY_PRE_2026-07-08",
+    "UPGRADED_POST_2026-07-08"
+  ],
+  "engine_vintage_production_rule_modified": false,
+  "reported_current_engine_weights": {
+    "price_pct": 30,
+    "impulse_pct": 30,
+    "others_each_pct": 5
+  },
+  "same_weights_valid_for_2025": "UNKNOWN_DO_NOT_ASSUME",
+  "primary_comparison": [
+    "MODEL_C_PRICE_MOMENTUM_VOLUME",
+    "MODEL_E_PLUS_COMPOSITE",
+    "MODEL_F_PLUS_COMPONENTS",
+    "MODEL_J_RESIDUAL_NONPRICE"
+  ],
+  "experiment_records": [
+    {
+      "id": "E01",
+      "hypothesis": "Composite improves directional skill beyond price/momentum",
+      "comparator": "Model C vs E",
+      "source_report_status": "READY_WITH_RESTRICTED_DATA",
+      "qualification": "2025 BTC/ETH 1h; matched 1h/4h/12h/24h",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E02",
+      "hypothesis": "Non-price components add residual information",
+      "comparator": "Model C vs F/J",
+      "source_report_status": "READY_WITH_RESTRICTED_DATA",
+      "qualification": "Train-only residualization, component ablation",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E03",
+      "hypothesis": "Sentiment velocity exceeds absolute level",
+      "comparator": "CFGI level vs delta 6h/24h",
+      "source_report_status": "READY_WITH_RESTRICTED_DATA",
+      "qualification": "Matched regime; time-valid changes",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E04",
+      "hypothesis": "Failed sentiment recovery warns downside continuation",
+      "comparator": "Price-only rebound sequence",
+      "source_report_status": "READY_WITH_RESTRICTED_DATA",
+      "qualification": "Admissible non-overlapping recovery episodes",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E05",
+      "hypothesis": "Persistent Extreme Fear differs from new Extreme Fear",
+      "comparator": "Spell-age matched fear states",
+      "source_report_status": "BLOCKED_MISSING_DATA",
+      "qualification": "Broad eligible state denominator not materialized",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E06",
+      "hypothesis": "4h/1d disagreement forecasts transitions",
+      "comparator": "Price transition state",
+      "source_report_status": "READY_WITH_RESTRICTED_DATA",
+      "qualification": "Discovery only; 1230 repeated snapshots not native 15m",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E07",
+      "hypothesis": "MAEVE selection outperforms fear-only entry",
+      "comparator": "NONE vs ENTRY; frequency/threshold/price baselines",
+      "source_report_status": "BLOCKED_MISSING_DATA",
+      "qualification": "Full eligible opportunity population required",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E08",
+      "hypothesis": "MAEVE 4h advantage holds with matched controls",
+      "comparator": "Eligible 4h NONE matched by regime",
+      "source_report_status": "BLOCKED_MISSING_DATA",
+      "qualification": "Small subset and 4h selection bias",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E09",
+      "hypothesis": "CFGI filter reduces harmful MAEVE DCA",
+      "comparator": "Actual DCA vs bounded DCA vs no DCA",
+      "source_report_status": "READY_WITH_RESTRICTED_DATA",
+      "qualification": "Identical starting capital and adverse-capture accounting",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E10",
+      "hypothesis": "CFGI+breadth stress warning beats breadth alone",
+      "comparator": "Breadth-only + price stress",
+      "source_report_status": "READY_WITH_RESTRICTED_DATA",
+      "qualification": "Discovery only; independent market family N",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E11",
+      "hypothesis": "ETH/BTC residual sentiment spread improves rotation",
+      "comparator": "ETH/BTC price trend + BTC.D + breadth",
+      "source_report_status": "PROSPECTIVE_ONLY",
+      "qualification": "No signal promotion; holdout freeze",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    },
+    {
+      "id": "E12",
+      "hypothesis": "CFGI enhances exit/reentry wealth after costs",
+      "comparator": "HOLD vs price-only vs warning-only vs CFGI",
+      "source_report_status": "BLOCKED_TEMPORAL_INTEGRITY/ADMISSION",
+      "qualification": "No eligible closed episodes; action + fill + re-entry PIT",
+      "task2_admitted": false,
+      "historical_simulation_executed": false
+    }
+  ],
+  "required_admission": [
+    "AUTHENTICATED_PRIVATE_IMMUTABLE_PIT_BINDINGS",
+    "ENGINE_VINTAGE_AND_SCHEMA",
+    "TRAIN_ONLY_RESIDUALIZATION",
+    "FIRST_KNOWN_SOURCE_TIME",
+    "MATCHED_ELIGIBLE_POPULATION",
+    "INDEPENDENT_MARKET_FAMILY_N",
+    "PURGED_CHRONOLOGICAL_HOLDOUT",
+    "MULTIPLE_TESTING_TRIAL_LEDGER",
+    "BENCHMARK_EQUALS_SAME_CLOCK_AND_COSTS"
+  ],
+  "research_actions": [
+    "MAEVE_TIMESTAMP_ADJUDICATION",
+    "ELIGIBLE_NONE_ENTRY_DCA_EXIT_SET",
+    "CFGI_C_E_F_J_INCREMENTAL_INFORMATION",
+    "ENGINE_VINTAGE_NEGATIVE_FIXTURES",
+    "REGIME_FAILED_RECOVERY_AND_DCA_COUNTERFACTUAL"
+  ],
+  "owner_issues": [
+    1596,
+    1530,
+    1553
+  ],
+  "privacy": "PUBLIC_SUMMARY_ONLY_NO_PRIVATE_VALUES_OR_FULL_PDF",
+  "research_only": true,
+  "live_trading_authority": false,
+  "signal_promotion": false,
+  "new_scheduler": false,
+  "data_spend_authorized_usd": 0,
+  "independent_edge_verdict": "NOT_ESTABLISHED",
+  "historical_simulations_executed_in_this_intake": 0,
+  "round3_policy": "PROSPECTIVE_COLLECTION_ONLY_NO_TEST_OR_SCORE",
+  "new_report_next": "DR05_APPEND_VERSIONED_INTAKE_NOT_SILENT_REWRITE"
+}

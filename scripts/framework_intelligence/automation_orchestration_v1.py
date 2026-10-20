@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -42,12 +43,19 @@ def now_iso() -> str:
 
 
 def workflow_key(value: Any) -> str:
-    text = str(value or "").strip().lower()
+    """Canonical exact workflow ID; never compare partial names or prose."""
+    if not isinstance(value, str):
+        return ""
+    text = value.strip().lower()
+    if text.startswith(".github/workflows/"):
+        text = text[len(".github/workflows/"):]
+    if "/" in text or "\\" in text:
+        return ""
     if text.endswith(".yml"):
         text = text[:-4]
     elif text.endswith(".yaml"):
         text = text[:-5]
-    return text
+    return text if re.fullmatch(r"[a-z0-9][a-z0-9._-]*", text) else ""
 
 
 def remediation_rows(value: dict[str, Any]) -> list[dict[str, Any]]:
@@ -69,22 +77,74 @@ def remediation_rows(value: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def row_matches_workflow(row: dict[str, Any], workflow: str) -> bool:
+def row_matches_workflow(row: dict[str, Any], workflow: str, *, linked_workflow: str | None = None) -> bool:
+    """Match only exact typed workflow identities, never objective/finding text."""
     target = workflow_key(workflow)
     if not target:
         return False
-    candidates = [
-        row.get("workflow"),
-        row.get("finding"),
-        row.get("objective"),
-        row.get("candidate_id"),
-        row.get("candidate_path"),
-    ]
-    return any(target in workflow_key(value) or workflow_key(value) in target for value in candidates if value)
+    source = row.get("workflow")
+    if not isinstance(source, str):
+        return False
+    if source.startswith("research-intake/"):
+        # This link can only be supplied by a separately verified intake file.
+        return bool(linked_workflow and workflow_key(linked_workflow) == target)
+    return workflow_key(source) == target
 
 
-def best_remediation_match(rows: list[dict[str, Any]], workflow: str) -> dict[str, Any] | None:
-    matches = [row for row in rows if row_matches_workflow(row, workflow)]
+def verified_intake_target(repo: Path, row: dict[str, Any]) -> str | None:
+    """Resolve the *single* primary workflow from a verified Codex intake file.
+
+    The candidate ID/path, digest, declared owner scope and primary target must
+    all agree. Never infer an identity from an intake title, findings, or a
+    potentially multi-workflow allowed_change_scope.
+    """
+    identity = row.get("workflow")
+    candidate_id = row.get("candidate_id")
+    candidate_path = row.get("candidate_path")
+    if not all(isinstance(x, str) for x in (identity, candidate_id, candidate_path)):
+        return None
+    if not re.fullmatch(r"[a-z0-9][a-z0-9_-]*", candidate_id):
+        return None
+    if identity != "research-intake/" + candidate_id:
+        return None
+    if not re.fullmatch(r"research/codex/intake/[0-9]{4}/[0-9]{2}/[a-z0-9_-]+[.]json", candidate_path):
+        return None
+    if candidate_path.split("/")[-1] != candidate_id + ".json":
+        return None
+    try:
+        raw = (repo / candidate_path).read_bytes()
+        declared_digest = row.get("candidate_sha256")
+        if not isinstance(declared_digest, str) or not re.fullmatch(r"[0-9a-f]{64}", declared_digest):
+            return None
+        candidate = json.loads(raw)
+        # Codex Research Intake uses canonical JSON hashing, NOT raw-file
+        # bytes (see write_codex_research_transition_receipt.py).
+        canonical = json.dumps(candidate, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        if hashlib.sha256(canonical).hexdigest() != declared_digest:
+            return None
+    except (OSError, ValueError, TypeError):
+        return None
+    if not isinstance(candidate, dict) or candidate.get("contract") != "CODEX_RESEARCH_CANDIDATE_v1":
+        return None
+    if candidate.get("candidate_id") != candidate_id or candidate.get("status") != "SUBMITTED":
+        return None
+    primary = candidate.get("primary_target")
+    if not isinstance(primary, str) or not primary.startswith(".github/workflows/"):
+        return None
+    if not workflow_key(primary):
+        return None
+    if primary not in (candidate.get("allowed_change_scope") or []):
+        return None
+    return primary
+
+
+def best_remediation_match(
+    rows: list[dict[str, Any]], workflow: str,
+    linked_targets: dict[int, str] | None = None,
+) -> dict[str, Any] | None:
+    links = linked_targets or {}
+    matches = [row for row in rows
+               if row_matches_workflow(row, workflow, linked_workflow=links.get(id(row)))]
     if not matches:
         return None
     rank = {
@@ -132,6 +192,14 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
         raise SystemExit("automation_health_unavailable_or_invalid")
 
     all_remediation = remediation_rows(remediation) + remediation_rows(codex)
+    # Resolve intake identities once per snapshot, not per RED workflow.
+    # No extra queue, no new model call and no mutable external lookup.
+    linked_targets = {}
+    for remediation_row in all_remediation:
+        if remediation_row.get("state") in ACTIVE_REMEDIATION_STATES:
+            verified_target = verified_intake_target(repo, remediation_row)
+            if verified_target:
+                linked_targets[id(remediation_row)] = verified_target
     red_rows = [x for x in health["workflows"] if isinstance(x, dict) and x.get("status") == "RED"]
     clusters = red_clusters(red_rows)
     cluster_by_workflow: dict[str, str] = {}
@@ -149,7 +217,7 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
         live = row.get("live") if isinstance(row.get("live"), dict) else {}
         latest = live.get("latest_run") if isinstance(live.get("latest_run"), dict) else {}
         findings = [str(x) for x in (row.get("findings") or [])]
-        match = best_remediation_match(all_remediation, workflow)
+        match = best_remediation_match(all_remediation, workflow, linked_targets)
         remediation_state = str((match or {}).get("state") or "")
         repeated = bool(SOL_FINDINGS.intersection(findings)) or int(live.get("failure_streak") or 0) >= 2
         cluster_id = cluster_by_workflow.get(workflow)

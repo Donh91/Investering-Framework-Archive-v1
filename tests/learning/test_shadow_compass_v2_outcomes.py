@@ -43,6 +43,7 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             "contract": "SHADOW_COMPASS_V2_FORECAST_v1",
             "forecast_id": "SCV2-test",
             "forecast_sha256": "forecast-sha",
+            "scoring_contract": "SHADOW_COMPASS_V2_SCORING_v3",
             "issued_at_utc": issued.isoformat().replace("+00:00", "Z"),
             "model_id": "gpt-6.1-sol",
             "reasoner_version": "test-v1",
@@ -78,6 +79,38 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             out = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 11, 59, tzinfo=timezone.utc))
             self.assertIsNone(out)
 
+    def test_existing_legacy_outcome_remains_already_matured_without_rewrite(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            forecast = self.fixture(root)
+            frozen = json.loads(forecast.read_text())
+            frozen["scoring_contract"] = "SHADOW_COMPASS_V2_SCORING_v2"
+            forecast.write_text(json.dumps(frozen))
+            out = root / "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes/2026/09/01/SCV2-test_12h.json"
+            write_json(out, {"immutable": "legacy-v2"})
+            original = out.read_bytes()
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 13, tzinfo=timezone.utc))
+            self.assertEqual(result["status"], "ALREADY_MATURED")
+            self.assertEqual(out.read_bytes(), original)
+            out.unlink()
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 13, tzinfo=timezone.utc))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
+            self.assertFalse(out.exists())
+
+    def test_legacy_shadow_forecast_cannot_mature_under_v3(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            path = self.fixture(root)
+            frozen = json.loads(path.read_text())
+            frozen["scoring_contract"] = "SHADOW_COMPASS_V2_SCORING_v2"
+            path.write_text(json.dumps(frozen))
+            original = path.read_bytes()
+            result = mature_one(root, path, "12h", datetime(2026, 9, 1, 13, tzinfo=timezone.utc))
+            self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
+            self.assertEqual(result["frozen_scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v2")
+            self.assertEqual(path.read_bytes(), original)
+            self.assertFalse((root / "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes").exists())
+
     def test_matured_shadow_uses_same_direction_tolerance_contract(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -86,7 +119,8 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             self.assertEqual(out["status"], "MATURED")
             value = json.loads((root / out["path"]).read_text())
             self.assertEqual(value["contract"], "SHADOW_COMPASS_V2_OUTCOME_v1")
-            self.assertEqual(value["scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v2")
+            self.assertEqual(value["scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v3")
+            self.assertEqual(value["matured_at_utc"], "2026-09-01T13:00:00Z")
             self.assertEqual(value["time_basis"]["effective_window_hours"], 12.0)
             self.assertEqual(value["time_basis"]["start_reference_age_hours"], 0.0)
             self.assertEqual(value["target_observation_at_utc"], "2026-09-01T12:00:00Z")
@@ -95,6 +129,29 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             self.assertEqual(value["comparison_metadata"]["sideways_tolerance_pct"], 1.5)
             self.assertFalse(value["authority"]["automatic_promotion"])
             self.assertEqual(value["baselines"]["persistence"]["prediction"], "UP")
+
+    def test_shadow_uses_candle_close_not_shared_batch_end(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            forecast = self.fixture(root)
+            day = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-01.csv"
+            with day.open(newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            for row in rows:
+                row["source_window_end_utc"] = "2026-09-01T13:00:00Z" if int(row["timestamp_utc"][11:13]) in (8, 9, 10, 11) else ""
+            with day.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+                writer.writeheader()
+                writer.writerows(rows)
+            early = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 12, 30, tzinfo=timezone.utc))
+            self.assertEqual(early["status"], "PENDING_TARGET_EVIDENCE")
+            result = mature_one(root, forecast, "12h", datetime(2026, 9, 1, 13, 30, tzinfo=timezone.utc))
+            self.assertEqual(result["status"], "MATURED")
+            value = json.loads((root / result["path"]).read_text())
+            self.assertEqual(value["target_observation_open_at_utc"], "2026-09-01T11:00:00Z")
+            self.assertEqual(value["target_observation_at_utc"], "2026-09-01T12:00:00Z")
+            self.assertAlmostEqual(value["realized"]["btc_return_pct"], 11.0)
+            self.assertEqual(value["scoring_contract"], "SHADOW_COMPASS_V2_SCORING_v3")
 
     def test_sideways_uses_official_tolerance(self):
         with tempfile.TemporaryDirectory() as td:

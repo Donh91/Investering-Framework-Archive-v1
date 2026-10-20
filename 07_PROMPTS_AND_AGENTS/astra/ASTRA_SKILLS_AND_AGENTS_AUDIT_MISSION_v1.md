@@ -1,5 +1,8 @@
 # Astra Skills & Agents Audit Mission v1
 
+> **2026-10-15 model-neutral mission continuity (Skills & Agents Audit).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. The mission is eligible for qualified GPT-6 and existing Research Lab/Codex owners now. Historical wording limiting it to GPT-6 Astra or a stronger successor is **not** a model-availability stop. Read current issues/PRs, including in-flight agent-efficiency work, and avoid duplicating completed reviews. The audit-only and scope/no-write gates remain. Follow the existing [Framework Mission Continuity owner](ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 **Status:** READ_ONLY_QUALIFICATION_MISSION  
 **Authority:** NONE_BY_ITSELF  
 **Applies to:** GPT-6 Astra or a materially stronger successor model  

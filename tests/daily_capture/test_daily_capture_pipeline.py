@@ -33,6 +33,17 @@ class DailyCapturePipelineTests(unittest.TestCase):
                 "cfgi_sentiment": 78,
             }))
             output = root / "03_DAILY_CAPTURE_LOGS" / "captures"
+            plan = root / "execution-plan.json"
+            self.run_script(
+                "scripts/daily_capture/freeze_capture_execution_plan.py",
+                "--output", str(plan),
+                "--run-id", "test-run",
+                "--trigger", "schedule",
+                "--schedule-id", "13 10 * * *",
+                "--slow-macro-planned", "false",
+                "--slow-macro-reason", "NORMAL_TACTICAL_SLOT",
+                "--planned-at-utc", "2026-09-27T10:00:00Z",
+            )
             self.run_script(
                 "scripts/daily_capture/build_capture_index.py",
                 "--root", str(root),
@@ -41,15 +52,17 @@ class DailyCapturePipelineTests(unittest.TestCase):
                 "--run-id", "test-run",
                 "--trigger", "schedule",
                 "--schedule-id", "13 10 * * *",
-                "--slow-macro-planned", "false",
-                "--slow-macro-reason", "NORMAL_TACTICAL_SLOT",
+                "--execution-plan-file", str(plan),
             )
             packets = [p for p in output.rglob("*.json") if p.name != "LATEST.json"]
             self.assertEqual(len(packets), 1)
             packet = json.loads(packets[0].read_text())
             self.assertEqual(packet["contract"], "DAILY_LIVE_ANCHOR_INDEX_v3")
             self.assertEqual(packet["capture_lane"], "LIVE_POINT_IN_TIME_ANCHOR")
-            self.assertEqual(packet["execution_plan"]["contract"], "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v1")
+            self.assertEqual(packet["execution_plan"]["contract"], "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v2")
+            self.assertTrue(packet["execution_plan"]["frozen_before_owner_execution"])
+            self.assertTrue(packet["execution_plan"]["outcome_independent"])
+            self.assertEqual(len(packet["execution_plan"]["plan_sha256"]), 64)
             self.assertEqual(packet["execution_plan"]["schedule_id"], "13 10 * * *")
             self.assertFalse(packet["execution_plan"]["slow_macro_planned"])
             self.assertEqual(packet["execution_plan"]["expected_owner_statuses"]["fred_macro"], "DISABLED")
@@ -110,10 +123,18 @@ class DailyCapturePipelineTests(unittest.TestCase):
             status = root / "status.json"
             status.write_text(json.dumps({"top100_breadth": 0}))
             output = root / "captures"
+            plan = root / "execution-plan.json"
+            self.run_script(
+                "scripts/daily_capture/freeze_capture_execution_plan.py",
+                "--output", str(plan), "--run-id", "rotation-context-test", "--trigger", "test",
+                "--slow-macro-planned", "false", "--slow-macro-reason", "TEST",
+                "--planned-at-utc", "2026-08-25T07:14:00Z",
+            )
             self.run_script(
                 "scripts/daily_capture/build_capture_index.py",
                 "--root", str(root), "--status-file", str(status), "--output-root", str(output),
                 "--run-id", "rotation-context-test", "--trigger", "test",
+                "--execution-plan-file", str(plan),
             )
             packet_path = next(path for path in output.rglob("*.json") if path.name != "LATEST.json")
             packet = json.loads(packet_path.read_text())

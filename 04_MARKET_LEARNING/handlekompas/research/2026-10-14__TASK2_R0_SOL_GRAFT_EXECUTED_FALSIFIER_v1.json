@@ -1,0 +1,46 @@
+{
+  "contract": "TASK2_R0_SOL_GRAFT_EXECUTED_FALSIFIER_v1",
+  "recorded_date": "2026-10-14",
+  "status": "REPRODUCED_GIT_PRIMITIVE_FALSE_ACCEPT__BLOCK_CURRENT_R0_VERIFIER_PR",
+  "source_pr": 1627,
+  "source_pr_pinned_head_sha": "52d4a6a87ed3d41dbb4c4ccf53285b39c51a4bd5",
+  "source_script_blob_sha": "7ae538e6b1f87108de3c6057c187909ffe2458a1",
+  "test_script_blob_sha": "b6dc5bbb99f600875eda99d3487de6f5fd0756ff",
+  "git_version_tested": "2.47.3",
+  "engine": "DISPOSABLE_SHA1_GIT_REPOSITORY_NO_PROVIDER_OR_MARKET_DATA",
+  "executed_exact_pr_script": false,
+  "executed_graft_sensitive_git_ancestry_predicate": true,
+  "baseline_commit": "04e7e329c48cf3a95a6468975e65e9ae331b897b",
+  "unrelated_commit": "83a46c3c0dfc413f1ae433ccf4894ee397c76bdd",
+  "shared_tree": "523651ee3ea1b8f2f4323c9d88ac6fac4dcc3b17",
+  "shared_blob": "f70f10e4db19068f79bc43844b49f3eece45c4e8",
+  "before_graft": "NON_ANCESTOR",
+  "after_graft_normal": "FALSE_ACCEPT",
+  "after_graft_no_replace": "FALSE_ACCEPT",
+  "source_tree_and_blob_type_checks_pass": true,
+  "repository_graft_metadata_added": "U B in .git/info/grafts",
+  "specific_user_exposure": "UNVERIFIED_REAL_REPO_GRAFT_ABSENT_OR_PRESENT_UNKNOWN",
+  "prior_sol_reviews": [
+    {
+      "trigger": 6172934053,
+      "result_comment": 6173001365,
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "cost_usd": 0.14207
+    },
+    {
+      "trigger": 6175760286,
+      "result_comment": 6175852501,
+      "verdict": "WEAKENED",
+      "cost_usd": 0.163946
+    }
+  ],
+  "code_repair_started_by_this_receipt": false,
+  "independent_code_review_completed": false,
+  "source_first_known_admitted": false,
+  "market_edge_test_executed": false,
+  "portfolio_action": false,
+  "privacy": "PUBLIC_SYNTHETIC_NO_PRIVATE_SOURCE_VALUES",
+  "reproduction_shell": "set -euo pipefail\nD=$(mktemp -d /tmp/task2-r0-graft-XXXXXX)\ntrap 'rm -rf \"$D\"' EXIT\ncd \"$D\"\ngit init -q\ngit config user.email test@example.invalid\ngit config user.name Task2\nprintf 'A\\n' > p\ngit add p\ngit commit -qm baseline\nB=$(git rev-parse HEAD)\nT=$(git rev-parse \"${B}^{tree}\")\nS=$(git rev-parse \"${B}:p\")\nU=$(git commit-tree \"$T\" -m unrelated-root)\ngit merge-base --is-ancestor \"$B\" \"$U\" && echo UNEXPECTED || echo NON_ANCESTOR_BEFORE_GRAFT\nprintf '%s %s\\n' \"$U\" \"$B\" > .git/info/grafts\ngit --no-replace-objects merge-base --is-ancestor \"$B\" \"$U\" && echo FALSE_ACCEPT || echo NON_ANCESTOR\ngit --no-replace-objects cat-file -t \"$U\"\ntest \"$(git --no-replace-objects rev-parse \"${U}^{tree}\")\" = \"$T\"\ntest \"$(git --no-replace-objects rev-parse \"${U}:p\")\" = \"$S\"\necho GRAFT_CAN_FORGE_ANCESTRY_WITH_IDENTICAL_TREE_AND_SOURCE_SHA",
+  "expected_remediation": "Raw-commit ancestry or fail-closed graft/env isolation plus negative/positive regression fixtures",
+  "canonical_owner_issue": 1596
+}

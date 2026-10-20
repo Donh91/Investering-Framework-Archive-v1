@@ -5,16 +5,33 @@ import argparse
 import hashlib
 import itertools
 import json
+import math
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+try:
+    from scripts.experiments.source_git_anchor import AcceptedMainSource
+except ModuleNotFoundError:  # Direct script invocation from the existing workflow.
+    from source_git_anchor import AcceptedMainSource
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from metric_resolver import (  # noqa: E402  (path is prepared immediately above)
     CAPTURE_DOCUMENT_ROOT,
     canonical_path,
+    resolve_for_forecast,
+)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "learning"))
+from outcome_maturation_engine import classify as classify_frozen_outcome  # noqa: E402
+from mature_exact_settlement_forecasts import validate_evidence as validate_original_settlement_evidence  # noqa: E402
+from forecast_settlement_price_owner import (  # noqa: E402
+    SettlementSourceError,
+    validate_forecast as validate_original_price_forecast,
+    last_closed_minute_open,
+    parse_binance,
+    parse_okx,
 )
 
 UTC = timezone.utc
@@ -259,34 +276,306 @@ def unique_candidate_rows(candidate_root: Path) -> tuple[list[tuple[Path, dict[s
     return rows, duplicate_count
 
 
+def outcome_bound_to_frozen_forecast(
+    outcome: dict[str, Any], frozen: dict[str, Any], outcome_root: Path,
+    *, source_anchor: AcceptedMainSource | None = None,
+    forecast_path: Path | None = None,
+) -> bool:
+    """Narrow status-eligible evidence: a self-declared score flag is insufficient.
+
+    Uses the original frozen forecast's canonical SHA, first-frozen scientific
+    admission and exact-target-time settlement contract. This still is NOT an
+    independent assessment of forecast skill or external vendor evidence.
+    """
+    if frozen.get("contract") != "FROZEN_FORECAST_v1" or frozen.get("unit_contract_version") != UNIT_CONTRACT_VERSION:
+        return False
+    if frozen.get("forecast_id") != outcome.get("forecast_id"):
+        return False
+    if outcome.get("forecast_sha256") != sha(frozen):
+        return False
+    admission = frozen.get("scientific_admission")
+    if not isinstance(admission, dict) or admission.get("status") != "QUALIFIED_FOR_FORWARD_TEST":
+        return False
+    exact = "FORECAST_SETTLEMENT_EXACT_TARGET_TIME_v1"
+    if frozen.get("settlement_contract_version") != exact or outcome.get("settlement_contract_version") != exact:
+        return False
+    due = frozen.get("outcome_due_utc")
+    target = outcome.get("settlement_target_utc")
+    observed = outcome.get("settlement_observation_utc")
+    if not isinstance(due, str) or not isinstance(target, str) or not isinstance(observed, str):
+        return False
+    try:
+        if dt(due) != dt(target) or dt(due) != dt(observed):
+            return False
+    except (ValueError, TypeError):
+        return False
+    offset = outcome.get("settlement_offset_seconds")
+    if type(offset) not in (int, float) or not float(offset) == 0.0:
+        return False
+    if not isinstance(outcome.get("evidence_sha256"), str) or len(outcome["evidence_sha256"]) != 64:
+        return False
+    forecast_id = str(frozen["forecast_id"])
+    # A file-derived ID must never become a path traversal or symlink target.
+    if (not forecast_id.startswith("EXP-FC-") or len(forecast_id) > 128
+            or not forecast_id.isascii()
+            or any(not (c.isalnum() or c in "_-") for c in forecast_id)):
+        return False
+    original = outcome_root.parent
+    # Canonical settlement producer writes immutable binding and evidence
+    # beside outcome_memory; do not trust a self-declared outcome result.
+    binding_path = original / "settlement_bindings" / f"{forecast_id}.json"
+    evidence_file = original / "settlement_evidence" / f"{forecast_id}.json"
+    try:
+        for path in (binding_path, evidence_file):
+            if path.is_symlink() or path.resolve() != path.absolute():
+                return False
+        binding = read(binding_path)
+        evidence = read(evidence_file)
+    except (OSError, ValueError, UnicodeError):
+        return False
+    if not isinstance(binding, dict) or not isinstance(evidence, dict):
+        return False
+    if binding.get("contract") != "FORECAST_SETTLEMENT_OUTCOME_BINDING_v1":
+        return False
+    if evidence.get("contract") != "FORECAST_SETTLEMENT_EVIDENCE_v1":
+        return False
+    # Recompute producer's signed-by-source JSON content digest, including
+    # original result HIT/MISS, not just an outcome-supplied 64-char claim.
+    expected = sha({k: v for k, v in binding.items() if k != "binding_sha256"})
+    if binding.get("binding_sha256") != expected:
+        return False
+    if binding.get("outcome_sha256") != sha(outcome):
+        return False
+    if binding.get("forecast_id") != forecast_id or binding.get("forecast_sha256") != sha(frozen):
+        return False
+    if binding.get("outcome_path") != f"research/framework_memory/outcome_memory/{forecast_id}.json":
+        return False
+    evidence_ref = f"research/framework_memory/settlement_evidence/{forecast_id}.json"
+    if binding.get("evidence_path") != evidence_ref or outcome.get("evidence_path") != evidence_ref:
+        return False
+    if evidence.get("forecast_id") != forecast_id or evidence.get("forecast_sha256") != sha(frozen):
+        return False
+    if binding.get("evidence_sha256") != sha(evidence) or outcome.get("evidence_sha256") != sha(evidence):
+        return False
+    if binding.get("settlement_target_utc") != outcome.get("settlement_target_utc"):
+        return False
+    # A self-consistent forged outcome+binding+evidence can still claim a
+    # non-existent price. Reuse the EXISTING producer's raw-receipt integrity
+    # validator before attempting to classify HIT/MISS.
+    repo_root = outcome_root.parent
+    if (outcome_root.parent.name == "framework_memory"
+            and outcome_root.parent.parent.name == "research"):
+        repo_root = outcome_root.parent.parent.parent
+    raw_ref = evidence.get("source_raw_path")
+    if not isinstance(raw_ref, str) or not raw_ref or Path(raw_ref).is_absolute():
+        return False
+    raw_file = (repo_root / raw_ref).resolve(strict=False)
+    if not raw_file.is_relative_to(repo_root.resolve(strict=False)):
+        return False
+    # A coordinated rewrite of raw/evidence/outcome/binding must not create
+    # a historical HIT. Pin both the original forecast and raw bytes to their
+    # FIRST accepted canonical main objects, outside this mutable worktree.
+    # Shallow/missing history produces zero eligible scores, not a CI bypass.
+    try:
+        root = repo_root.resolve()
+        anchor = source_anchor if source_anchor is not None else AcceptedMainSource(root)
+        frozen_at = frozen.get("frozen_at_utc")
+        if not isinstance(frozen_at, str) or not frozen_at.endswith("Z") or dt(frozen_at) >= dt(due):
+            return False
+        if forecast_path is None:
+            at = dt(frozen_at)
+            forecast_path = root / "research/framework_memory/forecast_memory" / f"{at.year:04d}" / f"{at.month:02d}" / f"{forecast_id}.json"
+        forecast_path = forecast_path.absolute()
+        relative_forecast_path = forecast_path.relative_to(root)
+        if forecast_path.is_symlink() or forecast_path.resolve() != forecast_path.absolute():
+            return False
+        if read(forecast_path) != frozen:
+            return False
+        if not anchor.matches(relative_forecast_path,
+                              hashlib.sha256(forecast_path.read_bytes()).hexdigest(),
+                              accepted_before=dt(due)):
+            return False
+        if not anchor.matches(Path(raw_ref), evidence.get("source_raw_sha256"),
+                              accepted_after=dt(due)):
+            return False
+    except (OSError, ValueError, TypeError, UnicodeError):
+        return False
+    try:
+        validate_original_settlement_evidence(frozen, evidence, repo_root)
+        # The producer validator binds the raw *bytes*, but must not be used
+        # alone: also rederive the original candle and close PRICE from those
+        # exact raw bytes, not from mutable normalized market_metrics.
+        _, spec, raw_target = validate_original_price_forecast(frozen)
+        raw_bytes = raw_file.read_bytes()
+        original_open = last_closed_minute_open(raw_target)
+        if spec["kind"] == "BINANCE_SPOT_1M":
+            original_observation = parse_binance(
+                raw_bytes, spec["symbol"], raw_target, original_open)
+        elif spec["kind"] == "OKX_MARK_1M":
+            original_observation = parse_okx(
+                raw_bytes, spec["inst_id"], raw_target, original_open)
+        else:
+            return False
+        if (original_observation["source"] != evidence.get("source_id")
+                or original_observation["instrument"] != evidence.get("source_instrument")
+                or original_observation["confirmed"] is not True
+                or dt(original_observation["candle_open_utc"]) != dt(evidence["source_candle_open_utc"])
+                or dt(original_observation["candle_close_utc"]) != dt(evidence["source_candle_close_utc"])):
+            return False
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError, SettlementSourceError):
+        return False
+    # Recompute HIT/MISS from the validated original settlement metric with
+    # the EXISTING canonical maturation scorer. This is still not an
+    # independent provider publication, delivery or scientific skill proof.
+    try:
+        resolution = resolve_for_forecast(evidence, frozen)
+        if not resolution.ok:
+            return False
+        if type(resolution.value) not in (int, float) or not math.isfinite(float(resolution.value)):
+            return False
+        if float(resolution.value) != float(original_observation["close"]):
+            return False
+        start = frozen.get("start_value")
+        end = resolution.value
+        if (type(start) not in (int, float) or type(end) not in (int, float)
+                or not math.isfinite(float(start)) or not math.isfinite(float(end))
+                or float(start) <= 0):
+            return False
+        if classify_frozen_outcome(frozen, float(start), float(end)) != outcome.get("result"):
+            return False
+        if type(outcome.get("start_value")) not in (int, float) or float(outcome["start_value"]) != float(start):
+            return False
+        if (type(outcome.get("end_value")) not in (int, float)
+                or not math.isfinite(float(outcome["end_value"]))
+                or float(outcome["end_value"]) != float(end)):
+            return False
+        observed_return = round((float(end) / float(start) - 1.0) * 100.0, 8)
+        if (type(outcome.get("return_pct")) not in (int, float)
+                or not math.isfinite(float(outcome["return_pct"]))):
+            return False
+        if abs(float(outcome["return_pct"]) - observed_return) > 1e-8:
+            return False
+    except (ValueError, TypeError, KeyError, ArithmeticError):
+        return False
+    return True
+
+
 def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, outcome_root: Path, receipt_root: Path, now: str) -> dict[str, Any]:
     candidate_rows, duplicate_candidate_file_count = unique_candidate_rows(candidate_root)
-    candidates = [value for _, value in candidate_rows]; observations = {}; candidate_forecasts = {}; outcomes = {}; receipts = {}
-    for _, value in jsons(observation_root, "EXPERIMENT_OBSERVATION_v1"): observations.setdefault(value["candidate_id"], []).append(value)
-    for _, value in jsons(forecast_root, "FROZEN_FORECAST_v1"):
-        candidate_id = value.get("source_candidate_id"); forecast_id = value.get("forecast_id")
-        if candidate_id and forecast_id: candidate_forecasts.setdefault(candidate_id, []).append(forecast_id)
-    for path in outcome_root.rglob("*.json") if outcome_root.exists() else []:
-        try: value = read(path)
-        except Exception: continue
-        if value.get("forecast_id"): outcomes[value["forecast_id"]] = value
+    candidates = [value for _, value in candidate_rows]
+    observations = {}; candidate_forecasts = {}; outcomes = {}; receipts = {}
+    original_forecasts = {}
+    original_forecast_paths = {}
+    source_root = outcome_root.parent
+    if source_root.name == "framework_memory" and source_root.parent.name == "research":
+        source_root = source_root.parent.parent
+    source_anchor = AcceptedMainSource(source_root)
+    for _, value in jsons(observation_root, "EXPERIMENT_OBSERVATION_v1"):
+        observations.setdefault(value["candidate_id"], []).append(value)
+    for path, value in sorted(jsons(forecast_root, "FROZEN_FORECAST_v1"), key=lambda x: x[0].as_posix()):
+        candidate_id = value.get("source_candidate_id")
+        forecast_id = value.get("forecast_id")
+        if not candidate_id or not forecast_id:
+            continue
+        key = str(forecast_id)
+        owner = str(candidate_id)
+        prior = original_forecasts.get(key)
+        if prior is not None:
+            old_owner, old_frozen = prior
+            if old_owner != owner or old_frozen != value:
+                raise ValueError(f"forecast_id_ownership_or_content_conflict:{key}")
+            # Duplicate byte-identical source does not count twice.
+            continue
+        original_forecasts[key] = (owner, value)
+        original_forecast_paths[key] = path
+        candidate_forecasts.setdefault(owner, []).append(key)
+    for path in sorted(outcome_root.rglob("*.json")) if outcome_root.exists() else []:
+        try:
+            value = read(path)
+        except (OSError, ValueError, UnicodeError):
+            continue
+        if not isinstance(value, dict) or not value.get("forecast_id"):
+            continue
+        forecast_id = str(value["forecast_id"])
+        if forecast_id in outcomes:
+            # An ambiguous original outcome cannot be silently won by walk order.
+            raise ValueError(f"duplicate_outcome_forecast_id:{forecast_id}")
+        outcomes[forecast_id] = value
     for _, value in jsons(receipt_root, "EXPERIMENT_EXECUTION_RECEIPT_v1"): receipts.setdefault(value.get("candidate_id"), []).append(value.get("replication_status"))
     rows = []; counts = {}
     for candidate in candidates:
-        candidate_id = candidate["candidate_id"]; candidate_observations = sorted(observations.get(candidate_id, []), key=lambda item: item.get("observed_at_utc", "")); last = candidate_observations[-1] if candidate_observations else None; forecast_ids = candidate_forecasts.get(candidate_id, []); matured = [outcomes[item] for item in forecast_ids if item in outcomes]
-        if candidate.get("spec", {}).get("kind") == "FORECAST_TEST" and candidate.get("spec", {}).get("target_unit_contract_version") != UNIT_CONTRACT_VERSION: state = "TARGET_UNIT_QUARANTINED"
-        elif any(item.get("status") == "MATURED" and item.get("result") == "HIT" for item in matured): state = "MATURED_SUPPORTED"
-        elif any(item.get("status") == "MATURED" and item.get("result") == "MISS" for item in matured): state = "MATURED_NOT_SUPPORTED"
-        elif matured: state = "MATURED_INCONCLUSIVE"
-        elif forecast_ids: state = "WAITING_FOR_MATURITY"
-        elif last and last.get("evaluation_status") == "WAITING_FOR_MAPPING": state = "WAITING_FOR_MAPPING"
-        elif last and last.get("evaluation_status") == "WAITING_FOR_DATA": state = "WAITING_FOR_DATA"
-        elif last and last.get("evaluation_status") == "FIRED_NO_TARGET": state = "FIRED_NO_TARGET"
-        elif candidate_observations: state = "INCUBATING"
-        else: state = "PROPOSED"
+        candidate_id = candidate["candidate_id"]
+        candidate_observations = sorted(observations.get(candidate_id, []), key=lambda item: item.get("observed_at_utc", ""))
+        last = candidate_observations[-1] if candidate_observations else None
+        forecast_ids = candidate_forecasts.get(candidate_id, [])
+        original_outcomes = [outcomes[item] for item in sorted(set(forecast_ids)) if item in outcomes]
+        # A retained CENSORED or UNKNOWN outcome is NOT a matured/scoreable test.
+        # Keep counts disjoint and do not rewrite any original outcome file.
+        matured = [item for item in original_outcomes
+                   if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
+                   and item.get("status") == "MATURED"]
+        eligible = [item for item in matured
+                    if item.get("scientific_score_eligible") is True
+                    and item.get("result") in {"HIT", "MISS"}
+                    and item.get("forecast_id") in original_forecasts
+                    and original_forecasts[item["forecast_id"]][0] == candidate_id
+                    and outcome_bound_to_frozen_forecast(
+                        item, original_forecasts[item["forecast_id"]][1], outcome_root,
+                        source_anchor=source_anchor,
+                        forecast_path=original_forecast_paths[item["forecast_id"]])]
+        censored = [item for item in original_outcomes
+                    if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
+                    and item.get("status") == "CENSORED"]
+        unresolved_count = len(original_outcomes) - len(matured) - len(censored)
+        if candidate.get("spec", {}).get("kind") == "FORECAST_TEST" and candidate.get("spec", {}).get("target_unit_contract_version") != UNIT_CONTRACT_VERSION:
+            state = "TARGET_UNIT_QUARANTINED"
+        elif any(item.get("result") == "HIT" for item in eligible):
+            state = "MATURED_SUPPORTED"
+        elif any(item.get("result") == "MISS" for item in eligible):
+            state = "MATURED_NOT_SUPPORTED"
+        elif matured:
+            state = "MATURED_INCONCLUSIVE"
+        elif original_outcomes:
+            # Historical source is retained, but not a mature observation.
+            state = "WAITING_FOR_DATA"
+        elif forecast_ids:
+            state = "WAITING_FOR_MATURITY"
+        elif last and last.get("evaluation_status") == "WAITING_FOR_MAPPING":
+            state = "WAITING_FOR_MAPPING"
+        elif last and last.get("evaluation_status") == "WAITING_FOR_DATA":
+            state = "WAITING_FOR_DATA"
+        elif last and last.get("evaluation_status") == "FIRED_NO_TARGET":
+            state = "FIRED_NO_TARGET"
+        elif candidate_observations:
+            state = "INCUBATING"
+        else:
+            state = "PROPOSED"
         counts[state] = counts.get(state, 0) + 1
-        rows.append({"candidate_id": candidate_id, "title": candidate["spec"]["title"], "kind": candidate["spec"]["kind"], "state": state, "created_at_utc": candidate["created_at_utc"], "observation_count": len(candidate_observations), "forecast_ids": forecast_ids, "matured_outcome_count": len(matured), "replication_receipts": sorted(set(item for item in receipts.get(candidate_id, []) if item)), "automatic_age_expiry": False})
-    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "duplicate_candidate_file_count": duplicate_candidate_file_count, "state_counts": counts, "candidates": rows, "rules": {"candidate_id_uniqueness": "ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE", "duplicate_candidate_spec_conflict": "FAIL_CLOSED", "idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True}}
+        rows.append({
+            "candidate_id": candidate_id, "title": candidate["spec"]["title"],
+            "kind": candidate["spec"]["kind"], "state": state,
+            "created_at_utc": candidate["created_at_utc"],
+            "observation_count": len(candidate_observations),
+            "forecast_ids": forecast_ids,
+            "outcome_record_count": len(original_outcomes),
+            "matured_outcome_count": len(matured),
+            "censored_outcome_count": len(censored),
+            "unknown_outcome_count": unresolved_count,
+            "scientific_score_eligible_outcome_count": len(eligible),
+            "outcome_evidence_state": (
+                "CENSORED_ONLY" if censored and not matured and not unresolved_count
+                else "MATURED_SOME" if matured
+                else "UNRESOLVED" if original_outcomes
+                else "NO_OUTCOME_RECORD"
+            ),
+            "replication_receipts": sorted(set(item for item in receipts.get(candidate_id, []) if item)),
+            "automatic_age_expiry": False,
+        })
+    # Retain the existing container contract for current readers, while making
+    # the corrected count semantics explicitly versioned. Historical snapshots
+    # are not rewritten; their adjudications must pass each consumer's existing
+    # state/count drift checks before reuse.
+    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "contract_revision": "1.1", "outcome_count_contract": "EXPERIMENT_OUTCOME_COUNTS_v2", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "duplicate_candidate_file_count": duplicate_candidate_file_count, "state_counts": counts, "candidates": rows, "rules": {"candidate_id_uniqueness": "ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE", "duplicate_candidate_spec_conflict": "FAIL_CLOSED", "idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True, "matured_outcome_count_semantics": "STATUS_MATURED_ONLY", "scientific_score_eligible_outcome_count_semantics": "STATUS_MATURED_AND_SCORE_ELIGIBLE_TRUE_AND_HIT_OR_MISS", "censored_outcomes_never_matured": True, "legacy_snapshot_reinterpretation": "FORBIDDEN", "prior_adjudication_reuse": "REQUIRES_CURRENT_STATE_AND_COUNT_MATCH"}}
 
 
 def main() -> None:

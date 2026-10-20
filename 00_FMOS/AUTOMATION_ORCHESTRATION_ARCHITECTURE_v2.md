@@ -91,6 +91,45 @@ Lifecycle directives live with the workflow instead of in a parallel registry:
 
 Lifecycle state never converts a genuine active failure into success. Invalid lifecycle declarations, an `EXPECTED_BLOCK` workflow with a schedule, an invalid/missing lifecycle timestamp, a missing reason/exit contract, or a successful run after the expected-block lifecycle became authoritative remain actionable health defects.
 
+
+
+## Universal GitHub queue continuity — NON-BINDING proposal (2026-10-14; revised 2026-10-18)
+
+**Review status: PROPOSED / NO OWNER RATIFICATION VERIFIED / NOT CURRENT GOVERNING POLICY.** This bounded cross-domain note describes a possible consistency principle for existing GitHub queues. It does **not** amend operative contracts of Codex/remediation, scientific experiments, Research Lab, Alpha Lab, Compass/Cycle Navigator, FMOS or Supervisor. Current AGENTS.md, per-domain contracts, schedules and documented receipts retain precedence.
+
+### Suggested interpretation, not a new lifecycle
+
+> A queue entry identifies proposed or admitted work; it is never evidence that execution, scientific validation, notification or downstream consumption occurred.
+
+When an **existing authorized owner** next updates its ordinary record, useful fields *within that owner's current schema* include: stable source/ref and evidence class, accountable owner, next admissible action, dependencies/eligibility/revisit condition, budget/security/review limits, and completion or blocked-state evidence. Exact fields, state labels and required events differ by domain. This is **not** a newly mandatory schema, extra durable registry or independent runner.
+
+Illustrative owner-specific lifecycle only:
+
+~~~text
+SOURCE / INTAKE
+  -> existing domain owner + deduplication (if admitted)
+  -> eligibility/readiness under that owner's rules
+  -> real execution + source/commit evidence OR explicit wait/block
+  -> applicable independent review, maturation and consumer readback
+  -> domain-authorized closed/rejected/superseded outcome OR continued wait
+~~~
+
+**Do not conflate:** an issue comment, a merged PR, GitHub Actions success, CODEX_READY, a model technical review comment and a verified natural production outcome. Each establishes a different fact. A research note that was never admitted is not an overdue operational task. An expected wait for first-known market data, a qualified source or available approved budget is not automatically failure.
+
+### Existing authority and permitted follow-up
+
+- Preserve existing domain-owned processes. Route bounded reproducible code defects only through the existing Codex intake and remediation controller; method candidates via Research Lab/Experiment Lifecycle; rendering defects via current SITE/CN owners. Do not add a global queue, scheduler, supervisor obligation, starvation scanner, source-of-truth index or unattended execution trigger.
+- **No new standing Supervisor requirement is established here.** Sampling blocked/eligible records, reporting age or implementing starvation detection are only candidate practices for a separately authorized, measurable, domain-owned pilot. First establish true eligibility and owner from canonical sources.
+- An owner may preserve explicit WAITING/UNVERIFIED/NO_SOURCE or native equivalents where its authoritative contract supports them. An issue comment cannot authenticate spending, permissions, private-data access, merges or portfolio actions.
+- Future workflow/code changes require separate scoped PRs obeying then-current ownership, safety, CI, review and post-merge readback gates. This document is not that implementation.
+- The existing code-delivery topology QUEUED -> IN_PR -> MERGED -> READBACK_VERIFIED -> DONE remains applicable **only where the existing owner contract adopts it**. Rejected, superseded, non-actionable or pending research must not be relabelled successful.
+
+### Review and adoption boundaries
+
+The 2026-10-16 AGENTS.md owner-approved single-account merge exception, where applicable, differs from a formal independent GitHub APPROVED review. Owner authorization is not an independent endorsement; model reviews (including Grok/Codex technical comments) are advisory evidence, not a GitHub approval or authority change.
+
+This section is **a reviewable proposal only**. Future adoption into operational instructions requires an authenticated domain-owner decision, exact current-main applicability, identified consumer, independent technical review where required, and bounded post-adoption readback. There is no presumption old unprocessed issues are automatically monitored or that this documentation authorizes action.
+
 ## Remediation and Codex
 
 `CODEX_READY` means the problem has sufficient evidence for a bounded code task. It does not mean that code has been changed or merged.
@@ -146,7 +185,22 @@ A stale task must not be repaired speculatively. A valid hash-bound receipt move
 
 `research/codex/CODEX_EXECUTION_LEDGER.jsonl` records state or contract transitions from activation of Codex Intake v1 forward. Its first production pass imports the currently visible remediation tasks as a baseline without pretending to have observed older activity live. Earlier history remains reconstructable through remediation history, transition receipts, issues, PRs and commits.
 
-No automation may self-merge a Codex change. Model weights, market gates, canonical predecessor rules, authority boundaries, portfolio logic, API budget and new policy semantics remain framework-owner proposal-only.
+### Owner-authorized single-account integration — explicit override, 2026-10-16
+
+The repository owner has expressly replaced the earlier **distinct GitHub identity as a universal integration prerequisite** for this one-owner repository. This amendment applies to the existing bounded workstream (#1622, #1626, #1627, #1629, #1644, #1645, #1649) and future specifically owner-authorized releases. It is NOT a general permission for unsupervised Codex, Supervisor, scheduled workflows or paid API agents to merge their own output. The owner may explicitly delegate one identified, risk-assessed PR release through the existing authenticated GitHub integrator even if its GitHub login is also the PR author. Record that this is a **SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE**, never a GitHub nonauthor APPROVED review or proof of independent account-level sign-off.
+
+This single-account path is admissible ONLY when:
+1. The owner personally authorizes the exact release or explicitly named bounded PR set in an authenticated instruction. A repository issue, model summary, reviewer bot, generated receipt or task queue cannot manufacture that authority. A new unspecific batch receives no automatic standing permission.
+2. GitHub still permits the merge under its REAL rules, with no bypass of required reviews, branch protections, security settings or required status checks. Check current main, exact PR head SHA, changed paths, branch, risk class, relevant domain authority, review comments and exact-head check runs. Merge using GitHub's expected-head SHA condition; never push directly to main as a disguised integration.
+3. All applicable CI and targeted positive, negative and mutation-sensitive security tests pass. Independently authored technical commentary (a second agent/model or documented non-writing reviewer where available) is recorded as **advisory**, not `APPROVED`. Adjudicate concrete findings; ANY known unmitigated P0/P1, unresolved integrity/data contamination, unsupported paid-call liability, code/receipt mismatch or missing required evidence stops release. Explicit owner permission is not a substitute for falsification of a reported P1 defect. Explain accepted P2 residual risks.
+4. For workflow, source integrity, provenance, billing, security or governance changes require immediate verified internal safepoint, scoped adversarial tests, source/recovery authority separation `PASS`, and a concrete producer/consumer postmerge observation. No new model/agent/budget, market action, policy-scoring promotion or private-data publication is conferred.
+5. After merge, read back exact main commit and changed file hashes and verify a genuine natural production/consumer run as applicable. Report `POST_FIX_OBSERVATION` rather than `DONE` until the postmerge evidence exists.
+
+**Codex event finality:** `scripts/governance/check_codex_review_finality.py` is a read-only *diagnostic* that can return `technical_review_accepted=true`, `merge_authorized=false` and `atomic_review_merge_binding=false`. It MUST NOT be treated as an atomic lock or merge authorization. In the owner-directed single-account path, the explicit owner's release mandate, GitHub's own actual merge gates, and the verified code/evidence checks are the authority; a favorable bot review alone never authorizes a merge. Fresh material P0/P1 findings discovered before release stop it, irrespective of comment timestamps. If Codex review quota is exhausted, document that limitation and use any permitted existing independent technical assessment; do not fake completion. Automated merges that would derive authorization from the mutable GitHub review/comment event stream remain `AUTO_MERGE_BLOCKED` until an actual atomic authorization mechanism exists.
+
+This is a narrowly scoped change to the previous FMOS rule prohibiting even owner-directed same-account integration. **It does not weaken** `01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md`: separation of destructive source/recovery authority, branch-only agent edits, no force-push, no backup/credential/ruleset tampering, immutable historic evidence and mandatory PRs remain in force. Unverified source/recovery separation for a high-impact action is still `SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED`. The existing independently authored Codex review cannot become a formal GitHub `APPROVED`. The current direct-main production writers require their separate migration before enabling mandatory PR protection on main.
+
+The 2026-10-16 quality amendment is implemented through the **existing** Codex candidate, Supervisor #1156, domain PR/CI and safepoint owners. Consequential repairs must predefine a failure matrix and adversarial negative controls before coding, including as applicable source/receipt provenance, malformed parser outputs, stale/altered frozen state, per-lane budget, concurrency and oversized work. Verify tests fail for mutants when safety guards are removed; don't mock away the gate under test. A postmerge P1/P2 on an already-reviewed exact SHA is a new remediation candidate, not evidence that past green CI proved full correctness. Track current-head reviewer requests/completions, finality at merge, P0-P2 found postmerge and cost per truly verified closure in existing observability surfaces. No new review service, queue, workflow or spending is authorized by this paragraph.
 
 ## API-agent failure semantics
 
