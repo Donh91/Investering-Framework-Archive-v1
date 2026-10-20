@@ -180,6 +180,8 @@ def public_hourly_price_path(
             stamp = parse_utc(row["timestamp_utc"])
         except (ValueError, KeyError):
             continue
+        if str(row.get("spot_status") or "").upper() not in {"PASS", "OK"} or cutoff is None:
+            continue
         closed = stamp + timedelta(hours=1)
         if stamp in seen or stamp < monday or stamp >= weekend or closed > now or (cutoff is not None and closed > cutoff):
             continue
