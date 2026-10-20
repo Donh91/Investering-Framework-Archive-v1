@@ -23,9 +23,9 @@ const official={
 };
 const keys=['BTC','ETH','LARGE_MID','ALT_IGNITION','MICRO','BROAD','MANIA','DISTRIBUTION','PROTECTION','REENTRY'];
 const view={
- weekly:{forecast_week:'2026-W43'},
- compass:{state:'FRESH',permit_path_live_gates:true,action_now:'HOLD_WAIT'},
- path:{state:'SOURCE_BOUND',is_live:true,
+ weekly:{forecast_week:'2026-W43',public_issue_number:30},
+ compass:{state:'FRESH',permit_path_live_gates:true,action_now:'HOLD_WAIT',compass_id:'CMP-TEST-W43'},
+ path:{state:'SOURCE_BOUND',source_issue:30,source_week:'2026-W43',source_identity:'CMP-TEST-W43',
   current_checkpoint:{key:'BTC',label:'BTC leadership',status:'FROZEN_WEEK_REFERENCE'},
   next_checkpoint:{key:'ETH',label:'ETH leadership'},
   next_gate:'ETH/BTC still needs confirmation',
@@ -73,6 +73,12 @@ assert.equal(p.phases[1].kind,'next');
 assert.equal(p.phases[2].kind,'unverified');
 assert.equal(p.rotation[1].action,'UNAVAILABLE','MEMES do not inherit MICRO');
 assert.equal(p.rotation[1].eta,'No verified ETA');
+const wrongIdentity=structuredClone(view);wrongIdentity.path.source_identity='CMP-FORGED';
+assert.equal(pathModel(wrongIdentity,'en').eligible,false,'Wrong Compass source must not promote path');
+const wrongIssue=structuredClone(view);wrongIssue.path.source_issue=31;
+assert.equal(pathModel(wrongIssue,'en').eligible,false,'Wrong public CN number must not promote path');
+const wrongWeek=structuredClone(view);wrongWeek.path.source_week='2026-W42';
+assert.equal(pathModel(wrongWeek,'en').eligible,false,'Historic source week must not be promoted live');
 const pStale=pathModel(stale,'en');
 assert.equal(pStale.eligible,false);
 assert.equal(pStale.now,'Current cycle phase unverified');
