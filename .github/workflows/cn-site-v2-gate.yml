@@ -28,6 +28,7 @@ jobs:
       - name: Validate and build
         run: |
           python3 scripts/cycle_navigator/validate_public_series.py
+          python3 05_CYCLE_NAVIGATOR/site/tests/test_public_hourly_curve.py
           node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
           node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
