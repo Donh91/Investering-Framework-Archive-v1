@@ -90,8 +90,8 @@
       :txt('No eligible observed daily prices yet: no green actual line or measured high/low whiskers are displayed.',
            'Endnu ingen gyldige observerede dagspriser: ingen grøn faktisk kurve eller målte lav/høj-markeringer vises.');
     if(m.daily.length){
-      return txt('Blue dotted line: seven original frozen daily expected closing prices, with original forecast low/high envelope.',
-                 'Blå stiplet linje: syv oprindeligt frosne forventede dagslukkepriser med oprindeligt lav/høj-prognoseinterval.')
+      return txt('Blue dotted line: seven original frozen daily expected closing prices, aligned to the end of each UTC day, with original forecast low/high envelope.',
+                 'Blå stiplet linje: syv oprindeligt frosne forventede dagslukkepriser placeret ved hver UTC-dags afslutning med oprindeligt lav/høj-prognoseinterval.')
         +' '+observationCopy;
     }
     return txt('No original seven-day closing-price forecast was published. Only three frozen price-range intervals are shown, with no daily forecast line.',
