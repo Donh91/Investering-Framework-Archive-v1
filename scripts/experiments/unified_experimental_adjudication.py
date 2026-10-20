@@ -10,6 +10,12 @@ from typing import Any
 UTC = timezone.utc
 
 
+def scientific_eligible(row: dict[str, Any]) -> int:
+    """Physical maturity cannot substitute for verified scientific eligibility."""
+    value, physical = row.get("scientific_score_eligible_outcome_count"), row.get("matured_outcome_count")
+    return value if type(value) is int and value >= 0 and type(physical) is int and value <= physical else 0
+
+
 def read_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
@@ -22,6 +28,7 @@ def read_json(path: Path, default: Any) -> Any:
 def candidate_action(row: dict[str, Any], admission: dict[str, Any] | None) -> dict[str, Any]:
     admission_status = (admission or {}).get("status") or row.get("scientific_admission_status") or "UNAVAILABLE"
     state = str(row.get("state") or "UNKNOWN")
+    eligible_count = scientific_eligible(row)
     if admission_status == "SEMANTIC_DUPLICATE_KEEP_SHADOW":
         action, reason = "ARCHIVE_ONLY_DUPLICATE", "semantic duplicate, preserve history but do not spend new prospective execution"
     elif admission_status in {"TARGET_UNIT_QUARANTINED", "BLOCKED_INVALID_TARGET", "KEEP_SHADOW_INSUFFICIENT_COMBINATION"}:
@@ -30,6 +37,8 @@ def candidate_action(row: dict[str, Any], admission: dict[str, Any] | None) -> d
         action, reason = "WAIT_FOR_MAPPING", "candidate is not machine-mappable yet"
     elif state in {"WAITING_FOR_DATA", "PROPOSED", "INCUBATING", "FIRED_NO_TARGET", "WAITING_FOR_MATURITY"}:
         action, reason = "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE", "insufficient mature prospective evidence for lifecycle escalation"
+    elif state in {"MATURED_SUPPORTED", "MATURED_NOT_SUPPORTED"} and eligible_count == 0:
+        action, reason = "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE", "no independently score-eligible outcomes"
     elif state == "MATURED_SUPPORTED":
         action, reason = "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW", "supportive outcome exists, but promotion still requires baseline, controls, regime and complexity review"
     elif state == "MATURED_NOT_SUPPORTED":
@@ -47,6 +56,7 @@ def candidate_action(row: dict[str, Any], admission: dict[str, Any] | None) -> d
         "lifecycle_state": state,
         "scientific_admission_status": admission_status,
         "matured_outcome_count": row.get("matured_outcome_count", 0),
+        "scientific_score_eligible_outcome_count": eligible_count,
         "replication_receipts": row.get("replication_receipts", []),
         "selected_action": action,
         "reason": reason,
