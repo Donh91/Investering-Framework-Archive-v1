@@ -1,6 +1,7 @@
 // Premium vNext candidate production-source contract tests.
 // Runs in current SITE gate; synthetic source fixtures NEVER reach public dist.
 import assert from 'node:assert/strict';
+import './test-premium-experience.mjs';
 import {readFileSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -290,8 +291,28 @@ assert.doesNotMatch(client,/seed\.json|localhost|private\/|secrets\/|api\.coinge
 assert.match(css,/@media\(max-width:520px\)/);
 assert.match(css, /prefers-reduced-motion/);
 assert.match(html, /role="tablist"/);
-assert.equal((html.match(/role="tabpanel"/g)||[]).length,3);
-assert.equal((html.match(/role="tab"/g)||[]).length,3);
+assert.equal((html.match(/role="tabpanel"/g)||[]).length,4);
+assert.equal((html.match(/role="tab"/g)||[]).length,4);
+assert.match(html,/id="view-path"/);
+assert.match(html,/id="premium-risk-steps"/);
+assert.match(html,/id="premium-balance-bars"/);
+assert.match(html,/id="premium-proof-copy"/);
+assert.match(html,/id="premium-proof-price-status"/);
+assert.match(html,/id="premium-proof-direction-status"/);
+assert.match(html,/id="premium-proof-pullback-status"/);
+assert.equal((html.match(/class="product-more"/g)||[]).length,2);
+assert.match(client,/renderProductExperience\(view,feeds,lang\)/);
+const experience=read('premium-experience.mjs'),experienceCss=read('premium-experience.css');
+assert.match(experience,/officialBullBear\(current,'1_3d'\)/);
+assert.match(experience,/officialPullbackStage/);
+assert.match(experience,/officialPathView\(null,\{lang\}\)/);
+assert.match(experience,/riskStageLabel\(s,lang\)/);
+assert.match(client,/const target=a\.dataset\.navTo/);
+assert.match(client,/document\.querySelector\('\[data-tab="'\+target\+'"\]'\)\?\.focus\(\)/);
+assert.match(experience,/permit_path_live_gates===true/);
+assert.match(experience,/publicAuditPrompt/);
+assert.doesNotMatch(experience,/fetch\(|OPENAI_API_KEY|seed\.json/);
+assert.match(experienceCss,/min-height:44px/);
 // Chart redraw must track semantic source changes (not just fetch object identity),
  // otherwise a refresh can destroy zoom, selected UTC day and the chosen asset.
 assert.match(client, /lastChartFingerprint!==fingerprint\|\|lastChartLang!==lang/);
@@ -362,8 +383,11 @@ assert.match(client,/inspectOfficialPublicFeeds\(feeds\.latest,feeds\.compass,\{
 
 assert.match(css, /\.cycle-step\[data-reference="true"\]/);
 assert.doesNotMatch(css, /\.cycle-step:first-child\{/);
-assert.match(client, /p\.current_checkpoint\?\.key===phaseKeys\[i\]/);
-assert.match(client, /FROZEN_WEEK_REFERENCE/);
+// The old five-node Overview rail was intentionally retired. Assert that the
+// product now binds the source checkpoint to the full ten-stage PATH rail.
+assert.match(read('premium-experience.mjs'), /p\.current_checkpoint\?\.key===x\.key/);
+assert.match(read('premium-experience.mjs'), /FROZEN_WEEK_REFERENCE/);
+assert.match(html, /id="premium-path-rail"/);
 assert.match(client, /document\.addEventListener\('visibilitychange',\(\)=>\{if\(!document.hidden\)load\(\)\}\)/);
 assert.match(client, /setInterval\(\(\)=>\{if\(!document.hidden\)load\(\)\},300000\)/);
 assert.match(client,/setTimeout\(\(\)=>controller\.abort\(\),10000\)/);
@@ -373,4 +397,4 @@ assert.match(client,/finally\{clearTimeout\(deadline\);loading=false;refresh\(\)
 assert.match(site,/resolve\(outputDir,"vnext"\)/);
 assert.match(site,/await copyFile\(resolve\(siteDir,"vnext-live",file\),resolve\(vnextDir,file\)\)/);
 execFileSync(process.execPath,['--check',resolve(dir,'app.mjs')],{stdio:'pipe'});
-console.log('PASS vNext: W43 source truth, official freshness, score isolation, negative gates, three-view shell, i18n and syntax');
+console.log('PASS vNext: W43 source truth, official freshness, score isolation, negative gates, four-view product shell, i18n and syntax');
