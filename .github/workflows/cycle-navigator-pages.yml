@@ -50,6 +50,8 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
       - name: Validate public series identity and score lineage
         run: python3 scripts/cycle_navigator/validate_public_series.py
       - name: Validate public product contract
