@@ -50,7 +50,6 @@ def admissions(*rows):
 def a(cid="EC-1", fingerprint="abc", **kw):
     row = {"candidate_id": cid, "status": "QUALIFIED_FOR_FORWARD_TEST", "historical_candidate_requalification": False, "semantic_fingerprint": fingerprint}
     row.update(kw)
-    row.setdefault("scientific_score_eligible_outcome_count", row["matured_outcome_count"])
     return row
 
 
