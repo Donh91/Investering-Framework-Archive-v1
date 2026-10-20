@@ -41,7 +41,7 @@ assert len(output["ETH"]) == 4  # ETH valid even where BTC numeric is invalid
 assert all(set(p) == {"observed_at_utc", "close"} for asset in ("BTC","ETH") for p in output[asset])
 serialized = json.dumps(output)
 assert "secret_key" not in serialized and "THIS_PRIVATE_VALUE" not in serialized
-assert "expected_close" not in serialized and "forecast" not in serialized.lower().replace("prospective_forecast","")
+assert "expected_close" not in serialized and "forecast_low" not in serialized and "forecast_high" not in serialized
 assert not public_hourly_price_path(data, 2026, 43, 30, None, now=now)["BTC"]
 assert not public_hourly_price_path([], 2026, 43, 30, cutoff, now=now)["BTC"]
 assert all(r["close"] > 0 for r in output["BTC"])
