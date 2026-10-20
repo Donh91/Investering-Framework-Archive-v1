@@ -102,7 +102,7 @@ export function pathModel(view,lang='da'){
    rotation:eligible&&Array.isArray(p.rotation)?p.rotation.map(x=>({
      key:safe(x.key)||t.unavailable,action:safe(x.action)||t.unavailable,
      eta:safe(x.eta)||t.pathNoEta})):[],
-   source:eligible?(safe(p.source_label)||t.unavailable):t.unavailable};
+   source:eligible?('CN #'+p.source_issue+' · '+p.source_week+' · '+p.source_identity):t.unavailable};
 }
 export function publicAuditPrompt(lang='da'){
  return txt(lang).proofPrompt+'\n\n'+URLS.join('\n')+'\n';
