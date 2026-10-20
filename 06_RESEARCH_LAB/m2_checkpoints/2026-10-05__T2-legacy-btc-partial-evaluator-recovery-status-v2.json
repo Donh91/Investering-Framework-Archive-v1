@@ -1,0 +1,84 @@
+{
+  "contract": "T2_LEGACY_BTC_PARTIAL_EVALUATOR_RECOVERY_STATUS_v2",
+  "created_date": "2026-10-05",
+  "supersedes": "06_RESEARCH_LAB/m2_checkpoints/2026-10-05__T2-legacy-btc-partial-evaluator-recovery-status-v1.json",
+  "test_id": "GATE_BTC_PARTIAL_FT_1",
+  "historical_identity": "GATE-BTC-PARTIAL-v0.1.1",
+  "recovery_status": "RULE_EVALUATOR_SUBSTANTIALLY_RECOVERED_HISTORICAL_ONLY_NONREPLAYABLE_SUPERSEDED",
+  "authority": {
+    "market_permission": false,
+    "portfolio_action": false,
+    "canonical_promotion": false,
+    "forward_observation_enabled": false
+  },
+  "recovered_rule_lineage": {
+    "claimed_freeze_date": "2026-06-10",
+    "first_exact_rule_evidence_at_utc": "2026-06-11T03:53:21Z",
+    "v0_1_1_confirmation_at_utc": "2026-06-11T04:28:41Z",
+    "evaluation_deadline_utc": "2026-07-10T23:59:59Z",
+    "superseded_at_utc": "2026-07-02T17:13:36Z",
+    "superseded_by": "GATE-BTC-PARTIAL-v0.2",
+    "expected_confirmation_cost_pct": [
+      5,
+      7
+    ],
+    "rules": {
+      "btc_daily_close_above_64000_consecutive": 2,
+      "no_close_below_59400_after_local_low": true,
+      "etf_flow": "STABILIZED",
+      "reclaim_quality_not": "WEAK",
+      "spot_demand_not": "WEAK",
+      "btc_dominance_3d_change_pp_max": 1,
+      "funding_oi": "NOT_CROWDED_LONG",
+      "ethbtc_required": false,
+      "breadth_required": false
+    },
+    "benchmark_allocation": {
+      "BTC_pct": 0,
+      "STABLE_pct": 100,
+      "ALT_pct": 0
+    },
+    "experimental_allocation_after_ENTERED": {
+      "BTC_pct": 10,
+      "STABLE_pct": 90,
+      "ALT_pct": 0
+    },
+    "mechanical_return_divergence_formula": "0.10 * BTC_RETURN_AFTER_VALID_ENTERED_ROW"
+  },
+  "still_missing_for_actual_policy_replay": [
+    "EXACT_ORIGINAL_2026_06_10_FREEZE_TIMESTAMP",
+    "EXECUTION_OR_EXPLICIT_NO_ACTION_RECEIPT",
+    "ACTUAL_TRANSACTION_COST_CONTRACT",
+    "SETTLED_CLOSEOUT_ROW"
+  ],
+  "v0_2_status": {
+    "status": "APPROVED_STRUCTURE_PENDING_FINAL_FREEZE_IN_2026_07_03_SOURCE",
+    "data_ping_authority": "NOT_DETERMINED_BY_DATA_PING",
+    "missing_at_that_time": [
+      "FREEZE_TIMESTAMP_UTC",
+      "CONFIRMED_HARD_DEATH_PARAMETER",
+      "CONFIRMED_FT2_DEADLINE",
+      "OFFICIAL_V0_2_ROW_STATUS",
+      "CONFIRMATION_RELEVANT_UTC_CLOSE_OCCURRED_AFTER_FREEZE"
+    ],
+    "rule": "DO_NOT_TREAT_SUPERSEDED_V0_1_1_AS_CURRENT_V0_2_PERMISSION"
+  },
+  "t2_consequence": {
+    "current_t2_may_use_legacy_v0_1_1_as_live_permission": false,
+    "current_t2_may_fabricate_v0_2_row": false,
+    "observer_role": "MEASURE_ALREADY_ACCEPTED_OWNER_DECISIONS_ONLY",
+    "coverage_state_until_owner_decision_contract_resolved": "GAP_FAIL_CLOSED"
+  },
+  "strongest_sources": [
+    "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/DECISION_LINEAGE_RECOVERY_LEDGER_v2.json",
+    "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/engineering/2026-07-28__wave1-3-authority-lineage.md",
+    "Project/Library Fable5_Expert_Onboarding_Batch1_ChatGPT_Answer_2026-07-03.txt",
+    "Project/Library RESEARCH_LAB_EVIDENCE_PACK_GATE_BTC_PARTIAL_GRADUATED_DEPLOYMENT_v1.md"
+  ],
+  "hard_rules": [
+    "NO_LIVE_PERMISSION_FROM_HISTORICAL_RECOVERY",
+    "NO_V0_1_1_TO_V0_2_SEMANTIC_SUBSTITUTION",
+    "NO_DATA_PING_CREATED_PERMISSION_ROW",
+    "NO_T2_DIVERGENCE_WITHOUT_EXPLICIT_OWNER_ASSERTION"
+  ]
+}

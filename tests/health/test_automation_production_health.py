@@ -93,6 +93,69 @@ jobs:
     assert "NON_GLOBAL_WRITER_LOCK" not in row["static_risks"]
 
 
+def test_approved_market_owner_writer_group_is_safe(tmp_path: Path) -> None:
+    path = tmp_path / "hourly-sequence-capture.yml"
+    path.write_text(
+        """name: Hourly Owner
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: framework-market-owner-writer
+  queue: max
+  cancel-in-progress: false
+jobs:
+  writer:
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: |
+          git add out
+          if git diff --cached --quiet; then exit 0; fi
+          git rebase --abort || true
+          git push origin HEAD:main
+          git merge-base --is-ancestor HEAD origin/main
+"""
+    )
+    row = module.workflow_static(path)
+    assert row["writer_group"] == module.MARKET_WRITER_GROUP
+    assert "NON_GLOBAL_WRITER_LOCK" not in row["static_risks"]
+
+
+def test_unapproved_market_owner_writer_group_remains_red(tmp_path: Path) -> None:
+    path = tmp_path / "unrelated-writer.yml"
+    path.write_text(
+        """name: Unrelated
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: framework-market-owner-writer
+  queue: max
+  cancel-in-progress: false
+jobs:
+  writer:
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: |
+          git add out
+          if git diff --cached --quiet; then exit 0; fi
+          git rebase --abort || true
+          git push origin HEAD:main
+          git merge-base --is-ancestor HEAD origin/main
+"""
+    )
+    row = module.workflow_static(path)
+    assert "NON_GLOBAL_WRITER_LOCK" in row["static_risks"]
+
+
 def test_unrecognized_dynamic_writer_group_remains_red(tmp_path: Path) -> None:
     path = write_workflow(
         tmp_path,

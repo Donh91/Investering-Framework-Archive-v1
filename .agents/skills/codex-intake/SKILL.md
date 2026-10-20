@@ -1,3 +1,8 @@
+---
+name: codex-intake
+description: Route reproducible research or audit defects into the governed Codex intake. Use when asked to queue a bounded code fix or audit candidates before submission; preserve existing owners and never self-declare CODEX_READY.
+---
+
 # Codex Intake Skill v1
 
 Status: ACTIVE OPERATIONAL ROUTING
@@ -40,7 +45,7 @@ Conversation memory is not queue authority.
 A research thread may submit evidence, but it may not self-declare `CODEX_READY`.
 
 1. Prove the problem is code-remediable and bounded.
-2. Search `LATEST_CODEX_READY_TASKS.json` for a duplicate.
+2. Search `LATEST_CODEX_READY_TASKS.json`, execution state, exact transition/completion receipts and current open PRs for an existing owner. Match signatures, objectives and changed paths, not titles alone. A missing PR pointer in generated state is not proof that no PR exists.
 3. If an active health signature already covers the same defect, set `linked_health_signature` to it and do not create parallel authority.
 4. Create one candidate conforming to `research/codex/CODEX_RESEARCH_CANDIDATE.schema.json` at:
    `research/codex/intake/YYYY/MM/<candidate_id>.json`
@@ -52,6 +57,17 @@ A research thread may submit evidence, but it may not self-declare `CODEX_READY`
 10. After merge and required verification, publish a completion receipt so the execution ledger can show `RESOLVED`.
 
 ## Candidate evidence minimum
+
+### Owner-aware, economical triage
+
+- Reuse the existing owner/branch for the same defect. Return a read-only deduplication result when the new evidence adds no governed value. When durable new evidence does warrant persistence, submit it only through one schema-bound candidate on an isolated branch and link that candidate to the existing signature/owner; do not write directly to its PR branch, handoff or other ad hoc surface. Preserve the no-self-merge rule after material repair.
+- Group investigation only when exact logs and reproduction establish a shared failing component. One bounded repair can serve multiple findings, but each signature retains its own receipt and post-fix gate. Similar workflow names alone do not justify merging independent defects or scopes.
+- A correctly enforced budget, authority or evidence guard is not a code defect. Record the observed blocker without raising limits, weakening guards or changing failure semantics merely to make CI green. A distinct observability defect needs its own reproduction.
+- Check the actual test runner, collected test count and exit status. Zero collected tests, skipped execution or unrelated green checks do not verify a fix.
+- Compare suspected stale findings against fresh runs and owner contracts. Already-fixed or superseded findings need reconciliation evidence, not artificial code changes or manual deletion from generated queue files. A partial merge does not resolve a whole owner.
+- Use deterministic inspection first. If a named causal or architectural question remains unresolved, prepare an advisory request with exact evidence and a bounded expected decision. Leave execution pending unless an existing authorized owner or the user explicitly authorizes the model route and its verified budget gate. Reuse evidence within its immutable binding; refresh changed heads, task contracts, runs and receipts before action. Do not repeat an unchanged audit or add another agent/controller merely to increase activity.
+
+These are intake decisions, not new lifecycle states, model-budget authority or permission to execute a fix inside this skill. Use existing schema fields and the current handoff for evidence; do not create a parallel queue.
 
 A candidate must include:
 
@@ -68,6 +84,14 @@ A candidate must include:
 Do not invent new candidate schema fields merely to express a diagnosis. Use the existing objective, evidence, reproduction and acceptance-test surfaces to state what is known and what remains hypothesis.
 
 If evidence is incomplete, route to `NEEDS_MORE_EVIDENCE`. If authority is too broad, reject the Codex route and escalate to framework owner.
+
+## Failure-contract and adversarial-test requirement (2026-10-16)
+
+This requirement applies inside the existing candidate schema; do not invent another task format or engine. Before changing consequential code, freeze one bounded failing example plus a **failure matrix** recording the principal invariants that an adversary, upstream producer or corrupted file could break. Write a negative test for each relevant critical safety invariant *before* the implementation. Useful patterns include corrupting all consequential frozen-state fields one at a time, using missing/stale/out-of-order evidence, reusing execution receipts as independent verification, normalizing identity aliases, contradicting an accepted status in a model-produced string, removing a cost lane guard while the global budget remains, and submitting oversized batches. Include a positive control for a legitimately safe case.
+
+Prove each high-risk negative test is sensitive: **remove or deliberately mutate the actual protective guard in an isolated test mutation and show the negative test fails**. A violating input rejected by the intact guard is only a complementary positive control, never sufficient evidence of mutation sensitivity. A stub that merely returns `subprocess.CompletedProcess([], 0)` does not prove the invoked command includes the required per-lane cap or reserves budget correctly. Use explicit command/argument assertions and error/no-payment controls. Reject unrelated test expansion and duplicate validator logic; reuse the existing domain owner.
+
+Before *any* autonomously integrated PR: current SHA and diff, all required CI SUCCESS, latest Codex review request/completion event on that SHA, no newer pending review, no unresolved P0/P1/P2 findings, and exact current domain/governance authorization. `COMMENTED` is not a formal `APPROVED`; a favorable review followed by a later still-running review is `REVIEW_IN_PROGRESS`. A head change resets finality. No agent may approve its own code or imply its own review is independent. Then verify exact `main` blob and relevant natural post-fix evidence; otherwise remain `POST_FIX_OBSERVATION` or blocked.
 
 ## Root-cause discipline before readiness
 

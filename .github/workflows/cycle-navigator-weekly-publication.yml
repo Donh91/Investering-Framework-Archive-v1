@@ -252,6 +252,17 @@ jobs:
               raise SystemExit('deterministic_range_baseline_authority_violation')
           PY
 
+      - name: Freeze optional CN v2 prospective Edge statement registry (read-only source consumer)
+        if: steps.precheck.outputs.skip != 'true'
+        # Experimental public accountability must never prevent the existing CN weekly
+        # source owner from publishing its canonical forecast or Price Range scoring.
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python scripts/cycle_navigator/build_v2_edge_forecast_freeze.py --repo-root . \
+            | tee runtime_cn_v2_edge_freeze.json
+          echo 'CN_V2_ACCOUNTABILITY_SOURCE_CAPTURE_COMPLETE_OR_EXPLICITLY_SKIPPED'
+
       - name: Commit complete weekly Cycle Navigator archive
         if: steps.precheck.outputs.skip != 'true'
         shell: bash
@@ -334,8 +345,9 @@ jobs:
         run: |
           set -euo pipefail
           # Dispatch only after the complete CN package passed durable readback.
-          # Both workflows share framework-main-writer, so the Compass run waits
-          # until this weekly writer has released the global writer lock.
+          # Official Compass uses the dedicated market-owner writer lane, so once
+          # this weekly package has passed durable readback it can refresh without
+          # waiting behind unrelated research/operations writers.
           gh workflow run daily-compass.yml --ref main -f run_reason=EVENT_DRIVEN
           echo "WEEKLY_CN_COMPASS_HANDOFF_DISPATCHED"
 

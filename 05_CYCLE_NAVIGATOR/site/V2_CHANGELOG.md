@@ -1,3 +1,11 @@
+## 2026-10-06 · PATH v3 cycle journey
+
+- Replaced the duplicated PATH Decision Windows rail with a source-owned crypto cycle journey from BTC leadership through rotation, altseason, protection and re-entry.
+- Collapsed the seven stacked Rotation cards into one compact weekly BTC → ETH → large → mid → small → micro → memes rail with CURRENT POSITION, NEXT GATE and WHAT UNLOCKS IT.
+- Retired the separate long Altcoin Cycle Timer ladder as a duplicate presentation; Altseason remains a compact watch milestone attached to the main cycle route.
+- Preserved source-owned ETA semantics, Compass/CN alignment, separate distribution/sell/re-entry authority and fail-closed behavior.
+- Added `CN_PATH_CYCLE_ROTATION_v3`, mobile-first v3 styling, versioned product spec and regression gates that reject restoration of the old primary Decision Windows / third Altcoin ladder.
+
 # V2 changelog — 2026-09-16
 
 - Replaced multi-section primary navigation with NOW / PATH / WHY.
@@ -11,3 +19,16 @@
 - Updated public build to ship scoreboard assets.
 - Archived recovered CN6, CN10, CN16–CN20 publication records and bound CN21 without duplication.
 - Added product, data/science and adversarial source-review evidence.
+
+## 2026-10-05 · PATH clarity pass
+
+- Conditional source timing is rendered as a watch window with explicit confirmation semantics, never as a countdown.
+- Big-picture Market Cycle now separates decision windows from the full governed cycle route.
+- Long-cycle placement remains visibly unresolved when the 4–8-week owner cannot support a phase call.
+
+## 2026-10-05 · PATH final polish
+
+- Public PATH copy now translates internal machine vocabulary into investor-facing language.
+- The full cycle route separates current position from a forward destination; forward phases can never masquerade as “where we are”.
+- Mobile decision windows keep all five horizons visible at once; the longer cycle route stays horizontally swipeable.
+- Conditional windows remain source-owned and are explicitly presented as watch windows, never countdowns.

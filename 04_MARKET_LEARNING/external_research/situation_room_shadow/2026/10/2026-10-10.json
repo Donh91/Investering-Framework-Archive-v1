@@ -1,0 +1,54 @@
+{
+  "authority": "SHADOW_RESEARCH_ONLY_NON_CANONICAL",
+  "authority_firewall": {
+    "canonical_effect": false,
+    "execution_authority": false,
+    "market_state_effect": false,
+    "portfolio_effect": false,
+    "topup_authority": false
+  },
+  "contract": "SITUATION_ROOM_VERIFICATION_SHADOW_BRIDGE_v1",
+  "generated_at_utc": "2026-10-10T12:33:43Z",
+  "observation_date_utc": "2026-10-10",
+  "pending_verification": [
+    {
+      "canonical_effect": false,
+      "detection_time_utc": "2026-10-10T12:33:04Z",
+      "event_time_utc": "2026-10-10T06:00:44.408000Z",
+      "market_state_effect": false,
+      "portfolio_effect": false,
+      "shadow_admission": "NOT_ADMITTED_PENDING_VERIFICATION",
+      "shadow_id": "SRSH_1d593a5fe6c289efbf6b",
+      "source": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 134124,
+        "error_class": null,
+        "fetched_at_utc": "2026-10-10T12:33:05Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "6685d3de5cc82c12d46947eb748616e893afab28bf80b66c8ee7f37ef2b7463e",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-10-10"
+      },
+      "title": "Volatility metrics diverge from 2018 patterns on lower swings \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-10-10",
+      "verification_status": "PENDING_PRIMARY_VERIFICATION"
+    }
+  ],
+  "source_owner_contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "source_owner_path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/10/2026-10-10.json",
+  "source_run_id": "SRDO_034300dda06bbcea",
+  "status": "PENDING_VERIFICATION",
+  "verification_policy": {
+    "accepted_methods": [
+      "OWNER_PRIMARY_EVENT_TITLE_OVERLAP",
+      "SITUATION_ROOM_LINKED_PRIMARY_SOURCE"
+    ],
+    "automatic_admission_requires_primary_corroboration": true,
+    "minimum_shared_tokens": 2,
+    "minimum_title_overlap": 0.45,
+    "situation_room_is_discovery_only": true
+  },
+  "verified_shadow_context": []
+}

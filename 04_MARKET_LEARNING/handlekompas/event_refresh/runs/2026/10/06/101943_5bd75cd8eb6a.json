@@ -1,0 +1,99 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "DATA_HEALTH_CHANGED",
+    "ACTION_STATE_CHANGED",
+    "MARKET_STATE_CHANGED",
+    "CAPITALIZATION_LADDER_CHANGED",
+    "PROTECTION_STATE_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT_DATA_DEGRADED",
+  "current_data_status": "DEGRADED",
+  "current_ladder": [
+    [
+      "BTC",
+      "UNAVAILABLE"
+    ],
+    [
+      "ETH",
+      "UNAVAILABLE"
+    ],
+    [
+      "LARGE_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MID_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "SMALL_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MICROCAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MEMES",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "action_permission": "HOLD_WAIT_DATA_DEGRADED",
+    "btc_delta_pct": -0.04054546200612519,
+    "directional_state": "UNAVAILABLE",
+    "eth_delta_pct": -0.22452472532528134,
+    "eth_relative_state": "UNAVAILABLE",
+    "ethbtc_delta_pct": -0.2216592780240445,
+    "regime": "DATA_DEGRADED",
+    "summary": "Current market direction is unavailable because required state is degraded."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "LOW",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "DEGRADED",
+    "decisive_public_drivers": [],
+    "distribution_risk": "UNKNOWN",
+    "eta_window": "UNKNOWN",
+    "invalidation": "Fresh canonical market and Cycle Navigator evidence is required.",
+    "last_material_change_at": "2026-10-06T10:19:43Z",
+    "pullback_class": "UNKNOWN",
+    "pullback_risk_state": "UNAVAILABLE",
+    "reentry_message": "Re-entry review is unavailable until canonical evidence is healthy.",
+    "reentry_state": "UNAVAILABLE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-10-06T10:19:43Z",
+  "heat_detail": {
+    "btc_return_24h_pct": -0.99594,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": -0.53466,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": -0.3655
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 6885.0,
+  "last_requested_source_sha": "3217d487c78874d5225a6bd13ce88fa3d2b33da716f414facd412e965889a3ec",
+  "latest_compass_source_packet_sha256": "3217d487c78874d5225a6bd13ce88fa3d2b33da716f414facd412e965889a3ec",
+  "protective_bypass": true,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 28637.0,
+  "source_packet_sha256": "5bd75cd8eb6aa8279043a3edc85e85b4514e976600948715eddc4e403764b36c",
+  "suppressed_cause_codes": [],
+  "upstream_refresh_required": false
+}

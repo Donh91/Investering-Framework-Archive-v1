@@ -469,6 +469,7 @@ def build_forecast(
         "contract": FORECAST_CONTRACT,
         "forecast_id": forecast_id,
         "issued_at_utc": issued,
+        "scoring_contract": "SHADOW_COMPASS_V2_SCORING_v3",
         "model_id": model,
         "reasoner_version": REASONER_VERSION,
         "source_fingerprint": source_fingerprint,

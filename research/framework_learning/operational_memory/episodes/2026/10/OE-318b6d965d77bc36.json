@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/framework-learning-operations.yml",
+    "scripts/learning/m6_warning_event_outcomes.py",
+    "scripts/research/edge_compound_governor.py",
+    "tests/learning/test_m6_warning_event_outcomes.py",
+    "tests/research/test_edge_compound_governor.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-318b6d965d77bc36",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "edge-001-governor-m6-evidence-integrity-1544",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Exact-head CI green. Research-only changes; no trading authority. Preserve independent Claude red-team as post-merge scientific audit.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/framework-learning-operations.yml": "1b8ec2beaba217d9d01ecb7c841015c40d9ea76a",
+    "scripts/learning/m6_warning_event_outcomes.py": "12aece6952ea2b277573da24088582a39a3fc819",
+    "scripts/research/edge_compound_governor.py": "2a2d9886e955bec2b0edd8037b16fe80a85571ee",
+    "tests/learning/test_m6_warning_event_outcomes.py": "6eb0a0bcf8510af256b21f388639951a015e6b47",
+    "tests/research/test_edge_compound_governor.py": "4a0d38fe654459f9fc07c2dc048544f44d780cf7"
+  },
+  "source_commit_sha": "318b6d965d77bc36921df83689b2137407e15c7f",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-08T08:35:55-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research: repair EDGE-001 governor and M6 evidence integrity (#1544)"
+}

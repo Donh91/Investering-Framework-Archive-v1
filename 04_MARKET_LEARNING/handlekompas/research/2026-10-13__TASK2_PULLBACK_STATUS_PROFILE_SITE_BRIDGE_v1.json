@@ -1,0 +1,272 @@
+{
+  "contract": "TASK2_PULLBACK_STATUS_PROFILE_SITE_BRIDGE_RESEARCH_v1",
+  "issued_date": "2026-10-13",
+  "parent_mission_id": "COMPASS-HORIZON-EDGE-20261011",
+  "parent_research_pr": 1573,
+  "related_issue_owners": [
+    1516,
+    1530,
+    1553,
+    1578
+  ],
+  "site_design_pr": 1576,
+  "task1_pr": 1592,
+  "status": "HANDOVER_DESIGN_STAGED_NOT_EXECUTED",
+  "authority": "RESEARCH_AND_CONSUMER_DESIGN_ONLY",
+  "canonical_effect": false,
+  "site_deployed": false,
+  "backwards_compatibility": "EXISTING_SOURCE_ONLY_VNEXT_ADAPTER",
+  "documents": {
+    "master": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_PULLBACK_DECISION_PROFILE_AND_SITE_CONSUMER_HANDOVER_v1.md",
+    "existing_r4p": "04_MARKET_LEARNING/handlekompas/research/2026-10-12__R4P_PULLBACK_INVESTOR_DECISION_EDGE_DEEP_AUDIT_v1.md",
+    "site_handover": null
+  },
+  "research_workstreams": [
+    {
+      "id": "PDP0",
+      "purpose": "current owner/cadence and source first-knowledge inventory",
+      "mode": "READ_ONLY",
+      "owner_issue": 1553,
+      "gate": "PIT_BINDINGS_AND_OWNER_APPROVAL"
+    },
+    {
+      "id": "PDP1",
+      "purpose": "prospective class/onset/severity control and 20 scenario audit",
+      "mode": "RESEARCH_ONLY",
+      "owner_issue": 1530,
+      "gate": "FROZEN_INDEPENDENT_EPISODE_FAMILIES"
+    },
+    {
+      "id": "PDP2",
+      "purpose": "event/horizon likelihood and duration calibration",
+      "mode": "RESEARCH_ONLY",
+      "owner_issue": 1516,
+      "gate": "SAMPLE_AND_OOS_CALIBRATION"
+    },
+    {
+      "id": "PDP3",
+      "purpose": "holder versus cash/altcoin-stablecoin-re-entry economic counterfactuals",
+      "mode": "RESEARCH_ONLY",
+      "owner_issue": 1553,
+      "gate": "LIQUIDITY_FILL_AND_DELIVERY_TIMES"
+    },
+    {
+      "id": "PDP4",
+      "purpose": "official-only public profile site consumer, existing build and adapter",
+      "mode": "PRESENTATION_ONLY",
+      "owner_issue": 1578,
+      "gate": "RATIFIED_OFFICIAL_PROJECTION_AND_LIVE_QA"
+    },
+    {
+      "id": "PDP5",
+      "purpose": "independent tests and approved future learning",
+      "mode": "RESEARCH_ONLY",
+      "owner_issue": 1530,
+      "gate": "GOVERNED_MATURED_OUTCOME"
+    }
+  ],
+  "profile_axes": {
+    "official_risk_stage": {
+      "owner": "OFFICIAL_COMPASS_PROTECTION",
+      "allowed": [
+        "NORMAL",
+        "BUILDING",
+        "ELEVATED",
+        "HIGH",
+        "CONFIRMED",
+        "UNAVAILABLE"
+      ],
+      "semantic": "qualitative risk severity not imminence or probability",
+      "missing": "UNAVAILABLE"
+    },
+    "onset_timing": {
+      "owner": "FUTURE_VERSIONED_SOURCE_ONLY",
+      "research_horizon_candidates": [
+        "0_6H",
+        "6_24H",
+        "1_3D",
+        "4_7D",
+        "8_21D",
+        "GT_21D"
+      ],
+      "live_default": "UNKNOWN",
+      "strict_null": true
+    },
+    "event_probability": {
+      "owner": "RESEARCH_PENDING_INDEPENDENT_EVENT_CALIBRATION",
+      "live_default": "NOT_CALIBRATED",
+      "numeric_1_to_10_allowed": false,
+      "conf_quality_semantic": "evidence_quality_not_probability"
+    },
+    "size_by_cap_tier": {
+      "owner": "FUTURE_ADMITTED_ASSET_TIER_RESEARCH",
+      "tiers": [
+        "BTC",
+        "ETH",
+        "LARGE",
+        "MID",
+        "SMALL",
+        "MICRO",
+        "MEMES"
+      ],
+      "live_default": "UNKNOWN",
+      "no_btc_beta_multiplication": true
+    },
+    "duration_and_regime": {
+      "owner": "FORWARD_PATH_AND_CANONICAL_CYCLE",
+      "research_outcomes": [
+        "FAST_DIP_RECLAIM",
+        "MULTIDAY_CORRECTION",
+        "PROLONGED_DOWNTREND",
+        "STRUCTURAL_BEAR",
+        "INDETERMINATE"
+      ],
+      "live_default": "UNKNOWN",
+      "no_severity_to_bear_inference": true
+    },
+    "official_action": {
+      "owner": "OFFICIAL_COMPASS",
+      "source": "action.NOW",
+      "permission_not_personal_hold_safety": true
+    },
+    "incumbent_sell": {
+      "owner": "SEPARATE_GOVERNED_SELL_ASSESSMENT",
+      "default": "UNAVAILABLE",
+      "warn_is_sell": false
+    },
+    "reentry": {
+      "owner": "COMPASS_PROTECTION_TRACKER",
+      "allowed": [
+        "INACTIVE",
+        "WAIT_FOR_FLUSH",
+        "WAIT_FOR_RECLAIM",
+        "REVIEW",
+        "UNAVAILABLE"
+      ],
+      "review_is_buy": false
+    },
+    "provenance": {
+      "fields": [
+        "official_compass_id",
+        "official_compass_issued_at",
+        "source_sha256",
+        "source_risk_week",
+        "observation_asof",
+        "first_knowledge",
+        "valid_through",
+        "data_health",
+        "evidence_quality"
+      ],
+      "never_synthesize_missing": true
+    }
+  },
+  "research_to_official_gate": [
+    "IMMUTABLE_RESEARCH_FREEZE",
+    "VALID_FIRST_KNOWLEDGE",
+    "SAME_CLOCK_SIMPLE_BENCHMARKS",
+    "QUALIFIED_INDEPENDENT_FAMILIES",
+    "NEGATIVE_NON_EVENTS_AND_V_RECOVERY",
+    "HONEST_ABSTENTION_MISSINGNESS",
+    "AFTER_COST_UTILITY_IF_ACTION_CLAIM",
+    "OWNER_VERSIONED_RATIFICATION",
+    "INDEPENDENT_REVIEW_CI_AND_ROLLBACK",
+    "NEW_CANONICAL_OFFICIAL_FORECAST_FREEZE"
+  ],
+  "transport": {
+    "research_source": "EXISTING_EDGE_M6_PIT_LEDGER_NONCANONICAL",
+    "official_status_source": "OFFICIAL_COMPASS_IMMUTABLE_FREEZE_AND_PUBLIC_PROJECTION",
+    "site_adapter": null,
+    "site_investor_view": null,
+    "canonical_site_delivery": "05_CYCLE_NAVIGATOR/site/build-public.mjs",
+    "allowed_primary_display": [
+      "official_risk_stage",
+      "owner_supported_eta_or_unknown",
+      "evidence_quality",
+      "official_2_3w_direction",
+      "official_4_8w_overlay",
+      "official_action",
+      "separate_incumbent_sell_state",
+      "reentry_state"
+    ],
+    "research_display_policy": "NOT_PRIMARY_RISK_STAGE; optional separately approved research status only; no candidate ETA/size/probability/SELL",
+    "missing_official_status": "UNAVAILABLE_NO_GREEN_STALE_FALLBACK",
+    "site_live_readback_required": true,
+    "no_direct_research_feed_to_canonical_site": true,
+    "no_new_api_endpoint": true,
+    "no_new_scheduler": true,
+    "deploy_permission": "EXISTING_SITE_RELEASE_OWNER_REVIEW"
+  },
+  "consumer_negative_fixtures": [
+    "HIGH_WITH_NULL_ETA_IS_NOT_IMMINENT",
+    "LOW_EVIDENCE_NOT_70_PERCENT",
+    "ELEVATED_BEARISH_12H_MIXED_2_3W_SEPARATE",
+    "RISK_STAGE_CAN_DECREASE",
+    "STALE_SOURCE_CLEARS_LIVE_HIGHLIGHT",
+    "SHADOW_RESEARCH_NEAR_TERM_DOES_NOT_OVERRIDE_NORMAL_OFFICIAL",
+    "MICROCAP_SIZE_UNKNOWN_WITHOUT_QUALIFIED_TIER",
+    "NO_PROBABILITY_WITHOUT_EVENT_HORIZON_AND_CALIBRATION",
+    "HOLD_WAIT_NOT_SAFE_INCUMBENT_HOLD",
+    "SELL_UNAVAILABLE_NOT_ZERO_RISK",
+    "REENTRY_REVIEW_NOT_BUY",
+    "MISMATCHED_COMPASS_WEEK_NOT_LIVE",
+    "W41_SEED_NOT_LIVE_W42",
+    "PUBLIC_REJECTS_PRIVATE_WALLET_VALUES",
+    "SITE_DEPLOY_PROOF_NOT_EQ_NOTIFICATION_PROOF",
+    "DA_EN_MOBILE_390_430"
+  ],
+  "current_research_readback": {
+    "source_date": "2026-10-12",
+    "pullback_eligibility": "SUSPENDED_NO_ELIGIBILITY_CONTRACT",
+    "closed_eligible_episode_count": 0,
+    "calibrated_1_to_10": "NOT_CALIBRATED",
+    "official_live_bear_transition": "NOT_ESTABLISHED",
+    "economic_stablecoin_edge": "NOT_MEASURABLE"
+  },
+  "prohibited": [
+    "PRIVATE_DATA_PUBLICATION",
+    "SOURCE_FREE_STAGE_CLASSIFICATION",
+    "RESEARCH_AUTOPROMOTION",
+    "LIVE_AUTOTRADING",
+    "PERCENT_FROM_ORDINAL_STAGE",
+    "STALE_AS_LIVE",
+    "SITE_PRODUCED_SELL",
+    "RISK_CLASS_AS_BEAR_MARKET",
+    "EXPAND_12H_TO_24H",
+    "NEW_WORKFLOW_OR_PAID_API"
+  ],
+  "site_implementation_dependency": {
+    "status": "PINNED_EXTERNAL_PR_NOT_ADMITTED",
+    "owner_issue": 1578,
+    "source_pr": 1576,
+    "current_task2_tree_has_these_files": false,
+    "local_consumer_paths_available": false,
+    "canonical_effect": false,
+    "live_admission": "BLOCKED_REQUIRES_APPROVED_SITE_MERGE_AND_LIVE_QA",
+    "external_sources": [
+      {
+        "role": "site_handover",
+        "repository": "Donh91/Investering-Framework-Archive-v1",
+        "commit": "b57822f770dc902240c2310296036433dc31f475",
+        "path": "05_CYCLE_NAVIGATOR/site/vnext-preview/PULLBACK_PROGRESSION_INTERNAL_HANDOVER_2026-10-12.md",
+        "git_blob_sha": "d62c2d346f3248086d82de47e6eb12f1fd649ed6",
+        "status": "EXACT_EXTERNAL_SOURCE_VERIFIED_NOT_LOCAL_OR_DEPLOYED"
+      },
+      {
+        "role": "site_adapter",
+        "repository": "Donh91/Investering-Framework-Archive-v1",
+        "commit": "b57822f770dc902240c2310296036433dc31f475",
+        "path": "05_CYCLE_NAVIGATOR/site/vnext-preview/official-feed-parity.mjs",
+        "git_blob_sha": "834df837e0d1c75923ad24c0570eead3c3c997fd",
+        "status": "EXACT_EXTERNAL_SOURCE_VERIFIED_NOT_LOCAL_OR_DEPLOYED"
+      },
+      {
+        "role": "site_investor_view",
+        "repository": "Donh91/Investering-Framework-Archive-v1",
+        "commit": "b57822f770dc902240c2310296036433dc31f475",
+        "path": "05_CYCLE_NAVIGATOR/site/vnext-preview/official-pullback-investor-view.mjs",
+        "git_blob_sha": "901d81eee5f17468f3c6d2afb3115b08a3fabda8",
+        "status": "EXACT_EXTERNAL_SOURCE_VERIFIED_NOT_LOCAL_OR_DEPLOYED"
+      }
+    ]
+  }
+}

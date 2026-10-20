@@ -32,7 +32,7 @@ from scripts.learning.compass_outcomes import (
 FORECAST_ROOT = Path("04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts")
 OUTPUT_ROOT = Path("04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes")
 CONTRACT = "SHADOW_COMPASS_V2_OUTCOME_v1"
-SCORING_CONTRACT = "SHADOW_COMPASS_V2_SCORING_v2"
+SCORING_CONTRACT = "SHADOW_COMPASS_V2_SCORING_v3"
 
 
 def _source_auto_state(repo: Path, forecast: Mapping[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any]]:
@@ -95,6 +95,19 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     issued = parse_utc(forecast.get("issued_at_utc"))
     if issued is None:
         return None
+    rel = OUTPUT_ROOT / issued.strftime("%Y/%m/%d") / f"{forecast.get('forecast_id')}_{horizon}.json"
+    out = repo / rel
+    if out.exists():
+        return {"status": "ALREADY_MATURED", "path": rel.as_posix()}
+    if forecast.get("scoring_contract") != SCORING_CONTRACT:
+        return {
+            "status": "PENDING_SCORING_CONTRACT_MISMATCH",
+            "forecast_id": forecast.get("forecast_id"),
+            "horizon": horizon,
+            "frozen_scoring_contract": forecast.get("scoring_contract"),
+            "required_scoring_contract": SCORING_CONTRACT,
+            "reason": "PROSPECTIVE_V3_ONLY_LEGACY_REQUIRES_SEPARATE_GOVERNED_SCORER",
+        }
 
     auto_state, auto_binding = _source_auto_state(repo, forecast)
     if auto_state is None:
@@ -118,12 +131,8 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
     if now < target:
         return None
 
-    rel = OUTPUT_ROOT / issued.strftime("%Y/%m/%d") / f"{forecast.get('forecast_id')}_{horizon}.json"
-    out = repo / rel
-    if out.exists():
-        return {"status": "ALREADY_MATURED", "path": rel.as_posix()}
 
-    rows = load_hourly(repo, start_reference, target + TARGET_TOLERANCE)
+    rows = load_hourly(repo, start_reference, target + TARGET_TOLERANCE, as_of=now)
     endpoint = closest_target(rows, target)
     if endpoint is None:
         return {
@@ -165,10 +174,12 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
         "model_id": forecast.get("model_id"),
         "reasoner_version": forecast.get("reasoner_version"),
         "horizon": horizon,
+        "matured_at_utc": now.isoformat().replace("+00:00", "Z"),
         "issued_at_utc": issued.isoformat().replace("+00:00", "Z"),
         "target_at_utc": target.isoformat().replace("+00:00", "Z"),
         "target_observation_at_utc": endpoint_close.isoformat().replace("+00:00", "Z") if endpoint_close else None,
         "target_observation_open_at_utc": endpoint["timestamp_utc"].isoformat().replace("+00:00", "Z"),
+        "target_source_window_end_utc": endpoint["source_window_end_utc"].isoformat().replace("+00:00", "Z") if endpoint.get("source_window_end_utc") else None,
         "time_basis": {
             "status": "PASS",
             "nominal_horizon_hours": HORIZONS[horizon],
@@ -177,6 +188,8 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
             "effective_window_hours": round(effective_window_hours, 6),
             "window_deviation_hours": round(window_deviation_hours, 6),
             "endpoint_semantics": "HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON",
+            "source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE",
+            "source_first_knowledge_status": "UNKNOWN_NOT_PROVEN_BY_BATCH_END",
         },
         "frozen_forecast": {
             "direction": predicted,

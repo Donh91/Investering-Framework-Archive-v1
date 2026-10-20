@@ -62,3 +62,21 @@
 .fail-health-grid strong{display:block;margin-top:5px;color:#172033;font-size:12px;line-height:1.35}
 .fail-health-note{margin-top:14px!important;color:#7b8798!important;font-size:11px!important}
 @media(max-width:640px){.fail-health-grid{grid-template-columns:1fr}.fail-card-health{padding:20px}}
+
+
+/* Integrated Compass, bounded and mobile first */
+.compass-synthesis{margin:14px 0 18px;padding:16px 18px;border:1px solid #e0e7ef;border-radius:18px;background:linear-gradient(120deg,#fff,#f8fafc);color:#172033}
+.synthesis-head{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.synthesis-head span,.synthesis-proof span,.synthesis-horizons span{display:block;color:#667085;font-size:9px;font-weight:850;letter-spacing:.08em}
+.synthesis-head strong{display:block;font-size:16px;letter-spacing:-.02em;margin-top:3px}
+.synthesis-head>small{font-size:9px;font-weight:800;color:#667085;text-align:right}
+.synthesis-proof{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.synthesis-proof>div{padding:11px 12px;border:1px solid #e6eaf1;background:#fff;border-radius:12px}
+.synthesis-proof strong{display:block;font-size:13px;margin-top:6px;line-height:1.35}
+.synthesis-horizons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:10px}
+.synthesis-horizons>div{min-width:0;border-top:2px solid #d7dfe8;padding:8px 4px}
+.synthesis-horizons strong{display:block;font-size:11px;margin-top:6px;line-height:1.3;overflow-wrap:anywhere}
+.synthesis-analysis{font-size:13px;color:#344054;line-height:1.55;margin:14px 0 7px}
+.synthesis-boundary{display:block;font-size:10px;color:#7b8798;line-height:1.45}
+@media(max-width:680px){.compass-synthesis{padding:14px}.synthesis-head{display:block}.synthesis-head>small{display:block;margin-top:5px;text-align:left}.synthesis-horizons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:390px){.synthesis-proof{grid-template-columns:1fr}}

@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, output_schema, retry_output_token_limit, validate_output
+from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, output_schema, retry_output_token_limit, request_timeout_seconds, validate_output
 from scripts.api_agent.advance_deep_research_queue import build_task_packet, retained_providers, select_next
 from scripts.api_agent.advance_mcp_connection_scorecard import apply_evaluation
 from scripts.api_agent.evaluate_mcp_connection_receipt import classify, score_receipt
@@ -141,6 +141,23 @@ class ApiGatewayTests(unittest.TestCase):
         self.assertEqual(cfg['max_output_tokens'],9000)
         self.assertEqual(cfg['retry_max_output_tokens'],18000)
         self.assertEqual(retry_output_token_limit(cfg),18000)
+
+    def test_only_research_lab_sol_has_extended_timeout(self):
+        registry=load_registry(REGISTRY)
+        specialist=registry["tasks"]["RESEARCH_LAB_SOL_ANALYSIS"]
+        routine=registry["tasks"]["DAILY_DIRECTOR_SHADOW"]
+        self.assertEqual(specialist["model"],"gpt-6.1-sol")
+        self.assertEqual(specialist["reasoning_effort"],"high")
+        self.assertEqual(request_timeout_seconds(specialist),420)
+        self.assertEqual(request_timeout_seconds(routine),180)
+        self.assertNotIn("request_timeout_seconds",routine)
+        self.assertEqual(registry["single_run_hard_stop_usd"],3.0)
+
+    def test_bounded_timeout_invalid_types_and_values_fail_closed(self):
+        for invalid in (True,180.0,"420",29,481,None,-1):
+            with self.subTest(value=invalid):
+                with self.assertRaisesRegex(ValueError,"invalid_request_timeout_seconds"):
+                    request_timeout_seconds({"request_timeout_seconds":invalid})
 
     def test_routine_task_retry_cap_remains_legacy_bounded(self):
         data=load_registry(REGISTRY)

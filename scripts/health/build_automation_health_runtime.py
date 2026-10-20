@@ -299,6 +299,37 @@ def _completed_runs_with_latest_attempt_history(
     return (current + recovered + older)[:max_history]
 
 
+def hourly_prior_utc_day_delivery(api_base: str, wid: int, branch_q: str, token: str) -> dict[str, Any]:
+    """Report GitHub schedule *creation* counts, not assumed source-candle delivery.
+
+    The only additional existing-health API request is for this hourly workflow.
+    It cannot establish which cron slot triggered which event or provider PIT.
+    """
+    day = (base.utc_now().date() - base.timedelta(days=1)).isoformat()
+    result = {
+        "contract": "HOURLY_SCHEDULE_CREATION_OBSERVABILITY_v1",
+        "utc_day": day,
+        "expected_hourly_cron_slots": 24,
+        "created_schedule_event_count": None,
+        "status": "UNAVAILABLE",
+        "semantics": "GITHUB_ACTIONS_SCHEDULE_EVENT_CREATION_UTC_DAY_NOT_SOURCE_PIT",
+    }
+    try:
+        data = base.api_json(
+            f"{api_base}/actions/workflows/{wid}/runs?event=schedule&branch={branch_q}&created={day}&per_page=1",
+            token,
+        )
+        count = data.get("total_count")
+        if type(count) is not int or count < 0:
+            raise ValueError("INVALID_SCHEDULE_EVENT_TOTAL_COUNT")
+        result["created_schedule_event_count"] = count
+        result["status"] = "MEASURED"
+    except Exception:
+        # API outage must never be represented as zero scheduled deliveries.
+        result["status"] = "UNAVAILABLE"
+    return result
+
+
 def live_workflows(
     repo: str,
     token: str,
@@ -391,11 +422,14 @@ def live_workflows(
         cancellations = [run for run in recent_completed if _is_cancelled(run)]
         pr_gate_rejections = [run for run in recent_completed if _is_pr_gate_rejection(run)]
 
+        delivery = (hourly_prior_utc_day_delivery(api_base, wid, branch_q, token)
+                    if workflow_name == "hourly-sequence-capture.yml" and is_scheduled else None)
         result[workflow_name] = {
             "workflow_id": wid,
             "name": workflow.get("name"),
             "state": workflow.get("state"),
             "html_url": workflow.get("html_url"),
+            "hourly_schedule_utc_day": delivery,
             "production_scope": (
                 f"default_branch:{default_branch};events:schedule,workflow_dispatch"
                 if is_scheduled
@@ -519,6 +553,16 @@ def classify(row: dict[str, Any], now: Any) -> tuple[str, list[str]]:
             "REPEATED_CONSECUTIVE_CANCELLATIONS",
         )
     )
+    delivery = live.get("hourly_schedule_utc_day") if row.get("workflow") == "hourly-sequence-capture.yml" else None
+    if row.get("scheduled") and isinstance(delivery, dict):
+        if delivery.get("status") == "MEASURED":
+            count = delivery.get("created_schedule_event_count")
+            if type(count) is int and count < 24:
+                findings_set.add("HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H")
+                semantic_warning = True
+        else:
+            findings_set.add("HOURLY_SCHEDULE_DELIVERY_OBSERVABILITY_UNAVAILABLE")
+            semantic_warning = True
     if status == "AMBER" and not findings_set:
         status = "GREEN"
 

@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-16__TASK2_EXISTING_DATA_FIRST_EXECUTION_LADDER_v1.md",
+    "scripts/research/task2_existing_data_coverage.py",
+    "tests/research/test_task2_existing_data_coverage.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_MARKET_LEARNING",
+  "episode_id": "OE-4c40e43e0ed6f541",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(Task2): quantify existing-data coverage without blocking exploratory ablations * test(Task2): reject missing attempts, hindsight clocks and invented feature lift * ci(Task2): verify existing-data source coverage and no-hindsight tests in current gate * research(Task2): execute existing-data diagnostics in parallel with strict PIT admission * scope(Task2): defer workflow mutation; keep research/test-only integration within review cap * docs(Task2): disclose exact-head CI scope after removing workflow change",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-16__TASK2_EXISTING_DATA_FIRST_EXECUTION_LADDER_v1.md": "d9c31c733b640d53befcfe94649806df1299f305",
+    "scripts/research/task2_existing_data_coverage.py": "2e4145d476bd5f21ae902976fcc51c393cf79ff1",
+    "tests/research/test_task2_existing_data_coverage.py": "2b80fd727c67c006868a3511b60db9cbcb7cb587"
+  },
+  "source_commit_sha": "4c40e43e0ed6f541e5f2439f279336d0f7b077f6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-16T00:30:03-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(Task2): audit existing data and prioritize incremental source value without PIT promotion"
+}

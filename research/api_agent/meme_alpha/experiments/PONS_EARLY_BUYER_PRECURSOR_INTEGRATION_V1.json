@@ -1,0 +1,79 @@
+{
+  "contract": "PONS_EARLY_BUYER_PRECURSOR_INTEGRATION_V1",
+  "status": "RESEARCH_ONLY_SHADOW",
+  "owner": {
+    "canonical_experiment": "06_RESEARCH_LAB/alpha_lab/2026-10-02__wallet-precursor-execution-fidelity-prospective-experiment-v1__prereg.md",
+    "conviction_wallet_issue": 1419,
+    "clean_g3_issue": 1018,
+    "no_new_owner": true
+  },
+  "purpose": "Adapt the frozen Pons first-10 recipient cohort into existing as-of Wallet Alpha / Clean G3 science without granting retroactive launch-time credit.",
+  "inputs": {
+    "case_contract": "MAL_PONS_CURVE_CAPTURE_CASE_V1",
+    "cohort_contract": "MAL_PONS_EARLY_BUYER_COHORT_FREEZE_V1",
+    "wallet_alpha_record_contract": "WALLET_ALPHA_RECORD_V1",
+    "prior_outcomes": "existing chain+venue+role-local matured wallet outcomes",
+    "relationship_evidence": [
+      "SAME_FUNDER",
+      "BUNDLE_LINK",
+      "STRONG_CONTROLLER"
+    ]
+  },
+  "graph_contract": "MEME_ALPHA_PONS_EARLY_BUYER_GRAPH_v1",
+  "semantics": {
+    "chain": "robinhood-chain",
+    "venue": "pons-v2-bonding-curve",
+    "fixed_cohort_window_seconds": 300,
+    "cohort_wallet": "CurveBuy token recipient",
+    "initiator_equivalence": false,
+    "self_initiated_trade_proven": false,
+    "outcome_cutoff": "cohort_window_end_utc",
+    "signal_availability": "max(case frozen_at, cohort frozen_at, prospective_credit_from_utc)",
+    "launch_time_action_credit": false
+  },
+  "wallet_quality": {
+    "shared_helper": "compute_asof_wallet_quality_for_graph",
+    "chain_local": true,
+    "venue_local": true,
+    "role_local": true,
+    "min_prior_matured_default": 3,
+    "future_outcomes_forbidden": true,
+    "cross_chain_import_forbidden": true
+  },
+  "registry_gate": {
+    "edge_states": [
+      "REPEATABLE_EDGE_CANDIDATE",
+      "REPEATABLE_EDGE_SUPPORTED"
+    ],
+    "record_must_be_reviewed_by_cutoff": true,
+    "future_registry_state_forbidden": true,
+    "local_matured_history_also_required": true
+  },
+  "precursor_states": {
+    "UNKNOWN": "No point-in-time locally qualified edge wallet is established, or evidence is incomplete.",
+    "WATCH": "Exactly one effective independent locally qualified edge wallet is present.",
+    "MULTI_ENTITY_CONVERGENCE": "At least two effective independent locally qualified edge wallets are present after STRONG_CONTROLLER collapse.",
+    "TIME_SENSITIVE_PRECURSOR": "Reserved. This adapter cannot emit it until lead-time evidence is separately matured."
+  },
+  "entity_rules": {
+    "same_funder_collapses_identity": false,
+    "bundle_link_collapses_identity": false,
+    "strong_controller_collapses_identity": true
+  },
+  "blockscout_next_stage": {
+    "purpose": "Add bounded pre-cutoff wallet age/activity/funding context through the existing runtime-only Blockscout owner.",
+    "canonical_transport": "scripts/api_agent/meme_alpha_blockscout.py",
+    "credential": "runtime-only BLOCKSCOUT_API_KEY with governed public fallback",
+    "incomplete_history_is": "UNKNOWN",
+    "no_new_scanner": true,
+    "no_new_scheduler": true
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "portfolio_action": false,
+    "position_sizing": false,
+    "buy_now_promotion": false,
+    "alert_authority": false
+  }
+}

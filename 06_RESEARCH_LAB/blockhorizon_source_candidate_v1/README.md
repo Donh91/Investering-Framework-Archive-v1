@@ -1,9 +1,9 @@
 # BlockHorizon Source Candidate v1
 
-**Status:** PRIVATE_RAW_ARCHIVE_RECONCILED / FIRST_PASS_RESEARCH_PREP_FROZEN / API_PENDING / RESEARCH_ONLY  
+**Status:** PRIVATE_RAW_ARCHIVE_RECONCILED / FIRST_PASS_RESEARCH_PREP_FROZEN / OFFICIAL_EXPORTS_USABLE / API_MCP_PENDING / RESEARCH_ONLY  
 **Authority:** NONE_BY_ITSELF  
 **Added:** 2026-09-07  
-**Updated:** 2026-09-18  
+**Updated:** 2026-10-06  
 **Purpose:** Preserve BlockHorizon as a high-priority Bitcoin on-chain historical research source while keeping raw values, source rights, revision semantics and framework authority separate.
 
 ## Current state
@@ -48,6 +48,21 @@ receipts/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/09/2026-09-09__bl
 ```
 
 The repository owner explicitly confirmed on 2026-09-08 that the BlockHorizon downloads are authorized for private internal archival and research. This does not grant public redistribution authority.
+
+
+## Access and transport status - 2026-10-06
+
+BlockHorizon now explicitly advertises full-history downloads for any metric as CSV, JSON, Excel or PNG on its official site. For the framework, this changes the access state but not the research authority:
+
+- official tabular exports are usable now for user-initiated historical retrieval;
+- CSV remains the preferred immutable raw-archive transport, JSON is a secondary structured transport, and Excel is a manual fallback;
+- website charts may be read directly for current displayed values, axes, series interpretation, metric discovery and research triage;
+- when a tabular export exists, historical research must use that export rather than pixel-estimated chart values;
+- no public BlockHorizon API or MCP is validated as integration-ready as of 2026-10-06;
+- undocumented internal endpoints must not be treated as an API;
+- future API/MCP access should replace only the retrieval transport, while the existing restricted raw archive, provenance, revision handling, normalization and Research Lab gates remain stable.
+
+The machine-readable access gate is tracked in `ACCESS_TRANSPORT_STATUS_v1.json`. A future API/MCP transition requires a small hashed parity sample against an already archived official export before it is trusted for subsequent retrievals.
 
 ## IMPORTANT FOR ALL AGENTS - READ ORDER
 
@@ -198,6 +213,7 @@ Treat it as:
 
 ```text
 CURRENT_RESEARCH_READINESS.json
+ACCESS_TRANSPORT_STATUS_v1.json
 BLOCKHORIZON_RESEARCH_PREP_BLUEPRINT_v1.json
 SOURCE_CONTRACT_v1.json
 CURRENT_PRIVATE_BINDING.json
@@ -239,7 +255,7 @@ Resume collection when:
 
 - a specific research hypothesis requires one of the 17 remaining core family bands;
 - incremental-value analysis justifies an optional P2 chart;
-- BlockHorizon exposes validated machine-readable access;
+- BlockHorizon exposes validated automated API/MCP access that passes `ACCESS_TRANSPORT_STATUS_v1.json` transition gates;
 - a private retrieval revision requires hash/readback reconciliation.
 
 Do not resume broad collection simply because additional charts exist.

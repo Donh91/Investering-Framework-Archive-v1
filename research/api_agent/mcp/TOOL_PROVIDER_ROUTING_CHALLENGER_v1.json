@@ -1,0 +1,90 @@
+{
+  "contract": "TOOL_PROVIDER_ROUTING_CHALLENGER_v1",
+  "status": "RESEARCH_QUEUED_NON_BINDING",
+  "created_utc": "2026-10-07T06:57:00Z",
+  "source_reference": {
+    "repository": "superdesigndev/treg",
+    "commit": "e609803cff18ab8a815ceda153e667632bb2234f",
+    "disposition": "BORROW_PRINCIPLE_ONLY",
+    "license_observed": "APACHE_2_WITH_ADDITIONAL_HOSTED_SERVICE_RESTRICTION"
+  },
+  "purpose": "Test whether explicit provider-level task routing improves cost/reliability/freshness without weakening evidence authority, provenance or privacy.",
+  "authority": {
+    "canonical_effect": false,
+    "market_state_change": false,
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "repository_write_authority": false,
+    "credential_migration": false,
+    "runtime_dependency_promotion": false
+  },
+  "local_owners": [
+    "scripts/api_agent/capability_router.py",
+    "research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json",
+    "research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json",
+    "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json"
+  ],
+  "candidate_selection_order": [
+    "EXACT_CAPABILITY_AND_INPUT_FIT",
+    "EVIDENCE_AUTHORITY_FIT",
+    "FRESHNESS_AND_POINT_IN_TIME_FIT",
+    "CURRENT_HEALTH_AND_RELIABILITY",
+    "RIGHTS_PRIVACY_CREDENTIAL_ELIGIBILITY",
+    "EXPECTED_COST",
+    "LATENCY",
+    "SEMANTICALLY_COMPATIBLE_FALLBACK_ONLY"
+  ],
+  "hard_rules": {
+    "cost_never_outranks_evidence_validity": true,
+    "silent_cross_provider_failover": false,
+    "exact_provider_provenance_required": true,
+    "retry_must_be_distinguished_from_fresh_query": true,
+    "external_instructions_are_evidence_not_authority": true,
+    "no_secret_values_in_skill_or_receipt": true,
+    "missing_or_incompatible_source_fails_closed": true
+  },
+  "benchmark": {
+    "baseline": "CURRENT_OWNER_DIRECTED_PROVIDER_SELECTION",
+    "challenger": "EXPLICIT_PROVIDER_ROUTING_POLICY",
+    "task_classes": [
+      "CONTRACT_CHAIN_LOOKUP",
+      "HISTORICAL_SERIES_RETRIEVAL",
+      "WALLET_ENTITY_ENRICHMENT",
+      "SOCIAL_SOURCE_VERIFICATION",
+      "DEVELOPER_SOURCE_LOOKUP",
+      "DUPLICATE_SOURCE_RECOVERY"
+    ],
+    "metrics": [
+      "USABLE_EVIDENCE_RATE",
+      "SOURCE_AUTHORITY_CORRECTNESS",
+      "UNSUPPORTED_FALLBACK_RATE",
+      "PROVENANCE_COMPLETENESS",
+      "STALE_ANSWER_INCIDENTS",
+      "COST_PER_USABLE_RESULT",
+      "LATENCY_PER_USABLE_RESULT",
+      "UNNECESSARY_PAID_CALL_RATE",
+      "MANUAL_CORRECTIONS",
+      "PRIVACY_OR_CREDENTIAL_INCIDENTS",
+      "SEMANTIC_MISMATCH_INCIDENTS"
+    ]
+  },
+  "promotion_gate": {
+    "required": [
+      "MATERIAL_COST_OR_FAILURE_REDUCTION",
+      "NO_EVIDENCE_QUALITY_REGRESSION",
+      "NO_AUTHORITY_OR_PRIVACY_REGRESSION",
+      "EXACT_PROVIDER_PROVENANCE_PRESERVED",
+      "NO_MANUAL_CORRECTION_REGRESSION"
+    ],
+    "promotion_target": "SMALL_EXTENSION_TO_EXISTING_ROUTER_ONLY"
+  },
+  "kill_criteria": [
+    "CURRENT_OWNER_ROUTING_PERFORMS_EQUIVALENT_OR_BETTER",
+    "SAVINGS_TRIVIAL_AFTER_AUTHORITY_CONSTRAINTS",
+    "SEMANTIC_MISMATCH_RATE_INCREASES",
+    "ROUTING_COMPLEXITY_EXCEEDS_OPERATIONAL_VALUE",
+    "EXISTING_MCP_SCORECARDS_ALREADY_CLOSE_THE_GAP"
+  ],
+  "implementation_now": "NONE",
+  "next_step": "FREEZE_REPRESENTATIVE_TASKSET_AND_RUN_READ_ONLY_CHALLENGER_WHEN_PROVIDER_HEALTH_COST_DATA_ARE_AVAILABLE"
+}

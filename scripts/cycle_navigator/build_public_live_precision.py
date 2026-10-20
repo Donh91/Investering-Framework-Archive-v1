@@ -3,9 +3,14 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
+import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.cycle_navigator.daily_price_journey import validate_daily_path
 
 
 FORMULA = "70pct_containment_plus_30pct_jaccard"
@@ -119,9 +124,82 @@ def numeric(row: dict[str, str], key: str) -> float | None:
     if value in (None, ""):
         return None
     try:
-        return float(value)
+        number = float(value)
+        return number if math.isfinite(number) else None
     except (TypeError, ValueError):
         return None
+
+
+def daily_observations(hourly: list[dict[str, str]], year: int, week: int, *, now: datetime | None = None) -> dict[str, Any]:
+    """UTC source prices only. Incomplete days are visible as gaps, never synthetic."""
+    now = now or datetime.now(timezone.utc)
+    monday = datetime.combine(date.fromisocalendar(year, week, 1), datetime.min.time(), timezone.utc)
+    rows = {parse_utc(r["timestamp_utc"]): r for r in hourly if parse_utc(r["timestamp_utc"]) + timedelta(hours=1) <= now}
+    cutoff = max(rows) + timedelta(hours=1) if rows else None
+    result: dict[str, Any] = {"contract": "CN_PUBLIC_DAILY_OBSERVATIONS_v1", "timezone": "UTC", "observed_through_utc": fmt_iso(cutoff), "BTC": [], "ETH": []}
+    for day in range(7):
+        start, end = monday + timedelta(days=day), monday + timedelta(days=day+1)
+        subset = [(t, r) for t, r in sorted(rows.items()) if start <= t < end]
+        expected = max(0, int((min(end, cutoff or start) - start).total_seconds() // 3600))
+        for asset in ("BTC", "ETH"):
+            good = [(t, numeric(r, asset.lower()+"_low"), numeric(r, asset.lower()+"_high"), numeric(r, asset.lower()+"_close")) for t, r in subset]
+            good = [r for r in good if all(x is not None and x > 0 for x in r[1:]) and r[1] <= r[3] <= r[2]]
+            complete = expected > 0 and len(good) == expected and all(t == start + timedelta(hours=i) for i, (t, *_) in enumerate(good))
+            result[asset].append({"day": day+1, "date": start.date().isoformat(), "observed_hours": len(good), "expected_hours": expected,
+                                  "coverage_complete_to_date": complete, "status": "COMPLETE" if complete and expected == 24 else "LIVE" if complete else "GAP" if expected else "NOT_STARTED",
+                                  "low": min(r[1] for r in good) if complete else None, "high": max(r[2] for r in good) if complete else None,
+                                  "close": good[-1][3] if complete else None, "as_of_utc": fmt_iso(good[-1][0]+timedelta(hours=1)) if complete else None})
+    return result
+
+
+
+def public_hourly_price_path(
+    hourly: list[dict[str, str]], iso_year: int, iso_week: int,
+    public_issue: int, cutoff: datetime | None, *, now: datetime | None = None,
+) -> dict[str, Any]:
+    """Public, read-only 1h closes: no wallet IDs, future fill, interpolation or forecast.
+
+    Filter against the SAME PASS/OK hourly owner evidence used for the
+    frozen-range evaluation. The browser independently verifies this projection.
+    """
+    now = now or datetime.now(timezone.utc)
+    monday = datetime.combine(date.fromisocalendar(iso_year, iso_week, 1), datetime.min.time(), timezone.utc)
+    weekend = monday + timedelta(days=7)
+    result: dict[str, Any] = {
+        "contract": "CN_PUBLIC_HOURLY_PRICE_PATH_v1",
+        "forecast_week": f"{iso_year}-W{iso_week:02d}",
+        "public_issue_number": public_issue,
+        "source": "HOURLY_SPOT_PASS_ONLY",
+        "semantics": "OBSERVED_HOURLY_CLOSE_NOT_A_PROSPECTIVE_FORECAST",
+        "observed_through_utc": fmt_iso(cutoff),
+        "BTC": [], "ETH": [],
+    }
+    seen: set[datetime] = set()
+    for row in hourly:
+        try:
+            stamp = parse_utc(row["timestamp_utc"])
+        except (ValueError, KeyError):
+            continue
+        if str(row.get("spot_status") or "").upper() not in {"PASS", "OK"} or cutoff is None:
+            continue
+        closed = stamp + timedelta(hours=1)
+        if stamp in seen or stamp < monday or stamp >= weekend or closed > now or (cutoff is not None and closed > cutoff):
+            continue
+        if stamp.minute or stamp.second or stamp.microsecond:
+            continue
+        seen.add(stamp)
+        for asset in ("BTC", "ETH"):
+            low = numeric(row, asset.lower() + "_low")
+            high = numeric(row, asset.lower() + "_high")
+            close = numeric(row, asset.lower() + "_close")
+            if (low is None or high is None or close is None or low <= 0 or
+                    not low <= close <= high):
+                continue
+            result[asset].append({
+                "observed_at_utc": fmt_iso(closed),
+                "close": close,
+            })
+    return result
 
 
 def copy_public_freeze_archive(root: Path, dist_data: Path) -> int:
@@ -235,6 +313,7 @@ def main() -> None:
 
     ledger_rows = load_range_rows(root, public_issue, forecast_week)
     frozen_intraday = freeze.get("intraday_map") if isinstance(freeze.get("intraday_map"), dict) else {}
+    daily_path = validate_daily_path(freeze.get("daily_price_path"), freeze, iso_year, iso_week)
     hourly = load_hourly_rows(root, iso_year, iso_week)
     bounds = window_bounds(iso_year, iso_week)
     latest_open = parse_utc(hourly[-1]["timestamp_utc"]) if hourly else None
@@ -368,6 +447,9 @@ def main() -> None:
         "frozen_at_utc": fmt_iso(frozen_at),
         "live_as_of_utc": fmt_iso(observed_through),
         "freeze_sha256": digest,
+        "daily_price_path": daily_path,
+        "daily_observations": daily_observations(hourly, iso_year, iso_week),
+        "hourly_price_path": public_hourly_price_path(hourly, iso_year, iso_week, public_issue, observed_through),
         "freeze_receipt_public_path": f"data/public-freezes/{iso_year}/W{iso_week:02d}/CN{public_issue}_PUBLIC_FREEZE.json",
         "final_score_destination": "CN_PUBLIC_WEEKLY_SCORECARD.price_range_precision.score",
         "finalization_rule": "Final score locks only after 168h weekly actuals and canonical weekly settlement.",

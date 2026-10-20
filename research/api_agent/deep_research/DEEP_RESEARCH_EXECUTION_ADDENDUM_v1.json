@@ -57,7 +57,10 @@
     "required_coverage_status": "COMPLETE_FOR_EXPECTED_CHECK_SET",
     "minimum_checks_total": 1,
     "missing_or_failed_gate_state": "WAIT_PROSPECTIVE_COVERAGE",
-    "reason": "Do not build a false-positive/false-negative library while zero-row versus zero-observation remains ambiguous."
+    "reason": "DRQ-018 requires at least one evaluable prospective owner check; NOT_EVALUABLE_DATA_BLOCKED receipts establish observability but cannot release false-positive/false-negative research.",
+    "minimum_evaluable_checks_total": 1,
+    "blocked_checks_do_not_satisfy_gate": true,
+    "evaluable_check_definition": "no_divergence_checks + divergence_source_rows"
   },
   "supplemental_research": {
     "task_path": "research/api_agent/deep_research/tasks/DRQ-CUAU-001__copper-gold-decomposition.json",

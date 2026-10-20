@@ -1,0 +1,80 @@
+{
+  "contract": "BLOCKHORIZON_ACCESS_TRANSPORT_STATUS_v1",
+  "observed_date": "2026-10-06",
+  "status": "OFFICIAL_EXPORTS_USABLE__PUBLIC_API_MCP_NOT_VALIDATED",
+  "authority": {
+    "research_only": true,
+    "canonical_market_authority": false,
+    "portfolio_authority": false,
+    "automatic_collection_authorized": false,
+    "undocumented_endpoint_use_authorized": false
+  },
+  "current_access_modes": {
+    "official_manual_export": {
+      "status": "USABLE_NOW",
+      "provider_scope": "FULL_HISTORY_PER_SELECTED_METRIC",
+      "advertised_formats": [
+        "CSV",
+        "JSON",
+        "EXCEL",
+        "PNG"
+      ],
+      "framework_preference": [
+        "CSV_PRIMARY_FOR_IMMUTABLE_RAW_ARCHIVE",
+        "JSON_SECONDARY_WHEN_SCHEMA_OR_NESTING_ADDS_VALUE",
+        "EXCEL_FALLBACK_FOR_MANUAL_RETRIEVAL",
+        "PNG_ONLY_FOR_VISUAL_PROVENANCE_OR_CHART_REVIEW"
+      ],
+      "private_raw_retention": "SUBJECT_TO_SOURCE_CONTRACT_AND_EXISTING_OWNER_ATTESTATION"
+    },
+    "website_chart_read": {
+      "status": "USABLE_NOW_FOR_INSPECTION",
+      "allowed_uses": [
+        "CURRENT_DISPLAYED_VALUE_READING",
+        "AXIS_AND_SERIES_INTERPRETATION",
+        "METRIC_DISCOVERY",
+        "RESEARCH_TRIAGE",
+        "VISUAL_CROSSCHECK"
+      ],
+      "historical_archive_rule": "USE_OFFICIAL_TABULAR_EXPORT_WHEN_A_SERIES_IS_REQUIRED; DO_NOT SUBSTITUTE PIXEL_ESTIMATES_FOR_AVAILABLE_EXPORTS",
+      "provenance_rule": "CAPTURE_PROVIDER_URL_AND_OBSERVATION_DATE_WHEN A WEBSITE-READ VALUE MATERIALLY INFORMS RESEARCH"
+    },
+    "public_api": {
+      "status": "NOT_PUBLICLY_DOCUMENTED_OR_VALIDATED",
+      "integration_ready": false
+    },
+    "public_mcp": {
+      "status": "NOT_PUBLICLY_DOCUMENTED_OR_VALIDATED",
+      "integration_ready": false
+    }
+  },
+  "provider_evidence": [
+    {
+      "url": "https://www.blockhorizon.io/contact-us",
+      "observed_claim": "Provider advertises full-history export for any metric as CSV, JSON, Excel or PNG."
+    },
+    {
+      "url": "https://charts.blockhorizon.io/",
+      "observed_claim": "Provider chart terminal exposes the live metric catalog and download workflow."
+    }
+  ],
+  "transport_abstraction": {
+    "downstream_contract": "KEEP_EXISTING_PRIVATE_RAW_ARCHIVE_PROVENANCE_NORMALIZATION_AND_RESEARCH_GATES_STABLE",
+    "current_transport": "USER_INITIATED_OFFICIAL_EXPORT",
+    "future_transport": "API_OR_MCP_ONLY_AFTER_PUBLIC_DOCUMENTATION_OR_OTHER_VALIDATED_AUTHORIZED_ACCESS",
+    "transition_rule": "A future API or MCP may replace retrieval transport but must not silently change metric semantics, revision handling, provenance, point-in-time eligibility or research authority.",
+    "undocumented_internal_endpoints": "DO_NOT_USE"
+  },
+  "api_mcp_reentry_gate": {
+    "required_before_integration": [
+      "PUBLIC_OR_OWNER_AUTHORIZED_ACCESS_PATH",
+      "DOCUMENTED_OR_EMPIRICALLY_VALIDATED_HISTORICAL_SERIES_RETRIEVAL",
+      "STABLE_METRIC_IDENTIFIER_OR_MAPPING",
+      "AUTHENTICATION_AND_RATE_LIMIT_BEHAVIOR_UNDERSTOOD_WHEN_APPLICABLE",
+      "TIMESTAMP_AND_REVISION_SEMANTICS_TESTED",
+      "RAW_RESPONSE_IMMUTABLY_ARCHIVABLE_IN_RESTRICTED_PLANE",
+      "NO_CONFLICT_WITH_PROVIDER_TERMS_OR_EXISTING_SOURCE_CONTRACT"
+    ],
+    "next_action_when_gate_passes": "ADD_A_NEW_TRANSPORT_REVISION_OR_SUBCONTRACT, RUN A SMALL HASHED PARITY SAMPLE AGAINST AN EXISTING OFFICIAL EXPORT, THEN PROMOTE THE NEW TRANSPORT FOR FUTURE RETRIEVALS IF PARITY PASSES."
+  }
+}

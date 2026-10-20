@@ -85,6 +85,16 @@ Hard rules:
 - Material source conflict remains explicit `DATA_CONFLICT` until resolved.
 - If the current route cannot support an action horizon, that lane fails closed to `AFVENT` or `INGEN HANDLING` with `KRÆVER FRISKE DATA` or the exact blocking reason.
 
+## 3.1 Permanent complete Compass across chat and site (2026-10-08)
+
+**User mandate:** Every ordinary `Kompas` request requires one comprehensive current, critical analysis of ALL relevant Compass layers, not just the Official Daily Compass. The same evidence-selection and safety policy powers the Cycle Navigator site's public composite Compass readback.
+
+**Required source cross-read, every invocation:** canonical production Auto Market State and freshness, immutable Official Daily Compass, Native Handlekompas, Shadow Compass v2, governed weekly Master Monday/Cycle Navigator, Strategic Compass, and currently eligible pullback/distribution, SELL/Swing, re-entry, rotation, market health, Bull/Bear and outcome accountability where available. Inspect each latest source and its contract, timestamp, origin, provenance and authority; record a missing or stale source as `NOT_VERIFIED`, `UNAVAILABLE` or `DEGRADED`. Shadow is an independent NON-BINDING analytical challenge, never an owner of official action, threshold, score or site-confirmed cycle phase. Do not count common underlying source packets as multiple independent confirmations.
+
+**Default complete human output:** clear STATUS / HANDLING / TID for BTC, ETH, large, mid, small, micro and memes; horizons 12–24h, 1–3d, 5–7d, 2–3w, 21–30d and 4–8w, with source-backed direction/path/ranges, pullback/distribution and separate SELL/Swing/re-entry assessment. Mark unsupported windows and ranges as unavailable. Identify official-vs-shadow agreement/disagreement. End with `🧠 MIN FORTOLKNING — <SPECIFIC FORWARD HORIZON>`: independent, evidence-led market direction and next action without hopium. Specific narrower user windows may abbreviate presentation, NEVER the cross-read. Keep iPhone-friendly and strictly TEXT_ONLY / no widgets.
+
+**Public site consumption:** the site must consume a sanitised, reproducible full-stack Compass projection assembled from the same current verified owner evidence as chat; this is a readback/interpretation layer, never a new market engine, owner or new prospective receipt. Site may show the latest non-binding AI research outlook clearly separated from the official decision, including when official navigation is degraded; it must never turn shadow or live prices into a verified BUY/SELL or imply the official status recovered. Public snapshots must carry source-alignment, freshness and unavailable labels and must not leak private/restricted data. Site builds are not a substitute for an autonomous agent or a claim of fresh AI inference.
+
 ## 4. Decision semantics
 
 The compass reuses the controlled action vocabulary and altcoin-regime vocabulary from the active Three-Horizon Action Compass owner. Do not create synonyms that change machine meaning.
@@ -123,9 +133,9 @@ The compass may include one plain-language market-direction note such as `bull s
 
 ## 5. Required human output
 
-The default response is compact and text-only. It should normally fit on a phone screen without analytical filler.
+The default response is compact, text-only and phone-first. The short template below is abbreviated; complete cross-layer coverage remains mandatory under Section 3.1.
 
-Use this structure:
+The following block defines the minimum decision semantics for packet/legacy text renderings; user-invoked chat Kompas additionally follows the **mandatory two-table presentation** in section 5.1:
 
 ```markdown
 ### 🧭 KOMPAS
@@ -157,6 +167,44 @@ Rendering rules:
 - Do not print method explanations, internal workflow names, API/provider lists, raw source tables or governance prose unless the user explicitly asks.
 - If the state is unchanged, say `UÆNDRET` once rather than rewriting a long justification.
 - If one lane is unsupported, fail that lane closed without making the rest of the compass verbose.
+
+## 5.1 Permanent two-table presentation for on-demand chat Kompas
+
+For every user-invoked `kompas`, `handlekompas` or `compass` request in a repository-aware Investering chat, render **both** compact, phone-first Markdown tables below in this order. These two views are REQUIRED, not optional decorations. Keep the rest of the response brief. They do not change the official Compass machine schema, its freeze, governed actions, source authority or scoring.
+
+**A. Mit taktiske Kompas**
+
+| Tid | Retning | Handling |
+|---|---|---|
+| 0–12t / 24t* | ↑ / → / ↓ / Ukendt | KØB / HOLD / AFVENT / ... |
+| 1–3 dage | ... | ... |
+| 5–7 dage | ... | ... |
+| 2–3 uger | ... | ... |
+| 4–8 uger | ... | ... |
+
+`*` Use the exact supported near-term validity (e.g. 0–12 hours, not 24 hours unless evidenced). Display the longer-cycle lane as `Ukendt / AFVENT` when unavailable; 21–30D is only available from its dedicated governed strategic owner. No fabricated range, trend, score or ETA to fill a cell.
+
+**B. Aktivklasser**
+
+| Aktiv | Status | Handling |
+|---|---|---|
+| BTC | ... | ... |
+| ETH | ... | ... |
+| Large caps | ... | ... |
+| Mid caps | ... | ... |
+| Small caps | ... | ... |
+| Microcaps | ... | ... |
+| Memes | ... | ... |
+
+Rules for both tables:
+
+- The `Retning` / `Status` cells summarize the latest eligible official owner observations. The `Handling` cells use ONLY the active controlled action vocabulary (`KØB`, `TOP-UP`, `GRADUERET KØB`, `FORBERED KØB`, `AFVENT`, `HOLD`, `REDUCER`, `EXIT`, `INGEN HANDLING`), and must NOT convert directional optimism or a risk warning into buy/sell authority.
+- The two tables remain visible even during `DATA_DEGRADED`, source conflicts, unsupported horizons or missing meme owner. State `Ukendt` / `AFVENT` or `INGEN HANDLING` with a short reason. Do not infer meme permission from microcaps or create a 24-hour forecast from a 12-hour signal.
+- After the two tables and any material `SELL / Swing` note, end with `🧠 MIN FORTOLKNING — <TIME HORIZON>` (1–3 concise sentences): give an evidence-grounded expected sequence (`↗ → ↔ → ↘` etc.) only if supported. Label any independent assistant judgement `Selvstændig fortolkning, ikke nyt officielt maskinsignal`. Never silently overwrite the official direction or governed action.
+- Preserve the separate `SELL / Swing` or protection note when materially relevant, including pullback/distribution/re-entry warning versus action and any supported ETA. No duplication of the asset/rotation table.
+- These are plain text Markdown tables, not widgets. Max three columns per table, no cards, carousel, GenUI, charts, unsupported confidence scores or wide layouts. Layout only; do not mint a new forecast receipt by rendering.
+
+This user-facing format supplements rather than supersedes the Three-Horizon action vocabulary and all exact current-pointer / fail-closed rules.
 
 ## 6. No-widget / internal-tool rendering policy
 
@@ -240,6 +288,9 @@ A compass response is incomplete if any applicable check is `NO`:
 
 ```text
 GLOBAL_TRIGGER_RESOLVED: YES/NO
+ALL_COMPASS_LAYERS_VERIFIED_OR_EXPLICITLY_UNAVAILABLE: YES/NO
+CHAT_AND_SITE_SHARED_SOURCE_SEMANTICS: YES/NO
+OWN_HORIZON_LABELED_ANALYSIS_AND_PROTECTION_COVERED: YES/NO
 CURRENT_AUTHORITY_RESOLVED: YES/NO
 CURRENT_DATA_ROUTE_USED: YES/NO
 ON_DEMAND_FRESHNESS_EVALUATED: YES/NO
@@ -252,6 +303,8 @@ WARNING_SEPARATE_FROM_ACTION: YES/NO
 STALE_OR_CONFLICTING_DATA_FAILS_CLOSED: YES/NO
 NO_DUPLICATE_ROTATION_SECTIONS: YES/NO
 VISIBLE_OUTPUT_TEXT_ONLY: YES/NO
+TWO_REQUIRED_COMPACT_MARKDOWN_TABLES_PRESENT: YES/NO
+TACTICAL_INTERPRETATION_SEPARATE_FROM_ACTION_AUTHORITY: YES/NO
 NO_RAW_API_OR_TOOL_OUTPUT: YES/NO
 NO_RENDER_ONLY_RECEIPT_CREATED: YES/NO
 NO_AUTOMATIC_PORTFOLIO_EXECUTION: YES/NO

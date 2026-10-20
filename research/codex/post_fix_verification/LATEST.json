@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=37225819713:success,37194664023:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=39396624135:success,39321485684:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=37298455869:success,37227427568:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=39483913133:success,39399602578:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,7 +54,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=37298162880,37225418791 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=39483363083,39395516104 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -69,53 +69,8 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=37298162880,37225418791 checks=PASS",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=39483363083,39395516104 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
-          "pass": true
-        },
-        {
-          "evidence": "MISSION_CONVERGENCE_REQUIRED",
-          "kind": "MISSION_CONVERGENCE",
-          "pass": false
-        }
-      ]
-    },
-    {
-      "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
-      "checks": [
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:status='PASS'",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:parent_replay='PASS'",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:neighbor_replay='PASS'",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:autonomous_route_observed=True",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:bounded_retest_route_observed=True",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:historical_market_reused_as_current=False",
-          "kind": "JSON_PATH_EQUALS",
-          "pass": true
-        },
-        {
-          "evidence": "research/api_agent/meme_alpha/reports/2026-10-02__adversarial-runtime-postfix-verification-v1.json:parallel_runtime=False",
-          "kind": "JSON_PATH_EQUALS",
           "pass": true
         },
         {
@@ -148,11 +103,16 @@
   ],
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
-    "machine_spec_configured": 6,
-    "machine_spec_unconfigured": 28,
+    "machine_spec_configured": 5,
+    "machine_spec_unconfigured": 29,
     "post_fix_total": 34
   },
-  "skipped": [],
+  "skipped": [
+    {
+      "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
+      "reason": "NOT_POST_FIX_OBSERVATION"
+    }
+  ],
   "unconfigured": [
     {
       "candidate_id": "codex-daily-director-directional-threshold-root-cause-v1",
@@ -187,6 +147,11 @@
     {
       "candidate_id": "codex-research-confidence-binding-calibration-v1",
       "post_fix_gate": "CONFIDENCE_BINDING_FIXTURE_PASS_PLUS_MINIMUM_SAMPLE_REMAINS_LOW_SAMPLE_UNTIL_NATURAL_OUTCOMES",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-convergence-hash-supersession-v2",
+      "post_fix_gate": "FOCUSED_SUPERSESSION_TESTS_PASS_PLUS_APPEND_ONLY_GATE_PASS_PLUS_ADVERSARIAL_RUNTIME_POST_FIX_VERIFIER_ACCEPTS_CONVERGENCE_WITH_ORIGINAL_BASE_RECEIPT_UNCHANGED",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     },
     {

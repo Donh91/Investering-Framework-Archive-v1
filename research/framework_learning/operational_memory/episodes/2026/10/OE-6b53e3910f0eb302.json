@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/adaptive-decision-miss-validation.yml",
+    "scripts/api_agent/adaptive_decision_miss_auditor.py",
+    "tests/api_agent/test_adaptive_gap_validation_v1_1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-6b53e3910f0eb302",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Fail closed on invalid decision-miss API output * Test bounded decision-miss API retry * Preserve invalid decision-miss output as health failure * Preserve blocked gap semantics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/adaptive-decision-miss-validation.yml": "d739acc93ffda5ca1282c61373c03908400abbcf",
+    "scripts/api_agent/adaptive_decision_miss_auditor.py": "59ea6755e56b817dcf9ab18673ff7a85b15c8218",
+    "tests/api_agent/test_adaptive_gap_validation_v1_1.py": "f35935355182cd0b017f100876fc0158f894ccd9"
+  },
+  "source_commit_sha": "6b53e3910f0eb30270a9e8b2d80196ab3d1de023",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-07T09:55:06+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Fail closed on malformed Adaptive Decision Miss API output (#1535)"
+}

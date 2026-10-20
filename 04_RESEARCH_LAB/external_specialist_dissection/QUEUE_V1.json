@@ -1,0 +1,296 @@
+{
+  "contract": "RESEARCH_LAB_EXTERNAL_SPECIALIST_DISSECTION_QUEUE_V1",
+  "status": "ACTIVE_RESEARCH_QUEUE",
+  "authority": "RESEARCH_ONLY",
+  "canonical_readme": "04_RESEARCH_LAB/external_specialist_dissection/README.md",
+  "updated_at_utc": "2026-10-18",
+  "resume_policy": {
+    "read_before_work": true,
+    "fresh_overlap_audit": true,
+    "one_new_heavy_lane_at_a_time": true,
+    "provider_labels_are_not_truth": true,
+    "first_party_or_internal_reproduction_preferred": true,
+    "prospective_evidence_required_for_edge": true,
+    "negative_results_retained": true
+  },
+  "transversal": [
+    {
+      "id": "X0_DISAGREEMENT_ALPHA_V1",
+      "priority": "P0",
+      "score": 25,
+      "state": "WAITING_FOR_COMPARABLE_CLAIMS",
+      "owner": "04_RESEARCH_LAB",
+      "next_action": "Define shared disagreement receipt after S1-S3 produce comparable claim pairs; archive spec in canonical folder.",
+      "spec": "04_RESEARCH_LAB/external_specialist_dissection/X0_DISAGREEMENT_ALPHA_V1.md"
+    }
+  ],
+  "lanes": [
+    {
+      "rank": 1,
+      "id": "S1_EXECUTABLE_SELLABILITY_TRUTH_V1",
+      "priority": "P0",
+      "score": 24,
+      "state": "PAIRED_DENOMINATOR_MERGED_PROSPECTIVE_DATA_PENDING",
+      "owner": "Meme-Alpha-Lab microstructure/execution-quality",
+      "targets": [
+        "GoPlus",
+        "Honeypot.is",
+        "raw simulation/routes"
+      ],
+      "next_action": "Accumulate contemporaneous provider/internal mechanics pairs. Build EVM_NEGATIVE_SELLABILITY_PROOF_V1 only through the existing execution-realism owner; do not infer failure from inactivity.",
+      "spec": "04_RESEARCH_LAB/external_specialist_dissection/S1_EXECUTABLE_SELLABILITY_TRUTH_V1.md",
+      "blocker": "Independent negative EVM route/revert/no-route evidence is still missing; prospective paired rows also need to accumulate.",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/98",
+      "active_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/100",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/100",
+      "source_proof": "Meme-Alpha-Lab/research/sellability/LIVE_SOURCE_PROOF_2026-10-06.md",
+      "merged_pairing_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/104",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S1_EXECUTION_RECEIPT_2026-10-06.md"
+    },
+    {
+      "rank": 2,
+      "id": "S2_WALLET_SKILL_TRUTH_TOURNAMENT_V1",
+      "priority": "P0",
+      "score": 23,
+      "state": "PONS_PRECURSOR_AND_ROBINHOOD_HISTORY_COMPLETENESS_MERGED_FORWARD_CASE_PENDING",
+      "owner": "Meme-Alpha-Lab Wallet Alpha Protocol",
+      "targets": [
+        "GMGN",
+        "Nansen",
+        "Fomo",
+        "Kolscan",
+        "Cielo",
+        "Lookonchain",
+        "raw chain"
+      ],
+      "next_action": "On the first eligible post-activation Pons first-10 cohort, run bounded Blockscout history coverage at the cohort cutoff. Admit wallet-age/activity/funding features only when coverage_state=COMPLETE_WINDOW; otherwise UNKNOWN. Then prospectively mature outcomes and measure incremental value.",
+      "spec": "04_RESEARCH_LAB/external_specialist_dissection/S2_WALLET_SKILL_TRUTH_TOURNAMENT_V1.md",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/101",
+      "active_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/102",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/102",
+      "source_proof": "Meme-Alpha-Lab/research/discovery/GMGN_INDEXED_WALLET_SOURCE_PROOF_2026-10-06.md",
+      "pons_precursor_pr": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1522",
+      "pons_precursor_receipt": "06_RESEARCH_LAB/alpha_lab/2026-10-06__pons-early-buyer-precursor-integration-v1.md",
+      "robinhood_history_pr": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1524",
+      "robinhood_history_receipt": "06_RESEARCH_LAB/alpha_lab/2026-10-06__robinhood-wallet-history-completeness-v1.md"
+    },
+    {
+      "rank": 3,
+      "id": "S3_ENTITY_ADJUSTED_CLUSTER_AND_BUNDLE_V1",
+      "priority": "P0",
+      "score": 23,
+      "state": "RELATIONSHIP_RESOLVER_MERGED_RAW_MEMBERSHIP_PARTIAL",
+      "owner": "Meme-Alpha-Lab forensics/Distribution Overhang",
+      "targets": [
+        "Bubblemaps",
+        "Arkham",
+        "raw chain"
+      ],
+      "next_action": "Recover exact SHIB/BRETT/full-PEPE historical cluster membership only from reproducible raw/provider evidence; otherwise accumulate prospective relationship rows and keep provider clusters as challengers.",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/105",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/106",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S3_EXECUTION_RECEIPT_2026-10-06.md",
+      "bubblemaps_source_audit": "04_RESEARCH_LAB/external_specialist_dissection/S3_BUBBLEMAPS_CHALLENGER_SOURCE_AUDIT_2026-10-06.md",
+      "blocker": "HISTORICAL_CLUSTER_RAW_MEMBERSHIP_V1 remains open for BRETT >100-wallet set, SHIB 0x1406 descendants and full PEPE genesis/bundle set."
+    },
+    {
+      "rank": 4,
+      "id": "S4_LAUNCH_TRAJECTORY_AND_RETENTION_V1",
+      "priority": "P0",
+      "score": 23,
+      "state": "MERGED_CAPABILITY_ACTIVE",
+      "owner": "Meme-Alpha-Lab",
+      "targets": [
+        "Pons v2 first-party",
+        "Ocellus challenger",
+        "Allium (P2 source feasibility challenger, Meme-Alpha-Lab #155, AUTH_REQUIRED; not first-party truth)"
+      ],
+      "next_action": "Continue append-only curve trades, first-sale latency, fixed-horizon cohort maturation and graduation-progress reconstruction. OPTIONAL NO-SPEND SHADOW: inspect https://github.com/Donh91/Meme-Alpha-Lab/issues/155 and linked deep research only after current first-party S4/S1/S2 priority. No Allium data ingestion, scorer or subscription until source, terms, endpoint and cost receipts pass. Evaluate incremental first-party economic-quality method separately.",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/97"
+    },
+    {
+      "rank": 5,
+      "id": "S5_DERIVATIVES_CROWDING_TO_PULLBACK_V1",
+      "priority": "P0_P1",
+      "score": 22,
+      "state": "BASELINE_MERGED_PROSPECTIVE_GRADING_PENDING",
+      "owner": "existing SPOT_PERP_FLOW_DIVERGENCE + Compass/Pullback",
+      "targets": [
+        "CoinGlass",
+        "Laevitas",
+        "exchange-native"
+      ],
+      "next_action": "Accumulate prospective frozen crowding vectors and grade them against existing M6 outcomes. Add liquidation/options challengers only after baseline incremental value can be measured.",
+      "merged_pr": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1515",
+      "execution_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1514",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S5_EXECUTION_RECEIPT_2026-10-06.md"
+    },
+    {
+      "rank": 6,
+      "id": "S6_DISTRIBUTION_EGRESS_AND_EXCHANGE_FLOW_V1",
+      "priority": "P1",
+      "score": 21,
+      "state": "DESTINATION_SEMANTICS_MERGED_RAW_COLLECTION_PENDING",
+      "owner": "Distribution/Exit Overhang + Wallet Alpha",
+      "targets": [
+        "Arkham",
+        "Nansen challenger",
+        "raw chain"
+      ],
+      "next_action": "Collect bounded raw egress observations from qualified/early wallets and compare supported destination egress against latent overhang and realized sells. Provider CEX labels remain challengers.",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/107",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/108",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S6_EXECUTION_RECEIPT_2026-10-06.md"
+    },
+    {
+      "rank": 7,
+      "id": "S7_ATTENTION_CONVERSION_CURVE_V1",
+      "priority": "P1",
+      "score": 20,
+      "state": "ATTENTION_EVENT_TRUTH_MERGED_RESPONSE_JOIN_PENDING",
+      "owner": "Narrative/Culture + Promotion Network",
+      "targets": [
+        "DexScreener",
+        "GeckoTerminal",
+        "GMGN Callouts",
+        "Tehcscreener (P2 candidate, unverified public API, Meme-Alpha-Lab #154)",
+        "CrawlHive + Consensus (P2 method challenger, Meme-Alpha-Lab #157)"
+      ],
+      "next_action": "Join frozen attention events to qualified-wallet/Pons flow, liquidity/price outcomes and S6 egress under existing owners. Do not infer PAID_PROFILE from PROFILE/BOOST. Optional P2 no-cron shadow challenger: see https://github.com/Donh91/Meme-Alpha-Lab/issues/154 for bounded API proof and 1-7d prospective activity-vs-survival lift test, only after existing S7 work and heavy-lane priorities; retain SOURCE_ACCESS_UNVERIFIED until live JSON/schema/freshness receipt, and do not promote composite score without matched controls. P2 deferred method-only intake: https://github.com/Donh91/Meme-Alpha-Lab/issues/157. Use existing frozen social and source receipts to test per-source accountability, count reconciliation, knowledge-time correctness and executable opportunity-cost versus baseline. No new crawler, API spend, schedule, score promotion or effect on current next action.",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/109",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/110",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S7_EXECUTION_RECEIPT_2026-10-06.md",
+      "readiness": {
+        "event_count": 13706,
+        "unique_chain_token_count": 6696,
+        "first_event_count": 7153,
+        "change_event_count": 6553
+      }
+    },
+    {
+      "rank": 8,
+      "id": "S8_UNLOCK_SUPPLY_OVERHANG_V1",
+      "priority": "P1",
+      "score": 20,
+      "state": "SOURCE_RECONCILIATION_MERGED_HISTORICAL_PANEL_PENDING",
+      "owner": "research/packages/UNLOCK_SUPPLY_OVERHANG_V1",
+      "targets": [
+        "Tokenomist",
+        "CryptoRank",
+        "DropsTab",
+        "first-party vesting"
+      ],
+      "next_action": "Freeze exact-identity historical unlock events from reconciled sources, then join realized recipient selling, liquidity and spot/perp response under the existing package.",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/111",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/112",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S8_EXECUTION_RECEIPT_2026-10-06.md"
+    },
+    {
+      "rank": 9,
+      "id": "S9_LAUNCH_MEV_SNIPER_EXECUTION_QUALITY_V1",
+      "priority": "P1",
+      "score": 19,
+      "state": "DURABLE_PONS_CAPTURE_ACTIVE_WAIT_FIRST_ELIGIBLE_CASE",
+      "owner": "Meme-Alpha-Lab microstructure/forensics",
+      "targets": [
+        "raw chain/traces",
+        "MEV specialist challengers"
+      ],
+      "next_action": "Wait for the first post-activation eligible Pons case under unchanged selection rules; then verify exact timestamped trade persistence and immutable S9/S4 freezes. No pre-activation credit.",
+      "execution_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/113",
+      "merged_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/114",
+      "execution_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S9_EXECUTION_RECEIPT_2026-10-06.md",
+      "bridge_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/115",
+      "bridge_receipt": "04_RESEARCH_LAB/external_specialist_dissection/S9_OBSERVATION_BRIDGE_RECEIPT_2026-10-06.md",
+      "durable_capture_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/117",
+      "durable_capture_receipt": "04_RESEARCH_LAB/external_specialist_dissection/PONS_DURABLE_CURVE_CAPTURE_RECEIPT_2026-10-06.md",
+      "runtime_activation_utc": "2026-10-06T21:36:02Z"
+    },
+    {
+      "rank": 10,
+      "id": "S10_PROTOCOL_VALUE_CAPTURE_TRUTH_V1",
+      "priority": "P2_CONDITIONAL",
+      "score": 17,
+      "state": "TOKEN_CLASS_CONDITIONAL",
+      "owner": "existing Microcap/FUSE utility research",
+      "targets": [
+        "DeFiLlama",
+        "Token Terminal",
+        "Artemis",
+        "first-party protocol data"
+      ],
+      "next_action": "Run only for utility/AI/infrastructure candidates whose thesis depends on usage or holder value capture"
+    }
+  ],
+  "reference_success": {
+    "case": "OCELLUS_TO_PONS_V2",
+    "result": "EXTERNAL_METHOD_IDEA_TO_INTERNAL_FIRST_PARTY_PRIMITIVE",
+    "evidence": [
+      "Meme-Alpha-Lab/architecture/EXTERNAL_SPECIALIST_DISSECTION_V1.md",
+      "Meme-Alpha-Lab/research/discovery/PONS_V2_PUBLIC_SOURCE_TRANSFER_2026-10-05.md",
+      "Meme-Alpha-Lab/scripts/collectors/robinhood_pons_curve_trades_v1.py"
+    ]
+  },
+  "master_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+  "current_next_action": {
+    "id": "FIRST_FORWARD_PONS_BUYER_QUALITY_CASE_V1",
+    "detail": "Wait for the first eligible post-activation Pons case under unchanged capture rules. Once first-10 cohort freezes, run Robinhood Blockscout history-completeness receipts for cohort wallets, bind point-in-time Wallet Alpha state, freeze precursor packet, and later grade against matured outcomes. Do not manufacture a historical forward case."
+  },
+  "source_capability_snapshot": "04_RESEARCH_LAB/external_specialist_dissection/SOURCE_CAPABILITY_SNAPSHOT_2026-10-06.md",
+  "last_completed_action": "ROBINHOOD_WALLET_HISTORY_COMPLETENESS_MERGED_PR1524",
+  "last_completed_at_utc": "2026-10-06",
+  "method_intakes": [
+    {
+      "id": "URGE_FREE_ACTIVITY_METHOD_20261014",
+      "owner_lane": "S4_LAUNCH_TRAJECTORY_AND_RETENTION_V1",
+      "related_lane": "S7_ATTENTION_CONVERSION_CURVE_V1",
+      "evidence_note": "04_RESEARCH_LAB/external_specialist_dissection/2026-10-14__urge-liqn-free-source-intake.md",
+      "review_state": "METHOD_ONLY_OWNER_REVIEW_PENDING",
+      "incremental_value": "UNPROVEN",
+      "source_access": "FREE_OFFICIAL_API_UNVERIFIED",
+      "execution_permission": false,
+      "existing_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/161"
+    },
+    {
+      "id": "LIQN_FREE_FACTOR_METHOD_20261014",
+      "owner_lane": "S5_DERIVATIVES_CROWDING_TO_PULLBACK_V1",
+      "evidence_note": "04_RESEARCH_LAB/external_specialist_dissection/2026-10-14__urge-liqn-free-source-intake.md",
+      "review_state": "SOURCE_ADMISSIBILITY_UNVERIFIED",
+      "incremental_value": "UNPROVEN",
+      "source_access": "AUTH_REQUIRED_FREE_EXPORT_UNVERIFIED",
+      "execution_permission": false,
+      "existing_pr": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1613"
+    },
+    {
+      "id": "QUANTGPT_PIT_METHOD_20261014",
+      "owner_lane": "TASK2_R1_EXISTING_SOURCE_ADMISSION",
+      "evidence_note": "04_RESEARCH_LAB/external_specialist_dissection/2026-10-14__urge-liqn-free-source-intake.md",
+      "review_state": "ALREADY_TESTED_PARTLY_ADDITIONAL_SOURCE_GAPS_UNVERIFIED",
+      "incremental_value": "NOT_AN_ALPHA_CLAIM",
+      "source_access": "PROPRIETARY_SOURCE_AND_OUTPUT_USE_PROHIBITED_FOR_FRAMEWORK",
+      "execution_permission": false,
+      "existing_pr": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1613"
+    },
+    {
+      "id": "PREMIUM_SPECIALIST_REA_ALPHA_EVIDENCE_20261018",
+      "owner_lane": "S3_ENTITY_ADJUSTED_CLUSTER_AND_BUNDLE_V1",
+      "evidence_note": "04_RESEARCH_LAB/external_specialist_dissection/2026-10-18__premium-specialist-rea-alpha-lab-priority-deepdive-v1.md",
+      "review_state": "METHOD_ONLY_OWNER_REVIEW_PENDING",
+      "incremental_value": "UNPROVEN",
+      "source_access": "PUBLIC_DOCS_AND_PUBLIC_CODE_ONLY_NO_PREMIUM_SUBSCRIPTION",
+      "execution_permission": false,
+      "execution_owner": "https://github.com/Donh91/Meme-Alpha-Lab/issues/126",
+      "master_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+      "next_action": "Supervisor/Strategist must read historical overlap audit and MAL 40-method registry, 14 adapter gaps, method performance, old preregistrations and manual-only Bridge metadata; first fix existing MAL #120/#124 census/B1 and S1 negative sell route if admissible. No duplicate scanner/source subscription, no new lane or changes to current next action.",
+      "overlap_audit_state": "ARCHIVAL_OVERLAP_SAMPLE_REVIEW_PENDING",
+      "overlap_matrix": "04_RESEARCH_LAB/external_specialist_dissection/ARCHIVE_OVERLAP_MATRIX_2026-10-18.json",
+      "overlap_human_audit": "04_RESEARCH_LAB/external_specialist_dissection/2026-10-18__historical-overlap-reuse-audit-v1.md",
+      "overlap_entry_count": 24,
+      "existing_method_count": 40,
+      "adapter_gap_record_count": 14,
+      "preflight_required_before_execution": true,
+      "related_lane": "S1_EXECUTABLE_SELLABILITY_TRUTH_V1",
+      "other_cross_domain_owner_refs": "See ARCHIVE_OVERLAP_MATRIX_2026-10-18.json hypothesis_mapping and source REA note; these are informational references, not machine-routed lanes."
+    }
+  ]
+}

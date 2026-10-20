@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/convergence/supersessions/codex-research-alpha-adversarial-runtime-wiring-v1/v1.json",
+    "scripts/remediation/mission_convergence.py",
+    "tests/remediation/test_mission_convergence.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-711424194e1677f8",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Add fail-closed convergence hash supersession validator * Test append-only convergence hash supersession * Add adversarial runtime convergence hash sidecar",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/convergence/supersessions/codex-research-alpha-adversarial-runtime-wiring-v1/v1.json": "7462452dd9060e05237c0df79fd1ab90452d8ec7",
+    "scripts/remediation/mission_convergence.py": "cb4c016c4ff25e320106a630620fadbd7e080bfc",
+    "tests/remediation/test_mission_convergence.py": "5c18b1d38dc76e8f9272a16d74b556c623763699"
+  },
+  "source_commit_sha": "711424194e1677f85c5eaf1dc46e1af37dbca009",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-07T08:21:24+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Add append-only convergence hash supersession recovery (#1511)"
+}

@@ -134,7 +134,7 @@ jobs:
           assert '  schedule:' not in intraday
           assert '    needs: sequence' in hourly
           assert 'ref: ${{ needs.sequence.outputs.source_commit_sha }}' in hourly
-          assert 'group: framework-main-writer' in hourly and 'group: framework-main-writer' in intraday
+          assert 'group: framework-market-owner-writer' in hourly and 'group: framework-market-owner-writer' in intraday
           assert 'uses: ./.github/actions/intraday-execution' in hourly and 'uses: ./.github/actions/intraday-execution' in intraday
           assert 'validate_direction_confidence.py --root . --write-receipt' in runner
           assert 'git push' not in runner

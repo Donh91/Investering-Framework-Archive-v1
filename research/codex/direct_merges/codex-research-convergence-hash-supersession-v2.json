@@ -1,0 +1,22 @@
+{
+  "contract": "CODEX_RESEARCH_DIRECT_MERGE_RECEIPT_v1",
+  "status": "DIRECT_MERGE_VERIFIED",
+  "resolution_mode": "DIRECT_NON_CODEX_REPAIR",
+  "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+  "signature": "e2e06783f79846eceb10",
+  "candidate_id": "codex-research-convergence-hash-supersession-v2",
+  "candidate_sha256": "a42af3b3f3a46bb90bafa4142ac82ea6a51aaac5ba7f4cd0e51e440c13a53e56",
+  "task_contract_sha256": "a6e2da17c732fc811cc17206037e1646d7a7cd39ed4fe0b4da262e47c7e5673a",
+  "branch": "fix/convergence-hash-supersession-v2-20261006",
+  "pr_number": 1511,
+  "merge_commit_sha": "711424194e1677f85c5eaf1dc46e1af37dbca009",
+  "merged_at_utc": "2026-10-07T06:21:24Z",
+  "verified_at_utc": "2026-10-07T10:38:00Z",
+  "post_fix_gate": "FOCUSED_SUPERSESSION_TESTS_PASS_PLUS_APPEND_ONLY_GATE_PASS_PLUS_ADVERSARIAL_RUNTIME_POST_FIX_VERIFIER_ACCEPTS_CONVERGENCE_WITH_ORIGINAL_BASE_RECEIPT_UNCHANGED",
+  "verification_evidence": [
+    "PR #1511 merged direct non-Codex repair at 711424194e1677f85c5eaf1dc46e1af37dbca009 from head 4157e35eca047429eb78ce233d4dbc2bf11bb7d3.",
+    "Exact-head Remediation Maturation, Data Architecture, Automation Production Health, and Storage Health gates passed before merge; exact-main readback confirms the generic validator, tests, and append-only supersession sidecar.",
+    "Independent Bridge audit AUDIT-20261006T175110Z-CLAUDE-PR1511-CONVERGENCE-HASH-REVIEW returned APPROVE_FOR_EXISTING_GOVERNED_MERGE after 15/15 tests and deterministic adversarial probes; historical base receipt blob remained unchanged."
+  ],
+  "receipt_sha256": "acbe1b3c067efbcd8b70fe34c517f9fe1a231953a622f193b6ed64ef341484e0"
+}

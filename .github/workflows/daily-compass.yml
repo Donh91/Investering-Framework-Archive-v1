@@ -52,7 +52,7 @@ permissions:
 
 concurrency:
   # Read-only PR validation must not compete with serialized main writers.
-  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-market-owner-writer' }}
   queue: max
   cancel-in-progress: false
 jobs:
@@ -73,6 +73,81 @@ jobs:
           python -m unittest tests.data_ping.test_official_daily_compass -v
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_decision_economics_ledger -v
+      - name: Task 1.5 checkout frozen PR source and input tree
+        if: github.event.pull_request.number == 1597
+        env:
+          TASK15_EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git fetch --quiet --no-tags origin "$TASK15_EXPECTED_SOURCE_SHA"
+          git worktree add --detach /tmp/task15-frozen-source "$TASK15_EXPECTED_SOURCE_SHA"
+          actual=$(git -C /tmp/task15-frozen-source rev-parse HEAD)
+          test "$actual" = "$TASK15_EXPECTED_SOURCE_SHA"
+          echo "FROZEN_TASK15_SOURCE_SHA=$actual"
+      - name: Task 1.5 noncanonical forecast cohort oracle self-test
+        if: github.event.pull_request.number == 1597
+        run: |
+          python /tmp/task15-frozen-source/04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_forecast_reconciliation_v1.py --self-test
+      - name: Task 1.5 full issued-forecast replay, research only
+        if: github.event.pull_request.number == 1597
+        env:
+          TASK15_EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python /tmp/task15-frozen-source/04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_forecast_reconciliation_v1.py --root /tmp/task15-frozen-source --expect-source-commit "$TASK15_EXPECTED_SOURCE_SHA" --out /tmp/task15-evidence >/tmp/task15-full-receipt.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/task15-full-receipt.json').read_text())
+          assert r['closure_verdict']=='PARTIAL_RESEARCH_EXECUTION_NOT_TASK_1_5_SCIENTIFIC_PASS'
+          import os
+          assert r['source_commit_verified'] is True
+          assert r['source_checkout_commit']==os.environ['TASK15_EXPECTED_SOURCE_SHA']
+          assert r['tape_rows']==672 and r['forecast_asset_horizon_slots_in_window']>0
+          assert Path('/tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv').exists()
+          print(json.dumps({'mode':'RESEARCH_ONLY_RECONCILIATION','prediction_files':r['prediction_files_total_before_date_filter'],'forecast_slots':r['forecast_asset_horizon_slots_in_window'],'tape_rows':r['tape_rows'],'ledger_sha256':r['ledger_sha256'],'results':r['results'],'limitations':r['limitations']},sort_keys=True))
+          PY
+      - name: Task 1.5 source publication chronology, sample only
+        if: github.event.pull_request.number == 1597
+        run: |
+          python /tmp/task15-frozen-source/04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py --self-test
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --quiet --no-tags --unshallow origin +refs/heads/main:refs/remotes/origin/main
+          else
+            git fetch --quiet --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          fi
+          python /tmp/task15-frozen-source/04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py \
+            --root /tmp/task15-frozen-source --input /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv \
+            --out /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json
+          python /tmp/task15-frozen-source/04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py \
+            --root /tmp/task15-frozen-source --input /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv \
+            --out /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_FULL_CENSUS.json --full-census
+      - name: Task 1.5 frozen vote-group challenger shadow negative controls
+        if: github.event.pull_request.number == 1597
+        run: |
+          python /tmp/task15-frozen-source/04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_frozen_vote_ablation_v1.py --self-test
+          python /tmp/task15-frozen-source/04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_frozen_vote_ablation_v1.py --root /tmp/task15-frozen-source --ledger /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv --out /tmp/task15-evidence/TASK15_FROZEN_VOTE_ABLATION_DEV_v1.json >/tmp/task15-ablation-summary.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/task15-evidence/TASK15_FROZEN_VOTE_ABLATION_DEV_v1.json'))
+          assert r['status']=='EXPOSED_DEVELOPMENT_ONLY_PIT_AND_PROSPECTIVE_HOLDOUT_BLOCKED'
+          assert r['permission']['portfolio_execution'] is False
+          assert r['permission']['automatic_model_weight_changes'] is False
+          assert len(r['results'])==2
+          assert '4H:ETH' in r['results']['ISSUED_SEP15_TO_OCT12_235959']
+          print(json.dumps({'status':r['status'],'source':r['source'],'results':r['results']},sort_keys=True))
+          PY
+      - name: Archive Task 1.5 source-bound research receipts
+        if: github.event.pull_request.number == 1597
+        uses: actions/upload-artifact@v4
+        with:
+          name: task15-readonly-ledger-${{ github.run_id }}
+          path: |
+            /tmp/task15-evidence/TASK15_R0_FROZEN_FORECAST_TAPE_CENSOR_LEDGER.csv
+            /tmp/task15-evidence/TASK15_R0_RECEIPT.json
+            /tmp/task15-evidence/TASK15_FROZEN_VOTE_ABLATION_DEV_v1.json
+            /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_SAMPLE.json
+            /tmp/task15-evidence/TASK15_R1_OWNER_PUBLICATION_FULL_CENSUS.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Build and validate public Compass bundle
         run: |
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs

@@ -1,0 +1,100 @@
+{
+  "classification": "PUBLIC_CODE_REPAIR_AND_PROVIDER_VALUE_FREE_EXECUTION_RECEIPT",
+  "owner_issue": 1156,
+  "source_finding": 4235983901,
+  "source_pr": 1555,
+  "repair_pr": 1566,
+  "reviewed_head": "9854a82019451f6a2d9d62c4e3fa5ca68680f632",
+  "base_source_commit": "169188ec2c35e437e8a67a9a71b1ddff458a08ff",
+  "merged_commit": "8f56a304e323a68255c0845c7c353943cb5152a0",
+  "status": "MERGED_MAIN_READBACK_CONTROLLED_CLI_PASS_NATURAL_POST_FIX_WAIT",
+  "change_scope": "Existing intake script and tests only; distinct workflow-event and executed-code SHAs; tracked clean code gate",
+  "files": [
+    {
+      "path": "scripts/framework_intelligence/supervisor_mission_intake_v1.py",
+      "bytes": 4788,
+      "sha256": "f0ef8364b6e89f1f8abdee7d2087f56d77cd4aecb9d6ac5ae761763af191e5cc"
+    },
+    {
+      "path": "tests/framework_intelligence/test_supervisor_mission_intake_v1.py",
+      "bytes": 8355,
+      "sha256": "b5cafe2e8d925a952cde9e8d48b67d7a3999150839459f963c3a6e8095cbdf66"
+    }
+  ],
+  "local_targeted_tests": 17,
+  "ci_workflow_runs": [
+    38081070884,
+    38081070886,
+    38081070893
+  ],
+  "ci_validation_job": 114297917624,
+  "ci_validation_test_count": 209,
+  "ci_all_three_workflows_success": true,
+  "independent_review": {
+    "exact_head_short": "9854a82",
+    "completed_utc": "2026-10-10T19:47:08.688211Z",
+    "summary_comment": 6101492248,
+    "inline_findings": 0,
+    "bot_thumb_up_utc": "2026-10-10T19:47:11Z",
+    "formal_approved_review": false
+  },
+  "merge_gates": {
+    "branch_metadata_read": true,
+    "main_protected": false,
+    "protection_enabled": false,
+    "enforced_check_contexts": [],
+    "rulesets": [],
+    "policy_requirements": "Ordinary low-impact task branch, PR, relevant validation and independent review",
+    "policy_requirements_satisfied": true,
+    "platform_enforcement_status": "POLICY_ONLY_TECHNICAL_ENFORCEMENT_GAP",
+    "settings_or_bypass_changed": false
+  },
+  "post_merge": {
+    "remote_contents_exactly_match": true,
+    "targeted_tests_from_merged_git_tree": 17,
+    "isolated_git_worktree": true,
+    "actual_owner_cli": {
+      "receipt": {
+        "authority": "TRIAGE_ONLY",
+        "claim_key": "Donh91/Investering-Framework-Archive-v1#1552:6092565956",
+        "code_binding_status": "BOUND_TO_EXECUTED_CHECKOUT",
+        "code_ref": "main",
+        "codex_ready": false,
+        "comment_id": 6092565956,
+        "contract": "SUPERVISOR_MISSION_INTAKE_v1",
+        "executed_code_sha": "8f56a304e323a68255c0845c7c353943cb5152a0",
+        "execution_started": false,
+        "human_approval_verified": false,
+        "issue_number": 1552,
+        "next_gate": "fresh cockpit, dedupe, governed CODEX_RESEARCH_CANDIDATE intake and independent review",
+        "reason": "issue_not_open",
+        "repository": "Donh91/Investering-Framework-Archive-v1",
+        "state": "IGNORED",
+        "workflow_event_sha": "fce7ddbbe31e8405cf9ac218e2167aab2aca20dc"
+      },
+      "bytes": 723,
+      "sha256": "272f7642533e083a8706496ba2c7d700d08d66d215d08d2abf795edf0ced1af7",
+      "verification_type": "CONTROLLED_OWNER_CLI_REPLAY_RECONSTRUCTED_INPUT",
+      "natural_scheduled_or_issue_comment_receipt_verified": false
+    },
+    "input_classification": "RECONSTRUCTED_PUBLIC_SMOKE_EVENT_NOT_ORIGINAL_GITHUB_EVENT",
+    "input_sha256": "3a1f6c03869ba7a3e9f68b9c6c61144102c0b2252c94115a48a3b80cbce55971",
+    "natural_workflow_receipt_verified": false,
+    "full_supervisor_dispatch_verified": false,
+    "warning_delivery_verified": false
+  },
+  "execution_comments": {
+    "pr1566": 6101558660,
+    "owner1156": 6101558795,
+    "original_pr1555": 6101558948
+  },
+  "rollback": "Reviewed revert of the two-file additive repair, preserving historical receipts",
+  "high_impact_operation": false,
+  "workflow_or_schedule_change": false,
+  "queue_reopened": false,
+  "scoring_or_strategy_change": false,
+  "portfolio_authority_change": false,
+  "scientific_promotion": false,
+  "new_hypothesis_trials": 0,
+  "new_paid_research_calls": 0
+}

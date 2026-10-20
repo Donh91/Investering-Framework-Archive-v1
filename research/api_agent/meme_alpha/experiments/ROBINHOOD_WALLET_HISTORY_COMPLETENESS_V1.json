@@ -1,0 +1,47 @@
+{
+  "contract": "ROBINHOOD_WALLET_HISTORY_COMPLETENESS_V1",
+  "status": "RESEARCH_ONLY_SOURCE_AUDIT",
+  "owner": {
+    "transport": "scripts/api_agent/meme_alpha_blockscout.py",
+    "wallet_science_issue": 1419,
+    "clean_g3_issue": 1018,
+    "no_new_scanner": true,
+    "no_new_scheduler": true
+  },
+  "source": {
+    "provider": "Blockscout",
+    "chain": "robinhood-chain",
+    "chain_id": 4663,
+    "endpoints": [
+      "/api/v2/addresses/{wallet}/transactions",
+      "/api/v2/addresses/{wallet}/token-transfers"
+    ],
+    "pagination": "follow response next_page_params verbatim as the next request query"
+  },
+  "window_semantics": {
+    "required": "history_start_utc < cutoff_utc",
+    "complete_if": [
+      "pagination exhausts",
+      "oldest timestamped item reaches or predates history_start_utc"
+    ],
+    "page_cap": "TRUNCATED_PAGE_CAP",
+    "missing_timestamp": "DATA_INSUFFICIENT",
+    "non_monotonic_pagination": "DATA_CONFLICT",
+    "source_failure": "SOURCE_ERROR"
+  },
+  "admissible_states": [
+    "COMPLETE_WINDOW",
+    "TRUNCATED_PAGE_CAP",
+    "DATA_INSUFFICIENT",
+    "DATA_CONFLICT",
+    "SOURCE_ERROR"
+  ],
+  "downstream_rule": "Only COMPLETE_WINDOW may support claims about no prior activity or bounded activity counts. Every other state must remain UNKNOWN downstream.",
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "portfolio_action": false,
+    "buy_now_promotion": false,
+    "alert_authority": false
+  }
+}

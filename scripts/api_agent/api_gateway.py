@@ -213,6 +213,14 @@ def build_request(task: str, task_cfg: dict[str, Any], prompt: str, context: dic
     }
 
 
+def api_attempt_limit(task_cfg: dict[str, Any]) -> int:
+    """A single paid attempt is a task-local override, never an assumed default."""
+    attempts = task_cfg.get("max_attempts", 2)
+    if type(attempts) is not int or attempts not in (1, 2):
+        raise ValueError("invalid_api_attempt_limit")
+    return attempts
+
+
 def retry_output_token_limit(task_cfg: dict[str, Any]) -> int:
     first = int(task_cfg["max_output_tokens"])
     configured = task_cfg.get("retry_max_output_tokens")
@@ -225,10 +233,17 @@ def retry_output_token_limit(task_cfg: dict[str, Any]) -> int:
     return configured
 
 
-def call_api(api_key: str, payload: dict[str, Any]) -> dict[str, Any]:
+def request_timeout_seconds(task_cfg: dict[str, Any]) -> int:
+    """Keep existing default; allow bounded task-local time for senior research."""
+    timeout = task_cfg.get("request_timeout_seconds", 180)
+    if type(timeout) is not int or not 30 <= timeout <= 480:
+        raise ValueError("invalid_request_timeout_seconds")
+    return timeout
+
+def call_api(api_key: str, payload: dict[str, Any], timeout_seconds: int = 180) -> dict[str, Any]:
     request = urllib.request.Request("https://api.openai.com/v1/responses", data=canonical_bytes(payload), headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(request, timeout=180) as response:
+        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
             return json.loads(response.read())
     except urllib.error.HTTPError as exc:
         body = exc.read().decode(errors="replace")
@@ -289,11 +304,11 @@ def main() -> None:
     else:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: raise SystemExit("OPENAI_API_KEY_missing")
-        for attempt in range(2):
+        for attempt in range(api_attempt_limit(task_cfg)):
             payload = dict(request_payload)
             if attempt == 1:
                 payload["max_output_tokens"] = retry_output_token_limit(task_cfg)
-            response = call_api(api_key, payload)
+            response = call_api(api_key, payload, timeout_seconds=request_timeout_seconds(task_cfg))
             responses.append(response)
             try:
                 output = extract_output(response)

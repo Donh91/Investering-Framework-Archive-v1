@@ -59,3 +59,14 @@ Any future promotion beyond Shadow must use the framework's existing evidence/ad
 
 No corroboration means `PENDING_PRIMARY_VERIFICATION`, not a verified event.
 Source/network failure means unavailable/unknown evidence, never silent confirmation and never `NO_EVENT` by inference.
+
+## News interpretation research standard
+
+For interpretation beyond source verification, use the research-only methodology in:
+
+- `04_MARKET_LEARNING/external_research/news_intelligence/2026-10-07__NEWS_INTELLIGENCE_SITUATION_ANALYSIS_RESEARCH_LAB_v1.md`
+- `04_MARKET_LEARNING/external_research/news_intelligence/NEWS_INTELLIGENCE_FORWARD_TEST_v1.md`
+
+This does **not** expand Situation Room authority. It only standardizes how verified news context is decomposed into surprise, regime dependence, transmission hypotheses, cross-asset reaction, persistence and falsification.
+
+The Situation Room firewall remains unchanged: discovery/verification/context only, no canonical, market-state, portfolio, top-up or execution authority.

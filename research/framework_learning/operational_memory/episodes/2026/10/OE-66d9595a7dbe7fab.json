@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/external_research/news_intelligence/2026-10-10__coingecko-news-shadow-pilot-v1__research.md",
+    "scripts/research/coingecko_news_shadow_probe.py",
+    "tests/test_coingecko_news_shadow_probe.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_MARKET_LEARNING",
+  "episode_id": "OE-66d9595a7dbe7fab",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "offline-coingecko-baseline-admission-replaces-1564-1567",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: bind offline news comparison to healthy same-day baseline * fix: enforce consumed news receipt knowledge cutoff * fix: reject legacy request-start timestamps as news availability",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/external_research/news_intelligence/2026-10-10__coingecko-news-shadow-pilot-v1__research.md": "957b134723f18bf5c6c6997f4e0a451687a9ad62",
+    "scripts/research/coingecko_news_shadow_probe.py": "111b2d59cef78cdb8b6557e253509b7b38f4a38e",
+    "tests/test_coingecko_news_shadow_probe.py": "c0231ab74770ae898af1c8c9ea00654bccfe317d"
+  },
+  "source_commit_sha": "66d9595a7dbe7fabafb696f4ffbe58e872252ea2",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-11T00:02:50-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix: repair offline CoinGecko baseline admission, replaces #1564 (#1567)"
+}

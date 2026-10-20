@@ -1,0 +1,509 @@
+import json,tempfile,unittest
+from datetime import datetime,timedelta,timezone
+from pathlib import Path
+from scripts.research.edge_compound_governor import build
+
+class EdgeCompoundGovernorTests(unittest.TestCase):
+
+    def seed_owner_pair(self,root,horizons=None):
+        horizons=horizons or {}
+        m6=root/"research/framework_memory/m6_warning_events/LATEST.json";m6.parent.mkdir(parents=True,exist_ok=True)
+        f=root/"research/framework_memory/edge001_tsunami_features/LATEST.json";f.parent.mkdir(parents=True,exist_ok=True)
+        when="2026-10-07T00:00:00Z"
+        # A synthetic MATURED outcome must include the frozen complete path
+        # contract. A bare maturity string is deliberately insufficient.
+        start=datetime.fromisoformat(when.replace("Z","+00:00"))
+        expanded={}
+        for name,row in horizons.items():
+            h=dict(row)
+            if h.get("maturity_state")=="MATURED":
+                hours={"24h":24,"72h":72,"7d":168,"14d":336,"30d":720}[name]
+                target=(start+timedelta(hours=hours)).isoformat().replace("+00:00","Z")
+                first=(start+timedelta(hours=1)).isoformat().replace("+00:00","Z")
+                outcome={"state":"MATURED",
+                    "reference_anchor":{"price":100.0,"mae_pct":-1.0,"mfe_pct":2.0,"terminal_return_pct":0.0},
+                    "post_knowledge_close_anchor":{"timestamp":first,"price":100.0,
+                        "mae_pct":-1.0,"mfe_pct":2.0,"terminal_return_pct":0.0},
+                    "terminal":{"timestamp":target,"close":100.0}}
+                barrier={"touched":False,"first_touch_timestamp":None,
+                    "basis":"FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                    "touch_time_semantics":"HOURLY_BAR_END_NOT_EXACT_LOW_TIME"}
+                outcome["adverse_barriers"]={key:dict(barrier) for key in ("-10.0","-15.0","-20.0")}
+                eth=json.loads(json.dumps(outcome))
+                eth["adverse_barriers"]={key:dict(barrier) for key in ("-15.0","-20.0","-30.0")}
+                h.update({"target_at_utc":target,
+                    "coverage":{"reason":"COMPLETE_HOURLY_CLOSE_GRID",
+                        "row_count":hours,"max_gap_hours":1.0,
+                        "first_close":first,"last_close":target},
+                    "BTC":outcome,"ETH":eth})
+            expanded[name]=h
+        horizons=expanded
+        event={"compass_id":"CMP-TEST","knowledge_timestamp":when,
+            "episode_family_id":"M6F-20261007T000000Z","independent_family_weight":1.0,
+            "horizons":horizons}
+        m6.write_text(json.dumps({"integrity_revision":"v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
+            "event_count":1,"provisional_independent_family_count":1,"events":[event]}))
+        f.write_text(json.dumps({"integrity_revision":"v1.1_PIT_STRICT",
+            "rows":[{"compass_id":"CMP-TEST","knowledge_timestamp":when}]}))
+
+    def seed_empty_owners(self,root):
+        m6=root/"research/framework_memory/m6_warning_events/LATEST.json";m6.parent.mkdir(parents=True,exist_ok=True)
+        f=root/"research/framework_memory/edge001_tsunami_features/LATEST.json";f.parent.mkdir(parents=True,exist_ok=True)
+        m6.write_text(json.dumps({"integrity_revision":"v1.2_POST_KNOWLEDGE_BAR_INTEGRITY","event_count":0,"events":[]}))
+        f.write_text(json.dumps({"integrity_revision":"v1.1_PIT_STRICT","rows":[]}))
+
+
+    def test_empty_repo_fails_closed_without_external_dispatch(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);out=root/"out.json";hist=root/"hist"
+            r=build(root,out,hist,datetime(2026,10,7,tzinfo=timezone.utc))
+            self.assertTrue(r["material_delta"])
+            self.assertFalse(r["external_routing"]["automatic_dispatch"])
+            self.assertFalse(r["authority"]["portfolio_action"])
+            self.assertEqual(r["rules"]["live_exit_rule"],"NONE")
+
+    def test_building_collects_without_external_review(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            ptr=root/"04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json";ptr.parent.mkdir(parents=True)
+            freeze=root/"04_MARKET_LEARNING/handlekompas/official/daily/2026/10/07/CMP-x.json";freeze.parent.mkdir(parents=True)
+            freeze.write_text(json.dumps({"protection_tracker":{"pullback_risk_state":"BUILDING","distribution_risk":"NONE"}}))
+            ptr.write_text(json.dumps({"compass_path":freeze.relative_to(root).as_posix()}))
+            self.seed_empty_owners(root)
+            r=build(root,root/"out.json",root/"hist",datetime(2026,10,7,tzinfo=timezone.utc))
+            self.assertEqual(r["decision"],"COLLECT")
+            self.assertFalse(r["external_routing"]["sol_recommended"])
+            self.assertFalse(r["external_routing"]["claude_recommended"])
+
+    def test_new_7d_warning_family_never_implies_adverse_conclusion(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"7d":{"maturity_state":"MATURED"}})
+            cal=root/"research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json";cal.parent.mkdir(parents=True)
+            cal.write_text(json.dumps({"eligible_series_row_count":0,"warning_series_row_count":0}))
+            out=root/"out.json";hist=root/"hist"
+            first=build(root,out,hist,datetime(2026,10,16,tzinfo=timezone.utc))
+            self.assertEqual(first["deltas"],["INITIAL_GOVERNOR_SNAPSHOT"])
+            self.assertEqual(first["decision"],"COLLECT")
+            self.assertFalse(first["external_routing"]["sol_recommended"])
+            self.assertFalse(first["external_routing"]["claude_recommended"])
+            self.assertFalse(first["conclusion_layer"]["review_due"])
+            # establish prior state with zero 7d family
+            prior=json.loads(out.read_text());prior["semantic_state"]["matured_family_counts"]["7d"]=0
+            out.write_text(json.dumps(prior))
+            second=build(root,out,hist,datetime(2026,10,17,tzinfo=timezone.utc))
+            self.assertEqual(second["decision"],"COLLECT")
+            self.assertFalse(second["external_routing"]["sol_recommended"])
+            self.assertFalse(second["external_routing"]["claude_recommended"])
+            self.assertFalse(second["conclusion_layer"]["automatic_promotion"])
+            self.assertFalse(second["conclusion_layer"]["review_due"])
+            self.assertEqual(second["semantic_state"]["m6_family_semantics"],
+                "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES")
+
+    def test_complete_matured_outcome_evidence_is_structurally_valid(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"},
+                                       "72h":{"maturity_state":"PENDING"}})
+            result=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+            integrity=result["semantic_state"]["m6_matured_payload_integrity"]
+            self.assertEqual(integrity["status"],"PASS")
+            self.assertEqual(integrity["checked"],1)
+            self.assertEqual(integrity["invalid"],0)
+            self.assertNotIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",result["semantic_state"]["blockers"])
+            self.assertEqual(result["decision"],"COLLECT")
+            self.assertFalse(result["external_routing"]["automatic_dispatch"])
+
+    def test_malformed_matured_asset_path_fails_closed(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"7d":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            del owner["events"][0]["horizons"]["7d"]["ETH"]["post_knowledge_close_anchor"]
+            path.write_text(json.dumps(owner))
+            result=build(root,root/"out.json",root/"history",datetime(2026,10,15,tzinfo=timezone.utc))
+            self.assertEqual(result["decision"],"FALSIFY")
+            self.assertEqual(result["semantic_state"]["m6_matured_payload_integrity"]["status"],"BLOCKED")
+            self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",result["semantic_state"]["blockers"])
+            self.assertFalse(result["external_routing"]["automatic_dispatch"])
+
+    def test_malformed_asset_containers_block_without_crashing(self):
+        for field,value in (("BTC",["not an asset"]),("ETH",{"state":"MATURED","reference_anchor":["bad"]})):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                owner["events"][0]["horizons"]["24h"][field]=value
+                path.write_text(json.dumps(owner))
+                result=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(result["decision"],"FALSIFY")
+                self.assertEqual(result["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+                self.assertFalse(result["external_routing"]["automatic_dispatch"])
+
+    def test_false_full_grid_is_not_matured_payload_pass(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            owner["events"][0]["horizons"]["24h"]["coverage"]["row_count"]=5
+            path.write_text(json.dumps(owner))
+            result=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(result["decision"],"FALSIFY")
+            self.assertEqual(result["semantic_state"]["m6_matured_payload_integrity"]["checked"],1)
+            self.assertEqual(result["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+
+    def test_no_matured_horizons_are_not_evidence_of_edge(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"30d":{"maturity_state":"PENDING"}})
+            result=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+            integrity=result["semantic_state"]["m6_matured_payload_integrity"]
+            self.assertEqual(integrity["status"],"PASS_NO_MATURED_YET")
+            self.assertEqual(integrity["checked"],0)
+            self.assertEqual(result["semantic_state"]["information_edge_claim"],"NOT_ESTABLISHED")
+            self.assertEqual(result["semantic_state"]["economic_action_edge_claim"],"NOT_ESTABLISHED")
+
+
+    def test_matured_terminal_must_reach_horizon_not_just_any_pre_target_close(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"7d":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            horizon=owner["events"][0]["horizons"]["7d"]
+            for symbol in ("BTC","ETH"):
+                horizon[symbol]["terminal"]["timestamp"]="2026-10-07T01:00:00Z"
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,15,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_matured_grid_must_have_credible_last_close_and_row_count(self):
+        for mode in ("early_last","missing_last","discordant_count"):
+            with self.subTest(mode=mode),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                coverage=owner["events"][0]["horizons"]["24h"]["coverage"]
+                if mode=="early_last":
+                    coverage["last_close"]="2026-10-07T01:00:00Z"
+                elif mode=="missing_last":
+                    coverage.pop("last_close")
+                else:
+                    coverage["row_count"]=25
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],"FALSIFY")
+                self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+
+    def test_symbol_specific_barriers_must_be_complete_and_typed(self):
+        variants=("empty_btc","wrong_eth_keys","missing_touched","fake_touch","false_with_timestamp")
+        for mode in variants:
+            with self.subTest(mode=mode),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                horizon=owner["events"][0]["horizons"]["24h"]
+                if mode=="empty_btc":
+                    horizon["BTC"]["adverse_barriers"]={}
+                elif mode=="wrong_eth_keys":
+                    horizon["ETH"]["adverse_barriers"]=dict(horizon["BTC"]["adverse_barriers"])
+                elif mode=="missing_touched":
+                    horizon["BTC"]["adverse_barriers"]["-10.0"].pop("touched")
+                elif mode=="fake_touch":
+                    barrier=horizon["BTC"]["adverse_barriers"]["-10.0"]
+                    barrier["touched"]=True
+                    barrier["first_touch_timestamp"]="2026-10-06T23:00:00Z"
+                else:
+                    barrier=horizon["ETH"]["adverse_barriers"]["-15.0"]
+                    barrier["first_touch_timestamp"]="2026-10-07T03:00:00Z"
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],"FALSIFY")
+                self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+                self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+
+    def test_matured_row_before_its_target_time_fails_closed(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            # The frozen target is October 8 midnight; this evaluation is Oct 7 noon.
+            early=datetime(2026,10,7,12,tzinfo=timezone.utc)
+            report=build(root,root/"out.json",root/"hist",early)
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",report["semantic_state"]["blockers"])
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_hourly_grid_impossible_subhour_max_gap_fails_closed(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            owner["events"][0]["horizons"]["24h"]["coverage"]["max_gap_hours"]=0.5
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["status"],"BLOCKED")
+
+    def test_barrier_first_touch_must_be_a_real_hour_end(self):
+        for timestamp,expected in (("2026-10-07T03:30:00Z","FALSIFY"),
+                                   ("2026-10-07T03:00:00Z","COLLECT")):
+            with self.subTest(timestamp=timestamp),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                barrier=owner["events"][0]["horizons"]["24h"]["BTC"]["adverse_barriers"]["-10.0"]
+                barrier.update(touched=True,first_touch_timestamp=timestamp)
+                # A touched -10% reference-price barrier requires recorded MAE.
+                owner["events"][0]["horizons"]["24h"]["BTC"]["reference_anchor"]["mae_pct"]=-10.5
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],expected)
+
+    def test_overflowing_utc_offset_fails_closed_without_crash(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            owner["events"][0]["horizons"]["24h"]["target_at_utc"]="9999-12-31T23:59:59-23:59"
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+
+    def test_extreme_knowledge_time_cannot_overflow_maturity_deadline(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            event=owner["events"][0]
+            event["knowledge_timestamp"]="9999-12-31T23:00:00Z"
+            event["horizons"]["24h"]["target_at_utc"]="9999-12-31T23:59:59Z"
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",report["semantic_state"]["blockers"])
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_malformed_horizon_containers_fail_closed_before_counting(self):
+        for shape in ("list_horizons","list_horizon","string_horizons"):
+            with self.subTest(shape=shape),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                event=owner["events"][0]
+                if shape=="list_horizons":event["horizons"]=["malformed"]
+                elif shape=="string_horizons":event["horizons"]="malformed"
+                else:event["horizons"]["24h"]=["malformed"]
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],"FALSIFY")
+                self.assertIn("M6_MATURED_OUTCOME_PAYLOAD_INVALID",report["semantic_state"]["blockers"])
+                self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_mae_and_barrier_touch_labels_cannot_contradict(self):
+        for symbol in ("BTC","ETH"):
+            with self.subTest(symbol=symbol),tempfile.TemporaryDirectory() as t:
+                root=Path(t)
+                self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+                path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+                owner=json.loads(path.read_text())
+                asset=owner["events"][0]["horizons"]["24h"][symbol]
+                asset["reference_anchor"]["mae_pct"]=-35.0
+                # All three fixed downside barriers are recorded untouched.
+                path.write_text(json.dumps(owner))
+                report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+                self.assertEqual(report["decision"],"FALSIFY")
+                self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["invalid"],1)
+                self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_earlier_shallow_touch_required_before_later_deep_touch(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            asset=owner["events"][0]["horizons"]["24h"]["BTC"]
+            asset["reference_anchor"]["mae_pct"]=-25.0
+            for level,ts in (("-10.0","2026-10-07T04:00:00Z"),("-15.0","2026-10-07T03:00:00Z"),("-20.0","2026-10-07T05:00:00Z")):
+                asset["adverse_barriers"][level].update(touched=True,first_touch_timestamp=ts)
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"FALSIFY")
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_coherent_touched_barrier_depth_stays_collect_only(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"24h":{"maturity_state":"MATURED"}})
+            path=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            owner=json.loads(path.read_text())
+            asset=owner["events"][0]["horizons"]["24h"]["BTC"]
+            asset["reference_anchor"]["mae_pct"]=-25.0
+            for level,ts in (("-10.0","2026-10-07T03:00:00Z"),("-15.0","2026-10-07T04:00:00Z"),("-20.0","2026-10-07T05:00:00Z")):
+                asset["adverse_barriers"][level].update(touched=True,first_touch_timestamp=ts)
+            path.write_text(json.dumps(owner))
+            report=build(root,root/"out.json",root/"hist",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(report["decision"],"COLLECT")
+            self.assertEqual(report["semantic_state"]["m6_matured_payload_integrity"]["status"],"PASS")
+            self.assertFalse(report["external_routing"]["automatic_dispatch"])
+
+    def test_out_of_order_m6_owner_blocks_fresh_governor(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root)
+            m6=root/"research/framework_memory/m6_warning_events/LATEST.json"
+            j=json.loads(m6.read_text());base=j["events"][0]
+            j["events"]=[base,dict(base,compass_id="CMP-OLDER",knowledge_timestamp="2026-10-06T23:00:00Z",
+                episode_family_id="M6F-20261007T000000Z",independent_family_weight=0.0)]
+            j["event_count"]=2
+            m6.write_text(json.dumps(j))
+            out=build(root,root/"out.json",root/"history",datetime(2026,10,8,tzinfo=timezone.utc))
+            self.assertEqual(out["decision"],"FALSIFY")
+            self.assertIn("M6_EVENT_CHRONOLOGY_FAMILY_OR_COHORT_INVALID",out["semantic_state"]["blockers"])
+            self.assertFalse(out["external_routing"]["automatic_dispatch"])
+
+    def test_reconcile_stale_bootstrap_does_not_trigger_expensive_review(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.seed_owner_pair(root,{"7d":{"maturity_state":"MATURED"},"14d":{"maturity_state":"MATURED"}})
+            out=root/"LATEST.json";history=root/"history";now=datetime(2026,10,22,tzinfo=timezone.utc)
+            original=build(root,out,history,now)
+            legacy=dict(original)
+            legacy["decision"]="CONCLUSION_REVIEW"
+            legacy["semantic_fingerprint"]="STALE_PRE_FIX_FINGERPRINT"
+            legacy["deltas"]=["INITIAL_GOVERNOR_SNAPSHOT"]
+            legacy["external_routing"]={"sol_recommended":True,"claude_recommended":True,"automatic_dispatch":False}
+            out.write_text(json.dumps(legacy))
+            repaired=build(root,out,history,now)
+            self.assertEqual(repaired["decision"],"NOOP")
+            self.assertEqual(repaired["deltas"],["LEGACY_BOOTSTRAP_FALSE_ESCALATION_SUPERSEDED"])
+            self.assertFalse(repaired["external_routing"]["sol_recommended"])
+            self.assertFalse(repaired["external_routing"]["claude_recommended"])
+            self.assertFalse(repaired["conclusion_layer"]["review_due"])
+            self.assertEqual(repaired["prior_false_bootstrap_supersession"]["previous_decision"],"CONCLUSION_REVIEW")
+            entries=sorted(history.rglob("*.json"))
+            self.assertEqual(len(entries),2)
+            self.assertEqual(sorted(json.loads(p.read_text())["decision"] for p in entries),["COLLECT","NOOP"])
+            self.assertTrue(any(p.stem.endswith("-bootstrap-supersession") for p in entries))
+            self.assertFalse(build(root,out,history,now)["material_delta"])
+            self.assertEqual(len(list(history.rglob("*.json"))),2)
+
+
+    def test_task15_advisory_nonblocking_optional_main_only(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);out=root/"out.json";history=root/"history"
+            self.seed_empty_owners(root)
+            now=datetime(2026,10,13,9,tzinfo=timezone.utc)
+            missing=build(root,out,history,now)
+            self.assertEqual(missing["semantic_state"]["task15_research_admission"]["status"],
+                             "NOT_LOADED_NOT_ADMITTED")
+            self.assertFalse(missing["external_routing"]["automatic_dispatch"])
+            self.assertFalse(missing["conclusion_layer"]["automatic_promotion"])
+            gate=root/"04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json"
+            gate.parent.mkdir(parents=True)
+            valid={"contract":"EDGE_TASK_1_5_ADMISSION_GATE_v1",
+                   "status":"BLOCKED_SCIENTIFIC_CLOSURE",
+                   "task15_closure_allowed":False,
+                   "permissions":{"continue_existing_market_data_collection":True,
+                                  "allow_official_model_weight_change":False,
+                                  "allow_trade_or_sell_signal":False,
+                                  "allow_historical_pullback_economic_claim":False,
+                                  "allow_legacy_censor_rewrite":False}}
+            gate.write_text(json.dumps(valid))
+            blocked=build(root,out,history,now)
+            advisory=blocked["semantic_state"]["task15_research_admission"]
+            self.assertEqual(advisory["status"],"BLOCKED_RESEARCH_PREFLIGHT")
+            self.assertEqual(blocked["source_bindings"]["task15_gate"]["status"],"PASS")
+            self.assertIn("TASK15_RESEARCH_ADMISSION_ADVISORY_CHANGED",blocked["deltas"])
+            self.assertEqual(blocked["decision"],"NOOP")
+            self.assertFalse(blocked["external_routing"]["automatic_dispatch"])
+            self.assertFalse(blocked["authority"]["portfolio_action"])
+            valid["permissions"]["allow_official_model_weight_change"]=True
+            gate.write_text(json.dumps(valid))
+            unsafe=build(root,out,history,now)
+            self.assertEqual(unsafe["semantic_state"]["task15_research_admission"]["status"],
+                             "INVALID_NONBINDING_RESEARCH_GATE")
+            self.assertEqual(unsafe["decision"],"NOOP")
+            self.assertFalse(unsafe["conclusion_layer"]["automatic_promotion"])
+            self.assertFalse(unsafe["external_routing"]["sol_recommended"])
+
+
+    def test_task15_gate_cannot_change_existing_collect_or_falsify_routing(self):
+        # A genuine existing COLLECT decision must be invariant to every
+        # optional Task1.5 advisory state. No spend, action or collection stop.
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            self.seed_empty_owners(root)
+            freeze=root/"04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-TEST.json"
+            freeze.parent.mkdir(parents=True)
+            freeze.write_text(json.dumps({"protection_tracker":{
+                "pullback_risk_state":"BUILDING","distribution_risk":"NONE"}}))
+            ptr=root/"04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json"
+            ptr.parent.mkdir(parents=True,exist_ok=True)
+            ptr.write_text(json.dumps({"compass_path":freeze.relative_to(root).as_posix()}))
+            now=datetime(2026,10,13,9,tzinfo=timezone.utc)
+            out=root/"state.json";hist=root/"history"
+            baseline=build(root,out,hist,now)
+            self.assertEqual(baseline["decision"],"COLLECT")
+            self.assertEqual(baseline["semantic_state"]["task15_research_admission"]["status"],
+                             "NOT_LOADED_NOT_ADMITTED")
+            gate=root/"04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json"
+            gate.parent.mkdir(parents=True)
+            safe={"contract":"EDGE_TASK_1_5_ADMISSION_GATE_v1",
+                  "status":"BLOCKED_SCIENTIFIC_CLOSURE","task15_closure_allowed":False,
+                  "permissions":{"continue_existing_market_data_collection":True,
+                                 "allow_official_model_weight_change":False,
+                                 "allow_trade_or_sell_signal":False,
+                                 "allow_historical_pullback_economic_claim":False,
+                                 "allow_legacy_censor_rewrite":False}}
+            cases=[
+                ("BLOCKED_RESEARCH_PREFLIGHT",safe),
+                ("UNREVIEWED_RESEARCH_ONLY",{**safe,"status":"UNREVIEWED"}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"permissions":{
+                    **safe["permissions"],"allow_trade_or_sell_signal":True}}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{k:v for k,v in safe.items() if k!="status"}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"status":"NEW_UNKNOWN_UNREVIEWED"}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"status":None}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"status":123}),
+                ("INVALID_NONBINDING_RESEARCH_GATE",{**safe,"status":["BLOCKED_SCIENTIFIC_CLOSURE"]}),
+            ]
+            for expected,payload in cases:
+                with self.subTest(expected=expected):
+                    gate.write_text(json.dumps(payload))
+                    result=build(root,out,hist,now)
+                    self.assertEqual(result["semantic_state"]["task15_research_admission"]["status"],expected)
+                    self.assertEqual(result["decision"],baseline["decision"])
+                    self.assertEqual(result["external_routing"],baseline["external_routing"])
+                    self.assertEqual(result["conclusion_layer"],baseline["conclusion_layer"])
+                    self.assertEqual(result["authority"],baseline["authority"])
+                    self.assertEqual(result["rules"],baseline["rules"])
+                    self.assertFalse(result["external_routing"]["automatic_dispatch"])
+                    self.assertFalse(result["authority"]["portfolio_action"])
+            # A real source-integrity FALSIFY must also retain its existing
+            # disposition when Task1.5 status is present or malformed.
+            features=root/"research/framework_memory/edge001_tsunami_features/LATEST.json"
+            value=json.loads(features.read_text())
+            value["integrity_revision"]="INVALID_TEST_CONTRACT"
+            features.write_text(json.dumps(value))
+            falsified=build(root,out,hist,now)
+            self.assertEqual(falsified["decision"],"FALSIFY")
+            self.assertIn("FEATURE_COLLECTOR_INTEGRITY_REVISION_NOT_STRICT",
+                          falsified["semantic_state"]["blockers"])
+            self.assertFalse(falsified["external_routing"]["sol_recommended"])
+            self.assertFalse(falsified["conclusion_layer"]["automatic_promotion"])
+
+if __name__=="__main__":unittest.main()

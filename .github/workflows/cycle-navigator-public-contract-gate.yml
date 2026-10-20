@@ -216,7 +216,16 @@ jobs:
           if public_receipt.get('x_distribution_required') is not False:
               raise SystemExit('public_freeze_receipt_x_dependency_regression')
 
-          index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
+          # Main homepage is premium; all historic classic integration lives
+          # at /legacy/ and is never injected on the premium root.
+          premium_root=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
+          if '<base href="./vnext/">' not in premium_root or 'PREMIUM LIVE' not in premium_root or 'id="view-results"' not in premium_root:
+              raise SystemExit('premium_root_release_contract_missing')
+          if './live-observation.js' in premium_root or './public-product.js' in premium_root or './quiet-production.js' in premium_root:
+              raise SystemExit('classic_runtime_leaked_into_premium_root')
+          if 'href="../legacy/"' not in premium_root:
+              raise SystemExit('premium_rollback_link_missing')
+          index=Path('05_CYCLE_NAVIGATOR/site/dist/legacy/index.html').read_text()
           required_scripts=('./quiet-production.js','./shortcut.js','./live-observation.js','./public-copy.js','./market-compass-premium.js','./precision-accountability.js')
           for script in required_scripts:
               if script not in index:
@@ -242,11 +251,14 @@ jobs:
               if not Path(path).exists():
                   raise SystemExit(f'final_public_asset_missing:{path}')
           product=Path('05_CYCLE_NAVIGATOR/site/dist/public-product.js').read_text()
-          if 'CN_PATH_THREE_TRACK_v2' not in product:
-              raise SystemExit('path_three_track_contract_missing')
-          for marker in ('1 · MARKET CYCLE','2 · ROTATION','3 · ALTCOIN CYCLE TIMER','ALTSEASON IGNITION','Small-cap expansion gate','ETA TO TARGET GATE','Broad altseason','Mania / euphoria','Distribution','Exit / protection','NO SUPPORTED ETA','NEXT ROTATION GATE'):
+          if 'CN_PATH_CYCLE_ROTATION_v3' not in product:
+              raise SystemExit('path_v3_contract_missing')
+          for marker in ('1 · MARKET CYCLE','2 · THIS WEEK’S ROTATION','CURRENT CHECKPOINT','NEXT WATCH','LONG-RANGE VIEW','BTC leadership','Ethereum leadership','Large + mid rotation','ALTSEASON IGNITION','Small caps begin to participate','Micro acceleration','Broad altseason','Mania / euphoria','Distribution','Exit / protection','Cooldown / re-entry','MONDAY BASELINE','SUNDAY REVIEW','CURRENT POSITION','NEXT GATE','WHAT UNLOCKS IT','NO SUPPORTED ETA'):
               if marker not in product:
-                  raise SystemExit(f'path_three_track_marker_missing:{marker}')
+                  raise SystemExit(f'path_v3_marker_missing:{marker}')
+          for retired in ('DECISION WINDOWS','3 · ALTCOIN CYCLE TIMER'):
+              if retired in product:
+                  raise SystemExit(f'path_v3_retired_surface_regression:{retired}')
           if "jsonOptional('./data/compass.json')" not in product:
               raise SystemExit('path_not_bound_to_public_compass')
           if "compass?.sell_assessment" not in product or "compass?.protection_tracker" not in product:
@@ -255,15 +267,21 @@ jobs:
               raise SystemExit('altseason_ignition_eta_not_source_owned')
           if "source:'MONDAY BASE CASE'" in product or "CONSOLIDATION|TRANSITION" in product:
               raise SystemExit('market_cycle_frontend_classifier_regression')
-          if "source:'NO STRUCTURED 4–8W PHASE'" not in product:
+          if "source:'NO STRUCTURED LONG-CYCLE PHASE'" not in product:
               raise SystemExit('market_cycle_fail_closed_state_missing')
           if "return{key:'MICRO'" not in product or "return{key:'BROAD'" not in product or "return{key:'MANIA'" not in product:
               raise SystemExit('altcoin_target_progression_incomplete')
-          if "no browser countdown math" not in product:
-              raise SystemExit('altseason_timer_countdown_semantics_missing')
-          if "Conditional gate window · not a guaranteed phase-start date" not in product:
-              raise SystemExit('altseason_timer_conditional_gate_disclosure_missing')
-          if "LIVE GATES REFRESHING" not in product or "function pathWeeklyAlignment" not in product:
+          if "GATE STATUS" not in product or "Any supported ETA is shown on the route" not in product:
+              raise SystemExit('altseason_watch_gate_semantics_missing')
+          if "Only if confirmation arrives" not in product:
+              raise SystemExit('altseason_watch_window_disclosure_missing')
+          if "function publicPathText" not in product or "function publicPathStatus" not in product:
+              raise SystemExit('path_public_language_filter_missing')
+          if "function cycleRouteState" not in product or "data-cycle-role=" not in product or "'current-checkpoint'" not in product or "'next-watch'" not in product:
+              raise SystemExit('path_current_next_separation_missing')
+          if "function rotationSnapshot" not in product or "rotation-line-v3" not in product:
+              raise SystemExit('path_weekly_rotation_contract_missing')
+          if "LIVE SIGNALS REFRESHING" not in product or "function pathWeeklyAlignment" not in product:
               raise SystemExit('path_weekly_alignment_guard_missing')
           latest=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
           compass=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/compass.json').read_text())

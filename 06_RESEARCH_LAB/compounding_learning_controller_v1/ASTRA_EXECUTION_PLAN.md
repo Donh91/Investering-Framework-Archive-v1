@@ -1,5 +1,7 @@
 # Astra Execution Plan — Compounding Learning Controller v1
 
+> Reconciliation, 2026-10-15: historical implementation/WAIT_FOR_ASTRA status below is superseded as a dispatch instruction. Main `77537b33285ff55daaaebefc74d2dcfd2f91b8b5` contains the existing controller/core and persisted Compounding Learning health (`research/architecture_health/LATEST_COMPOUNDING_LEARNING_HEALTH.json`, observed PASS, generated 2026-10-12T16:35:50.860771Z, seven learning events). Reuse that governed runtime; do not restart the exploratory build or wait for a model name. This is not a fresh production run, deployment acceptance, new activation permission or scientific promotion. Original plan and acceptance criteria remain below for audit history.
+
 **Execution state now:** `PAUSED_BY_OWNER_UNTIL_ASTRA`  
 **This document authorizes planning only, not implementation before Astra review is explicitly started.**
 

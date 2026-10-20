@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import tempfile
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +25,167 @@ def write_json(path: Path, value: Any):
 
 def sha256(path: Path):
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
+
+
+def read_strategist_advisory(root: Path, now: datetime, *,
+                            strategist_path: str = "research/framework_learning/strategist/LATEST.json") -> dict[str, Any]:
+    """Verify advisory source bytes and authority, without dispatch authority.
+
+    The initial producer may observe a prior brief. Finalization reuses these
+    same checks after the current Strategist, without rerunning its inputs.
+    """
+    allowed = {"research/framework_learning/strategist/LATEST.json",
+               "runtime/framework-learning-supervisor/strategist/LATEST.json"}
+    if strategist_path not in allowed:
+        raise ValueError("STRATEGIST_PATH_NOT_ALLOWLISTED")
+    rel = strategist_path
+    path = root / rel
+    empty = {"status": "UNAVAILABLE", "reference": rel, "proposal_ids": [],
+             "attention_codes": [], "grok_review_candidate_count": 0,
+             "automatic_routing": False, "source_sha256": None}
+    try:
+        if (path.is_symlink() or not path.is_file() or path.resolve() != path.absolute()):
+            return empty
+        raw = path.read_bytes()
+        if len(raw) > 2_000_000:
+            return {**empty, "status": "INVALID"}
+        packet = json.loads(raw)
+        if (not isinstance(packet, dict) or
+                packet.get("contract") != "FRAMEWORK_STRATEGIST_BRIEF_v1" or
+                packet.get("owner") != "EXISTING_FRAMEWORK_LEARNING_SUPERVISOR"):
+            return {**empty, "status": "INVALID"}
+        authority = packet.get("authority")
+        prohibited = ("canonical_effect", "portfolio_execution", "autonomous_grok_request",
+                      "autonomous_api_payment", "autonomous_merge", "new_queue")
+        if (not isinstance(authority, dict) or any(authority.get(key) is not False for key in prohibited)):
+            return {**empty, "status": "AUTHORITY_VIOLATION"}
+        generated = packet.get("generated_at_utc")
+        if not isinstance(generated, str) or not generated.endswith("Z"):
+            return {**empty, "status": "INVALID"}
+        stamp = datetime.fromisoformat(generated.replace("Z", "+00:00"))
+        elapsed = (now - stamp).total_seconds()
+        if elapsed < -900 or elapsed > 48 * 3600:
+            return {**empty, "status": "STALE"}
+        if packet.get("input_status") != "CURRENT":
+            return {**empty, "status": "DEGRADED"}
+        receipts = packet.get("source_receipts")
+        if not isinstance(receipts, dict) or not receipts:
+            return {**empty, "status": "INVALID"}
+        # The producer's receipt paths are untrusted input; a malicious
+        # previous advisory must not induce arbitrary local file reads.
+        expected = {
+            "strategic_intent": "00_FMOS/framework_strategist/STRATEGIC_INTENT_v1.json",
+            "learning_memory": "research/framework_learning/LATEST_LEARNING_MEMORY.json",
+            "weekly_delta": "research/framework_learning/LATEST_WEEKLY_LEARNING_DELTA.json",
+            "self_improvement": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
+            "health": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+            "unconsumed": "research/framework_learning/LATEST_UNCONSUMED_INFORMATION.json",
+            "staleness": "research/framework_learning/LATEST_METHOD_STALENESS_REGISTER.json",
+            "weekly_forensics": "research/framework_learning/weekly_forensics/LATEST.json",
+            "resource_budget": "research/framework_learning/resource_budget/LATEST.json",
+        }
+        optional = {"weekly_forensics", "resource_budget"}
+        if set(receipts) != set(expected):
+            return {**empty, "status": "INVALID"}
+        for name, relative in expected.items():
+            value = receipts[name]
+            if not isinstance(value, dict) or value.get("path") != relative:
+                return {**empty, "status": "INVALID"}
+            if name in optional and value.get("status") != "CURRENT":
+                # Explicitly optional, never used for a finding in this state.
+                continue
+            if value.get("status") != "CURRENT":
+                return {**empty, "status": "SOURCE_MOVED"}
+            original = root / relative
+            if (not original.is_file() or original.is_symlink()
+                    or original.resolve() != original.absolute()
+                    or root.resolve() not in original.resolve().parents):
+                return {**empty, "status": "SOURCE_MOVED"}
+            if hashlib.sha256(original.read_bytes()).hexdigest() != value.get("sha256"):
+                return {**empty, "status": "SOURCE_MOVED"}
+        proposals = packet.get("proposals")
+        if (not isinstance(proposals, list) or len(proposals) > 3
+                or any(not isinstance(p, dict) or p.get("dispatch_allowed") is not False
+                       or p.get("automatic_grok_call") is not False
+                       or p.get("automatic_market_change") is not False
+                       for p in proposals)):
+            return {**empty, "status": "AUTHORITY_VIOLATION"}
+        if any(not isinstance(p.get("id"), str) or not isinstance(p.get("code"), str)
+               for p in proposals):
+            return {**empty, "status": "INVALID"}
+        return {"status": "ADVISORY_PREVIOUS_EVIDENCE", "reference": rel,
+                "source_generated_at_utc": generated,
+                "proposal_ids": [p["id"] for p in proposals],
+                "attention_codes": [p["code"] for p in proposals],
+                "grok_review_candidate_count": sum(
+                    p.get("routing") == "GROK_REVIEW_CANDIDATE" for p in proposals),
+                "automatic_routing": False,
+                "source_sha256": hashlib.sha256(raw).hexdigest()}
+    except (OSError, ValueError, TypeError, UnicodeDecodeError):
+        return {**empty, "status": "INVALID"}
+
+
+def finalize_strategist_advisory(root: Path, output_root: str, now: datetime) -> dict[str, Any]:
+    """Consume the current brief after producers finish, without regenerating inputs.
+
+    Only the existing live Supervisor state is finalized. Earlier snapshots stay
+    immutable producer-stage observations. Source hashes and authority are still
+    checked by the same reader; SOURCE_MOVED is never converted into acceptance.
+    """
+    root = root.resolve()
+    if output_root not in {"research/framework_learning", "runtime/framework-learning-supervisor"}:
+        raise ValueError("SUPERVISOR_OUTPUT_NOT_ALLOWLISTED")
+    target = root / output_root / "LATEST_SUPERVISOR_STATE.json"
+    if (target.is_symlink() or not target.is_file()
+            or target.resolve() != target.absolute()
+            or len(target.read_bytes()) > 2_000_000):
+        raise ValueError("SUPERVISOR_STATE_UNTRUSTED")
+    original_state = target.read_bytes()
+    state = json.loads(original_state)
+    if (not isinstance(state, dict)
+            or state.get("contract") != "FRAMEWORK_LEARNING_SUPERVISOR_STATE_v1"
+            or state.get("authority") != "ORCHESTRATION_ONLY"
+            or any(state.get(k) is not False for k in
+                   ("canonical_effect", "portfolio_execution", "master_monday_live_influence"))):
+        raise ValueError("SUPERVISOR_STATE_AUTHORITY_INVALID")
+    generated = state.get("generated_at_utc")
+    if not isinstance(generated, str) or not generated.endswith("Z"):
+        raise ValueError("SUPERVISOR_STATE_TIME_INVALID")
+    stamp = datetime.fromisoformat(generated.replace("Z", "+00:00"))
+    age = (now - stamp).total_seconds()
+    if age < 0 or age > 15 * 60:
+        raise ValueError("SUPERVISOR_STATE_NOT_CURRENT_RUN")
+    advisory = read_strategist_advisory(
+        root, now, strategist_path=output_root + "/strategist/LATEST.json")
+    if advisory["status"] == "ADVISORY_PREVIOUS_EVIDENCE":
+        produced = datetime.fromisoformat(advisory["source_generated_at_utc"].replace("Z", "+00:00"))
+        if produced < stamp or produced > now:
+            advisory.update(status="PRODUCER_NOT_CURRENT_RUN", proposal_ids=[],
+                            attention_codes=[], grok_review_candidate_count=0,
+                            source_sha256=None)
+        else:
+            advisory["status"] = "ADVISORY_CURRENT_EVIDENCE"
+    advisory["consumption_phase"] = "POST_PRODUCER_SOURCE_VERIFICATION"
+    advisory["verified_at_utc"] = now.isoformat().replace("+00:00", "Z")
+    state["strategist_advisory"] = advisory
+    # A failed source/authority check publishes its honest rejection, not a
+    # retained accepted proposal from the earlier producer stage.
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=target.parent,
+                                         prefix=".supervisor-finalize-", delete=False) as file:
+            temporary = Path(file.name)
+            json.dump(state, file, indent=2, sort_keys=True)
+            file.write("\n")
+            file.flush()
+            os.fsync(file.fileno())
+        if target.read_bytes() != original_state:
+            raise ValueError("SUPERVISOR_STATE_MOVED_DURING_FINALIZATION")
+        temporary.replace(target)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    return advisory
 
 
 def week_id(now: datetime):
@@ -123,10 +286,14 @@ def main():
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--output-root", default="research/framework_learning")
     ap.add_argument("--as-of-utc")
+    ap.add_argument("--finalize-strategist", action="store_true")
     args = ap.parse_args()
 
     root = Path(args.repo_root)
     now = datetime.fromisoformat(args.as_of_utc.replace("Z", "+00:00")) if args.as_of_utc else datetime.now(timezone.utc)
+    if args.finalize_strategist:
+        print(json.dumps(finalize_strategist_advisory(root, args.output_root, now), sort_keys=True))
+        return
     year, week, week_label = week_id(now)
     out_root = root / args.output_root
 
@@ -215,6 +382,7 @@ def main():
         "unconsumed_information_count": len(unconsumed), "method_audit_due_count": sum(1 for x in staleness if x["status"] == "METHOD_AUDIT_DUE"), "delegation_queue_count": len(queue),
         "next_best_existing_experiment": src["next_best"], "compounding_learning_backlog_reference": "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/LEARNING_BACKLOG.json",
         "compute_policy": "DETERMINISTIC_FIRST_LUNA_FOR_ROUTINE_GPT6_1_SOL_FOR_DIFFICULT_ASTRA_FOR_AGENTIC_EXTREME", "automation_orchestration": orchestration_summary, "canonical_effect": False, "portfolio_execution": False, "master_monday_live_influence": False,
+        "strategist_advisory": read_strategist_advisory(root, now),
     }
     docs = {
         "LATEST_LEARNING_MEMORY.json": memory,

@@ -13,9 +13,13 @@ import hashlib
 import json
 import math
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.cycle_navigator.daily_price_journey import validated_public_copy
 
 CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
@@ -949,6 +953,14 @@ def protection_tracker(
     if not invalidation:
         invalidation = "Later structured canonical protection evidence must explicitly downgrade or clear this state."
 
+    public_explanation = None
+    forecast_week = str(((cn_package.get("forecast_freeze") or {}).get("bull_bear_scale") or {}).get("forecast_week") or "")
+    try:
+        year_text, week_text = forecast_week.split("-W")
+        public_explanation = validated_public_copy(structured, int(year_text), int(week_text))
+    except (ValueError, TypeError):
+        pass
+
     return {
         "contract": "COMPASS_PROTECTION_TRACKER_v1",
         "pullback_risk_state": risk,
@@ -958,6 +970,7 @@ def protection_tracker(
         "confidence_quality": quality,
         "decisive_public_drivers": drivers,
         "invalidation": invalidation,
+        "public_explanation": public_explanation,
         "last_material_change_at": last_change,
         "data_quality": "OK" if risk != "UNAVAILABLE" else "DEGRADED",
         "reentry_state": reentry,
@@ -1403,7 +1416,7 @@ def build_official_compass(
         "next_meaningful_change_eta": next_eta,
         "conclusion": conclusion,
         "outcome_maturity": {"12h": "PENDING_MATURITY", "72h": "PENDING_MATURITY", "168h": "PENDING_MATURITY"},
-        "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v2",
+        "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
         "authority": OFFICIAL_AUTHORITY,
     }
     packet["compass_sha256"] = digest(canon({k: v for k, v in packet.items() if k != "compass_sha256"}))

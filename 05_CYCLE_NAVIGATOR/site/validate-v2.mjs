@@ -1,11 +1,258 @@
+import './tests/full-stack-readback.test.mjs';
+import './vnext-live/validate.mjs';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { preserveLegacyShell, releasePremiumShell } from './premium-release.mjs';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
-const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
+const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
 const h=JSON.parse(history);
+const chartSource=await read('./frozen-week-chart.js'),chartCss=await read('./frozen-week-chart.css');
+
+const proofSource=await read('./validate-compass-site-v5.mjs');
+const helperStart=proofSource.indexOf('function verifiedRawDigest(');
+const helperEnd=proofSource.indexOf('const [op,ap,wp,shp,stp]',helperStart);
+const rawDigest=helperStart>=0&&helperEnd>helperStart
+ ?new Function('createHash',proofSource.slice(helperStart,helperEnd)+';return verifiedRawDigest;')(createHash)
+ :()=>false;
+// A real producer preserves the numeric token 82116.0; JS JSON.stringify turns
+// it into 82116. Valid bytes MUST pass; any reserialised or mutated bytes FAIL.
+const sourceWithoutDigest='{"anchor_id":"proof","market_reference":{"btc_usdt":82116.0}}\n';
+const frozenDigest=createHash('sha256').update(sourceWithoutDigest,'utf8').digest('hex');
+const originalRaw='{"anchor_id":"proof","anchor_sha256":"'+frozenDigest+'","market_reference":{"btc_usdt":82116.0}}\n';
+const originalData=JSON.parse(originalRaw);
+const hashAcceptsOriginal=rawDigest(originalRaw,originalData,'anchor_sha256',frozenDigest);
+const hashRejectsJsRewrite=!rawDigest(originalRaw.replace('82116.0','82116'),originalData,'anchor_sha256',frozenDigest);
+const hashRejectsCorruptedFingerprint=!rawDigest(originalRaw.replace('"proof"','"evil"'),originalData,'anchor_sha256',frozenDigest);
+const hashRejectsWrongExpected=!rawDigest(originalRaw,originalData,'anchor_sha256','0'.repeat(64));
+
+const chartAPI={};new Function('window','document',chartSource)(chartAPI,{addEventListener(){}});const chartModel=chartAPI.CNWeekChart.model,chartLinePlan=chartAPI.CNWeekChart.linePlan,chartGraphDescription=chartAPI.CNWeekChart.graphDescription;
 const etaStart=product.indexOf('function pathEta'),etaEnd=product.indexOf('function pathStatus');
 const productSyntaxOk=(()=>{try{new Function(product);return true}catch{return false}})();
 const etaSlice=etaStart>=0&&etaEnd>etaStart?product.slice(etaStart,etaEnd):'';
+const pathTiming=new Function('investorText',etaSlice+';return {weeklyBackstoppedEta,etaDistance};')(v=>String(v??''));
+// Exercise public renderers with synthetic contract inputs; never fetch market values.
+const extract=(source,name,next)=>source.slice(source.indexOf('function '+name+'('),source.indexOf('function '+next+'('));
+const escapeHtml=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const graph=new Function('esc','utcLabel','publicPathText','return '+extract(product,'weeklyJourney','pathContext'))(escapeHtml,v=>String(v??''),v=>String(v??''));
+const recommendationTest=new Function(extract(premium,'publicAction','cnConclusion')+';return recommendation;')();
+const risk=new Function('esc','clean','publicState','publicCompassText','recommendation','return '+extract(premium,'pullbackCard','renderPremium'))(escapeHtml,v=>typeof v==='string'&&v.trim()?v.trim():null,v=>String(v||''),v=>String(v||''),recommendationTest);
+const synthetic={public_series:{current_public_projection:{public_issue_number:9,forecast_week:'2026-W41'}},public_live_precision:{contract:'CN_PUBLIC_LIVE_PRICE_PRECISION_v1',public_issue_number:9,forecast_week:'2026-W41',live_as_of_utc:'2026-10-07T12:00:00Z',window_scores:{day_1_2:{window_start_utc:'2026-10-05T00:00:00Z',window_end_utc:'2026-10-07T00:00:00Z'},day_3_4:{window_start_utc:'2026-10-07T00:00:00Z',window_end_utc:'2026-10-09T00:00:00Z'},day_5_7:{window_start_utc:'2026-10-09T00:00:00Z',window_end_utc:'2026-10-12T00:00:00Z'}},rows:['BTC','ETH'].flatMap(asset=>['day_1_2','day_3_4','day_5_7'].map(window=>({asset,window,forecast_low:100,forecast_high:120,actual_low_to_date:window==='day_1_2'?99:null,actual_high_to_date:window==='day_1_2'?111:null,coverage_complete_to_date:window==='day_1_2'})))}};
+synthetic.public_live_precision.daily_observations={contract:'CN_PUBLIC_DAILY_OBSERVATIONS_v1',observed_through_utc:'2026-10-07T12:00:00Z',...Object.fromEntries(['BTC','ETH'].map(asset=>[asset,Array.from({length:7},(_,i)=>({day:i+1,date:`2026-10-${String(i+5).padStart(2,'0')}`,close:i<2?110:null,low:i<2?99:null,high:i<2?111:null,as_of_utc:i<2?`2026-10-${String(i+6).padStart(2,'0')}T00:00:00Z`:null,status:i<2?'COMPLETE':'NOT_STARTED',coverage_complete_to_date:i<2}))]))};
+const dailyFixture=structuredClone(synthetic);dailyFixture.public_live_precision.daily_price_path={contract:'CN_FROZEN_DAILY_PRICE_PATH_v1',forecast_week:'2026-W41',...Object.fromEntries(['BTC','ETH'].map(asset=>[asset,{status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({day:i+1,low:100,high:120,expected_close:105+i}))}]))};
+const frozenBefore=JSON.stringify(synthetic),graphHtml=graph(synthetic),gap=structuredClone(synthetic);gap.public_live_precision.daily_observations.BTC.forEach(r=>r.coverage_complete_to_date=false);gap.public_live_precision.daily_observations.ETH.forEach(r=>r.coverage_complete_to_date=false);
+const riskInput={contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',protection_tracker:{contract:'COMPASS_PROTECTION_TRACKER_v1',pullback_risk_state:'BUILDING',pullback_class:'ORDINARY RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED.',confidence_quality:'LOW',eta_window:'Conditional watch only',reentry_state:'INACTIVE'},sell_assessment:{contract:'COMPASS_SELL_ASSESSMENT_v1',state:'UNAVAILABLE'}};
+const riskHtml=risk(riskInput,'CURRENT'),limitedRisk=risk({...riskInput,data_status:'STALE'},'UNAVAILABLE'),expiredRisk=risk(riskInput,'LAST_VERIFIED');
+const translateCompass = new Function('words', premium.slice(premium.indexOf('const publicCompassText ='), premium.indexOf('function officialScale'))+';return publicCompassText;')(v=>String(v||''));
+const translateInvestor=new Function('return '+extract(product,'investorText','publicPathText'))();
+const weekIdentityText=translateCompass('W40 BTC gained 2.44%. Possible W41 retest.');
+const futureFixture=structuredClone(synthetic);futureFixture.public_live_precision.daily_observations.BTC[6]={day:7,date:'2026-10-11',close:110,low:100,high:120,as_of_utc:'2099-10-12T00:00:00Z',coverage_complete_to_date:true};
+const badDaily=structuredClone(dailyFixture);badDaily.public_live_precision.daily_price_path.BTC.points[3].expected_close=130;
+const badDate=structuredClone(synthetic);badDate.public_live_precision.daily_observations.BTC[0].date='2026-10-06';
+const positivePlan=chartLinePlan(chartModel(dailyFixture,'BTC'));
+const missingForecastPlan=chartLinePlan(chartModel(synthetic,'BTC'));
+const observedGap=structuredClone(dailyFixture);
+observedGap.public_live_precision.daily_observations.BTC[1].coverage_complete_to_date=false;
+observedGap.public_live_precision.daily_observations.BTC[2]={
+  day:3,date:'2026-10-07',close:112,low:100,high:118,
+  as_of_utc:'2026-10-07T12:00:00Z',status:'PARTIAL',
+  coverage_complete_to_date:true,observed_hours:12
+};
+const gappedPlan=chartLinePlan(chartModel(observedGap,'BTC'));
+const hourlyActual=structuredClone(synthetic);
+hourlyActual.public_live_precision.hourly_price_path={
+ contract:'CN_PUBLIC_HOURLY_PRICE_PATH_v1',forecast_week:'2026-W41',public_issue_number:9,
+ source:'HOURLY_SPOT_PASS_ONLY',semantics:'OBSERVED_HOURLY_CLOSE_NOT_A_PROSPECTIVE_FORECAST',
+ observed_through_utc:'2026-10-07T12:00:00Z',
+ BTC:[1,2,3,5,6].map((hour,i)=>({
+   observed_at_utc:'2026-10-05T'+String(hour).padStart(2,'0')+':00:00Z',close:106+i
+ })),
+ ETH:[1,2].map(hour=>({
+   observed_at_utc:'2026-10-05T'+String(hour).padStart(2,'0')+':00:00Z',close:2100+hour
+ }))
+};
+const hourlySourceModel=chartModel(hourlyActual,'BTC'),actualHourlyPlan=chartLinePlan(hourlySourceModel);
+const wrongHourlyWeek=structuredClone(hourlyActual);wrongHourlyWeek.public_live_precision.hourly_price_path.forecast_week='2026-W42';
+const futureHourly=structuredClone(hourlyActual);futureHourly.public_live_precision.hourly_price_path.BTC.push({observed_at_utc:'2099-10-05T04:00:00Z',close:110});
+const invalidHourlySource=structuredClone(hourlyActual);invalidHourlySource.public_live_precision.hourly_price_path.BTC[0].close=-2;
+const hourMismatchIssue=structuredClone(hourlyActual);hourMismatchIssue.public_live_precision.hourly_price_path.public_issue_number=8;
+
+
+// Render the actual shipped PATH mount against an instrumented TradingView v5
+// and Canvas2D adapter. This catches omitted primitive attachment (a real P2)
+// instead of trusting textual assertions about an unused drawing class.
+function probeChartRender(data){
+  const paints={fills:0,whiskerStrokes:0,intervalRects:0,attached:0};
+  const ctx={
+    save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},
+    fill(){paints.fills++},stroke(){paints.whiskerStrokes++},
+    // Corridor price-band rectangles are 30px in this deterministic scale;
+    // 20px label capsules and 320px future-time shading are not corridors.
+    fillRect(x,y,width,height){if(height>20&&height<100)paints.intervalRects++},strokeRect(){},fillText(){},
+    setLineDash(){},measureText(text){return {width:text.length*7}},
+    createLinearGradient(){return {addColorStop(){}}}
+  };
+  const series=[];
+  const scale={
+    timeToCoordinate(t){return 25+(t-Date.parse('2026-10-05T00:00:00Z')/1000)/86400*58},
+    setVisibleLogicalRange(){},fitContent(){}
+  };
+  const chart={
+    timeScale(){return scale},remove(){},subscribeCrosshairMove(){},subscribeClick(){},
+    addSeries(kind,options){
+      const record={kind,options,data:[],primitives:[]};series.push(record);
+      return {
+        setData(points){record.data=points},
+        priceToCoordinate(v){return 280-v*1.5},
+        attachPrimitive(primitive){
+          paints.attached++;record.primitives.push(primitive);
+          primitive.attached({chart,requestUpdate(){}});
+          primitive.paneViews()[0].renderer().draw({
+            useMediaCoordinateSpace(f){f({context:ctx,mediaSize:{width:470,height:320}})}
+          });
+        }
+      };
+    }
+  };
+  const el={innerHTML:'',onclick:null,setAttribute(){}},buttons=Array.from({length:7},(_,i)=>({dataset:{fwDay:String(i)},setAttribute(){},onclick:null}));
+  const host={
+    isConnected:true,innerHTML:'',
+    querySelector(selector){return el},
+    querySelectorAll(selector){return selector==='[data-fw-day]'?buttons:[]}
+  };
+  chartAPI.LightweightCharts={
+    ColorType:{Solid:'solid'},LineStyle:{Dotted:1,Solid:0,Dashed:2},
+    LineType:{Simple:0},CrosshairMode:{Normal:0},LineSeries:'line',
+    createChart(){return chart}
+  };
+  chartAPI.CNWeekChart.mount(host,data);
+  return {paints,series};
+}
+// The actual shipped role=img description must not advertise a daily
+// prediction when only weekly range windows were frozen. DA/EN covers VoiceOver copy.
+const notYetObserved=structuredClone(dailyFixture);
+notYetObserved.public_live_precision.daily_observations.BTC.forEach(p=>p.coverage_complete_to_date=false);
+const neitherObservedNorPublished=structuredClone(synthetic);
+neitherObservedNorPublished.public_live_precision.daily_observations.BTC.forEach(p=>p.coverage_complete_to_date=false);
+chartAPI.CNI18n={language:'en'};
+const a11yUnavailableEn=chartGraphDescription(chartModel(synthetic,'BTC'));
+const a11yPublishedEn=chartGraphDescription(chartModel(dailyFixture,'BTC'));
+const a11yPublishedNoActualEn=chartGraphDescription(chartModel(notYetObserved,'BTC'));
+const a11yLegacyNoActualEn=chartGraphDescription(chartModel(neitherObservedNorPublished,'BTC'));
+chartAPI.CNI18n.language='da';
+const a11yUnavailableDa=chartGraphDescription(chartModel(synthetic,'BTC'));
+const a11yPublishedDa=chartGraphDescription(chartModel(dailyFixture,'BTC'));
+const a11yPublishedNoActualDa=chartGraphDescription(chartModel(notYetObserved,'BTC'));
+const a11yLegacyNoActualDa=chartGraphDescription(chartModel(neitherObservedNorPublished,'BTC'));
+chartAPI.CNI18n.language='en';
+const publishedRender=probeChartRender(dailyFixture);
+const legacyRender=probeChartRender(synthetic);
+const hourlyRender=probeChartRender(hourlyActual);
+const packageSanitizer=new Function(build.slice(build.indexOf('const pick='),build.indexOf('async function readJson'))+';return sanitizePackage;')();
+const translationProjection=new Function('sanitizePackage','standaloneFreeze','publicStructureAnalysis','return '+build.slice(build.indexOf('function publicTranslations('),build.indexOf('const snapshot=')))(packageSanitizer,{},()=>null);
+const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
+const acceptedTranslations=translationProjection(bilingualFixture);
 const checks=[
+ ['Real TradingView mount draws two independent GREEN 1h runs, BLUE daily series stays absent without source',
+   hourlyRender.series.filter(s=>s.options?.color==='#27c59a').length===2&&
+   hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
+   hourlyRender.series.filter(s=>s.options?.color==='#5f96ff').every(s=>s.data.length===0)&&
+   chartSource.includes('chart.timeScale().fitContent()')],
+ ['TRUE hourly observations render actual line with missing hours disconnected and no fake future forecast',
+   hourlySourceModel.hourly.length===5&&actualHourlyPlan.forecast.length===0&&
+   actualHourlyPlan.actualRuns.length===2&&actualHourlyPlan.actualRuns[0].length===3&&
+   actualHourlyPlan.actualRuns[1].length===2&&
+   actualHourlyPlan.actualRuns[0][0].value===106&&
+   actualHourlyPlan.actualRuns[1][0].time-actualHourlyPlan.actualRuns[0].at(-1).time===7200],
+ ['Wrong issue/week, future hour and invalid negative price fail hourly projection closed',
+   [wrongHourlyWeek,hourMismatchIssue,futureHourly,invalidHourlySource].every(x=>
+     chartModel(x,'BTC').hourly.length===0)&&chartModel(hourlyActual,'ETH').hourly.length===2],
+ ['Published daily forecast preserves exact seven source points independently of hourly actuals',
+   chartLinePlan(chartModel({...dailyFixture,public_live_precision:{...dailyFixture.public_live_precision,
+     hourly_price_path:hourlyActual.public_live_precision.hourly_price_path}},'BTC')).forecast.length===7],
+ ['Public hourly projection is bounded, source-guarded, and not a forecast',
+   precisionBuilder.includes('public_hourly_price_path(')&&
+   precisionBuilder.includes('HOURLY_SPOT_PASS_ONLY')&&
+   precisionBuilder.includes('cutoff is None')&&
+   chartSource.includes('CN_PUBLIC_HOURLY_PRICE_PATH_v1')&&
+   chartSource.includes('point.time-current.at(-1).time!==3600')],
+ ['W43 Pages byte-true anchor integrity accepts producer numeric spelling 82116.0 and rejects any altered source',hashAcceptsOriginal&&hashRejectsJsRewrite&&hashRejectsCorruptedFingerprint&&hashRejectsWrongExpected],
+ ['Danish projection accepts public prose and rejects changed numeric signs',acceptedTranslations.length===1&&acceptedTranslations[0].da==='BTC steg +2.44% i uge 40.'],
+ ['Danish projection cannot publish untranslated private-scenario source content',!acceptedTranslations.some(x=>x.en.includes('9000'))&&translationProjection({market_state:'Legacy source without translations.'}).length===0],
+ ['weekly chart rejects future timestamps and wrong UTC day identity',!chartModel(futureFixture,'BTC').days[6].actual&&!chartModel(badDate,'BTC').days[0].actual],
+ ['invalid daily forecast bounds fail to published ranges without fabricated line',chartModel(badDaily,'BTC').daily.length===0&&chartModel(badDaily,'BTC').rows.length===3],
+ ['TradingView weekly chart is self-hosted and overlays authentic evidence only',liveBuilder.includes('vendor/lightweight-charts-5.2.0.js')&&chartSource.includes('lineVisible:false')&&chartSource.includes('if(d.actual)current.push(')&&chartSource.includes("['D1–2','D3–4','D5–7']")&&!chartSource.includes('LineType.Curved')],
+ ['published daily forecast is exactly seven immutable points and actual does not extend into future',
+    positivePlan.forecast.length===7&&positivePlan.actualRuns.length===1&&positivePlan.actualRuns[0].length===2&&
+    positivePlan.forecast.every((p,i)=>p.time===chartModel(dailyFixture,'BTC').days[i].time&&p.value===105+i)&&
+    positivePlan.actualRuns[0].every((p,i)=>p.value===110&&p.time===chartModel(dailyFixture,'BTC').days[i].time)],
+ ['unpublished daily path plots no fabricated forecast while preserving real observations',
+    missingForecastPlan.forecast.length===0&&missingForecastPlan.actualRuns.length===1&&
+    missingForecastPlan.actualRuns[0].length===2],
+ ['missing source coverage splits actual line into disjoint runs, never bridges data gaps',
+    gappedPlan.forecast.length===7&&gappedPlan.actualRuns.length===2&&
+    gappedPlan.actualRuns.every(run=>run.length===1)&&
+    gappedPlan.actualRuns[0][0].time===chartModel(observedGap,'BTC').days[0].time&&
+    gappedPlan.actualRuns[1][0].time===chartModel(observedGap,'BTC').days[2].time],
+ ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
+ ['VoiceOver: W42-style missing daily forecast is explicitly not presented as a daily forecast curve in both languages',
+    a11yUnavailableEn.includes('No original seven-day')&&a11yUnavailableEn.includes('no daily forecast line')&&
+    a11yUnavailableDa.includes('Ingen oprindelig syvdagesprognose')&&a11yUnavailableDa.includes('uden daglig prognoselinje')&&
+    chartSource.includes('escape(graphDescription(m))')],
+ ['VoiceOver: only verified PUBLISHED forecast is described as blue dotted and actual as green solid in DA/EN',
+    a11yPublishedEn.includes('Blue dotted line')&&a11yPublishedEn.includes('Green solid line')&&
+    a11yPublishedEn.includes('missing days are unconnected')&&
+    a11yPublishedDa.includes('Blå stiplet linje')&&a11yPublishedDa.includes('Grøn fuldt optrukken linje')&&
+    !a11yPublishedEn.includes('No original seven-day')],
+ ['P2 VoiceOver: seven frozen future forecast points without eligible observations never announce an actual line or measured whiskers',
+    a11yPublishedNoActualEn.includes('Blue dotted line')&&
+    a11yPublishedNoActualEn.includes('No eligible observed daily prices yet')&&
+    a11yPublishedNoActualEn.includes('no green actual line or measured high/low whiskers')&&
+    !a11yPublishedNoActualEn.includes('Green solid line:')&&
+    a11yPublishedNoActualDa.includes('Blå stiplet linje')&&
+    a11yPublishedNoActualDa.includes('Endnu ingen gyldige observerede dagspriser')&&
+    !a11yPublishedNoActualDa.includes('Grøn fuldt optrukken linje:')],
+ ['P2 VoiceOver: range-only history with no observations advertises neither a dotted forecast nor green actual',
+    a11yLegacyNoActualEn.includes('No original seven-day')&&
+    a11yLegacyNoActualEn.includes('No eligible observed daily prices yet')&&
+    !a11yLegacyNoActualEn.includes('Blue dotted line:')&&
+    a11yLegacyNoActualDa.includes('Ingen oprindelig syvdagesprognose')&&
+    a11yLegacyNoActualDa.includes('Endnu ingen gyldige observerede dagspriser')],
+ ['P2: published 7-day PATH renders actual daily envelope AND observed source low/high whiskers',
+    publishedRender.paints.attached===1&&
+    publishedRender.paints.fills===1&&
+    publishedRender.paints.whiskerStrokes===3&& // Two source high/low whiskers + one last-source timeline marker.
+    publishedRender.series[0].data.length===7&&
+    publishedRender.series.some(v=>v.data.length===2&&v.options.color==='#27c59a')],
+ ['P2: legacy 3-window freeze renders authentic interval corridors with no forged daily forecast',
+    legacyRender.paints.attached===1&&
+    legacyRender.paints.fills===0&&
+    legacyRender.paints.intervalRects===3&&
+    legacyRender.series[0].data.length===0&&
+    legacyRender.paints.whiskerStrokes>=5],
+ ['P2: reset control actually measures at least 44 by 44 CSS pixels by its min-width and min-height contracts',
+    chartCss.includes('.fw-reset{font-size:18px;min-width:44px;')&&
+    chartCss.includes('.fw-assets button,.fw-reset{min-height:44px}')&&
+    !chartCss.includes('.fw-reset{font-size:18px;min-width:38px;')],
+ ['DA/ENG ships before product rendering with bound public prose only',liveBuilder.includes('./i18n.js')&&build.includes('presentation_translations:publicTranslations(pkg)')&&build.includes('allowed.has(x.en)')&&build.includes('digits(x.en)===digits(x.da)')],
+ ['public tab links restore PATH or PROOF without creating another forecast',product.includes("const initialView=location.hash.slice(1)")&&product.includes("['path','proof'].includes(initialView)")&&product.includes("history.replaceState(null,'','#'+b.dataset.tab)")],
+ ['public near-term no-observation status has a plain-language explanation',premium.includes("s === 'UNCHANGED NO NEW OBSERVATION'")&&premium.includes("return 'NO NEW READING'")&&premium.includes('Current action unchanged · awaiting a fresh near-term reading.')],
+ ['PATH interval-only history cannot impersonate a frozen dotted forecast; controls are thumb-sized',
+    chartSource.includes("m.daily.length?'forecast':'interval'")&&
+    chartCss.includes('.fw-legend .interval{height:9px;')&&
+    chartCss.includes('.fw-assets button,.fw-reset{min-height:44px}')&&
+    missingForecastPlan.forecast.length===0&&positivePlan.forecast.length===7],
+ ['chart legend matches actual green and frozen blue price curves',chartSource.includes("BLUE='#5f96ff',GREEN='#27c59a'")&&chartCss.includes('.fw-legend .forecast{height:0;border-top:3px dotted #5f96ff')&&chartCss.includes('.fw-legend .actual{background:#27c59a}')],
+ ['arrival windows and rotation facts remain readable on mobile',css.includes('.alt-transition small{font-size:12px')&&css.includes('.rotation-readout-v3 p{font-size:13px')],
+
+ ['public Compass translation preserves historical week and future watch identity',weekIdentityText==='week 40 BTC gained 2.44%. Possible week 41 retest.'&&translateInvestor('W40 BTC gained 2.44%. Possible W41 retest.')===weekIdentityText&&!weekIdentityText.includes('This week')],
+ ['weekly graph binds public issue and week and omits unavailable sources',graph({})===''&&graph({...synthetic,public_series:{current_public_projection:{public_issue_number:10,forecast_week:'2026-W41'}}})===''],
+ ['weekly chart preserves freeze and plots only complete daily coverage',JSON.stringify(synthetic)===frozenBefore&&['BTC','ETH'].reduce((n,a)=>n+chartModel(synthetic,a).days.filter(d=>d.actual).length,0)===4&&chartModel(gap,'BTC').days.every(d=>!d.actual)],
+ ['legacy freezes never fabricate a daily expected-close line',chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').daily.length===7&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')],
+ ['weekly graph identifies source cutoff and leaves future observations empty',chartModel(synthetic,'BTC').days.slice(2).every(d=>!d.actual)&&chartModel({...synthetic,public_live_precision:{...synthetic.public_live_precision,daily_observations:null,live_as_of_utc:'2020-01-01T00:00:00Z'}},'BTC').stale&&chartSource.includes('STALE SNAPSHOT')],
+ ['pullback card separates ordinary unconfirmed dip from sell and re-entry',riskHtml.includes('Ordinary dip watch')&&riskHtml.includes('DEVELOPING · UNCONFIRMED')&&riskHtml.includes('NOT ESTABLISHED')&&riskHtml.includes('Not quantified')],
+ ['pullback card fails unavailable and stale sources closed',risk({},'UNAVAILABLE').includes('Risk assessment unavailable')&&limitedRisk.includes('Risk assessment unavailable')&&!limitedRisk.includes('Conditional watch only')&&!expiredRisk.includes('ACTION NOW · COMPASS')&&!expiredRisk.includes('<strong>WAIT</strong>')&&expiredRisk.includes('LAST VERIFIED COMPASS ACTION · NOT CURRENT')],
+ ['PATH removes duplicate overview and standalone tactical action',!extract(product,'renderPath','showProof').includes('pathOverview(')&&!extract(product,'renderPath','showProof').includes('pathActionLens(')&&product.includes('CYCLE CONCLUSION')],
+ ['daily chart and investor disclosure ship through existing assets',product.includes('+weeklyJourney(data)')&&chartCss.includes('.fw-days')&&liveBuilder.includes('frozen-week-chart.js')&&premium.includes('+ pullbackCard(officialView,readingState)')&&premiumCss.includes('.premium-pullback')],
  ['public product browser script parses before release',productSyntaxOk],
  ['fallback action-first hero',html.includes('WHAT SHOULD I DO NOW?')],
  ['weekly authority firewall',html.includes('never rewrite the forecast')&&liveBuilder.includes('NON_AUTHORITATIVE_OBSERVATION_ONLY')],
@@ -15,48 +262,72 @@ const checks=[
  ['premium Bull/Bear fails closed instead of synthesising',premium.includes("row.status === 'OK'")&&premium.includes('bull + bear === 10')&&premium.includes('No Bull/Bear number is reconstructed by the website.')&&!/expected_direction[^\n]{0,120}(bull|bear)\s*=/.test(premium)],
  ['premium conclusion recommendation and explainability',premium.includes('CYCLE NAVIGATOR · CONCLUSION')&&premium.includes('RECOMMENDATION')&&premium.includes('HOW THIS READING IS BUILT')&&premium.includes('PRICE & STRUCTURE')&&premium.includes('PARTICIPATION & ROTATION')&&premium.includes('LIQUIDITY & POSITIONING')&&premium.includes('SENTIMENT & CYCLE')&&premium.includes('Evidence balance, not probability')],
  ['premium owns the single first-visit hero',premiumCss.includes('#productNow.premium-compass-installed>.market-weather,#productNow.premium-compass-installed>.action-hero{display:none!important}')&&premium.includes('NEAR-TERM PRESSURE · 0–12H')&&premium.includes('WEEKLY OUTLOOK · 5–7D')&&premium.includes('RISK WATCH')&&premium.includes('near-term pressure and weekly outlook remain separate signals.')],
- ['front-page action is visibly time-bounded without hardcoding a forecast duration',premium.includes('function recommendationWindow')&&premium.includes('CURRENT ACTION')&&premium.includes('NEXT GOVERNED REVIEW · ')&&premium.includes('This is the reassessment window, not a promise that the action changes.')&&premium.includes('next_meaningful_change_eta')&&premium.includes('NEXT_12H')&&premiumCss.includes('.premium-action-window')],
- ['front page exposes hourly monitor freshness without stealing Official Compass authority',premium.includes('function hourlyMonitor')&&premium.includes('HOURLY MONITOR')&&premium.includes('context only, Official Compass remains the action owner.')&&premium.includes("live?.contract !== 'CYCLE_NAVIGATOR_PUBLIC_LIVE_OBSERVATION_v2'")&&premiumCss.includes('.premium-live-monitor')],
- ['NOW triad separates short-horizon pressure weekly outlook and risk timing',premium.includes('function decisionMeta')&&premium.includes('weeklyEta')&&premium.includes('riskEta')&&premium.includes('not the weekly outlook')&&premium.includes('current W41 view')],
+ ['front-page action is visibly time-bounded without hardcoding a forecast duration',premium.includes('function recommendationWindow')&&premium.includes('CURRENT ACTION')&&premium.includes('NEXT REVIEW · ')&&premium.includes('This is the reassessment window, not a promise that the action changes.')&&premium.includes('next_meaningful_change_eta')&&premium.includes('NEXT_12H')&&premiumCss.includes('.premium-action-window')],
+ ['front page exposes hourly monitor freshness without stealing Market Compass authority',premium.includes('function hourlyMonitor')&&premium.includes('HOURLY MONITOR')&&premium.includes('Current action comes from the verified Market Compass.')&&premium.includes("live?.contract !== 'CYCLE_NAVIGATOR_PUBLIC_LIVE_OBSERVATION_v2'")&&premiumCss.includes('.premium-live-monitor')],
+ ['NOW triad separates short-horizon pressure weekly outlook and risk timing',premium.includes('function decisionMeta')&&premium.includes('weeklyEta')&&premium.includes('riskEta')&&premium.includes('Current-state BTC/ETH direction proxy; not an independently validated 12H forecast.')&&premium.includes('No current validated 12H forecast.')&&premium.includes('current weekly view')],
  ['NOW triad opens a bounded investor and swing-trader drill-down',premium.includes('function decisionDetail')&&premium.includes('FOR AN INVESTOR')&&premium.includes('FOR A SWING TRADER')&&premium.includes('WHAT TO WATCH')&&premium.includes('data-live-detail')&&premium.includes('detail.scrollIntoView')&&premiumCss.includes('.premium-decision-detail')],
  ['three horizons expose a plain-English so-what line',premium.includes('function soWhat')&&premium.includes('SO WHAT?')&&premium.includes('do not chase high-beta')&&premiumCss.includes('.premium-so-what')],
  ['seven-rung risk curve reaches governed MEMES without proxy synthesis',premium.includes("['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES']")&&premium.includes('MEME RISK')&&premium.includes("String(row.segment).toUpperCase() === 'MEMES'")&&!premium.includes("MICROCAPS' ? 'MEMES")&&premiumCss.includes('.premium-rung-grid')],
  ['premium layer ships in final Pages bundle',liveBuilder.includes('market-compass-premium.js')&&liveBuilder.includes('market-compass-premium.css')&&premiumCss.includes('.premium-horizon-grid')&&premiumCss.includes('@media(max-width:520px)')],
+ ['premium public copy filters internal framework vocabulary',premium.includes('const publicCompassText')&&premium.includes("replace(/\\bgoverned\\b/gi, 'verified')")&&premium.includes('AWAITING VERIFIED READ')&&premium.includes('RISK ROTATION · ')&&premium.includes('Published by the Market Compass.')&&!premium.includes('Official Compass remains the action owner.')&&!premium.includes('NEXT GOVERNED REVIEW · ')],
+ ['premium public evidence drivers pass through the language filter',premium.includes('return rows.map((x) => publicCompassText(x));')&&premium.includes('30-day altcoin participation reading')&&premium.includes('Recent settled ETF flows favoured Bitcoin over Ethereum')&&premium.includes('Meme risk needs its own confirmed signal.')&&premium.includes('publicCompassText(clean(meme.reason)')],
+ ['public fallbacks contain no internal governance jargon',premium.includes('Previously verified Compass · not current.')&&premium.includes('Official Compass unavailable · no current reading.')&&!premium.includes('Fresh market evidence is still loading.')&&premium.includes("replace(/\\bframework\\b/gi, 'research process')")&&!premium.includes('The framework is waiting for fresh evidence.')&&compassV5.includes('No supported horizon yet')&&compassV5.includes('Fresh verified evidence required')&&compassV5.includes('The current Compass stays in place until the new reading is confirmed.')&&!compassV5.includes('Awaiting governed horizon')&&!compassV5.includes('stays authoritative')&&!compassV5.includes('owner evidence')],
  ['single-action hero',product.includes("HOLD:'HOLD'")&&!product.includes("HOLD:'HOLD / WAIT'")],
- ['three-track PATH has market cycle rotation and altcoin cycle',product.includes('CN_PATH_THREE_TRACK_v2')&&product.includes('1 · MARKET CYCLE')&&product.includes('2 · ROTATION')&&product.includes('3 · ALTCOIN CYCLE TIMER')],
- ['PATH headline stays concise and purpose-led',product.includes('Cycle. Rotation. Altcoin timing.')&&product.includes('the adaptive countdown toward the next high-beta phase')],
- ['Market Cycle uses canonical phase vocabulary and minimized public strategic projection',product.includes('MARKET_CYCLE')&&product.includes('PARABOLIC_ALTSEASON')&&product.includes('next_21_30d')&&product.includes('weeks_4_8')&&build.includes('sanitizeDecisionProjection')],
- ['Market Cycle separates weekly-now text from structured forward phase',product.includes("source:'STRUCTURED MONDAY 21–30D'")&&product.includes("source:'STRUCTURED MONDAY 4–8W'")&&product.includes("source:'NO STRUCTURED LONG-CYCLE PHASE'")&&product.includes('NEXT STRUCTURED PHASE')&&product.includes('WEEKLY NOW')&&product.includes('FORWARD ETA')&&!product.includes("source:'MONDAY BASE CASE'")],
+ ['PATH separates macro phases from the single altcoin journey',product.includes('1 · MARKET CYCLE')&&product.includes('2 · THIS WEEK’S ROTATION')&&product.includes('Altcoin journey. Live rotation.')&&product.includes('macro-map')&&product.includes('The market journey.')],
+ ['PATH v3 removes the duplicate Compass decision-window rail',!product.includes('DECISION WINDOWS')&&!product.includes('market-horizon-rail')&&!product.includes('function horizonCell')],
+ ['PATH headline explains its three distinct scopes',product.includes('The market regime, altcoin rotation and weekly price plan.')],
+ ['Market Cycle distinguishes current weekly phase from forward scenarios',product.includes('market_cycle_context?.current_phase')&&product.includes('Forward scenario: ')&&product.includes('Stable cycle phase not confirmed')],
  ['public strategic cycle payload omits private scenario and asset-detail fields',build.includes('next_21_30d:pick(dp.next_21_30d||{},["direction","summary","regime_destination","expected_path","action_posture","confidence"])')&&!build.includes('next_21_30d:pick(dp.next_21_30d||{},["direction","btc_direction"')],
- ['three-track overview exposes cycle rotation plus distinct altcoin NOW and watch target',product.includes('path-overview-v2')&&product.includes('NEXT ROTATION GATE')&&product.includes('ALTCOIN TIMER · NOW')&&product.includes("WATCH · '+esc(target.title)")&&product.includes("current.source==='LIVE'")&&css.includes('.path-overview-v2')&&css.includes('.path-overview-v2 .focus small')],
- ['Rotation is a seven-rung top-to-bottom typed Compass ladder',product.includes("['BTC','Bitcoin']")&&product.includes("['ETH','Ethereum']")&&product.includes("['LARGE_CAPS','Large caps']")&&product.includes("['MID_CAPS','Mid caps']")&&product.includes("['SMALL_CAPS','Small caps']")&&product.includes("['MICROCAPS','Microcaps']")&&product.includes("['MEMES','Memes']")&&product.includes('capitalization_ladder')],
- ['Altcoin default countdown target is source-owned small-cap ignition',product.includes("eyebrow:'NEXT HIGH-BETA PHASE'")&&product.includes("title:'ALTSEASON IGNITION'")&&product.includes("subtitle:'Small-cap expansion gate'")&&product.includes("eta:pathEta(ignition.eta)")],
- ['Altcoin NOW position can use governed ETH HOLD without upgrading the stage status',product.includes("const eth=compassSegment(compass,'ETH')")&&product.includes("/HOLD|ACTIVE|CONFIRMED/.test(ethState)")&&product.includes("key:'ETH_UNLOCK'")&&product.includes('Blue marks the current governed position in the sequence. Amber marks the next target to watch.')],
- ['Altcoin hero separates the watch target from NOW and does not promote conditional ETA',product.includes('WATCH TARGET · NOT CURRENT')&&product.includes('function targetHeadlineEta')&&product.includes('/CONDITIONAL/i.test(eta)')&&product.includes('Headline ETA withheld')&&product.includes('The governed ETA remains on the timeline below')&&!product.includes('ADAPTIVE ETA')],
- ['Altcoin target advances one governed step at a time through protection and re-entry',product.includes("return{key:'MICRO'")&&product.includes("return{key:'BROAD'")&&product.includes("return{key:'MANIA'")&&product.includes("return{key:'DISTRIBUTION'")&&product.includes("return{key:'EXIT'")&&product.includes("return{key:'REENTRY'")&&product.includes("eyebrow:'NEXT RECOVERY PHASE'")&&product.includes('sell_assessment')&&product.includes('reentry_state')],
- ['Altcoin timeline includes ignition broad altseason mania and post-cycle protection',product.includes("key:'PARTICIPATION'")&&product.includes("key:'ETH_UNLOCK'")&&product.includes("key:'LARGE_MID'")&&product.includes("key:'IGNITION'")&&product.includes("key:'MICRO'")&&product.includes("key:'BROAD'")&&product.includes("key:'MANIA'")&&product.includes("key:'DISTRIBUTION'")&&product.includes("key:'EXIT'")&&product.includes("key:'REENTRY'")],
- ['PATH never manufactures countdown math',product.includes('NO SUPPORTED ETA')&&etaSlice.includes('pathEta')&&!etaSlice.includes('Date')&&!etaSlice.includes('Math')&&!etaSlice.includes('parseInt')&&!etaSlice.includes('parseFloat')&&product.includes('no browser countdown math')],
+ ['Macro cycle has one ordered thread, an integrated conclusion and a NOW link',product.includes('MAP · NOT A FORECAST')&&product.includes('Bitcoin → Ethereum')&&product.includes('Distribution → protection → new start')&&product.includes('CYCLE CONCLUSION')&&product.includes('data-now-link')&&css.includes('.macro-map')],
+ ['Altcoin journey spans BTC through takeoff protection and re-entry',['BTC leadership','Ethereum leadership','Large + mid rotation','Altseason ignition','Micro acceleration','Broad altseason','Mania / euphoria','Distribution','Exit / protection','Cooldown / re-entry'].every(x=>product.includes("title:'"+x+"'"))],
+ ['Cycle journey visually separates current checkpoint and next watch',product.includes("data-cycle-role=")&&product.includes("'current-checkpoint'")&&product.includes("'next-watch'")&&css.includes('.cycle-journey-step.current')&&css.includes('.cycle-journey-step.next')],
+ ['Incoming ETA appears as a source-backed time distance between altcoin phases',product.includes('TIME DISTANCE')&&product.includes('etaDistance(row.eta)')&&product.includes('currentIndex+1')&&product.includes('alt-transition')],
+ ['Five connector dots map ETA distance without progress or probability',pathTiming.etaDistance('1–3 days').dots===5&&pathTiming.etaDistance('1–2 weeks').dots===4&&pathTiming.etaDistance('Next 2–3 weeks, conditional').dots===3&&pathTiming.etaDistance('No supported ETA').dots===0&&product.includes('Array.from({length:5}')&&product.includes('This is not progress or probability.')&&css.includes('.alt-track-dots i.is-lit')],
+ ['Takeoff readiness never invents a countdown or unconfirmed percentage',product.includes('No source-backed readiness percentage is published.')&&product.includes("takeoff=statusActive(small.status||small.action)")&&product.includes('100% · Small-cap takeoff confirmed')],
+ ['Current cycle checkpoint is derived from existing live owners without upgrading status',product.includes('function cycleRouteState')&&product.includes("rotation.current?.segment==='ETH'")&&product.includes("rotation.current)currentKey='BTC'")&&product.includes("status:eth.status||eth.action||'UNAVAILABLE'")&&!product.includes("status:'CONFIRMED',eta:eth.eta")],
+ ['Rotation remains a typed seven-rung BTC to MEMES ladder',product.includes("['BTC','Bitcoin']")&&product.includes("['ETH','Ethereum']")&&product.includes("['LARGE_CAPS','Large']")&&product.includes("['MID_CAPS','Mid']")&&product.includes("['SMALL_CAPS','Small']")&&product.includes("['MICROCAPS','Micro']")&&product.includes("['MEMES','Memes']")&&product.includes('capitalization_ladder')],
+ ['Rotation uses one route with current next and unlock readout',product.includes('alt-journey-rail')&&product.includes('CURRENT POSITION')&&product.includes('NEXT GATE')&&product.includes('WHAT UNLOCKS IT')&&!product.includes('rotation-rung-v2')],
+ ['Rotation journey cannot imply a fixed daily schedule',product.includes('elapsed time cannot open a gate')&&product.includes('No automatic loop')],
+ ['Rotation timing reconciles live Compass with the slower frozen weekly sequence',pathTiming.weeklyBackstoppedEta('1-7d conditional','Next 2–3 weeks, conditional')==='Next 2–3 weeks, conditional'&&pathTiming.weeklyBackstoppedEta('1-7d conditional','No supported ETA')==='NO SUPPORTED ETA'&&product.includes('weeklyBackstoppedEta(sharedEta([large,mid]),monday(2).window)')&&product.includes('weeklyBackstoppedEta(small.eta,monday(3).window)')],
+ ['Takeoff is integrated in the existing altcoin journey',product.includes('ALTSEASON WATCH · TAKEOFF')&&product.includes('takeoff-watch')&&!product.includes('function altseasonWatchPanel')],
+ ['Altseason default watch target remains source-owned small-cap ignition',product.includes("eyebrow:'NEXT HIGH-BETA PHASE'")&&product.includes("title:'ALTSEASON IGNITION'")&&product.includes("subtitle:'Small caps begin to participate'")&&product.includes("eta:pathEta(ignition.eta)")],
+ ['Altseason target can advance through micro broad mania protection and re-entry',product.includes("return{key:'MICRO'")&&product.includes("return{key:'BROAD'")&&product.includes("return{key:'MANIA'")&&product.includes("return{key:'DISTRIBUTION'")&&product.includes("return{key:'EXIT'")&&product.includes("return{key:'REENTRY'")&&product.includes('sell_assessment')&&product.includes('reentry_state')],
+ ['PATH never manufactures a clock countdown or market ETA',product.includes('NO SUPPORTED ETA')&&etaSlice.includes('pathEta')&&!etaSlice.includes('Date')&&!etaSlice.includes('Date.now')&&etaSlice.includes('days<=7?5:days<=14?4:days<=21?3:days<=35?2:1')],
+ ['Conditional timing is translated into a plain-English watch window',product.includes('function timingWindow')&&product.includes('WATCH WINDOW')&&product.includes('Only if confirmation arrives · not a countdown')&&product.includes("'$1–$2 days'")],
  ['Distribution evidence is distribution-specific and exit remains sell-owner only',product.includes(".find(x=>/distribution/i.test(String(x||'')))")&&product.includes("status:valid?p.distribution_risk:'UNAVAILABLE'")&&product.includes("status:valid?sell.state:'UNAVAILABLE'")&&product.includes('sell_assessment')],
- ['PATH preserves compound re-entry states, UNCLEAR and INACTIVE ordering',product.includes('WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH')&&product.includes("replaceAll('_',' ')")&&product.includes("if(/INACTIVE|UNAVAILABLE|UNCLEAR|UNKNOWN|PAUSED|LOCKED/.test(s))return'unknown'")&&product.includes('UNAVAILABLE|UNCLEAR|UNKNOWN')],
- ['PATH re-entry target uses exact governed states',product.includes("function reentryEngaged")&&product.includes("['WAIT_FOR_FLUSH','WAIT_FOR_RECLAIM','REVIEW'].includes(s)")&&product.includes("if(reentryEngaged(reentryState))return{key:'REENTRY'")&&product.includes("key==='REENTRY'&&reentryEngaged(raw)")&&!product.includes("WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH|REVIEW|ACTIVE|CONFIRMED")],
- ['Monday fallback never masquerades as a live NOW position',product.includes("source:'MONDAY'")&&product.includes("isCurrent=i===current.index&&current.source==='LIVE'")&&product.includes("source:'LIVE',certainty:'POSITION'")],
- ['Market Cycle visual highlight is explicitly a forward destination',product.includes('data-cycle-role=')&&product.includes("forward-destination")&&product.includes('NEXT STRUCTURED PHASE')],
+ ['PATH preserves compound re-entry states and unavailable ordering',product.includes('WAIT_FOR_RECLAIM|WAIT_FOR_FLUSH')&&product.includes("replaceAll('_',' ')")&&product.includes("if(/INACTIVE|UNAVAILABLE|UNCLEAR|UNKNOWN|PAUSED|LOCKED/.test(s))return'unknown'")],
+ ['Pages proves Compass weekly lineage from exact internal bound source',build.includes('INTERNAL_COMPASS_POINTER_PATH')&&build.includes('CN_COMPASS_WEEKLY_ALIGNMENT_v1')&&build.includes('internalPointer?.compass_id!==projection.compass_id')&&build.includes('machineSha===String(weeklyPointer?.machine_package_sha256||"")')&&build.includes('buildCompassSnapshot(pointer)')],
+ ['Compass weekly lineage failure is isolated from NOW availability',build.includes('status:"UNVERIFIED"')&&build.includes('Preserve the independently verified public Compass for NOW')&&build.includes('Only PATH')&&build.includes('weekly_context')],
+ ['PATH fails live overlays closed unless public issue and forecast week align',product.includes('function pathWeeklyAlignment')&&product.includes("receipt.status==='ALIGNED'")&&product.includes('currentIssue===receiptIssue')&&product.includes('currentWeek===receiptWeek')&&product.includes('liveCompass=alignment.ok?compass:null')],
+ ['PATH exposes a compact public rollover warning only when alignment is not ready',product.includes('function pathAlignmentNotice')&&product.includes('LIVE SIGNALS REFRESHING')&&product.includes('The weekly path stays fixed while live data catches up.')&&css.includes('.path-alignment-warning')],
+ ['Broad Altseason live state comes from the Compass lane not weekly prose',product.includes("const broadStatus=!valid?'UNAVAILABLE'")&&product.includes("pathStatus(cycle.state||cycle.action_posture||'UNAVAILABLE')")],
+ ['Altcoin source stages remain neutral when live confirmation is unavailable',product.includes("status:valid?(small.status||small.action||'UNAVAILABLE'):'UNAVAILABLE'")&&product.includes("unavailableWhy='Live confirmation is unavailable. The weekly baseline remains visible in the details.'")],
+ ['PATH v3 styling is mobile-first and timing-forward',css.includes('.market-cycle-v3')&&css.includes('.cycle-journey-rail')&&css.includes('.cycle-watch-v3')&&css.includes('.rotation-line-v3')&&css.includes('.rotation-readout-v3')&&css.includes('@media(max-width:640px)')],
+ ['Mobile cycle and rotation rails remain swipeable and compact',css.includes('.cycle-journey-rail{display:flex')&&css.includes('.rotation-line-v3{display:flex')&&css.includes('scroll-snap-type:x proximity')&&css.includes('.cycle-journey-step{flex-basis:94px;min-width:94px}')&&css.includes('.rotation-node-v3{flex-basis:78px;min-width:78px}')&&css.includes('.rotation-readout-v3 article:last-child{grid-column:1/3}')],
+ ['Macro and altcoin explanations stay behind visible disclosures',product.includes('Why this regime?')&&product.includes('Cycle plan and timing')&&product.includes('aria-hidden="true">↓')],
+ ['PATH has a dedicated public-language filter for internal machine wording',product.includes('function publicPathText')&&product.includes("replace(/\\bgoverned\\b/gi,'verified')")&&product.includes("replace(/\\blineage\\b/gi,'data alignment')")&&product.includes("replace(/\\bowner\\b/gi,'signal source')")&&product.includes('function publicPathStatus')],
+ ['PATH public labels avoid raw internal-facing status copy',product.includes('DATA STATUS')&&product.includes('NO SUPPORTED ETA')&&!product.includes('<span>LIVE OWNER</span>')],
+ ['PATH fast-scan guide explains visual semantics and conservative timing',product.includes('function pathLegend')&&product.includes('READ PATH IN 10 SECONDS')&&product.includes('Blue = what is known now · Amber = next watch · Grey = not confirmed')&&product.includes('Time-distance dots')&&product.includes('not progress, probability or a countdown')&&css.includes('.path-read-guide')],
+ ['Public PATH status translation remains conservative',product.includes('function publicHorizonState')&&product.includes("s==='UNAVAILABLE'?'NOT READY':s")&&product.includes('function dataStatusLabel')&&product.includes("return'UP TO DATE'")],
+ ['Freshness and next update remain visible',product.includes('CURRENT OFFICIAL COMPASS')&&product.includes('LAST VERIFIED COMPASS · NOT CURRENT')&&product.includes('NEXT SCHEDULED CHECK')&&product.includes('ownerMinute=12')&&product.includes('CNOfficialReadingState')],
 
  ['Pages proves Compass weekly lineage from exact internal bound source',build.includes('INTERNAL_COMPASS_POINTER_PATH')&&build.includes('CN_COMPASS_WEEKLY_ALIGNMENT_v1')&&build.includes('internalPointer?.compass_id!==projection.compass_id')&&build.includes('machineSha===String(weeklyPointer?.machine_package_sha256||"")')&&build.includes('buildCompassSnapshot(pointer)')],
  ['Compass weekly lineage failure is isolated from NOW availability',build.includes('status:"UNVERIFIED"')&&build.includes('Preserve the independently verified public Compass for NOW')&&build.includes('Only PATH')&&build.includes('weekly_context')],
  ['PATH fails live overlays closed unless public issue and forecast week align',product.includes('function pathWeeklyAlignment')&&product.includes("receipt.status==='ALIGNED'")&&product.includes('currentIssue===receiptIssue')&&product.includes('currentWeek===receiptWeek')&&product.includes('liveCompass=alignment.ok?compass:null')],
- ['PATH exposes a compact rollover warning only when lineage is not aligned',product.includes('function pathAlignmentNotice')&&product.includes('LIVE GATES REFRESHING')&&product.includes('Monday path stays frozen while live Compass lineage catches up.')&&css.includes('.path-alignment-warning')],
- ['Rotation cannot fall back to weekly prose as a live status',product.includes("const status=valid?(live?.status||live?.action||'UNAVAILABLE'):'UNAVAILABLE'")&&product.includes("const eta=valid&&live?pathEta(live.eta):'NO SUPPORTED ETA'")],
+ ['PATH exposes a compact public rollover warning only when alignment is not ready',product.includes('function pathAlignmentNotice')&&product.includes('LIVE SIGNALS REFRESHING')&&product.includes('The weekly path stays fixed while live data catches up.')&&css.includes('.path-alignment-warning')],
+ ['Rotation cannot fall back to weekly prose as a live status',product.includes('function rotationSnapshot')&&product.includes("const status=valid?(live?.status||live?.action||'UNAVAILABLE'):'UNAVAILABLE'")&&product.includes("eta:valid&&live?pathEta(live.eta):'NO SUPPORTED ETA'")&&product.includes("reason:publicPathText(live?.reason||weekly?.status||'No public rotation explanation is available.')")&&!product.includes("status:weekly?.status")],
  ['Broad Altseason live state comes from the Compass lane, not frozen Monday status',product.includes("const broadStatus=!valid?'UNAVAILABLE'")&&product.includes("pathStatus(cycle.state||cycle.action_posture||'UNAVAILABLE')")&&!product.includes("String(cycle.state||'').toUpperCase()==='BROAD_ALTSEASON'?'ACTIVE':pathStatus(monday(4).phase)")],
- ['Altcoin stages preserve Monday windows as detail while unavailable live gates fail closed',product.includes("status:valid?(small.status||small.action||'UNAVAILABLE'):'UNAVAILABLE'")&&product.includes("monday:monday(3).window")&&product.includes("unavailableWhy='Live gate unavailable; the frozen Monday baseline remains visible in details.'")],
+ ['Altcoin stages preserve weekly windows as detail while unavailable live gates stay neutral',product.includes("status:valid?(small.status||small.action||'UNAVAILABLE'):'UNAVAILABLE'")&&product.includes("monday:monday(3).window")&&product.includes("unavailableWhy='Live confirmation is unavailable. The weekly baseline remains visible in the details.'")],
 
- ['Three-track PATH styling is mobile-first and ETA-forward',css.includes('.market-cycle-v2')&&css.includes('.rotation-rail-v2')&&css.includes('.altcoin-timer-v2')&&css.includes('.alt-countdown')&&css.includes('@media(max-width:640px)')],
- ['PATH alignment and countdown semantics remain legible on mobile',css.includes('.path-alignment-warning')&&css.includes('.alt-countdown-semantics')&&css.includes('@media(max-width:640px)')&&css.includes('.alt-countdown .alt-countdown-semantics{font-size:10px}')],
- ['Altcoin ETA panel overrides dark hero surface with high-contrast light panel',css.includes('.alt-timer-hero>.alt-countdown{background:linear-gradient(150deg,#f6fbf8,#fff);color:#0f172a}')&&css.includes('.alt-timer-hero>.alt-countdown.protect')],
  ['PATH hero has intentional dark-surface contrast',css.includes('.path-v2-head h2{color:#fff}')&&css.includes('.path-v2-head p{max-width:760px;color:#cbd5e1}')&&css.includes('.path-v2-head small{color:#8dc1ff}')],
- ['mobile altcoin stages clearly separate NOW from the watch target',css.includes('content:"NOW"')&&css.includes('WATCH TARGET')&&!css.includes('content:"YOU ARE HERE"')&&!css.includes('content:"CURRENT STAGE"')&&css.includes('.alt-cycle-step>strong{grid-column:3;grid-row:1')&&css.includes('.alt-cycle-step>b{grid-column:2/4;grid-row:2')],
- ['Long reasons stay behind disclosure on rotation and altcoin rails',product.includes('rotation-rung-v2')&&product.includes('alt-cycle-step')&&product.includes('<details><summary>Why?</summary>')&&css.includes('.path-track-detail')],
- ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')&&product.includes('ownerMinute=12')],
+ ['Takeoff timing is legible on mobile and remains weekly-conservative',css.includes('.takeoff-watch small')&&css.includes('@media(max-width:640px)')&&product.includes('Weekly baseline · no supported ETA')&&product.includes('faster live Compass window cannot overrule the slower weekly sequence')],
+ ['PATH v3 rails make current and next visually distinct on mobile',css.includes('.cycle-journey-step.current')&&css.includes('.cycle-journey-step.next')&&css.includes('.rotation-node-v3.current')&&css.includes('.rotation-node-v3.next')&&css.includes('content:"NOW"')&&css.includes('content:"NEXT"')],
+ ['PATH has a dedicated public-language filter for internal machine wording',product.includes('function publicPathText')&&product.includes("replace(/\\bgoverned\\b/gi,'verified')")&&product.includes("replace(/\\blineage\\b/gi,'data alignment')")&&product.includes("replace(/\\bowner\\b/gi,'signal source')")&&product.includes('function publicPathStatus')],
+ ['PATH public language translates remaining trader-internal terms',product.includes("replace(/ETH-relative/gi,'Ethereum-vs-Bitcoin')")&&product.includes("replace(/microstructure/gi,'short-term market structure')")&&product.includes('Meme risk is tracked separately. No verified meme-specific signal is available yet')],
+ ['PATH public labels avoid raw internal-facing status and owner copy',!product.includes('<span>LIVE OWNER</span>')&&!product.includes('Monday path stays frozen while live Compass lineage catches up.')&&!product.includes('Frozen Monday context remains reference only until the live owner can place the sequence safely.')&&product.includes('DATA STATUS')&&product.includes('NOT AVAILABLE YET')],
+ ['PATH fast-scan guide explains visual semantics and conservative timing',product.includes('function pathLegend')&&product.includes('READ PATH IN 10 SECONDS')&&product.includes('Blue = what is known now · Amber = next watch · Grey = not confirmed')&&product.includes('Time-distance dots')&&product.includes('not progress, probability or a countdown')&&css.includes('.path-read-guide')],
+ ['PATH public horizon and data labels suppress raw availability codes',product.includes('function publicHorizonState')&&product.includes("s==='UNAVAILABLE'?'NOT READY':s")&&product.includes('function dataStatusLabel')&&product.includes("return'UP TO DATE'")],
+ ['freshness and next update',product.includes('CURRENT OFFICIAL COMPASS')&&product.includes('LAST VERIFIED COMPASS · NOT CURRENT')&&product.includes('NEXT SCHEDULED CHECK')&&product.includes('ownerMinute=12')&&product.includes('CNOfficialReadingState')],
 
 
  ['scoreboard integrity uses coverage not a cross-era aggregate',h.policy?.cross_era_aggregate===false&&product.includes('completed forecasts with score evidence')&&!product.includes('HISTORICAL WEEKLY AVERAGE')&&!product.includes('mean(scores.map')],
@@ -102,5 +373,29 @@ const checks=[
  ['raw history remains locked',h.policy?.historical_scores_locked===true&&h.policy?.retroactive_rescoring===false],
  ['history coverage matches records',Number(h.coverage?.completed_issues)===Math.max(...h.records.map(r=>Number(r.cn)))&&Number(h.coverage?.latest_open_issue)===Number(h.coverage?.completed_issues)+1&&Number(h.coverage?.rows_with_published_or_canonical_score_evidence)===h.records.length]
 ];
+
+// Premium release checks execute against the actual shipped same-origin HTML,
+// not a mock redesign. Negative controls must fail before any root promotion.
+const vnextRoot=await read('./vnext-live/index.html');
+const releasedRoot=releasePremiumShell(vnextRoot);
+const preservedLegacy=preserveLegacyShell(html);
+const base='https://donh91.github.io/Investering-Framework-Archive-v1/';
+const sourceResolved=new URL('../data/latest.json',new URL('./vnext/',base)).href;
+let missingTabRejected=false,missingBundleRejected=false;
+try{releasePremiumShell(vnextRoot.replace('id="view-results"','id="removed-results"'))}catch{missingTabRejected=true}
+try{releasePremiumShell(vnextRoot.replace('src="./app.mjs"','src="./missing.mjs"'))}catch{missingBundleRejected=true}
+checks.push(
+ ['premium canonical home is a real shell, not redirect',releasedRoot.includes('<base href="./vnext/">')&&releasedRoot.includes('PREMIUM LIVE')&&releasedRoot.includes('id="view-results"')&&!releasedRoot.includes('src="./app.js"')],
+ ['premium source path stays original same-origin public data',sourceResolved===base+'data/latest.json'&&releasedRoot.includes('src="./app.mjs"')],
+ ['legacy rollback shell points to root assets',preservedLegacy.includes('<base href="../">')&&preservedLegacy.includes('src="./app.js"')&&preservedLegacy.includes('href="./legacy/#now"')&&preservedLegacy.includes('href="./legacy/#top"')],
+ ['premium links to real rollback and no preview copy',releasedRoot.includes('href="../legacy/"')&&releasedRoot.includes('href="../#content"')&&!releasedRoot.includes('PREMIUM PREVIEW')&&!releasedRoot.includes('data-t="previewOnly"')],
+ ['premium canonical metadata is not mislabelled preview',releasedRoot.includes('<title>Cycle Navigator · Premium</title>')&&releasedRoot.includes('current-source premium market cycle, compass and verified results')&&!releasedRoot.includes('not the canonical production home')],
+ ['staged /vnext/ preview metadata remains separately honest',vnextRoot.includes('<title>Cycle Navigator · Premium Preview</title>')],
+ ['cutover never changes production data ownership',build.includes('releasePremiumShell(premiumShell)')&&build.includes('preserveLegacyShell(index)')&&build.includes('resolve(dataDir,"latest.json")')],
+ ['legacy-only client injection cannot corrupt premium root',liveBuilder.includes('indexPath=resolve(distDir,"legacy/index.html")')],
+ ['premium fails closed for missing primary tab',missingTabRejected],
+ ['premium fails closed for missing app bundle',missingBundleRejected]
+);
 let failed=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
 if(failed)process.exit(1);console.log(`PASS ${checks.length}/${checks.length} Cycle Navigator public product release checks`);
+

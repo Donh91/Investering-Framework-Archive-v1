@@ -1,0 +1,141 @@
+# MASTER MONDAY — 2026-W41
+
+Preflight: **FULL_MASTER_MONDAY_INPUT**
+
+API calibration: **SUCCESS**
+
+Experiment registry evidence: **AVAILABLE**
+
+Consumer receipt: **PASS**
+
+Learning decision impact: **NOT_EVALUABLE_NOVEL_INPUT_NOT_CONSUMED**
+
+## Analysis layer
+
+```json
+"Shadow-only weekly calibration is ready: final W41 price-path and enriched-hourly coverage are complete. The week featured a sharp BTC/ETH/ETHBTC drawdown followed by a late partial recovery, while ETF totals were negative and rotation evidence remained mixed. Current range candidates are research objects only; no canonical forecast, threshold change, model promotion, framework-state change, or portfolio implication is asserted."
+```
+
+## Operational translation
+
+```json
+{
+  "status": "UNAVAILABLE_API_CONTRACT",
+  "reason": "WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include an operational_translation field."
+}
+```
+
+## Calibration scorecard
+
+```json
+{
+  "status": "UNAVAILABLE_API_CONTRACT",
+  "experiment_registry_status": "AVAILABLE",
+  "analysis_layer": {},
+  "operational_translation_layer": {},
+  "matured_outcome_count": 130,
+  "reason": "WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include a scorecard field."
+}
+```
+
+## Learning decision impact — 8 week shadow measurement
+
+```json
+{
+  "contract": "LEARNING_DECISION_IMPACT_v1",
+  "authority": "SHADOW_MEASUREMENT_ONLY",
+  "iso_year": 2026,
+  "iso_week": 41,
+  "evaluation_horizon_weeks": 8,
+  "learning_input_present": true,
+  "changed_calibration_decision": null,
+  "exact_input_responsible": [],
+  "potential_incremental_inputs": [
+    "06e2306aaa662757a7f24541a4df8b84ae97a4acedeeada54d42344549304251",
+    "0fc553baec385fbe2bbe8d92f29993b5fed184c1bf2f12ccfc2cfa27ab961ae8",
+    "2de55c6c9665601debb50ddc1e5f4597c3f3f334c467e3a938586f68214a15e2",
+    "2fad6b7caae6cbf095609e4741a221397d381cf8ceb1348c2fd8b14607a64eb1",
+    "3225cbd934b6fcfa0157e4c4d92e9c38e3bf9826204226addce8d801d99cf520",
+    "3930085d83e0f3112e6b8f6e966d6adf1eb89228a58240fc5f16f61fabc36fb2",
+    "433e2589a0d18f164f1eec1655c86fbd2fa82efbcff5633fccd48b93fca3efe8",
+    "8d3d8e7c66c5c1aec7bce6bba168fe91fbf3ccfc3253311214915f08df6e1a66",
+    "b1446242fe2556d012e8e075299ab776c080c6c8eee751eda43c321d58288118",
+    "b3e67dca73ef131fb45d6a3e81bc868515bf85468e66065545fe3b0f85659809"
+  ],
+  "automatic_deletion": false,
+  "retirement_review_rule": "After 8 evaluable weekly observations, eight FALSE decisions with zero novel unconsumed inputs triggers retirement/merge review; missing consumption or NOT_EVALUABLE never counts as proof of zero value.",
+  "learning_packet_generated_at_utc": "2026-10-11T19:41:43.988857Z",
+  "learning_packet_sha256": "4339edb783616bf01b3c9a4026d9da162f452a885bbf02212e355441f5b5bb00",
+  "baseline_semantic_identity_count": 0,
+  "learning_semantic_identity_count": 10,
+  "learning_live_consumption_allowed": false,
+  "assessment_status": "NOT_EVALUABLE_NOVEL_INPUT_NOT_CONSUMED",
+  "reason": "Novel advisory input existed, but the packet is advisory-only and was not allowed to alter the frozen baseline calibration. Fix/authorize the consumer edge before attributing decision impact."
+}
+```
+
+## Autonomous shadow admission
+
+This section is reporting-only. The OpenAI API lifecycle decision does not require owner confirmation.
+
+```json
+{
+  "candidate_decisions": [
+    {
+      "candidate_id": "BWC-R1-C1-PROPERTY-INVARIANTS",
+      "complexity_tax_assessment": "Runtime is low (approximately 0.35–0.38 seconds per prospective run), with no reported external dependency. Maintenance remains a cost unless the probe demonstrates coverage beyond existing validators.",
+      "confidence": 0.98,
+      "decision": "KEEP_SHADOW",
+      "evidence_sufficiency": "MIXED",
+      "implementation_status": "KEEP_OBSERVING",
+      "incremental_value_assessment": "Two stable prospective runs exercised 1,000 generated cases and 9,002 checks each, with no violations, but both observed the same target code version. No real defect discovery or mutation protection beyond baseline is shown.",
+      "master_monday_note": "Remain in shadow. Stable, inexpensive runs do not yet satisfy the incremental-protection promotion gate.",
+      "rationale": "The preregistered gate requires repeated stable runs plus real defect discovery or mutation protection not already provided by baseline. The latter has not been demonstrated; repeated observations of one target version do not establish performance across real changes.",
+      "resulting_state": "SHADOW_TESTING",
+      "rollback_path": "Delete the isolated property probe and its workflow reference; no canonical, market, or portfolio rollback is required."
+    },
+    {
+      "candidate_id": "BWC-R1-C2-MUTATION",
+      "complexity_tax_assessment": "Approximately 0.49–0.51 seconds per prospective run is acceptable so far. Source-pattern maintenance and coverage interpretation remain costs.",
+      "confidence": 0.97,
+      "decision": "KEEP_SHADOW",
+      "evidence_sufficiency": "MIXED",
+      "implementation_status": "KEEP_OBSERVING",
+      "incremental_value_assessment": "The probe killed all seven tested mutations in both prospective runs, adding a measured kill rate absent from existing CI metadata. The supplied evidence does not establish an actionable coverage gap or incremental critical-contract protection across distinct real code changes.",
+      "master_monday_note": "Remain in shadow despite a 7/7 kill rate; assess protection and cost on distinct real changes before promotion.",
+      "rationale": "The observed kill rate exceeds the shadow-continuation threshold, but the two prospective rows target the same code version. A high kill rate alone does not establish the promotion gate’s meaningful coverage or critical-contract value after complexity tax.",
+      "resulting_state": "SHADOW_TESTING",
+      "rollback_path": "Delete the isolated mutation probe and temporary-copy workflow integration; no production-code or canonical rollback is required."
+    },
+    {
+      "candidate_id": "BWC-R1-C3-SESSION-TELEMETRY",
+      "complexity_tax_assessment": "Local-only metadata and no persisted raw output limit privacy and egress risk. The supplied rows do not quantify overhead or the usefulness of the resulting measurements.",
+      "confidence": 0.99,
+      "decision": "KEEP_SHADOW",
+      "evidence_sufficiency": "INSUFFICIENT",
+      "implementation_status": "KEEP_OBSERVING",
+      "incremental_value_assessment": "The evidence reports privacy-preserving operation, but supplies no cross-job duration, failure, output-size or resource measurements that improved a complexity-tax decision beyond existing CI metadata.",
+      "master_monday_note": "Remain in shadow; demonstrate useful cost or failure measurements across multiple research jobs.",
+      "rationale": "The promotion gate requires useful measurements across multiple research jobs. PASS statuses and privacy assertions alone do not demonstrate that value.",
+      "resulting_state": "SHADOW_TESTING",
+      "rollback_path": "Remove the telemetry wrapper and generated telemetry artifacts; no canonical, market, or portfolio rollback is required."
+    },
+    {
+      "candidate_id": "BWC-R1-C4-GUARDRAILS",
+      "complexity_tax_assessment": "Expected runtime is low, but maintaining a path policy would impose a moderate governance burden if promoted. False-block behavior has not been established across varied legitimate changes.",
+      "confidence": 0.98,
+      "decision": "KEEP_SHADOW",
+      "evidence_sufficiency": "MIXED",
+      "implementation_status": "KEEP_OBSERVING",
+      "incremental_value_assessment": "The initial harness caught bytecode working-tree contamination and prompted isolation rather than guardrail relaxation. Later self-tests and postflights passed, but they do not establish repeated zero-false-positive operation across candidate changes.",
+      "master_monday_note": "Remain in shadow; the contamination catch is useful, but repeated legitimate-change and unsafe-change evidence is still needed.",
+      "rationale": "The promotion gate requires repeated zero-false-positive operation and demonstrated unsafe-change blocking. One laboratory catch and self-tests do not fully establish both requirements prospectively.",
+      "resulting_state": "SHADOW_TESTING",
+      "rollback_path": "Remove the dedicated pre/post-flight guardrail probe; existing production gates remain unchanged."
+    }
+  ],
+  "contract": "SHADOW_ADMISSION_AI_DECISION_v1",
+  "master_monday_summary": "All four candidates remain in SHADOW_TESTING with automatic enablement withheld. The two prospective rows observe one target code version, not two distinct real changes. Lab and repeated-run results are promising, but no candidate has yet demonstrated its full incremental-value promotion gate after complexity tax. Master Monday reports these decisions only; no market, canonical, portfolio or blocking authority changes.",
+  "overall_status": "EVIDENCE_LIMITED"
+}
+```

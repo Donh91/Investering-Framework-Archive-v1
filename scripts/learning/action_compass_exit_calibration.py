@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import statistics
@@ -13,7 +14,10 @@ OUTCOME_CONTRACT = "OFFICIAL_DAILY_COMPASS_OUTCOME_v1"
 FREEZE_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
 PROTECTION_CONTRACT = "COMPASS_PROTECTION_TRACKER_v1"
 REPORT_CONTRACT = "ACTION_COMPASS_PROTECTION_CALIBRATION_v2"
-ELIGIBLE_DECISION_POLICY_PREFIX = "2026-09-25_DECISION_INTEGRITY_"
+ELIGIBLE_DECISION_POLICIES = {
+    "2026-09-25_DECISION_INTEGRITY_V3_2",
+    "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+}
 ELIGIBLE_PROJECTION_SOURCE = "MACHINE_PACKAGE"
 
 
@@ -22,6 +26,22 @@ def read_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"object_required:{path}")
     return value
+
+
+def frozen_compass_digest(freeze: dict[str, Any]) -> str | None:
+    """Recompute the producer's frozen digest, excluding its self-hash.
+
+    Mirrors native_handlekompas.py: json.dumps(sorted, compact,
+    ensure_ascii=False, allow_nan=False) plus one trailing newline.
+    Invalid/noncanonical data fails closed instead of entering calibration.
+    """
+    try:
+        payload = {key: value for key, value in freeze.items() if key != "compass_sha256"}
+        canonical = (json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                                ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def finite_number(value: Any) -> float | None:
@@ -63,8 +83,8 @@ def eligible_typed_protection(freeze: dict[str, Any]) -> tuple[dict[str, Any] | 
     if isinstance(schema, bool) or not isinstance(schema, (int, float)) or int(schema) < 3:
         return None, "PRE_DECISION_INTEGRITY_SCHEMA"
     policy = str(freeze.get("decision_policy_version") or "")
-    if not policy.startswith(ELIGIBLE_DECISION_POLICY_PREFIX):
-        return None, "PRE_DECISION_INTEGRITY_POLICY"
+    if policy not in ELIGIBLE_DECISION_POLICIES:
+        return None, "UNREGISTERED_DECISION_POLICY"
 
     cn = ((freeze.get("source_bindings") or {}).get("cycle_navigator") or {})
     if cn.get("decision_projection_source") != ELIGIBLE_PROJECTION_SOURCE:
@@ -75,7 +95,7 @@ def eligible_typed_protection(freeze: dict[str, Any]) -> tuple[dict[str, Any] | 
         return None, "PROTECTION_TRACKER_MISSING"
     if tracker.get("data_quality") != "OK":
         return None, "PROTECTION_DATA_QUALITY_NOT_OK"
-    if tracker.get("pullback_risk_state") == "UNAVAILABLE" or tracker.get("distribution_risk") == "UNKNOWN":
+    if tracker.get("pullback_risk_state") in {None, "", "UNAVAILABLE"}:
         return None, "PROTECTION_STATE_UNAVAILABLE"
     if not isinstance(tracker.get("invalidation"), str) or not tracker.get("invalidation", "").strip():
         return None, "PROTECTION_INVALIDATION_MISSING"
@@ -116,6 +136,12 @@ def collect_rows(repo_root: Path, outcome_root: Path) -> tuple[list[dict[str, An
             continue
         if freeze.get("compass_id") != outcome.get("compass_id") or freeze.get("compass_sha256") != outcome.get("compass_sha256"):
             excluded["FORECAST_BINDING_MISMATCH"] += 1
+            continue
+        # Matching declared identifiers are insufficient: historical freeze bytes
+        # might have changed while their copied claimed digests stayed identical.
+        computed_digest = frozen_compass_digest(freeze)
+        if computed_digest is None or computed_digest != freeze.get("compass_sha256"):
+            excluded["FORECAST_PAYLOAD_HASH_MISMATCH"] += 1
             continue
 
         tracker, reason = eligible_typed_protection(freeze)
@@ -202,6 +228,42 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return output
 
 
+def nonwarning_downside_context(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Observe downside while no typed protection warning was issued.
+
+    Descriptive only. Overlapping freezes and horizon windows are not
+    independent adverse-event families; neither a minimum MAE nor a return
+    constitutes a retrospective alert, missed warning or sell permission.
+    """
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for row in rows:
+        if row["distribution_risk"] in {"WARNING", "CONFIRMED"}:
+            continue
+        if row["pullback_risk_state"] in {"ELEVATED", "HIGH", "CONFIRMED"}:
+            continue
+        groups.setdefault((row["horizon"], row["series_id"]), []).append(row)
+
+    context: list[dict[str, Any]] = []
+    for (horizon, series), group in sorted(groups.items()):
+        downside = [
+            value for row in group
+            if (value := finite_number(row.get("max_drawdown_after_signal_pct"))) is not None
+        ]
+        context.append({
+            "horizon": horizon,
+            "series_id": series,
+            "series_row_count": len(group),
+            "distinct_compass_freeze_count": len({row["compass_id"] for row in group}),
+            "mae_observed_row_count": len(downside),
+            "mae_missing_row_count": len(group) - len(downside),
+            "median_observed_mae_pct": median(downside),
+            "worst_observed_mae_pct": round(min(downside), 10) if downside else None,
+            "warning_classification": "NO_TYPED_WARNING_IN_FROZEN_COMPASS",
+            "independent_adverse_event_count": None,
+        })
+    return context
+
+
 def build_report(repo_root: Path, outcome_root: Path, generated_at_utc: str | None) -> dict[str, Any]:
     rows, outcome_count, excluded = collect_rows(repo_root, outcome_root)
     cohorts = summarize(rows)
@@ -225,11 +287,12 @@ def build_report(repo_root: Path, outcome_root: Path, generated_at_utc: str | No
         "source_outcome_count": outcome_count,
         "eligible_series_row_count": len(rows),
         "warning_series_row_count": len(warning_rows),
+        "nonwarning_downside_context": nonwarning_downside_context(rows),
         "excluded_outcome_counts": dict(sorted(excluded.items())),
         "cohorts": cohorts,
         "prospective_source_gate": {
             "minimum_compass_schema_version": 3,
-            "decision_policy_prefix": ELIGIBLE_DECISION_POLICY_PREFIX,
+            "registered_decision_policies": sorted(ELIGIBLE_DECISION_POLICIES),
             "required_decision_projection_source": ELIGIBLE_PROJECTION_SOURCE,
             "required_protection_contract": PROTECTION_CONTRACT,
             "historical_prose_backfill": False,
@@ -248,6 +311,8 @@ def build_report(repo_root: Path, outcome_root: Path, generated_at_utc: str | No
         "interpretation_boundary": {
             "descriptive_only": True,
             "hit_miss_labels": False,
+            "nonwarning_downside_context_is_descriptive": True,
+            "overlapping_freezes_are_not_independent_events": True,
             "new_thresholds": False,
             "market_rule_change": False,
             "portfolio_action": False,

@@ -1,0 +1,58 @@
+{
+  "contract": "EDGE_TASK15_FIRST_PARENT_PUBLICATION_FULL_CENSUS_RECEIPT_v1",
+  "date_utc": "2026-10-13",
+  "classification": "RESEARCH_ONLY_COMMIT_TIME_PROXY_NOT_ORIGINAL_PROVIDER_FIRST_KNOWABLE_CERTIFICATION",
+  "authority": {
+    "portfolio_execution": false,
+    "official_compass_signal_change": false,
+    "outcome_rewrite": false,
+    "automatic_reweight": false
+  },
+  "evidence": {
+    "research_pr": 1597,
+    "source_head_sha": "bf6df0fc0dd418a6dfb64d7023a765eefe2590a8",
+    "main_first_parent_source_sha": "288b1d59211e7810a2bb53d13c420976069d61bc",
+    "script_git_blob_sha": "afb8f7b97aadaae2540add3f10a40b36bcc6c2e7",
+    "workflow_name": "Official Daily Compass",
+    "workflow_run_id": 38367785431,
+    "workflow_job_id": 115197309402,
+    "workflow_result": "SUCCESS",
+    "artifact_id": 11797835583,
+    "artifact_name": "task15-readonly-ledger-38367785431",
+    "artifact_digest": "sha256:ac25ebf6a5ac073556b1945ee86d6effc82ee1d60e0151236159517b54852050",
+    "artifact_expires_at": "2026-10-27T08:14:56Z",
+    "replay_window": "2026-09-15T06:00:00Z..2026-10-13T06:00:00Z"
+  },
+  "first_parent_census": {
+    "scope": "ALL 824 ORIGINAL ISSUED ELIGIBLE BTC/ETH 1H/4H/24H FORECAST-OUTCOME PAIRS WITH COMPLETE EX-POST TAPE; preserves original outcome status",
+    "n": 824,
+    "original_censored_count": 510,
+    "original_censored_exact_candle_first_in_main_after_90min_deadline": 510,
+    "original_matured_count": 314,
+    "original_matured_exact_candle_first_in_main_within_90min_deadline": 314,
+    "inconsistent_status_count_in_census": 0
+  },
+  "stratified_preregistered_sample": {
+    "sampled_n": 94,
+    "censored_late": 48,
+    "matured_by_deadline": 46,
+    "selection": "Earliest two issuance clocks in week x BTC/ETH x horizon x original outcome maturity status"
+  },
+  "interpretation": [
+    "First-parent Git commit timestamps support a systematic historical exact owner-candle archival publication gap underlying original CENSORED outcomes across all retrospectively joined cases.",
+    "This does not identify whether delayed publication came from GitHub scheduled-run drops, queued workflows, provider failure, or post-close ETL within each source hour.",
+    "All 510 original CENSORED outcomes remain censored; later price tape is strictly sensitivity analysis, not registered forecast accuracy.",
+    "All 824 share overlapping assets/horizons/time windows; neither 824 nor 314 are independent prospective event families.",
+    "Source main commit-time proxy is not independently certified provider first-known timestamp or historical live action receipt.",
+    "Competing challenger vote-family shadow tests on the same historical window are only in-sample diagnostics, never a winner or automatic model promotion."
+  ],
+  "next_gates": [
+    "Existing Hourly Sequence Capture :12, Native Market Recovery :24, source first-publication SLA, and workflow scheduling must be audited as a serialized operational chain with complete run timelines and a prospective no-backfill delivery numerator and denominator.",
+    "Prospectively measure source availability by exact due clock + 90min with independently verified on-time source receipts, by day/horizon/asset; record any suppressed retry and data degradation without translating this into trade permission.",
+    "Keep weekly model evaluation read-only, freeze any proposed vote/weight challenger and demand future blocked walk-forward and independent holdout after first-knowledge PIT admission.",
+    "Task 1.5 needs final independent method review, chat/site source-to-render receipts, version-at-issue/policy replay and truthful action utility. Task 2 historical pullback/distribution edge remains separately blocked."
+  ],
+  "task15_exit_gate": "OPEN",
+  "task2_signal_economic_claim": "BLOCKED",
+  "signed_off": false
+}

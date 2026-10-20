@@ -1,0 +1,285 @@
+{
+  "contract": "TASK2_FULL_STACK_AUDIT_EXECUTION_GATE_v1",
+  "mission_id": "COMPASS-HORIZON-EDGE-20261011",
+  "created_date": "2026-10-13",
+  "stage": "R0_PUBLIC_PINNED_SOURCE_PREFLIGHT_DONE__R1_SYNTHETIC_NEGATIVE_CONTROL_DONE__R1_LIVE_PIT_BLOCKED",
+  "research_only": true,
+  "owner_repo": "Donh91/Investering-Framework-Archive-v1",
+  "read_first": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+  "canonical_related_prs": [
+    1573,
+    1597,
+    1598,
+    1599
+  ],
+  "owner_issues": [
+    1530,
+    1553,
+    1596,
+    1516
+  ],
+  "unmerged_review_dependency_check_required": true,
+  "no_new_scheduler": true,
+  "trade_execution_allowed": false,
+  "automatic_signal_promotion_allowed": false,
+  "retrospective_censor_overwrite_allowed": false,
+  "api_budget_usd_reserved": 0,
+  "work_execution_started": true,
+  "data_families": [
+    "HOURLY_OWNER_SPOT_ETHBTC",
+    "INTRADAY_SHADOW_1_4_24H",
+    "OFFICIAL_12_72_168H",
+    "SHADOW_V2",
+    "STRATEGIC_21_30D",
+    "FORWARD_PATH_14_21D",
+    "CN_WEEKLY_PRICE_BANDS",
+    "CN_PHASE_ROTATION_ALTSEASON",
+    "BREADTH_AND_TIER_LIQUIDITY",
+    "DERIVATIVES_OI_FUNDING_SPOT_FLOW",
+    "ETF_MACRO_VINTAGE_STABLECOINS",
+    "NEWS_SOCIAL_KOL",
+    "PULLBACK_PROTECTION_AND_REENTRY",
+    "EDGE_M6_TYPED_WARNINGS",
+    "PORTFOLIO_ACTION_EXECUTION_PRIVATE",
+    "ALPHA_LAB_LAUNCH_WALLET_PRIVATE",
+    "CHAT_CN_SITE_DELIVERY_AND_LEARNING"
+  ],
+  "frozen_snapshots_asof_2026_10_13": {
+    "pullback_learning_eligibility": "SUSPENDED_NO_ELIGIBILITY_CONTRACT",
+    "pullback_closed_eligible_episodes": 0,
+    "m6_warning_event_count": 20,
+    "m6_provisional_family_count": 2,
+    "m6_economic_action_scoring_ready": false,
+    "action_calibration_eligible_series_rows": 212,
+    "action_calibration_typed_warning_rows": 0,
+    "task15_expost_market_price_joins": 824,
+    "task15_original_outcomes": 814,
+    "task15_censored_original": 500,
+    "task15_matured_original": 314,
+    "task15_missing_original_receipt": 10,
+    "task15_verdict": "BLOCKED_SCIENTIFIC_CLOSURE",
+    "cn_current_pointer_status": "DEGRADED",
+    "note": "Snapshot, not a future readback or admission; head/vintage may change"
+  },
+  "work_stages": [
+    {
+      "id": "R0",
+      "name": "DATA_AUTHORITY_AND_VERSIONED_SOURCE_GRAPH",
+      "method": "DETERMINISTIC_FIRST",
+      "needs": [],
+      "exit": [
+        "exact_main_sha",
+        "source_inventory_by_family_and_grain",
+        "privacy_boundary",
+        "model_source_version_map",
+        "owner_pr_dedup",
+        "pre_registration_sha"
+      ]
+    },
+    {
+      "id": "R1",
+      "name": "ISSUE_TIME_PIT_CENSOR_AND_DELIVERY_RECONCILIATION",
+      "method": "DETERMINISTIC_WITH_INDEPENDENT_REVIEW",
+      "needs": [
+        "R0"
+      ],
+      "exit": [
+        "attempted_population",
+        "admitted",
+        "pending",
+        "censored",
+        "abstain",
+        "no_edge",
+        "unmatched",
+        "source_first_known_certainty",
+        "publication_delay",
+        "negative_fixtures_pass"
+      ]
+    },
+    {
+      "id": "R2",
+      "name": "BASELINE_DIRECTION_RANGE_AND_PATH_TOURNAMENT",
+      "method": "GITHUB_REPLAY_AND_OPTIONAL_SOL_HIGH_METHOD_REVIEW",
+      "needs": [
+        "R1"
+      ],
+      "exit": [
+        "same_clock_control",
+        "event_family_count",
+        "source_version_era",
+        "class_balance",
+        "block_uncertainty",
+        "ablation_controls",
+        "precommitted_metrics",
+        "no_hindsight_winner"
+      ]
+    },
+    {
+      "id": "R3",
+      "name": "PULLBACK_WARNING_DISTRIBUTION_REENTRY",
+      "method": "GITHUB_SYNTHETIC_PLUS_PIT_PROSPECTIVE",
+      "needs": [
+        "R1"
+      ],
+      "exit": [
+        "twenty_R4P_original_adversarial_cases",
+        "frozen_144_grid",
+        "warning_information_lead",
+        "false_sale_cost",
+        "v_recovery_controls",
+        "holder_vs_new_cash",
+        "no_sell_promotion"
+      ]
+    },
+    {
+      "id": "R4",
+      "name": "MACRO_FLOWS_ROTATION_NEWS_ALPHA_LAB_EXTENSIONS",
+      "method": "SPLIT_PUBLIC_PRIVATE_AND_TIME_ELIGIBLE",
+      "needs": [
+        "R1"
+      ],
+      "exit": [
+        "asof_universe_and_listings",
+        "source_first_publication",
+        "independent_market_families",
+        "private_data_no_public_leak",
+        "delisted_failures_and_survivorship",
+        "marginal_lift_beyond_price"
+      ]
+    },
+    {
+      "id": "R5",
+      "name": "DECISION_ECONOMICS_AND_PUBLIC_CONSUMER_REPLAY",
+      "method": "WORK_FOR_BROWSER_AND_CROSS_OWNER_REVIEW",
+      "needs": [
+        "R2",
+        "R3"
+      ],
+      "exit": [
+        "action_permission_at_issue",
+        "first_visible_chat_site",
+        "DA_EN",
+        "390px_mobile",
+        "slippage_fees_spread",
+        "incumbent_vs_cash",
+        "unknown_if_no_receipts"
+      ]
+    },
+    {
+      "id": "R6",
+      "name": "SEALED_FUTURE_HOLDOUT_NEGATIVE_CONTROLS_AND_META_STATISTICS",
+      "method": "DETERMINISTIC_REPLAY_WITH_INDEPENDENT_CRITIQUE",
+      "needs": [
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "exit": [
+        "family_block_bootstrap",
+        "purged_walk_forward",
+        "multiple_testing_controls",
+        "future_maturation",
+        "baseline_outperformance_or_honest_negative"
+      ]
+    },
+    {
+      "id": "R7",
+      "name": "INDEPENDENT_REPORT_AND_OWNER_HANDOVER",
+      "method": "WORK_COORDINATION_RECOMMENDED_NOT_REQUIRED",
+      "needs": [
+        "R0",
+        "R1"
+      ],
+      "exit": [
+        "scoped_pass_fail_block_verdict",
+        "source_commit_and_receipts",
+        "candidate_survivors_if_any",
+        "cost_receipts",
+        "owner_issue_actions",
+        "rollback",
+        "site_parity_readback",
+        "negative_learning_persisted"
+      ]
+    }
+  ],
+  "global_fail_closed": [
+    "MISSING_OR_INVALID_PIT_FIRST_KNOWN",
+    "NOT_SAME_HORIZON_OR_COHORT",
+    "SCORE_CONTRACT_MISMATCH",
+    "RETROSPECTIVE_CENSORED_OUTCOME_RECLASSIFICATION",
+    "ABSTENTION_OR_NO_EDGE_DROPPED_FROM_DENOMINATOR",
+    "INSUFFICIENT_INDEPENDENT_EPISODE_FAMILIES",
+    "AFTER_OUTCOME_PARAMETER_SELECTION",
+    "NO_ACTION_OR_EXECUTABLE_FILL_EVIDENCE",
+    "PRIVATE_RECORD_ON_PUBLIC_BRANCH",
+    "DISAGREEMENT_WITH_CURRENT_MAIN_SOURCE_OWNER",
+    "PREVIEW_ONLY_MISTAKEN_FOR_PRODUCTION",
+    "MISSING_ACTUAL_390PX_FINAL_VISUAL_QA",
+    "SYNTHETIC_ORACLE_PASS_MISTAKEN_FOR_PRODUCTION_TEST_EXECUTION",
+    "SOURCE_REACHABLE_MISTAKEN_FOR_PIT_ADMISSION",
+    "PRIVATE_METADATA_COPIED_TO_PUBLIC_ARCHIVE"
+  ],
+  "success_state": "NO_ALPHA_CLAIM_UNTIL_INDEPENDENT_PROSPECTIVE_ADMISSION",
+  "next_action": "Supervisor: finalize #1598 exact-head 390px visual/DA-EN source-to-live release and rollback, #1597 PIT methodology, #1599 safe readback dependencies. Task2 next run must fresh-read main + all PR heads, then full R1 original issuance-to-first-known ledger; test source admissibility before performance.",
+  "request_work_now": false,
+  "reproducible_progress": {
+    "r0_public_source_census": {
+      "status": "PARTIAL_PUBLIC_PASS",
+      "frozen_main_sha": "aea463dc9c5a57fab0e7ef1aa5fc63791158d524",
+      "families_total": 17,
+      "git_source_refs_verified": 37,
+      "git_tree_refs": 19,
+      "git_blob_refs": 18,
+      "source_mismatches": 0,
+      "private_cross_repo_maturity": "UNVERIFIED_NO_IMMUTABLE_AUTHORIZED_BINDING",
+      "receipt": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PUBLIC_SOURCE_CENSUS_AND_R1_ORACLE_RECEIPT_v1.json",
+      "distinct_source_paths": 36,
+      "shared_source_paths_not_independent": 1
+    },
+    "r1_no_hindsight_preflight": {
+      "status": "CONTROLS_DEFINED_CURRENT_HEAD_CI_RECEIPT_REQUIRED",
+      "negative_positive_fixture_cases": 38,
+      "node_module": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs",
+      "history_rows_independently_scored": 0,
+      "independent_source_pit_proof": "BLOCKED",
+      "r1_full_chronology": "BLOCKED",
+      "private_raw_data_posted": false,
+      "previous_checkpoint_fixture_cases": 34,
+      "node_cli_execution": "CURRENT_HEAD_CI_RECEIPT_REQUIRED",
+      "regression_minimum_controls": 38,
+      "verified_code_head": null,
+      "verified_outcomes_CI_run": null,
+      "verification_scope": "SYNTHETIC_MECHANICS_NOT_HISTORICAL_PIT_OR_FORECAST_SKILL",
+      "historical_CI_checkpoint": {
+        "controls": 31,
+        "head": "1c1aebd0332a49d4266a2e3b738b9dac4fa8a72a",
+        "run": 38432271271,
+        "status": "GITHUB_CI_EXECUTED_SELF_TEST_PASS",
+        "scope": "SYNTHETIC_MECHANICS_NOT_HISTORICAL_PIT_OR_FORECAST_SKILL"
+      },
+      "current_CI_receipt_location": "Existing GitHub Actions run for the reviewed PR HEAD; final TASK2_READY_HANDOFF references the externally read-back exact-head result. This gate never self-certifies its own current HEAD."
+    },
+    "m6_owner_rows": {
+      "status": "SOURCE_LINKAGE_ONLY_PASS",
+      "warning_rows": 20,
+      "feature_rows": 20,
+      "joined_by_compass_id": 20,
+      "binding_mismatches": 0,
+      "provisional_families": 2,
+      "independent_market_shock_families_verified": null
+    },
+    "cross_repo_private_access": {
+      "status": "UNVERIFIED_NO_IMMUTABLE_AUTHORIZED_BINDING",
+      "source_repos_reachable": null,
+      "restricted_raw_data_read": false,
+      "source_filenames_written_to_public": false
+    },
+    "site_compass_release": {
+      "status": "SUPERVISOR_REVIEW_PENDING",
+      "pr": 1598,
+      "head_at_previous_review": "8947e0e1a1cdf5479a5a9490bf3d11efae0bd584",
+      "qa_condition": "Exact-head independent release check, actual 390px/DA_EN and public Pages readback; no presumptive merge"
+    }
+  },
+  "work_execution_scope": "TECHNICAL_PREPARATION_ONLY_R2_R7_NOT_EXECUTED"
+}

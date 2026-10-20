@@ -255,3 +255,31 @@ Measure alert precision, recall, false escalation rate, latency, calibration, tu
 ### Promotion test
 
 Do not promote a multi-agent architecture because it looks sophisticated. It must outperform a simpler single-owner/deterministic baseline after accounting for coordination errors, latency, token/compute cost and correlated false positives.
+
+
+---
+
+## AT-SRC-0013
+
+Date captured: 2026-10-08
+Source type: User-supplied X/shared prompt screenshot
+Exact URL: UNKNOWN
+Status: SCREENED / BASELINE_FIXTURE
+Evidence class: METHOD INSPIRATION; NOT PERFORMANCE EVIDENCE
+Source note: `04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0013_NAIVE_AI_STRATEGY_MINER_PROMPT.md`
+
+### Executive disposition
+
+Retain as `NAIVE_AI_STRATEGY_MINER_BASELINE`, not as a new Auto Trading architecture.
+
+The source correctly emphasizes explicit strategy specifications, costs, baseline comparison, failure explanation and paper-first progression. Its central `collect -> backtest -> rank -> generate variants` loop is also a useful adversarial example of adaptive strategy mining without first-class trial-count, leakage, multiplicity and frozen-forward controls.
+
+### Research use
+
+When current Auto Trading P0 evidence gates are satisfied, compare this naive strategy-mining procedure against the governed Framework pipeline on the same frozen strategy corpus.
+
+Primary question:
+
+> How much apparent strategy alpha disappears when immutable trial counting, leakage controls, multiplicity and frozen-forward evaluation are enforced?
+
+No new THEORY_LEDGER hypothesis or execution authority is created by this source.

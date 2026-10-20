@@ -20,6 +20,11 @@ SUPPORTED_WALLET_ROLES = {
     "LORE_NATIVE",
 }
 
+SUPPORTED_BUYER_GRAPH_CONTRACTS = {
+    "MEME_ALPHA_CURRENT_TOKEN_BUYER_GRAPH_v1",
+    "MEME_ALPHA_PONS_EARLY_BUYER_GRAPH_v1",
+}
+
 
 def _parse_utc(value: str) -> datetime:
     parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
@@ -164,20 +169,21 @@ def build_current_token_buyer_graph(
     }
 
 
-def compute_asof_wallet_quality(
+def compute_asof_wallet_quality_for_graph(
     buyer_graph: dict[str, Any],
     prior_outcomes: list[dict[str, Any]],
     *,
     role: str = "EARLY_LAUNCH",
     min_prior_matured: int = 3,
 ) -> list[dict[str, Any]]:
-    """Compute wallet quality using only outcomes matured before candidate cutoff.
+    """Compute chain/venue-local wallet quality from an admitted buyer graph.
 
-    Outcomes are chain/venue/role local by default. Cross-chain evidence must be
-    tested separately and is not silently imported into a wallet's local skill.
+    This is the shared anti-leakage primitive. It accepts only explicitly admitted
+    graph contracts and uses only outcomes matured at or before the graph cutoff.
+    Cross-chain and cross-venue history is never imported silently.
     """
 
-    if buyer_graph.get("contract") != "MEME_ALPHA_CURRENT_TOKEN_BUYER_GRAPH_v1":
+    if buyer_graph.get("contract") not in SUPPORTED_BUYER_GRAPH_CONTRACTS:
         raise ValueError("INVALID_BUYER_GRAPH")
     if role not in SUPPORTED_WALLET_ROLES:
         raise ValueError("INVALID_WALLET_SPECIALISM_ROLE")
@@ -245,6 +251,25 @@ def compute_asof_wallet_quality(
     return rows
 
 
+def compute_asof_wallet_quality(
+    buyer_graph: dict[str, Any],
+    prior_outcomes: list[dict[str, Any]],
+    *,
+    role: str = "EARLY_LAUNCH",
+    min_prior_matured: int = 3,
+) -> list[dict[str, Any]]:
+    """Backward-compatible Clean G3 wrapper for the original Pump buyer graph."""
+
+    if buyer_graph.get("contract") != "MEME_ALPHA_CURRENT_TOKEN_BUYER_GRAPH_v1":
+        raise ValueError("INVALID_BUYER_GRAPH")
+    return compute_asof_wallet_quality_for_graph(
+        buyer_graph,
+        prior_outcomes,
+        role=role,
+        min_prior_matured=min_prior_matured,
+    )
+
+
 class _UnionFind:
     def __init__(self, items: set[str]) -> None:
         self.parent = {item: item for item in items}
@@ -310,6 +335,7 @@ def adjust_wallet_entities(
     for wallet in wallets:
         strong_groups[uf.find(wallet)].add(wallet)
     effective_entity_count = len(strong_groups)
+    qualified_effective_entity_count = len({uf.find(wallet) for wallet in qualified})
     largest_strong = max((len(group) for group in strong_groups.values()), default=0)
 
     same_funder_linked_qualified: set[str] = set()
@@ -325,6 +351,7 @@ def adjust_wallet_entities(
         "cutoff_utc": cutoff_utc,
         "raw_wallet_count": len(wallets),
         "qualified_wallet_count": len(qualified),
+        "qualified_effective_entity_count_strong_controller_only": qualified_effective_entity_count,
         "effective_entity_count_strong_controller_only": effective_entity_count,
         "largest_strong_controller_entity_size": largest_strong,
         "same_funder_linked_qualified_wallets": len(same_funder_linked_qualified),

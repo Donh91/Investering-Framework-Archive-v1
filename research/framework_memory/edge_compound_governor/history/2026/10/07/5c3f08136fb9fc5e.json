@@ -1,0 +1,106 @@
+{
+  "authority": {
+    "automatic_external_dispatch": false,
+    "canonical_promotion": false,
+    "market_state_change": false,
+    "portfolio_action": false,
+    "sell": false,
+    "threshold_change": false,
+    "trim": false
+  },
+  "conclusion_layer": {
+    "automatic_promotion": false,
+    "review_due": true,
+    "separate_from_collection": true
+  },
+  "contract": "EDGE_COMPOUND_GOVERNOR_v1",
+  "decision": "CONCLUSION_REVIEW",
+  "decision_reason": "New independent-family long-horizon maturity merits separate adjudication plus independent review.",
+  "deltas": [
+    "INITIAL_GOVERNOR_SNAPSHOT"
+  ],
+  "external_routing": {
+    "automatic_dispatch": false,
+    "claude_recommended": true,
+    "sol_recommended": true
+  },
+  "generated_at_utc": "2026-10-07T07:12:45.395618Z",
+  "material_delta": true,
+  "rules": {
+    "live_exit_rule": "NONE",
+    "negative_results_preserved": true,
+    "raw_external_output_canonical": false,
+    "warning_is_sell": false
+  },
+  "semantic_fingerprint": "5c3f08136fb9fc5e13f0e9e8b1c40c97973a3f14407d14a1e5c87abd9146476d",
+  "semantic_state": {
+    "blockers": [],
+    "calibration_eligible_rows": 84,
+    "calibration_warning_rows": 0,
+    "distribution_risk": "UNKNOWN",
+    "feature_integrity_revision": "v1.1_PIT_STRICT",
+    "feature_row_count": 12,
+    "latest_sol_verdict": "WEAKENED",
+    "m6_event_count": 12,
+    "m6_integrity_revision": "v1.1_STRICT_TAPE_AND_ANCHOR",
+    "m6_provisional_family_count": 1,
+    "matured_event_counts": {
+      "14d": 9,
+      "24h": 12,
+      "30d": 0,
+      "72h": 12,
+      "7d": 12
+    },
+    "matured_family_counts": {
+      "14d": 1,
+      "24h": 1,
+      "30d": 0,
+      "72h": 1,
+      "7d": 1
+    },
+    "pit_unverified_feature_rows": 0,
+    "pit_verified_feature_rows": 12,
+    "pullback_risk_state": "BUILDING",
+    "unknown_horizon_counts": {
+      "14d": 0,
+      "24h": 0,
+      "30d": 0,
+      "72h": 0,
+      "7d": 0
+    }
+  },
+  "source_bindings": {
+    "calibration": {
+      "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+      "sha256": "ff3406800b9b43c13636dd2aebb0de6958c6b5d4ba82eaf63fe4344346d41684",
+      "status": "PASS"
+    },
+    "compass_freeze": {
+      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/07/CMP-20261007-42a5e22248cb.json",
+      "sha256": "1624513484bd0493c6bd3882ecd2dd54d2089ac67f45e086c6f13d850e330ad4",
+      "status": "PASS"
+    },
+    "compass_pointer": {
+      "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+      "sha256": "d8b6b94421cc667ee87fba7a44b854f6cb774d281901e8c3a8008397e70ac87d",
+      "status": "PASS"
+    },
+    "edge_features": {
+      "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
+      "sha256": "fbcee9145f69691d20e27f2cde0271d174d2aab1334174ab359719619c13b8ae",
+      "status": "PASS"
+    },
+    "latest_sol": {
+      "comment_id": 6027394815,
+      "path": "research/api_agent/outputs/research_lab_sol/RL-DISTRIBUTION-SURVIVAL-META-006/issue-1476/comment-6027394815/RESEARCH_LAB_SOL_ANALYSIS.json",
+      "sha256": "2b7e75b8d9d92cb6417f94d31e4c79c2ef5abc84b537cb1bb3f07c809a777a25",
+      "status": "PASS",
+      "verdict": "WEAKENED"
+    },
+    "m6_events": {
+      "path": "research/framework_memory/m6_warning_events/LATEST.json",
+      "sha256": "d9a50da46cf3edff50ccc432bfdb3f457503e8d74281b0c05ea1eb88e26bad5b",
+      "status": "PASS"
+    }
+  }
+}

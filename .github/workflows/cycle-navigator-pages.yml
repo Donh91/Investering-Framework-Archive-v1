@@ -21,18 +21,14 @@ on:
       - "scripts/cycle_navigator/validate_public_series.py"
       - "04_MARKET_LEARNING/handlekompas/LATEST.json"
       - "04_MARKET_LEARNING/handlekompas/official/**"
+      - "04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json"
+      - "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
       - "04_MARKET_LEARNING/entry_signals/LATEST.json"
       - ".github/workflows/cycle-navigator-pages.yml"
-  workflow_run:
-    # Rebuild after any successful production Native Handlekompas completion on main.
-    # This covers the primary Hourly → Entry Signal → Native chain plus Native's
-    # scheduled/manual fallback paths. Bot commits use GITHUB_TOKEN and therefore
-    # cannot be relied on to recursively trigger push-based workflows.
-    workflows:
-      - Native Handlekompas
-    types:
-      - completed
+  repository_dispatch:
+    # Existing Shadow writer sends this only after verified publication.
+    types: [shadow-compass-v2-published]
   workflow_dispatch:
 
 permissions:
@@ -44,12 +40,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
-    if: >-
-      github.event_name != 'workflow_run' ||
-      (
-        github.event.workflow_run.head_branch == 'main' &&
-        github.event.workflow_run.conclusion == 'success'
-      )
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -60,8 +50,12 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
       - name: Validate public series identity and score lineage
         run: python3 scripts/cycle_navigator/validate_public_series.py
+      - name: Verify public hourly observed price projection (no interpolation)
+        run: python3 05_CYCLE_NAVIGATOR/site/tests/test_public_hourly_curve.py
       - name: Validate public product contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
       - name: Build privacy-safe public bundle
@@ -76,9 +70,23 @@ jobs:
         run: python3 scripts/cycle_navigator/build_public_live_precision.py
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Verify real 390/430 Premium Chrome mobile behavior
+        run: node 05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs
       - name: Verify final investor-facing shell and privacy
         run: |
-          grep -q 'public-product.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/vnext/index.html
+          grep -q '<base href="./vnext/">' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'PREMIUM LIVE' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'role="tablist"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-overview"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-compass"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-results"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="../legacy/"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'src="./app.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          ! grep -q 'PREMIUM PREVIEW' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          ! grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'public-product.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
@@ -87,7 +95,7 @@ jobs:
           test -f 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.css
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/public-freezes/index.json
-          grep -q 'precision-accountability.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'precision-accountability.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           grep -q 'Frozen Monday. Scored live. Verified after close.' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
@@ -96,8 +104,8 @@ jobs:
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"refresh_cadence": "HOURLY_OWNER_CHAIN"' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'market-compass-premium.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          grep -q 'market-compass-premium.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           grep -q 'CYCLE NAVIGATOR · CONCLUSION' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
           grep -q 'HOW THIS READING IS BUILT' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
           grep -q '2–3 WEEKS' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js
@@ -111,35 +119,45 @@ jobs:
           grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'MARKET COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'Cycle. Rotation. Altcoin timing.' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'The market journey.' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q '1 · MARKET CYCLE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q '2 · ROTATION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q '3 · ALTCOIN CYCLE TIMER' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q '2 · THIS WEEK’S ROTATION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'ALTSEASON IGNITION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'Small-cap expansion gate' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'ETA TO TARGET GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'Conditional gate window · not a guaranteed phase-start date' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'LIVE GATES REFRESHING' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Small caps begin to participate' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'ALTSEASON WATCH' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Only if confirmation arrives' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'LIVE SIGNALS REFRESHING' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'CN_COMPASS_WEEKLY_ALIGNMENT_v1' 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q '"status": "ALIGNED"' 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q 'Broad altseason' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'NEXT ROTATION GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'path-overview-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          grep -q 'NO STRUCTURED 4–8W PHASE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'CURRENT CHECKPOINT' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'path-overview-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'NO STRUCTURED LONG-CYCLE PHASE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -q "source:'MONDAY BASE CASE'" 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Mania / euphoria' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Distribution' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Exit / protection' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'CN_PATH_THREE_TRACK_v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'CN_PATH_CYCLE_ROTATION_v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'no browser countdown math' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'market-cycle-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          grep -q 'rotation-rail-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          grep -q 'altcoin-timer-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'conditional windows need confirmation and are not countdowns' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'market-cycle-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'THE MARKET JOURNEY' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'NEXT GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'function publicPathText' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'cycle-journey-step.next' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'rotation-line-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'cycle-watch-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          ! grep -q 'DECISION WINDOWS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q '3 · ALTCOIN CYCLE TIMER' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'rotation-readout-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'cycle-journey-rail' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           ! grep -q 'CAPITAL ROTATION · HERE AND NOW' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'MARKET COMPASS UPDATED' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'CURRENT OFFICIAL COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'LAST VERIFIED COMPASS · NOT CURRENT' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'OFFICIAL COMPASS UNAVAILABLE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q 'MARKET COMPASS UPDATED' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'completed forecasts with score evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'SINCE LAST CN' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'WHY THIS CALL' 05_CYCLE_NAVIGATOR/site/dist/public-product.js

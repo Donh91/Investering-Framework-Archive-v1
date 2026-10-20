@@ -1,0 +1,104 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "MARKET_STATE_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT",
+  "current_data_status": "OK",
+  "current_ladder": [
+    [
+      "BTC",
+      "HOLD"
+    ],
+    [
+      "ETH",
+      "HOLD"
+    ],
+    [
+      "LARGE_CAPS",
+      "WAIT"
+    ],
+    [
+      "MID_CAPS",
+      "WAIT"
+    ],
+    [
+      "SMALL_CAPS",
+      "WAIT"
+    ],
+    [
+      "MICROCAPS",
+      "HARD_WAIT"
+    ],
+    [
+      "MEMES",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "action_permission": "HOLD_WAIT",
+    "btc_delta_pct": -0.07451576439306828,
+    "directional_state": "MIXED",
+    "eth_delta_pct": 0.047775896089374825,
+    "eth_relative_state": "STRENGTHENING",
+    "ethbtc_delta_pct": 0.12961762799741372,
+    "market_observation_open_utc": "2026-10-08T00:00:00Z",
+    "new_price_observation": true,
+    "predecessor_market_observation_open_utc": "2026-10-07T20:00:00Z",
+    "regime": "MIXED",
+    "summary": "BTC/ETH direction is conflicting or incomplete; action authority remains separate."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "LOW",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "OK",
+    "decisive_public_drivers": [
+      "W40 BTC gained 2.44% and ETH 1.43%, while ETH/BTC declined 0.97%.",
+      "The 30d shadow source ended at 78 with an ALTCOIN_SEASON label, but 90d was 55 and 365d was 37; the shorter-window label varied during W40.",
+      "Five settled sessions totaled +82.9 in reported BTC ETF units versus \u2212118.0 in ETH ETF units; final Master Monday describes mixed microstructure and no confirmed broad transmission.",
+      "The 168-hour price path recovered late, countering a confirmed-breakdown claim."
+    ],
+    "distribution_risk": "UNKNOWN",
+    "eta_window": "Possible W41 retest, particularly Day 3\u20137; timing and occurrence unconfirmed.",
+    "invalidation": "The near-term retest watch weakens if BTC sustains its late-W40 advance while ETH/BTC stabilizes and breadth and flows confirm participation. A single range breach is a forecast miss, not automatically distribution.",
+    "last_material_change_at": "2026-10-07T14:45:46Z",
+    "public_explanation": null,
+    "pullback_class": "ORDINARY RETEST WATCH; DEPTH AND SEVERITY UNQUANTIFIED.",
+    "pullback_risk_state": "BUILDING",
+    "reentry_message": "No re-entry review is active.",
+    "reentry_state": "INACTIVE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-10-08T01:11:53Z",
+  "heat_detail": {
+    "btc_return_24h_pct": -2.55286,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": -4.60681,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": -3.944955
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 18154.0,
+  "last_requested_source_sha": "5a31daee7ddbbe46ee4522655dd13d00bdd64923ea95af9c7e56bb1dd8904b82",
+  "latest_compass_source_packet_sha256": "519542cda704cc141a4d4d067820124718b73cb5e384c7a71a37ffb1893b5ba6",
+  "protective_bypass": false,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 18307.0,
+  "source_packet_sha256": "6b8a4a5ad84c30987391788b9aadfc8fadf73c153cbdd8baac54aab08fa7b041",
+  "suppressed_cause_codes": [],
+  "upstream_refresh_required": false
+}

@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 
 from scripts.api_agent.adaptive_budget_lane_eligibility import decide
+from scripts.api_agent import adaptive_decision_miss_auditor as miss_auditor
 
 def test_validation_policy_is_shadow_only():
     p=json.loads((ROOT/'research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_VALIDATION_POLICY_v1_1.json').read_text())
@@ -52,6 +53,31 @@ def test_decision_miss_registry_marks_discovery_only_and_bounds_attribution(tmp_
     assert item['authority']['sensor_weight_change'] is False
     assert payload['attribution_semantics']['aligned_sensor_count_proves_independence'] is False
     assert payload['authority']['automatic_sensor_promotion'] is False
+
+
+def test_decision_miss_api_invalid_retries_once_then_blocks(monkeypatch):
+    responses=[
+        {"id":"r1","usage":{"input_tokens":100,"output_tokens":10},"output_text":"{\"status\":\"READY\""},
+        {"id":"r2","usage":{"input_tokens":100,"output_tokens":10},"output_text":"{\"status\":\"READY\""},
+    ]
+    monkeypatch.setattr(miss_auditor,"call",lambda key,ctx:responses.pop(0))
+    out,seen,errors=miss_auditor.call_with_bounded_retry("k",{"x":1})
+    assert out is None
+    assert len(seen)==2
+    assert len(errors)==2
+    blocked=miss_auditor.blocked_result("API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY")
+    assert blocked=={"status":"BLOCKED","misses":[],"reason":"API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY"}
+
+def test_decision_miss_second_attempt_can_recover(monkeypatch):
+    responses=[
+        {"id":"r1","usage":{"input_tokens":100,"output_tokens":10},"output_text":"{\"status\":\"READY\""},
+        {"id":"r2","usage":{"input_tokens":100,"output_tokens":10},"output_text":json.dumps({"status":"NO_SUPPORTED_MISSES","misses":[]})},
+    ]
+    monkeypatch.setattr(miss_auditor,"call",lambda key,ctx:responses.pop(0))
+    out,seen,errors=miss_auditor.call_with_bounded_retry("k",{"x":1})
+    assert out=={"status":"NO_SUPPORTED_MISSES","misses":[]}
+    assert len(seen)==2
+    assert len(errors)==1
 
 def guard(status="PASS", *, remaining=1.0, reserve=0.05, errors=None):
     return {

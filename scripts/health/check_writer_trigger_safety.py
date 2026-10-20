@@ -6,6 +6,17 @@ import re
 from pathlib import Path
 
 PR_ISOLATED_WRITER_GROUP = "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
+MARKET_WRITER_GROUP = "framework-market-owner-writer"
+PR_ISOLATED_MARKET_WRITER_GROUP = "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-market-owner-writer' }}"
+MARKET_WRITER_ALLOWLIST = {
+    "hourly-sequence-capture.yml",
+    "entry-signal-ledger.yml",
+    "native-handlekompas.yml",
+    "native-market-recovery.yml",
+    "intraday-execution-research.yml",
+    "compass-event-refresh.yml",
+    "daily-compass.yml",
+}
 
 
 def has_job_main_guard(text: str) -> bool:
@@ -35,7 +46,12 @@ def inspect(path: Path) -> list[str]:
     queue_value = queue_match.group(1).strip().strip("'\"") if queue_match else None
     cancel_match = re.search(r"(?m)^\s+cancel-in-progress:\s*([^\n#]+)", text)
     cancel_value = cancel_match.group(1).strip().strip("'\"") if cancel_match else None
-    writer_group = group_value in {"framework-main-writer", PR_ISOLATED_WRITER_GROUP}
+    global_writer_group = group_value in {"framework-main-writer", PR_ISOLATED_WRITER_GROUP}
+    market_writer_group = path.name in MARKET_WRITER_ALLOWLIST and group_value in {
+        MARKET_WRITER_GROUP,
+        PR_ISOLATED_MARKET_WRITER_GROUP,
+    }
+    writer_group = global_writer_group or market_writer_group
 
     if push_trigger:
         findings.append("PUSH_TRIGGERED_MAIN_WRITER")
@@ -49,7 +65,7 @@ def inspect(path: Path) -> list[str]:
         findings.append("MAIN_WRITER_WITHOUT_MAX_QUEUE")
     elif cancel_value not in {None, "false"}:
         findings.append("MAIN_WRITER_QUEUE_CANCEL_CONFLICT")
-    if pr_trigger and group_value == "framework-main-writer":
+    if pr_trigger and group_value in {"framework-main-writer", MARKET_WRITER_GROUP}:
         findings.append("PR_VALIDATION_COMPETES_WITH_MAIN_WRITER")
     return findings
 
@@ -72,8 +88,8 @@ def main() -> None:
             "A main writer must never run from a generic push event.",
             "A manually dispatchable main writer must be pinned to main by job guard or checkout ref.",
             "Every main-writing workflow must include an explicit main checkout; immutable downstream checkouts may use a frozen commit.",
-            "Every production main writer must serialize through framework-main-writer concurrency.",
-            "Every framework-main-writer member must use queue: max so later group members cannot replace a pending production writer.",
+            "Every production main writer must serialize through framework-main-writer, except the explicit latency-critical market-owner allowlist which serializes through framework-market-owner-writer.",
+            "Every approved writer group member must use queue: max so later group members cannot replace a pending production writer.",
             "A workflow with pull_request validation and production main writes must isolate PR runs from framework-main-writer.",
         ],
     }

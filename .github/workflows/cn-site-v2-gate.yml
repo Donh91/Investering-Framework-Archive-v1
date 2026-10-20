@@ -13,6 +13,7 @@ on:
       - '05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md'
       - 'scripts/cycle_navigator/validate_public_series.py'
       - '.github/workflows/cycle-navigator-pages.yml'
+      - '.github/workflows/native-handlekompas.yml'
       - '.github/workflows/cn-site-v2-gate.yml'
   workflow_dispatch:
 jobs:
@@ -27,15 +28,33 @@ jobs:
       - name: Validate and build
         run: |
           python3 scripts/cycle_navigator/validate_public_series.py
+          python3 05_CYCLE_NAVIGATOR/site/tests/test_public_hourly_curve.py
           node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
+          node 05_CYCLE_NAVIGATOR/site/tests/official-compass-freshness.test.mjs
+          node 05_CYCLE_NAVIGATOR/site/tests/full-stack-readback.test.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           python3 scripts/cycle_navigator/build_public_live_precision.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Verify real 390/430 Premium Chrome mobile behavior
+        run: node 05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs
       - name: Verify public investor product
         run: |
-          test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/vnext/index.html
+          grep -q '<base href="./vnext/">' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'PREMIUM LIVE' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'role="tablist"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-overview"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-compass"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'id="view-results"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="../legacy/"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'src="./app.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          ! grep -q 'PREMIUM PREVIEW' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          ! grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
@@ -50,39 +69,46 @@ jobs:
           ! grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'MARKET COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'Cycle. Rotation. Altcoin timing.' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'The market journey.' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q '1 · MARKET CYCLE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q '2 · ROTATION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q '3 · ALTCOIN CYCLE TIMER' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q '2 · THIS WEEK’S ROTATION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'ALTSEASON IGNITION' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'Small-cap expansion gate' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'ETA TO TARGET GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'Conditional gate window · not a guaranteed phase-start date' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'LIVE GATES REFRESHING' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Small caps begin to participate' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'ALTSEASON WATCH' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Only if confirmation arrives' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'LIVE SIGNALS REFRESHING' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'CN_COMPASS_WEEKLY_ALIGNMENT_v1' 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q '"status": "ALIGNED"' 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q 'Broad altseason' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'NEXT ROTATION GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'path-overview-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'CURRENT CHECKPOINT' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'path-overview-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'NO STRUCTURED LONG-CYCLE PHASE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -q "source:'MONDAY BASE CASE'" 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Mania / euphoria' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Distribution' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Exit / protection' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'CN_PATH_THREE_TRACK_v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'CN_PATH_CYCLE_ROTATION_v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'no browser countdown math' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'market-cycle-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          grep -q 'rotation-rail-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          grep -q 'altcoin-timer-v2' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          grep -q "github.event.workflow_run.head_branch == 'main'" .github/workflows/cycle-navigator-pages.yml
-          grep -q "github.event.workflow_run.conclusion == 'success'" .github/workflows/cycle-navigator-pages.yml
-          ! grep -q "github.event.workflow_run.event == 'workflow_run'" .github/workflows/cycle-navigator-pages.yml
+          grep -q 'conditional windows need confirmation and are not countdowns' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'market-cycle-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'THE MARKET JOURNEY' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'NEXT GATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'function publicPathText' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'cycle-journey-step.next' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'rotation-line-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'cycle-watch-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          ! grep -q 'DECISION WINDOWS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q '3 · ALTCOIN CYCLE TIMER' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'rotation-readout-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'cycle-journey-rail' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'workflow_dispatch:' .github/workflows/cycle-navigator-pages.yml
+          ! grep -q 'workflow_run:' .github/workflows/cycle-navigator-pages.yml
+          grep -q 'gh workflow run cycle-navigator-pages.yml --ref main' .github/workflows/native-handlekompas.yml
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
           grep -q 'completed forecasts with score evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js

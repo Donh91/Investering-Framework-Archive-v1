@@ -1,0 +1,89 @@
+{
+  "authority": {
+    "live_exit_rule": "NONE",
+    "runtime_change": false,
+    "warning_is_sell": false
+  },
+  "calibration": {
+    "eligible_outcome_bindings_by_exclusion_count": 80,
+    "eligible_series_rows_replayed": 160,
+    "exclusions": {
+      "PRE_DECISION_INTEGRITY_SCHEMA": 147,
+      "PROJECTION_NOT_PROSPECTIVE_MACHINE_PACKAGE": 36,
+      "PROTECTION_DATA_QUALITY_NOT_OK": 30,
+      "UNREGISTERED_DECISION_POLICY": 26
+    },
+    "series_rows_are_two_correlated_assets_per_eligible_outcome": true,
+    "source_outcomes_at_current_tree": 319,
+    "warning_series_rows_replayed": 0
+  },
+  "control_period": {
+    "alert_delivery_receipt": "UNKNOWN",
+    "compass_id": "CMP-20260928-e78407db05ac",
+    "control_does_not_establish_false_alarm_rate": true,
+    "decision_policy_version": "2026-09-25_DECISION_INTEGRITY_V3_2",
+    "issued_at_utc": "2026-09-28T21:54:34Z",
+    "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/28/CMP-20260928-e78407db05ac.json",
+    "pullback_risk_state": "BUILDING",
+    "role": "CONTROL_CONTEXT_ONLY_NOT_MATCHED_POLICY_FAMILY",
+    "schema_version": 3,
+    "selection": "first schema>=3 NORMAL/BUILDING freeze at pinned current tree; diagnostic, not preregistered performance control",
+    "sha256": "8f0cf671f9bbcb71abb0570504920f31d86b871c0d97b9d75a1c2cee9d636dec"
+  },
+  "current_freeze_population": {
+    "protection_state": {
+      "BUILDING": 59,
+      "ELEVATED": 11,
+      "HIGH": 1,
+      "NORMAL": 8,
+      "None": 12,
+      "UNAVAILABLE": 52
+    },
+    "schema": {
+      "1": 12,
+      "2": 37,
+      "3": 21,
+      "4": 73
+    }
+  },
+  "delivery_chain": {
+    "action_available": "UNKNOWN",
+    "alertable_under_contemporaneous_policy": "UNKNOWN",
+    "delivery": "UNKNOWN",
+    "emission": "UNKNOWN",
+    "owner_market_path_replay": "PASS",
+    "stress_original_knowledge_time": "UNKNOWN",
+    "warning_freeze": "HASH_VERIFIED"
+  },
+  "hypothesis_trials_created": 0,
+  "m6": {
+    "events": 12,
+    "events_range": [
+      "2026-09-19T09:21:56Z",
+      "2026-09-24T11:48:33Z"
+    ],
+    "families": 1,
+    "full_stored_object_match": false,
+    "generated_at_utc": "2026-10-10T07:16:20Z",
+    "horizon_mismatches": [],
+    "second_run_identical": true,
+    "source_freeze_hash_matches": true,
+    "tape_binding_mismatches": [
+      "M6E-8dbfcf3e3077eea4",
+      "M6E-acfe7a0fc72aca4e",
+      "M6E-2511cff8f71258fa",
+      "M6E-bc5a5ce8f9874c07",
+      "M6E-6e0f494f2efca73b",
+      "M6E-8578d6935fd94c3a",
+      "M6E-29e42e3a45ff20a3",
+      "M6E-7513e5a4ed0436a7",
+      "M6E-b1ba8914fb3cc670",
+      "M6E-459f6429e5c10bbc",
+      "M6E-bee31d2dabc582fe",
+      "M6E-ac7f042228d27208"
+    ]
+  },
+  "owner_version_limit": "Old schema2 warnings and modern schema>=3 control are not a matched policy population",
+  "source_commit": "175aa330f15262e4fcca0de6b3c9aff77511325e",
+  "status": "BOUND_READ_ONLY_OWNER_REPLAY"
+}

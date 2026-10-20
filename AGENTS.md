@@ -132,6 +132,24 @@ A candidate merged to the intake path triggers remediation maturation immediatel
 
 The operational contract is `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`. If a research thread lacks GitHub write capability, it must return a schema-complete candidate payload and explicitly state that it was not persisted.
 
+### 0.2a Development quality and PR release authority — owner-approved 2026-10-16
+
+This is a constraint on the EXISTING Codex intake, Supervisor and GitHub PR/CI process, not a new executor, reviewer account, scheduler, queue or authority plane. For consequential code work, freeze owner/source contract, failure matrix, positive and adversarial negative cases before implementation; prove critical tests catch removed guards. No fabricated GitHub `APPROVED`, model-as-human impersonation, silent budget increase, portfolio action or private-data leak.
+
+**Single-owner release rule (specific explicit owner override on 2026-10-16):** The repository owner has expressly withdrawn the requirement for an additional human GitHub reviewer/integrator as a universal condition for these already nominated PRs: #1622, #1626, #1627, #1629, #1644, #1645 and #1649. A release may be executed by the existing GitHub identity `Donh91` following the owner's authenticated authorization, with the exact resulting operation recorded as `SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE`. This is not a formal nonauthor GitHub approval or autonomous self-merge permission. An automated queue, reviewer, Codex or Supervisor cannot authorize its own work; future releases require explicit owner mandate or a separately approved bounded release policy.
+
+**Before an owner-authorized release:**
+1. Re-read current `main`, exact 40-character PR head, actual GitHub rule/required-review/status state, changed files, active domain policies and required CI. Never bypass a real GitHub protection rule, push code directly onto main for the purpose of integrating a PR, grant extra permissions, or use a fake approval. Invoke only an existing integrator with the expected HEAD SHA.
+2. Examine available non-writing technical review from independent models/agents as advisory evidence, including current/previous Codex findings; record any unavailable quota or pending review truthfully. The read-only `scripts/governance/check_codex_review_finality.py` may show `FINAL_TECHNICAL_REVIEW`, but `merge_authorized=false` remains correct and its two-pass census is NOT atomic with a GitHub merge. The owner's explicit authorization and real platform rules, not a mutable bot comment, control the release. Any concrete unmitigated P0/P1, reproducible evidence-corruption defect, unpaid/repeated billing exposure or absent required original evidence STOPS release regardless of consent. Record residual P2 issues rather than conceal them.
+3. Enforce risk-adjusted existing tests, negative controls, integrity/policy authority and source-recovery separation. High-impact governance, source, workflow and payment changes require verified immediate safepoint and stronger evidence; no relaxation of canonical repository safety or the public/private data boundary. Keep `SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED` fatal for affected high-impact actions.
+4. After merge, read back exact new main SHA, changed blobs and genuine scheduled producer/consumer evidence. Green CI is not a natural production readback; an unfinished follow-up remains `POST_FIX_OBSERVATION`.
+
+**Automated merge policy:** A bot or unattended agent can never take a `COMMENTED`, stale exact-head review, earlier positive receipt or double-read comment census as release authorization. Existing review-event TOCTOU in PR #1649 remains a known limitation. Owner-directed integration does not claim to make it atomic; it simply does not base its authorization on those mutable bot events. No `gh pr merge --match-head-commit` can lock same-SHA comments, so purely bot-authorized merging remains blocked.
+
+**Independent recovery invariant is unchanged.** The canonical `01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md` still prohibits jointly destructive source/Vault authority, force pushing, branch/ruleset/credential changes by agents, destructive history rewriting and unreviewed source governance escalation. Internal safepoints are not independent external backups. Protecting main with a required-PR GitHub rule remains a separate project: current scheduled direct-main publishers must be migrated first; never silently give writers a bypass.
+
+**Learning:** Use existing #1156 and operational receipts to record advisory code review defects, test evidence, exact head, owner authorization, actual merge, postmerge defects, real cost and producer/consumer closure. No new parallel metric or autonomous integrator.
+
 ### 0.3 Global Action Compass invocation - all Investering threads
 
 Canonical owner:
@@ -147,6 +165,8 @@ In any repository-aware Investering thread, an exact prompt of `kompas`, `handle
 Do not ask which thread, DATA PING version, workflow or agent the user means. Resolve current authority from the operational cockpit and autonomous production-data route, then apply the global compass contract.
 
 This is not an instruction to reactivate manual DATA PING. A plain compass invocation is a current-state render/decision-translation request. It must not create a new prospective receipt merely because the user requested the view.
+
+**Permanent complete KOMPAS mandate (2026-10-08):** Plain `Kompas` means cross-read and integrate all applicable Official, Native, Shadow v2 (research only), Strategic, Master Monday/Cycle Navigator and risk/SELL/Swing/re-entry evidence, with every relevant asset/horizon and a final assistant-owned time-labelled interpretation. The public CN site must consume a sanitized composite readback of that same evidence, with official action ownership unchanged. Apply Global Action Compass contract Section 3.1 and `full_stack_compass_default` machine routing; unavailable sources remain explicit.
 
 User-facing compass output is **TEXT_ONLY** by default. APIs, connectors, repository tools and web retrieval may be used internally when needed, but do not intentionally render widgets, market cards, interactive charts, API/connector result cards, raw JSON, raw tool output or provider diagnostics in the compass response. Keep the authored output compact, phone-first and action-oriented.
 
