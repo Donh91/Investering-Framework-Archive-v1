@@ -752,7 +752,7 @@ def test_task2_source_sla_rejects_nonfinite_owner_source(tmp_path):
     _task2_source_repo(tmp_path)
     header = "timestamp_utc,spot_status,btc_close,eth_close\n"
     _task2_commit_csv(tmp_path, "2026-10-19.csv",
-                      header + "2026-10-19T00:00:00Z,PASS,nan,6\n",
+                      header + "2026-10-19T00:00:00Z,PASS,101,6\n2026-10-19T01:00:00Z,PASS,nan,6\n",
                       "2026-10-19T03:04:00+00:00")
     audit = _task2_source_audit_module()
     import pytest
