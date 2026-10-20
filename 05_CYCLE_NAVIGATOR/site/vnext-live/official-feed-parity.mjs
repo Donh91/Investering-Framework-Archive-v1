@@ -228,7 +228,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
         base_case_4_8_weeks:pkg.base_case_4_8_weeks
       },
       compass
-    }, {mode:'live',verifiedAlignment:true,lang:'da'});
+    }, {mode:'live',verifiedAlignment:true,lang:options.lang==='en'?'en':'da'});
     if (view.status==='SOURCE_BOUND' && view.is_live) {
       result.path={
         state:'SOURCE_BOUND',source_issue:view.source_issue,
