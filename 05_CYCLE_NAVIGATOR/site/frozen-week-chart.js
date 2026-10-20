@@ -49,7 +49,7 @@
       const d=start+i*DAY,p=obs?.[key]?.find(p=>p.day===i+1),asOf=Date.parse(p?.as_of_utc);
       // Exact existing UTC-day eligibility. An incomplete day never becomes a settled close.
       const actual=p&&p.date===new Date(d).toISOString().slice(0,10)&&p.coverage_complete_to_date===true&&asOf>d&&asOf<=d+DAY&&asOf<=cutoff&&asOf<=now&&[p.low,p.high,p.close].every(num)&&p.low<=p.close&&p.close<=p.high?p:null;
-      return {date:new Date(d).toISOString().slice(0,10),time:d/1000,index:i,forecast:daily[i]||null,range:rows[i<2?0:i<4?1:2],actual};
+      return {date:new Date(d).toISOString().slice(0,10),time:d/1000,closeTime:(d+DAY)/1000,index:i,forecast:daily[i]||null,range:rows[i<2?0:i<4?1:2],actual};
     });
     return {live,start,end,cutoff,stale,days,daily,hourly,rows,summary,windows};
   }
@@ -58,7 +58,7 @@
   // a future canonical Monday emits its first eligible daily forecast.
   function linePlan(m){
     const forecast=m.daily.length===7
-      ?m.days.map(d=>({time:d.time,value:d.forecast.expected_close}))
+      ?m.days.map(d=>({time:d.closeTime,value:d.forecast.expected_close}))
       :[];
     const actualRuns=[];let current=[];
     if(m.hourly?.length){
@@ -70,7 +70,7 @@
       }
     }else{
       m.days.forEach(d=>{
-        if(d.actual)current.push({time:d.time,value:d.actual.close});
+        if(d.actual)current.push({time:Date.parse(d.actual.as_of_utc)/1000,value:d.actual.close});
         else if(current.length){actualRuns.push(current);current=[];}
       });
     }
@@ -110,28 +110,28 @@
       const spans=m.rows.map((row,index)=>({row,index,first:index===0?0:index===1?2:4,last:index===0?1:index===1?3:6,label:['D1–2','D3–4','D5–7'][index]}));
       c.save();
       if(m.daily.length){
-        const upper=m.days.map(d=>[x(d.time),y(d.forecast.high)]),lower=m.days.map(d=>[x(d.time),y(d.forecast.low)]).reverse();
+        const upper=m.days.map(d=>[x(d.closeTime),y(d.forecast.high)]),lower=m.days.map(d=>[x(d.closeTime),y(d.forecast.low)]).reverse();
         if(upper.concat(lower).every(p=>p.every(v=>v!==null))){c.beginPath();upper.concat(lower).forEach((p,i)=>i?c.lineTo(...p):c.moveTo(...p));c.closePath();c.fillStyle='rgba(95,150,255,.09)';c.fill();}
       }else{
         spans.forEach(({row:r,first,last})=>{
-          const left=x(m.days[first].time),right=x(m.days[last].time),next=x(m.days[Math.min(first+1,6)].time),step=(next??0)-(left??0)||40;
+          const left=x(m.days[first].time),right=x(m.days[last].closeTime);
           const top=y(r.forecast_high),bottom=y(r.forecast_low);
           if([left,right,top,bottom].some(v=>v===null))return;
-          const l=Math.max(0,left-step*.5),rr=Math.min(size.width,right+step*.5);
+          const l=Math.max(0,left),rr=Math.min(size.width,right);
           const gradient=c.createLinearGradient(0,top,0,bottom);gradient.addColorStop(0,'rgba(95,150,255,.13)');gradient.addColorStop(1,'rgba(95,150,255,.045)');c.fillStyle=gradient;c.fillRect(l,top,rr-l,bottom-top);
           c.strokeStyle='rgba(95,150,255,.44)';c.lineWidth=1;c.setLineDash([4,4]);
           c.beginPath();c.moveTo(l,top);c.lineTo(rr,top);c.moveTo(l,bottom);c.lineTo(rr,bottom);c.stroke();c.setLineDash([]);
         });
       }
       if(!m.daily.length)spans.forEach(({first,last,label},index)=>{
-        const left=x(m.days[first].time),right=x(m.days[last].time),next=x(m.days[Math.min(first+1,6)].time),step=(next??0)-(left??0)||40;
-        if(left===null||right===null)return;const l=Math.max(0,left-step*.5),rr=Math.min(size.width,right+step*.5),mid=(l+rr)/2;
+        const left=x(m.days[first].time),right=x(m.days[last].closeTime);
+        if(left===null||right===null)return;const l=Math.max(0,left),rr=Math.min(size.width,right),mid=(l+rr)/2;
         if(index){c.strokeStyle='rgba(145,162,185,.14)';c.lineWidth=1;c.setLineDash([2,5]);c.beginPath();c.moveTo(l,8);c.lineTo(l,size.height-22);c.stroke();c.setLineDash([]);}
         c.font='600 9px -apple-system,BlinkMacSystemFont,system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';const width=c.measureText(label).width+14;c.fillStyle='rgba(20,36,58,.88)';c.fillRect(mid-width/2,9,width,20);c.strokeStyle='rgba(95,150,255,.22)';c.strokeRect(mid-width/2+.5,9.5,width-1,19);c.fillStyle='rgba(181,200,227,.9)';c.fillText(label,mid,19);
       });
       // A vertical marker only denotes the LAST SOURCE OBSERVATION, never a
       // "today" date or an imagined boundary between actual and forecast.
-      const last=m.days.filter(d=>d.actual).at(-1),lastTime=m.hourly.at(-1)?.time??last?.time;
+      const last=m.days.filter(d=>d.actual).at(-1),lastTime=m.hourly.at(-1)?.time??(last?Date.parse(last.actual.as_of_utc)/1000:undefined);
       if(lastTime!==undefined){const xx=x(lastTime);if(xx!==null){
         c.fillStyle='rgba(160,177,198,.028)';c.fillRect(xx,0,size.width-xx,size.height);
         c.strokeStyle='rgba(190,205,225,.55)';c.lineWidth=1;c.setLineDash([3,5]);
@@ -141,7 +141,7 @@
         c.fillStyle='rgba(11,26,44,.93)';c.fillRect(left,38,w,18);c.fillStyle='#b6d7ed';
         c.textAlign='center';c.textBaseline='middle';c.fillText(label,left+w/2,47);
       }}
-      m.days.forEach(d=>{if(!d.actual)return;const xx=x(d.time),hi=y(d.actual.high),lo=y(d.actual.low);if([xx,hi,lo].some(v=>v===null))return;c.strokeStyle='rgba(39,197,154,.48)';c.lineWidth=1;c.beginPath();c.moveTo(xx,hi);c.lineTo(xx,lo);c.moveTo(xx-3,hi);c.lineTo(xx+3,hi);c.moveTo(xx-3,lo);c.lineTo(xx+3,lo);c.stroke();});c.restore();
+      m.days.forEach(d=>{if(!d.actual)return;const xx=x(Date.parse(d.actual.as_of_utc)/1000),hi=y(d.actual.high),lo=y(d.actual.low);if([xx,hi,lo].some(v=>v===null))return;c.strokeStyle='rgba(39,197,154,.48)';c.lineWidth=1;c.beginPath();c.moveTo(xx,hi);c.lineTo(xx,lo);c.moveTo(xx-3,hi);c.lineTo(xx+3,hi);c.moveTo(xx-3,lo);c.lineTo(xx+3,lo);c.stroke();});c.restore();
     }
   }
   function mount(host,data){
@@ -170,7 +170,7 @@
     const opts={priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:true,lineWidth:2,autoscaleInfoProvider:()=>({priceRange:{minValue:min-padding,maxValue:max+padding}})};
     const plan=linePlan(m);
     const baseline=chart.addSeries(lib.LineSeries,{...opts,color:BLUE,lineType:lib.LineType.Simple,lineStyle:lib.LineStyle.Dotted,lineWidth:3});baseline.setData(plan.forecast);
-    const scaleAnchor=chart.addSeries(lib.LineSeries,{...opts,color:'transparent',lineVisible:false,crosshairMarkerVisible:false});scaleAnchor.setData(m.days.map(d=>({time:d.time,value:d.forecast?.high??d.range.forecast_high})));
+    const scaleAnchor=chart.addSeries(lib.LineSeries,{...opts,color:'transparent',lineVisible:false,crosshairMarkerVisible:false});scaleAnchor.setData([...m.days.map(d=>({time:d.time,value:d.forecast?.high??d.range.forecast_high})),{time:m.end/1000,value:m.days[6].forecast?.high??m.days[6].range.forecast_high}]);
     // One original-source overlay in BOTH modes: exact 7d daily low/high envelope
     // plus observed high/low whiskers, or the three genuine legacy intervals.
     // Visual hierarchy remains just two primary closing-price strokes.
@@ -179,8 +179,8 @@
     plan.actualRuns.forEach((points,i)=>{const latest=i===plan.actualRuns.length-1;const series=chart.addSeries(lib.LineSeries,{...opts,color:GREEN,lineStyle:lib.LineStyle.Solid,lineWidth:3,pointMarkersVisible:true,pointMarkersRadius:3,lastValueVisible:latest,priceLineVisible:latest,priceLineColor:'rgba(39,197,154,.30)',priceLineStyle:lib.LineStyle.Dashed});series.setData(points);});
     chart.timeScale().fitContent();
     const select=d=>{selected=d.index;readout(d);};
-    chart.subscribeCrosshairMove(p=>{if(p.time===undefined)return;const d=m.days.find(d=>d.time===p.time);if(d)select(d);});
-    chart.subscribeClick(p=>{if(p.time===undefined)return;const d=m.days.find(d=>d.time===p.time);if(d)select(d);});
+    chart.subscribeCrosshairMove(p=>{if(p.time===undefined)return;const d=m.days.find(d=>p.time>d.time&&p.time<=d.closeTime)||m.days.find(d=>p.time===d.time&&d.index===0);if(d)select(d);});
+    chart.subscribeClick(p=>{if(p.time===undefined)return;const d=m.days.find(d=>p.time>d.time&&p.time<=d.closeTime)||m.days.find(d=>p.time===d.time&&d.index===0);if(d)select(d);});
     host.querySelectorAll('[data-fw-day]').forEach(b=>b.onclick=()=>select(m.days[Number(b.dataset.fwDay)]));
     host.querySelectorAll('[data-fw-asset]').forEach(b=>b.onclick=()=>{asset=b.dataset.fwAsset;mount(host,data);});
     host.querySelector('.fw-reset').onclick=()=>chart.timeScale().fitContent();
