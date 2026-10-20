@@ -18,6 +18,6 @@ export function chartSourceFingerprint(latest, nowMs=Date.now()) {
     pointer?.status??null,stale,
     v?.public_issue_number??null,v?.forecast_week??null,
     v?.window_scores??null,v?.rows??null,v?.daily_price_path??null,
-    v?.daily_observations??null,v?.live_as_of_utc??null
+    v?.daily_observations??null,v?.hourly_price_path??null,v?.live_as_of_utc??null
   ]);
 }
