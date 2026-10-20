@@ -72,6 +72,7 @@ assert.equal(p.phases[0].kind,'reference');
 assert.equal(p.phases[1].kind,'next');
 assert.equal(p.phases[2].kind,'unverified');
 assert.equal(p.rotation[1].action,'UNAVAILABLE','MEMES do not inherit MICRO');
+assert.match(p.source,/CN #30 · 2026-W43 · CMP-TEST-W43/,'Readback must show original source identity, not a nonexistent adapter label');
 assert.equal(p.rotation[1].eta,'No verified ETA');
 const wrongIdentity=structuredClone(view);wrongIdentity.path.source_identity='CMP-FORGED';
 assert.equal(pathModel(wrongIdentity,'en').eligible,false,'Wrong Compass source must not promote path');
