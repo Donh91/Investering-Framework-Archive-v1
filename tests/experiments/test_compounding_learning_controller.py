@@ -148,6 +148,30 @@ class CompoundingLearningControllerTest(unittest.TestCase):
         self.assertEqual(families[0]["matured_outcome_count_total"], 25)
         self.assertEqual(families[0]["scientific_score_eligible_outcome_count_total"], 0)
 
+    def test_fresh_but_below_science_floor_is_not_falsely_stale(self):
+        row = candidate(state="MATURED_SUPPORTED", matured_outcome_count=25,
+                        scientific_score_eligible_outcome_count=1)
+        adj = adjudication(action="RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+                           state="MATURED_SUPPORTED", matured=25)
+        adj["candidate_actions"][0]["scientific_score_eligible_outcome_count"] = 1
+        packets, keys = controller.evaluate_candidates(
+            registry(row), admission(), adj, policy(), {}, datetime(2026, 1, 8, tzinfo=UTC))
+        self.assertEqual(len(packets), 1)
+        self.assertEqual(packets[0]["adjudication_freshness"], "CURRENT")
+        self.assertEqual(packets[0]["learning_state"], "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE")
+        self.assertEqual(packets[0]["unified_adjudication_action"], "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW")
+        self.assertFalse(packets[0]["proposal_eligible"])
+        self.assertFalse(any(":ADJUDICATION:" in x for x in keys))
+
+    def test_confirmatory_day_checkpoint_keeps_freshness_without_promotion(self):
+        row = candidate(title="CONFIRMATORY forecast", state="INCUBATING", matured_outcome_count=0)
+        packets, _ = controller.evaluate_candidates(
+            registry(row), admission(), adjudication(), policy(), {}, datetime(2026, 1, 8, tzinfo=UTC))
+        self.assertEqual(packets[0]["learning_profile"], "CONFIRMATORY")
+        self.assertEqual(packets[0]["adjudication_freshness"], "CURRENT")
+        self.assertNotEqual(packets[0]["learning_state"], "WAIT_FOR_REFRESHED_UNIFIED_ADJUDICATION")
+        self.assertFalse(packets[0]["proposal_eligible"])
+
     def test_stale_adjudication_cannot_reinterpret_newer_registry(self):
         row = candidate(state="MATURED_SUPPORTED", matured_outcome_count=10)
         stale = adjudication(
