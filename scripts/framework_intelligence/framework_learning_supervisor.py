@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import tempfile
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,13 +27,18 @@ def sha256(path: Path):
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
 
 
-def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
-    """Ingest PREVIOUS approved producer receipt, without trust/dispatch authority.
+def read_strategist_advisory(root: Path, now: datetime, *,
+                            strategist_path: str = "research/framework_learning/strategist/LATEST.json") -> dict[str, Any]:
+    """Verify advisory source bytes and authority, without dispatch authority.
 
-    The Strategist writes after this Supervisor step in the same existing
-    workflow; this explicit one-run lag prevents circular generation.
+    The initial producer may observe a prior brief. Finalization reuses these
+    same checks after the current Strategist, without rerunning its inputs.
     """
-    rel = "research/framework_learning/strategist/LATEST.json"
+    allowed = {"research/framework_learning/strategist/LATEST.json",
+               "runtime/framework-learning-supervisor/strategist/LATEST.json"}
+    if strategist_path not in allowed:
+        raise ValueError("STRATEGIST_PATH_NOT_ALLOWLISTED")
+    rel = strategist_path
     path = root / rel
     empty = {"status": "UNAVAILABLE", "reference": rel, "proposal_ids": [],
              "attention_codes": [], "grok_review_candidate_count": 0,
@@ -75,8 +82,9 @@ def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
             "unconsumed": "research/framework_learning/LATEST_UNCONSUMED_INFORMATION.json",
             "staleness": "research/framework_learning/LATEST_METHOD_STALENESS_REGISTER.json",
             "weekly_forensics": "research/framework_learning/weekly_forensics/LATEST.json",
+            "resource_budget": "research/framework_learning/resource_budget/LATEST.json",
         }
-        optional = {"weekly_forensics"}
+        optional = {"weekly_forensics", "resource_budget"}
         if set(receipts) != set(expected):
             return {**empty, "status": "INVALID"}
         for name, relative in expected.items():
@@ -106,6 +114,7 @@ def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
                for p in proposals):
             return {**empty, "status": "INVALID"}
         return {"status": "ADVISORY_PREVIOUS_EVIDENCE", "reference": rel,
+                "source_generated_at_utc": generated,
                 "proposal_ids": [p["id"] for p in proposals],
                 "attention_codes": [p["code"] for p in proposals],
                 "grok_review_candidate_count": sum(
@@ -114,6 +123,69 @@ def read_strategist_advisory(root: Path, now: datetime) -> dict[str, Any]:
                 "source_sha256": hashlib.sha256(raw).hexdigest()}
     except (OSError, ValueError, TypeError, UnicodeDecodeError):
         return {**empty, "status": "INVALID"}
+
+
+def finalize_strategist_advisory(root: Path, output_root: str, now: datetime) -> dict[str, Any]:
+    """Consume the current brief after producers finish, without regenerating inputs.
+
+    Only the existing live Supervisor state is finalized. Earlier snapshots stay
+    immutable producer-stage observations. Source hashes and authority are still
+    checked by the same reader; SOURCE_MOVED is never converted into acceptance.
+    """
+    root = root.resolve()
+    if output_root not in {"research/framework_learning", "runtime/framework-learning-supervisor"}:
+        raise ValueError("SUPERVISOR_OUTPUT_NOT_ALLOWLISTED")
+    target = root / output_root / "LATEST_SUPERVISOR_STATE.json"
+    if (target.is_symlink() or not target.is_file()
+            or target.resolve() != target.absolute()
+            or len(target.read_bytes()) > 2_000_000):
+        raise ValueError("SUPERVISOR_STATE_UNTRUSTED")
+    original_state = target.read_bytes()
+    state = json.loads(original_state)
+    if (not isinstance(state, dict)
+            or state.get("contract") != "FRAMEWORK_LEARNING_SUPERVISOR_STATE_v1"
+            or state.get("authority") != "ORCHESTRATION_ONLY"
+            or any(state.get(k) is not False for k in
+                   ("canonical_effect", "portfolio_execution", "master_monday_live_influence"))):
+        raise ValueError("SUPERVISOR_STATE_AUTHORITY_INVALID")
+    generated = state.get("generated_at_utc")
+    if not isinstance(generated, str) or not generated.endswith("Z"):
+        raise ValueError("SUPERVISOR_STATE_TIME_INVALID")
+    stamp = datetime.fromisoformat(generated.replace("Z", "+00:00"))
+    age = (now - stamp).total_seconds()
+    if age < 0 or age > 15 * 60:
+        raise ValueError("SUPERVISOR_STATE_NOT_CURRENT_RUN")
+    advisory = read_strategist_advisory(
+        root, now, strategist_path=output_root + "/strategist/LATEST.json")
+    if advisory["status"] == "ADVISORY_PREVIOUS_EVIDENCE":
+        produced = datetime.fromisoformat(advisory["source_generated_at_utc"].replace("Z", "+00:00"))
+        if produced < stamp or produced > now:
+            advisory.update(status="PRODUCER_NOT_CURRENT_RUN", proposal_ids=[],
+                            attention_codes=[], grok_review_candidate_count=0,
+                            source_sha256=None)
+        else:
+            advisory["status"] = "ADVISORY_CURRENT_EVIDENCE"
+    advisory["consumption_phase"] = "POST_PRODUCER_SOURCE_VERIFICATION"
+    advisory["verified_at_utc"] = now.isoformat().replace("+00:00", "Z")
+    state["strategist_advisory"] = advisory
+    # A failed source/authority check publishes its honest rejection, not a
+    # retained accepted proposal from the earlier producer stage.
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=target.parent,
+                                         prefix=".supervisor-finalize-", delete=False) as file:
+            temporary = Path(file.name)
+            json.dump(state, file, indent=2, sort_keys=True)
+            file.write("\n")
+            file.flush()
+            os.fsync(file.fileno())
+        if target.read_bytes() != original_state:
+            raise ValueError("SUPERVISOR_STATE_MOVED_DURING_FINALIZATION")
+        temporary.replace(target)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    return advisory
 
 
 def week_id(now: datetime):
@@ -214,10 +286,14 @@ def main():
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--output-root", default="research/framework_learning")
     ap.add_argument("--as-of-utc")
+    ap.add_argument("--finalize-strategist", action="store_true")
     args = ap.parse_args()
 
     root = Path(args.repo_root)
     now = datetime.fromisoformat(args.as_of_utc.replace("Z", "+00:00")) if args.as_of_utc else datetime.now(timezone.utc)
+    if args.finalize_strategist:
+        print(json.dumps(finalize_strategist_advisory(root, args.output_root, now), sort_keys=True))
+        return
     year, week, week_label = week_id(now)
     out_root = root / args.output_root
 

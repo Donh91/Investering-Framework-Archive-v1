@@ -70,12 +70,13 @@ def prospective_row(candidate: dict[str, Any]) -> dict[str, Any]:
         role = "DATA_BLOCKED"
     else:
         role = "UNRESOLVED"
-    # Legacy registry v1 once counted CENSORED outcome files as MATURED.
-    # The aggregate count is not a scientific validation or evidence of
-    # independent PIT/after-cost improvement even if a later producer fixes
-    # the count. All positive admission requires a distinct governed owner.
-    raw_matured = candidate.get("matured_outcome_count")
-    legacy_matured = raw_matured if type(raw_matured) is int and raw_matured >= 0 else None
+    # An old registry may contain only the *wrong* raw-maturity counter.
+    # Never treat it as independent prospective validation. Even a genuine
+    # eligible HIT requires matched baselines, independence and owner review.
+    eligible = candidate.get("scientific_score_eligible_outcome_count")
+    eligible_count = eligible if type(eligible) is int and eligible >= 0 else None
+    matured = candidate.get("matured_outcome_count")
+    matured_count = matured if type(matured) is int and matured >= 0 else None
     return {
         "relationship_id": str(candidate.get("candidate_id")),
         "sensor_or_test_ids": [str(candidate.get("title") or candidate.get("candidate_id"))],
@@ -85,12 +86,15 @@ def prospective_row(candidate: dict[str, Any]) -> dict[str, Any]:
             "state": state,
             "scientific_admission_status": admission,
             "observation_count": int(candidate.get("observation_count") or 0),
-            "matured_outcome_count": legacy_matured,
-            "matured_counter_integrity": "LEGACY_UNVERIFIED" if legacy_matured is not None else "UNKNOWN",
+            "outcome_record_count": candidate.get("outcome_record_count"),
+            "matured_outcome_count": matured_count,
+            "censored_outcome_count": candidate.get("censored_outcome_count"),
+            "scientific_score_eligible_outcome_count": eligible_count,
+            "outcome_evidence_state": candidate.get("outcome_evidence_state") or "UNKNOWN_LEGACY_REGISTRY",
+            "matured_counter_integrity": "LEGACY_UNVERIFIED" if matured_count is not None else "UNKNOWN",
             "prospective_skill_evidence": "NOT_ADMITTED",
         },
-        # No single raw, censored, HIT, MISS or self-declared score flag proves
-        # matched independent forward validation. This is presentation only.
+        "has_eligible_matured_outcome": bool(eligible_count and admission == "QUALIFIED_FOR_FORWARD_TEST"),
         "current_prospective_validation": False,
         "presentation_role": role,
         "source_refs": [

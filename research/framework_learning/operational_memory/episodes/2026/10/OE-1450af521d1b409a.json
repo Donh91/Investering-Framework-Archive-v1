@@ -1,0 +1,50 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    ".github/workflows/cycle-navigator-public-contract-gate.yml",
+    "05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs",
+    "05_CYCLE_NAVIGATOR/site/build-live-observation.mjs",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs",
+    "05_CYCLE_NAVIGATOR/site/build-shortcut.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-release.mjs",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-1450af521d1b409a",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized premium root cutover, no new market rules or forecast data. Preserve old website at /legacy/. Exact-head gates green; physical Safari/VoiceOver remains pending.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "c87ac249c9706c794b1e2c019ccd5f722107cc8c",
+    ".github/workflows/cycle-navigator-pages.yml": "25711799772b932c5b815e5cba325700993a1a80",
+    ".github/workflows/cycle-navigator-public-contract-gate.yml": "9f3f79766eab79be9cc10b4b9bee370e3e8c226f",
+    "05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs": "d67a7979d01854c902610d416840249aafd3b22b",
+    "05_CYCLE_NAVIGATOR/site/build-live-observation.mjs": "9b58d0af3e242a9c12eeca146d278a3aee7a69f8",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs": "7a4cbdecb526f304eb7ac7f6d81d9aaf951bf0d5",
+    "05_CYCLE_NAVIGATOR/site/build-shortcut.mjs": "6bc43b344464cecc6f97ec74024a44cbf300b0d8",
+    "05_CYCLE_NAVIGATOR/site/premium-release.mjs": "e39214fb34e5e9f6c62aaf20454bb12a6d9f3771",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "51c762bb90a3871e8344f9e3a089e9646e9ecb29"
+  },
+  "source_commit_sha": "1450af521d1b409a0bd02a3706641bc6df6a7af9",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-19T13:22:04-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "release(site): ship premium v1.0 home with intact classic rollback"
+}

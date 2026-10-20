@@ -19,14 +19,14 @@ TRIGGER = re.compile(r"^\[TEMP_SOL_PR_REVIEW\] PR=([1-9][0-9]{0,5}) HEAD=([a-f0-
 MAX_DIFF_BYTES = 65_000
 MAX_CONTEXT_BYTES = 85_000
 RESERVATION_USD = 0.75
-HARD_CAP_USD = 5.00
+HARD_CAP_USD = 6.00
 SOFT_CAP_USD = 3.00
 TZ = ZoneInfo("Europe/Copenhagen")
 
 
 def check_window(at: datetime | None = None) -> str:
     day = (at or datetime.now(TZ)).astimezone(TZ).date().isoformat()
-    if not "2026-10-12" <= day <= "2026-10-17":
+    if not "2026-10-20" <= day <= "2026-10-25":
         raise ValueError("TEMP_BRIDGE_EXPIRED_OR_NOT_STARTED")
     return day
 
@@ -156,7 +156,7 @@ def existing_reservations() -> list[dict]:
         raise ValueError("RESERVATION_CENSUS_UNAVAILABLE")
     rows = [row for page in pages for row in page]
     claims = []
-    pattern = re.compile(r"^TEMP_BRIDGE_RESERVATION_V1 PR=([1-9][0-9]{0,5}) HEAD=([a-f0-9]{40}) TRIGGER=([0-9]+) DAY=(2026-10-(?:1[2-7]))$")
+    pattern = re.compile(r"^TEMP_BRIDGE_RESERVATION_V1 PR=([1-9][0-9]{0,5}) HEAD=([a-f0-9]{40}) TRIGGER=([0-9]+) DAY=(2026-10-(?:1[2-7]|2[0-5]))$")
     for row in rows:
         body = str(row.get("body") or "").strip()
         if body.startswith(MARKER):

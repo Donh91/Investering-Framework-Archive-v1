@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const siteDir = dirname(fileURLToPath(import.meta.url));
-const output = resolve(siteDir, "dist/index.html");
+const output = resolve(siteDir, "dist/legacy/index.html");
 let html = await readFile(output, "utf8");
 
 function requireAnchor(anchor, label) {

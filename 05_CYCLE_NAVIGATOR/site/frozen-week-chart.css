@@ -37,3 +37,39 @@
 .fw-legend .interval{height:9px;width:21px;border:1px solid rgba(95,150,255,.62);border-radius:2px;background:rgba(95,150,255,.12)}
 .fw-assets button,.fw-reset{min-height:44px}
 @media(max-width:600px){.fw-assets button,.fw-reset{min-height:44px}}
+
+/* Forecast vs observed v2: visually expressive ONLY where original hourly
+ * observations are source-bound. The daily forecast line remains conditional. */
+.frozen-week-chart{background:#0a172a;border-color:#2a4662;border-radius:17px}
+.fw-toolbar{background:#10233b;flex-wrap:wrap;row-gap:8px}
+.fw-assets{border-color:#355273}
+.fw-assets button[aria-pressed=true]{background:#254e7b;color:#fff}
+.fw-quote{align-items:center;gap:12px;padding-bottom:13px}
+.fw-quote strong{font-weight:700;font-size:clamp(27px,3.7vw,35px)}
+.fw-source small{line-height:1.5}
+.fw-legend{border-bottom:1px solid rgba(81,112,152,.2);padding-bottom:14px;line-height:1.4}
+.fw-progress-summary{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap;padding:12px 21px;background:#0c1b2e;color:#99b7d2;font-size:10px;letter-spacing:.03em}
+.fw-progress-summary .fw-progress-actual{color:#77daba}
+.fw-progress-summary .fw-progress-actual strong{font-variant-numeric:tabular-nums;padding-left:6px;color:#dff9ed;font-size:12px}
+.fw-progress-summary .fw-progress-forecast{color:#94b5eb;max-width:65%;text-align:right}
+.fw-canvas{height:344px;border-top:1px solid rgba(115,147,184,.17);background:#0b1b2e}
+.fw-days{padding-top:17px}
+.fw-days button[aria-pressed=true]{border-color:#608bd1;background:#223c60}
+.fw-readout{margin-top:15px}
+.fw-values>div{background:#10253c}
+.fw-note{border-top:1px solid rgba(73,102,145,.21);margin:18px 19px 0;padding:14px 3px 0}
+@media(max-width:600px){
+ .fw-quote{padding:17px 14px 12px}
+ .fw-quote strong{font-size:25px}
+ .fw-progress-summary{padding:11px 13px;gap:5px}
+ .fw-progress-summary .fw-progress-forecast{max-width:60%}
+ .fw-canvas{height:328px}
+ .fw-days{padding-top:14px}
+ .fw-note{margin-inline:13px}
+}
+@media(max-width:390px){
+ .fw-toolbar{gap:7px}
+ .fw-period{min-width:76px;line-height:1.45}
+ .fw-source{max-width:45%}
+ .fw-progress-summary .fw-progress-forecast{max-width:100%;text-align:left}
+}

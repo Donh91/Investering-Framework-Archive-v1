@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/unified_experimental_adjudication.py",
+    "scripts/research/compounding_learning_v1_core.py",
+    "tests/experiments/test_compounding_learning_controller.py",
+    "tests/experiments/test_compounding_learning_v1_design.py",
+    "tests/experiments/test_unified_experimental_adjudication.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-2a22a38fa4f279e9",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-enforce-eligible-only-learning-gates-correction-receipts",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE; existing Codex COMMENTED review findings addressed in head; four exact-head CI succeeded; no formal nonauthor APPROVED is claimed. Research-only and no forecast skill promotion.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/unified_experimental_adjudication.py": "3cd9214dff85ac25726bd3f9f6d87ed5a401848f",
+    "scripts/research/compounding_learning_v1_core.py": "e5d88685ce07c6b4ceff32b6f770768f1bad0caf",
+    "tests/experiments/test_compounding_learning_controller.py": "0fe27cefb585059eec6b3fbc6ef4013ce6386e52",
+    "tests/experiments/test_compounding_learning_v1_design.py": "d5e5a3553f7c6682e8890939bd273a994c27b3f4",
+    "tests/experiments/test_unified_experimental_adjudication.py": "75a4354cc0250a9d56de5921f42397f0b7fa32e3"
+  },
+  "source_commit_sha": "2a22a38fa4f279e9c1450f2d6b2e3918bc112cd0",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T11:42:45-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(task2): enforce eligible-only learning gates and correction receipts (#1695)"
+}

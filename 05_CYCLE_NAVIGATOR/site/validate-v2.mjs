@@ -1,6 +1,8 @@
 import './tests/full-stack-readback.test.mjs';
+import './vnext-live/validate.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { preserveLegacyShell, releasePremiumShell } from './premium-release.mjs';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
 const h=JSON.parse(history);
@@ -56,6 +58,24 @@ observedGap.public_live_precision.daily_observations.BTC[2]={
   coverage_complete_to_date:true,observed_hours:12
 };
 const gappedPlan=chartLinePlan(chartModel(observedGap,'BTC'));
+const hourlyActual=structuredClone(synthetic);
+hourlyActual.public_live_precision.hourly_price_path={
+ contract:'CN_PUBLIC_HOURLY_PRICE_PATH_v1',forecast_week:'2026-W41',public_issue_number:9,
+ source:'HOURLY_SPOT_PASS_ONLY',semantics:'OBSERVED_HOURLY_CLOSE_NOT_A_PROSPECTIVE_FORECAST',
+ observed_through_utc:'2026-10-07T12:00:00Z',
+ BTC:[1,2,3,5,6].map((hour,i)=>({
+   observed_at_utc:'2026-10-05T'+String(hour).padStart(2,'0')+':00:00Z',close:106+i
+ })),
+ ETH:[1,2].map(hour=>({
+   observed_at_utc:'2026-10-05T'+String(hour).padStart(2,'0')+':00:00Z',close:2100+hour
+ }))
+};
+const hourlySourceModel=chartModel(hourlyActual,'BTC'),actualHourlyPlan=chartLinePlan(hourlySourceModel);
+const wrongHourlyWeek=structuredClone(hourlyActual);wrongHourlyWeek.public_live_precision.hourly_price_path.forecast_week='2026-W42';
+const futureHourly=structuredClone(hourlyActual);futureHourly.public_live_precision.hourly_price_path.BTC.push({observed_at_utc:'2099-10-05T04:00:00Z',close:110});
+const invalidHourlySource=structuredClone(hourlyActual);invalidHourlySource.public_live_precision.hourly_price_path.BTC[0].close=-2;
+const hourMismatchIssue=structuredClone(hourlyActual);hourMismatchIssue.public_live_precision.hourly_price_path.public_issue_number=8;
+
 
 // Render the actual shipped PATH mount against an instrumented TradingView v5
 // and Canvas2D adapter. This catches omitted primitive attachment (a real P2)
@@ -74,7 +94,7 @@ function probeChartRender(data){
   const series=[];
   const scale={
     timeToCoordinate(t){return 25+(t-Date.parse('2026-10-05T00:00:00Z')/1000)/86400*58},
-    setVisibleLogicalRange(){}
+    setVisibleLogicalRange(){},fitContent(){}
   };
   const chart={
     timeScale(){return scale},remove(){},subscribeCrosshairMove(){},subscribeClick(){},
@@ -126,11 +146,44 @@ const a11yLegacyNoActualDa=chartGraphDescription(chartModel(neitherObservedNorPu
 chartAPI.CNI18n.language='en';
 const publishedRender=probeChartRender(dailyFixture);
 const legacyRender=probeChartRender(synthetic);
+const hourlyRender=probeChartRender(hourlyActual);
 const packageSanitizer=new Function(build.slice(build.indexOf('const pick='),build.indexOf('async function readJson'))+';return sanitizePackage;')();
 const translationProjection=new Function('sanitizePackage','standaloneFreeze','publicStructureAnalysis','return '+build.slice(build.indexOf('function publicTranslations('),build.indexOf('const snapshot=')))(packageSanitizer,{},()=>null);
 const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
 const acceptedTranslations=translationProjection(bilingualFixture);
 const checks=[
+ ['CRITICAL future 7-day blue expected CLOSE must timestamp each UTC DAY END not prior morning',
+   positivePlan.forecast.every((p,i)=>p.time===chartModel(dailyFixture,'BTC').days[i].time+86400)&&
+   positivePlan.forecast[0].time===Date.parse('2026-10-06T00:00:00Z')/1000&&
+   positivePlan.forecast[6].time===Date.parse('2026-10-12T00:00:00Z')/1000],
+ ['CRITICAL observed partial/closed-day fallback uses exact owner as_of, NOT day-start or future day-end',
+   gappedPlan.actualRuns[0][0].time===Date.parse('2026-10-06T00:00:00Z')/1000&&
+   gappedPlan.actualRuns[1][0].time===Date.parse('2026-10-07T12:00:00Z')/1000&&
+   chartSource.includes('x(d.closeTime),y(d.forecast.high)')&&
+   chartSource.includes('time:m.end/1000')],
+ ['Real TradingView mount draws two independent GREEN 1h runs, BLUE daily series stays absent without source',
+   hourlyRender.series.filter(s=>s.options?.color==='#27c59a').length===2&&
+   hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
+   hourlyRender.series.filter(s=>s.options?.color==='#5f96ff').every(s=>s.data.length===0)&&
+   chartSource.includes('chart.timeScale().fitContent()')],
+ ['TRUE hourly observations render actual line with missing hours disconnected and no fake future forecast',
+   hourlySourceModel.hourly.length===5&&actualHourlyPlan.forecast.length===0&&
+   actualHourlyPlan.actualRuns.length===2&&actualHourlyPlan.actualRuns[0].length===3&&
+   actualHourlyPlan.actualRuns[1].length===2&&
+   actualHourlyPlan.actualRuns[0][0].value===106&&
+   actualHourlyPlan.actualRuns[1][0].time-actualHourlyPlan.actualRuns[0].at(-1).time===7200],
+ ['Wrong issue/week, future hour and invalid negative price fail hourly projection closed',
+   [wrongHourlyWeek,hourMismatchIssue,futureHourly,invalidHourlySource].every(x=>
+     chartModel(x,'BTC').hourly.length===0)&&chartModel(hourlyActual,'ETH').hourly.length===2],
+ ['Published daily forecast preserves exact seven source points independently of hourly actuals',
+   chartLinePlan(chartModel({...dailyFixture,public_live_precision:{...dailyFixture.public_live_precision,
+     hourly_price_path:hourlyActual.public_live_precision.hourly_price_path}},'BTC')).forecast.length===7],
+ ['Public hourly projection is bounded, source-guarded, and not a forecast',
+   precisionBuilder.includes('public_hourly_price_path(')&&
+   precisionBuilder.includes('HOURLY_SPOT_PASS_ONLY')&&
+   precisionBuilder.includes('cutoff is None')&&
+   chartSource.includes('CN_PUBLIC_HOURLY_PRICE_PATH_v1')&&
+   chartSource.includes('point.time-current.at(-1).time!==3600')],
  ['W43 Pages byte-true anchor integrity accepts producer numeric spelling 82116.0 and rejects any altered source',hashAcceptsOriginal&&hashRejectsJsRewrite&&hashRejectsCorruptedFingerprint&&hashRejectsWrongExpected],
  ['Danish projection accepts public prose and rejects changed numeric signs',acceptedTranslations.length===1&&acceptedTranslations[0].da==='BTC steg +2.44% i uge 40.'],
  ['Danish projection cannot publish untranslated private-scenario source content',!acceptedTranslations.some(x=>x.en.includes('9000'))&&translationProjection({market_state:'Legacy source without translations.'}).length===0],
@@ -139,16 +192,16 @@ const checks=[
  ['TradingView weekly chart is self-hosted and overlays authentic evidence only',liveBuilder.includes('vendor/lightweight-charts-5.2.0.js')&&chartSource.includes('lineVisible:false')&&chartSource.includes('if(d.actual)current.push(')&&chartSource.includes("['D1–2','D3–4','D5–7']")&&!chartSource.includes('LineType.Curved')],
  ['published daily forecast is exactly seven immutable points and actual does not extend into future',
     positivePlan.forecast.length===7&&positivePlan.actualRuns.length===1&&positivePlan.actualRuns[0].length===2&&
-    positivePlan.forecast.every((p,i)=>p.time===chartModel(dailyFixture,'BTC').days[i].time&&p.value===105+i)&&
-    positivePlan.actualRuns[0].every((p,i)=>p.value===110&&p.time===chartModel(dailyFixture,'BTC').days[i].time)],
+    positivePlan.forecast.every((p,i)=>p.time===chartModel(dailyFixture,'BTC').days[i].closeTime&&p.value===105+i)&&
+    positivePlan.actualRuns[0].every((p,i)=>p.value===110&&p.time===Date.parse(chartModel(dailyFixture,'BTC').days[i].actual.as_of_utc)/1000)],
  ['unpublished daily path plots no fabricated forecast while preserving real observations',
     missingForecastPlan.forecast.length===0&&missingForecastPlan.actualRuns.length===1&&
     missingForecastPlan.actualRuns[0].length===2],
  ['missing source coverage splits actual line into disjoint runs, never bridges data gaps',
     gappedPlan.forecast.length===7&&gappedPlan.actualRuns.length===2&&
     gappedPlan.actualRuns.every(run=>run.length===1)&&
-    gappedPlan.actualRuns[0][0].time===chartModel(observedGap,'BTC').days[0].time&&
-    gappedPlan.actualRuns[1][0].time===chartModel(observedGap,'BTC').days[2].time],
+    gappedPlan.actualRuns[0][0].time===Date.parse(chartModel(observedGap,'BTC').days[0].actual.as_of_utc)/1000&&
+    gappedPlan.actualRuns[1][0].time===Date.parse(chartModel(observedGap,'BTC').days[2].actual.as_of_utc)/1000],
  ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
  ['VoiceOver: W42-style missing daily forecast is explicitly not presented as a daily forecast curve in both languages',
     a11yUnavailableEn.includes('No original seven-day')&&a11yUnavailableEn.includes('no daily forecast line')&&
@@ -176,7 +229,7 @@ const checks=[
  ['P2: published 7-day PATH renders actual daily envelope AND observed source low/high whiskers',
     publishedRender.paints.attached===1&&
     publishedRender.paints.fills===1&&
-    publishedRender.paints.whiskerStrokes===2&&
+    publishedRender.paints.whiskerStrokes===3&& // Two source high/low whiskers + one last-source timeline marker.
     publishedRender.series[0].data.length===7&&
     publishedRender.series.some(v=>v.data.length===2&&v.options.color==='#27c59a')],
  ['P2: legacy 3-window freeze renders authentic interval corridors with no forged daily forecast',
@@ -329,6 +382,29 @@ const checks=[
  ['raw history remains locked',h.policy?.historical_scores_locked===true&&h.policy?.retroactive_rescoring===false],
  ['history coverage matches records',Number(h.coverage?.completed_issues)===Math.max(...h.records.map(r=>Number(r.cn)))&&Number(h.coverage?.latest_open_issue)===Number(h.coverage?.completed_issues)+1&&Number(h.coverage?.rows_with_published_or_canonical_score_evidence)===h.records.length]
 ];
+
+// Premium release checks execute against the actual shipped same-origin HTML,
+// not a mock redesign. Negative controls must fail before any root promotion.
+const vnextRoot=await read('./vnext-live/index.html');
+const releasedRoot=releasePremiumShell(vnextRoot);
+const preservedLegacy=preserveLegacyShell(html);
+const base='https://donh91.github.io/Investering-Framework-Archive-v1/';
+const sourceResolved=new URL('../data/latest.json',new URL('./vnext/',base)).href;
+let missingTabRejected=false,missingBundleRejected=false;
+try{releasePremiumShell(vnextRoot.replace('id="view-results"','id="removed-results"'))}catch{missingTabRejected=true}
+try{releasePremiumShell(vnextRoot.replace('src="./app.mjs"','src="./missing.mjs"'))}catch{missingBundleRejected=true}
+checks.push(
+ ['premium canonical home is a real shell, not redirect',releasedRoot.includes('<base href="./vnext/">')&&releasedRoot.includes('PREMIUM LIVE')&&releasedRoot.includes('id="view-results"')&&!releasedRoot.includes('src="./app.js"')],
+ ['premium source path stays original same-origin public data',sourceResolved===base+'data/latest.json'&&releasedRoot.includes('src="./app.mjs"')],
+ ['legacy rollback shell points to root assets',preservedLegacy.includes('<base href="../">')&&preservedLegacy.includes('src="./app.js"')&&preservedLegacy.includes('href="./legacy/#now"')&&preservedLegacy.includes('href="./legacy/#top"')],
+ ['premium links to real rollback and no preview copy',releasedRoot.includes('href="../legacy/"')&&releasedRoot.includes('href="../#content"')&&!releasedRoot.includes('PREMIUM PREVIEW')&&!releasedRoot.includes('data-t="previewOnly"')],
+ ['premium canonical metadata is not mislabelled preview',releasedRoot.includes('<title>Cycle Navigator · Premium</title>')&&releasedRoot.includes('current-source premium market cycle, compass and verified results')&&!releasedRoot.includes('not the canonical production home')],
+ ['staged /vnext/ preview metadata remains separately honest',vnextRoot.includes('<title>Cycle Navigator · Premium Preview</title>')],
+ ['cutover never changes production data ownership',build.includes('releasePremiumShell(premiumShell)')&&build.includes('preserveLegacyShell(index)')&&build.includes('resolve(dataDir,"latest.json")')],
+ ['legacy-only client injection cannot corrupt premium root',liveBuilder.includes('indexPath=resolve(distDir,"legacy/index.html")')],
+ ['premium fails closed for missing primary tab',missingTabRejected],
+ ['premium fails closed for missing app bundle',missingBundleRejected]
+);
 let failed=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
 if(failed)process.exit(1);console.log(`PASS ${checks.length}/${checks.length} Cycle Navigator public product release checks`);
 

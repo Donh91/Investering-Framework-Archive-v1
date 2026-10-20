@@ -42,6 +42,7 @@ def candidate(**overrides):
         "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
     }
     row.update(overrides)
+    row.setdefault("scientific_score_eligible_outcome_count", row["matured_outcome_count"])
     return row
 
 
@@ -82,6 +83,7 @@ def adjudication(action="WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE", state="INCUBATING"
             "candidate_id": "EC-1",
             "lifecycle_state": state,
             "matured_outcome_count": matured,
+            "scientific_score_eligible_outcome_count": matured,
             "scientific_admission_status": admission_status,
             "selected_action": action,
             "reason": "test",
@@ -109,8 +111,66 @@ class CompoundingLearningControllerTest(unittest.TestCase):
             registry(row), admission(), adjudication(matured=10), policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
         )
         self.assertEqual(len(packets), 1)
-        self.assertIn("EC-1:CHECKPOINT:MATURED:5", keys)
-        self.assertIn("EC-1:CHECKPOINT:MATURED:10", keys)
+        self.assertIn("EC-1:CHECKPOINT:SCIENTIFIC_ELIGIBLE:5", keys)
+        self.assertIn("EC-1:CHECKPOINT:SCIENTIFIC_ELIGIBLE:10", keys)
+
+    def test_25_physical_1_eligible_never_unlocks_scientific_checkpoints(self):
+        row = candidate(state="MATURED_SUPPORTED", matured_outcome_count=25,
+                        scientific_score_eligible_outcome_count=1)
+        adj = adjudication(action="RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+                           state="MATURED_SUPPORTED", matured=25)
+        adj["candidate_actions"][0]["scientific_score_eligible_outcome_count"] = 1
+        packets, keys = controller.evaluate_candidates(
+            registry(row), admission(), adj, policy(), {}, datetime(2026, 1, 8, tzinfo=UTC))
+        self.assertFalse(any("SCIENTIFIC_ELIGIBLE" in k or ":ADJUDICATION:" in k for k in keys))
+        self.assertTrue(all(not p["proposal_eligible"] for p in packets))
+        family = controller.build_hypothesis_families(registry(row), admission(), adj)
+        self.assertFalse(any(v["current_evidence_status"] == "SUPPORTED_NEEDS_INCREMENTAL_VALUE" for v in family))
+
+    def test_bad_counter_cannot_become_scientific_evidence(self):
+        for bad in (True, "25", -1, None, 26):
+            row = candidate(matured_outcome_count=25, scientific_score_eligible_outcome_count=bad)
+            packets, keys = controller.evaluate_candidates(
+                registry(row), admission(), adjudication(matured=25), policy(), {},
+                datetime(2026, 1, 8, tzinfo=UTC))
+            self.assertFalse(any("SCIENTIFIC_ELIGIBLE" in k for k in keys))
+
+    def test_inconclusive_physical_outcomes_do_not_create_material_evidence(self):
+        row = candidate(state="MATURED_INCONCLUSIVE", matured_outcome_count=25,
+                        scientific_score_eligible_outcome_count=0)
+        adj = adjudication(action="KEEP_SHADOW_INCONCLUSIVE",
+                           state="MATURED_INCONCLUSIVE", matured=25)
+        adj["candidate_actions"][0]["scientific_score_eligible_outcome_count"] = 0
+        families = controller.build_hypothesis_families(registry(row), admission(), adj)
+        self.assertEqual(len(families), 1)
+        self.assertFalse(families[0]["material_evidence"])
+        self.assertEqual(families[0]["current_evidence_status"], "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE")
+        self.assertEqual(families[0]["matured_outcome_count_total"], 25)
+        self.assertEqual(families[0]["scientific_score_eligible_outcome_count_total"], 0)
+
+    def test_fresh_but_below_science_floor_is_not_falsely_stale(self):
+        row = candidate(state="MATURED_SUPPORTED", matured_outcome_count=25,
+                        scientific_score_eligible_outcome_count=1)
+        adj = adjudication(action="RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+                           state="MATURED_SUPPORTED", matured=25)
+        adj["candidate_actions"][0]["scientific_score_eligible_outcome_count"] = 1
+        packets, keys = controller.evaluate_candidates(
+            registry(row), admission(), adj, policy(), {}, datetime(2026, 1, 8, tzinfo=UTC))
+        self.assertEqual(len(packets), 1)
+        self.assertEqual(packets[0]["adjudication_freshness"], "CURRENT")
+        self.assertEqual(packets[0]["learning_state"], "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE")
+        self.assertEqual(packets[0]["unified_adjudication_action"], "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW")
+        self.assertFalse(packets[0]["proposal_eligible"])
+        self.assertFalse(any(":ADJUDICATION:" in x for x in keys))
+
+    def test_confirmatory_day_checkpoint_keeps_freshness_without_promotion(self):
+        row = candidate(title="CONFIRMATORY forecast", state="INCUBATING", matured_outcome_count=0)
+        packets, _ = controller.evaluate_candidates(
+            registry(row), admission(), adjudication(), policy(), {}, datetime(2026, 1, 8, tzinfo=UTC))
+        self.assertEqual(packets[0]["learning_profile"], "CONFIRMATORY")
+        self.assertEqual(packets[0]["adjudication_freshness"], "CURRENT")
+        self.assertNotEqual(packets[0]["learning_state"], "WAIT_FOR_REFRESHED_UNIFIED_ADJUDICATION")
+        self.assertFalse(packets[0]["proposal_eligible"])
 
     def test_stale_adjudication_cannot_reinterpret_newer_registry(self):
         row = candidate(state="MATURED_SUPPORTED", matured_outcome_count=10)

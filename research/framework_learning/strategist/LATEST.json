@@ -10,8 +10,8 @@
     "type": "ADVISORY_ONLY"
   },
   "contract": "FRAMEWORK_STRATEGIST_BRIEF_v1",
-  "covered_source_count": 7,
-  "generated_at_utc": "2026-10-19T09:13:55.830620Z",
+  "covered_source_count": 8,
+  "generated_at_utc": "2026-10-20T19:30:56.468878Z",
   "goal_alignment": [
     {
       "evidence_requirement": "Independent production readback and accepted safety/integrity receipts",
@@ -50,10 +50,41 @@
   "intent_sha256": "19acd15d003444b3c7ea141885ff1aebbc3c8959a7bf15e62c30c5dbba6480dd",
   "longitudinal_claim": "NO_VERIFIED_MULTI_WEEK_TREND_IN_THIS_READOUT",
   "next_step": "ADVISORY_HANDOFF_TO_EXISTING_SUPERVISOR; GROK_ONLY_VIA_EXISTING_VERIFIED_BRIDGE",
-  "observations_total": 4,
+  "observations_total": 5,
   "optional_source_warnings": [],
   "owner": "EXISTING_FRAMEWORK_LEARNING_SUPERVISOR",
   "proposals": [
+    {
+      "authority": "PROPOSAL_ONLY",
+      "automatic_code_write": false,
+      "automatic_grok_call": false,
+      "automatic_market_change": false,
+      "code": "RESOURCE_BUDGET_CRITICAL",
+      "dispatch_allowed": false,
+      "evidence_bindings": [
+        {
+          "contract": "FRAMEWORK_RESOURCE_BUDGET_ADVISORY_v1",
+          "name": "resource_budget",
+          "path": "research/framework_learning/resource_budget/LATEST.json",
+          "sha256": "6efdbfc69a020afbe86d8d0ea8be023b2edd01c5e2197bf8ba9b858a0218e989",
+          "source_generated_at_utc": "2026-10-20T19:30:56.421563Z",
+          "status": "CURRENT"
+        }
+      ],
+      "evidence_fingerprint": "7bcfa648bb9fcc5d1bac27e3",
+      "evidence_sources": [
+        "resource_budget"
+      ],
+      "goal_id": "EFFICIENCY",
+      "grok_bridge_state": "NOT_REQUESTED",
+      "id": "94c566d2ea0fae6c01c0ff9c",
+      "interpretation": "Existing owner resource advisory only; budget hard cap not provider-verified, no self-authorized dispatch or schedule changes.",
+      "owner": "Framework Learning Supervisor / Strategist",
+      "question": "Require explicit bounded value-and-cost approval before any new Codex Cloud or paid delegation; preserve mandatory CI and critical source integrity.",
+      "routing": "SUPERVISOR_ATTENTION",
+      "scientific_status": "NOT_ASSESSED",
+      "severity": "CRITICAL"
+    },
     {
       "authority": "PROPOSAL_ONLY",
       "automatic_code_write": false,
@@ -97,63 +128,23 @@
           "contract": "WEEKLY_LEARNING_DELTA_v1",
           "name": "weekly_delta",
           "path": "research/framework_learning/LATEST_WEEKLY_LEARNING_DELTA.json",
-          "sha256": "41d68a46a3282c2a276c1e823bcb5e03702296e928502e62be90a476e1e970e7",
-          "source_generated_at_utc": "2026-10-19T09:13:55.751397Z",
+          "sha256": "f3353fd7fbe8ecb8b1f958bd333b29664814793d6d58b13dc03ec169f21c7c4a",
+          "source_generated_at_utc": "2026-10-20T19:30:56.291976Z",
           "status": "CURRENT"
         }
       ],
-      "evidence_fingerprint": "cab452d8cc65d2d1c4ea0cd3",
+      "evidence_fingerprint": "0f9805613d9791e28b26fb78",
       "evidence_sources": [
         "weekly_delta"
       ],
       "goal_id": "RESEARCH_RIGOR",
       "grok_bridge_state": "NOT_REQUESTED",
       "id": "a5e6d3f15063d24a1fde6155",
-      "interpretation": "9 distinct changed compounding-family identities; may share original roots, never evidence of alpha.",
+      "interpretation": "5 distinct changed compounding-family identities; may share original roots, never evidence of alpha.",
       "owner": "#1157",
       "question": "Which changed hypothesis families have genuinely new evidence, and which merely changed labels?",
       "routing": "SUPERVISOR_ATTENTION",
       "scientific_status": "DESCRIPTIVE_RESEARCH_ONLY",
-      "severity": "MEDIUM"
-    },
-    {
-      "authority": "PROPOSAL_ONLY",
-      "automatic_code_write": false,
-      "automatic_grok_call": false,
-      "automatic_market_change": false,
-      "code": "OPERATIONAL_WARNING_REVIEW",
-      "dispatch_allowed": false,
-      "evidence_bindings": [
-        {
-          "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
-          "name": "health",
-          "path": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
-          "sha256": "c297b45661953bcf50bb080d12443b9e0bd999c2fac9b5f3ba7009a80ea82d46",
-          "source_generated_at_utc": "2026-10-19T09:08:34.310369Z",
-          "status": "CURRENT"
-        },
-        {
-          "contract": "SELF_IMPROVEMENT_ADVISORY_v1",
-          "name": "self_improvement",
-          "path": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
-          "sha256": "c211651c9b99de16a183ddf999ed8799498d2327d7d6dd0016768534007f69b0",
-          "source_generated_at_utc": "2026-10-19T09:13:55.796812Z",
-          "status": "CURRENT"
-        }
-      ],
-      "evidence_fingerprint": "1dc7eead16dfdadda8f04545",
-      "evidence_sources": [
-        "health",
-        "self_improvement"
-      ],
-      "goal_id": "RELIABILITY",
-      "grok_bridge_state": "NOT_REQUESTED",
-      "id": "8ec45d13e62a3cc4ef4afeb2",
-      "interpretation": "A cautionary operations state is not automatically a critical incident.",
-      "owner": "#1156",
-      "question": "Which current AMBER findings are substantive, and which are expected controls?",
-      "routing": "SUPERVISOR_ATTENTION",
-      "scientific_status": "NOT_ASSESSED",
       "severity": "MEDIUM"
     }
   ],
@@ -161,29 +152,36 @@
     "health": {
       "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
       "path": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
-      "sha256": "c297b45661953bcf50bb080d12443b9e0bd999c2fac9b5f3ba7009a80ea82d46",
-      "source_generated_at_utc": "2026-10-19T09:08:34.310369Z",
+      "sha256": "87c400778488816d72db106e29f8b7850ac86f2a71a81a7c3306a1308f904834",
+      "source_generated_at_utc": "2026-10-20T19:26:16.152823Z",
       "status": "CURRENT"
     },
     "learning_memory": {
       "contract": "FRAMEWORK_LEARNING_MEMORY_v1",
       "path": "research/framework_learning/LATEST_LEARNING_MEMORY.json",
-      "sha256": "c1bd8cefcf8b96418567be56317d846a9d636b652b4a0197c0e3411cb6618790",
-      "source_generated_at_utc": "2026-10-19T09:13:55.751397Z",
+      "sha256": "297d46a063e7d8216616364d28eace938d3072bb603ef0c5ae6255f7390ff8a9",
+      "source_generated_at_utc": "2026-10-20T19:30:56.291976Z",
+      "status": "CURRENT"
+    },
+    "resource_budget": {
+      "contract": "FRAMEWORK_RESOURCE_BUDGET_ADVISORY_v1",
+      "path": "research/framework_learning/resource_budget/LATEST.json",
+      "sha256": "6efdbfc69a020afbe86d8d0ea8be023b2edd01c5e2197bf8ba9b858a0218e989",
+      "source_generated_at_utc": "2026-10-20T19:30:56.421563Z",
       "status": "CURRENT"
     },
     "self_improvement": {
       "contract": "SELF_IMPROVEMENT_ADVISORY_v1",
       "path": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
-      "sha256": "c211651c9b99de16a183ddf999ed8799498d2327d7d6dd0016768534007f69b0",
-      "source_generated_at_utc": "2026-10-19T09:13:55.796812Z",
+      "sha256": "39dca08cd52614dd09296ac161a97d158218d09daace3550cfc936e3a39aceef",
+      "source_generated_at_utc": "2026-10-20T19:30:56.371848Z",
       "status": "CURRENT"
     },
     "staleness": {
       "contract": "METHOD_STALENESS_REGISTER_v1",
       "path": "research/framework_learning/LATEST_METHOD_STALENESS_REGISTER.json",
-      "sha256": "aab893d890d598b845b59ab6d78c0faecc419f2326212813aed055dbfb847f4c",
-      "source_generated_at_utc": "2026-10-19T09:13:55.751397Z",
+      "sha256": "360c8f187b5a52b457ec2bd5f18153cd04164746a1c7514b10b00a58625b17fb",
+      "source_generated_at_utc": "2026-10-20T19:30:56.291976Z",
       "status": "CURRENT"
     },
     "strategic_intent": {
@@ -196,15 +194,15 @@
     "unconsumed": {
       "contract": "UNCONSUMED_INFORMATION_REGISTER_v1",
       "path": "research/framework_learning/LATEST_UNCONSUMED_INFORMATION.json",
-      "sha256": "682d6d4cda15411404203c687794cd379d9492da789f43453a4c466889f5bde0",
-      "source_generated_at_utc": "2026-10-19T09:13:55.751397Z",
+      "sha256": "c6e1bb7a97a34cb101e5627bad2f920c5fcc589d7a1d752712e6a21b88062761",
+      "source_generated_at_utc": "2026-10-20T19:30:56.291976Z",
       "status": "CURRENT"
     },
     "weekly_delta": {
       "contract": "WEEKLY_LEARNING_DELTA_v1",
       "path": "research/framework_learning/LATEST_WEEKLY_LEARNING_DELTA.json",
-      "sha256": "41d68a46a3282c2a276c1e823bcb5e03702296e928502e62be90a476e1e970e7",
-      "source_generated_at_utc": "2026-10-19T09:13:55.751397Z",
+      "sha256": "f3353fd7fbe8ecb8b1f958bd333b29664814793d6d58b13dc03ec169f21c7c4a",
+      "source_generated_at_utc": "2026-10-20T19:30:56.291976Z",
       "status": "CURRENT"
     },
     "weekly_forensics": {
@@ -215,5 +213,5 @@
       "status": "CURRENT"
     }
   },
-  "suppressed_by_max_three": 1
+  "suppressed_by_max_three": 2
 }

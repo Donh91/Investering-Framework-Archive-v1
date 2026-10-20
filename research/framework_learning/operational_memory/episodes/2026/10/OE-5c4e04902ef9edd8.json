@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/vnext-live/premium.css"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-5c4e04902ef9edd8",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(site): let owner-expiry source clock wrap safely at iPhone widths * test(site): real Chrome/CDP 390/430 mobile acceptance of built Premium, no dependencies * test(site): run existing Premium mobile Chrome acceptance before PR approval and Pages release * test(site): run existing Premium mobile Chrome acceptance before PR approval and Pages release * fix(site QA): measure 44px targets in their visible tabs, not hidden 0x0 DOM boxes * test(site): prove mocked AI prompt copy, PATH keyboard focus, and source-owner expiry in Chrome * fix(site CI): pin Node 22 WebSocket runtime in natural Page",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "0b1c3106667e61a543bc5830311d56ba59ec9f31",
+    ".github/workflows/cycle-navigator-pages.yml": "e23b652bcd7a109b5b2310df45dd492c7b11c105",
+    "05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs": "25de71f59888e3593bca88bb121eef3a3bc45870",
+    "05_CYCLE_NAVIGATOR/site/vnext-live/premium.css": "8ae5d057c338359be042a9a16c7e7942a2d299a4"
+  },
+  "source_commit_sha": "5c4e04902ef9edd8892828d6595ae060b5eaa1ef",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T11:09:10-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "test(site): enforce real 390/430 mobile product acceptance (#1699)"
+}

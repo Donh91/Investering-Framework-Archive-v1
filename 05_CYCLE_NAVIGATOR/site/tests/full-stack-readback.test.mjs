@@ -40,8 +40,52 @@ function fixture(){
  const installForecast=()=>{const f=signed(forecast,'forecast_sha256');files.set(resolve(root,forecastPath),f.raw);pointers.set('shadow',{contract:'SHADOW_COMPASS_V2_LATEST_POINTER_v1',forecast_path:forecastPath,forecast_sha256:f.hash,forecast_id:'f',source_fingerprint:'fp'});};installForecast();
  const context={resolve,relative,createHash,Date,repoRoot:root,COMPASS_POINTER_PATH:'public',INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
  vm.createContext(context);vm.runInContext(source.slice(source.indexOf('function verifiedRelative'),source.indexOf('\nasync function buildCompassEventSnapshot'))+';globalThis.run=buildFullStackReadback;globalThis.digest=verifiedRawDigest;',context);
- return {root,files,pointers,forecast,installForecast,autoPath,officialPath,projectionPath,weeklyPath,context,run:()=>context.run({compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
+ return {root,files,pointers,forecast,installForecast,autoPath,officialPath,projectionPath,weeklyPath,weeklyPointer:wp,context,run:()=>context.run({compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
 }
+// A verified weekly delivery pointer is insufficient: the referenced Master
+// Monday machine package must itself be readable and match its declared SHA.
+for (const mode of ['valid','missing','tampered','tampered-content','wrong-digest','wrong-week','not-ready','escaped-path','wrong-freeze','missing-freeze','complete','sensitive','conflicting-status','analysis-empty','analysis-array','analysis-failure','analysis-unavailable','status-injection']) {
+ const f=fixture();
+ const pointerPath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json';
+ const packagePath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_MACHINE_PACKAGE.json';
+ const isFull=['complete','analysis-empty','analysis-array','analysis-failure','analysis-unavailable'].includes(mode);
+ const invalidAnalysis=mode==='analysis-empty'?{}:mode==='analysis-array'?[]:mode==='analysis-failure'?{status:'BLOCKED',summary:'FAILED_MODEL_REVIEW'}:mode==='analysis-unavailable'?'UNAVAILABLE':null;
+ const analysis=invalidAnalysis!==null?invalidAnalysis:mode==='sensitive'?'PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC':'Shadow-only weekly context';
+ const machineScore=mode==='status-injection'?'PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC':isFull?'READY':'UNAVAILABLE_API_CONTRACT';
+ const signedMachine=signed({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',iso_year:2026,iso_week:40,freeze_sha256:'a'.repeat(64),api_status:'success',api_receipt:{status:'PASS'},analysis,
+  scorecard:{status:machineScore},operational_translation:{status:isFull?'READY':'UNAVAILABLE_API_CONTRACT'}},'package_sha256');
+ const machine=signedMachine.raw;
+ const pointer={contract:'MASTER_MONDAY_DELIVERY_POINTER_v1',status:mode==='not-ready'?'PARTIAL':'READY',
+   iso_year:2026,iso_week:mode==='wrong-week'?39:40,
+   ...(mode==='missing-freeze'?{}:{freeze_sha256:mode==='wrong-freeze'?'b'.repeat(64):'a'.repeat(64)}),
+   machine_package_path:mode==='escaped-path'?'../../private/secret.json':packagePath,
+   machine_package_sha256:mode==='wrong-digest'?'f'.repeat(64):signedMachine.hash,
+   scorecard_status:mode==='status-injection'?'PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC':['complete','conflicting-status','analysis-empty','analysis-array','analysis-failure','analysis-unavailable'].includes(mode)?'READY':'UNAVAILABLE_API_CONTRACT',
+   operational_translation_status:['complete','analysis-empty','analysis-array','analysis-failure','analysis-unavailable'].includes(mode)?'READY':'UNAVAILABLE_API_CONTRACT'};
+ const raw=JSON.stringify(pointer);
+ f.weeklyPointer.completed_source_year=2026;
+ f.weeklyPointer.completed_source_week=40;
+ f.weeklyPointer.master_monday_pointer_sha256=hash(raw);
+ f.files.set(resolve(f.root,pointerPath),raw);
+ f.files.set(resolve(f.root,packagePath),mode==='tampered'?machine.replace('"iso_week":40','"iso_week":39'):mode==='tampered-content'?machine.replace('Shadow-only weekly context','Changed after freeze without digest update'):machine);
+ if(mode==='missing')f.files.delete(resolve(f.root,packagePath));
+ f.pointers.set('handoff',{pointers:{latest_weekly_output:{path:pointerPath,sha256:hash(raw)}}});
+ const result=await f.run();
+ const got=result.source_status.master_monday;
+ assert.equal(got,['valid','complete','sensitive','conflicting-status','analysis-empty','analysis-array','analysis-failure','analysis-unavailable','status-injection'].includes(mode)?'SOURCE_ALIGNED':'UNVERIFIED','Master Monday target readback: '+mode);
+ assert.equal(result.source_status.master_monday_analysis,mode==='complete'?'COMPLETE':mode==='conflicting-status'?'CONFLICTING_ANALYTICS':got==='SOURCE_ALIGNED'?'PARTIAL_ANALYTICS':'UNVERIFIED');
+ assert.equal(result.master_monday?.authority,'WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION');
+ assert.equal(result.master_monday?.machine_package_sha256,undefined);
+ assert.equal(result.master_monday?.freeze_sha256,undefined);
+ assert.equal(result.master_monday?.machine_package_path,undefined);
+ assert.doesNotMatch(JSON.stringify(result.master_monday),/PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC/);
+ if(mode==='status-injection')assert.equal(result.master_monday.scorecard_status,'UNAVAILABLE');
+ if(['analysis-empty','analysis-array','analysis-failure','analysis-unavailable'].includes(mode)){
+  assert.equal(result.master_monday.api_analysis_status,'UNAVAILABLE','Failed model analysis cannot be considered present: '+mode);
+  assert.notEqual(result.status,'COMPLETE','No overall complete when model analysis unavailable: '+mode);
+ }
+}
+
 let f=fixture();assert.equal((await f.run()).shadow.status,'ALIGNED_RESEARCH');
 f=fixture();f.pointers.get('official').source_packet_sha256='a'.repeat(64);let result=await f.run();assert.equal(result.source_status.official,'DEGRADED');assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH');
 f=fixture();f.pointers.get('auto').packet_generated_at_utc='2099-01-01T00:00:00Z';result=await f.run();assert.equal(result.source_status.auto_market_state,'UNVERIFIED');assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH');
@@ -129,4 +173,22 @@ const oldEvent=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
   ...scheduled,detected_at_utc:'2026-10-11T06:30:00Z'});
 assert.doesNotMatch(oldEvent,/SCHEDULED UPDATE DELAYED/);
 assert.doesNotMatch(render('OK'),/SCHEDULED UPDATE DELAYED/);
+// SITE must show Monday provenance/completeness without substituting it for
+// the current official action or leaking raw API narrative.
+{
+ const context={esc:String,publicState:String,publicCompassText:String,recommendation:()=>({action:'HOLD'})};
+ vm.createContext(context);
+ vm.runInContext(premium.slice(premium.indexOf('function compositeIntel('),premium.indexOf('function refreshStatusBanner('))+';globalThis.render=compositeIntel;',context);
+ const weekly={contract:'PUBLIC_COMPASS_FULL_STACK_READBACK_v1',status:'PARTIAL_OR_DEGRADED',source_status:{official:'VERIFIED'},
+   master_monday:{status:'SOURCE_ALIGNED',completed_week:'2026-W42',analytics_status:'PARTIAL_ANALYTICS'}};
+ const html=context.render({data_status:'OK',action_now:'HOLD',full_stack:weekly},'CURRENT');
+ assert.match(html,/MONDAY BASELINE/);
+ assert.match(html,/2026-W42/);
+ assert.match(html,/ANALYSIS PARTIAL/);
+ const conflict=context.render({data_status:'OK',action_now:'HOLD',full_stack:{...weekly,master_monday:{status:'SOURCE_ALIGNED',completed_week:'2026-W42',analytics_status:'CONFLICTING_ANALYTICS'}}},'CURRENT');
+ assert.match(conflict,/ANALYTICAL SOURCE CONFLICT/);
+ assert.match(html,/OFFICIAL ACTION/);
+ const missing=context.render({data_status:'OK',action_now:'HOLD',full_stack:{...weekly,master_monday:{status:'UNVERIFIED'}}},'CURRENT');
+ assert.match(missing,/MONDAY BASELINE · SOURCE UNVERIFIED/);
+}
 console.log('FULL_STACK_READBACK_REGRESSION_PASS');

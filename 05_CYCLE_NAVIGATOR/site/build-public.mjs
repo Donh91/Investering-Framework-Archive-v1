@@ -2,6 +2,7 @@ import { mkdir, readFile, rm, writeFile, copyFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { preserveLegacyShell, releasePremiumShell } from "./premium-release.mjs";
 const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(siteDir,"../.."); const outputDir=resolve(siteDir,"dist"); const dataDir=resolve(outputDir,"data");
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
@@ -18,7 +19,7 @@ const PROSPECTIVE_RANGE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_PROSPEC
 const PUBLIC_SERIES_INDEX_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json");
 const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","compass-product-v5.js","compass-product-v5.css","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","apple-touch-icon.png","manifest.webmanifest","social-card.svg"];
 const pick=(obj,keys)=>Object.fromEntries(keys.filter(k=>Object.prototype.hasOwnProperty.call(obj||{},k)).map(k=>[k,obj[k]]));
-const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_week","issue_number","publication_status","status"]);
+const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_year","completed_source_week","issue_number","publication_status","status"]);
 function sanitizeDecisionProjection(dp){
   if(!dp||dp.contract!=="CYCLE_NAVIGATOR_DECISION_PROJECTION_v1")return null;
   return {
@@ -269,9 +270,78 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       Number(weeklyPointer?.issue_number)===Number(weeklyPackage?.issue_number));
   }catch{}
   const mp=master?.pointer;
+  // A pointer digest proves only pointer bytes. Never call the weekly source
+  // aligned unless its referenced immutable machine package is also readable
+  // and matches the exact producer-declared SHA-256.
+  let masterTargetVerified=false,masterMachine=null;
+  try{
+    const p=verifiedRelative(mp?.machine_package_path,"research/api_agent/outputs/weekly/");
+    const expected=mp?.machine_package_sha256;
+    if(p&&typeof expected==="string"&&/^[0-9a-f]{64}$/.test(expected)){
+      // This producer pointer declares the canonical self-digest of the
+      // machine package, NOT the SHA-256 of the entire JSON file bytes.
+      const raw=await readFile(p,"utf8");
+      const target=JSON.parse(raw);
+      masterTargetVerified=target?.contract==="MASTER_MONDAY_MACHINE_PACKAGE_v1"&&
+        Number(target?.iso_year)===Number(mp?.iso_year)&&
+        Number(target?.iso_week)===Number(mp?.iso_week)&&
+        // A valid package from the right week but a different evidence freeze
+        // must not be promoted to the current Monday baseline.
+        typeof mp?.freeze_sha256==="string"&&/^[0-9a-f]{64}$/.test(mp.freeze_sha256)&&
+        target?.freeze_sha256===mp.freeze_sha256&&
+        verifiedRawDigest(raw,target,"package_sha256",expected);
+      if(masterTargetVerified)masterMachine=target;
+    }
+  }catch{}
   const masterAligned=Boolean(mp?.contract==="MASTER_MONDAY_DELIVERY_POINTER_v1"&&mp?.status==="READY"&&
     mp?.iso_week===weeklyPointer?.completed_source_week&&mp?.iso_year===weeklyPointer?.completed_source_year&&
-    master.digest===weeklyPointer?.master_monday_pointer_sha256);
+    master.digest===weeklyPointer?.master_monday_pointer_sha256&&masterTargetVerified);
+  // Source alignment, analytical completeness, and decision authority are
+  // independent. A successful API delivery does not fill absent scorecard or
+  // operational translation fields. Never copy raw API prose to public SITE.
+  // Never echo arbitrary machine/provider metadata into the public projection.
+  const validMondayStatuses=new Set([
+    "READY","PASS","AVAILABLE","COMPLETE","SCORED","PENDING_MATURED_OUTCOMES",
+    "UNAVAILABLE_API_CONTRACT","INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION",
+    "UNAVAILABLE_EXPERIMENT_REGISTRY","UNAVAILABLE_API_FAILURE","UNAVAILABLE",
+    "BLOCKED","DEGRADED","UNKNOWN"
+  ]);
+  const mondayStatus=v=>typeof v==="string"&&validMondayStatuses.has(v)?v:"UNAVAILABLE";
+  const scoreStatus=masterAligned?mondayStatus(mp?.scorecard_status):"UNVERIFIED";
+  const translationStatus=masterAligned?mondayStatus(mp?.operational_translation_status):"UNVERIFIED";
+  // A successful API transport is not substantive analysis when its receipt,
+  // content or model-level status explicitly reports unavailable/failed data.
+  const mondayAnalysis=masterMachine?.analysis;
+  const invalidAnalysisMarkers=["UNAVAILABLE","FAILED","FAILURE","FAIL","ERROR","BLOCKED","SKIPPED","UNKNOWN"];
+  const validAnalysisText=v=>{
+    if(typeof v!=="string"||!v.trim())return false;
+    const t=v.trim().toUpperCase();
+    return !invalidAnalysisMarkers.some(k=>t===k||t.startsWith(k+"_")||t.startsWith(k+":")||t.startsWith(k+" "));
+  };
+  const apiAnalysisAvailable=Boolean(masterAligned&&masterMachine?.api_status==="success"&&
+    masterMachine?.api_receipt?.status==="PASS"&&(
+      validAnalysisText(mondayAnalysis)||
+      (mondayAnalysis&&!Array.isArray(mondayAnalysis)&&typeof mondayAnalysis==="object"&&
+       ["READY","DEGRADED"].includes(mondayAnalysis.status)&&
+       validAnalysisText(mondayAnalysis.summary))));
+  const analyticalStatuses=new Set(["READY","PASS","AVAILABLE","COMPLETE","SCORED"]);
+  const statusConflict=masterAligned&&(
+    scoreStatus!==mondayStatus(masterMachine?.scorecard?.status)||
+    translationStatus!==mondayStatus(masterMachine?.operational_translation?.status));
+  const mondayAnalytics=masterAligned?
+    (statusConflict?"CONFLICTING_ANALYTICS":
+     apiAnalysisAvailable&&analyticalStatuses.has(scoreStatus)&&analyticalStatuses.has(translationStatus)?"COMPLETE":"PARTIAL_ANALYTICS"):
+    "UNVERIFIED";
+  const mondayPublic=masterAligned?{
+    contract:"PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1",
+    completed_week:`${mp.iso_year}-W${String(mp.iso_week).padStart(2,"0")}`,
+    status:"SOURCE_ALIGNED",analytics_status:mondayAnalytics,
+    api_analysis_status:apiAnalysisAvailable?"AVAILABLE_SHADOW_ONLY":"UNAVAILABLE",
+    scorecard_status:scoreStatus,operational_translation_status:translationStatus,
+    // Source hashes remain internal verification inputs; SITE_CONTRACT forbids
+    // publishing machine hashes or internal paths in the public projection.
+    authority:"WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION"
+  }:{contract:"PUBLIC_MASTER_MONDAY_WEEKLY_CONTEXT_READBACK_v1",status:"UNVERIFIED",analytics_status:"UNVERIFIED",authority:"WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION"};
   let shadow=null,shadowAligned=false;
   try{
     if(shadowPtr?.contract==="SHADOW_COMPASS_V2_LATEST_POINTER_v1"){
@@ -353,7 +423,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     }
   }catch{}
   const officialValid=officialValidated&&compass?.data_status==="OK"&&official?.compass_id===compass?.compass_id;
-  const quality=officialValid&&nativeAligned&&shadow?.status==="ALIGNED_RESEARCH"&&masterAligned&&strategic&&weeklyAligned?"COMPLETE":"PARTIAL_OR_DEGRADED";
+  const quality=officialValid&&nativeAligned&&shadow?.status==="ALIGNED_RESEARCH"&&masterAligned&&mondayAnalytics==="COMPLETE"&&strategic&&weeklyAligned?"COMPLETE":"PARTIAL_OR_DEGRADED";
   return {
     contract:"PUBLIC_COMPASS_FULL_STACK_READBACK_v1",
     status:quality,
@@ -365,11 +435,13 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
       shadow:shadow?.status||"UNVERIFIED",
       strategic:strategic?.status||"UNVERIFIED",
       master_monday:masterAligned?"SOURCE_ALIGNED":"UNVERIFIED",
+      master_monday_analysis:mondayAnalytics,
       cycle_navigator:weeklyAligned?"WEEKLY_POINTER_ALIGNED":"UNVERIFIED"
     },
     official_freshness:officialValid?officialFreshness:{status:"UNAVAILABLE"},
     official_action:officialValid?compass.action_now:"UNAVAILABLE",
     official_data_status:String(compass?.data_status||"NOT_PUBLISHED"),
+    master_monday:mondayPublic,
     native:nativeValidated?{now:researchEnum(nativeTarget.action.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:nativeTarget.DATA_HEALTH||"UNAVAILABLE",checked_at_utc:nativeTarget.generated_at_utc,official_source_aligned:nativeAligned}:{now:"UNAVAILABLE",data_health:"UNVERIFIED",official_source_aligned:false},
     shadow:shadow||{status:"UNVERIFIED",authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons:{}},
     strategic:strategic||{status:"UNVERIFIED",authority:"CYCLE_NAVIGATOR_ONLY"},
@@ -491,9 +563,36 @@ await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
+ // vNext is a read-only first-party *candidate*, deployed below /vnext/
+ // on the EXISTING Pages host. Canonical /index.html remains untouched.
+ const vnextDir=resolve(outputDir,"vnext"); await mkdir(vnextDir,{recursive:true});
+ for(const file of ["index.html","CN_LOGO.svg","premium.css","premium-experience.css","app.mjs","premium-experience.mjs","chart-source-key.mjs","monday-public-bridge.mjs","source-trace.mjs","official-bullbear.mjs",
+  "official-pullback-eta.mjs","official-pullback-stage.mjs","official-pullback-investor-view.mjs",
+  "official-path.mjs","official-feed-parity.mjs"])
+   await copyFile(resolve(siteDir,"vnext-live",file),resolve(vnextDir,file));
+ // A direct build-public.mjs deployment must also include every shared chart
+ // dependency referenced by /vnext/index.html, without relying on later
+ // Pages-only build-live-observation staging.
+ await mkdir(resolve(outputDir,"vendor"),{recursive:true});
+ for(const shared of ["frozen-week-chart.js","frozen-week-chart.css",
+  "vendor/lightweight-charts-5.2.0.js","vendor/lightweight-charts-LICENSE.txt",
+  "vendor/lightweight-charts-NOTICE.txt"]){
+    await copyFile(resolve(siteDir,shared),resolve(outputDir,shared));
+ }
+
+
 const indexPath=resolve(outputDir,"index.html"); let index=await readFile(indexPath,"utf8");
 if(!index.includes("./compass-product-v5.css")) index=index.replace("</head>",'  <link rel="stylesheet" href="./compass-product-v5.css" />\n</head>');
 if(!index.includes("./compass-product-v5.js")) index=index.replace("</body>",'  <script src="./compass-product-v5.js" defer></script>\n</body>');
-await writeFile(indexPath,index,"utf8");
+// Preserve the previously deployed homepage as a fully functional, same-origin
+// rollback. Relative URLs are rebased to the existing root static assets/data.
+const legacyDir=resolve(outputDir,"legacy");
+await mkdir(legacyDir,{recursive:true});
+await writeFile(resolve(legacyDir,"index.html"),preserveLegacyShell(index),"utf8");
+// Premium uses precisely the already-tested /vnext/ client and shared public
+// sources. No second writer, service, forecast or provider is introduced.
+const premiumShell=await readFile(resolve(vnextDir,"index.html"),"utf8");
+await writeFile(indexPath,releasePremiumShell(premiumShell),"utf8");
+console.log("CN premium v1.0 root released in bundle; legacy rollback at /legacy/");
 console.log(`Cycle Navigator public v2 built: issue #${pkg.issue_number}; Compass ${compass.compass_id||compass.data_status}`);
 
