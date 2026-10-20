@@ -40,9 +40,24 @@ function missing(id,n=3){clear(id);const tr=document.createElement('tr'),td=docu
 function trText(da,en){return tr(da,en)}
 function drawStatus(){
  const fresh=view?.compass?.state==='FRESH',valid=view?.weekly?.state==='OK'||view?.weekly?.state==='DEGRADED';
+ // Never present Pages re-publication time as fresh Official market evidence.
+ // Use the source owner's exact published validity deadline, not an inferred TTL.
+ const freshness=feeds?.compass?.full_stack?.official_freshness;
+ const ownerExpiry=freshness?.contract==='OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1'&&
+   freshness?.status==='VERIFIED_OWNER_POLICY'&&
+   freshness?.semantics==='SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA'?
+     freshness.valid_until_utc:null;
+ const expiryMs=typeof ownerExpiry==='string'?Date.parse(ownerExpiry):NaN;
+ const expired=Number.isFinite(expiryMs)&&Date.now()>=expiryMs;
  $('source-dot').className='statusdot '+(fresh?'good':valid?'warn':'bad');
- show('source-status',error?tr('Indlæsning af offentlige kilder fejlede','Public source loading failed'):fresh?tr('Kildekontrolleret · officielt Kompas aktuelt','Source verified · Official Compass current'):valid?tr('Ugen frosset · aktuelle handlinger afventer','Week frozen · current actions unavailable'):tr('Ingen aktuel kildeverificeret handling','No current source-verified action'));
- show('source-clock',stamp(feeds?.latest?.generated_at));
+ show('source-status',error?tr('Indlæsning af offentlige kilder fejlede','Public source loading failed'):
+   fresh?tr('Kildekontrolleret · officielt Kompas aktuelt','Source verified · Official Compass current'):
+   expired?tr('Officielt Kompas udløbet · ingen aktuel handling','Official Compass expired · no current action'):
+   valid?tr('Kompas ikke aktuelt · frossen ugegrundlag vises','Compass not current · frozen weekly context shown'):
+   tr('Ingen aktuel kildeverificeret handling','No current source-verified action'));
+ show('source-clock',Number.isFinite(expiryMs)?
+   tr('Kompas gyldigt til ','Compass valid until ')+stamp(ownerExpiry):
+   tr('Sidste levering ','Last delivery ')+stamp(feeds?.latest?.generated_at));
 }
 function drawOverview(){
  const w=view?.weekly||{},c=view?.compass||{},p=view?.path||{},verified=c.state==='FRESH'&&c.permit_path_live_gates===true,official=verified?feeds.compass:null;
