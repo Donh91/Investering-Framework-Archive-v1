@@ -412,9 +412,7 @@ const displayStatus=(at,language='da',state='UNAVAILABLE')=>{
    }}}
  };
  const simulatedDate={now:()=>Date.parse(at),parse:Date.parse};
- new Function('view','feeds','error','tr','stamp','
-console.log('PASS vNext: W43 source truth, official freshness, score isolation, negative gates, four-view product shell, i18n and syntax');
-,'show','Date',
+ new Function('view','feeds','error','tr','stamp','$','show','Date',
    statusSlice+'; drawStatus();')(
    {weekly:{state:'DEGRADED'},compass:{state}},
    fakeFeed,false,(da,en)=>language==='en'?en:da,
