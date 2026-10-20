@@ -121,7 +121,7 @@ class TemporaryBridgeTests(unittest.TestCase):
                 self.assertEqual(len(seen), 1)
             with patch.object(bridge, "check_window", return_value="2026-10-12"), \
                  patch.object(bridge, "pr_info", return_value=info()), \
-                 patch.object(bridge, "existing_reservations", return_value=prior + [{"trigger": 77, "pr": 77, "head": HEAD, "day": "2026-10-12"}]), \
+                 patch.object(bridge, "existing_reservations", return_value=prior + [{"trigger": 77, "pr": 77, "head": HEAD, "day": "2026-10-12"}, {"trigger": 78, "pr": 78, "head": HEAD, "day": "2026-10-12"}, {"trigger": 79, "pr": 79, "head": HEAD, "day": "2026-10-12"}]), \
                  patch.object(bridge, "gh") as gh:
                 with self.assertRaisesRegex(ValueError, "HARD_STOP"):
                     bridge.reserve(p)
