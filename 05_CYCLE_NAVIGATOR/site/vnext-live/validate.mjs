@@ -396,5 +396,41 @@ assert.match(client,/finally\{clearTimeout\(deadline\);loading=false;refresh\(\)
 
 assert.match(site,/resolve\(outputDir,"vnext"\)/);
 assert.match(site,/await copyFile\(resolve\(siteDir,"vnext-live",file\),resolve\(vnextDir,file\)\)/);
+// Actual status renderer regression: a newer Pages delivery timestamp must
+// NEVER disguise the older owner's expired Official Compass freshness.
+const statusSlice=client.slice(client.indexOf('function drawStatus(){'),client.indexOf('function drawOverview(){'));
+assert.match(statusSlice,/SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA/);
+assert.doesNotMatch(statusSlice,/show\('source-clock',stamp\(feeds\?\.latest\?\.generated_at\)\)/);
+const displayStatus=(at,language='da',state='UNAVAILABLE')=>{
+ const captured={},fakeFeed={
+   latest:{generated_at:'2026-10-20T17:25:58Z'},
+   compass:{full_stack:{official_freshness:{
+     contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',
+     status:'VERIFIED_OWNER_POLICY',
+     semantics:'SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA',
+     valid_until_utc:'2026-10-20T14:00:00Z'
+   }}}
+ };
+ const simulatedDate={now:()=>Date.parse(at),parse:Date.parse};
+ new Function('view','feeds','error','tr','stamp','$','show','Date',
+   statusSlice+'; drawStatus();')(
+   {weekly:{state:'DEGRADED'},compass:{state}},
+   fakeFeed,false,(da,en)=>language==='en'?en:da,
+   utc=>utc,()=>({className:''}),
+   (key,val)=>{captured[key]=val},simulatedDate);
+ return captured;
+};
+const afterOwnerExpiry=displayStatus('2026-10-20T17:30:00Z');
+assert.match(afterOwnerExpiry['source-status'],/Kompas udløbet/);
+assert.match(afterOwnerExpiry['source-clock'],/14:00:00Z/);
+assert.doesNotMatch(afterOwnerExpiry['source-clock'],/17:25:58Z/);
+const afterOwnerExpiryEnglish=displayStatus('2026-10-20T17:30:00Z','en');
+assert.match(afterOwnerExpiryEnglish['source-status'],/Compass expired/);
+const beforeExpiryUnaligned=displayStatus('2026-10-20T13:00:00Z');
+assert.match(beforeExpiryUnaligned['source-status'],/ikke aktuelt/);
+assert.doesNotMatch(beforeExpiryUnaligned['source-status'],/udløbet/);
+const eligibleOwner=displayStatus('2026-10-20T13:00:00Z','da','FRESH');
+assert.match(eligibleOwner['source-status'],/aktuelt/);
+
 execFileSync(process.execPath,['--check',resolve(dir,'app.mjs')],{stdio:'pipe'});
 console.log('PASS vNext: W43 source truth, official freshness, score isolation, negative gates, four-view product shell, i18n and syntax');
