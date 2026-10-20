@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, evaluate, heat_state
+from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, _missing_scheduled_freeze, _public_refresh_message, evaluate, heat_state
 
 
 NOW = datetime(2026, 9, 18, 16, 0, tzinfo=timezone.utc)
@@ -133,6 +133,217 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertFalse(_ladder_materially_changed(previous, current))
         promoted = previous + [{"segment": "MEMES", "status": "PREPARE"}]
         self.assertTrue(_ladder_materially_changed(previous, promoted))
+
+    def test_missed_morning_freeze_triggers_current_time_recovery_not_sell(self):
+        zeros = {k: {"pct": 0.0} for k in ("btc_usdt", "eth_usdt", "ethbtc")}
+        a = auto_state(
+            observation_open="2026-09-18T15:00:00Z",
+            predecessor_observation="2026-09-18T15:00:00Z",
+            deltas=zeros,
+        )
+        latest = compass(
+            issued_at=(NOW - timedelta(hours=14)).isoformat().replace("+00:00", "Z")
+        )
+        result = decision(auto=a, latest=latest)
+        self.assertTrue(result["dispatch"])
+        self.assertIn("SCHEDULED_FREEZE_MISSING", result["cause_codes"])
+        self.assertEqual(result["missing_scheduled_freeze"], "MORNING")
+        self.assertFalse(result["authority"]["portfolio_execution"])
+        self.assertFalse(result["authority"]["forecast_change"])
+
+    def test_latest_issue_after_slot_does_not_trigger_recovery(self):
+        a = auto_state(
+            observation_open="2026-09-18T15:00:00Z",
+            predecessor_observation="2026-09-18T15:00:00Z",
+            deltas={k: {"pct": 0.0} for k in ("btc_usdt", "eth_usdt", "ethbtc")},
+        )
+        result = decision(auto=a, latest=compass(
+            issued_at=(NOW - timedelta(hours=6)).isoformat().replace("+00:00", "Z")
+        ))
+        self.assertFalse(result["dispatch"])
+        self.assertIsNone(result["missing_scheduled_freeze"])
+        self.assertEqual(result["reason"], "NO_MATERIAL_CHANGE")
+
+    def test_missed_freeze_respects_existing_inflight_request(self):
+        old = (NOW-timedelta(hours=14)).isoformat().replace("+00:00","Z")
+        result = decision(latest=compass(issued_at=old), prior_state={
+            "last_heat_state": "NORMAL",
+            "last_requested_source_sha": "new-source",
+            "last_request_at_utc": (NOW - timedelta(minutes=5)).isoformat().replace("+00:00", "Z"),
+        })
+        self.assertFalse(result["dispatch"])
+        self.assertEqual(result["reason"], "REQUEST_IN_FLIGHT")
+        self.assertIn("SCHEDULED_FREEZE_MISSING", result["suppressed_cause_codes"])
+
+    def test_missed_freeze_grace_and_dst_boundary(self):
+        issue = "2026-03-29T06:16:00Z"  # 08:16 Europe/Copenhagen CEST
+        self.assertIsNone(_missing_scheduled_freeze(
+            datetime(2026, 3, 29, 6, 59, tzinfo=timezone.utc), issue))
+        self.assertEqual(_missing_scheduled_freeze(
+            datetime(2026, 3, 29, 7, 3, tzinfo=timezone.utc), issue), "MORNING")
+        self.assertIsNone(_missing_scheduled_freeze(
+            datetime(2026, 3, 29, 7, 3, tzinfo=timezone.utc),
+            "2026-03-29T06:17:00Z"
+        ))
+        # After transition to CET, 08:17 local is 07:17 UTC.
+        self.assertEqual(_missing_scheduled_freeze(
+            datetime(2026, 10, 25, 8, 3, tzinfo=timezone.utc),
+            "2026-10-25T07:16:00Z"), "MORNING")
+        self.assertIsNone(_missing_scheduled_freeze(
+            datetime(2026, 10, 25, 7, 59, tzinfo=timezone.utc),
+            "2026-10-25T07:16:00Z"))
+
+    def test_previous_evening_miss_survives_midnight(self):
+        # Oct 11 02:55 CPH is Oct 11 00:55Z: yesterday's 20:17 slot
+        # was missed, even though today's 08:17 slot is not due.
+        now = datetime(2026, 10, 11, 0, 55, tzinfo=timezone.utc)
+        morning_only = "2026-10-10T06:20:00Z"
+        self.assertEqual(
+            _missing_scheduled_freeze(now, morning_only), "PREVIOUS_EVENING")
+        # Genuine late evening/current-time issue supersedes missed slot.
+        self.assertIsNone(_missing_scheduled_freeze(
+            now, "2026-10-10T22:35:49Z"))
+        # A short delay before the 20:17+45m grace should not alarm.
+        before_grace = datetime(2026, 10, 10, 18, 45, tzinfo=timezone.utc)
+        self.assertIsNone(_missing_scheduled_freeze(before_grace, morning_only))
+
+    def test_missed_publication_message_is_not_fake_market_move(self):
+        text = _public_refresh_message(["SCHEDULED_FREEZE_MISSING"])
+        self.assertIn("Scheduled Compass update missed", text)
+        self.assertIn("does not indicate a new market move", text)
+        self.assertNotIn("Material market move or decision-state", text)
+        retry = _public_refresh_message(["PRIOR_REQUEST_NOT_BOUND_RETRY", "SCHEDULED_FREEZE_MISSING"])
+        self.assertEqual(retry, text)
+        mixed = _public_refresh_message(["SCHEDULED_FREEZE_MISSING", "MARKET_STATE_CHANGED"])
+        self.assertNotEqual(mixed, text)
+        market = _public_refresh_message(["MARKET_STATE_CHANGED"])
+        self.assertIn("reassessment", market)
+        protective = _public_refresh_message(["PROTECTION_STATE_CHANGED"])
+        self.assertIn("Protection or re-entry", protective)
+
+    def test_no_recovery_without_verifiable_original_issue_time(self):
+        self.assertIsNone(_missing_scheduled_freeze(NOW, None))
+        self.assertIsNone(_missing_scheduled_freeze(NOW, "not-utc"))
+        self.assertIsNone(_missing_scheduled_freeze(NOW, "2099-01-01T00:00:00Z"))
+
+    def test_same_fresh_source_does_not_hide_missed_scheduled_publication(self):
+        # As-of clocks are internally consistent: this SAME immutable packet
+        # existed BEFORE the 08:17 CPH slot, is still fresh at 09:05 CPH,
+        # but the last issued forecast was 08:16 CPH. A missed publication
+        # is a different event from new market-data materiality.
+        a = auto_state(source_sha="same")
+        src = "2026-09-18T06:14:00Z"
+        a["packet_generated_at_utc"] = src
+        for status in a["source_health"]["hourly_market"]["freshness"].values():
+            if isinstance(status, dict):
+                status["timestamp"] = src
+        a["normalized_state"]["live_market"]["observation_open_utc"] = "2026-09-18T06:00:00Z"
+        a["predecessor"]["market_observation_open_utc"] = "2026-09-18T05:00:00Z"
+        kw = dict(auto_state=a, auto_pointer={"packet_sha256": "same"},
+                  latest_compass=compass(source_sha="same",
+                                        issued_at="2026-09-18T06:16:00Z"),
+                  entry_latest=entry(), prior_state={"last_heat_state": "NORMAL"},
+                  cn_package=cn_package(), cn_binding={"status": "PASS"})
+        before_grace = evaluate(**kw, now=datetime(2026, 9, 18, 7, 0, tzinfo=timezone.utc))
+        self.assertFalse(before_grace["dispatch"])
+        self.assertEqual(before_grace["reason"], "LATEST_COMPASS_ALREADY_BINDS_CURRENT_OWNER_PACKET")
+        missed = evaluate(**kw, now=datetime(2026, 9, 18, 7, 5, tzinfo=timezone.utc))
+        self.assertTrue(missed["dispatch"])
+        self.assertEqual(missed["missing_scheduled_freeze"], "MORNING")
+        self.assertIn("SCHEDULED_FREEZE_MISSING", missed["cause_codes"])
+        self.assertFalse(missed["authority"]["portfolio_execution"])
+        self.assertFalse(missed["authority"]["forecast_change"])
+
+    def test_same_source_missed_slot_tracks_inflight_and_retries_after_20m(self):
+        # Temporal replay: source 08:14 CPH, issued 08:16, 08:17 scheduled
+        # slot missing, 09:05 current-time refresh request never bound.
+        a = auto_state(source_sha="same")
+        original = "2026-09-18T06:14:00Z"
+        a["packet_generated_at_utc"] = original
+        for value in a["source_health"]["hourly_market"]["freshness"].values():
+            if isinstance(value, dict):
+                value["timestamp"] = original
+        a["normalized_state"]["live_market"]["observation_open_utc"] = "2026-09-18T06:00:00Z"
+        a["predecessor"]["market_observation_open_utc"] = "2026-09-18T05:00:00Z"
+        kw = dict(
+            auto_state=a,
+            auto_pointer={"packet_sha256": "same"},
+            latest_compass=compass(source_sha="same", issued_at="2026-09-18T06:16:00Z"),
+            entry_latest=entry(),
+            prior_state={
+                "last_heat_state": "NORMAL",
+                "last_requested_source_sha": "same",
+                "last_request_at_utc": "2026-09-18T07:05:00Z",
+            },
+            cn_package=cn_package(), cn_binding={"status": "PASS"},
+        )
+        in_flight = evaluate(**kw, now=datetime(2026, 9, 18, 7, 15, tzinfo=timezone.utc))
+        self.assertFalse(in_flight["dispatch"])
+        self.assertEqual(in_flight["reason"], "REQUEST_IN_FLIGHT")
+        self.assertIn("SCHEDULED_FREEZE_MISSING", in_flight["suppressed_cause_codes"])
+
+        retry = evaluate(**kw, now=datetime(2026, 9, 18, 7, 25, tzinfo=timezone.utc))
+        self.assertTrue(retry["dispatch"])
+        self.assertEqual(retry["reason"], "MATERIAL_REASSESSMENT_REQUIRED")
+        self.assertIn("PRIOR_REQUEST_NOT_BOUND_RETRY", retry["cause_codes"])
+        self.assertIn("SCHEDULED_FREEZE_MISSING", retry["cause_codes"])
+        self.assertFalse(retry["authority"]["portfolio_execution"])
+        self.assertIn("Scheduled Compass update missed",
+                      _public_refresh_message(retry["cause_codes"]))
+
+        # Requests for other source identities cannot create false same-SHA
+        # retry evidence against the unchanged current packet.
+        unrelated = dict(kw, prior_state={
+            "last_heat_state": "NORMAL",
+            "last_requested_source_sha": "different-source",
+            "last_request_at_utc": "2026-09-18T07:05:00Z",
+        })
+        fresh = evaluate(**unrelated, now=datetime(2026, 9, 18, 7, 25, tzinfo=timezone.utc))
+        self.assertNotIn("PRIOR_REQUEST_NOT_BOUND_RETRY", fresh.get("cause_codes", []))
+
+    def test_persistent_downside_heat_does_not_duplicate_missed_slot_recovery(self):
+        # Accepted same-source recovery at 09:05 CPH; a persistent HOT
+        # downside episode is NOT a new protection deterioration.
+        a = auto_state(source_sha="same")
+        original = "2026-09-18T06:14:00Z"
+        a["packet_generated_at_utc"] = original
+        for value in a["source_health"]["hourly_market"]["freshness"].values():
+            if isinstance(value, dict):
+                value["timestamp"] = original
+        a["normalized_state"]["live_market"]["observation_open_utc"] = "2026-09-18T06:00:00Z"
+        a["predecessor"]["market_observation_open_utc"] = "2026-09-18T05:00:00Z"
+        prior = {
+            "last_heat_state": "HOT_DOWNSIDE_REASSESSMENT",
+            "last_requested_source_sha": "same",
+            "last_request_at_utc": "2026-09-18T07:05:00Z",
+        }
+        kw = dict(
+            auto_state=a, auto_pointer={"packet_sha256": "same"},
+            latest_compass=compass(source_sha="same", issued_at="2026-09-18T06:16:00Z"),
+            entry_latest=entry(temp="NORMAL", btc=-8.5, eth=-5, median=-2),
+            prior_state=prior, cn_package=cn_package(), cn_binding={"status": "PASS"},
+        )
+        in_flight = evaluate(**kw, now=datetime(2026, 9, 18, 7, 10, tzinfo=timezone.utc))
+        self.assertFalse(in_flight["dispatch"])
+        self.assertEqual(in_flight["reason"], "REQUEST_IN_FLIGHT")
+        self.assertFalse(in_flight["protective_bypass"])
+        self.assertIn("SCHEDULED_FREEZE_MISSING", in_flight["suppressed_cause_codes"])
+
+        retry = evaluate(**kw, now=datetime(2026, 9, 18, 7, 26, tzinfo=timezone.utc))
+        self.assertTrue(retry["dispatch"])
+        self.assertIn("PRIOR_REQUEST_NOT_BOUND_RETRY", retry["cause_codes"])
+        self.assertIn("SCHEDULED_FREEZE_MISSING", retry["cause_codes"])
+        self.assertFalse(retry["protective_bypass"])
+
+        # A genuinely NEW downside episode still bypasses the in-flight
+        # cooldown so urgent protective reassessment remains possible.
+        newly_hot = evaluate(
+            **dict(kw, prior_state=dict(prior, last_heat_state="NORMAL")),
+            now=datetime(2026, 9, 18, 7, 10, tzinfo=timezone.utc),
+        )
+        self.assertTrue(newly_hot["dispatch"])
+        self.assertTrue(newly_hot["protective_bypass"])
+        self.assertIn("MARKET_HEAT_ENTERED", newly_hot["cause_codes"])
 
     def test_same_source_never_dispatches(self):
         a=auto_state(source_sha="same")

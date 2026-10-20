@@ -106,6 +106,109 @@ def sequence_id(packet_hash: str, observed_at: str) -> str:
     return "T6-" + hashlib.sha256(f"{packet_hash}|{observed_at}".encode()).hexdigest()[:16]
 
 
+def verified_replay_baseline(root: Path, seq: str, level: float, at: str) -> dict[str, Any]:
+    """Validate the COMPLETE baseline against its first immutable cross observation.
+
+    A sequence ID/clock alone cannot authenticate frozen price/breadth/flow axes.
+    A replay must fail closed when the historical first-cross observation or
+    baseline is missing or inconsistent. No historical object is rewritten.
+    """
+    baseline_path = root / "sequences" / seq / "BASELINE.json"
+    if not baseline_path.is_file():
+        raise ValueError("t6_replay_state_mismatch")
+    baseline = read_json(baseline_path)
+    start = baseline.get("sequence_start_utc")
+    source = baseline.get("source_packet_sha256")
+    # A first-cross observation and baseline are *both mutable repository
+    # files*. Their agreement is not independent proof of archived inputs.
+    # Source packet bytes were frozen at first-cross and bound by SHA-256.
+    packet_path = root / "sequences" / seq / "SOURCE_PACKET.json"
+    if packet_path.is_file() and not packet_path.is_symlink():
+        packet = read_json(packet_path)
+    elif packet_path.exists():
+        raise ValueError("t6_replay_first_source_packet_missing")
+    else:
+        # Read-only legacy compatibility: historical sequences predate
+        # SOURCE_PACKET.json. Authenticate from the original immutable
+        # Auto Market State run archive, never synthesize or backfill it.
+        stamp = parse_time(start)
+        resolved_root = root.resolve()
+        if (len(resolved_root.parents) < 3 or
+                resolved_root.parts[-3:] != ("research", "framework_memory",
+                                             "rotation_survival_forward_rows")):
+            raise ValueError("t6_replay_first_source_packet_missing")
+        source_dir = (resolved_root.parents[2] / "04_MARKET_LEARNING" /
+                      "entry_signals" / "auto_market_state" / "runs" /
+                      stamp.strftime("%Y/%m/%d"))
+        matches = sorted(source_dir.glob(stamp.strftime("%H%M%S") + "_*.json"))
+        if len(matches) != 1 or not matches[0].is_file() or matches[0].is_symlink():
+            raise ValueError("t6_replay_first_source_packet_missing")
+        packet = read_json(matches[0])
+    if sha(packet) != source:
+        raise ValueError("t6_replay_first_source_packet_mismatch")
+    if (not isinstance(start, str) or not isinstance(source, str)
+            or len(source) != 64 or any(c not in "0123456789abcdef" for c in source)
+            or sequence_id(source, start) != seq or parse_time(start) > parse_time(at)):
+        raise ValueError("t6_replay_state_mismatch")
+    first_id = hashlib.sha256(f"{source}|{start}".encode()).hexdigest()[:20]
+    first_path = root / "observations" / f"{start[:10]}_{first_id}.json"
+    if not first_path.is_file():
+        raise ValueError("t6_replay_state_mismatch")
+    first = read_json(first_path)
+    # Historical evidence is schema-exact: absence is part of the freeze.
+    # Added outcome/censoring fields must not be accepted after maturation.
+    required_first_keys = {
+        "contract", "authority", "observed_at_utc", "source_packet_sha256",
+        "registered_ethbtc_level_read_only", "current_ethbtc",
+        "prior_ethbtc", "first_cross_detected", "active_sequence_id_before",
+        "axes", "missing_axes", "retrospective_creation", "event",
+    }
+    if set(first) != required_first_keys:
+        raise ValueError("t6_replay_frozen_first_schema_mismatch")
+    before, crossed = first.get("prior_ethbtc"), first.get("current_ethbtc")
+    axes = first.get("axes")
+    source_axes = snapshot_axes(packet)
+    original_first = prior_ethbtc(packet, float(scalar(packet, "ethbtc")))
+    if (packet_timestamp(packet) != start or snapshot_axes(packet) != axes
+            or original_first != before or scalar(packet, "ethbtc") != crossed):
+        raise ValueError("t6_replay_first_source_packet_mismatch")
+    if (first.get("contract") != OBS_CONTRACT or first.get("authority") != AUTHORITY
+            or first.get("event") != "FIRST_CROSS_FROZEN"
+            or first.get("observed_at_utc") != start
+            or first.get("source_packet_sha256") != source
+            or first.get("registered_ethbtc_level_read_only") != level
+            or first.get("active_sequence_id_before") is not None
+            or first.get("first_cross_detected") is not True
+            or first.get("retrospective_creation") is not False
+            or first.get("right_censored") is not None
+            and first.get("right_censored") is not True
+            or isinstance(before, bool) or not isinstance(before, (int, float))
+            or isinstance(crossed, bool) or not isinstance(crossed, (int, float))
+            or not before < level <= crossed
+            or not isinstance(axes, dict) or set(axes) != {"ETHBTC", "breadth", "BTC_D", "deployment", "flow"}
+            or axes.get("ETHBTC") != axis(crossed, "normalized_state.scalar_values.ethbtc")
+            or first.get("missing_axes") != [key for key, row in axes.items() if isinstance(row, dict) and row.get("available") is False]
+            or any(not isinstance(row, dict) or set(row) != {"available", "value", "source_field", "inferred"}
+                   or row.get("inferred") is not False
+                   or row.get("available") is not (row.get("value") is not None)
+                   for row in axes.values())):
+        raise ValueError("t6_replay_state_mismatch")
+    expected = {
+        "contract": CONTRACT, "authority": AUTHORITY, "sequence_id": seq,
+        "sequence_start_utc": start, "benchmark": "FIRST_ETHBTC_CROSS",
+        "registered_ethbtc_level_read_only": level,
+        "source_packet_sha256": source,
+        "first_cross": {"prior_ethbtc": before, "cross_ethbtc": crossed},
+        "axes_at_freeze": axes, "right_censored": True,
+        "relationship_classification": None, "incremental_value_vs_first_cross": None,
+        "delay_cost": None, "failure_outcome": None, "exit_side_outcome": None,
+        "missingness_policy": "MISSING_REMAINS_UNKNOWN_NEVER_INFERRED",
+    }
+    if baseline != expected:
+        raise ValueError("t6_replay_state_mismatch")
+    return baseline
+
+
 def write_immutable(path: Path, value: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     data = canon(value)
@@ -127,9 +230,164 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
     level = registered_level(cadence)
     prior = prior_ethbtc(packet, current)
     packet_hash = sha(packet)
+    obs_id = hashlib.sha256(f"{packet_hash}|{observed_at}".encode()).hexdigest()[:20]
+    observation_path = root / "observations" / f"{observed_at[:10]}_{obs_id}.json"
+
+    # An already-frozen source observation must be an idempotent NOOP.  A rerun
+    # may see the *later* state (e.g., after the observation closed a sequence),
+    # so reconstructing the old event from current STATE would corrupt history.
+    # We only reuse the existing exact immutable object, never silently accept
+    # a different packet, cadence level or missing/stale LATEST pointer.
+    if observation_path.exists():
+        original = read_json(observation_path)
+        axes = snapshot_axes(packet)
+        expected_source_fields = {
+            "contract": OBS_CONTRACT,
+            "authority": AUTHORITY,
+            "observed_at_utc": observed_at,
+            "source_packet_sha256": packet_hash,
+            "registered_ethbtc_level_read_only": level,
+            "current_ethbtc": current,
+            "prior_ethbtc": prior,
+            "first_cross_detected": prior is not None and prior < level <= current,
+            "axes": axes,
+            "missing_axes": [name for name, row in axes.items() if not row["available"]],
+            "retrospective_creation": False,
+        }
+        if any(original.get(key) != value for key, value in expected_source_fields.items()):
+            raise ValueError(f"immutable_conflict:{observation_path}")
+        event = original.get("event")
+        expected_keys = set(expected_source_fields) | {"active_sequence_id_before", "event"}
+        if event == "NO_ELIGIBLE_FIRST_CROSS":
+            expected_keys.add("right_censored")
+        elif event in {"ACTIVE_SEQUENCE_OBSERVATION", "ETHBTC_REVERSAL_OBSERVED"}:
+            expected_keys.update({"sequence_id", "time_in_state_days", "right_censored"})
+        if set(original) != expected_keys:
+            raise ValueError("t6_replay_frozen_observation_schema_mismatch")
+        if event == "FIRST_CROSS_FROZEN":
+            expected_active = sequence_id(packet_hash, observed_at)
+        elif event == "ACTIVE_SEQUENCE_OBSERVATION":
+            expected_active = original.get("sequence_id")
+            if not isinstance(expected_active, str) or not expected_active:
+                raise ValueError("t6_replay_state_mismatch")
+        elif event in {"ETHBTC_REVERSAL_OBSERVED", "NO_ELIGIBLE_FIRST_CROSS"}:
+            expected_active = None
+        else:
+            raise ValueError("t6_replay_state_mismatch")
+        latest_path = root / "LATEST.json"
+        if not latest_path.exists():
+            raise ValueError("t6_replay_latest_pointer_missing")
+        latest = read_json(latest_path)
+        if (latest.get("contract") != "ROTATION_SURVIVAL_LATEST_v1"
+                or latest.get("observation_path") != observation_path.as_posix()
+                or latest.get("observation_sha256") != sha(original)
+                or latest.get("observed_at_utc") != observed_at
+                or latest.get("event") != event
+                or "active_sequence_id" not in latest
+                or latest["active_sequence_id"] != expected_active
+                or latest.get("authority") != AUTHORITY):
+            raise ValueError("t6_replay_latest_pointer_mismatch")
+        state_path = root / "STATE.json"
+        if state_path.exists():
+            replay_state = read_json(state_path)
+            if (replay_state.get("contract") != STATE_CONTRACT
+                    or "active_sequence_id" not in replay_state
+                    or replay_state["active_sequence_id"] != expected_active):
+                raise ValueError("t6_replay_state_mismatch")
+            if event in {"FIRST_CROSS_FROZEN", "ACTIVE_SEQUENCE_OBSERVATION", "ETHBTC_REVERSAL_OBSERVED"}:
+                replay_sequence = expected_active if expected_active is not None else original.get("sequence_id")
+                if not isinstance(replay_sequence, str) or not replay_sequence.startswith("T6-") or len(replay_sequence) != 19 or any(c not in "0123456789abcdef" for c in replay_sequence[3:]):
+                    raise ValueError("t6_replay_state_mismatch")
+                baseline = verified_replay_baseline(root, replay_sequence, level, observed_at)
+                start = baseline["sequence_start_utc"]
+                source = baseline["source_packet_sha256"]
+                if event == "FIRST_CROSS_FROZEN" and (start != observed_at or source != packet_hash):
+                    raise ValueError("t6_replay_state_mismatch")
+                if event == "ETHBTC_REVERSAL_OBSERVED":
+                    expected_state = {"contract": STATE_CONTRACT, "active_sequence_id": None,
+                                      "last_closed_sequence_id": replay_sequence, "closed_at_utc": observed_at,
+                                      "closure_reason": "ETHBTC_REVERSED_BELOW_REGISTERED_FIRST_CROSS_LEVEL",
+                                      "source_packet_sha256": packet_hash}
+                else:
+                    expected_state = {"contract": STATE_CONTRACT, "active_sequence_id": replay_sequence,
+                                      "sequence_start_utc": start, "source_packet_sha256": source}
+                if replay_state != expected_state:
+                    raise ValueError("t6_replay_state_mismatch")
+        elif expected_active is not None or event == "ETHBTC_REVERSAL_OBSERVED":
+            raise ValueError("t6_replay_state_mismatch")
+        # Consequential event-derived fields are part of the frozen observation.
+        # Reconstruct them from packet/source and the independently verified
+        # first-cross BASELINE rather than trusting the replayed event object.
+        if event == "NO_ELIGIBLE_FIRST_CROSS":
+            if (original.get("first_cross_detected") is not False
+                    or original.get("active_sequence_id_before") is not None
+                    or original.get("right_censored") is not True
+                    or any(key in original for key in ("sequence_id", "time_in_state_days"))):
+                raise ValueError("t6_replay_event_fields_mismatch")
+        elif event == "FIRST_CROSS_FROZEN":
+            if (original.get("first_cross_detected") is not True
+                    or original.get("active_sequence_id_before") is not None
+                    or any(key in original for key in ("sequence_id", "time_in_state_days", "right_censored"))):
+                raise ValueError("t6_replay_event_fields_mismatch")
+        else:
+            if event not in {"ACTIVE_SEQUENCE_OBSERVATION", "ETHBTC_REVERSAL_OBSERVED"}:
+                raise ValueError("t6_replay_event_fields_mismatch")
+            active_expected = event == "ACTIVE_SEQUENCE_OBSERVATION"
+            start_at = parse_time(baseline["sequence_start_utc"])
+            duration = max(0.0, (parse_time(observed_at) - start_at).total_seconds() / 86400.0)
+            if (original.get("active_sequence_id_before") != replay_sequence
+                    or original.get("sequence_id") != replay_sequence
+                    or type(original.get("time_in_state_days")) is not float
+                    or original["time_in_state_days"] != duration
+                    or original.get("right_censored") is not active_expected
+                    or (current >= level) is not active_expected):
+                raise ValueError("t6_replay_event_fields_mismatch")
+        return latest
+
+    # A different never-seen packet is not permission to rewind the sequence.
+    # Compare the real producer's clock to the immutable latest observation
+    # before ANY state/baseline/observation write. Equal clock with different
+    # source identity is ambiguous and must not replace a frozen observation.
+    latest_path = root / "LATEST.json"
     state_path = root / "STATE.json"
+    if latest_path.exists():
+        previous_latest = read_json(latest_path)
+        previous_path_value = previous_latest.get("observation_path")
+        if (previous_latest.get("contract") != "ROTATION_SURVIVAL_LATEST_v1"
+                or not isinstance(previous_path_value, str)
+                or previous_latest.get("authority") != AUTHORITY
+                or not isinstance(previous_latest.get("observed_at_utc"), str)):
+            raise ValueError("t6_fresh_latest_pointer_mismatch")
+        previous_path = Path(previous_path_value)
+        if (not previous_path.is_file() or previous_path.is_symlink()
+                or not previous_path.is_relative_to(root)):
+            raise ValueError("t6_fresh_latest_pointer_mismatch")
+        previous_observation = read_json(previous_path)
+        if (previous_latest.get("observation_sha256") != sha(previous_observation)
+                or previous_latest["observed_at_utc"] != previous_observation.get("observed_at_utc")
+                or previous_latest.get("event") != previous_observation.get("event")):
+            raise ValueError("t6_fresh_latest_pointer_mismatch")
+        if parse_time(observed_at) <= parse_time(previous_latest["observed_at_utc"]):
+            raise ValueError("t6_fresh_packet_time_regression")
+    elif state_path.exists() or any((root / "observations").glob("*.json")):
+        raise ValueError("t6_fresh_latest_pointer_missing")
     state = read_json(state_path) if state_path.exists() else {"contract": STATE_CONTRACT, "active_sequence_id": None}
     active = state.get("active_sequence_id")
+    if active is not None:
+        if (not isinstance(active, str) or not active.startswith("T6-")
+                or len(active) != 19 or any(c not in "0123456789abcdef" for c in active[3:])):
+            raise ValueError("t6_fresh_active_state_mismatch")
+        # Each real scheduled *new* packet must independently authenticate the
+        # original first-cross packet and frozen observation before any write.
+        # Protect the natural producer path, not only explicit replay.
+        baseline = verified_replay_baseline(root, active, level, observed_at)
+        expected_state = {
+            "contract": STATE_CONTRACT, "active_sequence_id": active,
+            "sequence_start_utc": baseline["sequence_start_utc"],
+            "source_packet_sha256": baseline["source_packet_sha256"],
+        }
+        if state != expected_state:
+            raise ValueError("t6_fresh_active_state_mismatch")
     crossed = prior is not None and prior < level <= current
     observation: dict[str, Any] = {
         "contract": OBS_CONTRACT,
@@ -165,6 +423,10 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
             "exit_side_outcome": None,
             "missingness_policy": "MISSING_REMAINS_UNKNOWN_NEVER_INFERRED",
         }
+        # Persist the original packet *before* baseline/state/observation.
+        # Replay validates its byte identity, not just two self-consistent
+        # derivative files. No API call, new authority or historical rewrite.
+        write_immutable(root / "sequences" / active / "SOURCE_PACKET.json", packet)
         write_immutable(root / "sequences" / active / "BASELINE.json", baseline)
         state = {"contract": STATE_CONTRACT, "active_sequence_id": active, "sequence_start_utc": observed_at, "source_packet_sha256": packet_hash}
         state_path.parent.mkdir(parents=True, exist_ok=True)
@@ -186,8 +448,7 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
         observation["event"] = "NO_ELIGIBLE_FIRST_CROSS"
         observation["right_censored"] = True
 
-    obs_id = hashlib.sha256(f"{packet_hash}|{observed_at}".encode()).hexdigest()[:20]
-    write_immutable(root / "observations" / f"{observed_at[:10]}_{obs_id}.json", observation)
+    write_immutable(observation_path, observation)
     latest = {"contract": "ROTATION_SURVIVAL_LATEST_v1", "observed_at_utc": observed_at, "observation_path": str((root / "observations" / f"{observed_at[:10]}_{obs_id}.json").as_posix()), "observation_sha256": sha(observation), "event": observation["event"], "active_sequence_id": state.get("active_sequence_id"), "authority": AUTHORITY}
     (root / "LATEST.json").write_bytes(canon(latest))
     return latest

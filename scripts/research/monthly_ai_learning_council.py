@@ -44,6 +44,7 @@ def compact_experiment_registry(registry: dict[str, Any], limit: int = 100) -> d
         state = str(row.get("state") or "UNKNOWN")
         states[state] = states.get(state, 0) + 1
         matured = int(row.get("matured_outcome_count", 0) or 0)
+        eligible = int(row.get("scientific_score_eligible_outcome_count", 0) or 0)
         if matured > 0 or state.startswith("MATURED"):
             rows.append({
                 "candidate_id": row.get("candidate_id"),
@@ -51,9 +52,10 @@ def compact_experiment_registry(registry: dict[str, Any], limit: int = 100) -> d
                 "kind": row.get("kind"),
                 "state": state,
                 "matured_outcome_count": matured,
+                "scientific_score_eligible_outcome_count": eligible,
                 "scientific_admission_status": row.get("scientific_admission_status"),
             })
-    rows.sort(key=lambda x: (-int(x.get("matured_outcome_count", 0)), str(x.get("candidate_id"))))
+    rows.sort(key=lambda x: (-int(x.get("scientific_score_eligible_outcome_count", 0)), str(x.get("candidate_id"))))
     return {
         "contract": registry.get("contract"),
         "candidate_count": len([x for x in registry.get("candidates", []) if isinstance(x, dict)]),
@@ -198,11 +200,17 @@ def deterministic_claims(context: dict[str, Any], floor: int) -> tuple[list[dict
     learned, challenged = [], []
     rows = context.get("evidence_census", {}).get("experiment_registry", {}).get("matured_candidates", []) or []
     for row in rows:
-        n = int(row.get("matured_outcome_count", 0) or 0)
+        # Lifecycle maturity is not equivalent to scientific score eligibility.
+        # Old snapshots lacking the explicit eligible denominator fail closed.
+        n = int(row.get("scientific_score_eligible_outcome_count", 0) or 0)
         if n < floor:
             continue
         state = str(row.get("state") or "")
-        compact = {"candidate_id": row.get("candidate_id"), "title": row.get("title"), "matured_outcome_count": n, "state": state}
+        compact = {
+            "candidate_id": row.get("candidate_id"), "title": row.get("title"),
+            "matured_outcome_count": int(row.get("matured_outcome_count", 0) or 0),
+            "scientific_score_eligible_outcome_count": n, "state": state,
+        }
         if state == "MATURED_SUPPORTED":
             learned.append(compact)
         elif state == "MATURED_NOT_SUPPORTED":

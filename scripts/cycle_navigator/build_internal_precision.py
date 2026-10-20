@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
+import math
 import os
 import re
+import subprocess
+import sys
+import time
 import urllib.error
 import urllib.request
 from collections import defaultdict
@@ -340,9 +345,357 @@ def generic_calibration_summary(repo: Path) -> dict[str, Any]:
     }
 
 
-def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidence: list[dict[str, Any]], max_output_tokens: int) -> list[dict[str, Any]]:
+def _cost_preflight(repo: Path, model: str, request_bytes: bytes, max_output_tokens: int) -> None:
+    """Fail closed before any optional CN OpenAI call; reserve worst-case tokens.
+
+    This is a bounded single-lane admission under the existing main-writer
+    concurrency group, NOT a platform-wide atomic billing reservation.
+    """
+    if str(repo) not in sys.path:
+        sys.path.insert(0, str(repo))
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
+    try:
+        policy = read_json(repo / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json")
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("CN_API_POLICY_UNREADABLE_NO_SPEND") from exc
+    if not isinstance(policy, dict):
+        raise RuntimeError("CN_API_POLICY_INVALID_SHAPE_NO_SPEND")
+    if (policy.get("status") != "ACTIVE_SHADOW_ONLY" or
+            policy.get("monthly_hard_stop_usd") != 40 or
+            policy.get("global_reserve_usd") != 4):
+        raise RuntimeError("CN_API_POLICY_UNVERIFIED")
+    caps = policy.get("lane_caps_usd")
+    lane_task = "CN_INTERNAL_LONG_HORIZON_SCORER"
+    # An absent cap must never silently fall back to the global monthly limit.
+    if (not isinstance(caps, dict) or
+            type(caps.get(lane_task)) not in (int, float) or
+            caps[lane_task] != 1):
+        raise RuntimeError("CN_API_LANE_CAP_UNVERIFIED_NO_SPEND")
+    if model not in PRICES_PER_MILLION or type(max_output_tokens) is not int or not 1 <= max_output_tokens <= 5000:
+        raise RuntimeError("CN_API_MODEL_OR_OUTPUT_LIMIT_NOT_APPROVED")
+    if not request_bytes or len(request_bytes) > 200000:
+        raise RuntimeError("CN_API_CONTEXT_SIZE_OUT_OF_BOUNDS")
+    # 1 token/UTF-8-byte is conservative for bounded text payloads.
+    max_cost = estimate_cost(model, len(request_bytes), max_output_tokens)
+    if max_cost > 1.0:
+        raise RuntimeError("CN_API_SINGLE_CALL_ESTIMATE_OUT_OF_BOUNDS")
+    guard = repo / "scripts/api_agent/check_monthly_cost_guard.py"
+    cmd = [sys.executable, str(guard), "--receipt-root", str(repo / "research/api_agent/outputs"),
+           "--pending-ledger-root", str(repo / "runtime/api-cost-ledger"),
+           "--hard-stop-usd", "40", "--reserve-usd", str(round(4.0 + max_cost, 8))]
+    try:
+        result = subprocess.run(cmd, cwd=repo, capture_output=True, timeout=45, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("CN_API_GLOBAL_BUDGET_CHECK_UNAVAILABLE") from exc
+    if result.returncode:
+        raise RuntimeError("CN_API_GLOBAL_BUDGET_BLOCKED")
+    # The existing task-specific governor must independently enforce this
+    # lane's monthly allowance, not merely the global post-reserve balance.
+    lane_cmd = [
+        sys.executable, str(repo / "scripts/api_agent/check_api_lane_budget.py"),
+        "--receipt-root", str(repo / "research/api_agent/outputs"),
+        "--task", lane_task, "--cap-usd", str(caps[lane_task]),
+        "--reserve-usd", str(round(max_cost, 8)),
+    ]
+    try:
+        lane_result = subprocess.run(lane_cmd, cwd=repo, capture_output=True, timeout=45, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("CN_API_LANE_BUDGET_CHECK_UNAVAILABLE") from exc
+    if lane_result.returncode:
+        raise RuntimeError("CN_API_LANE_BUDGET_BLOCKED")
+
+
+def _cn_cost_receipt_path(repo: Path, claims: list[dict[str, Any]]) -> Path:
+    # Claim identity binds retries to the SAME frozen cohort irrespective
+    # of rebuilt prompts and evidence. Never charge it twice automatically.
+    ids = [str(c["claim_id"]) for c in claims]
+    if not ids or len(set(ids)) != len(ids):
+        raise RuntimeError("CN_API_INVALID_COHORT_IDS")
+    digest = hashlib.sha256(canonical_bytes(ids)).hexdigest()
+    return repo / "research/api_agent/outputs/cn_internal_precision" / digest / "receipt.json"
+
+
+
+def _previously_attempted_claim_ids(repo: Path) -> set[str]:
+    """Read paid-attempt claim IDs from trusted, durable CN receipts only."""
+    root = repo / "research/api_agent/outputs/cn_internal_precision"
+    if not root.exists():
+        return set()
+    if not root.is_dir() or root.is_symlink():
+        raise RuntimeError("CN_API_RECEIPT_ROOT_INVALID")
+    attempted: set[str] = set()
+    for path in sorted(root.glob("*/receipt.json")):
+        if path.is_symlink() or path.parent.is_symlink():
+            raise RuntimeError("CN_API_RECEIPT_PATH_INVALID")
+        try:
+            prior = json.loads(path.read_text())
+        except (OSError, ValueError, TypeError) as exc:
+            raise RuntimeError("CN_API_PREVIOUS_RECEIPT_UNREADABLE") from exc
+        if not isinstance(prior, dict) or prior.get("contract") != "API_AGENT_RECEIPT_v3":
+            raise RuntimeError("CN_API_PREVIOUS_RECEIPT_INVALID")
+        if prior.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER":
+            raise RuntimeError("CN_API_PREVIOUS_RECEIPT_TASK_INVALID")
+        ids = prior.get("claim_ids")
+        if (not isinstance(ids, list) or not ids or
+                any(not isinstance(v, str) or not v for v in ids) or len(ids) != len(set(ids))):
+            raise RuntimeError("CN_API_PREVIOUS_RECEIPT_CLAIMS_INVALID")
+        attempted.update(ids)
+    return attempted
+
+
+def _fresh_unattempted_long_claims(repo: Path, due: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    attempted = _previously_attempted_claim_ids(repo)
+    return [claim for claim in due if claim["claim_id"] not in attempted]
+
+
+def _reject_previously_attempted_claims(repo: Path, claims: list[dict[str, Any]]) -> None:
+    current = {str(item["claim_id"]) for item in claims}
+    if current.intersection(_previously_attempted_claim_ids(repo)):
+        raise RuntimeError("CN_API_CLAIM_ALREADY_ATTEMPTED_OWNER_REVIEW_REQUIRED")
+
+
+CN_RESERVATION_ROOT = "runtime/api-cost-ledger/cn_internal_precision_reservations"
+CN_REPOSITORY = "Donh91/Investering-Framework-Archive-v1"
+CN_RESERVATION_BRANCH = "agent/task-20261016-cn-cost-liability"
+
+
+def _cn_gh_api(path: str, *, fields: dict[str, str] | None = None,
+               allow_not_found: bool = False) -> Any:
+    """Use existing authenticated gh/contents permissions, never a new service."""
+    cmd = ["gh", "api"]
+    if fields is not None:
+        cmd.extend(["-X", "PUT"])
+    cmd.append(f"repos/{CN_REPOSITORY}/{path}")
+    if fields:
+        for name, value in fields.items():
+            cmd.extend(["-f", f"{name}={value}"])
+    try:
+        result = subprocess.run(cmd, capture_output=True, timeout=45, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_GITHUB_UNAVAILABLE") from exc
+    if result.returncode:
+        message = result.stderr.decode(errors="replace") if isinstance(result.stderr, bytes) else str(result.stderr)
+        if allow_not_found and "HTTP 404" in message:
+            return None
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_GITHUB_UNAVAILABLE")
+    try:
+        return json.loads(result.stdout)
+    except (ValueError, TypeError) as exc:
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_RESPONSE_INVALID") from exc
+
+
+def _cn_gh_file(path: str, *, ref: str = "main", allow_not_found: bool = False) -> bytes | None:
+    item = _cn_gh_api(f"contents/{path}?ref={ref}", allow_not_found=allow_not_found)
+    if item is None:
+        return None
+    if not isinstance(item, dict) or item.get("encoding") != "base64" or not isinstance(item.get("content"), str):
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_FILE_INVALID")
+    try:
+        return base64.b64decode(item["content"], validate=False)
+    except (ValueError, TypeError) as exc:
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_FILE_INVALID") from exc
+
+
+
+def _valid_cn_prior_paid_receipt(receipt: Any, reservation: dict[str, Any]) -> bool:
+    """Do not reconcile a pre-POST liability using a partial/fabricated paid receipt.
+
+    Exact complete usage and model are required before another paid claim may
+    begin. Unknown usage, contradictory status, NaN and missing fields keep
+    the previous liability outstanding, rather than silently charging again.
+    """
+    if (not isinstance(receipt, dict) or not isinstance(reservation, dict)
+            or not isinstance(reservation.get("model"), str)
+            or not reservation["model"] or not re.fullmatch(
+                r"[0-9a-f]{64}", str(reservation.get("request_hash") or ""))
+            or not isinstance(reservation.get("claim_ids"), list)
+            or not reservation["claim_ids"]
+            or any(not isinstance(v, str) or not v for v in reservation["claim_ids"])
+            or type(reservation.get("created_unix")) is not int
+            or reservation["created_unix"] <= 0
+            or reservation["created_unix"] > int(time.time()) + 300):
+        return False
+    if (receipt.get("contract") != "API_AGENT_RECEIPT_v3"
+            or receipt.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER"
+            or receipt.get("authority") != AUTHORITY
+            or receipt.get("claim_ids") != reservation.get("claim_ids")
+            or receipt.get("request_hash") != reservation.get("request_hash")
+            or receipt.get("model") != reservation.get("model")
+            or receipt.get("reasoning_effort") != "medium"
+            or type(receipt.get("attempt_count")) is not int
+            or receipt.get("attempt_count") != 1
+            or receipt.get("status") not in {"PASS", "API_OUTPUT_INVALID"}
+            or receipt.get("usage_reconciliation_required") is True):
+        return False
+    if (type(receipt.get("created_unix")) is not int
+            or receipt["created_unix"] < reservation["created_unix"]
+            or receipt["created_unix"] > int(time.time()) + 300
+            or time.gmtime(receipt["created_unix"])[:2]
+               != time.gmtime(reservation["created_unix"])[:2]):
+        # Midnight rollover is a conservative owner-reconciliation stop,
+        # never an excuse to omit a prior-month charge from the ledger.
+        return False
+    if not re.fullmatch(r"[0-9a-f]{64}", str(receipt.get("context_hash") or "")):
+        return False
+    for key in ("input_tokens", "output_tokens"):
+        if type(receipt.get(key)) is not int or receipt[key] < 0:
+            return False
+    if receipt["input_tokens"] + receipt["output_tokens"] <= 0:
+        return False
+    cost = receipt.get("estimated_cost_usd")
+    maximum = reservation.get("max_estimated_cost_usd")
+    if (type(maximum) not in (int, float) or not math.isfinite(maximum)
+            or not 0 < maximum <= 1
+            or type(cost) not in (int, float) or not math.isfinite(cost)
+            or not 0 <= cost <= maximum + 1e-8):
+        return False
+    # A receipt cannot self-declare artificially low spend: recompute from
+    # its exact governed model and measured token usage, before new paid POST.
+    try:
+        from scripts.api_agent.api_gateway import estimate_cost
+        expected_cost = estimate_cost(receipt["model"], receipt["input_tokens"],
+                                      receipt["output_tokens"])
+    except (ImportError, KeyError, TypeError, ValueError):
+        return False
+    if abs(cost - expected_cost) > 1e-8:
+        return False
+    if receipt["status"] == "PASS":
+        if (not re.fullmatch(r"[0-9a-f]{64}", str(receipt.get("output_hash") or ""))
+                or receipt.get("error") is not None):
+            return False
+    else:
+        if receipt.get("output_hash") is not None or not isinstance(receipt.get("error"), str):
+            return False
+    return True
+
+
+def _reserve_cn_api_attempt_before_post(repo: Path, claim_ids: list[str], request_hash: str,
+                                        model: str, max_cost: float) -> None:
+    """Persist one-way pre-POST cost liability on an owner-scoped NON-main task branch.
+
+    GitHub main and its canonical paid receipts remain distinct, reviewed
+    immutable scientific truth. Existing GitHub contents:write on the scoped
+    non-default branch is the only provisional liability writer. A failed/cancelled later workflow retains
+    this pre-POST reservation, preventing an unaudited paid retry.
+    """
+    if (os.environ.get("GITHUB_ACTIONS") != "true"
+            or os.environ.get("GITHUB_REPOSITORY") != CN_REPOSITORY
+            or not os.environ.get("GH_TOKEN")):
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_AUTH_REQUIRED_NO_SPEND")
+    if not claim_ids or len(claim_ids) != len(set(claim_ids)) or any(not isinstance(x, str) or not x for x in claim_ids):
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_CLAIMS_INVALID")
+    if not re.fullmatch(r"[a-f0-9]{64}", request_hash):
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_REQUEST_INVALID")
+    if type(max_cost) not in (int, float) or not 0 < max_cost <= 1 or max_cost != max_cost:
+        raise RuntimeError("CN_API_DURABLE_RESERVATION_COST_INVALID")
+    # Shard new immutable liabilities by UTC month. Read legacy flat entries
+    # and every prior month, not just the current month: claim-id replay can
+    # cross calendar boundaries. An incomplete shard census always blocks POST.
+    month = time.strftime("%Y-%m", time.gmtime())
+    reservation_path = f"{CN_RESERVATION_ROOT}/{month}/{request_hash}.json"
+    listing = _cn_gh_api(f"contents/{CN_RESERVATION_ROOT}?ref={CN_RESERVATION_BRANCH}", allow_not_found=True)
+    previous_files: list[dict[str, Any]] = []
+    if listing is not None:
+        if not isinstance(listing, list) or len(listing) >= 100:
+            raise RuntimeError("CN_API_DURABLE_RESERVATION_CENSUS_INCOMPLETE")
+        for entry in listing:
+            if not isinstance(entry, dict):
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
+            name = str(entry.get("name") or "")
+            if entry.get("type") == "dir" and re.fullmatch(r"20[0-9]{2}-(?:0[1-9]|1[0-2])", name):
+                shard = _cn_gh_api(f"contents/{CN_RESERVATION_ROOT}/{name}?ref={CN_RESERVATION_BRANCH}")
+                if not isinstance(shard, list) or len(shard) >= 100:
+                    raise RuntimeError("CN_API_DURABLE_RESERVATION_CENSUS_INCOMPLETE")
+                previous_files.extend(shard)
+            elif entry.get("type") == "file":
+                previous_files.append(entry)  # legacy flat reservations
+            else:
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
+        for item in previous_files:
+            if (not isinstance(item, dict) or item.get("type") != "file"
+                    or not re.fullmatch(r"[0-9a-f]{64}\.json", str(item.get("name")))
+                    or not isinstance(item.get("path"), str)
+                    or not re.fullmatch(
+                        rf"{re.escape(CN_RESERVATION_ROOT)}/(?:20[0-9]{{2}}-(?:0[1-9]|1[0-2])/)?[0-9a-f]{{64}}\.json",
+                        item["path"])):
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_UNTRUSTED_FILE")
+            previous_bytes = _cn_gh_file(str(item["path"]), ref=CN_RESERVATION_BRANCH)
+            try:
+                previous = json.loads(previous_bytes)
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_UNREADABLE") from exc
+            if (not isinstance(previous, dict) or previous.get("contract") != "CN_PAID_API_PREPOST_RESERVATION_v1"
+                    or previous.get("task") != "CN_INTERNAL_LONG_HORIZON_SCORER"
+                    or not isinstance(previous.get("claim_ids"), list)
+                    or not isinstance(previous.get("receipt_path"), str)):
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_INVALID")
+            if set(claim_ids) & set(previous["claim_ids"]):
+                raise RuntimeError("CN_API_CLAIM_ALREADY_RESERVED_NO_RETRY")
+            # If a paid call may have occurred but the canonical receipt was
+            # not successfully published on main, *all* further spend stops
+            # until existing owner reconciles failed-run artifacts/provider cost.
+            prior_receipt_path = previous["receipt_path"]
+            if not re.fullmatch(
+                    r"research/api_agent/outputs/cn_internal_precision/[0-9a-f]{64}/receipt\.json",
+                    prior_receipt_path):
+                raise RuntimeError("CN_API_DURABLE_RESERVATION_RECEIPT_PATH_INVALID")
+            remote_receipt = _cn_gh_file(prior_receipt_path, allow_not_found=True)
+            if remote_receipt is None:
+                raise RuntimeError("CN_API_PREVIOUS_UNRECONCILED_PAID_ATTEMPT")
+            try:
+                paid_receipt = json.loads(remote_receipt)
+            except (ValueError, TypeError) as exc:
+                raise RuntimeError("CN_API_PREVIOUS_REMOTE_RECEIPT_INVALID") from exc
+            if not _valid_cn_prior_paid_receipt(paid_receipt, previous):
+                raise RuntimeError("CN_API_PREVIOUS_REMOTE_RECEIPT_INVALID")
+            # The existing global/lane guards read local main: their accounting
+            # can only be considered complete if the same receipt is present.
+            local_receipt = repo / prior_receipt_path
+            if (not local_receipt.is_file() or local_receipt.is_symlink()
+                    or local_receipt.read_bytes() != remote_receipt):
+                raise RuntimeError("CN_API_PREVIOUS_REMOTE_RECEIPT_NOT_ACCOUNTED")
+    digest = hashlib.sha256(canonical_bytes(claim_ids)).hexdigest()
+    receipt_path = f"research/api_agent/outputs/cn_internal_precision/{digest}/receipt.json"
+    row = {
+        "contract": "CN_PAID_API_PREPOST_RESERVATION_v1",
+        "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+        "claim_ids": claim_ids,
+        "model": model,
+        "request_hash": request_hash,
+        "max_estimated_cost_usd": max_cost,
+        # Existing global cost guard reads the pending-ledger root. Treat
+        # reserved maximum as a conservative charge liability, even before
+        # the provider reports actual usage. A later paid receipt may also
+        # be counted; over-reservation is safer than untracked paid retries.
+        "estimated_cost_usd": max_cost,
+        "created_unix": int(time.time()),
+        "receipt_path": receipt_path,
+        "authority": AUTHORITY,
+        "no_automatic_paid_retry": True,
+    }
+    raw = canonical_bytes(row)
+    payload = base64.b64encode(raw).decode()
+    _cn_gh_api(f"contents/{reservation_path}", fields={
+        "message": "cn: durable paid-attempt reservation before optional model call",
+        "content": payload, "branch": CN_RESERVATION_BRANCH,
+    })
+    if _cn_gh_file(reservation_path, ref=CN_RESERVATION_BRANCH) != raw:
+        raise RuntimeError("CN_API_RESERVATION_MAIN_READBACK_FAILED_NO_SPEND")
+
+
+def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidence: list[dict[str, Any]],
+                               max_output_tokens: int, repo: Path | None = None) -> list[dict[str, Any]]:
     if not claims:
         return []
+    # No unscoped direct HTTP call: test callers must pass a repository
+    # authority root; a missing root makes the function no-spend.
+    if repo is None:
+        raise RuntimeError("CN_API_REPO_ROOT_REQUIRED")
+    repo = repo.resolve()
+    receipt_path = _cn_cost_receipt_path(repo, claims)
+    if receipt_path.exists():
+        raise RuntimeError("CN_API_COHORT_ALREADY_ATTEMPTED_OWNER_REVIEW_REQUIRED")
+    _reject_previously_attempted_claims(repo, claims)
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY_missing_for_mature_long_horizon_claims")
@@ -376,33 +729,104 @@ def score_long_horizon_via_api(model: str, claims: list[dict[str, Any]], evidenc
         "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps({"claims": claims, "weekly_evidence": evidence}, sort_keys=True)}]}],
         "text": {"format": {"type": "json_schema", "name": "cn_internal_long_horizon_scores_v1", "strict": True, "schema": schema}},
     }
-    req = urllib.request.Request("https://api.openai.com/v1/responses", data=canonical_bytes(payload), headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST")
+    payload_bytes = canonical_bytes(payload)
+    _cost_preflight(repo, model, payload_bytes, max_output_tokens)
+    # Persist the future charge liability *before* the HTTP POST; otherwise
+    # a later Actions validation/git-push failure would erase its local receipt.
+    from scripts.api_agent.api_gateway import estimate_cost
+    _reserve_cn_api_attempt_before_post(
+        repo, [str(c["claim_id"]) for c in claims],
+        hashlib.sha256(payload_bytes).hexdigest(), model,
+        estimate_cost(model, len(payload_bytes), max_output_tokens))
+    req = urllib.request.Request("https://api.openai.com/v1/responses", data=payload_bytes,
+                                 headers={"Authorization": f"Bearer {api_key}",
+                                          "Content-Type": "application/json"}, method="POST")
+    request_hash = hashlib.sha256(payload_bytes).hexdigest()
+    raw: dict[str, Any] | None = None
+    response_error: str | None = None
     try:
         with urllib.request.urlopen(req, timeout=180) as response:
             raw = json.loads(response.read())
-    except urllib.error.HTTPError as exc:
-        raise RuntimeError(f"openai_http_{exc.code}:{exc.read().decode(errors='replace')[:500]}") from exc
-    text = raw.get("output_text")
-    if not text:
-        parts = []
-        for item in raw.get("output", []):
-            for content in item.get("content", []) if isinstance(item, dict) else []:
-                if isinstance(content, dict) and content.get("type") == "output_text":
-                    parts.append(str(content.get("text", "")))
-        text = "".join(parts)
-    parsed = json.loads(text)
-    rows = parsed.get("scores") or []
-    by_id = {r["claim_id"]: r for r in rows}
-    expected = [c["claim_id"] for c in claims]
-    if list(by_id) != expected:
-        raise SystemExit("INTERNAL_LONG_HORIZON_SCORE_COVERAGE_MISMATCH")
-    for row in rows:
-        status = row["status"]
-        expected_score = ALLOWED_STATUS[status]
-        if expected_score is None and row.get("score") is not None:
-            raise SystemExit("INTERNAL_LONG_HORIZON_NULL_SCORE_MISMATCH")
-        if expected_score is not None and float(row.get("score")) != expected_score:
-            raise SystemExit("INTERNAL_LONG_HORIZON_SCORE_STATUS_MISMATCH")
+            if not isinstance(raw, dict):
+                response_error = "NON_OBJECT_RESPONSE"
+    except (urllib.error.URLError, OSError, ValueError, TypeError) as exc:
+        # After POST, any network ambiguity may have incurred billable tokens.
+        response_error = f"POST_RESPONSE_UNVERIFIABLE:{type(exc).__name__}"
+
+    rows: list[dict[str, Any]] = []
+    valid = False
+    usage = (raw or {}).get("usage") if isinstance(raw, dict) else None
+    input_count = usage.get("input_tokens") if isinstance(usage, dict) else None
+    output_count = usage.get("output_tokens") if isinstance(usage, dict) else None
+    usage_valid = all(type(x) is int and x >= 0 for x in (input_count, output_count))
+    if response_error is None and isinstance(raw, dict):
+        try:
+            if raw.get("status") == "incomplete":
+                raise ValueError("INCOMPLETE_RESPONSE")
+            text = raw.get("output_text")
+            if not text:
+                parts = []
+                for item in raw.get("output", []):
+                    for content in item.get("content", []) if isinstance(item, dict) else []:
+                        if isinstance(content, dict) and content.get("type") == "output_text":
+                            parts.append(str(content.get("text", "")))
+                text = "".join(parts)
+            parsed = json.loads(text)
+            if not isinstance(parsed, dict):
+                raise ValueError("INVALID_RESPONSE_STRUCTURE")
+            rows = parsed.get("scores") or []
+            by_id = {r["claim_id"]: r for r in rows}
+            expected = [c["claim_id"] for c in claims]
+            if (not isinstance(rows, list) or len(rows) != len(expected)
+                    or len(by_id) != len(expected) or list(by_id) != expected):
+                # A duplicate claim cannot count twice or create a negative
+                # pending denominator, even when dict keys collapse to one.
+                raise ValueError("INTERNAL_LONG_HORIZON_DUPLICATE_OR_MISSING_SCORES")
+            for row in rows:
+                status = row["status"]
+                expected_score = ALLOWED_STATUS[status]
+                if expected_score is None and row.get("score") is not None:
+                    raise ValueError("INTERNAL_LONG_HORIZON_NULL_SCORE_MISMATCH")
+                if expected_score is not None and float(row.get("score")) != expected_score:
+                    raise ValueError("INTERNAL_LONG_HORIZON_SCORE_STATUS_MISMATCH")
+            valid = True
+        except (ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+            response_error = f"INVALID_STRUCTURED_OUTPUT:{type(exc).__name__}"
+    if not usage_valid:
+        response_error = "CN_API_COST_USAGE_UNKNOWN"
+        valid = False
+
+    receipt = {
+        "contract": "API_AGENT_RECEIPT_v3",
+        "task": "CN_INTERNAL_LONG_HORIZON_SCORER",
+        "model": model, "reasoning_effort": "medium",
+        "created_unix": int(time.time()),
+        "response_id": raw.get("id") if isinstance(raw, dict) else None,
+        "request_hash": request_hash,
+        "context_hash": hashlib.sha256(canonical_bytes(evidence)).hexdigest(),
+        "output_hash": hashlib.sha256(canonical_bytes(rows)).hexdigest() if valid else None,
+        "attempt_count": 1, "status": "PASS" if valid else "API_OUTPUT_INVALID",
+        "claim_ids": [c["claim_id"] for c in claims],
+        "authority": "INTERNAL_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY",
+        "error": response_error,
+    }
+    if usage_valid:
+        from scripts.api_agent.api_gateway import estimate_cost
+        receipt.update({
+            "input_tokens": input_count, "output_tokens": output_count,
+            "estimated_cost_usd": estimate_cost(model, input_count, output_count),
+        })
+    else:
+        # Intentionally omit the cost amount. Existing global cost guard
+        # will thereafter fail closed on this receipt until owner reconciles
+        # provider billing, instead of undercounting a possibly paid call.
+        receipt["usage_reconciliation_required"] = True
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    if receipt_path.exists():
+        raise RuntimeError("CN_API_RECEIPT_RACE_NO_OVERWRITE")
+    receipt_path.write_bytes(canonical_bytes(receipt))
+    if not valid:
+        raise RuntimeError(response_error or "CN_API_OUTPUT_INVALID")
     return rows
 
 
@@ -453,6 +877,49 @@ def evidence_for_long_claims(repo: Path, claims: list[dict[str, Any]]) -> list[d
                 "machine": read_json(machine),
             })
     return rows
+
+
+def score_matured_claims_bounded(repo: Path, fresh_due: list[dict[str, Any]],
+                               model: str, max_output_tokens: int) -> tuple[list[dict[str, Any]], list[str]]:
+    """One paid request maximum; oversized claim A may not starve eligible B.
+
+    Oversized claims stay explicitly PENDING, never mislabeled as a score or
+    automatically paid on a retry. Any ambiguous/post-payment error stops
+    further calls in this run to avoid accidentally duplicating charges.
+    """
+    scored: list[dict[str, Any]] = []
+    oversized: list[str] = []
+    paid_issued = False
+    for claim in fresh_due:
+        evidence = evidence_for_long_claims(repo, [claim])
+        if any(row.get("status") == "MISSING" for row in evidence):
+            scored.append({
+                "claim_id": claim["claim_id"], "status": "NOT_EVALUABLE",
+                "score": None,
+                "evidence": "One or more required final Master Monday weekly evidence packages are missing.",
+                "self_critique": "Long-horizon claim preserved; no score without all required final evidence.",
+            })
+            continue
+        if paid_issued:
+            break
+        try:
+            # The actual scorer contains both global and per-lane budget guards,
+            # a pre-POST context bound and durable claim-level paid receipts.
+            paid_issued = True
+            scored.extend(score_long_horizon_via_api(
+                model, [claim], evidence, max_output_tokens, repo=repo))
+            break
+        except RuntimeError as exc:
+            if str(exc) in ("CN_API_CONTEXT_SIZE_OUT_OF_BOUNDS",
+                            "CN_API_SINGLE_CALL_ESTIMATE_OUT_OF_BOUNDS"):
+                paid_issued = False  # These errors happen before the POST.
+                oversized.append(claim["claim_id"])
+                continue
+            print(f"CN_LONG_HORIZON_API_BLOCKED:{claim['claim_id']}:{exc}", file=sys.stderr)
+            break
+        except (json.JSONDecodeError, urllib.error.URLError):
+            break
+    return scored, oversized
 
 
 def compact_score(value: Any) -> str:
@@ -546,17 +1013,24 @@ def main() -> None:
 
     due_long = matured_unscored_long_horizon(repo, completed_year, completed_week, existing_ids)
     long_scores: list[dict[str, Any]] = []
+    oversize_pending_claim_ids: list[str] = []
     mature_long_pending = 0
     if due_long:
-        ev = evidence_for_long_claims(repo, due_long)
-        if any(r.get("status") == "MISSING" for r in ev):
-            long_scores = [{"claim_id": c["claim_id"], "status": "NOT_EVALUABLE", "score": None, "evidence": "One or more required final Master Monday weekly evidence packages are missing.", "self_critique": "Long-horizon claim was preserved but cannot be scored without the full frozen horizon evidence."} for c in due_long]
-        else:
-            try:
-                long_scores = score_long_horizon_via_api(args.model, due_long, ev, args.max_output_tokens)
-            except (RuntimeError, json.JSONDecodeError, urllib.error.URLError):
-                mature_long_pending = len(due_long)
-                long_scores = []
+        # Previously attempted paid claims stay pending. Unlike a whole-cohort
+        # abort, fresh mature claims still advance through the ordinary guard.
+        try:
+            fresh_due = _fresh_unattempted_long_claims(repo, due_long)
+        except RuntimeError as exc:
+            print(f"CN_LONG_HORIZON_COST_PROVENANCE_BLOCKED:{exc}", file=sys.stderr)
+            fresh_due = []
+        mature_long_pending = len(due_long) - len(fresh_due)
+        if fresh_due:
+            long_scores, oversize_pending_claim_ids = score_matured_claims_bounded(
+                repo, fresh_due, args.model, args.max_output_tokens)
+            mature_long_pending = len(due_long) - len(long_scores)
+            if oversize_pending_claim_ids:
+                print("CN_LONG_HORIZON_OVERSIZE_PENDING:"
+                      + ",".join(oversize_pending_claim_ids), file=sys.stderr)
         cby = {c["claim_id"]: c for c in due_long}
         for s in long_scores:
             c = cby[s["claim_id"]]
@@ -606,6 +1080,7 @@ def main() -> None:
         "parameter_scores": rows,
         "newly_matured_long_horizon_scores": long_scores,
         "mature_long_horizon_awaiting_score_count": mature_long_pending,
+        "mature_long_horizon_oversize_pending_claim_ids": oversize_pending_claim_ids,
         "current_frozen_claim_count": len(current_internal.get("claims", [])),
         "current_unavailable_or_unfrozen_count": len(current_internal.get("unavailable_or_unfrozen", [])),
         "generic_framework_calibration": generic,

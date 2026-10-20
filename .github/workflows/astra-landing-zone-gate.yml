@@ -6,6 +6,8 @@ on:
       - '07_PROMPTS_AND_AGENTS/astra/**'
       - 'scripts/astra/validate_astra_landing_zone.py'
       - 'tests/astra/test_astra_landing_zone.py'
+      - 'scripts/astra/agent_delegation_benchmark_v1.py'
+      - 'tests/astra/test_agent_delegation_benchmark_v1.py'
       - '.github/workflows/astra-landing-zone-gate.yml'
   workflow_dispatch:
 
@@ -33,3 +35,6 @@ jobs:
 
       - name: Run Astra landing-zone regression tests
         run: python -m unittest discover -s tests/astra -p 'test_astra_landing_zone.py' -v
+
+      - name: Run delegation receipt-independence regressions (PR only)
+        run: python -m unittest discover -s tests/astra -p 'test_agent_delegation_benchmark_v1.py' -v

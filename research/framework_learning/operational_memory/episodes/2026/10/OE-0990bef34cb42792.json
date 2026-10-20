@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/framework-learning-operations.yml",
+    "scripts/learning/t6_rotation_survival.py",
+    "tests/learning/test_t6_rotation_survival.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-0990bef34cb42792",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "t6-fail-closed-immutable-source-replay-strict-observation",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(T6): make exact immutable source replay a guarded no-op * test(T6): replay after closure, changed cadence, tampering and stale pointer negatives * ci(T6): run exact replay regressions in existing PR-only learning gate * fix(T6): validate replay summary and state against frozen event * test(T6): reject replay pointer and state corruption * fix(T6): bind replay sequence state to immutable baseline * fix(T6): bind complete replay baseline axes and metadata to frozen first-cross observation * test(T6): reject corrupted baseline axes, first-cross metadata and missing original * test(T6): muta",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/framework-learning-operations.yml": "95cf80a4e18a3d764026ee600e5d5374409042bd",
+    "scripts/learning/t6_rotation_survival.py": "af983ef54cc29b6fb04abeb38ddde3c985f612f5",
+    "tests/learning/test_t6_rotation_survival.py": "969493a58a10ae4d810540a3aa1fbc6f05df454d"
+  },
+  "source_commit_sha": "0990bef34cb42792f1c11e2d5d9021b2b543c62a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-15T19:37:10-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(T6): fail-closed immutable source replay and strict observation chronology"
+}

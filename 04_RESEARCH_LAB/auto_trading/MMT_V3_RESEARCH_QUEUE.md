@@ -1,5 +1,8 @@
 # MMT V3 RESEARCH QUEUE
 
+> **2026-10-15 model-neutral mission continuity (MMT v3).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. The frozen benchmark and script-compiler hypothesis can be studied by currently qualified GPT-6 researchers when the existing owner admits the task; `when Astra is active` is **not** a gate. Real data/adapter availability, scientific admission, execution realism and budget remain mandatory, and this note does not start a paid benchmark. Follow the existing [Framework Mission Continuity owner](../../07_PROMPTS_AND_AGENTS/astra/ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 Status: `RESEARCH_ONLY`
 Owner: Investering Framework Research Lab
 Source anchor: `source_notes/AT-SRC-0006_MMT_V3_MARKET_DATA_AND_SCRIPTING.md`

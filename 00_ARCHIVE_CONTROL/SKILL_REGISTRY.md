@@ -26,6 +26,8 @@ Skills are process instructions. They do not own market truth, framework doctrin
 | skill-quality-gate | `.agents/skills/skill-quality-gate/SKILL.md` | PILOT_ACTIVE_READ_ONLY_V0_1 | create/modify/audit skill, trigger tuning, regression review, prove candidate value, retirement review | Read-only meta-evaluation; no authoring, registry mutation, promotion, merge, disable or delete authority |
 | typesafe-ai | `.agents/skills/typesafe-ai/SKILL.md` | INSTALLED_EXPERIMENTAL_SHADOW_ONLY | TypeSafe/JEV design, primitives, API integration, cookbook-guided shadow experiments | Advisory/reference only; no market, trading, routing, threshold, promotion or repository-write authority |
 
+| adaptive-analysis-methods | `.agents/skills/adaptive-analysis-methods/SKILL.md` | PILOT_CANDIDATE_READ_ONLY_V1 | deep audit, repeated failure, uncertain research, high-consequence review | Read-only method selection only; no model, queue, write, market or portfolio authority |
+
 ## 3. Default composition
 
 For general framework work:
@@ -452,13 +454,27 @@ kill_criterion: Any false acceptance caused by averaging a critical regression, 
 
 Potential later candidates such as DATA PING execution, weekly range audit, Master Monday, Cycle Navigator publication and automated agent loops remain `NOT_AUTHORIZED_FOR_BUILD` unless separately governed.
 
+
+The v0.6 candidate exception is `adaptive-analysis-methods` (owner-approved pilot, not automatically promoted):
+
+```yaml
+failure_mode_observed: Repeated deep-audit and PR-resolution requests produce broad plans or review loops without identifying the binding uncertainty or completing work.
+repeated_task_frequency: Recurring across Alpha Lab, Task 2, Cycle Navigator and critical PR remediation.
+why_existing_skills_cannot_cover_it: Existing skills route context, falsify specific claims or govern writes; none selects the smallest task-appropriate reasoning procedure across these failure classes.
+inputs: Current owner, user objective, verified primary evidence, task risk and documented failures.
+outputs: One selected bounded method, optional complement, concrete next action and stop condition.
+validation_loop: Existing skill-quality-gate with positive and negative trigger cases, no-skill baseline and authority/completion regressions.
+authority_boundary: Read-only selection; no automatic other-skill invocation, API/model routing, workflows, writes, market or portfolio authority.
+kill_criterion: Any critical authority violation, recurrent analysis loops, or no measured improvement over baseline after representative qualified uses.
+```
+
 ## 13. Current status
 
 ```yaml
-stack_version: 0.5
+stack_version: 0.5 # v0.6 candidate not yet accepted
 stack_status: PILOT_ACTIVE_HARDENED
 skills_active: 7
-skills_installed: 8
+skills_installed: 9 # includes unaccepted v0.6 pilot candidate
 typesafe_ai_skill_status: INSTALLED_EXPERIMENTAL_SHADOW_ONLY
 typesafe_ai_upstream_blob_sha: 0109513f9656917dc93cbc5ecddfca465a53ce66
 stack_qualified_uses_completed_before_v0_3: 1

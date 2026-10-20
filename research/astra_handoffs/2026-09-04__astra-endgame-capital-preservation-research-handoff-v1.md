@@ -1,5 +1,8 @@
 # ASTRA Handoff — Endgame Capital Preservation Research v1
 
+> **2026-10-15 model-neutral mission continuity (Endgame / Capital Preservation).** Historical `Astra` wording, filenames and model-era labels are compatibility references only, not an authority to wait for a new model. Current research owners, including Task 2, distribution/pullback/exit and FNP, may route bounded GPT-6 analysis now; future Astra availability is not a blocker. The previously specified `OWNER_BLOCKED` exit ladder and all prospective lifecycle/scientific/no-auto-execution restrictions remain binding until their own explicit approval. Follow the existing Framework Mission Continuity owner and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 **Prepared:** 2026-09-04  
 **Priority:** CRITICAL / ENDGAME  
 **Authority:** RESEARCH_ONLY / NO_AUTOMATIC_PROMOTION / NO_PORTFOLIO_EXECUTION  

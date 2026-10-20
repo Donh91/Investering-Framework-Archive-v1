@@ -34,7 +34,9 @@ def policy():
 
 def c(cid="EC-1", **kw):
     row = {"candidate_id": cid, "title": "Prospective X", "kind": "FORECAST_TEST", "created_at_utc": "2026-01-01T00:00:00Z", "state": "INCUBATING", "matured_outcome_count": 0, "observation_count": 1, "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST"}
-    row.update(kw); return row
+    row.update(kw)
+    row.setdefault("scientific_score_eligible_outcome_count", row["matured_outcome_count"])
+    return row
 
 
 def registry(*rows):
@@ -47,11 +49,12 @@ def admissions(*rows):
 
 def a(cid="EC-1", fingerprint="abc", **kw):
     row = {"candidate_id": cid, "status": "QUALIFIED_FOR_FORWARD_TEST", "historical_candidate_requalification": False, "semantic_fingerprint": fingerprint}
-    row.update(kw); return row
+    row.update(kw)
+    return row
 
 
 def ar(cid, action, state, matured):
-    return {"candidate_id": cid, "lifecycle_state": state, "matured_outcome_count": matured, "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST", "selected_action": action, "reason": "test", "canonical_effect": False, "portfolio_execution": False}
+    return {"candidate_id": cid, "lifecycle_state": state, "matured_outcome_count": matured, "scientific_score_eligible_outcome_count": matured, "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST", "selected_action": action, "reason": "test", "canonical_effect": False, "portfolio_execution": False}
 
 
 def adjudication(*rows):
@@ -101,6 +104,48 @@ class DesignTest(unittest.TestCase):
         adj2 = adjudication(ar("EC-1", "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW", "MATURED_SUPPORTED", 20))
         _, _, _, event2 = controller._build_products(registry(c(state="MATURED_SUPPORTED", matured_outcome_count=20)), adm, adj2, policy(), first, {}, datetime(2026,1,9,tzinfo=UTC))
         self.assertIsNotNone(event2)
+
+    def test_custom_stricter_policy_does_not_create_family_evidence(self):
+        reg = registry(c(state="MATURED_SUPPORTED", matured_outcome_count=10))
+        adm = admissions(a())
+        adj = adjudication(ar("EC-1", "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW", "MATURED_SUPPORTED", 10))
+        custom = policy()
+        custom["profiles"] = {k: dict(v) for k, v in custom["profiles"].items()}
+        custom["profiles"]["STANDARD"]["matured_checkpoints"] = [20, 40]
+        state, proposal, _, event = controller._build_products(
+            reg, adm, adj, custom, {}, {}, datetime(2026, 1, 8, tzinfo=UTC))
+        self.assertEqual(state["hypothesis_families"][0]["current_evidence_status"],
+                         "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE")
+        self.assertFalse(state["hypothesis_families"][0]["material_evidence"])
+        self.assertFalse(any(x["proposal_eligible"] for x in state["learning_packets"]))
+        self.assertIsNone(event)
+        self.assertFalse(proposal.get("automatic_execution", False))
+
+    def test_material_evidence_invalidation_produces_one_correction_event(self):
+        adm = admissions(a())
+        adj1 = adjudication(ar("EC-1", "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+                               "MATURED_SUPPORTED", 10))
+        first, _, _, event1 = controller._build_products(
+            registry(c(state="MATURED_SUPPORTED", matured_outcome_count=10)),
+            adm, adj1, policy(), {}, {}, datetime(2026, 1, 8, tzinfo=UTC))
+        self.assertIsNotNone(event1)
+        adj2 = adjudication(ar("EC-1", "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+                               "MATURED_SUPPORTED", 10))
+        adj2["candidate_actions"][0]["scientific_score_eligible_outcome_count"] = 0
+        corrected = registry(c(state="MATURED_SUPPORTED", matured_outcome_count=10,
+                               scientific_score_eligible_outcome_count=0))
+        second, _, _, event2 = controller._build_products(
+            corrected, adm, adj2, policy(), first, {}, datetime(2026, 1, 9, tzinfo=UTC))
+        self.assertIsNotNone(event2)
+        self.assertTrue(second["learning_delta"]["material_change"])
+        change = second["learning_delta"]["changed_families"][0]
+        self.assertEqual(change["correction_kind"], "MATERIAL_EVIDENCE_INVALIDATED")
+        self.assertIsNotNone(change["previous_evidence_fingerprint"])
+        self.assertIsNone(change["new_evidence_fingerprint"])
+        self.assertEqual(second["hypothesis_families"][0]["material_evidence"], False)
+        _, _, _, event3 = controller._build_products(
+            corrected, adm, adj2, policy(), second, {}, datetime(2026, 1, 10, tzinfo=UTC))
+        self.assertIsNone(event3)
 
     def test_backlog_retains_disappeared_idea(self):
         family = {"semantic_identity":"x", "current_evidence_status":"SUPPORTED_NEEDS_INCREMENTAL_VALUE", "unresolved_uncertainty":"u", "supporting_evidence_refs":["A"], "contradicting_evidence_refs":[], "candidate_ids":["A"], "kinds":["FORECAST_TEST"], "learning_profiles":["STANDARD"], "known_regime_dependence":["ALL"], "redundancy_collinearity_warning":False, "complexity_burden":"LOW", "max_candidate_observation_count":20}

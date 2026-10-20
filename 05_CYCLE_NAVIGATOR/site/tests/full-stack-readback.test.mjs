@@ -20,15 +20,72 @@ function fixture(){
  const officialPath='04_MARKET_LEARNING/handlekompas/official/daily/c.json';
  const official={contract:'OFFICIAL_DAILY_COMPASS_v1',compass_id:'c',issued_at_utc:now,data_status:'OK',source_bindings:{auto_market_state:{packet_sha256:auto.hash}}};
  const officialRaw=JSON.stringify(official);files.set(resolve(root,officialPath),officialRaw);
- pointers.set('official',{contract:'OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1',compass_path:officialPath,compass_id:'c',issued_at_utc:now,data_status:'OK',compass_content_sha256:hash(officialRaw),source_packet_sha256:auto.hash});
+ const projectionPath='04_MARKET_LEARNING/handlekompas/official/public/c.json';
+ const projectionCore={contract:'PUBLIC_COMPASS_PROJECTION_v1',compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'};
+ const projectionSigned=signed(projectionCore,'projection_sha256');
+ const projectionSemanticHash=projectionSigned.hash;
+ const projectionRaw=projectionSigned.raw;
+ files.set(resolve(root,projectionPath),projectionRaw);
+ const projectionBytesHash=hash(projectionRaw);
+ const projectionFields={public_projection_path:projectionPath,public_projection_content_sha256:projectionBytesHash,
+  public_projection_sha256:projectionSemanticHash};
+ pointers.set('public',{contract:'PUBLIC_COMPASS_LATEST_POINTER_v1',compass_id:'c',
+  issued_at_utc:now,data_status:'OK',...projectionFields});
+ pointers.set('official',{contract:'OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1',compass_path:officialPath,
+  compass_id:'c',issued_at_utc:now,data_status:'OK',compass_content_sha256:hash(officialRaw),
+  source_packet_sha256:auto.hash,...projectionFields});
  pointers.set('auto',{packet_path:autoPath,packet_sha256:auto.hash,packet_generated_at_utc:now});
  const forecastPath='04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/f.json';
  const forecast={contract:'SHADOW_COMPASS_V2_FORECAST_v1',forecast_id:'f',issued_at_utc:now,source_fingerprint:'fp',authority:{automatic_promotion:false},source_bindings:{auto_market_state:{packet_path:autoPath,packet_sha256:auto.hash,packet_generated_at_utc:now},cycle_navigator:{iso_year:2026,iso_week:41,issue_number:29,machine_package_sha256:wp.machine_package_sha256}},model_output:{horizons:{'12h':{direction:'UP'}}}};
  const installForecast=()=>{const f=signed(forecast,'forecast_sha256');files.set(resolve(root,forecastPath),f.raw);pointers.set('shadow',{contract:'SHADOW_COMPASS_V2_LATEST_POINTER_v1',forecast_path:forecastPath,forecast_sha256:f.hash,forecast_id:'f',source_fingerprint:'fp'});};installForecast();
- const context={resolve,relative,createHash,Date,repoRoot:root,INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
+ const context={resolve,relative,createHash,Date,repoRoot:root,COMPASS_POINTER_PATH:'public',INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
  vm.createContext(context);vm.runInContext(source.slice(source.indexOf('function verifiedRelative'),source.indexOf('\nasync function buildCompassEventSnapshot'))+';globalThis.run=buildFullStackReadback;globalThis.digest=verifiedRawDigest;',context);
- return {root,files,pointers,forecast,installForecast,autoPath,officialPath,weeklyPath,context,run:()=>context.run({compass_id:'c',data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
+ return {root,files,pointers,forecast,installForecast,autoPath,officialPath,projectionPath,weeklyPath,weeklyPointer:wp,context,run:()=>context.run({compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
 }
+// A verified weekly delivery pointer is insufficient: the referenced Master
+// Monday machine package must itself be readable and match its declared SHA.
+for (const mode of ['valid','missing','tampered','tampered-content','wrong-digest','wrong-week','not-ready','escaped-path','wrong-freeze','missing-freeze','complete','sensitive','conflicting-status','analysis-empty','analysis-array','analysis-failure','analysis-unavailable','status-injection']) {
+ const f=fixture();
+ const pointerPath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_DELIVERY_POINTER.json';
+ const packagePath='research/api_agent/outputs/weekly/2026/W40/MASTER_MONDAY_MACHINE_PACKAGE.json';
+ const isFull=['complete','analysis-empty','analysis-array','analysis-failure','analysis-unavailable'].includes(mode);
+ const invalidAnalysis=mode==='analysis-empty'?{}:mode==='analysis-array'?[]:mode==='analysis-failure'?{status:'BLOCKED',summary:'FAILED_MODEL_REVIEW'}:mode==='analysis-unavailable'?'UNAVAILABLE':null;
+ const analysis=invalidAnalysis!==null?invalidAnalysis:mode==='sensitive'?'PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC':'Shadow-only weekly context';
+ const machineScore=mode==='status-injection'?'PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC':isFull?'READY':'UNAVAILABLE_API_CONTRACT';
+ const signedMachine=signed({contract:'MASTER_MONDAY_MACHINE_PACKAGE_v1',iso_year:2026,iso_week:40,freeze_sha256:'a'.repeat(64),api_status:'success',api_receipt:{status:'PASS'},analysis,
+  scorecard:{status:machineScore},operational_translation:{status:isFull?'READY':'UNAVAILABLE_API_CONTRACT'}},'package_sha256');
+ const machine=signedMachine.raw;
+ const pointer={contract:'MASTER_MONDAY_DELIVERY_POINTER_v1',status:mode==='not-ready'?'PARTIAL':'READY',
+   iso_year:2026,iso_week:mode==='wrong-week'?39:40,
+   ...(mode==='missing-freeze'?{}:{freeze_sha256:mode==='wrong-freeze'?'b'.repeat(64):'a'.repeat(64)}),
+   machine_package_path:mode==='escaped-path'?'../../private/secret.json':packagePath,
+   machine_package_sha256:mode==='wrong-digest'?'f'.repeat(64):signedMachine.hash,
+   scorecard_status:mode==='status-injection'?'PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC':['complete','conflicting-status','analysis-empty','analysis-array','analysis-failure','analysis-unavailable'].includes(mode)?'READY':'UNAVAILABLE_API_CONTRACT',
+   operational_translation_status:['complete','analysis-empty','analysis-array','analysis-failure','analysis-unavailable'].includes(mode)?'READY':'UNAVAILABLE_API_CONTRACT'};
+ const raw=JSON.stringify(pointer);
+ f.weeklyPointer.completed_source_year=2026;
+ f.weeklyPointer.completed_source_week=40;
+ f.weeklyPointer.master_monday_pointer_sha256=hash(raw);
+ f.files.set(resolve(f.root,pointerPath),raw);
+ f.files.set(resolve(f.root,packagePath),mode==='tampered'?machine.replace('"iso_week":40','"iso_week":39'):mode==='tampered-content'?machine.replace('Shadow-only weekly context','Changed after freeze without digest update'):machine);
+ if(mode==='missing')f.files.delete(resolve(f.root,packagePath));
+ f.pointers.set('handoff',{pointers:{latest_weekly_output:{path:pointerPath,sha256:hash(raw)}}});
+ const result=await f.run();
+ const got=result.source_status.master_monday;
+ assert.equal(got,['valid','complete','sensitive','conflicting-status','analysis-empty','analysis-array','analysis-failure','analysis-unavailable','status-injection'].includes(mode)?'SOURCE_ALIGNED':'UNVERIFIED','Master Monday target readback: '+mode);
+ assert.equal(result.source_status.master_monday_analysis,mode==='complete'?'COMPLETE':mode==='conflicting-status'?'CONFLICTING_ANALYTICS':got==='SOURCE_ALIGNED'?'PARTIAL_ANALYTICS':'UNVERIFIED');
+ assert.equal(result.master_monday?.authority,'WEEKLY_CONTEXT_ONLY_NO_CURRENT_ACTION');
+ assert.equal(result.master_monday?.machine_package_sha256,undefined);
+ assert.equal(result.master_monday?.freeze_sha256,undefined);
+ assert.equal(result.master_monday?.machine_package_path,undefined);
+ assert.doesNotMatch(JSON.stringify(result.master_monday),/PRIVATE_WALLET_KEY_SHOULD_NOT_BE_PUBLIC/);
+ if(mode==='status-injection')assert.equal(result.master_monday.scorecard_status,'UNAVAILABLE');
+ if(['analysis-empty','analysis-array','analysis-failure','analysis-unavailable'].includes(mode)){
+  assert.equal(result.master_monday.api_analysis_status,'UNAVAILABLE','Failed model analysis cannot be considered present: '+mode);
+  assert.notEqual(result.status,'COMPLETE','No overall complete when model analysis unavailable: '+mode);
+ }
+}
+
 let f=fixture();assert.equal((await f.run()).shadow.status,'ALIGNED_RESEARCH');
 f=fixture();f.pointers.get('official').source_packet_sha256='a'.repeat(64);let result=await f.run();assert.equal(result.source_status.official,'DEGRADED');assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH');
 f=fixture();f.pointers.get('auto').packet_generated_at_utc='2099-01-01T00:00:00Z';result=await f.run();assert.equal(result.source_status.auto_market_state,'UNVERIFIED');assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH');
@@ -43,6 +100,41 @@ for(const mode of ['missing','tampered','wrong-issue','valid']){
  f.installForecast();result=await f.run();assert.equal(result.shadow.status,mode==='valid'?'STALE_RESEARCH':'UNVERIFIED');
  assert.equal(result.shadow.horizons['12h']?.direction,mode==='valid'?'UP':undefined);
 }
+// The original public bytes must be independently bound to the same Official
+// pointer and public projection identity. Exact ID only is never sufficient.
+for(const mode of ['missing-pointer','missing-file','wrong-public-digest','wrong-internal-digest',
+ 'wrong-semantic-hash','wrong-public-id','wrong-internal-id','wrong-public-time',
+ 'different-public-bytes','correlated-public-tamper','wrong-public-contract','missing-pointer-hash','wrong-source-status']){
+ f=fixture();
+ const pub=f.pointers.get('public'),internal=f.pointers.get('official');
+ const path=resolve(f.root,f.projectionPath);
+ if(mode==='missing-pointer')f.pointers.delete('public');
+ if(mode==='missing-file')f.files.delete(path);
+ if(mode==='wrong-public-digest')pub.public_projection_content_sha256='a'.repeat(64);
+ if(mode==='wrong-internal-digest')internal.public_projection_content_sha256='a'.repeat(64);
+ if(mode==='wrong-semantic-hash')pub.public_projection_sha256='b'.repeat(64);
+ if(mode==='wrong-public-id')pub.compass_id='WRONG';
+ if(mode==='wrong-internal-id')internal.compass_id='WRONG';
+ if(mode==='wrong-public-time')pub.issued_at_utc='2025-01-01T00:00:00Z';
+ if(mode==='different-public-bytes')f.files.set(path,f.files.get(path).replace('HOLD','BUY'));
+ if(mode==='correlated-public-tamper'){
+  const changed=JSON.parse(f.files.get(path));
+  changed.action_now='BUY';
+  const mutatedRaw=JSON.stringify(sort(changed));
+  f.files.set(path,mutatedRaw);
+  const mutatedHash=hash(mutatedRaw);
+  pub.public_projection_content_sha256=mutatedHash;
+  internal.public_projection_content_sha256=mutatedHash;
+  // All three copies of projection_sha256 still agree, but the actual
+  // mutated source bytes no longer match its signed semantic digest.
+ }
+ if(mode==='wrong-public-contract')f.files.set(path,f.files.get(path).replace('PUBLIC_COMPASS_PROJECTION_v1','UNVERIFIED'));
+ if(mode==='missing-pointer-hash')delete pub.public_projection_content_sha256;
+ if(mode==='wrong-source-status')internal.data_status='DEGRADED';
+ result=await f.run();
+ assert.equal(result.source_status.official,'DEGRADED','Public projection binding: '+mode);
+ assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH','No validated shadow source when public pointer mismatched: '+mode);
+}
 // Native metadata must come from the hash-verified target, not a mutable pointer.
 for(const mode of ['valid','health','time']){
  f=fixture();const auto=f.pointers.get('auto');const path='04_MARKET_LEARNING/handlekompas/runs/n.json';
@@ -52,12 +144,51 @@ for(const mode of ['valid','health','time']){
 }
 // Preserve Python integral-float bytes rather than parse/stringify reconstruction.
 f=fixture();const raw='{"contract":"FLOAT_TEST","number":1.0}';const digest=hash(raw),withDigest='{"contract":"FLOAT_TEST","number":1.0,"z_sha256":"'+digest+'"}';assert.equal(f.context.digest(withDigest,JSON.parse(withDigest),'z_sha256',digest),true);assert.equal(f.context.digest(withDigest.replace('1.0','2.0'),JSON.parse(withDigest.replace('1.0','2.0')),'z_sha256',digest),false);
-function render(status,contract='PUBLIC_COMPASS_PROJECTION_v1'){
+function render(status,contract='PUBLIC_COMPASS_PROJECTION_v1',event=null){
  let html='';const root={querySelectorAll:()=>[],querySelector:()=>null,classList:{add:()=>{}},prepend:s=>{html=s.innerHTML}};
- const ctx={document:{getElementById:()=>root,createElement:()=>({querySelector:()=>null,querySelectorAll:()=>[]})},esc:String,HORIZONS:[],officialScale:()=>null,decisionMeta:()=>({live:'UNAVAILABLE',liveEta:'UNKNOWN',weekly:'UNAVAILABLE',weeklyEta:'UNKNOWN'}),cnConclusion:()=>'',recommendationWindow:()=>'',hourlyMonitor:()=>'',decisionDetail:()=>'<p>INVESTOR_DETAIL</p>',compositeIntel:()=>'',pullbackCard:()=>'',riskCurve:()=>'',publicDataStatus:String,capSummary:()=>''};
- vm.createContext(ctx);vm.runInContext(premium.slice(premium.indexOf('function publicAction'),premium.indexOf('\nfunction cnConclusion'))+premium.slice(premium.indexOf('function renderPremium('),premium.indexOf('\nlet latestSnapshot'))+';globalThis.run=renderPremium;',ctx);
- ctx.run({live_observation:{current_action:{stance:'BUY'}}},{contract,data_status:status,action_now:'HOLD_WAIT_DATA_DEGRADED',bull_bear_scale:{}});return html;
+ const ctx={document:{getElementById:()=>root,createElement:()=>({querySelector:()=>null,querySelectorAll:()=>[]})},officialReadingState:(v)=>v?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&v?.data_status==='OK'?'CURRENT':'UNAVAILABLE',scheduleFreshnessExpiry:()=>{},esc:String,HORIZONS:[],officialScale:()=>null,decisionMeta:()=>({live:'UNAVAILABLE',liveEta:'UNKNOWN',weekly:'UNAVAILABLE',weeklyEta:'UNKNOWN'}),cnConclusion:()=>'',recommendationWindow:()=>'',hourlyMonitor:()=>'',decisionDetail:()=>'<p>INVESTOR_DETAIL</p>',compositeIntel:()=>'',pullbackCard:()=>'',riskCurve:()=>'',publicDataStatus:String,capSummary:()=>''};
+ vm.createContext(ctx);vm.runInContext(premium.slice(premium.indexOf('function publicAction'),premium.indexOf('\nfunction cnConclusion'))+premium.slice(premium.indexOf('function refreshStatusBanner('),premium.indexOf('function officialReadingState('))
+  +premium.slice(premium.indexOf('function renderPremium('),premium.indexOf('\nlet latestSnapshot'))+';globalThis.run=renderPremium;',ctx);
+ ctx.run({live_observation:{current_action:{stance:'BUY'}}},{contract,data_status:status,action_now:'HOLD_WAIT_DATA_DEGRADED',issued_at_utc:'2026-10-11T06:30:00Z',bull_bear_scale:{}},event);return html;
 }
-for(const status of ['DEGRADED','NOT_PUBLISHED','STALE',undefined]){const html=render(status);assert.match(html,/WAIT · DATA DEGRADED/);assert.doesNotMatch(html,/Keep current positioning|INVESTOR_DETAIL|APPLIES NOW/);}
+for(const status of ['DEGRADED','NOT_PUBLISHED','STALE',undefined]){const html=render(status);assert.match(html,/ACTION UNAVAILABLE/);assert.doesNotMatch(html,/Keep current positioning|INVESTOR_DETAIL|APPLIES NOW/);}
 assert.match(render('OK'),/CURRENT ACTION<\/span><strong>HOLD<\/strong>/);assert.match(render('OK'),/INVESTOR_DETAIL/);assert.doesNotMatch(render('OK','WRONG_CONTRACT'),/INVESTOR_DETAIL/);
+// The premium NOW renderer is the real current site owner. It must NOT
+// label an operations/scheduling outage as a live market-move detection.
+const scheduled={contract:'PUBLIC_COMPASS_EVENT_STATUS_v1',status:'REASSESSMENT_REQUESTED',
+  detected_at_utc:'2026-10-11T07:45:00Z',cause_codes:['SCHEDULED_FREEZE_MISSING']};
+const late=render('OK','PUBLIC_COMPASS_PROJECTION_v1',scheduled);
+assert.match(late,/SCHEDULED UPDATE DELAYED/);
+assert.match(late,/Fresh Compass update requested/);
+assert.doesNotMatch(late,/MARKET MOVE DETECTED/);
+const retryLate=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
+  ...scheduled,cause_codes:['PRIOR_REQUEST_NOT_BOUND_RETRY','SCHEDULED_FREEZE_MISSING']});
+assert.match(retryLate,/SCHEDULED UPDATE DELAYED/);
+assert.doesNotMatch(retryLate,/MARKET MOVE DETECTED/);
+const trueMove=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
+  ...scheduled,cause_codes:['MARKET_STATE_CHANGED']});
+assert.match(trueMove,/MARKET MOVE DETECTED/);
+assert.doesNotMatch(trueMove,/SCHEDULED UPDATE DELAYED/);
+const oldEvent=render('OK','PUBLIC_COMPASS_PROJECTION_v1',{
+  ...scheduled,detected_at_utc:'2026-10-11T06:30:00Z'});
+assert.doesNotMatch(oldEvent,/SCHEDULED UPDATE DELAYED/);
+assert.doesNotMatch(render('OK'),/SCHEDULED UPDATE DELAYED/);
+// SITE must show Monday provenance/completeness without substituting it for
+// the current official action or leaking raw API narrative.
+{
+ const context={esc:String,publicState:String,publicCompassText:String,recommendation:()=>({action:'HOLD'})};
+ vm.createContext(context);
+ vm.runInContext(premium.slice(premium.indexOf('function compositeIntel('),premium.indexOf('function refreshStatusBanner('))+';globalThis.render=compositeIntel;',context);
+ const weekly={contract:'PUBLIC_COMPASS_FULL_STACK_READBACK_v1',status:'PARTIAL_OR_DEGRADED',source_status:{official:'VERIFIED'},
+   master_monday:{status:'SOURCE_ALIGNED',completed_week:'2026-W42',analytics_status:'PARTIAL_ANALYTICS'}};
+ const html=context.render({data_status:'OK',action_now:'HOLD',full_stack:weekly},'CURRENT');
+ assert.match(html,/MONDAY BASELINE/);
+ assert.match(html,/2026-W42/);
+ assert.match(html,/ANALYSIS PARTIAL/);
+ const conflict=context.render({data_status:'OK',action_now:'HOLD',full_stack:{...weekly,master_monday:{status:'SOURCE_ALIGNED',completed_week:'2026-W42',analytics_status:'CONFLICTING_ANALYTICS'}}},'CURRENT');
+ assert.match(conflict,/ANALYTICAL SOURCE CONFLICT/);
+ assert.match(html,/OFFICIAL ACTION/);
+ const missing=context.render({data_status:'OK',action_now:'HOLD',full_stack:{...weekly,master_monday:{status:'UNVERIFIED'}}},'CURRENT');
+ assert.match(missing,/MONDAY BASELINE · SOURCE UNVERIFIED/);
+}
 console.log('FULL_STACK_READBACK_REGRESSION_PASS');

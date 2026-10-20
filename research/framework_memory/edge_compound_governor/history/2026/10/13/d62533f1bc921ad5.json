@@ -1,0 +1,132 @@
+{
+  "authority": {
+    "automatic_external_dispatch": false,
+    "canonical_promotion": false,
+    "market_state_change": false,
+    "portfolio_action": false,
+    "sell": false,
+    "threshold_change": false,
+    "trim": false
+  },
+  "conclusion_layer": {
+    "automatic_promotion": false,
+    "review_due": false,
+    "separate_from_collection": true
+  },
+  "contract": "EDGE_COMPOUND_GOVERNOR_v1",
+  "decision": "COLLECT",
+  "decision_reason": "Natural warning evidence is accumulating; preserve pre-outcome features and await maturation.",
+  "deltas": [
+    "m6_event_count:19->20",
+    "feature_row_count:19->20",
+    "pit_verified_feature_rows:19->20",
+    "matured_event_counts.24h:12->13",
+    "matured_family_counts.24h:1->2",
+    "unknown_horizon_counts.24h:1->0",
+    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
+    "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
+  ],
+  "external_routing": {
+    "automatic_dispatch": false,
+    "claude_recommended": false,
+    "sol_recommended": false
+  },
+  "generated_at_utc": "2026-10-13T07:48:01.632500Z",
+  "material_delta": true,
+  "prior_false_bootstrap_supersession": null,
+  "rules": {
+    "live_exit_rule": "NONE",
+    "negative_results_preserved": true,
+    "raw_external_output_canonical": false,
+    "warning_is_sell": false
+  },
+  "semantic_fingerprint": "d62533f1bc921ad532e9a6c9a6b38adea8988c937d46ddd4af2fed39dc383435",
+  "semantic_state": {
+    "blockers": [],
+    "calibration_eligible_rows": 212,
+    "calibration_warning_rows": 0,
+    "distribution_risk": "UNKNOWN",
+    "economic_action_edge_claim": "NOT_ESTABLISHED",
+    "feature_integrity_revision": "v1.1_PIT_STRICT",
+    "feature_row_count": 20,
+    "information_edge_claim": "NOT_ESTABLISHED",
+    "latest_sol_verdict": "WEAKENED",
+    "m6_event_count": 20,
+    "m6_family_semantics": "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
+    "m6_integrity": {
+      "chronological": true,
+      "family_anchor_valid": true,
+      "family_lineage_fingerprint": "a1d819bcf749611bb14fe7d6596a41266a26464e22982df2892ef85e7d0ec323",
+      "feature_cohort_parity": true,
+      "first_warning_weight_valid": true,
+      "status": "PASS"
+    },
+    "m6_integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
+    "m6_matured_payload_integrity": {
+      "checked": 49,
+      "invalid": 0,
+      "reasons": [],
+      "status": "PASS"
+    },
+    "m6_provisional_family_count": 2,
+    "matured_event_counts": {
+      "14d": 12,
+      "24h": 13,
+      "30d": 0,
+      "72h": 12,
+      "7d": 12
+    },
+    "matured_family_counts": {
+      "14d": 1,
+      "24h": 2,
+      "30d": 0,
+      "72h": 1,
+      "7d": 1
+    },
+    "pit_unverified_feature_rows": 0,
+    "pit_verified_feature_rows": 20,
+    "pullback_risk_state": "ELEVATED",
+    "unknown_horizon_counts": {
+      "14d": 0,
+      "24h": 0,
+      "30d": 0,
+      "72h": 0,
+      "7d": 0
+    },
+    "verified_independent_adverse_family_count": null
+  },
+  "source_bindings": {
+    "calibration": {
+      "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+      "sha256": "e843a7505258bf37ef90fa936ca833d77951f7e765601af18037278bfe366512",
+      "status": "PASS"
+    },
+    "compass_freeze": {
+      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-88618d3ad2a7.json",
+      "sha256": "3e001bfa8d37afbe4ced0d881c30218f50ae1ad8510d346ce8ec8f957ca12b98",
+      "status": "PASS"
+    },
+    "compass_pointer": {
+      "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+      "sha256": "c61ebf8a335fa441d9c1578b34db3b3527b25f67e4be4b47df226f8e94f97b85",
+      "status": "PASS"
+    },
+    "edge_features": {
+      "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
+      "sha256": "431f738ebb4573752605e8b16fcf3f5aeae8f1d1a64c282d1bbceea59965c148",
+      "status": "PASS"
+    },
+    "latest_sol": {
+      "comment_id": 6124130988,
+      "path": "research/api_agent/outputs/research_lab_sol/RL-DISTRIBUTION-SURVIVAL-META-006/issue-1476/comment-6124130988/RESEARCH_LAB_SOL_ANALYSIS.json",
+      "sha256": "dbe5c27b308f10991699d140965c403a10d6f5ccb86cdcd95664fa4977fbc011",
+      "status": "PASS",
+      "verdict": "WEAKENED"
+    },
+    "m6_events": {
+      "path": "research/framework_memory/m6_warning_events/LATEST.json",
+      "sha256": "f342f4891b0338e87b738cb95676bdb56e4c9548f0d78c20642bd85f8b075e93",
+      "status": "PASS"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+## GPT-6.1 Sol API review — advisory, not formal approval
+PR #1613, exact head efb813c21542677c03ce6c11b6848b6776bebe1a
+Base SHA 8dac9ff7cde6b05b6922835947f319003118cbc6, patch SHA-256 0f9301b18568e9e3205024c40a1212f912b2b3524808c964629dd13d327772ee
+Review verdict: PASS_WITH_FINDINGS MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE. Static read-only review of the supplied PR #1613 diff identifies three P2 findings, one conditional on the omitted JSON loader, and one P3 race condition. No P0/P1 defect is established. This is advisory analysis, not formal GitHub approval or merge certification.
+Receipt: PASS, tokens 24428/9575, estimated cost USD 0.144606.
+This analysis cannot replace CI, nonauthoring GitHub review or governance acceptance.
+
+Findings:
+- P2| scripts/research/research_meta_orchestrator.py and scripts/research/validate_research_meta_orchestrator.py: File presence does not establish merged-note eligibility. specialist_intake_handoff accepts any qualifying on-disk Markdown file, including an untracked file or a note present only in a PR checkout. The test named draft_or_missing_note_does_not_enter_queue only deletes the file; it does not test a present, unmerged note. Falsification test: run the handoff against a checkout containing a PR-only note with passing sentinel/binding state; the visible implementation will append an obser
+- P2| scripts/research/research_meta_orchestrator.py: Repository containment is not established when the entire specialist-notes directory is a symlink. Both allowed and p are resolved, so a directory symlink pointing outside root makes the external directory the accepted boundary. Falsification test: place a valid queue and Markdown fixture outside a temporary repository root, symlink external_specialist_dissection to that directory, and invoke the handoff. The visible implementation accepts and hashes the external note. Acceptance should establish containment within the trusted repository, or 
+- P2| scripts/research/research_meta_orchestrator.py: The reader calls source.get without validating that the decoded queue is an object, while its exception handler excludes AttributeError. If load_json returns ordinary decoded JSON such as [] or null, the handoff aborts the orchestrator rather than returning an invalid-input report. Falsification test: supply those valid JSON payloads and require a structured rejection without an uncaught exception. The load_json implementation is omitted, so production reachability remains conditional on that helper's behavior.
+- P3| scripts/research/research_meta_orchestrator.py and scripts/research/validate_research_meta_orchestrator.py: Two separate p.is_file checks permit a present-status/null-hash observation. If the first check succeeds and the note disappears before the second, status remains NOTE_PRESENT_NOT_SOURCE_ADMITTED while note_sha256 becomes null; attach_specialist_intakes then appends that row. Falsification test: deterministically simulate those two check results and require that no eligible observation has a missing fingerprint. Eligibility should follow a successful read/hash, not an earlier existen
+
+Uncertainties:
+- Full surrounding code is unverified, including research_governance_common.load_json, orchestrate defaults, specialist binding semantics and downstream EXECUTION_QUEUE consumers.
+- No tests were run. Added assertions are proposed coverage, not evidence of passed tests; current CI and exact-head gate results are unverified.
+- The governing workflows, checkout cleanliness, branch restrictions, Python runtime and symlink policy were not supplied or inspected.
+- The claimed base SHA 8dac9ff7cde6b05b6922835947f319003118cbc6, head SHA efb813c21542677c03ce6c11b6848b6776bebe1a and diff SHA-256 are supplied metadata, not independently authenticated or recomputed here.
+- External source provenance, licensing, current access conditions and cited internal receipts are unverified. Statements inside the new note remain untrusted claims.
+- Author independence, independent review, source-governance approval and existing-owner authorization are unverified.
+- No post-merge workflow run, persisted-state readback or consumer receipt is supplied; operational activation and scientific outcomes are not established.

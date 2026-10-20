@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/frozen-week-chart.css",
+    "05_CYCLE_NAVIGATOR/site/frozen-week-chart.js",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-c1fbb6d418af2ae2",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-path-render-source-bound-weekly-forecast-actual",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(path): two-curve weekly forecast vs actual in frozen-week-chart.js * fix(path): two-curve weekly forecast vs actual in frozen-week-chart.css * fix(path): two-curve weekly forecast vs actual in validate-v2.mjs * test(path): align legacy and legend guards with honest two-curve design * refine(path): daily forecast shows exactly two readable trajectories * style(path): quiet premium responsive two-line trading instrument * testable(path): freeze exactly seven source points and split observed runs at gaps * test(path): seven frozen forecast points, missing daily freeze and observed gaps * ux",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/frozen-week-chart.css": "178a84ca4acb47f1e487b7d40e26d3a2f2b3e59d",
+    "05_CYCLE_NAVIGATOR/site/frozen-week-chart.js": "4b9bbd6272b6ec5830f5d489634f9ece81ad6447",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "483ea103c7a076cbb7bf15d20e3289e1612bf258"
+  },
+  "source_commit_sha": "c1fbb6d418af2ae2950225d2e9ad3f9c3a296d5d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-18T11:07:52-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site PATH): render source-bound weekly forecast and actual evidence"
+}

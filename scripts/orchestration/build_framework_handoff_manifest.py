@@ -68,6 +68,8 @@ def main() -> None:
         "OPERATIONAL_MEMORY_STATE": operational_base / "LATEST_OPERATIONAL_MEMORY_STATE.json",
         "OPERATIONAL_MEMORY_INDEX": operational_base / "LATEST_OPERATIONAL_MEMORY_INDEX.json",
         "OPERATIONAL_MEMORY_HEALTH": operational_base / "LATEST_OPERATIONAL_MEMORY_HEALTH.json",
+        "FRAMEWORK_STRATEGIST": root / "research/framework_learning/strategist/LATEST.json",
+        "FRAMEWORK_STRATEGIST_SEMANTIC": root / "research/framework_learning/strategist/semantic/LATEST.json",
         "OPERATIONAL_MEMORY_AUDIT": operational_base / "LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json",
         "OPERATIONAL_PROCEDURAL_CANDIDATES": operational_base / "LATEST_PROCEDURAL_CANDIDATES.json",
         "EXPERIMENT_DISPATCH": root / "research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json",
@@ -167,6 +169,7 @@ def main() -> None:
             "EXPERIMENT_GOVERNANCE_REVIEW",
         ],
         "EXPERIMENT_LEARNING": experiment_learning_read_order,
+        "FRAMEWORK_STRATEGY_ADVISORY": ["FRAMEWORK_STRATEGIST", "FRAMEWORK_STRATEGIST_SEMANTIC", "OPERATIONAL_MEMORY_AUDIT", "COMPOUNDING_LEARNING_STATE"],
         "ASTRA_RESEARCH_ROUTING": operational_memory_read_order + experiment_learning_read_order,
         "CODEX_DELIVERY_ROUTING": operational_memory_read_order + ["CODEX_READY_TASKS", "NEEDS_MORE_EVIDENCE", "REMEDIATION_QUEUE"],
     }
