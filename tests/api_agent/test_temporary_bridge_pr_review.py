@@ -36,8 +36,8 @@ def info(head=HEAD, draft=False, state="open"):
 
 class TemporaryBridgeTests(unittest.TestCase):
     def test_exact_window_expires_and_is_danish_time(self):
-        self.assertEqual(bridge.check_window(datetime.fromisoformat("2026-10-17T23:59:00+02:00")), "2026-10-17")
-        for date in ("2026-10-11T23:59:00+02:00", "2026-10-18T00:01:00+02:00"):
+        self.assertEqual(bridge.check_window(datetime.fromisoformat("2026-10-25T23:59:00+01:00")), "2026-10-25")
+        for date in ("2026-10-19T23:59:00+02:00", "2026-10-26T00:01:00+01:00"):
             with self.assertRaisesRegex(ValueError, "EXPIRED"):
                 bridge.check_window(datetime.fromisoformat(date))
 
