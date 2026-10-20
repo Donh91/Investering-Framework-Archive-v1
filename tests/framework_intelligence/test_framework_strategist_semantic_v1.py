@@ -27,6 +27,8 @@ class SemanticTest(unittest.TestCase):
         # not the baseline informational "no documented improvement" reminder.
         f.sources["health"]["status"] = "RED"
         f.sources["self_improvement"]["operational_verdict"] = "NEEDS_DIAGNOSIS"
+        # Synthetic positive control only, not provider budget telemetry.
+        f.sources["resource_budget"]["status"] = "NORMAL"
         f.flush_sources()
         f.run_brain()
         f.write("research/api_agent/API_TASK_REGISTRY_v1.json",
@@ -113,6 +115,25 @@ class SemanticTest(unittest.TestCase):
         self.assertFalse("workflows" in context)
         self.assertLess(len(canonical(context)), 12000)
         self.assertLessEqual(len(context["observations"]), 3)
+
+    def test_resource_conservation_cannot_trigger_paid_reasoning(self):
+        for state in ("CRITICAL", "CONSERVE", "UNKNOWN"):
+            with self.subTest(state=state):
+                self.fixture.sources["resource_budget"]["status"] = state
+                self.fixture.flush_sources()
+                self.fixture.run_brain()
+                plan = self.plan()
+                self.assertFalse(plan["run_allowed"])
+                self.assertEqual(plan["reason"], "RESOURCE_CONSERVATION_BLOCKED")
+                with self.assertRaises(ValueError):
+                    reservation_payload(self.root, self.runtime, run_id="12345")
+
+    def test_missing_optional_resource_is_observable_but_cannot_pay(self):
+        from scripts.framework_intelligence.framework_strategist_v1 import SOURCES
+        (self.root / SOURCES["resource_budget"][0]).unlink()
+        brief = self.fixture.run_brain()
+        self.assertEqual(brief["input_status"], "CURRENT")
+        self.assertFalse(self.plan()["run_allowed"])
 
     def test_different_time_same_observation_does_not_repay(self):
         a = self.plan()["material_fingerprint"]

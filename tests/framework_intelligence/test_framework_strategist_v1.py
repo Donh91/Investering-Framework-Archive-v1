@@ -1,5 +1,6 @@
 """Adversarial correctness, authority and source-provenance tests for Strategist."""
 import hashlib
+
 import json
 import tempfile
 import unittest
@@ -42,6 +43,11 @@ class StrategistTest(unittest.TestCase):
             "unconsumed": {"items": []},
             "staleness": {"items": []},
             "weekly_forensics": {"findings": []},
+            "resource_budget": {
+                "status": "UNKNOWN",
+                "authority": {"automatic_dispatch": False, "automatic_spend": False,
+                              "ci_bypass": False},
+            },
         }
         self.write(INTENT_PATH, self.intent)
         self.flush_sources()
@@ -64,6 +70,65 @@ class StrategistTest(unittest.TestCase):
 
     def run_brain(self):
         return build(self.root, self.output, now=NOW)
+
+    def test_unknown_budget_is_not_silently_green(self):
+        result = self.run_brain()
+        self.assertIn("RESOURCE_BUDGET_UNKNOWN", [x["code"] for x in result["proposals"]])
+        self.assertTrue(all(not x["dispatch_allowed"] for x in result["proposals"]))
+
+    def test_absent_optional_budget_emits_low_urgency_gap_not_paid_dispatch(self):
+        (self.root / SOURCES["resource_budget"][0]).unlink()
+        packet = self.run_brain()
+        self.assertEqual(packet["input_status"], "CURRENT")
+        self.assertEqual(packet["source_receipts"]["resource_budget"]["status"], "MISSING")
+        self.assertIn("RESOURCE_BUDGET_UNAVAILABLE", [x["code"] for x in packet["proposals"]])
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"],
+                         "ADVISORY_PREVIOUS_EVIDENCE")
+
+    def test_supervisor_five_resource_receipt_integrity_cases(self):
+        self.run_brain()
+        budget = self.root / SOURCES["resource_budget"][0]
+        packet = json.loads(self.output.read_text())
+        # A: exact CURRENT receipt.
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"],
+                         "ADVISORY_PREVIOUS_EVIDENCE")
+        # B: change source bytes after brief.
+        original = budget.read_bytes()
+        budget.write_bytes(original + b" ")
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"], "SOURCE_MOVED")
+        budget.write_bytes(original)
+        # C: unlisted receipt is rejected (no arbitrary file reads).
+        packet["source_receipts"]["secret_extra"] = {"path": "AGENTS.md", "status": "CURRENT"}
+        self.output.write_text(json.dumps(packet))
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"], "INVALID")
+        # D: optional receipt present and CURRENT must still exist on disk.
+        self.run_brain()
+        budget.unlink()
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"], "SOURCE_MOVED")
+        # E: if producer marks budget optional MISSING, consumer accepts packet.
+        self.run_brain()
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"],
+                         "ADVISORY_PREVIOUS_EVIDENCE")
+
+    def test_resource_budget_critical_becomes_first_advisory_not_cloud_execution(self):
+        self.sources["resource_budget"]["status"] = "CRITICAL"
+        self.flush_sources()
+        packet = self.run_brain()
+        self.assertEqual(packet["proposals"][0]["code"], "RESOURCE_BUDGET_CRITICAL")
+        self.assertEqual(packet["proposals"][0]["severity"], "CRITICAL")
+        self.assertFalse(packet["proposals"][0]["dispatch_allowed"])
+        self.assertFalse(packet["proposals"][0]["automatic_grok_call"])
+        self.assertFalse(packet["authority"]["autonomous_api_payment"])
+
+    def test_injected_resource_dispatch_authority_is_rejected(self):
+        self.sources["resource_budget"]["status"] = "CRITICAL"
+        self.sources["resource_budget"]["authority"]["automatic_dispatch"] = True
+        self.flush_sources()
+        packet = self.run_brain()
+        self.assertEqual(packet["source_receipts"]["resource_budget"]["status"],
+                         "INVALID_SCHEMA")
+        self.assertNotIn("RESOURCE_BUDGET_CRITICAL",
+                         [p["code"] for p in packet["proposals"]])
 
     def test_baseline_cannot_claim_independent_positive_progress(self):
         result = self.run_brain()
@@ -89,7 +154,9 @@ class StrategistTest(unittest.TestCase):
         second = self.run_brain()
         self.assertEqual(first["proposals"], second["proposals"])
         self.assertEqual(first["source_receipts"], second["source_receipts"])
-        self.assertEqual(len(first["proposals"]), 1)
+        self.assertGreaterEqual(len(first["proposals"]), 1)
+        self.assertIn("RESOURCE_BUDGET_UNKNOWN",
+                      [p["code"] for p in first["proposals"]])
         self.assertFalse(first["proposals"][0]["dispatch_allowed"])
 
     def test_amber_is_warning_not_p0(self):
@@ -518,3 +585,103 @@ class StrategistTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StrategistConnectionTest(unittest.TestCase):
+    def setUp(self):
+        self.fixture = StrategistTest()
+        self.fixture.setUp()
+        self.addCleanup(self.fixture.tmp.cleanup)
+        self.root = self.fixture.root
+        self.state_path = "research/framework_learning/LATEST_SUPERVISOR_STATE.json"
+        self.state = {
+            "contract": "FRAMEWORK_LEARNING_SUPERVISOR_STATE_v1",
+            "authority": "ORCHESTRATION_ONLY",
+            "generated_at_utc": NOW.isoformat().replace("+00:00", "Z"),
+            "canonical_effect": False, "portfolio_execution": False,
+            "master_monday_live_influence": False,
+            "unrelated_owner_value": "PRESERVE",
+            "strategist_advisory": {"status": "SOURCE_MOVED"},
+        }
+        self.fixture.write(self.state_path, self.state)
+
+    def finalize(self):
+        from scripts.framework_intelligence.framework_learning_supervisor import finalize_strategist_advisory
+        return finalize_strategist_advisory(self.root, "research/framework_learning", NOW)
+
+    def test_current_producer_is_consumed_without_regenerating_bound_inputs(self):
+        first = self.fixture.run_brain()
+        self.fixture.sources["health"]["status"] = "AMBER"
+        self.fixture.sources["health"]["amber_count"] = 1
+        self.fixture.flush_sources()
+        self.assertEqual(read_strategist_advisory(self.root, NOW)["status"], "SOURCE_MOVED")
+        current = self.fixture.run_brain()
+        protected = [INTENT_PATH, OUTPUT_PATH, *[s[0] for s in SOURCES.values()]]
+        before = {p: (self.root / p).read_bytes() for p in protected}
+        result = self.finalize()
+        self.assertEqual(result["status"], "ADVISORY_CURRENT_EVIDENCE")
+        self.assertEqual(result["proposal_ids"], [p["id"] for p in current["proposals"]])
+        self.assertFalse(result["automatic_routing"])
+        self.assertEqual(before, {p: (self.root / p).read_bytes() for p in protected})
+        state = json.loads((self.root / self.state_path).read_text())
+        self.assertEqual(state["unrelated_owner_value"], "PRESERVE")
+        self.assertEqual(state["generated_at_utc"], self.state["generated_at_utc"])
+        self.assertNotEqual(first["source_receipts"], current["source_receipts"])
+
+    def test_source_changed_after_current_brief_is_still_rejected(self):
+        self.fixture.run_brain()
+        path = self.root / SOURCES["health"][0]
+        path.write_bytes(path.read_bytes() + b" ")
+        result = self.finalize()
+        self.assertEqual(result["status"], "SOURCE_MOVED")
+        self.assertEqual(result["proposal_ids"], [])
+        self.assertIsNone(result["source_sha256"])
+
+    def test_authority_injection_does_not_reach_live_consumer(self):
+        packet = self.fixture.run_brain()
+        packet["authority"]["autonomous_merge"] = True
+        self.fixture.write(OUTPUT_PATH, packet)
+        self.assertEqual(self.finalize()["status"], "AUTHORITY_VIOLATION")
+
+    def test_stale_brief_does_not_reach_live_consumer(self):
+        packet = self.fixture.run_brain()
+        packet["generated_at_utc"] = "2026-10-10T00:00:00Z"
+        self.fixture.write(OUTPUT_PATH, packet)
+        self.assertEqual(self.finalize()["status"], "STALE")
+
+    def test_unchanged_previous_run_is_not_relabeled_as_current_producer(self):
+        packet = self.fixture.run_brain()
+        packet["generated_at_utc"] = "2026-10-17T18:59:59Z"
+        self.fixture.write(OUTPUT_PATH, packet)
+        result = self.finalize()
+        self.assertEqual(result["status"], "PRODUCER_NOT_CURRENT_RUN")
+        self.assertEqual(result["proposal_ids"], [])
+
+    def test_historical_or_untrusted_supervisor_state_is_not_rewritten(self):
+        for value in ("2026-10-10T00:00:00Z", "2026-10-18T00:00:00Z"):
+            self.state["generated_at_utc"] = value
+            self.fixture.write(self.state_path, self.state)
+            before = (self.root / self.state_path).read_bytes()
+            with self.assertRaises(ValueError):
+                self.finalize()
+            self.assertEqual((self.root / self.state_path).read_bytes(), before)
+
+    def test_existing_workflow_finalizes_after_current_producer(self):
+        text = Path(".github/workflows/framework-learning-supervisor.yml").read_text()
+        self.assertEqual(text.count("--finalize-strategist"), 2)
+        for output in ("runtime/framework-learning-supervisor", "research/framework_learning"):
+            producer = ("--output " + output + "/strategist/LATEST.json")
+            start = text.index(producer)
+            finalize = text.index("--finalize-strategist", start)
+            self.assertLess(finalize - start, 500)
+
+    def test_cli_finalization_keeps_sources_and_consumes_real_brief(self):
+        import subprocess
+        import sys
+        packet = self.fixture.run_brain()
+        script = Path("scripts/framework_intelligence/framework_learning_supervisor.py").resolve()
+        run = subprocess.run([sys.executable, str(script), "--repo-root", str(self.root),
+                              "--as-of-utc", "2026-10-17T19:00:00Z",
+                              "--finalize-strategist"], capture_output=True, text=True, check=True)
+        self.assertEqual(json.loads(run.stdout)["status"], "ADVISORY_CURRENT_EVIDENCE")
+        self.assertEqual(json.loads((self.root / OUTPUT_PATH).read_text()), packet)

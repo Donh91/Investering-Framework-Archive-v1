@@ -1,6 +1,7 @@
 # Framework Strategist · Governed Semantic Reasoning v2
 
-**STATE: IMPLEMENTATION CANDIDATE / NOT INSTALLED / AWAITING INDEPENDENT EXACT-HEAD CODE REVIEW.**
+**STATE: SOURCE RELEASE THROUGH EXISTING PR #1667; actual merge/runtime receipts belong in #1156.**
+Owner instruction of 20 October 2026 explicitly permits self-review and governed single-account integration for this mission. Record `SELF_REVIEW` and `SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE` honestly, never independent acceptance or GitHub `APPROVED`. Historical requests for an additional model review do not require recursive review handoffs under this owner-directed release. Real platform safeguards and unresolved material defects still stop release.
 The deterministic Strategist v1 is merged in main and remains sole source of machine-audited observations. This PR adds a low-cost reasoning **specialist call inside the EXISTING** Framework Learning Supervisor workflow, not a new supervisor, queue, workflow, recurring scheduled task, persistent agent, model router or recovery authority.
 
 ## Minimal execution contract
@@ -34,3 +35,17 @@ Model default `gpt-6.1-sol`, high reasoning effort, 5,400 output-token ceiling, 
 
 ## Complexity budget / sunset
 No new schedule, separate owner, parallel queue, new credential, autonomous order, forecast output or changed core budget cap. One new semantic script and one bounded test module; minor registry/price and existing workflow integration. Following release, measure accepted owner investigations minus noisy proposals and incremental inference cost. Sunset if no measurable decision benefit after ten admissible opportunity events; no prelaunch waiting period.
+
+## Connection audit correction, 20 October 2026
+
+This prepared #1667 revision reconciles current main Resource Steward additions rather than overwriting them. The existing workflow now finishes deterministic producers, then calls `framework_learning_supervisor.py --finalize-strategist`. That command validates the current brief through the original source-hash/authority reader, requires a current-run state and producer timestamp, and atomically updates only existing `LATEST_SUPERVISOR_STATE.json`. It does not rerun source producers, rewrite old snapshots, add a queue, or enable automatic action. Original snapshots remain producer-stage observations. A real post-brief source mutation remains `SOURCE_MOVED`; old briefs cannot be relabeled as current production.
+
+Resource Steward is optional for free deterministic observations, but mandatory before a new semantic paid attempt. `CRITICAL`, `CONSERVE`, `UNKNOWN`, missing or invalid resource advice sets `run_allowed=false`; reservation creation is then refused. A critical budget warning cannot authorize spending to analyze itself. Synthetic `NORMAL` test fixtures are not provider billing evidence; ordinary lane/global/key/reservation checks remain necessary. No API call was made in this audit.
+
+Grok's owner-approved Bridge-only report policy is separate from Claude's pause. An incoming report is advisory evidence, not a new automatic source or an authenticated provider-run receipt. This change installs no Bridge polling, task queue or Grok dispatcher. Only existing owner adjudication may supply an independently verified source-bound handoff.
+
+Release requires current-head technical inspection, applicable GitHub checks and safepoint/release requirements under the explicit owner-directed procedure above. After release demand one existing natural run with matching producer/consumer hash and proposal IDs. A prepared commit, local tests or a green producer alone is not this proof.
+
+## Monthly liability admission
+
+The existing workflow also claims a conservative maximum bill in one month-wide GitHub Contents CAS blob before calling the gateway. Different material fingerprints contend on that same blob SHA; duplicate fingerprints, a lost CAS race, HTTP/auth/transport uncertainty, malformed/tampered ledger or missing exact PUT receipt stop payment. Both per-question reservation and maximum monthly liability remain consumed after failure/unknown provider response; neither is automatically refunded. The existing $0.75 lane cap/$0.05 reserve and global $40/$4 receipt gates remain. This repository accounting is not an account-wide provider billing limit or proof of actual charges across unrelated clients.

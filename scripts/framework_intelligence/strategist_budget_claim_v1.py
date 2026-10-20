@@ -14,8 +14,13 @@ import hashlib
 import json
 import math
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+REPO_MODULE_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_MODULE_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_MODULE_ROOT))
 
 from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 
@@ -135,6 +140,31 @@ def prepare_payload(root: Path, runtime: Path, remote_get: dict,
     return {"path": rel, "request": body, "liability_usd": liability}
 
 
+def verified_http_ledger(raw: str) -> dict:
+    """Only an actual HTTP404 means absent; auth/transport/parse errors stop."""
+    headers, separator, body = raw.replace("\r\n", "\n").partition("\n\n")
+    status = headers.splitlines()[0].split() if headers else []
+    if not separator or len(status) < 2 or not status[0].startswith("HTTP/"):
+        raise ValueError("missing_authoritative_http_status")
+    value = json.loads(body)
+    if status[1] == "404" and isinstance(value, dict) and value.get("message") == "Not Found":
+        return {}
+    if status[1] != "200" or not isinstance(value, dict) or not value:
+        raise ValueError("monthly_ledger_fetch_failed")
+    return value
+
+
+def verify_claim_response(submitted: dict, response: dict) -> None:
+    """Bind successful GitHub PUT to the exact paid-liability bytes/path."""
+    raw = base64.b64decode(submitted["request"]["content"], validate=True)
+    expected = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+    content = response.get("content", {})
+    commit = response.get("commit", {})
+    if (content.get("path") != submitted["path"] or content.get("sha") != expected
+            or not HEX40.fullmatch(str(commit.get("sha", "")))):
+        raise ValueError("monthly_claim_not_durable")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", type=Path, required=True)
@@ -143,9 +173,16 @@ def main() -> None:
     ap.add_argument("--month", required=True)
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--confirmed-absent", action="store_true")
+    ap.add_argument("--http-response", action="store_true")
+    ap.add_argument("--verify-response", type=Path)
     a = ap.parse_args()
-    remote = json.loads(a.remote_get.read_text())
-    if not remote and not a.confirmed_absent:
+    if a.verify_response:
+        verify_claim_response(json.loads(a.remote_get.read_text()),
+                              json.loads(a.verify_response.read_text()))
+        return
+    remote = (verified_http_ledger(a.remote_get.read_text()) if a.http_response
+              else json.loads(a.remote_get.read_text()))
+    if not remote and not (a.confirmed_absent or a.http_response):
         raise SystemExit("remote_ledger_absence_not_authoritative")
     request = prepare_payload(a.repo_root, a.runtime_dir, remote,
                               month=a.month, run_id=a.run_id)

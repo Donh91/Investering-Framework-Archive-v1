@@ -161,6 +161,22 @@ def create_plan(root: Path, runtime: Path, *, now: datetime,
                         "material":material}))
     candidate = any(row.get("severity") in ("CRITICAL", "HIGH", "MEDIUM") for row in proposals)
     reason = "MATERIAL_CANDIDATE" if candidate else "NO_MATERIAL_ATTENTION"
+    # A warning about critical resources is useful deterministic advice, not
+    # permission to spend on reasoning about the warning. Resource Steward is
+    # optional for free observation, but required for a new paid semantic call.
+    budget_receipt = packet["source_receipts"].get("resource_budget")
+    resource_state = "UNVERIFIED"
+    if isinstance(budget_receipt, dict) and budget_receipt.get("status") == "CURRENT":
+        budget = load(root / SOURCES["resource_budget"][0])
+        resource_state = budget.get("status", "UNVERIFIED")
+        authority = budget.get("authority")
+        if (not isinstance(authority, dict)
+                or any(authority.get(k) is not False for k in
+                       ("automatic_dispatch", "automatic_spend", "ci_bypass"))):
+            resource_state = "UNVERIFIED"
+    if resource_state != "NORMAL":
+        candidate = False
+        reason = "RESOURCE_CONSERVATION_BLOCKED"
     reservation_rel = f"{RESERVATIONS}/{fp}.json"
     if (root / reservation_rel).exists():
         reason = "PAID_ATTEMPT_ALREADY_RESERVED_NO_RETRY"
@@ -193,6 +209,7 @@ def create_plan(root: Path, runtime: Path, *, now: datetime,
     runtime.mkdir(parents=True, exist_ok=True)
     plan = {"contract":"FRAMEWORK_STRATEGIST_SEMANTIC_PLAN_v1",
             "run_allowed":candidate, "reason":reason, "task":TASK, "model":MODEL,
+            "resource_advisory_status":resource_state,
             "material_fingerprint":fp,"reservation_path":reservation_rel,
             "source_strategist_sha256":context["source_strategist_sha256"],
             "prompt_sha256":sha(PROMPT.encode()),"context_sha256":sha(canonical(context)),
@@ -230,7 +247,7 @@ def reservation_payload(root: Path, runtime: Path, *, run_id: str) -> tuple[str,
     }
     # Deliberately no SHA overwrite: only CREATE, never update reservation.
     request = {
-        "message":f"budget(strategist): reserve exactly one Terra attempt {fp[:12]}",
+        "message":f"budget(strategist): reserve exactly one Sol attempt {fp[:12]}",
         "content":base64.b64encode(canonical(data)+b"\n").decode("ascii"),
         "branch":"main",
     }

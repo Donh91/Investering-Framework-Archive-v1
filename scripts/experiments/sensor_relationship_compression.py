@@ -70,6 +70,12 @@ def prospective_row(candidate: dict[str, Any]) -> dict[str, Any]:
         role = "DATA_BLOCKED"
     else:
         role = "UNRESOLVED"
+    # Legacy registry v1 once counted CENSORED outcome files as MATURED.
+    # The aggregate count is not a scientific validation or evidence of
+    # independent PIT/after-cost improvement even if a later producer fixes
+    # the count. All positive admission requires a distinct governed owner.
+    raw_matured = candidate.get("matured_outcome_count")
+    legacy_matured = raw_matured if type(raw_matured) is int and raw_matured >= 0 else None
     return {
         "relationship_id": str(candidate.get("candidate_id")),
         "sensor_or_test_ids": [str(candidate.get("title") or candidate.get("candidate_id"))],
@@ -79,9 +85,13 @@ def prospective_row(candidate: dict[str, Any]) -> dict[str, Any]:
             "state": state,
             "scientific_admission_status": admission,
             "observation_count": int(candidate.get("observation_count") or 0),
-            "matured_outcome_count": int(candidate.get("matured_outcome_count") or 0),
+            "matured_outcome_count": legacy_matured,
+            "matured_counter_integrity": "LEGACY_UNVERIFIED" if legacy_matured is not None else "UNKNOWN",
+            "prospective_skill_evidence": "NOT_ADMITTED",
         },
-        "current_prospective_validation": bool(candidate.get("matured_outcome_count", 0)),
+        # No single raw, censored, HIT, MISS or self-declared score flag proves
+        # matched independent forward validation. This is presentation only.
+        "current_prospective_validation": False,
         "presentation_role": role,
         "source_refs": [
             f"research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#{candidate.get('candidate_id')}"

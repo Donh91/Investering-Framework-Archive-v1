@@ -146,4 +146,42 @@ for(const txt of [
   'Official Compass unavailable · no current reading.'
 ])assert.ok(lang.exact[txt]?.length>5,'Missing Danish translation: '+txt);
 
+// PATH must be governed by the same CURRENT/LAST_VERIFIED/UNAVAILABLE state
+// as NOW, and an in-place expiry must remove PATH live permissions promptly.
+const paStart=header.indexOf('function pathWeeklyAlignment(');
+const paEnd=header.indexOf('\nfunction pathAlignmentNotice(',paStart);
+assert.ok(paStart>0&&paEnd>paStart,'PATH alignment must exist');
+const pathCtx={window:{CNOfficialReadingState:()=> 'CURRENT'}};
+vm.createContext(pathCtx);
+vm.runInContext(header.slice(paStart,paEnd)+';globalThis.align=pathWeeklyAlignment;',pathCtx);
+const pathSnapshot={public_series:{current_public_projection:{public_issue_number:29,forecast_week:'2026-W41'}}};
+const pathOfficial={...verified,weekly_context:{contract:'CN_COMPASS_WEEKLY_ALIGNMENT_v1',
+ status:'ALIGNED',public_issue_number:29,forecast_week:'2026-W41'}};
+assert.equal(pathCtx.align(pathSnapshot,pathOfficial).ok,true);
+pathCtx.window.CNOfficialReadingState=()=> 'LAST_VERIFIED';
+assert.equal(pathCtx.align(pathSnapshot,pathOfficial).ok,false);
+pathCtx.window.CNOfficialReadingState=()=> 'UNAVAILABLE';
+assert.equal(pathCtx.align(pathSnapshot,pathOfficial).ok,false);
+assert.match(header,/syncPathExpiration\(\);/,'PATH expiry check must run from freshness poll');
+const pollStart=header.indexOf('function syncPathExpiration(');
+const pollEnd=header.indexOf('\nfunction showProof(',pollStart);
+assert.ok(pollStart>0&&pollEnd>pollStart,'PATH expiry watcher must exist');
+let liveState='CURRENT',pathRefreshes=0;
+const pollCtx={lastRenderedPathOfficialState:'CURRENT',snapshot:pathSnapshot,
+ officialCompass:pathOfficial,document:{getElementById:()=>({})},
+ window:{CNOfficialReadingState:()=>liveState}};
+pollCtx.renderPath=()=>{pathRefreshes++;pollCtx.lastRenderedPathOfficialState=liveState;};
+vm.createContext(pollCtx);
+vm.runInContext(header.slice(pollStart,pollEnd)+';globalThis.pollPath=syncPathExpiration;',pollCtx);
+pollCtx.pollPath();assert.equal(pathRefreshes,0);
+liveState='LAST_VERIFIED';pollCtx.pollPath();assert.equal(pathRefreshes,1);
+pollCtx.pollPath();assert.equal(pathRefreshes,1);
+liveState='UNAVAILABLE';pollCtx.pollPath();assert.equal(pathRefreshes,2);
+for(const k of [
+ 'Current-state BTC/ETH direction proxy; not an independently validated 12H forecast.',
+ 'No current validated 12H forecast.'
+])assert.ok(lang.exact[k]?.length>5,'Missing DA method qualifier: '+k);
+assert.match(premium,/not an independently validated 12H forecast/);
+console.log('CN_PATH_EXPIRY_AND_12H_DISCLOSURE_PASS');
+
 console.log('OFFICIAL_COMPASS_FRESHNESS_3STATE_PASS');

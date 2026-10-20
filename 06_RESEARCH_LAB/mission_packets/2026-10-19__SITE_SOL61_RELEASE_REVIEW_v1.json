@@ -1,0 +1,53 @@
+{
+  "contract": "RESEARCH_LAB_SOL_API_MISSION_PACKET_v1",
+  "created_date": "2026-10-19",
+  "status": "OWNER_RELEASED_FOR_ONE_BOUNDED_EXACT_HEAD_ADVERSARIAL_REVIEW",
+  "mission_id": "SITE-COMPASS-P0-SOL61-20261019-001",
+  "title": "Master Monday -> Official Compass -> Cycle Navigator/SITE P0 adversarial release review",
+  "priority": "P0",
+  "recommended_task_lane": "RESEARCH_LAB_SOL_ANALYSIS",
+  "recommended_model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "question": "Inspect exact #1683 machine-pointer self-hash+freeze binding, analytics completeness and privacy, and how staged #1680 vNext consumes official real public sources. Identify real code bugs, missing negative fixtures, missing original source production/Pages delivery and why W42/W43 historical scores remain unadmitted. Rank concrete patches and release gates, no fake LIVE.",
+  "hypothesis": "The current GitHub changes may close integrity gaps but are NOT evidence of real publication, scientific edge, or independent review. Actively seek falsifiers, not agreement.",
+  "baseline": "No changes / current main. Explicit exact source identity, fail-closed unknown and cheapest no-action alternative.",
+  "falsifier": "Reproducible source/identity/clock/authority failure in the supplied exact diff. Tests missing or weaker than claimed. Cross-repo publication/source parity fails.",
+  "kill_condition": "If proof incomplete, head drift, clipped diff, missing original source timing or no acceptance receipt: INSUFFICIENT_EVIDENCE, no promotion or merge claim. No repeat paid attempt on unchanged inputs.",
+  "required_outputs": [
+    "EXACT_PR_SHA_MATRIX",
+    "PASS_FAIL_UNKNOWN_PER_P0_P1",
+    "REPRODUCIBLE_ATTACK_AND_FIXTURE",
+    "MISSING_DATA_VS_REAL_DATA",
+    "SOURCE_FREEZE_AND_PUBLIC_DELIVERY",
+    "EXACT_HEAD_REVIEW_LIMIT",
+    "NO_INDEPENDENT_FORMAL_GITHUB_APPROVAL",
+    "BUDGET_AND_NEXT_OWNER_BOUND_STEP"
+  ],
+  "forbidden": [
+    "code write",
+    "automatic merge",
+    "PR formal approval",
+    "new workflow/queue/model router",
+    "market/scoring/forecast semantics change",
+    "private raw or credentials",
+    "portfolio actions",
+    "historical scientific skill without accepted independent source times",
+    "paid datasets",
+    "repeat call"
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "repository_write": false
+  },
+  "exact_pr_head_shas": {
+    "1680": "5301a94482de5bcde45c729096e2757243fe7efb",
+    "1683": "ac0002837d304631f42fa44e3255a73b83004d52"
+  },
+  "review_only_no_code_write": true,
+  "max_runs_for_this_release": 1
+}

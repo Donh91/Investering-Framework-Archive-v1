@@ -17,8 +17,11 @@ on:
       - 'scripts/framework_intelligence/self_improvement_v1.py'
       - 'scripts/framework_intelligence/framework_strategist_v1.py'
       - 'scripts/framework_intelligence/framework_strategist_semantic_v1.py'
+      - 'scripts/framework_intelligence/strategist_budget_claim_v1.py'
+      - 'tests/framework_intelligence/test_strategist_budget_claim_v1.py'
       - 'tests/framework_intelligence/test_framework_strategist_semantic_v1.py'
-      - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
+      - 'scripts/framework_intelligence/resource_budget_guard_v1.py'
+      - 'tests/framework_intelligence/test_resource_budget_guard_v1.py'
       - 'tests/framework_intelligence/test_framework_strategist_v1.py'
       - '00_FMOS/framework_strategist/**'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
@@ -86,6 +89,8 @@ jobs:
             scripts/framework_intelligence/self_improvement_v1.py \
             scripts/framework_intelligence/framework_strategist_v1.py \
             scripts/framework_intelligence/framework_strategist_semantic_v1.py \
+            scripts/framework_intelligence/strategist_budget_claim_v1.py \
+            scripts/framework_intelligence/resource_budget_guard_v1.py \
             scripts/framework_intelligence/supervisor_mission_intake_v1.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
@@ -100,6 +105,8 @@ jobs:
             tests.framework_intelligence.test_self_improvement_v1 \
             tests.framework_intelligence.test_framework_strategist_v1 \
             tests.framework_intelligence.test_framework_strategist_semantic_v1 \
+            tests.framework_intelligence.test_strategist_budget_claim_v1 \
+            tests.framework_intelligence.test_resource_budget_guard_v1 \
             tests.framework_intelligence.test_supervisor_mission_intake_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
@@ -123,9 +130,16 @@ jobs:
           python scripts/framework_intelligence/self_improvement_v1.py \
             --repo-root . \
             --output runtime/framework-learning-supervisor/LATEST_SELF_IMPROVEMENT_V1.json
+          python scripts/framework_intelligence/resource_budget_guard_v1.py \
+            --repo-root . \
+            --output runtime/framework-learning-supervisor/resource_budget/LATEST.json
           python scripts/framework_intelligence/framework_strategist_v1.py \
             --repo-root . \
             --output runtime/framework-learning-supervisor/strategist/LATEST.json
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root runtime/framework-learning-supervisor \
+            --finalize-strategist
           python scripts/framework_intelligence/framework_strategist_semantic_v1.py prepare \
             --repo-root . \
             --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
@@ -694,6 +708,8 @@ jobs:
             scripts/framework_intelligence/self_improvement_v1.py \
             scripts/framework_intelligence/framework_strategist_v1.py \
             scripts/framework_intelligence/framework_strategist_semantic_v1.py \
+            scripts/framework_intelligence/strategist_budget_claim_v1.py \
+            scripts/framework_intelligence/resource_budget_guard_v1.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
             scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
@@ -704,6 +720,7 @@ jobs:
             tests.framework_intelligence.test_framework_strategist_v1 \
             tests.framework_intelligence.test_framework_strategist_semantic_v1 \
             tests.framework_intelligence.test_strategist_budget_claim_v1 \
+            tests.framework_intelligence.test_resource_budget_guard_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_capability_router \
@@ -730,9 +747,16 @@ jobs:
           python scripts/framework_intelligence/self_improvement_v1.py \
             --repo-root . \
             --output research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json
+          python scripts/framework_intelligence/resource_budget_guard_v1.py \
+            --repo-root . \
+            --output research/framework_learning/resource_budget/LATEST.json
           python scripts/framework_intelligence/framework_strategist_v1.py \
             --repo-root . \
             --output research/framework_learning/strategist/LATEST.json
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root research/framework_learning \
+            --finalize-strategist
           python scripts/framework_intelligence/operational_memory_v1.py \
             --repo-root . \
             --output-root research/framework_learning/operational_memory \
@@ -858,7 +882,7 @@ jobs:
             finalize+=(--sol-output "$outroot/sol/output.json")
           fi
           "${finalize[@]}"
-      - name: Governed zero-retry Terra strategic reasoning (existing schedule)
+      - name: Governed zero-retry Sol strategic reasoning (existing schedule)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GH_TOKEN: ${{ github.token }}
@@ -913,23 +937,14 @@ jobs:
           # competing writes fail, instead of double-spending the same cap.
           month="$(date -u +%Y-%m)"
           monthly="research/framework_learning/strategist/semantic/reservations/monthly/$month.json"
-          absence_flag=()
-          if gh api "repos/$GITHUB_REPOSITORY/contents/$monthly?ref=main" \
-              > "$RUNNER_TEMP/strat-monthly-get.json" 2>"$RUNNER_TEMP/strat-monthly-get.err"; then
-            :
-          elif grep -q 'HTTP 404' "$RUNNER_TEMP/strat-monthly-get.err"; then
-            printf '{}' > "$RUNNER_TEMP/strat-monthly-get.json"
-            absence_flag=(--confirmed-absent)
-          else
-            echo "Cannot verify remote budget ledger; no payment."
-            exit 0
-          fi
+          gh api --include "repos/$GITHUB_REPOSITORY/contents/$monthly?ref=main" \
+            > "$RUNNER_TEMP/strat-monthly-get.http" 2> "$RUNNER_TEMP/strat-monthly-get.err"
           if ! python -m scripts.framework_intelligence.strategist_budget_claim_v1 \
                 --repo-root . \
                 --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
-                --remote-get "$RUNNER_TEMP/strat-monthly-get.json" \
+                --remote-get "$RUNNER_TEMP/strat-monthly-get.http" --http-response \
                 --month "$month" --run-id "$GITHUB_RUN_ID" \
-                "${absence_flag[@]}" > "$RUNNER_TEMP/strat-monthly-row.json"; then
+                > "$RUNNER_TEMP/strat-monthly-row.json"; then
             echo "Atomic monthly budget admission failed; no payment."
             exit 0
           fi
@@ -994,7 +1009,7 @@ jobs:
               --context-file runtime/framework-learning-supervisor/strategist-semantic/context.json \
               --output-dir "$outroot" \
               --intended-write-prefix research/api_agent/outputs/framework_strategist/; then
-            echo "Terra attempt unsuccessful. Reservation forbids automatic paid retry."
+            echo "Sol attempt unsuccessful. Reservation forbids automatic paid retry."
             exit 0
           fi
           if ! python scripts/framework_intelligence/framework_strategist_semantic_v1.py \
@@ -1163,7 +1178,8 @@ jobs:
           for rel in \
             research/framework_learning/LATEST_SUPERVISOR_STATE.json \
             research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json \
-             research/framework_learning/strategist/LATEST.json \
+            research/framework_learning/resource_budget/LATEST.json \
+            research/framework_learning/strategist/LATEST.json \
             research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json \
             research/framework_learning/LATEST_DELEGATION_QUEUE.json \
             research/framework_learning/automation_orchestration/LATEST_PLAN.json \

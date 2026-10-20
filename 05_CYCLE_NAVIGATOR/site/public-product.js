@@ -220,6 +220,7 @@ function freshness(){
   const publicIssue=snapshot?.public_series?.current_public_projection?.public_issue_number;
   const title=status==='CURRENT'?'CURRENT OFFICIAL COMPASS':status==='LAST_VERIFIED'?'LAST VERIFIED COMPASS · NOT CURRENT':'OFFICIAL COMPASS UNAVAILABLE';
   h.innerHTML=`<div><span>${title}</span><strong>${d?d.toLocaleString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'No verified issue timestamp'}</strong><small>${age!=null?`${mins(age)} ago`:'No verified live timestamp'} · ${status}</small></div><div><span>NEXT SCHEDULED CHECK</span><strong>${mins(next-n)}</strong><small>Schedule only · not a forecast or guarantee of fresh data</small></div><div><span>CURRENT WEEKLY OUTLOOK</span><strong>CN #${esc(publicIssue??snapshot.package?.issue_number??'—')}</strong><small>Separate frozen weekly evidence</small></div>`;
+  syncPathExpiration();
 }
 
 function rotationEta(item){
@@ -380,8 +381,9 @@ function pathWeeklyAlignment(data,compass){
   const current=data?.public_series?.current_public_projection||{},receipt=compass?.weekly_context||{};
   const currentIssue=Number(current.public_issue_number),receiptIssue=Number(receipt.public_issue_number);
   const currentWeek=String(current.forecast_week||''),receiptWeek=String(receipt.forecast_week||'');
-  const ok=compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK'&&receipt.contract==='CN_COMPASS_WEEKLY_ALIGNMENT_v1'&&receipt.status==='ALIGNED'&&Number.isInteger(currentIssue)&&Number.isInteger(receiptIssue)&&currentIssue===receiptIssue&&currentWeek!==''&&currentWeek===receiptWeek;
-  return {ok,status:ok?'ALIGNED':receipt.status||'UNVERIFIED',currentWeek,receiptWeek};
+  const currentState=window.CNOfficialReadingState?.(compass)||'UNAVAILABLE';
+  const ok=currentState==='CURRENT'&&compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&compass?.data_status==='OK'&&receipt.contract==='CN_COMPASS_WEEKLY_ALIGNMENT_v1'&&receipt.status==='ALIGNED'&&Number.isInteger(currentIssue)&&Number.isInteger(receiptIssue)&&currentIssue===receiptIssue&&currentWeek!==''&&currentWeek===receiptWeek;
+  return {ok,status:ok?'ALIGNED':currentState!=='CURRENT'?'OFFICIAL_'+currentState:receipt.status||'UNVERIFIED',currentWeek,receiptWeek};
 }
 function pathAlignmentNotice(alignment){
   if(alignment.ok)return'';
@@ -593,7 +595,9 @@ function pathContext(data){
   const p=data.package||{},extra=sinceLastBlock(data)+whyThisCallBlock(data);
   return '<details class="path-more"><summary>More cycle context</summary>'+pathLegend()+'<div class="horizon-grid"><article><span>2–3 WEEK OUTLOOK</span><p>'+esc(short(publicPathText(p.base_case_2_3_weeks)||'No reliable 2–3 week view is published.',270))+'</p></article><article><span>4–8 WEEK OUTLOOK</span><p>'+esc(short(publicPathText(p.base_case_4_8_weeks||p.compass_4_8_weeks)||'No reliable 4–8 week view is published.',270))+'</p></article></div>'+extra+'</details>';
 }
+let lastRenderedPathOfficialState=null;
 function renderPath(data,compass){
+  lastRenderedPathOfficialState=window.CNOfficialReadingState?.(compass)||'UNAVAILABLE';
   const p=data.package||{},alignment=pathWeeklyAlignment(data,compass),liveCompass=alignment.ok?compass:null;
   document.getElementById('productPath').innerHTML='<header class="product-head path-v2-head"><small>PATH · THE MARKET JOURNEY</small><h2>The market journey.</h2><p>The market regime, altcoin rotation and weekly price plan. Open a card for the evidence behind it.</p></header>'
     +pathAlignmentNotice(alignment)
@@ -604,6 +608,13 @@ function renderPath(data,compass){
   window.CNWeekChart?.mount(document.getElementById("frozenWeekChart"),data);
   document.querySelector('#productPath [data-proof-link]')?.addEventListener('click',showProof);
   document.querySelectorAll('#productPath [data-now-link]').forEach(b=>b.onclick=()=>document.querySelector('[data-tab="now"]')?.click());
+}
+
+
+function syncPathExpiration(){
+  if(!snapshot||lastRenderedPathOfficialState===null||!document.getElementById('productPath'))return;
+  const next=window.CNOfficialReadingState?.(officialCompass)||'UNAVAILABLE';
+  if(next!==lastRenderedPathOfficialState)renderPath(snapshot,officialCompass);
 }
 
 function showProof(){document.querySelector('[data-tab="proof"]')?.click();}
