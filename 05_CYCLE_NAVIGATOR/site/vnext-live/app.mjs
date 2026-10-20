@@ -174,7 +174,15 @@ document.querySelector('.skip').addEventListener('click',event=>{
  event.preventDefault();$('content').focus();
 });
 initProductExperience(()=>({view,feeds,lang}));
-document.querySelectorAll('[data-nav-to]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();selectTab(a.dataset.navTo)}));
+document.querySelectorAll('[data-nav-to]').forEach(a=>a.addEventListener('click',e=>{
+ e.preventDefault();
+ const target=a.dataset.navTo;
+ if(!keys.includes(target))return;
+ selectTab(target);
+ // The trigger is now in a hidden panel. Move focus to the selected real tab,
+ // including for keyboard / VoiceOver navigation.
+ document.querySelector('[data-tab="'+target+'"]')?.focus();
+}));
 document.querySelectorAll('[data-tab]').forEach(b=>{
  b.addEventListener('click',()=>selectTab(b.dataset.tab));
  b.addEventListener('keydown',event=>{
