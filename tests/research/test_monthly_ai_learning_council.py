@@ -73,13 +73,15 @@ class MonthlyAILearningCouncilTests(unittest.TestCase):
 
     def test_learning_claim_requires_floor(self) -> None:
         ctx = {"evidence_census": {"experiment_registry": {"matured_candidates": [
-            {"candidate_id": "A", "state": "MATURED_SUPPORTED", "matured_outcome_count": 24},
-            {"candidate_id": "B", "state": "MATURED_SUPPORTED", "matured_outcome_count": 25},
-            {"candidate_id": "C", "state": "MATURED_NOT_SUPPORTED", "matured_outcome_count": 30},
+            {"candidate_id": "A", "state": "MATURED_SUPPORTED", "matured_outcome_count": 24, "scientific_score_eligible_outcome_count": 24},
+            {"candidate_id": "B", "state": "MATURED_SUPPORTED", "matured_outcome_count": 25, "scientific_score_eligible_outcome_count": 25},
+            {"candidate_id": "C", "state": "MATURED_NOT_SUPPORTED", "matured_outcome_count": 30, "scientific_score_eligible_outcome_count": 30},
+            {"candidate_id": "MIXED", "state": "MATURED_SUPPORTED", "matured_outcome_count": 25, "scientific_score_eligible_outcome_count": 1},
         ]}}}
         learned, challenged = deterministic_claims(ctx, 25)
         self.assertEqual([x["candidate_id"] for x in learned], ["B"])
         self.assertEqual([x["candidate_id"] for x in challenged], ["C"])
+        self.assertNotIn("MIXED", [x["candidate_id"] for x in learned + challenged])
 
     def test_finalize_preserves_firewall_when_ai_missing(self) -> None:
         with tempfile.TemporaryDirectory() as td:
