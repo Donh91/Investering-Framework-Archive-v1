@@ -290,8 +290,21 @@ assert.doesNotMatch(client,/seed\.json|localhost|private\/|secrets\/|api\.coinge
 assert.match(css,/@media\(max-width:520px\)/);
 assert.match(css, /prefers-reduced-motion/);
 assert.match(html, /role="tablist"/);
-assert.equal((html.match(/role="tabpanel"/g)||[]).length,3);
-assert.equal((html.match(/role="tab"/g)||[]).length,3);
+assert.equal((html.match(/role="tabpanel"/g)||[]).length,4);
+assert.equal((html.match(/role="tab"/g)||[]).length,4);
+assert.match(html,/id="view-path"/);
+assert.match(html,/id="premium-risk-steps"/);
+assert.match(html,/id="premium-balance-bars"/);
+assert.match(html,/id="premium-proof-copy"/);
+assert.equal((html.match(/class="product-more"/g)||[]).length,2);
+assert.match(client,/renderProductExperience\(view,feeds,lang\)/);
+const experience=read('premium-experience.mjs'),experienceCss=read('premium-experience.css');
+assert.match(experience,/officialBullBear\(current,'1_3d'\)/);
+assert.match(experience,/officialPullbackStage/);
+assert.match(experience,/permit_path_live_gates===true/);
+assert.match(experience,/publicAuditPrompt/);
+assert.doesNotMatch(experience,/fetch\(|OPENAI_API_KEY|seed\.json/);
+assert.match(experienceCss,/min-height:44px/);
 // Chart redraw must track semantic source changes (not just fetch object identity),
  // otherwise a refresh can destroy zoom, selected UTC day and the chosen asset.
 assert.match(client, /lastChartFingerprint!==fingerprint\|\|lastChartLang!==lang/);
