@@ -182,7 +182,15 @@ def evaluate_candidates(registry, admission, adjudication, policy, previous_stat
                 keys.append(key)
         if not keys:
             continue
-        state, action, why, eligible, question = _learning(row, bool(current and floor is not None and eligible_count >= floor))
+        state, action, why, eligible, question = _learning(row, current)
+        # A fresh adjudication and insufficient scientific evidence are different
+        # states; only suppress proposing the unearned next scientific test.
+        if eligible and (floor is None or eligible_count < floor):
+            state = "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE"
+            action = "CONTINUE_OBSERVING"
+            why = "fresh adjudication; scientific eligible outcome checkpoint not met"
+            eligible = False
+            question = "NONE"
         packets.append({
             "contract": "COMPOUNDING_LEARNING_CHECKPOINT_PACKET_v1",
             "candidate_id": cid,
@@ -229,7 +237,8 @@ def evaluate_candidates(registry, admission, adjudication, policy, previous_stat
     return selected, sorted({key for packet in selected for key in packet["trigger_event_keys"]})
 
 
-def build_hypothesis_families(registry, admission, adjudication):
+def build_hypothesis_families(registry, admission, adjudication, policy=None):
+    policy = policy or {"profiles": PROFILE_DEFAULTS, "default_profile": "STANDARD"}
     amap, jmap = _maps(admission, adjudication)
     groups = {}
     for candidate in registry.get("candidates", []):
@@ -250,7 +259,7 @@ def build_hypothesis_families(registry, admission, adjudication):
             cid = str(candidate["candidate_id"])
             titles.add(str(candidate.get("title") or ""))
             kinds.add(str(candidate.get("kind") or ""))
-            profiles.add(_profile(candidate, {"profiles": PROFILE_DEFAULTS, "default_profile": "STANDARD"}))
+            profiles.add(_profile(candidate, policy))
             if candidate.get("regime_dependency"):
                 regimes.add(str(candidate["regime_dependency"]))
             matured = int(candidate.get("matured_outcome_count") or 0)
@@ -265,8 +274,8 @@ def build_hypothesis_families(registry, admission, adjudication):
                 stale.append(cid)
                 continue
             action = str(row.get("selected_action") or "")
-            member_profile = _profile(candidate, {"profiles": PROFILE_DEFAULTS, "default_profile": "STANDARD"})
-            family_floor = _science_floor(member_profile, PROFILE_DEFAULTS.get(member_profile, PROFILE_DEFAULTS["STANDARD"]))
+            member_profile = _profile(candidate, policy)
+            family_floor = _science_floor(member_profile, (policy.get("profiles") or PROFILE_DEFAULTS).get(member_profile, PROFILE_DEFAULTS["STANDARD"]))
             # A current but scientifically ineligible physical outcome remains
             # operationally visible; it must NOT become a material learning event.
             if action in ESCALATIONS and (family_floor is None or eligible_count < family_floor):
@@ -361,16 +370,18 @@ def derive_learning_delta(previous_state, families):
     prior = {str(row.get("semantic_identity")): row for row in previous_state.get("hypothesis_families", []) if isinstance(row, dict) and row.get("semantic_identity")}
     changed = []
     for family in families:
-        if not family["material_evidence"]:
-            continue
         old = prior.get(family["semantic_identity"])
-        if not old or old.get("material_evidence_fingerprint") != family.get("material_evidence_fingerprint"):
+        invalidated = bool(old and old.get("material_evidence") and not family["material_evidence"])
+        if not family["material_evidence"] and not invalidated:
+            continue
+        if invalidated or not old or old.get("material_evidence_fingerprint") != family.get("material_evidence_fingerprint"):
             changed.append({
                 "semantic_identity": family["semantic_identity"],
                 "previous_status": old.get("current_evidence_status") if old else None,
                 "new_status": family["current_evidence_status"],
                 "previous_evidence_fingerprint": old.get("material_evidence_fingerprint") if old else None,
                 "new_evidence_fingerprint": family["material_evidence_fingerprint"],
+                "correction_kind": "MATERIAL_EVIDENCE_INVALIDATED" if invalidated else "MATERIAL_EVIDENCE_UPDATED",
             })
     return {"contract": "LEARNING_DELTA_v1", "material_change": bool(changed), "changed_family_count": len(changed), "changed_families": changed}
 
@@ -625,7 +636,7 @@ def _event(previous, families, delta, adjudication, as_of):
         "new_learning_graph_reference": graph,
         "adjudication_generated_at_utc": adjudication.get("generated_at_utc"),
         "evidence_delta": delta,
-        "why_change_is_justified": "Unified Experimental Adjudication produced materially different mature evidence in at least one semantic family.",
+        "why_change_is_justified": "Unified adjudication changed or invalidated prior material evidence under the scientific eligibility gates.",
         "what_did_not_change": [
             "FROZEN_PARENT_EVIDENCE", "SCIENTIFIC_ADMISSION_CONTRACT", "CANONICAL_FRAMEWORK_AUTHORITY",
             "MARKET_THRESHOLDS_AND_MODEL_WEIGHTS", "PORTFOLIO_ACTION",
@@ -639,7 +650,7 @@ def _event(previous, families, delta, adjudication, as_of):
 def _build_products(registry, admission, adjudication, policy, previous, previous_backlog, as_of):
     packets, new_keys = evaluate_candidates(registry, admission, adjudication, policy, previous, as_of)
     event_keys = sorted(set(previous.get("emitted_event_keys") or []) | set(new_keys))
-    families = build_hypothesis_families(registry, admission, adjudication)
+    families = build_hypothesis_families(registry, admission, adjudication, policy)
     delta = derive_learning_delta(previous, families)
     tests = generate_candidate_tests(families)
     proposal, ranked = select_bounded_next_best_test(tests, int(policy.get("max_next_best_tests_per_run", 1)))
