@@ -58,6 +58,24 @@ observedGap.public_live_precision.daily_observations.BTC[2]={
   coverage_complete_to_date:true,observed_hours:12
 };
 const gappedPlan=chartLinePlan(chartModel(observedGap,'BTC'));
+const hourlyActual=structuredClone(synthetic);
+hourlyActual.public_live_precision.hourly_price_path={
+ contract:'CN_PUBLIC_HOURLY_PRICE_PATH_v1',forecast_week:'2026-W41',public_issue_number:9,
+ source:'HOURLY_SPOT_PASS_ONLY',semantics:'OBSERVED_HOURLY_CLOSE_NOT_A_PROSPECTIVE_FORECAST',
+ observed_through_utc:'2026-10-07T12:00:00Z',
+ BTC:[1,2,3,5,6].map((hour,i)=>({
+   observed_at_utc:'2026-10-05T'+String(hour).padStart(2,'0')+':00:00Z',close:106+i
+ })),
+ ETH:[1,2].map(hour=>({
+   observed_at_utc:'2026-10-05T'+String(hour).padStart(2,'0')+':00:00Z',close:2100+hour
+ }))
+};
+const hourlySourceModel=chartModel(hourlyActual,'BTC'),actualHourlyPlan=chartLinePlan(hourlySourceModel);
+const wrongHourlyWeek=structuredClone(hourlyActual);wrongHourlyWeek.public_live_precision.hourly_price_path.forecast_week='2026-W42';
+const futureHourly=structuredClone(hourlyActual);futureHourly.public_live_precision.hourly_price_path.BTC.push({observed_at_utc:'2099-10-05T04:00:00Z',close:110});
+const invalidHourlySource=structuredClone(hourlyActual);invalidHourlySource.public_live_precision.hourly_price_path.BTC[0].close=-2;
+const hourMismatchIssue=structuredClone(hourlyActual);hourMismatchIssue.public_live_precision.hourly_price_path.public_issue_number=8;
+
 
 // Render the actual shipped PATH mount against an instrumented TradingView v5
 // and Canvas2D adapter. This catches omitted primitive attachment (a real P2)
@@ -133,6 +151,24 @@ const translationProjection=new Function('sanitizePackage','standaloneFreeze','p
 const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
 const acceptedTranslations=translationProjection(bilingualFixture);
 const checks=[
+ ['TRUE hourly observations render actual line with missing hours disconnected and no fake future forecast',
+   hourlySourceModel.hourly.length===5&&actualHourlyPlan.forecast.length===0&&
+   actualHourlyPlan.actualRuns.length===2&&actualHourlyPlan.actualRuns[0].length===3&&
+   actualHourlyPlan.actualRuns[1].length===2&&
+   actualHourlyPlan.actualRuns[0][0].value===106&&
+   actualHourlyPlan.actualRuns[1][0].time-actualHourlyPlan.actualRuns[0].at(-1).time===7200],
+ ['Wrong issue/week, future hour and invalid negative price fail hourly projection closed',
+   [wrongHourlyWeek,hourMismatchIssue,futureHourly,invalidHourlySource].every(x=>
+     chartModel(x,'BTC').hourly.length===0)&&chartModel(hourlyActual,'ETH').hourly.length===2],
+ ['Published daily forecast preserves exact seven source points independently of hourly actuals',
+   chartLinePlan(chartModel({...dailyFixture,public_live_precision:{...dailyFixture.public_live_precision,
+     hourly_price_path:hourlyActual.public_live_precision.hourly_price_path}},'BTC')).forecast.length===7],
+ ['Public hourly projection is bounded, source-guarded, and not a forecast',
+   precisionBuilder.includes('public_hourly_price_path(')&&
+   precisionBuilder.includes('HOURLY_SPOT_PASS_ONLY')&&
+   precisionBuilder.includes('cutoff is None')&&
+   chartSource.includes('CN_PUBLIC_HOURLY_PRICE_PATH_v1')&&
+   chartSource.includes('point.time-current.at(-1).time!==3600')],
  ['W43 Pages byte-true anchor integrity accepts producer numeric spelling 82116.0 and rejects any altered source',hashAcceptsOriginal&&hashRejectsJsRewrite&&hashRejectsCorruptedFingerprint&&hashRejectsWrongExpected],
  ['Danish projection accepts public prose and rejects changed numeric signs',acceptedTranslations.length===1&&acceptedTranslations[0].da==='BTC steg +2.44% i uge 40.'],
  ['Danish projection cannot publish untranslated private-scenario source content',!acceptedTranslations.some(x=>x.en.includes('9000'))&&translationProjection({market_state:'Legacy source without translations.'}).length===0],
