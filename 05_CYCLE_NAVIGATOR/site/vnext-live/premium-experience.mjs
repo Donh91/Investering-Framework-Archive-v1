@@ -99,7 +99,8 @@ export function pathModel(view,lang='da'){
    view?.compass?.permit_path_live_gates===true&&
    p.source_issue===view?.weekly?.public_issue_number&&
    p.source_week===view?.weekly?.forecast_week&&
-   p.source_identity===view?.compass?.compass_id;
+   p.source_identity===view?.compass?.compass_id&&
+   Array.isArray(p.full_phases)&&p.full_phases.length===10;
  const sourcePhases=Array.isArray(p?.full_phases)&&p.full_phases.length===10?
    p.full_phases:officialPathView(null,{lang}).full_phases;
  const phases=sourcePhases.map((x,i)=>({key:safe(x.key)||String(i),label:safe(x.label)||t.unavailable,
