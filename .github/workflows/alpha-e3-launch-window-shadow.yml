@@ -1,0 +1,47 @@
+name: Alpha Lab E3 launch-window shadow
+
+on:
+  workflow_dispatch:
+    inputs:
+      prereg_path:
+        description: Hash-bound E3 preregistration JSON frozen before T0
+        required: true
+      max_seconds:
+        description: Bounded observation window in seconds
+        required: true
+        default: "3300"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alpha-e3-launch-window-shadow
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ROBINHOOD_RPC_URLS: https://rpc.mainnet.chain.robinhood.com,https://robinhood-mainnet-rpc.blockreq.com/v1/rpc/public
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile
+        run: python -m py_compile 06_RESEARCH_LAB/alpha_lab/tools/alpha_e3_launch_window_v1.py scripts/api_agent/meme_alpha_robinhood_pons_v2.py
+      - name: Observe bounded launch window
+        run: |
+          mkdir -p artifacts
+          python 06_RESEARCH_LAB/alpha_lab/tools/alpha_e3_launch_window_v1.py \
+            --prereg "${{ inputs.prereg_path }}" \
+            --state artifacts/e3_state.json \
+            --evidence artifacts/e3_observations.jsonl \
+            --max-seconds "${{ inputs.max_seconds }}" \
+            --poll-seconds 15
+      - name: Upload immutable run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpha-e3-launch-window-${{ github.run_id }}
+          path: artifacts/
+          retention-days: 90
+          if-no-files-found: error
