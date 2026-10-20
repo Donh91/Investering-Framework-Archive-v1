@@ -54,6 +54,8 @@ jobs:
         with: {node-version: '22'}
       - name: Validate public series identity and score lineage
         run: python3 scripts/cycle_navigator/validate_public_series.py
+      - name: Verify public hourly observed price projection (no interpolation)
+        run: python3 05_CYCLE_NAVIGATOR/site/tests/test_public_hourly_curve.py
       - name: Validate public product contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
       - name: Build privacy-safe public bundle
