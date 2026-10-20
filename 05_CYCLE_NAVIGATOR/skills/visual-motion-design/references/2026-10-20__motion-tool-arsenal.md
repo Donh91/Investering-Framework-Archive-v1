@@ -46,3 +46,52 @@ The post curates 15 open-source repositories for programmable motion/video produ
 ## Classification / housekeeping
 
 This is a **selective source reference**, not a requirement to use the listed tools. Keep a single local reference under the existing design skill; do not duplicate the list in the top-level canonical index, site runtime or Research Lab. Update it only when a real design use case or license/security review warrants it.
+
+## Follow-up research: After Effects challengers and stronger repo candidates (2026-10-20)
+
+**Owner request:** Search for tools that can replace After Effects, compare them against the original 15-project list, and log relevance to Cycle Navigator. This is a *research/selection extension* to the existing Arsenal, not a new site requirement or an automatic adoption decision.
+
+**Boundary:** No single verified open-source repo is an exact end-to-end After Effects replacement across 2D layer motion, compositing, VFX, 3D, editing, expressions, and Adobe project/plugin compatibility. Choose by specific output. Do not promise After Effects project compatibility.
+
+| Candidate | Official source | Decision for CN | Evidence / limits |
+| --- | --- | --- | --- |
+| **Motion Canvas** | https://github.com/motion-canvas/motion-canvas | **HIGH: code-driven explainers / social media** | MIT-licensed TypeScript generator-based 2D motion graphics and preview editor. Suitable for explicit, reproducible explanatory animations of frozen forecasts vs observed values, and phase timelines. Specialized vector-animation tool, *not* a full video editor or After Effects replacement. |
+| **Manim Community Edition** | https://github.com/ManimCommunity/manim | **HIGH: research/calibration explainers** | Community-maintained Python mathematical animation library. Strong for verified curves, score explainers, uncertainty/coverage diagrams, and time-series education. Requires separate production environment and animation engineering; not a general GUI compositing tool. Prefer community edition over 3b1b's distinct personal ManimGL for general maintenance/onboarding. |
+| **Friction Graphics** | https://github.com/friction2d/friction | **MEDIUM-HIGH: manual 2D motion and logo animation** | GPL-3.0-only standalone desktop application for vector/raster motion graphics. More direct creative After Effects-like 2D workflow than code-first tools, but weaker for integrated high-end VFX. Exports SVG/SMIL, **not Lottie**; exported SVG supports only a subset of editor features. Validate output in destination viewer/browser. |
+| **Natron** | https://github.com/NatronGitHub/Natron | **MEDIUM, VFX only** | Open-source node-based video compositor, keying, rotoscoping, tracking, OpenFX; closest conceptual tool for compositing (not for CN dashboard UX). Not a single solution for procedural infographic videos or 3D scenes. |
+| **Kdenlive** | https://github.com/KDE/kdenlive | **MEDIUM: optional final editing** | Free/open-source multitrack editing, titles, masks, audio, transitions and export. Used after motion renders, not as a replacement for a full motion compositor. GitHub is a mirror; upstream contributions are hosted on KDE Invent. |
+| **Blender** (already listed above) | https://github.com/blender/blender | **MEDIUM: standalone cinematic/3D visual assets** | Broadest free/open-source all-round creative 3D, animation and compositing candidate, but unnecessary and potentially expensive in compute/time for routine CN market explainers. Not a site JS dependency. |
+| **Remotion** (already listed above) | https://github.com/remotion-dev/remotion | **VERY HIGH: repeatable branded weekly X/Telegram video** | Strong React/JS video-rendering option when the same existing verified/frozen CN figures must be rendered into repeatable video templates. **Special license**: individuals and certain small companies can qualify for free use, but larger for-profit entities may need a company license. Check current rules *before* production. |
+| **Cavalry by Canva** (non-repo product) | https://cavalry.studio/ | **HIGH: manual After Effects-style 2D design** | Officially offered free with Canva account on macOS/Windows; procedural/data-driven motion graphics, Lottie exports. **Proprietary desktop app, not an open-source GitHub repo, not executable on iPhone alone**. Best outside-code visual-production challenger; no integration decision. |
+| **Maxon Autograph** (non-repo product) | https://www.maxon.net/en/autograph | **MEDIUM-HIGH: manual 2D/3D and compositing** | Officially free motion design, VFX/compositing, shape and text animation. Desktop, **proprietary**, and some integrations/plugins require separate licenses. Potential broader AE-like GUI alternative, but do not depend on it for public-site builds. |
+
+### Practical selection for actual CN deliverables
+
+1. **Static Cycle Navigator / Kompas / PATH UI:** existing approved HTML/CSS/SVG/motion.js primitives. **No new framework.** Mobile-first, restrained Quiet Precision, reduced-motion, no additional runtime dependencies.
+2. **Repeated weekly CN video from verified, immutable forecast data:** **Remotion (first feasibility candidate)** with existing FFmpeg. Compare Motion Canvas only if vector explainer quality significantly improves; don't build both pipelines concurrently. A prospective prototype must reuse frozen inputs, show observation cutoff and missing observations honestly, label forecast and actual distinctly, render deterministic frames and record input hashes.
+3. **Explanatory research diagrams / score education:** Motion Canvas for TypeScript-first workflow; ManimCE only when code-generated math/graphs add an actual advantage. These are alternatives, not mandatory combined dependencies.
+4. **Distinctive logo animation or manual promotional artwork:** evaluate Cavalry (desktop/proprietary) or Friction (open source); Blender only for real 3D. Never mutate the approved compass mark or existing design system.
+5. **Heavy compositing / green screen / VFX:** Natron or free Maxon Autograph; not a present CN site requirement. **Edit/final delivery:** Kdenlive/FFmpeg if needed.
+
+### Exclusions and known traps
+
+- Do **not** adopt an entire 'AI video studio' or promise one prompt to film-quality 4K MP4: listed repos provide ingredients, not a proven turnkey production stack.
+- Do **not** confuse available open-source Rive **runtimes** with a fully open-source **editor**; no evidence for an open-editor After Effects replacement.
+- Do **not** use Friction -> Lottie as an assumed export path: Friction explicitly documents SVG/SMIL instead of Lottie.
+- Do **not** introduce heavy 3D or React framework migration into the GitHub Pages site to enable promotional animations.
+- Do **not** auto-render from unverified live market values, infer missing points, animate scoring into certainty, or replace current frozen weekly graph with a video.
+- Do **not** install or schedule anything by logging this comparison; tooling needs separate sandbox, dependency/license review, security validation, export-quality assessment, and explicit production scope.
+- iPhone-only editing is not a viable assumption for desktop GUI alternatives (Cavalry, Autograph, Friction, Natron, Blender, Kdenlive). Programmatic tools require a build host if ever approved.
+
+### Primary evidence read during evaluation
+
+- Motion Canvas scope: https://github.com/motion-canvas/motion-canvas and https://github.com/motion-canvas/motion-canvas/blob/main/packages/docs/docs/intro.md
+- Manim Community scope: https://github.com/ManimCommunity/manim
+- Friction scope/licensing/export: https://github.com/friction2d/friction , https://friction.graphics/documentation/faq.html , https://friction.graphics/documentation/export.html
+- Natron official source: https://github.com/NatronGitHub/Natron
+- Kdenlive source and upstream disclaimer: https://github.com/KDE/kdenlive
+- Remotion licensing: https://www.remotion.dev/docs/license and https://github.com/remotion-dev/remotion/blob/main/packages/core/LICENSE.md
+- Cavalry product and terms: https://cavalry.studio/ and https://www.canva.com/en_gb/help/free-cavalry-access/
+- Maxon Autograph product and terms: https://www.maxon.net/en/autograph
+
+**State:** RESEARCH_REFERENCE_ONLY / NO_RUNTIME_ADOPTION / NO_NEW_AUTOMATION / NO_MARKET_LOGIC_CHANGE. This appendix records an independent relative suitability evaluation, not a benchmark, successful video render or production validation.
