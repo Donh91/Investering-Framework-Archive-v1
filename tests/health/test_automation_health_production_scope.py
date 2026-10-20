@@ -732,3 +732,31 @@ def test_task2_daily_hourly_source_sla_no_price_or_original_score_leak(tmp_path)
     assert len({row["due_at_utc"] for row in records}) == 24
     assert all("btc_close" not in row and "eth_close" not in row and "score" not in row for row in records)
     assert sum([receipt["first_commit_clock_within_90m"],receipt["first_commit_clock_after_90m"],receipt["not_present_in_first_parent_history"],receipt["clock_anomalies"]]) == 24
+
+def test_task2_source_sla_does_not_change_hourly_or_recovery_schedules():
+    root = Path(__file__).parents[2]
+    health = (root / ".github/workflows/automation-production-health.yml").read_text()
+    primary = (root / ".github/workflows/hourly-sequence-capture.yml").read_text()
+    recovery = (root / ".github/workflows/native-market-recovery.yml").read_text()
+    assert "Measure prior UTC day hourly source first-commit deadline" in health
+    assert "--daily-hourly-owner-sla-day" in health
+    assert "LATEST_HOURLY_SOURCE_SLA.json" in health
+    assert "SOURCE_GIT_HISTORY_OR_VALIDATION_UNAVAILABLE" in health
+    assert "cron: '12 * * * *'" in primary
+    assert "cron: '24 * * * *'" in recovery
+    assert "framework-market-owner-writer" in primary
+    assert "framework-market-owner-writer" in recovery
+
+
+def test_task2_source_sla_rejects_nonfinite_owner_source(tmp_path):
+    _task2_source_repo(tmp_path)
+    header = "timestamp_utc,spot_status,btc_close,eth_close\n"
+    _task2_commit_csv(tmp_path, "2026-10-19.csv",
+                      header + "2026-10-19T00:00:00Z,PASS,nan,6\n",
+                      "2026-10-19T03:04:00+00:00")
+    audit = _task2_source_audit_module()
+    import pytest
+    with pytest.raises(ValueError, match="NONFINITE_PRICE"):
+        audit.daily_hourly_owner_source_sla(
+            tmp_path, "HEAD", datetime(2026, 10, 19).date(),
+            now=datetime(2026, 10, 20, 2, tzinfo=timezone.utc))
