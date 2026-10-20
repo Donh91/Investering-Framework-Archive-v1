@@ -96,7 +96,8 @@ try{
    const tabIds=['overview','compass','path','results'];
    const views={};
    for(const id of tabIds){$('[data-tab="'+id+'"]').click();
-    views[id]={visible:!$('#view-'+id).hidden,overflow:safeOverflow()};
+    views[id]={visible:!$('#view-'+id).hidden,
+     exclusive:tabIds.every(key=>$('#view-'+key).hidden===(key!==id)),overflow:safeOverflow()};
     overflow.push(views[id].overflow)}
    $('[data-tab="compass"]').click();
    const before=$('#premium-now-action').textContent;
@@ -132,6 +133,7 @@ try{
    const sourceExpiryShown=sourceExpired?
      $('#source-status').textContent.includes('udløbet')&&
      $('#source-clock').textContent.includes('Kompas gyldigt til'):true;
+   const sourceClockText=$('#source-clock').textContent;
    const sourceClock=$('#source-clock').getBoundingClientRect();
    // Only measure touch targets when their owning tab is actually visible.
    // A hidden tab's DOM elements correctly report 0x0, not a 0px product bug.
@@ -146,12 +148,20 @@ try{
    const pathJumpFocus=document.activeElement?.id==='tab-path'&&!$('#view-path').hidden;
    $('[data-tab="overview"]').click();
    const chartButtons=Array.from(document.querySelectorAll('[data-fw-asset]'));
-   let chart='ABSTAIN_NO_ELIGIBLE_CHART_CONTROLS';
-   if(chartButtons.length===2){$('[data-fw-asset="ETH"]').click();
+   const chartSource=await (await fetch('/data/latest.json',{cache:'no-store'})).json();
+   const model=window.CNWeekChart;
+   const eligibleModels=typeof model?.model==='function'&&
+     model.model(chartSource,'BTC')!==null&&model.model(chartSource,'ETH')!==null;
+   let chart='ABSTAIN_NO_ELIGIBLE_CHART_SOURCE';
+   if(typeof model?.model!=='function')chart='FAIL_CHART_LIBRARY_MISSING';
+   else if(eligibleModels&&chartButtons.length!==2)chart='FAIL_ELIGIBLE_CHART_CONTROLS_MISSING';
+   else if(eligibleModels&&chartButtons.length===2){
+    $('[data-fw-asset="ETH"]').click();
     const eth=$('[data-fw-asset="ETH"]').getAttribute('aria-pressed')==='true';
     $('[data-fw-asset="BTC"]').click();
     const btc=$('[data-fw-asset="BTC"]').getAttribute('aria-pressed')==='true';
-    chart=eth&&btc?'PASS':'FAIL'}
+    chart=eth&&btc?'PASS':'FAIL';
+   }
    overflow.push(safeOverflow());
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,promptHasProof:prompt.includes('scorebook-index.json')&&
@@ -160,14 +170,19 @@ try{
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
     proofCopied,sourceExpiryShown,pathJumpFocus,
-    clockRight:sourceClock.right,clockLeft:sourceClock.left,buttons:checks,chart,
+    clockRight:sourceClock.right,clockLeft:sourceClock.left,clockWidth:sourceClock.width,
+    clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
   reports.push(report);
   assert.equal(report.width,width,'Wrong CDP viewport');
   assert.ok(report.overflow<=2,'Horizontal page overflow on '+width+'px '+JSON.stringify(report));
+  assert.ok(report.clockText&&report.clockText!=='—'&&
+     /Kompas gyldigt til|Sidste levering/.test(report.clockText)&&
+     report.clockWidth>0&&report.clockHeight>0,'Source clock missing or placeholder '+width);
   assert.ok(report.clockRight<=width+2&&report.clockLeft>=-2,'Source expiry outside viewport '+width);
-  assert.ok(Object.values(report.views).every(q=>q.visible&&q.overflow<=2),'One of four tabs clipped at '+width);
+  assert.ok(Object.values(report.views).every(q=>q.visible&&q.exclusive&&q.overflow<=2),
+   'Multiple panels visible or one of four tabs clipped at '+width);
   assert.equal(report.five,5,'Five official ordinal risk categories must be visible');
   assert.equal(report.phases,10,'Full PATH must have ten stages, even when expired');
   assert.ok(Object.values(report.lens).every(q=>q.active==='true'&&q.action===report.before),
@@ -180,11 +195,15 @@ try{
   assert.ok(report.proofCopied,'AI verification copy button omitted or changed the original public audit prompt');
   assert.ok(report.sourceExpiryShown,'Expired Official Compass not disclosed in served homepage status');
   assert.ok(report.pathJumpFocus,'Overview-to-PATH anchor lost keyboard focus in hidden panel');
-  assert.ok(report.scoreDirection&&report.scorePullback,'Edge status must never be a fabricated number');
-  assert.ok(report.buttons.every(x=>x.width>=43&&x.height>=43),
-   'Mobile touch target smaller than 44px '+JSON.stringify(report.buttons.filter(x=>x.width<43||x.height<43)));
+  assert.ok([report.scorePrice,report.scoreDirection,report.scorePullback].every(x=>
+     typeof x==='string'&&x.trim()!==''&&x.trim()!=='—'&&x.trim()!=='UNAVAILABLE'),
+    'One of the three public Proof families missing or a placeholder');
+  assert.ok(report.scoreDirection.includes('Ingen verificeret')&&
+    report.scorePullback.includes('Ingen verificeret'),'Edge claim escaped unverified source policy');
+  assert.ok(report.buttons.every(x=>x.width>=44&&x.height>=44),
+   'Mobile touch target smaller than 44px '+JSON.stringify(report.buttons.filter(x=>x.width<44||x.height<44)));
 
-  assert.ok(report.chart!=='FAIL','BTC/ETH chart asset toggling failed');
+  assert.ok(!report.chart.startsWith('FAIL'),'BTC/ETH chart controls failed or valid chart source was dropped: '+report.chart);
   assert.equal(report.reducedMotion,'auto','Reduced-motion page scrolling is not disabled');
  }
  assert.deepEqual(exceptions,[],'Unexpected browser JavaScript exception');
