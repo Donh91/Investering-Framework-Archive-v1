@@ -152,6 +152,15 @@ const translationProjection=new Function('sanitizePackage','standaloneFreeze','p
 const bilingualFixture={market_state:'BTC gained +2.44% in week 40.',public_translations:[{en:'BTC gained +2.44% in week 40.',da:'BTC steg +2.44% i uge 40.'},{en:'BTC gained +2.44% in week 40.',da:'BTC faldt −2.44% i uge 40.'},{en:'Private forecast value 9000.',da:'Privat prognoseværdi 9000.'}],private_scenario:'Private forecast value 9000.'};
 const acceptedTranslations=translationProjection(bilingualFixture);
 const checks=[
+ ['CRITICAL future 7-day blue expected CLOSE must timestamp each UTC DAY END not prior morning',
+   positivePlan.forecast.every((p,i)=>p.time===chartModel(dailyFixture,'BTC').days[i].time+86400)&&
+   positivePlan.forecast[0].time===Date.parse('2026-10-06T00:00:00Z')/1000&&
+   positivePlan.forecast[6].time===Date.parse('2026-10-12T00:00:00Z')/1000],
+ ['CRITICAL observed partial/closed-day fallback uses exact owner as_of, NOT day-start or future day-end',
+   gappedPlan.actualRuns[0][0].time===Date.parse('2026-10-06T00:00:00Z')/1000&&
+   gappedPlan.actualRuns[1][0].time===Date.parse('2026-10-07T12:00:00Z')/1000&&
+   chartSource.includes('x(d.closeTime),y(d.forecast.high)')&&
+   chartSource.includes('time:m.end/1000')],
  ['Real TradingView mount draws two independent GREEN 1h runs, BLUE daily series stays absent without source',
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').length===2&&
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
@@ -183,16 +192,16 @@ const checks=[
  ['TradingView weekly chart is self-hosted and overlays authentic evidence only',liveBuilder.includes('vendor/lightweight-charts-5.2.0.js')&&chartSource.includes('lineVisible:false')&&chartSource.includes('if(d.actual)current.push(')&&chartSource.includes("['D1–2','D3–4','D5–7']")&&!chartSource.includes('LineType.Curved')],
  ['published daily forecast is exactly seven immutable points and actual does not extend into future',
     positivePlan.forecast.length===7&&positivePlan.actualRuns.length===1&&positivePlan.actualRuns[0].length===2&&
-    positivePlan.forecast.every((p,i)=>p.time===chartModel(dailyFixture,'BTC').days[i].time&&p.value===105+i)&&
-    positivePlan.actualRuns[0].every((p,i)=>p.value===110&&p.time===chartModel(dailyFixture,'BTC').days[i].time)],
+    positivePlan.forecast.every((p,i)=>p.time===chartModel(dailyFixture,'BTC').days[i].closeTime&&p.value===105+i)&&
+    positivePlan.actualRuns[0].every((p,i)=>p.value===110&&p.time===Date.parse(chartModel(dailyFixture,'BTC').days[i].actual.as_of_utc)/1000)],
  ['unpublished daily path plots no fabricated forecast while preserving real observations',
     missingForecastPlan.forecast.length===0&&missingForecastPlan.actualRuns.length===1&&
     missingForecastPlan.actualRuns[0].length===2],
  ['missing source coverage splits actual line into disjoint runs, never bridges data gaps',
     gappedPlan.forecast.length===7&&gappedPlan.actualRuns.length===2&&
     gappedPlan.actualRuns.every(run=>run.length===1)&&
-    gappedPlan.actualRuns[0][0].time===chartModel(observedGap,'BTC').days[0].time&&
-    gappedPlan.actualRuns[1][0].time===chartModel(observedGap,'BTC').days[2].time],
+    gappedPlan.actualRuns[0][0].time===Date.parse(chartModel(observedGap,'BTC').days[0].actual.as_of_utc)/1000&&
+    gappedPlan.actualRuns[1][0].time===Date.parse(chartModel(observedGap,'BTC').days[2].actual.as_of_utc)/1000],
  ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
  ['VoiceOver: W42-style missing daily forecast is explicitly not presented as a daily forecast curve in both languages',
     a11yUnavailableEn.includes('No original seven-day')&&a11yUnavailableEn.includes('no daily forecast line')&&
