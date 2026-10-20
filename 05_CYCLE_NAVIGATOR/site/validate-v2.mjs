@@ -220,7 +220,7 @@ const checks=[
  ['P2: published 7-day PATH renders actual daily envelope AND observed source low/high whiskers',
     publishedRender.paints.attached===1&&
     publishedRender.paints.fills===1&&
-    publishedRender.paints.whiskerStrokes===2&&
+    publishedRender.paints.whiskerStrokes===3&& // Two source high/low whiskers + one last-source timeline marker.
     publishedRender.series[0].data.length===7&&
     publishedRender.series.some(v=>v.data.length===2&&v.options.color==='#27c59a')],
  ['P2: legacy 3-window freeze renders authentic interval corridors with no forged daily forecast',
