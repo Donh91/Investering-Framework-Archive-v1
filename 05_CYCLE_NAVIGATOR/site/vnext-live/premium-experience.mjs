@@ -23,6 +23,7 @@ const TXT={
   pathUnavailable:'Aktuel cyklusfase ikke verificeret',pathNote:'Blå: kun kildeunderbygget reference. Rav: ubekræftet næste gate. Grå: ingen dokumenteret progression.',
   pathGate:'Næste kildebetingelse',pathNoEta:'Ingen verificeret ETA',pathFrozen:'Frossen ugereference, ikke bekræftet faseovergang',
   rotation:'Denne uges kapitalrotation',wait:'Ikke bekræftet',source:'Kilde',
+  rangeFamily:'Price Range · kildescore',directionFamily:'Direction / Flow / Rotation',pullbackFamily:'Pullback Edge',rangeEligible:'Officielt scorecard · ikke uafhængigt forseglet',rangeUnavailable:'Ingen færdig kildekontrolleret score',edgeUnavailable:'Ingen verificeret offentlig Edge-score',
   proofTitle:'Få en uafhængig AI-gennemgang',proofInfo:'Læsere kan lade deres egen AI kontrollere originale prognoser, hashbindinger, observationer og scores. Dette er ikke en AI-certificering eller en ny modelvurdering.',
   proofButton:'Kopiér auditinstruks',proofCopied:'Auditinstruks kopieret',proofFailure:'Markér og kopiér teksten nedenfor',
   proofStatus:'Uafhængig ex-ante-forsegling afventer dokumentation. Price Range ≠ Direction/Rotation/Pullback Edge.',
@@ -46,6 +47,7 @@ const TXT={
   pathUnavailable:'Current cycle phase unverified',pathNote:'Blue: sourced reference only. Amber: unconfirmed next gate. Grey: no documented progression.',
   pathGate:'Next source condition',pathNoEta:'No verified ETA',pathFrozen:'Frozen weekly reference, not a confirmed phase transition',
   rotation:'This week’s capital rotation',wait:'Unconfirmed',source:'Source',
+  rangeFamily:'Price Range · source score',directionFamily:'Direction / Flow / Rotation',pullbackFamily:'Pullback Edge',rangeEligible:'Official scorecard · not independently sealed',rangeUnavailable:'No eligible completed source score',edgeUnavailable:'No verified public Edge score',
   proofTitle:'Ask an independent AI to audit',proofInfo:'Readers can use their own AI to examine original forecasts, source hashes, observations and scores. This is not AI certification or a new performance claim.',
   proofButton:'Copy audit instructions',proofCopied:'Audit instructions copied',proofFailure:'Select and copy the prompt below',
   proofStatus:'Independent ex-ante sealing remains unproven. Price Range ≠ Direction/Rotation/Pullback Edge.',
@@ -157,6 +159,9 @@ export function renderProductExperience(view,feeds,lang='da'){
  if(rot){for(const x of path.rotation){const row=element('li','rotation-tier');
     row.append(element('b','',x.key),element('strong','',x.action),element('small','',x.eta));rot.append(row)}
    if(!path.rotation.length)rot.append(element('li','path-empty',t.pathUnavailable));}
+ set('premium-proof-price-status',view?.completed_score?.state==='FINAL_PUBLIC_SCORECARD'?t.rangeEligible:t.rangeUnavailable);
+ set('premium-proof-direction-status',t.edgeUnavailable);
+ set('premium-proof-pullback-status',t.edgeUnavailable);
  set('premium-proof-title',t.proofTitle);set('premium-proof-info',t.proofInfo);
  set('premium-proof-status',t.proofStatus);set('premium-proof-button',t.proofButton);
  set('premium-proof-open',t.proofOpen);set('premium-proof-archive',t.proofArchive);
