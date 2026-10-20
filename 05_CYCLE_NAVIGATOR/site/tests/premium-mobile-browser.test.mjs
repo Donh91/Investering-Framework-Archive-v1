@@ -115,6 +115,23 @@ try{
    const daText=$('#tab-results [data-t="tabResults"]').textContent;
    const daPath=$('[data-exp-t="pathPage"]').textContent;
    const prompt=$('#premium-proof-prompt').value;
+   // A deterministic mocked clipboard validates the product click-handler and
+   // exact copied original-source audit text, NOT the native iOS clipboard API.
+   let copiedText=null;
+   Object.defineProperty(navigator,'clipboard',{configurable:true,value:{
+    writeText:async text=>{copiedText=text;}
+   }});
+   $('#premium-proof-copy').click();
+   await new Promise(resolve=>setTimeout(resolve,35));
+   const proofCopied=!!copiedText&&copiedText===prompt&&
+    $('#premium-copy-status').textContent.includes('kopieret');
+   const ownerSource=await (await fetch('/data/compass.json',{cache:'no-store'})).json();
+   const expiry=ownerSource?.full_stack?.official_freshness?.valid_until_utc;
+   const sourceExpired=typeof expiry==='string'&&Number.isFinite(Date.parse(expiry))&&
+     Date.now()>=Date.parse(expiry);
+   const sourceExpiryShown=sourceExpired?
+     $('#source-status').textContent.includes('udløbet')&&
+     $('#source-clock').textContent.includes('Kompas gyldigt til'):true;
    const sourceClock=$('#source-clock').getBoundingClientRect();
    // Only measure touch targets when their owning tab is actually visible.
    // A hidden tab's DOM elements correctly report 0x0, not a 0px product bug.
@@ -124,6 +141,9 @@ try{
    const checks=sizes(document.querySelectorAll('.tabs button,.languages button,#premium-proof-copy'));
    $('[data-tab="compass"]').click();
    checks.push(...sizes(document.querySelectorAll('[data-investor-lens],.product-more>summary')));
+   $('[data-tab="overview"]').click();
+   $('[data-nav-to="path"]').focus();$('[data-nav-to="path"]').click();
+   const pathJumpFocus=document.activeElement?.id==='tab-path'&&!$('#view-path').hidden;
    $('[data-tab="overview"]').click();
    const chartButtons=Array.from(document.querySelectorAll('[data-fw-asset]'));
    let chart='ABSTAIN_NO_ELIGIBLE_CHART_CONTROLS';
@@ -139,6 +159,7 @@ try{
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
+    proofCopied,sourceExpiryShown,pathJumpFocus,
     clockRight:sourceClock.right,clockLeft:sourceClock.left,buttons:checks,chart,
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
@@ -156,6 +177,9 @@ try{
   assert.equal(report.enPath,'The market cycle','English PATH translation missing');
   assert.equal(report.daPath,'Markeds­cyklussen','Danish PATH restoration missing');
   assert.ok(report.promptHasProof,'Proof AI prompt lacks original source/hash anchors');
+  assert.ok(report.proofCopied,'AI verification copy button omitted or changed the original public audit prompt');
+  assert.ok(report.sourceExpiryShown,'Expired Official Compass not disclosed in served homepage status');
+  assert.ok(report.pathJumpFocus,'Overview-to-PATH anchor lost keyboard focus in hidden panel');
   assert.ok(report.scoreDirection&&report.scorePullback,'Edge status must never be a fabricated number');
   assert.ok(report.buttons.every(x=>x.width>=43&&x.height>=43),
    'Mobile touch target smaller than 44px '+JSON.stringify(report.buttons.filter(x=>x.width<43||x.height<43)));
