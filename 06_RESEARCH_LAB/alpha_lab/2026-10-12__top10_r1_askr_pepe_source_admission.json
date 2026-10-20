@@ -1,0 +1,55 @@
+{
+  "contract": "ALPHA_MOONSHOT_R1_SOURCE_ADMISSION_V1",
+  "date": "2026-10-12",
+  "state": "DATA_BLOCKED_PENDING_SOURCE_CENSUS",
+  "research_only": true,
+  "prospective_credit": 0,
+  "owner_issue": 1340,
+  "design": "04_RESEARCH_LAB/external_specialist_dissection/ALPHA_LAB_TOP10_SEQUENTIAL_EXECUTION_2026-10-12.md",
+  "cases": [
+    {
+      "case_id": "ASKR",
+      "chain": "robinhood-chain",
+      "chain_id": 4663,
+      "token_id": "UNKNOWN_UNTIL_FIRST_PARTY_READBACK",
+      "pool_id": "UNKNOWN",
+      "first_executable_source_time": "UNKNOWN",
+      "historical_reserve_source": "UNKNOWN",
+      "matched_control": "NOT_SELECTED",
+      "admission": "DATA_BLOCKED",
+      "reason": "Known anecdotal winner case does not establish verified token/pool/first-observable source and historical route liquidity. Do not infer CA from project ticker."
+    },
+    {
+      "case_id": "PEPE",
+      "chain": "ethereum",
+      "chain_id": 1,
+      "token_id": "UNKNOWN_UNTIL_FIRST_PARTY_READBACK",
+      "pool_id": "UNKNOWN",
+      "first_executable_source_time": "UNKNOWN",
+      "historical_reserve_source": "UNKNOWN",
+      "matched_control": "NOT_SELECTED",
+      "admission": "DATA_BLOCKED",
+      "reason": "Historical PEPE token identity, original pool, first observation, historical execution route and matched control require exact source and version."
+    },
+    {
+      "case_id": "FARTCOIN",
+      "chain": "solana",
+      "chain_id": null,
+      "token_id": "UNKNOWN_UNTIL_FIRST_PARTY_READBACK",
+      "pool_id": "UNKNOWN",
+      "first_executable_source_time": "UNKNOWN",
+      "historical_reserve_source": "UNKNOWN",
+      "matched_control": "NOT_SELECTED",
+      "admission": "OPTIONAL_DATA_BLOCKED",
+      "reason": "Do not add until archive/source can prove historical Solana reserves and executable entry/exit."
+    }
+  ],
+  "next_source_work": [
+    "Search owner-owned Alpha/Pons frozen raw cases for ASKR and exact first pool/tx/CA, then chain explorer independent readback.",
+    "Find canonical verified PEPE mint/CA and earliest relevant DEX pool, raw archive blocks and source delivery.",
+    "Select same-venue/age/liquidity ordinary and failed negative controls before any return simulation.",
+    "Use existing S1 route simulator; if missing historical reserve snapshots mark UNKNOWN and collect future raw snapshots prospectively."
+  ],
+  "no_api_call_executed": true,
+  "no_simulated_return_claim": true
+}
