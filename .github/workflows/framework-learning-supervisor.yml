@@ -959,12 +959,15 @@ jobs:
           rel=sys.argv[4]
           raw=base64.b64decode(row["request"]["content"])
           digest=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
-          assert row["path"]==rel and put["content"]["path"]==rel
-          assert put["content"]["sha"]==digest
-          assert isinstance(put["commit"]["sha"],str) and re.fullmatch("[0-9a-f]{40}",put["commit"]["sha"])
-          assert get["sha"]==digest
-          assert base64.b64decode(get["content"])==raw
-          assert row["liability_usd"]>0
+          if row["path"]!=rel or put.get("content",{}).get("path")!=rel:
+              raise ValueError("remote_budget_path_mismatch")
+          if put.get("content",{}).get("sha")!=digest or get.get("sha")!=digest:
+              raise ValueError("remote_budget_blob_mismatch")
+          commit=put.get("commit",{})
+          if not isinstance(commit,dict) or not isinstance(commit.get("sha"),str) or not re.fullmatch("[0-9a-f]{40}",commit["sha"]):
+              raise ValueError("remote_budget_commit_unverified")
+          if base64.b64decode(get["content"])!=raw or row["liability_usd"]<=0:
+              raise ValueError("budget_claim_readback_mismatch")
 
           PY
           then
