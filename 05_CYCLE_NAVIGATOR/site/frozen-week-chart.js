@@ -177,13 +177,13 @@
     scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor));
     // Separate observed runs rather than trusting a line to bridge missing evidence.
     plan.actualRuns.forEach((points,i)=>{const latest=i===plan.actualRuns.length-1;const series=chart.addSeries(lib.LineSeries,{...opts,color:GREEN,lineStyle:lib.LineStyle.Solid,lineWidth:3,pointMarkersVisible:true,pointMarkersRadius:3,lastValueVisible:latest,priceLineVisible:latest,priceLineColor:'rgba(39,197,154,.30)',priceLineStyle:lib.LineStyle.Dashed});series.setData(points);});
-    chart.timeScale().setVisibleLogicalRange({from:-.65,to:6.65});
+    chart.timeScale().fitContent();
     const select=d=>{selected=d.index;readout(d);};
     chart.subscribeCrosshairMove(p=>{if(p.time===undefined)return;const d=m.days.find(d=>d.time===p.time);if(d)select(d);});
     chart.subscribeClick(p=>{if(p.time===undefined)return;const d=m.days.find(d=>d.time===p.time);if(d)select(d);});
     host.querySelectorAll('[data-fw-day]').forEach(b=>b.onclick=()=>select(m.days[Number(b.dataset.fwDay)]));
     host.querySelectorAll('[data-fw-asset]').forEach(b=>b.onclick=()=>{asset=b.dataset.fwAsset;mount(host,data);});
-    host.querySelector('.fw-reset').onclick=()=>chart.timeScale().setVisibleLogicalRange({from:-.65,to:6.65});
+    host.querySelector('.fw-reset').onclick=()=>chart.timeScale().fitContent();
     instance={chart,host,data};
   }
   window.CNWeekChart={mount,model,linePlan,graphDescription};
