@@ -1,6 +1,6 @@
 /* Product alignment executable negatives. Synthetic fixtures ONLY; no seeded market claims. */
 import assert from 'node:assert/strict';
-import {decisionModel,pathModel,publicAuditPrompt} from './premium-experience.mjs';
+import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel} from './premium-experience.mjs';
 const bullBear={
  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',
  semantics:'EVIDENCE_BALANCE_NOT_PROBABILITY',
@@ -86,7 +86,17 @@ assert.equal(pStale.now,'Current cycle phase unverified');
 assert.equal(pStale.phases.every(x=>x.kind==='unverified'),true);
 assert.deepEqual(pStale.rotation,[],'An expired Compass cannot show live action tiers');
 const pInvalid=structuredClone(view);pInvalid.path.full_phases=pInvalid.path.full_phases.slice(0,5);
-assert.deepEqual(pathModel(pInvalid,'en').phases,[],'Partial cycle ladder cannot pretend to be ten phases');
+assert.equal(pathModel(pInvalid,'en').eligible,false,'Truncated official phase output cannot be promoted live');
+assert.equal(pathModel(pInvalid,'en').phases.length,10,'A source-loss fallback keeps the ten canonical reference phases');
+assert.ok(pathModel(pInvalid,'en').phases.every(x=>x.kind==='unverified'));
+const noSourcePath=structuredClone(view);noSourcePath.path={state:'UNAVAILABLE',full_phases:[]};
+assert.equal(pathModel(noSourcePath,'da').phases.length,10,'Expired source must preserve the neutral 10-stage map');
+assert.equal(pathModel(noSourcePath,'da').now,'Aktuel cyklusfase ikke verificeret');
+assert.deepEqual(pathModel(noSourcePath,'da').rotation,[]);
+assert.equal(riskStageLabel('BUILDING','da'),'Opbygning');
+assert.equal(riskStageLabel('BUILDING','en'),'Building');
+assert.equal(riskStageLabel('CONFIRMED','da'),'Bekræftet');
+assert.equal(riskStageLabel('MAGIC','da'),'UNAVAILABLE');
 const prompt=publicAuditPrompt('da');
 for(const needed of ['scorebook-index.json','source_commit','SHA-256','ABSTAIN','VERIFIED','CycleNavigator-scores']){
  assert.ok(prompt.includes(needed),'AI verification prompt missing '+needed);
