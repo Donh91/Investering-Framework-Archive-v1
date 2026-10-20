@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_lifecycle.py",
+    "scripts/experiments/sensor_relationship_compression.py",
+    "scripts/experiments/source_git_anchor.py",
+    "scripts/research/monthly_ai_learning_council.py",
+    "tests/experiments/test_experiment_lifecycle.py",
+    "tests/experiments/test_sensor_relationship_compression.py",
+    "tests/experiments/test_source_git_anchor.py",
+    "tests/research/test_monthly_ai_learning_council.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-f5f11ddeac4d0124",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-censor-aware-outcome-counts-fail-closed-source",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(task2): separate censored, matured and truly score-eligible experiment outcomes * fix(task2): refuse false sensor prospective-validation from censored or legacy outcome counts * test(task2): falsify censor-only maturity, invalid status, mixed eligible and duplicate outcomes * test: prevent censored-only and legacy sensor maturity claims * test: archived CENSORED outcome is never counted as matured * fix(task2): enforce frozen forecast ownership, lineage hash and exact settlement before score eligibility * test(task2): fake lineage, stale settlement and cross-candidate forecast collision ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_lifecycle.py": "c1a10c559941e9fdc25f2fb4a756cb12b94ad851",
+    "scripts/experiments/sensor_relationship_compression.py": "76af857113e77512e799a77773d6fec575d8833d",
+    "scripts/experiments/source_git_anchor.py": "247913a2cd8bfdd5e3e8154dc372876077992192",
+    "scripts/research/monthly_ai_learning_council.py": "01421f304b6f9f8a26a3c10666933c72e298d9ae",
+    "tests/experiments/test_experiment_lifecycle.py": "2f5a8e3199ffa9c6b9f9dfba8da746cffc5d967c",
+    "tests/experiments/test_sensor_relationship_compression.py": "33d7517acc0c99a2706f3538dadb0b92428dfac4",
+    "tests/experiments/test_source_git_anchor.py": "b94e3a69ed283e39856da66e268269a99f75e360",
+    "tests/research/test_monthly_ai_learning_council.py": "de11481592541310ea2d77aec9556490afa534f2"
+  },
+  "source_commit_sha": "f5f11ddeac4d01248209140efac6bb5cab43d364",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T08:35:49-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): censor-aware outcome counts and fail-closed source eligibility"
+}
