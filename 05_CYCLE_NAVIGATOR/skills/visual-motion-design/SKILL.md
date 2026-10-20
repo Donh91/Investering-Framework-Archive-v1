@@ -43,6 +43,10 @@ Never publish null forecast ranges.
 
 A structural/component score must never be presented as overall precision.
 
+## Reusable design-tool arsenal
+
+For relevant icon, storyboard, social infographic/video or purposeful motion-design tasks, **consult** [the curated motion tool reference](references/2026-10-20__motion-tool-arsenal.md) after the current site authority documents. It is an optional selection aid only. Existing native site assets and the approved Quiet Precision design remain primary; listed tools are not automatically installed, activated or approved for production.
+
 ## Design principles
 
 Use Apple-style restraint and design-engineering judgment:
