@@ -150,6 +150,20 @@ try{
    const chartButtons=Array.from(document.querySelectorAll('[data-fw-asset]'));
    const chartSource=await (await fetch('/data/latest.json',{cache:'no-store'})).json();
    const model=window.CNWeekChart;
+   const hourlySource=chartSource.public_live_precision?.hourly_price_path;
+   const actualModel=model?.model?.(chartSource,'BTC');
+   const actualPlan=actualModel?model.linePlan(actualModel):null;
+   const hourlyPublished=hourlySource?.contract==='CN_PUBLIC_HOURLY_PRICE_PATH_v1'&&
+      Array.isArray(hourlySource.BTC)&&hourlySource.BTC.length>0;
+   const hourlyCurveProof=!hourlyPublished?true:!!actualModel&&
+     actualModel.hourly.length===hourlySource.BTC.length&&
+     actualPlan.actualRuns.reduce((sum,run)=>sum+run.length,0)===hourlySource.BTC.length&&
+     (actualModel.daily.length===7?actualPlan.forecast.length===7:actualPlan.forecast.length===0);
+   const actualPointCount=actualPlan?.actualRuns.reduce((sum,run)=>sum+run.length,0)??0;
+   const hourlyPointCount=hourlySource?.BTC?.length??0;
+   const forecastPointCount=actualPlan?.forecast.length??0;
+   const actualStatus=document.querySelector('.fw-progress-actual')?.textContent||'';
+   const forecastStatus=document.querySelector('.fw-progress-forecast')?.textContent||'';
    const eligibleModels=typeof model?.model==='function'&&
      model.model(chartSource,'BTC')!==null&&model.model(chartSource,'ETH')!==null;
    let chart='ABSTAIN_NO_ELIGIBLE_CHART_SOURCE';
@@ -172,6 +186,7 @@ try{
     proofCopied,sourceExpiryShown,pathJumpFocus,
     clockRight:sourceClock.right,clockLeft:sourceClock.left,clockWidth:sourceClock.width,
     clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,
+    hourlyCurveProof,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
   reports.push(report);
@@ -204,6 +219,11 @@ try{
    'Mobile touch target smaller than 44px '+JSON.stringify(report.buttons.filter(x=>x.width<44||x.height<44)));
 
   assert.ok(!report.chart.startsWith('FAIL'),'BTC/ETH chart controls failed or valid chart source was dropped: '+report.chart);
+  assert.ok(report.hourlyCurveProof,'Verified hourly actual source dropped / gaps fabricated / forecast filled');
+  if(report.hourlyPointCount>0){
+    assert.equal(report.actualPointCount,report.hourlyPointCount,'Actual line must contain exactly each source-valid hour');
+    assert.ok(report.actualStatus.includes('timesluk')&&report.forecastStatus,'Progress display must explain observed vs forecast');
+  }
   assert.equal(report.reducedMotion,'auto','Reduced-motion page scrolling is not disabled');
  }
  assert.deepEqual(exceptions,[],'Unexpected browser JavaScript exception');
