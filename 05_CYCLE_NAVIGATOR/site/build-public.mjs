@@ -566,7 +566,7 @@ for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolv
  // vNext is a read-only first-party *candidate*, deployed below /vnext/
  // on the EXISTING Pages host. Canonical /index.html remains untouched.
  const vnextDir=resolve(outputDir,"vnext"); await mkdir(vnextDir,{recursive:true});
- for(const file of ["index.html","CN_LOGO.svg","premium.css","app.mjs","chart-source-key.mjs","monday-public-bridge.mjs","source-trace.mjs","official-bullbear.mjs",
+ for(const file of ["index.html","CN_LOGO.svg","premium.css","premium-experience.css","app.mjs","premium-experience.mjs","chart-source-key.mjs","monday-public-bridge.mjs","source-trace.mjs","official-bullbear.mjs",
   "official-pullback-eta.mjs","official-pullback-stage.mjs","official-pullback-investor-view.mjs",
   "official-path.mjs","official-feed-parity.mjs"])
    await copyFile(resolve(siteDir,"vnext-live",file),resolve(vnextDir,file));
