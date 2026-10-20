@@ -284,7 +284,7 @@ assert.match(html,/href="\.\.\/frozen-week-chart.css"/);
 assert.match(client,/\.\.\/data\/latest.json/);
 assert.match(client,/\.\.\/data\/compass.json/);
 assert.match(client,/CNWeekChart\.mount\(host,chartData\)/);
-assert.match(client,/inspectOfficialPublicFeeds\(feeds.latest,feeds.compass\)/);
+assert.match(client,/inspectOfficialPublicFeeds\(feeds.latest,feeds.compass,\{lang\}\)/);
 assert.match(client,/setInterval\(refresh,60000\)/);
 assert.doesNotMatch(client,/seed\.json|localhost|private\/|secrets\/|api\.coingecko|wallet/i);
 assert.match(css,/@media\(max-width:520px\)/);
@@ -345,6 +345,20 @@ assert.notEqual(chartSourceFingerprint(freshDaily,Date.parse(now)),validKey,
 
 assert.match(client, /event\.key==='ArrowRight'/);
 assert.match(client, /event\.key==='ArrowLeft'/);
+
+// Exercise the real adapter: switching language must translate its own PATH
+// labels without changing the source eligibility or official action.
+const pathLatest=structuredClone(latest),pathCompass=structuredClone(compass);
+pathLatest.package.rotation_ladder=[];
+pathLatest.package.altseason_countdown=[];
+pathCompass.capitalization_ladder=[];
+const pathDa=inspectOfficialPublicFeeds(pathLatest,pathCompass,{nowUtc:now,lang:'da'});
+const pathEn=inspectOfficialPublicFeeds(pathLatest,pathCompass,{nowUtc:now,lang:'en'});
+assert.equal(pathDa.path.state,'SOURCE_BOUND');
+assert.equal(pathEn.path.next_gate,'Next gate not documented');
+assert.equal(pathDa.path.next_gate,'Næste gate ikke dokumenteret');
+assert.deepEqual(pathEn.compass,pathDa.compass);
+assert.match(client,/inspectOfficialPublicFeeds\(feeds\.latest,feeds\.compass,\{lang\}\)/);
 
 assert.match(css, /\.cycle-step\[data-reference="true"\]/);
 assert.doesNotMatch(css, /\.cycle-step:first-child\{/);

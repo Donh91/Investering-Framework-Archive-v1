@@ -159,7 +159,7 @@ function selectTab(id){
  try{history.replaceState(null,'','#'+id)}catch{}
 }
 function refresh(){
- if(feeds){try{view=inspectOfficialPublicFeeds(feeds.latest,feeds.compass)}catch{view=null}}else view=null;
+ if(feeds){try{view=inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang})}catch{view=null}}else view=null;
  document.documentElement.lang=lang;
  document.querySelectorAll('[data-t]').forEach(e=>{if(dict[lang][e.dataset.t])e.textContent=dict[lang][e.dataset.t]});
  document.querySelectorAll('[data-lang]').forEach(e=>e.setAttribute('aria-pressed',String(e.dataset.lang===lang)));
@@ -178,6 +178,10 @@ async function load(){
  }catch{feeds=null;error=true}
  finally{clearTimeout(deadline);loading=false;refresh()}
 }
+// The shared document base must not turn the skip link into a page reload.
+document.querySelector('.skip').addEventListener('click',event=>{
+ event.preventDefault();$('content').focus();
+});
 document.querySelectorAll('[data-tab]').forEach(b=>{
  b.addEventListener('click',()=>selectTab(b.dataset.tab));
  b.addEventListener('keydown',event=>{
