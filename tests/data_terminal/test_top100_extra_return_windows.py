@@ -77,6 +77,23 @@ class ExtraWindowCaptureTests(unittest.TestCase):
                 with self.assertRaises(owner.E):
                     owner.parse(json.dumps(rows).encode(), include_extra_windows=True)
 
+    def test_surplus_invalid_window_does_not_poison_selected_members(self):
+        # A malformed optional field on nonselected rank 101 cannot cause
+        # an outage when every one of the actual 100 members is valid.
+        rows = json.loads(fixture())
+        rows[100]["price_change_percentage_30d_in_currency"] = "INVALID_SURPLUS"
+        selected, _, aggregate = owner.parse(
+            json.dumps(rows).encode(), include_extra_windows=True
+        )
+        self.assertEqual(len(selected), 100)
+        self.assertEqual(aggregate["constituent_count"], 100)
+        self.assertEqual(selected[-1]["source_rank"], 100)
+        # If one earlier member is a stablecoin, rank 101 enters the
+        # filtered Top100 and MUST now fail the optional schema gate.
+        rows[0]["symbol"] = "usdt"
+        with self.assertRaisesRegex(owner.E, "invalid optional return"):
+            owner.parse(json.dumps(rows).encode(), include_extra_windows=True)
+
     def test_source_receipt_is_capture_time_only(self):
         raw = fixture()
         constituents, _, aggregate = owner.parse(raw, include_extra_windows=True)
