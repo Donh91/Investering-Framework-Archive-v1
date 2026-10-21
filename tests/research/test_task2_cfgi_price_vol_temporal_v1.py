@@ -73,14 +73,17 @@ class TimeSeparatedCFGIIncrementalTests(unittest.TestCase):
             m.fit(train,m.BASE_FIELDS)
     def test_proper_scoring_baseline_denominator(self):
         train=[row(i,int(i%2==0),score=i-20) for i in range(40)]
-        models={"price_vol":m.fit(train,m.BASE_FIELDS),
+        models={"train_only_unconditional":sum(r["y"] for r in train)/len(train),
+                "price_vol":m.fit(train,m.BASE_FIELDS),
                 "price_vol_cfgi":m.fit(train,m.AUG_FIELDS)}
         test=[row(i,int(i%3==0),score=i-10) for i in range(20)]
         x=m.metrics(test,models)
         self.assertEqual(x["rows"],20)
         self.assertEqual(x["positive_outcome"]+x["negative_outcome"],20)
         self.assertIsNotNone(x["descriptive_brier_improvement_vs_price_vol"])
-        for arm in ("price_vol","price_vol_cfgi"):
+        self.assertEqual(x["days_cfgi_brier_better_than_price_vol"]+x["days_cfgi_brier_worse_than_price_vol"]+x["days_cfgi_brier_tied"],1)
+        self.assertIsNotNone(x["descriptive_brier_improvement_price_vol_vs_constant"])
+        for arm in ("train_only_unconditional","price_vol","price_vol_cfgi"):
             self.assertGreaterEqual(x[arm]["brier"],0)
             self.assertLessEqual(x[arm]["brier"],1)
         self.assertFalse(x["market_edge_admitted"])
@@ -105,5 +108,8 @@ class TimeSeparatedCFGIIncrementalTests(unittest.TestCase):
                 self.assertGreater(segments["train"]["rows"],100)
                 self.assertGreater(segments["validation"]["rows"],10)
                 self.assertGreater(segments["test_inspected_history"]["rows"],20)
+                v=segments["test_inspected_history"]
+                self.assertIsNotNone(v["train_only_unconditional"])
+                self.assertEqual(v["days_cfgi_brier_better_than_price_vol"]+v["days_cfgi_brier_worse_than_price_vol"]+v["days_cfgi_brier_tied"],v["distinct_utc_calendar_days"])
                 self.assertFalse(segments["model_selection_after_validation"])
 if __name__=="__main__":unittest.main()
