@@ -101,6 +101,8 @@ def census(base=BASE):
     by_version=Counter()
     by_horizon=Counter()
     outcomes_extra=Counter()
+    by_horizon_receipt=Counter()
+    integrity_exceptions=Counter()
     for day in days():
         sub=day.strftime("%Y/%m/%d")
         daily=base/"daily"/sub
@@ -151,6 +153,8 @@ def census(base=BASE):
                 elif row_reasons:
                     state="ORIGINAL_LINKAGE_OR_CLOCK_QUARANTINED"
                 counts[state]+=1
+                by_horizon_receipt[horizon+"::"+state]+=1
+                integrity_exceptions.update(set(row_reasons))
                 original_records.append({
                     "original_forecast_path":"04_MARKET_LEARNING/handlekompas/official/daily/"+sub+"/"+p.name,
                     "original_forecast_git_blob_sha1":blob_sha(raw),
@@ -180,6 +184,8 @@ def census(base=BASE):
             "source_label":"PUBLIC_ORIGINAL_OFFICIAL_FORECAST_AND_OUTCOME_GIT_BLOB_ONLY",
             "private_round3_gate":PRIVATE_GATE,"source_era":"v1_v2_v3_MUST_REMAIN_SEPARATE",
             "counts":dict(counts),"forecasts_by_scoring_contract":dict(by_version),
+            "original_integrity_exception_counts":dict(integrity_exceptions),
+            "per_horizon_receipt_states":dict(by_horizon_receipt),
             "forecast_horizon_attempt_counts":dict(by_horizon),
             "original_published_direction_labels_only":dict(original_states),
             "days":dates,"original_records":original_records,
@@ -204,5 +210,7 @@ def main():
     print(json.dumps({"contract":CONTRACT,"counts":out["counts"],
                       "by_version":out["forecasts_by_scoring_contract"],
                       "by_horizon":out["forecast_horizon_attempt_counts"],
-                      "original_labels":out["original_published_direction_labels_only"]},sort_keys=True))
+                      "original_labels":out["original_published_direction_labels_only"],
+                      "integrity_exceptions":out["original_integrity_exception_counts"],
+                      "per_horizon":out["per_horizon_receipt_states"]},sort_keys=True))
 if __name__=="__main__":main()
