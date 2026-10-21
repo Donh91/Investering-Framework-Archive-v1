@@ -16,7 +16,7 @@ class MatchedArchiveTests(unittest.TestCase):
         self.assertEqual(cases[0]['tape'][48][0],T+48*m.HOUR_MS)
         self.assertEqual(cases[1]['tape'][48][0],T+(48+336)*m.HOUR_MS)
         self.assertEqual(len(cases[0]['tape']),384)
-        self.assertEqual(cases[0]['tape'][-1][0]+m.HOUR_MS,cases[1]['tape'][48][0)
+        self.assertEqual(cases[0]['tape'][-1][0]+m.HOUR_MS,cases[1]['tape'][48][0])
     def test_short_segment_and_tail_excluded(self):
         self.assertEqual(len(m.windows_from_segments([continuous(48+335)])),0)
         self.assertEqual(len(m.windows_from_segments([continuous(48+336+335)])),1)
