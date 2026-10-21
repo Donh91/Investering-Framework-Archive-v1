@@ -108,13 +108,13 @@ class CounterfactualTests(unittest.TestCase):
             simulate_synthetic(historical_like, signal(proof='SYNTHETIC_FIXTURE_ONLY'), policy())
 
     def test_mutated_valid_toy_tape_is_not_in_admission_roster(self):
-        tape = scenario([100, 90, 80, 70])
+        tape=raw_scenario([100, 90, 80, 70])
         tape[2] = replace(tape[2], bid=79, ask=79)
         with self.assertRaisesRegex(ValueError, 'UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED'):
             simulate_synthetic(tape, signal(), policy())
 
     def test_shifted_historical_clock_cannot_masquerade_as_toy_scenario(self):
-        tape = scenario([100, 90, 80, 70])
+        tape=raw_scenario([100, 90, 80, 70])
         tape = [replace(q, at=q.at + timedelta(days=180),
                         known_at=q.known_at + timedelta(days=180)) for q in tape]
         with self.assertRaisesRegex(ValueError, 'UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED'):
