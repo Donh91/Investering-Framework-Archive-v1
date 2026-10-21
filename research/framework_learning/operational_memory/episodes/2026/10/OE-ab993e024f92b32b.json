@@ -1,0 +1,30 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": null,
+  "episode_id": "OE-ab993e024f92b32b",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-bounded-chrome-bootstrap-retry-fail-closed-ci",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(site): retry isolated Chrome CDP startup once with actionable failure diagnostics * test(site): prove two Chrome bootstrap failures block publication * test(site): fail-closed negative Chrome bootstrap check before existing mobile release gate * test(site): fail-closed negative Chrome bootstrap check before existing mobile release gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {},
+  "source_commit_sha": "ab993e024f92b32bb528368211a70fa35d732b45",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T23:26:27-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(site): bounded Chrome bootstrap retry and fail-closed CI (#1709)"
+}

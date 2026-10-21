@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/framework-learning-supervisor.yml",
+    "scripts/api_agent/temporary_bridge_pr_review.py",
+    "tests/api_agent/test_temporary_bridge_pr_review.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-8931b832cdc8936a",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-owner-approved-temporary-sol-pr-review-cap",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(api): owner-authorized bounded review reservation cap USD 6 * test(api): retain hard-stop negative control at updated $6 cap * fix(ci): skip paid semantic preparation for degraded PR dry-run",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/framework-learning-supervisor.yml": "08ecd2acfa7469f5d2ba0a309754768c35af1a7f",
+    "scripts/api_agent/temporary_bridge_pr_review.py": "80ee18ab82641990f7666a05f35121cf4740d1f0",
+    "tests/api_agent/test_temporary_bridge_pr_review.py": "9b4d1da3c4cf9fec0a0a94e8c99d89ee9547b8fe"
+  },
+  "source_commit_sha": "8931b832cdc8936a6be18f1d5905e63e0e17611a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T13:45:01-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(api): owner-approved temporary Sol PR review cap to $6 (#1704)"
+}

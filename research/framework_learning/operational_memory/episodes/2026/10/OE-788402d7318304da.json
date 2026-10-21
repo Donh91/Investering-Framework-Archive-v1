@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-788402d7318304da",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-p0-retry-chrome-handshake-safely-while-preserving",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(site): retry isolated Chrome CDP startup once with actionable failure diagnostics * test(site): prove two Chrome bootstrap failures block publication * test(site): fail-closed negative Chrome bootstrap check before existing mobile release gate * test(site): fail-closed negative Chrome bootstrap check before existing mobile release gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "b0561969e3edb4b90efa947a6c59488024869e7f",
+    ".github/workflows/cycle-navigator-pages.yml": "0116ba66b8cd663ee1b268b107dfb8217c800343",
+    "05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs": "d1c14040348df4bf1fdabdbf1b364882f65a5f15",
+    "05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs": "5b7e25eec8638e7eb28b2849bddb5c9727f11570"
+  },
+  "source_commit_sha": "788402d7318304da4ff4b7f68ca7f093717c108f",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T19:18:59-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site P0): retry Chrome handshake safely while preserving Pages mobile gates (#1708)"
+}

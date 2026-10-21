@@ -8,13 +8,13 @@
     "portfolio_action": false,
     "type": "ADVISORY_DERIVED_READ_ONLY"
   },
-  "candidate_count": 575,
+  "candidate_count": 577,
   "challengers": [
     {
       "automatic_promotion": false,
       "candidate_id": "EC-0258e3807909a4d1987f",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 82,
+      "matured_outcome_count": 83,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -23,7 +23,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-031fe5e419bd0096db4d",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 39,
+      "matured_outcome_count": 41,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -32,7 +32,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-03d0c1a48139b386534c",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 108,
+      "matured_outcome_count": 109,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -41,7 +41,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-05f05e742b6cd1ed61f0",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 48,
+      "matured_outcome_count": 49,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -50,7 +50,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-065c78e4af0270a9d365",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 165,
+      "matured_outcome_count": 166,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -322,10 +322,10 @@
     "adaptive_evolution": 1157,
     "self_healing": 1156
   },
-  "generated_at_utc": "2026-10-20T19:30:56.371848Z",
+  "generated_at_utc": "2026-10-21T07:58:14.628857Z",
   "health_consistency": "OK",
-  "health_live_coverage": 0.9949,
-  "incident_count": 5,
+  "health_live_coverage": 0.9899,
+  "incident_count": 6,
   "incident_history": [
     {
       "automatic_code_write_allowed": false,
@@ -458,6 +458,28 @@
       "route": "EXISTING_REMEDIATION_OWNER",
       "severity": "AMBER",
       "workflow": "pdlt-daily-census.yml"
+    },
+    {
+      "automatic_code_write_allowed": false,
+      "automatic_retry_allowed": false,
+      "classification": "UNKNOWN",
+      "counted_in_this_snapshot": true,
+      "findings": [
+        "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H"
+      ],
+      "fingerprint": "f722c0fa56b287bf4a4a63f74f577ca4cefafda681d6a02d043f46104110c144",
+      "first_seen_at_utc": "2026-10-21T07:14:06.203874Z",
+      "last_seen_at_utc": "2026-10-21T07:14:06.203874Z",
+      "observation_count": 1,
+      "observed_keys": [
+        "run:39545619457"
+      ],
+      "observed_run_id": 39545619457,
+      "owner_issue": 1156,
+      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
+      "route": "EXISTING_REMEDIATION_OWNER",
+      "severity": "AMBER",
+      "workflow": "hourly-sequence-capture.yml"
     }
   ],
   "incidents": [
@@ -482,6 +504,28 @@
       "route": "EXISTING_REMEDIATION_OWNER",
       "severity": "AMBER",
       "workflow": "edge001-t2-registry.yml"
+    },
+    {
+      "automatic_code_write_allowed": false,
+      "automatic_retry_allowed": false,
+      "classification": "UNKNOWN",
+      "counted_in_this_snapshot": true,
+      "findings": [
+        "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H"
+      ],
+      "fingerprint": "f722c0fa56b287bf4a4a63f74f577ca4cefafda681d6a02d043f46104110c144",
+      "first_seen_at_utc": "2026-10-21T07:14:06.203874Z",
+      "last_seen_at_utc": "2026-10-21T07:14:06.203874Z",
+      "observation_count": 1,
+      "observed_keys": [
+        "run:39545619457"
+      ],
+      "observed_run_id": 39545619457,
+      "owner_issue": 1156,
+      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
+      "route": "EXISTING_REMEDIATION_OWNER",
+      "severity": "AMBER",
+      "workflow": "hourly-sequence-capture.yml"
     },
     {
       "automatic_code_write_allowed": false,
@@ -585,13 +629,13 @@
   "scoreboard": {
     "DOCUMENTED_IMPROVEMENT": 0,
     "FALSIFIED": 0,
-    "INSUFFICIENT_EVIDENCE": 541,
+    "INSUFFICIENT_EVIDENCE": 543,
     "KILLED": 0,
     "REGRESSED": 0,
     "UNPROVEN": 34
   },
   "source_generated_at_utc": {
-    "automation_health": "2026-10-20T19:26:16.152823Z"
+    "automation_health": "2026-10-21T07:14:06.203874Z"
   },
   "source_observation_counted": true,
   "source_paths": {
@@ -599,8 +643,8 @@
     "experiment_registry": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
   },
   "source_sha256": {
-    "automation_health": "87c400778488816d72db106e29f8b7850ac86f2a71a81a7c3306a1308f904834",
-    "experiment_registry": "f895c4c6ab5c00a3086be0303f0b7980614311b295dbdc7e6ce9f967d7b3f764"
+    "automation_health": "f41d08d2532328a8c4dc2e7014f829f6ca29c0d420de578f9da484dd80265249",
+    "experiment_registry": "790e6e236188586cfdc4a046cb1627c9612a6d976bd86ba3ec39b39172f70cd4"
   },
-  "workflow_census_count": 198
+  "workflow_census_count": 199
 }

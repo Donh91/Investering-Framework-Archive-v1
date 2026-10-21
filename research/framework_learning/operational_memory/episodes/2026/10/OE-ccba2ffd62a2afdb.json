@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    ".github/workflows/automation-production-health.yml",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-21__task2_hourly_source_7d_rollup_v1.py",
+    "tests/research/test_task2_hourly_source_7d_rollup_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-ccba2ffd62a2afdb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-seven-day-source-clock-continuity-false-scientific",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized exact-head merge after seven applicable GitHub checks PASS; 17/17 local + real daily receipt PR replay PASS. Codex review unavailable due quota, no formal APPROVED claimed. Research-only, original outcomes immutable; natural producer readback pending.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "5818de3baf5c4874f4cb1b3fe8b8fde077235c63",
+    ".github/workflows/automation-production-health.yml": "7305327cec801c163b65d733eb6e4247faf83d39",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-21__task2_hourly_source_7d_rollup_v1.py": "e12b0b7ad0559c84cbf6aa97bd4063744c64dd2a",
+    "tests/research/test_task2_hourly_source_7d_rollup_v1.py": "d59ede385bd11518ae7f4117e6f1c8f5e035d128"
+  },
+  "source_commit_sha": "ccba2ffd62a2afdb23bdba3c4ed233c833dbebde",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-21T00:13:28-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): preserve seven-day source-clock continuity without false scientific rates"
+}

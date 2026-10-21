@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/api_agent/temporary_bridge_pr_review.py",
+    "tests/api_agent/test_temporary_bridge_pr_review.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-786efd111bfceac9",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-renew-bounded-gpt-sol-pr-review-lease",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(api): renew bounded Sol PR review lease Oct 20-25 * test(api): enforce renewed Copenhagen lease boundaries",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/api_agent/temporary_bridge_pr_review.py": "9d50f4d33fc3cdc2229bd90b60244bd333cdb29e",
+    "tests/api_agent/test_temporary_bridge_pr_review.py": "ffc3297a0ee28cf65ad08830a11e0d145e93ab15"
+  },
+  "source_commit_sha": "786efd111bfceac9cf857266247284a25fb85ec8",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T13:20:33-07:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(api): renew bounded GPT-6.1 Sol PR review lease through Oct 25 (#1701)"
+}

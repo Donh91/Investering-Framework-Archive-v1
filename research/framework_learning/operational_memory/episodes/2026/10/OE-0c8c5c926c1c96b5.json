@@ -1,0 +1,50 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-capture-architecture-gate.yml",
+    ".github/workflows/daily-raw-owner-capture.yml",
+    "research/repository_safety/2026-09-28__owner-plan-provenance-safepoint-receipt.json",
+    "scripts/daily_capture/build_capture_index.py",
+    "scripts/daily_capture/freeze_capture_execution_plan.py",
+    "scripts/health/build_architecture_health.py",
+    "tests/daily_capture/test_audit_hourly_measurements.py",
+    "tests/daily_capture/test_daily_capture_pipeline.py",
+    "tests/health/test_architecture_health_v2_1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-0c8c5c926c1c96b5",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* capture: freeze owner execution plan before collectors * capture: consume pre-frozen owner execution plan * capture: freeze execution intent before owner calls * health: require pre-frozen plan and owner artifact evidence * test: bind capture index to pre-frozen plan * test: enforce pre-run owner plan and artifact proof * capture: compile execution plan freezer in architecture gate * safety: record owner-plan provenance safepoint * fix: restore isolated capture CLIs and complete owner evidence validation",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-capture-architecture-gate.yml": "ff60b44d6ddc0951a96926951e4dc9d080694c72",
+    ".github/workflows/daily-raw-owner-capture.yml": "5431760d9a338050b3e128c08e3ad449947ca628",
+    "research/repository_safety/2026-09-28__owner-plan-provenance-safepoint-receipt.json": "624eb0d1822f7fa290035fd3e8fce218d7483ffe",
+    "scripts/daily_capture/build_capture_index.py": "930d720c8ef47835a9f47fb88c81e7912580feba",
+    "scripts/daily_capture/freeze_capture_execution_plan.py": "991901aa04be1c2828b9126cb5b5d61646350bff",
+    "scripts/health/build_architecture_health.py": "2d1754cd9c61037ea256d26b921862a0e8120b53",
+    "tests/daily_capture/test_audit_hourly_measurements.py": "d56eec924b8baabfb2191c719a2eb4dd83d7065b",
+    "tests/daily_capture/test_daily_capture_pipeline.py": "5efc1c3bc322597e523fdd0f3d15c36882e935c3",
+    "tests/health/test_architecture_health_v2_1.py": "d8753bef33e6f1fb00cc2fee4300466c1cb20da6"
+  },
+  "source_commit_sha": "0c8c5c926c1c96b5e138f73162eeb3ff64bdff8d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T13:51:55-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Capture: freeze owner execution plan before collectors (#1359)"
+}

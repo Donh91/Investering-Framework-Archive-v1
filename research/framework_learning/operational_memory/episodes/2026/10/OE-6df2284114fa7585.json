@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health.yml",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py",
+    "tests/health/test_automation_health_production_scope.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-6df2284114fa7585",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-hourly-owner-source-deadlines-existing-production-health",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE; exact PR head verified, seven GitHub checks passed (Automation Production Health: 198 pytest and 119 unittest tests); no formal independent approved review claimed; research-only source SLA metric (committer-clock proxy), fail-closed UNAVAILABLE, no new schedule, owner, private data, trading authority or market-rule change; require natural producer verification after merge.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health.yml": "64c8e22e19ba7a3ce0e42e66a14d152fb4a8cdd4",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py": "5c09003b0c16db7fe748ff1d08f556fea58f1fdd",
+    "tests/health/test_automation_health_production_scope.py": "df373449fcbb8b1235cdfb010fb13d39ac72ed9e"
+  },
+  "source_commit_sha": "6df2284114fa7585d281d2dbe07ee072afea7a00",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T15:27:28-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): audit hourly owner source deadlines in existing production health (#1707)"
+}

@@ -1,0 +1,50 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "05_CYCLE_NAVIGATOR/site/frozen-week-chart.css",
+    "05_CYCLE_NAVIGATOR/site/frozen-week-chart.js",
+    "05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/tests/test_public_hourly_curve.py",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs",
+    "05_CYCLE_NAVIGATOR/site/vnext-live/chart-source-key.mjs",
+    "scripts/cycle_navigator/build_public_live_precision.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-ad4d19aa1a0fd2b6",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(site): project verified public hourly observed closes for true actual price curve * feat(site): join verified hourly closes into continuous actual curve, split at source gaps * fix(site): exact UTC hourly timestamp parsing and preserve accessibility fallback copy * fix(site): invalidate chart when official hourly observations change * feat(site): source-cutoff marker and legible observed-versus-frozen chart summary * fix(site): fail hourly public projection closed on failed spot proof or missing cutoff * style(site): premium source-true hourly forecast/actual visual hierarchy on iPhone ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "e851944c985e629f971d92e3eb570ac908306b44",
+    ".github/workflows/cycle-navigator-pages.yml": "fd1b7055087e08354bf34c78a18ed19fde3227b0",
+    "05_CYCLE_NAVIGATOR/site/frozen-week-chart.css": "de05a254b2e8ef219f74cd809b37239b548ffae4",
+    "05_CYCLE_NAVIGATOR/site/frozen-week-chart.js": "df8076fa18a6a4fffdff11dc4860dc2befc54c24",
+    "05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs": "8b86b17bc7ab2f5dbdca261b585cfcd32520144d",
+    "05_CYCLE_NAVIGATOR/site/tests/test_public_hourly_curve.py": "41900a9bb3abeef1f0acc15ee1b910ffe1c66efa",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "6897d057aba05f4a749257782c3939aa87a38617",
+    "05_CYCLE_NAVIGATOR/site/vnext-live/chart-source-key.mjs": "583c6c442846d98f2574551015c5e77acc088ca7",
+    "scripts/cycle_navigator/build_public_live_precision.py": "d08cefa18299d7837ab9e8e60a040abea01088c2"
+  },
+  "source_commit_sha": "ad4d19aa1a0fd2b6450c92fe904d8e8ce72f6d71",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T14:12:54-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "feat(site): source-true hourly actual curve vs frozen forecast bands (#1705)"
+}

@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/build_automation_health_runtime.py",
+    "tests/health/test_automation_health_production_scope.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-18ea0303343fbd1a",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-expose-hourly-schedule-delivery-gaps-production-health",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE. Four exact-head CI checks passed including automation-health pytest regressions. Reviewer Codex code-review usage exhausted; no independent APPROVED claimed. Existing health writer only; counts prior UTC-day schedule-event creations, makes underdelivery AMBER, no new scheduler, retry, score or trade changes. Natural production readback pending.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/build_automation_health_runtime.py": "bf3db0355656cfe402bdb9c90f9b96cbe871ba70",
+    "tests/health/test_automation_health_production_scope.py": "b234980e506202a430467619c6f9d45211752aad"
+  },
+  "source_commit_sha": "18ea0303343fbd1afb1d7d6b5df8873f3c9c6bd0",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T12:53:27-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(task2): expose hourly schedule delivery gaps in production health (#1703)"
+}

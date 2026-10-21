@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".agents/skills/adaptive-analysis-methods/SKILL.md",
+    ".agents/skills/adaptive-analysis-methods/agents/openai.yaml",
+    ".agents/skills/adaptive-analysis-methods/references/METHODS.md",
+    "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md",
+    "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json",
+    "07_PROMPTS_AND_AGENTS/skill_quality_gate/adaptive_analysis_methods_v1_cases.json",
+    "tests/skill_quality_gate/test_adaptive_analysis_pilot_invocation.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".agents",
+  "episode_id": "OE-dfce5f124aa5c693",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(skills): add bounded adaptive analysis method pilot * feat(skills): add bounded adaptive analysis method pilot * feat(skills): add bounded adaptive analysis method pilot * docs(skills): register adaptive methods as bounded pilot candidate * feat(skills): register adaptive method routing metadata * test(skills): add frozen candidate positive and negative trigger scenarios * fix(skill): gate implicit pilot invocation until quality acceptance * fix(skill): keep pilot routing explicit until blind quality gate * test(skill): fail closed on implicit invocation of unaccepted pilot",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".agents/skills/adaptive-analysis-methods/SKILL.md": "94897150cf15a0cfdcddafc3151a2cd507643abc",
+    ".agents/skills/adaptive-analysis-methods/agents/openai.yaml": "abdd016a0f20555031765b577c032bacba254b6c",
+    ".agents/skills/adaptive-analysis-methods/references/METHODS.md": "8275fa4dc9f4813847428c754b211d359a74aa60",
+    "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md": "c94830720a1bc2f99b8c27d1ea7c4d9b9f766e2a",
+    "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json": "2b2e44e69b51967ecb6492956f46167ad4233322",
+    "07_PROMPTS_AND_AGENTS/skill_quality_gate/adaptive_analysis_methods_v1_cases.json": "70225b9ab2b89ceb62069f655cfc11178e98702e",
+    "tests/skill_quality_gate/test_adaptive_analysis_pilot_invocation.py": "5bc90169ddde74690abfd2bc2f230df9f66799e5"
+  },
+  "source_commit_sha": "dfce5f124aa5c6938542104ad50321361892c3f8",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-20T14:13:08-07:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "feat(skills): adaptive analysis methods v1 bounded pilot (#1691)"
+}
