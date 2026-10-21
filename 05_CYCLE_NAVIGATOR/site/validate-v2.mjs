@@ -7,6 +7,7 @@ const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
 const h=JSON.parse(history);
 const chartSource=await read('./frozen-week-chart.js'),chartCss=await read('./frozen-week-chart.css');
+const vnextShell=await read('./vnext-live/index.html');
 
 const proofSource=await read('./validate-compass-site-v5.mjs');
 const helperStart=proofSource.indexOf('function verifiedRawDigest(');
@@ -166,6 +167,15 @@ const checks=[
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
    hourlyRender.series.filter(s=>s.options?.color==='#5f96ff').every(s=>s.data.length===0)&&
    chartSource.includes('chart.timeScale().fitContent()')],
+ ['Approved B minimal shell preserves source evidence behind native disclosure and exposes nonproduction 2-3W test',
+   chartSource.includes("drawer.className='fw-evidence-details'")&&
+   chartSource.includes("host.ownerDocument?.createElement")&&
+   chartCss.includes('.fw-evidence-details summary{min-height:44px')&&
+   vnextShell.includes('class="cn-original-ranges"')&&
+   vnextShell.includes('id="btc-range"')&&vnextShell.includes('id="eth-range"')&&
+   vnextShell.includes('cycle-navigator-forward-outlook-1-3w-z8say7.v2.appdeploy.ai')&&
+   vnextShell.includes('data-t="forwardNote"')&&
+   chartSource.includes("No authentic daily forecast was published, so no forecast curve is drawn.")],
  ['Owner-approved B forecast renders behind a thicker actual line, WITHOUT fabricating blue W43',
    publishedRender.series[0].options?.lineStyle===2&&publishedRender.series[0].options?.lineWidth===2&&
    publishedRender.series.some(s=>s.options?.color==='#27c59a'&&s.options?.lineStyle===0&&s.options?.lineWidth===4)&&

@@ -46,3 +46,34 @@
  .statusbar>div{flex:1 1 180px;min-width:0}
  .statusbar #source-clock{flex:0 1 auto;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:right}
 }
+
+
+/* Approved B in canonical Premium shell: one chart, no stacked dashboard cards. */
+#view-overview .chart-area{background:transparent;border:0;padding:0;margin-top:16px;border-radius:0;color:inherit}
+#view-overview .chart-kicker{color:#173650;font-size:12px;font-weight:680;margin-bottom:12px;align-items:baseline}
+#view-overview .chart-kicker .subtle{color:#8495a9;font-size:10px;font-weight:550}
+#view-overview .chart-area #official-path-chart{min-height:315px;overflow:visible}
+.cn-original-ranges{margin:13px 0 0;border-top:1px solid #e0e8f0;padding-top:5px}
+.cn-original-ranges summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-size:11px;color:#63809b;font-weight:650;list-style:none}
+.cn-original-ranges summary::-webkit-details-marker{display:none}
+.cn-original-ranges summary::after{content:'+';font-size:18px;margin-left:auto;font-weight:500}
+.cn-original-ranges[open] summary::after{content:'−'}
+.cn-original-ranges summary:focus-visible{outline:2px solid #3977e4;outline-offset:1px}
+.cn-original-ranges .range-grid{margin:10px 0 0}
+.cn-original-ranges .range{padding:13px 14px;background:#f8fafc}
+.cn-original-ranges .range strong{font-size:clamp(16px,2vw,21px)}
+.cn-forward-preview{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:18px;border:1px solid #dbe6f2;border-radius:12px;padding:15px 17px;background:#f5f8fc}
+.cn-forward-preview strong{font-size:10px;color:#24558d;letter-spacing:.075em}
+.cn-forward-preview p{font-size:11px;line-height:1.5;color:#71879d;margin:5px 0 0}
+.cn-forward-preview a{flex:none;font-size:11px;color:#225aab;font-weight:760;min-height:44px;display:flex;align-items:center}
+@media(max-width:520px){
+ #view-overview .chart-area{margin-top:14px}
+ #view-overview .chart-kicker{padding:0 2px;gap:6px;flex-wrap:wrap;font-size:11px}
+ #view-overview .chart-area #official-path-chart{min-height:300px}
+ .cn-original-ranges .range-grid{gap:8px}
+ .cn-forward-preview{padding:13px 12px;gap:8px}
+ .cn-forward-preview a{font-size:10px}
+ /* A long UNAVAILABLE action should stay in its card, not break on a
+    single final letter as in the 2026-10-21 native iPhone screenshot. */
+ .decision-main .action-value{font-size:clamp(16px,4.2vw,23px);letter-spacing:-.035em;overflow-wrap:normal;word-break:normal}
+}
