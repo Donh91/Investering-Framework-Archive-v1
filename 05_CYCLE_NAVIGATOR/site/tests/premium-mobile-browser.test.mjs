@@ -32,19 +32,46 @@ const server=createServer((req,res)=>{
 });
 await new Promise((accept,reject)=>server.once('error',reject).listen(0,'127.0.0.1',accept));
 const url='http://127.0.0.1:'+server.address().port+'/';
-const profile=mkdtempSync(join(tmpdir(),'cn-premium-browser-'));
-const browser=spawn(chrome,['--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
- '--no-first-run','--no-default-browser-check','--no-zygote',
- '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
-let socket;
+// Chrome may intermittently fail to initialize on a busy GitHub-hosted runner.
+// A single failed Chrome bootstrap must NOT bypass any browser assertions or
+// permanently block the Pages release. A second *fresh* isolated profile is
+// allowed only for the startup handshake; both failures still fail the job.
+let profile=null,browser=null,socket;
 try{
  let debugPort;
- for(let i=0;i<130;i++){
-  if(browser.exitCode!==null)throw Error('Chrome exited '+browser.exitCode);
-  try{debugPort=Number(readFileSync(join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);if(debugPort>0)break}catch{}
-  await delay(100);
+ const startupFailures=[];
+ for(let attempt=1;attempt<=2&&!debugPort;attempt++){
+  profile=mkdtempSync(join(tmpdir(),'cn-premium-browser-'));
+  const flags=['--headless=new','--no-sandbox','--disable-gpu',
+    '--disable-dev-shm-usage','--no-first-run','--no-default-browser-check',
+    ...(attempt===1?['--no-zygote']:[]),
+    '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'];
+  browser=spawn(chrome,flags,{stdio:['ignore','ignore','pipe']});
+  let startupError='',startupStderr='';
+  browser.on('error',e=>{startupError=String(e.message||e)});
+  browser.stderr?.on('data',chunk=>{startupStderr=(startupStderr+chunk.toString()).slice(-4000)});
+  for(let i=0;i<120;i++){
+   if(startupError||browser.exitCode!==null||browser.signalCode!==null)break;
+   try{
+    const port=Number(readFileSync(join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);
+    if(Number.isInteger(port)&&port>0){debugPort=port;break}
+   }catch{}
+   await delay(100);
+  }
+  if(debugPort)break;
+  startupFailures.push({attempt,exitCode:browser.exitCode,signal:browser.signalCode,
+    error:startupError,stderr:startupStderr.slice(-1800)});
+  // Ensure no stale browser/profile is reused by the second attempt.
+  if(browser.exitCode===null&&browser.signalCode===null){
+   browser.kill('SIGTERM');
+   await Promise.race([new Promise(resolve=>browser.once('close',resolve)),delay(1000)]);
+   if(browser.exitCode===null&&browser.signalCode===null)browser.kill('SIGKILL');
+  }
+  try{rmSync(profile,{recursive:true,force:true})}catch{}
+  profile=null;browser=null;
+  if(attempt===1)await delay(400);
  }
- assert.ok(debugPort,'NO_CHROME_DEVTOOLS_PORT');
+ assert.ok(debugPort,'NO_CHROME_DEVTOOLS_PORT '+JSON.stringify(startupFailures));
  const pages=await (await fetch('http://127.0.0.1:'+debugPort+'/json')).json();
  const page=pages.find(x=>x.type==='page');
  assert.ok(page?.webSocketDebuggerUrl,'NO_PAGE_CDP');
@@ -230,10 +257,14 @@ try{
  console.log('PASS real Chrome mobile 390x844 and 430x932; tabs, languages, PATH, source-clock, risk, proof, chart '+JSON.stringify(reports));
 } finally {
  try{socket?.close()}catch{}
- browser.kill('SIGTERM');
- await Promise.race([new Promise(accept=>browser.once('close',accept)),delay(1500)]);
- if(browser.exitCode===null)browser.kill('SIGKILL');
+ if(browser){
+  if(browser.exitCode===null&&browser.signalCode===null){
+   browser.kill('SIGTERM');
+   await Promise.race([new Promise(resolve=>browser.once('close',resolve)),delay(1500)]);
+  }
+  if(browser.exitCode===null&&browser.signalCode===null)browser.kill('SIGKILL');
+ }
  server.close();
  await delay(150);
- try{rmSync(profile,{recursive:true,force:true})}catch{}
+ if(profile)try{rmSync(profile,{recursive:true,force:true})}catch{}
 }
