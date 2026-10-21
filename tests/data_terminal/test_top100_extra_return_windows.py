@@ -106,11 +106,21 @@ class ExtraWindowCaptureTests(unittest.TestCase):
         self.assertEqual(len(selected), 100)
         self.assertEqual(aggregate["constituent_count"], 100)
         self.assertEqual(selected[-1]["source_rank"], 100)
-        # If one earlier member is a stablecoin, rank 101 enters the
-        # filtered Top100 and MUST now fail the optional schema gate.
+        # When rank 101 becomes a member, degrade ONLY its optional
+        # research window, preserving the original 24h aggregate.
         rows[0]["symbol"] = "usdt"
-        with self.assertRaisesRegex(owner.E, "invalid optional return"):
-            owner.parse(json.dumps(rows).encode(), include_extra_windows=True)
+        raw = json.dumps(rows).encode()
+        selected, _, aggregate = owner.parse(raw, include_extra_windows=True)
+        legacy, _, old_aggregate = owner.parse(raw)
+        self.assertEqual(aggregate, old_aggregate)
+        self.assertEqual(selected[-1]["source_rank"], 101)
+        self.assertIsNone(selected[-1]["extra_return_windows_pct"]["30d"])
+        self.assertEqual(selected[-1]["change_24h_pct"], legacy[-1]["change_24h_pct"])
+        capture = owner.extra_window_provenance(selected, raw, "2026-10-21T08:00:00Z")
+        self.assertEqual(capture["status"], "DEGRADED_OPTIONAL_ONLY")
+        self.assertEqual(capture["invalid_member_counts"]["30d"], 1)
+        self.assertEqual(capture["available_member_counts"]["30d"], 99)
+        self.assertFalse(capture["provider_first_known_proven"])
 
     def test_source_receipt_is_capture_time_only(self):
         raw = fixture()
