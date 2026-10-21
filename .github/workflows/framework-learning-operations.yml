@@ -31,6 +31,8 @@ on:
       - 'tests/research/test_task2_price_window_robustness_v1.py'
       - 'scripts/research/task2_cfgi_price_expost_4h_v1.py'
       - 'tests/research/test_task2_cfgi_price_expost_4h_v1.py'
+      - 'scripts/research/task2_cfgi_64d_expost_cohorts_v1.py'
+      - 'tests/research/test_task2_cfgi_64d_expost_cohorts_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -255,6 +257,38 @@ jobs:
         with:
           name: task2-cfgi-vs-price-expost-${{ github.run_id }}
           path: /tmp/task2_cfgi_price_expost_4h.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 all archived 64 day original CFGI 4h versus momentum weekly cohort analysis
+        run: |
+          python -m unittest tests.research.test_task2_cfgi_64d_expost_cohorts_v1 -v
+          python -m scripts.research.task2_cfgi_64d_expost_cohorts_v1 --out /tmp/task2_cfgi_64day_expost.json
+          python - <<'PY'
+          import json
+          q=json.load(open('/tmp/task2_cfgi_64day_expost.json'))
+          assert q['contract']=='TASK2_CFGI_64D_ORIGINAL_4H_ASSOCIATION_v1'
+          assert q['source_original_manifest']['total_calendar_days']==64
+          assert q['joined_symbol_opportunities']>80
+          assert q['weekly_units']>=8
+          assert not q['authority']['historical_edge_admitted']
+          assert not q['authority']['new_vendor_requests']
+          assert not q['original_raw_cfgi_values_exported']
+          assert not q['statistical_significance_claim']
+          assert not q['hypothesis_registered_before_outcomes']
+          assert not q['executed_forecast_model_included']
+          for s,metrics in q['by_symbol'].items():
+              assert metrics['paired_both_correct']+metrics['paired_cfgi_only_correct']+metrics['paired_momentum_only_correct']+metrics['paired_both_wrong']==metrics['strictly_paired_non_neutral_opportunities']
+              print('TASK2_64DAY_ASOF_DESCRIPTIVE',s,metrics)
+          for w,metrics in q['by_week'].items():
+              print('TASK2_CF_GI_WEEK_UNIT',w,'opportunities',metrics['symbol_observations'],
+                    'BTC',metrics['by_symbol']['BTC']['paired_cfgi_only_correct']-metrics['by_symbol']['BTC']['paired_momentum_only_correct'],
+                    'ETH',metrics['by_symbol']['ETH']['paired_cfgi_only_correct']-metrics['by_symbol']['ETH']['paired_momentum_only_correct'])
+          PY
+      - name: Retain Task2 full 64day CFGI weekly descriptive original-source receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-cfgi-64day-expost-${{ github.run_id }}
+          path: /tmp/task2_cfgi_64day_expost.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
