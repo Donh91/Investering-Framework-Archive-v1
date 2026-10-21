@@ -414,7 +414,16 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
           strategic={status:"BOUND_WEEKLY_ANCHOR",issued_at_utc:anchor.issued_at_utc,
             horizon_21_30d:{direction:researchEnum(anchor?.strategic_21_30d?.direction,directionValues),
               action:researchEnum(anchor?.strategic_21_30d?.action_posture,["WAIT","HOLD","UNAVAILABLE"]),
-              summary:publicNarrative(anchor?.strategic_21_30d?.summary)},
+              summary:publicNarrative(anchor?.strategic_21_30d?.summary),
+              btc_direction:researchEnum(anchor?.strategic_21_30d?.btc_direction,directionValues),
+              eth_direction:researchEnum(anchor?.strategic_21_30d?.eth_direction,directionValues),
+              confidence:researchEnum(anchor?.strategic_21_30d?.confidence,["LOW","MEDIUM","HIGH","UNKNOWN"]),
+              expected_path:publicNarrative(anchor?.strategic_21_30d?.expected_path),
+              falsifiers:Array.isArray(anchor?.strategic_21_30d?.falsification)?
+                anchor.strategic_21_30d.falsification.map(publicNarrative).filter(Boolean).slice(0,3):[],
+              scenarios:Array.isArray(anchor?.strategic_21_30d?.scenarios)?
+                anchor.strategic_21_30d.scenarios.filter(x=>["BASE","BULL","BEAR"].includes(x?.label)).
+                  map(x=>({label:x.label,thesis:publicNarrative(x.thesis)})).filter(x=>x.thesis).slice(0,3):[]},
             horizon_4_8w:{direction:researchEnum(anchor?.cycle_4_8w?.direction,directionValues),
               status:researchEnum(anchor?.cycle_4_8w?.state,["UNCLEAR","CONSOLIDATION","ROTATION","DISTRIBUTION","UNAVAILABLE"])},
             authority:"CYCLE_NAVIGATOR_OWNED_NOT_NEW_SITE_FORECAST"};
@@ -445,7 +454,8 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     native:nativeValidated?{now:researchEnum(nativeTarget.action.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:nativeTarget.DATA_HEALTH||"UNAVAILABLE",checked_at_utc:nativeTarget.generated_at_utc,official_source_aligned:nativeAligned}:{now:"UNAVAILABLE",data_health:"UNVERIFIED",official_source_aligned:false},
     shadow:shadow||{status:"UNVERIFIED",authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons:{}},
     strategic:strategic||{status:"UNVERIFIED",authority:"CYCLE_NAVIGATOR_ONLY"},
-    weekly:{status:String(weeklyPointer?.status||"UNAVAILABLE"),iso_week:weeklyPointer?.iso_week||null,iso_year:weeklyPointer?.iso_year||null,direction_2_3w:weeklyAligned?researchEnum(weeklyPackage?.decision_projection?.next_2_3w?.direction,directionValues):"UNAVAILABLE"},
+    weekly:{status:String(weeklyPointer?.status||"UNAVAILABLE"),iso_week:weeklyPointer?.iso_week||null,iso_year:weeklyPointer?.iso_year||null,direction_2_3w:weeklyAligned?researchEnum(weeklyPackage?.decision_projection?.next_2_3w?.direction,directionValues):"UNAVAILABLE",
+      summary_2_3w:weeklyAligned?publicNarrative(weeklyPackage?.decision_projection?.next_2_3w?.summary):null},
     protective_action_authority:"OFFICIAL_COMPASS_ONLY",
     conclusion:"Official decisions stay source-owned. Model research is context, not a confirmed buy/sell or an altseason trigger."
   };
