@@ -166,6 +166,12 @@ const checks=[
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
    hourlyRender.series.filter(s=>s.options?.color==='#5f96ff').every(s=>s.data.length===0)&&
    chartSource.includes('chart.timeScale().fitContent()')],
+ ['Owner-approved B forecast renders behind a thicker actual line, WITHOUT fabricating blue W43',
+   publishedRender.series[0].options?.lineStyle===2&&publishedRender.series[0].options?.lineWidth===2&&
+   publishedRender.series.some(s=>s.options?.color==='#27c59a'&&s.options?.lineStyle===0&&s.options?.lineWidth===4)&&
+   hourlyRender.series[0].data.length===0&&
+   hourlyRender.series.filter(s=>s.options?.color==='#27c59a').every(s=>s.options.lineWidth===4)&&
+   chartCss.includes('CN_GRAPH_B_APPROVED_2026_10_21')&&chartCss.includes('.fw-legend .forecast{border-top:2px dashed #5f96ff}')],
  ['TRUE hourly observations render actual line with missing hours disconnected and no fake future forecast',
    hourlySourceModel.hourly.length===5&&actualHourlyPlan.forecast.length===0&&
    actualHourlyPlan.actualRuns.length===2&&actualHourlyPlan.actualRuns[0].length===3&&
@@ -202,7 +208,7 @@ const checks=[
     gappedPlan.actualRuns.every(run=>run.length===1)&&
     gappedPlan.actualRuns[0][0].time===Date.parse(chartModel(observedGap,'BTC').days[0].actual.as_of_utc)/1000&&
     gappedPlan.actualRuns[1][0].time===Date.parse(chartModel(observedGap,'BTC').days[2].actual.as_of_utc)/1000],
- ['PATH two-curve display is dotted frozen 7d forecast and solid observed-to-date, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dotted')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:3px dotted #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
+ ['Approved B two-curve display has dashed frozen 7d forecast and dominant solid actual, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dashed,lineWidth:2')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:2px dashed #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
  ['VoiceOver: W42-style missing daily forecast is explicitly not presented as a daily forecast curve in both languages',
     a11yUnavailableEn.includes('No original seven-day')&&a11yUnavailableEn.includes('no daily forecast line')&&
     a11yUnavailableDa.includes('Ingen oprindelig syvdagesprognose')&&a11yUnavailableDa.includes('uden daglig prognoselinje')&&
@@ -250,7 +256,7 @@ const checks=[
     chartCss.includes('.fw-legend .interval{height:9px;')&&
     chartCss.includes('.fw-assets button,.fw-reset{min-height:44px}')&&
     missingForecastPlan.forecast.length===0&&positivePlan.forecast.length===7],
- ['chart legend matches actual green and frozen blue price curves',chartSource.includes("BLUE='#5f96ff',GREEN='#27c59a'")&&chartCss.includes('.fw-legend .forecast{height:0;border-top:3px dotted #5f96ff')&&chartCss.includes('.fw-legend .actual{background:#27c59a}')],
+ ['Approved B chart legend matches dominant green actual and dashed blue forecast',chartSource.includes("BLUE='#5f96ff',GREEN='#27c59a'")&&chartCss.includes('.fw-legend .forecast{height:0;border-top:2px dashed #5f96ff')&&chartCss.includes('.fw-legend .actual{background:#27c59a}')],
  ['arrival windows and rotation facts remain readable on mobile',css.includes('.alt-transition small{font-size:12px')&&css.includes('.rotation-readout-v3 p{font-size:13px')],
 
  ['public Compass translation preserves historical week and future watch identity',weekIdentityText==='week 40 BTC gained 2.44%. Possible week 41 retest.'&&translateInvestor('W40 BTC gained 2.44%. Possible W41 retest.')===weekIdentityText&&!weekIdentityText.includes('This week')],
