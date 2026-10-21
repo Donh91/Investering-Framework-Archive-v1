@@ -203,6 +203,26 @@ try{
     const btc=$('[data-fw-asset="BTC"]').getAttribute('aria-pressed')==='true';
     chart=eth&&btc?'PASS':'FAIL';
    }
+   // On the real Premium site, 7/14/21 are functional buttons, not
+   // separate AppDeploy links. The 14/21 extension is a TIME AXIS only.
+   let forwardButtons='ABSTAIN_NO_ELIGIBLE_CHART_SOURCE';
+   if(eligibleModels){
+     const buttons=Array.from(document.querySelectorAll('[data-fw-horizon]'));
+     if(buttons.length!==3)forwardButtons='FAIL_MISSING_HORIZON_BUTTONS';
+     else{
+       const hit=n=>{
+         const btn=document.querySelector('[data-fw-horizon="'+n+'"]');
+         btn.click();
+         const chosen=document.querySelector('[data-fw-horizon="'+n+'"]');
+         const notice=document.querySelector('.fw-horizon-availability')?.textContent||'';
+         return chosen?.getAttribute('aria-pressed')==='true'&&
+           (n===7?/7.day original|7 dages original/i.test(notice):notice.includes('8–'+n));
+       };
+       const all=hit(14)&&hit(21)&&hit(7);
+       forwardButtons=all?'PASS':'FAIL_HORIZON_TOGGLE_OR_SOURCE_DISCLOSURE';
+       checks.push(...sizes(document.querySelectorAll('[data-fw-horizon]')));
+     }
+   }
    overflow.push(safeOverflow());
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,promptHasProof:prompt.includes('scorebook-index.json')&&
@@ -212,7 +232,7 @@ try{
     scorePullback:$('#premium-proof-pullback-status').textContent,
     proofCopied,sourceExpiryShown,pathJumpFocus,
     clockRight:sourceClock.right,clockLeft:sourceClock.left,clockWidth:sourceClock.width,
-    clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,
+    clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,forwardButtons,
     hourlyCurveProof,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
@@ -246,6 +266,7 @@ try{
    'Mobile touch target smaller than 44px '+JSON.stringify(report.buttons.filter(x=>x.width<44||x.height<44)));
 
   assert.ok(!report.chart.startsWith('FAIL'),'BTC/ETH chart controls failed or valid chart source was dropped: '+report.chart);
+  assert.ok(!report.forwardButtons.startsWith('FAIL'),'Approved B 7/14/21 horizon controls failed: '+report.forwardButtons);
   assert.ok(report.hourlyCurveProof,'Verified hourly actual source dropped / gaps fabricated / forecast filled');
   if(report.hourlyPointCount>0){
     assert.equal(report.actualPointCount,report.hourlyPointCount,'Actual line must contain exactly each source-valid hour');
