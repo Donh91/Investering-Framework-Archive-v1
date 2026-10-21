@@ -14,55 +14,30 @@ from types import MappingProxyType
 UTC = timezone.utc
 STATES = {"ELEVATED", "HIGH", "CONFIRMED"}
 
-# Immutable, module-owned toy data. These are exactly the regression scenarios
-# preregistered in the existing test suite; they are NOT real price histories.
-# A caller can set Warning.original_proof but cannot add a tape to this roster.
-_FROZEN_PRICE_TAPES = (
-    (100, 95, 60, 50, 55, 58),
-    (100, 95, 98, 110, 130, 160),
-    (100, 110, 120, 145, 170),
-    (100, 95, 70, 60, 63),
-    (100, 95, 85, 90, 100),
-    (100, 100, 100, 100, 100),
-    (100, 100, 100, 100),
-    (100, 90, 80, 70),
-    (100, 95, 90, 92),
-    (100, 95, 90),
-    (100, 90),
-    (100, 80, 85, 90),
-    (100, 98, 96, 94),
-    (100, 110, 120, 140),
-)
-_FROZEN_PRICE_TAPES_WITH_CAPACITY = (
-    ((100, 95, 80), (1e9, 100, 100)),
-    ((100, 95, 70, 60), (1e9, 100, 1e9, 1e9)),
-    ((100, 95, 90, 130, 160), (1e9, 1e9, 1e9, 100, 1e9)),
-    ((100, 80, 50, 30), (1e9, 10, 10, 10)),
-)
+# The static toy roster is defined ONCE below as MappingProxyType.
+# No second allowlist: a divergent registration/validation list could block
+# listed cases or accidentally certify caller-controlled price history.
 _FIXTURE_BASE = datetime(2026, 1, 1, tzinfo=UTC)
-_FROZEN_TAPE_KEYS = frozenset(
-    (tuple(prices), tuple(float(c) for c in capacities))
-    for prices, capacities in (
-        *((p, (1e9,) * len(p)) for p in _FROZEN_PRICE_TAPES),
-        *_FROZEN_PRICE_TAPES_WITH_CAPACITY,
-    )
-)
 
 
 def _approved_synthetic_fixture(quotes: list["Quote"]) -> bool:
-    """Match all input bytes semantically to bundled immutable toy scenarios.
+    """Admit exactly the module-owned toy scenario definitions, never caller data.
 
-    A self-declared 'synthetic' label, caller-provided hash, source URL,
-    or historical capture can never authorize an external observation.
-    This is *not* a proof of real-world provenance or economics.
+    Static numerical resemblance is only a deterministic test fixture match;
+    it must NEVER be interpreted as historical source or scientific proof.
     """
-    return (
-        all(q.at == _FIXTURE_BASE + timedelta(hours=i)
-            and q.known_at == q.at and q.bid == q.ask for i, q in enumerate(quotes))
-        and (tuple(q.bid for q in quotes),
-             tuple(float(q.capacity_usd) for q in quotes)) in _FROZEN_TAPE_KEYS
+    if not all(q.at == _FIXTURE_BASE + timedelta(hours=i)
+               and q.known_at == q.at and q.bid == q.ask
+               for i, q in enumerate(quotes)):
+        return False
+    exact = (tuple(float(q.bid) for q in quotes),
+             tuple(float(q.capacity_usd) for q in quotes))
+    return any(
+        exact == (tuple(float(p) for p in prices),
+                  tuple(float(cap) for cap in (capacities
+                      if capacities is not None else (1e9,) * len(prices))))
+        for prices, capacities in _REGISTERED_TOY_CASES.values()
     )
-
 
 
 @dataclass(frozen=True)
