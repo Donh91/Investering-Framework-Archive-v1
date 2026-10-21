@@ -33,6 +33,8 @@ on:
       - 'tests/research/test_task2_cfgi_price_expost_4h_v1.py'
       - 'scripts/research/task2_cfgi_64d_expost_cohorts_v1.py'
       - 'tests/research/test_task2_cfgi_64d_expost_cohorts_v1.py'
+      - 'scripts/research/task2_cfgi_price_vol_temporal_v1.py'
+      - 'tests/research/test_task2_cfgi_price_vol_temporal_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -289,6 +291,46 @@ jobs:
         with:
           name: task2-cfgi-64day-expost-${{ github.run_id }}
           path: /tmp/task2_cfgi_64day_expost.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 frozen chronological CFGI uplift versus price and realized 8h volatility, ex post
+        run: |
+          python -m unittest tests.research.test_task2_cfgi_price_vol_temporal_v1 -v
+          python -m scripts.research.task2_cfgi_price_vol_temporal_v1 --out /tmp/task2_cfgi_incremental_chrono.json
+          python - <<'PY'
+          import json
+          o=json.load(open('/tmp/task2_cfgi_incremental_chrono.json'))
+          assert o['contract']=='TASK2_CFGI_INCREMENTAL_PRICE_VOL_CHRONOLOGY_v1'
+          assert o['classification']=='EX_POST_INSPECTED_HISTORY_TEMPORAL_DIAGNOSTIC_NOT_SCIENTIFIC_PIT'
+          assert o['variant_count']==2
+          assert o['chronology']['holdout_truly_unseen'] is False
+          assert not o['authority']['round3_private_values_read']
+          assert not o['authority']['original_compass_issued_predictions_scored']
+          assert not o['authority']['provider_first_publication_proven']
+          assert not o['authority']['new_provider_requests']
+          assert not o['statistical_significance_or_economic_edge_claim']
+          assert not o['underlying_source_values_emitted']
+          for asset,q in o['asset_results'].items():
+              assert not q['model_selection_after_validation']
+              assert not q['coefficient_tuning_on_validation_or_test']
+              for period in ('train','validation','test_inspected_history'):
+                  x=q[period]
+                  assert x['rows']>10
+                  assert x['positive_outcome']+x['negative_outcome']==x['rows']
+                  assert x['price_vol']['n']==x['price_vol_cfgi']['n']==x['rows']
+                  assert not x['market_edge_admitted']
+              x=q['test_inspected_history']
+              print('TASK2_CF_GI_INCREMENTAL_INSPECTED_TEST',asset,
+                    'n',x['rows'],'days',x['distinct_utc_calendar_days'],
+                    'baseline Brier',x['price_vol']['brier'],
+                    'augmented Brier',x['price_vol_cfgi']['brier'],
+                    'lift',x['descriptive_brier_improvement_vs_price_vol'])
+          PY
+      - name: Retain Task2 chronology-Brier descriptive aggregate for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-cfgi-chronology-price-vol-${{ github.run_id }}
+          path: /tmp/task2_cfgi_incremental_chrono.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
