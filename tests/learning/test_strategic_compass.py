@@ -141,6 +141,17 @@ class ForwardRangePreflightTests(unittest.TestCase):
         self.assertEqual(validate_forward_range_candidate(original), original)
         self.assertEqual(original, before)
 
+    def test_no_source_is_valid_for_explicit_unavailable(self):
+        row = forward_range_fixture()
+        row["source"] = None
+        validate_forward_range_candidate(row)
+
+    def test_missing_source_cannot_publish_candidate_prices(self):
+        def bad(x):
+            x["source"] = None
+            x["BTC"]["windows"][0].update(status="CANDIDATE", low_usd=100.0, high_usd=120.0, reason=None)
+        self.reject(bad)
+
     def test_source_bound_sparse_interval_candidate_not_price_path(self):
         row = forward_range_fixture()
         b = row["BTC"]["windows"][0]
