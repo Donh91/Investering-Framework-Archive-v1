@@ -154,3 +154,18 @@
  .fw-evidence-details .fw-days{padding:7px 0}
  .fw-attribution{padding:3px 13px 12px}
 }
+
+/* B approved 7/14/21-day horizon selector. Visual-only extension:
+ * source-gated seven-day forecast and valid actual observations remain frozen. */
+.fw-horizons{display:flex;gap:9px;padding:15px 18px 3px;align-items:center;background:#0a1729}
+.fw-horizons button{display:inline-flex;gap:7px;align-items:baseline;justify-content:center;min-width:80px;min-height:44px;border:1px solid #344963;border-radius:10px;background:#12243a;color:#98aec8;padding:9px 13px;font-weight:650}
+.fw-horizons button strong{font-size:16px;font-weight:760}
+.fw-horizons button small{font-size:11px;font-weight:560}
+.fw-horizons button[aria-pressed=true]{background:#244365;color:#f4f8ff;border-color:#4b739e}
+.fw-horizons button:focus-visible{outline:2px solid #80affd;outline-offset:2px}
+.fw-horizon-availability{margin:0;color:#90a9c5;font-size:10px;line-height:1.55;padding:7px 18px 15px;border-top:1px solid #2a405c66}
+@media(max-width:600px){
+ .fw-horizons{padding:12px 13px 3px;gap:8px}
+ .fw-horizons button{min-width:70px;min-height:44px;padding:8px 12px}
+ .fw-horizon-availability{padding:7px 13px 13px}
+}
