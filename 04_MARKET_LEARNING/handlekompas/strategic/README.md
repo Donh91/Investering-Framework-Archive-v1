@@ -47,7 +47,7 @@ It validates the isolated `LONG_RANGE_SCENARIO_v0_1_CANDIDATE` format;
 Run explicitly on a private-data-safe candidate JSON:
 ```sh
 python -m scripts.learning.strategic_compass_long_range_validation candidate.json
-python -m unittest tests.learning.test_strategic_compass_long_range_validation
+python -m unittest discover -s tests/learning -p test_strategic_compass_long_range_validation.py
 ```
 
 Fail-closed rules include UTC knowledge/cutoff/issue order, future and ordered
