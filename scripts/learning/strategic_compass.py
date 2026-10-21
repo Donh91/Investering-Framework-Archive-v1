@@ -10,7 +10,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from datetime import datetime, timezone
+import math
+import re
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -81,6 +83,113 @@ def alignment_class(directions: list[str]) -> str:
     if all(x == "DOWN" for x in tactical) and any(x in {"UP", "SIDEWAYS", "MIXED"} for x in strategic):
         return "TRANSITION_WARNING"
     return "MIXED_OR_NO_EDGE"
+
+
+
+FORWARD_RANGE_PREFLIGHT = "COMPASS_14_21D_RANGE_PREFLIGHT_v1"
+FORWARD_RANGE_AUTHORITY = {"public_issuance": False, "score_allowed": False, "portfolio_action": False}
+
+
+def validate_forward_range_candidate(value: Any) -> dict[str, Any]:
+    """Source-clock preflight ONLY for #1516's proposed 14/21D envelopes.
+
+    No forecast generation, original source custody attestation, publication,
+    scoring, public conversion or automation. Caller supplies the original
+    source receipt; a syntactically valid source hash is NOT proof of custody.
+    Existing <=7-day and 21-30D/4-8W forecasts are never rewritten.
+    """
+    def required(obj: Any, keys: set[str], where: str) -> Mapping[str, Any]:
+        if not isinstance(obj, dict) or set(obj) != keys:
+            raise ValueError(f"{where}_contract_invalid")
+        return obj
+
+    def stamp(value: Any, where: str) -> datetime:
+        if not isinstance(value, str) or not re.fullmatch(
+            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", value
+        ):
+            raise ValueError(f"{where}_utc_required")
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError(f"{where}_invalid") from exc
+
+    def nonempty(value: Any) -> bool:
+        return isinstance(value, str) and bool(value.strip())
+
+    row = required(value, {
+        "contract", "authority", "forecast_id", "forecast_week",
+        "public_issue_number", "issued_at_utc", "source", "revision_of",
+        "BTC", "ETH"
+    }, "forward_range")
+    if row["contract"] != FORWARD_RANGE_PREFLIGHT or row["authority"] != FORWARD_RANGE_AUTHORITY:
+        raise ValueError("research_only_authority_required")
+    if not nonempty(row["forecast_id"]) or type(row["public_issue_number"]) is not int or row["public_issue_number"] <= 0:
+        raise ValueError("forecast_identity_invalid")
+    if row["revision_of"] is not None:
+        # Original issued receipt not supplied here; never overwrite the old call.
+        raise ValueError("revision_requires_independently_attested_original")
+    forecast_week = row["forecast_week"]
+    if not isinstance(forecast_week, str) or not re.fullmatch(r"\d{4}-W\d{2}", forecast_week):
+        raise ValueError("forecast_week_invalid")
+    try:
+        year, week = int(forecast_week[:4]), int(forecast_week[6:])
+        monday = datetime.combine(date.fromisocalendar(year, week, 1),
+                                  datetime.min.time(), timezone.utc)
+    except ValueError as exc:
+        raise ValueError("forecast_week_invalid") from exc
+
+    issued = stamp(row["issued_at_utc"], "issued_at")
+    first_interval = monday + timedelta(days=7)
+    if not monday <= issued < first_interval:
+        raise ValueError("late_or_preweek_issuance_not_original_monday_forecast")
+
+    source = row["source"]
+    if source is not None:
+        source = required(source, {
+            "owner", "source_contract_id", "sha256",
+            "first_known_at_utc", "cutoff_utc"
+        }, "source")
+        if source["owner"] != "CYCLE_NAVIGATOR_WEEKLY" or not nonempty(source["source_contract_id"]):
+            raise ValueError("unknown_source_owner")
+        if not isinstance(source["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", source["sha256"]):
+            raise ValueError("unbound_source_hash")
+        first_known = stamp(source["first_known_at_utc"], "source_first_known")
+        cutoff = stamp(source["cutoff_utc"], "source_cutoff")
+        if not first_known <= cutoff <= issued:
+            raise ValueError("source_known_after_cutoff_or_issuance")
+
+    for asset in ("BTC", "ETH"):
+        series = required(row[asset], {"windows"}, asset)
+        windows = series["windows"]
+        if not isinstance(windows, list) or len(windows) != 2:
+            raise ValueError(f"{asset}_window_count_invalid")
+        for ix, (label, days_a, days_b) in enumerate(
+            (("D8_14", 7, 14), ("D15_21", 14, 21))
+        ):
+            bucket = required(windows[ix], {
+                "window", "start_utc", "end_utc", "status",
+                "low_usd", "high_usd", "reason"
+            }, f"{asset}_{label}")
+            if (bucket["window"] != label or
+                stamp(bucket["start_utc"], "window_start") != monday + timedelta(days=days_a) or
+                stamp(bucket["end_utc"], "window_end") != monday + timedelta(days=days_b)):
+                raise ValueError(f"{asset}_{label}_clock_incorrect")
+            if bucket["status"] == "CANDIDATE":
+                if source is None:
+                    raise ValueError("candidate_price_requires_original_source_receipt")
+                lo, hi = bucket["low_usd"], bucket["high_usd"]
+                if not all(
+                    type(num) in (float, int) and math.isfinite(num) and num > 0
+                    for num in (lo, hi)
+                ) or not lo < hi or bucket["reason"] is not None:
+                    raise ValueError(f"{asset}_{label}_invalid_price_band")
+            elif bucket["status"] in ("UNAVAILABLE", "ABSTAIN"):
+                if (bucket["low_usd"] is not None or bucket["high_usd"] is not None or
+                    not nonempty(bucket["reason"])):
+                    raise ValueError(f"{asset}_{label}_unavailable_requires_null_prices")
+            else:
+                raise ValueError(f"{asset}_{label}_unsupported_status")
+    return value
 
 
 def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:

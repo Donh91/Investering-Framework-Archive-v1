@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.learning.strategic_compass import alignment_class, materialize
+from scripts.learning.strategic_compass import alignment_class, materialize, validate_forward_range_candidate
 
 # Existing Official Compass Outcomes PR gate invokes this test module.
 # Import the isolated long-range shadow validators to execute their adversarial suite.
@@ -98,6 +98,126 @@ class StrategicCompassTests(unittest.TestCase):
             second = materialize(repo, now)
             self.assertEqual(first["status"], "CREATED")
             self.assertEqual(second["status"], "NOOP_SAME_SOURCES")
+
+
+def forward_range_fixture():
+    # SYNTHETIC, no live price or provider assertion.
+    from datetime import timedelta
+    monday = datetime(2026, 10, 26, tzinfo=timezone.utc)
+    windows = []
+    for name, left, right in (("D8_14", 7, 14), ("D15_21", 14, 21)):
+        windows.append({
+            "window": name,
+            "start_utc": (monday + timedelta(days=left)).isoformat().replace("+00:00", "Z"),
+            "end_utc": (monday + timedelta(days=right)).isoformat().replace("+00:00", "Z"),
+            "status": "UNAVAILABLE",
+            "low_usd": None, "high_usd": None,
+            "reason": "NO_ADMITTED_SOURCE"
+        })
+    return {
+        "contract": "COMPASS_14_21D_RANGE_PREFLIGHT_v1",
+        "authority": {"public_issuance": False, "score_allowed": False, "portfolio_action": False},
+        "forecast_id": "SYNTHETIC_FORWARD_TEST",
+        "forecast_week": "2026-W44",
+        "public_issue_number": 31,
+        "issued_at_utc": "2026-10-26T08:00:00Z",
+        "source": {
+            "owner": "CYCLE_NAVIGATOR_WEEKLY",
+            "source_contract_id": "EXISTING_WEEKLY_OWNER",
+            "sha256": "a" * 64,
+            "first_known_at_utc": "2026-10-26T06:50:00Z",
+            "cutoff_utc": "2026-10-26T07:00:00Z"
+        },
+        "revision_of": None,
+        "BTC": {"windows": json.loads(json.dumps(windows))},
+        "ETH": {"windows": json.loads(json.dumps(windows))}
+    }
+
+
+class ForwardRangePreflightTests(unittest.TestCase):
+    def test_explicit_unavailable_is_valid_and_no_forecast_issued(self):
+        original = forward_range_fixture()
+        before = json.loads(json.dumps(original))
+        self.assertEqual(validate_forward_range_candidate(original), original)
+        self.assertEqual(original, before)
+
+    def test_no_source_is_valid_for_explicit_unavailable(self):
+        row = forward_range_fixture()
+        row["source"] = None
+        validate_forward_range_candidate(row)
+
+    def test_missing_source_cannot_publish_candidate_prices(self):
+        def bad(x):
+            x["source"] = None
+            x["BTC"]["windows"][0].update(status="CANDIDATE", low_usd=100.0, high_usd=120.0, reason=None)
+        self.reject(bad)
+
+    def test_source_bound_sparse_interval_candidate_not_price_path(self):
+        row = forward_range_fixture()
+        b = row["BTC"]["windows"][0]
+        b.update(status="CANDIDATE", low_usd=100.0, high_usd=120.0, reason=None)
+        validate_forward_range_candidate(row)
+        self.assertNotIn("expected_close", b)
+
+    def reject(self, patch):
+        row = forward_range_fixture()
+        patch(row)
+        with self.assertRaises(ValueError):
+            validate_forward_range_candidate(row)
+
+    def test_wrong_iso_week(self):
+        self.reject(lambda x: x.update(forecast_week="2026-W99"))
+
+    def test_issued_after_start_of_outcome(self):
+        self.reject(lambda x: x.update(issued_at_utc="2026-11-02T00:00:00Z"))
+
+    def test_source_first_known_after_issue(self):
+        self.reject(lambda x: x["source"].update(first_known_at_utc="2026-10-27T00:00:00Z"))
+
+    def test_cutoff_before_source_first_known(self):
+        self.reject(lambda x: x["source"].update(cutoff_utc="2026-10-26T06:00:00Z"))
+
+    def test_cutoff_after_issued(self):
+        self.reject(lambda x: x["source"].update(cutoff_utc="2026-10-26T08:00:01Z"))
+
+    def test_window_crosses_boundaries(self):
+        self.reject(lambda x: x["BTC"]["windows"][0].update(end_utc="2026-11-03T00:00:00Z"))
+
+    def test_window_order_is_fixed(self):
+        self.reject(lambda x: x["ETH"]["windows"].reverse())
+
+    def test_abstention_cannot_have_price_band(self):
+        self.reject(lambda x: x["BTC"]["windows"][0].update(status="ABSTAIN", low_usd=100, high_usd=110))
+
+    def test_missing_source_fields_cannot_become_candidate(self):
+        def bad(x):
+            x["source"]["first_known_at_utc"] = None
+            x["BTC"]["windows"][0].update(status="CANDIDATE", low_usd=100, high_usd=110, reason=None)
+        self.reject(bad)
+
+    def test_invalid_numeric_band(self):
+        for low, high in ((-1, 110), (120, 110), (float("nan"), 110), (True, 110), (100, float("inf"))):
+            with self.subTest(low=low, high=high):
+                self.reject(lambda x: x["BTC"]["windows"][1].update(status="CANDIDATE", low_usd=low, high_usd=high, reason=None))
+
+    def test_single_endpoint_is_not_a_band(self):
+        self.reject(lambda x: x["BTC"]["windows"][0].update(status="CANDIDATE", low_usd=100, high_usd=None, reason=None))
+
+    def test_spurious_curve_or_outcome_payload_not_allowed(self):
+        self.reject(lambda x: x["BTC"]["windows"][0].update(expected_close=110))
+        self.reject(lambda x: x.update(realized_return=0.2))
+
+    def test_public_or_score_authority_cannot_be_escalated(self):
+        self.reject(lambda x: x["authority"].update(public_issuance=True))
+        self.reject(lambda x: x["authority"].update(score_allowed=True))
+        self.reject(lambda x: x["authority"].update(portfolio_action=True))
+
+    def test_revision_requires_separate_original_freeze_admission(self):
+        self.reject(lambda x: x.update(revision_of="SYNTHETIC_PRIOR_FORECAST"))
+
+    def test_no_issued_claim_with_blank_or_invalid_source_hash(self):
+        self.reject(lambda x: x["source"].update(sha256="invalid"))
+
 
 
 if __name__ == "__main__":
