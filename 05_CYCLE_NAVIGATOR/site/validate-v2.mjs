@@ -161,7 +161,8 @@ const checks=[
    gappedPlan.actualRuns[0][0].time===Date.parse('2026-10-06T00:00:00Z')/1000&&
    gappedPlan.actualRuns[1][0].time===Date.parse('2026-10-07T12:00:00Z')/1000&&
    chartSource.includes('x(d.closeTime),y(d.forecast.high)')&&
-   chartSource.includes('time:m.end/1000')],
+   chartSource.includes('time:(m.start+horizon*DAY)/1000')&&
+   chartSource.includes('scaleAnchor.setData([...m.days.map')],
  ['Real TradingView mount draws two independent GREEN 1h runs, BLUE daily series stays absent without source',
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').length===2&&
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
