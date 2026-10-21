@@ -21,6 +21,8 @@ on:
       - 'tests/research/test_task2_protection_synthetic_v1.py'
       - 'scripts/research/task2_archive_price_only_stress_v1.py'
       - 'tests/research/test_task2_archive_price_only_stress_v1.py'
+      - 'scripts/research/task2_matched_windows_v1.py'
+      - 'tests/research/test_task2_matched_windows_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -80,6 +82,41 @@ jobs:
         with:
           name: task2-price-only-expost-stress-${{ github.run_id }}
           path: /tmp/task2_price_only_dev.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 matched fixed 14-day price-only windows and adversarial controls
+        run: |
+          python -m unittest tests.research.test_task2_matched_windows_v1 -v
+          python -m scripts.research.task2_matched_windows_v1 --output /tmp/task2_matched_fixed14d.json > /tmp/task2_matched_fixed14d_stdout.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/task2_matched_fixed14d.json'))
+          assert x['contract']=='TASK2_MATCHED_FIXED_WINDOWS_PRICE_ONLY_v1'
+          assert x['window_hours']==336 and x['warmup_hours']==48
+          assert x['claim_of_compass_accuracy'] is False
+          assert x['claim_of_cfgi_edge'] is False
+          assert x['claim_of_out_of_sample_edge'] is False
+          assert x['executable_after_cost_fill_verified'] is False
+          assert x['chosen_best_parameter'] is None
+          for era,v in x['eras'].items():
+              n=v['fixed_full_14d_windows']
+              assert n>0 and v['complete_window_comparisons']==n*576
+              assert v['claimed_independent_shock_families']==0
+              assert len(v['cost_scenarios'])==4
+              for c in v['cost_scenarios']:
+                  assert c['comparisons']==n*144
+                  assert c['no_signal']+c['sale_attempts']==c['comparisons']
+                  assert c['better_than_hold']+c['worse_than_hold']+c['equal_to_hold']==c['comparisons']
+              print('TASK2_MATCHED_WINDOW_ERA_PASS',era,'windows',n,
+                    'zero_cost',v['cost_scenarios'][0],
+                    'high_cost',v['cost_scenarios'][-1])
+          print('TASK2_NO_COMPASS_CFGI_PIT_OR_TRADING_CLAIM')
+          PY
+      - name: Retain Task2 fixed-window aggregate receipt (PR artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-fixed14d-expost-${{ github.run_id }}
+          path: /tmp/task2_matched_fixed14d.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
