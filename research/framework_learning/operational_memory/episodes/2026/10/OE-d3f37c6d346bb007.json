@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/daily_capture/rich_breadth_checkpoint.py",
+    "scripts/data_terminal/top100_breadth_owner_collector.py",
+    "tests/data_terminal/test_top100_breadth_owner_collector.py",
+    "tests/data_terminal/test_top100_extra_return_windows.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-d3f37c6d346bb007",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "ARCHIVE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized bounded P2 upgrade; exact-head 7/7 CI PASS and Top100 24/24 plus Data Terminal 122/122. Adversarial self review COMMENT only, not independent approval. No extra API request, signal/authority change or backfill. Post-merge natural data producer confirmation remains pending.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/daily_capture/rich_breadth_checkpoint.py": "0d80fbe8b2e5858dda2930889c7c96ca9e4cc7e7",
+    "scripts/data_terminal/top100_breadth_owner_collector.py": "fe77ae1369cd6dbb607316fb0faf0097d85e82bd",
+    "tests/data_terminal/test_top100_breadth_owner_collector.py": "85ed12f71867d6f780726ad90875f0cc22c97ed4",
+    "tests/data_terminal/test_top100_extra_return_windows.py": "ee5ed7a8be20d60f6f744b86cdaeebd9dfc23944"
+  },
+  "source_commit_sha": "d3f37c6d346bb007280edd1b3f27dc364c549d46",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-21T01:59:51-07:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "feat(breadth): preserve optional CoinGecko 7/30/200d source windows (#1715)"
+}

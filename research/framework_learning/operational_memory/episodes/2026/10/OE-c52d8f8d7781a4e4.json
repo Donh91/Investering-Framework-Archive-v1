@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/framework-learning-operations.yml",
+    "scripts/research/task2_price_window_robustness_v1.py",
+    "tests/research/test_task2_price_window_robustness_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-c52d8f8d7781a4e4",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-approved bounded historical research correction after 8/8 exact-head CI success and original archive 71-window source readback. 11 new negative tests pass; no original forecast/CFGI outcome scoring, no promotion, market rule, paid API, scheduling or portfolio action. Window-level descriptive win/loss and leave-one-out checks must not be interpreted as independent market shock families; Codex quota prevented formal independent review, no APPROVED claim.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/framework-learning-operations.yml": "f9d7c0041ae6c0d6f6a703fb4aa8afa9d3e1e572",
+    "scripts/research/task2_price_window_robustness_v1.py": "5ff116fc3e06169e69a40d8f9b2ff2eb9dee53b6",
+    "tests/research/test_task2_price_window_robustness_v1.py": "2fa96447d47787d2ce7a9ab0f594886770b9efa7"
+  },
+  "source_commit_sha": "c52d8f8d7781a4e48ef1cee742f7774e8d47b743",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-21T05:33:39-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(task2): test 14d exit robustness using 71 original window units"
+}
