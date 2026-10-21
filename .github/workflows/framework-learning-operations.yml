@@ -23,6 +23,8 @@ on:
       - 'tests/research/test_task2_archive_price_only_stress_v1.py'
       - 'scripts/research/task2_matched_windows_v1.py'
       - 'tests/research/test_task2_matched_windows_v1.py'
+      - 'scripts/research/task2_cfgi_capture_clock_audit_v1.py'
+      - 'tests/research/test_task2_cfgi_capture_clock_audit_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -117,6 +119,42 @@ jobs:
         with:
           name: task2-fixed14d-expost-${{ github.run_id }}
           path: /tmp/task2_matched_fixed14d.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 CFGI prospective four-hour capture clock audit, metadata only
+        run: |
+          python -m unittest tests.research.test_task2_cfgi_capture_clock_audit_v1 -v
+          python -m scripts.research.task2_cfgi_capture_clock_audit_v1 --out /tmp/task2_cfgi_7d_source_clocks.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/task2_cfgi_7d_source_clocks.json'))
+          assert x['contract']=='TASK2_CFGI_4H_CLOCK_READBACK_v1'
+          assert x['original_capture_count']==42
+          assert x['original_symbol_rows_count']==126
+          assert x['source_timeframe']=='4h'
+          assert x['declared_field_count']==10
+          assert x['maximum_original_symbol_clock_skew_seconds']>=934
+          assert x['symbol_clock_skewed_captures']>=1
+          assert not x['cfgi_predictive_edge_tested']
+          assert not x['compass_predictive_edge_tested']
+          assert not x['future_outcomes_used']
+          assert not x['market_values_emitted']
+          assert not x['authority']['outcome_scoring']
+          assert not x['authority']['hypothesis_testing']
+          assert not x['authority']['source_provider_first_publication_verified']
+          assert not x['original_signal_or_market_rule_changed']
+          assert len(x['original_clock_receipts'])==42
+          print('TASK2_CFGI_ORIGINAL_42_CAPTURE_CLOCKS_PASS',
+                {'captures':x['original_capture_count'],
+                 'symbol_receipts':x['original_symbol_rows_count'],
+                 'clock_skewed':x['symbol_clock_skewed_captures'],
+                 'max_skew_seconds':x['maximum_original_symbol_clock_skew_seconds']})
+          PY
+      - name: Retain Task2 CFGI clock-only source QA receipt (PR artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-cfgi-source-clock-${{ github.run_id }}
+          path: /tmp/task2_cfgi_7d_source_clocks.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
