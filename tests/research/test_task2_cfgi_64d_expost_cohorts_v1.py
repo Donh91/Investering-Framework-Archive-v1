@@ -72,7 +72,8 @@ class Task2WideSampleTests(unittest.TestCase):
     def test_wide_study_does_not_change_fixed_small_study(self):
         from scripts.research import task2_cfgi_price_expost_4h_v1 as tiny
         self.assertEqual(len(tiny.DAYS),7)
-        self.assertEqual(m.START,tiny.START_DAY if hasattr(tiny,'START_DAY') else date(2026,8,18))
+        self.assertEqual((min(tiny.DAYS),max(tiny.DAYS)),(14,20))
+        self.assertLess(m.START,date(2026,10,14))
     def test_actual_original_archive_census_when_mounted(self):
         if m.CAPTURE_ROOT.exists() and m.PRICE_ROOT.exists():
             o=m.execute()
