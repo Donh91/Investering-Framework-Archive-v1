@@ -92,6 +92,15 @@ jobs:
           PY
             echo "::warning::Research source SLA unavailable; no fabricated on-time/late rate"
           fi
+      - name: Freeze first daily source-clock receipt and reconcile seven-day window
+        shell: bash
+        run: |
+          set -euo pipefail
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-21__task2_hourly_source_7d_rollup_v1.py \
+            --latest research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json \
+            --archive research/architecture_health/hourly_source_sla/daily \
+            --rollup research/architecture_health/LATEST_HOURLY_SOURCE_7D.json
+          echo "Seven-day continuity: research-only Git committer proxy, NOT provider PIT." >> "$GITHUB_STEP_SUMMARY"
       - name: Build architecture health after automation audit
         run: |
           python scripts/health/build_architecture_health.py \
@@ -134,7 +143,9 @@ jobs:
           git merge-base --is-ancestor HEAD origin/main
           for path in \
             research/architecture_health/LATEST_AUTOMATION_HEALTH.json \
-            research/architecture_health/LATEST_AUTOMATION_HEALTH.md; do
+            research/architecture_health/LATEST_AUTOMATION_HEALTH.md \
+            research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json \
+            research/architecture_health/LATEST_HOURLY_SOURCE_7D.json; do
             local_sha=$(sha256sum "$path" | awk '{print $1}')
             remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
             [ "$local_sha" = "$remote_sha" ]
@@ -183,6 +194,8 @@ jobs:
             research/architecture_health/LATEST_ACTIONS_BUDGET.json
             research/architecture_health/LATEST_ACTIONS_BUDGET.md
             research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json
+            research/architecture_health/LATEST_HOURLY_SOURCE_7D.json
+            research/architecture_health/hourly_source_sla/daily/
             research/architecture_health/history/
           retention-days: 14
           if-no-files-found: error
