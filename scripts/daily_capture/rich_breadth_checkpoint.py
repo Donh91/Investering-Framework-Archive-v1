@@ -131,12 +131,12 @@ def main(argv: list[str] | None = None) -> int:
         "per_page": 150,
         "page": 1,
         "sparkline": "false",
-        "price_change_percentage": "24h",
+        "price_change_percentage": owner.EXTENDED_PRICE_CHANGE_QUERY,
     }
     retrieval_start = now_utc()
     raw = owner.fetch(owner.BASE + "?" + owner.urllib.parse.urlencode(query))
     retrieval_complete = now_utc()
-    constituents, exclusions, aggregate = owner.parse(raw)
+    constituents, exclusions, aggregate = owner.parse(raw, include_extra_windows=True)
     normalization_time = now_utc()
     now = datetime.now(timezone.utc).replace(microsecond=0)
     payload = {
@@ -152,6 +152,7 @@ def main(argv: list[str] | None = None) -> int:
         "aggregate": aggregate,
         "constituents": constituents,
         "exclusion_count": len(exclusions),
+        "extra_return_capture": owner.extra_window_provenance(constituents, raw, retrieval_complete),
         **owner.owner_interface(aggregate, retrieval_complete),
         "interpolation": False,
         "forward_fill": False,
