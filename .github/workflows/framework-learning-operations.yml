@@ -35,6 +35,8 @@ on:
       - 'tests/research/test_task2_cfgi_64d_expost_cohorts_v1.py'
       - 'scripts/research/task2_cfgi_price_vol_temporal_v1.py'
       - 'tests/research/test_task2_cfgi_price_vol_temporal_v1.py'
+      - 'scripts/research/task2_official_r1_original_evidence_gate_v1.py'
+      - 'tests/research/test_task2_official_r1_original_evidence_gate_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -334,6 +336,37 @@ jobs:
         with:
           name: task2-cfgi-chronology-price-vol-${{ github.run_id }}
           path: /tmp/task2_cfgi_incremental_chrono.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 source-bound original official R1 receipt and abstention gate
+        run: |
+          python -m unittest tests.research.test_task2_official_r1_original_evidence_gate_v1 -v
+          python -m scripts.research.task2_official_r1_original_evidence_gate_v1 --out /tmp/task2_original_official_r1_9day.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/task2_original_official_r1_9day.json'))
+          assert x['contract']=='TASK2_OFFICIAL_ORIGINAL_R1_RECEIPT_CENSUS_v1'
+          assert x['first_day']=='2026-10-12' and x['last_day']=='2026-10-20'
+          assert x['private_round3_gate']=='ROUND3_COLLECTION_ONLY_ANALYSIS_OFF'
+          assert x['counts']['original_forecasts']>20
+          assert len(x['original_records'])==3*x['counts']['original_forecasts']
+          assert sum(x['forecasts_by_scoring_contract'].values())==x['counts']['original_forecasts']
+          assert sum(x['forecast_horizon_attempt_counts'].values())==len(x['original_records'])
+          assert not x['model_skill_or_return_estimated']
+          assert not x['first_known_market_value_eligibility_unlocked']
+          assert not x['actual_delivery_first_known_verified']
+          assert not x['provider_first_publication_verified']
+          assert x['independent_shock_families_certified']==0
+          assert all(r['scientific_pit_admitted'] is False and r['provider_first_publication_verified'] is False for r in x['original_records'])
+          for k,v in sorted(x['counts'].items()):
+              print('TASK2_R1_ISSUER_RECEIPT_COUNTS',k,v)
+          print('TASK2_R1_ORIGINAL_ABSTENTION_LABELS',x['original_published_direction_labels_only'])
+          PY
+      - name: Retain Task2 source-bound original official R1 9-day receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-original-official-r1-9day-${{ github.run_id }}
+          path: /tmp/task2_original_official_r1_9day.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
