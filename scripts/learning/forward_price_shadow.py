@@ -97,7 +97,7 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
         last_date = day
         first_known = _timestamp(row["first_known_at_utc"])
         day_closed = datetime.combine(day + timedelta(days=1), datetime.min.time(), timezone.utc)
-        if not day_closed <= first_known <= cutoff:
+        if not day_closed < first_known <= cutoff:
             raise ValueError("lookahead_or_unsettled_bar")
         lo, high, close = (_price(row[k]) for k in ("low_usd", "high_usd", "close_usd"))
         if not lo <= close <= high:
@@ -119,7 +119,7 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
             segment = cleaned[end - horizon:end]
             lows.append(math.log(min(bar[0] for bar in segment) / base))
             highs.append(math.log(max(bar[1] for bar in segment) / base))
-        nonoverlap_max = len(lows) // horizon
+        nonoverlap_max = (len(cleaned) - 1) // horizon
         if nonoverlap_max < 12:
             horizons[str(horizon)] = {
                 "status": "ABSTAIN", "reason": "TOO_FEW_INDEPENDENT_HORIZON_BLOCKS",
@@ -132,8 +132,8 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
         if not 0 < low < high or not math.isfinite(low + high):
             raise ValueError("degenerate_empirical_envelope")
         horizons[str(horizon)] = {
-            "status": "SHADOW_BASELINE_ONLY", "low_usd": round(low, 8),
-            "high_usd": round(high, 8), "overlapping_windows": len(lows),
+            "status": "SHADOW_BASELINE_ONLY", "low_usd": low,
+            "high_usd": high, "overlapping_windows": len(lows),
             "nonoverlap_upper_bound": nonoverlap_max,
             "coverage_probability": None, "calibration_status": "NOT_CALIBRATED",
         }
