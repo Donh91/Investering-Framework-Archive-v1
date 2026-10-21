@@ -27,6 +27,10 @@ class LongRangeCandidateTests(unittest.TestCase):
     def test_future_knowledge(self):
         self.reject(lambda v: v["observation"]["items"][0].update(source_first_known_utc="2026-10-22T00:00:00Z"))
 
+    def test_source_first_known_after_observation_asof_but_before_cutoff(self):
+        self.reject(lambda v: v["observation"]["items"][0].update(
+            source_first_known_utc="2026-10-21T07:40:00Z"))
+
     def test_future_cutoff(self):
         self.reject(lambda v: v["frozen_issue"].update(cutoff_utc="2026-10-22T00:00:00Z"))
 
