@@ -143,8 +143,12 @@ def validate_candidate(value: Mapping[str, Any], *, prior_issues: Mapping[str, M
         known = item["source_first_known_utc"]
         if status == "SCENARIO_ONLY" and (known is None or not item["settled"]):
             _fail("supported scenario cannot depend on unknown-time or unsettled observation")
-        if known is not None and _ts(known, "source_first_known_utc") > cutoff:
-            _fail("source was not knowable by cutoff")
+        if known is not None:
+            known_time = _ts(known, "source_first_known_utc")
+            if known_time > as_of:
+                _fail("source was not knowable by observation as_of")
+            if known_time > cutoff:
+                _fail("source was not knowable by cutoff")
         if item.get("margin_note") is not None:
             _string(item["margin_note"], "margin_note")
 
