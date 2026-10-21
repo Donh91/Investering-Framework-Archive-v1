@@ -27,6 +27,8 @@ BASE = "https://api.coingecko.com/api/v3/coins/markets"
 BLOCKCHAINCENTER_URL = "https://www.blockchaincenter.net/altcoin-season-index/"
 COINMARKETCAP_URL = "https://coinmarketcap.com/charts/altcoin-season-index/"
 MAX_SOURCE_BYTES = 2_000_000
+EXTRA_RETURN_WINDOWS = ("7d", "30d", "200d")
+EXTENDED_PRICE_CHANGE_QUERY = "24h,7d,30d,200d"
 TIMEFRAMES = ("30", "90", "365")
 STABLE_SYMBOLS = frozenset({
     "USDT", "USDC", "BUSD", "DAI", "TUSD", "USDP", "PAX", "GUSD",
@@ -182,7 +184,46 @@ def fetch(url: str, timeout: int = 20, *, accept: str = "application/json") -> b
     return payload
 
 
-def parse(payload: bytes) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
+def parse_optional_return_windows(row: dict[str, Any]) -> dict[str, float | None]:
+    """Source-reported windows, not predictive signals or reconstructed history."""
+    parsed: dict[str, float | None] = {}
+    for days in EXTRA_RETURN_WINDOWS:
+        key = f"price_change_percentage_{days}_in_currency"
+        value = row.get(key)
+        if value is None:
+            parsed[days] = None
+        elif isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise E("SCHEMA_DRIFT", f"invalid optional return {key}")
+        else:
+            parsed[days] = float(value)
+    return parsed
+
+
+def extra_window_provenance(constituents: list[dict[str, Any]], payload: bytes, retrieval: str) -> dict[str, Any]:
+    """Capture-time source receipt; absent provider values stay null/UNKNOWN."""
+    return {
+        "contract": "COINGECKO_EXTRA_WINDOWS_CAPTURE_v1",
+        "source": "COINGECKO_COINS_MARKETS",
+        "source_query_price_change_percentage": EXTENDED_PRICE_CHANGE_QUERY,
+        "source_fields": {days: f"price_change_percentage_{days}_in_currency" for days in EXTRA_RETURN_WINDOWS},
+        "first_collector_seen_utc": retrieval,
+        "retrieved_at_utc": retrieval,
+        "raw_sha256": sha(payload),
+        "membership_hash": sha(canonical([
+            {"filtered_rank": x["filtered_rank"], "asset_id": x["asset_id"]} for x in constituents
+        ])),
+        "available_member_counts": {
+            days: sum(x["extra_return_windows_pct"][days] is not None for x in constituents)
+            for days in EXTRA_RETURN_WINDOWS
+        },
+        "member_count": len(constituents),
+        "status": "CAPTURE_ONLY_NOT_OUTCOME_ADMITTED",
+        "forward_from_capture_only": True,
+        "authority": ROTATION_AUTHORITY,
+    }
+
+
+def parse(payload: bytes, *, include_extra_windows: bool = False) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     try:
         rows = json.loads(payload)
     except Exception as exc:
@@ -231,6 +272,8 @@ def parse(payload: bytes) -> tuple[list[dict[str, Any]], list[dict[str, Any]], d
             "price_usd": float(row["current_price"]),
             "change_24h_pct": float(change),
         })
+        if include_extra_windows:
+            ranked[-1]["extra_return_windows_pct"] = parse_optional_return_windows(row)
     constituents = ranked[:100]
     if len(constituents) != 100:
         raise E("INSUFFICIENT_FILTERED_UNIVERSE", f"expected 100, got {len(constituents)}")
@@ -560,6 +603,15 @@ def verify(root: Path) -> dict[str, Any]:
     aggregate = owner.get("aggregate", {})
     if aggregate.get("membership_hash") != replay_hash or aggregate.get("constituent_count") != 100:
         failures.append({"path": "owner_snapshot.json", "error": "MEMBERSHIP_REPLAY_MISMATCH"})
+    if "extra_return_capture" in owner:
+        try:
+            original = (root / "raw_source_payload.json").read_bytes()
+            rows, _, _ = parse(original, include_extra_windows=True)
+            capture = extra_window_provenance(rows, original, owner["retrieval_timestamp"])
+            if capture != owner["extra_return_capture"] or rows != owner["constituents"]:
+                raise ValueError("extended return replay differs")
+        except (ValueError, KeyError, OSError, E):
+            failures.append({"path": "raw_source_payload.json", "error": "EXTRA_WINDOW_REPLAY_MISMATCH"})
     checks = (
         ("rotation_context", "rotation_context_snapshot.json", "raw_blockchaincenter_altcoin_season.html.gz", build_rotation_context),
         ("rotation_method_crosscheck", "rotation_method_crosscheck_snapshot.json", "raw_coinmarketcap_altcoin_season.html.gz", build_coinmarketcap_context),
@@ -626,6 +678,7 @@ def run(
     rotation_error: dict[str, str] | None = None,
     coinmarketcap_payload: bytes | None = None,
     coinmarketcap_error: dict[str, str] | None = None,
+    include_extra_windows: bool = False,
 ) -> dict[str, Any]:
     output.mkdir(parents=True, exist_ok=True)
     for name in (
@@ -635,7 +688,7 @@ def run(
     ):
         (output / name).unlink(missing_ok=True)
     (output / "raw_source_payload.json").write_bytes(payload)
-    constituents, exclusions, aggregate = parse(payload)
+    constituents, exclusions, aggregate = parse(payload, include_extra_windows=include_extra_windows)
     rotation_context = _materialize_context(
         rotation_payload, rotation_error, retrieval, output, "raw_blockchaincenter_altcoin_season.html.gz",
         build_rotation_context, degraded_rotation_context, "BlockchainCenter",
@@ -656,6 +709,8 @@ def run(
         "rotation_context": rotation_context, "rotation_method_crosscheck": coinmarketcap_context,
         "interpolation": False, "forward_fill": False, "authority": AUTHORITY,
     }
+    if include_extra_windows:
+        owner["extra_return_capture"] = extra_window_provenance(constituents, payload, retrieval)
     receipt = {
         "run_id": run_id, "raw_sha256": sha(payload), "membership_hash": aggregate["membership_hash"],
         "constituent_count": 100, "aggregate_replay": "PASS",
@@ -668,6 +723,8 @@ def run(
         "rotation_crosscheck_failure_state": coinmarketcap_context.get("failure_state"),
         "status": "PASS", "authority": AUTHORITY,
     }
+    if include_extra_windows:
+        receipt["extra_return_capture"] = owner["extra_return_capture"]
     (output / "owner_snapshot.json").write_text(json.dumps(owner, indent=2, sort_keys=True) + "\n")
     (output / "rotation_context_snapshot.json").write_text(json.dumps(rotation_context, indent=2, sort_keys=True) + "\n")
     (output / "rotation_method_crosscheck_snapshot.json").write_text(json.dumps(coinmarketcap_context, indent=2, sort_keys=True) + "\n")
@@ -698,7 +755,7 @@ def main() -> int:
         else:
             query = {
                 "vs_currency": "usd", "order": "market_cap_desc", "per_page": 150, "page": 1,
-                "sparkline": "false", "price_change_percentage": "24h",
+                "sparkline": "false", "price_change_percentage": EXTENDED_PRICE_CHANGE_QUERY,
             }
             payload = fetch(BASE + "?" + urllib.parse.urlencode(query), timeout=args.timeout)
         contexts: dict[str, bytes | dict[str, str] | None] = {
@@ -717,7 +774,7 @@ def main() -> int:
                         contexts[payload_key] = fetch(url, timeout=args.timeout, accept="text/html,application/xhtml+xml")
                     except E as exc:
                         contexts[error_key] = {"failure_state": exc.status, "message": str(exc)}
-        owner = run(payload, args.output_dir, retrieval, **contexts)
+        owner = run(payload, args.output_dir, retrieval, include_extra_windows=not bool(args.fixture), **contexts)
         readback = verify(args.output_dir)
         print(json.dumps({
             "status": readback["status"], "run_id": owner["run_id"], "constituents": 100,
