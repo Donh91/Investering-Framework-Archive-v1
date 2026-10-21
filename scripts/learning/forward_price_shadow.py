@@ -103,7 +103,7 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
         if not lo <= close <= high:
             raise ValueError("ohlc_invalid")
         cleaned.append((lo, high, close))
-    last_closed = datetime.combine(last_date + timedelta(days=1), datetime.min.time, timezone.utc)
+    last_closed = datetime.combine(last_date + timedelta(days=1), datetime.min.time(), timezone.utc)
     if cutoff < last_closed or cutoff - last_closed > timedelta(hours=48):
         raise ValueError("last_bar_not_fresh_to_cutoff")
 
