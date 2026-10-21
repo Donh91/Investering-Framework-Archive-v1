@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/handlekompas/strategic/README.md",
+    "scripts/learning/strategic_compass_long_range_validation.py",
+    "tests/learning/test_strategic_compass_long_range_validation.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_MARKET_LEARNING",
+  "episode_id": "OE-5a26c06ef77fa197",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized bounded P1 merge; 6 exact-head CI pass, local adversarial test suite pass; GitHub review was SELF_REVIEW/COMMENT, not independent APPROVED. No source authority or production forecast integration. Post-merge main readback pending.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/handlekompas/strategic/README.md": "97ad0b1a1feeab6546aa1b9b5a16c0f5d09d94e7",
+    "scripts/learning/strategic_compass_long_range_validation.py": "6c63c312b9ebbf6c96f51daa408803687dfd6211",
+    "tests/learning/test_strategic_compass_long_range_validation.py": "d7a6557570da9eccf3c23d695c8b1fc8831634a6"
+  },
+  "source_commit_sha": "5a26c06ef77fa197f556b16659bc7ba1fc580a2e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-21T01:40:11-07:00",
+  "task_class": "MARKET_STATE",
+  "task_summary": "test(compass): fail-closed long-range shadow scenario preflight (#1714)"
+}

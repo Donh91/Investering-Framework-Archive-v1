@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 5206,
-  "generated_at_utc": "2026-10-21T07:58:27.850798Z",
+  "episode_count": 5216,
+  "generated_at_utc": "2026-10-21T08:48:57.306109Z",
   "rows": [
     {
       "changed_paths": [
@@ -46156,10 +46156,10 @@
         "tests/learning/test_strategic_compass_outcomes.py"
       ],
       "compatibility": {
-        "changed": 15,
+        "changed": 16,
         "checked": 22,
         "removed": 0,
-        "same": 7,
+        "same": 6,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "scripts",
@@ -145994,11 +145994,11 @@
         "tests/research/test_task2_protection_synthetic_v1.py"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 6,
         "removed": 0,
-        "same": 6,
-        "status": "EXACT"
+        "same": 5,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "06_RESEARCH_LAB",
       "episode_id": "OE-0e2772a3d0602cb1",
@@ -146040,6 +146040,51 @@
       "source_timestamp": "2026-10-21T00:51:39Z",
       "task_class": "API_AGENT",
       "task_summary": "learning: update decision miss and gap validation 39523768085"
+    },
+    {
+      "changed_paths": [
+        "scripts/api_agent/meme_alpha_clean_g3.py",
+        "tests/api_agent/test_meme_alpha_clean_g3.py"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 2,
+        "removed": 0,
+        "same": 2,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "scripts",
+      "episode_id": "OE-ce71eac1902719b8",
+      "episode_path": "episodes/2026/10/OE-ce71eac1902719b8.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "ce71eac1902719b8443b98fed1ec1792d72e842d",
+      "source_timestamp": "2026-10-21T00:58:12-07:00",
+      "task_class": "API_AGENT",
+      "task_summary": "Alpha Lab: fail-closed fresh-main continuation of conviction draft (#1569)"
+    },
+    {
+      "changed_paths": [],
+      "compatibility": {
+        "changed": 0,
+        "checked": 0,
+        "removed": 0,
+        "same": 0,
+        "status": "UNKNOWN"
+      },
+      "dominant_path_prefix": null,
+      "episode_id": "OE-fd3c27e2bc197484",
+      "episode_path": "episodes/2026/10/OE-fd3c27e2bc197484.json",
+      "failure_signature": "site-resilient-fail-closed-chrome-bootstrap-existing-pages",
+      "newer_related_episode": null,
+      "operation_type": "FIX",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "fd3c27e2bc197484b28dea209cc54efae2588c96",
+      "source_timestamp": "2026-10-21T00:58:42-07:00",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "fix(site): resilient fail-closed Chrome bootstrap in existing Pages gate (#1712)"
     },
     {
       "changed_paths": [
@@ -146178,6 +146223,57 @@
       "source_timestamp": "2026-10-21T01:07:04Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: daily machine throughput 2026-10-20 39525027705"
+    },
+    {
+      "changed_paths": [
+        ".github/workflows/framework-learning-operations.yml",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-21__TASK2_BACKTEST_LADDER_CFGI_SOURCE_MATRIX_v1.md",
+        "scripts/research/task2_archive_price_only_stress_v1.py",
+        "tests/research/test_task2_archive_price_only_stress_v1.py"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": ".github",
+      "episode_id": "OE-a6947fc3231e7131",
+      "episode_path": "episodes/2026/10/OE-a6947fc3231e7131.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "a6947fc3231e7131fc0582e873f2291183e39dea",
+      "source_timestamp": "2026-10-21T01:23:37-07:00",
+      "task_class": "AUTOMATION_REMEDIATION",
+      "task_summary": "research(task2): source-bound 1152-scenario archive stress and CFGI science map"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/strategic/README.md",
+        "scripts/learning/strategic_compass_long_range_validation.py",
+        "tests/learning/test_strategic_compass_long_range_validation.py"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-5a26c06ef77fa197",
+      "episode_path": "episodes/2026/10/OE-5a26c06ef77fa197.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "5a26c06ef77fa197f556b16659bc7ba1fc580a2e",
+      "source_timestamp": "2026-10-21T01:40:11-07:00",
+      "task_class": "MARKET_STATE",
+      "task_summary": "test(compass): fail-closed long-range shadow scenario preflight (#1714)"
     },
     {
       "changed_paths": [
@@ -146379,11 +146475,11 @@
         "04_MARKET_LEARNING/handlekompas/event_refresh/runs/2026/10/21/015149_f6c2ddbfb69f.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-ff4d4aa8814cbc7b",
@@ -146405,11 +146501,11 @@
         "04_MARKET_LEARNING/handlekompas/official/public/2026/10/21/CMP-20261021-2de9526fe628.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 2,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-5ec34d323d967baf",
@@ -146864,11 +146960,11 @@
         "04_MARKET_LEARNING/handlekompas/runs/2026/10/21/064051_b17c4239f5f9.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 1,
         "checked": 2,
         "removed": 0,
-        "same": 2,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "04_MARKET_LEARNING",
       "episode_id": "OE-0508851bd9def534",
@@ -146895,10 +146991,10 @@
         "research/architecture_health/hourly_source_sla/daily/2026-10-20.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 7,
         "checked": 9,
         "removed": 0,
-        "same": 7,
+        "same": 2,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -146924,11 +147020,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 7,
-        "status": "EXACT"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-e68cc48c22838639",
@@ -146936,7 +147032,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "e68cc48c228386390cff51cc2e11b6e778601b47",
       "source_timestamp": "2026-10-21T07:17:19Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -146992,11 +147088,11 @@
         "research/framework_memory/rotation_survival_forward_rows/observations/2026-10-21_8769818474a5ae9bfdfb.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 14,
         "checked": 20,
         "removed": 0,
-        "same": 20,
-        "status": "EXACT"
+        "same": 6,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-6f8967e573e6f4f6",
@@ -147177,7 +147273,182 @@
       "source_timestamp": "2026-10-21T07:57:26Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "learning: entry signal ledger 39565029672"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/runs/2026/10/21/075807_c85aaa68c26e.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 2,
+        "removed": 0,
+        "same": 2,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-53e79a1ae121cabe",
+      "episode_path": "episodes/2026/10/OE-53e79a1ae121cabe.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "53e79a1ae121cabe75e56a7781b280c607e6db36",
+      "source_timestamp": "2026-10-21T07:58:07Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: native Handlekompas 39565678006"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/event_refresh/LATEST.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/STATE.json",
+        "04_MARKET_LEARNING/handlekompas/event_refresh/runs/2026/10/21/075843_d46f5cfb9263.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-3a76c66be71e9754",
+      "episode_path": "episodes/2026/10/OE-3a76c66be71e9754.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "3a76c66be71e97540c4fee5b1b0364ea5e7cc45d",
+      "source_timestamp": "2026-10-21T07:58:48Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: Compass event refresh 39565683459"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json",
+        "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/21/CMP-20261021-aad539eaa474.json",
+        "04_MARKET_LEARNING/handlekompas/official/public/2026/10/21/CMP-20261021-aad539eaa474.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 4,
+        "removed": 0,
+        "same": 4,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-56c8bb1eac31ca7f",
+      "episode_path": "episodes/2026/10/OE-56c8bb1eac31ca7f.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "56c8bb1eac31ca7f74e4ef42da826d6a581938c8",
+      "source_timestamp": "2026-10-21T07:59:23Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: official daily Compass 39565821874"
+    },
+    {
+      "changed_paths": [
+        "06_RESEARCH_LAB/current_relationship_compression/CURRENT_SENSOR_RELATIONSHIP_COMPRESSION.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/decision_economics/LATEST_SEGMENT_RETURN_FOUNDATION.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_YIELD_SHADOW.json",
+        "research/framework_handoffs/LATEST_DATA_CONSUMER_INDEX.json",
+        "research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json",
+        "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+        "research/framework_memory/edge001_tsunami_features/LATEST.json",
+        "research/framework_memory/edge_compound_governor/LATEST.json",
+        "research/framework_memory/edge_compound_governor/history/2026/10/21/86c4fae451188e7b.json",
+        "research/framework_memory/fnp_forward_rows/LATEST.json",
+        "research/framework_memory/fnp_forward_rows/runs/39568937485-1.json",
+        "research/framework_memory/m6_warning_events/LATEST.json",
+        "research/framework_memory/rotation_survival_forward_rows/LATEST.json",
+        "research/framework_memory/rotation_survival_forward_rows/observations/2026-10-21_523cdf39079ecf591a4a.json"
+      ],
+      "compatibility": {
+        "changed": 2,
+        "checked": 18,
+        "removed": 0,
+        "same": 16,
+        "status": "PARTIAL"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-2edb15ec4a0607db",
+      "episode_path": "episodes/2026/10/OE-2edb15ec4a0607db.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "2edb15ec4a0607db875da1bac2e20c8b8e498c19",
+      "source_timestamp": "2026-10-21T08:25:09Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: update integrated learning and experiment receipts 39568937485"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_7D.json",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json",
+        "research/architecture_health/history/39571571765-attempt-1.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 8,
+        "removed": 0,
+        "same": 8,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-219fbfadff78c516",
+      "episode_path": "episodes/2026/10/OE-219fbfadff78c516.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "219fbfadff78c5165da90ee3487ff25bd1ed6e94",
+      "source_timestamp": "2026-10-21T08:47:32Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 39571571765"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-f5aa475150854ca3",
+      "episode_path": "episodes/2026/10/OE-f5aa475150854ca3.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "f5aa475150854ca32e217cc9b3110d1cffa6845f",
+      "source_timestamp": "2026-10-21T08:48:15Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 39571960641"
     }
   ],
-  "source_head_sha": "f09e2dc4fcd18e71dd418f253611276968e0aa8f"
+  "source_head_sha": "f5aa475150854ca32e217cc9b3110d1cffa6845f"
 }
