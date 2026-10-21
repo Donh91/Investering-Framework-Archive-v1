@@ -136,8 +136,7 @@ def census(base=BASE):
                     outcome=json.loads(outbytes)
                     original_outcome_blob=blob_sha(outbytes)
                     more,labels=original_outcome_assessment(
-                        doc,p.relative_to(base.parents[2]).as_posix()
-                        if False else "04_MARKET_LEARNING/handlekompas/official/daily/"+sub+"/"+p.name,
+                        doc,"04_MARKET_LEARNING/handlekompas/official/daily/"+sub+"/"+p.name,
                         outcome,path,horizon)
                     row_reasons+=more
                     state=("LINKED_PUBLIC_ORIGINAL_NOT_PIT_ADMITTED"
@@ -159,7 +158,7 @@ def census(base=BASE):
                     "original_outcome_path":("04_MARKET_LEARNING/handlekompas/official/outcomes/"+sub+"/"+path.name) if path else None,
                     "scoring_contract":version,"horizon":horizon,
                     "original_maturity_claim":doc.get("outcome_maturity",{}).get(horizon) if isinstance(doc.get("outcome_maturity"),dict) else None,
-                    "source_packet_binding_declared":isinstance(doc.get("source_bindings",{}).get("auto_market_state"),dict),
+                    "source_packet_binding_declared":isinstance(doc.get("source_bindings"),dict) and isinstance(doc["source_bindings"].get("auto_market_state"),dict),
                     "original_outcome_recorded_direction_label_counts":labels,
                     "receipt_state":state,
                     "integrity_exceptions":sorted(set(row_reasons)),
