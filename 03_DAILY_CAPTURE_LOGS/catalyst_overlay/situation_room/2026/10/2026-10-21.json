@@ -1,0 +1,100 @@
+{
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "collection_route": "SITUATION_ROOM_STATIC_DATED_OWNER_v1",
+  "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "current_unverified_discoveries": [],
+  "daily_result": "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
+  "detection_time_utc": "2026-10-21T11:50:22Z",
+  "events": [],
+  "market_reaction_observations": [],
+  "market_reaction_separate_from_event": true,
+  "market_state_effect": false,
+  "observation_date_utc": "2026-10-21",
+  "portfolio_effect": false,
+  "retrieval": {
+    "dynamic_archive_shell_not_required": true,
+    "situation_room_archive_url": "https://situationroom.space/briefings",
+    "situation_room_daily_url": "https://situationroom.space/briefing/2026-10-21",
+    "strategy": "DETERMINISTIC_STATIC_DAILY_BRIEFING"
+  },
+  "retroactive_candidate_eligibility": false,
+  "run_id": "SRDO_ed5b1fd014a5acbb",
+  "run_status": "DEGRADED",
+  "shared_row_tournament_eligible": false,
+  "situation_room_role": "DISCOVERY_ONLY",
+  "source_coverage": {
+    "primary_pass": 5,
+    "primary_total": 5,
+    "receipts": [
+      {
+        "bytes": 0,
+        "error_class": "URLError",
+        "fetched_at_utc": "2026-10-21T11:50:22Z",
+        "http_status": null,
+        "role": "DISCOVERY_ONLY",
+        "sha256": null,
+        "source_id": "SITUATION_ROOM",
+        "status": "FAIL",
+        "url": "https://situationroom.space/briefing/2026-10-21"
+      },
+      {
+        "bytes": 97082,
+        "error_class": null,
+        "fetched_at_utc": "2026-10-21T11:50:32Z",
+        "http_status": 200,
+        "role": "PRIMARY",
+        "sha256": "4a007328659389e6b02038ea350f8e7930fdcf8290998db58e8eac6ebf28f153",
+        "source_id": "SEC",
+        "status": "PASS",
+        "url": "https://www.sec.gov/newsroom/press-releases"
+      },
+      {
+        "bytes": 71658,
+        "error_class": null,
+        "fetched_at_utc": "2026-10-21T11:50:32Z",
+        "http_status": 200,
+        "role": "PRIMARY",
+        "sha256": "79544e9ca1958d7da598b45ddd0aea0b9ac8687f432decff4a8825099b8ba66e",
+        "source_id": "TREASURY",
+        "status": "PASS",
+        "url": "https://home.treasury.gov/news/press-releases"
+      },
+      {
+        "bytes": 263667,
+        "error_class": null,
+        "fetched_at_utc": "2026-10-21T11:50:32Z",
+        "http_status": 200,
+        "role": "PRIMARY",
+        "sha256": "c298e7a8896fcacfe8b429b8075c0b00c355033e8f66d4acea00c11e3e0a51a8",
+        "source_id": "WHITE_HOUSE",
+        "status": "PASS",
+        "url": "https://www.whitehouse.gov/news/"
+      },
+      {
+        "bytes": 65045,
+        "error_class": null,
+        "fetched_at_utc": "2026-10-21T11:50:33Z",
+        "http_status": 200,
+        "role": "PRIMARY",
+        "sha256": "a612dfcec17cb89b8886538e13306907e6509d0df96ba50b246079a4d28294b7",
+        "source_id": "CFTC",
+        "status": "PASS",
+        "url": "https://www.cftc.gov/PressRoom/PressReleases"
+      },
+      {
+        "bytes": 87372,
+        "error_class": null,
+        "fetched_at_utc": "2026-10-21T11:50:33Z",
+        "http_status": 200,
+        "role": "PRIMARY",
+        "sha256": "386f15a139a37d1e6e44e5f40996fbd8a4ee8d8b38f70b0fa582f27b0758e67c",
+        "source_id": "FEDERAL_RESERVE",
+        "status": "PASS",
+        "url": "https://www.federalreserve.gov/newsevents/pressreleases.htm"
+      }
+    ]
+  },
+  "unresolved_candidates": [],
+  "unverified_discoveries": []
+}
