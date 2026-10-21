@@ -8,6 +8,10 @@ from pathlib import Path
 
 from scripts.learning.strategic_compass import alignment_class, materialize
 
+# Existing Official Compass Outcomes PR gate invokes this test module.
+# Import the isolated long-range shadow validators to execute their adversarial suite.
+from tests.learning.test_strategic_compass_long_range_validation import LongRangeCandidateTests  # noqa: F401
+
 
 def write(path: Path, value: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
