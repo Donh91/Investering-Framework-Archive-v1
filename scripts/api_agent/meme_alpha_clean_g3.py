@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from scripts.api_agent.meme_alpha_prospective import freeze_shadow_observation
@@ -464,7 +464,17 @@ def evaluate_conviction_cluster_v0(
     """
     if buyer_graph.get("contract") != "MEME_ALPHA_CURRENT_TOKEN_BUYER_GRAPH_v1":
         raise ValueError("INVALID_BUYER_GRAPH")
-    cutoff = _parse_utc(str(buyer_graph["cutoff_utc"]))
+    # Do not silently assign UTC to a naive/local candidate cutoff.
+    try:
+        raw_cutoff = buyer_graph["cutoff_utc"]
+        if not isinstance(raw_cutoff, str):
+            raise ValueError("cutoff must be a string")
+        cutoff = datetime.fromisoformat(raw_cutoff.replace("Z", "+00:00"))
+        if cutoff.tzinfo is None or cutoff.utcoffset() != timedelta(0):
+            raise ValueError("cutoff must declare UTC")
+        cutoff = cutoff.astimezone(timezone.utc)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("CONVICTION_CUTOFF_REQUIRES_EXPLICIT_UTC") from exc
     provenance = provenance_by_wallet or {}
     buyer_by_wallet = {str(row["wallet"]): row for row in buyer_graph.get("buyers", [])}
     quality_by_wallet = {str(row["wallet"]): row for row in wallet_quality_rows}
@@ -472,14 +482,18 @@ def evaluate_conviction_cluster_v0(
     def history_available_at_cutoff(row: dict[str, Any]) -> bool:
         # compute_asof_wallet_quality emits this bound. Precomputed rows must
         # not bypass it, and missing/ambiguous timestamps are not evidence.
-        value = row.get("latest_matured_outcome_at_utc")
-        if not isinstance(value, str):
+        maturity = row.get("latest_matured_outcome_at_utc")
+        available = row.get("source_first_available_at_utc")
+        if not isinstance(maturity, str) or not isinstance(available, str):
             return False
         try:
-            matured = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            matured = datetime.fromisoformat(maturity.replace("Z", "+00:00"))
+            first_available = datetime.fromisoformat(available.replace("Z", "+00:00"))
         except ValueError:
             return False
-        return matured.tzinfo is not None and matured.astimezone(timezone.utc) <= cutoff
+        return (matured.tzinfo is not None and first_available.tzinfo is not None
+                and matured.astimezone(timezone.utc) <= cutoff
+                and first_available.astimezone(timezone.utc) <= cutoff)
 
     eligible = {
         wallet for wallet, row in quality_by_wallet.items()
@@ -489,7 +503,8 @@ def evaluate_conviction_cluster_v0(
         and provenance.get(wallet, "UNKNOWN") == "PASS"
     }
 
-    uf = _UnionFind(set(eligible))
+    # Collapse controllers across ALL buyers, including wallets not eligible to vote.
+    uf = _UnionFind(set(buyer_by_wallet))
     same_funder: dict[str, set[str]] = defaultdict(set)
     used_links: list[dict[str, Any]] = []
     for item in link_evidence:
@@ -499,7 +514,7 @@ def evaluate_conviction_cluster_v0(
         kind = str(item.get("kind", ""))
         if kind == "STRONG_CONTROLLER":
             a, b = str(item.get("wallet_a", "")), str(item.get("wallet_b", ""))
-            if a in eligible and b in eligible and a != b:
+            if a in buyer_by_wallet and b in buyer_by_wallet and a != b:
                 uf.union(a, b)
                 used_links.append(dict(item))
         elif kind == "SAME_FUNDER":
@@ -549,13 +564,15 @@ def evaluate_conviction_cluster_v0(
         and independence_state == "PASS"
     )
     detected = cluster_count >= 2 and required_states_pass
+    # A self-supplied source timestamp cannot establish a pre-outcome freeze.
+    # Never grant prospective credit without an independent immutable receipt.
     control_class = "MULTI_CLUSTER" if detected else ("SINGLE_CLUSTER" if cluster_count == 1 else "ZERO_CLUSTER")
     if cluster_count >= 2 and not detected:
         control_class = "MULTI_CLUSTER_NOT_ELIGIBLE"
 
     payload = {
         "contract": "CONVICTION_CLUSTER_DETECTED_V0",
-        "status": "FROZEN_SHADOW_EVENT" if detected else "FROZEN_CONTROL",
+        "status": "FROZEN_UNADMITTED_SHADOW_CANDIDATE" if detected else "FROZEN_CONTROL",
         "observed_at": str(buyer_graph["cutoff_utc"]),
         "token_ca": str(buyer_graph["mint"]),
         "chain": str(buyer_graph["chain"]),
@@ -569,7 +586,21 @@ def evaluate_conviction_cluster_v0(
         "liquidity_state": liquidity_state,
         "sellability_state": sellability_state,
         "control_class": control_class,
-        "prospective_credit": bool(detected),
+        "research_candidate_detected": bool(detected),
+        "prospective_credit": False,
+        "independent_source_verified": False,
+        "prospective_admission_status": "BLOCKED_PENDING_IMMUTABLE_PREOUTCOME_SOURCE_RECEIPT",
+        "source_inputs_sha256": {
+            "buyer_graph": _stable_hash(buyer_graph),
+            "wallet_quality_rows": _stable_hash(wallet_quality_rows),
+            "link_evidence": _stable_hash(link_evidence),
+            "provenance_by_wallet": _stable_hash(provenance),
+            "liquidity_sellability": _stable_hash({
+                "liquidity_state": liquidity_state,
+                "sellability_state": sellability_state,
+            }),
+        },
+        "source_availability_claims_independently_verified": False,
         "historical_replay_credit": 0,
         "used_link_evidence_sha256": _stable_hash(sorted(used_links, key=lambda x: json.dumps(x, sort_keys=True))),
         "authority": {
