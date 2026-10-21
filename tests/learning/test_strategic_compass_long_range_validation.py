@@ -93,6 +93,9 @@ class LongRangeCandidateTests(unittest.TestCase):
     def test_missing_falsifier(self):
         self.reject(lambda v: v["hypothesis_families"][0].update(falsifier_dates=[]))
 
+    def test_no_observations_cannot_claim_source_available(self):
+        self.reject(lambda v: v["observation"].update(items=[]))
+
     def test_unsettled_source(self):
         self.reject(lambda v: v["observation"]["items"][0].update(settled=False))
 
