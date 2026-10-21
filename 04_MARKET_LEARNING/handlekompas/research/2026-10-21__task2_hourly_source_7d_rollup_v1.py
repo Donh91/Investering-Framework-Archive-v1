@@ -23,7 +23,14 @@ KINDS = {
     'NOT_PRESENT_IN_FIRST_PARENT_HISTORY':'not_present_in_first_parent_history',
     'CLOCK_ANOMALY_NOT_ADMITTED':'clock_anomalies',
 }
-DISALLOWED = {'btc_close','eth_close','price','forecast_score','original_outcome_result','market_signal'}
+EXPECTED_ROW_KEYS = {'classification','due_at_utc','first_present_main_commit',
+                     'first_present_committer_utc','minutes_after_due',
+                     'source_open_at_utc','source_path'}
+EXPECTED_TOP_KEYS = {'authority','clock_anomalies','contract','evaluated_at_utc',
+                     'evidence_semantics','expected_due_hours',
+                     'first_commit_clock_after_90m','first_commit_clock_within_90m',
+                     'main_first_parent_ref_sha','not_present_in_first_parent_history',
+                     'records','utc_due_day','measurement_status','reason'}
 AUTHORITY = {'research_only':True,'model_promotion':False,
              'original_outcome_rescore':False,'portfolio_action':False}
 
@@ -64,6 +71,8 @@ def daily_signature(doc):
 def validate_day(doc, *, now):
     if not isinstance(doc,dict) or doc.get('contract') != CONTRACT:
         raise ValueError('INVALID_DAILY_CONTRACT')
+    if not set(doc).issubset(EXPECTED_TOP_KEYS):
+        raise ValueError('UNKNOWN_DAILY_ROOT_FIELD')
     day = parse_day(doc.get('utc_due_day'))
     if day >= now.date():
         raise ValueError('DAY_NOT_COMPLETE')
@@ -82,7 +91,7 @@ def validate_day(doc, *, now):
     counts = {k:0 for k in KINDS}
     midnight = datetime.combine(day,datetime.min.time(),tzinfo=timezone.utc)
     for h,row in enumerate(doc['records']):
-        if not isinstance(row,dict) or DISALLOWED.intersection(row):
+        if not isinstance(row,dict) or set(row) != EXPECTED_ROW_KEYS:
             raise ValueError('INVALID_OR_PRIVATE_DAILY_ROW')
         due = midnight + timedelta(hours=h)
         start = due - timedelta(hours=1)
