@@ -352,6 +352,8 @@ jobs:
           assert len(x['original_records'])==3*x['counts']['original_forecasts']
           assert sum(x['forecasts_by_scoring_contract'].values())==x['counts']['original_forecasts']
           assert sum(x['forecast_horizon_attempt_counts'].values())==len(x['original_records'])
+          assert sum(x['per_horizon_receipt_states'].values())==len(x['original_records'])
+          assert x['counts']['original_outcome_files_matched']+x['counts'].get('unmatched_outcome_files',0)==sum(day['original_outcome_files'] for day in x['days'])
           assert not x['model_skill_or_return_estimated']
           assert not x['first_known_market_value_eligibility_unlocked']
           assert not x['actual_delivery_first_known_verified']
@@ -361,6 +363,8 @@ jobs:
           for k,v in sorted(x['counts'].items()):
               print('TASK2_R1_ISSUER_RECEIPT_COUNTS',k,v)
           print('TASK2_R1_ORIGINAL_ABSTENTION_LABELS',x['original_published_direction_labels_only'])
+          print('TASK2_R1_INTEGRITY_EXCEPTIONS',x['original_integrity_exception_counts'])
+          print('TASK2_R1_BY_HORIZON_RECEIPTS',x['per_horizon_receipt_states'])
           PY
       - name: Retain Task2 source-bound original official R1 9-day receipt
         uses: actions/upload-artifact@v4
