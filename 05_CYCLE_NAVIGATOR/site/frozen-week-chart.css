@@ -111,3 +111,46 @@
   .fw-canvas{height:315px}
   .fw-days{padding:12px 8px 0;gap:2px}
 }
+
+
+/* CN B MINIMAL INSTRUMENT / 2026-10-21
+ * Approved B visually centers the original price evidence. Source-detail
+ * controls are collapsed, never removed or numerically altered.
+ */
+.frozen-week-chart{overflow:hidden;border-radius:14px;box-shadow:none}
+.fw-toolbar{padding:15px 18px 5px;border:0;gap:10px}
+.fw-assets{background:#12233a;border:1px solid #2d4764;border-radius:10px}
+.fw-assets button[aria-pressed=true]{background:#274667}
+.fw-period{color:#9db0c9;letter-spacing:.06em;font-size:11px}
+.fw-reset{font-size:17px;color:#9db0c9;border:1px solid #2e4765}
+.fw-quote{padding:14px 18px 8px;gap:12px}
+.fw-quote strong{font-size:clamp(28px,4vw,39px);font-weight:670;line-height:1.15}
+.fw-source{text-align:right;max-width:48%}
+.fw-legend{padding:12px 18px 16px;gap:14px 22px;border:0}
+.fw-legend .actual{height:3px;background:#27c59a}
+.fw-legend .forecast{height:0;border-top:2px dashed #5f96ff}
+.fw-canvas{height:360px;background:#0a1729;border-color:rgba(115,147,184,.12)}
+.fw-evidence-details{margin:4px 18px 0;border-top:1px solid rgba(120,154,198,.22)}
+.fw-evidence-details summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-size:11px;font-weight:650;letter-spacing:.01em;color:#a8bed6;list-style:none;gap:8px}
+.fw-evidence-details summary::-webkit-details-marker{display:none}
+.fw-evidence-details summary::after{content:'+';font-weight:650;font-size:18px;margin-left:auto;line-height:1}
+.fw-evidence-details[open] summary::after{content:'−'}
+.fw-evidence-details summary:focus-visible{outline:2px solid #83b1ff;outline-offset:-2px;border-radius:4px}
+.fw-evidence-details .fw-progress-summary{padding:7px 0 15px;background:transparent;gap:6px}
+.fw-evidence-details .fw-days{padding:10px 0 0}
+.fw-evidence-details .fw-readout{margin:11px 0 0}
+.fw-evidence-details .fw-note{margin:12px 0 0;padding:12px 0 0}
+.fw-evidence-details .fw-footer{padding:14px 0 12px}
+.fw-attribution{padding:3px 18px 14px;color:#8395aa}
+@media(max-width:600px){
+ .frozen-week-chart{border-radius:12px}
+ .fw-toolbar{padding:11px 13px 3px}
+ .fw-quote{padding:12px 13px 7px}
+ .fw-quote strong{font-size:clamp(23px,6.7vw,31px)}
+ .fw-source small{font-size:9px}
+ .fw-legend{padding:10px 13px 13px;gap:9px 13px;font-size:9px}
+ .fw-canvas{height:318px}
+ .fw-evidence-details{margin:2px 13px 0}
+ .fw-evidence-details .fw-days{padding:7px 0}
+ .fw-attribution{padding:3px 13px 12px}
+}
