@@ -19,6 +19,8 @@ on:
       - 'tests/research/test_edge_compound_governor.py'
       - 'scripts/research/task2_protection_synthetic_v1.py'
       - 'tests/research/test_task2_protection_synthetic_v1.py'
+      - 'scripts/research/task2_archive_price_only_stress_v1.py'
+      - 'tests/research/test_task2_archive_price_only_stress_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -53,6 +55,33 @@ jobs:
           python -m unittest tests.learning.test_m6_warning_event_outcomes tests.learning.test_edge001_tsunami_feature_ledger tests.research.test_edge_compound_governor -v
           python scripts/research/edge001_144_variant_pit_harness.py --self-test
           python -m unittest discover -s tests/research -p 'test_task2_protection_synthetic_v1.py' -v
+      - name: Task2 archived price-only 1152-cell ex-post stress, research only
+        run: |
+          python -m unittest tests.research.test_task2_archive_price_only_stress_v1 -v
+          python scripts/research/task2_archive_price_only_stress_v1.py --output /tmp/task2_price_only_dev.json > /tmp/task2_price_only_stdout.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/task2_price_only_dev.json'))
+          assert x['contract']=='TASK2_PRICE_ONLY_ARCHIVE_STRESS_v1'
+          assert x['era_cells_configured']==1152
+          assert len(x['price_eras'])==2
+          assert x['source_preflight']['cfgi']['market_hourly_slots']==0
+          assert x['source_preflight']['cfgi']['original_vendor_first_publication_certified'] is False
+          assert x['CFGI_predictive_edge_tested'] is False
+          assert x['forecast_model_tested'] is False
+          assert x['counterfactual_fill_certified'] is False
+          assert x['holdout_untouched'] is False
+          assert x['candidate_winner_selected'] is False
+          print('TASK2_ARCHIVE_STRESS_ENGINE_PASS', {k:{'assessed_cells':v['assessed_cells'],'segments':v['price_segments'],'source_hours':v['sum_of_segment_hours'],'skipped_cells':v['skipped_cells'],'triggered_cells':v['cells_triggering_illustrative_trim'],'positive_vs_hold_cells_descriptive':v['cells_positive_vs_hold_descriptive']} for k,v in x['price_eras'].items()})
+          print('NO_FORECAST_OR_CFGI_EDGE_EVALUATED')
+          PY
+      - name: Retain Task2 aggregate research-only stress receipt (PR artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-price-only-expost-stress-${{ github.run_id }}
+          path: /tmp/task2_price_only_dev.json
+          retention-days: 7
+          if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
         run: python -m unittest tests.learning.test_t6_rotation_survival -v
       - name: Run sensor relationship scientific-evidence fail-closed regressions (PR only)
