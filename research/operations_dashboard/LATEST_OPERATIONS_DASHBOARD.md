@@ -1,30 +1,30 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-10-21T19:29:35.926774Z`
+Generated: `2026-10-21T19:55:59.976612Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.335 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.219 |
-| `weekly_output` | **GREEN** | FRESH | 62.236 |
-| `automation_health` | **RED** | RED | 0.055 |
-| `architecture_health` | **GREEN** | GREEN | 0.01 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 1.219 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 3.652 |
-| `remediation_maturation` | **GREEN** | FRESH | 10.589 |
+| `daily_capture` | **GREEN** | FRESH | 2.775 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.659 |
+| `weekly_output` | **GREEN** | FRESH | 62.676 |
+| `automation_health` | **RED** | RED | 0.495 |
+| `architecture_health` | **GREEN** | GREEN | 0.45 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 1.659 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 4.092 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.327 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **278**
-- OpenAI estimated cost this month: **$13.050000 from receipts**
+- OpenAI receipts this month: **279**
+- OpenAI estimated cost this month: **$13.050305 from receipts**
 - Pending forecast candidates: **253**
 - Experiment candidates: **583**
 - Experiment dispatch requests: **35198**
 - Codex-ready remediation tasks: **6**
-- Needs-more-evidence items: **2**
+- Needs-more-evidence items: **3**
 
 ## Incidents
 
@@ -54,4 +54,4 @@ A gateway PASS alone is not measured downstream value or investment edge.
 - **P0** `automation_health` - ['daily-settled-etf-calibration.yml:LATEST_RUN_FAILED']
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `9f17ed03a6b53e2dd491a65e6e3153a0317e3d460c08c5db5f712385e5a05b84`
+Dashboard SHA-256: `2c653e1e39aa4c11aed9f1883d7929f76458b4e0b0554d67d77942ebae472455`
