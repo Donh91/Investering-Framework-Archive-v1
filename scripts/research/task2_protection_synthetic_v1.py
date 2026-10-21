@@ -13,6 +13,56 @@ from math import isfinite
 UTC = timezone.utc
 STATES = {"ELEVATED", "HIGH", "CONFIRMED"}
 
+# Immutable, module-owned toy data. These are exactly the regression scenarios
+# preregistered in the existing test suite; they are NOT real price histories.
+# A caller can set Warning.original_proof but cannot add a tape to this roster.
+_FROZEN_PRICE_TAPES = (
+    (100, 95, 60, 50, 55, 58),
+    (100, 95, 98, 110, 130, 160),
+    (100, 110, 120, 145, 170),
+    (100, 95, 70, 60, 63),
+    (100, 95, 85, 90, 100),
+    (100, 100, 100, 100, 100),
+    (100, 100, 100, 100),
+    (100, 90, 80, 70),
+    (100, 95, 90, 92),
+    (100, 95, 90),
+    (100, 90),
+    (100, 80, 85, 90),
+    (100, 98, 96, 94),
+    (100, 110, 120, 140),
+)
+_FROZEN_PRICE_TAPES_WITH_CAPACITY = (
+    ((100, 95, 80), (1e9, 100, 100)),
+    ((100, 95, 70, 60), (1e9, 100, 1e9, 1e9)),
+    ((100, 95, 90, 130, 160), (1e9, 1e9, 1e9, 100, 1e9)),
+    ((100, 80, 50, 30), (1e9, 10, 10, 10)),
+)
+_FIXTURE_BASE = datetime(2026, 1, 1, tzinfo=UTC)
+_FROZEN_TAPE_KEYS = frozenset(
+    (tuple(prices), tuple(float(c) for c in capacities))
+    for prices, capacities in (
+        *((p, (1e9,) * len(p)) for p in _FROZEN_PRICE_TAPES),
+        *_FROZEN_PRICE_TAPES_WITH_CAPACITY,
+    )
+)
+
+
+def _approved_synthetic_fixture(quotes: list["Quote"]) -> bool:
+    """Match all input bytes semantically to bundled immutable toy scenarios.
+
+    A self-declared 'synthetic' label, caller-provided hash, source URL,
+    or historical capture can never authorize an external observation.
+    This is *not* a proof of real-world provenance or economics.
+    """
+    return (
+        all(q.at == _FIXTURE_BASE + timedelta(hours=i)
+            and q.known_at == q.at and q.bid == q.ask for i, q in enumerate(quotes))
+        and (tuple(q.bid for q in quotes),
+             tuple(float(q.capacity_usd) for q in quotes)) in _FROZEN_TAPE_KEYS
+    )
+
+
 
 @dataclass(frozen=True)
 class Quote:
@@ -80,14 +130,19 @@ def validate(quotes: list[Quote], warning: Warning, policy: Policy, initial_usd:
         if not 0 < quote.bid <= quote.ask or quote.capacity_usd <= 0:
             raise ValueError("BID_ASK_OR_LIQUIDITY_INVALID")
         previous = quote.at
+    # A label on the Warning is caller-controlled; admit only fixed toy tapes.
+    # Any arbitrary external/historical series is excluded from this prototype.
+    if not _approved_synthetic_fixture(quotes):
+        raise ValueError("UNREGISTERED_OR_HISTORICAL_TAPE_BLOCKED")
 
 
 def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
                        initial_usd: float = 10_000.0) -> dict:
     """Single fixed warning, next executable quote, fixed-clock reentry; NO hindsight.
 
-    Outright refusal of historical source requests is intentional: an independent
-    PIT/outcome gate must be implemented by an approved owner, not caller flags.
+    Only fixed, bundled synthetic test tapes are admitted. Warning.original_proof
+    is never independent provenance. Historical/PIT analysis remains forbidden;
+    scientific evidence admission needs a separately owned original-source gate.
     """
     validate(quotes, warning, policy, initial_usd)
     start_mid = (quotes[0].bid + quotes[0].ask) / 2
