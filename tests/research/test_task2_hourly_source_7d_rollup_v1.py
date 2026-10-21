@@ -57,6 +57,8 @@ def test_frozen_duplicate_new_run_timestamps_same_day(tmp_path):
     (lambda x:x['records'].pop(), 'NOT_24_DUE_HOURS'),
     (lambda x:x['records'][0].update(due_at_utc='2026-10-19T01:00:00Z'),'DUPLICATE_MISSING'),
     (lambda x:x['records'][0].update(btc_close=100),'INVALID_OR_PRIVATE'),
+    (lambda x:x['records'][0].update(spot_price=123),'INVALID_OR_PRIVATE'),
+    (lambda x:x.update(raw_market_data='SECRET'),'UNKNOWN_DAILY_ROOT_FIELD'),
     (lambda x:x.update(first_commit_clock_within_90m=0),'TAMPERED'),
     (lambda x:x['records'][1].update(minutes_after_due=12.0),'CLOCK_LAG_MISMATCH'),
     (lambda x:x['records'][1].update(classification='FIRST_COMMIT_CLOCK_AFTER_90M'),'MISCLASSIFIED_DEADLINE'),
