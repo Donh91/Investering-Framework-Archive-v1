@@ -202,7 +202,11 @@ class MemeAlphaCleanG3Tests(unittest.TestCase):
                 prior(f"{wallet}-2", wallet, maturity="1970-01-01T00:11:00Z", five_x=False),
                 prior(f"{wallet}-3", wallet, maturity="1970-01-01T00:12:00Z", five_x=True),
             ])
-        return graph, compute_asof_wallet_quality(graph, outcomes, min_prior_matured=3)
+        rows = compute_asof_wallet_quality(graph, outcomes, min_prior_matured=3)
+        # Synthetic source availability is NOT independent proof.
+        for row in rows:
+            row["source_first_available_at_utc"] = "1970-01-01T00:13:00Z"
+        return graph, rows
 
     def test_conviction_v0_two_independent_qualified_clusters_freeze_event(self) -> None:
         graph, rows = self._qualified_rows(("A", "B"))
@@ -214,10 +218,12 @@ class MemeAlphaCleanG3Tests(unittest.TestCase):
             liquidity_state="PASS",
             sellability_state="PASS",
         )
-        self.assertEqual(event["status"], "FROZEN_SHADOW_EVENT")
+        self.assertEqual(event["status"], "FROZEN_UNADMITTED_SHADOW_CANDIDATE")
         self.assertEqual(event["cluster_count"], 2)
         self.assertEqual(event["funding_independence_state"], "PASS")
-        self.assertTrue(event["prospective_credit"])
+        self.assertTrue(event["research_candidate_detected"])
+        self.assertFalse(event["prospective_credit"])
+        self.assertFalse(event["independent_source_verified"])
         self.assertFalse(event["authority"]["user_alert"])
 
     def test_conviction_v0_strong_controller_collapses_two_wallets(self) -> None:
@@ -330,7 +336,63 @@ class MemeAlphaCleanG3Tests(unittest.TestCase):
         graph, rows = self._qualified_rows(("A", "B"))
         for row in rows:
             row["latest_matured_outcome_at_utc"] = graph["cutoff_utc"]
-        self.assertTrue(self._evaluate_qualified(graph, rows)["prospective_credit"])
+        event = self._evaluate_qualified(graph, rows)
+        self.assertTrue(event["research_candidate_detected"])
+        self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_controller_bridge_via_unqualified_wallet(self) -> None:
+        graph, rows = self._qualified_rows(("A", "C", "B"))
+        rows = [r for r in rows if r["wallet"] in {"A", "B"}]
+        links = [
+            {"kind": "STRONG_CONTROLLER", "wallet_a": "A", "wallet_b": "C",
+             "effective_at_utc": "1970-01-01T00:15:00Z"},
+            {"kind": "STRONG_CONTROLLER", "wallet_a": "C", "wallet_b": "B",
+             "effective_at_utc": "1970-01-01T00:15:00Z"},
+        ]
+        event = evaluate_conviction_cluster_v0(
+            buyer_graph=graph, wallet_quality_rows=rows, link_evidence=links,
+            provenance_by_wallet={"A": "PASS", "B": "PASS"},
+            liquidity_state="PASS", sellability_state="PASS")
+        self.assertEqual(event["cluster_count"], 1)
+        self.assertFalse(event["research_candidate_detected"])
+        self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_missing_future_or_naive_availability_rejected(self) -> None:
+        for unavailable in (None, "1970-01-01T00:30:00Z", "1970-01-01T00:10:00"):
+            graph, rows = self._qualified_rows(("A", "B"))
+            rows[0]["source_first_available_at_utc"] = unavailable
+            with self.subTest(unavailable=unavailable):
+                event = self._evaluate_qualified(graph, rows)
+                self.assertEqual(event["cluster_count"], 1)
+                self.assertFalse(event["prospective_credit"])
+
+    def test_conviction_v0_naive_or_non_utc_cutoff_rejected(self) -> None:
+        for bad in ("1970-01-01T00:17:40", "1970-01-01T01:17:40+01:00"):
+            graph, rows = self._qualified_rows(("A", "B"))
+            graph["cutoff_utc"] = bad
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(ValueError, "CONVICTION_CUTOFF_REQUIRES_EXPLICIT_UTC"):
+                    self._evaluate_qualified(graph, rows)
+
+    def test_conviction_v0_original_inputs_are_content_hashed(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        original = self._evaluate_qualified(graph, rows)
+        graph["buyers"][0]["gross_quote_amount_raw"] += 1
+        changed = self._evaluate_qualified(graph, rows)
+        self.assertNotEqual(original["source_inputs_sha256"]["buyer_graph"],
+                            changed["source_inputs_sha256"]["buyer_graph"])
+        self.assertNotEqual(original["observation_sha256"], changed["observation_sha256"])
+        self.assertFalse(changed["prospective_credit"])
+
+    def test_conviction_v0_forged_source_availability_never_grants_credit(self) -> None:
+        graph, rows = self._qualified_rows(("A", "B"))
+        for row in rows:
+            row["source_first_available_at_utc"] = "1970-01-01T00:00:01Z"
+        event = self._evaluate_qualified(graph, rows)
+        self.assertTrue(event["research_candidate_detected"])
+        self.assertFalse(event["prospective_credit"])
+        self.assertEqual(event["prospective_admission_status"],
+                         "BLOCKED_PENDING_IMMUTABLE_PREOUTCOME_SOURCE_RECEIPT")
 
 
 if __name__ == "__main__":
