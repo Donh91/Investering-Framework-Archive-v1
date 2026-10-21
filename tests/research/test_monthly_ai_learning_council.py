@@ -83,6 +83,78 @@ class MonthlyAILearningCouncilTests(unittest.TestCase):
         self.assertEqual([x["candidate_id"] for x in challenged], ["C"])
         self.assertNotIn("MIXED", [x["candidate_id"] for x in learned + challenged])
 
+
+    def test_stale_weekly_escalation_cannot_become_new_learning(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            stale = {"candidate_id": "C1", "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+                     "lifecycle_state": "MATURED_SUPPORTED", "matured_outcome_count": 75}
+            seed_repo(root, prior_month="2026-10", escalation=[stale])
+            dump(root / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json", {
+                "contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1",
+                "candidates": [{"candidate_id": "C1", "state": "MATURED_INCONCLUSIVE",
+                                "matured_outcome_count": 83, "scientific_score_eligible_outcome_count": 0}],
+            })
+            dump(root / "research/experiment_lifecycle/weekly_adjudication/LATEST.json", {
+                "contract": "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1",
+                "generated_at_utc": "2026-10-19T14:27:52Z",
+                "summary": {"escalation_review_count": 1}, "escalation_queue": [stale],
+            })
+            ctx = build_context(root, datetime(2026, 10, 21, 6, 0, tzinfo=UTC))
+            self.assertEqual(ctx["evidence_census"]["weekly_escalation_queue"], [])
+            self.assertFalse(ctx["eligibility"]["escalation_trigger"])
+            self.assertFalse(ctx["eligibility"]["run_review"])
+            self.assertEqual(ctx["evidence_census"]["weekly_adjudication_summary"]["status"],
+                             "SCIENTIFIC_ELIGIBILITY_REVALIDATION_REQUIRED")
+            action, *_ = choose_primary_action(ctx, {"status": "BLOCKED"})
+            self.assertEqual(action, "CONTINUE_OBSERVING")
+
+    def test_matching_current_scientific_escalation_remains_actionable(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            seed_repo(root, prior_month="2026-10")
+            current = {"candidate_id": "C1", "state": "MATURED_SUPPORTED",
+                       "matured_outcome_count": 25, "scientific_score_eligible_outcome_count": 25}
+            matched = {"candidate_id": "C1", "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+                       "lifecycle_state": "MATURED_SUPPORTED", "matured_outcome_count": 25,
+                       "scientific_score_eligible_outcome_count": 25}
+            dump(root / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json", {
+                "contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "candidates": [current]})
+            dump(root / "research/experiment_lifecycle/weekly_adjudication/LATEST.json", {
+                "contract": "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1",
+                "summary": {"escalation_review_count": 1}, "escalation_queue": [matched]})
+            ctx = build_context(root, datetime(2026, 10, 21, 6, 0, tzinfo=UTC))
+            self.assertEqual(ctx["evidence_census"]["weekly_escalation_queue"], [matched])
+            self.assertTrue(ctx["eligibility"]["escalation_trigger"])
+            self.assertEqual(ctx["evidence_census"]["weekly_adjudication_summary"]["escalation_review_count"], 1)
+
+    def test_below_floor_or_missing_eligibility_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            seed_repo(root, prior_month="2026-10")
+            current = {"candidate_id": "C1", "state": "MATURED_SUPPORTED",
+                       "matured_outcome_count": 25, "scientific_score_eligible_outcome_count": 1}
+            candidate = {"candidate_id": "C1", "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+                         "lifecycle_state": "MATURED_SUPPORTED", "matured_outcome_count": 25,
+                         "scientific_score_eligible_outcome_count": 1}
+            dump(root / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json", {
+                "contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "candidates": [current]})
+            dump(root / "research/experiment_lifecycle/weekly_adjudication/LATEST.json", {
+                "contract": "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1", "escalation_queue": [candidate]})
+            ctx = build_context(root, datetime(2026, 10, 21, 6, 0, tzinfo=UTC))
+            self.assertEqual(ctx["evidence_census"]["weekly_escalation_queue"], [])
+            candidate["scientific_score_eligible_outcome_count"] = 25
+            current["scientific_score_eligible_outcome_count"] = 25
+            # Legacy weekly row missing the count must not be trusted after registry upgrade.
+            candidate.pop("scientific_score_eligible_outcome_count")
+            dump(root / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json", {
+                "contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "candidates": [current]})
+            dump(root / "research/experiment_lifecycle/weekly_adjudication/LATEST.json", {
+                "contract": "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1", "escalation_queue": [candidate]})
+            ctx = build_context(root, datetime(2026, 10, 21, 6, 0, tzinfo=UTC))
+            self.assertEqual(ctx["evidence_census"]["weekly_escalation_queue"], [])
+
+
     def test_finalize_preserves_firewall_when_ai_missing(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
