@@ -72,7 +72,7 @@ jobs:
           assert x['counterfactual_fill_certified'] is False
           assert x['holdout_untouched'] is False
           assert x['candidate_winner_selected'] is False
-          print('TASK2_ARCHIVE_STRESS_ENGINE_PASS', {k:{'assessed_cells':v['assessed_cells'],'segments':v['price_segments'],'source_hours':v['sum_of_segment_hours']} for k,v in x['price_eras'].items()})
+          print('TASK2_ARCHIVE_STRESS_ENGINE_PASS', {k:{'assessed_cells':v['assessed_cells'],'segments':v['price_segments'],'source_hours':v['sum_of_segment_hours'],'skipped_cells':v['skipped_cells'],'triggered_cells':v['cells_triggering_illustrative_trim'],'positive_vs_hold_cells_descriptive':v['cells_positive_vs_hold_descriptive']} for k,v in x['price_eras'].items()})
           print('NO_FORECAST_OR_CFGI_EDGE_EVALUATED')
           PY
       - name: Run prospective T6 exact-replay regressions (PR only)
