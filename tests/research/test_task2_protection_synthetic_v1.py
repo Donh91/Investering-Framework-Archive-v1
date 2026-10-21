@@ -163,6 +163,14 @@ class CounterfactualTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'HISTORICAL_OR_UNAUTHORIZED'):
             simulate_synthetic(scenario([100,90]),replace(signal(),state='BUILDING'),policy())
 
+    def test_every_registered_toy_case_is_in_exact_same_validation_roster(self):
+        for case_id in registered_toy_case_names():
+            with self.subTest(case_id=case_id):
+                out = simulate_synthetic(case_id, signal(), policy())
+                self.assertEqual(out["evidence_class"], "SYNTHETIC_ONLY_NOT_HISTORICAL_EDGE")
+                self.assertFalse(out["historical_result_admissible"])
+                self.assertFalse(out["portfolio_action_authorized"])
+
     def test_caller_supplied_literal_proof_not_admitted_as_case_id(self):
         with self.assertRaisesRegex(ValueError,'UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED'):
             simulate_synthetic('SYNTHETIC_FIXTURE_ONLY',signal(),policy())
