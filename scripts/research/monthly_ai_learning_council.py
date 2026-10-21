@@ -64,6 +64,43 @@ def compact_experiment_registry(registry: dict[str, Any], limit: int = 100) -> d
     }
 
 
+
+def eligible_weekly_escalations(lifecycle: dict[str, Any], adjudication: dict[str, Any], floor: int) -> list[dict[str, Any]]:
+    """Current, matched scientific evidence only. Legacy weekly actions are never authority.
+
+    A monthly review must not resurrect old 'supported' physical maturity when
+    today's registry has zero scientifically score-eligible outcomes.
+    """
+    if (
+        lifecycle.get("contract") != "EXPERIMENT_LIFECYCLE_REGISTRY_v1"
+        or adjudication.get("contract") != "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1"
+    ):
+        return []
+    candidates = {
+        r["candidate_id"]: r for r in lifecycle.get("candidates", [])
+        if isinstance(r, dict) and isinstance(r.get("candidate_id"), str)
+    }
+    allowed_actions = {"RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW", "RUN_FAILURE_AND_RETIREMENT_REVIEW"}
+    validated: list[dict[str, Any]] = []
+    for row in adjudication.get("escalation_queue", []):
+        if not isinstance(row, dict) or row.get("selected_action") not in allowed_actions:
+            continue
+        current = candidates.get(row.get("candidate_id"))
+        if not current:
+            continue
+        eligible = current.get("scientific_score_eligible_outcome_count")
+        physical = current.get("matured_outcome_count")
+        if (type(eligible) is not int or type(physical) is not int
+            or eligible < floor or eligible > physical or physical < 0):
+            continue
+        if (row.get("scientific_score_eligible_outcome_count") != eligible
+            or row.get("matured_outcome_count") != physical
+            or row.get("lifecycle_state") != current.get("state")):
+            continue
+        validated.append(row)
+    return validated
+
+
 def build_context(repo_root: Path, now: datetime) -> dict[str, Any]:
     policy = read_json(repo_root / "research/monthly_learning_council/MONTHLY_AI_LEARNING_COUNCIL_POLICY_v1.json", {}) or {}
     prior = read_json(repo_root / "research/monthly_learning_council/STATE.json", {}) or {}
@@ -77,9 +114,20 @@ def build_context(repo_root: Path, now: datetime) -> dict[str, Any]:
 
     forecast_n = count_json(repo_root / "research/framework_memory/forecast_memory")
     outcome_n = count_json(repo_root / "research/framework_memory/outcome_memory")
-    escalation = [x for x in adjudication.get("escalation_queue", []) if isinstance(x, dict)]
+    source_escalations = [x for x in adjudication.get("escalation_queue", []) if isinstance(x, dict)]
+    floor = int(policy.get("minimum_matured_outcomes_for_learning_claim", 25) or 25)
+    eligible_escalations = eligible_weekly_escalations(lifecycle, adjudication, floor)
     escalation_limit = int(policy.get("max_escalation_candidates_in_context", 25) or 25)
-    escalation = escalation[:escalation_limit]
+    escalation = eligible_escalations[:escalation_limit]
+    weekly_summary = adjudication.get("summary")
+    if len(source_escalations) != len(eligible_escalations):
+        # Never offer stale positive counts as current AI evidence.
+        weekly_summary = {
+            "status": "SCIENTIFIC_ELIGIBILITY_REVALIDATION_REQUIRED",
+            "source_generated_at_utc": adjudication.get("generated_at_utc"),
+            "source_escalation_count_historical": len(source_escalations),
+            "currently_validated_escalation_count": len(eligible_escalations),
+        }
     escalation_fp = digest(escalation)
 
     month_key = now.strftime("%Y-%m")
@@ -111,7 +159,7 @@ def build_context(repo_root: Path, now: datetime) -> dict[str, Any]:
             "forecast_json_count": forecast_n,
             "outcome_json_count": outcome_n,
             "experiment_registry": compact_experiment_registry(lifecycle),
-            "weekly_adjudication_summary": adjudication.get("summary"),
+            "weekly_adjudication_summary": weekly_summary,
             "weekly_escalation_queue": escalation,
             "shadow_registry_summary": shadow.get("summary"),
             "shared_row_snapshot": {
