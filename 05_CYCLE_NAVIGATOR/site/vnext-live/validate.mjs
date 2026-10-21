@@ -281,7 +281,7 @@ assert.match(site,/summary_2_3w:weeklyAligned\?publicNarrative/);
 assert.match(site,/expected_path:publicNarrative\(anchor\?\.strategic_21_30d\?\.expected_path\)/);
 assert.match(client,/function drawMonday\(\)/);
 assert.match(client,/function drawCompass\(\)\{\s*drawMonday\(\);/);
-assert.match(site,/"chart-source-key.mjs","monday-public-bridge.mjs"/);
+assert.match(site,/"chart-source-key.mjs","forward-outlook.mjs","monday-public-bridge.mjs"/);
 assert.match(site,/"iso_year","iso_week","completed_source_year","completed_source_week"/);
 assert.doesNotMatch(read('monday-public-bridge.mjs'),/fetch\(|\bwallet\b|\bsecret\b|\bOPENAI_API_KEY\b/i);
 
