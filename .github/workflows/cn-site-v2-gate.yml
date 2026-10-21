@@ -38,6 +38,8 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           python3 scripts/cycle_navigator/build_public_live_precision.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Verify browser failures cannot bypass mobile release gate
+        run: node 05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs
       - name: Verify real 390/430 Premium Chrome mobile behavior
         run: node 05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs
       - name: Verify public investor product
