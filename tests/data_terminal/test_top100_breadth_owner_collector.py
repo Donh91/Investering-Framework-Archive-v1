@@ -4,6 +4,9 @@ import pathlib
 import tempfile
 import unittest
 
+# Existing Top100 CI entrypoint must execute the additive-source negative tests.
+from tests.data_terminal.test_top100_extra_return_windows import ExtraWindowCaptureTests  # noqa: F401
+
 PATH = pathlib.Path("scripts/data_terminal/top100_breadth_owner_collector.py")
 ARCHIVED_RAW = pathlib.Path(
     "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/raw_source_payload.json"
