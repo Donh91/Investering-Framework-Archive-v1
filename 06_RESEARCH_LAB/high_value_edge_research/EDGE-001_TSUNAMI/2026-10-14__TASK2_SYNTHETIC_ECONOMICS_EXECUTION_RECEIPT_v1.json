@@ -1,0 +1,118 @@
+{
+  "contract": "TASK2_EDGE001_SYNTHETIC_EXECUTION_RECEIPT_v1",
+  "recorded_date_utc": "2026-10-14",
+  "owner_issues": [
+    1530,
+    1553,
+    1596
+  ],
+  "code_review_state": "DRAFT_REQUIRES_INDEPENDENT_NONAUTHORING_REVIEW",
+  "execution_environment": {
+    "os": "Linux",
+    "python": "3.13.5",
+    "stdlib_only": true,
+    "workflow_run_id": null,
+    "run_type": "LOCAL_ISOLATED_BYTE_IDENTICAL_SOURCE_TEST"
+  },
+  "original_main_at_branch": "201b9a72d8c6cc6ca35f2b61ef05f37b404981ea",
+  "branch": "agent/task-20261014-edge001-synthetic-economics",
+  "code_path": "scripts/research/task2_protection_synthetic_v1.py",
+  "code_git_blob_sha": "f4b85fb49de5771c7315174a07d99a44da195cf8",
+  "test_path": "tests/research/test_task2_protection_synthetic_v1.py",
+  "test_git_blob_sha": "02c215cbf862570a6024b454d54ed07ec4376186",
+  "exact_local_git_hash_matches_remote": true,
+  "test_command": "python -m unittest discover -s tests/research -p test_task2_protection_synthetic_v1.py -q",
+  "test_results": {
+    "defined": 29,
+    "passed": 29,
+    "failed": 0,
+    "errors": 0,
+    "scope": "SYNTHETIC_BEHAVIOR_AND_FAIL_CLOSED_GUARDS_ONLY"
+  },
+  "sample_policies": "SYNTHETIC_10000_USD_INCUMBENT_50_PERCENT_TRIM_0_1_PERCENT_FEE_0_1_PERCENT_SLIPPAGE_ZERO_SPREAD",
+  "synthetic_examples": [
+    {
+      "name": "CRASH_EARLY",
+      "quote_mid_prices": [
+        100,
+        95,
+        60,
+        50,
+        55,
+        58
+      ],
+      "reentry_hold_hours": 4,
+      "hold_terminal_usd": 5794.2,
+      "policy_terminal_usd": 7623.402179,
+      "policy_delta_vs_hold_usd": 1829.202179
+    },
+    {
+      "name": "V_RECOVERY",
+      "quote_mid_prices": [
+        100,
+        95,
+        98,
+        110,
+        130,
+        160
+      ],
+      "reentry_hold_hours": 3,
+      "hold_terminal_usd": 15984,
+      "policy_terminal_usd": 13808.987297,
+      "policy_delta_vs_hold_usd": -2175.012703
+    },
+    {
+      "name": "PUMP_FALSE_POSITIVE",
+      "quote_mid_prices": [
+        100,
+        110,
+        120,
+        145,
+        170
+      ],
+      "reentry_hold_hours": 3,
+      "hold_terminal_usd": 16983,
+      "policy_terminal_usd": 13964.060418,
+      "policy_delta_vs_hold_usd": -3018.939582
+    },
+    {
+      "name": "ILLIQUID_ALTCOIN",
+      "execution": "BLOCKED_BY_LIQUIDITY",
+      "delta_vs_hold_usd": 0
+    }
+  ],
+  "synthetic_price_only_lead": {
+    "fixture_mid_prices": [
+      100,
+      98,
+      96,
+      94
+    ],
+    "warning_delivered_hours_from_start": 0,
+    "p2_crossing_h": 2,
+    "p1_crossing_h": 3,
+    "lead_vs_p2_hours": 2,
+    "lead_vs_p1_hours": 3
+  },
+  "scientific_status": {
+    "historic_source_pit": "BLOCKED",
+    "typed_historical_warning_t2b": "BLOCKED",
+    "real_historical_simulations_performed": 0,
+    "independent_market_families_scored": 0,
+    "economic_edge_proven": false,
+    "exit_rule": "NONE",
+    "portfolio_trade_permission": false,
+    "round3_outcome_scoring": "OFF"
+  },
+  "missing_next": [
+    "CI_or_independent_exact_head_test",
+    "nonauthoring_code_review",
+    "R1_original_first_known_and_delivery",
+    "EDGE_T2B_primary_warning_source_admission",
+    "independent_market_family_denominator",
+    "predeclared_historical_action_policy",
+    "executable_bid_ask_liquidity",
+    "sealed_future_out_of_sample_holdout"
+  ],
+  "notice": "Numbers reflect invented scenario mathematics only, not historical or prospective cryptocurrency results; no model selection or live investment decision may use them."
+}

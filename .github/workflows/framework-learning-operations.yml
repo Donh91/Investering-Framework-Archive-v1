@@ -17,6 +17,8 @@ on:
       - 'tests/learning/test_m6_warning_event_outcomes.py'
       - 'tests/learning/test_edge001_tsunami_feature_ledger.py'
       - 'tests/research/test_edge_compound_governor.py'
+      - 'scripts/research/task2_protection_synthetic_v1.py'
+      - 'tests/research/test_task2_protection_synthetic_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -50,6 +52,7 @@ jobs:
         run: |
           python -m unittest tests.learning.test_m6_warning_event_outcomes tests.learning.test_edge001_tsunami_feature_ledger tests.research.test_edge_compound_governor -v
           python scripts/research/edge001_144_variant_pit_harness.py --self-test
+          python -m unittest discover -s tests/research -p 'test_task2_protection_synthetic_v1.py' -v
       - name: Run prospective T6 exact-replay regressions (PR only)
         run: python -m unittest tests.learning.test_t6_rotation_survival -v
       - name: Run sensor relationship scientific-evidence fail-closed regressions (PR only)
