@@ -129,6 +129,8 @@ def validate_candidate(value: Mapping[str, Any], *, prior_issues: Mapping[str, M
     items = observation["items"]
     if not isinstance(items, list):
         _fail("observation.items: array required")
+    if status in {"SCENARIO_ONLY", "ABSTAIN"} and not items:
+        _fail("supported/abstaining scenario must bind at least one observation")
     seen_items: set[str] = set()
     for item in items:
         item = _obj(item, "observation.item")
