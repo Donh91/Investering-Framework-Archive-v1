@@ -3,17 +3,17 @@
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "986a87138b378de3ee3d5bf2da46693f47e26c2f0679ca886dafabae513656f6",
+      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
       "execution_mode": "AUTO_LOCAL_RESEARCH",
       "impact_tier": "MEDIUM",
-      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
+      "novelty_verdict": null,
       "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
-      "source": "COMPOUNDING_LEARNING",
-      "specialist_action": "STRESS_TEST_REGIME_SPECIFICITY",
-      "target": "EC-3b5610a3c12b040694a9"
+      "reason": "registered source material exists but exact evaluator recovery is still required",
+      "source": "SHADOW_REGISTRY",
+      "specialist_action": "RECOVER_EVALUATOR",
+      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
     }
   ],
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -21,36 +21,6 @@
   "canonical_effect": false,
   "contract": "RESEARCH_META_EXECUTION_QUEUE_v1",
   "queue": [
-    {
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "986a87138b378de3ee3d5bf2da46693f47e26c2f0679ca886dafabae513656f6",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "MEDIUM",
-      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
-      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
-      "source": "COMPOUNDING_LEARNING",
-      "specialist_action": "STRESS_TEST_REGIME_SPECIFICITY",
-      "target": "EC-3b5610a3c12b040694a9"
-    },
-    {
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "8373aa40ca788df4a7b585791be0a4182c0bde8af305b7e04cd374a21a90a72d",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "MEDIUM",
-      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
-      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
-      "source": "MONTHLY_COUNCIL",
-      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
-      "target": "EC-0258e3807909a4d1987f"
-    },
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
@@ -65,6 +35,36 @@
       "source": "SHADOW_REGISTRY",
       "specialist_action": "RECOVER_EVALUATOR",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "986a87138b378de3ee3d5bf2da46693f47e26c2f0679ca886dafabae513656f6",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "BLOCKED",
+      "novelty_verdict": "DUPLICATE_EXACT",
+      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
+      "source": "COMPOUNDING_LEARNING",
+      "specialist_action": "STRESS_TEST_REGIME_SPECIFICITY",
+      "target": "EC-3b5610a3c12b040694a9"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "8373aa40ca788df4a7b585791be0a4182c0bde8af305b7e04cd374a21a90a72d",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "BLOCKED",
+      "novelty_verdict": "DUPLICATE_EXACT",
+      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
+      "target": "EC-0258e3807909a4d1987f"
     },
     {
       "canonical_effect": false,
@@ -170,6 +170,21 @@
       "source": "EXTERNAL_SPECIALIST_INTAKE",
       "specialist_action": "EXISTING_OWNER_REVIEW_ONLY",
       "target": "QUANTGPT_PIT_METHOD_20261014"
+    },
+    {
+      "canonical_effect": false,
+      "evidence_fingerprint": "b9bcebf9c9722055bf2058c9e85fefa77ee9ed6008fd689c0e98d90ed96cf817",
+      "evidence_note": "04_RESEARCH_LAB/external_specialist_dissection/2026-10-18__premium-specialist-rea-alpha-lab-priority-deepdive-v1.md",
+      "execution_mode": "AUTO_OBSERVE",
+      "impact_tier": "LOW",
+      "orchestrator_action": "WAIT_FOR_EVIDENCE",
+      "owner_lane": "S3_ENTITY_ADJUSTED_CLUSTER_AND_BUNDLE_V1",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "Public method description is not verified independent market evidence",
+      "source": "EXTERNAL_SPECIALIST_INTAKE",
+      "specialist_action": "EXISTING_OWNER_REVIEW_ONLY",
+      "target": "PREMIUM_SPECIALIST_REA_ALPHA_EVIDENCE_20261018"
     }
   ]
 }
