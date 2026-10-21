@@ -193,14 +193,38 @@ def parse_optional_return_windows(row: dict[str, Any]) -> dict[str, float | None
         if value is None:
             parsed[days] = None
         elif isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
-            raise E("SCHEMA_DRIFT", f"invalid optional return {key}")
+            # Optional research-only source drift must not break canonical 24h breadth.
+            # Record invalid coverage separately; no zero-fill or outcome authority.
+            parsed[days] = None
         else:
             parsed[days] = float(value)
     return parsed
 
 
 def extra_window_provenance(constituents: list[dict[str, Any]], payload: bytes, retrieval: str) -> dict[str, Any]:
-    """Capture-time source receipt; absent provider values stay null/UNKNOWN."""
+    """Capture-only receipt; independently count invalid source values per window."""
+    raw_rows = json.loads(payload)
+    invalid: dict[str, int] = {}
+    missing: dict[str, int] = {}
+    for days in EXTRA_RETURN_WINDOWS:
+        key = f"price_change_percentage_{days}_in_currency"
+        values = [raw_rows[x["source_rank"] - 1].get(key) for x in constituents]
+        invalid[days] = sum(
+            value is not None and (
+                isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value)
+            ) for value in values
+        )
+        missing[days] = sum(value is None for value in values)
+    available = {
+        days: sum(x["extra_return_windows_pct"][days] is not None for x in constituents)
+        for days in EXTRA_RETURN_WINDOWS
+    }
+    if any(invalid.values()):
+        status = "DEGRADED_OPTIONAL_ONLY"
+    elif not any(available.values()):
+        status = "SOURCE_FIELDS_ABSENT_OPTIONAL_ONLY"
+    else:
+        status = "CAPTURE_ONLY_NOT_OUTCOME_ADMITTED"
     return {
         "contract": "COINGECKO_EXTRA_WINDOWS_CAPTURE_v1",
         "source": "COINGECKO_COINS_MARKETS",
@@ -212,12 +236,12 @@ def extra_window_provenance(constituents: list[dict[str, Any]], payload: bytes, 
         "membership_hash": sha(canonical([
             {"filtered_rank": x["filtered_rank"], "asset_id": x["asset_id"]} for x in constituents
         ])),
-        "available_member_counts": {
-            days: sum(x["extra_return_windows_pct"][days] is not None for x in constituents)
-            for days in EXTRA_RETURN_WINDOWS
-        },
+        "available_member_counts": available,
+        "invalid_member_counts": invalid,
+        "missing_member_counts": missing,
         "member_count": len(constituents),
-        "status": "CAPTURE_ONLY_NOT_OUTCOME_ADMITTED",
+        "provider_first_known_proven": False,
+        "status": status,
         "forward_from_capture_only": True,
         "authority": ROTATION_AUTHORITY,
     }
