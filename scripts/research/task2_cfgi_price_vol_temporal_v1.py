@@ -156,7 +156,7 @@ def predict(model,row):
 
 def metrics(rows,models):
     def arm(model):
-        predicted=[predict(model,r) for r in rows]
+        predicted=([float(model)]*len(rows) if isinstance(model,(float,int)) else [predict(model,r) for r in rows])
         if not predicted:return None
         brier=sum((p-r["y"])**2 for p,r in zip(predicted,rows))/len(rows)
         logloss=-sum(r["y"]*math.log(max(1e-9,p))+(1-r["y"])*math.log(max(1e-9,1-p)) for p,r in zip(predicted,rows))/len(rows)
@@ -164,8 +164,18 @@ def metrics(rows,models):
         no=sum(1 for p,r in zip(predicted,rows) if p<0.5 and r["y"]==0)
         return {"n":len(rows),"brier":round(brier,8),"logloss":round(logloss,8),
                 "accuracy_0_5_threshold":round((yes+no)/len(rows),6)}
+    constant=arm(models["train_only_unconditional"])
     base=arm(models["price_vol"])
     aug=arm(models["price_vol_cfgi"])
+    by_day={}
+    for row in rows:
+        by_day.setdefault(row["day"],[]).append(row)
+    daily_gains=[]
+    for day,rr in sorted(by_day.items()):
+        lift=sum((predict(models["price_vol"],r)-r["y"])**2 -
+                 (predict(models["price_vol_cfgi"],r)-r["y"])**2
+                 for r in rr)/len(rr)
+        daily_gains.append(lift)
     return {"rows":len(rows),
             "distinct_utc_calendar_days":len({r["day"] for r in rows}),
             "distinct_iso_weeks":len({r["week"] for r in rows}),
@@ -173,7 +183,11 @@ def metrics(rows,models):
             "negative_outcome":sum(r["y"]==0 for r in rows),
             "future_flat_rows":sum(r["future_flat"] for r in rows),
             "price_batch_clock_unverified":sum(r["price_batch_end_uncertain"] for r in rows),
-            "price_vol":base,"price_vol_cfgi":aug,
+            "train_only_unconditional":constant,"price_vol":base,"price_vol_cfgi":aug,
+            "days_cfgi_brier_better_than_price_vol":sum(v>1e-12 for v in daily_gains),
+            "days_cfgi_brier_worse_than_price_vol":sum(v< -1e-12 for v in daily_gains),
+            "days_cfgi_brier_tied":sum(abs(v)<=1e-12 for v in daily_gains),
+            "descriptive_brier_improvement_price_vol_vs_constant":round(constant["brier"]-base["brier"],8) if constant and base else None,
             "descriptive_brier_improvement_vs_price_vol":round(base["brier"]-aug["brier"],8) if base and aug else None,
             "descriptive_logloss_improvement_vs_price_vol":round(base["logloss"]-aug["logloss"],8) if base and aug else None,
             "market_edge_admitted":False}
@@ -189,7 +203,9 @@ def execute(capture_root=archive.CAPTURE_ROOT,spot_root=archive.PRICE_ROOT):
         test=[r for r in by if r["partition"]=="test_inspected_history"]
         if len(train)<100 or len(validation)<10 or len(test)<20:
             raise ValueError("INSUFFICIENT_SEPARATE_TIME_SPLITS")
-        models={"price_vol":fit(train,BASE_FIELDS),"price_vol_cfgi":fit(train,AUG_FIELDS)}
+        prevalence=sum(r["y"] for r in train)/len(train)
+        models={"train_only_unconditional":max(0.001,min(0.999,prevalence)),
+                "price_vol":fit(train,BASE_FIELDS),"price_vol_cfgi":fit(train,AUG_FIELDS)}
         split[symbol]={"train":metrics(train,models),
                        "validation":metrics(validation,models),
                        "test_inspected_history":metrics(test,models),
@@ -209,6 +225,7 @@ def execute(capture_root=archive.CAPTURE_ROOT,spot_root=archive.PRICE_ROOT):
               "l2_penalty":RIDGE,"gradient_step":LEARNING_RATE,
               "iterations":ITERATIONS,
               "baseline_features":list(BASE_FIELDS),
+              "naive_baseline":"constant UP probability, TRAIN-only class prevalence",
               "incremental_feature":"original 4h CFGI v3 composite score centered at 50",
               "volatility":"std dev previous 8 completed 1h log returns percent",
               "scaling":"train-only zscore capped +/-6"},
@@ -226,7 +243,9 @@ def main():
     compact={"contract":CONTRACT,"counts":result["counts"],
              "assets":{symbol:{split:{"n":metrics_["rows"],
                                       "days":metrics_["distinct_utc_calendar_days"],
+                                      "brier_constant":metrics_["train_only_unconditional"]["brier"],
                                       "brier_price_vol":metrics_["price_vol"]["brier"],
+                                      "days_better":metrics_["days_cfgi_brier_better_than_price_vol"],
                                       "brier_plus_cfgi":metrics_["price_vol_cfgi"]["brier"],
                                       "brier_lift":metrics_["descriptive_brier_improvement_vs_price_vol"]}
                                for split,metrics_ in values.items() if split in ("train","validation","test_inspected_history")}
