@@ -4,15 +4,26 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2] / "scripts" / "research"))
-from task2_protection_synthetic_v1 import Quote, Warning, Policy, simulate_synthetic, price_only_lead_synthetic
+from task2_protection_synthetic_v1 import (Quote, Warning, Policy, simulate_synthetic,
+    price_only_lead_synthetic, validate, registered_toy_case_names, registered_toy_definition)
 
 BASE = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
-def scenario(prices, spread=0, capacities=None, step_h=1):
+def raw_scenario(prices, spread=0, capacities=None, step_h=1):
     capacities = capacities or [1e9] * len(prices)
     return [Quote(BASE + timedelta(hours=i*step_h), BASE + timedelta(hours=i*step_h),
                   p*(1-spread/2), p*(1+spread/2), capacities[i])
             for i,p in enumerate(prices)]
+
+def scenario(prices, spread=0, capacities=None, step_h=1):
+    """Select CODE-OWNED fixture bytes by exact immutable toy definition."""
+    if spread != 0 or step_h != 1:
+        raise ValueError("NO_DYNAMIC_FIXTURE_PARAMS")
+    key=(tuple(prices),tuple(capacities) if capacities is not None else None)
+    ids=[id for id in registered_toy_case_names() if registered_toy_definition(id)==key]
+    if len(ids)!=1:
+        raise ValueError("UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED")
+    return ids[0]
 
 def signal(delivered_h=0, issued_h=0, source_h=0, proof='SYNTHETIC_FIXTURE_ONLY'):
     return Warning(BASE+timedelta(hours=source_h), BASE+timedelta(hours=issued_h),
@@ -92,21 +103,21 @@ class CounterfactualTests(unittest.TestCase):
     def test_forged_label_cannot_admit_unregistered_historical_tape(self):
         # Unrecognized caller-supplied observations must not be accepted even
         # if every timestamp, execution clock, and warning label looks valid.
-        historical_like = scenario([101, 99, 82, 75])
-        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_OR_HISTORICAL_TAPE_BLOCKED'):
+        historical_like = raw_scenario([101, 99, 82, 75])
+        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED'):
             simulate_synthetic(historical_like, signal(proof='SYNTHETIC_FIXTURE_ONLY'), policy())
 
     def test_mutated_valid_toy_tape_is_not_in_admission_roster(self):
         tape = scenario([100, 90, 80, 70])
         tape[2] = replace(tape[2], bid=79, ask=79)
-        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_OR_HISTORICAL_TAPE_BLOCKED'):
+        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED'):
             simulate_synthetic(tape, signal(), policy())
 
     def test_shifted_historical_clock_cannot_masquerade_as_toy_scenario(self):
         tape = scenario([100, 90, 80, 70])
         tape = [replace(q, at=q.at + timedelta(days=180),
                         known_at=q.known_at + timedelta(days=180)) for q in tape]
-        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_OR_HISTORICAL_TAPE_BLOCKED'):
+        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED'):
             simulate_synthetic(tape, signal(), policy())
 
     def test_reproduced_frozen_toy_only_has_no_scientific_authority(self):
@@ -123,17 +134,17 @@ class CounterfactualTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'LOOKAHEAD'):
             simulate_synthetic(scenario([100,90]),signal(issued_h=2,delivered_h=1),policy())
     def test_duplicate_quotes_forbidden(self):
-        tape=scenario([100,90,80]);tape[2]=replace(tape[2],at=tape[1].at,known_at=tape[1].at)
+        tape=raw_scenario([100,90,80]);tape[2]=replace(tape[2],at=tape[1].at,known_at=tape[1].at)
         with self.assertRaisesRegex(ValueError,'OUT_OF_ORDER'):
-            simulate_synthetic(tape,signal(),policy())
+            validate(tape,signal(),policy(),10000)
     def test_future_quote_capture_forbidden(self):
-        tape=scenario([100,90]);tape[1]=replace(tape[1],known_at=tape[1].at+timedelta(hours=2))
+        tape=raw_scenario([100,90]);tape[1]=replace(tape[1],known_at=tape[1].at+timedelta(hours=2))
         with self.assertRaisesRegex(ValueError,'QUOTE_CAPTURE'):
-            simulate_synthetic(tape,signal(),policy())
+            validate(tape,signal(),policy(),10000)
     def test_no_negative_spread_or_nan(self):
-        tape=scenario([100,90]);tape[1]=replace(tape[1],bid=float('nan'))
+        tape=raw_scenario([100,90]);tape[1]=replace(tape[1],bid=float('nan'))
         with self.assertRaisesRegex(ValueError,'NONFINITE'):
-            simulate_synthetic(tape,signal(),policy())
+            validate(tape,signal(),policy(),10000)
     def test_negative_cost_forbidden(self):
         with self.assertRaisesRegex(ValueError,'POLICY_COST'):
             simulate_synthetic(scenario([100,90]),signal(),policy(fee=-1))
@@ -151,6 +162,14 @@ class CounterfactualTests(unittest.TestCase):
     def test_unknown_warning_state_forbidden(self):
         with self.assertRaisesRegex(ValueError,'HISTORICAL_OR_UNAUTHORIZED'):
             simulate_synthetic(scenario([100,90]),replace(signal(),state='BUILDING'),policy())
+
+    def test_caller_supplied_literal_proof_not_admitted_as_case_id(self):
+        with self.assertRaisesRegex(ValueError,'UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED'):
+            simulate_synthetic('SYNTHETIC_FIXTURE_ONLY',signal(),policy())
+
+    def test_price_baseline_rejects_historical_tape_exact_like_toy(self):
+        with self.assertRaisesRegex(ValueError,'UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED'):
+            price_only_lead_synthetic(raw_scenario([100,98,96,94]),signal())
 
 class PriceOnlyLeadTests(unittest.TestCase):
     def test_early_warning_beats_frozen_price_triggers(self):
@@ -172,9 +191,9 @@ class PriceOnlyLeadTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'LOOKAHEAD'):
             price_only_lead_synthetic(scenario([100,90]),signal(source_h=3))
     def test_quote_capture_futurity_cannot_lead(self):
-        q=scenario([100,90]);q[1]=replace(q[1],known_at=q[1].at+timedelta(minutes=1))
+        q=raw_scenario([100,90]);q[1]=replace(q[1],known_at=q[1].at+timedelta(minutes=1))
         with self.assertRaisesRegex(ValueError,'QUOTE_CAPTURE'):
-            price_only_lead_synthetic(q,signal())
+            validate(q,signal(),policy(),10000)
 
 if __name__=='__main__': unittest.main(verbosity=2)
 
