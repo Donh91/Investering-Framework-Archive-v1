@@ -318,10 +318,13 @@ jobs:
                   assert x['rows']>10
                   assert x['positive_outcome']+x['negative_outcome']==x['rows']
                   assert x['price_vol']['n']==x['price_vol_cfgi']['n']==x['rows']
+                  assert x['train_only_unconditional']['n']==x['rows']
+                  assert x['days_cfgi_brier_better_than_price_vol']+x['days_cfgi_brier_worse_than_price_vol']+x['days_cfgi_brier_tied']==x['distinct_utc_calendar_days']
                   assert not x['market_edge_admitted']
               x=q['test_inspected_history']
               print('TASK2_CF_GI_INCREMENTAL_INSPECTED_TEST',asset,
                     'n',x['rows'],'days',x['distinct_utc_calendar_days'],
+                    'naive Brier',x['train_only_unconditional']['brier'],
                     'baseline Brier',x['price_vol']['brier'],
                     'augmented Brier',x['price_vol_cfgi']['brier'],
                     'lift',x['descriptive_brier_improvement_vs_price_vol'])
