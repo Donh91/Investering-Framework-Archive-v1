@@ -69,13 +69,31 @@ class ExtraWindowCaptureTests(unittest.TestCase):
         extended, _, _ = owner.parse(fixture(), include_extra_windows=True)
         self.assertEqual(extended[3]["extra_return_windows_pct"], {"7d": None, "30d": None, "200d": None})
 
-    def test_schema_drift_invalid_extra_is_rejected(self):
+    def test_invalid_optional_value_does_not_break_24h_breadth(self):
         for bad in [True, "12.5", float("inf"), float("nan"), [], {}]:
             with self.subTest(bad=str(bad)):
                 rows = json.loads(fixture())
                 rows[0]["price_change_percentage_30d_in_currency"] = bad
-                with self.assertRaises(owner.E):
-                    owner.parse(json.dumps(rows).encode(), include_extra_windows=True)
+                raw = json.dumps(rows).encode()
+                _, _, legacy_aggregate = owner.parse(raw)
+                extended, _, original_aggregate = owner.parse(raw, include_extra_windows=True)
+                self.assertEqual(legacy_aggregate, original_aggregate)
+                self.assertIsNone(extended[0]["extra_return_windows_pct"]["30d"])
+                status = owner.extra_window_provenance(extended, raw, "2026-10-21T08:00:00Z")
+                self.assertEqual(status["status"], "DEGRADED_OPTIONAL_ONLY")
+                self.assertEqual(status["invalid_member_counts"]["30d"], 1)
+                self.assertEqual(status["missing_member_counts"]["30d"], 1)
+                self.assertFalse(status["authority"]["can_create_outcome_rows"])
+
+    def test_all_optional_fields_absent_stays_null_and_unadmitted(self):
+        raw = fixture(include_windows=False)
+        extended, _, legacy = owner.parse(raw, include_extra_windows=True)
+        status = owner.extra_window_provenance(extended, raw, "2026-10-21T08:00:00Z")
+        self.assertEqual(status["status"], "SOURCE_FIELDS_ABSENT_OPTIONAL_ONLY")
+        self.assertEqual(status["available_member_counts"], {"7d": 0, "30d": 0, "200d": 0})
+        self.assertEqual(status["missing_member_counts"], {"7d": 100, "30d": 100, "200d": 100})
+        self.assertEqual(legacy["constituent_count"], 100)
+        self.assertFalse(status["provider_first_known_proven"])
 
     def test_surplus_invalid_window_does_not_poison_selected_members(self):
         # A malformed optional field on nonselected rank 101 cannot cause
@@ -104,6 +122,9 @@ class ExtraWindowCaptureTests(unittest.TestCase):
         self.assertEqual(capture["raw_sha256"], hashlib.sha256(raw).hexdigest())
         self.assertEqual(capture["membership_hash"], aggregate["membership_hash"])
         self.assertEqual(capture["available_member_counts"], {"7d": 99, "30d": 99, "200d": 99})
+        self.assertEqual(capture["missing_member_counts"], {"7d": 1, "30d": 1, "200d": 1})
+        self.assertEqual(capture["invalid_member_counts"], {"7d": 0, "30d": 0, "200d": 0})
+        self.assertFalse(capture["provider_first_known_proven"])
         self.assertFalse(capture["authority"]["can_create_outcome_rows"])
 
     def test_owner_legacy_default_preserved(self):
