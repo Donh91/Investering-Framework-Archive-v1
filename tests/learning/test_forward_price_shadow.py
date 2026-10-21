@@ -54,14 +54,16 @@ class ShadowPriceTests(unittest.TestCase):
             self.assertLess(band["low_usd"], band["high_usd"])
             self.assertIsNone(band["coverage_probability"])
 
-    def reject(self, fn):
+    def reject(self, fn, *, rehash=True):
         data = fixture()
         fn(data)
+        if rehash:
+            data["source_rows_sha256"] = hashlib.sha256(canonical(data["bars"])).hexdigest()
         with self.assertRaises(ValueError):
             build_shadow(data)
 
     def test_tamper_frozen_source_rows(self):
-        self.reject(lambda x: x["bars"][-1].update(close_usd=x["bars"][-1]["close_usd"] + 1.0))
+        self.reject(lambda x: x["bars"][-1].update(close_usd=x["bars"][-1]["close_usd"] + 1.0), rehash=False)
 
     def test_no_provider_proof(self):
         self.reject(lambda x: x.update(provider_first_known_proven=False))
@@ -85,9 +87,17 @@ class ShadowPriceTests(unittest.TestCase):
         self.reject(lambda x: x["bars"].insert(40, copy.deepcopy(x["bars"][39])))
 
     def test_nonpositive_or_nonfinite(self):
-        for value in (-1,0,float("inf"),float("nan"),True):
+        for value in (-1, 0, True):
             with self.subTest(x=value):
                 self.reject(lambda x: x["bars"][0].update(low_usd=value))
+
+    def test_nonfinite_source_values_fail_canonical_input_binding(self):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(value=value):
+                data=fixture()
+                data["bars"][0]["low_usd"]=value
+                with self.assertRaises(ValueError):
+                    canonical(data["bars"])
 
     def test_close_outside_daily_high(self):
         self.reject(lambda x: x["bars"][0].update(close_usd=999999))
@@ -108,6 +118,33 @@ class ShadowPriceTests(unittest.TestCase):
         out=build_shadow(d)
         self.assertEqual(out["horizons_days"]["21"]["status"], "ABSTAIN")
         self.assertEqual(out["horizons_days"]["21"]["nonoverlap_upper_bound"], 11)
+
+    def test_253_bars_has_twelve_disjoint_21d_blocks(self):
+        data=fixture(253)
+        result=build_shadow(data)["horizons_days"]["21"]
+        self.assertEqual(result["nonoverlap_upper_bound"], 12)
+        self.assertEqual(result["status"], "SHADOW_BASELINE_ONLY")
+
+    def test_source_first_known_cannot_equal_day_close(self):
+        def boundary(x):
+            last=x["bars"][-1]
+            day=datetime.strptime(last["day_utc"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            last["first_known_at_utc"]=(day+timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.reject(boundary)
+
+    def test_small_positive_prices_not_rounded_to_zero(self):
+        data=fixture()
+        for bar in data["bars"]:
+            p=bar["close_usd"]*1e-12
+            bar["close_usd"]=p
+            bar["low_usd"]=p*.99
+            bar["high_usd"]=p*1.01
+        data["source_rows_sha256"]=hashlib.sha256(canonical(data["bars"])).hexdigest()
+        out=build_shadow(data)
+        for v in out["horizons_days"].values():
+            if v["status"] == "SHADOW_BASELINE_ONLY":
+                self.assertGreater(v["low_usd"],0)
+                self.assertGreater(v["high_usd"],v["low_usd"])
 
     def test_missing_source_manifest_sha(self):
         self.reject(lambda x: x.update(source_manifest_sha256="x"))
