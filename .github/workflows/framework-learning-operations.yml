@@ -75,6 +75,13 @@ jobs:
           print('TASK2_ARCHIVE_STRESS_ENGINE_PASS', {k:{'assessed_cells':v['assessed_cells'],'segments':v['price_segments'],'source_hours':v['sum_of_segment_hours'],'skipped_cells':v['skipped_cells'],'triggered_cells':v['cells_triggering_illustrative_trim'],'positive_vs_hold_cells_descriptive':v['cells_positive_vs_hold_descriptive']} for k,v in x['price_eras'].items()})
           print('NO_FORECAST_OR_CFGI_EDGE_EVALUATED')
           PY
+      - name: Retain Task2 aggregate research-only stress receipt (PR artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-price-only-expost-stress-${{ github.run_id }}
+          path: /tmp/task2_price_only_dev.json
+          retention-days: 7
+          if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
         run: python -m unittest tests.learning.test_t6_rotation_survival -v
       - name: Run sensor relationship scientific-evidence fail-closed regressions (PR only)
