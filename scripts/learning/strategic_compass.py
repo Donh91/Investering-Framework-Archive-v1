@@ -143,18 +143,20 @@ def validate_forward_range_candidate(value: Any) -> dict[str, Any]:
     if not monday <= issued < first_interval:
         raise ValueError("late_or_preweek_issuance_not_original_monday_forecast")
 
-    source = required(row["source"], {
-        "owner", "source_contract_id", "sha256",
-        "first_known_at_utc", "cutoff_utc"
-    }, "source")
-    if source["owner"] != "CYCLE_NAVIGATOR_WEEKLY" or not nonempty(source["source_contract_id"]):
-        raise ValueError("unknown_source_owner")
-    if not isinstance(source["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", source["sha256"]):
-        raise ValueError("unbound_source_hash")
-    first_known = stamp(source["first_known_at_utc"], "source_first_known")
-    cutoff = stamp(source["cutoff_utc"], "source_cutoff")
-    if not first_known <= cutoff <= issued:
-        raise ValueError("source_known_after_cutoff_or_issuance")
+    source = row["source"]
+    if source is not None:
+        source = required(source, {
+            "owner", "source_contract_id", "sha256",
+            "first_known_at_utc", "cutoff_utc"
+        }, "source")
+        if source["owner"] != "CYCLE_NAVIGATOR_WEEKLY" or not nonempty(source["source_contract_id"]):
+            raise ValueError("unknown_source_owner")
+        if not isinstance(source["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", source["sha256"]):
+            raise ValueError("unbound_source_hash")
+        first_known = stamp(source["first_known_at_utc"], "source_first_known")
+        cutoff = stamp(source["cutoff_utc"], "source_cutoff")
+        if not first_known <= cutoff <= issued:
+            raise ValueError("source_known_after_cutoff_or_issuance")
 
     for asset in ("BTC", "ETH"):
         series = required(row[asset], {"windows"}, asset)
@@ -173,6 +175,8 @@ def validate_forward_range_candidate(value: Any) -> dict[str, Any]:
                 stamp(bucket["end_utc"], "window_end") != monday + timedelta(days=days_b)):
                 raise ValueError(f"{asset}_{label}_clock_incorrect")
             if bucket["status"] == "CANDIDATE":
+                if source is None:
+                    raise ValueError("candidate_price_requires_original_source_receipt")
                 lo, hi = bucket["low_usd"], bucket["high_usd"]
                 if not all(
                     type(num) in (float, int) and math.isfinite(num) and num > 0
