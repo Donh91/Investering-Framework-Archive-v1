@@ -54,7 +54,7 @@ class HourlyBatchClockTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"CLOCK_NOT_EXPLICIT_UTC"):
             m.utc("2026-10-18T00:00:00+00:00")
     def test_declaration_never_infers_data_available(self):
-        self.assertIn("NOT_DETECTION",m.CONTRACT.replace("CLOCK_AUDIT","NOT_DETECTION") if False else "NOT_DETECTION")
+        self.assertIn("BATCH REQUEST WINDOW END",m.__doc__)
     def test_source_frozen_full_week(self):
         if m.SOURCE.exists():
             result=m.execute()
