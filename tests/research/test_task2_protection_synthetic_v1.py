@@ -89,6 +89,33 @@ class CounterfactualTests(unittest.TestCase):
     def test_historical_proof_is_rejected(self):
         with self.assertRaisesRegex(ValueError,'HISTORICAL_OR_UNAUTHORIZED_WARNING_BLOCKED'):
             simulate_synthetic(scenario([100,90]),signal(proof='PIT_VERIFIED'),policy())
+    def test_forged_label_cannot_admit_unregistered_historical_tape(self):
+        # Unrecognized caller-supplied observations must not be accepted even
+        # if every timestamp, execution clock, and warning label looks valid.
+        historical_like = scenario([101, 99, 82, 75])
+        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_OR_HISTORICAL_TAPE_BLOCKED'):
+            simulate_synthetic(historical_like, signal(proof='SYNTHETIC_FIXTURE_ONLY'), policy())
+
+    def test_mutated_valid_toy_tape_is_not_in_admission_roster(self):
+        tape = scenario([100, 90, 80, 70])
+        tape[2] = replace(tape[2], bid=79, ask=79)
+        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_OR_HISTORICAL_TAPE_BLOCKED'):
+            simulate_synthetic(tape, signal(), policy())
+
+    def test_shifted_historical_clock_cannot_masquerade_as_toy_scenario(self):
+        tape = scenario([100, 90, 80, 70])
+        tape = [replace(q, at=q.at + timedelta(days=180),
+                        known_at=q.known_at + timedelta(days=180)) for q in tape]
+        with self.assertRaisesRegex(ValueError, 'UNREGISTERED_OR_HISTORICAL_TAPE_BLOCKED'):
+            simulate_synthetic(tape, signal(), policy())
+
+    def test_reproduced_frozen_toy_only_has_no_scientific_authority(self):
+        out = simulate_synthetic(scenario([100, 95, 60, 50, 55, 58]), signal(), policy())
+        self.assertEqual(out['evidence_class'], 'SYNTHETIC_ONLY_NOT_HISTORICAL_EDGE')
+        self.assertFalse(out['historical_result_admissible'])
+        self.assertFalse(out['statistical_significance_admissible'])
+        self.assertFalse(out['portfolio_action_authorized'])
+
     def test_future_source_forbidden(self):
         with self.assertRaisesRegex(ValueError,'LOOKAHEAD'):
             simulate_synthetic(scenario([100,90]),signal(source_h=2),policy())
