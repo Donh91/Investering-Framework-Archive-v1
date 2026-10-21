@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_EXACT_PR_PATCHES_A.md",
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_EXACT_PR_TESTS_AND_VNEXT_B.md",
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_RELEASE_REVIEW_v1.json",
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_EXACT_PR_PATCHES_A.md",
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-52590a023f603d48",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE. User explicitly authorized GPT-6.1 Sol API review and high-priority completion on 2026-10-19. Five exact-head PR CI checks passed. This merges ONLY frozen public-safe exact PR evidence and approved existing Research Lab Sol queue metadata, no new workflow/agent/authority/budget, no private data. Internal backup-safepoint/2026-10-19-sol61-advisory-queue-release pinned prechange main b6f9f2eff926e5d383882805c0de68e9c5a1c41b. One active mission; Task2 second remains explicitly HOLD. Independent external human APPROVED not claimed; user-authorized administrat",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_EXACT_PR_PATCHES_A.md": "1f960d4ce71d8fd5c6a3513ea0448503c1f5af1d",
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_EXACT_PR_TESTS_AND_VNEXT_B.md": "3bfe47ad0ab47de6508b71a899900fb770fc8362",
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__SITE_SOL61_RELEASE_REVIEW_v1.json": "0afa58e091f9867a4c923f1efcba1f8fafbb7763",
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_EXACT_PR_PATCHES_A.md": "92c86db412ac81bf235e231e7e9de282fdb26152",
+    "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json": "561f8255c2aafac73d577d5751f0e509515bfa77",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json": "1d4f8663fb16bf5f10f0ce2c5cb47795f8956780"
+  },
+  "source_commit_sha": "52590a023f603d485773a49987cc56a3c4c48df5",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-19T08:03:28-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "audit(sol): release bounded exact-head SITE/Compass P0 review via existing API lane (#1684)"
+}

@@ -1,5 +1,8 @@
 # ASTRA HANDOVER - EXTERNAL ALPHA STANDING LANE
 
+> **2026-10-15 model-neutral mission continuity (External Alpha).** Historical `Astra` wording, filenames and model-era labels are **compatibility references only**, not an authority to wait for a new model. This is an existing owner-held standing research lane (#937), not a future Astra activation. The current framework may use qualified GPT-6 and deterministic work for owner-admitted candidates now. Respect MAEVE action/opportunity timing, identity proofs, current case status, independent tests and research-only authority; no auto-copy trading. Follow the existing [Framework Mission Continuity owner](../../07_PROMPTS_AND_AGENTS/astra/ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md) and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 Status: READY FOR FUTURE ASTRA SUPERVISION / RESEARCH ONLY
 Owner: #937
 Scientific lifecycle: #885

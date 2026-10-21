@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".agents/skills/codex-intake/SKILL.md",
+    ".github/workflows/full-architecture-1to7-gate.yml",
+    "00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md",
+    "AGENTS.md",
+    "scripts/governance/check_codex_review_finality.py",
+    "tests/governance/test_codex_review_finality.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".agents",
+  "episode_id": "OE-26a87adb247d80db",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* governance: freeze negative controls and forbid merges with newer pending reviews * architecture: reconcile non-self-merge with exact-head independent in-house technical review * codex intake: require predeclared failure matrices and guard-sensitive negative tests * governance: preserve unconditional non-self-merge and require guard mutation proof * governance: preserve unconditional non-self-merge and require guard mutation proof * governance: add fail-closed exact-head Codex review finality preflight * test: reproduce premature merge race and fail closed on pending or incomplete reviews * ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".agents/skills/codex-intake/SKILL.md": "4ac73d5f5916d2aa4005665deca5c1467afb5ac8",
+    ".github/workflows/full-architecture-1to7-gate.yml": "7a8eb774734fa5732e526acf1dbb5cc0560147c6",
+    "00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md": "9cb984ce2f408e97f08f06490e587d3869d86e3c",
+    "AGENTS.md": "72d0846eb9687fb54c320845dab8cd10e46b62fa",
+    "scripts/governance/check_codex_review_finality.py": "e4e6c88a823933feec25117ae70e9f4f19e8ec1d",
+    "tests/governance/test_codex_review_finality.py": "49a3fd2d49f47f3a02d486413024cccbe9b69cca"
+  },
+  "source_commit_sha": "26a87adb247d80db18cdf8591f2ad43173277be3",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-15T19:32:56-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "governance: owner-authorized single-account release with fail-closed gates"
+}

@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/api-agent-gateway-gate.yml",
+    ".github/workflows/cycle-navigator-internal-precision.yml",
+    ".github/workflows/full-architecture-1to7-gate.yml",
+    "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+    "scripts/cycle_navigator/build_internal_precision.py",
+    "tests/cycle_navigator/__init__.py",
+    "tests/cycle_navigator/test_internal_precision_api_budget.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-c3c7150309118317",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-durable-api-cost-reservations-receipt-reconciliation-fail",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(cn): fail-close direct long-horizon OpenAI calls on budget with durable cost receipt and dedupe * fix(cn): make shared API budget/pricing helper import independent of entrypoint path * fix(cn): verify cost guard in CI and persist exact AI usage receipts with CN weekly commit/readback * test(cn): negative and positive offline API monthly budget, dedupe and unknown-usage gates * test(cn): declare package for independent offline API-budget regressions * test(ci): execute CN paid scoring budget/dedupe regressions on relevant PRs * fix(cn): preserve weekly deterministic scoring when API budge",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/api-agent-gateway-gate.yml": "9ce3feae219b1db304607c49c5804c12d4dd9489",
+    ".github/workflows/cycle-navigator-internal-precision.yml": "1a92cbe12b41d365295ce1269b544e6dfb55d233",
+    ".github/workflows/full-architecture-1to7-gate.yml": "fce6fd35da1db49d7f2fdd369de2c39b6c0e09ec",
+    "research/api_agent/API_INTELLIGENCE_POLICY_v2.json": "be470c332af26c066a2cd8e8d7238aa6fa81101e",
+    "scripts/cycle_navigator/build_internal_precision.py": "0e1b8a216a6b0c68a2f56bdec894ec86e09fb1e0",
+    "tests/cycle_navigator/__init__.py": "ceb55573f4fd01b048c5f4a4d76745bef953b00f",
+    "tests/cycle_navigator/test_internal_precision_api_budget.py": "7da85a396c4394a02442beb73065287333e645f0"
+  },
+  "source_commit_sha": "c3c7150309118317cd350b74519443a377eb489d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-15T19:42:04-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(CN): durable API cost reservations, receipt reconciliation and fail-closed budget gates"
+}

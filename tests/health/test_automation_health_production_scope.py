@@ -557,3 +557,206 @@ def test_current_repository_has_no_unresolved_write_targets() -> None:
         if row["write_target_class"] == "DYNAMIC_TARGET_UNKNOWN":
             unknown.append(path.name)
     assert unknown == [], f"unresolved repository write targets: {unknown}"
+
+
+def _hourly_delivery_fixture(count, monkeypatch):
+    def fake_api(url: str, token: str) -> dict:
+        assert "event=schedule" in url
+        assert "created=2026-10-19" in url
+        assert "per_page=1" in url
+        return {"total_count": count}
+
+    monkeypatch.setattr(module.base, "utc_now",
+                        lambda: datetime(2026, 10, 20, 19, 45, tzinfo=timezone.utc))
+    monkeypatch.setattr(module.base, "api_json", fake_api)
+    return module.hourly_prior_utc_day_delivery("https://api.github.com/repos/Donh91/Test", 1, "main", "dummy")
+
+
+def _classify_hourly_with_delivery(delivery):
+    row = _scheduled_row()
+    row["workflow"] = "hourly-sequence-capture.yml"
+    row["cron_expressions"] = ["12 * * * *"]
+    row["live"] = {
+        "state": "active",
+        "latest_run": {
+            "id": 1, "event": "schedule", "status": "completed",
+            "conclusion": "success", "created_at": "2026-10-20T19:12:00Z",
+            "updated_at": "2026-10-20T19:15:00Z",
+        },
+        "latest_scheduled_run": {
+            "id": 1, "event": "schedule", "status": "completed",
+            "conclusion": "success", "created_at": "2026-10-20T19:12:00Z",
+            "updated_at": "2026-10-20T19:15:00Z",
+        },
+        "recent_failure_count": 0,
+        "recent_completed_count": 1,
+        "expected_success_streak": 1,
+        "success_streak": 1,
+        "failure_streak": 0,
+        "cancellation_streak": 0,
+        "pr_gate_rejection_streak": 0,
+        "hourly_schedule_utc_day": delivery,
+    }
+    return module.classify(row, datetime(2026, 10, 20, 19, 45, tzinfo=timezone.utc))
+
+
+def test_hourly_schedule_creations_under_24_alert_even_if_recent_success(monkeypatch):
+    delivery = _hourly_delivery_fixture(4, monkeypatch)
+    assert delivery["status"] == "MEASURED"
+    assert delivery["utc_day"] == "2026-10-19"
+    assert delivery["expected_hourly_cron_slots"] == 24
+    assert delivery["created_schedule_event_count"] == 4
+    status, findings = _classify_hourly_with_delivery(delivery)
+    assert status == "AMBER"
+    assert "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H" in findings
+    assert "LATEST_RUN_FAILED" not in findings
+
+
+def test_full_24_schedule_creations_does_not_alarm(monkeypatch):
+    delivery = _hourly_delivery_fixture(24, monkeypatch)
+    status, findings = _classify_hourly_with_delivery(delivery)
+    assert status == "GREEN"
+    assert "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H" not in findings
+
+
+def test_unknown_api_schedule_count_is_not_reinterpreted_as_zero(monkeypatch):
+    delivery = _hourly_delivery_fixture(None, monkeypatch)
+    assert delivery["created_schedule_event_count"] is None
+    assert delivery["status"] == "UNAVAILABLE"
+    status, findings = _classify_hourly_with_delivery(delivery)
+    assert status == "AMBER"
+    assert "HOURLY_SCHEDULE_DELIVERY_OBSERVABILITY_UNAVAILABLE" in findings
+    assert "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H" not in findings
+
+
+def test_zero_schedule_events_are_measured_as_gap(monkeypatch):
+    delivery = _hourly_delivery_fixture(0, monkeypatch)
+    status, findings = _classify_hourly_with_delivery(delivery)
+    assert status == "AMBER"
+    assert "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H" in findings
+
+# Task2 P0 first-parent source-clock audit: actual Git fixtures, not synthetic timestamps
+# unbound to git history. All market authority remains research-only.
+def _task2_source_audit_module():
+    spec = importlib.util.spec_from_file_location(
+        "task2_hourly_source_sla",
+        Path(__file__).parents[2] / "04_MARKET_LEARNING" / "handlekompas" /
+        "research" / "2026-10-13__task15_source_publication_chronology_v1.py",
+    )
+    assert spec and spec.loader
+    loaded = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loaded)
+    return loaded
+
+
+def _task2_git(repo, *args, when=None):
+    import os
+    import subprocess
+    env = os.environ.copy()
+    if when:
+        env.update(GIT_AUTHOR_DATE=when, GIT_COMMITTER_DATE=when)
+    result = subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True, env=env)
+    return result.stdout.strip()
+
+
+def _task2_commit_csv(repo, name, payload, at):
+    relative = Path("03_DAILY_CAPTURE_LOGS/hourly/2026/10") / name
+    target = repo / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(payload)
+    _task2_git(repo, "add", relative.as_posix())
+    _task2_git(repo, "commit", "-qm", "source snapshot", when=at)
+
+
+def _task2_source_repo(tmp_path):
+    _task2_git(tmp_path, "init", "-q")
+    _task2_git(tmp_path, "config", "user.name", "Research Fixture")
+    _task2_git(tmp_path, "config", "user.email", "fixture@example.invalid")
+    header = "timestamp_utc,spot_status,btc_close,eth_close\n"
+    prev = header + "2026-10-18T23:00:00Z,PASS,100,5\n"
+    _task2_commit_csv(tmp_path, "2026-10-18.csv", prev, "2026-10-19T00:12:00+00:00")
+    late = header + "2026-10-19T00:00:00Z,PASS,101,6\n"
+    _task2_commit_csv(tmp_path, "2026-10-19.csv", late, "2026-10-19T03:01:00+00:00")
+    return header, late
+
+
+def test_task2_daily_hourly_source_sla_exact_midnight_and_late(tmp_path):
+    header, late = _task2_source_repo(tmp_path)
+    audit = _task2_source_audit_module()
+    receipt = audit.daily_hourly_owner_source_sla(
+        tmp_path, "HEAD", datetime(2026, 10, 19).date(),
+        now=datetime(2026, 10, 20, 2, tzinfo=timezone.utc))
+    assert receipt["expected_due_hours"] == 24
+    assert receipt["first_commit_clock_within_90m"] == 1
+    assert receipt["first_commit_clock_after_90m"] == 1
+    assert receipt["not_present_in_first_parent_history"] == 22
+    assert receipt["clock_anomalies"] == 0
+    assert receipt["records"][0]["source_open_at_utc"] == "2026-10-18T23:00:00Z"
+    assert receipt["records"][1]["minutes_after_due"] == 121
+    assert receipt["authority"]["portfolio_action"] is False
+    assert "provider" in receipt["evidence_semantics"].lower()
+
+
+def test_task2_daily_hourly_source_sla_late_backfill_not_on_time(tmp_path):
+    header, late = _task2_source_repo(tmp_path)
+    _task2_commit_csv(tmp_path, "2026-10-19.csv",
+                      late + "2026-10-19T01:00:00Z,PASS,102,7\n",
+                      "2026-10-19T05:15:00+00:00")
+    audit = _task2_source_audit_module()
+    report = audit.daily_hourly_owner_source_sla(
+        tmp_path, "HEAD", datetime(2026, 10, 19).date(),
+        now=datetime(2026, 10, 20, 2, tzinfo=timezone.utc))
+    assert report["first_commit_clock_within_90m"] == 1
+    assert report["first_commit_clock_after_90m"] == 2
+    assert report["records"][1]["minutes_after_due"] == 121
+    assert report["records"][2]["classification"] == "FIRST_COMMIT_CLOCK_AFTER_90M"
+
+
+def test_task2_daily_hourly_source_sla_rejects_current_day(tmp_path):
+    _task2_source_repo(tmp_path)
+    audit = _task2_source_audit_module()
+    import pytest
+    with pytest.raises(ValueError, match="ONLY_PREVIOUS_COMPLETE_UTC_DAYS"):
+        audit.daily_hourly_owner_source_sla(
+            tmp_path, "HEAD", datetime(2026, 10, 20).date(),
+            now=datetime(2026, 10, 20, 2, tzinfo=timezone.utc))
+
+
+def test_task2_daily_hourly_source_sla_no_price_or_original_score_leak(tmp_path):
+    _task2_source_repo(tmp_path)
+    audit = _task2_source_audit_module()
+    receipt = audit.daily_hourly_owner_source_sla(
+        tmp_path, "HEAD", datetime(2026, 10, 19).date(),
+        now=datetime(2026, 10, 20, 2, tzinfo=timezone.utc))
+    records = receipt["records"]
+    assert len({row["due_at_utc"] for row in records}) == 24
+    assert all("btc_close" not in row and "eth_close" not in row and "score" not in row for row in records)
+    assert sum([receipt["first_commit_clock_within_90m"],receipt["first_commit_clock_after_90m"],receipt["not_present_in_first_parent_history"],receipt["clock_anomalies"]]) == 24
+
+def test_task2_source_sla_does_not_change_hourly_or_recovery_schedules():
+    root = Path(__file__).parents[2]
+    health = (root / ".github/workflows/automation-production-health.yml").read_text()
+    primary = (root / ".github/workflows/hourly-sequence-capture.yml").read_text()
+    recovery = (root / ".github/workflows/native-market-recovery.yml").read_text()
+    assert "Measure prior UTC day hourly source first-commit deadline" in health
+    assert "--daily-hourly-owner-sla-day" in health
+    assert "LATEST_HOURLY_SOURCE_SLA.json" in health
+    assert "SOURCE_GIT_HISTORY_OR_VALIDATION_UNAVAILABLE" in health
+    assert "cron: '12 * * * *'" in primary
+    assert "cron: '24 * * * *'" in recovery
+    assert "framework-market-owner-writer" in primary
+    assert "framework-market-owner-writer" in recovery
+
+
+def test_task2_source_sla_rejects_nonfinite_owner_source(tmp_path):
+    _task2_source_repo(tmp_path)
+    header = "timestamp_utc,spot_status,btc_close,eth_close\n"
+    _task2_commit_csv(tmp_path, "2026-10-19.csv",
+                      header + "2026-10-19T00:00:00Z,PASS,101,6\n2026-10-19T01:00:00Z,PASS,nan,6\n",
+                      "2026-10-19T03:04:00+00:00")
+    audit = _task2_source_audit_module()
+    import pytest
+    with pytest.raises(ValueError, match="NONFINITE_PRICE"):
+        audit.daily_hourly_owner_source_sla(
+            tmp_path, "HEAD", datetime(2026, 10, 19).date(),
+            now=datetime(2026, 10, 20, 2, tzinfo=timezone.utc))

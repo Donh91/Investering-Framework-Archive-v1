@@ -44,6 +44,7 @@ def compact_experiment_registry(registry: dict[str, Any], limit: int = 100) -> d
         state = str(row.get("state") or "UNKNOWN")
         states[state] = states.get(state, 0) + 1
         matured = int(row.get("matured_outcome_count", 0) or 0)
+        eligible = int(row.get("scientific_score_eligible_outcome_count", 0) or 0)
         if matured > 0 or state.startswith("MATURED"):
             rows.append({
                 "candidate_id": row.get("candidate_id"),
@@ -51,15 +52,53 @@ def compact_experiment_registry(registry: dict[str, Any], limit: int = 100) -> d
                 "kind": row.get("kind"),
                 "state": state,
                 "matured_outcome_count": matured,
+                "scientific_score_eligible_outcome_count": eligible,
                 "scientific_admission_status": row.get("scientific_admission_status"),
             })
-    rows.sort(key=lambda x: (-int(x.get("matured_outcome_count", 0)), str(x.get("candidate_id"))))
+    rows.sort(key=lambda x: (-int(x.get("scientific_score_eligible_outcome_count", 0)), str(x.get("candidate_id"))))
     return {
         "contract": registry.get("contract"),
         "candidate_count": len([x for x in registry.get("candidates", []) if isinstance(x, dict)]),
         "state_counts": states,
         "matured_candidates": rows[:limit],
     }
+
+
+
+def eligible_weekly_escalations(lifecycle: dict[str, Any], adjudication: dict[str, Any], floor: int) -> list[dict[str, Any]]:
+    """Current, matched scientific evidence only. Legacy weekly actions are never authority.
+
+    A monthly review must not resurrect old 'supported' physical maturity when
+    today's registry has zero scientifically score-eligible outcomes.
+    """
+    if (
+        lifecycle.get("contract") != "EXPERIMENT_LIFECYCLE_REGISTRY_v1"
+        or adjudication.get("contract") != "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1"
+    ):
+        return []
+    candidates = {
+        r["candidate_id"]: r for r in lifecycle.get("candidates", [])
+        if isinstance(r, dict) and isinstance(r.get("candidate_id"), str)
+    }
+    allowed_actions = {"RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW", "RUN_FAILURE_AND_RETIREMENT_REVIEW"}
+    validated: list[dict[str, Any]] = []
+    for row in adjudication.get("escalation_queue", []):
+        if not isinstance(row, dict) or row.get("selected_action") not in allowed_actions:
+            continue
+        current = candidates.get(row.get("candidate_id"))
+        if not current:
+            continue
+        eligible = current.get("scientific_score_eligible_outcome_count")
+        physical = current.get("matured_outcome_count")
+        if (type(eligible) is not int or type(physical) is not int
+            or eligible < floor or eligible > physical or physical < 0):
+            continue
+        if (row.get("scientific_score_eligible_outcome_count") != eligible
+            or row.get("matured_outcome_count") != physical
+            or row.get("lifecycle_state") != current.get("state")):
+            continue
+        validated.append(row)
+    return validated
 
 
 def build_context(repo_root: Path, now: datetime) -> dict[str, Any]:
@@ -75,9 +114,20 @@ def build_context(repo_root: Path, now: datetime) -> dict[str, Any]:
 
     forecast_n = count_json(repo_root / "research/framework_memory/forecast_memory")
     outcome_n = count_json(repo_root / "research/framework_memory/outcome_memory")
-    escalation = [x for x in adjudication.get("escalation_queue", []) if isinstance(x, dict)]
+    source_escalations = [x for x in adjudication.get("escalation_queue", []) if isinstance(x, dict)]
+    floor = int(policy.get("minimum_matured_outcomes_for_learning_claim", 25) or 25)
+    eligible_escalations = eligible_weekly_escalations(lifecycle, adjudication, floor)
     escalation_limit = int(policy.get("max_escalation_candidates_in_context", 25) or 25)
-    escalation = escalation[:escalation_limit]
+    escalation = eligible_escalations[:escalation_limit]
+    weekly_summary = adjudication.get("summary")
+    if len(source_escalations) != len(eligible_escalations):
+        # Never offer stale positive counts as current AI evidence.
+        weekly_summary = {
+            "status": "SCIENTIFIC_ELIGIBILITY_REVALIDATION_REQUIRED",
+            "source_generated_at_utc": adjudication.get("generated_at_utc"),
+            "source_escalation_count_historical": len(source_escalations),
+            "currently_validated_escalation_count": len(eligible_escalations),
+        }
     escalation_fp = digest(escalation)
 
     month_key = now.strftime("%Y-%m")
@@ -109,7 +159,7 @@ def build_context(repo_root: Path, now: datetime) -> dict[str, Any]:
             "forecast_json_count": forecast_n,
             "outcome_json_count": outcome_n,
             "experiment_registry": compact_experiment_registry(lifecycle),
-            "weekly_adjudication_summary": adjudication.get("summary"),
+            "weekly_adjudication_summary": weekly_summary,
             "weekly_escalation_queue": escalation,
             "shadow_registry_summary": shadow.get("summary"),
             "shared_row_snapshot": {
@@ -198,11 +248,17 @@ def deterministic_claims(context: dict[str, Any], floor: int) -> tuple[list[dict
     learned, challenged = [], []
     rows = context.get("evidence_census", {}).get("experiment_registry", {}).get("matured_candidates", []) or []
     for row in rows:
-        n = int(row.get("matured_outcome_count", 0) or 0)
+        # Lifecycle maturity is not equivalent to scientific score eligibility.
+        # Old snapshots lacking the explicit eligible denominator fail closed.
+        n = int(row.get("scientific_score_eligible_outcome_count", 0) or 0)
         if n < floor:
             continue
         state = str(row.get("state") or "")
-        compact = {"candidate_id": row.get("candidate_id"), "title": row.get("title"), "matured_outcome_count": n, "state": state}
+        compact = {
+            "candidate_id": row.get("candidate_id"), "title": row.get("title"),
+            "matured_outcome_count": int(row.get("matured_outcome_count", 0) or 0),
+            "scientific_score_eligible_outcome_count": n, "state": state,
+        }
         if state == "MATURED_SUPPORTED":
             learned.append(compact)
         elif state == "MATURED_NOT_SUPPORTED":

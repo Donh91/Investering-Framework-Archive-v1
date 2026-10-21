@@ -59,6 +59,48 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Measure prior UTC day hourly source first-commit deadline
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json"
+          DAY="$(date -u -d 'yesterday' +%F)"
+          # Research evidence only: committer clock is not provider/push first-known.
+          if python 04_MARKET_LEARNING/handlekompas/research/2026-10-13__task15_source_publication_chronology_v1.py \
+              --root . \
+              --ref HEAD \
+              --daily-hourly-owner-sla-day "$DAY" \
+              --out "$OUT"; then
+            echo "Hourly owner source-clock SLA: measured (research only)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            # No fake zero/green. Do not block the fleet health observer
+            # just because retrospective research-source history is unavailable.
+            python - <<'PY'
+          import json
+          from datetime import datetime, timezone, timedelta
+          from pathlib import Path
+          path=Path("research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps({
+              "contract":"TASK2_HOURLY_SOURCE_COMMIT_CLOCK_SLA_v1",
+              "utc_due_day":(datetime.now(timezone.utc).date()-timedelta(days=1)).isoformat(),
+              "measurement_status":"UNAVAILABLE",
+              "reason":"SOURCE_GIT_HISTORY_OR_VALIDATION_UNAVAILABLE",
+              "authority":{"research_only":True,"original_outcome_rescore":False,
+                           "model_promotion":False,"portfolio_action":False}
+          },sort_keys=True)+"\n",encoding="utf-8")
+          PY
+            echo "::warning::Research source SLA unavailable; no fabricated on-time/late rate"
+          fi
+      - name: Freeze first daily source-clock receipt and reconcile seven-day window
+        shell: bash
+        run: |
+          set -euo pipefail
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-21__task2_hourly_source_7d_rollup_v1.py \
+            --latest research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json \
+            --archive research/architecture_health/hourly_source_sla/daily \
+            --rollup research/architecture_health/LATEST_HOURLY_SOURCE_7D.json
+          echo "Seven-day continuity: research-only Git committer proxy, NOT provider PIT." >> "$GITHUB_STEP_SUMMARY"
       - name: Build architecture health after automation audit
         run: |
           python scripts/health/build_architecture_health.py \
@@ -101,7 +143,9 @@ jobs:
           git merge-base --is-ancestor HEAD origin/main
           for path in \
             research/architecture_health/LATEST_AUTOMATION_HEALTH.json \
-            research/architecture_health/LATEST_AUTOMATION_HEALTH.md; do
+            research/architecture_health/LATEST_AUTOMATION_HEALTH.md \
+            research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json \
+            research/architecture_health/LATEST_HOURLY_SOURCE_7D.json; do
             local_sha=$(sha256sum "$path" | awk '{print $1}')
             remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
             [ "$local_sha" = "$remote_sha" ]
@@ -149,6 +193,9 @@ jobs:
             research/architecture_health/LATEST_AUTOMATION_HEALTH.md
             research/architecture_health/LATEST_ACTIONS_BUDGET.json
             research/architecture_health/LATEST_ACTIONS_BUDGET.md
+            research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json
+            research/architecture_health/LATEST_HOURLY_SOURCE_7D.json
+            research/architecture_health/hourly_source_sla/daily/
             research/architecture_health/history/
           retention-days: 14
           if-no-files-found: error

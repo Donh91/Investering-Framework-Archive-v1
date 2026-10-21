@@ -1,5 +1,8 @@
 # ASTRA Handoff — Native OTA Reconciliation Implementation v1
 
+> **2026-10-15 model-neutral mission continuity (Native OTA).** Historical `Astra` wording, filenames and model-era labels are compatibility references only, not an authority to wait for a new model. This is an existing owner-reconciliation mission for the present framework, not a pending Astra model release. Inspect current native OTA readbacks/owners first; implement only real gaps with current GPT-6/Codex routing. No parallel collectors, new schedules, model spending or unreviewed policy changes. Follow the existing Framework Mission Continuity owner and current `AGENTS.md` / domain-owner gates; this notice changes no authority or budget.
+
+
 **Prepared:** 2026-09-05  
 **Priority:** HIGH / OPERATIONAL SIMPLIFICATION  
 **Authority:** RESEARCH_ONLY / NO_CANONICAL_OR_PORTFOLIO_AUTHORITY  

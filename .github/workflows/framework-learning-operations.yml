@@ -55,6 +55,8 @@ jobs:
           python -m unittest discover -s tests/research -p 'test_task2_protection_synthetic_v1.py' -v
       - name: Run prospective T6 exact-replay regressions (PR only)
         run: python -m unittest tests.learning.test_t6_rotation_survival -v
+      - name: Run sensor relationship scientific-evidence fail-closed regressions (PR only)
+        run: python -m unittest tests.experiments.test_sensor_relationship_compression -v
   operate:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -283,6 +285,28 @@ jobs:
             --outcome-root research/framework_memory/outcome_memory \
             --receipt-root research/experiment_lifecycle/receipts \
             --output research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json
+      - name: Regenerate research-only sensor relationships from current experiment registry
+        run: |
+          python -m unittest tests.experiments.test_sensor_relationship_compression -q
+          python scripts/experiments/sensor_relationship_compression.py \
+            --registry research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json \
+            --historical-audit 06_RESEARCH_LAB/audit_summaries/2026-07-22__public-repo-methods-closed-lab-audit__shadow.md \
+            --output 06_RESEARCH_LAB/current_relationship_compression/CURRENT_SENSOR_RELATIONSHIP_COMPRESSION.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry = json.loads(Path("research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json").read_text())
+          readout = json.loads(Path("06_RESEARCH_LAB/current_relationship_compression/CURRENT_SENSOR_RELATIONSHIP_COMPRESSION.json").read_text())
+          assert registry["contract"] == "EXPERIMENT_LIFECYCLE_REGISTRY_v1"
+          assert registry["outcome_count_contract"] == "EXPERIMENT_OUTCOME_COUNTS_v2"
+          assert readout["generated_from_registry_at_utc"] == registry["generated_at_utc"]
+          assert readout["authority"]["research_only"] is True
+          assert readout["authority"]["canonical_market_state"] is False
+          assert readout["authority"]["portfolio_action"] is False
+          assert all(row["current_prospective_validation"] is False for row in readout["prospective_rows"])
+          assert all(row["sample_status"]["prospective_skill_evidence"] == "NOT_ADMITTED" for row in readout["prospective_rows"])
+          print("SENSOR_RELATIONSHIP_NATURAL_READBACK", "registry_utc=", registry["generated_at_utc"], "sensor_rows=", len(readout["prospective_rows"]), "current_validation_true=", 0)
+          PY
       - name: Build architecture and automation health
         run: |
           python scripts/health/build_architecture_health.py \
@@ -319,7 +343,7 @@ jobs:
         run: |
           git config user.name 'framework-operations-bot'
           git config user.email 'framework-operations-bot@users.noreply.github.com'
-          git add research/data_ping_bridge research/etf_owner research/framework_memory research/experiment_lifecycle research/architecture_health research/framework_handoffs research/decision_economics
+          git add research/data_ping_bridge research/etf_owner research/framework_memory research/experiment_lifecycle research/architecture_health research/framework_handoffs research/decision_economics 06_RESEARCH_LAB/current_relationship_compression/CURRENT_SENSOR_RELATIONSHIP_COMPRESSION.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "ops: update integrated learning and experiment receipts ${GITHUB_RUN_ID}"
           pushed=false

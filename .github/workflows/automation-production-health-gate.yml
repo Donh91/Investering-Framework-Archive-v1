@@ -114,6 +114,27 @@ jobs:
             tests/remediation/test_auto_verify_post_fix.py \
             tests/governance/test_append_only_evidence.py \
             tests/governance/test_test_collection_truth.py
+      - name: Verify Task2 seven-day source-clock continuity and real frozen daily receipt
+        run: |
+          python -m pytest -q tests/research/test_task2_hourly_source_7d_rollup_v1.py
+          python 04_MARKET_LEARNING/handlekompas/research/2026-10-21__task2_hourly_source_7d_rollup_v1.py \
+            --latest research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json \
+            --archive /tmp/task2-seven-day-daily \
+            --rollup /tmp/task2-seven-day-summary.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          daily=json.loads(Path('research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json').read_text())
+          output=json.loads(Path('/tmp/task2-seven-day-summary.json').read_text())
+          assert output['contract']=='TASK2_HOURLY_SOURCE_7DAY_CONTINUITY_v1'
+          assert output['denominator_due_hours']==168
+          assert output['measured_days']==1
+          assert output['on_time_rate'] is None
+          assert output['status']=='INCOMPLETE_DO_NOT_CALCULATE_RATE'
+          assert output['scientific_admission'].startswith('BLOCKED_')
+          assert output['days'][-1]['day']==daily['utc_due_day']
+          print('TASK2_LIVE_DAILY_REPLAY_RESEARCH_ONLY_PASS')
+          PY
       - name: Run static repository inventory without API
         run: |
           python scripts/health/build_automation_health.py --workflow-root .github/workflows --json-output /tmp/automation-health.json --md-output /tmp/automation-health.md || code=$?

@@ -7,6 +7,11 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT / 'scripts') not in sys.path:
     sys.path.insert(0, str(ROOT / 'scripts'))
 from entry_signal.entry_signal_ledger import HORIZONS_H as ENTRY_HORIZONS
+# Existing weekly collector also builds a deterministic, no-API cross-domain
+# advisory. No new schedule, repo fetch or paid source.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from scripts.research import shadow_cross_domain_weekly_v1 as cross_domain
 
 REGISTRY = ROOT / '04_MARKET_LEARNING/shadow_registry/REGISTRY.json'
 OUTDIR = ROOT / '04_MARKET_LEARNING/shadow_registry/weekly'
@@ -224,6 +229,12 @@ def validate_snapshot(out):
             raise ValueError('weekly snapshot authority invalid: ' + field)
     if out.get('anti_double_counting') != 'RELATED_SHADOWS_MUST_NOT_BE_TREATED_AS_INDEPENDENT_CONFIRMATIONS':
         raise ValueError('weekly snapshot independence firewall invalid')
+    # Older immutable weekly snapshots remain valid without this additive field.
+    review = out.get('cross_domain_review')
+    if review is not None:
+        cross_domain.validate(review)
+        if review['week'] != out.get('week') or review['generated_at_utc'] != out.get('generated_at_utc').replace('+00:00', 'Z'):
+            raise ValueError('cross-domain review clock/week mismatch')
 
     try:
         stamp = datetime.fromisoformat(out['generated_at_utc'].replace('Z', '+00:00'))
@@ -362,6 +373,7 @@ def main():
             'promotion_candidates': [r['sensor_id'] for r in rows if r['registry_relevance_state'] == 'PROMOTION_CANDIDATE'],
         },
         'interpretation_rule': 'This runtime records evidence availability and pre-registered evaluator outputs. It does not infer NOISE, REDUNDANT or PROMOTION from file presence alone.',
+        'cross_domain_review': cross_domain.build(ROOT, now),
     }
     disposition = persist_snapshot(out)
     print(json.dumps({**out['summary'], 'weekly_snapshot_persistence': disposition}, sort_keys=True))

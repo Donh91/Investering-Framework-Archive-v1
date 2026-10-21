@@ -14,6 +14,17 @@ on:
       - 'research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json'
       - 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
+      - 'scripts/framework_intelligence/self_improvement_v1.py'
+      - 'scripts/framework_intelligence/framework_strategist_v1.py'
+      - 'scripts/framework_intelligence/framework_strategist_semantic_v1.py'
+      - 'scripts/framework_intelligence/strategist_budget_claim_v1.py'
+      - 'tests/framework_intelligence/test_strategist_budget_claim_v1.py'
+      - 'tests/framework_intelligence/test_framework_strategist_semantic_v1.py'
+      - 'scripts/framework_intelligence/resource_budget_guard_v1.py'
+      - 'tests/framework_intelligence/test_resource_budget_guard_v1.py'
+      - 'tests/framework_intelligence/test_framework_strategist_v1.py'
+      - '00_FMOS/framework_strategist/**'
+      - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'scripts/framework_intelligence/supervisor_mission_intake_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_v1.py'
       - 'scripts/framework_intelligence/weekly_forensics_replay_v1.py'
@@ -22,6 +33,7 @@ on:
       - 'scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
+      - 'tests/framework_intelligence/test_self_improvement_v1.py'
       - 'tests/framework_intelligence/test_supervisor_mission_intake_v1.py'
       - 'tests/framework_intelligence/test_automation_orchestration_v1.py'
       - 'tests/api_agent/test_api_gateway.py'
@@ -74,6 +86,11 @@ jobs:
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
+            scripts/framework_intelligence/self_improvement_v1.py \
+            scripts/framework_intelligence/framework_strategist_v1.py \
+            scripts/framework_intelligence/framework_strategist_semantic_v1.py \
+            scripts/framework_intelligence/strategist_budget_claim_v1.py \
+            scripts/framework_intelligence/resource_budget_guard_v1.py \
             scripts/framework_intelligence/supervisor_mission_intake_v1.py \
             scripts/framework_intelligence/weekly_forensics_v1.py \
             scripts/framework_intelligence/weekly_forensics_replay_v1.py \
@@ -85,6 +102,11 @@ jobs:
         run: |
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_self_improvement_v1 \
+            tests.framework_intelligence.test_framework_strategist_v1 \
+            tests.framework_intelligence.test_framework_strategist_semantic_v1 \
+            tests.framework_intelligence.test_strategist_budget_claim_v1 \
+            tests.framework_intelligence.test_resource_budget_guard_v1 \
             tests.framework_intelligence.test_supervisor_mission_intake_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
@@ -105,6 +127,27 @@ jobs:
           python scripts/framework_intelligence/framework_learning_supervisor.py \
             --repo-root . \
             --output-root runtime/framework-learning-supervisor
+          python scripts/framework_intelligence/self_improvement_v1.py \
+            --repo-root . \
+            --output runtime/framework-learning-supervisor/LATEST_SELF_IMPROVEMENT_V1.json
+          python scripts/framework_intelligence/resource_budget_guard_v1.py \
+            --repo-root . \
+            --output runtime/framework-learning-supervisor/resource_budget/LATEST.json
+          python scripts/framework_intelligence/framework_strategist_v1.py \
+            --repo-root . \
+            --output runtime/framework-learning-supervisor/strategist/LATEST.json
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root runtime/framework-learning-supervisor \
+            --finalize-strategist
+          if python -c "import json; from pathlib import Path; p=json.loads(Path('runtime/framework-learning-supervisor/strategist/LATEST.json').read_text()); exit(0 if p.get('input_status') == 'CURRENT' else 1)"; then
+          python scripts/framework_intelligence/framework_strategist_semantic_v1.py prepare \
+            --repo-root . \
+            --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
+            --strategist-path runtime/framework-learning-supervisor/strategist/LATEST.json
+          else
+            echo 'Semantic strategist not qualified in PR dry-run: paid preparation correctly skipped'
+          fi
           python scripts/framework_intelligence/operational_memory_v1.py \
             --repo-root . \
             --output-root runtime/operational-memory \
@@ -129,6 +172,8 @@ jobs:
           s=json.loads((root/'LATEST_SUPERVISOR_STATE.json').read_text())
           p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
           q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
+          evolution=json.loads((root/'LATEST_SELF_IMPROVEMENT_V1.json').read_text())
+          strategist=json.loads((root/'strategist/LATEST.json').read_text())
           om=Path('runtime/operational-memory')
           h=json.loads((om/'LATEST_OPERATIONAL_MEMORY_HEALTH.json').read_text())
           st=json.loads((om/'LATEST_OPERATIONAL_MEMORY_STATE.json').read_text())
@@ -139,6 +184,23 @@ jobs:
           assert s['master_monday_live_influence'] is False
           assert p['live_consumption_allowed'] is False
           assert q['authority']=='PROPOSAL_ONLY'
+          assert evolution['contract']=='SELF_IMPROVEMENT_ADVISORY_v1'
+          assert strategist['contract']=='FRAMEWORK_STRATEGIST_BRIEF_v1'
+          assert strategist['authority']['portfolio_execution'] is False
+          assert strategist['authority']['autonomous_grok_request'] is False
+          assert strategist['authority']['autonomous_api_payment'] is False
+          assert strategist['authority']['autonomous_merge'] is False
+          assert len(strategist['proposals']) <= 3
+          assert evolution['authority']['automatic_promotion'] is False
+          assert evolution['authority']['automatic_merge'] is False
+          assert evolution['authority']['automatic_code_write'] is False
+          assert evolution['scoreboard']['DOCUMENTED_IMPROVEMENT']==0
+          assert evolution['operational_verdict'] in (
+              'NO_RED_HEALTH_INCIDENTS', 'ADVISORY_DEGRADED',
+              'NEEDS_DIAGNOSIS', 'INSUFFICIENT_EVIDENCE')
+          assert isinstance(evolution['workflow_census_count'], int)
+          assert len(evolution['incident_history']) >= evolution['incident_count']
+          assert evolution['input_issues'] == [] or evolution['operational_verdict']=='INSUFFICIENT_EVIDENCE'
           assert h['status']=='PASS', h
           assert h['source_of_truth']=='CURRENT_GITHUB_MAIN'
           assert h['memory_role']=='DERIVED_ACCELERATION_LAYER_ONLY'
@@ -647,12 +709,22 @@ jobs:
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
+            scripts/framework_intelligence/self_improvement_v1.py \
+            scripts/framework_intelligence/framework_strategist_v1.py \
+            scripts/framework_intelligence/framework_strategist_semantic_v1.py \
+            scripts/framework_intelligence/strategist_budget_claim_v1.py \
+            scripts/framework_intelligence/resource_budget_guard_v1.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
             scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
             scripts/orchestration/build_framework_handoff_manifest.py
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_self_improvement_v1 \
+            tests.framework_intelligence.test_framework_strategist_v1 \
+            tests.framework_intelligence.test_framework_strategist_semantic_v1 \
+            tests.framework_intelligence.test_strategist_budget_claim_v1 \
+            tests.framework_intelligence.test_resource_budget_guard_v1 \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_capability_router \
@@ -676,6 +748,19 @@ jobs:
           python scripts/framework_intelligence/framework_learning_supervisor.py \
             --repo-root . \
             --output-root research/framework_learning
+          python scripts/framework_intelligence/self_improvement_v1.py \
+            --repo-root . \
+            --output research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json
+          python scripts/framework_intelligence/resource_budget_guard_v1.py \
+            --repo-root . \
+            --output research/framework_learning/resource_budget/LATEST.json
+          python scripts/framework_intelligence/framework_strategist_v1.py \
+            --repo-root . \
+            --output research/framework_learning/strategist/LATEST.json
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root research/framework_learning \
+            --finalize-strategist
           python scripts/framework_intelligence/operational_memory_v1.py \
             --repo-root . \
             --output-root research/framework_learning/operational_memory \
@@ -697,16 +782,30 @@ jobs:
           s=json.loads((root/'LATEST_SUPERVISOR_STATE.json').read_text())
           p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
           q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
+          evolution=json.loads((root/'LATEST_SELF_IMPROVEMENT_V1.json').read_text())
+          strategist=json.loads((root/'strategist/LATEST.json').read_text())
           om=root/'operational_memory'
           h=json.loads((om/'LATEST_OPERATIONAL_MEMORY_HEALTH.json').read_text())
           st=json.loads((om/'LATEST_OPERATIONAL_MEMORY_STATE.json').read_text())
           audit=json.loads((om/'LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json').read_text())
           handoff=json.loads(Path('research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json').read_text())
+          assert handoff['evidence']['FRAMEWORK_STRATEGIST']['sha256']
           assert s['canonical_effect'] is False
           assert s['portfolio_execution'] is False
           assert s['master_monday_live_influence'] is False
           assert p['live_consumption_allowed'] is False
           assert q['authority']=='PROPOSAL_ONLY'
+          assert evolution['contract']=='SELF_IMPROVEMENT_ADVISORY_v1'
+          assert strategist['contract']=='FRAMEWORK_STRATEGIST_BRIEF_v1'
+          assert strategist['authority']['portfolio_execution'] is False
+          assert strategist['authority']['autonomous_grok_request'] is False
+          assert strategist['authority']['autonomous_api_payment'] is False
+          assert strategist['authority']['autonomous_merge'] is False
+          assert len(strategist['proposals']) <= 3
+          assert evolution['authority']['automatic_promotion'] is False
+          assert evolution['authority']['automatic_merge'] is False
+          assert evolution['authority']['automatic_code_write'] is False
+          assert evolution['scoreboard']['DOCUMENTED_IMPROVEMENT']==0
           assert p['scientific_status']=='FORECAST_SKILL_UNPROVEN'
           assert h['status']=='PASS', h
           assert st['authority']['automatic_promotion'] is False
@@ -721,6 +820,13 @@ jobs:
             assert key in handoff['agent_read_order']['CODEX_OPERATIONAL_PREFLIGHT'], key
             assert key in handoff['agent_read_order']['ASTRA_RESEARCH_ROUTING'], key
           PY
+      - name: Prepare strategic semantic analysis only on material change
+        run: |
+          if ! python scripts/framework_intelligence/framework_strategist_semantic_v1.py prepare \
+            --repo-root . \
+            --runtime-dir runtime/framework-learning-supervisor/strategist-semantic; then
+            echo "Semantic source not qualified; deterministic Supervisor continues unchanged."
+          fi
       - name: Run bounded intelligent automation orchestration
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -780,6 +886,142 @@ jobs:
             finalize+=(--sol-output "$outroot/sol/output.json")
           fi
           "${finalize[@]}"
+      - name: Governed zero-retry Sol strategic reasoning (existing schedule)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          plan="runtime/framework-learning-supervisor/strategist-semantic/plan.json"
+          needed="$(python - "$plan" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1]))
+          print("yes" if p.get("run_allowed") is True and p.get("max_api_calls")==1 else "no")
+          PY
+          )"
+          if [ "$needed" != "yes" ]; then
+            echo "No novel material question: deterministic Supervisor is sufficient."
+            exit 0
+          fi
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "No API key: deterministic-only; no payment attempted."
+            exit 0
+          fi
+          if ! python scripts/api_agent/check_api_lane_budget.py \
+              --receipt-root research/api_agent/outputs \
+              --task FRAMEWORK_STRATEGIST_SEMANTIC \
+              --cap-usd 0.75 --reserve-usd 0.20 ||
+             ! python scripts/api_agent/check_monthly_cost_guard.py \
+              --receipt-root research/api_agent/outputs \
+              --hard-stop-usd 40 --reserve-usd 4.15; then
+            echo "Semantic lane/global budget not verified: no API call."
+            exit 0
+          fi
+          if ! python scripts/framework_intelligence/framework_strategist_semantic_v1.py \
+            reserve-payload --repo-root . \
+            --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
+            --run-id "$GITHUB_RUN_ID" > "$RUNNER_TEMP/strat-reserve-row.json"; then
+            echo "Paid attempt rejected by immutable reservation gate."
+            exit 0
+          fi
+          python - "$RUNNER_TEMP/strat-reserve-row.json" "$RUNNER_TEMP/strat-reserve-request.json" <<'PY'
+          import json,sys
+          row=json.load(open(sys.argv[1]))
+          with open(sys.argv[2],"w") as target:
+              json.dump(row["request"],target)
+          PY
+          rel="$(python - "$RUNNER_TEMP/strat-reserve-row.json" <<'PY'
+          import json,sys
+          print(json.load(open(sys.argv[1]))["path"])
+          PY
+          )"
+          # Reserve the WORST-CASE model cost in one shared, month-scoped
+          # GitHub blob before fingerprint reservation or any billable call.
+          # The same path + expected old SHA serializes DIFFERENT fingerprints;
+          # competing writes fail, instead of double-spending the same cap.
+          month="$(date -u +%Y-%m)"
+          monthly="research/framework_learning/strategist/semantic/reservations/monthly/$month.json"
+          gh api --include "repos/$GITHUB_REPOSITORY/contents/$monthly?ref=main" \
+            > "$RUNNER_TEMP/strat-monthly-get.http" 2> "$RUNNER_TEMP/strat-monthly-get.err"
+          if ! python -m scripts.framework_intelligence.strategist_budget_claim_v1 \
+                --repo-root . \
+                --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
+                --remote-get "$RUNNER_TEMP/strat-monthly-get.http" --http-response \
+                --month "$month" --run-id "$GITHUB_RUN_ID" \
+                > "$RUNNER_TEMP/strat-monthly-row.json"; then
+            echo "Atomic monthly budget admission failed; no payment."
+            exit 0
+          fi
+          python - "$RUNNER_TEMP/strat-monthly-row.json" "$RUNNER_TEMP/strat-monthly-request.json" <<'PY'
+          import json,sys
+          with open(sys.argv[2],"w") as out:
+              json.dump(json.load(open(sys.argv[1]))["request"],out)
+          PY
+          if ! gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$monthly" \
+                --input "$RUNNER_TEMP/strat-monthly-request.json" \
+                > "$RUNNER_TEMP/strat-monthly-put.json"; then
+            echo "Monthly budget CAS lost or rejected; no payment."
+            exit 0
+          fi
+          if ! gh api "repos/$GITHUB_REPOSITORY/contents/$monthly?ref=main" \
+                > "$RUNNER_TEMP/strat-monthly-readback.json"; then
+            echo "No remote month-ledger readback; no payment."
+            exit 0
+          fi
+          if ! python - "$RUNNER_TEMP/strat-monthly-row.json" \
+                "$RUNNER_TEMP/strat-monthly-put.json" \
+                "$RUNNER_TEMP/strat-monthly-readback.json" "$monthly" <<'PY'
+          import base64,hashlib,json,re,sys
+          row=json.load(open(sys.argv[1]))
+          put=json.load(open(sys.argv[2]))
+          get=json.load(open(sys.argv[3]))
+          rel=sys.argv[4]
+          raw=base64.b64decode(row["request"]["content"])
+          digest=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          if row["path"]!=rel or put.get("content",{}).get("path")!=rel:
+              raise ValueError("remote_budget_path_mismatch")
+          if put.get("content",{}).get("sha")!=digest or get.get("sha")!=digest:
+              raise ValueError("remote_budget_blob_mismatch")
+          commit=put.get("commit",{})
+          if not isinstance(commit,dict) or not isinstance(commit.get("sha"),str) or not re.fullmatch("[0-9a-f]{40}",commit["sha"]):
+              raise ValueError("remote_budget_commit_unverified")
+          if base64.b64decode(get["content"])!=raw or row["liability_usd"]<=0:
+              raise ValueError("budget_claim_readback_mismatch")
+
+          PY
+          then
+            echo "Monthly claim verification failed; no payment."
+            exit 0
+          fi
+          # Atomic first-create in GitHub main; rejected duplicate means NO payment.
+          if ! gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$rel" \
+              --input "$RUNNER_TEMP/strat-reserve-request.json" > "$RUNNER_TEMP/strat-put-response.json"; then
+            echo "Reservation was not durably created: API remains blocked."
+            exit 0
+          fi
+          # GitHub updated REMOTE main, not the runner checkout. Preserve the
+          # exact GitHub response and submitted bytes for post-call blob proof.
+          cp "$RUNNER_TEMP/strat-reserve-row.json" \
+            runtime/framework-learning-supervisor/strategist-semantic/reservation_submitted.json
+          cp "$RUNNER_TEMP/strat-put-response.json" \
+            runtime/framework-learning-supervisor/strategist-semantic/reservation_remote_response.json
+          outroot="research/api_agent/outputs/framework_strategist/run-$GITHUB_RUN_ID"
+          if ! python scripts/api_agent/api_gateway.py \
+              --task FRAMEWORK_STRATEGIST_SEMANTIC \
+              --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+              --prompt-file runtime/framework-learning-supervisor/strategist-semantic/prompt.txt \
+              --context-file runtime/framework-learning-supervisor/strategist-semantic/context.json \
+              --output-dir "$outroot" \
+              --intended-write-prefix research/api_agent/outputs/framework_strategist/; then
+            echo "Sol attempt unsuccessful. Reservation forbids automatic paid retry."
+            exit 0
+          fi
+          if ! python scripts/framework_intelligence/framework_strategist_semantic_v1.py \
+              validate --repo-root . \
+              --runtime-dir runtime/framework-learning-supervisor/strategist-semantic \
+              --run-id "$GITHUB_RUN_ID"; then
+            echo "Model output not verifiable; preserved as untrusted evidence only."
+          fi
       - name: Manage Operational Memory audit escalation
         if: always()
         env:
@@ -924,6 +1166,9 @@ jobs:
           if [ -d research/api_agent/outputs/automation_orchestration ]; then
             git add research/api_agent/outputs/automation_orchestration
           fi
+          if [ -d research/api_agent/outputs/framework_strategist ]; then
+            git add research/api_agent/outputs/framework_strategist
+          fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "research: refresh framework learning supervisor ${GITHUB_RUN_ID}"
           pushed=false
@@ -936,6 +1181,9 @@ jobs:
           git fetch origin main
           for rel in \
             research/framework_learning/LATEST_SUPERVISOR_STATE.json \
+            research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json \
+            research/framework_learning/resource_budget/LATEST.json \
+            research/framework_learning/strategist/LATEST.json \
             research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json \
             research/framework_learning/LATEST_DELEGATION_QUEUE.json \
             research/framework_learning/automation_orchestration/LATEST_PLAN.json \
