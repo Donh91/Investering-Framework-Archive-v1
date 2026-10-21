@@ -272,13 +272,18 @@ def parse(payload: bytes, *, include_extra_windows: bool = False) -> tuple[list[
             "price_usd": float(row["current_price"]),
             "change_24h_pct": float(change),
         })
-        if include_extra_windows:
-            ranked[-1]["extra_return_windows_pct"] = parse_optional_return_windows(row)
     constituents = ranked[:100]
     if len(constituents) != 100:
         raise E("INSUFFICIENT_FILTERED_UNIVERSE", f"expected 100, got {len(constituents)}")
     for filtered_rank, row in enumerate(constituents, 1):
         row["filtered_rank"] = filtered_rank
+        if include_extra_windows:
+            # Only members of the frozen filtered Top100 get optional fields.
+            # Bad optional fields on excluded/surplus provider rows must not
+            # turn an otherwise valid source capture into a false outage.
+            row["extra_return_windows_pct"] = parse_optional_return_windows(
+                rows[row["source_rank"] - 1]
+            )
     membership = [{"filtered_rank": row["filtered_rank"], "asset_id": row["asset_id"]} for row in constituents]
     membership_hash = sha(canonical(membership))
     changes = [row["change_24h_pct"] for row in constituents]
