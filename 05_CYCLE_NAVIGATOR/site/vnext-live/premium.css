@@ -77,3 +77,37 @@
     single final letter as in the 2026-10-21 native iPhone screenshot. */
  .decision-main .action-value{font-size:clamp(16px,4.2vw,23px);letter-spacing:-.035em;overflow-wrap:normal;word-break:normal}
 }
+
+
+/* Forward Outlook is source-bound analysis, never a browser-side price predictor. */
+.cn-forward{margin:19px 0 0;padding:23px 25px;border:1px solid #dce5ef;background:#fff;border-radius:14px;color:#102842}
+.cn-forward-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.cn-forward-head .eyebrow{font-size:9px;letter-spacing:.1em;color:#6086b4;margin:0 0 7px}
+.cn-forward-head h2{font-size:23px;letter-spacing:-.045em;margin:0}
+.cn-forward-status{font-size:9px;letter-spacing:.045em;color:#7187a0;border:1px solid #dbe4ef;background:#f7f9fc;padding:6px 10px;border-radius:20px;white-space:nowrap}
+.cn-forward-disclaimer{font-size:12px;line-height:1.6;color:#75869a;margin:8px 0 18px}
+.cn-forward-horizons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.cn-forward-horizons article{border-radius:11px;background:#0a1729;color:#f4f7fd;padding:20px 18px;min-width:0}
+.cn-forward-horizons article:nth-child(2){background:#f3f7fb;color:#0e2a49;border:1px solid #e0e8f1}
+.cn-forward-horizons article>span{display:block;font-size:9px;letter-spacing:.09em;color:#a7bcd4;font-weight:750}
+.cn-forward-horizons article:nth-child(2)>span{color:#6e8aa8}
+.cn-forward-horizons strong{display:block;font-size:22px;letter-spacing:-.045em;margin:12px 0 6px}
+.cn-forward-horizons p{font-size:11px;line-height:1.7;color:#c4d3e2;margin:0;overflow-wrap:anywhere}
+.cn-forward-horizons article:nth-child(2) p{color:#647e96}
+.cn-forward-empty{display:flex;gap:9px;align-items:flex-start;color:#64809e;font-size:11px;line-height:1.6;margin:17px 0 9px}
+.cn-forward-empty-dot{background:#d1a55b;width:7px;height:7px;border-radius:50%;flex:none;margin-top:6px}
+.cn-forward-details,.cn-forward-demo{border-top:1px solid #e0e8f0;margin-top:11px}
+.cn-forward-details summary,.cn-forward-demo summary{min-height:44px;display:flex;align-items:center;cursor:pointer;list-style:none;font-weight:700;font-size:11px;color:#37618c}
+.cn-forward-details summary::-webkit-details-marker,.cn-forward-demo summary::-webkit-details-marker{display:none}
+.cn-forward-details summary::after,.cn-forward-demo summary::after{content:'+';margin-left:auto;font-size:18px;font-weight:550}
+.cn-forward-details[open] summary::after,.cn-forward-demo[open] summary::after{content:'−'}
+.cn-forward-details summary:focus-visible,.cn-forward-demo summary:focus-visible{outline:2px solid #2f6fda;outline-offset:1px}
+.cn-forward-facts{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:11px;color:#8292a2;padding:6px 0}
+.cn-forward-facts strong{color:#24435e;font-weight:650;text-align:right}
+.cn-forward-details>p,.cn-forward-demo p{font-size:11px;line-height:1.7;color:#6c8197;margin:10px 0}
+#cn-forward-scenarios article{padding:11px 0;border-top:1px solid #edf1f6}
+#cn-forward-scenarios strong,#cn-forward-falsifiers>strong{color:#2d658e;font-size:10px;letter-spacing:.065em}
+#cn-forward-scenarios p,#cn-forward-falsifiers li{font-size:11px;line-height:1.65;color:#6d849b;margin:5px 0}
+#cn-forward-falsifiers ul{padding-left:18px}
+.cn-forward-demo a{display:inline-flex;align-items:center;min-height:44px;color:#3269b6;font-size:11px;font-weight:760}
+@media(max-width:520px){.cn-forward{padding:18px 13px}.cn-forward-head h2{font-size:21px}.cn-forward-horizons{gap:8px}.cn-forward-horizons article{padding:15px 11px}.cn-forward-horizons strong{font-size:19px}.cn-forward-horizons article>span{font-size:8px}.cn-forward-horizons p{font-size:10px}}
