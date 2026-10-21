@@ -4,7 +4,7 @@
  * prospective source-bound and hash-verified owner readback. */
 const DIRECTIONS=new Set(['UP','DOWN','SIDEWAYS','MIXED','NO_EDGE']);
 const ALLOWED_CONF=new Set(['LOW','MEDIUM','HIGH','UNKNOWN']);
-const safe=v=>typeof v==='string'&&v.length<=650&&!/\\d|[$%]|https?:|wallet|secret|address|0x[0-9a-f]{8}/i.test(v)?v.trim():null;
+const safe=v=>typeof v==='string'&&v.length<=650&&!/\d|[$%]|https?:|wallet|secret|address|0x[0-9a-f]{8}/i.test(v)?v.trim():null;
 const direction=v=>DIRECTIONS.has(v)?v:'UNAVAILABLE';
 const empty=()=>({contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',status:'UNAVAILABLE',
  weekly:{direction:'UNAVAILABLE',summary:null},
