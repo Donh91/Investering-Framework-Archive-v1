@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from math import isfinite
+from types import MappingProxyType
 
 UTC = timezone.utc
 STATES = {"ELEVATED", "HIGH", "CONFIRMED"}
@@ -104,6 +105,8 @@ def _clean_nonnegative(value: float) -> bool:
 def validate(quotes: list[Quote], warning: Warning, policy: Policy, initial_usd: float) -> None:
     if len(quotes) < 2 or not _clean_nonnegative(initial_usd) or initial_usd <= 0:
         raise ValueError("SYNTHETIC_TAPE_OR_CAPITAL_INVALID")
+    # Warning.original_proof is caller-controlled and never proves provenance.
+    # The public API is restricted by _registered_quotes to code-owned presets.
     if warning.original_proof != "SYNTHETIC_FIXTURE_ONLY" or warning.state not in STATES:
         raise ValueError("HISTORICAL_OR_UNAUTHORIZED_WARNING_BLOCKED")
     if not all(_utc(t) for t in (warning.source_known_at, warning.issued_at, warning.delivered_at)):
@@ -136,7 +139,7 @@ def validate(quotes: list[Quote], warning: Warning, policy: Policy, initial_usd:
         raise ValueError("UNREGISTERED_OR_HISTORICAL_TAPE_BLOCKED")
 
 
-def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
+def _simulate_registered_fixture(quotes: list[Quote], warning: Warning, policy: Policy,
                        initial_usd: float = 10_000.0) -> dict:
     """Single fixed warning, next executable quote, fixed-clock reentry; NO hindsight.
 
@@ -240,7 +243,7 @@ def simulate_synthetic(quotes: list[Quote], warning: Warning, policy: Policy,
     }
 
 
-def price_only_lead_synthetic(quotes: list[Quote], warning: Warning) -> dict:
+def _price_only_registered_fixture(quotes: list[Quote], warning: Warning) -> dict:
     """Frozen P1/P2-like synthetic price references, outcome-free warning-clock comparison.
 
     The first running-peak crossing is computed online on this fictional quote tape;
@@ -272,3 +275,66 @@ def price_only_lead_synthetic(quotes: list[Quote], warning: Warning) -> dict:
         "historical_lead_certified": False,
     }
 
+
+
+# Immutable CODE-OWNED imaginary toy-price roster. These are illustrative
+# arithmetic fixtures, NOT replayed or transformed market/provider series.
+# Caller numbers/Quote sequences cannot become economics outputs.
+_REGISTERED_TOY_CASES = MappingProxyType({
+    "CRASH": ((100, 95, 60, 50, 55, 58), None),
+    "V_RECOVERY": ((100, 95, 98, 110, 130, 160), None),
+    "PARABOLIC": ((100, 110, 120, 145, 170), None),
+    "STALE_DELIVERY": ((100, 95, 70, 60, 63), None),
+    "COSTS": ((100, 95, 85, 90, 100), None),
+    "LOW_CAPITAL": ((100, 95, 80), (1000000000, 100, 100)),
+    "LOW_LIQUIDITY": ((100, 95, 70, 60), (1000000000, 100, 1000000000, 1000000000)),
+    "BLOCKED_REENTRY": ((100, 95, 90, 130, 160), (1000000000, 1000000000, 1000000000, 100, 1000000000)),
+    "FLAT5": ((100, 100, 100, 100, 100), None),
+    "FLAT4": ((100, 100, 100, 100), None),
+    "NEXT_QUOTE": ((100, 90, 80, 70), None),
+    "EARLY_WARNING": ((100, 95, 90, 92), None),
+    "FIRST_QUOTE": ((100, 95, 90), None),
+    "ALT_ILLIQUID": ((100, 80, 50, 30), (1000000000, 10, 10, 10)),
+    "TWO": ((100, 90), None),
+    "THREE": ((100, 90, 80), None),
+    "HOLD": ((100, 80, 85, 90), None),
+    "P_PRICE": ((100, 98, 96, 94), None),
+    "P_PUMP": ((100, 110, 120, 140), None),
+})
+
+def registered_toy_case_names() -> tuple[str,...]:
+    """Read-only fixture names; not source identifiers or market labels."""
+    return tuple(_REGISTERED_TOY_CASES)
+
+
+def registered_toy_definition(case_id: str) -> tuple[tuple[float,...],tuple[float,...] | None]:
+    """Read-only frozen toy parameters for deterministic regression fixtures."""
+    if not isinstance(case_id,str) or case_id not in _REGISTERED_TOY_CASES:
+        raise ValueError("UNREGISTERED_STATIC_TOY_FIXTURE_BLOCKED")
+    return _REGISTERED_TOY_CASES[case_id]
+
+
+def _registered_quotes(case_id: str) -> list[Quote]:
+    prices, capacities = registered_toy_definition(case_id)
+    first = datetime(2026, 1, 1, tzinfo=UTC)
+    caps = capacities if capacities is not None else (1_000_000_000.0,)*len(prices)
+    return [Quote(first+timedelta(hours=i),first+timedelta(hours=i),
+                  float(price),float(price),float(caps[i]))
+            for i,price in enumerate(prices)]
+
+
+def simulate_synthetic(case_id: str, warning: Warning, policy: Policy,
+                       initial_usd: float = 10_000.0) -> dict:
+    """Public research toy API: only sealed code-owned scenario identifiers.
+
+    A caller cannot pass Quote rows or historical prices, even with forged
+    'SYNTHETIC_FIXTURE_ONLY' warning. Never use for actual user protection.
+    """
+    quotes=_registered_quotes(case_id)
+    return _simulate_registered_fixture(quotes,warning,policy,initial_usd)
+
+
+def price_only_lead_synthetic(case_id: str, warning: Warning) -> dict:
+    """Public research toy price-only baseline on predeclared frozen fixtures."""
+    quotes=_registered_quotes(case_id)
+    return _price_only_registered_fixture(quotes,warning)
