@@ -119,7 +119,9 @@ class ExtraWindowCaptureTests(unittest.TestCase):
         capture = owner.extra_window_provenance(selected, raw, "2026-10-21T08:00:00Z")
         self.assertEqual(capture["status"], "DEGRADED_OPTIONAL_ONLY")
         self.assertEqual(capture["invalid_member_counts"]["30d"], 1)
-        self.assertEqual(capture["available_member_counts"]["30d"], 99)
+        # One originally missing source value plus rank-101 invalid value => 98 valid.
+        self.assertEqual(capture["available_member_counts"]["30d"], 98)
+        self.assertEqual(capture["missing_member_counts"]["30d"], 1)
         self.assertFalse(capture["provider_first_known_proven"])
 
     def test_source_receipt_is_capture_time_only(self):
