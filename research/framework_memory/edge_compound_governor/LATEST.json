@@ -17,23 +17,14 @@
   "decision": "FALSIFY",
   "decision_reason": "Resolve deterministic integrity/cohort blockers before scoring or external interpretation.",
   "deltas": [
-    "m6_event_count:72->76",
-    "feature_row_count:72->76",
-    "pit_verified_feature_rows:71->75",
-    "matured_event_counts.24h:63->67",
-    "matured_event_counts.30d:7->9",
-    "matured_event_counts.72h:49->52",
-    "matured_event_counts.7d:24->27",
-    "unknown_horizon_counts.24h:0->1",
-    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
-    "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
+    "unknown_horizon_counts.7d:0->1"
   ],
   "external_routing": {
     "automatic_dispatch": false,
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-10-21T06:00:02.160216Z",
+  "generated_at_utc": "2026-10-21T07:44:59.066524Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -42,7 +33,7 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "59fb782c915ccce67f41e3e13cde31ffd116a7e1f2b063cff8045d2c0dbefa17",
+  "semantic_fingerprint": "e73e13c322a02466a107a07ed266a07e751796a95d9fee1160448936f64a65f1",
   "semantic_state": {
     "blockers": [
       "PIT_UNVERIFIED_FEATURE_ROWS"
@@ -104,14 +95,14 @@
       "24h": 1,
       "30d": 0,
       "72h": 0,
-      "7d": 0
+      "7d": 1
     },
     "verified_independent_adverse_family_count": null
   },
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "5de44300942292ab6e9e559afc787936d8bf20e5ab701c7b54b5d234b116ca46",
+      "sha256": "5eb65f7258846eb321a8f864beb16fb9c77da286678573c5f4c7e9599052c99f",
       "status": "PASS"
     },
     "compass_freeze": {
@@ -138,7 +129,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "7dd1058e72fcd796f5c6d5f51ad41559b0832517f0d5090e954865bab0c0e14c",
+      "sha256": "b6b29656ce667b496bbd80a8fc65e513f63e4d13e23d2dae3357c72c685ea59c",
       "status": "PASS"
     },
     "task15_gate": {
