@@ -25,6 +25,8 @@ on:
       - 'tests/research/test_task2_matched_windows_v1.py'
       - 'scripts/research/task2_cfgi_capture_clock_audit_v1.py'
       - 'tests/research/test_task2_cfgi_capture_clock_audit_v1.py'
+      - 'scripts/research/task2_hourly_source_window_clocks_v1.py'
+      - 'tests/research/test_task2_hourly_source_window_clocks_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -155,6 +157,37 @@ jobs:
         with:
           name: task2-cfgi-source-clock-${{ github.run_id }}
           path: /tmp/task2_cfgi_7d_source_clocks.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 frozen 168 hourly batch-end clock source audit
+        run: |
+          python -m unittest tests.research.test_task2_hourly_source_window_clocks_v1 -v
+          python -m scripts.research.task2_hourly_source_window_clocks_v1 --output /tmp/task2_hourly_batch_window_clock.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/task2_hourly_batch_window_clock.json'))
+          assert x['contract']=='TASK2_HOURLY_BATCH_END_CLOCK_AUDIT_v1'
+          assert x['original_hour_rows']==168
+          assert x['batch_end_after_candle_end_count']==104
+          assert x['batch_end_equals_candle_end_count']==64
+          assert x['max_batch_end_minus_hour_start_hours']==6
+          assert len(x['by_day'])==7
+          assert x['source_semantics'].endswith('NOT_DETECTION_OR_VENDOR_FIRST_KNOWN')
+          assert x['cfgi_or_compass_edge_tested'] is False
+          assert x['values_disclosed'] is False
+          assert x['per_row_provider_first_known_certified'] is False
+          assert x['before_batch_end_data_available_proven'] is False
+          assert x['after_batch_end_data_unavailable_proven'] is False
+          print('TASK2_7DAY_SOURCE_BATCH_END_QA_PASS',
+                {'rows':x['original_hour_rows'],
+                 'batch_end_after_candle_close':x['batch_end_after_candle_end_count'],
+                 'max_batch_span_h':x['max_batch_end_minus_hour_start_hours']})
+          PY
+      - name: Retain Task2 hourly batch-end source metadata receipt (PR artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-hourly-source-batch-clock-${{ github.run_id }}
+          path: /tmp/task2_hourly_batch_window_clock.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
