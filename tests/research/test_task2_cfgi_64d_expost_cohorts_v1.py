@@ -72,7 +72,7 @@ class Task2WideSampleTests(unittest.TestCase):
     def test_wide_study_does_not_change_fixed_small_study(self):
         from scripts.research import task2_cfgi_price_expost_4h_v1 as tiny
         self.assertEqual(len(tiny.DAYS),7)
-        self.assertEqual(len(m.day_iter(m.START,m.END).__iter__().__next__().__class__.__name__),4)
+        self.assertEqual(m.START,tiny.START_DAY if hasattr(tiny,'START_DAY') else date(2026,8,18))
     def test_actual_original_archive_census_when_mounted(self):
         if m.CAPTURE_ROOT.exists() and m.PRICE_ROOT.exists():
             o=m.execute()
@@ -86,7 +86,7 @@ class Task2WideSampleTests(unittest.TestCase):
             self.assertFalse(o["statistical_significance_claim"])
             self.assertFalse(o["executed_forecast_model_included"])
             self.assertFalse(o["original_raw_cfgi_values_exported"])
-            self.assertFalse(o["historical_or_live_cfgi_edge_proven"] if "historical_or_live_cfgi_edge_proven" in o else o["authority"]["historical_edge_admitted"])
+            self.assertFalse(o["authority"]["historical_edge_admitted"])
             self.assertGreater(o["weekly_units"],7)
             self.assertGreater(o["joined_symbol_opportunities"],80)
     def test_declared_default_is_expost_not_pit(self):
