@@ -166,6 +166,16 @@ const checks=[
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
    hourlyRender.series.filter(s=>s.options?.color==='#5f96ff').every(s=>s.data.length===0)&&
    chartSource.includes('chart.timeScale().fitContent()')],
+ ['Approved B minimal shell preserves source evidence behind native disclosure and exposes nonproduction 2-3W test',
+   chartSource.includes("drawer.className='fw-evidence-details'")&&
+   chartSource.includes("host.ownerDocument?.createElement")&&
+   chartCss.includes('.fw-evidence-details summary{min-height:44px')&&
+   chartCss.includes('Blue forecast')===false&&
+   vnextRoot.includes('class="cn-original-ranges"')&&
+   vnextRoot.includes('id="btc-range"')&&vnextRoot.includes('id="eth-range"')&&
+   vnextRoot.includes('cycle-navigator-forward-outlook-1-3w-z8say7.v2.appdeploy.ai')&&
+   vnextRoot.includes('data-t="forwardNote"')&&
+   chartSource.includes("No authentic daily forecast was published, so no forecast curve is drawn.")],
  ['Owner-approved B forecast renders behind a thicker actual line, WITHOUT fabricating blue W43',
    publishedRender.series[0].options?.lineStyle===2&&publishedRender.series[0].options?.lineWidth===2&&
    publishedRender.series.some(s=>s.options?.color==='#27c59a'&&s.options?.lineStyle===0&&s.options?.lineWidth===4)&&
