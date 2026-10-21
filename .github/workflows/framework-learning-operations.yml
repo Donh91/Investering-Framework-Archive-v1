@@ -29,6 +29,8 @@ on:
       - 'tests/research/test_task2_hourly_source_window_clocks_v1.py'
       - 'scripts/research/task2_price_window_robustness_v1.py'
       - 'tests/research/test_task2_price_window_robustness_v1.py'
+      - 'scripts/research/task2_cfgi_price_expost_4h_v1.py'
+      - 'tests/research/test_task2_cfgi_price_expost_4h_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -222,6 +224,37 @@ jobs:
         with:
           name: task2-window-unit-robustness-${{ github.run_id }}
           path: /tmp/task2_window_unit_robustness.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 original 4h CFGI score versus price-only descriptive archive control
+        run: |
+          python -m unittest tests.research.test_task2_cfgi_price_expost_4h_v1 -v
+          python -m scripts.research.task2_cfgi_price_expost_4h_v1 --out /tmp/task2_cfgi_price_expost_4h.json
+          python - <<'PY'
+          import json
+          o=json.load(open('/tmp/task2_cfgi_price_expost_4h.json'))
+          assert o['contract']=='TASK2_CFGI_PRICE_4H_SAME_OPPORTUNITY_EXPOST_v1'
+          assert o['original_capture_opportunities']==42
+          assert o['original_symbol_opportunities']==84
+          assert o['joined_development_only_symbol_opportunities']+sum(o['missing_or_degraded_symbol_opportunities'].values())==84
+          assert o['original_price_asof_proven'] is False
+          assert o['independent_provider_first_known_proven'] is False
+          assert o['historical_or_live_cfgi_edge_proven'] is False
+          assert o['prediction_originally_issued'] is False
+          assert o['multiple_family_independence_proven'] is False
+          assert len(o['source_manifest']['price_archive_sha1_per_day'])==7
+          assert len(o['source_manifest']['original_capture_index_sha1_per_file'])==42
+          for sym,v in o['by_symbol'].items():
+              assert v['independent_event_families_admitted']==0
+              assert v['statistical_p_value'] is None
+              assert v['paired_both_correct']+v['paired_cfgi_only_correct']+v['paired_momentum_only_correct']+v['paired_both_wrong']==v['strictly_paired_non_neutral_opportunities']
+              print('TASK2_CFGI_EXPOST_PAIRED_CENSUS',sym,v)
+          PY
+      - name: Retain Task2 CFGI 4h paired descriptive research receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-cfgi-vs-price-expost-${{ github.run_id }}
+          path: /tmp/task2_cfgi_price_expost_4h.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
