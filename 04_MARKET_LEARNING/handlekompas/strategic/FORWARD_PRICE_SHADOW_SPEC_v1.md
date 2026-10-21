@@ -64,3 +64,13 @@ Phase 4 = existing Task2 #1596 and Adaptive Evolution #1157 adjudicate R0/R1 -> 
 Use existing Framework Learning Supervisor temporary exact-HEAD review, bounded API budget. The Sol result is ADVISORY, not a formal GitHub APPROVED. Identify concrete P0/P1 defects: off-by-one window indexing; overlaps/effective sample claims; legal source time; hash-to-bytes binding vs real first-known; USD vs USDT/venues; unfinished daily bars; 10/90 excursion range semantics and uncalibrated joint coverage; mutation/retrofit hazard; inappropriate adaptation after 3–4w; fair model tournament; exclusion/censorship; public/private data boundary; duplication with existing #1516/#1593/Task2; impact on existing Compass signals and graphs. State anything not tested. If code or science is unsafe, request correction and keep draft; never ask Sol to authorize a merge or autopublish.
 
 Public site/X never reference the external paid analyst, their original estimates, images, or subscriber-only source content; a future sources/methodology page needs separately authenticated owner approval.
+
+## Independent Sol 6.1 API review and corrections (2026-10-21)
+
+Original reviewed PR head 319a7943565ef19e6ba5c116921f48c3b8183655, review was PASS_WITH_FINDINGS, NOT formal GitHub approval or evidence of market forecast skill. Exact source review: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1733#issuecomment-6327328060. Estimated API charge $0.117882. All reported findings were addressed on a NEW code head, but the original review does NOT certify new HEAD:
+- P2: preserve exactly floor((N-1)/h) possible nonoverlapping h-day target blocks with a preceding close, not floor((N-h)/h); adversarial fixture with 253 bars -> 12 disjoint 21-day blocks
+- P2: semantic negative tests must recompute canonical row digest after mutation; genuine hash-tamper test intentionally does not
+- P3: preserve unrounded positive ordered emitted range endpoints; rounding to eight decimal places can collapse tiny prices and fake a valid envelope
+- P3: require source first_known_at_utc to be STRICTLY later than its completed UTC day boundary, consistent with original textual contract
+
+No price signal, site numeric forecast, empirical calibration, original vendor time certification, model reweighting or owner release is implied by these code fixes. Re-run exact-head existing CI and perform one bounded fresh Sol advisory review before considering research-only merge.
