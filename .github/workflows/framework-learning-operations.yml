@@ -27,6 +27,8 @@ on:
       - 'tests/research/test_task2_cfgi_capture_clock_audit_v1.py'
       - 'scripts/research/task2_hourly_source_window_clocks_v1.py'
       - 'tests/research/test_task2_hourly_source_window_clocks_v1.py'
+      - 'scripts/research/task2_price_window_robustness_v1.py'
+      - 'tests/research/test_task2_price_window_robustness_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -188,6 +190,38 @@ jobs:
         with:
           name: task2-hourly-source-batch-clock-${{ github.run_id }}
           path: /tmp/task2_hourly_batch_window_clock.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 actual 71 calendar-window level stress and false win corrections
+        run: |
+          python -m unittest tests.research.test_task2_price_window_robustness_v1 -v
+          python -m scripts.research.task2_price_window_robustness_v1 --out /tmp/task2_window_unit_robustness.json > /tmp/task2_window_unit_robustness_stdout.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/task2_window_unit_robustness.json'))
+          assert x['contract']=='TASK2_14D_WINDOW_UNIT_ROBUSTNESS_v1'
+          assert x['window_unit_count']==71
+          assert x['known_independent_shock_family_count']==0
+          assert x['original_compass_or_cfgi_tested'] is False
+          assert x['hypothesis_freeze_before_outcomes'] is False
+          assert x['p_value'] is None
+          for era,o in x['by_era'].items():
+              assert o['windows'] in (30,41)
+              assert len(o['by_cost'])==4
+              for c,v in o['by_cost'].items():
+                  assert v['window_unit_count']==o['windows']
+                  assert v['windows_mean_positive']+v['windows_mean_negative']+v['windows_mean_tied']==o['windows']
+                  assert v['nominal_correlated_setting_window_cells']==144*o['windows']
+                  assert not v['scientific_independence_claim']
+              print('TASK2_WINDOW_UNIT_BASIS_PASS',era,'N=',o['windows'],
+                    '0pct',o['by_cost']['0.000'],
+                    '2pct',o['by_cost']['0.020'])
+          PY
+      - name: Retain Task2 window-level no-pseudoreplication receipt (PR artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-window-unit-robustness-${{ github.run_id }}
+          path: /tmp/task2_window_unit_robustness.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
