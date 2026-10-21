@@ -84,6 +84,12 @@ score or portfolio authority. Future daily/hourly expected prices and
 post-outcome results are not part of this contract. Existing frozen W43
 weekly and intraday forecasts are never transformed into longer ranges.
 
+If no source receipt exists, the candidate object's `source` may be `null`
+**only** for `UNAVAILABLE`/`ABSTAIN` windows; no dummy hash or inferred
+price band is required or permitted. Any non-null proposed price band must
+bind syntactically to the original source metadata, which remains subject
+to independent proof outside this preflight.
+
 **Important:** This is **NOT** a newly active 14/21-day forecast producer,
 no source first-knowable attestation, no Monday freeze or scoring endpoint,
 and not proof that the source's hash or receipt is real. It provides a
