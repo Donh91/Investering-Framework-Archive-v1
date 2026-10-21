@@ -37,6 +37,8 @@ on:
       - 'tests/research/test_task2_cfgi_price_vol_temporal_v1.py'
       - 'scripts/research/task2_official_r1_original_evidence_gate_v1.py'
       - 'tests/research/test_task2_official_r1_original_evidence_gate_v1.py'
+      - 'scripts/research/task2_official_slot_clock_census_v1.py'
+      - 'tests/research/test_task2_official_slot_clock_census_v1.py'
       - 'scripts/learning/t6_rotation_survival.py'
       - 'tests/learning/test_t6_rotation_survival.py'
       - '.github/workflows/framework-learning-operations.yml'
@@ -371,6 +373,40 @@ jobs:
         with:
           name: task2-original-official-r1-9day-${{ github.run_id }}
           path: /tmp/task2_original_official_r1_9day.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Task2 original scheduled versus event-driven forecast clock census
+        run: |
+          python -m unittest tests.research.test_task2_official_slot_clock_census_v1 -v
+          python -m scripts.research.task2_official_slot_clock_census_v1 --out /tmp/task2_official_slot_clock_census.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/task2_official_slot_clock_census.json'))
+          c=x['counts']
+          assert x['contract']=='TASK2_OFFICIAL_SCHEDULE_LABEL_VERSUS_ISSUANCE_CLOCK_CENSUS_v1'
+          assert c['observed_original_forecasts']==70
+          assert c['scheduled_reason_files']==17
+          assert c['expected_local_schedule_slot_dates']==18
+          assert c['missing_same_day_declared_reason']==1
+          assert c['event_driven_or_on_demand']==53
+          assert c['original_github_run_dispatch_verified']==0
+          assert c['first_delivery_verified']==0
+          assert c['scientifically_admitted_forecast_causality']==0
+          assert len(x['original_source_git_blob_manifest'])==70
+          assert not x['clock_diagnostic_is_actual_job_delay']
+          assert not x['same_day_schedule_assignment_proven']
+          assert not x['provider_first_publication_verified']
+          assert not x['scientific_edge_established']
+          for k,v in sorted(x['diagnostic_counts'].items()):
+              print('TASK2_CLOCK_EVIDENCE_DIAGNOSTIC',k,v)
+          for day in x['by_day']:
+              print('TASK2_ORIGINAL_SCHEDULE_SLOT_COUNT',day)
+          PY
+      - name: Retain Task2 original scheduled-slot diagnostic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-original-slot-clock-census-${{ github.run_id }}
+          path: /tmp/task2_official_slot_clock_census.json
           retention-days: 7
           if-no-files-found: error
       - name: Run prospective T6 exact-replay regressions (PR only)
