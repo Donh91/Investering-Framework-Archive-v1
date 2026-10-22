@@ -374,6 +374,8 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         daily_result = "UNKNOWN_DUE_TO_SOURCE_FAILURE"
     elif events:
         daily_result = "MATERIAL_CATALYSTS_FOUND"
+    elif primary_pass < primary_total:
+        daily_result = "UNKNOWN_DUE_TO_SOURCE_FAILURE"
     elif unresolved:
         daily_result = "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES"
     elif current_discoveries:
@@ -387,7 +389,7 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         "run_id": "SRDO_" + hashlib.sha256((date_utc + detection).encode()).hexdigest()[:16],
         "observation_date_utc": date_utc,
         "detection_time_utc": detection,
-        "run_status": "PASS" if daily_result in {"MATERIAL_CATALYSTS_FOUND", "NO_NEW_MATERIAL_CATALYST"} else "DEGRADED",
+        "run_status": "PASS" if primary_pass == primary_total and daily_result in {"MATERIAL_CATALYSTS_FOUND", "NO_NEW_MATERIAL_CATALYST"} else "DEGRADED",
         "daily_result": daily_result,
         "source_coverage": {"primary_pass": primary_pass, "primary_total": primary_total, "receipts": receipts},
         "events": events,
