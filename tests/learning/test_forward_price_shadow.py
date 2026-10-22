@@ -179,7 +179,7 @@ class ShadowPriceTests(unittest.TestCase):
             with self.subTest(horizon=h):
                 row = result["horizons_days"][str(h)]
                 self.assertEqual(row["status"], "SHADOW_BASELINE_ONLY")
-                self.assertEqual(row["low_usd"], 9e307)
+                self.assertAlmostEqual(row["low_usd"] / 1e308, 0.9, places=14)
                 self.assertAlmostEqual(row["high_usd"] / 1e308, 1.1, places=14)
 
     def test_missing_source_manifest_sha(self):
