@@ -1,0 +1,186 @@
+{
+  "contract": "HF_TASK2_RESEARCH_SOURCE_CENSUS_DELTA_v2",
+  "audit_date": "2026-10-22",
+  "supersession": "ADDITIVE_ONLY",
+  "predecessor": "SOURCE_MANIFEST_v1.json",
+  "evidence_tier": "T0_HUB_CREATOR_DOCS_AND_SELECTED_MANIFEST_FILES_ONLY",
+  "reviewed_source_count": 8,
+  "result_status": "RESEARCH_ONLY",
+  "executable_backtest_ran": false,
+  "real_dataset_file_rows_recomputed": false,
+  "dataset_viewer_throttling_observed": true,
+  "hf_jobs_started": 0,
+  "new_github_actions": 0,
+  "new_scheduled_tasks": 0,
+  "current_pr": 1747,
+  "owner_scope": "Existing Task2 R0-R7, Alpha Lab, Situation Room and Stress/Flush; no new owners",
+  "sources": [
+    {
+      "id": "HF-013",
+      "repo_id": "Chainticks/stablecoin-flows",
+      "license": "cc-by-4.0",
+      "reported_rows": 494000,
+      "reported_total_mb": 53.3,
+      "verdict": "P1_SOURCE_QA",
+      "risk": [
+        "transfer_vs_deployment",
+        "daily_partition_incomplete",
+        "bridged_entity_ambiguity"
+      ],
+      "owner": "TASK2_STABLECOIN_R0_R1",
+      "found": "Manifest and LATEST_DATE, sample incomplete May14 UTC",
+      "source_claim_not_verified": true
+    },
+    {
+      "id": "HF-014",
+      "repo_id": "ochinimus/crypto-liquidation-ticks",
+      "license": "cc-by-4.0",
+      "reported_rows": 1442664,
+      "reported_period_start_utc": "2026-07-08T16:42:32Z",
+      "reported_period_end_utc": "2026-08-06T23:59:42Z",
+      "verdict": "P1_VENUE_COVERAGE_AUDIT",
+      "risk": [
+        "symbol_universe_5_to_800_at_20260712T1623",
+        "binance_okx_throttling",
+        "venue_contract_differences"
+      ],
+      "owner": "TASK2_STRESS_FLUSH",
+      "source_claim_not_verified": true
+    },
+    {
+      "id": "HF-015",
+      "repo_id": "katelabs/crypto-news-scored",
+      "license": "cc-by-nc-4.0",
+      "reported_headlines": 25407,
+      "reported_hourly_prices": 79524,
+      "reported_median_publication_ingest_delay_minutes": 11.8,
+      "verdict": "P1_NONCOMMERCIAL_NEWS_PIT_RESEARCH",
+      "risk": [
+        "publisher_says_ingested_not_original_system_first_known",
+        "scorer_revision_unverified",
+        "model_training_vintage",
+        "text_redistribution"
+      ],
+      "owner": "SITUATION_ROOM_TASK2_NEWS",
+      "source_claim_not_verified": true
+    },
+    {
+      "id": "HF-016",
+      "repo_id": "maryamfakhari/crypto-news-coindesk-2020-2025",
+      "license": "cc-by-nc-4.0",
+      "reported_rows": 229200,
+      "verdict": "P2_RETROSPECTIVE_CONTEXT_ONLY",
+      "risk": [
+        "external_text_rights",
+        "scraped_vs_delivered_time"
+      ],
+      "owner": "SITUATION_ROOM",
+      "source_claim_not_verified": true
+    },
+    {
+      "id": "HF-017",
+      "repo_id": "polyorderbooks/polymarket-crypto-updown-orderbooks-l2",
+      "license": "cc-by-4.0",
+      "reported_rows": 897192,
+      "reported_markets": 805,
+      "verdict": "P1_EXECUTABILITY_NEGATIVE_CONTROL",
+      "risk": [
+        "labels_on_every_row",
+        "one_sided_books",
+        "crossed_quotes",
+        "nonindependent_markets",
+        "no_tradable_fill_assumption"
+      ],
+      "owner": "TASK2_MARKET_MODEL",
+      "source_claim_not_verified": true
+    },
+    {
+      "id": "HF-018",
+      "repo_id": "fati-80-Sho/RugPull1K",
+      "license": "cc-by-nc-4.0",
+      "publisher_claim_projects": 1028,
+      "viewer_reported_rows": 935800,
+      "viewer_columns": 1,
+      "verdict": "P2_FORMAT_TIME_GATES_BLOCKED",
+      "risk": [
+        "claimed_project_grain_vs_one_column_viewer",
+        "lifespan_midpoint_known_expost",
+        "selection_bias"
+      ],
+      "owner": "ALPHA_LAB",
+      "source_claim_not_verified": true
+    },
+    {
+      "id": "HF-019",
+      "repo_id": "AdamAtractor/24_crypto_orderbook_30lvl",
+      "license": "cc-by-4.0",
+      "free_sample_days_claim": 7,
+      "verdict": "P3_SAMPLE_ONLY",
+      "risk": [
+        "full_history_paid_external",
+        "only_hyperliquid_perp_sample",
+        "viewer_unindexed"
+      ],
+      "owner": "TASK2_MARKET_MICROSTRUCTURE",
+      "source_claim_not_verified": true
+    },
+    {
+      "id": "HF-020",
+      "repo_id": "SahandNZ/cryptonews-articles-with-price-momentum-labels",
+      "license": "openrail",
+      "reported_rows": 180300,
+      "verdict": "P3_TEXT_ONLY",
+      "risk": [
+        "future_price_label",
+        "news_rights",
+        "no_point_in_time_receipt"
+      ],
+      "owner": "SITUATION_ROOM",
+      "source_claim_not_verified": true
+    }
+  ],
+  "existing_code_routing": [
+    {
+      "issue": "ALPHA-HF-C1",
+      "severity": "P1",
+      "path": "research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py",
+      "kind": "G2_FIELD_FIRST_KNOWN_NOT_GATED",
+      "state": "STATIC_FINDING_NEEDS_OWNER_REPLICATION"
+    },
+    {
+      "issue": "ALPHA-HF-C2",
+      "severity": "P1_P2",
+      "path": "research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py",
+      "kind": "FULL_PANEL_FEATURE_SELECTION_BEFORE_TEMPORAL_SPLIT",
+      "state": "STATIC_FINDING_NEEDS_OWNER_REPLICATION"
+    },
+    {
+      "issue": "ALPHA-HF-C3",
+      "severity": "P1",
+      "path": ".github/workflows/meme-alpha-trenches-point-in-time.yml",
+      "kind": "MUTABLE_SOURCE_MAIN_AND_NO_MANIFEST_DIGEST_COMPARE",
+      "state": "STATIC_FINDING_NEEDS_OWNER_REPLICATION"
+    },
+    {
+      "issue": "ALPHA-HF-C4",
+      "severity": "GOOD_GUARD",
+      "kind": "LIFECYCLE_OUTCOME_NOT_SELLABLE_ALPHA",
+      "state": "PRESERVE"
+    },
+    {
+      "issue": "ALPHA-HF-C5",
+      "severity": "P2",
+      "kind": "SPLIT_OVERLAP_NOT_ASSERTED_EXPLICITLY",
+      "state": "STATIC_FINDING_NEEDS_OWNER_REPLICATION"
+    }
+  ],
+  "docs": [
+    "07_SECOND_WAVE_DATA_SOURCE_AUDIT.md",
+    "08_EXISTING_ALPHA_LAB_CODE_CROSSCHECK.md",
+    "09_PRIORITIZED_PILOT_QUEUE_AND_ACCEPTANCE.md"
+  ],
+  "next_step": "owner_review_then_select_one_small_public_data_source_file_quality_run",
+  "live_trading_authority": false,
+  "canonical_promotion_authority": false,
+  "report_counts_verified_independently": false
+}
