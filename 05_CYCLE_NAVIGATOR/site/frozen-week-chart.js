@@ -77,6 +77,17 @@
     if(current.length)actualRuns.push(current);
     return {forecast,actualRuns};
   }
+  // Six DASHED low/high original source interval edges; no constructed daily close.
+  function rangePlan(m){
+    if(m.daily.length===7)return [];
+    return m.rows.map((source,index)=>{
+      const first=index===0?0:index===1?2:4,last=index===0?1:index===1?3:6;
+      return {
+        low:[{time:m.days[first].time,value:source.forecast_low},{time:m.days[last].closeTime,value:source.forecast_low}],
+        high:[{time:m.days[first].time,value:source.forecast_high},{time:m.days[last].closeTime,value:source.forecast_high}]
+      };
+    });
+  }
   // Screen-reader contract mirrors what is actually plotted. Source-absent
   // seven-day forecasts are intervals, not a daily forecast curve.
   function graphDescription(m){
@@ -216,6 +227,12 @@
     const opts={priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:true,lineWidth:2,autoscaleInfoProvider:()=>({priceRange:{minValue:min-padding,maxValue:max+padding}})};
     const plan=linePlan(m);
     const baseline=chart.addSeries(lib.LineSeries,{...opts,color:BLUE,lineType:lib.LineType.Simple,lineStyle:lib.LineStyle.Dashed,lineWidth:2});baseline.setData(plan.forecast);
+    // Source interval bounds, NOT prospective seven-day daily close forecasts.
+    // Genuine dashed chart series are reliably visible above grid/primitive.
+    for(const r of rangePlan(m))for(const segment of [r.low,r.high]){
+      const edge=chart.addSeries(lib.LineSeries,{...opts,color:'rgba(95,150,255,.86)',lineStyle:lib.LineStyle.Dashed,lineWidth:2,crosshairMarkerVisible:false,priceLineVisible:false,lastValueVisible:false});
+      edge.setData(segment);
+    }
     const scaleAnchor=chart.addSeries(lib.LineSeries,{...opts,color:'transparent',lineVisible:false,crosshairMarkerVisible:false});
     // Time-axis-only continuation, not a forecast series or observable price.
     // Never place a visible blue/green point beyond eligible source timestamps.
@@ -241,6 +258,6 @@
     host.querySelector('.fw-reset').onclick=()=>chart.timeScale().fitContent();
     instance={chart,host,data};
   }
-  window.CNWeekChart={mount,model,linePlan,graphDescription};
+  window.CNWeekChart={mount,model,linePlan,rangePlan,graphDescription};
   document.addEventListener('cn-language-change',()=>{if(instance?.host.isConnected)mount(instance.host,instance.data);});
 })();
