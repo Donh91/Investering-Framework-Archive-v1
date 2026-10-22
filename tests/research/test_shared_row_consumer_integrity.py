@@ -197,6 +197,20 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)
         self.assertIs(next_action.filter_consumer_rows, weekly.filter_consumer_rows)
 
+    def test_monitor_does_not_consider_forged_maturity_clock_a_verified_outcome(self) -> None:
+        parent = row("MATURITY_CLOCK_ONLY")
+        pair = divergence("MATURITY_CLOCK_ONLY", "D_VALID")
+        pair["matured_24h_utc"] = "2026-10-02T00:00:00Z"
+        self.assertEqual(
+            monitor.verified_matured_divergence_counts([parent], [pair]),
+            {"24h": 0, "72h": 0, "7d": 0},
+        )
+        # A genuinely verified parent+pair outcome is counted exactly once.
+        parent["outcome_24h"] = pair["outcome_24h"] = "1"
+        self.assertEqual(
+            monitor.verified_matured_divergence_counts([parent], [pair])["24h"], 1
+        )
+
     def test_monitor_fails_closed_on_sha_shaped_but_forged_current_row(self) -> None:
         forged = row("MONITOR_FAKE_SHA")
         forged["provenance_hash"] = "a" * 64
