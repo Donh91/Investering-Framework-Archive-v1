@@ -306,6 +306,45 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "event_id already frozen"):
             controller.ingest(row_path)
 
+    def test_prospective_source_freshness_exact_boundary_and_all_three_stale_guards(self):
+        clock = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc)
+        materializer.require_fresh_sources(
+            clock,
+            ethbtc_hour=clock - timedelta(hours=3),
+            breadth_capture=clock - timedelta(hours=36),
+            btcd_verified=clock - timedelta(hours=36),
+        )
+        cases = [
+            ("ETHBTC_LAST_SETTLED_HOUR_STALE", {"ethbtc_hour": clock - timedelta(hours=3, seconds=1)}),
+            ("BREADTH_DATED_OWNER_STALE", {"breadth_capture": clock - timedelta(hours=36, seconds=1)}),
+            ("BTCD_CMC_VERIFICATION_STALE", {"btcd_verified": clock - timedelta(hours=36, seconds=1)}),
+            ("SOURCE_AFTER_INFORMATION_CUTOFF", {"ethbtc_hour": clock + timedelta(seconds=1)}),
+        ]
+        defaults = {
+            "ethbtc_hour": clock - timedelta(hours=1),
+            "breadth_capture": clock - timedelta(hours=12),
+            "btcd_verified": clock - timedelta(hours=12),
+        }
+        for expected_reason, override in cases:
+            with self.subTest(reason=expected_reason):
+                params = {**defaults, **override}
+                with self.assertRaisesRegex(materializer.Ineligible, expected_reason):
+                    materializer.require_fresh_sources(clock, **params)
+
+    def test_materializer_does_not_invent_current_signal_from_old_owners(self):
+        fixture = FixtureRepo(self)
+        # The exact source files still pass schema, original Git, 168h continuity
+        # and provider identity, but no fresh hourly captures were delivered.
+        result = materializer.build(isoz(fixture.observation + timedelta(hours=4)))
+        self.assert_rejected(result, "ETHBTC_LAST_SETTLED_HOUR_STALE")
+
+    def test_prospective_replay_rejects_source_clock_staleness_even_if_hash_bound(self):
+        fixture = FixtureRepo(self)
+        row = fixture.build()["row"]
+        cutoff = fixture.observation + timedelta(hours=4)
+        with self.assertRaisesRegex(materializer.Ineligible, "ETHBTC_LAST_SETTLED_HOUR_STALE"):
+            controller.verify_source_bindings(row, cutoff)
+
     def test_exact_168_hour_contract_rejects_sparse_gap_and_duplicate(self):
         cases = [
             ({"hourly_count": 1}, "ETHBTC_EXACT_168_HOURS_MISSING"),
