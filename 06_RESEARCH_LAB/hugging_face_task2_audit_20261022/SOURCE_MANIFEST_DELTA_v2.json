@@ -29,7 +29,24 @@
       ],
       "owner": "TASK2_STABLECOIN_R0_R1",
       "found": "Manifest and LATEST_DATE, sample incomplete May14 UTC",
-      "source_claim_not_verified": true
+      "source_claim_not_verified": true,
+      "verified_metadata_manifest": {
+        "upstream_manifest_generated_at": "2026-10-22T03:59:12.269018+00:00",
+        "daily_partition_count": 167,
+        "row_count_manifest_sum": 494016,
+        "calendar_missing_days": 0,
+        "suspicious_interior_short_days": [
+          "2026-05-14"
+        ],
+        "may_14_first_event_utc": "2026-05-14T00:01:11Z",
+        "may_14_last_event_utc": "2026-05-14T03:53:35Z",
+        "gap_to_may_15_first_event_hours": 20.487,
+        "last_partial_day": "2026-10-22",
+        "last_partial_day_rows": 794,
+        "data_rows_independently_recounted": false,
+        "causal_explanation_of_gap": "UNKNOWN",
+        "status": "METADATA_ONLY_GAP_FLAG_REQUIRES_FILE_AND_COLLECTOR_RECEIPTS"
+      }
     },
     {
       "id": "HF-014",
@@ -177,7 +194,8 @@
   "docs": [
     "07_SECOND_WAVE_DATA_SOURCE_AUDIT.md",
     "08_EXISTING_ALPHA_LAB_CODE_CROSSCHECK.md",
-    "09_PRIORITIZED_PILOT_QUEUE_AND_ACCEPTANCE.md"
+    "09_PRIORITIZED_PILOT_QUEUE_AND_ACCEPTANCE.md",
+    "10_STABLECOIN_MANIFEST_RECONCILIATION.md"
   ],
   "next_step": "owner_review_then_select_one_small_public_data_source_file_quality_run",
   "live_trading_authority": false,
