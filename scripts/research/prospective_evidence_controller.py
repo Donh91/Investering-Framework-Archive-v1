@@ -371,6 +371,7 @@ def verify_source_bindings(row: dict[str, Any], cutoff: datetime) -> dict[str, A
         ethbtc_hour=baseline["ts"],
         breadth_capture=retrieval,
         btcd_verified=max(btcd_verified),
+        btcd_last_settled_print=core.parse_ts(btcd_rows[-1]["source_timestamp_utc"]),
     )
     return {"manifest": manifest, "ethbtc_window": window, "baseline": expected_baseline}
 
