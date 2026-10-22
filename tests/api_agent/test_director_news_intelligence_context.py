@@ -4,7 +4,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
-import runpy
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -155,6 +155,35 @@ class NewsDirectorIntegrationTests(unittest.TestCase):
             last = evaluate(ctx, root / "outputs", now=NOW)
             self.assertFalse(last["fresh_ready"])
             self.assertTrue(last["news_already_analyzed"])
+
+    def test_news_only_delta_gate_requires_verified_noncanonical_news(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "context.json"
+            repo = Path(__file__).resolve().parents[2]
+            script = repo / "scripts/api_agent/check_delta_ready.py"
+            context = {
+                "coverage": {"comparable_numeric_metrics": 0},
+                "delta_status": "NO_DELTA",
+                "news_intelligence": {
+                    "news_only_review_eligible": True, "verified_count": 1,
+                    "event_fingerprint": "b" * 64,
+                    "canonical_effect": False, "portfolio_effect": False,
+                },
+            }
+            source.write_text(json.dumps(context))
+            result = subprocess.run(
+                [sys.executable, str(script), "--context", str(source)],
+                text=True, capture_output=True, check=True,
+            )
+            self.assertIn("delta_ready=true", result.stdout)
+            context["news_intelligence"]["portfolio_effect"] = True
+            source.write_text(json.dumps(context))
+            blocked = subprocess.run(
+                [sys.executable, str(script), "--context", str(source)],
+                text=True, capture_output=True, check=True,
+            )
+            self.assertIn("delta_ready=false", blocked.stdout)
 
     def test_workflow_uses_existing_context_augmentation_and_existing_budget(self):
         repo = Path(__file__).resolve().parents[2]
