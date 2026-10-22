@@ -6,6 +6,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from shared_row_tournament_weekly import filter_consumer_rows
+
 ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
 REGISTRY = Path("04_MARKET_LEARNING/shadow_registry/REGISTRY.json")
 CORE_FAMILIES = {"ETHBTC_PERSISTENCE", "BREADTH_SURVIVAL", "BTCD_PATH_RECLAIM"}
@@ -25,6 +27,8 @@ def main() -> None:
         ROOT / "03_CANDIDATE_REGISTRY.json",
         ROOT / "04_SHARED_ROW_SCHEMA.json",
         ROOT / "data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",
+        ROOT / "data/OUTCOME_DETAIL_LEDGER.csv",
+        ROOT / "RUNTIME_STATUS.json",
         ROOT / "14_DIVERGENCE_FNP_LEDGER.csv",
         ROOT / "RELEVANCE_STATE.json",
         REGISTRY,
@@ -36,10 +40,18 @@ def main() -> None:
     if "SHARED_ROW_MODEL_TOURNAMENT_V1" not in {item["sensor_id"] for item in registry["sensors"]}:
         issues.append("SHADOW_REGISTRY_NOT_REGISTERED")
     all_rows = read_csv(ROOT / "data/PROSPECTIVE_SHARED_ROW_LEDGER.csv")
-    valid_rows = [row for row in all_rows if row.get("row_integrity_contract") == INTEGRITY]
-    valid_ids = {row.get("event_id") for row in valid_rows}
     all_divergences = read_csv(ROOT / "14_DIVERGENCE_FNP_LEDGER.csv")
-    divergences = [row for row in all_divergences if row.get("event_id") in valid_ids]
+    outcome_details = read_csv(ROOT / "data/OUTCOME_DETAIL_LEDGER.csv")
+    runtime = json.loads((ROOT / "RUNTIME_STATUS.json").read_text())
+    valid_rows, divergences, excluded = filter_consumer_rows(
+        all_rows, all_divergences, runtime, outcome_details=outcome_details
+    )
+    # Zero rows is a legitimate collecting state. An untrusted *present* row
+    # is NOT: the monitor must never claim PASS by trusting a contract label.
+    rejected_rows = len(all_rows) - len(valid_rows)
+    rejected_divergences = len(all_divergences) - len(divergences)
+    if runtime.get("collection_state") == ACTIVE and (rejected_rows or rejected_divergences):
+        issues.append("UNVERIFIED_PROSPECTIVE_ROW_OR_DIVERGENCE")
     unresolved = [
         family["family_id"]
         for family in matrix["families"]
@@ -54,7 +66,10 @@ def main() -> None:
     rule = freeze.get("core_activation_rule", {})
     collection_state = rule.get("collection_state")
     quarantined = collection_state != ACTIVE or rule.get("containment_floor_sentinel") is not False
-    if quarantined:
+    if issues and "UNVERIFIED_PROSPECTIVE_ROW_OR_DIVERGENCE" in issues:
+        next_event = "RECONCILE_ORIGINAL_ROW_HASH_GIT_SOURCE_AND_OUTCOME_DETAILS"
+        readiness = "FAIL_CLOSED_UNVERIFIED_RESEARCH_EVIDENCE"
+    elif quarantined:
         next_event = "COMPLETE_POST_REPAIR_OWNERS_THEN_SEPARATE_FUTURE_FLOOR_REVIEW"
         readiness = "QUARANTINED_P0_REPAIR"
     elif core_unresolved:
@@ -77,7 +92,7 @@ def main() -> None:
         readiness = "READY_FOR_AVAILABLE_MATURED_OUTCOMES"
     output = {
         "contract": "SHARED_ROW_TOURNAMENT_MONITOR_v1",
-        "contract_revision": "1.1-p0-integrity",
+        "contract_revision": "1.2-consumer-source-bound-integrity",
         "authority": "RESEARCH_ONLY_NON_CANONICAL",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "status": "PASS" if not issues else "FAIL",
@@ -87,6 +102,13 @@ def main() -> None:
         "excluded_pre_repair_row_n": len(all_rows) - len(valid_rows),
         "divergence_n": len(divergences),
         "excluded_unbound_divergence_n": len(all_divergences) - len(divergences),
+        "consumer_integrity_filter": {
+            "raw_rows": len(all_rows),
+            "raw_divergences": len(all_divergences),
+            "eligible_rows": len(valid_rows),
+            "eligible_divergences": len(divergences),
+            "excluded": excluded,
+        },
         "matured": matured,
         "core_unresolved_family_bindings": core_unresolved,
         "optional_unresolved_family_bindings": optional_unresolved,
