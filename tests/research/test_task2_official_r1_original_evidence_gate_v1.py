@@ -118,6 +118,7 @@ class OriginalEvidenceTests(unittest.TestCase):
             self.assertGreater(q["counts"]["original_forecasts"],20)
             self.assertEqual(len(q["original_records"]),q["counts"]["original_forecasts"]*3)
             self.assertEqual(sum(q["per_horizon_receipt_states"].values()),3*q["counts"]["original_forecasts"])
+            self.assertEqual(q["original_integrity_exception_counts"].get("ORIGINAL_FORECAST_SELF_HASH_MISMATCH",0),0)
             self.assertFalse(q["provider_first_publication_verified"])
             self.assertFalse(q["actual_delivery_first_known_verified"])
             self.assertFalse(q["first_known_market_value_eligibility_unlocked"])
