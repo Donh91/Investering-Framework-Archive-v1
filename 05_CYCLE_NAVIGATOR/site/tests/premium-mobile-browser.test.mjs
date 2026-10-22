@@ -182,9 +182,14 @@ try{
    const graphHost=$('#official-path-chart');
    const graphTop=graphHost?.getBoundingClientRect().top-
       $('#view-overview').getBoundingClientRect().top;
-   const graphQuickAccess=!!graphLink&&graphLink.getAttribute('href')==='#official-path-chart'&&
-      graphHost?.tabIndex===-1&&Number.isFinite(graphTop)&&graphTop<740&&
-      graphLink.textContent.includes('Se grafen');
+   const pathBeforeGraphJump=location.pathname;
+   graphLink?.click();
+   const graphClickSafe=location.pathname===pathBeforeGraphJump&&
+     !location.pathname.endsWith('/vnext/')&&document.activeElement===graphHost&&
+     !$('#view-overview').hidden;
+   const graphQuickAccess=!!graphLink&&graphLink.getAttribute('href')==='../#official-path-chart'&&
+     graphHost?.tabIndex===-1&&Number.isFinite(graphTop)&&graphTop<740&&
+     graphLink.textContent.includes('Se grafen')&&graphClickSafe;
    checks.push(...sizes(graphLink?[graphLink]:[]));
    const chartButtons=Array.from(document.querySelectorAll('[data-fw-asset]'));
    const chartSource=await (await fetch('/data/latest.json',{cache:'no-store'})).json();
