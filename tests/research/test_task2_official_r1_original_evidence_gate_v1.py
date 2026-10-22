@@ -78,6 +78,7 @@ class OriginalEvidenceTests(unittest.TestCase):
                     ff=forecast()
                     ff["compass_id"]="CMP-"+day.strftime("%Y%m%d")+f"-fixture{j}"
                     ff["issued_at_utc"]=day.strftime("%Y-%m-%dT12:00:00Z")
+                    ff["compass_sha256"]=m.original_compass_self_digest(ff)
                     (directory/(ff["compass_id"]+".json")).write_text(json.dumps(ff))
             y=m.census(root)
             self.assertEqual(y["counts"]["original_forecasts"],27)
@@ -100,6 +101,7 @@ class OriginalEvidenceTests(unittest.TestCase):
                     ff=forecast()
                     ff["compass_id"]="CMP-"+day.strftime("%Y%m%d")+f"-fixture{j}"
                     ff["issued_at_utc"]=day.strftime("%Y-%m-%dT12:00:00Z")
+                    ff["compass_sha256"]=m.original_compass_self_digest(ff)
                     (directory/(ff["compass_id"]+".json")).write_text(json.dumps(ff))
             extra=root/"outcomes"/"2026/10/12"
             extra.mkdir(parents=True)
