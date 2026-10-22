@@ -6,6 +6,8 @@ import json
 import unittest
 from pathlib import Path
 
+from shared_row_activation_phase_gate import validate_activation_phase
+
 ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
 TEST = Path("tests/research/test_shared_row_p0_integrity.py")
 
@@ -20,7 +22,9 @@ def main() -> None:
     assert contract["candidate_decision_contract"]["complete_core_set_required"] is True
     assert contract["family_contracts"]["ETHBTC_PERSISTENCE"]["definition"]["lookback_rows"] == 168
     assert contract["source_binding_contract"]["contract"] == "SHARED_ROW_SOURCE_BINDING_MANIFEST_v1"
-    assert contract["prospective_eligibility_status"] == "CONTAINMENT_SENTINEL_NOT_AN_ACTIVATION_FLOOR"
+    # Phase-aware control: current repo remains quarantined; ACTIVE requires
+    # an independently reviewed, future-floor activation PR and source replay.
+    phase = validate_activation_phase(contract, freeze)
     activation = contract["prospective_activation"]
     implementation_commit = activation.get("implementation_merge_commit")
     boundary = activation.get("post_repair_source_capture_not_before_utc")
@@ -30,8 +34,6 @@ def main() -> None:
         assert len(implementation_commit) == 40
         assert boundary == activation.get("implementation_merged_at_utc")
         assert activation.get("readiness_must_be_reproduced_from_actual_bound_sources") is True
-    assert freeze["core_activation_rule"]["containment_floor_sentinel"] is True
-    assert freeze["core_activation_rule"]["collection_state"] == "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE"
     assert all(
         item.get("repair_state") == "P0_REPAIRED_AWAITING_ACTIVATION_OR_ACTIVE"
         for item in freeze["families"]
@@ -48,6 +50,10 @@ def main() -> None:
     assert spec and spec.loader
     spec.loader.exec_module(module)
     suite = unittest.defaultTestLoader.loadTestsFromModule(module)
+    phase_tests = unittest.defaultTestLoader.discover(
+        start_dir=str(TEST.parent), pattern="test_shared_row_activation_phase_gate.py"
+    )
+    suite.addTests(phase_tests)
     result = unittest.TextTestRunner(verbosity=1).run(suite)
     if not result.wasSuccessful():
         raise SystemExit(1)
@@ -56,9 +62,11 @@ def main() -> None:
             {
                 "status": "PASS",
                 "contract": "CORE_PROSPECTIVE_P0_INTEGRITY_GATE_v1",
+                "activation_phase": phase,
                 "tests_run": result.testsRun,
                 "checks": [
                     "quarantine_fail_closed",
+                    "phase_aware_activation_fail_closed",
                     "production_breadth_bundle_replay",
                     "same_cutoff_enforced",
                     "missing_is_not_zero",
