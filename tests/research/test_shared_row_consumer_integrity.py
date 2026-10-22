@@ -17,6 +17,7 @@ if str(RESEARCH_SCRIPTS) not in sys.path:
 
 import shared_row_tournament_relevance as relevance
 import shared_row_tournament_weekly as weekly
+import shared_row_next_action_controller as next_action
 
 
 FLOOR = "2026-09-30T00:00:00Z"
@@ -31,7 +32,7 @@ def runtime(active: bool = True) -> dict:
 
 
 def row(event_id: str, timestamp: str = "2026-10-01T00:00:00Z") -> dict:
-    return {
+    sample = {
         "event_id": event_id,
         "observation_timestamp_utc": timestamp,
         "information_cutoff_utc": timestamp,
@@ -39,16 +40,26 @@ def row(event_id: str, timestamp: str = "2026-10-01T00:00:00Z") -> dict:
         "row_integrity_contract": weekly.ROW_INTEGRITY_CONTRACT,
         "source_binding_manifest": "{}",
         "source_binding_manifest_sha256": "2" * 64,
-        "candidate_decisions": json.dumps({"C07_SIMPLE_3": True, "C08_SIMPLE_3_ETF": False}),
+        "ethbtc_derived_state": "ABOVE",
+        "breadth_derived_state": "BROAD_MAJORITY",
+        "btcd_derived_state": "FALLING_PATH",
+        "candidate_decisions": json.dumps({
+            "C01_ETHBTC": True, "C02_BREADTH": True, "C03_BTCD": True,
+            "C04_ETHBTC_BREADTH": True, "C05_ETHBTC_BTCD": True,
+            "C06_BREADTH_BTCD": True, "C07_SIMPLE_3": True,
+            "C08_SIMPLE_3_ETF": False,
+        }),
         "outcome_24h": "1",
         "outcome_72h": "1",
         "outcome_7d": "1",
-        "provenance_hash": "a" * 64,
+        "provenance_hash": "",
     }
+    sample["provenance_hash"] = weekly.evidence.frozen_provenance_hash(sample)
+    return sample
 
 
 def divergence(event_id: str, divergence_id: str, provenance: str | None = None) -> dict:
-    parent_hash = "a" * 64
+    parent_hash = row(event_id)["provenance_hash"]
     expected = hashlib.sha256((parent_hash + divergence_id).encode("utf-8")).hexdigest()
     return {
         "divergence_id": divergence_id,
@@ -108,6 +119,32 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         self.assertEqual(excluded["divergence_parent"], 2)
         self.assertEqual(excluded["divergence_provenance"], 1)
 
+    def test_hash_shaped_but_wrong_frozen_row_is_excluded(self) -> None:
+        entry = row("HASH_SHAPED_TAMPER")
+        entry["provenance_hash"] = "f" * 64
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier)
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["immutable_provenance"], 1)
+
+    def test_changed_candidate_decision_even_with_valid_hash_shape_is_excluded(self) -> None:
+        entry = row("DECISION_TAMPER")
+        decisions = json.loads(entry["candidate_decisions"])
+        decisions["C01_ETHBTC"] = False
+        entry["candidate_decisions"] = json.dumps(decisions)
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier)
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["immutable_provenance"], 1)
+
+    def test_recomputed_self_hash_does_not_override_frozen_boolean_rules(self) -> None:
+        entry = row("FROZEN_RULE_TAMPER")
+        decisions = json.loads(entry["candidate_decisions"])
+        decisions["C07_SIMPLE_3"] = False
+        entry["candidate_decisions"] = json.dumps(decisions)
+        entry["provenance_hash"] = weekly.evidence.frozen_provenance_hash(entry)
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier)
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["source_binding"], 1)
+
     def test_quarantine_excludes_every_row_and_divergence(self) -> None:
         rows, divs = self.adversarial_data()
         valid_rows, valid_divs, excluded = weekly.filter_consumer_rows(rows, divs, runtime(False), verifier)
@@ -115,6 +152,10 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         self.assertEqual(valid_divs, [])
         self.assertEqual(excluded["runtime_inactive"], len(rows))
         self.assertEqual(excluded["divergence_parent"], len(divs))
+
+    def test_weekly_relevance_and_next_action_share_one_fail_closed_filter(self) -> None:
+        self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)
+        self.assertIs(next_action.filter_consumer_rows, weekly.filter_consumer_rows)
 
     def test_weekly_and_relevance_use_the_same_fail_closed_filter(self) -> None:
         self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)
