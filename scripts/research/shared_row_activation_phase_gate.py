@@ -10,6 +10,16 @@ import re
 from datetime import datetime
 
 CORE_FAMILIES = {"ETHBTC_PERSISTENCE", "BREADTH_SURVIVAL", "BTCD_PATH_RECLAIM"}
+GATE_VERSION = "SHARED_ROW_ACTIVATION_PHASE_GATE_v1_1"
+FROZEN_DECISIONS = {
+    "C01_ETHBTC": "ETHBTC_PERSISTENCE.permission",
+    "C02_BREADTH": "BREADTH_SURVIVAL.permission",
+    "C03_BTCD": "BTCD_PATH_RECLAIM.permission",
+    "C04_ETHBTC_BREADTH": "C01_ETHBTC AND C02_BREADTH",
+    "C05_ETHBTC_BTCD": "C01_ETHBTC AND C03_BTCD",
+    "C06_BREADTH_BTCD": "C02_BREADTH AND C03_BTCD",
+    "C07_SIMPLE_3": "C01_ETHBTC AND C02_BREADTH AND C03_BTCD",
+}
 QUARANTINED = "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE"
 ACTIVE = "ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION"
 
@@ -23,7 +33,7 @@ def exact_utc(value: object) -> datetime:
     return datetime.fromisoformat(value[:-1] + "+00:00")
 
 
-def validate_activation_phase(contract: dict, freeze: dict) -> str:
+def validate_activation_phase(contract: dict, freeze: dict, runtime: dict | None = None) -> str:
     """Validate phase consistency only; do not certify external sources/reviews.
 
     A separately governed activation PR must reproduce the original immutable
@@ -34,6 +44,12 @@ def validate_activation_phase(contract: dict, freeze: dict) -> str:
     state = activation.get("collection_state")
     assert state in {QUARANTINED, ACTIVE}, "UNRECOGNIZED_COLLECTION_STATE"
     assert rule.get("collection_state") == state, "ACTIVATION_FREEZE_STATE_DRIFT"
+    assert isinstance(runtime, dict), "RUNTIME_STATE_REQUIRED"
+    assert runtime.get("collection_state") == state, "ACTIVATION_RUNTIME_STATE_DRIFT"
+    assert runtime.get("core_prospective_eligibility_status") == contract.get("prospective_eligibility_status"), "RUNTIME_ELIGIBILITY_STATUS_DRIFT"
+    assert runtime.get("core_prospective_eligibility_start") == contract.get("prospective_eligibility_start"), "RUNTIME_ELIGIBILITY_FLOOR_DRIFT"
+    assert runtime.get("authority") == "RESEARCH_ONLY_NON_CANONICAL", "RUNTIME_AUTHORITY_DRIFT"
+    assert runtime.get("canonical_effect") is False, "RUNTIME_CANONICAL_AUTHORITY_FORBIDDEN"
     assert contract.get("no_backdating") is True and rule.get("no_backdating") is True
     assert contract.get("legacy_equivalence") is False
     assert activation.get("readiness_must_be_reproduced_from_actual_bound_sources") is True
@@ -46,8 +62,13 @@ def validate_activation_phase(contract: dict, freeze: dict) -> str:
     }
     assert set(rule.get("candidates", [])) == required_candidates
     assert set(contract["candidate_decision_contract"]) >= required_candidates
+    assert all(
+        contract["candidate_decision_contract"].get(name) == expr
+        for name, expr in FROZEN_DECISIONS.items()
+    ), "FROZEN_CANDIDATE_DECISION_MUTATED"
     assert set(rule.get("start_only_when", [])) == CORE_FAMILIES
     families = {item["family_id"]: item for item in freeze["families"]}
+    assert len(families) == len(freeze["families"]), "DUPLICATE_FROZEN_FAMILY_ID"
     assert CORE_FAMILIES <= families.keys(), "CORE_FAMILY_MISSING"
     assert all(
         families[name].get("status") == "READY"
@@ -101,4 +122,14 @@ def validate_activation_phase(contract: dict, freeze: dict) -> str:
     review_utc = exact_utc(evidence.get("activation_reviewed_at_utc"))
     assert implementation_utc < source_ready_utc <= review_utc < floor, "ACTIVATION_CLOCK_ORDER_INVALID"
     assert activation.get("no_backdating", True) is True
+    assert evidence.get("validator_repair_version") == GATE_VERSION, "VALIDATOR_REPAIR_VERSION_MISSING"
+    adjudication_path = evidence.get("activation_adjudication_path")
+    assert isinstance(adjudication_path, str) and adjudication_path.startswith(
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/"
+    ) and adjudication_path.endswith(".md") and ".." not in adjudication_path, "ACTIVATION_ADJUDICATION_PATH_REQUIRED"
+    source_cutoff_utc = exact_utc(evidence.get("readiness_evidence_cutoff_utc"))
+    freeze_utc = exact_utc(evidence.get("activation_freeze_time_utc"))
+    assert implementation_utc < source_ready_utc <= source_cutoff_utc <= review_utc <= freeze_utc < floor, (
+        "ACTIVATION_SOURCE_REVIEW_FREEZE_CLOCK_ORDER_INVALID"
+    )
     return "ACTIVE_SCHEMA_VALID_SOURCE_REVIEW_STILL_REQUIRED"
