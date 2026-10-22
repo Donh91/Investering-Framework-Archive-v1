@@ -106,6 +106,10 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
     last_closed = datetime.combine(last_date + timedelta(days=1), datetime.min.time(), timezone.utc)
     if cutoff < last_closed or cutoff - last_closed > timedelta(hours=48):
         raise ValueError("last_bar_not_fresh_to_cutoff")
+    # Source freshness is end-to-end: two individually permitted 48h lags
+    # must not compound into a 96h stale issued candidate.
+    if issued - last_closed > timedelta(hours=48):
+        raise ValueError("issued_forecast_older_than_closed_source")
 
     anchor = cleaned[-1][2]  # Last *settled* close, NOT an invented intraday spot.
     horizons: dict[str, dict[str, Any]] = {}
