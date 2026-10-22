@@ -432,7 +432,10 @@ def main():
     runtime = json.loads((root / "RUNTIME_STATUS.json").read_text())
     # Use exactly the same source- and immutable-row gate as weekly/relevance;
     # no autonomous stress/review packet may consume raw unverified outcomes.
-    rows, divs, exclusions = filter_consumer_rows(raw_rows, raw_divs, runtime)
+    rows, divs, exclusions = filter_consumer_rows(
+        raw_rows, raw_divs, runtime,
+        outcome_details=read_csv(root / "data/OUTCOME_DETAIL_LEDGER.csv"),
+    )
     floor = parse_dt(runtime.get("core_prospective_eligibility_start"))
     ev = evidence(rows, divs, policy, floor)
     action, target, reason = choose_action(root, rows, ev, policy, now, history)
