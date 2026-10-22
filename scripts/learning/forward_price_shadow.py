@@ -129,7 +129,7 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
             continue
         low = anchor * math.exp(_quantile(lows, 0.10))
         high = anchor * math.exp(_quantile(highs, 0.90))
-        if not 0 < low < high or not math.isfinite(low + high):
+        if not (0 < low < high and math.isfinite(low) and math.isfinite(high)):
             raise ValueError("degenerate_empirical_envelope")
         horizons[str(horizon)] = {
             "status": "SHADOW_BASELINE_ONLY", "low_usd": low,
