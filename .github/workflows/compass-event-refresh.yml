@@ -9,6 +9,10 @@ on:
       - 'tests/data_ping/test_compass_event_refresh.py'
       - '04_MARKET_LEARNING/handlekompas/event_refresh/**'
       - '05_CYCLE_NAVIGATOR/site/**'
+  repository_dispatch:
+    # Existing public capture may request this bounded source-health inspection.
+    # No event payload is read; the job checks fresh main and immutable owners.
+    types: [compass-owner-liveness-202610]
   schedule:
     # Fallback only. Entry Signal Ledger explicitly dispatches the primary evaluation.
     - cron: '55 * * * *'

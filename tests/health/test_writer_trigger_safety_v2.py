@@ -217,4 +217,27 @@ jobs:
         self.assertNotIn('workflow_run:',event)
         self.assertNotIn('workflow_run:',pages)
 
+
+    def test_october_compass_owner_pulse_preserves_writer_safety_and_source_clock(self):
+        root=Path(__file__).parents[2]
+        anchor=(root/'.github/workflows/daily-raw-owner-capture.yml').read_text()
+        watcher=(root/'.github/workflows/compass-event-refresh.yml').read_text()
+        self.assertIn('types: [compass-owner-liveness-202610]', watcher)
+        self.assertIn('repository_dispatch:', watcher)
+        self.assertNotIn('workflow_run:', watcher)
+        self.assertIn('Temporary Compass hourly-source liveness pulse, October only', anchor)
+        self.assertIn('date(2026, 10, 22) <= local_date < date(2026, 11, 1)', anchor)
+        self.assertIn('origin/main:03_DAILY_CAPTURE_LOGS/hourly/LATEST.json', anchor)
+        self.assertIn('0 <= age <= 65*60', anchor)
+        self.assertIn('pointer.get("status") == "COMPLETE"', anchor)
+        self.assertIn('gh api -X POST "repos/$GH_REPO/dispatches" -f event_type=compass-owner-liveness-202610', anchor)
+        self.assertIn('COMPASS_OWNER_WATCH_ALREADY_ACTIVE', anchor)
+        self.assertIn('continue-on-error: true', anchor)
+        self.assertIn('group: framework-main-writer', anchor)
+        self.assertIn('cancel-in-progress: false', anchor)
+        # No new Actions token power, new production cron, market action or private store.
+        self.assertNotIn('  actions: write', anchor)
+        self.assertNotIn('cron: \'12 * * * *\'', anchor)
+        self.assertNotIn('gh workflow run daily-compass.yml', anchor)
+
 if __name__=='__main__':unittest.main()
