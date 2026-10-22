@@ -38,6 +38,9 @@ HOUR = timedelta(hours=1)
 # These do not change any market signal, outcome label, or investment threshold.
 MAX_ETHBTC_BASELINE_AGE = timedelta(hours=3)
 MAX_DAILY_OWNER_AGE = timedelta(hours=36)
+# A newly checked CSV can contain ancient daily prints. Bind the actual
+# most-recent UTC settled *source day*, not only its fresh verification stamp.
+MAX_BTCD_SETTLED_DAY_AGE = timedelta(hours=72)
 
 
 class Ineligible(RuntimeError):
@@ -408,7 +411,8 @@ def collection_gate(contract: dict[str, Any], freeze: dict[str, Any]) -> tuple[d
 
 
 def require_fresh_sources(
-    cutoff: datetime, *, ethbtc_hour: datetime, breadth_capture: datetime, btcd_verified: datetime
+    cutoff: datetime, *, ethbtc_hour: datetime, breadth_capture: datetime,
+    btcd_verified: datetime, btcd_last_settled_print: datetime
 ) -> None:
     """Same-cutoff source age enforcement shared with downstream Git replay.
 
@@ -419,6 +423,7 @@ def require_fresh_sources(
         ("ETHBTC_LAST_SETTLED_HOUR_STALE", ethbtc_hour, MAX_ETHBTC_BASELINE_AGE),
         ("BREADTH_DATED_OWNER_STALE", breadth_capture, MAX_DAILY_OWNER_AGE),
         ("BTCD_CMC_VERIFICATION_STALE", btcd_verified, MAX_DAILY_OWNER_AGE),
+        ("BTCD_CMC_SETTLED_PRINT_STALE", btcd_last_settled_print, MAX_BTCD_SETTLED_DAY_AGE),
     )
     for reason, source_time, maximum_age in checks:
         age = cutoff - source_time
@@ -475,6 +480,7 @@ def build(now_override: str | None = None) -> dict[str, Any]:
             ethbtc_hour=window[-1]["ts"],
             breadth_capture=breadth_time,
             btcd_verified=btcd_time,
+            btcd_last_settled_print=parse_ts(btcd[-1]["source_timestamp_utc"]),
         )
         hourly_bindings = bind_paths(
             hourly_paths,
