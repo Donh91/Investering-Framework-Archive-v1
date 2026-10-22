@@ -44,6 +44,10 @@ def filter_consumer_rows(rows,divs,runtime,verify_source_bindings=None):
         try:
             decisions=json.loads(row.get('candidate_decisions') or '{}')
             if not isinstance(decisions,dict) or not decisions or not all(isinstance(value,bool) for value in decisions.values()): raise ValueError('candidate decisions')
+            # Hash formatting alone is not row integrity: replay the original
+            # immutable CSV projection and the frozen C01-C07 Boolean contract.
+            evidence.verify_frozen_provenance(row)
+            evidence.validate_core_decision_contract(row,decisions,set(evidence.CORE_IDS))
             verify(row,cutoff)
         except Exception:
             excluded['source_binding']+=1; continue
