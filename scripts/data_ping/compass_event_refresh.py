@@ -23,7 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, Mapping
@@ -47,6 +47,11 @@ NON_PROTECTIVE_COOLDOWN_SECONDS = 3 * 60 * 60
 SCHEDULE_PROXIMITY_SECONDS = 30 * 60
 # Delay window is a dispatch-liveness grace period, NOT a forecast backdate.
 MISSING_SLOT_GRACE_SECONDS = 45 * 60
+# Temporary, owner-approved public Actions continuity bridge.
+# Expires on 2026-11-01 in Europe/Copenhagen; never backdate a forecast.
+SOURCE_CONTINUITY_START = date(2026, 10, 22)
+SOURCE_CONTINUITY_END = date(2026, 11, 1)
+SOURCE_CONTINUITY_LEAD_SECONDS = 45 * 60
 ACTION_RANK = {
     "HOLD_WAIT_DATA_DEGRADED": 0,
     "HOLD_DEFENSIVE_WAIT": 1,
@@ -198,6 +203,37 @@ def _missing_scheduled_freeze(now: datetime, issued_at: Any) -> str | None:
     return name if original_issue < due_at.astimezone(timezone.utc) else None
 
 
+def _official_source_expiry(compass: Mapping[str, Any], now: datetime) -> datetime | None:
+    """Strictest verified ORIGINAL Official owner freshness deadline.
+
+    Uses only timestamps and SLAs already frozen in the Official Compass.
+    An unrelated newer auto packet cannot extend those original clocks.
+    """
+    if str(compass.get("data_status") or "") != "OK":
+        return None
+    owner = nh.nested(compass, "source_bindings", "auto_market_state", "freshness")
+    if not isinstance(owner, Mapping) or owner.get("status") != "PASS":
+        return None
+    checks = owner.get("checks")
+    if not isinstance(checks, list) or not checks:
+        return None
+    issued = parse_utc(compass.get("issued_at_utc"))
+    if issued is None or issued > now:
+        return None
+    deadlines = []
+    for row in checks:
+        if not isinstance(row, Mapping) or row.get("status") != "PASS":
+            return None
+        stamp = parse_utc(row.get("timestamp"))
+        sla = row.get("max_age_seconds")
+        if (stamp is None or stamp > issued or isinstance(sla, bool)
+                or not isinstance(sla, (int, float)) or not 0 < sla <= 86400):
+            return None
+        deadlines.append(stamp + timedelta(seconds=sla))
+    deadline = min(deadlines)
+    return deadline if issued <= deadline else None
+
+
 def _public_refresh_message(cause_codes: Any) -> str:
     """Distinguish missed scheduled output from a genuine market event."""
     causes = set(cause_codes or [])
@@ -208,6 +244,12 @@ def _public_refresh_message(cause_codes: Any) -> str:
             "Scheduled Compass update missed. A fresh current-time reassessment "
             "has been requested; this does not indicate a new market move "
             "or a delivered forecast."
+        )
+    if causes - {"PRIOR_REQUEST_NOT_BOUND_RETRY"} == {"OFFICIAL_SOURCE_REFRESH_DUE"}:
+        return (
+            "Official Compass source freshness is near expiry. A current-time "
+            "reassessment was requested from fresh owner evidence; "
+            "this does not imply a material market move or new action."
         )
     return "Material market move or decision-state change detected. Compass reassessment is in progress."
 
@@ -340,7 +382,25 @@ def evaluate(
         auto_state, action, market, cn_package, as_of=now, prior_compass=latest_compass
     )
 
+    # Owner-approved 22-31 Oct public continuity bridge. Preserve the original
+    # Official source clock and require genuinely newer completed market data.
+    source_expiry = _official_source_expiry(latest_compass, now)
+    continuity_active = SOURCE_CONTINUITY_START <= now.astimezone(
+        ZoneInfo("Europe/Copenhagen")).date() < SOURCE_CONTINUITY_END
+    prior_open = parse_utc(nh.nested(latest_compass, "market_now", "market_observation_open_utc"))
+    current_open = parse_utc(market.get("market_observation_open_utc"))
+    expiry_due = bool(
+        continuity_active and source_expiry is not None
+        and source_expiry <= now + timedelta(seconds=SOURCE_CONTINUITY_LEAD_SECONDS)
+        and current_data_status == "OK"
+        and source_sha != compass_source_sha
+        and prior_open is not None and current_open is not None
+        and prior_open < current_open <= now
+    )
+
     causes: list[str] = []
+    if expiry_due:
+        causes.append("OFFICIAL_SOURCE_REFRESH_DUE")
     if str(latest_compass.get("data_status") or "") != current_data_status:
         causes.append("DATA_HEALTH_CHANGED")
     if str(latest_compass.get("action_now") or "") != str(action.get("NOW") or ""):
@@ -421,6 +481,7 @@ def evaluate(
     elif (
         dispatch
         and not protective
+        and not expiry_due
         and not request_retry_due
         and 0 <= seconds_to_scheduled <= SCHEDULE_PROXIMITY_SECONDS
     ):
@@ -430,6 +491,7 @@ def evaluate(
     elif (
         dispatch
         and not protective
+        and not expiry_due
         and not request_retry_due
         and cooldown_age is not None
         and cooldown_age < NON_PROTECTIVE_COOLDOWN_SECONDS
@@ -455,6 +517,13 @@ def evaluate(
         "seconds_to_next_scheduled_compass": seconds_to_scheduled,
         "missing_scheduled_freeze": missing_freeze,
         "missing_freeze_observation_only": True,
+        "temporary_source_continuity": {
+            "active": continuity_active,
+            "expiry_at_utc": source_expiry.isoformat().replace("+00:00", "Z") if source_expiry else None,
+            "refresh_admitted": expiry_due,
+            "expires_local_date": SOURCE_CONTINUITY_END.isoformat(),
+            "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION",
+        },
         "last_request_age_seconds": cooldown_age,
         "last_requested_source_sha": last_requested_source or None,
         "source_packet_sha256": source_sha,

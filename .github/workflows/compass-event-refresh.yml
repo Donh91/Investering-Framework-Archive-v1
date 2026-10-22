@@ -9,6 +9,11 @@ on:
       - 'tests/data_ping/test_compass_event_refresh.py'
       - '04_MARKET_LEARNING/handlekompas/event_refresh/**'
       - '05_CYCLE_NAVIGATOR/site/**'
+  workflow_run:
+    # Independent public-owner backstop when top-of-hour schedule events go missing.
+    # Run from main only; never consume triggering workflow artifacts.
+    workflows: ["Daily Live Anchor Capture"]
+    types: [completed]
   schedule:
     # Fallback only. Entry Signal Ledger explicitly dispatches the primary evaluation.
     - cron: '55 * * * *'
@@ -41,7 +46,12 @@ jobs:
           python -m unittest tests.data_ping.test_compass_event_refresh -v
 
   detect:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: >-
+      github.event_name != 'pull_request' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main'))
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
