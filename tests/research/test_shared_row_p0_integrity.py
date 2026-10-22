@@ -455,7 +455,19 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
             check=True,
         )
         result = json.loads(completed.stdout)
-        self.assert_rejected(result, "P0_REPAIR_QUARANTINE_ACTIVE")
+        # This branch stages ACTIVE for a strictly future floor; original dates
+        # remain ineligible. Do NOT claim quarantined runtime after activation.
+        self.assert_rejected(result, "BEFORE_PROSPECTIVE_ELIGIBILITY_START")
+        # Preserve a real QUARANTINED state negative control independently of
+        # the branch state, rather than skipping quarantine on ACTIVE.
+        with self.assertRaisesRegex(materializer.Ineligible, "P0_REPAIR_QUARANTINE_ACTIVE"):
+            materializer.collection_gate(
+                {"prospective_eligibility_status": "CONTAINMENT_SENTINEL_NOT_AN_ACTIVATION_FLOOR"},
+                {"core_activation_rule": {
+                    "collection_state": "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE",
+                    "containment_floor_sentinel": True,
+                }},
+            )
         floor = datetime(2026, 8, 9, 1, 0, tzinfo=timezone.utc)
         first = materializer.context_block(floor + timedelta(days=27), floor)
         second = materializer.context_block(floor + timedelta(days=28), floor)
