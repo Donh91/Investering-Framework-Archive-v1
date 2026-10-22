@@ -1,51 +1,48 @@
-# Hugging Face × Investering Framework | 2026-10-22 research gateway
+# Hugging Face × Framework Task 2, research and execution gateway
 
-**Status:** RESEARCH_ONLY / SOURCE_CANDIDATES / NOT PIT-ADMITTED / NOT PRODUCTION. **GitHub:** Donh91/Investering-Framework-Archive-v1. **HF account:** [FrameworkCN](https://huggingface.co/FrameworkCN), authenticated free account on 2026-10-22. **Audit run:** 2026-10-22, read-only Hub discovery plus public framework owner/rule readback.
+**Current research checkpoint: 23 October 2026.** Existing owner [#1596](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596); evidence package [draft PR #1747](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1747). Public research, source QA and original-file diagnostics have been executed. The package remains unmerged. Original no-hindsight information edge and investor economic edge remain unestablished.
 
-This is one versioned, public-safe research packet, not a new owner, collector, scheduler, agent, scoring system, forecast, live rule, second Task 2, or accepted historical source. No purchased data, paid Jobs, GPU, inference, HF repo creation, private source export, production deployment, or trading change was authorized or attempted. Unmerged PR status means the material is not incorporated into canonical main.
+## Start with current execution evidence
 
-## Agent reading order
-1. `AGENTS.md`, cross-repo boundary and map; privacy/safety always outrank this packet.
-2. Existing Task 2 R0–R7 owner: `04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md`.
-3. Dated Task 2 gate, newest immutable Task 2 source receipts, and existing DR01–DR08 research packet. Do NOT infer dated snapshots are current.
-4. Files here, in order:
-   - `01_ACCOUNT_CAPABILITIES_AND_UPGRADE.md` — observed free access versus documented pricing, rate limits, compute.
-   - `02_DATASET_SOURCE_CENSUS.md` — candidates, scope, risks, severity and retrieval status.
-   - `03_TASK2_RESEARCH_PROTOCOL.md` — R0–R7 test procedure, PIT gate, examples, benchmark, no-hindsight controls.
-   - `04_ALPHA_NEWS_MODEL_CANDIDATES.md` — Alpha Lab, news, sentiment and time-series challenger review.
-   - `05_DECISION_AND_AGENT_HANDOFF.md` — phases, boundaries, owners, measurable advancement gates and stop rules.
-   - `SOURCE_MANIFEST_v1.json` — machine-readable candidates and latest dispositions.
-   - `06_SOURCE_DOCUMENT_RED_TEAM_DELTA.md` — original release source-document red-team and first-wave corrections.
-   - `07_SECOND_WAVE_DATA_SOURCE_AUDIT.md` — eight additional external source cards with explicit license and data-quality gates.
-   - `08_EXISTING_ALPHA_LAB_CODE_CROSSCHECK.md` — static code findings, reuse of current Alpha Lab experiment instead of duplicate workflow.
-   - `09_PRIORITIZED_PILOT_QUEUE_AND_ACCEPTANCE.md` — bounded small-file pilots, acceptance tiers and precommitted negative controls.
-   - `10_STABLECOIN_MANIFEST_RECONCILIATION.md` — machine-level manifest aggregation, 167 days, 494,016 claimed rows and suspicious internal time gap.
-   - `SOURCE_MANIFEST_DELTA_v2.json` — machine-readable addendum to v1: eight newer source candidates, owner routing and code-audit findings.
+1. Fresh `AGENTS.md`, cross-repository boundary/map, current operational cockpit and the canonical Task 2 handoff override this dated gateway.
+2. [22, current R0–R7 acceptance matrix](22_TASK2_ACCEPTANCE_MATRIX_20261023.md): what was executed, actual denominators, available analyses, stage gates and concrete next actions.
+3. [20, corrected information/action gate and original-source rescue](20_R1_RECOVERY_AND_ANALYSIS_READINESS_20261023.md), with [seven original Actions artifact bindings](20_R1_SOURCE_ARTIFACT_BINDINGS_20261023.json).
+4. [21, executed original Official census](21_OFFICIAL_ORIGINAL_CENSUS_20261023.json): exact public main `5fd81f3714e95198cfc731e7db6b1404056a51e1`, 70 forecasts × three horizons = 210 attempts, 144 matching outcome files, 66 without an outcome file in that tree; no automatic PIT admission.
+5. [16, pinned HF BTCUSDT 1h source QA](16_PINNED_BTCUSDT_1H_T1_QA_20261022.md) and [reproduction script](16_PINNED_BTCUSDT_1H_T1_QA.py): actual 9 MB file, 80,317 rows, 128 omitted hours, 14 partial close stamps and six adverse fixtures. T1 source quality only.
+6. [19, 11 original public Pages publication chains](19_ORIGINAL_V3_PUBLICATION_CENSUS_20261023.md) and [machine rows](19_ORIGINAL_V3_PUBLICATION_CENSUS_20261023.json); [18, one-row detailed evidence](18_ORIGINAL_V3_PUBLICATION_CHAIN_R1_20261023.md). A deployment report is not a recipient receipt.
+7. [17, earlier execution scorecard and additive corrections](17_TASK2_EXECUTION_SCORECARD_20261022.md). Use #22 for the current cross-stage decision.
 
-## Work + Codex mission annex, owner-approval pending (v1.2)
-**Execution mode:** one **ChatGPT Work** coordinator together with **Codex as the primary engineering, deterministic testing and source-review partner**, after owner's separate execution approval. This is one integrated high-value Task 2 mission, not a replacement for the existing R0–R7 research owners or a new scheduled task.
+**Correct gate distinction:** pure informational forecast comparison has `user_delivery_required=false`; investor action/economics requires actual user delivery, actionability and credible fills. Source eligibility accepts exact provider publication **or independently preserved authentic original response binding**. Original archive timestamps alone do not certify the content of every selected feature. Developmental public analyses are already allowed under the existing-data-first owner addendum; one missing source must not stop unrelated diagnostics.
 
-**Capacity checkpoint:** owner reports **96% Work/Codex usage available following account reset on 2026-10-22**. The plugin has not read quota telemetry, and does not assert whether capacities are pooled. Earlier Codex review-limit messages may no longer reflect current execution access; confirm at launch. No credits have been intentionally spent on executing this mission.
+## Initial Hugging Face audit, 22 October 2026
 
-For any subsequent Work or Codex launch, read in order after current AGENTS and canonical owner:
-1. [11_EXTREME_WORK_MISSION_MASTER.md](11_EXTREME_WORK_MISSION_MASTER.md), consolidated mission, self-critique and v1.2 owner clarification.
-2. [12_PHASE_EXECUTION_AND_CODEX_DELEGATION.md](12_PHASE_EXECUTION_AND_CODEX_DELEGATION.md), high-value evidence waves, Work/Codex division of labour and true R0–R7 gates.
-3. [13_HF_SOURCE_PILOTS_AND_MODEL_CHALLENGERS.md](13_HF_SOURCE_PILOTS_AND_MODEL_CHALLENGERS.md), selectively pinned free-tier source pilots and model critics.
-4. [14_SCIENTIFIC_TEST_MATRIX_AND_KILL_GATES.md](14_SCIENTIFIC_TEST_MATRIX_AND_KILL_GATES.md), 32 adversarial tests, nulls, complete denominators, baselines, falsifiers and retirement.
-5. [15_APPROVAL_RESOURCE_AND_ACCEPTANCE_CONTRACT.md](15_APPROVAL_RESOURCE_AND_ACCEPTANCE_CONTRACT.md), prepared separate Work launch contract, usage/value allocation and science acceptance scorecard.
+The authenticated HF account `FrameworkCN` was FREE. These files record source candidates and dated source-card/license checks, not accepted performance evidence:
 
-**Up-to-date caution:** initial mainline PR census had six open; a later check on October 22 found only #1747 and #1733 OPEN. Historical #1746, #1748, #1736 and #1732 were CLOSED but that alone does not certify merge or live behavior. Refresh exact main/PR heads and original evidence, do not restart closed implementation blindly. This branch and PR #1747 remain **DRAFT, UNMERGED**, and are source/planning material only until governance-backed review. No Work/Codex run or HF paid work has started from this addendum.
+- [01, free account, limits and upgrade economics](01_ACCOUNT_CAPABILITIES_AND_UPGRADE.md).
+- [02, initial dataset census](02_DATASET_SOURCE_CENSUS.md), [SOURCE_MANIFEST_v1.json](SOURCE_MANIFEST_v1.json).
+- [03, research protocol](03_TASK2_RESEARCH_PROTOCOL.md).
+- [04, existing Alpha/News model candidates](04_ALPHA_NEWS_MODEL_CANDIDATES.md).
+- [05, decisions and existing-owner handoff](05_DECISION_AND_AGENT_HANDOFF.md).
+- [06, original source-document red-team corrections](06_SOURCE_DOCUMENT_RED_TEAM_DELTA.md).
+- [07, eight additional source candidates](07_SECOND_WAVE_DATA_SOURCE_AUDIT.md), [SOURCE_MANIFEST_DELTA_v2.json](SOURCE_MANIFEST_DELTA_v2.json).
+- [08, static existing Alpha Lab code crosscheck](08_EXISTING_ALPHA_LAB_CODE_CROSSCHECK.md), not an executed bug reproduction.
+- [09, bounded pilot acceptance](09_PRIORITIZED_PILOT_QUEUE_AND_ACCEPTANCE.md).
+- [10, stablecoin manifest aggregation](10_STABLECOIN_MANIFEST_RECONCILIATION.md), metadata consistency only.
 
-## One-line scientific rule
-A third-party historical dataset can check the shape of the past, but it does not prove that *our* original forecast, feature or vendor datum was observable before its decision cutoff. No original issued-at + admissible first-known receipt = no retrospective edge claim.
+## Mission planning pack, retained as dated pre-execution design
 
-## High-impact delta versus previous research
-- Verified PR [#1675](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1675) has merged; its fail-closed scientific counting and settlement repairs should be reconciled on actual main, not restated as blocked solely from its old PR body.
-- PR [#1617](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1617) is closed **unmerged**; no longer an open merge dependency, but assess if its source SHA validation problem was fixed by other subsequent code before reopening an issue.
-- Chain of Title previously referenced in existing Alpha Lab manifests currently returns missing via the HF filesystem lookup; confirm deletion/rename/access before relying on the URL. Do not delete historical public source references or overwrite frozen provenance.
-- New useful *candidates*, not admitted proof: OHLCV, Polymarket price/orderbook, stablecoin flows, liquidations, news, and model quality. **Alpha reuse discovery:** an existing `trenches_point_in_time_ablation_v1.py` and research workflow already cover the pump.fun source; do not duplicate. New static owner-facing code issues are documented in file 08.
+Files 11–15 were prepared before separate owner authorization. Their embedded AWAITING_APPROVAL/NOT_STARTED language describes that historical design checkpoint; actual later Work-session execution is recorded in #16–22.
 
-## Provenance, terminology and routing
-References are provider-native HF Hub dataset and model links, public HF docs, or specific existing GitHub sources. Snapshot metadata must be checked again before ingest because schemas, revisions, licenses, uptime, rates and data availability can change. Store source revisions, SHA, files, coverage, publication and first-known proof before any experiment. Use existing research owners for implementation. Do not write raw/restricted provider data to this public repository.
+- [11, master mission](11_EXTREME_WORK_MISSION_MASTER.md).
+- [12, R0–R7 and bounded Work/Codex division](12_PHASE_EXECUTION_AND_CODEX_DELEGATION.md).
+- [13, source pilots and challenger conditions](13_HF_SOURCE_PILOTS_AND_MODEL_CHALLENGERS.md).
+- [14, adverse tests and kill gates](14_SCIENTIFIC_TEST_MATRIX_AND_KILL_GATES.md).
+- [15, approval/resource/acceptance contract](15_APPROVAL_RESOURCE_AND_ACCEPTANCE_CONTRACT.md).
 
-**Research disposition:** `SOURCE_CONTEXT_ONLY` for most items, `FORWARD_TEST_CANDIDATE` only after owner selection, and `DATA_BLOCKED` when evidence is unavailable. Zero evidence of a real performance uplift is claimed.
+## Integration, privacy and next exact dependency
+
+The existing CODEX_READY OKX settlement-clock repair is isolated in [draft #1749](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1749), with independent advisory and exact-head checks. Main readback, allowed release route and natural postmerge closure remain separate. Historical #1746/#1748 were verified merged and their natural monitor observed zero rows; first real post-floor source/consumer evidence is still pending.
+
+The historical source rescue requires the existing exact private Task 2 custody package, not Round 3 value inspection. Its immutable commit/path/hash and requested read-only scope are in #20. No private values have been accessed or posted in this execution. No paid HF Job/GPU/API call, new scheduler, market rule or portfolio action was introduced.
+
+The frozen prospective core floor is 24 October 2026 14:00 Copenhagen (12:00Z). No current source QA, GitHub deployment, synthetic fixture, retrospective fit or model review substitutes for genuinely future matured, independent evidence.
