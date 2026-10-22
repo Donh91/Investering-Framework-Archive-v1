@@ -5,6 +5,32 @@ import { createHash } from 'node:crypto';
 import { preserveLegacyShell, releasePremiumShell } from './premium-release.mjs';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
+// Security regression, Cloudflare-inspired trust-boundary audit:
+// an unavailable private source must not serialize a raw filesystem exception into
+// public data/compass.json. Exercise the real fallback function with a synthetic
+// failure. The negative control recreates the old unsafe assignment in memory only.
+const compassFactoryStart=build.indexOf('async function buildCompassSnapshot(');
+const compassFactoryEnd=build.indexOf('// PUBLIC_COMPASS_FULL_STACK_READBACK_v1:',compassFactoryStart);
+if(compassFactoryStart<0||compassFactoryEnd<=compassFactoryStart)throw Error('Compass fallback regression cannot isolate actual builder');
+const compassFactorySource=build.slice(compassFactoryStart,compassFactoryEnd);
+const safeFailureMarker='OFFICIAL_COMPASS_SOURCE_UNAVAILABLE';
+const syntheticInternalPath='/synthetic/internal/location/not-for-public';
+const failingSource=async()=>{throw Error('ENOENT: '+syntheticInternalPath)};
+const makeCompassFactory=source=>new Function('readJson','COMPASS_POINTER_PATH',source+';return buildCompassSnapshot;')(failingSource,'synthetic-public-pointer');
+const safeFallback=await makeCompassFactory(compassFactorySource)({});
+if(safeFallback.failure_state!==safeFailureMarker||
+   safeFallback.data_status!=='NOT_PUBLISHED'||
+   safeFallback.action_now!=='UNAVAILABLE'||
+   JSON.stringify(safeFallback).includes(syntheticInternalPath))
+  throw Error('Internal Compass exception was exposed in public fallback');
+const unsafeSource=compassFactorySource.replace(
+  'failure_state:"OFFICIAL_COMPASS_SOURCE_UNAVAILABLE"',
+  'failure_state:String(error?.message||error)');
+if(unsafeSource===compassFactorySource)throw Error('No security guard to mutation-test');
+const unsafeFallback=await makeCompassFactory(unsafeSource)({});
+if(!JSON.stringify(unsafeFallback).includes(syntheticInternalPath))
+  throw Error('Security negative control did not detect the previous path disclosure');
+
 const h=JSON.parse(history);
 const chartSource=await read('./frozen-week-chart.js'),chartCss=await read('./frozen-week-chart.css');
 const vnextShell=await read('./vnext-live/index.html');
