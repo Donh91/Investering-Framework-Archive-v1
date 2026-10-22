@@ -49,9 +49,9 @@ def row(event_id: str, timestamp: str = "2026-10-01T00:00:00Z") -> dict:
             "C06_BREADTH_BTCD": True, "C07_SIMPLE_3": True,
             "C08_SIMPLE_3_ETF": False,
         }),
-        "outcome_24h": "1",
-        "outcome_72h": "1",
-        "outcome_7d": "1",
+        "outcome_24h": "",
+        "outcome_72h": "",
+        "outcome_7d": "",
         "provenance_hash": "",
     }
     sample["provenance_hash"] = weekly.evidence.frozen_provenance_hash(sample)
@@ -70,9 +70,9 @@ def divergence(event_id: str, divergence_id: str, provenance: str | None = None)
         "candidate_b": "C08_SIMPLE_3_ETF",
         "decision_a": "true",
         "decision_b": "false",
-        "outcome_24h": "1",
-        "outcome_72h": "1",
-        "outcome_7d": "1",
+        "outcome_24h": "",
+        "outcome_72h": "",
+        "outcome_7d": "",
         "provenance_hash": provenance or expected,
     }
 
@@ -144,6 +144,18 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier)
         self.assertEqual(valid, [])
         self.assertEqual(excluded["source_binding"], 1)
+
+    def test_matured_parent_without_original_detail_is_never_scored(self) -> None:
+        entry = row("FAKE_MATURED_24H")
+        entry["outcome_24h"] = "1"
+        entry["mae_24h"] = "-0.25000000"
+        entry["mfe_24h"] = "0.50000000"
+        # These outcome fields are intentionally mutable in the original
+        # frozen projection. A matching owner detail must still exist.
+        self.assertEqual(weekly.evidence.frozen_provenance_hash(entry), entry["provenance_hash"])
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier, outcome_details=[])
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["outcome_receipt"], 1)
 
     def test_quarantine_excludes_every_row_and_divergence(self) -> None:
         rows, divs = self.adversarial_data()
