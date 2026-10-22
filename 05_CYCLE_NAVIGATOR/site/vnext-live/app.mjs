@@ -214,6 +214,16 @@ async function load(){
 document.querySelector('.skip').addEventListener('click',event=>{
  event.preventDefault();$('content').focus();
 });
+// The canonical root injects <base href="./vnext/">. Stay on the current
+// document when opening the original B chart, never jump to /vnext/.
+document.querySelector('.cn-chart-jump')?.addEventListener('click',event=>{
+ event.preventDefault();
+ if(tab!=='overview')selectTab('overview');
+ const target=$('official-path-chart');
+ if(!target)return;
+ target.scrollIntoView({block:'start'});
+ target.focus({preventScroll:true});
+});
 initProductExperience(()=>({view,feeds,lang}));
 document.querySelectorAll('[data-nav-to]').forEach(a=>a.addEventListener('click',e=>{
  e.preventDefault();
