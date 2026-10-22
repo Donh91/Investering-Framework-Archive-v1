@@ -36,6 +36,18 @@ def days():
     while i<=LAST:
         yield i
         i+=timedelta(days=1)
+def original_compass_self_digest(doc):
+    """Validate original forecast content; not provider first-known or delivery."""
+    if not isinstance(doc,dict):
+        return None
+    try:
+        payload={k:v for k,v in doc.items() if k!="compass_sha256"}
+        canonical=(json.dumps(payload,sort_keys=True,separators=(",",":"),
+                              ensure_ascii=False,allow_nan=False)+"\n").encode("utf-8")
+    except (TypeError,ValueError,OverflowError):
+        return None
+    return hashlib.sha256(canonical).hexdigest()
+
 def preflight_forecast(doc,path,day):
     problems=[]
     expected=path.stem
@@ -117,6 +129,8 @@ def census(base=BASE):
             raw=p.read_bytes()
             doc=json.loads(raw)
             reasons=preflight_forecast(doc,p,day)
+            if original_compass_self_digest(doc)!=doc.get("compass_sha256"):
+                reasons.append("ORIGINAL_FORECAST_SELF_HASH_MISMATCH")
             version=doc.get("scoring_contract") or "VERSION_MISSING"
             by_version[version]+=1
             counts["original_forecasts"]+=1
