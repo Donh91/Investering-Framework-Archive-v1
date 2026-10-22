@@ -155,6 +155,13 @@ class NewsDirectorIntegrationTests(unittest.TestCase):
             last = evaluate(ctx, root / "outputs", now=NOW)
             self.assertFalse(last["fresh_ready"])
             self.assertTrue(last["news_already_analyzed"])
+            # A different capture ID without numeric market delta cannot
+            # monetize an old verified news event for a second time.
+            current["latest_capture"]["run_id"] = "CAPTURE_124"
+            ctx.write_text(json.dumps(current))
+            repeated = evaluate(ctx, root / "outputs", now=NOW)
+            self.assertTrue(repeated["identity_unseen"])
+            self.assertFalse(repeated["fresh_ready"])
 
     def test_news_only_delta_gate_requires_verified_noncanonical_news(self):
         with tempfile.TemporaryDirectory() as td:
