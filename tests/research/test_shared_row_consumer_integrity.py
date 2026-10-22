@@ -49,30 +49,31 @@ def row(event_id: str, timestamp: str = "2026-10-01T00:00:00Z") -> dict:
             "C06_BREADTH_BTCD": True, "C07_SIMPLE_3": True,
             "C08_SIMPLE_3_ETF": False,
         }),
-        "outcome_24h": "1",
-        "outcome_72h": "1",
-        "outcome_7d": "1",
+        "outcome_24h": "",
+        "outcome_72h": "",
+        "outcome_7d": "",
         "provenance_hash": "",
     }
     sample["provenance_hash"] = weekly.evidence.frozen_provenance_hash(sample)
     return sample
 
 
-def divergence(event_id: str, divergence_id: str, provenance: str | None = None) -> dict:
+def divergence(event_id: str, divergence_id: str, provenance: str | None = None, *, candidate_a: str = "C07_SIMPLE_3") -> dict:
     parent_hash = row(event_id)["provenance_hash"]
+    divergence_id = f"{event_id}__{candidate_a}__vs__C08_SIMPLE_3_ETF"
     expected = hashlib.sha256((parent_hash + divergence_id).encode("utf-8")).hexdigest()
     return {
         "divergence_id": divergence_id,
         "event_id": event_id,
         "observation_timestamp_utc": "2026-10-01T00:00:00Z",
         "information_cutoff_utc": "2026-10-01T00:00:00Z",
-        "candidate_a": "C07_SIMPLE_3",
+        "candidate_a": candidate_a,
         "candidate_b": "C08_SIMPLE_3_ETF",
         "decision_a": "true",
         "decision_b": "false",
-        "outcome_24h": "1",
-        "outcome_72h": "1",
-        "outcome_7d": "1",
+        "outcome_24h": "",
+        "outcome_72h": "",
+        "outcome_7d": "",
         "provenance_hash": provenance or expected,
     }
 
@@ -104,7 +105,7 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
             divergence("GOOD", "D_GOOD"),
             divergence("PRE_FLOOR", "D_PRE_FLOOR"),
             divergence("UNBOUND", "D_UNBOUND"),
-            divergence("GOOD", "D_BAD_HASH", "0" * 64),
+            divergence("GOOD", "D_BAD_HASH", "0" * 64, candidate_a="C02_BREADTH"),
         ]
         return rows, divs
 
@@ -112,7 +113,7 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         rows, divs = self.adversarial_data()
         valid_rows, valid_divs, excluded = weekly.filter_consumer_rows(rows, divs, runtime(), verifier)
         self.assertEqual([item["event_id"] for item in valid_rows], ["GOOD"])
-        self.assertEqual([item["divergence_id"] for item in valid_divs], ["D_GOOD"])
+        self.assertEqual([item["divergence_id"] for item in valid_divs], ["GOOD__C07_SIMPLE_3__vs__C08_SIMPLE_3_ETF"])
         self.assertEqual(excluded["pre_floor_or_timestamp"], 1)
         self.assertEqual(excluded["source_binding"], 1)
         self.assertEqual(excluded["immutable_provenance"], 1)
@@ -144,6 +145,44 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier)
         self.assertEqual(valid, [])
         self.assertEqual(excluded["source_binding"], 1)
+
+    def test_matured_parent_without_original_detail_is_never_scored(self) -> None:
+        entry = row("FAKE_MATURED_24H")
+        entry["outcome_24h"] = "1"
+        entry["mae_24h"] = "-0.25000000"
+        entry["mfe_24h"] = "0.50000000"
+        # These outcome fields are intentionally mutable in the original
+        # frozen projection. A matching owner detail must still exist.
+        self.assertEqual(weekly.evidence.frozen_provenance_hash(entry), entry["provenance_hash"])
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier, outcome_details=[])
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["outcome_receipt"], 1)
+
+    def test_divergence_with_invented_matured_label_is_not_admitted(self) -> None:
+        entry = row("DIV_FORGED_OUTCOME")
+        pair = divergence("DIV_FORGED_OUTCOME", "D_VALID")
+        pair["outcome_24h"] = "1"  # parent and owner detail are still unmatured
+        valid, divs, excluded = weekly.filter_consumer_rows([entry], [pair], runtime(), verifier, outcome_details=[])
+        self.assertEqual(len(valid), 1)
+        self.assertEqual(divs, [])
+        self.assertEqual(excluded["divergence_outcome"], 1)
+
+    def test_divergence_misattributes_a_frozen_candidate_vote(self) -> None:
+        entry = row("DIV_VOTE_TAMPER")
+        pair = divergence("DIV_VOTE_TAMPER", "D_VALID")
+        pair["decision_a"] = "false"
+        valid, divs, excluded = weekly.filter_consumer_rows([entry], [pair], runtime(), verifier, outcome_details=[])
+        self.assertEqual(len(valid), 1)
+        self.assertEqual(divs, [])
+        self.assertEqual(excluded["divergence_decision"], 1)
+
+    def test_duplicate_divergence_identity_cannot_double_count(self) -> None:
+        entry = row("DIV_DOUBLE")
+        pair = divergence("DIV_DOUBLE", "D_VALID")
+        valid, divs, excluded = weekly.filter_consumer_rows([entry], [pair, dict(pair)], runtime(), verifier, outcome_details=[])
+        self.assertEqual(len(valid), 1)
+        self.assertEqual(divs, [])
+        self.assertEqual(excluded["divergence_provenance"], 2)
 
     def test_quarantine_excludes_every_row_and_divergence(self) -> None:
         rows, divs = self.adversarial_data()
