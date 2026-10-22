@@ -255,6 +255,57 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+      - name: Temporary Compass hourly-source liveness pulse, October only
+        if: success() && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Read REMOTE main. The original capture checkout can precede a fresh Hourly write.
+          git fetch origin main
+          state="$(python - <<'PY'
+          from datetime import date, datetime, timezone
+          from zoneinfo import ZoneInfo
+          import json
+          import subprocess
+          now = datetime.now(timezone.utc)
+          local_date = now.astimezone(ZoneInfo("Europe/Copenhagen")).date()
+          if not date(2026, 10, 22) <= local_date < date(2026, 11, 1):
+              print("OUTSIDE_TEMPORARY_WINDOW")
+          else:
+              try:
+                  raw = subprocess.run(
+                      ["git", "show", "origin/main:03_DAILY_CAPTURE_LOGS/hourly/LATEST.json"],
+                      check=True, capture_output=True, text=True).stdout
+                  pointer = json.loads(raw)
+                  observed = datetime.fromisoformat(
+                      str(pointer["window_end_utc"]).replace("Z", "+00:00"))
+                  age = (now-observed).total_seconds()
+                  fresh = (pointer.get("status") == "COMPLETE"
+                           and observed.utcoffset() is not None
+                           and 0 <= age <= 65*60)
+                  print("NO_RECOVERY_DUE" if fresh else "SOURCE_STALE")
+              except (ValueError, KeyError, TypeError, OSError, subprocess.CalledProcessError):
+                  print("SOURCE_POINTER_UNVERIFIED")
+          PY
+          )"
+          case "$state" in
+            SOURCE_STALE|SOURCE_POINTER_UNVERIFIED)
+              # Use the existing watcher and its owner freshness/dispatch gates.
+              active=$(gh run list --repo "$GH_REPO" --workflow compass-event-refresh.yml --branch main --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending" or .status=="waiting")] | length')
+              if [ "$active" -gt 0 ]; then
+                echo "COMPASS_OWNER_WATCH_ALREADY_ACTIVE count=$active"
+              else
+                gh api -X POST "repos/$GH_REPO/dispatches" -f event_type=compass-owner-liveness-202610
+                echo "COMPASS_OWNER_WATCH_DISPATCH_ACCEPTED source_live_anchor=$GITHUB_RUN_ID state=$state"
+              fi
+              ;;
+            *) echo "COMPASS_OWNER_WATCH_NOOP state=$state" ;;
+          esac
+
   notify:
     needs: capture
     if: failure() && github.ref == 'refs/heads/main'
