@@ -6,7 +6,7 @@ import json
 import unittest
 from pathlib import Path
 
-from shared_row_activation_phase_gate import validate_activation_phase
+from shared_row_activation_phase_gate import validate_activation_phase, validate_owner_matrix_floor
 
 ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
 TEST = Path("tests/research/test_shared_row_p0_integrity.py")
@@ -17,6 +17,7 @@ def main() -> None:
     outcome = json.loads((ROOT / "OUTCOME_CONTRACT_v1.json").read_text())
     freeze = json.loads((ROOT / "TRANSFORM_FREEZE_REGISTRY.json").read_text())
     runtime = json.loads((ROOT / "RUNTIME_STATUS.json").read_text())
+    owner_matrix = json.loads((ROOT / "OWNER_BINDING_MATRIX.json").read_text())
     schema = json.loads((ROOT / "04_SHARED_ROW_SCHEMA.json").read_text())
     assert contract["authority"] == "RESEARCH_ONLY_NON_CANONICAL"
     assert contract["legacy_equivalence"] is False and contract["no_backdating"] is True
@@ -26,6 +27,7 @@ def main() -> None:
     # Phase-aware control: current repo remains quarantined; ACTIVE requires
     # an independently reviewed, future-floor activation PR and source replay.
     phase = validate_activation_phase(contract, freeze, runtime)
+    owner_floor_gate = validate_owner_matrix_floor(contract, freeze, owner_matrix)
     activation = contract["prospective_activation"]
     implementation_commit = activation.get("implementation_merge_commit")
     boundary = activation.get("post_repair_source_capture_not_before_utc")
@@ -64,6 +66,7 @@ def main() -> None:
                 "status": "PASS",
                 "contract": "CORE_PROSPECTIVE_P0_INTEGRITY_GATE_v1",
                 "activation_phase": phase,
+                "owner_matrix_floor_gate": owner_floor_gate,
                 "tests_run": result.testsRun,
                 "checks": [
                     "quarantine_fail_closed",
