@@ -8,7 +8,7 @@ After approval, carry through the separate owner's precise authorized spend, mer
 
 ## B. Work launch instruction, paste by owner once approved
 ```text
-TASK 2 EXTREME WORK MISSION — EXECUTION APPROVED WITHIN CURRENT CANONICAL GOVERNANCE.
+TASK 2 EXTREME WORK + CODEX MISSION — OWNER EXECUTION APPROVAL SUBJECT TO CURRENT CANONICAL GOVERNANCE.
 
 Repository: https://github.com/Donh91/Investering-Framework-Archive-v1
 Existing scientific Task 2 owner: https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596
@@ -16,16 +16,31 @@ Existing Hugging Face audit PR: https://github.com/Donh91/Investering-Framework-
 Mission master (read all 11–15 and preceding audit files):
 https://github.com/Donh91/Investering-Framework-Archive-v1/blob/agent/task-20261022-huggingface-task2-audit/06_RESEARCH_LAB/hugging_face_task2_audit_20261022/11_EXTREME_WORK_MISSION_MASTER.md
 
-You are ONE Work coordinator responsible for genuine scientific and engineering progress rather than restating research plans. Reread fresh AGENTS.md, source and privacy boundaries, current operations, current R0–R7 governance and all live PR statuses and tests first. Execute the highest-priority eligible work including #1746/#1748 P0 scientific integrity, source original first-known R1, first lawful pinned FREE Hugging Face source pilot and first matching baseline only after source admission. Then advance all R0–R7 steps with evidence gates rather than fake serial completion. Use existing Codex intake for bounded reproducible defects if available and authorized; otherwise cheapest valid executor. Independently review exact heads and merge ONLY if platform safeguards and the owner's explicit authorization permit it. Log original tests, negative outcomes, no-signal and censored denominators, costs, independent event families, genuine main and consumer readback. Reuse #1747; no duplicate HF pipeline, scorer, supervisor or unapproved new CI workflow. Maintain separation of restricted data and credentials. Pause any paid HF Jobs/PRO purchase and unapproved spend for explicit authorization. Protect frozen prospective clock and Round3 analysis gate.
+You are ONE Work coordinator, partnered with Codex as the PRIMARY technical implementation, regression-test and code-review collaborator, responsible for genuine scientific and engineering progress rather than restating research plans. User reports 96% available Work/Codex usage after reset, verify actual availability and whether the quotas are shared, do not assume automatic access. Reread fresh AGENTS.md, source and privacy boundaries, current operations, current R0–R7 governance and all live PR statuses and tests first. First resolve CLOSED #1746/#1748 main merge/consumer truth; do not rebuild already fixed code. Then prioritize one original first-known R1 scientific cohort, one bounded legal revision-pinned FREE Hugging Face source pilot when decision-useful and the first R2 matched cheap baseline only after genuine R1 admission. Use Codex substantially for scoped concrete source repairs, deterministic replay, negative fixtures and baseline code through existing release/intake, while Work handles real source evidence, scientific independence and integration. After real gates pass, advance highest-value R3–R7 research rather than pretending to complete phases in parallel. Check independent exact-head reviews and merge ONLY if platform safeguards and owner's explicit authorization permit it. Log original tests, negative outcomes, no-signal and censored denominators, costs, independent event families, genuine main and consumer readback. Reuse #1747; no duplicate HF pipeline, scorer, supervisor or unapproved new CI workflow. Maintain separation of restricted data and credentials. Pause any paid HF Jobs/PRO purchase and unapproved spend for explicit authorization. Protect frozen prospective clock and Round3 analysis gate.
 
 Deliver actual repaired/admitted/blocked evidence and an owner-readable final Task 2 completion scorecard with links. If a hard external gate blocks an experiment, do the next *independent and useful* eligible task. Never represent this mission planning pack as experiments already executed or scientific edge already established.
 ```
 
+## B.1 Work/Codex big-run value contract, post-reset clarification
+**Owner-reported usage:** 96% remaining, observed by user after reset on October 22, 2026. This is NOT connector-verified account telemetry and may change before execution. Work/Codex may have distinct entitlements and charging behavior; inspect instead of guessing.
+
+**Use case:** a substantial, high-density single Work mission coordinating real Codex engineering and research, not a one-hour repeatable status task, model-agent multiplication or wasteful attempts to use up a percentage quota. One Work coordinator remains accountable from current-truth census through selected R0/R1/HF/R2/R3 work and release receipts.
+
+**Spend priority:** High-value evidence must lead compute. Avoid repeated full archive re-reading and whole repository review per subtask. Batch preflight once, then re-read only exact affected current authority before writes/merges. Let Codex work on exact-head minimal source code/test changes while Work independently investigates original provenance and first-known clocks; use frozen handoff packets to connect them. Keep one PR per actual bounded fix, do not create queues just because credit reset.
+
+**Quality allocation:** Initial indicative proportions of **work effort, not billed quotas**: ~35% original chronology and R1 scientific admission; ~25% Codex reproducible implementation and hardening; ~15% admitted R2/R3 baseline/economics; ~10% small HF source validation; ~10% independent technical review/merge/readback; ~5% contingency. Reallocate when evidence supports it, especially to real R1 unlocking. For information-integrity failures, prioritize protection regardless of percentage.
+
+**Account quota safeguards:** treat remaining quota as an observed input only when visible; otherwise `USAGE_UNVERIFIED`. Do not infer future reset time or promise a specific number of Work/Codex runs. Codex quota failure before the reset does not categorically rule out subsequent use; recheck sparingly. No fake independent review or branch-protection bypass if quota remains unavailable.
+
+**Large-run quality gates:** before heavy research: current real defect ledger, named source/issue-clock blocker, signed existing scientific owner, one verified closed-vs-merged census, one narrowly selected nonredundant HF file. At middle checkpoint: exact commands/sha/provenance, baseline/negative controls, measured eligible family N, remaining capacity and new information. At terminal checkpoint: new verified durable source/engineering result(s), explicit science state, actual merge/CI/readback or blockers, remaining highest-ROI action. A source-only pilot must not be credited as original forecast skill.
+
+**Research saturation:** stop/defer branches that don't resolve named evidence or decision uncertainty, even if credits remain. Preserve enough available Work/Codex capacity for failing tests, review feedback, repair and honest closure.
+
 ## C. Resource and cost plan, no false economies
 | Resource | Allowed strategy AFTER approval | Unapproved or forbidden |
 |---|---|---|
-| ChatGPT Work | one coordinator, strongest available reasoning chosen by user product UI and task complexity, no fake model label | parallel Work supervisors/Work usage beyond current availability |
-| Codex | scoped implementer/code reviewer when existing intake and actual credits permit; tests first, exact head | default queue/review loop without new evidence; self-APPROVED GitHub identity |
+| ChatGPT Work | ONE full-scale mission coordinator, verify user-reported 96% remaining usage, prioritize deep original evidence and scientific validation | assuming credits are pooled with Codex or running extra Work supervisors |
+| Codex | PRIMARY code/test/replay partner for bounded high-value work while Work owns full scientific mission; verify reset and actual review availability; exact heads and tests first | assuming old quota errors still apply, repeated unusable review calls, self-APPROVED GitHub identity |
 | OpenAI API | existing approved gateway only if named irreducible high-value analysis and actual approved budget allow; fixed cap per call | invent a new $ allowance, crank most expensive model on unadmitted data, disclose tokens |
 | HF free plugin | public Hub search, cards, source manifests, viewer schemas, small legally permitted excerpts, pinned file QA | treat OAuth scope as limitless compute, duplicate production feed |
 | HF PRO | recommendation only after measured rate/storage/hosting blocker and owner separately approves $9 subscription | subscribe without owner action, confuse monthly credit with free GPU unlimited |
@@ -37,7 +52,7 @@ Deliver actual repaired/admitted/blocked evidence and an owner-readable final Ta
 Verify exact plan prices and account-specific quotas again at run time. Official reference sources: [HF Hub Rate Limits](https://huggingface.co/docs/hub/rate-limits), [HF Pricing](https://huggingface.co/pricing), [HF Jobs Pricing](https://huggingface.co/docs/hub/jobs-pricing), [HF Billing](https://huggingface.co/docs/hub/billing).
 
 ## D. First run deliverables, not necessarily the same as 100% Task 2 complete
-First Work run must yield at least one **verifiable durable artifact** among: (1) a correctly reviewed+merged P0 repair with exact main and natural readback; (2) an R1 original PIT reconciliation that changes eligible/admitted evidence count OR provides reproducible precise NOT_IDENTIFIABLE blocker; (3) a pinned HF small-file source T1 pilot with exact file SHA, schema/gap QA and adverse fixtures, clearly not T2; (4) a valid research rejection/retirement that saves further spending; (5) a governed Codex candidate with a failing negative regression and exact owner. If none achieved, report real blocker and spent resources, do not award synthetic progress.
+The user has explicitly prioritized a substantial Work + Codex run with freshly reported 96% usage. **Aim for at least two independent durable outputs**, one source-integrity/engineering/reproducibility result and one distinct original-cohort/HF-source scientific result, **only if genuinely feasible and authorized**. If scientific admission or code integration is blocked, produce precise durable blocker receipts, not fabricated progress. Valid outputs include: (1) a correctly reviewed+merged P0 repair with exact main and natural readback; (2) an R1 original PIT reconciliation that changes eligible/admitted evidence count OR provides reproducible precise NOT_IDENTIFIABLE blocker; (3) a pinned HF small-file source T1 pilot with exact file SHA, schema/gap QA and adverse fixtures, clearly not T2; (4) a valid research rejection/retirement that saves further spending; (5) a governed Codex candidate with a failing negative regression and exact owner. If none achieved, report real blocker and spent resources, do not award synthetic progress.
 
 No user-facing claimed 'Task 2 done' unless every active research stage either (a) has fulfilled its own originally committed completion conditions, (b) has a signed scope-bounded terminal falsified/rejected/blocked verdict, or (c) is explicitly marked ongoing prospective maturation. A stage cannot be 'complete' because documentation exists.
 
@@ -54,11 +69,13 @@ hf_plan_and_entitlement: FREE_OR_VERIFIED
 hf_paid_jobs_started: 0
 actions_budget_state: VERIFIED | OWNER_REPORTED | UNKNOWN
 open_prs_count_fresh: ...
-p0_prs:
+former_p0_pr_closure_reconciliation:
   - number: 1746
     head_40_sha: ...
     review_status: ...
     ci_status: ...
+    actual_closed_vs_merged_vs_superseded: ...
+    verified_main_blob: ...
     merge_or_block: ...
     natural_consumer_readback: ...
   - number: 1748
