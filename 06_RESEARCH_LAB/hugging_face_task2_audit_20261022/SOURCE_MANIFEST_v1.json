@@ -25,15 +25,16 @@
       "role": "TASK2_OHLCV_CHEAP_BENCHMARK",
       "advertised_rows": 9000000,
       "parquet_mb_approx": 425.3,
-      "disposition": "P1_CANDIDATE_PIT_UNPROVEN",
+      "disposition": "P1_CONTRADICTORY_VIEWER_VS_README_AND_EXTRA_TIMEFRAMES",
       "license_tag": "mit"
     },
     {
       "id": "HF-002",
       "repo_id": "linxy/CryptoCoin",
       "role": "SECONDARY_FRESH_BARS",
-      "disposition": "P2_VIEWER_STRUCTURE_MISSING",
-      "license_tag": "mit"
+      "disposition": "P1_DIRECT_SYMBOL_FILE_CONFIRMED_VIEWER_NO_CONFIG",
+      "license_tag": "mit",
+      "sample_verified_path": "BTCUSDT/BTCUSDT_1h.parquet"
     },
     {
       "id": "HF-003",
@@ -47,24 +48,34 @@
       "id": "HF-004",
       "repo_id": "aliplayer1/polymarket-crypto-updown",
       "role": "MARKET_IMPLIED_BASELINE",
-      "disposition": "P1_ONLY_SMALL_SPLITS",
+      "disposition": "P1_MIXED_HISTORIC_BACKFILL_AND_LIVE_STREAM",
       "license_tag": "mit",
       "risks": [
         "unresolved_resolutions",
         "fees_unknown",
-        "market_timestamp_validation"
+        "market_timestamp_validation",
+        "no_pit_backfill_proof"
       ]
     },
     {
       "id": "HF-005",
       "repo_id": "Tr4m0ryp/trenches-pumpfun-forward-2026-08",
       "role": "ALPHA_PUMP_FUN_FALSIFICATION",
-      "disposition": "P1_PENDING_LICENSE_ASOF",
-      "license_tag": "other",
+      "disposition": "HARD_LICENSE_HOLD_PIT_COUNTEREXAMPLE_ONLY",
+      "license_tag": "polyform-noncommercial-1.0.0",
       "risks": [
-        "path_error_censoring",
-        "decision_time_leakage"
-      ]
+        "commercial_license_restriction",
+        "69.09_hour_capture_gap",
+        "reach_field_leak",
+        "negative_age_stamps",
+        "zero_trade_capture_join",
+        "degenerate_y_theta_70",
+        "enriched_vendor_population"
+      ],
+      "known_observed_hours": 75.2722,
+      "capture_span_hours": 146.4508,
+      "label_y_theta_70_usable": false,
+      "reachable_social_at_first_sighting_count": 0
     },
     {
       "id": "HF-006",
@@ -147,5 +158,6 @@
     "NO_PRIVATE_PUBLIC_DATA_TRANSFER",
     "EXISTING_OWNER_REVIEW"
   ],
-  "evidence_level": "SOURCE_METADATA_AND_SAMPLED_SCHEMAS_NOT_PERFORMANCE"
+  "evidence_level": "SOURCE_METADATA_AND_SAMPLED_SCHEMAS_NOT_PERFORMANCE",
+  "latest_source_document_audit": "06_SOURCE_DOCUMENT_RED_TEAM_DELTA.md"
 }
