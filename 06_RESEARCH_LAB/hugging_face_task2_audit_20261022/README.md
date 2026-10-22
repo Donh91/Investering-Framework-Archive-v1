@@ -15,7 +15,12 @@ This is one versioned, public-safe research packet, not a new owner, collector, 
    - `04_ALPHA_NEWS_MODEL_CANDIDATES.md` — Alpha Lab, news, sentiment and time-series challenger review.
    - `05_DECISION_AND_AGENT_HANDOFF.md` — phases, boundaries, owners, measurable advancement gates and stop rules.
    - `SOURCE_MANIFEST_v1.json` — machine-readable candidates and latest dispositions.
-   - `06_SOURCE_DOCUMENT_RED_TEAM_DELTA.md` — source README/DATASHEET/MANIFEST review correcting preliminary estimates and surfacing licensing, sample bias, failed labels, clock leakage, dataset file drift.
+   - `06_SOURCE_DOCUMENT_RED_TEAM_DELTA.md` — original release source-document red-team and first-wave corrections.
+   - `07_SECOND_WAVE_DATA_SOURCE_AUDIT.md` — eight additional external source cards with explicit license and data-quality gates.
+   - `08_EXISTING_ALPHA_LAB_CODE_CROSSCHECK.md` — static code findings, reuse of current Alpha Lab experiment instead of duplicate workflow.
+   - `09_PRIORITIZED_PILOT_QUEUE_AND_ACCEPTANCE.md` — bounded small-file pilots, acceptance tiers and precommitted negative controls.
+   - `10_STABLECOIN_MANIFEST_RECONCILIATION.md` — machine-level manifest aggregation, 167 days, 494,016 claimed rows and suspicious internal time gap.
+   - `SOURCE_MANIFEST_DELTA_v2.json` — machine-readable addendum to v1: eight newer source candidates, owner routing and code-audit findings.
 
 ## One-line scientific rule
 A third-party historical dataset can check the shape of the past, but it does not prove that *our* original forecast, feature or vendor datum was observable before its decision cutoff. No original issued-at + admissible first-known receipt = no retrospective edge claim.
@@ -24,7 +29,7 @@ A third-party historical dataset can check the shape of the past, but it does no
 - Verified PR [#1675](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1675) has merged; its fail-closed scientific counting and settlement repairs should be reconciled on actual main, not restated as blocked solely from its old PR body.
 - PR [#1617](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1617) is closed **unmerged**; no longer an open merge dependency, but assess if its source SHA validation problem was fixed by other subsequent code before reopening an issue.
 - Chain of Title previously referenced in existing Alpha Lab manifests currently returns missing via the HF filesystem lookup; confirm deletion/rename/access before relying on the URL. Do not delete historical public source references or overwrite frozen provenance.
-- New useful *candidates*, not admitted proof: OHLCV 9m, Polymarket price/orderbook, pump.fun source with separate feature/label/observation tables, public stablecoin transfers and financial text.
+- New useful *candidates*, not admitted proof: OHLCV, Polymarket price/orderbook, stablecoin flows, liquidations, news, and model quality. **Alpha reuse discovery:** an existing `trenches_point_in_time_ablation_v1.py` and research workflow already cover the pump.fun source; do not duplicate. New static owner-facing code issues are documented in file 08.
 
 ## Provenance, terminology and routing
 References are provider-native HF Hub dataset and model links, public HF docs, or specific existing GitHub sources. Snapshot metadata must be checked again before ingest because schemas, revisions, licenses, uptime, rates and data availability can change. Store source revisions, SHA, files, coverage, publication and first-known proof before any experiment. Use existing research owners for implementation. Do not write raw/restricted provider data to this public repository.
