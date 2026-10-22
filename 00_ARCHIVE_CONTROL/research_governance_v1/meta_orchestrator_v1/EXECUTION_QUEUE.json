@@ -53,21 +53,6 @@
     },
     {
       "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "8373aa40ca788df4a7b585791be0a4182c0bde8af305b7e04cd374a21a90a72d",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "MONTHLY_COUNCIL",
-      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
-      "target": "EC-0258e3807909a4d1987f"
-    },
-    {
-      "canonical_effect": false,
       "decision_surface": "RESEARCH_OPERATIONS",
       "evidence_fingerprint": "129d64bfdf45177ac4e05a26caf93ac7920f62c6b9d38bf600cf54a623693e17",
       "execution_mode": "AUTO_OBSERVE",
@@ -95,6 +80,21 @@
       "source": "CYCLE_NAVIGATOR",
       "specialist_action": "CONTINUE_CALIBRATION",
       "target": ""
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "evidence_fingerprint": "855f32bc1c7c90022f8f39ba2998eb4f26506b5c6bf0c48234d320150ecefdcc",
+      "execution_mode": "AUTO_OBSERVE",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "orchestrator_action": "WAIT_FOR_EVIDENCE",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "No evidence-backed escalation or surviving AI research hypothesis justified a new bounded research item.",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "CONTINUE_OBSERVING",
+      "target": "MONTHLY_AI_LEARNING_COUNCIL"
     },
     {
       "canonical_effect": false,

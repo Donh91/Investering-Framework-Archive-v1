@@ -4,7 +4,7 @@
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "222320578dc4eeebfda3db0e6a6a4ad62a94f68b5c15fca9e985f425556c803c",
+  "evidence_fingerprint": "1a8866432079c9d527dcff87adc33b76fe5a0adec83f9abf9aea65f05aa3311e",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
@@ -55,6 +55,21 @@
       "target": ""
     },
     {
+      "action": "CONTINUE_OBSERVING",
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "855f32bc1c7c90022f8f39ba2998eb4f26506b5c6bf0c48234d320150ecefdcc",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "No evidence-backed escalation or surviving AI research hypothesis justified a new bounded research item.",
+      "source": "MONTHLY_COUNCIL",
+      "target": "MONTHLY_AI_LEARNING_COUNCIL"
+    },
+    {
       "action": "NO_ACTION",
       "canonical_effect": false,
       "decision_surface": "RESEARCH_OPERATIONS",
@@ -98,21 +113,6 @@
       "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
       "source": "COMPOUNDING_LEARNING",
       "target": "EC-3b5610a3c12b040694a9"
-    },
-    {
-      "action": "RUN_INCREMENTAL_VALUE_TEST",
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "8373aa40ca788df4a7b585791be0a4182c0bde8af305b7e04cd374a21a90a72d",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "MONTHLY_COUNCIL",
-      "target": "EC-0258e3807909a4d1987f"
     }
   ],
   "queue_n": 7,
