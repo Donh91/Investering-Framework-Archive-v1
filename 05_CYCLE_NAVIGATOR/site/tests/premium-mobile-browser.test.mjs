@@ -197,6 +197,21 @@ try{
    const hourlySource=chartSource.public_live_precision?.hourly_price_path;
    const actualModel=model?.model?.(chartSource,'BTC');
    const actualPlan=actualModel?model.linePlan(actualModel):null;
+   // Source-exact original low/high edges, never a fabricated seven-day close.
+   const ranges=actualModel?model.rangePlan(actualModel):[];
+   const originalRangesValid=!!actualModel&&
+     (actualModel.daily.length===7?ranges.length===0:
+       ranges.length===3&&ranges.every((r,i)=>{
+         const first=i===0?0:i===1?2:4,last=i===0?1:i===1?3:6;
+         const source=actualModel.rows[i];
+         return r.low.length===2&&r.high.length===2&&
+           r.low[0].time===actualModel.days[first].time&&
+           r.low[1].time===actualModel.days[last].closeTime&&
+           r.high[0].time===r.low[0].time&&
+           r.high[1].time===r.low[1].time&&
+           r.low.every(p=>p.value===source.forecast_low)&&
+           r.high.every(p=>p.value===source.forecast_high);
+       }));
    const hourlyPublished=hourlySource?.contract==='CN_PUBLIC_HOURLY_PRICE_PATH_v1'&&
       Array.isArray(hourlySource.BTC)&&hourlySource.BTC.length>0;
    const hourlyCurveProof=!hourlyPublished?true:!!actualModel&&
@@ -250,7 +265,7 @@ try{
     proofCopied,sourceExpiryShown,pathJumpFocus,
     clockRight:sourceClock.right,clockLeft:sourceClock.left,clockWidth:sourceClock.width,
     clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,forwardButtons,
-    hourlyCurveProof,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
+    hourlyCurveProof,originalRangesValid,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
   reports.push(report);
@@ -288,6 +303,7 @@ try{
   assert.ok(!report.chart.startsWith('FAIL'),'BTC/ETH chart controls failed or valid chart source was dropped: '+report.chart);
   assert.ok(!report.forwardButtons.startsWith('FAIL'),'Approved B 7/14/21 horizon controls failed: '+report.forwardButtons);
   assert.ok(report.hourlyCurveProof,'Verified hourly actual source dropped / gaps fabricated / forecast filled');
+  assert.ok(report.originalRangesValid,'Three frozen source windows must form six exact low/high edges');
   if(report.hourlyPointCount>0){
     assert.equal(report.actualPointCount,report.hourlyPointCount,'Actual line must contain exactly each source-valid hour');
     assert.ok(report.actualStatus.includes('timesluk')&&report.forecastStatus,'Progress display must explain observed vs forecast');
