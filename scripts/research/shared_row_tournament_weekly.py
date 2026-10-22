@@ -19,7 +19,7 @@ def ts(v):
     except Exception:return None
 def filter_consumer_rows(rows,divs,runtime,verify_source_bindings=None,outcome_details=None):
     """Return only active-floor rows with reconstructable immutable provenance."""
-    excluded={'runtime_inactive':0,'duplicate_event_id':0,'integrity_contract':0,'pre_floor_or_timestamp':0,'source_binding':0,'immutable_provenance':0,'divergence_parent':0,'divergence_provenance':0,'outcome_receipt':0}
+    excluded={'runtime_inactive':0,'duplicate_event_id':0,'integrity_contract':0,'pre_floor_or_timestamp':0,'source_binding':0,'immutable_provenance':0,'divergence_parent':0,'divergence_provenance':0,'divergence_decision':0,'divergence_outcome':0,'outcome_receipt':0}
     floor=ts(runtime.get('core_prospective_eligibility_start'))
     active=(runtime.get('collection_state')==ACTIVE_COLLECTION_STATE and runtime.get('core_prospective_eligibility_status')==ACTIVE_FLOOR_STATUS and floor is not None)
     if not active:
@@ -67,14 +67,25 @@ def filter_consumer_rows(rows,divs,runtime,verify_source_bindings=None,outcome_d
             excluded['outcome_receipt']+=1; continue
         valid[event_id]=row
     valid_divs=[]
+    divergence_counts={}
+    for item in divs:
+        key=str(item.get('divergence_id') or '')
+        divergence_counts[key]=divergence_counts.get(key,0)+1
     for div in divs:
         parent=valid.get(str(div.get('event_id') or ''))
         if parent is None:
             excluded['divergence_parent']+=1; continue
         divergence_id=str(div.get('divergence_id') or '')
         expected=hashlib.sha256((parent['provenance_hash']+divergence_id).encode('utf-8')).hexdigest()
-        if (not divergence_id or div.get('provenance_hash')!=expected or div.get('observation_timestamp_utc')!=parent.get('observation_timestamp_utc') or div.get('information_cutoff_utc')!=parent.get('information_cutoff_utc')):
+        if (not divergence_id or divergence_counts.get(divergence_id)!=1 or div.get('provenance_hash')!=expected or div.get('observation_timestamp_utc')!=parent.get('observation_timestamp_utc') or div.get('information_cutoff_utc')!=parent.get('information_cutoff_utc')):
             excluded['divergence_provenance']+=1; continue
+        decisions=json.loads(parent['candidate_decisions'])
+        candidate_a,candidate_b=div.get('candidate_a'),div.get('candidate_b')
+        canonical_id=f"{parent['event_id']}__{candidate_a}__vs__{candidate_b}"
+        if (candidate_a not in decisions or candidate_b not in decisions or candidate_a>=candidate_b or divergence_id!=canonical_id or decisions[candidate_a]==decisions[candidate_b] or str(div.get('decision_a','')).strip().lower()!=str(decisions[candidate_a]).lower() or str(div.get('decision_b','')).strip().lower()!=str(decisions[candidate_b]).lower() or div.get('catalyst_tag','')!=parent.get('catalyst_tag','') or div.get('regime_tag','')!=parent.get('regime_tag','')):
+            excluded['divergence_decision']+=1; continue
+        if any(str(div.get(field,'')).strip()!=str(parent.get(field,'')).strip() for h in ['24h','72h','7d'] for field in [f'outcome_{h}',f'mae_{h}',f'mfe_{h}']):
+            excluded['divergence_outcome']+=1; continue
         valid_divs.append(div)
     return list(valid.values()),valid_divs,excluded
 def b(v):
