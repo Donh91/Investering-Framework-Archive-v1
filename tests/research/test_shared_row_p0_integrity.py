@@ -313,23 +313,46 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
             ethbtc_hour=clock - timedelta(hours=3),
             breadth_capture=clock - timedelta(hours=36),
             btcd_verified=clock - timedelta(hours=36),
+            btcd_last_settled_print=clock - timedelta(hours=72),
         )
         cases = [
             ("ETHBTC_LAST_SETTLED_HOUR_STALE", {"ethbtc_hour": clock - timedelta(hours=3, seconds=1)}),
             ("BREADTH_DATED_OWNER_STALE", {"breadth_capture": clock - timedelta(hours=36, seconds=1)}),
             ("BTCD_CMC_VERIFICATION_STALE", {"btcd_verified": clock - timedelta(hours=36, seconds=1)}),
+            ("BTCD_CMC_SETTLED_PRINT_STALE", {"btcd_last_settled_print": clock - timedelta(hours=72, seconds=1)}),
             ("SOURCE_AFTER_INFORMATION_CUTOFF", {"ethbtc_hour": clock + timedelta(seconds=1)}),
         ]
         defaults = {
             "ethbtc_hour": clock - timedelta(hours=1),
             "breadth_capture": clock - timedelta(hours=12),
             "btcd_verified": clock - timedelta(hours=12),
+            "btcd_last_settled_print": clock - timedelta(hours=24),
         }
         for expected_reason, override in cases:
             with self.subTest(reason=expected_reason):
                 params = {**defaults, **override}
                 with self.assertRaisesRegex(materializer.Ineligible, expected_reason):
                     materializer.require_fresh_sources(clock, **params)
+
+    def test_recent_reverification_cannot_make_old_settled_cmc_print_fresh(self):
+        fixture = FixtureRepo(self)
+        # Change all three original date/source-timestamp pairs together;
+        # freshness must track the latest settled market DAY, even after
+        # the whole amended CSV has been genuinely committed to fixture Git.
+        with fixture.btcd.open(newline="", encoding="utf-8") as handle:
+            old = list(csv.DictReader(handle))
+            fields = list(old[0])
+        for item in old:
+            stale_day = datetime.fromisoformat(item["date_utc"]) - timedelta(days=30)
+            item["date_utc"] = stale_day.date().isoformat()
+            item["source_timestamp"] = item["date_utc"] + "T00:00:00Z"
+            # The source_verified_timestamp is NOT moved back: it is fresh.
+        with fixture.btcd.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(old)
+        fixture.commit_path(fixture.btcd, "reverify ancient CMC settled market dates")
+        self.assert_rejected(fixture.build(), "BTCD_CMC_SETTLED_PRINT_STALE")
 
     def test_materializer_does_not_invent_current_signal_from_old_owners(self):
         fixture = FixtureRepo(self)
