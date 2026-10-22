@@ -80,6 +80,23 @@ class ShadowPriceTests(unittest.TestCase):
     def test_stale_cutoff(self):
         self.reject(lambda x: x.update(issued_at_utc="2027-01-01T00:00:00Z"))
 
+    def test_end_to_end_source_age_prevents_chained_96h_lag(self):
+        data = fixture()
+        last_day = datetime.strptime(data["bars"][-1]["day_utc"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        last_closed = last_day + timedelta(days=1)
+        data["cutoff_utc"] = (last_closed + timedelta(hours=47)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        data["issued_at_utc"] = (last_closed + timedelta(hours=94)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        # Each prior age gate alone is <48h, but the original issue is 94h stale.
+        with self.assertRaisesRegex(ValueError, "issued_forecast_older_than_closed_source"):
+            build_shadow(data)
+
+    def test_recent_original_issue_within_48h_still_accepted(self):
+        data = fixture()
+        last_day = datetime.strptime(data["bars"][-1]["day_utc"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        last_closed = last_day + timedelta(days=1)
+        data["issued_at_utc"] = (last_closed + timedelta(hours=47)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.assertEqual(build_shadow(data)["authority"], "SHADOW_NOT_ISSUED")
+
     def test_gapped_bars(self):
         self.reject(lambda x: x["bars"].pop(25))
 
