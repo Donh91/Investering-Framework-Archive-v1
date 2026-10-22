@@ -23,6 +23,15 @@ def original_contracts():
     return contract, freeze
 
 
+def runtime_for(contract):
+    """Synthetic runtime snapshot for schema tests only; never changes repository."""
+    state = json.loads((ROOT / "RUNTIME_STATUS.json").read_text())
+    state["collection_state"] = contract["prospective_activation"]["collection_state"]
+    state["core_prospective_eligibility_start"] = contract["prospective_eligibility_start"]
+    state["core_prospective_eligibility_status"] = contract["prospective_eligibility_status"]
+    return state
+
+
 def synthetic_future_phase():
     contract, freeze = original_contracts()
     floor = "2026-11-05T00:00:00Z"  # SYNTHETIC; not a proposal for a real floor.
@@ -39,7 +48,14 @@ def synthetic_future_phase():
                 "ACTIVATION_READINESS_REVIEW_2026-10-05.md"
             ),
             "latest_source_capture_at_utc": "2026-11-04T18:00:00Z",
+            "readiness_evidence_cutoff_utc": "2026-11-04T19:00:00Z",
             "activation_reviewed_at_utc": "2026-11-04T20:00:00Z",
+            "activation_freeze_time_utc": "2026-11-04T21:00:00Z",
+            "activation_adjudication_path": (
+                "06_RESEARCH_LAB/shared_row_model_tournament_v1/"
+                "ACTIVATION_ADJUDICATION_2026-10-05.md"
+            ),
+            "validator_repair_version": "SHARED_ROW_ACTIVATION_PHASE_GATE_v1_1",
         },
     )
     freeze["core_activation_rule"].update(
@@ -56,17 +72,17 @@ def synthetic_future_phase():
 class ActivationPhaseGateTests(unittest.TestCase):
     def reject(self, contract, freeze):
         with self.assertRaises((AssertionError, ValueError, KeyError)):
-            validate_activation_phase(contract, freeze)
+            validate_activation_phase(contract, freeze, runtime_for(contract))
 
     def test_actual_quarantine_remains_valid(self):
         c, f = original_contracts()
         self.assertEqual(c["prospective_activation"]["collection_state"], QUARANTINED)
-        self.assertEqual(validate_activation_phase(c, f), "QUARANTINED_VALID")
+        self.assertEqual(validate_activation_phase(c, f, runtime_for(c)), "QUARANTINED_VALID")
 
     def test_synthetic_active_schema_only(self):
         c, f = synthetic_future_phase()
         self.assertEqual(
-            validate_activation_phase(c, f),
+            validate_activation_phase(c, f, runtime_for(c)),
             "ACTIVE_SCHEMA_VALID_SOURCE_REVIEW_STILL_REQUIRED",
         )
 
@@ -143,6 +159,60 @@ class ActivationPhaseGateTests(unittest.TestCase):
         c, f = synthetic_future_phase()
         c["prospective_activation"]["activation_evidence"]["activation_reviewed_at_utc"] = "2026-11-04T20:00:00+01:00"
         self.reject(c, f)
+
+    def test_runtime_state_mismatch_rejected(self):
+        c, f = synthetic_future_phase()
+        runtime = runtime_for(c)
+        runtime["collection_state"] = QUARANTINED
+        with self.assertRaises(AssertionError):
+            validate_activation_phase(c, f, runtime)
+
+    def test_runtime_floor_mismatch_rejected(self):
+        c, f = synthetic_future_phase()
+        runtime = runtime_for(c)
+        runtime["core_prospective_eligibility_start"] = "2026-09-30T00:00:00Z"
+        with self.assertRaises(AssertionError):
+            validate_activation_phase(c, f, runtime)
+
+    def test_frozen_candidate_definition_mutation_rejected(self):
+        c, f = synthetic_future_phase()
+        c["candidate_decision_contract"]["C07_SIMPLE_3"] = "C01_ETHBTC OR C03_BTCD"
+        self.reject(c, f)
+
+    def test_duplicate_family_definition_rejected(self):
+        c, f = synthetic_future_phase()
+        f["families"].append(copy.deepcopy(f["families"][0]))
+        self.reject(c, f)
+
+    def test_missing_frozen_readiness_cutoff_rejected(self):
+        c, f = synthetic_future_phase()
+        del c["prospective_activation"]["activation_evidence"]["readiness_evidence_cutoff_utc"]
+        self.reject(c, f)
+
+    def test_activation_freeze_at_or_after_floor_rejected(self):
+        c, f = synthetic_future_phase()
+        c["prospective_activation"]["activation_evidence"]["activation_freeze_time_utc"] = c["prospective_eligibility_start"]
+        self.reject(c, f)
+
+    def test_readiness_cutoff_after_review_rejected(self):
+        c, f = synthetic_future_phase()
+        c["prospective_activation"]["activation_evidence"]["readiness_evidence_cutoff_utc"] = "2026-11-04T20:30:00Z"
+        self.reject(c, f)
+
+    def test_missing_adjudication_path_rejected(self):
+        c, f = synthetic_future_phase()
+        del c["prospective_activation"]["activation_evidence"]["activation_adjudication_path"]
+        self.reject(c, f)
+
+    def test_wrong_validator_repair_version_rejected(self):
+        c, f = synthetic_future_phase()
+        c["prospective_activation"]["activation_evidence"]["validator_repair_version"] = "UNVERIFIED"
+        self.reject(c, f)
+
+    def test_missing_runtime_rejected(self):
+        c, f = synthetic_future_phase()
+        with self.assertRaises(AssertionError):
+            validate_activation_phase(c, f)
 
     def test_actual_repository_has_no_synthetic_activation_fields(self):
         c, f = original_contracts()
