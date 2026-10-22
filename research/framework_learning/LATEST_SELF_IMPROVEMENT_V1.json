@@ -322,7 +322,7 @@
     "adaptive_evolution": 1157,
     "self_healing": 1156
   },
-  "generated_at_utc": "2026-10-22T07:54:49.818494Z",
+  "generated_at_utc": "2026-10-22T08:52:24.463894Z",
   "health_consistency": "OK",
   "health_live_coverage": 0.9899,
   "incident_count": 7,
@@ -441,7 +441,7 @@
       "automatic_code_write_allowed": false,
       "automatic_retry_allowed": false,
       "classification": "UNKNOWN",
-      "counted_in_this_snapshot": true,
+      "counted_in_this_snapshot": false,
       "findings": [
         "LATEST_RUN_FAILED"
       ],
@@ -491,14 +491,15 @@
       ],
       "fingerprint": "f722c0fa56b287bf4a4a63f74f577ca4cefafda681d6a02d043f46104110c144",
       "first_seen_at_utc": "2026-10-21T07:14:06.203874Z",
-      "last_seen_at_utc": "2026-10-21T19:26:18.058958Z",
-      "observation_count": 3,
+      "last_seen_at_utc": "2026-10-22T08:47:13.510954Z",
+      "observation_count": 4,
       "observed_keys": [
         "run:39545619457",
         "run:39564941319",
-        "run:39655897570"
+        "run:39655897570",
+        "run:39742960474"
       ],
-      "observed_run_id": 39655897570,
+      "observed_run_id": 39742960474,
       "owner_issue": 1156,
       "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
       "route": "EXISTING_REMEDIATION_OWNER",
@@ -555,20 +556,21 @@
       "automatic_code_write_allowed": false,
       "automatic_retry_allowed": false,
       "classification": "UNKNOWN",
-      "counted_in_this_snapshot": false,
+      "counted_in_this_snapshot": true,
       "findings": [
         "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H"
       ],
       "fingerprint": "f722c0fa56b287bf4a4a63f74f577ca4cefafda681d6a02d043f46104110c144",
       "first_seen_at_utc": "2026-10-21T07:14:06.203874Z",
-      "last_seen_at_utc": "2026-10-21T19:26:18.058958Z",
-      "observation_count": 3,
+      "last_seen_at_utc": "2026-10-22T08:47:13.510954Z",
+      "observation_count": 4,
       "observed_keys": [
         "run:39545619457",
         "run:39564941319",
-        "run:39655897570"
+        "run:39655897570",
+        "run:39742960474"
       ],
-      "observed_run_id": 39655897570,
+      "observed_run_id": 39742960474,
       "owner_issue": 1156,
       "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
       "route": "EXISTING_REMEDIATION_OWNER",
@@ -683,15 +685,15 @@
     "UNPROVEN": 34
   },
   "source_generated_at_utc": {
-    "automation_health": "2026-10-21T19:26:18.058958Z"
+    "automation_health": "2026-10-22T08:47:13.510954Z"
   },
-  "source_observation_counted": false,
+  "source_observation_counted": true,
   "source_paths": {
     "automation_health": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
     "experiment_registry": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
   },
   "source_sha256": {
-    "automation_health": "48051285eafa4907f40f3541d90abeda62970e1b9fd1230014773d99e82ff159",
+    "automation_health": "70b726c48a9c50d6e7945182d7884792f71837e11c884cb4fb9ce097ee187c36",
     "experiment_registry": "7c6e408af31b8398c6c77e8f77c326a102ac7c60d5bdd3ff06bedeb83235efe1"
   },
   "workflow_census_count": 199

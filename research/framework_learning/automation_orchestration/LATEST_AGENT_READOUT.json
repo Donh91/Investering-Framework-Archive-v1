@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-22T07:56:09Z",
+  "generated_at_utc": "2026-10-22T08:53:44Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,28 +15,28 @@
   },
   "luna_triage": {
     "evidence_against": [
-      "Only one recent failure is reported, with a failure streak of 1; this does not establish a persistent defect.",
-      "No failure logs, step-level error, or dependency-health evidence is supplied to identify the cause."
+      "Only one recent failure is reported (failure_streak 1); there is no evidence of persistence or a repeated pattern.",
+      "No supplied evidence identifies a shared dependency failure or a code defect."
     ],
     "evidence_for": [
-      "The latest run of daily-settled-etf-calibration.yml failed (run 39593559858).",
-      "The item is scheduled and lists framework-main-writer as its existing writer group.",
-      "An existing remediation record is already OBSERVED with route OBSERVE."
+      "Workflow daily-settled-etf-calibration.yml has a reported latest-run failure (run 39593559858).",
+      "The existing remediation record is OBSERVED with route OBSERVE; preserve that state."
     ],
     "forecast_candidates": [],
     "hypotheses": [
-      "Treat as an unclassified, possibly transient execution failure; the available evidence is insufficient to distinguish transient noise from a dependency failure or code defect.",
-      "The existing framework-main-writer owner should inspect the failed run and its logs next. Keep the existing OBSERVED remediation state; do not create duplicate remediation."
+      "Failure class is undetermined from the supplied summary; a transient execution failure is possible, but not established.",
+      "The framework-main-writer group is the supplied existing owner to inspect the failed run."
     ],
     "status": "DEGRADED",
-    "summary": "One reported failure for daily-settled-etf-calibration.yml. Cause is unclassified; inspect run details before treating it as persistent or assigning a defect class.",
+    "summary": "Triage the single reported failure for daily-settled-etf-calibration.yml. Evidence is insufficient to distinguish transient execution noise from a dependency failure or code defect. The existing OBSERVED remediation state remains unchanged; framework-main-writer is the existing owner to inspect next.",
     "uncertainties": [
-      "No job or step logs, error message, retry outcome, or dependency status were supplied.",
-      "The record does not identify an individual owner beyond the existing writer group framework-main-writer."
+      "Run logs, failed job or step, and error details were not supplied.",
+      "No dependency status or comparison with other workflows is available.",
+      "A single failure does not establish whether the issue is transient or persistent."
     ]
   },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "49fadbec6747ac381c1d9abf030796bc064f822600c1b571f96ccac88baad442",
+  "plan_fingerprint": "ca898b3002884a1b796fe83210a3c839d009c7e3bc953f417c1b51e1b92e9e7c",
   "routing_summary": {
     "existing_remediation_count": 0,
     "luna_triage_count": 1,
@@ -44,5 +44,5 @@
     "sol_6_1_diagnosis_count": 0
   },
   "sol_6_1_diagnosis": null,
-  "source_health_generated_at_utc": "2026-10-21T19:26:18.058958Z"
+  "source_health_generated_at_utc": "2026-10-22T08:47:13.510954Z"
 }
