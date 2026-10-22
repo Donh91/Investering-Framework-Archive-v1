@@ -74,6 +74,28 @@ class NewsDirectorIntegrationTests(unittest.TestCase):
             self.assertFalse(out["market_state_effect"])
             self.assertEqual(len(paths), 2)
 
+    def test_real_source_pass_with_unverified_headline_is_not_source_failure(self):
+        # Regression for real 2026-10-22 Situation Room receipt: 6/6 primaries
+        # PASS, discovery PASS, but owner verdict DEGRADED pending verification.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            pointer = fixture(root, verified=False)
+            row_path = root / "2026-10-22.json"
+            row = json.loads(row_path.read_text())
+            row["run_status"] = "DEGRADED"
+            row["daily_result"] = "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY"
+            row["current_unverified_discoveries"] = [
+                {"title": "Unverified crypto ETF headline", "verification_status": "DISCOVERY_UNVERIFIED"}
+            ]
+            row_path.write_text(json.dumps(row))
+            out, _ = news_intelligence(pointer, now=NOW)
+            self.assertEqual(out["source_coverage_status"], "PASS")
+            self.assertEqual(out["status"], "REVIEW_REQUIRED_UNVERIFIED")
+            self.assertEqual(out["source_daily_result"], "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY")
+            self.assertEqual(out["unverified_count"], 1)
+            self.assertEqual(out["verified_count"], 0)
+            self.assertFalse(out["news_only_review_eligible"])
+
     def test_failed_discovery_source_is_never_clean_no_news(self):
         with tempfile.TemporaryDirectory() as td:
             out, _ = news_intelligence(fixture(Path(td), failed=True, verified=False), now=NOW)

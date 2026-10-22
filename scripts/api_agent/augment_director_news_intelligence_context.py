@@ -85,11 +85,25 @@ def news_intelligence(pointer_path=DEFAULT_OWNER_POINTER, *, now=None):
                      if isinstance(x, dict) and x.get("status") != "PASS"})
     primary_pass = coverage.get("primary_pass")
     primary_total = coverage.get("primary_total")
-    healthy = (row.get("run_status") == "PASS" and not failed and
-               isinstance(primary_pass, int) and primary_pass >= 3 and
-               isinstance(primary_total, int) and primary_pass == primary_total)
-    coverage_status = "PASS" if healthy else "DEGRADED"
-    status = "STALE" if age_hours > 36 else ("READY" if healthy else "DEGRADED_SOURCE_COVERAGE")
+    # Source transport health and the owner research verdict are distinct.
+    # A verified fetch can still yield an unresolved discovery requiring review.
+    source_healthy = (
+        bool(receipts) and not failed
+        and isinstance(primary_pass, int) and primary_pass >= 3
+        and isinstance(primary_total, int) and primary_pass == primary_total
+    )
+    coverage_status = "PASS" if source_healthy else "DEGRADED"
+    owner_result = row.get("daily_result")
+    if age_hours > 36:
+        status = "STALE"
+    elif not source_healthy:
+        status = "DEGRADED_SOURCE_COVERAGE"
+    elif owner_result in {"REVIEW_REQUIRED_UNVERIFIED_DISCOVERY", "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES"}:
+        status = "REVIEW_REQUIRED_UNVERIFIED"
+    elif row.get("run_status") == "PASS":
+        status = "READY"
+    else:
+        status = "DEGRADED_OWNER_RESULT"
 
     verified = []
     seen = set()
