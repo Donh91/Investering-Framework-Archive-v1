@@ -4,6 +4,7 @@ import csv,hashlib,json,re
 from datetime import datetime,timezone
 from pathlib import Path
 import prospective_evidence_controller as evidence
+import shared_row_outcome_receipt_gate as outcome_gate
 ROOT=Path('06_RESEARCH_LAB/shared_row_model_tournament_v1'); LED=ROOT/'data/PROSPECTIVE_SHARED_ROW_LEDGER.csv'; FNP=ROOT/'14_DIVERGENCE_FNP_LEDGER.csv'; REG=ROOT/'03_CANDIDATE_REGISTRY.json'; OUT=ROOT/'weekly'
 ACTIVE_COLLECTION_STATE='ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION'
 ACTIVE_FLOOR_STATUS='ACTIVE_POST_REPAIR_FLOOR'
@@ -16,14 +17,20 @@ def ts(v):
         d=datetime.fromisoformat(str(v or '').replace('Z','+00:00'))
         return d.astimezone(timezone.utc) if d.tzinfo else None
     except Exception:return None
-def filter_consumer_rows(rows,divs,runtime,verify_source_bindings=None):
+def filter_consumer_rows(rows,divs,runtime,verify_source_bindings=None,outcome_details=None):
     """Return only active-floor rows with reconstructable immutable provenance."""
-    excluded={'runtime_inactive':0,'duplicate_event_id':0,'integrity_contract':0,'pre_floor_or_timestamp':0,'source_binding':0,'immutable_provenance':0,'divergence_parent':0,'divergence_provenance':0}
+    excluded={'runtime_inactive':0,'duplicate_event_id':0,'integrity_contract':0,'pre_floor_or_timestamp':0,'source_binding':0,'immutable_provenance':0,'divergence_parent':0,'divergence_provenance':0,'outcome_receipt':0}
     floor=ts(runtime.get('core_prospective_eligibility_start'))
     active=(runtime.get('collection_state')==ACTIVE_COLLECTION_STATE and runtime.get('core_prospective_eligibility_status')==ACTIVE_FLOOR_STATUS and floor is not None)
     if not active:
         excluded['runtime_inactive']=len(rows); excluded['divergence_parent']=len(divs)
         return [],[],excluded
+    # A matured outcome is never eligible merely because the mutable outcome
+    # columns say 1/0; demand one immutable outcome-owner receipt per horizon.
+    if outcome_details is None:
+        detail_path = ROOT / 'data/OUTCOME_DETAIL_LEDGER.csv'
+        outcome_details = read(detail_path) if detail_path.is_file() else []
+    indexed_details = outcome_gate.detail_index(outcome_details)
     counts={}
     for row in rows:
         event_id=str(row.get('event_id') or ''); counts[event_id]=counts.get(event_id,0)+1
@@ -54,6 +61,10 @@ def filter_consumer_rows(rows,divs,runtime,verify_source_bindings=None):
             verify(row,cutoff)
         except Exception:
             excluded['source_binding']+=1; continue
+        try:
+            outcome_gate.verify_row_outcomes(row,indexed_details)
+        except Exception:
+            excluded['outcome_receipt']+=1; continue
         valid[event_id]=row
     valid_divs=[]
     for div in divs:
