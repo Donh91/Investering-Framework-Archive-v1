@@ -146,6 +146,42 @@ class ShadowPriceTests(unittest.TestCase):
                 self.assertGreater(v["low_usd"],0)
                 self.assertGreater(v["high_usd"],v["low_usd"])
 
+    def test_numeric_oracle_known_geometric_path_extrema(self):
+        """Catch wrong target-window endpoints, min/max choice and sample counts."""
+        data = fixture(253)
+        for i, bar in enumerate(data["bars"]):
+            close = 100.0 * (1.001 ** i)
+            bar["close_usd"] = close
+            bar["low_usd"] = 0.99 * close
+            bar["high_usd"] = 1.01 * close
+        data["source_rows_sha256"] = hashlib.sha256(canonical(data["bars"])).hexdigest()
+        output = build_shadow(data)
+        anchor = data["bars"][-1]["close_usd"]
+        for h in (1, 7, 14, 21):
+            with self.subTest(horizon=h):
+                candidate = output["horizons_days"][str(h)]
+                self.assertEqual(candidate["status"], "SHADOW_BASELINE_ONLY")
+                self.assertEqual(candidate["overlapping_windows"], 253 - h)
+                self.assertEqual(candidate["nonoverlap_upper_bound"], 252 // h)
+                self.assertAlmostEqual(candidate["low_usd"], anchor * 0.99 * 1.001, delta=anchor*1e-12)
+                self.assertAlmostEqual(candidate["high_usd"], anchor * 1.01 * (1.001 ** h), delta=anchor*1e-12)
+
+    def test_individually_finite_extrema_without_sum_overflow(self):
+        """Two finite endpoints are not invalid just because their sum overflows."""
+        data = fixture(253)
+        for bar in data["bars"]:
+            bar["low_usd"] = 9e307
+            bar["close_usd"] = 1e308
+            bar["high_usd"] = 1.1e308
+        data["source_rows_sha256"] = hashlib.sha256(canonical(data["bars"])).hexdigest()
+        result = build_shadow(data)
+        for h in (1, 7, 14, 21):
+            with self.subTest(horizon=h):
+                row = result["horizons_days"][str(h)]
+                self.assertEqual(row["status"], "SHADOW_BASELINE_ONLY")
+                self.assertEqual(row["low_usd"], 9e307)
+                self.assertAlmostEqual(row["high_usd"] / 1e308, 1.1, places=14)
+
     def test_missing_source_manifest_sha(self):
         self.reject(lambda x: x.update(source_manifest_sha256="x"))
 
