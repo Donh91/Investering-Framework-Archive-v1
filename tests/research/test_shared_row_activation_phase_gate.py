@@ -14,7 +14,7 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parents[2]
 ROOT = PROJECT / "06_RESEARCH_LAB/shared_row_model_tournament_v1"
 sys.path.insert(0, str(PROJECT / "scripts/research"))
-from shared_row_activation_phase_gate import validate_activation_phase, ACTIVE, QUARANTINED
+from shared_row_activation_phase_gate import validate_activation_phase, validate_owner_matrix_floor, ACTIVE, QUARANTINED
 
 
 def original_contracts():
@@ -93,6 +93,34 @@ class ActivationPhaseGateTests(unittest.TestCase):
     def reject(self, contract, freeze):
         with self.assertRaises((AssertionError, ValueError, KeyError)):
             validate_activation_phase(contract, freeze, runtime_for(contract))
+
+    def test_real_owner_matrix_matches_actual_active_runtime_floor(self):
+        c, f = original_contracts()
+        matrix = json.loads((ROOT / "OWNER_BINDING_MATRIX.json").read_text())
+        self.assertEqual(validate_owner_matrix_floor(c, f, matrix), "OWNER_MATRIX_FLOOR_BOUND")
+
+    def test_stale_containment_owner_matrix_floor_rejected(self):
+        c, f = original_contracts()
+        matrix = json.loads((ROOT / "OWNER_BINDING_MATRIX.json").read_text())
+        for owner in matrix["families"]:
+            if owner["family_id"] == "ETHBTC_PERSISTENCE":
+                owner["prospective_eligibility_start"] = "2026-09-30T00:00:00Z"
+        with self.assertRaisesRegex(AssertionError, "OWNER_MATRIX_CORE_FLOOR_OR_READINESS_DRIFT"):
+            validate_owner_matrix_floor(c, f, matrix)
+
+    def test_duplicate_owner_matrix_family_rejected(self):
+        c, f = original_contracts()
+        matrix = json.loads((ROOT / "OWNER_BINDING_MATRIX.json").read_text())
+        matrix["families"].append(copy.deepcopy(matrix["families"][0]))
+        with self.assertRaisesRegex(AssertionError, "OWNER_MATRIX_DUPLICATE_FAMILY"):
+            validate_owner_matrix_floor(c, f, matrix)
+
+    def test_blocked_optional_owner_never_inherits_prospective_floor(self):
+        c, f = original_contracts()
+        matrix = json.loads((ROOT / "OWNER_BINDING_MATRIX.json").read_text())
+        next(z for z in matrix["families"] if z["family_id"] == "ETF_FLOW_QUALITY")["prospective_eligibility_start"] = c["prospective_eligibility_start"]
+        with self.assertRaisesRegex(AssertionError, "OWNER_MATRIX_BLOCKED_OPTIONAL_FLOOR"):
+            validate_owner_matrix_floor(c, f, matrix)
 
     def test_synthetic_quarantine_still_fail_closed(self):
         c, f = synthetic_quarantine()

@@ -133,3 +133,34 @@ def validate_activation_phase(contract: dict, freeze: dict, runtime: dict | None
         "ACTIVATION_SOURCE_REVIEW_FREEZE_CLOCK_ORDER_INVALID"
     )
     return "ACTIVE_SCHEMA_VALID_SOURCE_REVIEW_STILL_REQUIRED"
+
+
+def validate_owner_matrix_floor(contract: dict, freeze: dict, matrix: dict) -> str:
+    """Reject contradictory active start clocks in owner discoverability metadata.
+
+    Matrix metadata cannot independently grant market or research eligibility.
+    Only the prior phase gate + original source-bound materializer do that.
+    """
+    assert matrix.get("contract") == "PROSPECTIVE_OWNER_BINDING_MATRIX_v1", "OWNER_MATRIX_CONTRACT_DRIFT"
+    assert matrix.get("authority") == "RESEARCH_ONLY_NON_CANONICAL", "OWNER_MATRIX_AUTHORITY_DRIFT"
+    raw = matrix.get("families")
+    assert isinstance(raw, list), "OWNER_MATRIX_FAMILIES_MISSING"
+    families = {item["family_id"]: item for item in raw}
+    assert len(families) == len(raw), "OWNER_MATRIX_DUPLICATE_FAMILY"
+    assert CORE_FAMILIES <= families.keys(), "OWNER_MATRIX_CORE_MISSING"
+    frozen = {item["family_id"]: item for item in freeze.get("families", [])}
+    assert CORE_FAMILIES <= frozen.keys(), "OWNER_MATRIX_FROZEN_CORE_MISSING"
+    floor = contract.get("prospective_eligibility_start")
+    assert all(
+        families[family].get("prospective_eligibility_start") == floor
+        and families[family].get("prospective_eligibility_start") == frozen[family].get("prospective_eligibility_start")
+        and families[family].get("status") == "READY"
+        and families[family].get("candidate_decision_contract_status") == "READY"
+        for family in CORE_FAMILIES
+    ), "OWNER_MATRIX_CORE_FLOOR_OR_READINESS_DRIFT"
+    assert all(
+        item.get("prospective_eligibility_start") is None
+        for name, item in families.items()
+        if name not in CORE_FAMILIES and item.get("candidate_decision_contract_status") == "BLOCKED"
+    ), "OWNER_MATRIX_BLOCKED_OPTIONAL_FLOOR"
+    return "OWNER_MATRIX_FLOOR_BOUND"

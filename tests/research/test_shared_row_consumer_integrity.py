@@ -18,6 +18,7 @@ if str(RESEARCH_SCRIPTS) not in sys.path:
 import shared_row_tournament_relevance as relevance
 import shared_row_tournament_weekly as weekly
 import shared_row_next_action_controller as next_action
+import shared_row_tournament_monitor as monitor
 
 
 FLOOR = "2026-09-30T00:00:00Z"
@@ -195,6 +196,63 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
     def test_weekly_relevance_and_next_action_share_one_fail_closed_filter(self) -> None:
         self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)
         self.assertIs(next_action.filter_consumer_rows, weekly.filter_consumer_rows)
+
+    def test_monitor_does_not_consider_forged_maturity_clock_a_verified_outcome(self) -> None:
+        parent = row("MATURITY_CLOCK_ONLY")
+        pair = divergence("MATURITY_CLOCK_ONLY", "D_VALID")
+        pair["matured_24h_utc"] = "2026-10-02T00:00:00Z"
+        self.assertEqual(
+            monitor.verified_matured_divergence_counts([parent], [pair]),
+            {"24h": 0, "72h": 0, "7d": 0},
+        )
+        # A genuinely verified parent+pair outcome is counted exactly once.
+        parent["outcome_24h"] = pair["outcome_24h"] = "1"
+        self.assertEqual(
+            monitor.verified_matured_divergence_counts([parent], [pair])["24h"], 1
+        )
+
+    def test_monitor_fails_closed_on_sha_shaped_but_forged_current_row(self) -> None:
+        forged = row("MONITOR_FAKE_SHA")
+        forged["provenance_hash"] = "a" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "lab"
+            root.mkdir()
+            write_csv(root / "data" / "PROSPECTIVE_SHARED_ROW_LEDGER.csv", [forged])
+            (root / "14_DIVERGENCE_FNP_LEDGER.csv").write_text("divergence_id,event_id\\n")
+            (root / "data" / "OUTCOME_DETAIL_LEDGER.csv").write_text("event_id,horizon\\n")
+            (root / "OWNER_BINDING_MATRIX.json").write_text(json.dumps({
+                "families": [{
+                    "family_id": name, "status": "READY",
+                    "candidate_decision_contract_status": "READY"
+                } for name in sorted(monitor.CORE_FAMILIES)]
+            }))
+            (root / "TRANSFORM_FREEZE_REGISTRY.json").write_text(json.dumps({
+                "core_activation_rule": {
+                    "collection_state": monitor.ACTIVE, "containment_floor_sentinel": False
+                }
+            }))
+            (root / "RUNTIME_STATUS.json").write_text(json.dumps(runtime()))
+            for name in ["03_CANDIDATE_REGISTRY.json", "04_SHARED_ROW_SCHEMA.json", "RELEVANCE_STATE.json"]:
+                (root / name).write_text("{}")
+            registry = root / "registry.json"
+            registry.write_text(json.dumps({
+                "sensors": [{"sensor_id": "SHARED_ROW_MODEL_TOURNAMENT_V1"}]
+            }))
+            with mock.patch.object(monitor, "ROOT", root), mock.patch.object(monitor, "REGISTRY", registry), mock.patch.object(
+                monitor, "filter_consumer_rows", side_effect=lambda rows, divs, state, outcome_details: weekly.filter_consumer_rows(
+                    rows, divs, state, verifier, outcome_details=outcome_details
+                )
+            ) as linked_filter:
+                with self.assertRaises(SystemExit) as caught:
+                    monitor.main()
+                self.assertEqual(caught.exception.code, 2)
+                linked_filter.assert_called_once()
+            result = json.loads((root / "monitor" / "LATEST.json").read_text())
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["eligible_row_n"], 0)
+            self.assertEqual(result["consumer_integrity_filter"]["excluded"]["immutable_provenance"], 1)
+            self.assertIn("UNVERIFIED_PROSPECTIVE_ROW_OR_DIVERGENCE", result["issues"])
+            self.assertEqual(result["scoring_readiness"], "FAIL_CLOSED_UNVERIFIED_RESEARCH_EVIDENCE")
 
     def test_weekly_and_relevance_use_the_same_fail_closed_filter(self) -> None:
         self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)
