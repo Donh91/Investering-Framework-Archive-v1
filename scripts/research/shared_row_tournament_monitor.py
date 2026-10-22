@@ -20,6 +20,23 @@ def read_csv(path: Path):
         return list(csv.DictReader(handle))
 
 
+def verified_matured_divergence_counts(valid_rows: list[dict], divergences: list[dict]) -> dict:
+    """A timestamp marker is NOT an outcome; only admitted parent receipts count.
+
+    The shared consumer gate already checked each parent outcome against its
+    immutable owner receipt and all copied pairwise outcome columns.
+    """
+    parents = {row["event_id"]: row for row in valid_rows}
+    return {
+        horizon: sum(
+            str(parents.get(div.get("event_id"), {}).get(f"outcome_{horizon}", "")) in {"0", "1"}
+            and str(div.get(f"outcome_{horizon}", "")) in {"0", "1"}
+            for div in divergences
+        )
+        for horizon in ("24h", "72h", "7d")
+    }
+
+
 def main() -> None:
     required = [
         ROOT / "OWNER_BINDING_MATRIX.json",
@@ -59,10 +76,7 @@ def main() -> None:
     ]
     core_unresolved = [family for family in unresolved if family in CORE_FAMILIES]
     optional_unresolved = [family for family in unresolved if family not in CORE_FAMILIES]
-    matured = {
-        horizon: sum(bool(row.get(f"matured_{horizon}_utc")) for row in divergences)
-        for horizon in ["24h", "72h", "7d"]
-    }
+    matured = verified_matured_divergence_counts(valid_rows, divergences)
     rule = freeze.get("core_activation_rule", {})
     collection_state = rule.get("collection_state")
     quarantined = collection_state != ACTIVE or rule.get("containment_floor_sentinel") is not False
