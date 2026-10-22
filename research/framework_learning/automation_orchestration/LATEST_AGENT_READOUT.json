@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-22T08:53:44Z",
+  "generated_at_utc": "2026-10-22T19:24:45Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -13,36 +13,15 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "luna_triage": {
-    "evidence_against": [
-      "Only one recent failure is reported (failure_streak 1); there is no evidence of persistence or a repeated pattern.",
-      "No supplied evidence identifies a shared dependency failure or a code defect."
-    ],
-    "evidence_for": [
-      "Workflow daily-settled-etf-calibration.yml has a reported latest-run failure (run 39593559858).",
-      "The existing remediation record is OBSERVED with route OBSERVE; preserve that state."
-    ],
-    "forecast_candidates": [],
-    "hypotheses": [
-      "Failure class is undetermined from the supplied summary; a transient execution failure is possible, but not established.",
-      "The framework-main-writer group is the supplied existing owner to inspect the failed run."
-    ],
-    "status": "DEGRADED",
-    "summary": "Triage the single reported failure for daily-settled-etf-calibration.yml. Evidence is insufficient to distinguish transient execution noise from a dependency failure or code defect. The existing OBSERVED remediation state remains unchanged; framework-main-writer is the existing owner to inspect next.",
-    "uncertainties": [
-      "Run logs, failed job or step, and error details were not supplied.",
-      "No dependency status or comparison with other workflows is available.",
-      "A single failure does not establish whether the issue is transient or persistent."
-    ]
-  },
+  "luna_triage": null,
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "ca898b3002884a1b796fe83210a3c839d009c7e3bc953f417c1b51e1b92e9e7c",
+  "plan_fingerprint": "1facd82b2808c968493b9a0a19831d258270d263272c8072058008c1c4b70827",
   "routing_summary": {
     "existing_remediation_count": 0,
-    "luna_triage_count": 1,
+    "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
   "sol_6_1_diagnosis": null,
-  "source_health_generated_at_utc": "2026-10-22T08:47:13.510954Z"
+  "source_health_generated_at_utc": "2026-10-22T19:19:35.547368Z"
 }

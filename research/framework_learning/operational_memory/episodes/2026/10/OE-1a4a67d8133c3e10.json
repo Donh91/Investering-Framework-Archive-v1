@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/shared-row-tournament-research-gate.yml",
+    "scripts/research/shared_row_next_action_controller.py",
+    "scripts/research/shared_row_tournament_weekly.py",
+    "tests/research/test_shared_row_consumer_integrity.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-1a4a67d8133c3e10",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-validate-frozen-shared-row-evidence-before-scoring",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(task2): reject changed frozen shared-row decisions in research consumers * fix(task2): count immutable-provenance failures separately from source binding * test(task2): prove hash-shaped forgery and changed core decisions cannot contaminate research scoring * fix(task2): route next-action decisions through same immutable source gate as weekly * ci(task2): require prospective consumer tamper and controller-source parity tests",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/shared-row-tournament-research-gate.yml": "ddf1a3f8069da93b56c52d2905db05f775c8f889",
+    "scripts/research/shared_row_next_action_controller.py": "0c047f7bf121f96d1a40e80387b4e367cfc587a0",
+    "scripts/research/shared_row_tournament_weekly.py": "7f89cc0d3fe83e26d9dc798d8ab0f9642493fd99",
+    "tests/research/test_shared_row_consumer_integrity.py": "00ebc5c255a339a69e254577138a12a848bb4977"
+  },
+  "source_commit_sha": "1a4a67d8133c3e1003dae6b29c9373542ead1560",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-22T05:49:12-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): validate frozen Shared Row evidence before scoring (#1743)"
+}
