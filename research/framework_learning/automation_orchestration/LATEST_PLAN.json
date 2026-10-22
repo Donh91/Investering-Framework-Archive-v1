@@ -9,7 +9,7 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "b3855dd9a6c7fd03ea188b9b72bd0f5eb0d8360e2e992875d796640d1446c184",
+  "fingerprint": "49fadbec6747ac381c1d9abf030796bc064f822600c1b571f96ccac88baad442",
   "fleet": {
     "amber_count": 6,
     "green_count": 192,
@@ -18,7 +18,7 @@
     "workflow_count": 199,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-10-21T19:30:13Z",
+  "generated_at_utc": "2026-10-22T07:54:49Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -33,7 +33,12 @@
   "items": [
     {
       "cluster_id": null,
-      "existing_remediation": null,
+      "existing_remediation": {
+        "finding": "LATEST_RUN_FAILED",
+        "route": "OBSERVE",
+        "signature": "e9fd7efdc36e5c119072",
+        "state": "OBSERVED"
+      },
       "failure_streak": 1,
       "findings": [
         "LATEST_RUN_FAILED"

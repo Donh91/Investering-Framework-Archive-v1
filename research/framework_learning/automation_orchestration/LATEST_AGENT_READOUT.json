@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-10-21T19:31:36Z",
+  "generated_at_utc": "2026-10-22T07:56:09Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,28 +15,28 @@
   },
   "luna_triage": {
     "evidence_against": [
-      "No failure details, step logs, exit code, or error message were supplied, so a shared dependency failure or code defect is not established.",
-      "Only one recent failure and a failure streak of 1 are reported; persistence is not demonstrated."
+      "Only one recent failure is reported, with a failure streak of 1; this does not establish a persistent defect.",
+      "No failure logs, step-level error, or dependency-health evidence is supplied to identify the cause."
     ],
     "evidence_for": [
       "The latest run of daily-settled-etf-calibration.yml failed (run 39593559858).",
-      "The workflow is scheduled and has one reported recent failure."
+      "The item is scheduled and lists framework-main-writer as its existing writer group.",
+      "An existing remediation record is already OBSERVED with route OBSERVE."
     ],
     "forecast_candidates": [],
     "hypotheses": [
-      "Most likely classification: undetermined single-run failure; transient execution noise is possible but unconfirmed.",
-      "No evidence currently supports assigning the failure to a shared dependency or code defect."
+      "Treat as an unclassified, possibly transient execution failure; the available evidence is insufficient to distinguish transient noise from a dependency failure or code defect.",
+      "The existing framework-main-writer owner should inspect the failed run and its logs next. Keep the existing OBSERVED remediation state; do not create duplicate remediation."
     ],
     "status": "DEGRADED",
-    "summary": "Triage is limited to one failed run with no diagnostic details. The existing framework-main-writer owner should inspect the failed run logs to identify the failing step and cause. No remediation authority is indicated.",
+    "summary": "One reported failure for daily-settled-etf-calibration.yml. Cause is unclassified; inspect run details before treating it as persistent or assigning a defect class.",
     "uncertainties": [
-      "Missing failed-step logs, error output, and exit status.",
-      "No prior-run results or broader workflow/dependency health evidence were supplied.",
-      "The supplied data does not identify a more specific existing owner than framework-main-writer."
+      "No job or step logs, error message, retry outcome, or dependency status were supplied.",
+      "The record does not identify an individual owner beyond the existing writer group framework-main-writer."
     ]
   },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "b3855dd9a6c7fd03ea188b9b72bd0f5eb0d8360e2e992875d796640d1446c184",
+  "plan_fingerprint": "49fadbec6747ac381c1d9abf030796bc064f822600c1b571f96ccac88baad442",
   "routing_summary": {
     "existing_remediation_count": 0,
     "luna_triage_count": 1,
