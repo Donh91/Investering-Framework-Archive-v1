@@ -2,19 +2,57 @@
 **Status:** proposed execution after separate owner approval. **Read master:** [11](11_EXTREME_WORK_MISSION_MASTER.md). All existing owners and frozen contracts override this planning packet.
 
 ## Overall operating model: one coordinator, many small proofs
-**Work** takes responsibility for cross-domain source reconciliation, method, prioritization, independent challenge coordination, execution receipts and closure. **Codex** may repair narrow code defects when genuinely available and approved; it may not become the sole blocked lane. **GitHub connector / local deterministic scripts** perform cheaper scoped inspections. **Research Lab** tries to falsify claims but does not become a new upstream signal source. **#1596** owns Task 2 scientific outcome; **#1156** owns PR reliability, closure and escalation; **#1530/#1553** own EDGE/risk/action; **Alpha Lab**, **Situation Room** and **CN/Kompas** preserve their current authorities. Do not create parallel agents, tasks, scheduled jobs, model routers, workflows or registries.
+**Work** takes responsibility for cross-domain source reconciliation, method, prioritization, independent challenge coordination, execution receipts and closure. **Codex** is Work's PRIMARY technical implementation, adversarial regression-test and source review partner, subject to actual available usage and current release authority. Codex is not a separate research decision owner. If Codex code-review quota is temporarily unavailable, label BLOCKED_REVIEW_QUOTA and preserve the correct review gate, never fabricate a pass or exhaust Work on repeated identical review requests. **GitHub connector / local deterministic scripts** perform cheaper scoped inspections. **Research Lab** tries to falsify claims but does not become a new upstream signal source. **#1596** owns Task 2 scientific outcome; **#1156** owns PR reliability, closure and escalation; **#1530/#1553** own EDGE/risk/action; **Alpha Lab**, **Situation Room** and **CN/Kompas** preserve their current authorities. Do not create parallel agents, tasks, scheduled jobs, model routers, workflows or registries.
 
-### First 60 operations on an approved Work run, ordered by dependencies rather than clock
+### First ten evidence gates on an approved Work run, ordered by dependencies rather than clock
 1. Freeze current main SHA; AGENTS, cross-repo boundary, authority/health/cost and registry; classify public/restricted.
-2. Enumerate ALL open PRs using live GitHub, exact head hashes, changed files, freshness, and reviews; identify who owns each. As of design, six were open: #1746, #1747, #1748, #1733, #1736 and #1732; **refresh, never hard-code six**.
+2. Enumerate ALL open PRs using live GitHub, exact head hashes, changed files, freshness, and reviews; identify who owns each. The v1.0 snapshot listed six, but the later v1.1 audit found only #1747 and #1733 OPEN; #1746/#1748/#1736/#1732 were CLOSED. **CLOSED does not mean MERGED or healthy**, and neither count remains current without a new read.
 3. Reconcile which older Task 2 PRs (#1573, #1597, #1617, #1627, #1644, #1675 and #1740/#1743/#1744/#1745) are genuinely merged/closed and whether current main reflects the intended fix. Do not double-repair a merged file.
-4. Audit P0 #1746 and #1748 independently for original source, fake SHA acceptance, market-print timestamp, immutable replay, owner floor, and source/row monitor consistency. Check exact head and real CI availability. If all gates are valid and existing owner mandate covers the merge, execute permitted integration; otherwise retain precise gate and handoff.
+4. FIRST classify #1746 and #1748 as MERGED/CLOSED_UNMERGED/SUPERSEDED/UNKNOWN. If merged, check exact main objects and original negative tests plus natural monitor/consumer readback. Only if a defect survives should Work assign a bounded Codex remediation. Closed PR != implemented fix, but don't re-implement proven code.
 5. Read #1747 as a *Draft research package*, never assume a citation or dataset card passes T1. The extra files 11–15 in this same PR are planning only. Do not merge all HF research because of urgency of other P0 Task 2 PRs.
 6. Establish Task2 evidence scoreboard from **original** archive, private authority (only if authorized), actual verified source/issue/outcome clocks, complete attempt denominator and publication lineage, with zero reconstruction of original missing fields.
 7. Identify cheapest **one** cohort whose actual admission can be tested without recursive source hunting, and **one** clear falsifier whose outcome can be independently computed.
 8. Run local deterministic source QA tests and ledger/original-sha verification before model analysis. Record exact commands and test counts, including failing fixtures.
 9. If R1 is still empty, do source rescue work only. Do not call a baseline `R2` or GPU fit without R1.
 10. Assess and report public-safe status with before/after row counts, independent events, statuses and proof pointers. Continue down R stages only through satisfied gates.
+
+## Work + Codex operating agreement, revision 1.2
+**Capacity fact:** owner reports **96% of Work/Codex usage remaining** after reset. This is owner-reported, not independently read by this connector. Treat Work and Codex as a coordinated resource pool; record observed product capacity or `UNVERIFIED`. Do not treat a previously failed Codex code-review quota as proof that all Codex execution is unavailable now.
+
+**Explicit division of labor**
+- Work: scientific owner crosswalk, original-file evidence access, prioritization, trial definition, source provenance, checkpoint quality, private/public handling, technical review orchestration, authorized integration, decision-value conclusion and final receipts.
+- Codex: technical change design and implementation on isolated PR branches, targeted source parser/clock guards, source-manifest pinning and negative tests, runnable reproducibility scripts and deterministic comparison harnesses, *plus adversarial independent code review when actual usable review capacity exists*.
+- Work is accountable for reviewing Codex results rather than copying its status claims. Codex output needs exact source SHA, test command and fresh PR review. A model in another session is an advisory independent critique, not formal GitHub APPROVED.
+
+**Make the large Work run productive, not a microtask loop**
+Run one coherent Work mission across the following **value waves**. Work should maintain a finite *decision backlog* of at most three active packages: (A) highest severity source/clock integrity gap, (B) one science original-cohort admission, (C) one directly useful HF source pilot. Codex can implement the independent package A while Work researches B and prepares C; Work integrates evidence before moving down R3–R7. Do not spawn 15 disconnected Codex tasks simply because they are listed in the mission.
+- Wave 0, reconnaissance: current main and close/merge truth, usage, current owners, exact blocked scientific gate. Output current truth table and exact head hash.
+- Wave 1, repair & trust: if a true P0 remains, Codex produces failing fixture and minimal repair while Work verifies original evidence and source semantics. If all P0 repaired, skip immediately.
+- Wave 2, first R1 scientific admission: Work binds one original issuable set and complete denominator. Codex audits/implements *only reproducible missing validator or deterministic replay*, no hindsight original issue reconstruction.
+- Wave 3, selected HF source proof: Work chooses single pinned small actual file and rights; Codex runs small immutable revision/source QA where permitted, including wrong clock and mutation traps. No GPU, no massive downloads.
+- Wave 4, first R2/R3 economic and information challenge: ONLY when true R1 admissible original and prereg exist; compare to zero/persistence/price-only, missingness, issuer delay and holder vs cash where evidence allows. Codex builds reproducible baseline code; Work independently verifies outputs and negative result interpretation.
+- Wave 5, frontier: allocate remaining usable capacity to highest-yield permitted R4–R7/Alpha/News source or model *only when a clearly observed gap persists*. Do not pretend prospective observations have matured. Close duplicates and produce durable stage scorecard.
+
+**Every Codex deliverable**: reproducible evidence packet, frozen baseline/head and expected failure, exact allowed file list, minimal diff, tests that fail when guard removed, reviewer feedback, status of real CI, cost/usage and merge+consumer provenance if authorized. Do not launch a Codex task if no executable defect or verifiable output.
+
+**Capacity guidance, not a commitment:** reserve most of the available effort for actual research and code, not speculative reviews. Aim conceptually ~35% original R0/R1 custody and research, ~25% Codex implementation/test hardening, ~15% genuine admitted R2/R3 comparisons, ~10% HF source custody and model/source screening, ~10% review/integration/readback and ~5% uncertainty reserve. These are **planning shares, not live quotas or expected usage**; adapt after Wave 1 according to the next actual scientific blocker and verified credits. A high-impact R1 unlock can justify reallocating major capacity away from model exploration.
+
+**Stop and redirect:** if the next activity cannot yield a new admissible row, independent baseline, reproducible bug/fix, explicit justified rejection or resolved consumer readback, don't burn usage on it. Maximum two attempts on unchanged head/fingerprint without new material evidence. Follow approvals, spend caps and current AGENTS every time.
+
+## Scientific decision tree
+```text
+CURRENT MAIN/PR TRUTH VERIFIED?
+  no -> resolve source/authority; stop code changes until truthful
+  yes -> ORIGINAL ISSUED FORECAST/AVAILABLE SOURCE CERTIFIABLE?
+    no -> reproducible R1 gap ledger; repair only actual source custody flaw
+    yes -> REAL ADMITTED R1 COHORT?
+      no -> admit original attempts or explain precise scientific blocker
+      yes -> preregister matched cheap baseline; run R2 without tuning on outcome
+        -> only genuine first-actionability + fill lets R3 claim action edge
+HF PARALLEL: pinned small file + rights + true clock + real owner value?
+  no -> SOURCE_ONLY/REJECT
+  yes -> T1 FILE QA; T2/T3 gated separately
+```
 
 ### Lane R0 | Truth acquisition, environment & replay integrity
 **Falsifier:** original forecast or source lineage cannot be bound to the advertised immutable object/time. Build source roster by asset/horizon/engine version/collector/source cadence, Git SHA, source provenance and original issue. Verify source vs code effective dates and output mirrors. Explicitly identify 2026-07-08 CFGI algorithm-era break, newer scorer version shifts, old PDF example paths, and false Git author timestamp inference.
@@ -60,8 +98,8 @@ Independent red-team verifies whether improvement changes actual decisions more 
 No thresholds/weights/gates promoted without future owner action and science release.
 
 ## Scope-specific Codex implementation packets, *conditional only*
-**C1 [P0] Original Shared Row eligibility / activation:** existing #1746. Input exact head + original wrong SHA and owner-floor fixtures. Output negative test, bounded fix, targeted regressions, review proof and natural postmerge verification.
-**C2 [P0] CMC settled MARKET PRINT stale replay:** existing #1748. Input stale ancient print reverified today; target same shared source helper; report 72h guard as *availability/data quality*, not buying threshold. Output exact negative boundary test, no production-data changes.
+**C1 [P0 only if defect remains] Shared Row eligibility / activation:** historical #1746 is CLOSED as of v1.1. Work must prove merge/current-main implementation and consumer truth before sending any Codex work. If failing, use original wrong SHA and owner-floor fixture, small fix, targeted regressions and natural postmerge verification. No duplicate PR without exact open defect.
+**C2 [P0 only if defect remains] CMC settled MARKET PRINT stale replay:** historical #1748 is CLOSED as of v1.1. Work must verify main guard and provenance before any Codex task. If missing, original stale-print reverified-today fixture and a bounded repair; 72h is data-availability guard, not an investment threshold.
 **C3 [P1] HF source manifest & pinning:** only after #1747 reviews. Expose revision SHA, file SHA, expected manifest digest, UTC coverage and zero data assumptions. A static/pure one-file QA helper only if no current owner already provides it.
 **C4 [P1] Alpha HF PIT ablation repair:** existing Alpha Lab owner, source + train-only columns, late-feature availability, `resolve/main` mutation and split disjointness. Do **not** open a second Alpha workflow. Compute allowed only after license/rights and freeze gate.
 **C5 [P1] Admission/scorer fail-close:** existing Task2/EDGE owner, only after an original R1 reproducible code bug is demonstrated. No semantic threshold change. Avoid queueing mere hypotheses as `CODEX_READY`.
