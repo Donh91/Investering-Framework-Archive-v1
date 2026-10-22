@@ -14,7 +14,8 @@ This is one versioned, public-safe research packet, not a new owner, collector, 
    - `03_TASK2_RESEARCH_PROTOCOL.md` — R0–R7 test procedure, PIT gate, examples, benchmark, no-hindsight controls.
    - `04_ALPHA_NEWS_MODEL_CANDIDATES.md` — Alpha Lab, news, sentiment and time-series challenger review.
    - `05_DECISION_AND_AGENT_HANDOFF.md` — phases, boundaries, owners, measurable advancement gates and stop rules.
-   - `SOURCE_MANIFEST_v1.json` — machine-readable candidates and initial dispositions.
+   - `SOURCE_MANIFEST_v1.json` — machine-readable candidates and latest dispositions.
+   - `06_SOURCE_DOCUMENT_RED_TEAM_DELTA.md` — source README/DATASHEET/MANIFEST review correcting preliminary estimates and surfacing licensing, sample bias, failed labels, clock leakage, dataset file drift.
 
 ## One-line scientific rule
 A third-party historical dataset can check the shape of the past, but it does not prove that *our* original forecast, feature or vendor datum was observable before its decision cutoff. No original issued-at + admissible first-known receipt = no retrospective edge claim.
