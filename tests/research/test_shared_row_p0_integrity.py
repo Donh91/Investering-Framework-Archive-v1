@@ -17,6 +17,7 @@ sys.path.insert(0, str(PROJECT / "scripts/data_terminal"))
 import core_shared_row_materializer as materializer
 import prospective_evidence_controller as controller
 import shared_row_outcome_owner as outcome_owner
+import shared_row_outcome_receipt_gate as outcome_receipt_gate
 import top100_breadth_owner_collector as breadth_owner
 
 
@@ -415,6 +416,16 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         self.assertEqual(detail[0]["baseline_reconciled"], "True")
         self.assertTrue(detail[0]["row_source_commit"])
         self.assertTrue(detail[0]["outcome_source_commit"])
+        # Production-shaped POSITIVE control: the actual outcome owner writes
+        # typed receipts and mutable scoring fields; verify they join exactly.
+        actual_matured = outcome_owner.read_csv(outcome_owner.ROWS)
+        self.assertEqual(len(actual_matured), 1)
+        original_index = outcome_receipt_gate.detail_index(detail)
+        outcome_receipt_gate.verify_row_outcomes(actual_matured[0], original_index)
+        forged = dict(actual_matured[0])
+        forged["outcome_24h"] = "0" if forged["outcome_24h"] == "1" else "1"
+        with self.assertRaisesRegex(ValueError, "direction differs"):
+            outcome_receipt_gate.verify_row_outcomes(forged, original_index)
         repeat = outcome_owner.run(isoz(fixture.observation + timedelta(hours=27)))
         self.assertEqual(repeat["horizons_written"], 0)
         self.assertEqual(len(outcome_owner.read_csv(outcome_owner.DETAIL)), 1)
