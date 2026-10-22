@@ -32,6 +32,26 @@ def runtime_for(contract):
     return state
 
 
+def synthetic_quarantine():
+    """Retain a real negative quarantine control after production enters ACTIVE."""
+    c, f = original_contracts()
+    sentinel = "2026-09-30T00:00:00Z"
+    c["prospective_eligibility_start"] = sentinel
+    c["prospective_eligibility_status"] = "CONTAINMENT_SENTINEL_NOT_AN_ACTIVATION_FLOOR"
+    c["prospective_activation"]["collection_state"] = QUARANTINED
+    c["prospective_activation"]["activation_pr"] = None
+    c["prospective_activation"].pop("activation_evidence", None)
+    f["core_activation_rule"].update(
+        collection_state=QUARANTINED,
+        containment_floor_sentinel=True,
+        prospective_eligibility_start=sentinel,
+    )
+    for fam in f["families"]:
+        if fam["family_id"] in {"ETHBTC_PERSISTENCE", "BREADTH_SURVIVAL", "BTCD_PATH_RECLAIM"}:
+            fam["prospective_eligibility_start"] = sentinel
+    return c, f
+
+
 def synthetic_future_phase():
     contract, freeze = original_contracts()
     floor = "2026-11-05T00:00:00Z"  # SYNTHETIC; not a proposal for a real floor.
@@ -74,10 +94,15 @@ class ActivationPhaseGateTests(unittest.TestCase):
         with self.assertRaises((AssertionError, ValueError, KeyError)):
             validate_activation_phase(contract, freeze, runtime_for(contract))
 
-    def test_actual_quarantine_remains_valid(self):
-        c, f = original_contracts()
-        self.assertEqual(c["prospective_activation"]["collection_state"], QUARANTINED)
+    def test_synthetic_quarantine_still_fail_closed(self):
+        c, f = synthetic_quarantine()
         self.assertEqual(validate_activation_phase(c, f, runtime_for(c)), "QUARANTINED_VALID")
+
+    def test_current_repository_active_or_quarantined_gate_matches_actual_runtime(self):
+        c, f = original_contracts()
+        actual_runtime = json.loads((ROOT / "RUNTIME_STATUS.json").read_text())
+        status = validate_activation_phase(c, f, actual_runtime)
+        self.assertIn(status, {"QUARANTINED_VALID", "ACTIVE_SCHEMA_VALID_SOURCE_REVIEW_STILL_REQUIRED"})
 
     def test_synthetic_active_schema_only(self):
         c, f = synthetic_future_phase()
@@ -144,7 +169,7 @@ class ActivationPhaseGateTests(unittest.TestCase):
         self.reject(c, f)
 
     def test_quarantine_cannot_falsely_claim_activation(self):
-        c, f = original_contracts()
+        c, f = synthetic_quarantine()
         c["prospective_activation"]["activation_pr"] = (
             "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1841"
         )
@@ -214,10 +239,16 @@ class ActivationPhaseGateTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             validate_activation_phase(c, f)
 
-    def test_actual_repository_has_no_synthetic_activation_fields(self):
+    def test_actual_repository_has_exact_phase_bound_evidence(self):
         c, f = original_contracts()
-        self.assertIsNone(c["prospective_activation"].get("activation_evidence"))
-        self.assertTrue(f["core_activation_rule"]["containment_floor_sentinel"])
+        if c["prospective_activation"]["collection_state"] == ACTIVE:
+            evidence = c["prospective_activation"]["activation_evidence"]
+            self.assertEqual(evidence["source_readiness_commit_sha"], "fa579abe688f21613345e600294b6f8b9b9b9b5b")
+            self.assertFalse(f["core_activation_rule"]["containment_floor_sentinel"])
+            self.assertEqual(c["prospective_eligibility_start"], "2026-10-24T12:00:00Z")
+        else:
+            self.assertEqual(c["prospective_activation"]["collection_state"], QUARANTINED)
+            self.assertTrue(f["core_activation_rule"]["containment_floor_sentinel"])
 
 
 if __name__ == "__main__":
