@@ -22,6 +22,20 @@ This is one versioned, public-safe research packet, not a new owner, collector, 
    - `10_STABLECOIN_MANIFEST_RECONCILIATION.md` — machine-level manifest aggregation, 167 days, 494,016 claimed rows and suspicious internal time gap.
    - `SOURCE_MANIFEST_DELTA_v2.json` — machine-readable addendum to v1: eight newer source candidates, owner routing and code-audit findings.
 
+## Work + Codex mission annex, owner-approval pending (v1.2)
+**Execution mode:** one **ChatGPT Work** coordinator together with **Codex as the primary engineering, deterministic testing and source-review partner**, after owner's separate execution approval. This is one integrated high-value Task 2 mission, not a replacement for the existing R0–R7 research owners or a new scheduled task.
+
+**Capacity checkpoint:** owner reports **96% Work/Codex usage available following account reset on 2026-10-22**. The plugin has not read quota telemetry, and does not assert whether capacities are pooled. Earlier Codex review-limit messages may no longer reflect current execution access; confirm at launch. No credits have been intentionally spent on executing this mission.
+
+For any subsequent Work or Codex launch, read in order after current AGENTS and canonical owner:
+1. [11_EXTREME_WORK_MISSION_MASTER.md](11_EXTREME_WORK_MISSION_MASTER.md), consolidated mission, self-critique and v1.2 owner clarification.
+2. [12_PHASE_EXECUTION_AND_CODEX_DELEGATION.md](12_PHASE_EXECUTION_AND_CODEX_DELEGATION.md), high-value evidence waves, Work/Codex division of labour and true R0–R7 gates.
+3. [13_HF_SOURCE_PILOTS_AND_MODEL_CHALLENGERS.md](13_HF_SOURCE_PILOTS_AND_MODEL_CHALLENGERS.md), selectively pinned free-tier source pilots and model critics.
+4. [14_SCIENTIFIC_TEST_MATRIX_AND_KILL_GATES.md](14_SCIENTIFIC_TEST_MATRIX_AND_KILL_GATES.md), 32 adversarial tests, nulls, complete denominators, baselines, falsifiers and retirement.
+5. [15_APPROVAL_RESOURCE_AND_ACCEPTANCE_CONTRACT.md](15_APPROVAL_RESOURCE_AND_ACCEPTANCE_CONTRACT.md), prepared separate Work launch contract, usage/value allocation and science acceptance scorecard.
+
+**Up-to-date caution:** initial mainline PR census had six open; a later check on October 22 found only #1747 and #1733 OPEN. Historical #1746, #1748, #1736 and #1732 were CLOSED but that alone does not certify merge or live behavior. Refresh exact main/PR heads and original evidence, do not restart closed implementation blindly. This branch and PR #1747 remain **DRAFT, UNMERGED**, and are source/planning material only until governance-backed review. No Work/Codex run or HF paid work has started from this addendum.
+
 ## One-line scientific rule
 A third-party historical dataset can check the shape of the past, but it does not prove that *our* original forecast, feature or vendor datum was observable before its decision cutoff. No original issued-at + admissible first-known receipt = no retrospective edge claim.
 
