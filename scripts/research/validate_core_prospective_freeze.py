@@ -16,6 +16,7 @@ def main() -> None:
     contract = json.loads((ROOT / "CORE_FAMILY_PROSPECTIVE_CONTRACT_v1.json").read_text())
     outcome = json.loads((ROOT / "OUTCOME_CONTRACT_v1.json").read_text())
     freeze = json.loads((ROOT / "TRANSFORM_FREEZE_REGISTRY.json").read_text())
+    runtime = json.loads((ROOT / "RUNTIME_STATUS.json").read_text())
     schema = json.loads((ROOT / "04_SHARED_ROW_SCHEMA.json").read_text())
     assert contract["authority"] == "RESEARCH_ONLY_NON_CANONICAL"
     assert contract["legacy_equivalence"] is False and contract["no_backdating"] is True
@@ -24,7 +25,7 @@ def main() -> None:
     assert contract["source_binding_contract"]["contract"] == "SHARED_ROW_SOURCE_BINDING_MANIFEST_v1"
     # Phase-aware control: current repo remains quarantined; ACTIVE requires
     # an independently reviewed, future-floor activation PR and source replay.
-    phase = validate_activation_phase(contract, freeze)
+    phase = validate_activation_phase(contract, freeze, runtime)
     activation = contract["prospective_activation"]
     implementation_commit = activation.get("implementation_merge_commit")
     boundary = activation.get("post_repair_source_capture_not_before_utc")
