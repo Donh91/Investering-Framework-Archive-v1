@@ -33,6 +33,11 @@ ROW_INTEGRITY_CONTRACT = "SHARED_ROW_P0_BINDING_v1"
 SOURCE_BINDING_CONTRACT = "SHARED_ROW_SOURCE_BINDING_MANIFEST_v1"
 ACTIVE_COLLECTION_STATE = "ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION"
 HOUR = timedelta(hours=1)
+# Frozen source-health guards for prospective RESEARCH admissions only.
+# Hourly direct spot should be recent; daily owners have a 36h collection window.
+# These do not change any market signal, outcome label, or investment threshold.
+MAX_ETHBTC_BASELINE_AGE = timedelta(hours=3)
+MAX_DAILY_OWNER_AGE = timedelta(hours=36)
 
 
 class Ineligible(RuntimeError):
@@ -402,6 +407,27 @@ def collection_gate(contract: dict[str, Any], freeze: dict[str, Any]) -> tuple[d
     return floor, parse_ts(boundary_raw)
 
 
+def require_fresh_sources(
+    cutoff: datetime, *, ethbtc_hour: datetime, breadth_capture: datetime, btcd_verified: datetime
+) -> None:
+    """Same-cutoff source age enforcement shared with downstream Git replay.
+
+    Source availability claims remain subject to original Git bindings; recent
+    timestamps alone do not establish independent upstream first-publication.
+    """
+    checks = (
+        ("ETHBTC_LAST_SETTLED_HOUR_STALE", ethbtc_hour, MAX_ETHBTC_BASELINE_AGE),
+        ("BREADTH_DATED_OWNER_STALE", breadth_capture, MAX_DAILY_OWNER_AGE),
+        ("BTCD_CMC_VERIFICATION_STALE", btcd_verified, MAX_DAILY_OWNER_AGE),
+    )
+    for reason, source_time, maximum_age in checks:
+        age = cutoff - source_time
+        if age < timedelta(0):
+            raise Ineligible("SOURCE_AFTER_INFORMATION_CUTOFF", reason)
+        if age > maximum_age:
+            raise Ineligible(reason, f"age_hours={age.total_seconds() / 3600:.2f}")
+
+
 def context_block(observation: datetime, floor: datetime, width_days: int = 28) -> str:
     if observation < floor:
         raise Ineligible("OBSERVATION_PRECEDES_ACTIVE_FLOOR")
@@ -444,6 +470,12 @@ def build(now_override: str | None = None) -> dict[str, Any]:
             raise Ineligible("ETHBTC_WINDOW_BEFORE_POST_REPAIR_CAPTURE_BOUNDARY")
         breadth, breadth_time, breadth_paths = load_breadth(wall, not_before)
         btcd, btcd_time, btcd_paths = load_btcd(wall, not_before)
+        require_fresh_sources(
+            wall,
+            ethbtc_hour=window[-1]["ts"],
+            breadth_capture=breadth_time,
+            btcd_verified=btcd_time,
+        )
         hourly_bindings = bind_paths(
             hourly_paths,
             commit=source_commit,
