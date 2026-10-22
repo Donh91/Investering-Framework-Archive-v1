@@ -476,7 +476,8 @@ def _funding_clock_metadata(auto_state: Mapping[str, Any], funding: Any) -> dict
     return {
         "settlement_at_utc": settlement,
         "observed_at": None,
-        "retrieved_at": stamp if bound else None,
+        "retrieved_at": None,
+        "source_batch_captured_at_utc": stamp if bound else None,
         "quote_clock_status": "CAPTURE_ONLY_PROVIDER_FIRST_KNOWN_UNKNOWN" if bound else "UNKNOWN_NOT_PIT_ADMITTED",
     }
 
