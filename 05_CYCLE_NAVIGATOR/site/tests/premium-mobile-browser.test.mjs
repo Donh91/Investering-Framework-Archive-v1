@@ -138,9 +138,11 @@ try{
    $('[data-tab="results"]').click();
    const en=$('[data-lang="en"]');en.click();
    const enText=$('#tab-results [data-t="tabResults"]').textContent;
+   const enChart=$('#view-overview .cn-chart-jump')?.textContent;
    const enPath=$('[data-exp-t="pathPage"]').textContent;
    $('[data-lang="da"]').click();
    const daText=$('#tab-results [data-t="tabResults"]').textContent;
+   const daChart=$('#view-overview .cn-chart-jump')?.textContent;
    const daPath=$('[data-exp-t="pathPage"]').textContent;
    const prompt=$('#premium-proof-prompt').value;
    // A deterministic mocked clipboard validates the product click-handler and
@@ -159,7 +161,7 @@ try{
      Date.now()>=Date.parse(expiry);
    const sourceExpiryShown=sourceExpired?
      $('#source-status').textContent.includes('udløbet')&&
-     $('#source-clock').textContent.includes('Kompas gyldigt til'):true;
+     $('#source-clock').textContent.includes('Kompas udløb'):true;
    const sourceClockText=$('#source-clock').textContent;
    const sourceClock=$('#source-clock').getBoundingClientRect();
    // Only measure touch targets when their owning tab is actually visible.
@@ -174,6 +176,21 @@ try{
    $('[data-nav-to="path"]').focus();$('[data-nav-to="path"]').click();
    const pathJumpFocus=document.activeElement?.id==='tab-path'&&!$('#view-path').hidden;
    $('[data-tab="overview"]').click();
+   // Real Chrome test: the approved chart must be easily discoverable on mobile,
+   // not buried below unrelated PATH/risk cards despite valid data in the DOM.
+   const graphLink=$('#view-overview .cn-chart-jump');
+   const graphHost=$('#official-path-chart');
+   const graphTop=graphHost?.getBoundingClientRect().top-
+      $('#view-overview').getBoundingClientRect().top;
+   const pathBeforeGraphJump=location.pathname;
+   graphLink?.click();
+   const graphClickSafe=location.pathname===pathBeforeGraphJump&&
+     !location.pathname.endsWith('/vnext/')&&document.activeElement===graphHost&&
+     !$('#view-overview').hidden;
+   const graphQuickAccess=!!graphLink&&graphLink.getAttribute('href')==='../#official-path-chart'&&
+     graphHost?.tabIndex===-1&&Number.isFinite(graphTop)&&graphTop<740&&
+     graphLink.textContent.includes('Se grafen')&&graphClickSafe;
+   checks.push(...sizes(graphLink?[graphLink]:[]));
    const chartButtons=Array.from(document.querySelectorAll('[data-fw-asset]'));
    const chartSource=await (await fetch('/data/latest.json',{cache:'no-store'})).json();
    const model=window.CNWeekChart;
@@ -225,7 +242,7 @@ try{
    }
    overflow.push(safeOverflow());
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
-    enText,enPath,daText,daPath,promptHasProof:prompt.includes('scorebook-index.json')&&
+    enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
@@ -240,7 +257,7 @@ try{
   assert.equal(report.width,width,'Wrong CDP viewport');
   assert.ok(report.overflow<=2,'Horizontal page overflow on '+width+'px '+JSON.stringify(report));
   assert.ok(report.clockText&&report.clockText!=='—'&&
-     /Kompas gyldigt til|Sidste levering/.test(report.clockText)&&
+     /Kompas gyldigt til|Kompas udløb|Sidste levering/.test(report.clockText)&&
      report.clockWidth>0&&report.clockHeight>0,'Source clock missing or placeholder '+width);
   assert.ok(report.clockRight<=width+2&&report.clockLeft>=-2,'Source expiry outside viewport '+width);
   assert.ok(Object.values(report.views).every(q=>q.visible&&q.exclusive&&q.overflow<=2),
@@ -251,6 +268,9 @@ try{
    'Investor lens changed official action');
   assert.equal(report.enText,'Results','English tab content switch missing');
   assert.equal(report.daText,'Resultater','Danish tab restoration missing');
+   assert.equal(report.enChart,'View chart · BTC / ETH ↓','English chart shortcut missing');
+   assert.equal(report.daChart,'Se grafen · BTC / ETH ↓','Danish chart shortcut missing');
+   assert.ok(report.graphQuickAccess,'Approved B graph must be discoverable near overview top: '+report.graphTop);
   assert.equal(report.enPath,'The market cycle','English PATH translation missing');
   assert.equal(report.daPath,'Markeds­cyklussen','Danish PATH restoration missing');
   assert.ok(report.promptHasProof,'Proof AI prompt lacks original source/hash anchors');
