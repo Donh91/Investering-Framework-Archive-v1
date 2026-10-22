@@ -120,5 +120,34 @@ class OriginalEvidenceTests(unittest.TestCase):
             self.assertFalse(q["actual_delivery_first_known_verified"])
             self.assertFalse(q["first_known_market_value_eligibility_unlocked"])
             self.assertEqual(q["private_round3_gate"],"ROUND3_COLLECTION_ONLY_ANALYSIS_OFF")
+    def test_frozen_forecast_content_digest_detects_tampering(self):
+        doc=forecast()
+        doc["compass_sha256"]=m.original_compass_self_digest(doc)
+        self.assertEqual(m.original_compass_self_digest(doc),doc["compass_sha256"])
+        doc["outcome_maturity"]["12h"]="RETROACTIVE_TAMPER"
+        self.assertNotEqual(m.original_compass_self_digest(doc),doc["compass_sha256"])
+        self.assertIsNone(m.original_compass_self_digest({"invalid":float("nan")}))
+
+    def test_census_quarantines_one_corrupted_forecast_all_three_horizons(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            for day in m.days():
+                sub=day.strftime("%Y/%m/%d")
+                (root/"daily"/sub).mkdir(parents=True)
+                (root/"outcomes"/sub).mkdir(parents=True)
+            for i in range(21):
+                doc=forecast()
+                doc["compass_id"]=f"CMP-20261012-SYNTH{i:03d}"
+                doc["compass_sha256"]=m.original_compass_self_digest(doc)
+                if i==7:
+                    doc["outcome_maturity"]["12h"]="FORGED_AFTER_FREEZE"
+                (root/"daily"/"2026/10/12"/(doc["compass_id"]+".json")).write_text(
+                    json.dumps(doc,sort_keys=True)+"\n",encoding="utf-8")
+            report=m.census(root)
+            self.assertEqual(report["counts"]["original_forecasts"],21)
+            self.assertEqual(report["original_integrity_exception_counts"]["ORIGINAL_FORECAST_SELF_HASH_MISMATCH"],3)
+            self.assertEqual(report["counts"]["ORIGINAL_FORECAST_QUARANTINED_NO_OUTCOME"],3)
+            self.assertFalse(report["first_known_market_value_eligibility_unlocked"])
+
 if __name__=="__main__":
     unittest.main()
