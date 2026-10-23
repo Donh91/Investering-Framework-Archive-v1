@@ -55,6 +55,7 @@ function textLabels(){
 function plot(){
  textLabels();
  const card=$('variant-panel');card.dataset.variant='b';
+ card.dataset.source=model?.forecast_status==='SOURCE_ISSUED'?'published':'missing';
  if(!model||model.source_status!=='SOURCE_BOUNDED'){
   ['range-band','range-upper','range-lower','forecast','actual'].forEach(id=>attr(id,'d',''));
   $('price-axis')?.replaceChildren();$('grid')?.replaceChildren();
