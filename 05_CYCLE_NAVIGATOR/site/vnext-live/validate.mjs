@@ -446,7 +446,7 @@ const displayStatus=(at,language='da',state='UNAVAILABLE')=>{
  };
  const simulatedDate={now:()=>Date.parse(at),parse:Date.parse};
  new Function('view','feeds','error','tr','stamp','$','show','Date',
-   statusSlice+'; drawStatus();')(
+   priceStatusSource+statusSlice+'; drawStatus();')(
    {weekly:{state:'DEGRADED'},compass:{state}},
    fakeFeed,false,(da,en)=>language==='en'?en:da,
    utc=>utc,()=>({className:''}),
