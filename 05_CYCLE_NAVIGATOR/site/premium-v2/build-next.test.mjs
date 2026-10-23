@@ -64,3 +64,26 @@ test('Vite source port is an explicit two-entry build rather than a default sing
  assert.equal(pkg.scripts['build:next'],'vite build --config vite.config.mjs');
  assert.ok(index.includes('CN_LOGO.svg'));
 });
+
+test('GitHub Pages first-party data URLs survive both native ESM and Vite asset locations',()=>{
+ const prefix='https://donh91.github.io/Investering-Framework-Archive-v1/';
+ for(const module of ['next/graph-b/source-graph-b.mjs','next/assets/source-graph-b.abc123.js']){
+   const resolved=new URL('../../data/latest.json',new URL(module,prefix));
+   assert.equal(resolved.href,prefix+'data/latest.json');
+   const compass=new URL('../../data/compass.json',new URL(module,prefix));
+   assert.equal(compass.href,prefix+'data/compass.json');
+   const lineage=new URL('../../data/publication-lineage.json',new URL(module,prefix));
+   assert.equal(lineage.href,prefix+'data/publication-lineage.json');
+ }
+});
+test('never ship imported AppDeploy sine-wave graph fixture from Vite source',async()=>{
+ const html=await readFile(new URL('./graph-b/source-graph-b.html',here),'utf8');
+ const b=await readFile(new URL('./graph-b/source-graph-b.mjs',here),'utf8');
+ const proof=await readFile(new URL('./proof/proof-explorer.mjs',here),'utf8');
+ const compass=await readFile(new URL('./compass/compass-path-ui.mjs',here),'utf8');
+ for(const s of [html,b,proof,compass]){
+   assert.doesNotMatch(s,/reference\/appdeploy-bc\/src\/main\.ts/);
+   assert.doesNotMatch(s,/Math\.sin\(/);
+   assert.doesNotMatch(s,/github\.com\/Donh91\/secrets/);
+ }
+});
