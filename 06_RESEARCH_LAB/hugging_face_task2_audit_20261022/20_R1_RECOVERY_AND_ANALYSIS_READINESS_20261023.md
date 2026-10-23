@@ -1,5 +1,7 @@
 # 20 | R1 source rescue and corrected information/action gates
 
+> **Later execution checkpoint:** The owner explicitly approved the exact historical restricted-read scope with “Godkendt! Go”. It has now been executed. [#23](23_SOURCE_CUSTODY_AND_SCOPED_DEVELOPMENT_20261023.md) records actual source-byte verification, eleven original 12h replays, ten scoped publication chains and the reproduced exposed B2 comparison. The prepared-request and NOT_READ statements below describe the earlier checkpoint, not the current access state. Full original R1 information admission remains NOT_ADMITTED.
+
 **2026-10-23, existing Task 2 science owner #1596.** Current public main pinned at `5fd81f3714e95198cfc731e7db6b1404056a51e1`; AGENTS Git blob `72d0846eb9687fb54c320845dab8cd10e46b62fa`. [Machine artifact bindings](20_R1_SOURCE_ARTIFACT_BINDINGS_20261023.json). This is an additive correction to the *session's interpretation* in #17–19 and related issue comments. Frozen original forecasts, outcomes and R1 ledger are preserved.
 
 ## Correct the gate before doing more research
@@ -39,4 +41,4 @@ The existing original-source custody package is in `Donh91/secrets`, immutable c
 
 Requested scope is read and local verification of this *historical Task 2 original-source package*, its existing validators, and the private AGENTS/boundary documents required before access. Public output may contain only hashes, paths, timing, counts, completeness and equality/admission booleans. No Round 3 provider-value inspection, hypothesis test, outcome score, portfolio change or private-value publication is needed. The owner's linked #15 approval contract expressly withholds private-data access by implication, and the canonical cross-repository boundary requires authorized immutable private binding. Therefore no restricted package access was claimed from the broad task mandate alone.
 
-**Current verdict:** `SOURCE_RESCUE_PREPARED_EXTERNAL_DIGESTS_VERIFIED / RESTRICTED_ORIGINAL_BYTES_NOT_READ / INFORMATION_ADMISSION_STILL_0_OF_11 / USER_DELIVERY_GATE_APPLIES_TO_R3`. This is a concrete source-access dependency, not a reason to halt unrelated public analyses.
+**Earlier pre-authorization verdict, superseded by #23:** `SOURCE_RESCUE_PREPARED_EXTERNAL_DIGESTS_VERIFIED / RESTRICTED_ORIGINAL_BYTES_NOT_READ / INFORMATION_ADMISSION_STILL_0_OF_11 / USER_DELIVERY_GATE_APPLIES_TO_R3`. This is a concrete source-access dependency, not a reason to halt unrelated public analyses.
