@@ -192,3 +192,29 @@
  .proof-window-details>summary{padding:12px 15px;padding-right:40px}
 }
 @media(prefers-reduced-motion:reduce){.balance-dial,.path-node,.proof-journey *{transition:none!important;animation:none!important}}
+
+/* PROOF · Current-week rolling windows, never a second official score.
+ * Source issuer owns 70/30 arithmetic; display only strict eligible rows. */
+.proof-live-sequence{margin:9px 0 18px;padding:22px 25px}
+.proof-live-sequence .section-heading{margin-bottom:7px}
+.proof-live-status{color:#4f6f8b;font-size:11px;line-height:1.5;margin:12px 0}
+.proof-live-windows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}
+.proof-live-window{padding:15px 14px 13px;border:1px solid #e1e8f1;border-radius:11px;background:#f8fafc;min-width:0}
+.proof-live-window-head{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap}
+.proof-live-window-day{font-size:11px;color:#6c7f95;font-weight:750}
+.proof-live-window-head small{font-size:9px;color:#7b8fa2}
+.proof-live-window-score{display:block;color:#163454;font-size:clamp(22px,3vw,30px);letter-spacing:-.045em;line-height:1.18;margin:14px 0 8px}
+.proof-live-window[data-state=LIVE_PROVISIONAL]{background:#f2f7ff;border-color:#b9cfee}
+.proof-live-window[data-state=LIVE_PROVISIONAL] .proof-live-window-score{color:#2f6fda}
+.proof-live-window[data-state=CLOSED_PROVISIONAL]{background:#f6f9fd;border-color:#d7e4f2}
+.proof-live-window-hours{display:block;color:#74889e;font-size:10px;line-height:1.5}
+@media(max-width:560px){
+ .proof-live-sequence{padding:19px 15px}
+ .proof-live-windows{gap:6px}
+ .proof-live-window{padding:11px 8px 10px;border-radius:9px}
+ .proof-live-window-day{font-size:10px}
+ .proof-live-window-head small{font-size:8px}
+ .proof-live-window-score{font-size:22px;margin:9px 0 5px}
+ .proof-live-window-hours{font-size:9px}
+}
+@media(max-width:365px){.proof-live-windows{grid-template-columns:1fr}}

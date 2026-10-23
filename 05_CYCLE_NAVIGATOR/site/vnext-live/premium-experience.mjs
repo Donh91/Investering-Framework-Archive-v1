@@ -42,6 +42,13 @@ const TXT={
   proofOngoing:'Undervejs',proofOngoingCopy:'Kun kildeverificerede faktiske observationer tæller',
   proofAfter:'Efter udløb',proofAfterCopy:'Kun modne og godkendelige resultater får score',
   proofSix:'Vis de seks historiske vinduer og deres oprindelige værdier',
+  proofLiveEyebrow:'DENNE UGE · KILDEBUNDET',proofLiveTitle:'Løbende kontrol af prisvinduer',
+  proofLiveExplainer:'Dag 1–2, 3–4 og 5–7. Samme 70/30-metode som den afsluttede uge. Foreløbige tal er ikke en godkendt slutscore.',
+  proofLiveMissing:'Denne uges kvalificerede timeopgørelse mangler. Ingen løbende score vises.',
+  proofLiveStale:'Sidste prisobservation er forældet. Løbende scoring vises først med friske verificerede data.',
+  proofLiveFresh:'Oprindeligt fastlåst · verificerede observationer',
+  proofLivePending:'Afventer',proofLiveClosed:'Vindue lukket · foreløbig',proofLiveTracking:'Under observation · foreløbig',
+  proofLiveDegraded:'Mangelfuld datadækning',proofLiveWindow:'Dag',proofLiveHours:'timer observeret',proofLiveNoScore:'Ingen kvalificeret score endnu',
   pathPage:'Markeds­cyklussen',pathIntro:'Cyklusrejsen og kapitalrotationen. Ingen selvstændige handlesignaler eller opdigtede datoer.',pathStepsTitle:'10 trin. Én sammenhængende rejse.',pathConditional:'Et observationsvindue er ikke en bekræftet dato.',rotationCaveat:'Et HOLD er ikke en bekræftet fase. Memes kræver særskilt kilde.',altNote:'Kun et betinget observationsmål, aldrig en automatisk nedtælling.',interpretation:'Min fortolkning · ugegrundlag og kilder',protection:'Pullback, beskyttelse & re-entry',contextNote:'Master Monday og forskning er baggrund, ikke officielle køb/sælg-signaler.',
   proofPrompt:'Uafhængig kildeaudit af Cycle Navigator: Åbn følgende OFFENTLIGE arkiver. Læs README, v2/scorebook-index.json og latest_readback. For hver påstand: hent ORIGINAL prognose ved præcist source_commit, kontroller offentlig CN-identitet, forecast_week, offentliggørelsestid før outcome, byte-eksakt SHA-256, gældende 70/30-metode, 168-timers dækning og seks frosne BTC/ETH-vinduer. Skeln Price Range-præcision fra Direction/Flow/Rotation og Pullback Edge, som kan være ABSTAIN/PENDING. Kontroller censur, fejl, datamangler og baseline. Kræv uafhængigt verificeret timestamp og immutable release før VERIFIED. Rapporter PASS/FAIL/UNVERIFIED med konkrete kilde-URL\'er; gæt aldrig manglende data.'
  },
@@ -72,6 +79,13 @@ const TXT={
   proofOngoing:'During week',proofOngoingCopy:'Only source-verified real observations count',
   proofAfter:'After maturity',proofAfterCopy:'Only mature eligible outcomes receive a score',
   proofSix:'View six historical windows and original source values',
+  proofLiveEyebrow:'THIS WEEK · SOURCE-BOUND',proofLiveTitle:'Live price-window accountability',
+  proofLiveExplainer:'Days 1–2, 3–4 and 5–7. The same 70/30 method as the settled week. Running values are not final settled scores.',
+  proofLiveMissing:'Eligible current-week hourly evidence is unavailable. No running score is shown.',
+  proofLiveStale:'Last price observation is stale. Running scores require fresh verified evidence.',
+  proofLiveFresh:'Originally frozen · verified observations',
+  proofLivePending:'Pending',proofLiveClosed:'Window ended · provisional',proofLiveTracking:'Tracking · provisional',
+  proofLiveDegraded:'Incomplete source coverage',proofLiveWindow:'Days',proofLiveHours:'observed hours',proofLiveNoScore:'No eligible running score yet',
   pathPage:'The market cycle',pathIntro:'The cycle journey and capital rotation. No independent trading signals or invented dates.',pathStepsTitle:'Ten stages. One coherent journey.',pathConditional:'A watch window is not a confirmed arrival date.',rotationCaveat:'HOLD is not a confirmed phase. MEMES require a dedicated source.',altNote:'Only a conditional watch target, never an automatic countdown.',interpretation:'My interpretation · weekly evidence and sources',protection:'Pullback, protection & re-entry',contextNote:'Master Monday and research are context, not official buy/sell signals.',
   proofPrompt:'Independently audit Cycle Navigator using these PUBLIC GitHub archives. Read README, v2/scorebook-index.json and latest_readback. For each claim fetch ORIGINAL frozen forecast at its exact source_commit; check public CN identity, forecast_week, pre-outcome publication, byte-exact SHA-256, established 70/30 Price Range method, 168-hour eligibility and six original BTC/ETH forecast windows. Keep Price Range precision separate from Direction/Flow/Rotation and Pullback Edge, which can be ABSTAIN/PENDING. Inspect censoring, missing evidence, base rates and controls. Require independently verifiable timestamp and immutable release before saying VERIFIED. Output PASS/FAIL/UNVERIFIED with primary-source URLs. Never fill missing data.'
  }
@@ -127,6 +141,39 @@ export function pathModel(view,lang='da'){
      key:safe(x.key)||t.unavailable,action:safe(x.action)||t.unavailable,
      eta:safe(x.eta)||t.pathNoEta})):[],
    source:eligible?('CN #'+p.source_issue+' · '+p.source_week+' · '+p.source_identity):t.unavailable};
+}
+// Pure source-safety selector, not a new forecasting/scoring engine.
+export function priceSequenceModel(view,latest,now=Date.now()){
+ const src=latest?.public_live_precision;
+ if(src?.contract!=='CN_PUBLIC_LIVE_PRICE_PRECISION_v1'||
+    src?.authority!=='PUBLIC_FORECAST_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY'||
+    src?.score_family!=='PRICE_RANGE_PRECISION'||
+    src?.forecast_week!==view?.weekly?.forecast_week||
+    src?.public_issue_number!==view?.weekly?.public_issue_number||
+    src?.formula!=='70pct_containment_plus_30pct_jaccard'||
+    !src?.window_scores||typeof src.window_scores!=='object')
+  return {state:'UNAVAILABLE',week:null,windows:[]};
+ const asOf=Date.parse(src.live_as_of_utc);
+ const sla=Number(src.freshness_sla_minutes);
+ if(!Number.isFinite(asOf)||asOf>now||!Number.isFinite(sla)||sla<=0)
+  return {state:'UNAVAILABLE',week:null,windows:[]};
+ const state=now-asOf>sla*60000?'STALE':'FRESH';
+ const names=[['day_1_2','1–2'],['day_3_4','3–4'],['day_5_7','5–7']];
+ const windows=names.map(([key,days])=>{
+   const x=src.window_scores[key]||{};
+   const phase=['NOT_STARTED','LIVE','COMPLETE','DEGRADED'].includes(x.phase)?x.phase:'UNAVAILABLE';
+   const hours=Number.isInteger(x.observed_hours)&&x.observed_hours>=0?x.observed_hours:null;
+   const expected=Number.isInteger(x.expected_hours_final)&&x.expected_hours_final>0?x.expected_hours_final:null;
+   const qualified=state==='FRESH'&&['LIVE','COMPLETE'].includes(phase)&&
+     x.coverage_complete_to_date===true&&x.rows_scored===2&&x.rows_total===2&&
+     hours!==null&&expected!==null&&hours<=expected&&
+     typeof x.score_to_date==='number'&&Number.isFinite(x.score_to_date)&&
+     x.score_to_date>=0&&x.score_to_date<=100;
+   return {key,days,phase,hours,expected,score:qualified?x.score_to_date:null,
+     state:qualified?(phase==='COMPLETE'?'CLOSED_PROVISIONAL':'LIVE_PROVISIONAL'):
+       phase==='DEGRADED'?'DEGRADED':'PENDING'};
+ });
+ return {state,week:src.forecast_week,asOf:src.live_as_of_utc,windows};
 }
 export function publicAuditPrompt(lang='da'){
  return txt(lang).proofPrompt+'\n\n'+URLS.join('\n')+'\n';
@@ -196,6 +243,32 @@ export function renderProductExperience(view,feeds,lang='da'){
  if(rot){for(const x of path.rotation){const row=element('li','rotation-tier');
     row.append(element('b','',x.key),element('strong','',x.action),element('small','',x.eta));rot.append(row)}
    if(!path.rotation.length)rot.append(element('li','path-empty',t.pathUnavailable));}
+ // Render this week's existing published *provisional* price-range sequences.
+ // They do not imply Direction/Rotation or Pullback Edge, nor final weekly score.
+ const seq=priceSequenceModel(view,feeds?.latest);
+ const seqRoot=reset('proof-live-windows');
+ set('proof-live-week',seq.week||t.unavailable);
+ set('proof-live-status',seq.state==='UNAVAILABLE'?t.proofLiveMissing:
+   seq.state==='STALE'?t.proofLiveStale:t.proofLiveFresh);
+ if(seqRoot){
+   for(const item of seq.windows){
+     const box=element('article','proof-live-window');
+     box.dataset.state=item.state;
+     const top=element('div','proof-live-window-head');
+     top.append(element('span','proof-live-window-day',t.proofLiveWindow+' '+item.days));
+     const state=item.state==='LIVE_PROVISIONAL'?t.proofLiveTracking:
+       item.state==='CLOSED_PROVISIONAL'?t.proofLiveClosed:
+       item.state==='DEGRADED'?t.proofLiveDegraded:t.proofLivePending;
+     top.append(element('small','',state));
+     const score=element('strong','proof-live-window-score',
+       item.score===null?'—':item.score.toLocaleString(lang==='da'?'da-DK':'en-US',{maximumFractionDigits:2})+'%');
+     const count=element('span','proof-live-window-hours',
+       item.hours===null||item.expected===null?t.proofLiveNoScore:
+         item.hours+' / '+item.expected+' '+t.proofLiveHours);
+     box.append(top,score,count);
+     seqRoot.append(box);
+   }
+ }
  set('premium-proof-price-status',view?.completed_score?.state==='FINAL_PUBLIC_SCORECARD'?t.rangeEligible:t.rangeUnavailable);
  set('premium-proof-direction-status',t.edgeUnavailable);
  set('premium-proof-pullback-status',t.edgeUnavailable);

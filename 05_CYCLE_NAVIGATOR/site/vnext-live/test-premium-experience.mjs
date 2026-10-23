@@ -1,6 +1,6 @@
 /* Product alignment executable negatives. Synthetic fixtures ONLY; no seeded market claims. */
 import assert from 'node:assert/strict';
-import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel} from './premium-experience.mjs';
+import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel,priceSequenceModel} from './premium-experience.mjs';
 const bullBear={
  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',
  semantics:'EVIDENCE_BALANCE_NOT_PROBABILITY',
@@ -103,3 +103,48 @@ for(const needed of ['scorebook-index.json','source_commit','SHA-256','ABSTAIN',
 }
 assert.doesNotMatch(prompt,/OPENAI_API_KEY|private key|seed\.json/);
 console.log('PASS 27 source-authority and source-loss premium experience assertions');
+
+
+// Verified owner-published D1–2 / D3–4 / D5–7 provisional price evidence.
+ // Distinct from settled weekly Price Range and future Direction/Pullback Edge.
+const precisionFixture={
+ public_live_precision:{
+  contract:'CN_PUBLIC_LIVE_PRICE_PRECISION_v1',
+  authority:'PUBLIC_FORECAST_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY',
+  score_family:'PRICE_RANGE_PRECISION',formula:'70pct_containment_plus_30pct_jaccard',
+  forecast_week:'2026-W43',public_issue_number:30,
+  live_as_of_utc:'2026-10-23T04:00:00Z',freshness_sla_minutes:90,
+  window_scores:{
+   day_1_2:{phase:'COMPLETE',score_to_date:72.5,rows_scored:2,rows_total:2,
+    observed_hours:48,expected_hours_final:48,coverage_complete_to_date:true},
+   day_3_4:{phase:'LIVE',score_to_date:63.2,rows_scored:2,rows_total:2,
+    observed_hours:42,expected_hours_final:48,coverage_complete_to_date:true},
+   day_5_7:{phase:'NOT_STARTED',score_to_date:null,rows_scored:0,rows_total:2,
+    observed_hours:0,expected_hours_final:72,coverage_complete_to_date:false}
+  }
+ }
+};
+const snapshotAt=Date.parse('2026-10-23T05:00:00Z');
+const sequence=priceSequenceModel(view,precisionFixture,snapshotAt);
+assert.equal(sequence.state,'FRESH');
+assert.equal(sequence.week,'2026-W43');
+assert.equal(sequence.windows.length,3);
+assert.deepEqual(sequence.windows.map(x=>x.score),[72.5,63.2,null]);
+assert.deepEqual(sequence.windows.map(x=>x.state),['CLOSED_PROVISIONAL','LIVE_PROVISIONAL','PENDING']);
+const later=priceSequenceModel(view,precisionFixture,Date.parse('2026-10-23T06:08:00Z'));
+assert.equal(later.state,'STALE');
+assert.ok(later.windows.every(x=>x.score===null),'Stale rows cannot appear as live scores');
+const badWeek=structuredClone(precisionFixture);
+badWeek.public_live_precision.forecast_week='2026-W42';
+assert.equal(priceSequenceModel(view,badWeek,snapshotAt).state,'UNAVAILABLE');
+const badFamily=structuredClone(precisionFixture);
+badFamily.public_live_precision.score_family='PULLBACK_EDGE';
+assert.equal(priceSequenceModel(view,badFamily,snapshotAt).state,'UNAVAILABLE');
+const partial=structuredClone(precisionFixture);
+partial.public_live_precision.window_scores.day_3_4.rows_scored=1;
+assert.equal(priceSequenceModel(view,partial,snapshotAt).windows[1].score,null);
+const corrupted=structuredClone(precisionFixture);
+corrupted.public_live_precision.window_scores.day_1_2.score_to_date=110;
+assert.equal(priceSequenceModel(view,corrupted,snapshotAt).windows[0].score,null);
+assert.equal(priceSequenceModel(view,precisionFixture,Date.parse('2026-10-23T03:00:00Z')).state,'UNAVAILABLE');
+console.log('PASS source-joined live price-range sequences, stale/partial/future/source negatives');
