@@ -16,16 +16,16 @@ const substitutions=[
 const navigation=[
  '<div class="premium-entry">',
  '<div class="premium-entry-intro"><span class="premium-entry-overline">CYCLE NAVIGATOR / NEXT</span>',
- '<h1>Et klarere blik på markedet.</h1>',
- '<p>Følg den originale prognose, den faktiske udvikling og kildeudstedte signaler i ét instrument.</p></div>',
+ '<h1 data-premium-copy="title">Et klarere blik på markedet.</h1>',
+ '<p data-premium-copy="intro">Følg den originale prognose, den faktiske udvikling og kildeudstedte signaler i ét instrument.</p></div>',
  '<nav class="premium-entry-navigation" aria-label="Premium sektioner">',
- '<a href="#variant-panel">Graf B</a>',
- '<a href="#official-product-pilot">Kompas</a>',
- '<a href="#official-pilot-path">PATH</a>',
- '<a href="#proof-explorer">Proof</a>',
- '<a href="../" class="premium-entry-canonical">Officiel side ↗</a>',
+ '<a href="#variant-panel" data-premium-nav="graph">Graf B</a>',
+ '<a href="#official-product-pilot" data-premium-nav="compass">Kompas</a>',
+ '<a href="#official-pilot-path" data-premium-nav="path">PATH</a>',
+ '<a href="#proof-explorer" data-premium-nav="proof">Proof</a>',
+ '<a href="../" class="premium-entry-canonical" data-premium-nav="official">Officiel side ↗</a>',
  '</nav>',
- '<p class="premium-entry-disclaimer">Udviklingsvisning. Originale offentlige kilder, ingen demonstrationskurser. Den officielle forside er uændret.</p>',
+ '<p class="premium-entry-disclaimer" data-premium-copy="disclaimer">Udviklingsvisning. Originale offentlige kilder, ingen demonstrationskurser. Den officielle forside er uændret.</p>',
  '</div>'
 ].join('\n');
 const style=[
