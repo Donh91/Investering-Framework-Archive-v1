@@ -52,3 +52,15 @@ test('Proof source links require commit-pinned public repositories only',async()
  assert.match(code,/source_commit/);
  assert.doesNotMatch(code,/Donh91\/secrets['"]/);
 });
+
+test('Original B small badge survives localization and unavailable source clears stale replay',async()=>{
+ const html=await from('./graph-b/source-graph-b.html');
+ const js=await from('./graph-b/source-graph-b.mjs');
+ assert.match(html,/class="alt-token">B<\/span>/);
+ assert.match(js,/heading\.replaceChildren\(document\.createTextNode\('Weekly Outlook '\)\)/);
+ assert.match(js,/badge\.textContent='B'/);
+ assert.doesNotMatch(html,/ONS 15:00 UTC/);
+ assert.doesNotMatch(html,/Illustrative forecast against observed path/);
+ assert.match(js,/\$\('playhead'\)\.setAttribute\('visibility','hidden'\)/);
+ assert.match(js,/card\.dataset\.source=model\?\.forecast_status==='SOURCE_ISSUED'/);
+});
