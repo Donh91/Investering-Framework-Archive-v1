@@ -54,7 +54,7 @@ test('prospective PUBLISHED is only a structurally valid 7-day source path, neve
  v.public_live_precision.daily_price_path.BTC={status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
   day:i+1,low:81000,high:84000,expected_close:82000+i*100
  }))};
- const m=readOfficialGraphB(v,'BTC',{now_utc:now});
+ const m=readOfficialGraphB(v,'BTC',{now_utc:'2026-10-19T06:00:00Z'});
  assert.equal(m.forecast_status,'SOURCE_ISSUED');assert.equal(m.forecast.length,7);
  const bad=fixture();bad.public_live_precision.daily_price_path.BTC={status:'PUBLISHED',points:[{day:1,expected_close:82000}]};
  assert.equal(readOfficialGraphB(bad,'BTC',{now_utc:now}).forecast_status,'PUBLISHED_INVALID_FAIL_CLOSED');
@@ -72,4 +72,15 @@ test('mismatched release lineage fails closed',()=>{
   forecast_week:'2026-W42',public_issue_number:30,source_to_public_equality:'PASS',last_observed_close_utc:'2026-10-19T04:00:00Z'
  }});
  assert.equal(m.source_reason,'PUBLIC_RELEASE_LINEAGE_MISMATCH');
+});
+
+test('post-cutoff or future-issued published daily path is rejected',()=>{
+ const v=fixture();v.public_live_precision.daily_price_path.BTC={
+   status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
+    day:i+1,low:81000,high:84000,expected_close:82000+i*100
+   }))
+ };
+ assert.equal(readOfficialGraphB(v,'BTC',{now_utc:'2026-10-19T04:20:00Z'}).forecast.length,0);
+ v.public_live_precision.frozen_at_utc='2026-10-21T06:00:00Z';
+ assert.equal(readOfficialGraphB(v,'BTC',{now_utc:'2026-10-21T07:00:00Z'}).forecast.length,0);
 });
