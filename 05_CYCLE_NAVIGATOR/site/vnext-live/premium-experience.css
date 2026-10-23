@@ -229,3 +229,62 @@
 /* Verified investor-readable OFFICIAL action, raw owner code always retained. */
 .product-action-code{display:block;margin-top:10px;color:#b9cbe0;font-size:10px;letter-spacing:.035em;font-weight:720;overflow-wrap:anywhere}
 .product-action-meaning{display:block;color:#b4c8df;font-size:10px;line-height:1.5;margin-top:5px;max-width:25rem}
+
+
+/* PREMIUM FINISH v1 · existing Quiet Precision, no alterations to approved B.
+ * Deliberately avoid #official-path-chart, .frozen-week-chart, chart variables,
+ * plot geometry and all official source / data / score presentation semantics.
+ * Typographic and responsive polish only outside the graph.
+ */
+.product-first .product-kicker{color:#536f8b;letter-spacing:.115em}
+.product-decision .product-cell{border-radius:12px}
+.product-decision .product-cell:first-child{background:#07172f}
+.product-action-meaning{max-width:36ch}
+.product-risk{border-radius:12px}
+.product-risk h3{letter-spacing:-.025em}
+.risk-class-rail{gap:5px}
+.risk-step{min-width:0;hyphens:auto;overflow-wrap:normal}
+.product-lenses button{transition:background-color .12s ease,border-color .12s ease,color .12s ease}
+.product-lenses button:hover:not([aria-pressed=true]){background:#e9f0f8;border-color:#cbd8e8}
+.path-main-row article{border-radius:12px}
+.path-route:before{background:#cbd9e8}
+.path-node{scroll-margin-top:20px}
+.path-node[data-kind=reference] .path-number{color:#2f6fda}
+.path-node[data-kind=next] .path-number{color:#9c703b}
+.path-rotation{scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#b9cbdf transparent}
+.rotation-tier{scroll-snap-align:start;border-radius:11px;gap:7px}
+.proof-window-details{position:relative}
+.proof-window-details>summary:after{pointer-events:none}
+.proof-live-window{transition:border-color .12s ease}
+.ai-verifier textarea{font-size:12px;line-height:1.6}
+@media(max-width:560px){
+ .product-first{border-radius:14px}
+ .product-decision .product-cell{min-height:111px}
+ .product-decision .product-cell small{font-size:10px}
+ .product-decision .product-cell strong{line-height:1.2}
+ .product-risk{padding:16px 13px}
+ .product-risk-heading{gap:8px}
+ .product-risk-label{max-width:44%;font-size:10px;line-height:1.5}
+ .risk-class-rail{gap:5px}
+ .risk-step{font-size:clamp(9px,2.4vw,11px);line-height:1.45;padding-top:8px}
+ .product-lenses{gap:6px}
+ .product-lenses button{flex:1 1 105px;padding-inline:9px;line-height:1.4;text-align:center}
+ .balance{border-radius:12px}
+ .balance-dial{width:86px}
+ .path-main-row{gap:8px}
+ .path-main-row article{padding:15px 12px}
+ .path-node{padding-block:14px}
+ .rotation-tier{min-width:94px}
+ .proof-live-window-score{font-variant-numeric:tabular-nums}
+ .proof-window-details>summary{line-height:1.4}
+}
+@media(max-width:365px){
+ .product-decision{grid-template-columns:minmax(0,1fr);gap:7px}
+ .product-decision .product-cell{min-height:0;padding:13px 14px}
+ .balance{grid-template-columns:minmax(0,1fr) 72px;gap:4px 7px}
+ .balance-dial{width:69px}
+ .risk-step{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .product-lenses button,.proof-live-window{transition:none!important}
+}
