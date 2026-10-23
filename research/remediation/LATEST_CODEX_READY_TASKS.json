@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-23T19:32:28Z",
+  "generated_at_utc": "2026-10-23T21:53:43Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -40,7 +40,7 @@
         "private raw data publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4e2c6df9c10d30c4b1d9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T19:32:28Z",
+      "last_observed_at_utc": "2026-10-23T21:53:43Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -117,7 +117,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T19:32:28Z",
+      "last_observed_at_utc": "2026-10-23T21:53:43Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -189,7 +189,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T19:32:28Z",
+      "last_observed_at_utc": "2026-10-23T21:53:43Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -225,6 +225,66 @@
     },
     {
       "allowed_change_scope": [
+        "scripts/data_ping/auto_market_state.py",
+        "tests/data_ping/test_auto_market_state_integrity.py"
+      ],
+      "candidate_id": "codex-research-task2-predecessor-packet-identity-v1",
+      "candidate_path": "research/codex/intake/2026/10/codex-research-task2-predecessor-packet-identity-v1.json",
+      "candidate_sha256": "227474f111665f6ed0a8b6e9329a4036ac43d28b7dc82cc6e05af1742d4e21c1",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "auto-market-state:prior-packet:declared-and-canonical-hash-not-enforced-v1",
+      "first_observed_at_utc": "2026-10-23T20:31:04.142932Z",
+      "forbidden_changes": [
+        "API budget",
+        "Round3 analysis or scoring",
+        "canonical authority",
+        "historical frozen data and forecasts",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "new workflows, schedulers, agents, providers or credentials",
+        "portfolio logic",
+        "predecessor selection or time policy"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a2838fc5808208860a9c --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-10-23T21:53:43Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Repair ONLY predecessor input-identity validation in existing prior_packet/read path. The exact producer Git blob 6196286539bd3e3688dc3bbcf322b15112b9ef5c accepts a wrong pointer hash, content changed without updating its packet hash, a different valid target with mismatched pointer hash, and wrong packet contract. All four were reproduced with the real pinned GitCliSnapshot in temporary Git repositories; two changed the sign of the synthetic original delta. Preserve the existing canonical packet hash convention (canon excluding packet_sha256), exact declared pointer-to-packet identity, existing packet/pointer contracts, current valid-input outputs and legitimate first-packet absence behavior. Reject corrupt predecessor inputs before use and expose the existing appropriate integrity-failure reason. Do not change predecessor selection, freshness/window semantics or numerical rules. If a safe parent failure route cannot be implemented without new market-policy semantics, STOP and return NEEDS_MORE_EVIDENCE for existing framework-owner adjudication.",
+      "observations": 1,
+      "post_fix_gate": "Existing #1596 science and #1156 integration retain ownership. Admit through existing controller, then exact-head tested repair, genuine independent review/release authority, applicable safepoint and source/recovery separation, CI SUCCESS and exact main blob readback. Natural producer/consumer observation must show a valid predecessor identity accepted and no corruption propagated before RESOLVED; otherwise POST_FIX_OBSERVATION. No self-merge and no automatic R1/edge admission.",
+      "precondition": "Candidate codex-research-task2-predecessor-packet-identity-v1 still exists on main at research/codex/intake/2026/10/codex-research-task2-predecessor-packet-identity-v1.json with SHA-256 227474f111665f6ed0a8b6e9329a4036ac43d28b7dc82cc6e05af1742d4e21c1, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "0bd0e83b14c49c0dd9a2c6d940e4a0d784d3c13e",
+        "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/task2_predecessor_integrity_probe_v1.py",
+        "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/31_EXECUTED_REPLAY_PUBLICATION_AND_INTEGRITY_20261023.json",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "a2838fc5808208860a9c",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-10-23T20:31:04.142932Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "Existing #1596 science and #1156 integration retain ownership. Admit through existing controller, then exact-head tested repair, genuine independent review/release authority, applicable safepoint and source/recovery separation, CI SUCCESS and exact main blob readback. Natural producer/consumer observation must show a valid predecessor identity accepted and no corruption propagated before RESOLVED; otherwise POST_FIX_OBSERVATION. No self-merge and no automatic R1/edge admission."
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "5b5dd3631e14c5aaa9a3c77cfa7240290a9e19421f2fc4ef050b680ee5a6e887",
+      "transition_receipt_path": "research/codex/transitions/a2838fc5808208860a9c.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-task2-predecessor-packet-identity-v1"
+    },
+    {
+      "allowed_change_scope": [
         "scripts/experiments/experiment_lifecycle.py",
         "tests/experiments/test_experiment_lifecycle.py",
         "scripts/experiments/sensor_relationship_compression.py",
@@ -257,7 +317,7 @@
         "trading or SELL action semantics"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a6e20836103b8e49f4ab --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T19:32:28Z",
+      "last_observed_at_utc": "2026-10-23T21:53:43Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -324,7 +384,7 @@
         "private source bytes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad6c41744767265f7c5a --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T19:32:28Z",
+      "last_observed_at_utc": "2026-10-23T21:53:43Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -392,7 +452,7 @@
         "source first-known promotion"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ff1c1d6794fc131c6991 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T19:32:28Z",
+      "last_observed_at_utc": "2026-10-23T21:53:43Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
