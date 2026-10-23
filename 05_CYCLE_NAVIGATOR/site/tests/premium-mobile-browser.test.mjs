@@ -224,6 +224,16 @@ try{
      eyebrow:approvedBFrame?.querySelector('.chart-b-eyebrow')?.textContent?.trim()||null,
      quoteBg:approvedBFrame?.querySelector('.fw-quote')?
        getComputedStyle(approvedBFrame.querySelector('.fw-quote')).backgroundColor:null,
+     inlineStyle:approvedBFrame?.getAttribute('style'),
+     matchesApproved:approvedBFrame?.matches('.chart-area[data-approved-design="B"]'),
+     matchingBackgroundRules:[...document.styleSheets].flatMap(sheet=>{
+       let rules=[];try{rules=[...sheet.cssRules]}catch{}
+       return rules.filter(rule=>rule.selectorText&&approvedBFrame?.matches(rule.selectorText)&&
+         (rule.style?.getPropertyValue('background')||rule.style?.getPropertyValue('background-color'))).
+         map(rule=>({href:sheet.href,selector:rule.selectorText,bg:rule.style.getPropertyValue('background'),
+            color:rule.style.getPropertyValue('background-color'),
+            important:rule.style.getPropertyPriority('background')})).slice(-12);
+     }),
      styles:[...document.styleSheets].map(sheet=>{
        let rules=[];try{rules=[...sheet.cssRules]}catch{}
        return {href:sheet.href,ruleCount:rules.length,approvedBRule:rules.some(rule=>rule.selectorText?.includes('chart-area[data-approved-design'))};
