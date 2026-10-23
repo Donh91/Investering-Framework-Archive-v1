@@ -76,7 +76,7 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
  let forecast=[],forecastStatus='UNAVAILABLE';
  if(freeze?.contract==='CN_FROZEN_DAILY_PRICE_PATH_v1'&&freeze.forecast_week===m.forecast_week&&block?.status==='PUBLISHED'){
    const issued=date(m.frozen_at_utc),values=block.points;
-   const good=Number.isFinite(issued)&&issued<start+DAY&&Array.isArray(values)&&values.length===7&&
+   const good=Number.isFinite(issued)&&issued<=now&&issued<start+DAY&&Array.isArray(values)&&values.length===7&&
       values.every((p,i)=>p?.day===i+1&&NUM(p?.expected_close)&&NUM(p?.low)&&NUM(p?.high)&&
       p.low<p.high&&p.low<=p.expected_close&&p.expected_close<=p.high);
    if(good){
