@@ -207,13 +207,14 @@ const checks=[
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
    hourlyRender.series.filter(s=>s.options?.color==='#5f96ff').every(s=>s.data.length===0)&&
    chartSource.includes('chart.timeScale().fitContent()')],
- ['Approved B minimal shell preserves source evidence behind native disclosure and exposes source-bound forward outlook with optional demo test',
+ ['Official owner-approved B navy shell retains source evidence, and no longer competes with a synthetic external design demo',
    chartSource.includes("drawer.className='fw-evidence-details'")&&
    chartSource.includes("host.ownerDocument?.createElement")&&
    chartCss.includes('.fw-evidence-details summary{min-height:44px')&&
    vnextShell.includes('class="cn-original-ranges"')&&
    vnextShell.includes('id="btc-range"')&&vnextShell.includes('id="eth-range"')&&
-   vnextShell.includes('cycle-navigator-forward-outlook-1-3w-z8say7.v2.appdeploy.ai')&&
+   vnextShell.includes('id="official-path-chart" class="frozen-week-chart"')&&
+   !vnextShell.includes('cycle-navigator-forward-outlook-1-3w-z8say7.v2.appdeploy.ai')&&
    vnextShell.includes('class="cn-forward"')&&
    vnextShell.includes('data-t="forwardPriceMissing"')&&
    chartSource.includes("No authentic daily forecast was published, so no forecast curve is drawn.")],
