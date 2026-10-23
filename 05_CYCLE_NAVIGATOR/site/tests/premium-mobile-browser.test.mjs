@@ -204,6 +204,25 @@ try{
    // not buried below unrelated PATH/risk cards despite valid data in the DOM.
    const graphLink=$('#view-overview .cn-chart-jump');
    const graphHost=$('#official-path-chart');
+   // Video QA, verify real root, not AppDeploy synthetic visual reference.
+   const rootBStyle=!!graphHost?.classList.contains('frozen-week-chart')&&
+     getComputedStyle(graphHost).backgroundColor==='rgb(10, 23, 41)'&&
+     getComputedStyle($('.fw-quote')).backgroundColor==='rgb(10, 23, 41)'&&
+     getComputedStyle($('.fw-quote strong')).color==='rgb(247, 251, 255)';
+   const rootIsNotDemo=!document.querySelector('.cn-forward-demo a[href*="appdeploy.ai"]');
+   const pathRail=$('#premium-path-rail');
+   const contiguousPath=!!pathRail&&getComputedStyle(pathRail).display==='block'&&
+     pathRail.querySelectorAll('.path-node').length===10&&
+     getComputedStyle(pathRail,'::before').content!=='none';
+   const sourceRef=pathRail?.querySelectorAll('.path-node[data-kind="reference"]').length??0;
+   const sourceSafePhases=sourceRef<=1;
+   const proofSimple=!!document.querySelector('.proof-primer')&&
+     !!document.querySelector('.proof-journey')&&
+     document.querySelector('.proof-window-details')?.open===false&&
+     !!document.querySelector('#premium-proof-copy');
+   const ring=$('#premium-balance-dial');
+   const compassGraphic=!!ring&&['verified','unavailable'].includes(ring.dataset.state)&&
+     ring.getAttribute('aria-label')?.length>12;
    const graphTop=graphHost?.getBoundingClientRect().top-
       $('#view-overview').getBoundingClientRect().top;
    const pathBeforeGraphJump=location.pathname;
@@ -302,7 +321,7 @@ try{
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
-    unavailableOneLine,staleChartAccessible,
+    unavailableOneLine,staleChartAccessible,rootBStyle,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,compassGraphic,
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
@@ -330,6 +349,11 @@ try{
    assert.equal(report.enChart,'View chart · BTC / ETH ↓','English chart shortcut missing');
    assert.equal(report.daChart,'Se grafen · BTC / ETH ↓','Danish chart shortcut missing');
    assert.ok(report.graphQuickAccess,'Approved B graph must be discoverable near overview top: '+report.graphTop);
+  assert.ok(report.rootBStyle,'Official CN chart must be navy from quote to plot');
+  assert.ok(report.rootIsNotDemo,'Public product should not link to competing synthetic demo');
+  assert.ok(report.contiguousPath&&report.sourceSafePhases,'PATH should be one source-honest dotted sequence');
+  assert.ok(report.proofSimple,'Proof explanation and progressive detail not rendered');
+  assert.ok(report.compassGraphic,'Official evidence dial missing or not source-labelled');
   assert.equal(report.enPath,'The market cycle','English PATH translation missing');
   assert.equal(report.daPath,'Markeds­cyklussen','Danish PATH restoration missing');
   assert.ok(report.promptHasProof,'Proof AI prompt lacks original source/hash anchors');
