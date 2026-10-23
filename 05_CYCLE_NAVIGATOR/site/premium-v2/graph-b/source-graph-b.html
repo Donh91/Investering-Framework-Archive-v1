@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cycle Navigator · B source-port (ISOLATED)</title>
 <link rel="stylesheet" href="./source-graph-b.css">
+<link rel="stylesheet" href="../proof/proof-explorer.css">
 <style>
 /* Development wrapper only. B CSS and DOM/SVG anatomy come from pinned
  * AppDeploy B/C snapshot 1792595071401, NO fake source output. NOT a public entrypoint. */
@@ -184,5 +185,29 @@
                 </div>
               </div>
             </section>
+
+<section id="proof-explorer" class="proof-explorer" aria-labelledby="proof-title">
+ <header class="proof-head"><div>
+  <span class="proof-eyebrow">RESULTATER / ORIGINAL → OBSERVERET → SCORE</span>
+  <h2 id="proof-title">Proof. Se hvad der faktisk blev forudsagt.</h2>
+  <p>Frosne kilder, observerede udfald, åben metode. Ingen omskrivning.</p>
+ </div><span id="proof-status" class="proof-status" role="status">Henter offentlige kilder…</span></header>
+ <div class="proof-steps" role="group" aria-label="Proof-trin">
+  <button type="button" data-proof-step="freeze" aria-pressed="true"><span>01</span> Frossen kilde</button>
+  <button type="button" data-proof-step="observed" aria-pressed="false"><span>02</span> Observation</button>
+  <button type="button" data-proof-step="assess" aria-pressed="false"><span>03</span> Score & kilde</button>
+ </div>
+ <div id="proof-focus" class="proof-hero" aria-live="polite">Afventer kildelæsning.</div>
+ <div id="proof-windows" class="proof-windows" aria-label="Tre ugentlige prisvinduer"></div>
+ <p id="proof-method" class="proof-method">Price Range 70/30 og Direction/Edge er adskilte evidensfamilier, ikke afkast.</p>
+ <details class="proof-source-details"><summary>Originale GitHub-kilder og metode</summary>
+  <div id="proof-sources">Afventer kildehenvisninger.</div></details>
+ <div class="proof-foot">
+  <a href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer">Åbn offentligt Proof-arkiv ↗</a>
+  <button type="button" id="proof-copy-audit">Kopiér auditinstruktion</button>
+  <span id="proof-copy-status" role="status"></span>
+ </div>
+</section>
 </main>
-<script type="module" src="./source-graph-b.mjs"></script></body></html>
+<script type="module" src="./source-graph-b.mjs"></script>
+<script type="module" src="../proof/proof-explorer.mjs"></script></body></html>
