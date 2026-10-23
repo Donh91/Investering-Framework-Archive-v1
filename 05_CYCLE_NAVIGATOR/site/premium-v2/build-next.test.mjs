@@ -6,7 +6,7 @@ const here=new URL('./',import.meta.url);
 test('staged v2 asset list excludes AppDeploy demos and canonical root',()=>{
  const p=stagingPlan();
  assert.ok(p.to.endsWith('/site/dist/next'));
- assert.equal(p.assets.length,11);
+ assert.equal(p.assets.length,12);
  assert.ok(!approvedAssets.some(x=>x.includes('reference/')||x.includes('src/main.ts')));
 });
 test('original B and Proof imports resolve only to staged first-party sources',async()=>{
@@ -38,4 +38,17 @@ test('Official Compass/PATH pilot uses real source, not a new market issuer',asy
  assert.match(ui,/\.\/official-compass-path\.mjs/);
  assert.match(ui,/PUBLIC_FEED_HTTP/);
  assert.doesNotMatch(ui,/Math\.sin\(/);
+});
+
+test('real CN logo and Vite multi-entry keep isolated B visible at /next/graph-b',async()=>{
+ const html=await readFile(new URL('./graph-b/source-graph-b.html',here),'utf8');
+ const root=await readFile(new URL('./index.html',here),'utf8');
+ const config=await readFile(new URL('./vite.config.mjs',here),'utf8');
+ const logo=await readFile(new URL('./assets/CN_LOGO.svg',here),'utf8');
+ assert.match(logo,/CN_LOGO Cycle Navigator/);
+ assert.match(html,/\.\.\/assets\/CN_LOGO\.svg/);
+ assert.match(root,/\.\/assets\/CN_LOGO\.svg/);
+ assert.match(config,/graph-b\/source-graph-b\.html/);
+ assert.match(config,/Investering-Framework-Archive-v1\/next/);
+ assert.match(config,/publicDir:false/);
 });
