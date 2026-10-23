@@ -215,6 +215,13 @@ try{
      getComputedStyle(graphHost).backgroundColor==='rgb(10, 23, 41)'&&
      getComputedStyle($('.fw-quote')).backgroundColor==='rgb(10, 23, 41)'&&
      getComputedStyle($('.fw-quote strong')).color==='rgb(247, 251, 255)';
+   const approvedBFrame=document.querySelector('.chart-area[data-approved-design="B"]');
+   const approvedBVisual=!!approvedBFrame&&
+     getComputedStyle(approvedBFrame).backgroundColor==='rgb(255, 255, 255)'&&
+     !!approvedBFrame.querySelector('#official-path-chart.frozen-week-chart')&&
+     approvedBFrame.querySelector('.chart-b-title')?.textContent?.trim()==='Ugens kursrejse.'&&
+     !!approvedBFrame.querySelector('.chart-b-eyebrow')?.textContent?.includes('WEEKLY OUTLOOK')&&
+     getComputedStyle(approvedBFrame.querySelector('.fw-quote')).backgroundColor==='rgb(10, 23, 41)';
    const rootIsNotDemo=!document.querySelector('.cn-forward-demo a[href*="appdeploy.ai"]');
    const pathRail=$('#premium-path-rail');
    const contiguousPath=!!pathRail&&getComputedStyle(pathRail).display==='block'&&
@@ -345,7 +352,7 @@ try{
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
-    unavailableOneLine,staleChartAccessible,rootBStyle,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,evidenceNeedle,
+    unavailableOneLine,staleChartAccessible,rootBStyle,approvedBVisual,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,evidenceNeedle,
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
@@ -374,6 +381,7 @@ try{
    assert.equal(report.daChart,'Se grafen · BTC / ETH ↓','Danish chart shortcut missing');
    assert.ok(report.graphQuickAccess,'Approved B graph must be discoverable near overview top: '+report.graphTop);
   assert.ok(report.rootBStyle,'Official CN chart must be navy from quote to plot');
+  assert.ok(report.approvedBVisual,'Approved B white editorial card / navy source chart diverged on actual served root: '+width);
   assert.ok(report.rootIsNotDemo,'Public product should not link to competing synthetic demo');
   assert.ok(report.contiguousPath&&report.sourceSafePhases,'PATH should be one source-honest dotted sequence');
   assert.ok(report.proofSimple,'Proof explanation and progressive detail not rendered');
