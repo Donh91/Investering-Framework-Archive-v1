@@ -110,3 +110,31 @@ This is a Vite/build route proof, **NOT canonical Pages release permission**. Ke
 - site/build-public.mjs currently deletes site/dist at start. If existing Pages publication is later extended for approved /next/ staging, sequence MUST be: canonical build and all original data/score/lineage stages → npm ci and real Vite multi-entry build → verify:next → existing final artifact checks → existing upload-pages-artifact. Running Vite earlier destroys /next/; do not introduce another Pages workflow or execute an unreviewed staging release.
 - **Unverified:** real Vite 6 install/build manifest, full Premium Node suite, current exact-head CI following these commits, actual served Pages /next/, screenshot parity/native iPhone, root-vs-legacy rollback rehearsal, separate staging review/merge authorization and final root release acceptance.
 - Remain DRAFT and fail closed until the missing evidence is produced. No production root changes from this hardening.
+
+
+## 2026-10-23 · Approved mandate execution checkpoint · real Premium root
+
+Owner's full phased mandate approved in chat on 2026-10-23 for phases 1–5, governed noncanonical /next/ staging ONLY. Canonical GitHub Pages homepage replacement remains separate, not delegated by this mandate.
+
+### CODED on existing Draft PR #1769
+
+- premium-root.mjs is now a fail-closed, source-native HTML transformation. Vite's pre HTML hook uses the original graph-b/source-graph-b.html as the SINGLE authored B+Proof+Compass+PATH surface for /next/index.html. The existing nested Graph B entry remains unchanged and independently buildable. This eliminates the root link-only landing problem without creating a second hand-maintained Graph B.
+- Added a restrained root hero, direct section navigation, original CN identity, noindex staging disclaimer, source-preserving 7 asset paths and DA/EN-labeled root navigation.
+- Added premium-root.test.mjs; extended actual artifact verifier to FAIL if root is merely a link-only landing or lacks B, Proof, Compass or PATH, and updated its positive and negative fixture tests.
+- Added stage-next.mjs + stage-next.test.mjs, with guarded npm ci → tests → Vite build → emitted output validation, requiring package-lock.json and SIX pre/post identical SHA-256 snapshots: root index, legacy index, vnext index, latest.json, compass.json, publication-lineage.json. Script is NOT installed in the existing CI and cannot be called a deployed release.
+- Extended package.json npm test and stage:pages:next scripts. No new dependency, workflow, scheduler or backend introduced.
+
+### Actually verified this execution
+
+- Fetched exact GitHub source and evaluated source-identical pure premium-root.mjs function in JS V8. Original B, Proof, Kompas/PATH, canonical logo and seven relative asset references preserved; all targeted structural assertions passed and 3/3 malicious/missing-source cases rejected. This validates PURE ROOT ASSEMBLY, not npm/Vite/Chrome.
+- AppDeploy existing QA app cycle-navigator-premium-v2-1-github-source-qa-71fr1g updated from the latest owned source assembly without changing its isolated public test JSON feeds. Current READY QA snapshot version 1792792800686, zero AppDeploy-reported frontend and network errors. QA-only source is normalized and data URLs differ by environment, so neither BYTE PARITY nor physical iPhone certification is asserted.
+- Source-assembly and staging guard tests have been COMMITTED but a full Node test suite, real npm ci, the GitHub project-basepath Vite build, exact-head CI and independent review remain NOT VERIFIED in this execution. The local terminal cannot resolve github.com/npm; do NOT generate a guessed package-lock.
+- Latest real /next/ on Github Pages NOT VERIFIED; public site root remains unchanged by this branch.
+- Branch was diverged and 33 commits behind main at most recent comparison. Do not rebase/force-push blindly; reconcile against fresh main before governed merge.
+
+### Next release-bound actions
+
+1. Produce lockfile in a network-capable trusted environment; review npm package integrity/lock reproducibility; exact branch npm ci, all node tests, actual Vite build and emitted artifact validator.
+2. Resolve any Vite rebase/module URL breakage, current-main drift, full canonical compatibility and independent review. Add ONLY reviewed stage:pages:next integration AFTER all canonical public/lineage/social steps and BEFORE the existing artifact upload in cycle-navigator-pages.yml. No second Pages workflow.
+3. Full browser mobile (390×844 and 430×932), accessible interactions, DA/EN, real source expiry/failure paths, original graph B geometry, historical root/legacy rollback and real /next/ Pages readback. A QA READY is never this acceptance.
+4. Governed noncanonical /next/ publication may proceed only with exact-head green checks, required independent review, verified rollback, no budget bypass and real URL evidence. Root homepage stays protected behind a SEPARATE owner visual/data/rollback releaseaccept.
