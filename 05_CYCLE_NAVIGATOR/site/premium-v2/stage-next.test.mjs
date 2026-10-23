@@ -38,6 +38,6 @@ test('missing public lineage or legacy shell fails closed before staging',async(
 });
 test('missing reviewed package lock blocks npm staging before any subprocess starts',async()=>{
  let calls=0;
- await assert.rejects(stageNext({run:()=>{calls++}}),/NEXT_STAGE_REVIEWED_PACKAGE_LOCK_REQUIRED/);
+ await assert.rejects(stageNext({run:()=>{calls++},lockfile:'/definitely-missing-reviewed-next-package-lock.json'}),/NEXT_STAGE_REVIEWED_PACKAGE_LOCK_REQUIRED/);
  assert.equal(calls,0);
 });
