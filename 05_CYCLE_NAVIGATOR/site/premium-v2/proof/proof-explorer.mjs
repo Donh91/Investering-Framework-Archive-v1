@@ -82,7 +82,29 @@ function renderSources(){
  }
  host.append(body);
 }
+
+function localizeProof(){
+ const en=document.documentElement.lang==='en';
+ const heading=$('proof-title');if(heading)heading.textContent=en?
+  'Proof. Check what was actually forecast.':'Proof. Se hvad der faktisk blev forudsagt.';
+ const sub=document.querySelector('.proof-head p');if(sub)sub.textContent=en?
+  'Frozen original source, observed outcomes, and an inspectable method. No rewriting.':
+  'Frosne kilder, observerede udfald, åben metode. Ingen omskrivning.';
+ const map={freeze:en?'Original freeze':'Frossen kilde',
+ observed:en?'Observed':'Observation',assess:en?'Score & source':'Score & kilde'};
+ for(const button of document.querySelectorAll('[data-proof-step]')){
+  const key=button.dataset.proofStep,id=key==='freeze'?'01':key==='observed'?'02':'03';
+  button.replaceChildren(node('span','',id),document.createTextNode(map[key]||key));
+ }
+ const summary=document.querySelector('.proof-source-details summary');
+ if(summary)summary.textContent=en?'Original GitHub sources and method':'Originale GitHub-kilder og metode';
+ const link=document.querySelector('.proof-foot a');if(link)link.textContent=en?
+  'Open public Proof archive ↗':'Åbn offentligt Proof-arkiv ↗';
+ const copy=$('proof-copy-audit');if(copy)copy.textContent=en?'Copy audit prompt':'Kopiér auditinstruktion';
+}
+
 function display(){
+ localizeProof();
  $('proof-status').textContent=view?.status==='PROVISIONAL_SOURCE_READBACK'?
   local('FORELØBIG · '+view.forecast_week,'PROVISIONAL · '+view.forecast_week):
   local('KILDE MANGLER','SOURCE MISSING');
@@ -123,4 +145,5 @@ $('proof-copy-audit')?.addEventListener('click',async()=>{
   $('proof-copy-status').textContent=local('Kopieret','Copied');
  }catch{$('proof-copy-status').textContent=local('Kopiér manuelt fra kildeoversigten','Use sources above manually')}
 });
+document.addEventListener('cn:languagechange',()=>display());
 initialize();
