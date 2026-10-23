@@ -39,9 +39,9 @@ function execute(bin,args){
  if(x.error)throw x.error;
  if(x.status!==0)throw Error('NEXT_STAGE_COMMAND_FAILED:'+bin+' '+args.join(' ')+':'+x.status);
 }
-export async function stageNext({run=execute}={}){
+export async function stageNext({run=execute,lockfile=resolve(here,'package-lock.json')}={}){
  // No speculative npm installation or staging when the reviewed lockfile is missing.
- try{await readFile(resolve(here,'package-lock.json'))}
+ try{await readFile(lockfile)}
  catch{throw Error('NEXT_STAGE_REVIEWED_PACKAGE_LOCK_REQUIRED')}
  const before=await snapshotProtected();
  run('npm',['ci']);
