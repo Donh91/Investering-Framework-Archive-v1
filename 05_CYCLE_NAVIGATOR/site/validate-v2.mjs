@@ -44,6 +44,7 @@ const vnextShell=await read('./vnext-live/index.html');
 
 const lineageSource=await read('../../scripts/cycle_navigator/check_publication_lineage.py');
 if(!lineageSource.includes('PUBLIC_HOURLY_PRICE_DIVERGENCE_')||
+   !lineageSource.includes('PUBLIC_HOURLY_FUTURE_CUTOFF')||
    !lineageSource.includes('PUBLIC_HOURLY_FUTURE_OBSERVATION')||
    !lineageSource.includes('CN_PUBLICATION_LINEAGE_RELEASE_RECEIPT_v1'))
   throw Error('Publication lineage source-first no-hindsight guards missing');
