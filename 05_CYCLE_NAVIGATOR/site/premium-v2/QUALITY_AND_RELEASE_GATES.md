@@ -89,3 +89,13 @@ This emits `site/dist/next/`, never rewrites `site/dist/index.html`, and bundles
 - Distinguish **AppDeploy hosted Vite binary success** (tested) from **GitHub Pages output** (not yet published). AppDeploy reformats/normalizes source after upload and the QA JavaScript uses absolute canonical public JSON URLs, so no assertion of byte-identical published assets. The official product remains unchanged.
 
 The original B SVG source port still needs approval of exact design geometry at 390x844 / 430x932 in native Safari. Historical `HOLD_WAIT` validity and stale spot freshness require accurate clock-edge checks while a browser tab stays open. The public W43 daily blue prospective expected-close path is still **UNAVAILABLE**, so no result may claim two live B curves as a source-complete product.
+
+## 2026-10-23 · Post-Vite multi-entry acceptance proof
+
+- AppDeploy source-QA **version `1792789076700` READY** after adding the same exact first-party canonical `CN_LOGO.svg` to the development header (no new backend, no AppDeploy marketing page source adopted).
+- Explicit Vite two-entry version `1792788950881`: BOTH `/` and `/graph-b/source-graph-b.html` returned actual Graph B page content from a fresh external HTTP reader; `NoSuchKey` issue resolved without changing production GitHub Pages.
+- Actual Node v22 URL assertions: **6/6 PASS** for `latest.json`, `compass.json` and `publication-lineage.json` from **both** native `/next/graph-b/source-graph-b.mjs` and Vite bundled `/next/assets/source-graph-b.<hash>.js`. Both resolve to `https://donh91.github.io/Investering-Framework-Archive-v1/data/` (no second market data owner).
+- Exact GitHub adapter suites re-executed: **24/24** source-only Graph B/Proof/70-30/Compass-PATH adversarial cases, **6/6** source-quarantine preflight cases in V8. Dedicated new `build-next.test.mjs` includes the URL checks; **full Node suite and first-party Vite/Pages dist remain outstanding**.
+- External screenshot provider Firecrawl reported **INSUFFICIENT_CREDITS**; no screenshot was fabricated and no additional paid credits were authorized or added. AppDeploy provides generated screenshot URLs, but no manual pixel-by-pixel native Safari owner QA has passed.
+
+This is a Vite/build route proof, **NOT canonical Pages release permission**. Keep PR Draft and `/next` integration subject to separate staged-review gate, and root subject to explicit owner visual accept/rollback.
