@@ -46,6 +46,17 @@ def validate_projection(expected: dict, actual: dict) -> None:
                     for x in actual[asset]), "PUBLIC_HOURLY_PRICE_INVALID_" + asset)
 
 
+def release_age_minutes(
+    cutoff: datetime | None, published: list[str], current: datetime,
+) -> float | None:
+    """Reject source or public clocks that are later than the release check."""
+    require(cutoff is None or cutoff <= current, "PUBLIC_HOURLY_FUTURE_CUTOFF")
+    last_published = max(published) if published else None
+    last_at = parse_utc(last_published) if last_published else None
+    require(last_at is None or last_at <= current, "PUBLIC_HOURLY_FUTURE_OBSERVATION")
+    return round((current - last_at).total_seconds() / 60, 2) if last_at else None
+
+
 def receipt_for(root: Path, snapshot: dict, current: datetime) -> dict:
     precision = snapshot.get("public_live_precision") or {}
     require(precision.get("contract") == "CN_PUBLIC_LIVE_PRICE_PRECISION_v1",
@@ -78,9 +89,7 @@ def receipt_for(root: Path, snapshot: dict, current: datetime) -> dict:
 
     published = [x["observed_at_utc"] for a in ("BTC", "ETH") for x in actual[a]]
     last_published = max(published) if published else None
-    last_at = parse_utc(last_published) if last_published else None
-    lag = round((current - last_at).total_seconds() / 60, 2) if last_at else None
-    require(lag is None or lag >= -1, "PUBLIC_HOURLY_FUTURE_OBSERVATION")
+    lag = release_age_minutes(cutoff, published, current)
     sla = precision.get("freshness_sla_minutes")
     require(isinstance(sla, int) and sla > 0, "PUBLIC_FRESHNESS_SLA_INVALID")
     state = "NO_VERIFIED_OBSERVATIONS" if lag is None else (
@@ -132,7 +141,18 @@ def self_test() -> None:
             raise AssertionError("Negative guard did not reject " + code)
     assert public_hourly_price_path([{**row, "spot_status": "FAIL"}], 2026, 43, 30, cutoff, now=cutoff)["BTC"] == []
     assert public_hourly_price_path([{**row, "btc_close": "999999"}], 2026, 43, 30, cutoff, now=cutoff)["BTC"] == []
-    print("PASS publication lineage positive, source gap, rejected status, privacy and five negative mutation guards")
+    assert release_age_minutes(cutoff, ["2026-10-19T01:00:00Z"], cutoff) == 0
+    for bad_cutoff, published, code in [
+        (cutoff + timedelta(hours=1), [], "PUBLIC_HOURLY_FUTURE_CUTOFF"),
+        (cutoff, ["2026-10-19T02:00:00Z"], "PUBLIC_HOURLY_FUTURE_OBSERVATION"),
+    ]:
+        try:
+            release_age_minutes(bad_cutoff, published, cutoff)
+        except PublicationLineageError as exc:
+            assert str(exc) == code, (code, str(exc))
+        else:
+            raise AssertionError("Future-clock guard did not reject " + code)
+    print("PASS publication lineage positive, source gap, rejected status, privacy, mutation and future-clock guards")
 
 
 def main() -> None:
