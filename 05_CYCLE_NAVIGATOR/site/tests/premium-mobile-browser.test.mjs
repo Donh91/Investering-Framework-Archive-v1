@@ -216,6 +216,12 @@ try{
      getComputedStyle(pathRail,'::before').content!=='none';
    const sourceRef=pathRail?.querySelectorAll('.path-node[data-kind="reference"]').length??0;
    const sourceSafePhases=sourceRef<=1;
+   const liveBoxes=Array.from(document.querySelectorAll('#proof-live-windows .proof-live-window'));
+   const liveStatus=document.querySelector('#proof-live-status')?.textContent||'';
+   const liveProofSafe=liveBoxes.length===3?
+     liveBoxes.every(b=>b.querySelector('.proof-live-window-score')?.textContent?.trim()&&
+       b.querySelector('.proof-live-window-hours')?.textContent?.trim()):
+     liveBoxes.length===0&&/mangler|unavailable/i.test(liveStatus);
    const proofSimple=!!document.querySelector('.proof-primer')&&
      !!document.querySelector('.proof-journey')&&
      document.querySelector('.proof-window-details')?.open===false&&
@@ -321,7 +327,7 @@ try{
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
-    unavailableOneLine,staleChartAccessible,rootBStyle,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,compassGraphic,
+    unavailableOneLine,staleChartAccessible,rootBStyle,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
@@ -353,6 +359,7 @@ try{
   assert.ok(report.rootIsNotDemo,'Public product should not link to competing synthetic demo');
   assert.ok(report.contiguousPath&&report.sourceSafePhases,'PATH should be one source-honest dotted sequence');
   assert.ok(report.proofSimple,'Proof explanation and progressive detail not rendered');
+  assert.ok(report.liveProofSafe,'Current-week source-joined D1–2/D3–4/D5–7 proof sequencing missing or fake');
   assert.ok(report.compassGraphic,'Official evidence dial missing or not source-labelled');
   assert.equal(report.enPath,'The market cycle','English PATH translation missing');
   assert.equal(report.daPath,'Markeds­cyklussen','Danish PATH restoration missing');
