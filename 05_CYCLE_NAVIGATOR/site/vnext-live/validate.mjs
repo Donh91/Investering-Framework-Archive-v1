@@ -467,3 +467,18 @@ assert.match(eligibleOwner['source-status'],/aktuelt/);
 
 execFileSync(process.execPath,['--check',resolve(dir,'app.mjs')],{stdio:'pipe'});
 console.log('PASS vNext: W43 source truth, official freshness, score isolation, negative gates, four-view product shell, i18n and syntax');
+
+
+// B graph absence is a first-class visible source state, never a
+// synthetic blue path derived from the three original low/high windows.
+const chartImplementation=readFileSync(new URL('../frozen-week-chart.js',import.meta.url),'utf8');
+const chartStyles=readFileSync(new URL('../frozen-week-chart.css',import.meta.url),'utf8');
+assert.match(chartImplementation,/fw-forecast-not-issued/);
+assert.match(chartImplementation,/data-fw-horizon/);
+assert.match(chartImplementation,/CN_FROZEN_DAILY_PRICE_PATH_v1/);
+assert.match(chartImplementation,/const forecast=m.daily.length===7/);
+assert.match(chartImplementation,/baseline.setData\(plan.forecast\)/);
+assert.match(chartImplementation,/forecast=m.daily.length===7[\s\S]*?:\[\];/);
+assert.match(chartStyles,/\.fw-forecast-not-issued\{/);
+assert.match(html,/id="official-chart-heading"/);
+assert.match(client,/show\('official-chart-heading',hasDaily\?/);

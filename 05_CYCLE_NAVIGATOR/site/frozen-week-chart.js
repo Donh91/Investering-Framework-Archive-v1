@@ -186,12 +186,31 @@
       availability.className='fw-horizon-availability';
       availability.setAttribute('role','status');
       availability.textContent=horizon===7?
-        txt('7-day original source. Unpublished expected closes remain unplotted.',
-            '7 dages originalkilde. Manglende forventede dagsluk tegnes ikke.'):
+        txt(m.daily.length?'Original seven-day expected closes issued and frozen.':'Seven-day frozen range source only. No daily expected-close curve was issued.',
+            m.daily.length?'Syv originale forventede dagsluk udstedt og fastlåst.':'Kun originale syvdagesintervaller. Ingen daglig prognosekurve blev udstedt.'):
         txt('Days 8–'+horizon+': no prospectively frozen BTC/ETH price path issued. Only the original seven days and verified observations are plotted.',
             'Dag 8–'+horizon+': ingen forhåndsfrossen BTC/ETH-prissti udstedt. Kun de oprindelige syv dage og verificerede observationer tegnes.');
       const canvasHost=host.querySelector('.fw-canvas');
       if(canvasHost?.insertAdjacentElement)canvasHost.insertAdjacentElement('afterend',availability);
+    }
+    // Graph B needs two genuine curves. Never disguise three frozen price
+    // windows as a prospectively published expected-close trajectory.
+    // This notification is separate from the observed-price freshness badge.
+    if(!m.daily.length && host.ownerDocument?.createElement){
+      const note=host.ownerDocument.createElement('div');
+      note.className='fw-forecast-not-issued';
+      note.dataset.forecastState='UNISSUED';
+      note.setAttribute('role','status');
+      const marker=host.ownerDocument.createElement('span');
+      marker.className='fw-forecast-not-issued-marker';marker.setAttribute('aria-hidden','true');
+      const copy=host.ownerDocument.createElement('div');
+      const heading=host.ownerDocument.createElement('strong');
+      heading.textContent=txt('BLUE FORECAST CURVE NOT ISSUED','BLÅ PROGNOSEKURVE IKKE UDSTEDT');
+      const reason=host.ownerDocument.createElement('small');
+      reason.textContent=txt('Source contains original interval bounds, not a frozen day-by-day BTC/ETH forecast. The approved B two-line view activates only for genuine pre-outcome source points.',
+        'Kilden har originale prisintervaller, men ingen fastlåst dag-for-dag-prognose for BTC/ETH. Den godkendte B-graf med to kurver aktiveres kun ved ægte prognosepunkter fra før udfaldet.');
+      copy.append(heading,reason);note.append(marker,copy);
+      host.querySelector('.fw-legend')?.insertAdjacentElement('afterend',note);
     }
     function readout(d){
       const f=d.forecast,p=d.actual,r=d.range;

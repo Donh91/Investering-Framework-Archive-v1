@@ -169,3 +169,24 @@
  .fw-horizons button{min-width:70px;min-height:44px;padding:8px 12px}
  .fw-horizon-availability{padding:7px 13px 13px}
 }
+
+/* Approved graph B · fail-closed visible forecast availability.
+ * The notice is documentation, NEVER a surrogate blue path or a price.
+ * Do not change TradingView plot series, green observations or 7/14/21 time axis.
+ */
+.fw-forecast-not-issued{
+ display:flex;gap:12px;align-items:flex-start;margin:3px 18px 15px;
+ padding:13px 15px;border:1px solid #324e72;border-left:3px solid #5f96ff;
+ background:#12233a;border-radius:8px;color:#dce9fb;
+}
+.fw-forecast-not-issued-marker{width:9px;height:9px;flex:none;margin-top:5px;border-radius:50%;
+ border:2px solid #83adf8;background:transparent}
+.fw-forecast-not-issued strong{display:block;font-size:10px;font-weight:770;
+ letter-spacing:.075em;color:#b6d0ff;line-height:1.55}
+.fw-forecast-not-issued small{display:block;margin-top:5px;color:#a7bbd3;
+ font-size:11px;line-height:1.55}
+@media(max-width:600px){
+ .fw-forecast-not-issued{margin:3px 13px 12px;padding:12px 11px;gap:9px}
+ .fw-forecast-not-issued strong{font-size:10px}
+ .fw-forecast-not-issued small{font-size:10px}
+}
