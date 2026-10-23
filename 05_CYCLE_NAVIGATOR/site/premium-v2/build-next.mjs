@@ -18,7 +18,8 @@ export const approvedAssets=[
  'proof/public-source-links.mjs',
  'compass/compass-path.css',
  'compass/compass-path-ui.mjs',
- 'compass/official-compass-path.mjs'
+ 'compass/official-compass-path.mjs',
+ 'assets/CN_LOGO.svg'
 ];
 export function stagingPlan(){
  const from=resolve(site,'premium-v2'),to=resolve(site,'dist','next');
