@@ -209,15 +209,22 @@
 .proof-live-window[data-state=CLOSED_PROVISIONAL]{background:#f6f9fd;border-color:#d7e4f2}
 .proof-live-window-hours{display:block;color:#74889e;font-size:10px;line-height:1.5}
 @media(max-width:560px){
+ /* Full-width mobile evidence rows: preserves original source scores and
+  * incomplete-window states, while avoiding three unreadable 100px cards. */
  .proof-live-sequence{padding:19px 15px}
- .proof-live-windows{gap:6px}
- .proof-live-window{padding:11px 8px 10px;border-radius:9px}
- .proof-live-window-day{font-size:10px}
- .proof-live-window-head small{font-size:8px}
- .proof-live-window-score{font-size:22px;margin:9px 0 5px}
- .proof-live-window-hours{font-size:9px}
+ .proof-live-windows{grid-template-columns:minmax(0,1fr);gap:8px}
+ .proof-live-window{display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;column-gap:12px;row-gap:4px;
+  padding:13px 15px;border-radius:11px;min-height:83px}
+ .proof-live-window-head{grid-column:1;grid-row:1;
+  flex-direction:column;align-items:flex-start;justify-content:center;gap:3px}
+ .proof-live-window-day{font-size:12px}
+ .proof-live-window-head small{font-size:10px;line-height:1.4}
+ .proof-live-window-score{grid-column:2;grid-row:1 / span 2;justify-self:end;
+  font-size:clamp(23px,7vw,29px);white-space:nowrap;margin:0}
+ .proof-live-window-hours{grid-column:1;grid-row:2;font-size:10px;line-height:1.5}
 }
-@media(max-width:365px){.proof-live-windows{grid-template-columns:1fr}}
+@media(max-width:365px){.proof-live-window-score{font-size:22px}}
 
 /* Verified investor-readable OFFICIAL action, raw owner code always retained. */
 .product-action-code{display:block;margin-top:10px;color:#b9cbe0;font-size:10px;letter-spacing:.035em;font-weight:720;overflow-wrap:anywhere}
