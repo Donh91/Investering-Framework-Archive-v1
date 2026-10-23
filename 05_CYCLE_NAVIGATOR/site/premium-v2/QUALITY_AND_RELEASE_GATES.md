@@ -99,3 +99,14 @@ The original B SVG source port still needs approval of exact design geometry at 
 - External screenshot provider Firecrawl reported **INSUFFICIENT_CREDITS**; no screenshot was fabricated and no additional paid credits were authorized or added. AppDeploy provides generated screenshot URLs, but no manual pixel-by-pixel native Safari owner QA has passed.
 
 This is a Vite/build route proof, **NOT canonical Pages release permission**. Keep PR Draft and `/next` integration subject to separate staged-review gate, and root subject to explicit owner visual accept/rollback.
+
+
+## 2026-10-23 · New-thread Vite artifact hardening (exact code locally tested)
+
+- Draft #1769 now includes verify-vite-output.mjs and verify-vite-output.test.mjs; staged Graph B HTML has explicit noindex,nofollow.
+- Actual local Node 22 run on **byte-identical files** (git blob SHA matching GitHub): node --check on both + node --test verify-vite-output.test.mjs: **6/6 PASS**, 0 FAIL. This is a synthetic fixture/adversarial **validator** test, **NOT** a real Vite build or full Premium suite.
+- Verifier mandates BOTH Vite HTML entrypoints, source Graph B markup, noindex markers, every emitted local asset referenced by HTML, correct /Investering-Framework-Archive-v1/next/ basepath, all 3 official public JSON feed references in compiled JS, quarantine of AppDeploy Math.sin demo, SHA-256 per emitted asset. It stops with a nonzero exit on regression. Run npm run verify:next **after** a real Vite build.
+- Genuine npm ci is **NOT VERIFIED**: the Draft project has no package-lock.json; do not invent a lockfile or report install success. npm install --package-lock-only --ignore-scripts must be performed in a network-capable controlled environment and lockfile reviewed/committed before npm ci can pass.
+- site/build-public.mjs currently deletes site/dist at start. If existing Pages publication is later extended for approved /next/ staging, sequence MUST be: canonical build and all original data/score/lineage stages → npm ci and real Vite multi-entry build → verify:next → existing final artifact checks → existing upload-pages-artifact. Running Vite earlier destroys /next/; do not introduce another Pages workflow or execute an unreviewed staging release.
+- **Unverified:** real Vite 6 install/build manifest, full Premium Node suite, current exact-head CI following these commits, actual served Pages /next/, screenshot parity/native iPhone, root-vs-legacy rollback rehearsal, separate staging review/merge authorization and final root release acceptance.
+- Remain DRAFT and fail closed until the missing evidence is produced. No production root changes from this hardening.
