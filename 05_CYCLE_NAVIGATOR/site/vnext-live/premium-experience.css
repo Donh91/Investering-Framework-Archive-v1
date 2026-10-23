@@ -451,3 +451,103 @@
  * The actual 390px browser probe caught computed transparent background.
  * All B frame selectors now outrank the older id-level transparency rule.
  * No !important or JS style injection; no market/chart source mutation. */
+
+/* B original layout v2 | visual-only translation from approved AppDeploy lab.
+ * The source-bound TradingView engine and Official Compass remain unchanged. */
+#view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
+ gap:14px;margin:0 0 23px;
+}
+#view-overview .chart-area[data-approved-design="B"] .chart-b-title{
+ font-size:clamp(30px,4vw,42px);font-weight:750;letter-spacing:-.047em;
+ margin:7px 0 9px;
+}
+#view-overview .chart-area[data-approved-design="B"] .chart-b-intro{
+ font-size:13px;line-height:1.6;max-width:38ch;
+}
+#view-overview .chart-area[data-approved-design="B"] #chart-evidence{
+ display:block;text-align:left;max-width:none;margin-top:6px;
+ font-size:10px;color:#7a8da1;
+}
+.chart-b-assets{display:flex;gap:3px;padding:4px;align-self:center;
+ background:#f0f4f8;border:1px solid #dde5ee;border-radius:13px}
+.chart-b-assets button{min-width:66px;min-height:48px;padding:9px 14px;
+ background:transparent;border:0;border-radius:9px;color:#8395aa;
+ font-size:13px;font-weight:740}
+.chart-b-assets button[aria-pressed=true]{background:#fff;color:#112c4d;
+ box-shadow:0 3px 12px #1a35551a}
+.chart-b-assets button:focus-visible{outline:2px solid #2f6fda;outline-offset:2px}
+#view-overview .chart-area[data-approved-design="B"] .fw-toolbar{display:none}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote{
+ padding:27px 23px 19px;align-items:start;gap:14px}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
+ font-size:clamp(33px,4vw,45px);margin-top:7px}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote .fw-week-range{
+ display:block;font-size:10px;color:#b6c9df;letter-spacing:.06em;
+ text-transform:uppercase;margin-top:7px}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend{
+ padding:12px 23px 24px;gap:12px 18px}
+#view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:370px}
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+ margin:9px 18px 13px;padding:10px 12px;gap:8px;
+ border:1px solid rgba(121,160,214,.32);border-left:2px solid #639dff;
+ background:rgba(56,87,124,.13)}
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued strong{
+ font-size:10px;letter-spacing:.025em;line-height:1.35}
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued small{
+ font-size:10px;line-height:1.4;margin-top:3px}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizon-availability{
+ padding:7px 18px 9px;border:0}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons{
+ display:flex;background:#fff;gap:7px;padding:13px 0 4px;
+ justify-content:flex-start;align-items:center}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button{
+ min-height:44px;min-width:75px;color:#71859a;background:#edf2f7;
+ border:1px solid #dce4ed;border-radius:10px;padding:8px 11px}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button[aria-pressed=true]{
+ background:#e3eeff;border-color:#95b5e5;color:#1e508e}
+.chart-b-scrub{padding:15px 1px 2px;color:#697d94}
+.chart-b-scrub-head{display:flex;align-items:center;justify-content:space-between;
+ gap:12px;margin-bottom:11px}
+.chart-b-scrub label{font-weight:750;font-size:13px}
+.chart-b-scrub-head strong{font-size:11px;color:#7890a9;text-align:right}
+.chart-b-scrub input[type=range]{width:100%;height:27px;
+ display:block;accent-color:#2f6fda;cursor:pointer;touch-action:pan-y}
+.chart-b-scrub-extents{display:flex;justify-content:space-between;
+ font-size:10px;color:#93a3b4;margin-top:3px}
+@media(max-width:600px){
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+  gap:9px;margin:0 0 17px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-title{
+  font-size:29px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-intro{
+  font-size:11px}
+ .chart-b-assets button{min-width:49px;min-height:44px;
+  padding:8px 9px;font-size:12px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote{
+  padding:19px 13px 14px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
+  font-size:clamp(27px,7vw,35px)}
+ #view-overview .chart-area[data-approved-design="B"] .fw-legend{
+  padding:10px 13px 16px;gap:10px 12px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{
+  height:335px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+  margin:8px 12px 9px}
+}
+@media(max-width:400px){
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-title{font-size:24px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-intro{
+  font-size:10px;line-height:1.45}
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-eyebrow{font-size:8px}
+ .chart-b-assets button{min-width:43px;padding:8px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:315px}
+}
+
+/* Chrome acceptance: actual B host must begin above 740px in overview,
+ * without weakening the test or hiding Official Compass current action. */
+@media(max-width:600px){
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+  margin-bottom:11px;
+ }
+}

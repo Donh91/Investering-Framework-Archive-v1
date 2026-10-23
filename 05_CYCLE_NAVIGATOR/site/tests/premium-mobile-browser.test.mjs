@@ -242,9 +242,12 @@ try{
    const approvedBVisual=approvedBProbe.outer&&
      approvedBProbe.frameBg==='rgb(255, 255, 255)'&&
      approvedBProbe.chart&&
-     ['Ugens kursrejse.','The weekly journey.'].includes(approvedBProbe.title)&&
-     approvedBProbe.eyebrow?.includes('WEEKLY OUTLOOK')&&
+     approvedBProbe.title==='Weekly Outlook · B'&&
+     /FROSSEN PROGNOSE|FROZEN FORECAST/.test(approvedBProbe.eyebrow)&&
      approvedBProbe.quoteBg==='rgb(10, 23, 41)';
+   const bOuterControls=document.querySelectorAll('.chart-b-assets [data-b-asset]').length===2 &&
+     !!document.querySelector('#chart-b-scrub-range') &&
+     document.querySelector('.chart-area[data-approved-design="B"] .fw-horizons')!==null;
    const rootIsNotDemo=!document.querySelector('.cn-forward-demo a[href*="appdeploy.ai"]');
    const pathRail=$('#premium-path-rail');
    const contiguousPath=!!pathRail&&getComputedStyle(pathRail).display==='block'&&
@@ -375,7 +378,7 @@ try{
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
-    unavailableOneLine,staleChartAccessible,rootBStyle,approvedBVisual,approvedBProbe,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,evidenceNeedle,
+    unavailableOneLine,staleChartAccessible,rootBStyle,approvedBVisual,bOuterControls,approvedBProbe,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,evidenceNeedle,
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
@@ -405,6 +408,7 @@ try{
    assert.ok(report.graphQuickAccess,'Approved B graph must be discoverable near overview top: '+report.graphTop);
   assert.ok(report.rootBStyle,'Official CN chart must be navy from quote to plot');
   assert.ok(report.approvedBVisual,'Approved B white editorial card / navy source chart mismatch at '+width+': '+JSON.stringify(report.approvedBProbe));
+  assert.ok(report.bOuterControls,'Real B must have external source-bound BTC/ETH selector, scrubber and 7/14/21 controls');
   assert.ok(report.rootIsNotDemo,'Public product should not link to competing synthetic demo');
   assert.ok(report.contiguousPath&&report.sourceSafePhases,'PATH should be one source-honest dotted sequence');
   assert.ok(report.proofSimple,'Proof explanation and progressive detail not rendered');
