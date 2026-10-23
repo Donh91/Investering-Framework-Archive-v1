@@ -110,6 +110,12 @@ function drawOverview(){
  const path=feeds?.latest?.public_live_precision?.daily_price_path;
  const hasDaily=['BTC','ETH'].some(k=>path?.[k]?.status==='PUBLISHED'&&path?.[k]?.points?.length===7);
  show('chart-evidence',hasDaily?tr('Oprindelige dagsprognoser','Original daily forecasts'):tr('Ingen original dagskurve','No original daily curve'));
+ // A 7-day interval-only source must not be advertised as a complete
+ // "forecast versus actual" TWO-CURVE instrument. Graph B remains mounted
+ // unchanged, with honest first-known forecast availability.
+ show('official-chart-heading',hasDaily?
+   tr('Prognose møder virkelighed.','Forecast meets reality.'):
+   tr('Frosne intervaller. Faktisk kurs.','Frozen ranges. Observed prices.'));
  window.CNI18n={language:lang};const host=$('official-path-chart');
  const chartData=feeds?.latest?.public_live_precision&&window.CNWeekChart?.mount&&window.LightweightCharts?feeds.latest:null;
  if(chartData){
