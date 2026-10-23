@@ -58,3 +58,43 @@ export function publicProofView(index,sourceCommit=null){
      proofUnsealed?'GITHUB_READBACK_IS_NOT_EXTERNAL_ATTESTATION':'OFFICIAL_SEAL_REQUIRED'
  };
 }
+
+/**
+ * Join the bootstrap score index to a PUBLIC GitHub source readback.
+ * A readback's original source_commit is a navigation address / byte identity,
+ * NOT evidence that the original claim predated the market outcome.
+ * A valid score index + readback never grants independent VERIFIED status.
+ */
+export function sourceReadbackProofRows(index,receipt){
+ if(index?.contract!=='CN_V2_PUBLIC_SCORE_INDEX_v1'||
+    receipt?.contract!=='CN_PUBLIC_SOURCE_READBACK_v1'||
+    !Array.isArray(receipt.frozen_claims))return [];
+ const result=[];
+ for(const record of receipt.frozen_claims.slice(0,30)){
+   if(!Number.isInteger(record?.public_issue_number)||
+      !/^\d{4}-W\d{2}$/.test(String(record.forecast_week||''))||
+      record.source_repo!=='Donh91/Investering-Framework-Archive-v1'||
+      record.verification!=='PROVISIONAL'||
+      !/^[a-f0-9]{64}$/i.test(String(record.sha256||''))||
+      !/^[a-f0-9]{40}$/i.test(String(record.source_blob_sha1||'')))continue;
+   const token=record.forecast_week.replace('-W','/W');
+   if(!record.source_path.includes('/'+token+'/'))continue;
+   const source_url=canonicalPublicSourceLink({
+     repo:record.source_repo,source_commit:record.source_commit,path:record.source_path});
+   if(!source_url)continue;
+   const count=Number(record.claim_count),eligible=Number(record.eligible_binary_claims),
+     abstained=Number(record.abstained_claims);
+   if(![count,eligible,abstained].every(Number.isInteger)||
+     count<0||eligible<0||abstained<0||eligible+abstained>count)continue;
+   result.push({
+     contract:'CN_PREMIUM_V2_SOURCE_RECEIPT_NAV_v1',
+     public_issue_number:record.public_issue_number,forecast_week:record.forecast_week,
+     source_url,source_commit:record.source_commit,source_path:record.source_path,
+     source_sha256:record.sha256,source_blob_sha1:record.source_blob_sha1,
+     total_claims:count,eligible_binary_claims:eligible,abstained_claims:abstained,
+     edge_accuracy:null,independent_proof_status:'PROVISIONAL_NOT_SEALED',
+     score_authority:false,source_git_commit_is_independent_timestamp:false
+   });
+ }
+ return result.sort((a,b)=>b.public_issue_number-a.public_issue_number);
+}
