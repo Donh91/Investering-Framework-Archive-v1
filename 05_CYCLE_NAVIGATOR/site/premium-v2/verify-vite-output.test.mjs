@@ -10,7 +10,7 @@ async function withBundle(run){
  try{
   await mkdir(join(dir,'graph-b'),{recursive:true});
   await mkdir(join(dir,'assets'),{recursive:true});
-  await writeFile(join(dir,'index.html'),'<!doctype html><html><head><meta name="robots" content="noindex,nofollow"></head><body><img src="./assets/logo.svg"><a href="./graph-b/source-graph-b.html">B</a></body></html>');
+  await writeFile(join(dir,'index.html'),'<!doctype html><html><head><meta name="robots" content="noindex,nofollow"></head><body><img src="./assets/logo.svg"><a href="./graph-b/source-graph-b.html">B</a><svg id="chart"></svg><section id="variant-panel"></section><section id="proof-explorer"></section><section id="official-product-pilot"><ol id="official-pilot-path"></ol></section></body></html>');
   await writeFile(join(dir,'graph-b/source-graph-b.html'),'<!doctype html><html><head><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/Investering-Framework-Archive-v1/next/assets/site.css"></head><body><svg id="chart"></svg><script type="module" src="/Investering-Framework-Archive-v1/next/assets/app.js"></script></body></html>');
   await writeFile(join(dir,'assets/site.css'),'body{color:#07172f}');
   await writeFile(join(dir,'assets/logo.svg'),'<svg xmlns="http://www.w3.org/2000/svg"/>');
@@ -58,5 +58,12 @@ test('missing source feed references or noindex block release',async()=>{
   await assert.rejects(verifyViteOutput(dir),/MISSING_FIRST_PARTY_FEED_REFERENCE/);
   await writeFile(join(dir,'index.html'),'<html><body>Unindexed?</body></html>');
   await assert.rejects(verifyViteOutput(dir),/MISSING_NOINDEX/);
+ });
+});
+
+test('placeholder root without original Graph B, Proof or Compass cannot be released',async()=>{
+ await withBundle(async dir=>{
+  await writeFile(join(dir,'index.html'),'<html><head><meta name="robots" content="noindex"></head><body><a href="./graph-b/source-graph-b.html">Open demo</a></body></html>');
+  await assert.rejects(verifyViteOutput(dir),/MISSING_PREMIUM_ROOT_MARKUP/);
  });
 });
