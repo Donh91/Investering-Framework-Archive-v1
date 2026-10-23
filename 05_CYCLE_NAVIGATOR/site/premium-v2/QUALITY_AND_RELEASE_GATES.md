@@ -138,3 +138,10 @@ Owner's full phased mandate approved in chat on 2026-10-23 for phases 1–5, gov
 2. Resolve any Vite rebase/module URL breakage, current-main drift, full canonical compatibility and independent review. Add ONLY reviewed stage:pages:next integration AFTER all canonical public/lineage/social steps and BEFORE the existing artifact upload in cycle-navigator-pages.yml. No second Pages workflow.
 3. Full browser mobile (390×844 and 430×932), accessible interactions, DA/EN, real source expiry/failure paths, original graph B geometry, historical root/legacy rollback and real /next/ Pages readback. A QA READY is never this acceptance.
 4. Governed noncanonical /next/ publication may proceed only with exact-head green checks, required independent review, verified rollback, no budget bypass and real URL evidence. Root homepage stays protected behind a SEPARATE owner visual/data/rollback releaseaccept.
+
+
+## 2026-10-23 · CI diagnostic and patched Vite pin
+
+- Real exact-head GitHub Actions gate run 40030844172/job/120678411322 (evaluated on HEAD fb1c689b) FAILED the **existing canonical** test 05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs:408 with Graph B top=747.4375 CSS px, threshold <=740. It is not a pass and cannot be waived. Root is protected by separate release contract. Route to established SITE owner for legitimate DOM/layout fix, compare latest main, run both 390 and 430 mobile tests. Preserve this failure in acceptance evidence.
+- Security research checked upstream vitejs/vite Oct 21 advisory GHSA-8g5g-mxqh-grgj and signed v6.4.5 release. Pinned Vite updated from 6.3.6 to patched 6.4.5 (source-only dependency change, no runtime behavior assumed). The future reviewed package-lock must be generated against 6.4.5. No npm install/Vite compile is claimed from this patch.
+- The earlier branch-head check outcomes are superseded after any further commit. Re-read current exact head before any merge/release, and do not bypass Actions exhausted-month policy.
