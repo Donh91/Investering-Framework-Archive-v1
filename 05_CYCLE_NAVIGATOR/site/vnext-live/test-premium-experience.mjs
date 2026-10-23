@@ -158,4 +158,6 @@ assert.equal(presentOfficialAction('SELL',false,'en').label,'AWAITING SOURCE');
 assert.equal(presentOfficialAction('BUY',true,'en').code,'BUY');
 assert.equal(presentOfficialAction('UNRECOGNIZED',true,'da').label,'UNRECOGNIZED');
 assert.equal(presentOfficialAction('UNRECOGNIZED',true,'da').verified,true);
+assert.equal(presentOfficialAction('UNAVAILABLE',true,'da').code,null);
+assert.equal(presentOfficialAction('UTILGÆNGELIG',true,'da').verified,false);
 console.log('PASS Official action translation is source-bound, no hidden signal remapping');
