@@ -226,6 +226,9 @@ export function renderProductExperience(view,feeds,lang='da'){
       decision.bull>=0&&decision.bear>=0&&decision.bull+decision.bear===10;
    dial.dataset.state=eligible?'verified':'unavailable';
    dial.style.setProperty('--bull-angle',eligible?(decision.bull*36)+'deg':'0deg');
+   // Pure visual mapping of the existing 0–10 source-owned evidence balance.
+   // Bull=Bear=5 -> needle centered. Never a forecast probability or trade signal.
+   dial.style.setProperty('--dial-needle-angle',eligible?((decision.bull-5)*14)+'deg':'0deg');
    dial.setAttribute('aria-label',eligible?
      (lang==='da'?'Officiel evidensbalance: Bull '+decision.bull+' af 10, Bear '+decision.bear+' af 10. Ikke en sandsynlighed.':
        'Official evidence balance: Bull '+decision.bull+' of 10, Bear '+decision.bear+' of 10. Not a probability.'):
