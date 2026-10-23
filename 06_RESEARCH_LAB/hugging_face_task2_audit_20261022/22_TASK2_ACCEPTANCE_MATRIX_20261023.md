@@ -4,6 +4,16 @@
 
 ## What analyses the evidence supports now
 
+### Executed continuation: original replay and publication, 23 October 2026
+
+[Receipt #31](31_EXECUTED_REPLAY_PUBLICATION_AND_INTEGRITY_20261023.json) records actual new local execution, not another proposed audit:
+
+- **Full original Git-object replay now executed:** 70 original forecasts / 210 horizons, all exact original forecast and CN blobs bound. The first real run exposed a research-script source-epoch bug: CN belongs to each Official forecast's `bound_main_sha`, not the older auto-packet input snapshot. Fixed only the research replay; 12 tests pass and two isolated mutants are rejected. Counts reproduce #29: 49 directional 12h issues, zero directional 72h/168h issues, 6 stale abstentions and 4 no-new-observation abstentions. No outcome file was read by this replay.
+- **One prespecified Oct14 directional case gains bounded publication proof:** current packet `df3dc63c8d16a59617a1f54345e6a1d3d083cb09` was canonically pushed in commit `0b0bce2b70b70db8dcb8f582571e70204bee3fe6` by 13:47:34.7489062Z; its predecessor `6ac2de2bc38ff666e86c6ec9711b79613fef8812` in `6969afecbcc63fa20550661547c232bde14ead73` by 08:03:37.5753266Z. Both precede original forecast `CMP-20261014-cdd1f365da26` at 13:49:20Z. Exact blobs, canonical self-hashes and predecessor declared binding match. Prior job rebased; its local pre-rebase commit is deliberately not used as publication proof. These are authenticated original Actions push acknowledgements, not absolute vendor first-known clocks.
+- **Existing source-integrity gap reproduced, not repaired:** [eight-case real-Git probe](task2_predecessor_integrity_probe_v1.py) executes pinned original reader functions and real `GitCliSnapshot`; four invalid identity/contract cases are incorrectly accepted. Payload tampering and target substitution flip a synthetic delta sign. This does not show corruption of the original historical packets, which passed the selected hash check. A bounded `CODEX_RESEARCH_CANDIDATE_v1` is staged in the existing intake on this same draft; it is neither CODEX_READY nor a production fix.
+
+**Admission remains `NOT_ADMITTED`:** all eleven original upstream eligibility-gate vintages and vendor quote first-known are still not fully authenticated. No certified R2/R3, signal-policy change, forecast rewrite or production merge is claimed. The prospective floor remains 24 October 12:00Z, with real maturation afterwards. Existing #1746 and #1748 are verified merged, not reimplemented.
+
 Framework/Compass original-file coverage, missingness, source latency, exact 12h input/engine replay and the exposed B2 development diagnostic can be analysed now. The historical source read was explicitly approved and executed. All eleven numeric/health/12h replays pass; ten have the separately authenticated original packet-publication chain. Full original R1 admission remains NOT_ADMITTED; vendor-vintage/dependency/independent-event requirements and investor delivery/fills remain distinct. [Executed source rescue and matched result](23_SOURCE_CUSTODY_AND_SCOPED_DEVELOPMENT_20261023.md).
 
 | Stage | Evidence and actual numerical result | Current acceptance | Next finite action / existing owner |

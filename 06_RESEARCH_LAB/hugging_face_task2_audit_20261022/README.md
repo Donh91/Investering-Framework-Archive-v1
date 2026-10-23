@@ -42,6 +42,10 @@ Files 11–15 were prepared before separate owner authorization. Their embedded 
 
 ## Integration, privacy and next exact dependency
 
+### Latest executed continuation
+
+[Receipt #31](31_EXECUTED_REPLAY_PUBLICATION_AND_INTEGRITY_20261023.json) adds the actual 70-forecast / 210-horizon Git replay, a tested CN source-epoch correction to the research script, and authenticated original current/predecessor publication for the prespecified Oct14 directional case. The [real-Git eight-case predecessor probe](task2_predecessor_integrity_probe_v1.py) reproduces four accepted integrity violations in the existing producer; it does not repair or activate production. [The bounded existing-intake candidate](../../research/codex/intake/2026/10/codex-research-task2-predecessor-packet-identity-v1.json) is staged in this same draft for governed admission, not CODEX_READY. See [current acceptance matrix](22_TASK2_ACCEPTANCE_MATRIX_20261023.md). Full R1, vendor first-known, eleven gate vintages and prospective maturation remain separate gates.
+
 The existing CODEX_READY OKX settlement-clock repair is isolated in [draft #1749](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1749), with independent advisory and exact-head checks. Main readback, allowed release route and natural postmerge closure remain separate. Historical #1746/#1748 were verified merged and their natural monitor observed zero rows; first real post-floor source/consumer evidence is still pending.
 
 The historical source rescue was explicitly authorized and executed. Original historical source values were processed locally, with only paths, hashes, clocks, counts and equality flags published. The outer custody ZIP transport remained unavailable; seven underlying original anchor ZIPs and ten additional original hourly ZIPs were actually verified. The eleven-attempt 12h replay and exposed development comparison are in #23. Full R1, longer CN horizons and investor economics remain separately gated; Round 3 analysis remains OFF. No paid HF Job/GPU/API call, new scheduler, market rule or portfolio action was introduced.

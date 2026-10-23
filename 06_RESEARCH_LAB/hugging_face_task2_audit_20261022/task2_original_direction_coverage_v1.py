@@ -85,7 +85,10 @@ def audit(census: dict, loader: Callable[[str, str], bytes], *, expected_origina
         bindings = original.get("source_bindings") or {}
         market = bindings.get("auto_market_state") or {}
         cn = (bindings.get("cycle_navigator") or {}).get("machine_package") or {}
-        cn_ref = market.get("source_snapshot_commit_sha")
+        # CN is loaded by the original Official producer from its own checkout,
+        # independently of the older auto-packet's upstream input snapshot.
+        # In the first Oct12 issue, W42 does not yet exist in the auto snapshot.
+        cn_ref = original.get("bound_main_sha")
         cn_path = cn.get("path")
         cn_blob = cn.get("git_blob_sha")
         if (not isinstance(cn_ref, str) or not SHA40.fullmatch(cn_ref)
@@ -126,7 +129,8 @@ def audit(census: dict, loader: Callable[[str, str], bytes], *, expected_origina
         freshness[fresh] += 1
         versions[version] += 1
         cn_packages[cn_blob] += 1
-        receipts.append({"path": path, "git_blob_sha1": blob, "cn_source_blob_sha1": cn_blob})
+        receipts.append({"path": path, "git_blob_sha1": blob,
+                         "cn_source_commit": cn_ref, "cn_source_blob_sha1": cn_blob})
     return {
         "contract": CONTRACT,
         "status": "RESEARCH_ONLY_NOT_R1_ADMITTED",

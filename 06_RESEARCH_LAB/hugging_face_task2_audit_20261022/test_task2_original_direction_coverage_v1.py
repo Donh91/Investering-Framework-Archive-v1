@@ -17,6 +17,7 @@ def fixture(*, version="OFFICIAL_DAILY_COMPASS_SCORING_v3",
     doc = {
         "compass_id": "CMP-20261012-abcdef123456",
         "issued_at_utc": "2026-10-12T12:00:00Z",
+        "bound_main_sha": B,
         "scoring_contract": version,
         "market_now": {
             "directional_state": (
@@ -73,10 +74,34 @@ class TestOriginalHorizonCoverage(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ORIGINAL_FORECAST_GIT_BLOB_MISMATCH"):
             self.run_case(census, files)
 
+    def test_cn_uses_original_forecast_checkout_not_older_auto_snapshot(self):
+        census, files = fixture()
+        doc = json.loads(files[(A, PATH)])
+        doc["source_bindings"]["auto_market_state"]["source_snapshot_commit_sha"] = "c" * 40
+        raw = (json.dumps(doc, sort_keys=True) + "\n").encode()
+        files[(A, PATH)] = raw
+        for row in census["original_records"]:
+            row["original_forecast_git_blob_sha1"] = sha_blob(raw)
+        # The real Oct12 weekly package was published after the auto snapshot.
+        # Only the original forecast checkout B contains its bound exact blob.
+        result = self.run_case(census, files)
+        self.assertEqual(result["original_forecasts"], 1)
+
     def test_missing_original_horizon_rejected(self):
         census, files = fixture()
         census["original_records"].pop()
         with self.assertRaisesRegex(ValueError, "ORIGINAL_DENOMINATOR_INCOMPLETE"):
+            self.run_case(census, files)
+
+    def test_missing_original_forecast_checkout_pin_rejected(self):
+        census, files = fixture()
+        doc = json.loads(files[(A, PATH)])
+        del doc["bound_main_sha"]
+        raw = (json.dumps(doc, sort_keys=True) + "\n").encode()
+        files[(A, PATH)] = raw
+        for row in census["original_records"]:
+            row["original_forecast_git_blob_sha1"] = sha_blob(raw)
+        with self.assertRaisesRegex(ValueError, "ORIGINAL_CN_BINDING_INVALID"):
             self.run_case(census, files)
 
     def test_duplicate_horizon_rejected(self):
