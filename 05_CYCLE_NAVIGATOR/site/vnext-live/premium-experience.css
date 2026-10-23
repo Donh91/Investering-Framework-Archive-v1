@@ -127,7 +127,7 @@
  background:#fff;display:grid;place-items:center;border:1px solid #e2eaf2}
 .balance-dial-face:before{content:"";position:absolute;inset:19%;border:1px solid #e2e9f1;border-radius:50%}
 .balance-dial-needle{display:block;width:2px;height:43%;position:absolute;top:28%;
- background:linear-gradient(#2f6fda 0 44%,#ced9e7 44% 100%);border-radius:3px;transform:rotate(35deg)}
+ background:linear-gradient(#2f6fda 0 44%,#ced9e7 44% 100%);border-radius:3px;transform:rotate(var(--dial-needle-angle,0deg))}
 .balance-dial[data-state=unavailable] .balance-dial-needle{background:#bfccda}
 .balance-dial-hub{position:relative;width:8px;height:8px;border:2px solid #e8f0fb;
  background:#2f6fda;border-radius:50%;z-index:2}
