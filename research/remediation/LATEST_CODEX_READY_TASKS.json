@@ -1,82 +1,13 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-23T21:53:43Z",
+  "generated_at_utc": "2026-10-23T22:14:18Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
   ],
   "research_intake_enabled": true,
   "tasks": [
-    {
-      "allowed_change_scope": [
-        "Donh91/Investering-Framework-Archive-v1:scripts/data_ping/native_handlekompas.py",
-        "Donh91/Investering-Framework-Archive-v1:tests/data_ping/test_official_daily_compass.py",
-        "Donh91/Investering-Framework-Archive-v1:tests/data_ping/test_funding_clock_semantics.py",
-        "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/*TASK2_R1* only for append-only source-valued-free verification receipt"
-      ],
-      "candidate_id": "codex-research-task2-okx-funding-settlement-clock-v1",
-      "candidate_path": "research/codex/intake/2026/10/codex-research-task2-okx-funding-settlement-clock-v1.json",
-      "candidate_sha256": "30bdb06909cb53fc3c4f76d575aeb4a5b86153c8572d437b82867b01d42c5105",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "TASK2_OKX_FUNDING_SETTLEMENT_TIME_MISLABELED_AS_FEATURE_OBSERVATION",
-      "first_observed_at_utc": "2026-10-14T15:32:03.646Z",
-      "forbidden_changes": [
-        "API budget",
-        "Round 3 scientific activation",
-        "automatic buy or sell recommendations",
-        "automatic merge",
-        "automatic trade execution",
-        "canonical authority",
-        "historical forecast/outcome rewrite",
-        "market gates",
-        "model weights",
-        "new policy semantics",
-        "new scheduler/workflow",
-        "paid data acquisition",
-        "portfolio logic",
-        "private raw data publication"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4e2c6df9c10d30c4b1d9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T21:53:43Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Repair ONLY the provenance metadata mapping for BTC/ETH OKX funding observations in native Compass evidence_snapshot. In existing scripts/data_ping/native_handlekompas.py, live funding_time is a scheduled settlement epoch in milliseconds but currently populates observed_at, creating misleading future-observed timestamps in six of nine original v3 forecast source chains. Keep funding_rate/value, health, scoring, eligibility decision, forecast and action policy unchanged. Preserve funding settlement epoch as explicit separate settlement-time metadata if compatible with existing schema; otherwise propose a versioned backward-compatible additive note and remain NEEDS_MORE_EVIDENCE. Derive quote observed/retrieved clock only from an independently bound pre-existing upstream source capture timestamp/receipt when available; never manufacture capture/publication time from settlement, current wall-clock, Git commit date or retrospective API. Missing original quote capture clock remains UNKNOWN, not automatically fresh/predictive or a reason to rewrite historical outcomes. Add deterministic positive/negative regression tests, preserve original 2026-10-12/13 issued data. Do not self-promote historical PIT or change production trade signals. If contract semantics would change downstream model decisions, stop and escalate to existing framework owner instead of quietly altering gates.",
-      "observations": 1,
-      "post_fix_gate": "EXACT_MAIN_CODE_FIX_PLUS_POSITIVE_NEGATIVE_TIMECLOCK_FIXTURES_PLUS_NATIVE_HANDLEKOMPAS_REGRESSION_SUITE_PLUS_MERGED_SOURCE_HASH_READBACK_PLUS_INDEPENDENT_REVIEW_PLUS_ZERO_HISTORICAL_FORECAST_MUTATIONS",
-      "precondition": "Candidate codex-research-task2-okx-funding-settlement-clock-v1 still exists on main at research/codex/intake/2026/10/codex-research-task2-okx-funding-settlement-clock-v1.json with SHA-256 30bdb06909cb53fc3c4f76d575aeb4a5b86153c8572d437b82867b01d42c5105, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "EXPEDITED",
-      "required_evidence": [
-        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_FEATURE_CLOCK_AUDIT_v1.json",
-        "scripts/data_ping/native_handlekompas.py",
-        "scripts/data_terminal/okx_swap_owner_collector.py",
-        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_11_SOURCE_CLOCK_CASES_v1.json",
-        "https://www.okx.com/docs-v5/en/",
-        "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1630",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "4e2c6df9c10d30c4b1d9",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-10-14T15:32:03.646Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "EXACT_MAIN_CODE_FIX_PLUS_POSITIVE_NEGATIVE_TIMECLOCK_FIXTURES_PLUS_NATIVE_HANDLEKOMPAS_REGRESSION_SUITE_PLUS_MERGED_SOURCE_HASH_READBACK_PLUS_INDEPENDENT_REVIEW_PLUS_ZERO_HISTORICAL_FORECAST_MUTATIONS"
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "44db4c7734448e420f3cc573dd03642f16d2ddaa6797badd89acb90378cffd58",
-      "transition_receipt_path": "research/codex/transitions/4e2c6df9c10d30c4b1d9.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-task2-okx-funding-settlement-clock-v1"
-    },
     {
       "allowed_change_scope": [
         "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
@@ -117,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T21:53:43Z",
+      "last_observed_at_utc": "2026-10-23T22:14:18Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -189,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T21:53:43Z",
+      "last_observed_at_utc": "2026-10-23T22:14:18Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -249,7 +180,7 @@
         "predecessor selection or time policy"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a2838fc5808208860a9c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T21:53:43Z",
+      "last_observed_at_utc": "2026-10-23T22:14:18Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -317,7 +248,7 @@
         "trading or SELL action semantics"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a6e20836103b8e49f4ab --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T21:53:43Z",
+      "last_observed_at_utc": "2026-10-23T22:14:18Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -384,7 +315,7 @@
         "private source bytes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad6c41744767265f7c5a --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T21:53:43Z",
+      "last_observed_at_utc": "2026-10-23T22:14:18Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -452,7 +383,7 @@
         "source first-known promotion"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ff1c1d6794fc131c6991 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-23T21:53:43Z",
+      "last_observed_at_utc": "2026-10-23T22:14:18Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
