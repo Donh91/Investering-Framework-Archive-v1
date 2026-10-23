@@ -102,7 +102,7 @@ const safe=(s)=>typeof s==='string'&&s.trim()?s.trim().slice(0,450):null;
 // Unrecognised codes are never reinterpreted as BUY/HOLD/SELL.
 export function presentOfficialAction(code,eligible,lang='da'){
  const da=lang!=='en';
- if(!eligible||typeof code!=='string'||!code.trim())
+ if(!eligible||typeof code!=='string'||!code.trim()||code==='UNAVAILABLE'||code==='UTILGÆNGELIG')
    return {label:da?'AFVENTER KILDE':'AWAITING SOURCE',code:null,verified:false,
       explanation:da?'Ingen aktuel kildeverificeret handling.':'No current source-verified action.'};
  const known={
