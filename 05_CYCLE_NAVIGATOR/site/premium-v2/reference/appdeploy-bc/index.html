@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cycle Navigator · Graph Design B/C</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="site">
+        <header class="topbar">
+          <div class="wrap topbar-inner">
+            <a href="#top" class="brand" aria-label="Cycle Navigator">
+              <svg
+                class="brand-logo"
+                viewBox="0 0 435 72"
+                xmlns="http://www.w3.org/2000/svg"
+                role="img"
+                aria-label="Cycle Navigator"
+              >
+                <g transform="translate(2 3)">
+                  <circle
+                    cx="33"
+                    cy="33"
+                    r="31"
+                    fill="none"
+                    stroke="#07172f"
+                    stroke-width="2.1"
+                  ></circle>
+                  <circle
+                    cx="33"
+                    cy="33"
+                    r="22"
+                    fill="none"
+                    stroke="#c7cbd1"
+                    stroke-width="2.5"
+                  ></circle>
+                  <path
+                    d="M40.9 23.9 36.7 36.7 23.9 40.9 28.7 28.7Z"
+                    fill="#3977e4"
+                  ></path>
+                  <path
+                    d="m40.9 23.9-12.2 4.8 8 8 4.2-12.8Z"
+                    fill="#07172f"
+                  ></path>
+                  <circle cx="33" cy="33" r="2.1" fill="#07172f"></circle>
+                </g>
+                <g fill="#07172f" font-family="Arial,sans-serif">
+                  <text
+                    x="90"
+                    y="30"
+                    font-size="25"
+                    font-weight="400"
+                    letter-spacing="6"
+                  >
+                    CYCLE
+                  </text>
+                  <text
+                    x="90"
+                    y="60"
+                    font-size="27"
+                    font-weight="800"
+                    letter-spacing="3.7"
+                  >
+                    NAVIGATOR
+                  </text>
+                </g>
+              </svg>
+            </a>
+            <div class="header-actions">
+              <span class="state-chip" data-t="headerState">DESIGNTEST</span>
+              <div class="lang-switch" role="group" aria-label="Sprog">
+                <button type="button" data-lang="da" aria-pressed="true">
+                  DA
+                </button>
+                <button type="button" data-lang="en" aria-pressed="false">
+                  EN
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div id="top" class="wrap">
+          <nav class="site-nav" aria-label="Navigation">
+            <span class="selected" data-t="overview">Overblik</span>
+            <span>Kompas</span><span>PATH</span>
+            <span data-t="results">Resultater</span>
+          </nav>
+          <main>
+            <div class="status-row">
+              <span class="status-light"></span
+              ><span data-t="warning"
+                >ISOLERET DESIGNPREVIEW · KUN EKSEMPELDATA</span
+              ><small>DESIGN LAB / V2</small>
+            </div>
+            <div class="hero">
+              <div class="hero-copy">
+                <div class="hero-eyebrow" data-t="heroEyebrow">
+                  CYCLE NAVIGATOR / GRAPH STUDIO
+                </div>
+                <h1 data-t="heroTitle">Ugens kursrejse.</h1>
+                <p data-t="heroIntro">
+                  To linjer. Det forventede forløb og markedets faktiske
+                  bevægelse, uden tabeller eller visuel støj.
+                </p>
+              </div>
+              <div class="choice">
+                <span class="choice-label" data-t="choiceLabel"
+                  >VÆLG DESIGN</span
+                >
+                <div
+                  class="choice-segments"
+                  role="group"
+                  aria-label="Designalternativ"
+                >
+                  <button
+                    type="button"
+                    id="select-b"
+                    data-variant="b"
+                    aria-pressed="true"
+                  >
+                    <b>B</b><span>Deep Navy</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="select-c"
+                    data-variant="c"
+                    aria-pressed="false"
+                  >
+                    <b>C</b><span>Arctic Mist</span>
+                  </button>
+                </div>
+                <a
+                  href="https://cycle-navigator-graph-design-approval-67flnd.v2.appdeploy.ai/"
+                  target="_blank"
+                  rel="noopener"
+                  class="original-a"
+                  data-t="originalA"
+                  >Se original A ↗</a
+                >
+              </div>
+            </div>
+            <section id="variant-panel" class="graph-card" data-variant="b">
+              <div class="card-top">
+                <div>
+                  <span class="small-kicker" data-t="cardEyebrow"
+                    >FROSSEN PROGNOSE / UGENS BEVÆGELSE</span
+                  >
+                  <h2 id="card-heading">
+                    Weekly Outlook <span class="alt-token">B</span>
+                  </h2>
+                  <p class="card-desc" data-t="cardDesc">
+                    Kursretning, forventede udsving og faktiske observationer.
+                  </p>
+                </div>
+                <div class="asset-select" role="group" aria-label="Aktiv">
+                  <button type="button" data-asset="BTC" aria-pressed="true">
+                    BTC
+                  </button>
+                  <button type="button" data-asset="ETH" aria-pressed="false">
+                    ETH
+                  </button>
+                </div>
+              </div>
+              <div class="chart-surface">
+                <div class="instrument-header">
+                  <div class="instrument-left">
+                    <span id="pair">BTC / USD</span
+                    ><strong id="observed-value">$83,000</strong
+                    ><small data-t="observed">Simuleret observeret kurs</small>
+                  </div>
+                  <div class="instrument-right">
+                    <span>19–25 OCT 2026</span
+                    ><strong id="time-label">Wed · 15:00 UTC</strong
+                    ><small data-t="freeze"
+                      >Illustrativ prognose · låst for hele ugen</small
+                    >
+                  </div>
+                </div>
+                <div class="legend">
+                  <div>
+                    <i class="swatch-forecast"></i
+                    ><span data-t="blueLegend">Forventet kurs</span>
+                  </div>
+                  <div>
+                    <i class="swatch-actual"></i
+                    ><span data-t="greenLegend">Faktisk kurs</span>
+                  </div>
+                  <div>
+                    <i class="swatch-band"></i
+                    ><span data-t="rangeLegend">Forventet low / high</span>
+                  </div>
+                </div>
+                <div class="plot-shell">
+                  <svg
+                    id="chart"
+                    viewBox="0 0 1000 405"
+                    preserveAspectRatio="none"
+                    aria-labelledby="chart-title chart-description"
+                    role="img"
+                  >
+                    <title id="chart-title">
+                      Illustrative forecast against observed path
+                    </title>
+                    <desc id="chart-description">
+                      Blue or teal predicted path with low high band, and green
+                      or charcoal observed path up to the selected hour.
+                    </desc>
+                    <defs>
+                      <linearGradient
+                        id="forecast-gradient"
+                        x1="0"
+                        x2="0"
+                        y1="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stop-color="var(--forecast)"
+                          stop-opacity=".22"
+                        ></stop>
+                        <stop
+                          offset="100%"
+                          stop-color="var(--forecast)"
+                          stop-opacity=".075"
+                        ></stop>
+                      </linearGradient>
+                    </defs>
+                    <g id="grid"></g>
+                    <path id="range-band" fill="url(#forecast-gradient)"></path>
+                    <path
+                      id="range-upper"
+                      class="range-edge"
+                      fill="none"
+                    ></path>
+                    <path
+                      id="range-lower"
+                      class="range-edge"
+                      fill="none"
+                    ></path>
+                    <path
+                      id="forecast"
+                      fill="none"
+                      stroke="var(--forecast)"
+                      stroke-width="3.1"
+                      stroke-linejoin="round"
+                      stroke-linecap="round"
+                    ></path>
+                    <path
+                      id="actual"
+                      fill="none"
+                      stroke="var(--actual)"
+                      stroke-width="2.8"
+                      stroke-linejoin="round"
+                      stroke-linecap="round"
+                    ></path>
+                    <line id="playhead" x1="0" y1="30" x2="0" y2="372"></line>
+                    <circle id="endpoint-halo" r="10"></circle>
+                    <circle id="endpoint" r="4.7"></circle>
+                  </svg>
+                  <div
+                    class="chart-price-axis"
+                    id="price-axis"
+                    aria-hidden="true"
+                  ></div>
+                </div>
+                <div class="day-axis" aria-hidden="true">
+                  <span data-day="0">MAN</span><span data-day="1">TIR</span
+                  ><span data-day="2">ONS</span><span data-day="3">TOR</span
+                  ><span data-day="4">FRE</span><span data-day="5">LØR</span
+                  ><span data-day="6">SØN</span>
+                </div>
+                <div class="instrument-foot">
+                  <span class="tiny-live"></span
+                  ><span id="source-state" data-t="demoFoot"
+                    >VISUEL SIMULATION, IKKE EN PUBLICERET PROGNOSE</span
+                  >
+                </div>
+              </div>
+              <div class="interaction">
+                <div class="time-control">
+                  <div class="time-control-head">
+                    <label for="hour-slider" data-t="hourLabel"
+                      >Spol gennem ugen</label
+                    >
+                    <strong id="timeline-label">ONS 15:00 UTC</strong>
+                  </div>
+                  <input
+                    type="range"
+                    id="hour-slider"
+                    min="0"
+                    max="167"
+                    step="1"
+                    value="63"
+                    aria-label="Time for den observerede kurve"
+                  />
+                  <div class="time-extents">
+                    <span data-t="monday">Mandag</span
+                    ><span data-t="sunday">Søndag</span>
+                  </div>
+                </div>
+                <div class="interaction-buttons">
+                  <button type="button" class="play-btn" id="play">
+                    <span id="play-symbol">▶</span
+                    ><span id="play-text" data-t="play">Afspil uge</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="missing-btn"
+                    id="missing"
+                    aria-pressed="false"
+                    data-t="missing"
+                  >
+                    Test uden prognose
+                  </button>
+                </div>
+              </div>
+            </section>
+            <div class="under-chart">
+              <div class="under-detail">
+                <span class="under-index">01</span>
+                <h3 data-t="underA">Frys forventningen</h3>
+                <p data-t="underAText">
+                  Prognoselinjen og low/high-båndet ændrer sig ikke, når den
+                  grønne eller mørke faktiske kurve vokser.
+                </p>
+              </div>
+              <div class="under-detail">
+                <span class="under-index">02</span>
+                <h3 data-t="underB">Vis bevægelsen</h3>
+                <p data-t="underBText">
+                  Forventningen har egne udsving. Ikke blot en flad linje med
+                  tre range-intervaller.
+                </p>
+              </div>
+              <div class="under-detail">
+                <span class="under-index">03</span>
+                <h3 data-t="underC">Bevar troværdigheden</h3>
+                <p data-t="underCText">
+                  Manglende original kilde betyder ingen officiel prognoselinje.
+                  Scores hører til Resultater.
+                </p>
+              </div>
+            </div>
+            <p class="disclaimer">
+              <b data-t="disclaimerTitle">Datagrænse</b
+              ><span data-t="disclaimerBody"
+                >Begge designs bruger kunstigt genererede kurver udelukkende til
+                visuel godkendelse. Den faktiske W43-prognose mangler en
+                verificeret daglig prognosesti. Den færdige graf må kun vise en
+                fremadrettet kildefrosset forventning med dokumenterede
+                datapunkter.</span
+              >
+            </p>
+          </main>
+          <footer>
+            <span>Cycle Navigator · Design Alternatives B/C</span
+            ><span data-t="footer">Ingen ændringer på live-sitet</span>
+          </footer>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
