@@ -7,6 +7,7 @@ const $=id=>document.getElementById(id);
 const dataUrl=new URL('../../data/compass.json',import.meta.url);
 const latestUrl=new URL('../../data/latest.json',import.meta.url);
 const lang=(da,en)=>document.documentElement.lang==='en'?en:da;
+let currentModel=null,sourceCompass=null,sourceLatest=null,expiryTimer=null;
 function make(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;
  if(text!==undefined)el.textContent=String(text);return el}
 function clearUnissued(){
@@ -20,7 +21,25 @@ function clearUnissued(){
   'No verified current PATH position.');
  $('official-pilot-gate').textContent='';
 }
+
+function localizeCompass(){
+ const en=document.documentElement.lang==='en';
+ const heading=document.querySelector('.official-pilot-head h2');
+ if(heading)heading.textContent=en?'Decision compass.':'Handlingskompas.';
+ const subtitle=document.querySelector('.official-pilot-head p');
+ if(subtitle)subtitle.textContent=en?'Official source only. No new action inference.':
+  'Official-first. Ingen nye køb-/salgsbeslutninger fra denne visning.';
+ const subs=document.querySelectorAll('.official-pilot-subhead');
+ if(subs[0]){
+  subs[0].querySelector('h3').textContent=en?'Capital rotation':'Kapitalrotation';
+  subs[0].querySelector('p').textContent=en?'Seven source-issued tiers, not trading instructions.':
+   'Syv kildeudstedte trin, ikke en købsanvisning.';
+ }
+ if(subs[1])subs[1].querySelector('h3').textContent=en?'PATH · Ten cycle phases':'PATH · Cyklens ti faser';
+}
+
 function paint(model){
+ localizeCompass();
  if(model.status==='UNAVAILABLE'){clearUnissued();return}
  const now=model.official_action_current;
  $('official-pilot-status').textContent=now?
@@ -81,10 +100,22 @@ async function fetchJson(url){
 }
 async function init(){
  clearUnissued();
+ if(expiryTimer!==null){clearTimeout(expiryTimer);expiryTimer=null;}
  try{
   const [compass,latest]=await Promise.all([fetchJson(dataUrl),fetchJson(latestUrl)]);
-  const model=readOfficialCompassPath(compass,latest,{now_utc:new Date().toISOString()});
-  paint(model);
+  sourceCompass=compass;sourceLatest=latest;
+  currentModel=readOfficialCompassPath(compass,latest,{now_utc:new Date().toISOString()});
+  paint(currentModel);
+  if(currentModel.status==='SOURCE_CURRENT'){
+   const ms=Date.parse(currentModel.valid_until_utc)-Date.now()+150;
+   if(ms>0&&ms<2147483000)expiryTimer=setTimeout(()=>{
+     currentModel=readOfficialCompassPath(sourceCompass,sourceLatest,{now_utc:new Date().toISOString()});
+     paint(currentModel);
+   },ms);
+  }
  }catch{clearUnissued()}
 }
 init();
+
+document.addEventListener('cn:languagechange',()=>{if(currentModel)paint(currentModel);else localizeCompass()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)init()});
