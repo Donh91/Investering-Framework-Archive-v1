@@ -32,3 +32,23 @@
 | Final root cutover | **BLOCKED** | Separate owner approval + release/readback |
 
 Historical score percentage and 168-hour coverage are **different quantities**. Absence of prospective directional edge remains ABSTAIN; no visual VERIFIED badge can upgrade this.
+
+## 2026-10-23 read-only live browser verification · LEGACY CANDIDATE
+
+Browser session: `84c400bd-5b98-49bd-8ac8-14e226e5fa7d` (TinyFish). Exact visited route:
+`https://donh91.github.io/Investering-Framework-Archive-v1/legacy/`.
+
+**Observed PASS (browser, not iPhone Safari):**
+- Legacy shell loads; header/weekly state/Compass/HOLD card are rendered, not stuck at `Loading`.
+- NOW/PATH/PROOF tabs can be selected; DA/ENG navigation translated.
+- BTC/ETH TradingView chart renders, original hourly recorded green path and frozen aggregate ranges, horizontal 7/14/21 time-axis controls. Original BLUE daily expected close path remains correctly `UNAVAILABLE`.
+- Legacy indicates **stale/not-current** Official action rather than fabricating fresh BUY/SELL. Source also exposes CN #30, observed historical hourly price and 29/29 historical score evidence.
+- A mobile-width single-column view was reported without observed horizontal clipping.
+
+**Still UNVERIFIED:**
+- True native iPhone Safari / VoiceOver, exact owner-app screenshot identity and all accessibility features.
+- The historical PROOF tab's full depth, drilldowns and evidence continuity (browser reported tab clickable but limited rendered chart/table visibility). Do not treat "tab exists" as comprehensive feature parity.
+- Browser console and network panel, real byte-identical asset/CDN hash, current Official Compass issued-clock freshness/equality, a fully tested production switch + reverse rollback.
+- A successful legacy browser visit does NOT make its data current or provide independent proof attestation.
+
+**Recovery conclusion:** The legacy route is a promising and partially verified fallback, **not** a certified known-good rollback package or permission to change the official root. Keep it intact; do not globally revert `main`. New UI should be built separately and compared against this live behavior. No side effects were made during the inspection.
