@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="da"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cycle Navigator · B source-port (ISOLATED)</title>
+<link rel="stylesheet" href="../reference/appdeploy-bc/src/styles.css">
+<style>
+/* Development wrapper only. B CSS and DOM/SVG anatomy come from pinned
+ * AppDeploy B/C snapshot 1792595071401, NO fake source output. NOT a public entrypoint. */
+.source-audit-status{font-size:12px;color:#596b80;margin:24px 0;line-height:1.55}
+.dev-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dev-header strong{font-size:12px;color:#07172f}
+.dev-lang{display:flex;gap:4px}
+.dev-lang button{border:1px solid #dce4ed;background:#fff;border-radius:8px;min-width:44px;min-height:44px}
+.dev-lang button[aria-pressed=true]{background:#e6effa;color:#0e3e74}
+@media(max-width:440px){.wrap{width:calc(100% - 24px)}}
+</style></head><body><main class="wrap">
+<div class="source-audit-status dev-header"><strong>GRAPH B · ISOLERET UDVIKLING · IKKE PRODUKTION</strong>
+<div class="dev-lang"><button type="button" data-lang="da" aria-pressed="true">DA</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div></div>
+<p class="source-audit-status" id="feed-status" role="status">Kontrollerer kanonisk, offentligt CN-datasæt. Ingen demo-priser.</p>
+<section id="variant-panel" class="graph-card" data-variant="b" data-source="missing">
+              <div class="card-top">
+                <div>
+                  <span class="small-kicker" data-t="cardEyebrow"
+                    >FROSSEN PROGNOSE / UGENS BEVÆGELSE</span
+                  >
+                  <h2 id="card-heading">
+                    Weekly Outlook <span class="alt-token">B</span>
+                  </h2>
+                  <p class="card-desc" data-t="cardDesc">
+                    Kursretning, forventede udsving og faktiske observationer.
+                  </p>
+                </div>
+                <div class="asset-select" role="group" aria-label="Aktiv">
+                  <button type="button" data-asset="BTC" aria-pressed="true">
+                    BTC
+                  </button>
+                  <button type="button" data-asset="ETH" aria-pressed="false">
+                    ETH
+                  </button>
+                </div>
+              </div>
+              <div class="chart-surface">
+                <div class="instrument-header">
+                  <div class="instrument-left">
+                    <span id="pair">BTC / USD</span
+                    ><strong id="observed-value">—</strong
+                    ><small data-t="observed">Kun verificerede observationer</small>
+                  </div>
+                  <div class="instrument-right">
+                    <span>UGE · KILDE AFVENTER</span
+                    ><strong id="time-label">—</strong
+                    ><small data-t="freeze"
+                      >Original prognose · afventer kilde</small
+                    >
+                  </div>
+                </div>
+                <div class="legend">
+                  <div>
+                    <i class="swatch-forecast"></i
+                    ><span data-t="blueLegend">Forventet kurs</span>
+                  </div>
+                  <div>
+                    <i class="swatch-actual"></i
+                    ><span data-t="greenLegend">Faktisk kurs</span>
+                  </div>
+                  <div>
+                    <i class="swatch-band"></i
+                    ><span data-t="rangeLegend">Forventet low / high</span>
+                  </div>
+                </div>
+                <div class="plot-shell">
+                  <svg
+                    id="chart"
+                    viewBox="0 0 1000 405"
+                    preserveAspectRatio="none"
+                    aria-labelledby="chart-title chart-description"
+                    role="img"
+                  >
+                    <title id="chart-title">
+                      Illustrative forecast against observed path
+                    </title>
+                    <desc id="chart-description">
+                      Blue or teal predicted path with low high band, and green
+                      or charcoal observed path up to the selected hour.
+                    </desc>
+                    <defs>
+                      <linearGradient
+                        id="forecast-gradient"
+                        x1="0"
+                        x2="0"
+                        y1="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stop-color="var(--forecast)"
+                          stop-opacity=".22"
+                        ></stop>
+                        <stop
+                          offset="100%"
+                          stop-color="var(--forecast)"
+                          stop-opacity=".075"
+                        ></stop>
+                      </linearGradient>
+                    </defs>
+                    <g id="grid"></g>
+                    <path id="range-band" fill="url(#forecast-gradient)"></path>
+                    <path
+                      id="range-upper"
+                      class="range-edge"
+                      fill="none"
+                    ></path>
+                    <path
+                      id="range-lower"
+                      class="range-edge"
+                      fill="none"
+                    ></path>
+                    <path
+                      id="forecast"
+                      fill="none"
+                      stroke="var(--forecast)"
+                      stroke-width="3.1"
+                      stroke-linejoin="round"
+                      stroke-linecap="round"
+                    ></path>
+                    <path
+                      id="actual"
+                      fill="none"
+                      stroke="var(--actual)"
+                      stroke-width="2.8"
+                      stroke-linejoin="round"
+                      stroke-linecap="round"
+                    ></path>
+                    <line id="playhead" x1="0" y1="30" x2="0" y2="372"></line>
+                    <circle id="endpoint-halo" r="10"></circle>
+                    <circle id="endpoint" r="4.7"></circle>
+                  </svg>
+                  <div
+                    class="chart-price-axis"
+                    id="price-axis"
+                    aria-hidden="true"
+                  ></div>
+                </div>
+                <div class="day-axis" aria-hidden="true">
+                  <span data-day="0">MAN</span><span data-day="1">TIR</span
+                  ><span data-day="2">ONS</span><span data-day="3">TOR</span
+                  ><span data-day="4">FRE</span><span data-day="5">LØR</span
+                  ><span data-day="6">SØN</span>
+                </div>
+                <div class="instrument-foot">
+                  <span class="tiny-live"></span
+                  ><span id="source-state" data-t="demoFoot"
+                    >KILDEPROGNOSE IKKE UDSTEDT</span
+                  >
+                </div>
+              </div>
+              <div class="interaction">
+                <div class="time-control">
+                  <div class="time-control-head">
+                    <label for="hour-slider" data-t="hourLabel"
+                      >Spol gennem ugen</label
+                    >
+                    <strong id="timeline-label">ONS 15:00 UTC</strong>
+                  </div>
+                  <input
+                    type="range"
+                    id="hour-slider"
+                    min="0"
+                    max="167"
+                    step="1"
+                    value="0"
+                    aria-label="Time for den observerede kurve"
+                  />
+                  <div class="time-extents">
+                    <span data-t="monday">Mandag</span
+                    ><span data-t="sunday">Søndag</span>
+                  </div>
+                </div>
+                <div class="interaction-buttons">
+                  <button type="button" class="play-btn" id="play">
+                    <span id="play-symbol">▶</span
+                    ><span id="play-text" data-t="play">Afspil uge</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+</main>
+<script type="module" src="./source-graph-b.mjs"></script></body></html>
