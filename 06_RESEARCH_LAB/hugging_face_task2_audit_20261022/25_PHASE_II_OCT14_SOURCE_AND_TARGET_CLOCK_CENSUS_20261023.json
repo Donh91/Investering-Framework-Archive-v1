@@ -71,7 +71,10 @@
       "live_capture_source_snapshot_member_verified": true,
       "auto_packet_absent_from_earlier_source_snapshot_expected": true,
       "scoring_results_read": false,
-      "scientific_R1_admission": false
+      "scientific_R1_admission": false,
+      "original_start_reference_age_hours": 0.312222,
+      "original_issue_to_target_plus_reference_age_equals_nominal_12h": true,
+      "original_source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE"
     },
     {
       "forecast_id": "CMP-20261014-18699903db9f",
@@ -102,7 +105,10 @@
       "live_capture_source_snapshot_member_verified": true,
       "auto_packet_absent_from_earlier_source_snapshot_expected": true,
       "scoring_results_read": false,
-      "scientific_R1_admission": false
+      "scientific_R1_admission": false,
+      "original_start_reference_age_hours": 0.713333,
+      "original_issue_to_target_plus_reference_age_equals_nominal_12h": true,
+      "original_source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE"
     },
     {
       "forecast_id": "CMP-20261014-e84827a7fb53",
@@ -133,7 +139,10 @@
       "live_capture_source_snapshot_member_verified": true,
       "auto_packet_absent_from_earlier_source_snapshot_expected": true,
       "scoring_results_read": false,
-      "scientific_R1_admission": false
+      "scientific_R1_admission": false,
+      "original_start_reference_age_hours": 4.926111,
+      "original_issue_to_target_plus_reference_age_equals_nominal_12h": true,
+      "original_source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE"
     },
     {
       "forecast_id": "CMP-20261014-cdd1f365da26",
@@ -164,7 +173,10 @@
       "live_capture_source_snapshot_member_verified": true,
       "auto_packet_absent_from_earlier_source_snapshot_expected": true,
       "scoring_results_read": false,
-      "scientific_R1_admission": false
+      "scientific_R1_admission": false,
+      "original_start_reference_age_hours": 0.822222,
+      "original_issue_to_target_plus_reference_age_equals_nominal_12h": true,
+      "original_source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE"
     },
     {
       "forecast_id": "CMP-20261014-34b416163f12",
@@ -195,7 +207,10 @@
       "live_capture_source_snapshot_member_verified": true,
       "auto_packet_absent_from_earlier_source_snapshot_expected": true,
       "scoring_results_read": false,
-      "scientific_R1_admission": false
+      "scientific_R1_admission": false,
+      "original_start_reference_age_hours": 3.795556,
+      "original_issue_to_target_plus_reference_age_equals_nominal_12h": true,
+      "original_source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE"
     },
     {
       "forecast_id": "CMP-20261014-a4e38e3a1db1",
@@ -226,7 +241,13 @@
       "live_capture_source_snapshot_member_verified": true,
       "auto_packet_absent_from_earlier_source_snapshot_expected": true,
       "scoring_results_read": false,
-      "scientific_R1_admission": false
+      "scientific_R1_admission": false,
+      "original_start_reference_age_hours": 0.407222,
+      "original_issue_to_target_plus_reference_age_equals_nominal_12h": true,
+      "original_source_window_end_semantics": "COLLECTION_BOUNDARY_NOT_CANDLE_CLOSE"
     }
-  ]
+  ],
+  "issue_target_reference_decomposition_verified_all_n": 6,
+  "issue_target_reference_decomposition_max_error_hours": 4.4444444391444904e-7,
+  "original_backtest_challenge": "Explicit original time_basis identity verified: original reference-point-to-target 12h = elapsed issue-to-target + reference age at actual issue, 6/6. Report actual lead and reference lead distinctly. Long-lag stale forecasts cannot masquerade as equal action horizons. This is temporal arithmetic, not forecast skill."
 }
