@@ -128,6 +128,12 @@ try{
     overflow.push(views[id].overflow)}
    $('[data-tab="compass"]').click();
    const before=$('#premium-now-action').textContent;
+   const sourceActionCode=$('#premium-action-code')?.textContent||'';
+   const sourceActionMeaning=$('#premium-action-meaning')?.textContent||'';
+   const actionReconciled=sourceActionCode.includes('OFFICIAL · HOLD_WAIT')?
+     before==='AFVENT'&&sourceActionMeaning.includes('afventsignal'):
+     !sourceActionCode.includes('OFFICIAL · HOLD_WAIT')&&before.length>0;
+
    const lens={};
    for(const id of ['holder','active','micro']){$('[data-investor-lens="'+id+'"]').click();
     lens[id]={active:$('[data-investor-lens="'+id+'"]').getAttribute('aria-pressed'),
@@ -331,7 +337,7 @@ try{
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
-    proofCopied,sourceExpiryShown,priceStatusIndependent,pathJumpFocus,
+    proofCopied,sourceExpiryShown,priceStatusIndependent,actionReconciled,pathJumpFocus,
     clockRight:sourceClock.right,clockLeft:sourceClock.left,clockWidth:sourceClock.width,
     clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,forwardButtons,
     hourlyCurveProof,originalRangesValid,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
@@ -366,6 +372,7 @@ try{
   assert.ok(report.promptHasProof,'Proof AI prompt lacks original source/hash anchors');
   assert.ok(report.proofCopied,'AI verification copy button omitted or changed the original public audit prompt');
   assert.ok(report.sourceExpiryShown,'Expired Official Compass not disclosed in served homepage status');
+  assert.ok(report.actionReconciled,'Official Compass readable action must preserve original verified code without creating BUY/SELL');
   assert.ok(report.priceStatusIndependent,'Public hourly source freshness must be disclosed separately from Compass');
   assert.ok(report.pathJumpFocus,'Overview-to-PATH anchor lost keyboard focus in hidden panel');
   assert.ok([report.scorePrice,report.scoreDirection,report.scorePullback].every(x=>
