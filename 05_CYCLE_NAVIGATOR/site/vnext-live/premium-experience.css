@@ -423,3 +423,25 @@
  .section{padding:19px 13px}
  .section-heading .eyebrow{letter-spacing:.10em}
 }
+
+
+/* B · iPhone above-the-fold correction after true 390px Chrome QA.
+ * Preserve the 740px official-plot discoverability contract rather than
+ * weakening acceptance thresholds to hide the added editorial title. */
+@media(max-width:440px){
+ .hero{margin:0 0 10px;padding:15px 18px 14px;gap:12px}
+ .hero h1{font-size:34px;line-height:1.04}
+ .hero .intro{margin-top:8px;line-height:1.45;font-size:12px}
+ .hero-indicator{min-height:0;padding:11px 13px}
+ .hero-value{margin:7px 0 3px;font-size:23px}
+ .decision{margin-bottom:7px;gap:7px}
+ .decision article{min-height:102px;padding:12px 11px}
+ .decision .eyebrow{margin-bottom:7px;line-height:1.45}
+ .decision .action-value{font-size:24px}
+ .decision-side #direction{font-size:22px}
+ .decision .small{margin:8px 0 0;line-height:1.45}
+ .section{margin-top:12px;padding:16px 13px}
+ .section-heading{margin-bottom:11px}
+ .chart-area[data-approved-design="B"]{margin-top:9px}
+ .chart-area[data-approved-design="B"] .chart-kicker{margin-bottom:11px}
+}
