@@ -1,0 +1,823 @@
+/* Source-native B/C CSS reference copied from user-approved AppDeploy B/C snapshot 1792595071401.
+ * No Sass/PostCSS/Tailwind dependency needed for these authored CSS rules.
+ * The only removed lines are the 3 @tailwind directives; these had no CSS
+ * meaning to a native browser but production Vite/Tailwind would expand them.
+ * Selected B only, C unused. NEVER load demonstration JS. */
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  color: #07172f;
+  background: #f6f7f8;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f6f7f8;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid #2f6fda;
+  outline-offset: 3px;
+}
+.wrap {
+  width: min(1120px, calc(100% - 40px));
+  margin: auto;
+}
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid #e0e6ec;
+}
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  height: 76px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 48px;
+}
+.brand-logo {
+  width: 190px;
+  max-width: 100%;
+  height: auto;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.state-chip {
+  border: 1px solid #dfe6ee;
+  color: #71849b;
+  padding: 6px 11px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  border-radius: 30px;
+  white-space: nowrap;
+}
+.lang-switch {
+  display: flex;
+  gap: 2px;
+  border: 1px solid #dfe6ee;
+  border-radius: 10px;
+  padding: 3px;
+  background: #f5f7fa;
+}
+.lang-switch button {
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #79869a;
+  min-height: 44px;
+  min-width: 44px;
+}
+.lang-switch button[aria-pressed='true'] {
+  background: #fff;
+  color: #0b294d;
+  box-shadow: 0 2px 5px #0b294d12;
+}
+.site-nav {
+  height: 57px;
+  display: flex;
+  gap: 33px;
+  align-items: center;
+  border-bottom: 1px solid #e0e6ec;
+  color: #8b98a6;
+  font-size: 12px;
+  font-weight: 650;
+}
+.site-nav span {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.site-nav .selected {
+  color: #07172f;
+  border-bottom: 2px solid #2f6fda;
+}
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #728298;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  margin-top: 20px;
+}
+.status-row small {
+  margin-left: auto;
+  font-size: 9px;
+  color: #9aabba;
+}
+.status-light {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4d84d4;
+}
+.hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px;
+  margin: 40px 0 27px;
+}
+.hero-eyebrow {
+  color: #64809c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+.hero h1 {
+  font-size: clamp(42px, 5.4vw, 62px);
+  font-weight: 740;
+  letter-spacing: -0.065em;
+  line-height: 1.05;
+  margin: 13px 0 15px;
+}
+.hero p {
+  font-size: 14px;
+  color: #708296;
+  line-height: 1.7;
+  max-width: 600px;
+  margin: 0;
+}
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex: none;
+}
+.choice-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  color: #7b8da3;
+}
+.choice-segments {
+  background: #edf2f7;
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  border: 1px solid #dfe6ee;
+  border-radius: 12px;
+}
+.choice-segments button {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 0;
+  background: transparent;
+  border-radius: 9px;
+  color: #678097;
+  font-size: 12px;
+  font-weight: 550;
+}
+.choice-segments button b {
+  font-size: 15px;
+  font-weight: 800;
+}
+.choice-segments button[aria-pressed='true'] {
+  background: #fff;
+  color: #0b2747;
+  box-shadow: 0 3px 12px #1a35551a;
+}
+.original-a {
+  font-size: 11px;
+  text-decoration: none;
+  color: #2f6fda;
+  font-weight: 700;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+.graph-card {
+  --forecast: #639dff;
+  --actual: #35dcae;
+  --plot: #101e31;
+  --card-surface: #07172f;
+  --card-text: #f1f7ff;
+  --secondary: #9fb2ca;
+  --grid: #93b1d5;
+  --edge: #5a91d9;
+  --on-light: #f6f8fb;
+  background: #fff;
+  border: 1px solid #e1e7ee;
+  border-radius: 17px;
+  padding: 26px;
+  box-shadow: 0 10px 36px #09214008;
+  transition: background-color 0.2s;
+}
+.card-top {
+  display: flex;
+  gap: 14px;
+  align-items: end;
+  justify-content: space-between;
+  margin: 0 2px 21px;
+}
+.small-kicker {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: #708ca8;
+}
+.card-top h2 {
+  font-size: clamp(27px, 3vw, 36px);
+  font-weight: 710;
+  letter-spacing: -0.04em;
+  margin: 5px 0 4px;
+}
+.card-top h2 .alt-token {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+  display: inline-block;
+  border: 1px solid #cad7e4;
+  padding: 4px 7px;
+  margin-left: 8px;
+  border-radius: 6px;
+  color: #617b95;
+}
+.card-desc {
+  color: #75879b;
+  font-size: 12px;
+  margin: 0;
+}
+.asset-select {
+  display: flex;
+  border: 1px solid #dce4ed;
+  border-radius: 10px;
+  padding: 3px;
+  background: #f4f7fa;
+  gap: 2px;
+}
+.asset-select button {
+  min-width: 61px;
+  min-height: 44px;
+  font-weight: 760;
+  font-size: 11px;
+  border: 0;
+  border-radius: 7px;
+  color: #77899d;
+  background: transparent;
+}
+.asset-select button[aria-pressed='true'] {
+  background: #fff;
+  color: #0f2f54;
+  box-shadow: 0 2px 6px #112e4e19;
+}
+.chart-surface {
+  background: var(--card-surface);
+  color: var(--card-text);
+  border-radius: 13px;
+  padding: 24px 25px 19px;
+  box-shadow: inset 0 0 0 1px #ffffff14;
+  transition: background-color 0.2s;
+}
+.instrument-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+.instrument-left > span,
+.instrument-right > span {
+  color: var(--secondary);
+  font-size: 10px;
+  letter-spacing: 0.11em;
+  font-weight: 780;
+}
+.instrument-left strong {
+  display: block;
+  font-size: clamp(28px, 3.6vw, 40px);
+  font-weight: 660;
+  letter-spacing: -0.055em;
+  margin: 3px 0;
+}
+.instrument-left small,
+.instrument-right small {
+  display: block;
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 500;
+}
+.instrument-right {
+  text-align: right;
+  padding-top: 2px;
+}
+.instrument-right strong {
+  display: block;
+  font-size: 13px;
+  letter-spacing: -0.02em;
+  font-weight: 660;
+  margin: 9px 0 6px;
+}
+.legend {
+  display: flex;
+  gap: 12px 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--secondary);
+  font-size: 10px;
+  margin-top: 27px;
+  margin-bottom: 8px;
+}
+.legend > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend i {
+  display: inline-block;
+  width: 26px;
+  flex: none;
+}
+.swatch-forecast {
+  border-top: 2px solid var(--forecast);
+}
+.swatch-actual {
+  border-top: 2px solid var(--actual);
+}
+/* Approved B visual grammar: dashed expected path, solid actual above it. */
+.graph-card[data-variant='b'] #forecast {
+  stroke-dasharray: 9 7;
+  stroke-width: 2.65;
+}
+.graph-card[data-variant='b'] #actual {
+  stroke-width: 3.45;
+}
+.graph-card[data-variant='b'] .swatch-forecast {
+  border-top-style: dashed;
+}
+.swatch-band {
+  height: 9px;
+  background: color-mix(in srgb, var(--forecast) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--forecast) 30%, transparent);
+  border-radius: 3px;
+}
+.plot-shell {
+  height: 354px;
+  position: relative;
+}
+#chart {
+  width: calc(100% - 59px);
+  height: 100%;
+  overflow: visible;
+  display: block;
+  --plot-grid: var(--grid);
+}
+.chart-price-axis {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 58px;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.chart-price-axis span {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  color: var(--secondary);
+  font-size: 10px;
+}
+.range-edge {
+  stroke: var(--edge);
+  stroke-opacity: 0.3;
+  stroke-width: 1;
+}
+#playhead {
+  stroke: var(--secondary);
+  stroke-opacity: 0.57;
+  stroke-dasharray: 4 7;
+  stroke-width: 1;
+}
+#endpoint-halo {
+  fill: var(--actual);
+  opacity: 0.17;
+}
+#endpoint {
+  fill: var(--actual);
+  stroke: var(--card-surface);
+  stroke-width: 2;
+}
+.day-axis {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding-right: 59px;
+  margin-top: 1px;
+}
+.day-axis span {
+  color: var(--secondary);
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  font-weight: 660;
+}
+.day-axis span:first-child {
+  text-align: left;
+}
+.day-axis span:last-child {
+  text-align: right;
+}
+.instrument-foot {
+  border-top: 1px solid color-mix(in srgb, var(--secondary) 21%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 14px;
+  margin-top: 23px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  line-height: 1.5;
+  color: var(--secondary);
+}
+.tiny-live {
+  width: 6px;
+  height: 6px;
+  background: var(--forecast);
+  border-radius: 50%;
+  flex: none;
+}
+.interaction {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 23px 4px 0;
+}
+.time-control {
+  flex: 1;
+  max-width: 625px;
+  min-width: 0;
+}
+.time-control-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+.time-control label {
+  font-weight: 650;
+  color: #476481;
+}
+.time-control strong {
+  font-size: 11px;
+  color: #2f6fda;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+#hour-slider {
+  display: block;
+  width: 100%;
+  accent-color: #2f6fda;
+  height: 30px;
+  margin: 9px 0 -4px;
+  cursor: pointer;
+}
+.time-extents {
+  display: flex;
+  justify-content: space-between;
+  color: #92a2b3;
+  font-size: 10px;
+  font-weight: 550;
+}
+.interaction-buttons {
+  display: flex;
+  gap: 9px;
+}
+.interaction-buttons button {
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 750;
+  padding: 10px 13px;
+  white-space: nowrap;
+}
+.play-btn {
+  background: #0a2546;
+  color: white;
+  border: 1px solid #0a2546;
+}
+#play-symbol {
+  margin-right: 5px;
+  font-size: 11px;
+}
+.missing-btn {
+  background: #f5f8fc;
+  color: #385a7e;
+  border: 1px solid #d4dfec;
+}
+.missing-btn[aria-pressed='true'] {
+  background: #e5ecf6;
+  border-color: #719ac7;
+}
+.under-chart {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin: 17px 0;
+}
+.under-detail {
+  border: 1px solid #e1e7ee;
+  border-radius: 12px;
+  background: #fff;
+  padding: 19px 21px;
+}
+.under-index {
+  font-size: 10px;
+  color: #5488cb;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+}
+.under-detail h3 {
+  font-size: 15px;
+  margin: 8px 0 6px;
+  color: #102f50;
+}
+.under-detail p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #7b8998;
+  margin: 0;
+}
+.disclaimer {
+  border: 1px solid #dbe5ee;
+  border-radius: 12px;
+  background: #ecf2f8;
+  padding: 17px 19px;
+  display: flex;
+  gap: 12px;
+  color: #536c84;
+  font-size: 11px;
+  line-height: 1.75;
+}
+.disclaimer b {
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  font-size: 10px;
+  color: #3e5f81;
+}
+footer {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  border-top: 1px solid #dfe7ef;
+  margin: 34px 0 0;
+  padding: 30px 0 60px;
+  color: #8a98a8;
+  font-size: 10px;
+}
+
+/* Distinct optional third direction: warm ivory, smoked slate and cool teal.
+   Unlike B, C is a light financial instrument. The chart layout and data stay the same. */
+.graph-card[data-variant='c'] {
+  --forecast: #31a6b9;
+  --actual: #26373d;
+  --plot: #f1f1ed;
+  --card-surface: #f4f2ed;
+  --card-text: #21333b;
+  --secondary: #6d858e;
+  --grid: #779098;
+  --edge: #63b8c4;
+  background: #fefdfb;
+  border-color: #e1dfd9;
+  box-shadow: 0 8px 28px #172a3108;
+}
+.graph-card[data-variant='c'] .card-top h2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: clamp(31px, 3.7vw, 44px);
+  letter-spacing: -0.045em;
+}
+.graph-card[data-variant='c'] .small-kicker {
+  color: #618f97;
+}
+.graph-card[data-variant='c'] .chart-surface {
+  box-shadow: inset 0 0 0 1px #c6cbc8;
+  border-radius: 12px;
+}
+.graph-card[data-variant='c'] .instrument-left strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+}
+.graph-card[data-variant='c'] .instrument-foot {
+  letter-spacing: 0.04em;
+}
+.graph-card[data-variant='c'] .legend .swatch-actual {
+  border-color: #26373d;
+}
+.graph-card[data-variant='c'] .legend .swatch-forecast {
+  border-color: #31a6b9;
+}
+
+/* No false forecasts when a legitimate prospective source is absent. */
+.graph-card[data-source='missing'] .instrument-foot {
+  color: var(--secondary);
+}
+.graph-card[data-source='missing'] .tiny-live {
+  background: #c27b4f;
+}
+
+@media (max-width: 760px) {
+  .wrap {
+    width: calc(100% - 28px);
+  }
+  .topbar-inner {
+    height: 70px;
+  }
+  .brand-logo {
+    width: 170px;
+  }
+  .state-chip {
+    display: none;
+  }
+  .hero {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+    margin: 31px 0 21px;
+  }
+  .hero h1 {
+    font-size: 47px;
+    margin: 7px 0 10px;
+  }
+  .hero p {
+    font-size: 13px;
+  }
+  .choice {
+    align-items: stretch;
+  }
+  .choice-segments {
+    align-self: flex-start;
+  }
+  .original-a {
+    align-self: flex-start;
+  }
+  .graph-card {
+    padding: 14px;
+  }
+  .chart-surface {
+    padding: 19px 15px;
+  }
+  .plot-shell {
+    height: 315px;
+  }
+  .interaction {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+    padding-top: 17px;
+  }
+  .time-control {
+    max-width: none;
+  }
+  .interaction-buttons {
+    justify-content: space-between;
+  }
+  .interaction-buttons button {
+    flex: 1;
+  }
+  .under-chart {
+    grid-template-columns: 1fr;
+  }
+  .disclaimer {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+@media (max-width: 440px) {
+  .brand-logo {
+    width: 157px;
+  }
+  .site-nav {
+    gap: 24px;
+    font-size: 11px;
+  }
+  .status-row {
+    font-size: 8px;
+    letter-spacing: 0.015em;
+  }
+  .hero h1 {
+    font-size: 39px;
+  }
+  .hero-eyebrow {
+    font-size: 9px;
+  }
+  .choice-label {
+    font-size: 9px;
+  }
+  .choice-segments button {
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .graph-card {
+    padding: 10px;
+    border-radius: 15px;
+  }
+  .card-top {
+    padding: 6px 4px 0;
+    align-items: end;
+  }
+  .small-kicker {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+  }
+  .card-top h2 {
+    font-size: 25px;
+  }
+  .card-desc {
+    font-size: 10px;
+  }
+  .asset-select button {
+    min-width: 48px;
+    min-height: 44px;
+  }
+  .chart-surface {
+    padding: 15px 10px;
+  }
+  .instrument-left > span,
+  .instrument-right > span {
+    font-size: 8px;
+  }
+  .instrument-left strong {
+    font-size: 28px;
+  }
+  .instrument-right strong {
+    font-size: 10px;
+  }
+  .instrument-left small,
+  .instrument-right small {
+    font-size: 8px;
+  }
+  .legend {
+    gap: 9px 14px;
+    margin-top: 19px;
+    font-size: 9px;
+  }
+  .legend i {
+    width: 18px;
+  }
+  .plot-shell {
+    height: 260px;
+  }
+  #chart {
+    width: calc(100% - 45px);
+  }
+  .chart-price-axis {
+    width: 44px;
+  }
+  .chart-price-axis span {
+    font-size: 8px;
+  }
+  .day-axis {
+    padding-right: 45px;
+  }
+  .day-axis span {
+    font-size: 8px;
+  }
+  .instrument-foot {
+    margin-top: 16px;
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+  .time-control-head {
+    font-size: 11px;
+  }
+  .time-control strong {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
