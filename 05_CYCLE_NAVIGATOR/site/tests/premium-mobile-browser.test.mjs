@@ -304,13 +304,13 @@ try{
    // expected closes; show the source-denial banner otherwise, in both assets.
    const issuerDenied=!!actualModel&&actualModel.daily.length!==7;
    const missingForecastBanner=document.querySelector('#official-path-chart .fw-forecast-not-issued');
-   const graphBSourceHonesty=!eligibleModels||!issuerDenied||
-      !!missingForecastBanner?.textContent.includes('BLÅ PROGNOSEKURVE IKKE UDSTEDT');
 
    const actualStatus=document.querySelector('.fw-progress-actual')?.textContent||'';
    const forecastStatus=document.querySelector('.fw-progress-forecast')?.textContent||'';
    const eligibleModels=typeof model?.model==='function'&&
      model.model(chartSource,'BTC')!==null&&model.model(chartSource,'ETH')!==null;
+   const graphBSourceHonesty=!eligibleModels||!issuerDenied||
+      !!missingForecastBanner?.textContent.includes('BLÅ PROGNOSEKURVE IKKE UDSTEDT');
    let chart='ABSTAIN_NO_ELIGIBLE_CHART_SOURCE';
    if(typeof model?.model!=='function')chart='FAIL_CHART_LIBRARY_MISSING';
    else if(eligibleModels&&chartButtons.length!==2)chart='FAIL_ELIGIBLE_CHART_CONTROLS_MISSING';
