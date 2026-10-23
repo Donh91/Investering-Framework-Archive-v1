@@ -160,4 +160,18 @@ assert.equal(presentOfficialAction('UNRECOGNIZED',true,'da').label,'UNRECOGNIZED
 assert.equal(presentOfficialAction('UNRECOGNIZED',true,'da').verified,true);
 assert.equal(presentOfficialAction('UNAVAILABLE',true,'da').code,null);
 assert.equal(presentOfficialAction('UTILGÆNGELIG',true,'da').verified,false);
+// Adversarial source codes must not inherit JavaScript object prototype keys.
+// A verified unknown code remains visible as itself; unverified data never gains authority.
+for(const sourceCode of ['constructor','__proto__','toString','valueOf','hasOwnProperty']){
+ for(const language of ['da','en']){
+  const verified=presentOfficialAction(sourceCode,true,language);
+  assert.deepEqual(verified,{label:sourceCode,code:sourceCode,verified:true,
+   explanation:language==='da'?'Uændret officiel kildekode.':'Unmodified official source code.'},
+   'Inherited object property must not turn a verified unknown source code into a blank label');
+  const unavailable=presentOfficialAction(sourceCode,false,language);
+  assert.equal(unavailable.verified,false,'Unverified code must never be promoted');
+  assert.equal(unavailable.code,null,'Unverified code must never be shown as official');
+  assert.equal(unavailable.label,language==='da'?'AFVENTER KILDE':'AWAITING SOURCE');
+ }
+}
 console.log('PASS Official action translation is source-bound, no hidden signal remapping');
