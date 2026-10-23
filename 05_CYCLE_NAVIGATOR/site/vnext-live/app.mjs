@@ -96,7 +96,7 @@ function drawOverview(){
  show('week-label','CN #'+(w.public_issue_number??'—')+' · '+(w.forecast_week||'—'));
  const translatedAction=presentOfficialAction(c.action_now,!!official,lang);
  show('action',translatedAction.label);
- show('action-note',official?(translatedAction.code+' · '+tr('Udstedt','Issued')+' '+stamp(official.issued_at_utc)):translatedAction.explanation);
+ show('action-note',official&&translatedAction.code?(translatedAction.code+' · '+tr('Udstedt','Issued')+' '+stamp(official.issued_at_utc)):translatedAction.explanation);
  show('direction',official?(val(official.horizons?.NEXT_12H?.expected_direction)||'UNKNOWN'):'UNKNOWN');
  show('risk',official?(val(c.pullback_risk_state)||'UNKNOWN'):'UNKNOWN');
  show('risk-2',official?(val(c.pullback_risk_state)||'UNKNOWN'):'UNKNOWN');
