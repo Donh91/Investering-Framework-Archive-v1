@@ -91,6 +91,12 @@
   // Screen-reader contract mirrors what is actually plotted. Source-absent
   // seven-day forecasts are intervals, not a daily forecast curve.
   function graphDescription(m){
+    // Accessible chart summary must fail stale CLOSED just like the visible
+    // source badge. A historical observed price is never a current quote.
+    const freshnessWarning=m.stale
+      ?txt('STALE OBSERVATION. Last source price is not a current market quote. ',
+           'FORÆLDET OBSERVATION. Seneste kildepris er ikke en aktuel markedskurs. ')
+      :'';
     const observed=(m.hourly?.length||0)>0||m.days.some(d=>d.actual);
     const observationCopy=m.hourly?.length
       ?txt('Green solid line: verified hourly closing prices only; missing hours break the line. Measured daily high/low whiskers require complete coverage.',
@@ -101,11 +107,11 @@
       :txt('No eligible observed daily prices yet: no green actual line or measured high/low whiskers are displayed.',
            'Endnu ingen gyldige observerede dagspriser: ingen grøn faktisk kurve eller målte lav/høj-markeringer vises.');
     if(m.daily.length){
-      return txt('Blue dotted line: seven original frozen daily expected closing prices, aligned to the end of each UTC day, with original forecast low/high envelope.',
+      return freshnessWarning+txt('Blue dotted line: seven original frozen daily expected closing prices, aligned to the end of each UTC day, with original forecast low/high envelope.',
                  'Blå stiplet linje: syv oprindeligt frosne forventede dagslukkepriser placeret ved hver UTC-dags afslutning med oprindeligt lav/høj-prognoseinterval.')
         +' '+observationCopy;
     }
-    return txt('No original seven-day closing-price forecast was published. Only three frozen price-range intervals are shown, with no daily forecast line.',
+    return freshnessWarning+txt('No original seven-day closing-price forecast was published. Only three frozen price-range intervals are shown, with no daily forecast line.',
                'Ingen oprindelig syvdagesprognose for dagslukkepriser blev offentliggjort. Kun tre frosne prisintervaller vises uden daglig prognoselinje.')
       +' '+observationCopy;
   }
