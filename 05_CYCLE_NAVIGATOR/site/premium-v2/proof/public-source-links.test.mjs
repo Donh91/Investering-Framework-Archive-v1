@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {canonicalPublicSourceLink,publicProofView} from './public-source-links.mjs';
+import {canonicalPublicSourceLink,publicProofView,sourceReadbackProofRows} from './public-source-links.mjs';
 const COMMIT='a'.repeat(40);
 const INDEX={contract:'CN_V2_PUBLIC_SCORE_INDEX_v1',
  current_frozen_forecast:{
@@ -46,4 +46,31 @@ test('even impressive flags cannot be promoted to independently VERIFIED in fron
  const v=publicProofView(f,COMMIT);
  assert.equal(v.status,'AWAIT_OFFICIAL_ATTESTATION');
  assert.equal(v.independent_proof_sealed,false);
+});
+
+const READBACK={contract:'CN_PUBLIC_SOURCE_READBACK_v1',frozen_claims:[{
+ source_repo:'Donh91/Investering-Framework-Archive-v1',
+ source_commit:COMMIT,source_path:'05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_V2_EDGE_FREEZE.json',
+ forecast_week:'2026-W42',public_issue_number:29,sha256:'1'.repeat(64),
+ source_blob_sha1:'2'.repeat(40),claim_count:10,eligible_binary_claims:0,
+ abstained_claims:10,verification:'PROVISIONAL'
+}]};
+test('proof readback source requires pinned public source path/hash and labels only PROVISIONAL',()=>{
+ const rows=sourceReadbackProofRows(INDEX,READBACK);
+ assert.equal(rows.length,1);
+ assert.equal(rows[0].public_issue_number,29);
+ assert.equal(rows[0].independent_proof_status,'PROVISIONAL_NOT_SEALED');
+ assert.equal(rows[0].edge_accuracy,null);
+ assert.ok(rows[0].source_url.includes('/blob/'+COMMIT+'/'));
+});
+test('reject spoofed provenance and score family mixing in public Proof nav',()=>{
+ const s=JSON.parse(JSON.stringify(READBACK));
+ s.frozen_claims[0].source_path='05_CYCLE_NAVIGATOR/weekly/2026/W43/CYCLE_NAVIGATOR_V2_EDGE_FREEZE.json';
+ assert.equal(sourceReadbackProofRows(INDEX,s).length,0);
+ s.frozen_claims[0].source_path='05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_V2_EDGE_FREEZE.json';
+ s.frozen_claims[0].source_repo='Donh91/secrets';
+ assert.equal(sourceReadbackProofRows(INDEX,s).length,0);
+ s.frozen_claims[0].source_repo='Donh91/Investering-Framework-Archive-v1';
+ s.frozen_claims[0].eligible_binary_claims=11;
+ assert.equal(sourceReadbackProofRows(INDEX,s).length,0);
 });
