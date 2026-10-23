@@ -15,7 +15,10 @@ export const approvedAssets=[
  'proof/proof-explorer.css',
  'proof/proof-explorer.mjs',
  'proof/price-range-proof.mjs',
- 'proof/public-source-links.mjs'
+ 'proof/public-source-links.mjs',
+ 'compass/compass-path.css',
+ 'compass/compass-path-ui.mjs',
+ 'compass/official-compass-path.mjs'
 ];
 export function stagingPlan(){
  const from=resolve(site,'premium-v2'),to=resolve(site,'dist','next');
