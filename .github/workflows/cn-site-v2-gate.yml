@@ -37,6 +37,8 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           python3 scripts/cycle_navigator/build_public_live_precision.py
+          python3 scripts/cycle_navigator/check_publication_lineage.py --self-test
+          python3 scripts/cycle_navigator/check_publication_lineage.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Verify browser failures cannot bypass mobile release gate
         run: node 05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs
