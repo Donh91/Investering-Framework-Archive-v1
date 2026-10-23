@@ -105,6 +105,7 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
    hourly_observations:points,actual_segments:runs(points),
    last_observed_at_utc:h.observed_through_utc,
    live_freshness:stale?'STALE':'FRESH',
+   source_freshness_sla_minutes:Math.max(30,Number(m.freshness_sla_minutes)||90),
    is_current_quote:!stale&&points.length>0,
    first_known_frozen_at_utc:m.frozen_at_utc||null,
    publication_lineage_status:publication_lineage?'MATCHED':'NOT_PROVIDED',
