@@ -8,6 +8,18 @@ const dataUrl=new URL('../../data/compass.json',import.meta.url);
 const latestUrl=new URL('../../data/latest.json',import.meta.url);
 const lang=(da,en)=>document.documentElement.lang==='en'?en:da;
 let currentModel=null,sourceCompass=null,sourceLatest=null,expiryTimer=null;
+const DA_PHASES={
+ 'BTC leadership':'BTC fører',
+ 'ETH leadership':'ETH fører',
+ 'Large + Mid rotation':'Large- og midcap-rotation',
+ 'Altseason ignition':'Altseason starter',
+ 'Micro acceleration':'Microcaps accelererer',
+ 'Broad altseason':'Bred altseason',
+ 'Mania / euphoria':'Mani / eufori',
+ 'Distribution':'Distribution',
+ 'Exit / protection':'Exit / beskyttelse',
+ 'Cooldown / re-entry':'Afkøling / genkøb'
+};
 function make(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;
  if(text!==undefined)el.textContent=String(text);return el}
 function clearUnissued(){
@@ -81,7 +93,7 @@ function paint(model){
  }
  const steps=$('official-pilot-path');steps.replaceChildren();
  for(const phrase of model.path_phases){
-  const el=make('li','',phrase);
+  const el=make('li','',lang(DA_PHASES[phrase]||phrase,phrase));
   if(model.path_current_phase===phrase)el.setAttribute('aria-current','step');
   steps.append(el);
  }
