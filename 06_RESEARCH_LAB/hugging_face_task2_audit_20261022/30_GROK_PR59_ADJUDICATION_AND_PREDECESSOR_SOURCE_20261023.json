@@ -124,7 +124,10 @@
         "original_source_freshness": "PASS",
         "btc_delta_absolute_below_003_pct": false
       }
-    ]
+    ],
+    "original_predecessor_packet_reader_code_sha1": "6196286539bd3e3688dc3bbcf322b15112b9ef5c",
+    "predecessor_pointer_reader_code_lines": "scripts/data_ping/auto_market_state.py:520-525",
+    "predecessor_pointer_reader_performs_explicit_digest_validation": false
   },
   "grok_claims_adjudication": [
     {
@@ -192,6 +195,12 @@
       "grok_claim": "Fixed 12h lookback, then longer CN-conditioned forward test",
       "status": "RESEARCH_PROPOSALS_PENDING_ORIGINAL_SOURCE_CLOCK_AND_PROSPECTIVE_FREEZE",
       "qualification": "Existing historical Oct12–20 70 original issuances had ZERO UP or DOWN labels in both 1–3d and 5–7d, so historical long-horizon directional accuracy is presently not identifiable."
+    },
+    {
+      "id": "G2-07",
+      "grok_claim": "Live prior_packet pointer chain intrinsically verifies predecessor payload identity",
+      "status": "SOURCE_CODE_COUNTEREVIDENCE_NO_EXPLICIT_SHA_CHECK",
+      "qualification": "Pinned auto_market_state.py blob 6196286539bd3e3688dc3bbcf322b15112b9ef5c lines 520-525 reads LATEST.json packet_path and returns raw predecessor packet, while copying pointer.packet_sha256 into metadata; no explicit value equality or source digest recomputation occurs in prior_packet(). This is a potential live integrity gate gap; it does NOT mean the six original predecessor Git objects failed identity: the six historical source objects match their original declared sha and source snapshot. Negative fixture should alter pointer sha or packet object and assert rejection, subject to authenticated parent read behavior."
     }
   ],
   "audit_stop_gates": [
@@ -199,7 +208,8 @@
     "DO NOT reconstruct missing external provider quote first-known from commit timestamp.",
     "DO NOT call original OCT14 direction-slot sample independent N=12; only one overlapping market block.",
     "DO NOT rerun selection-optimized 0.03% or 3h thresholds on same exposed cohort and claim unseen holdout.",
-    "NO live market threshold change, no private Round3 scoring, no automated-trading or portfolio effects."
+    "NO live market threshold change, no private Round3 scoring, no automated-trading or portfolio effects.",
+    "Do not promote the six source-snapshot predecessor matches to live pointer-to-packet cryptographic verification; the auto-market-state prior_packet() reader lacks an explicit validation step in inspected original source."
   ],
   "first_finite_next_action": "Prove authenticated first server commit/push clock for each predecessor and current packet on the original per-issue source branch, and inspect original upstream quote capture authenticity under its own approved private custodian. Freeze prospective E1/E2 test before future outcomes; include UTC instant normalization/deadband/lookback negative fixtures in research-only candidate tests. Never amend immutable as-issued originals.",
   "original_market_values_republished": false
