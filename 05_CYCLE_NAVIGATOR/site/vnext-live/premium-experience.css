@@ -83,3 +83,112 @@
 .proof-families strong{display:block;color:#173651;font-size:12px;line-height:1.5}
 .proof-families span{display:block;color:#6a7e91;font-size:11px;line-height:1.6;margin-top:6px}
 @media(max-width:520px){.proof-families{grid-template-columns:1fr}}
+
+/* CN PREMIUM ROOT · 2026-10-23 owner video acceptance.
+ * Brand/quiet precision unchanged. Only source-bound graphics; no new authority.
+ * B instrument must have one continuous navy surface on official root.
+ */
+.chart-area #official-path-chart.frozen-week-chart{
+ background:#0a1729;color:#eef5ff;border-color:#263d5b;box-shadow:none;
+ margin-top:4px;isolation:isolate;
+}
+.chart-area #official-path-chart.frozen-week-chart .fw-quote,
+.chart-area #official-path-chart.frozen-week-chart .fw-legend,
+.chart-area #official-path-chart.frozen-week-chart .fw-horizon-availability{
+ background:#0a1729;color:#c9d9eb;
+}
+.chart-area #official-path-chart.frozen-week-chart .fw-quote strong{color:#f7fbff}
+.chart-area #official-path-chart.frozen-week-chart .fw-legend span{color:#b8cce1}
+.chart-area #official-path-chart.frozen-week-chart .fw-evidence-details{
+ background:#0a1729;color:#9db3cc;border-top:1px solid #28405c;
+}
+.chart-area #official-path-chart.frozen-week-chart .fw-evidence-details summary{color:#aabed7}
+.chart-area #official-path-chart.frozen-week-chart .fw-progress-summary,
+.chart-area #official-path-chart.frozen-week-chart .fw-values,
+.chart-area #official-path-chart.frozen-week-chart .fw-readout{color:#c6d7ec}
+.chart-area #official-path-chart.frozen-week-chart .fw-source>span{color:#b6c8df}
+
+/* Restrained evidence dial, driven by official 10-unit Bull/Bear reading,
+ * neutral grey when the canonical source refuses a reading. */
+.balance{display:grid;grid-template-columns:minmax(0,1fr) 106px;gap:4px 18px;align-items:center;padding:18px 19px}
+.balance-summary{grid-column:1;display:flex;flex-wrap:wrap;gap:5px 13px}
+.balance-summary strong{font-size:19px;font-weight:730;letter-spacing:-.035em}
+.balance-summary>span{font-size:11px}
+.balance-bars{grid-column:1;align-self:end;margin:10px 0 4px;gap:4px}
+.balance-unit{height:5px;border-radius:9px}
+.balance>small{grid-column:1;line-height:1.5;color:#637c95}
+.balance-dial{grid-column:2;grid-row:1 / span 3;place-self:center;
+ width:102px;aspect-ratio:1;position:relative;border-radius:50%;
+ background:conic-gradient(from -90deg,#2f6fda 0deg var(--bull-angle,0deg),#c1cfdf var(--bull-angle,0deg) 360deg);
+ box-shadow:0 0 0 1px #dfe7f0;display:grid;place-items:center;
+}
+.balance-dial[data-state=unavailable]{background:conic-gradient(from -90deg,#cbd6e3,#cbd6e3);box-shadow:0 0 0 1px #dbe4ed}
+.balance-dial-face{position:relative;width:83%;aspect-ratio:1;border-radius:50%;
+ background:#fff;display:grid;place-items:center;border:1px solid #e2eaf2}
+.balance-dial-face:before{content:"";position:absolute;inset:19%;border:1px solid #e2e9f1;border-radius:50%}
+.balance-dial-needle{display:block;width:2px;height:43%;position:absolute;top:28%;
+ background:linear-gradient(#2f6fda 0 44%,#ced9e7 44% 100%);border-radius:3px;transform:rotate(35deg)}
+.balance-dial[data-state=unavailable] .balance-dial-needle{background:#bfccda}
+.balance-dial-hub{position:relative;width:8px;height:8px;border:2px solid #e8f0fb;
+ background:#2f6fda;border-radius:50%;z-index:2}
+.balance-dial[data-state=unavailable] .balance-dial-hub{background:#93a5b9}
+
+/* Continuous DSB-dot journey: one connected chronological rail at all widths.
+ * Grey is NOT progress, blue only a source-bound weekly reference, amber next
+ * conditional watch. No manufactured phase transition or elapsed time. */
+.path-route{display:block;position:relative;list-style:none;padding:4px 0 6px 31px;margin:0 0 0 6px}
+.path-route:before{content:"";position:absolute;left:12px;top:14px;bottom:17px;width:2px;background:#dce5f0;border-radius:3px}
+.path-node{position:relative;display:grid;grid-template-columns:31px minmax(0,1fr);
+ gap:2px 8px;align-items:baseline;padding:13px 10px 13px 4px;min-height:54px;
+ border:0;border-bottom:1px solid #edf1f5;border-radius:0;background:transparent!important;
+ flex-wrap:nowrap}
+.path-node:last-child{border-bottom:0}
+.path-node:before{content:"";position:absolute;left:-28px;top:17px;width:15px;height:15px;
+ border-radius:50%;background:#fff;border:2px solid #bfcfe0;box-shadow:0 0 0 4px #fff}
+.path-node[data-kind=reference]:before{background:#2f6fda;border-color:#2f6fda;box-shadow:0 0 0 4px #e7f0ff}
+.path-node[data-kind=next]:before{background:#fff;border-color:#b48246;box-shadow:0 0 0 4px #fff4e8}
+.path-node .path-number{font-size:10px;letter-spacing:.04em;font-weight:750;color:#8c9aae;width:auto}
+.path-node strong{font-size:13px;font-weight:690;line-height:1.45;color:#193149;min-width:0}
+.path-node[data-kind=reference] strong{color:#205dbb}
+.path-node[data-kind=next] strong{color:#875d31}
+.path-node small{grid-column:2;margin:1px 0 0;width:auto;font-size:10px;line-height:1.5;color:#77899c}
+.path-hero{box-shadow:none;border:1px solid #132d4d}
+.path-hero strong{letter-spacing:-.035em}
+.path-route + .small{font-size:11px;max-width:700px}
+
+/* Explain actual score vs coverage and prospective accountability without
+ * inventing separate intraday/rotation/pullback win rates. */
+.proof-primer{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:13px 0 18px}
+.proof-primer p{margin:0;background:#f1f5f9;border:1px solid #e0e8f1;border-radius:10px;
+ padding:15px 17px;font-size:12px;line-height:1.65;color:#536c84}
+.proof-journey{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0 0 18px;border:1px solid #e1e8f1;border-radius:12px;background:#fff}
+.proof-journey>div{display:grid;grid-template-columns:31px 1fr;align-content:start;
+ gap:3px 8px;padding:14px 12px;min-width:0}
+.proof-journey>div+div{border-left:1px solid #e9eef4}
+.proof-journey-marker{grid-row:1 / span 2;width:28px;height:28px;display:grid;place-items:center;
+ border:1px solid #d6e5fa;border-radius:50%;font-size:10px;font-weight:750;color:#2f6fda}
+.proof-journey strong{font-size:12px;line-height:1.25;color:#1e3650}
+.proof-journey small{font-size:10px;color:#71859a;line-height:1.55}
+.proof-window-details{margin:9px 0 18px;padding:0;overflow:hidden}
+.proof-window-details>summary{display:flex;flex-direction:column;gap:4px;justify-content:center;
+ cursor:pointer;min-height:60px;padding:15px 21px;font-size:15px;font-weight:720;color:#193552;list-style:none}
+.proof-window-details>summary::-webkit-details-marker{display:none}
+.proof-window-details>summary:after{content:"+";position:absolute;right:22px;color:#4775b8;font-size:23px;top:10px}
+.proof-window-details[open]>summary:after{content:"−"}
+.proof-window-details>summary small{font-size:10px;font-weight:500;color:#7c90a5}
+.proof-window-details>summary:focus-visible{outline:3px solid #2f6fda;outline-offset:-3px}
+.proof-window-details .table-scroll{margin:0 16px 18px}
+@media(max-width:600px){
+ .balance{grid-template-columns:minmax(0,1fr) 89px;gap:3px 9px;padding:15px 12px}
+ .balance-dial{width:86px}
+ .balance-summary strong{font-size:16px}
+ .balance>small{font-size:10px}
+ .path-route{padding-left:29px}
+ .proof-primer{grid-template-columns:1fr;gap:7px}
+ .proof-primer p{padding:12px 13px;font-size:11px}
+ .proof-journey{grid-template-columns:1fr}
+ .proof-journey>div{padding:12px 14px;grid-template-columns:31px 1fr}
+ .proof-journey>div+div{border-left:0;border-top:1px solid #e9eef4}
+ .proof-window-details>summary{padding:12px 15px;padding-right:40px}
+}
+@media(prefers-reduced-motion:reduce){.balance-dial,.path-node,.proof-journey *{transition:none!important;animation:none!important}}
