@@ -295,13 +295,13 @@
  * product card. Port the VISUAL grammar only. Never port synthetic SVG paths,
  * prices, interpolation, time cursors, horizon forecasts or signals.
  * Genuine TradingView source-bound B plot is unchanged. */
-.chart-area[data-approved-design="B"]{
+#view-overview .chart-area[data-approved-design="B"]{
  background:#fff;color:#07172f;border:1px solid #e1e7ee;
  border-radius:17px;padding:26px;
  box-shadow:0 10px 36px rgba(9,33,64,.045);
  margin-top:17px;
 }
-.chart-area[data-approved-design="B"] .chart-kicker{
+#view-overview .chart-area[data-approved-design="B"] .chart-kicker{
  display:flex;align-items:end;justify-content:space-between;
  gap:14px;margin:0 2px 22px;min-width:0;
 }
@@ -315,103 +315,103 @@
  letter-spacing:-.045em;line-height:1.19;color:#07172f;font-weight:710;
 }
 .chart-b-intro{display:block;font-size:12px;line-height:1.55;color:#71859a}
-.chart-area[data-approved-design="B"] .chart-kicker .subtle{
+#view-overview .chart-area[data-approved-design="B"] .chart-kicker .subtle{
  color:#577795;font-weight:640;font-size:10px;text-align:right;
  max-width:145px;line-height:1.55;align-self:center;
 }
-.chart-area[data-approved-design="B"] #official-path-chart.frozen-week-chart{
+#view-overview .chart-area[data-approved-design="B"] #official-path-chart.frozen-week-chart{
  margin:0;border:1px solid #253b55;border-radius:13px;
  background:#0a1729;color:#f1f7ff;box-shadow:inset 0 0 0 1px #ffffff0c;
 }
-.chart-area[data-approved-design="B"] .fw-toolbar{
+#view-overview .chart-area[data-approved-design="B"] .fw-toolbar{
  padding:17px 23px 5px;background:#0a1729;
 }
-.chart-area[data-approved-design="B"] .fw-horizons{
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons{
  gap:7px;padding:12px 23px 6px;
 }
-.chart-area[data-approved-design="B"] .fw-horizons button{
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button{
  background:#10243a;border:1px solid #2c4867;border-radius:9px;
  min-width:73px;min-height:44px;
 }
-.chart-area[data-approved-design="B"] .fw-horizons button[aria-pressed=true]{
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button[aria-pressed=true]{
  background:#28486c;color:#fff;border-color:#496f99;
 }
-.chart-area[data-approved-design="B"] .fw-quote{
+#view-overview .chart-area[data-approved-design="B"] .fw-quote{
  background:#0a1729;padding:18px 23px 7px;align-items:start;
 }
-.chart-area[data-approved-design="B"] .fw-quote strong{
+#view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
  color:#f7fbff;font-size:clamp(28px,3.7vw,40px);
  font-weight:660;letter-spacing:-.055em;
 }
-.chart-area[data-approved-design="B"] .fw-source{padding-top:2px}
-.chart-area[data-approved-design="B"] .fw-legend{
+#view-overview .chart-area[data-approved-design="B"] .fw-source{padding-top:2px}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend{
  background:#0a1729;padding:17px 23px 13px;
  gap:10px 22px;font-size:10px;color:#a9bfd8;
 }
-.chart-area[data-approved-design="B"] .fw-legend .forecast{
+#view-overview .chart-area[data-approved-design="B"] .fw-legend .forecast{
  border-color:#5f96ff;border-top-style:dashed;
 }
-.chart-area[data-approved-design="B"] .fw-legend .actual{
+#view-overview .chart-area[data-approved-design="B"] .fw-legend .actual{
  background:#27c59a;min-height:3px;
 }
-.chart-area[data-approved-design="B"] .fw-canvas{
+#view-overview .chart-area[data-approved-design="B"] .fw-canvas{
  height:360px;background:#0a1729;border-color:rgba(119,153,191,.12);
 }
-.chart-area[data-approved-design="B"] .fw-horizon-availability{
+#view-overview .chart-area[data-approved-design="B"] .fw-horizon-availability{
  background:#0a1729;color:#a4b8d0;line-height:1.55;
 }
-.chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
  margin:2px 23px 14px;background:#10243d;
 }
 /* The source state can be unavailable, but B's surface stays consistent. */
 @media(max-width:760px){
- .chart-area[data-approved-design="B"]{padding:15px}
- .chart-area[data-approved-design="B"] .chart-kicker{margin:4px 4px 17px}
+ #view-overview .chart-area[data-approved-design="B"]{padding:15px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{margin:4px 4px 17px}
  .chart-b-title{font-size:clamp(25px,6vw,31px)}
  .chart-b-intro{font-size:11px}
- .chart-area[data-approved-design="B"] .fw-canvas{height:325px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:325px}
 }
 @media(max-width:440px){
- .chart-area[data-approved-design="B"]{
+ #view-overview .chart-area[data-approved-design="B"]{
   padding:11px;border-radius:15px;
  }
- .chart-area[data-approved-design="B"] .chart-kicker{
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{
   align-items:start;gap:6px;margin:5px 4px 14px;
  }
  .chart-b-eyebrow{font-size:9px;letter-spacing:.11em}
  .chart-b-title{font-size:25px}
  .chart-b-intro{font-size:10px;max-width:31ch}
- .chart-area[data-approved-design="B"] .chart-kicker .subtle{
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker .subtle{
   max-width:90px;font-size:9px;line-height:1.45;margin-top:5px;
  }
- .chart-area[data-approved-design="B"] #official-path-chart.frozen-week-chart{
+ #view-overview .chart-area[data-approved-design="B"] #official-path-chart.frozen-week-chart{
   border-radius:11px;
  }
- .chart-area[data-approved-design="B"] .fw-toolbar{
+ #view-overview .chart-area[data-approved-design="B"] .fw-toolbar{
   padding:13px 13px 3px;gap:8px;
  }
- .chart-area[data-approved-design="B"] .fw-period{
+ #view-overview .chart-area[data-approved-design="B"] .fw-period{
   font-size:10px;letter-spacing:.025em;min-width:0;
  }
- .chart-area[data-approved-design="B"] .fw-quote{padding:14px 13px 7px}
- .chart-area[data-approved-design="B"] .fw-quote strong{
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote{padding:14px 13px 7px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
   font-size:clamp(24px,7vw,30px);
  }
- .chart-area[data-approved-design="B"] .fw-horizons{
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizons{
   padding:10px 13px 4px;gap:6px;
  }
- .chart-area[data-approved-design="B"] .fw-horizons button{
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizons button{
   flex:0 1 91px;min-width:0;padding:8px 10px;
  }
- .chart-area[data-approved-design="B"] .fw-legend{
+ #view-overview .chart-area[data-approved-design="B"] .fw-legend{
   padding:12px 13px 10px;gap:9px 13px;font-size:9px;
  }
- .chart-area[data-approved-design="B"] .fw-legend i{width:19px}
- .chart-area[data-approved-design="B"] .fw-canvas{height:295px}
- .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+ #view-overview .chart-area[data-approved-design="B"] .fw-legend i{width:19px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:295px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
   margin:2px 13px 11px;
  }
- .chart-area[data-approved-design="B"] .fw-horizon-availability{
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizon-availability{
   padding:8px 13px 12px;
  }
  /* Bring the approved price instrument closer to the first screen.
@@ -442,6 +442,12 @@
  .decision .small{margin:8px 0 0;line-height:1.45}
  .section{margin-top:12px;padding:16px 13px}
  .section-heading{margin-bottom:11px}
- .chart-area[data-approved-design="B"]{margin-top:9px}
- .chart-area[data-approved-design="B"] .chart-kicker{margin-bottom:11px}
+ #view-overview .chart-area[data-approved-design="B"]{margin-top:9px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{margin-bottom:11px}
 }
+
+/* Cascade audit 2026-10-23: pre-existing premium.css
+ * #view-overview .chart-area outranked low-specificity .chart-area[B].
+ * The actual 390px browser probe caught computed transparent background.
+ * All B frame selectors now outrank the older id-level transparency rule.
+ * No !important or JS style injection; no market/chart source mutation. */
