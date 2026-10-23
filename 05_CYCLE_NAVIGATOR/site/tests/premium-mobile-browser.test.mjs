@@ -235,6 +235,11 @@ try{
    const ring=$('#premium-balance-dial');
    const compassGraphic=!!ring&&['verified','unavailable'].includes(ring.dataset.state)&&
      ring.getAttribute('aria-label')?.length>12;
+   const officialBull=Number($('#premium-bull')?.textContent||NaN);
+   const compassAngle=ring?.style.getPropertyValue('--dial-needle-angle')?.trim();
+   const evidenceNeedle=ring?.dataset.state==='verified'&&Number.isInteger(officialBull)?
+     compassAngle===String((officialBull-5)*14)+'deg':
+     compassAngle==='0deg';
    const graphTop=graphHost?.getBoundingClientRect().top-
       $('#view-overview').getBoundingClientRect().top;
    const pathBeforeGraphJump=location.pathname;
@@ -333,7 +338,7 @@ try{
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
-    unavailableOneLine,staleChartAccessible,rootBStyle,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,
+    unavailableOneLine,staleChartAccessible,rootBStyle,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,evidenceNeedle,
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
@@ -367,6 +372,7 @@ try{
   assert.ok(report.proofSimple,'Proof explanation and progressive detail not rendered');
   assert.ok(report.liveProofSafe,'Current-week source-joined D1–2/D3–4/D5–7 proof sequencing missing or fake');
   assert.ok(report.compassGraphic,'Official evidence dial missing or not source-labelled');
+  assert.ok(report.evidenceNeedle,'Dial needle should match verified 0–10 Bull/Bear evidence, not a hardcoded angle');
   assert.equal(report.enPath,'The market cycle','English PATH translation missing');
   assert.equal(report.daPath,'Markeds­cyklussen','Danish PATH restoration missing');
   assert.ok(report.promptHasProof,'Proof AI prompt lacks original source/hash anchors');
