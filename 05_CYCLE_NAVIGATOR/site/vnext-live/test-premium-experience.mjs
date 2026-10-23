@@ -175,3 +175,51 @@ for(const sourceCode of ['constructor','__proto__','toString','valueOf','hasOwnP
  }
 }
 console.log('PASS Official action translation is source-bound, no hidden signal remapping');
+
+
+// Approved B graph is a production-source contract, never a synthetic preview.
+// This static lock complements, but does not replace, 390/430px browser/pixel QA.
+import {readFileSync} from 'node:fs';
+const designFile=(relative)=>readFileSync(new URL(relative,import.meta.url),'utf8');
+const pageMarkup=designFile('./index.html');
+const chartCss=designFile('../frozen-week-chart.css');
+const chartJs=designFile('../frozen-week-chart.js');
+const premiumCss=designFile('./premium-experience.css');
+const appJs=designFile('./app.mjs');
+// One and only one official B chart host, supplied by unchanged approved scripts.
+assert.equal((pageMarkup.match(/id="official-path-chart"/g)||[]).length,1);
+assert.match(pageMarkup,/<div id="official-path-chart" class="frozen-week-chart"/);
+assert.match(pageMarkup,/href="\.\.\/frozen-week-chart\.css"/);
+assert.match(pageMarkup,/src="\.\.\/frozen-week-chart\.js"/);
+assert.match(pageMarkup,/src="\.\.\/vendor\/lightweight-charts-5\.2\.0\.js"/);
+assert.match(premiumCss,/\.chart-area #official-path-chart\.frozen-week-chart/);
+assert.match(chartCss,/\.frozen-week-chart\{[^}]*background:#0d1b2c/);
+assert.match(chartCss,/\.fw-legend \.forecast\{[^}]*border-top:2px dashed #5f96ff/);
+assert.match(chartCss,/\.fw-legend \.actual\{background:#27c59a/);
+assert.match(chartJs,/const DAY=86400000,BLUE='#5f96ff',GREEN='#27c59a'/);
+assert.match(chartJs,/CN_FROZEN_DAILY_PRICE_PATH_v1/);
+assert.match(chartJs,/window\.LightweightCharts/);
+assert.match(chartJs,/window\.CNWeekChart/);
+assert.match(appJs,/\.\.\/data\/latest\.json/);
+assert.match(appJs,/\.\.\/data\/compass\.json/);
+assert.match(appJs,/window\.CNWeekChart\?\.mount/);
+console.log('PASS canonical B chart single host, approved palette, official feed + dated forecast gate');
+
+
+// Exact visual-authority lock: production root must adopt the owner's
+// approved Weekly Outlook B chrome from the isolated design lab, but never
+// its synthetic SVG price curves, artificial prices or its second URL.
+const productionPremiumCss=designFile('./premium-experience.css');
+const productionMarkup=designFile('./index.html');
+const productionApp=designFile('./app.mjs');
+assert.match(productionMarkup,/data-approved-design="B"/);
+assert.match(productionMarkup,/class="chart-b-title" data-t="chartBTitle"/);
+assert.match(productionMarkup,/id="official-path-chart" class="frozen-week-chart"/);
+assert.match(productionPremiumCss,/B LIVE VISUAL PARITY/);
+assert.match(productionPremiumCss,/\.chart-area\[data-approved-design="B"\]\{/);
+assert.match(productionPremiumCss,/\.chart-area\[data-approved-design="B"\] \.fw-canvas\{/);
+assert.match(productionApp,/chartBTitle:'The weekly journey.'/);
+assert.match(productionApp,/chartBTitle:'Ugens kursrejse.'/);
+assert.doesNotMatch(productionMarkup,/appdeploy\.ai/);
+assert.doesNotMatch(productionApp,/Math\.sin\([^)]*\/\s*(?:17|4\.7|2\.7)/);
+console.log('PASS: production B card, DA/EN chrome, single source-bound chart, no AppDeploy demo series');

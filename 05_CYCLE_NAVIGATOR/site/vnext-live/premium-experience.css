@@ -209,16 +209,245 @@
 .proof-live-window[data-state=CLOSED_PROVISIONAL]{background:#f6f9fd;border-color:#d7e4f2}
 .proof-live-window-hours{display:block;color:#74889e;font-size:10px;line-height:1.5}
 @media(max-width:560px){
+ /* Full-width mobile evidence rows: preserves original source scores and
+  * incomplete-window states, while avoiding three unreadable 100px cards. */
  .proof-live-sequence{padding:19px 15px}
- .proof-live-windows{gap:6px}
- .proof-live-window{padding:11px 8px 10px;border-radius:9px}
- .proof-live-window-day{font-size:10px}
- .proof-live-window-head small{font-size:8px}
- .proof-live-window-score{font-size:22px;margin:9px 0 5px}
- .proof-live-window-hours{font-size:9px}
+ .proof-live-windows{grid-template-columns:minmax(0,1fr);gap:8px}
+ .proof-live-window{display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;column-gap:12px;row-gap:4px;
+  padding:13px 15px;border-radius:11px;min-height:83px}
+ .proof-live-window-head{grid-column:1;grid-row:1;
+  flex-direction:column;align-items:flex-start;justify-content:center;gap:3px}
+ .proof-live-window-day{font-size:12px}
+ .proof-live-window-head small{font-size:10px;line-height:1.4}
+ .proof-live-window-score{grid-column:2;grid-row:1 / span 2;justify-self:end;
+  font-size:clamp(23px,7vw,29px);white-space:nowrap;margin:0}
+ .proof-live-window-hours{grid-column:1;grid-row:2;font-size:10px;line-height:1.5}
 }
-@media(max-width:365px){.proof-live-windows{grid-template-columns:1fr}}
+@media(max-width:365px){.proof-live-window-score{font-size:22px}}
 
 /* Verified investor-readable OFFICIAL action, raw owner code always retained. */
 .product-action-code{display:block;margin-top:10px;color:#b9cbe0;font-size:10px;letter-spacing:.035em;font-weight:720;overflow-wrap:anywhere}
 .product-action-meaning{display:block;color:#b4c8df;font-size:10px;line-height:1.5;margin-top:5px;max-width:25rem}
+
+
+/* PREMIUM FINISH v1 · existing Quiet Precision, no alterations to approved B.
+ * Deliberately avoid #official-path-chart, .frozen-week-chart, chart variables,
+ * plot geometry and all official source / data / score presentation semantics.
+ * Typographic and responsive polish only outside the graph.
+ */
+.product-first .product-kicker{color:#536f8b;letter-spacing:.115em}
+.product-decision .product-cell{border-radius:12px}
+.product-decision .product-cell:first-child{background:#07172f}
+.product-action-meaning{max-width:36ch}
+.product-risk{border-radius:12px}
+.product-risk h3{letter-spacing:-.025em}
+.risk-class-rail{gap:5px}
+.risk-step{min-width:0;hyphens:auto;overflow-wrap:normal}
+.product-lenses button{transition:background-color .12s ease,border-color .12s ease,color .12s ease}
+.product-lenses button:hover:not([aria-pressed=true]){background:#e9f0f8;border-color:#cbd8e8}
+.path-main-row article{border-radius:12px}
+.path-route:before{background:#cbd9e8}
+.path-node{scroll-margin-top:20px}
+.path-node[data-kind=reference] .path-number{color:#2f6fda}
+.path-node[data-kind=next] .path-number{color:#9c703b}
+.path-rotation{scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#b9cbdf transparent}
+.rotation-tier{scroll-snap-align:start;border-radius:11px;gap:7px}
+.proof-window-details{position:relative}
+.proof-window-details>summary:after{pointer-events:none}
+.proof-live-window{transition:border-color .12s ease}
+.ai-verifier textarea{font-size:12px;line-height:1.6}
+@media(max-width:560px){
+ .product-first{border-radius:14px}
+ .product-decision .product-cell{min-height:111px}
+ .product-decision .product-cell small{font-size:10px}
+ .product-decision .product-cell strong{line-height:1.2}
+ .product-risk{padding:16px 13px}
+ .product-risk-heading{gap:8px}
+ .product-risk-label{max-width:44%;font-size:10px;line-height:1.5}
+ .risk-class-rail{gap:5px}
+ .risk-step{font-size:clamp(9px,2.4vw,11px);line-height:1.45;padding-top:8px}
+ .product-lenses{gap:6px}
+ .product-lenses button{flex:1 1 105px;padding-inline:9px;line-height:1.4;text-align:center}
+ .balance{border-radius:12px}
+ .balance-dial{width:86px}
+ .path-main-row{gap:8px}
+ .path-main-row article{padding:15px 12px}
+ .path-node{padding-block:14px}
+ .rotation-tier{min-width:94px}
+ .proof-live-window-score{font-variant-numeric:tabular-nums}
+ .proof-window-details>summary{line-height:1.4}
+}
+@media(max-width:365px){
+ .product-decision{grid-template-columns:minmax(0,1fr);gap:7px}
+ .product-decision .product-cell{min-height:0;padding:13px 14px}
+ .balance{grid-template-columns:minmax(0,1fr) 72px;gap:4px 7px}
+ .balance-dial{width:69px}
+ .risk-step{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .product-lenses button,.proof-live-window{transition:none!important}
+}
+
+
+/* B LIVE VISUAL PARITY · exact owner-approved Weekly Outlook B grammar.
+ * Source: isolated B/C Design Lab, Graph B navy instrument within ivory
+ * product card. Port the VISUAL grammar only. Never port synthetic SVG paths,
+ * prices, interpolation, time cursors, horizon forecasts or signals.
+ * Genuine TradingView source-bound B plot is unchanged. */
+#view-overview .chart-area[data-approved-design="B"]{
+ background:#fff;color:#07172f;border:1px solid #e1e7ee;
+ border-radius:17px;padding:26px;
+ box-shadow:0 10px 36px rgba(9,33,64,.045);
+ margin-top:17px;
+}
+#view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+ display:flex;align-items:end;justify-content:space-between;
+ gap:14px;margin:0 2px 22px;min-width:0;
+}
+.chart-b-heading{min-width:0}
+.chart-b-eyebrow{
+ display:block;font-size:10px;font-weight:800;letter-spacing:.135em;
+ color:#6b88a5;text-transform:uppercase;line-height:1.5;
+}
+.chart-b-title{
+ display:block;margin:3px 0 4px;font-size:clamp(26px,3.2vw,36px);
+ letter-spacing:-.045em;line-height:1.19;color:#07172f;font-weight:710;
+}
+.chart-b-intro{display:block;font-size:12px;line-height:1.55;color:#71859a}
+#view-overview .chart-area[data-approved-design="B"] .chart-kicker .subtle{
+ color:#577795;font-weight:640;font-size:10px;text-align:right;
+ max-width:145px;line-height:1.55;align-self:center;
+}
+#view-overview .chart-area[data-approved-design="B"] #official-path-chart.frozen-week-chart{
+ margin:0;border:1px solid #253b55;border-radius:13px;
+ background:#0a1729;color:#f1f7ff;box-shadow:inset 0 0 0 1px #ffffff0c;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-toolbar{
+ padding:17px 23px 5px;background:#0a1729;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons{
+ gap:7px;padding:12px 23px 6px;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button{
+ background:#10243a;border:1px solid #2c4867;border-radius:9px;
+ min-width:73px;min-height:44px;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button[aria-pressed=true]{
+ background:#28486c;color:#fff;border-color:#496f99;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote{
+ background:#0a1729;padding:18px 23px 7px;align-items:start;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
+ color:#f7fbff;font-size:clamp(28px,3.7vw,40px);
+ font-weight:660;letter-spacing:-.055em;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-source{padding-top:2px}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend{
+ background:#0a1729;padding:17px 23px 13px;
+ gap:10px 22px;font-size:10px;color:#a9bfd8;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend .forecast{
+ border-color:#5f96ff;border-top-style:dashed;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend .actual{
+ background:#27c59a;min-height:3px;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-canvas{
+ height:360px;background:#0a1729;border-color:rgba(119,153,191,.12);
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizon-availability{
+ background:#0a1729;color:#a4b8d0;line-height:1.55;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+ margin:2px 23px 14px;background:#10243d;
+}
+/* The source state can be unavailable, but B's surface stays consistent. */
+@media(max-width:760px){
+ #view-overview .chart-area[data-approved-design="B"]{padding:15px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{margin:4px 4px 17px}
+ .chart-b-title{font-size:clamp(25px,6vw,31px)}
+ .chart-b-intro{font-size:11px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:325px}
+}
+@media(max-width:440px){
+ #view-overview .chart-area[data-approved-design="B"]{
+  padding:11px;border-radius:15px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+  align-items:start;gap:6px;margin:5px 4px 14px;
+ }
+ .chart-b-eyebrow{font-size:9px;letter-spacing:.11em}
+ .chart-b-title{font-size:25px}
+ .chart-b-intro{font-size:10px;max-width:31ch}
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker .subtle{
+  max-width:90px;font-size:9px;line-height:1.45;margin-top:5px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] #official-path-chart.frozen-week-chart{
+  border-radius:11px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-toolbar{
+  padding:13px 13px 3px;gap:8px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-period{
+  font-size:10px;letter-spacing:.025em;min-width:0;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote{padding:14px 13px 7px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
+  font-size:clamp(24px,7vw,30px);
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizons{
+  padding:10px 13px 4px;gap:6px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizons button{
+  flex:0 1 91px;min-width:0;padding:8px 10px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-legend{
+  padding:12px 13px 10px;gap:9px 13px;font-size:9px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-legend i{width:19px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:295px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+  margin:2px 13px 11px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizon-availability{
+  padding:8px 13px 12px;
+ }
+ /* Bring the approved price instrument closer to the first screen.
+  * Official Compass current-action card still leads the graph. */
+ .hero{padding:22px 22px 21px}
+ .hero h1{font-size:clamp(37px,10vw,43px)}
+ .decision article{padding:16px 13px;min-height:125px}
+ .decision .eyebrow{margin-bottom:9px}
+ .section{padding:19px 13px}
+ .section-heading .eyebrow{letter-spacing:.10em}
+}
+
+
+/* B · iPhone above-the-fold correction after true 390px Chrome QA.
+ * Preserve the 740px official-plot discoverability contract rather than
+ * weakening acceptance thresholds to hide the added editorial title. */
+@media(max-width:440px){
+ .hero{margin:0 0 10px;padding:15px 18px 14px;gap:12px}
+ .hero h1{font-size:34px;line-height:1.04}
+ .hero .intro{margin-top:8px;line-height:1.45;font-size:12px}
+ .hero-indicator{min-height:0;padding:11px 13px}
+ .hero-value{margin:7px 0 3px;font-size:23px}
+ .decision{margin-bottom:7px;gap:7px}
+ .decision article{min-height:102px;padding:12px 11px}
+ .decision .eyebrow{margin-bottom:7px;line-height:1.45}
+ .decision .action-value{font-size:24px}
+ .decision-side #direction{font-size:22px}
+ .decision .small{margin:8px 0 0;line-height:1.45}
+ .section{margin-top:12px;padding:16px 13px}
+ .section-heading{margin-bottom:11px}
+ #view-overview .chart-area[data-approved-design="B"]{margin-top:9px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{margin-bottom:11px}
+}
+
+/* Cascade audit 2026-10-23: pre-existing premium.css
+ * #view-overview .chart-area outranked low-specificity .chart-area[B].
+ * The actual 390px browser probe caught computed transparent background.
+ * All B frame selectors now outrank the older id-level transparency rule.
+ * No !important or JS style injection; no market/chart source mutation. */
