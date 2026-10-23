@@ -10,9 +10,11 @@ test('Premium root renders original Graph B, Proof, official Compass and PATH',(
  const root=buildPremiumRootHtml(original);
  for(const id of ['variant-panel','chart','proof-explorer','official-product-pilot','official-pilot-path'])
   assert.ok(root.includes('id="'+id+'"'),id);
- assert.match(root,/<h1>Et klarere blik på markedet\.<\/h1>/);
+ assert.match(root,/<h1 data-premium-copy="title">Et klarere blik på markedet\.<\/h1>/);
  assert.match(root,/Weekly Outlook <span class="alt-token">B<\/span>/);
  assert.match(root,/aria-label="Premium sektioner"/);
+ assert.match(root,/data-premium-nav="compass"/);
+ assert.match(root,/data-premium-copy="disclaimer"/);
  assert.match(root,/name="robots" content="noindex,nofollow"/);
  assert.ok(root.indexOf('id="variant-panel"')<root.indexOf('id="proof-explorer"'));
  assert.ok(root.indexOf('id="proof-explorer"')<root.indexOf('id="official-product-pilot"'));
@@ -55,4 +57,12 @@ test('Vite actual build must use build-time single-authority root plugin',async(
  assert.match(config,/context\.filename/);
  assert.match(config,/order:'pre'/);
  assert.match(config,/base:'\/Investering-Framework-Archive-v1\/next\/'/);
+});
+
+test('Graph B existing DA/EN control covers real Premium heading and navigation',async()=>{
+ const js=await readFile(new URL('./graph-b/source-graph-b.mjs',import.meta.url),'utf8');
+ assert.match(js,/data-premium-nav/);
+ assert.match(js,/data-premium-copy/);
+ assert.match(js,/A clearer view of the market/);
+ assert.match(js,/Et klarere blik på markedet/);
 });
