@@ -223,7 +223,11 @@ try{
      title:approvedBFrame?.querySelector('.chart-b-title')?.textContent?.trim()||null,
      eyebrow:approvedBFrame?.querySelector('.chart-b-eyebrow')?.textContent?.trim()||null,
      quoteBg:approvedBFrame?.querySelector('.fw-quote')?
-       getComputedStyle(approvedBFrame.querySelector('.fw-quote')).backgroundColor:null
+       getComputedStyle(approvedBFrame.querySelector('.fw-quote')).backgroundColor:null,
+     styles:[...document.styleSheets].map(sheet=>{
+       let rules=[];try{rules=[...sheet.cssRules]}catch{}
+       return {href:sheet.href,ruleCount:rules.length,approvedBRule:rules.some(rule=>rule.selectorText?.includes('chart-area[data-approved-design'))};
+     })
    };
    const approvedBVisual=approvedBProbe.outer&&
      approvedBProbe.frameBg==='rgb(255, 255, 255)'&&
