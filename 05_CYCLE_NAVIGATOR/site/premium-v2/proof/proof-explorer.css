@@ -1,0 +1,59 @@
+/* Premium Proof 2.1 · QUIET PRECISION · source-only B companion.
+ * Separate from approved AppDeploy B rules; no global styles injected. */
+.proof-explorer{border:1px solid #e0e8f0;border-radius:17px;background:#fff;
+ margin:32px 0 62px;padding:clamp(15px,3vw,28px);box-shadow:0 8px 35px #07172f08;
+ color:#07172f;max-width:100%;min-width:0}
+.proof-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.proof-eyebrow{font-size:10px;font-weight:800;color:#6284a8;letter-spacing:.13em}
+.proof-head h2{font-size:clamp(23px,3.5vw,36px);letter-spacing:-.045em;line-height:1.2;
+ margin:8px 0 9px;font-weight:720}
+.proof-head p{font-size:13px;line-height:1.7;color:#73879e;margin:0;max-width:59ch}
+.proof-status{flex:none;border:1px solid #dbe4ee;background:#f4f7fa;
+ color:#647c96;padding:9px 12px;border-radius:10px;letter-spacing:.05em;font-size:10px;
+ font-weight:720;max-width:180px;text-align:center}
+.proof-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+ margin:24px 0 12px}
+.proof-steps button{min-height:52px;border:1px solid #dfe8f2;background:#f5f8fb;
+ text-align:left;color:#45627d;border-radius:10px;padding:11px;font-weight:700;
+ font-size:12px;display:flex;align-items:center;gap:10px}
+.proof-steps button span{font-size:10px;letter-spacing:.05em;color:#7e9ab5}
+.proof-steps button[aria-pressed=true]{background:#092342;color:#fff;border-color:#092342}
+.proof-steps button[aria-pressed=true] span{color:#91b8ed}
+.proof-hero{background:#f4f7fb;border:1px solid #e1e8f1;padding:16px 18px;
+ border-radius:12px;font-size:13px;line-height:1.65;color:#294865;min-height:78px}
+.proof-windows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}
+.proof-window{padding:15px;border:1px solid #e0e7ef;border-radius:11px;min-width:0}
+.proof-window .proof-kicker{font-size:10px;letter-spacing:.08em;color:#7f92a8;
+ font-weight:760}
+.proof-window strong{display:block;margin:8px 0;font-size:clamp(18px,2.5vw,26px);
+ font-variant-numeric:tabular-nums;letter-spacing:-.05em}
+.proof-window p{font-size:11px;line-height:1.55;color:#6f8398;margin:4px 0}
+.proof-window[data-status=live]{border-color:#c5d7ed;background:#f7fbff}
+.proof-window[data-status=complete]{background:#fbfcfe}
+.proof-method{border-top:1px solid #e2e9f2;padding:14px 0;margin:0;
+ color:#7c8da2;font-size:11px;line-height:1.6}
+.proof-source-details{border:1px solid #e3eaf2;border-radius:10px;padding:12px 15px}
+.proof-source-details summary{font-size:12px;font-weight:730;color:#42617d;
+ cursor:pointer;min-height:30px}
+.proof-source-details p{font-size:11px;line-height:1.65;color:#647e97}
+.proof-source-list{display:grid;gap:10px;padding:10px 0 2px}
+.proof-source-row{padding:12px 10px;border-radius:8px;background:#f5f8fb;min-width:0;
+ display:flex;justify-content:space-between;align-items:center;gap:10px}
+.proof-source-row strong{font-size:11px}
+.proof-source-row small{display:block;font-size:10px;color:#71869a;line-height:1.5;
+ word-break:break-word}
+.proof-source-row a,.proof-foot a{color:#2869bc;font-weight:700;font-size:12px}
+.proof-foot{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:14px;
+ color:#7b91a7;font-size:11px}
+.proof-foot button{background:#fff;color:#21578e;border:1px solid #ccdaea;
+ border-radius:9px;padding:10px 12px;min-height:44px;font-size:11px;font-weight:740}
+.proof-foot a{display:flex;align-items:center;min-height:44px}
+.proof-explorer button:focus-visible,.proof-explorer summary:focus-visible,
+.proof-explorer a:focus-visible{outline:3px solid #2f6fda;outline-offset:3px}
+@media(max-width:650px){.proof-head{flex-direction:column}.proof-status{max-width:none}
+.proof-steps{gap:4px}.proof-steps button{font-size:10px;min-height:48px;
+ flex-direction:column;align-items:flex-start;gap:3px;padding:9px}
+.proof-windows{grid-template-columns:1fr}.proof-window{padding:12px 14px}
+.proof-window strong{font-size:23px}.proof-head h2{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.proof-explorer *, .proof-explorer *::before,
+.proof-explorer *::after{animation:none!important;transition:none!important}}
