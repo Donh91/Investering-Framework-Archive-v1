@@ -46,12 +46,21 @@ function snapshotSummary(rows,status,round,head){
       note:x.note||null}))
   };
 }
-async function check(path){
-  const expected=sha(await readFile(resolve(dist,path)));
+async function check(path,{readAsset=readFile,fetchAsset=fetch}={}){
+  // Reject paths before either local or remote access, including in self-tests.
+  const url=publicUrl(path);
+  let expected=null;
+  try{
+    expected=sha(await readAsset(resolve(dist,path)));
+  }catch{
+    // A missing/unreadable uploaded asset must still produce a failure receipt.
+    // Retrying the CDN cannot repair the local release bundle.
+    return {path,status:'LOCAL_ASSET_UNAVAILABLE',expected:null,actual:null};
+  }
   try{
     // No cachebuster that might mask normal public URL bytes; request no-cache
     // to make CDN prove this release rather than a prior cached variant.
-    const response=await fetch(publicUrl(path),{
+    const response=await fetchAsset(url,{
       redirect:'error',headers:{'Cache-Control':'no-cache','Pragma':'no-cache'},
       signal:AbortSignal.timeout(12000)
     });
@@ -73,7 +82,45 @@ if(process.argv.includes('--self-test')){
   assert.throws(()=>publicUrl('../secrets/password'),/NOT_AN_ALLOWLISTED_PUBLIC_ASSET/);
   assert.equal(new Set(files).size,files.length);
   assert.ok(files.includes('vnext/premium-experience.css')&&files.includes('data/latest.json'));
-  console.log('CN_PAGES_PARITY_SELF_TEST_PASS: bounded public exact-byte hash, 11 allowlisted assets');
+  const bytes=Buffer.from('release bytes');
+  const readAsset=async()=>bytes;
+  const fetchAsset=async()=>new Response(bytes);
+  const pass=await check('index.html',{readAsset,fetchAsset});
+  assert.equal(pass.status,'PASS');
+  assert.equal(pass.expected,sha(bytes));
+  assert.equal(pass.actual,sha(bytes));
+  assert.equal((await check('index.html',{readAsset,
+    fetchAsset:async()=>new Response('stale bytes')})).status,'MISMATCH');
+  const denied=await check('index.html',{readAsset,
+    fetchAsset:async()=>new Response('denied',{status:403})});
+  assert.equal(denied.status,'HTTP_ERROR');
+  assert.equal(denied.http_status,403);
+  assert.equal(denied.actual,null);
+  const timeout=await check('index.html',{readAsset,
+    fetchAsset:async()=>{throw new DOMException('private diagnostic','TimeoutError')}});
+  assert.equal(timeout.status,'FETCH_FAILED');
+  assert.equal(timeout.note,'TimeoutError');
+  assert.ok(!JSON.stringify(timeout).includes('private diagnostic'));
+  const bodyFailure=await check('index.html',{readAsset,
+    fetchAsset:async()=>({ok:true,arrayBuffer:async()=>{throw new Error('body failed')}})});
+  assert.equal(bodyFailure.status,'FETCH_FAILED');
+  let fetched=false;
+  const missing=await check('index.html',{
+    readAsset:async()=>{throw new Error('private local path')},
+    fetchAsset:async()=>{fetched=true;return new Response(bytes)}});
+  assert.equal(missing.status,'LOCAL_ASSET_UNAVAILABLE');
+  assert.equal(missing.expected,null);
+  assert.equal(fetched,false);
+  const receipt=snapshotSummary([missing],'DEGRADED',1,null);
+  assert.equal(receipt.files[0].status,'LOCAL_ASSET_UNAVAILABLE');
+  assert.equal(receipt.files[0].expected_sha256,null);
+  await assert.rejects(check('../secrets/password',{
+    readAsset:async()=>assert.fail('invalid path was read'),
+    fetchAsset:async()=>assert.fail('invalid path was fetched')
+  }),/NOT_AN_ALLOWLISTED_PUBLIC_ASSET/);
+  assert.equal((await Promise.all(files.map(path=>check(path,{readAsset,fetchAsset}))))
+    .filter(row=>row.status==='PASS').length,files.length);
+  console.log('CN_PAGES_PARITY_SELF_TEST_PASS: exact bytes, mismatch, HTTP, timeout, body failure, missing local asset, traversal and all 11 public assets');
 }else{
   let head=null;try{head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()}catch{}
   let last=null;
@@ -84,7 +131,7 @@ if(process.argv.includes('--self-test')){
     // No JSON payload, secrets, portfolio or private URLs printed. All checked
     // assets are intentionally already publicly accessible.
     console.log('CN_PAGES_PARITY_RECEIPT '+JSON.stringify(last));
-    if(pass)break;
+    if(pass||rows.some(row=>row.status==='LOCAL_ASSET_UNAVAILABLE'))break;
     if(round<6)await delay([0,5000,8000,12000,16000,20000][round]);
   }
   if(process.env.GITHUB_STEP_SUMMARY){
