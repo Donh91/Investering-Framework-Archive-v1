@@ -1,6 +1,6 @@
 /* Product alignment executable negatives. Synthetic fixtures ONLY; no seeded market claims. */
 import assert from 'node:assert/strict';
-import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel,priceSequenceModel} from './premium-experience.mjs';
+import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel,priceSequenceModel,presentOfficialAction} from './premium-experience.mjs';
 const bullBear={
  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',
  semantics:'EVIDENCE_BALANCE_NOT_PROBABILITY',
@@ -148,3 +148,14 @@ corrupted.public_live_precision.window_scores.day_1_2.score_to_date=110;
 assert.equal(priceSequenceModel(view,corrupted,snapshotAt).windows[0].score,null);
 assert.equal(priceSequenceModel(view,precisionFixture,Date.parse('2026-10-23T03:00:00Z')).state,'UNAVAILABLE');
 console.log('PASS source-joined live price-range sequences, stale/partial/future/source negatives');
+
+// Human-readable official code mapping must never create unissued signals.
+assert.deepEqual(presentOfficialAction('HOLD_WAIT',true,'da').label,'AFVENT');
+assert.deepEqual(presentOfficialAction('HOLD_WAIT',true,'en').label,'WAIT');
+assert.equal(presentOfficialAction('HOLD_WAIT',true,'da').code,'HOLD_WAIT');
+assert.equal(presentOfficialAction('HOLD_WAIT',false,'da').code,null);
+assert.equal(presentOfficialAction('SELL',false,'en').label,'AWAITING SOURCE');
+assert.equal(presentOfficialAction('BUY',true,'en').code,'BUY');
+assert.equal(presentOfficialAction('UNRECOGNIZED',true,'da').label,'UNRECOGNIZED');
+assert.equal(presentOfficialAction('UNRECOGNIZED',true,'da').verified,true);
+console.log('PASS Official action translation is source-bound, no hidden signal remapping');
