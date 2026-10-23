@@ -4,7 +4,7 @@
  * This is a deliberately small port of AppDeploy B/C Studio's actual SVG
  * geometry/updateGraph architecture. It consumes ONLY published first-party
  * /data/latest.json through the independently tested official-source adapter.
- * The original AppDeploy Math.sin() fixture and demo switch are NOT imported.
+ * The original AppDeploy synthetic sine-wave fixture and demo switch are NOT imported.
  *
  * This file must never be treated as an Official Compass, forecast issuer,
  * independent proof attestation or score engine.
