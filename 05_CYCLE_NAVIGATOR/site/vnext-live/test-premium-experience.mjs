@@ -218,8 +218,16 @@ assert.match(productionMarkup,/id="official-path-chart" class="frozen-week-chart
 assert.match(productionPremiumCss,/B LIVE VISUAL PARITY/);
 assert.match(productionPremiumCss,/\.chart-area\[data-approved-design="B"\]\{/);
 assert.match(productionPremiumCss,/\.chart-area\[data-approved-design="B"\] \.fw-canvas\{/);
-assert.match(productionApp,/chartBTitle:'The weekly journey.'/);
-assert.match(productionApp,/chartBTitle:'Ugens kursrejse.'/);
+assert.match(productionApp,/chartBTitle:'Weekly Outlook · B'/);
+assert.match(productionApp,/chartBTitle:'Weekly Outlook · B'/);
 assert.doesNotMatch(productionMarkup,/appdeploy\.ai/);
 assert.doesNotMatch(productionApp,/Math\.sin\([^)]*\/\s*(?:17|4\.7|2\.7)/);
 console.log('PASS: production B card, DA/EN chrome, single source-bound chart, no AppDeploy demo series');
+
+assert.match(productionMarkup,/data-b-asset="BTC"/);
+assert.match(productionMarkup,/data-b-asset="ETH"/);
+assert.match(productionMarkup,/id="chart-b-scrub-range"/);
+assert.match(chartJs,/visibleHours=m.hourly.filter\(p=>p.time<=shownUntil\)/);
+assert.match(chartJs,/const plan=linePlan\(plotModel\)/);
+assert.match(chartJs,/chart-b-scrub-label/);
+assert.match(productionPremiumCss,/B original layout v2/);
