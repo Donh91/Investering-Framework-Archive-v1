@@ -39,6 +39,25 @@ const clear=id=>{const el=$(id);el.replaceChildren();return el};
 function row(id,values){const tr=document.createElement('tr');for(const value of values){const td=document.createElement('td');td.textContent=String(value??'—');tr.append(td)}$(id).append(tr)}
 function missing(id,n=3){clear(id);const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=n;td.textContent=trText('Ingen godkendelige officielle data','No eligible official data');tr.append(td);$(id).append(tr)}
 function trText(da,en){return tr(da,en)}
+// The live BTC/ETH chart and Official Compass have different freshness owners.
+// Never turn a newer Compass issue into a "fresh price" claim.
+function priceSourceAgeStatus(latest,now=Date.now()){
+ const v=latest?.public_live_precision,path=v?.hourly_price_path;
+ if(v?.contract!=='CN_PUBLIC_LIVE_PRICE_PRECISION_v1'||
+    path?.contract!=='CN_PUBLIC_HOURLY_PRICE_PATH_v1'||
+    path?.semantics!=='OBSERVED_HOURLY_CLOSE_NOT_A_PROSPECTIVE_FORECAST'||
+    path?.source!=='HOURLY_SPOT_PASS_ONLY'||
+    path?.forecast_week!==v?.forecast_week||
+    path?.public_issue_number!==v?.public_issue_number||
+    !Array.isArray(path?.BTC)||!Array.isArray(path?.ETH)||
+    !path.BTC.length||!path.ETH.length||
+    path.observed_through_utc!==v.live_as_of_utc)
+   return {state:'UNAVAILABLE',asOf:null};
+ const cutoff=Date.parse(path.observed_through_utc),sla=Number(v.freshness_sla_minutes);
+ if(!Number.isFinite(cutoff)||cutoff>now||!Number.isFinite(sla)||sla<=0)
+   return {state:'UNAVAILABLE',asOf:null};
+ return {state:now-cutoff>sla*60000?'STALE':'FRESH',asOf:path.observed_through_utc};
+}
 function drawStatus(){
  const fresh=view?.compass?.state==='FRESH',valid=view?.weekly?.state==='OK'||view?.weekly?.state==='DEGRADED';
  // Never present Pages re-publication time as fresh Official market evidence.
@@ -59,6 +78,17 @@ function drawStatus(){
  show('source-clock',Number.isFinite(expiryMs)?
    (expired?tr('Kompas udløb ','Compass expired at '):tr('Kompas gyldigt til ','Compass valid until '))+stamp(ownerExpiry):
    tr('Sidste levering ','Last delivery ')+stamp(feeds?.latest?.generated_at));
+ // Fail stale closed, independently of the Official Compass action clock.
+ // Source is checked again on existing one-minute client refresh.
+ const warning=$('price-source-warning'),price=priceSourceAgeStatus(feeds?.latest);
+ if(warning){
+   warning.hidden=!feeds||price.state==='FRESH';
+   if(!warning.hidden)warning.textContent=price.state==='STALE'?
+     tr('Kursgraf forældet · seneste timesluk '+stamp(price.asOf)+' · Kompas vurderes separat.',
+        'Price chart stale · last hourly close '+stamp(price.asOf)+' · Compass assessed separately.'):
+     tr('Kursgraf uden verificerede timepriser · Kompas vurderes separat.',
+        'Price chart has no verified hourly prices · Compass assessed separately.');
+ }
 }
 function drawOverview(){
  const w=view?.weekly||{},c=view?.compass||{},p=view?.path||{},verified=c.state==='FRESH'&&c.permit_path_live_gates===true,official=verified?feeds.compass:null;
