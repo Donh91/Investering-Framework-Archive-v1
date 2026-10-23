@@ -159,6 +159,7 @@ document.querySelectorAll('[data-asset]').forEach(b=>b.addEventListener('click',
 }));
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{
  language=b.dataset.lang==='en'?'en':'da';plot();
+ document.dispatchEvent(new CustomEvent('cn:languagechange',{detail:{language}}));
 }));
 $('hour-slider')?.addEventListener('input',e=>{clearPlaying();sliderHour=Number(e.currentTarget.value);plot()});
 $('play')?.addEventListener('click',()=>{
