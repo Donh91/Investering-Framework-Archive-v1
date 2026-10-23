@@ -111,7 +111,7 @@ export function presentOfficialAction(code,eligible,lang='da'){
    BUY:[da?'BUY':'BUY',da?'Officiel BUY-kode, ingen porteføljeeksekvering.':'Official BUY code, no portfolio execution.'],
    SELL:[da?'SELL':'SELL',da?'Officiel SELL-kode, ingen porteføljeeksekvering.':'Official SELL code, no portfolio execution.']
  };
- const found=known[code];
+ const found=Object.prototype.hasOwnProperty.call(known,code)?known[code]:null;
  return found?{label:found[0],code,verified:true,explanation:found[1]}:
     {label:code.slice(0,40),code,verified:true,
      explanation:da?'Uændret officiel kildekode.':'Unmodified official source code.'};
