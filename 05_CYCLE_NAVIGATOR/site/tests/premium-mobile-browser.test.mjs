@@ -176,6 +176,19 @@ try{
    $('[data-nav-to="path"]').focus();$('[data-nav-to="path"]').click();
    const pathJumpFocus=document.activeElement?.id==='tab-path'&&!$('#view-path').hidden;
    $('[data-tab="overview"]').click();
+   // Hallmark-inspired adverse text test: simulate official source expiry
+   // without changing original source data or browser fixtures. The previous
+   // iPhone screenshot showed UNAVAILABLE split onto a dangling final letter.
+   const actionNode=$('#action'), originalAction=actionNode.textContent;
+   actionNode.textContent='UNAVAILABLE';
+   const adverseRange=document.createRange();
+   adverseRange.selectNodeContents(actionNode);
+   const actionPieces=Array.from(adverseRange.getClientRects()).filter(q=>q.width>0);
+   const actionCard=actionNode.closest('.decision-main').getBoundingClientRect();
+   const unavailableOneLine=actionPieces.length===1&&
+     actionPieces[0].left>=actionCard.left+1&&
+     actionPieces[0].right<=actionCard.right-1;
+   actionNode.textContent=originalAction;
    // Real Chrome test: the approved chart must be easily discoverable on mobile,
    // not buried below unrelated PATH/risk cards despite valid data in the DOM.
    const graphLink=$('#view-overview .cn-chart-jump');
@@ -259,6 +272,7 @@ try{
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
+    unavailableOneLine,
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
@@ -302,6 +316,7 @@ try{
 
   assert.ok(!report.chart.startsWith('FAIL'),'BTC/ETH chart controls failed or valid chart source was dropped: '+report.chart);
   assert.ok(!report.forwardButtons.startsWith('FAIL'),'Approved B 7/14/21 horizon controls failed: '+report.forwardButtons);
+  assert.ok(report.unavailableOneLine,'The source-unavailable action must not split or clip on narrow mobile');
   assert.ok(report.hourlyCurveProof,'Verified hourly actual source dropped / gaps fabricated / forecast filled');
   assert.ok(report.originalRangesValid,'Three frozen source windows must form six exact low/high edges');
   if(report.hourlyPointCount>0){
