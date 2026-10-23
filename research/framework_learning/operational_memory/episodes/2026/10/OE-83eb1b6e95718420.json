@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs",
+    "scripts/cycle_navigator/check_publication_lineage.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-83eb1b6e95718420",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized P0 source-clock fail-closed follow-up after PR #1752. Exact-head 6 relevant checks PASS, 3 expected skipped; independent future-cutoff and observation rejection with adversarial tests. No source rule/model/workflow change. SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE, not formal independent GitHub APPROVED.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "b2bd60e216a3a04c8804ad97994dca9f3c1fdb36",
+    "scripts/cycle_navigator/check_publication_lineage.py": "8f1ea313871ff676fb0c1fc932cf4086dd3c495c"
+  },
+  "source_commit_sha": "83eb1b6e95718420c9d25891c61bb4680981b832",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-22T17:13:34-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "SITE: reject future source and price clocks in public lineage (#1753)"
+}

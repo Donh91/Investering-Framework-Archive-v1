@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/OWNER_BINDING_MATRIX.json",
+    "scripts/research/shared_row_activation_phase_gate.py",
+    "scripts/research/shared_row_tournament_monitor.py",
+    "scripts/research/validate_core_prospective_freeze.py",
+    "tests/research/test_shared_row_activation_phase_gate.py",
+    "tests/research/test_shared_row_consumer_integrity.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-52cb3492c3fbb43e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-monitor-owner-floor-verified-evidence-1746",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Align the owner matrix with the frozen 24 Oct prospective floor and make the monitor consume the shared immutable provenance and outcome gate. Three exact-head gates passed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/OWNER_BINDING_MATRIX.json": "eb48adc05b9939151325c760f46ff22fd7bae241",
+    "scripts/research/shared_row_activation_phase_gate.py": "17d831fb45bf29126cde99720664fae5407b8434",
+    "scripts/research/shared_row_tournament_monitor.py": "8b35cbaa52c71d2568b97a6fb6abef87e8561a7a",
+    "scripts/research/validate_core_prospective_freeze.py": "0be0fd718326e3ffac51d7a96e9f1a19cd267b67",
+    "tests/research/test_shared_row_activation_phase_gate.py": "6c5bb099408f4fb926bd49128a56380986ded26a",
+    "tests/research/test_shared_row_consumer_integrity.py": "6a57ada0561a414b116774aa6db0a471ff8d0a33"
+  },
+  "source_commit_sha": "52cb3492c3fbb43e83ab920394111979972fe229",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-22T13:14:41-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(task2): bind monitor and owner floor to verified evidence (#1746)"
+}
