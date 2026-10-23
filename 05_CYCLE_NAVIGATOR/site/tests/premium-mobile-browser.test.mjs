@@ -300,6 +300,13 @@ try{
    const actualPointCount=actualPlan?.actualRuns.reduce((sum,run)=>sum+run.length,0)??0;
    const hourlyPointCount=hourlySource?.BTC?.length??0;
    const forecastPointCount=actualPlan?.forecast.length??0;
+   // Original B is two curves ONLY if the forecast issuer published daily
+   // expected closes; show the source-denial banner otherwise, in both assets.
+   const issuerDenied=!!actualModel&&actualModel.daily.length!==7;
+   const missingForecastBanner=document.querySelector('#official-path-chart .fw-forecast-not-issued');
+   const graphBSourceHonesty=!eligibleModels||!issuerDenied||
+      !!missingForecastBanner?.textContent.includes('BLÅ PROGNOSEKURVE IKKE UDSTEDT');
+
    const actualStatus=document.querySelector('.fw-progress-actual')?.textContent||'';
    const forecastStatus=document.querySelector('.fw-progress-forecast')?.textContent||'';
    const eligibleModels=typeof model?.model==='function'&&
@@ -327,7 +334,7 @@ try{
          const chosen=document.querySelector('[data-fw-horizon="'+n+'"]');
          const notice=document.querySelector('.fw-horizon-availability')?.textContent||'';
          return chosen?.getAttribute('aria-pressed')==='true'&&
-           (n===7?/7.day original|7 dages original/i.test(notice):notice.includes('8–'+n));
+           (n===7?/seven.day frozen range|syv originale forventede|original seven.day expected/i.test(notice)||/kun originale syvdagesintervaller/i.test(notice):notice.includes('8–'+n));
        };
        const all=hit(14)&&hit(21)&&hit(7);
        forwardButtons=all?'PASS':'FAIL_HORIZON_TOGGLE_OR_SOURCE_DISCLOSURE';
@@ -345,7 +352,7 @@ try{
     proofCopied,sourceExpiryShown,priceStatusIndependent,actionReconciled,pathJumpFocus,
     clockRight:sourceClock.right,clockLeft:sourceClock.left,clockWidth:sourceClock.width,
     clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,forwardButtons,
-    hourlyCurveProof,originalRangesValid,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
+    hourlyCurveProof,originalRangesValid,graphBSourceHonesty,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
   reports.push(report);
@@ -394,6 +401,7 @@ try{
   assert.ok(report.unavailableOneLine,'The source-unavailable action must not split or clip on narrow mobile');
   assert.ok(report.staleChartAccessible,'Stale public observed prices need explicit DA/EN screen-reader warning');
   assert.ok(report.hourlyCurveProof,'Verified hourly actual source dropped / gaps fabricated / forecast filled');
+  assert.ok(report.graphBSourceHonesty,'Approved Graph B must visibly acknowledge absence of source-issued blue expected-close curve');
   assert.ok(report.originalRangesValid,'Three frozen source windows must form six exact low/high edges');
   if(report.hourlyPointCount>0){
     assert.equal(report.actualPointCount,report.hourlyPointCount,'Actual line must contain exactly each source-valid hour');
