@@ -543,3 +543,11 @@
  .chart-b-assets button{min-width:43px;padding:8px}
  #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:315px}
 }
+
+/* Chrome acceptance: actual B host must begin above 740px in overview,
+ * without weakening the test or hiding Official Compass current action. */
+@media(max-width:600px){
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+  margin-bottom:11px;
+ }
+}
