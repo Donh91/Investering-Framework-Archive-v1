@@ -45,6 +45,11 @@ export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
   if(!/noindex/i.test(html))errors.push('MISSING_NOINDEX:'+path);
   if(path.includes('graph-b/')&&!html.includes('id="chart"'))
    errors.push('MISSING_GRAPH_B_MARKUP');
+  if(path==='index.html'){
+   for(const id of ['chart','variant-panel','proof-explorer','official-product-pilot','official-pilot-path']){
+    if(!html.includes('id="'+id+'"'))errors.push('MISSING_PREMIUM_ROOT_MARKUP:'+id);
+   }
+  }
   const entryUrl=new URL(base+path,host);
   const refPattern=/<(?:script|link|img)\b[^>]*?\s(?:src|href)=["']([^"']+)["']/gi;
   for(const m of html.matchAll(refPattern)){
