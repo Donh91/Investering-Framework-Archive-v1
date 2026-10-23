@@ -12,7 +12,7 @@
 import {readOfficialGraphB,replayObservedUntil} from './official-source-adapter.mjs';
 const $=id=>document.getElementById(id);
 const SVG='http://www.w3.org/2000/svg',HOUR=3600000,DAY=86400000;
-let asset='BTC',language='da',model=null,sliderHour=0,playTimer=null;
+let asset='BTC',language='da',model=null,sliderHour=0,playTimer=null,staleTimer=null;
 const s=(n)=>typeof n==='number'&&Number.isFinite(n)&&n>0;
 const t=(da,en)=>language==='da'?da:en;
 const utc=ms=>new Date(ms).toLocaleString(language==='da'?'da-DK':'en-GB',{
@@ -145,9 +145,20 @@ async function getJson(url){
 }
 async function refresh(){
  clearPlaying();
+ if(staleTimer!==null){clearTimeout(staleTimer);staleTimer=null;}
  try{
   const [snapshot,lineage]=await Promise.all([getJson(sourceUrl),getJson(lineageUrl)]);
   model=readOfficialGraphB(snapshot,asset,{now_utc:new Date().toISOString(),publication_lineage:lineage});
+  if(model.source_status==='SOURCE_BOUNDED'&&model.live_freshness==='FRESH'){
+   const deadline=Date.parse(model.last_observed_at_utc)+model.source_freshness_sla_minutes*60000;
+   const ms=deadline-Date.now()+150;
+   if(ms>0&&ms<2147483000)staleTimer=setTimeout(()=>{
+      if(model?.source_status==='SOURCE_BOUNDED'){
+       model={...model,live_freshness:'STALE',is_current_quote:false};
+       plot();
+      }
+   },ms);
+  }
   const start=Date.parse(model.bands?.[0]?.window_start_utc||'');
   const end=Date.parse(model.last_observed_at_utc||'');
   sliderHour=Number.isFinite(start)&&Number.isFinite(end)?Math.max(0,Math.min(167,Math.floor((end-start)/HOUR))):0;
@@ -171,6 +182,6 @@ $('play')?.addEventListener('click',()=>{
  set('play-text',t('Stop','Pause'));
  playTimer=setInterval(()=>{sliderHour=Math.min(end,sliderHour+1);plot();if(sliderHour>=end)clearPlaying()},135);
 });
-document.addEventListener('visibilitychange',()=>{if(document.hidden)clearPlaying()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearPlaying();else refresh()});
 window.addEventListener('pagehide',clearPlaying);
 refresh();
