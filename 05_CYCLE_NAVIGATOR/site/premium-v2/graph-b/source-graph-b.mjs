@@ -41,7 +41,14 @@ function textLabels(){
     forecast:'Original issued forecast',observed:'Observed price',bounds:'Original low/high',
     title:'Explore the week',mon:'Monday',sun:'Sunday'}
  }[language];
- set('card-heading',labels.card);
+ // Preserve the ORIGINAL AppDeploy "B" accent badge, not flattened text.
+ const heading=$('card-heading');
+ if(heading){
+  const badge=heading.querySelector('.alt-token');
+  heading.replaceChildren(document.createTextNode('Weekly Outlook '));
+  if(badge){badge.textContent='B';heading.append(badge)}
+  else{const b=document.createElement('span');b.className='alt-token';b.textContent='B';heading.append(b)}
+ }
  const e=document.querySelector('.card-desc');if(e)e.textContent=labels.desc;
  const map=[['.instrument-left small',labels.actual],['.swatch-forecast + span',labels.forecast],
  ['.swatch-actual + span',labels.observed],['.swatch-band + span',labels.bounds],
@@ -56,10 +63,23 @@ function plot(){
  textLabels();
  const card=$('variant-panel');card.dataset.variant='b';
  card.dataset.source=model?.forecast_status==='SOURCE_ISSUED'?'published':'missing';
+ const headerWeek=document.querySelector('.instrument-right > span');
+ if(headerWeek)headerWeek.textContent=model?.forecast_week?
+  model.forecast_week+' · CN #'+model.public_issue_number:t('UGE · KILDE AFVENTER','WEEK · SOURCE PENDING');
+ const dayWords=language==='da'?['MAN','TIR','ONS','TOR','FRE','LØR','SØN']:
+  ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+ document.querySelectorAll('.day-axis [data-day]').forEach((item,i)=>{item.textContent=dayWords[i]||''});
+ const warning=card.querySelector('.swatch-forecast + span');
+ if(warning&&model?.forecast_status!=='SOURCE_ISSUED')
+  warning.textContent=t('Blå dagsprognose ikke udstedt','Blue daily forecast not issued');
  if(!model||model.source_status!=='SOURCE_BOUNDED'){
   ['range-band','range-upper','range-lower','forecast','actual'].forEach(id=>attr(id,'d',''));
   $('price-axis')?.replaceChildren();$('grid')?.replaceChildren();
-  set('observed-value','—');set('time-label','—');set('source-state',t('Ingen verificeret kilde','No verified source'));
+  set('observed-value','—');set('time-label','—');set('timeline-label','—');
+  set('source-state',t('Ingen verificeret kilde','No verified source'));
+  $('hour-slider').disabled=true;$('hour-slider').value='0';$('hour-slider').max='0';
+  $('playhead').setAttribute('visibility','hidden');
+  $('endpoint')?.setAttribute('visibility','hidden');$('endpoint-halo')?.setAttribute('visibility','hidden');
   $('endpoint')?.setAttribute('visibility','hidden');$('endpoint-halo')?.setAttribute('visibility','hidden');
   set('feed-status',t('Afventer gyldige officielle CN-data. Ingen prognose eller pris vises.','No valid official CN source. No forecast or price shown.'));
   return;
@@ -72,6 +92,7 @@ function plot(){
  const hourInput=$('hour-slider');hourInput.max=String(availableMax);hourInput.value=String(sliderHour);
  hourInput.disabled=!hourly.length;
  const cursor=Math.min(end,start+sliderHour*HOUR);
+ $('playhead').setAttribute('visibility','visible');
  const observedRuns=replayObservedUntil(model,new Date(cursor).toISOString());
  const visible=observedRuns.flat();
  const values=[...bands.flatMap(b=>[b.forecast_low,b.forecast_high]),
@@ -130,7 +151,7 @@ function plot(){
   t('INGEN ORIGINAL DAGLIG PROGNOSE · KUN KILDEINTERVALLER','NO ORIGINAL DAILY FORECAST · SOURCE RANGES ONLY');
  set('source-state',st);
  const stale=model.live_freshness==='STALE';
- set('feed-status',(stale?t('FORÆLDEDE OBSERVATIONER. ','STALE OBSERVATIONS. '):'')+
+ set('feed-status',(stale?t('FORÆLDEDE OBSERVATIONER · IKKE AKTUEL KURS. ','STALE OBSERVATIONS · NOT CURRENT PRICE. '):'')+
  t('Kilde: offentlig CN '+model.forecast_week+' · #'+model.public_issue_number,
  'Source: public CN '+model.forecast_week+' · #'+model.public_issue_number)+
  ' · '+t('senest målt','last observed')+' '+(model.last_observed_at_utc||'—'));
