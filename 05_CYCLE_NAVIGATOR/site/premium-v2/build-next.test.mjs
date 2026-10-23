@@ -6,7 +6,7 @@ const here=new URL('./',import.meta.url);
 test('staged v2 asset list excludes AppDeploy demos and canonical root',()=>{
  const p=stagingPlan();
  assert.ok(p.to.endsWith('/site/dist/next'));
- assert.equal(p.assets.length,8);
+ assert.equal(p.assets.length,11);
  assert.ok(!approvedAssets.some(x=>x.includes('reference/')||x.includes('src/main.ts')));
 });
 test('original B and Proof imports resolve only to staged first-party sources',async()=>{
@@ -28,4 +28,14 @@ test('noncanonical client fetches existing root data, never writes new data',asy
  assert.match(js,/publication-lineage\.json/);
  assert.match(proof,/new URL\('\.\.\/\.\.\/data\/latest\.json',import\.meta\.url\)/);
  assert.doesNotMatch(js,/POST|PUT|DELETE|credentials:'include'/);
+});
+
+test('Official Compass/PATH pilot uses real source, not a new market issuer',async()=>{
+ const html=await readFile(new URL('./graph-b/source-graph-b.html',here),'utf8');
+ const ui=await readFile(new URL('./compass/compass-path-ui.mjs',here),'utf8');
+ assert.match(html,/official-pilot-action/);
+ assert.match(html,/compass-path-ui\.mjs/);
+ assert.match(ui,/\.\/official-compass-path\.mjs/);
+ assert.match(ui,/PUBLIC_FEED_HTTP/);
+ assert.doesNotMatch(ui,/Math\.sin\(/);
 });
