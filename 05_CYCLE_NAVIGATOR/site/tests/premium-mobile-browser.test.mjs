@@ -209,6 +209,25 @@ try{
    const model=window.CNWeekChart;
    const hourlySource=chartSource.public_live_precision?.hourly_price_path;
    const actualModel=model?.model?.(chartSource,'BTC');
+   // Both languages must tell a screen reader that the observed source is
+   // STALE, not silently describe an old green curve as a live quote.
+   const previousChartLanguage=window.CNI18n?.language||'da';
+   let staleChartAccessible=false;
+   if(actualModel&&typeof model.graphDescription==='function'){
+     window.CNI18n={language:'da'};
+     const daStale=model.graphDescription({...actualModel,stale:true});
+     const daFresh=model.graphDescription({...actualModel,stale:false});
+     window.CNI18n={language:'en'};
+     const enStale=model.graphDescription({...actualModel,stale:true});
+     const enFresh=model.graphDescription({...actualModel,stale:false});
+     window.CNI18n={language:previousChartLanguage};
+     staleChartAccessible=daStale.startsWith('FORÆLDET OBSERVATION.')&&
+       enStale.startsWith('STALE OBSERVATION.')&&
+       !daFresh.startsWith('FORÆLDET OBSERVATION.')&&
+       !enFresh.startsWith('STALE OBSERVATION.')&&
+       daStale.includes('Grøn fuldt optrukken linje')&&
+       enStale.includes('Green solid line');
+   }
    const actualPlan=actualModel?model.linePlan(actualModel):null;
    // Source-exact original low/high edges, never a fabricated seven-day close.
    const ranges=actualModel?model.rangePlan(actualModel):[];
@@ -272,7 +291,7 @@ try{
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
-    unavailableOneLine,
+    unavailableOneLine,staleChartAccessible,
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
@@ -317,6 +336,7 @@ try{
   assert.ok(!report.chart.startsWith('FAIL'),'BTC/ETH chart controls failed or valid chart source was dropped: '+report.chart);
   assert.ok(!report.forwardButtons.startsWith('FAIL'),'Approved B 7/14/21 horizon controls failed: '+report.forwardButtons);
   assert.ok(report.unavailableOneLine,'The source-unavailable action must not split or clip on narrow mobile');
+  assert.ok(report.staleChartAccessible,'Stale public observed prices need explicit DA/EN screen-reader warning');
   assert.ok(report.hourlyCurveProof,'Verified hourly actual source dropped / gaps fabricated / forecast filled');
   assert.ok(report.originalRangesValid,'Three frozen source windows must form six exact low/high edges');
   if(report.hourlyPointCount>0){
