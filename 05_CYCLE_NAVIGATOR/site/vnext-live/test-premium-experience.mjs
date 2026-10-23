@@ -175,3 +175,32 @@ for(const sourceCode of ['constructor','__proto__','toString','valueOf','hasOwnP
  }
 }
 console.log('PASS Official action translation is source-bound, no hidden signal remapping');
+
+
+// Approved B graph is a production-source contract, never a synthetic preview.
+// This static lock complements, but does not replace, 390/430px browser/pixel QA.
+import {readFileSync} from 'node:fs';
+const designFile=(relative)=>readFileSync(new URL(relative,import.meta.url),'utf8');
+const pageMarkup=designFile('./index.html');
+const chartCss=designFile('../frozen-week-chart.css');
+const chartJs=designFile('../frozen-week-chart.js');
+const premiumCss=designFile('./premium-experience.css');
+const appJs=designFile('./app.mjs');
+// One and only one official B chart host, supplied by unchanged approved scripts.
+assert.equal((pageMarkup.match(/id="official-path-chart"/g)||[]).length,1);
+assert.match(pageMarkup,/<div id="official-path-chart" class="frozen-week-chart"/);
+assert.match(pageMarkup,/href="\.\.\/frozen-week-chart\.css"/);
+assert.match(pageMarkup,/src="\.\.\/frozen-week-chart\.js"/);
+assert.match(pageMarkup,/src="\.\.\/vendor\/lightweight-charts-5\.2\.0\.js"/);
+assert.match(premiumCss,/\.chart-area #official-path-chart\.frozen-week-chart/);
+assert.match(chartCss,/\.frozen-week-chart\{[^}]*background:#0d1b2c/);
+assert.match(chartCss,/\.fw-legend \.forecast\{[^}]*border-top:2px dashed #5f96ff/);
+assert.match(chartCss,/\.fw-legend \.actual\{background:#27c59a/);
+assert.match(chartJs,/const DAY=86400000,BLUE='#5f96ff',GREEN='#27c59a'/);
+assert.match(chartJs,/CN_FROZEN_DAILY_PRICE_PATH_v1/);
+assert.match(chartJs,/window\.LightweightCharts/);
+assert.match(chartJs,/window\.CNWeekChart/);
+assert.match(appJs,/\.\.\/data\/latest\.json/);
+assert.match(appJs,/\.\.\/data\/compass\.json/);
+assert.match(appJs,/window\.CNWeekChart\?\.mount/);
+console.log('PASS canonical B chart single host, approved palette, official feed + dated forecast gate');
