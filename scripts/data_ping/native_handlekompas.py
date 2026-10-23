@@ -445,6 +445,43 @@ def _feature(
     }
 
 
+def _funding_clock_metadata(auto_state: Mapping[str, Any], funding: Any) -> dict[str, Any]:
+    """Keep settlement separate from the bound capture clock, which is not vendor first-known."""
+    settlement = None
+    raw = funding.get("funding_time") if isinstance(funding, Mapping) else None
+    if isinstance(raw, int) and not isinstance(raw, bool) and 10**12 <= raw < 10**13:
+        try:
+            settlement = datetime.fromtimestamp(raw / 1000, tz=timezone.utc).isoformat().replace("+00:00", "Z")
+        except (OverflowError, OSError, ValueError):
+            pass
+
+    health = nested(auto_state, "source_health", "live_anchor")
+    health = health if isinstance(health, Mapping) else {}
+    target = nested(health, "provenance", "target")
+    target = target if isinstance(target, Mapping) else {}
+    snapshot_sha = nested(auto_state, "source_snapshot", "exact_commit_sha")
+    stamp = nested(health, "freshness", "retrieval_freshness", "timestamp")
+    capture = _parse_utc(stamp) if isinstance(stamp, str) and stamp.endswith("Z") else None
+    packet = _parse_utc(auto_state.get("packet_generated_at_utc"))
+    bound = (
+        health.get("status") == "PASS"
+        and nested(health, "freshness", "retrieval_freshness", "status") == "PASS"
+        and isinstance(snapshot_sha, str) and len(snapshot_sha) == 40
+        and target.get("exact_commit_sha") == snapshot_sha
+        and target.get("exact_path") == health.get("target_path")
+        and isinstance(health.get("target_path"), str) and bool(health["target_path"])
+        and isinstance(target.get("git_blob_sha"), str) and len(target["git_blob_sha"]) == 40
+        and capture is not None and packet is not None and capture <= packet
+    )
+    return {
+        "settlement_at_utc": settlement,
+        "observed_at": None,
+        "retrieved_at": None,
+        "source_batch_captured_at_utc": stamp if bound else None,
+        "quote_clock_status": "CAPTURE_ONLY_PROVIDER_FIRST_KNOWN_UNKNOWN" if bound else "UNKNOWN_NOT_PIT_ADMITTED",
+    }
+
+
 def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[str, Any]:
     ns = auto_state.get("normalized_state") or {}
     live = ns.get("live_market") or {}
@@ -505,8 +542,8 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
         _feature("stablecoin_total_usd", finite(stable.get("total_usd")), "USD", packet_source, stable.get("source_timestamp"), nested(source_health, "stablecoin_liquidity", "status"), source_owner="DEFILLAMA_STABLECOINS", retrieved_at=stable.get("retrieved_at_utc")),
         _feature("btc_open_interest", btc_oi, "contracts", packet_source, derivative_hourly_observed, derivatives_health, source_owner="OKX_HOURLY_DERIVATIVES"),
         _feature("eth_open_interest", eth_oi, "contracts", packet_source, derivative_hourly_observed, derivatives_health, source_owner="OKX_HOURLY_DERIVATIVES"),
-        _feature("btc_funding", btc_funding, "rate", packet_source, nested(derivative_live, "BTC-USDT-SWAP", "funding", "funding_time"), derivatives_health, source_owner="OKX_LIVE_SWAP"),
-        _feature("eth_funding", eth_funding, "rate", packet_source, nested(derivative_live, "ETH-USDT-SWAP", "funding", "funding_time"), derivatives_health, source_owner="OKX_LIVE_SWAP"),
+        _feature("btc_funding", btc_funding, "rate", packet_source, None, derivatives_health, source_owner="OKX_LIVE_SWAP"),
+        _feature("eth_funding", eth_funding, "rate", packet_source, None, derivatives_health, source_owner="OKX_LIVE_SWAP"),
         _feature("sentiment_state", market_sentiment.get("classification"), None, packet_source, market_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
         _feature("sentiment_market_score", finite(market_sentiment.get("score")), "index", packet_source, market_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
         _feature("sentiment_btc_score", finite(btc_sentiment.get("score")), "index", packet_source, btc_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
@@ -517,6 +554,10 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
         _feature("eth_delta_since_prior_packet_pct", _delta_pct(auto_state, "eth_usdt"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
         _feature("ethbtc_delta_since_prior_packet_pct", _delta_pct(auto_state, "ethbtc"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
     ]
+    for row in rows:
+        if row["feature_id"] in ("btc_funding", "eth_funding"):
+            symbol = "BTC-USDT-SWAP" if row["feature_id"] == "btc_funding" else "ETH-USDT-SWAP"
+            row.update(_funding_clock_metadata(auto_state, nested(derivative_live, symbol, "funding")))
     available = sum(row["value"] is not None for row in rows)
     missing = [row["feature_id"] for row in rows if row["value"] is None]
     pass_lane_missing = [

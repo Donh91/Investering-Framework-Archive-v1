@@ -1,0 +1,37 @@
+{
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/data_ping/native_handlekompas.py",
+    "Donh91/Investering-Framework-Archive-v1:tests/data_ping/test_official_daily_compass.py",
+    "Donh91/Investering-Framework-Archive-v1:tests/data_ping/test_funding_clock_semantics.py",
+    "Donh91/Investering-Framework-Archive-v1:04_MARKET_LEARNING/handlekompas/research/*TASK2_R1* only for append-only source-valued-free verification receipt"
+  ],
+  "branch": "agent/task2-okx-funding-clock-20261022",
+  "candidate_id": "codex-research-task2-okx-funding-settlement-clock-v1",
+  "candidate_path": "research/codex/intake/2026/10/codex-research-task2-okx-funding-settlement-clock-v1.json",
+  "candidate_sha256": "30bdb06909cb53fc3c4f76d575aeb4a5b86153c8572d437b82867b01d42c5105",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "Round 3 scientific activation",
+    "automatic buy or sell recommendations",
+    "automatic merge",
+    "automatic trade execution",
+    "canonical authority",
+    "historical forecast/outcome rewrite",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "new scheduler/workflow",
+    "paid data acquisition",
+    "portfolio logic",
+    "private raw data publication"
+  ],
+  "objective": "Repair ONLY the provenance metadata mapping for BTC/ETH OKX funding observations in native Compass evidence_snapshot. In existing scripts/data_ping/native_handlekompas.py, live funding_time is a scheduled settlement epoch in milliseconds but currently populates observed_at, creating misleading future-observed timestamps in six of nine original v3 forecast source chains. Keep funding_rate/value, health, scoring, eligibility decision, forecast and action policy unchanged. Preserve funding settlement epoch as explicit separate settlement-time metadata if compatible with existing schema; otherwise propose a versioned backward-compatible additive note and remain NEEDS_MORE_EVIDENCE. Derive quote observed/retrieved clock only from an independently bound pre-existing upstream source capture timestamp/receipt when available; never manufacture capture/publication time from settlement, current wall-clock, Git commit date or retrospective API. Missing original quote capture clock remains UNKNOWN, not automatically fresh/predictive or a reason to rewrite historical outcomes. Add deterministic positive/negative regression tests, preserve original 2026-10-12/13 issued data. Do not self-promote historical PIT or change production trade signals. If contract semantics would change downstream model decisions, stop and escalate to existing framework owner instead of quietly altering gates.",
+  "post_fix_gate": "EXACT_MAIN_CODE_FIX_PLUS_POSITIVE_NEGATIVE_TIMECLOCK_FIXTURES_PLUS_NATIVE_HANDLEKOMPAS_REGRESSION_SUITE_PLUS_MERGED_SOURCE_HASH_READBACK_PLUS_INDEPENDENT_REVIEW_PLUS_ZERO_HISTORICAL_FORECAST_MUTATIONS",
+  "pr_number": null,
+  "receipt_sha256": "db5ab41bae89e669cfcd3fe671f2a41cc0b98c4ec9edfbac0c8593b6c0c630ef",
+  "recorded_at_utc": "2026-10-22T21:15:08Z",
+  "signature": "4e2c6df9c10d30c4b1d9",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "44db4c7734448e420f3cc573dd03642f16d2ddaa6797badd89acb90378cffd58"
+}
