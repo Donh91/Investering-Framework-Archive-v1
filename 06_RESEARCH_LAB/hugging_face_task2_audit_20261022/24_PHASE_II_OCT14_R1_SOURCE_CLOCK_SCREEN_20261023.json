@@ -136,5 +136,27 @@
       "selection_basis": "LONGER_DECLARED_SOURCE_AGE_SEPARATE_STALENESS_SCREEN",
       "source_clock_classification": "DECLARED_PACKET_AGE_GREATER_THAN_2_HOURS"
     }
-  ]
+  ],
+  "first_ranked_candidate_feature_clock_screen": {
+    "forecast_id": "CMP-20261014-18699903db9f",
+    "original_source_main_commit": "5fd81f3714e95198cfc731e7db6b1404056a51e1",
+    "selected_feature_count": 24,
+    "unique_source_owner_families": 11,
+    "feature_retrieved_at_declared_count": 9,
+    "feature_retrieved_at_missing_count": 15,
+    "vendor_first_known_authenticated_count": 0,
+    "numeric_observed_at_settlement_mistaken_for_quote_observation_count": 2,
+    "mislabelled_fields": [
+      "btc_funding",
+      "eth_funding"
+    ],
+    "original_funding_settlement_utc": "2026-10-14T08:00:00Z",
+    "original_issue_utc": "2026-10-14T07:42:48Z",
+    "settlement_after_issue_seconds": 1032,
+    "first_known_status": "NOT_ADMITTED",
+    "source_knowability_note": "Two original funding observed_at fields were scheduled future settlements, not original quote-observation times. Existing #1749 repairs future metadata only; immutable Oct14 original remains unchanged. Nine fields have declared retrieved_at, fifteen do not. Declared retrieval fields do not prove original source-quote first-known. Existing original hourly_market PASS is not a PIT proof for all 24 features.",
+    "current_remediation_pr": 1749,
+    "full_R1_information_admission": false,
+    "original_outcomes_or_predictions_changed": false
+  }
 }
