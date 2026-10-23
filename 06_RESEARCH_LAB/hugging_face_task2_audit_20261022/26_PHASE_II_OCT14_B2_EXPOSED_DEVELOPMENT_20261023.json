@@ -1,0 +1,197 @@
+{
+  "contract": "TASK2_PHASE_II_OCT14_EXPOST_12H_B2_BASELINE_DIAGNOSTIC_v1",
+  "authorizing_scope": "OWNER_APPROVED_PHASE_II_EXISTING_DATA_DEVELOPMENT_ONLY",
+  "classification": "EXPOSED_DEVELOPMENT_ONLY_NOT_R1_R2_HOLDOUT_OR_INVESTOR_EDGE",
+  "created_date": "2026-10-23",
+  "original_public_main": "5fd81f3714e95198cfc731e7db6b1404056a51e1",
+  "original_metadata_first_screen_source_file": "24_PHASE_II_OCT14_R1_SOURCE_CLOCK_SCREEN_20261023.json",
+  "source_and_target_timing_immutability_file": "25_PHASE_II_OCT14_SOURCE_AND_TARGET_CLOCK_CENSUS_20261023.json",
+  "previous_B2_protocol": "B2_SIGN_OF_ORIGINAL_PRIOR_PACKET_DELTA_ZERO_ABSTAINS",
+  "comparison": "SAME_ASSET_ISSUE_AND_ORIGINAL_TARGET_ON_TWO_ORIGINAL_DIRECTIONAL_ISSUANCES",
+  "outcome_inputs": "SIX_ORIGINAL_OCT14_PUBLIC_V3_12H_OUTCOMES_AT_EXACT_PINNED_MAIN_AND_CORRESPONDING_ORIGINAL_FORECASTS",
+  "actual_run_description": "On 2026-10-23 fetched twelve frozen-original public forecast/outcome files; checked original Git blobs against bound source-clock receipt, compass identity, sha256 linkage, scoring v3, issue and target clocks, preserved all six forecasts and counted B2 label sign only from contemporaneous original prior-packet feature; no provider values or realized percentages copied to research receipt",
+  "counts": {
+    "original_issuances": 6,
+    "original_asset_slots": 12,
+    "original_UP_or_DOWN_forecasts": 2,
+    "original_MIXED_forecasts": 2,
+    "original_UNAVAILABLE_forecasts": 2,
+    "original_abstained_asset_slots": 8,
+    "paired_original_UP_DOWN_asset_slots": 4,
+    "original_model_correct_matched_slots": 4,
+    "B2_correct_matched_slots": 4,
+    "model_B2_direction_agreement": 4,
+    "matched_correctness_count_lift": 0,
+    "missing_or_nonpredicted_slots_preserved": 8
+  },
+  "original_full_R1_information_admission": false,
+  "original_12h_issue_target_connected_overlap_blocks": 1,
+  "certified_independent_shock_families": null,
+  "untouched_holdout": false,
+  "negative_control_or_independent_review_executed_on_this_diagnostic": false,
+  "per_asset_outcome_market_values_published": false,
+  "model_accuracy_interval_estimated": false,
+  "capital_protection_or_delivery_PnL_claim": false,
+  "live_model_update_or_policy_change": false,
+  "source_first_known_unresolved": true,
+  "interpretation": "4/4 original Compass direction slots correct, and 4/4 exactly matched original cheap B2 directional baseline correct; no observed incremental directional lift, with two of six forecasts directional, four original forecast abstentions and one overlapping connected time block. Cannot support a statistical edge claim, generalization, calibrated forecast precision or R3 capital decisions.",
+  "next_gate": "Independent original first-known/response and publication R1, fair matched baseline on actually admitted future-independent event families, preregistered untouched forward holdout, and action-economics analysis with delivery/fills separate.",
+  "rows": [
+    {
+      "forecast_id": "CMP-20261014-3aa8ce4931eb",
+      "original_NEXT_12H_direction": "DOWN",
+      "original_source_freshness": "PASS",
+      "original_prediction_is_directional": true,
+      "original_asset_records": [
+        {
+          "asset": "btc",
+          "original_scoring_record_status": "CORRECT",
+          "B2_issued_at_prior_packet_delta_sign": "DOWN",
+          "model_correct_on_directional_subset": true,
+          "b2_correct_on_directional_subset": true,
+          "paired_valid": true,
+          "matched_direction": true
+        },
+        {
+          "asset": "eth",
+          "original_scoring_record_status": "CORRECT",
+          "B2_issued_at_prior_packet_delta_sign": "DOWN",
+          "model_correct_on_directional_subset": true,
+          "b2_correct_on_directional_subset": true,
+          "paired_valid": true,
+          "matched_direction": true
+        }
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261014-18699903db9f",
+      "original_NEXT_12H_direction": "MIXED",
+      "original_source_freshness": "PASS",
+      "original_prediction_is_directional": false,
+      "original_asset_records": [
+        {
+          "asset": "btc",
+          "original_scoring_record_status": "ABSTAINED",
+          "B2_issued_at_prior_packet_delta_sign": "UP",
+          "model_correct_on_directional_subset": null,
+          "b2_correct_on_directional_subset": null,
+          "paired_valid": false,
+          "matched_direction": false
+        },
+        {
+          "asset": "eth",
+          "original_scoring_record_status": "ABSTAINED",
+          "B2_issued_at_prior_packet_delta_sign": "DOWN",
+          "model_correct_on_directional_subset": null,
+          "b2_correct_on_directional_subset": null,
+          "paired_valid": false,
+          "matched_direction": false
+        }
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261014-e84827a7fb53",
+      "original_NEXT_12H_direction": "UNAVAILABLE",
+      "original_source_freshness": "STALE_OR_UNAVAILABLE",
+      "original_prediction_is_directional": false,
+      "original_asset_records": [
+        {
+          "asset": "btc",
+          "original_scoring_record_status": "ABSTAINED",
+          "B2_issued_at_prior_packet_delta_sign": "ABSTAIN",
+          "model_correct_on_directional_subset": null,
+          "b2_correct_on_directional_subset": null,
+          "paired_valid": false,
+          "matched_direction": false
+        },
+        {
+          "asset": "eth",
+          "original_scoring_record_status": "ABSTAINED",
+          "B2_issued_at_prior_packet_delta_sign": "ABSTAIN",
+          "model_correct_on_directional_subset": null,
+          "b2_correct_on_directional_subset": null,
+          "paired_valid": false,
+          "matched_direction": false
+        }
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261014-cdd1f365da26",
+      "original_NEXT_12H_direction": "DOWN",
+      "original_source_freshness": "PASS",
+      "original_prediction_is_directional": true,
+      "original_asset_records": [
+        {
+          "asset": "btc",
+          "original_scoring_record_status": "CORRECT",
+          "B2_issued_at_prior_packet_delta_sign": "DOWN",
+          "model_correct_on_directional_subset": true,
+          "b2_correct_on_directional_subset": true,
+          "paired_valid": true,
+          "matched_direction": true
+        },
+        {
+          "asset": "eth",
+          "original_scoring_record_status": "CORRECT",
+          "B2_issued_at_prior_packet_delta_sign": "DOWN",
+          "model_correct_on_directional_subset": true,
+          "b2_correct_on_directional_subset": true,
+          "paired_valid": true,
+          "matched_direction": true
+        }
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261014-34b416163f12",
+      "original_NEXT_12H_direction": "UNAVAILABLE",
+      "original_source_freshness": "STALE_OR_UNAVAILABLE",
+      "original_prediction_is_directional": false,
+      "original_asset_records": [
+        {
+          "asset": "btc",
+          "original_scoring_record_status": "ABSTAINED",
+          "B2_issued_at_prior_packet_delta_sign": "ABSTAIN",
+          "model_correct_on_directional_subset": null,
+          "b2_correct_on_directional_subset": null,
+          "paired_valid": false,
+          "matched_direction": false
+        },
+        {
+          "asset": "eth",
+          "original_scoring_record_status": "ABSTAINED",
+          "B2_issued_at_prior_packet_delta_sign": "ABSTAIN",
+          "model_correct_on_directional_subset": null,
+          "b2_correct_on_directional_subset": null,
+          "paired_valid": false,
+          "matched_direction": false
+        }
+      ]
+    },
+    {
+      "forecast_id": "CMP-20261014-a4e38e3a1db1",
+      "original_NEXT_12H_direction": "MIXED",
+      "original_source_freshness": "PASS",
+      "original_prediction_is_directional": false,
+      "original_asset_records": [
+        {
+          "asset": "btc",
+          "original_scoring_record_status": "ABSTAINED",
+          "B2_issued_at_prior_packet_delta_sign": "UP",
+          "model_correct_on_directional_subset": null,
+          "b2_correct_on_directional_subset": null,
+          "paired_valid": false,
+          "matched_direction": false
+        },
+        {
+          "asset": "eth",
+          "original_scoring_record_status": "ABSTAINED",
+          "B2_issued_at_prior_packet_delta_sign": "DOWN",
+          "model_correct_on_directional_subset": null,
+          "b2_correct_on_directional_subset": null,
+          "paired_valid": false,
+          "matched_direction": false
+        }
+      ]
+    }
+  ]
+}
