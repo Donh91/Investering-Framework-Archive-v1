@@ -163,6 +163,17 @@ try{
      $('#source-status').textContent.includes('udløbet')&&
      $('#source-clock').textContent.includes('Kompas udløb'):true;
    const sourceClockText=$('#source-clock').textContent;
+   const priceBanner=$('#price-source-warning');
+   const publicLive=(await (await fetch('/data/latest.json',{cache:'no-store'})).json())?.public_live_precision;
+   const ageCutoff=publicLive?.hourly_price_path?.observed_through_utc;
+   const priceAge=Date.parse(ageCutoff);
+   const ageSla=Number(publicLive?.freshness_sla_minutes)*60000;
+   const priceIsStale=Number.isFinite(priceAge)&&ageSla>0&&Date.now()-priceAge>ageSla;
+   const priceStatusIndependent=!!priceBanner&&
+     (priceIsStale?
+       (!priceBanner.hidden&&priceBanner.textContent.includes('Kursgraf forældet')&&
+        priceBanner.textContent.includes('Kompas vurderes separat')):
+       (priceBanner.hidden||priceBanner.textContent.includes('uden verificerede timepriser')));
    const sourceClock=$('#source-clock').getBoundingClientRect();
    // Only measure touch targets when their owning tab is actually visible.
    // A hidden tab's DOM elements correctly report 0x0, not a 0px product bug.
@@ -295,7 +306,7 @@ try{
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
-    proofCopied,sourceExpiryShown,pathJumpFocus,
+    proofCopied,sourceExpiryShown,priceStatusIndependent,pathJumpFocus,
     clockRight:sourceClock.right,clockLeft:sourceClock.left,clockWidth:sourceClock.width,
     clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,forwardButtons,
     hourlyCurveProof,originalRangesValid,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
@@ -324,6 +335,7 @@ try{
   assert.ok(report.promptHasProof,'Proof AI prompt lacks original source/hash anchors');
   assert.ok(report.proofCopied,'AI verification copy button omitted or changed the original public audit prompt');
   assert.ok(report.sourceExpiryShown,'Expired Official Compass not disclosed in served homepage status');
+  assert.ok(report.priceStatusIndependent,'Public hourly source freshness must be disclosed separately from Compass');
   assert.ok(report.pathJumpFocus,'Overview-to-PATH anchor lost keyboard focus in hidden panel');
   assert.ok([report.scorePrice,report.scoreDirection,report.scorePullback].every(x=>
      typeof x==='string'&&x.trim()!==''&&x.trim()!=='—'&&x.trim()!=='UNAVAILABLE'),
