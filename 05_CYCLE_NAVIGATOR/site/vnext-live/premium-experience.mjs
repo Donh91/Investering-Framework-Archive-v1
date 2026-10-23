@@ -98,6 +98,24 @@ const URLS=[
 ];
 const txt=(l)=>TXT[l==='en'?'en':'da'];
 const safe=(s)=>typeof s==='string'&&s.trim()?s.trim().slice(0,450):null;
+// Exact, source-visible presentation label for a verified Official action.
+// Unrecognised codes are never reinterpreted as BUY/HOLD/SELL.
+export function presentOfficialAction(code,eligible,lang='da'){
+ const da=lang!=='en';
+ if(!eligible||typeof code!=='string'||!code.trim()||code==='UNAVAILABLE'||code==='UTILGÆNGELIG')
+   return {label:da?'AFVENTER KILDE':'AWAITING SOURCE',code:null,verified:false,
+      explanation:da?'Ingen aktuel kildeverificeret handling.':'No current source-verified action.'};
+ const known={
+   HOLD_WAIT:[da?'AFVENT':'WAIT',da?'Officielt afventsignal, ingen ny køb/sælg-tilladelse.':'Official wait state, no new buy or sell authorization.'],
+   HOLD:[da?'HOLD':'HOLD',da?'Officiel HOLD-vurdering.':'Official HOLD assessment.'],
+   BUY:[da?'BUY':'BUY',da?'Officiel BUY-kode, ingen porteføljeeksekvering.':'Official BUY code, no portfolio execution.'],
+   SELL:[da?'SELL':'SELL',da?'Officiel SELL-kode, ingen porteføljeeksekvering.':'Official SELL code, no portfolio execution.']
+ };
+ const found=known[code];
+ return found?{label:found[0],code,verified:true,explanation:found[1]}:
+    {label:code.slice(0,40),code,verified:true,
+     explanation:da?'Uændret officiel kildekode.':'Unmodified official source code.'};
+}
 export function decisionModel(view,official,lang='da'){
  const t=txt(lang);
  const eligible=view?.compass?.state==='FRESH'&&view?.compass?.permit_path_live_gates===true&&
@@ -188,7 +206,12 @@ export function renderProductExperience(view,feeds,lang='da'){
  for(const el of document.querySelectorAll('[data-exp-t]')){
   const value=t[el.dataset.expT];if(typeof value==='string')el.textContent=value;
  }
- set('premium-now-action',decision.action);set('premium-now-direction',decision.direction);
+ const readable=presentOfficialAction(decision.action,decision.eligible,lang);
+ set('premium-now-action',readable.label);
+ set('premium-action-code',readable.code?'OFFICIAL · '+readable.code:readable.explanation);
+ const actionDescription=holder('premium-action-meaning');
+ if(actionDescription)actionDescription.textContent=readable.explanation;
+ set('premium-now-direction',decision.direction);
  set('premium-sell',decision.sell);set('premium-distribution',decision.distribution);
  set('premium-bull',decision.bull===null?t.unavailable:String(decision.bull));
  set('premium-bear',decision.bear===null?t.unavailable:String(decision.bear));
