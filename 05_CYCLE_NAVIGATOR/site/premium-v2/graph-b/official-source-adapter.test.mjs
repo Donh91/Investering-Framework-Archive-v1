@@ -5,7 +5,7 @@ import {readOfficialGraphB,replayObservedUntil} from './official-source-adapter.
 const start='2026-10-19T00:00:00Z',end='2026-10-26T00:00:00Z';
 function fixture(){
  const hourly=['2026-10-19T01:00:00Z','2026-10-19T02:00:00Z','2026-10-19T04:00:00Z'];
- const score={day_1_2:{window_start_utc:start},day_3_4:{},day_5_7:{window_end_utc:end}};
+ const score={day_1_2:{window_start_utc:start,scoring_start_utc:'2026-10-19T06:00:00Z'},day_3_4:{},day_5_7:{window_end_utc:end}};
  const rows=['day_1_2','day_3_4','day_5_7'].flatMap(w=>['BTC','ETH'].map(asset=>({
   asset,window:w,forecast_low:asset==='BTC'?78000:1900,forecast_high:asset==='BTC'?86000:2600
  })));
@@ -83,4 +83,17 @@ test('post-cutoff or future-issued published daily path is rejected',()=>{
  assert.equal(readOfficialGraphB(v,'BTC',{now_utc:'2026-10-19T04:20:00Z'}).forecast.length,0);
  v.public_live_precision.frozen_at_utc='2026-10-21T06:00:00Z';
  assert.equal(readOfficialGraphB(v,'BTC',{now_utc:'2026-10-21T07:00:00Z'}).forecast.length,0);
+});
+
+test('blue path must have frozen at source before first scored hour (no hindsight)',()=>{
+ const sample=fixture();
+ sample.public_live_precision.daily_price_path.BTC={status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
+   day:i+1,low:80000,high:85000,expected_close:82000+i*100
+ }))};
+ const issued=sample.public_live_precision.frozen_at_utc;
+ assert.equal(issued,'2026-10-19T05:19:14Z');
+ assert.equal(readOfficialGraphB(sample,'BTC',{now_utc:'2026-10-19T06:05:00Z'}).forecast_status,'SOURCE_ISSUED');
+ sample.public_live_precision.frozen_at_utc='2026-10-19T06:05:01Z';
+ assert.equal(readOfficialGraphB(sample,'BTC',{now_utc:'2026-10-19T08:00:00Z'}).forecast_status,
+   'PUBLISHED_INVALID_FAIL_CLOSED');
 });
