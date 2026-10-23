@@ -184,6 +184,10 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: 05_CYCLE_NAVIGATOR/site/dist
+      - name: Self-test exact-byte delivery parity validator
+        run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs --self-test
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify exact uploaded bytes served by real GitHub Pages
+        run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs
