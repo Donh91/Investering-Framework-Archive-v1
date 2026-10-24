@@ -12,7 +12,7 @@
 import {readOfficialGraphB,replayObservedUntil} from './official-source-adapter.mjs';
 const $=id=>document.getElementById(id);
 const SVG='http://www.w3.org/2000/svg',HOUR=3600000,DAY=86400000;
-let asset='BTC',language='da',model=null,sliderHour=0,playTimer=null,staleTimer=null;
+let asset='BTC',language='da',model=null,sliderHour=0,playTimer=null,staleTimer=null,requestGeneration=0;
 const s=(n)=>typeof n==='number'&&Number.isFinite(n)&&n>0;
 const t=(da,en)=>language==='da'?da:en;
 const utc=ms=>new Date(ms).toLocaleString(language==='da'?'da-DK':'en-GB',{
@@ -81,6 +81,8 @@ function textLabels(){
   button.setAttribute('aria-pressed',String(button.dataset.lang===language)));
 }
 function plot(){
+ // Never present BTC-source numeric evidence as ETH while a new fetch is pending.
+ if(model && model.asset!==asset)model=null;
  textLabels();
  // A source outage must never make the selected BTC/ETH control lie.
  // Update focus and pair before the early missing-source return.
@@ -192,25 +194,38 @@ async function getJson(url){
  return r.json();
 }
 async function refresh(){
+ const request=++requestGeneration,selected=asset;
  clearPlaying();
  if(staleTimer!==null){clearTimeout(staleTimer);staleTimer=null;}
+ // Invalidate prior-asset values immediately, before either fetch resolves.
+ model=null;
+ sliderHour=0;
+ plot();
  try{
   const [snapshot,lineage]=await Promise.all([getJson(sourceUrl),getJson(lineageUrl)]);
-  model=readOfficialGraphB(snapshot,asset,{now_utc:new Date().toISOString(),publication_lineage:lineage});
-  if(model.source_status==='SOURCE_BOUNDED'&&model.live_freshness==='FRESH'){
-   const deadline=Date.parse(model.last_observed_at_utc)+model.source_freshness_sla_minutes*60000;
+  if(request!==requestGeneration||selected!==asset)return;
+  const next=readOfficialGraphB(snapshot,selected,{now_utc:new Date().toISOString(),publication_lineage:lineage});
+  if(next.asset!==asset)return;
+  model=next;
+  if(next.source_status==='SOURCE_BOUNDED'&&next.live_freshness==='FRESH'){
+   const deadline=Date.parse(next.last_observed_at_utc)+next.source_freshness_sla_minutes*60000;
    const ms=deadline-Date.now()+150;
    if(ms>0&&ms<2147483000)staleTimer=setTimeout(()=>{
-      if(model?.source_status==='SOURCE_BOUNDED'){
+      if(request!==requestGeneration||asset!==selected)return;
+      if(model?.asset===selected&&model.source_status==='SOURCE_BOUNDED'){
        model={...model,live_freshness:'STALE',is_current_quote:false};
        plot();
       }
    },ms);
   }
-  const start=Date.parse(model.bands?.[0]?.window_start_utc||'');
-  const end=Date.parse(model.last_observed_at_utc||'');
-  sliderHour=Number.isFinite(start)&&Number.isFinite(end)?Math.max(0,Math.min(167,Math.floor((end-start)/HOUR))):0;
- }catch{model=null}
+  const start=Date.parse(next.bands?.[0]?.window_start_utc||'');
+  const end=Date.parse(next.last_observed_at_utc||'');
+  sliderHour=Number.isFinite(start)&&Number.isFinite(end)?
+   Math.max(0,Math.min(167,Math.floor((end-start)/HOUR))):0;
+ }catch{
+  if(request!==requestGeneration||selected!==asset)return;
+  model=null;
+ }
  plot();
 }
 document.querySelectorAll('[data-asset]').forEach(b=>b.addEventListener('click',()=>{
