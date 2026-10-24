@@ -147,3 +147,21 @@ Sources screened on 2026-10-24. The table distinguishes *published peer-reviewed
 7. Review independent source/data tests and resource gates; only then consider merge of bounded executable changes.
 
 **Do-not-duplicate rule:** if a matching module, experiment, registry, issue or PR exists, extend it or annotate its existing owner. New code requires documented evidence of a missing capability. Archive note itself is non-binding and no code has been executed or merged.
+
+
+## 8. Executed M3/Task 2 overlap audit, 24 October 2026
+
+Read directly from current public main: `AGENTS.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`, `06_RESEARCH_LAB/m3_checkpoints/2026-10-05__RL-CN-SKILL-BASELINE-003__FINAL_ADJUDICATION_v1.md`, `06_RESEARCH_LAB/m3_checkpoints/2026-10-05__RL-CN-SKILL-BASELINE-003__deterministic-delta-v1.md`, `scripts/research/cn_reconstructed_baseline_v1.py`, and `06_RESEARCH_LAB/hugging_face_task2_audit_20261022/22_TASK2_ACCEPTANCE_MATRIX_20261023.md`.
+
+**Finding: existing M3 baseline tournament is already executed and adjudicated.** Do not rerun it or claim #1479 is an untouched implementation gap. Its W39/W40 BTC/ETH four asset-week rows, reconstructed pre-freeze DUMB1.5/DUMB2.0 baselines, and adverse/ambiguous skill results are historical research-only. The reconstruction was after the fact and not a contemporaneously frozen baseline; two weeks are not four independent regimes. CN contained all four realized weekly ranges, but its Jaccard was inferior in 3/4 rows against each simple baseline, with no established stable range alpha. Public Price Range Precision (70% containment / 30% Jaccard) is an accountability composite, not an estimate of predictive edge.
+
+**Finding: Task 2 already executed a separate original-census/source replay and exposed matched B2 comparator.** The 23 Oct acceptance matrix records 70 original forecasts / 210 horizons, 11 bounded 12h replays, 16 matched directional slots with paired lift zero, source admission NOT_ADMITTED, one connected dependence block and no certified R2 tournament. Do not conflate this directional comparator with M3 weekly interval placement. No new model tournament or invented common scoring denominator.
+
+**Finite integration decision:**
+1. Retain M3 as `HISTORICAL_RECONSTRUCTED_BASELINE / RESEARCH_ONLY`, linking its exact adjudication and JSON artifact; do not reissue or overwrite its scores.
+2. Reuse `backtest_engine/statistics.py` and existing Task 2 calibration ledger only if an admitted prospective, horizon-matched **range** cohort exists. Directional 12h/72h/168h outcomes are not weekly range observations.
+3. Require `baseline_constructed_at_utc <= forecast_issue_at_utc`, original forecast hash, raw independent OHLC actuals, matched target/horizon, known information cutoff and independent episode grouping. Otherwise mark `NOT_COMPARABLE`, not missing skill.
+4. Preserve `R1_NOT_ADMITTED`, `R2_NOT_CERTIFIED`, Round 3 `PROSPECTIVE_COLLECTION_ONLY`, and Fable P2b `DECISION_BACKTEST_BLOCKED_LEDGER_MISSING`.
+5. For executable follow-up, deduplicate against existing M3 #1479, Task 2 #1596/#1530 and CN range #1516; inspect live operational cockpit and exact PRs before any bounded Codex intake. This audit creates no new executor, workflow, data ledger, model, paid call, signal or release.
+
+**Current completion truth:** Main-branch source inspection and research-route correction executed; no local Python tests, CI, code modification, PR merge, private-data read, or prospective performance inference performed.
