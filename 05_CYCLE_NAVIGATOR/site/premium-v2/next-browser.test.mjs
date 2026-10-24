@@ -178,6 +178,31 @@ try{
   assert.equal(responses.length,0,'NEXT_BROWSER_FAILED_ASSETS:'+JSON.stringify(responses));
   results.push({width,overflow:report.overflow,originalB:true,logo:true,
    officialInputsPresent:report.present,daEn:true,ethSelected:true,failClosed:!!report.sourceStatus});
+  if(width===430){
+   // Adversarial live refresh failure, not merely an adapter unit assertion:
+   // a previously rendered Official action must not reappear on language switch.
+   await evaluate(()=>{
+    window.fetch=async()=>{throw Error('INTENTIONAL_TEST_ONLY_OFFLINE')};
+    Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});
+    document.dispatchEvent(new Event('visibilitychange'));
+    return true;
+   });
+   await delay(450);
+   const staleAction=await evaluate(()=>{
+    document.querySelector('[data-lang="en"]')?.click();
+    const status=document.getElementById('official-pilot-status')?.textContent||'';
+    const action=document.getElementById('official-pilot-action')?.textContent||'';
+    document.querySelector('[data-asset="BTC"]')?.click();
+    document.querySelector('[data-lang="da"]')?.click();
+    const quote=document.getElementById('observed-value')?.textContent||'';
+    const pair=document.getElementById('pair')?.textContent||'';
+    return {status,action,quote,pair};
+   });
+   assert.equal(staleAction.status,'SOURCE UNAVAILABLE','NEXT_OFFLINE_RESURRECTED_CURRENT_COMPASS');
+   assert.equal(staleAction.action,'—','NEXT_OFFLINE_RESTORED_CURRENT_ACTION');
+   assert.equal(staleAction.quote,'—','NEXT_ASSET_SWITCH_BORROWED_PRIOR_PRICE');
+   assert.equal(staleAction.pair,'BTC / USD','NEXT_ASSET_SWITCH_WRONG_SELECTED_PAIR');
+  }
  }
  await send('Page.navigate',{url:origin+'next/graph-b/source-graph-b.html'});
  let nested=false;
