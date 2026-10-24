@@ -17,6 +17,8 @@ if str(RESEARCH_SCRIPTS) not in sys.path:
 
 import shared_row_tournament_relevance as relevance
 import shared_row_tournament_weekly as weekly
+import shared_row_next_action_controller as next_action
+import shared_row_tournament_monitor as monitor
 
 
 FLOOR = "2026-09-30T00:00:00Z"
@@ -31,7 +33,7 @@ def runtime(active: bool = True) -> dict:
 
 
 def row(event_id: str, timestamp: str = "2026-10-01T00:00:00Z") -> dict:
-    return {
+    sample = {
         "event_id": event_id,
         "observation_timestamp_utc": timestamp,
         "information_cutoff_utc": timestamp,
@@ -39,29 +41,40 @@ def row(event_id: str, timestamp: str = "2026-10-01T00:00:00Z") -> dict:
         "row_integrity_contract": weekly.ROW_INTEGRITY_CONTRACT,
         "source_binding_manifest": "{}",
         "source_binding_manifest_sha256": "2" * 64,
-        "candidate_decisions": json.dumps({"C07_SIMPLE_3": True, "C08_SIMPLE_3_ETF": False}),
-        "outcome_24h": "1",
-        "outcome_72h": "1",
-        "outcome_7d": "1",
-        "provenance_hash": "a" * 64,
+        "ethbtc_derived_state": "ABOVE",
+        "breadth_derived_state": "BROAD_MAJORITY",
+        "btcd_derived_state": "FALLING_PATH",
+        "candidate_decisions": json.dumps({
+            "C01_ETHBTC": True, "C02_BREADTH": True, "C03_BTCD": True,
+            "C04_ETHBTC_BREADTH": True, "C05_ETHBTC_BTCD": True,
+            "C06_BREADTH_BTCD": True, "C07_SIMPLE_3": True,
+            "C08_SIMPLE_3_ETF": False,
+        }),
+        "outcome_24h": "",
+        "outcome_72h": "",
+        "outcome_7d": "",
+        "provenance_hash": "",
     }
+    sample["provenance_hash"] = weekly.evidence.frozen_provenance_hash(sample)
+    return sample
 
 
-def divergence(event_id: str, divergence_id: str, provenance: str | None = None) -> dict:
-    parent_hash = "a" * 64
+def divergence(event_id: str, divergence_id: str, provenance: str | None = None, *, candidate_a: str = "C07_SIMPLE_3") -> dict:
+    parent_hash = row(event_id)["provenance_hash"]
+    divergence_id = f"{event_id}__{candidate_a}__vs__C08_SIMPLE_3_ETF"
     expected = hashlib.sha256((parent_hash + divergence_id).encode("utf-8")).hexdigest()
     return {
         "divergence_id": divergence_id,
         "event_id": event_id,
         "observation_timestamp_utc": "2026-10-01T00:00:00Z",
         "information_cutoff_utc": "2026-10-01T00:00:00Z",
-        "candidate_a": "C07_SIMPLE_3",
+        "candidate_a": candidate_a,
         "candidate_b": "C08_SIMPLE_3_ETF",
         "decision_a": "true",
         "decision_b": "false",
-        "outcome_24h": "1",
-        "outcome_72h": "1",
-        "outcome_7d": "1",
+        "outcome_24h": "",
+        "outcome_72h": "",
+        "outcome_7d": "",
         "provenance_hash": provenance or expected,
     }
 
@@ -93,7 +106,7 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
             divergence("GOOD", "D_GOOD"),
             divergence("PRE_FLOOR", "D_PRE_FLOOR"),
             divergence("UNBOUND", "D_UNBOUND"),
-            divergence("GOOD", "D_BAD_HASH", "0" * 64),
+            divergence("GOOD", "D_BAD_HASH", "0" * 64, candidate_a="C02_BREADTH"),
         ]
         return rows, divs
 
@@ -101,12 +114,76 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         rows, divs = self.adversarial_data()
         valid_rows, valid_divs, excluded = weekly.filter_consumer_rows(rows, divs, runtime(), verifier)
         self.assertEqual([item["event_id"] for item in valid_rows], ["GOOD"])
-        self.assertEqual([item["divergence_id"] for item in valid_divs], ["D_GOOD"])
+        self.assertEqual([item["divergence_id"] for item in valid_divs], ["GOOD__C07_SIMPLE_3__vs__C08_SIMPLE_3_ETF"])
         self.assertEqual(excluded["pre_floor_or_timestamp"], 1)
         self.assertEqual(excluded["source_binding"], 1)
         self.assertEqual(excluded["immutable_provenance"], 1)
         self.assertEqual(excluded["divergence_parent"], 2)
         self.assertEqual(excluded["divergence_provenance"], 1)
+
+    def test_hash_shaped_but_wrong_frozen_row_is_excluded(self) -> None:
+        entry = row("HASH_SHAPED_TAMPER")
+        entry["provenance_hash"] = "f" * 64
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier)
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["immutable_provenance"], 1)
+
+    def test_changed_candidate_decision_even_with_valid_hash_shape_is_excluded(self) -> None:
+        entry = row("DECISION_TAMPER")
+        decisions = json.loads(entry["candidate_decisions"])
+        decisions["C01_ETHBTC"] = False
+        entry["candidate_decisions"] = json.dumps(decisions)
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier)
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["immutable_provenance"], 1)
+
+    def test_recomputed_self_hash_does_not_override_frozen_boolean_rules(self) -> None:
+        entry = row("FROZEN_RULE_TAMPER")
+        decisions = json.loads(entry["candidate_decisions"])
+        decisions["C07_SIMPLE_3"] = False
+        entry["candidate_decisions"] = json.dumps(decisions)
+        entry["provenance_hash"] = weekly.evidence.frozen_provenance_hash(entry)
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier)
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["source_binding"], 1)
+
+    def test_matured_parent_without_original_detail_is_never_scored(self) -> None:
+        entry = row("FAKE_MATURED_24H")
+        entry["outcome_24h"] = "1"
+        entry["mae_24h"] = "-0.25000000"
+        entry["mfe_24h"] = "0.50000000"
+        # These outcome fields are intentionally mutable in the original
+        # frozen projection. A matching owner detail must still exist.
+        self.assertEqual(weekly.evidence.frozen_provenance_hash(entry), entry["provenance_hash"])
+        valid, _, excluded = weekly.filter_consumer_rows([entry], [], runtime(), verifier, outcome_details=[])
+        self.assertEqual(valid, [])
+        self.assertEqual(excluded["outcome_receipt"], 1)
+
+    def test_divergence_with_invented_matured_label_is_not_admitted(self) -> None:
+        entry = row("DIV_FORGED_OUTCOME")
+        pair = divergence("DIV_FORGED_OUTCOME", "D_VALID")
+        pair["outcome_24h"] = "1"  # parent and owner detail are still unmatured
+        valid, divs, excluded = weekly.filter_consumer_rows([entry], [pair], runtime(), verifier, outcome_details=[])
+        self.assertEqual(len(valid), 1)
+        self.assertEqual(divs, [])
+        self.assertEqual(excluded["divergence_outcome"], 1)
+
+    def test_divergence_misattributes_a_frozen_candidate_vote(self) -> None:
+        entry = row("DIV_VOTE_TAMPER")
+        pair = divergence("DIV_VOTE_TAMPER", "D_VALID")
+        pair["decision_a"] = "false"
+        valid, divs, excluded = weekly.filter_consumer_rows([entry], [pair], runtime(), verifier, outcome_details=[])
+        self.assertEqual(len(valid), 1)
+        self.assertEqual(divs, [])
+        self.assertEqual(excluded["divergence_decision"], 1)
+
+    def test_duplicate_divergence_identity_cannot_double_count(self) -> None:
+        entry = row("DIV_DOUBLE")
+        pair = divergence("DIV_DOUBLE", "D_VALID")
+        valid, divs, excluded = weekly.filter_consumer_rows([entry], [pair, dict(pair)], runtime(), verifier, outcome_details=[])
+        self.assertEqual(len(valid), 1)
+        self.assertEqual(divs, [])
+        self.assertEqual(excluded["divergence_provenance"], 2)
 
     def test_quarantine_excludes_every_row_and_divergence(self) -> None:
         rows, divs = self.adversarial_data()
@@ -115,6 +192,67 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         self.assertEqual(valid_divs, [])
         self.assertEqual(excluded["runtime_inactive"], len(rows))
         self.assertEqual(excluded["divergence_parent"], len(divs))
+
+    def test_weekly_relevance_and_next_action_share_one_fail_closed_filter(self) -> None:
+        self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)
+        self.assertIs(next_action.filter_consumer_rows, weekly.filter_consumer_rows)
+
+    def test_monitor_does_not_consider_forged_maturity_clock_a_verified_outcome(self) -> None:
+        parent = row("MATURITY_CLOCK_ONLY")
+        pair = divergence("MATURITY_CLOCK_ONLY", "D_VALID")
+        pair["matured_24h_utc"] = "2026-10-02T00:00:00Z"
+        self.assertEqual(
+            monitor.verified_matured_divergence_counts([parent], [pair]),
+            {"24h": 0, "72h": 0, "7d": 0},
+        )
+        # A genuinely verified parent+pair outcome is counted exactly once.
+        parent["outcome_24h"] = pair["outcome_24h"] = "1"
+        self.assertEqual(
+            monitor.verified_matured_divergence_counts([parent], [pair])["24h"], 1
+        )
+
+    def test_monitor_fails_closed_on_sha_shaped_but_forged_current_row(self) -> None:
+        forged = row("MONITOR_FAKE_SHA")
+        forged["provenance_hash"] = "a" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "lab"
+            root.mkdir()
+            write_csv(root / "data" / "PROSPECTIVE_SHARED_ROW_LEDGER.csv", [forged])
+            (root / "14_DIVERGENCE_FNP_LEDGER.csv").write_text("divergence_id,event_id\\n")
+            (root / "data" / "OUTCOME_DETAIL_LEDGER.csv").write_text("event_id,horizon\\n")
+            (root / "OWNER_BINDING_MATRIX.json").write_text(json.dumps({
+                "families": [{
+                    "family_id": name, "status": "READY",
+                    "candidate_decision_contract_status": "READY"
+                } for name in sorted(monitor.CORE_FAMILIES)]
+            }))
+            (root / "TRANSFORM_FREEZE_REGISTRY.json").write_text(json.dumps({
+                "core_activation_rule": {
+                    "collection_state": monitor.ACTIVE, "containment_floor_sentinel": False
+                }
+            }))
+            (root / "RUNTIME_STATUS.json").write_text(json.dumps(runtime()))
+            for name in ["03_CANDIDATE_REGISTRY.json", "04_SHARED_ROW_SCHEMA.json", "RELEVANCE_STATE.json"]:
+                (root / name).write_text("{}")
+            registry = root / "registry.json"
+            registry.write_text(json.dumps({
+                "sensors": [{"sensor_id": "SHARED_ROW_MODEL_TOURNAMENT_V1"}]
+            }))
+            with mock.patch.object(monitor, "ROOT", root), mock.patch.object(monitor, "REGISTRY", registry), mock.patch.object(
+                monitor, "filter_consumer_rows", side_effect=lambda rows, divs, state, outcome_details: weekly.filter_consumer_rows(
+                    rows, divs, state, verifier, outcome_details=outcome_details
+                )
+            ) as linked_filter:
+                with self.assertRaises(SystemExit) as caught:
+                    monitor.main()
+                self.assertEqual(caught.exception.code, 2)
+                linked_filter.assert_called_once()
+            result = json.loads((root / "monitor" / "LATEST.json").read_text())
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["eligible_row_n"], 0)
+            self.assertEqual(result["consumer_integrity_filter"]["excluded"]["immutable_provenance"], 1)
+            self.assertIn("UNVERIFIED_PROSPECTIVE_ROW_OR_DIVERGENCE", result["issues"])
+            self.assertEqual(result["scoring_readiness"], "FAIL_CLOSED_UNVERIFIED_RESEARCH_EVIDENCE")
 
     def test_weekly_and_relevance_use_the_same_fail_closed_filter(self) -> None:
         self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)

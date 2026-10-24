@@ -1,16 +1,35 @@
 {
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "canonical_effect": false,
-  "collection_state": "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE",
+  "collection_state": "ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION",
+  "consumer_integrity_filter": {
+    "eligible_divergences": 0,
+    "eligible_rows": 0,
+    "excluded": {
+      "divergence_decision": 0,
+      "divergence_outcome": 0,
+      "divergence_parent": 0,
+      "divergence_provenance": 0,
+      "duplicate_event_id": 0,
+      "immutable_provenance": 0,
+      "integrity_contract": 0,
+      "outcome_receipt": 0,
+      "pre_floor_or_timestamp": 0,
+      "runtime_inactive": 0,
+      "source_binding": 0
+    },
+    "raw_divergences": 0,
+    "raw_rows": 0
+  },
   "contract": "SHARED_ROW_TOURNAMENT_MONITOR_v1",
-  "contract_revision": "1.1-p0-integrity",
+  "contract_revision": "1.2-consumer-source-bound-integrity",
   "core_unresolved_family_bindings": [],
   "divergence_n": 0,
   "eligible_row_n": 0,
-  "exact_next_evidence_event": "COMPLETE_POST_REPAIR_OWNERS_THEN_SEPARATE_FUTURE_FLOOR_REVIEW",
+  "exact_next_evidence_event": "FIRST_P0_BOUND_SHARED_ROW_AFTER_ACTIVE_FLOOR",
   "excluded_pre_repair_row_n": 0,
   "excluded_unbound_divergence_n": 0,
-  "generated_at_utc": "2026-10-21T20:22:42Z",
+  "generated_at_utc": "2026-10-24T09:09:12Z",
   "issues": [],
   "matured": {
     "24h": 0,
@@ -24,7 +43,7 @@
     "CFGI_TIMING_CONTEXT",
     "FULL_STACK_REPRODUCIBILITY"
   ],
-  "scoring_readiness": "QUARANTINED_P0_REPAIR",
+  "scoring_readiness": "NOT_READY_NO_SHARED_ROWS",
   "status": "PASS",
   "unresolved_family_bindings": [
     "ETF_FLOW_QUALITY",

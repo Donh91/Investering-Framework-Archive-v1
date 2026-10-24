@@ -587,6 +587,103 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertEqual(out["current_protection_tracker"]["reentry_state"], "WAIT_FOR_RECLAIM")
         self.assertFalse(out["current_protection_tracker"]["authority"]["portfolio_execution"])
 
+
+    def _source_continuity_case(self, *, now=None, original_minutes_old=165,
+                                current_open=None, prior_open=None,
+                                source_sha="new-source", original_sha="old-source"):
+        now = now or datetime(2026, 10, 22, 12, 0, tzinfo=timezone.utc)
+        old_clock = now - timedelta(minutes=original_minutes_old)
+        new_clock = now - timedelta(minutes=5)
+        origin = old_clock.isoformat().replace("+00:00", "Z")
+        actual = new_clock.isoformat().replace("+00:00", "Z")
+        prev_obs = prior_open or (now - timedelta(hours=4)).replace(
+            minute=0, second=0, microsecond=0).isoformat().replace("+00:00", "Z")
+        next_obs = current_open or (now - timedelta(hours=1)).replace(
+            minute=0, second=0, microsecond=0).isoformat().replace("+00:00", "Z")
+        a = auto_state(source_sha=source_sha, observation_open=next_obs,
+                       predecessor_observation=prev_obs,
+                       deltas={k: {"pct": 0} for k in ("btc_usdt", "eth_usdt", "ethbtc")})
+        a["packet_generated_at_utc"] = actual
+        for row in a["source_health"]["hourly_market"]["freshness"].values():
+            if isinstance(row, dict):
+                row["timestamp"] = actual
+        latest = compass(source_sha=original_sha, issued_at=(
+            now - timedelta(hours=2)).isoformat().replace("+00:00", "Z"))
+        latest["market_now"]["market_observation_open_utc"] = prev_obs
+        latest["source_bindings"]["auto_market_state"]["freshness"] = {
+            "status": "PASS",
+            "checks": [{"lane": lane, "timestamp": origin, "status": "PASS",
+                        "max_age_seconds": 10800}
+                       for lane in ("pointer_freshness", "retrieval_freshness",
+                                    "session_coverage_freshness",
+                                    "source_observation_freshness", "auto_market_state_packet")],
+        }
+        return dict(auto_state=a, auto_pointer={"packet_sha256": source_sha},
+                    latest_compass=latest, entry_latest=entry(),
+                    prior_state={"last_heat_state": "NORMAL"},
+                    cn_package=cn_package(), cn_binding={"status": "PASS"}, now=now)
+
+    def test_temporary_source_continuity_new_verified_hour(self):
+        out = evaluate(**self._source_continuity_case())
+        self.assertTrue(out["dispatch"])
+        self.assertIn("OFFICIAL_SOURCE_REFRESH_DUE", out["cause_codes"])
+        self.assertEqual(out["temporary_source_continuity"]["expires_local_date"], "2026-11-01")
+        self.assertFalse(out["authority"]["forecast_change"])
+        self.assertFalse(out["authority"]["portfolio_execution"])
+        self.assertIn("does not imply a material market move",
+                      _public_refresh_message(["OFFICIAL_SOURCE_REFRESH_DUE"]))
+
+    def test_temporary_source_continuity_requires_new_source_and_hour(self):
+        kw = self._source_continuity_case()
+        kw["auto_state"]["normalized_state"]["live_market"]["observation_open_utc"] = (
+            kw["latest_compass"]["market_now"]["market_observation_open_utc"])
+        self.assertNotIn("OFFICIAL_SOURCE_REFRESH_DUE",
+                         evaluate(**kw).get("cause_codes", []))
+        same = self._source_continuity_case(source_sha="same", original_sha="same")
+        self.assertFalse(evaluate(**same)["dispatch"])
+        self.assertEqual(evaluate(**same)["reason"], "LATEST_COMPASS_ALREADY_BINDS_CURRENT_OWNER_PACKET")
+
+    def test_temporary_source_continuity_never_rewrites_invalid_clock(self):
+        for change in ("missing", "failed", "future", "no_approaching_expiry"):
+            with self.subTest(change=change):
+                kw = self._source_continuity_case()
+                checks = kw["latest_compass"]["source_bindings"]["auto_market_state"]["freshness"]
+                if change == "missing":
+                    checks.pop("checks")
+                elif change == "failed":
+                    checks["checks"][0]["status"] = "FAIL"
+                elif change == "future":
+                    checks["checks"][0]["timestamp"] = "2099-01-01T00:00:00Z"
+                else:
+                    for row in checks["checks"]:
+                        row["max_age_seconds"] = 18000
+                self.assertNotIn("OFFICIAL_SOURCE_REFRESH_DUE",
+                                 evaluate(**kw).get("cause_codes", []))
+
+    def test_temporary_source_continuity_expires_november_first(self):
+        nov = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
+        out = evaluate(**self._source_continuity_case(now=nov))
+        self.assertNotIn("OFFICIAL_SOURCE_REFRESH_DUE", out.get("cause_codes", []))
+        self.assertFalse(out["temporary_source_continuity"]["active"])
+
+    def test_temporary_source_continuity_respects_inflight_dedupe(self):
+        kw = self._source_continuity_case()
+        kw["prior_state"] = {
+            "last_heat_state": "NORMAL",
+            "last_requested_source_sha": "new-source",
+            "last_request_at_utc": (kw["now"] - timedelta(minutes=5)).isoformat().replace("+00:00", "Z"),
+        }
+        out = evaluate(**kw)
+        self.assertFalse(out["dispatch"])
+        self.assertEqual(out["reason"], "REQUEST_IN_FLIGHT")
+        self.assertIn("OFFICIAL_SOURCE_REFRESH_DUE", out["suppressed_cause_codes"])
+
+    def test_temporary_source_continuity_rejects_degraded_required_lane(self):
+        kw = self._source_continuity_case()
+        kw["cn_binding"] = {"status": "FAIL"}
+        out = evaluate(**kw)
+        self.assertNotIn("OFFICIAL_SOURCE_REFRESH_DUE", out.get("cause_codes", []))
+
     def test_unbound_request_retries_after_timeout(self):
         out=decision(
             latest=(lambda x: (x.update({"market_now":{"directional_state":"MIXED","regime":"HOLD_WAIT"}}) or x))(compass()),

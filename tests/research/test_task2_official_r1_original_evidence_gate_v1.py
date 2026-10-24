@@ -36,6 +36,25 @@ class OriginalEvidenceTests(unittest.TestCase):
         r,labels=m.original_outcome_assessment(forecast(),REL,x,Path("a"),"12h")
         self.assertEqual(labels["ABSTAINED"],1)
         self.assertEqual(labels["INCORRECT"],1)
+    def test_original_target_at_or_before_issue_is_quarantined(self):
+        # Frozen original cannot be prospective when its target is already due
+        # before issuance; outcome maturity can still be later and valid.
+        for target in (ISSUE, "2026-10-12T11:00:00Z"):
+            with self.subTest(target=target):
+                item=outcome()
+                item["target_at_utc"]=target
+                item["target_observation_at_utc"]=target
+                item["matured_at_utc"]="2026-10-13T01:00:00Z"
+                problems,_=m.original_outcome_assessment(
+                    forecast(),REL,item,Path("unchanged.json"),"12h")
+                self.assertIn("ORIGINAL_TARGET_NOT_AFTER_ISSUE",problems)
+
+    def test_original_target_after_issue_remains_valid(self):
+        problems,_=m.original_outcome_assessment(
+            forecast(),REL,outcome(),Path("unchanged.json"),"12h")
+        self.assertNotIn("ORIGINAL_TARGET_NOT_AFTER_ISSUE",problems)
+        self.assertEqual(problems,[])
+
     def test_target_mismatch_quarantines(self):
         x=outcome();x["target_observation_at_utc"]="2026-10-13T01:00:00Z"
         a,_=m.original_outcome_assessment(forecast(),REL,x,Path("x"),"12h")
@@ -78,6 +97,7 @@ class OriginalEvidenceTests(unittest.TestCase):
                     ff=forecast()
                     ff["compass_id"]="CMP-"+day.strftime("%Y%m%d")+f"-fixture{j}"
                     ff["issued_at_utc"]=day.strftime("%Y-%m-%dT12:00:00Z")
+                    ff["compass_sha256"]=m.original_compass_self_digest(ff)
                     (directory/(ff["compass_id"]+".json")).write_text(json.dumps(ff))
             y=m.census(root)
             self.assertEqual(y["counts"]["original_forecasts"],27)
@@ -100,6 +120,7 @@ class OriginalEvidenceTests(unittest.TestCase):
                     ff=forecast()
                     ff["compass_id"]="CMP-"+day.strftime("%Y%m%d")+f"-fixture{j}"
                     ff["issued_at_utc"]=day.strftime("%Y-%m-%dT12:00:00Z")
+                    ff["compass_sha256"]=m.original_compass_self_digest(ff)
                     (directory/(ff["compass_id"]+".json")).write_text(json.dumps(ff))
             extra=root/"outcomes"/"2026/10/12"
             extra.mkdir(parents=True)
@@ -116,9 +137,39 @@ class OriginalEvidenceTests(unittest.TestCase):
             self.assertGreater(q["counts"]["original_forecasts"],20)
             self.assertEqual(len(q["original_records"]),q["counts"]["original_forecasts"]*3)
             self.assertEqual(sum(q["per_horizon_receipt_states"].values()),3*q["counts"]["original_forecasts"])
+            self.assertEqual(q["original_integrity_exception_counts"].get("ORIGINAL_FORECAST_SELF_HASH_MISMATCH",0),0)
             self.assertFalse(q["provider_first_publication_verified"])
             self.assertFalse(q["actual_delivery_first_known_verified"])
             self.assertFalse(q["first_known_market_value_eligibility_unlocked"])
             self.assertEqual(q["private_round3_gate"],"ROUND3_COLLECTION_ONLY_ANALYSIS_OFF")
+    def test_frozen_forecast_content_digest_detects_tampering(self):
+        doc=forecast()
+        doc["compass_sha256"]=m.original_compass_self_digest(doc)
+        self.assertEqual(m.original_compass_self_digest(doc),doc["compass_sha256"])
+        doc["outcome_maturity"]["12h"]="RETROACTIVE_TAMPER"
+        self.assertNotEqual(m.original_compass_self_digest(doc),doc["compass_sha256"])
+        self.assertIsNone(m.original_compass_self_digest({"invalid":float("nan")}))
+
+    def test_census_quarantines_one_corrupted_forecast_all_three_horizons(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            for day in m.days():
+                sub=day.strftime("%Y/%m/%d")
+                (root/"daily"/sub).mkdir(parents=True)
+                (root/"outcomes"/sub).mkdir(parents=True)
+            for i in range(21):
+                doc=forecast()
+                doc["compass_id"]=f"CMP-20261012-SYNTH{i:03d}"
+                doc["compass_sha256"]=m.original_compass_self_digest(doc)
+                if i==7:
+                    doc["outcome_maturity"]["12h"]="FORGED_AFTER_FREEZE"
+                (root/"daily"/"2026/10/12"/(doc["compass_id"]+".json")).write_text(
+                    json.dumps(doc,sort_keys=True)+"\n",encoding="utf-8")
+            report=m.census(root)
+            self.assertEqual(report["counts"]["original_forecasts"],21)
+            self.assertEqual(report["original_integrity_exception_counts"]["ORIGINAL_FORECAST_SELF_HASH_MISMATCH"],3)
+            self.assertEqual(report["counts"]["ORIGINAL_FORECAST_QUARANTINED_NO_OUTCOME"],3)
+            self.assertFalse(report["first_known_market_value_eligibility_unlocked"])
+
 if __name__=="__main__":
     unittest.main()

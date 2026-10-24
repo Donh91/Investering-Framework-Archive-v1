@@ -6,6 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
+# Reuse the existing API Agent Gateway Gate invocation to execute the new
+# fail-closed news/Director integration suite, without changing workflows.
+from tests.api_agent.test_director_news_intelligence_context import NewsDirectorIntegrationTests
+
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/api_agent/augment_director_situation_room_shadow.py"
 spec = importlib.util.spec_from_file_location("augment_director_situation_room_shadow", SCRIPT)
 module = importlib.util.module_from_spec(spec)

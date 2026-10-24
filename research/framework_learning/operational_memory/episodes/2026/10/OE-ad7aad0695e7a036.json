@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/compass-event-refresh.yml",
+    ".github/workflows/daily-raw-owner-capture.yml",
+    "tests/health/test_writer_trigger_safety_v2.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-ad7aad0695e7a036",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "compass-october-public-hourly-liveness-backstop",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "fix(compass): October public hourly liveness backstop",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/compass-event-refresh.yml": "1c5b6d8a16190e8bcfc72d5a163d161e5107de45",
+    ".github/workflows/daily-raw-owner-capture.yml": "0ede2efaf147aade10a0f3dc59e7f79f926af82b",
+    "tests/health/test_writer_trigger_safety_v2.py": "80983d115d68d63ed83a31bf513cdb2a2aa3ed4a"
+  },
+  "source_commit_sha": "ad7aad0695e7a036330240f3cf4fe96ce0b1098d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-22T05:42:57-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(compass): October public hourly liveness backstop"
+}

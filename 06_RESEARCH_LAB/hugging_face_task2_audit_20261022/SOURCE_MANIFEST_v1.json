@@ -1,0 +1,163 @@
+{
+  "contract": "HF_TASK2_RESEARCH_SOURCE_CENSUS_v1",
+  "audited_date": "2026-10-22",
+  "status": "RESEARCH_ONLY_NOT_PIT_ADMITTED",
+  "account": {
+    "hf_user": "FrameworkCN",
+    "is_pro": false,
+    "authenticated": true
+  },
+  "git": {
+    "control_repo": "Donh91/Investering-Framework-Archive-v1",
+    "canonical_owner": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md",
+    "captured_main_sha": "b4a644faa5893bc7f33d87834d7a74a0639371dc",
+    "branch": "agent/task-20261022-huggingface-task2-audit"
+  },
+  "record_counts_are_provider_advertised": true,
+  "production_changes_allowed": false,
+  "trading_changes_allowed": false,
+  "new_scheduler_allowed": false,
+  "paid_compute_authorized": false,
+  "source_candidates": [
+    {
+      "id": "HF-001",
+      "repo_id": "zongowo111/v2-crypto-ohlcv-data",
+      "role": "TASK2_OHLCV_CHEAP_BENCHMARK",
+      "advertised_rows": 9000000,
+      "parquet_mb_approx": 425.3,
+      "disposition": "P1_CONTRADICTORY_VIEWER_VS_README_AND_EXTRA_TIMEFRAMES",
+      "license_tag": "mit"
+    },
+    {
+      "id": "HF-002",
+      "repo_id": "linxy/CryptoCoin",
+      "role": "SECONDARY_FRESH_BARS",
+      "disposition": "P1_DIRECT_SYMBOL_FILE_CONFIRMED_VIEWER_NO_CONFIG",
+      "license_tag": "mit",
+      "sample_verified_path": "BTCUSDT/BTCUSDT_1h.parquet"
+    },
+    {
+      "id": "HF-003",
+      "repo_id": "WinkingFace/CryptoLM-Bitcoin-BTC-USDT",
+      "role": "BTC_BASELINE",
+      "advertised_rows": 2300000,
+      "disposition": "P2_FEATURE_LEAKAGE_REVIEW",
+      "license_tag": "mit"
+    },
+    {
+      "id": "HF-004",
+      "repo_id": "aliplayer1/polymarket-crypto-updown",
+      "role": "MARKET_IMPLIED_BASELINE",
+      "disposition": "P1_MIXED_HISTORIC_BACKFILL_AND_LIVE_STREAM",
+      "license_tag": "mit",
+      "risks": [
+        "unresolved_resolutions",
+        "fees_unknown",
+        "market_timestamp_validation",
+        "no_pit_backfill_proof"
+      ]
+    },
+    {
+      "id": "HF-005",
+      "repo_id": "Tr4m0ryp/trenches-pumpfun-forward-2026-08",
+      "role": "ALPHA_PUMP_FUN_FALSIFICATION",
+      "disposition": "HARD_LICENSE_HOLD_PIT_COUNTEREXAMPLE_ONLY",
+      "license_tag": "polyform-noncommercial-1.0.0",
+      "risks": [
+        "commercial_license_restriction",
+        "69.09_hour_capture_gap",
+        "reach_field_leak",
+        "negative_age_stamps",
+        "zero_trade_capture_join",
+        "degenerate_y_theta_70",
+        "enriched_vendor_population"
+      ],
+      "known_observed_hours": 75.2722,
+      "capture_span_hours": 146.4508,
+      "label_y_theta_70_usable": false,
+      "reachable_social_at_first_sighting_count": 0
+    },
+    {
+      "id": "HF-006",
+      "repo_id": "vgregoire/polymarket-users",
+      "role": "EXISTING_SOURCE_OWNER",
+      "disposition": "DUPLICATE_EXISTING_INTEGRATION",
+      "license_tag": "cc-by-4.0"
+    },
+    {
+      "id": "HF-007",
+      "repo_id": "chainoftitle/chain-of-title",
+      "role": "EXISTING_ALPHA_LAUNCH_PROVENANCE",
+      "disposition": "ACCESS_ANOMALY_EXISTS_FALSE",
+      "license_tag": "historical_frozen_deposit_cc0_not_current_live_api"
+    },
+    {
+      "id": "HF-008",
+      "repo_id": "BlockDB/Stablecoin-Transfers-Ethereum-Cryptocurrency-Data",
+      "role": "MACRO_STABLECOIN_HISTORY",
+      "advertised_rows": 587800000,
+      "parquet_gb_approx": 83.6,
+      "disposition": "P2_GB_SCALE_AND_COVERAGE_ENDS_2025_10",
+      "license_tag": "cc-by-4.0"
+    },
+    {
+      "id": "HF-009",
+      "repo_id": "edaschau/bitcoin_news",
+      "role": "NEWS_DEDUP_HISTORICAL",
+      "advertised_rows": 210800,
+      "disposition": "P2_SCRAPE_CLOCK_WEAK",
+      "license_tag": "openrail"
+    },
+    {
+      "id": "HF-010",
+      "repo_id": "zeroshot/twitter-financial-news-sentiment",
+      "role": "NLP_LABEL_QA",
+      "advertised_rows": 11900,
+      "disposition": "P1_CLASSIFICATION_ONLY",
+      "license_tag": "mit"
+    },
+    {
+      "id": "HF-011",
+      "repo_id": "WinkingFace/CryptoLM-Ethereum-ETH-USDT",
+      "role": "ETH_BENCHMARK",
+      "disposition": "P2_NEEDS_REVISION_CHECK"
+    },
+    {
+      "id": "HF-012",
+      "repo_id": "dataforge-labs/ethereum-mempool",
+      "role": "MEMPOOL_TIMING_CONTROL",
+      "disposition": "P3_OBSERVER_BIAS"
+    }
+  ],
+  "models": [
+    {
+      "repo_id": "amazon/chronos-bolt-small",
+      "role": "TIME_SERIES_CHALLENGER",
+      "disposition": "RESEARCH_ONLY"
+    },
+    {
+      "repo_id": "ProsusAI/finbert",
+      "role": "FINANCIAL_SENTIMENT",
+      "disposition": "LICENSE_NONCOMMERCIAL_REVIEW"
+    },
+    {
+      "repo_id": "sentence-transformers/all-MiniLM-L6-v2",
+      "role": "STORY_DUPLICATE_EMBEDDING",
+      "disposition": "SMALL_SAMPLE_CANDIDATE"
+    }
+  ],
+  "gates": [
+    "GITHUB_AUTHORITATIVE_OWNER_FRESH_READ",
+    "LICENSE",
+    "HF_REVISION_AND_FILE_HASH",
+    "ORIGINAL_FORECAST_ISSUE_CLOCK",
+    "PROVIDER_FIRST_KNOWN_TIME",
+    "COMPLETE_DENOMINATOR_CENSORED_UNKNOWN",
+    "SAME_CLOCK_CHEAP_BASELINE",
+    "INDEPENDENT_EVENT_FAMILY",
+    "NO_PRIVATE_PUBLIC_DATA_TRANSFER",
+    "EXISTING_OWNER_REVIEW"
+  ],
+  "evidence_level": "SOURCE_METADATA_AND_SAMPLED_SCHEMAS_NOT_PERFORMANCE",
+  "latest_source_document_audit": "06_SOURCE_DOCUMENT_RED_TEAM_DELTA.md"
+}

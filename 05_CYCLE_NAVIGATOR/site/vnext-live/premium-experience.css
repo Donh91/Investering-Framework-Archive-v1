@@ -83,3 +83,471 @@
 .proof-families strong{display:block;color:#173651;font-size:12px;line-height:1.5}
 .proof-families span{display:block;color:#6a7e91;font-size:11px;line-height:1.6;margin-top:6px}
 @media(max-width:520px){.proof-families{grid-template-columns:1fr}}
+
+/* CN PREMIUM ROOT · 2026-10-23 owner video acceptance.
+ * Brand/quiet precision unchanged. Only source-bound graphics; no new authority.
+ * B instrument must have one continuous navy surface on official root.
+ */
+.chart-area #official-path-chart.frozen-week-chart{
+ background:#0a1729;color:#eef5ff;border-color:#263d5b;box-shadow:none;
+ margin-top:4px;isolation:isolate;
+}
+.chart-area #official-path-chart.frozen-week-chart .fw-quote,
+.chart-area #official-path-chart.frozen-week-chart .fw-legend,
+.chart-area #official-path-chart.frozen-week-chart .fw-horizon-availability{
+ background:#0a1729;color:#c9d9eb;
+}
+.chart-area #official-path-chart.frozen-week-chart .fw-quote strong{color:#f7fbff}
+.chart-area #official-path-chart.frozen-week-chart .fw-legend span{color:#b8cce1}
+.chart-area #official-path-chart.frozen-week-chart .fw-evidence-details{
+ background:#0a1729;color:#9db3cc;border-top:1px solid #28405c;
+}
+.chart-area #official-path-chart.frozen-week-chart .fw-evidence-details summary{color:#aabed7}
+.chart-area #official-path-chart.frozen-week-chart .fw-progress-summary,
+.chart-area #official-path-chart.frozen-week-chart .fw-values,
+.chart-area #official-path-chart.frozen-week-chart .fw-readout{color:#c6d7ec}
+.chart-area #official-path-chart.frozen-week-chart .fw-source>span{color:#b6c8df}
+
+/* Restrained evidence dial, driven by official 10-unit Bull/Bear reading,
+ * neutral grey when the canonical source refuses a reading. */
+.balance{display:grid;grid-template-columns:minmax(0,1fr) 106px;gap:4px 18px;align-items:center;padding:18px 19px}
+.balance-summary{grid-column:1;display:flex;flex-wrap:wrap;gap:5px 13px}
+.balance-summary strong{font-size:19px;font-weight:730;letter-spacing:-.035em}
+.balance-summary>span{font-size:11px}
+.balance-bars{grid-column:1;align-self:end;margin:10px 0 4px;gap:4px}
+.balance-unit{height:5px;border-radius:9px}
+.balance>small{grid-column:1;line-height:1.5;color:#637c95}
+.balance-dial{grid-column:2;grid-row:1 / span 3;place-self:center;
+ width:102px;aspect-ratio:1;position:relative;border-radius:50%;
+ background:conic-gradient(from -90deg,#2f6fda 0deg var(--bull-angle,0deg),#c1cfdf var(--bull-angle,0deg) 360deg);
+ box-shadow:0 0 0 1px #dfe7f0;display:grid;place-items:center;
+}
+.balance-dial[data-state=unavailable]{background:conic-gradient(from -90deg,#cbd6e3,#cbd6e3);box-shadow:0 0 0 1px #dbe4ed}
+.balance-dial-face{position:relative;width:83%;aspect-ratio:1;border-radius:50%;
+ background:#fff;display:grid;place-items:center;border:1px solid #e2eaf2}
+.balance-dial-face:before{content:"";position:absolute;inset:19%;border:1px solid #e2e9f1;border-radius:50%}
+.balance-dial-needle{display:block;width:2px;height:43%;position:absolute;top:28%;
+ background:linear-gradient(#2f6fda 0 44%,#ced9e7 44% 100%);border-radius:3px;transform:rotate(var(--dial-needle-angle,0deg))}
+.balance-dial[data-state=unavailable] .balance-dial-needle{background:#bfccda}
+.balance-dial-hub{position:relative;width:8px;height:8px;border:2px solid #e8f0fb;
+ background:#2f6fda;border-radius:50%;z-index:2}
+.balance-dial[data-state=unavailable] .balance-dial-hub{background:#93a5b9}
+
+/* Continuous DSB-dot journey: one connected chronological rail at all widths.
+ * Grey is NOT progress, blue only a source-bound weekly reference, amber next
+ * conditional watch. No manufactured phase transition or elapsed time. */
+.path-route{display:block;position:relative;list-style:none;padding:4px 0 6px 31px;margin:0 0 0 6px}
+.path-route:before{content:"";position:absolute;left:12px;top:14px;bottom:17px;width:2px;background:#dce5f0;border-radius:3px}
+.path-node{position:relative;display:grid;grid-template-columns:31px minmax(0,1fr);
+ gap:2px 8px;align-items:baseline;padding:13px 10px 13px 4px;min-height:54px;
+ border:0;border-bottom:1px solid #edf1f5;border-radius:0;background:transparent!important;
+ flex-wrap:nowrap}
+.path-node:last-child{border-bottom:0}
+.path-node:before{content:"";position:absolute;left:-28px;top:17px;width:15px;height:15px;
+ border-radius:50%;background:#fff;border:2px solid #bfcfe0;box-shadow:0 0 0 4px #fff}
+.path-node[data-kind=reference]:before{background:#2f6fda;border-color:#2f6fda;box-shadow:0 0 0 4px #e7f0ff}
+.path-node[data-kind=next]:before{background:#fff;border-color:#b48246;box-shadow:0 0 0 4px #fff4e8}
+.path-node .path-number{font-size:10px;letter-spacing:.04em;font-weight:750;color:#8c9aae;width:auto}
+.path-node strong{font-size:13px;font-weight:690;line-height:1.45;color:#193149;min-width:0}
+.path-node[data-kind=reference] strong{color:#205dbb}
+.path-node[data-kind=next] strong{color:#875d31}
+.path-node small{grid-column:2;margin:1px 0 0;width:auto;font-size:10px;line-height:1.5;color:#77899c}
+.path-hero{box-shadow:none;border:1px solid #132d4d}
+.path-hero strong{letter-spacing:-.035em}
+.path-route + .small{font-size:11px;max-width:700px}
+
+/* Explain actual score vs coverage and prospective accountability without
+ * inventing separate intraday/rotation/pullback win rates. */
+.proof-primer{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:13px 0 18px}
+.proof-primer p{margin:0;background:#f1f5f9;border:1px solid #e0e8f1;border-radius:10px;
+ padding:15px 17px;font-size:12px;line-height:1.65;color:#536c84}
+.proof-journey{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0 0 18px;border:1px solid #e1e8f1;border-radius:12px;background:#fff}
+.proof-journey>div{display:grid;grid-template-columns:31px 1fr;align-content:start;
+ gap:3px 8px;padding:14px 12px;min-width:0}
+.proof-journey>div+div{border-left:1px solid #e9eef4}
+.proof-journey-marker{grid-row:1 / span 2;width:28px;height:28px;display:grid;place-items:center;
+ border:1px solid #d6e5fa;border-radius:50%;font-size:10px;font-weight:750;color:#2f6fda}
+.proof-journey strong{font-size:12px;line-height:1.25;color:#1e3650}
+.proof-journey small{font-size:10px;color:#71859a;line-height:1.55}
+.proof-window-details{margin:9px 0 18px;padding:0;overflow:hidden}
+.proof-window-details>summary{display:flex;flex-direction:column;gap:4px;justify-content:center;
+ cursor:pointer;min-height:60px;padding:15px 21px;font-size:15px;font-weight:720;color:#193552;list-style:none}
+.proof-window-details>summary::-webkit-details-marker{display:none}
+.proof-window-details>summary:after{content:"+";position:absolute;right:22px;color:#4775b8;font-size:23px;top:10px}
+.proof-window-details[open]>summary:after{content:"−"}
+.proof-window-details>summary small{font-size:10px;font-weight:500;color:#7c90a5}
+.proof-window-details>summary:focus-visible{outline:3px solid #2f6fda;outline-offset:-3px}
+.proof-window-details .table-scroll{margin:0 16px 18px}
+@media(max-width:600px){
+ .balance{grid-template-columns:minmax(0,1fr) 89px;gap:3px 9px;padding:15px 12px}
+ .balance-dial{width:86px}
+ .balance-summary strong{font-size:16px}
+ .balance>small{font-size:10px}
+ .path-route{padding-left:29px}
+ .proof-primer{grid-template-columns:1fr;gap:7px}
+ .proof-primer p{padding:12px 13px;font-size:11px}
+ .proof-journey{grid-template-columns:1fr}
+ .proof-journey>div{padding:12px 14px;grid-template-columns:31px 1fr}
+ .proof-journey>div+div{border-left:0;border-top:1px solid #e9eef4}
+ .proof-window-details>summary{padding:12px 15px;padding-right:40px}
+}
+@media(prefers-reduced-motion:reduce){.balance-dial,.path-node,.proof-journey *{transition:none!important;animation:none!important}}
+
+/* PROOF · Current-week rolling windows, never a second official score.
+ * Source issuer owns 70/30 arithmetic; display only strict eligible rows. */
+.proof-live-sequence{margin:9px 0 18px;padding:22px 25px}
+.proof-live-sequence .section-heading{margin-bottom:7px}
+.proof-live-status{color:#4f6f8b;font-size:11px;line-height:1.5;margin:12px 0}
+.proof-live-windows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}
+.proof-live-window{padding:15px 14px 13px;border:1px solid #e1e8f1;border-radius:11px;background:#f8fafc;min-width:0}
+.proof-live-window-head{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap}
+.proof-live-window-day{font-size:11px;color:#6c7f95;font-weight:750}
+.proof-live-window-head small{font-size:9px;color:#7b8fa2}
+.proof-live-window-score{display:block;color:#163454;font-size:clamp(22px,3vw,30px);letter-spacing:-.045em;line-height:1.18;margin:14px 0 8px}
+.proof-live-window[data-state=LIVE_PROVISIONAL]{background:#f2f7ff;border-color:#b9cfee}
+.proof-live-window[data-state=LIVE_PROVISIONAL] .proof-live-window-score{color:#2f6fda}
+.proof-live-window[data-state=CLOSED_PROVISIONAL]{background:#f6f9fd;border-color:#d7e4f2}
+.proof-live-window-hours{display:block;color:#74889e;font-size:10px;line-height:1.5}
+@media(max-width:560px){
+ /* Full-width mobile evidence rows: preserves original source scores and
+  * incomplete-window states, while avoiding three unreadable 100px cards. */
+ .proof-live-sequence{padding:19px 15px}
+ .proof-live-windows{grid-template-columns:minmax(0,1fr);gap:8px}
+ .proof-live-window{display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;column-gap:12px;row-gap:4px;
+  padding:13px 15px;border-radius:11px;min-height:83px}
+ .proof-live-window-head{grid-column:1;grid-row:1;
+  flex-direction:column;align-items:flex-start;justify-content:center;gap:3px}
+ .proof-live-window-day{font-size:12px}
+ .proof-live-window-head small{font-size:10px;line-height:1.4}
+ .proof-live-window-score{grid-column:2;grid-row:1 / span 2;justify-self:end;
+  font-size:clamp(23px,7vw,29px);white-space:nowrap;margin:0}
+ .proof-live-window-hours{grid-column:1;grid-row:2;font-size:10px;line-height:1.5}
+}
+@media(max-width:365px){.proof-live-window-score{font-size:22px}}
+
+/* Verified investor-readable OFFICIAL action, raw owner code always retained. */
+.product-action-code{display:block;margin-top:10px;color:#b9cbe0;font-size:10px;letter-spacing:.035em;font-weight:720;overflow-wrap:anywhere}
+.product-action-meaning{display:block;color:#b4c8df;font-size:10px;line-height:1.5;margin-top:5px;max-width:25rem}
+
+
+/* PREMIUM FINISH v1 · existing Quiet Precision, no alterations to approved B.
+ * Deliberately avoid #official-path-chart, .frozen-week-chart, chart variables,
+ * plot geometry and all official source / data / score presentation semantics.
+ * Typographic and responsive polish only outside the graph.
+ */
+.product-first .product-kicker{color:#536f8b;letter-spacing:.115em}
+.product-decision .product-cell{border-radius:12px}
+.product-decision .product-cell:first-child{background:#07172f}
+.product-action-meaning{max-width:36ch}
+.product-risk{border-radius:12px}
+.product-risk h3{letter-spacing:-.025em}
+.risk-class-rail{gap:5px}
+.risk-step{min-width:0;hyphens:auto;overflow-wrap:normal}
+.product-lenses button{transition:background-color .12s ease,border-color .12s ease,color .12s ease}
+.product-lenses button:hover:not([aria-pressed=true]){background:#e9f0f8;border-color:#cbd8e8}
+.path-main-row article{border-radius:12px}
+.path-route:before{background:#cbd9e8}
+.path-node{scroll-margin-top:20px}
+.path-node[data-kind=reference] .path-number{color:#2f6fda}
+.path-node[data-kind=next] .path-number{color:#9c703b}
+.path-rotation{scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#b9cbdf transparent}
+.rotation-tier{scroll-snap-align:start;border-radius:11px;gap:7px}
+.proof-window-details{position:relative}
+.proof-window-details>summary:after{pointer-events:none}
+.proof-live-window{transition:border-color .12s ease}
+.ai-verifier textarea{font-size:12px;line-height:1.6}
+@media(max-width:560px){
+ .product-first{border-radius:14px}
+ .product-decision .product-cell{min-height:111px}
+ .product-decision .product-cell small{font-size:10px}
+ .product-decision .product-cell strong{line-height:1.2}
+ .product-risk{padding:16px 13px}
+ .product-risk-heading{gap:8px}
+ .product-risk-label{max-width:44%;font-size:10px;line-height:1.5}
+ .risk-class-rail{gap:5px}
+ .risk-step{font-size:clamp(9px,2.4vw,11px);line-height:1.45;padding-top:8px}
+ .product-lenses{gap:6px}
+ .product-lenses button{flex:1 1 105px;padding-inline:9px;line-height:1.4;text-align:center}
+ .balance{border-radius:12px}
+ .balance-dial{width:86px}
+ .path-main-row{gap:8px}
+ .path-main-row article{padding:15px 12px}
+ .path-node{padding-block:14px}
+ .rotation-tier{min-width:94px}
+ .proof-live-window-score{font-variant-numeric:tabular-nums}
+ .proof-window-details>summary{line-height:1.4}
+}
+@media(max-width:365px){
+ .product-decision{grid-template-columns:minmax(0,1fr);gap:7px}
+ .product-decision .product-cell{min-height:0;padding:13px 14px}
+ .balance{grid-template-columns:minmax(0,1fr) 72px;gap:4px 7px}
+ .balance-dial{width:69px}
+ .risk-step{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .product-lenses button,.proof-live-window{transition:none!important}
+}
+
+
+/* B LIVE VISUAL PARITY · exact owner-approved Weekly Outlook B grammar.
+ * Source: isolated B/C Design Lab, Graph B navy instrument within ivory
+ * product card. Port the VISUAL grammar only. Never port synthetic SVG paths,
+ * prices, interpolation, time cursors, horizon forecasts or signals.
+ * Genuine TradingView source-bound B plot is unchanged. */
+#view-overview .chart-area[data-approved-design="B"]{
+ background:#fff;color:#07172f;border:1px solid #e1e7ee;
+ border-radius:17px;padding:26px;
+ box-shadow:0 10px 36px rgba(9,33,64,.045);
+ margin-top:17px;
+}
+#view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+ display:flex;align-items:end;justify-content:space-between;
+ gap:14px;margin:0 2px 22px;min-width:0;
+}
+.chart-b-heading{min-width:0}
+.chart-b-eyebrow{
+ display:block;font-size:10px;font-weight:800;letter-spacing:.135em;
+ color:#6b88a5;text-transform:uppercase;line-height:1.5;
+}
+.chart-b-title{
+ display:block;margin:3px 0 4px;font-size:clamp(26px,3.2vw,36px);
+ letter-spacing:-.045em;line-height:1.19;color:#07172f;font-weight:710;
+}
+.chart-b-intro{display:block;font-size:12px;line-height:1.55;color:#71859a}
+#view-overview .chart-area[data-approved-design="B"] .chart-kicker .subtle{
+ color:#577795;font-weight:640;font-size:10px;text-align:right;
+ max-width:145px;line-height:1.55;align-self:center;
+}
+#view-overview .chart-area[data-approved-design="B"] #official-path-chart.frozen-week-chart{
+ margin:0;border:1px solid #253b55;border-radius:13px;
+ background:#0a1729;color:#f1f7ff;box-shadow:inset 0 0 0 1px #ffffff0c;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-toolbar{
+ padding:17px 23px 5px;background:#0a1729;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons{
+ gap:7px;padding:12px 23px 6px;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button{
+ background:#10243a;border:1px solid #2c4867;border-radius:9px;
+ min-width:73px;min-height:44px;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button[aria-pressed=true]{
+ background:#28486c;color:#fff;border-color:#496f99;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote{
+ background:#0a1729;padding:18px 23px 7px;align-items:start;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
+ color:#f7fbff;font-size:clamp(28px,3.7vw,40px);
+ font-weight:660;letter-spacing:-.055em;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-source{padding-top:2px}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend{
+ background:#0a1729;padding:17px 23px 13px;
+ gap:10px 22px;font-size:10px;color:#a9bfd8;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend .forecast{
+ border-color:#5f96ff;border-top-style:dashed;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend .actual{
+ background:#27c59a;min-height:3px;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-canvas{
+ height:360px;background:#0a1729;border-color:rgba(119,153,191,.12);
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizon-availability{
+ background:#0a1729;color:#a4b8d0;line-height:1.55;
+}
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+ margin:2px 23px 14px;background:#10243d;
+}
+/* The source state can be unavailable, but B's surface stays consistent. */
+@media(max-width:760px){
+ #view-overview .chart-area[data-approved-design="B"]{padding:15px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{margin:4px 4px 17px}
+ .chart-b-title{font-size:clamp(25px,6vw,31px)}
+ .chart-b-intro{font-size:11px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:325px}
+}
+@media(max-width:440px){
+ #view-overview .chart-area[data-approved-design="B"]{
+  padding:11px;border-radius:15px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+  align-items:start;gap:6px;margin:5px 4px 14px;
+ }
+ .chart-b-eyebrow{font-size:9px;letter-spacing:.11em}
+ .chart-b-title{font-size:25px}
+ .chart-b-intro{font-size:10px;max-width:31ch}
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker .subtle{
+  max-width:90px;font-size:9px;line-height:1.45;margin-top:5px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] #official-path-chart.frozen-week-chart{
+  border-radius:11px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-toolbar{
+  padding:13px 13px 3px;gap:8px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-period{
+  font-size:10px;letter-spacing:.025em;min-width:0;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote{padding:14px 13px 7px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
+  font-size:clamp(24px,7vw,30px);
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizons{
+  padding:10px 13px 4px;gap:6px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizons button{
+  flex:0 1 91px;min-width:0;padding:8px 10px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-legend{
+  padding:12px 13px 10px;gap:9px 13px;font-size:9px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-legend i{width:19px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:295px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+  margin:2px 13px 11px;
+ }
+ #view-overview .chart-area[data-approved-design="B"] .fw-horizon-availability{
+  padding:8px 13px 12px;
+ }
+ /* Bring the approved price instrument closer to the first screen.
+  * Official Compass current-action card still leads the graph. */
+ .hero{padding:22px 22px 21px}
+ .hero h1{font-size:clamp(37px,10vw,43px)}
+ .decision article{padding:16px 13px;min-height:125px}
+ .decision .eyebrow{margin-bottom:9px}
+ .section{padding:19px 13px}
+ .section-heading .eyebrow{letter-spacing:.10em}
+}
+
+
+/* B · iPhone above-the-fold correction after true 390px Chrome QA.
+ * Preserve the 740px official-plot discoverability contract rather than
+ * weakening acceptance thresholds to hide the added editorial title. */
+@media(max-width:440px){
+ .hero{margin:0 0 10px;padding:15px 18px 14px;gap:12px}
+ .hero h1{font-size:34px;line-height:1.04}
+ .hero .intro{margin-top:8px;line-height:1.45;font-size:12px}
+ .hero-indicator{min-height:0;padding:11px 13px}
+ .hero-value{margin:7px 0 3px;font-size:23px}
+ .decision{margin-bottom:7px;gap:7px}
+ .decision article{min-height:102px;padding:12px 11px}
+ .decision .eyebrow{margin-bottom:7px;line-height:1.45}
+ .decision .action-value{font-size:24px}
+ .decision-side #direction{font-size:22px}
+ .decision .small{margin:8px 0 0;line-height:1.45}
+ .section{margin-top:12px;padding:16px 13px}
+ .section-heading{margin-bottom:11px}
+ #view-overview .chart-area[data-approved-design="B"]{margin-top:9px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{margin-bottom:11px}
+}
+
+/* Cascade audit 2026-10-23: pre-existing premium.css
+ * #view-overview .chart-area outranked low-specificity .chart-area[B].
+ * The actual 390px browser probe caught computed transparent background.
+ * All B frame selectors now outrank the older id-level transparency rule.
+ * No !important or JS style injection; no market/chart source mutation. */
+
+/* B original layout v2 | visual-only translation from approved AppDeploy lab.
+ * The source-bound TradingView engine and Official Compass remain unchanged. */
+#view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
+ gap:14px;margin:0 0 23px;
+}
+#view-overview .chart-area[data-approved-design="B"] .chart-b-title{
+ font-size:clamp(30px,4vw,42px);font-weight:750;letter-spacing:-.047em;
+ margin:7px 0 9px;
+}
+#view-overview .chart-area[data-approved-design="B"] .chart-b-intro{
+ font-size:13px;line-height:1.6;max-width:38ch;
+}
+#view-overview .chart-area[data-approved-design="B"] #chart-evidence{
+ display:block;text-align:left;max-width:none;margin-top:6px;
+ font-size:10px;color:#7a8da1;
+}
+.chart-b-assets{display:flex;gap:3px;padding:4px;align-self:center;
+ background:#f0f4f8;border:1px solid #dde5ee;border-radius:13px}
+.chart-b-assets button{min-width:66px;min-height:48px;padding:9px 14px;
+ background:transparent;border:0;border-radius:9px;color:#8395aa;
+ font-size:13px;font-weight:740}
+.chart-b-assets button[aria-pressed=true]{background:#fff;color:#112c4d;
+ box-shadow:0 3px 12px #1a35551a}
+.chart-b-assets button:focus-visible{outline:2px solid #2f6fda;outline-offset:2px}
+#view-overview .chart-area[data-approved-design="B"] .fw-toolbar{display:none}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote{
+ padding:27px 23px 19px;align-items:start;gap:14px}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
+ font-size:clamp(33px,4vw,45px);margin-top:7px}
+#view-overview .chart-area[data-approved-design="B"] .fw-quote .fw-week-range{
+ display:block;font-size:10px;color:#b6c9df;letter-spacing:.06em;
+ text-transform:uppercase;margin-top:7px}
+#view-overview .chart-area[data-approved-design="B"] .fw-legend{
+ padding:12px 23px 24px;gap:12px 18px}
+#view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:370px}
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+ margin:9px 18px 13px;padding:10px 12px;gap:8px;
+ border:1px solid rgba(121,160,214,.32);border-left:2px solid #639dff;
+ background:rgba(56,87,124,.13)}
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued strong{
+ font-size:10px;letter-spacing:.025em;line-height:1.35}
+#view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued small{
+ font-size:10px;line-height:1.4;margin-top:3px}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizon-availability{
+ padding:7px 18px 9px;border:0}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons{
+ display:flex;background:#fff;gap:7px;padding:13px 0 4px;
+ justify-content:flex-start;align-items:center}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button{
+ min-height:44px;min-width:75px;color:#71859a;background:#edf2f7;
+ border:1px solid #dce4ed;border-radius:10px;padding:8px 11px}
+#view-overview .chart-area[data-approved-design="B"] .fw-horizons button[aria-pressed=true]{
+ background:#e3eeff;border-color:#95b5e5;color:#1e508e}
+.chart-b-scrub{padding:15px 1px 2px;color:#697d94}
+.chart-b-scrub-head{display:flex;align-items:center;justify-content:space-between;
+ gap:12px;margin-bottom:11px}
+.chart-b-scrub label{font-weight:750;font-size:13px}
+.chart-b-scrub-head strong{font-size:11px;color:#7890a9;text-align:right}
+.chart-b-scrub input[type=range]{width:100%;height:27px;
+ display:block;accent-color:#2f6fda;cursor:pointer;touch-action:pan-y}
+.chart-b-scrub-extents{display:flex;justify-content:space-between;
+ font-size:10px;color:#93a3b4;margin-top:3px}
+@media(max-width:600px){
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+  gap:9px;margin:0 0 17px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-title{
+  font-size:29px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-intro{
+  font-size:11px}
+ .chart-b-assets button{min-width:49px;min-height:44px;
+  padding:8px 9px;font-size:12px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote{
+  padding:19px 13px 14px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-quote strong{
+  font-size:clamp(27px,7vw,35px)}
+ #view-overview .chart-area[data-approved-design="B"] .fw-legend{
+  padding:10px 13px 16px;gap:10px 12px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{
+  height:335px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-forecast-not-issued{
+  margin:8px 12px 9px}
+}
+@media(max-width:400px){
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-title{font-size:24px}
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-intro{
+  font-size:10px;line-height:1.45}
+ #view-overview .chart-area[data-approved-design="B"] .chart-b-eyebrow{font-size:8px}
+ .chart-b-assets button{min-width:43px;padding:8px}
+ #view-overview .chart-area[data-approved-design="B"] .fw-canvas{height:315px}
+}
+
+/* Chrome acceptance: actual B host must begin above 740px in overview,
+ * without weakening the test or hiding Official Compass current action. */
+@media(max-width:600px){
+ #view-overview .chart-area[data-approved-design="B"] .chart-kicker{
+  margin-bottom:11px;
+ }
+}

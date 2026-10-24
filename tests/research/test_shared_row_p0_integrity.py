@@ -17,6 +17,7 @@ sys.path.insert(0, str(PROJECT / "scripts/data_terminal"))
 import core_shared_row_materializer as materializer
 import prospective_evidence_controller as controller
 import shared_row_outcome_owner as outcome_owner
+import shared_row_outcome_receipt_gate as outcome_receipt_gate
 import top100_breadth_owner_collector as breadth_owner
 
 
@@ -305,6 +306,68 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "event_id already frozen"):
             controller.ingest(row_path)
 
+    def test_prospective_source_freshness_exact_boundary_and_all_three_stale_guards(self):
+        clock = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc)
+        materializer.require_fresh_sources(
+            clock,
+            ethbtc_hour=clock - timedelta(hours=3),
+            breadth_capture=clock - timedelta(hours=36),
+            btcd_verified=clock - timedelta(hours=36),
+            btcd_last_settled_print=clock - timedelta(hours=72),
+        )
+        cases = [
+            ("ETHBTC_LAST_SETTLED_HOUR_STALE", {"ethbtc_hour": clock - timedelta(hours=3, seconds=1)}),
+            ("BREADTH_DATED_OWNER_STALE", {"breadth_capture": clock - timedelta(hours=36, seconds=1)}),
+            ("BTCD_CMC_VERIFICATION_STALE", {"btcd_verified": clock - timedelta(hours=36, seconds=1)}),
+            ("BTCD_CMC_SETTLED_PRINT_STALE", {"btcd_last_settled_print": clock - timedelta(hours=72, seconds=1)}),
+            ("SOURCE_AFTER_INFORMATION_CUTOFF", {"ethbtc_hour": clock + timedelta(seconds=1)}),
+        ]
+        defaults = {
+            "ethbtc_hour": clock - timedelta(hours=1),
+            "breadth_capture": clock - timedelta(hours=12),
+            "btcd_verified": clock - timedelta(hours=12),
+            "btcd_last_settled_print": clock - timedelta(hours=24),
+        }
+        for expected_reason, override in cases:
+            with self.subTest(reason=expected_reason):
+                params = {**defaults, **override}
+                with self.assertRaisesRegex(materializer.Ineligible, expected_reason):
+                    materializer.require_fresh_sources(clock, **params)
+
+    def test_recent_reverification_cannot_make_old_settled_cmc_print_fresh(self):
+        fixture = FixtureRepo(self)
+        # Change all three original date/source-timestamp pairs together;
+        # freshness must track the latest settled market DAY, even after
+        # the whole amended CSV has been genuinely committed to fixture Git.
+        with fixture.btcd.open(newline="", encoding="utf-8") as handle:
+            old = list(csv.DictReader(handle))
+            fields = list(old[0])
+        for item in old:
+            stale_day = datetime.fromisoformat(item["date_utc"]) - timedelta(days=30)
+            item["date_utc"] = stale_day.date().isoformat()
+            item["source_timestamp"] = item["date_utc"] + "T00:00:00Z"
+            # The source_verified_timestamp is NOT moved back: it is fresh.
+        with fixture.btcd.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(old)
+        fixture.commit_path(fixture.btcd, "reverify ancient CMC settled market dates")
+        self.assert_rejected(fixture.build(), "BTCD_CMC_SETTLED_PRINT_STALE")
+
+    def test_materializer_does_not_invent_current_signal_from_old_owners(self):
+        fixture = FixtureRepo(self)
+        # The exact source files still pass schema, original Git, 168h continuity
+        # and provider identity, but no fresh hourly captures were delivered.
+        result = materializer.build(isoz(fixture.observation + timedelta(hours=4)))
+        self.assert_rejected(result, "ETHBTC_LAST_SETTLED_HOUR_STALE")
+
+    def test_prospective_replay_rejects_source_clock_staleness_even_if_hash_bound(self):
+        fixture = FixtureRepo(self)
+        row = fixture.build()["row"]
+        cutoff = fixture.observation + timedelta(hours=4)
+        with self.assertRaisesRegex(materializer.Ineligible, "ETHBTC_LAST_SETTLED_HOUR_STALE"):
+            controller.verify_source_bindings(row, cutoff)
+
     def test_exact_168_hour_contract_rejects_sparse_gap_and_duplicate(self):
         cases = [
             ({"hourly_count": 1}, "ETHBTC_EXACT_168_HOURS_MISSING"),
@@ -415,6 +478,16 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         self.assertEqual(detail[0]["baseline_reconciled"], "True")
         self.assertTrue(detail[0]["row_source_commit"])
         self.assertTrue(detail[0]["outcome_source_commit"])
+        # Production-shaped POSITIVE control: the actual outcome owner writes
+        # typed receipts and mutable scoring fields; verify they join exactly.
+        actual_matured = outcome_owner.read_csv(outcome_owner.ROWS)
+        self.assertEqual(len(actual_matured), 1)
+        original_index = outcome_receipt_gate.detail_index(detail)
+        outcome_receipt_gate.verify_row_outcomes(actual_matured[0], original_index)
+        forged = dict(actual_matured[0])
+        forged["outcome_24h"] = "0" if forged["outcome_24h"] == "1" else "1"
+        with self.assertRaisesRegex(ValueError, "direction differs"):
+            outcome_receipt_gate.verify_row_outcomes(forged, original_index)
         repeat = outcome_owner.run(isoz(fixture.observation + timedelta(hours=27)))
         self.assertEqual(repeat["horizons_written"], 0)
         self.assertEqual(len(outcome_owner.read_csv(outcome_owner.DETAIL)), 1)
@@ -455,7 +528,19 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
             check=True,
         )
         result = json.loads(completed.stdout)
-        self.assert_rejected(result, "P0_REPAIR_QUARANTINE_ACTIVE")
+        # This branch stages ACTIVE for a strictly future floor; original dates
+        # remain ineligible. Do NOT claim quarantined runtime after activation.
+        self.assert_rejected(result, "BEFORE_PROSPECTIVE_ELIGIBILITY_START")
+        # Preserve a real QUARANTINED state negative control independently of
+        # the branch state, rather than skipping quarantine on ACTIVE.
+        with self.assertRaisesRegex(materializer.Ineligible, "P0_REPAIR_QUARANTINE_ACTIVE"):
+            materializer.collection_gate(
+                {"prospective_eligibility_status": "CONTAINMENT_SENTINEL_NOT_AN_ACTIVATION_FLOOR"},
+                {"core_activation_rule": {
+                    "collection_state": "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE",
+                    "containment_floor_sentinel": True,
+                }},
+            )
         floor = datetime(2026, 8, 9, 1, 0, tzinfo=timezone.utc)
         first = materializer.context_block(floor + timedelta(days=27), floor)
         second = materializer.context_block(floor + timedelta(days=28), floor)

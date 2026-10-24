@@ -128,6 +128,12 @@ try{
     overflow.push(views[id].overflow)}
    $('[data-tab="compass"]').click();
    const before=$('#premium-now-action').textContent;
+   const sourceActionCode=$('#premium-action-code')?.textContent||'';
+   const sourceActionMeaning=$('#premium-action-meaning')?.textContent||'';
+   const actionReconciled=sourceActionCode.includes('OFFICIAL · HOLD_WAIT')?
+     before==='AFVENT'&&sourceActionMeaning.includes('afventsignal'):
+     !sourceActionCode.includes('OFFICIAL · HOLD_WAIT')&&before.length>0;
+
    const lens={};
    for(const id of ['holder','active','micro']){$('[data-investor-lens="'+id+'"]').click();
     lens[id]={active:$('[data-investor-lens="'+id+'"]').getAttribute('aria-pressed'),
@@ -138,9 +144,11 @@ try{
    $('[data-tab="results"]').click();
    const en=$('[data-lang="en"]');en.click();
    const enText=$('#tab-results [data-t="tabResults"]').textContent;
+   const enChart=$('#view-overview .cn-chart-jump')?.textContent;
    const enPath=$('[data-exp-t="pathPage"]').textContent;
    $('[data-lang="da"]').click();
    const daText=$('#tab-results [data-t="tabResults"]').textContent;
+   const daChart=$('#view-overview .cn-chart-jump')?.textContent;
    const daPath=$('[data-exp-t="pathPage"]').textContent;
    const prompt=$('#premium-proof-prompt').value;
    // A deterministic mocked clipboard validates the product click-handler and
@@ -159,8 +167,19 @@ try{
      Date.now()>=Date.parse(expiry);
    const sourceExpiryShown=sourceExpired?
      $('#source-status').textContent.includes('udløbet')&&
-     $('#source-clock').textContent.includes('Kompas gyldigt til'):true;
+     $('#source-clock').textContent.includes('Kompas udløb'):true;
    const sourceClockText=$('#source-clock').textContent;
+   const priceBanner=$('#price-source-warning');
+   const publicLive=(await (await fetch('/data/latest.json',{cache:'no-store'})).json())?.public_live_precision;
+   const ageCutoff=publicLive?.hourly_price_path?.observed_through_utc;
+   const priceAge=Date.parse(ageCutoff);
+   const ageSla=Number(publicLive?.freshness_sla_minutes)*60000;
+   const priceIsStale=Number.isFinite(priceAge)&&ageSla>0&&Date.now()-priceAge>ageSla;
+   const priceStatusIndependent=!!priceBanner&&
+     (priceIsStale?
+       (!priceBanner.hidden&&priceBanner.textContent.includes('Kursgraf forældet')&&
+        priceBanner.textContent.includes('Kompas vurderes separat')):
+       (priceBanner.hidden||priceBanner.textContent.includes('uden verificerede timepriser')));
    const sourceClock=$('#source-clock').getBoundingClientRect();
    // Only measure touch targets when their owning tab is actually visible.
    // A hidden tab's DOM elements correctly report 0x0, not a 0px product bug.
@@ -174,12 +193,137 @@ try{
    $('[data-nav-to="path"]').focus();$('[data-nav-to="path"]').click();
    const pathJumpFocus=document.activeElement?.id==='tab-path'&&!$('#view-path').hidden;
    $('[data-tab="overview"]').click();
+   // Hallmark-inspired adverse text test: simulate official source expiry
+   // without changing original source data or browser fixtures. The previous
+   // iPhone screenshot showed UNAVAILABLE split onto a dangling final letter.
+   const actionNode=$('#action'), originalAction=actionNode.textContent;
+   actionNode.textContent='UNAVAILABLE';
+   const adverseRange=document.createRange();
+   adverseRange.selectNodeContents(actionNode);
+   const actionPieces=Array.from(adverseRange.getClientRects()).filter(q=>q.width>0);
+   const actionCard=actionNode.closest('.decision-main').getBoundingClientRect();
+   const unavailableOneLine=actionPieces.length===1&&
+     actionPieces[0].left>=actionCard.left+1&&
+     actionPieces[0].right<=actionCard.right-1;
+   actionNode.textContent=originalAction;
+   // Real Chrome test: the approved chart must be easily discoverable on mobile,
+   // not buried below unrelated PATH/risk cards despite valid data in the DOM.
+   const graphLink=$('#view-overview .cn-chart-jump');
+   const graphHost=$('#official-path-chart');
+   // Video QA, verify real root, not AppDeploy synthetic visual reference.
+   const rootBStyle=!!graphHost?.classList.contains('frozen-week-chart')&&
+     getComputedStyle(graphHost).backgroundColor==='rgb(10, 23, 41)'&&
+     getComputedStyle($('.fw-quote')).backgroundColor==='rgb(10, 23, 41)'&&
+     getComputedStyle($('.fw-quote strong')).color==='rgb(247, 251, 255)';
+   const approvedBFrame=document.querySelector('.chart-area[data-approved-design="B"]');
+   const approvedBProbe={
+     outer:!!approvedBFrame,
+     frameBg:approvedBFrame?getComputedStyle(approvedBFrame).backgroundColor:null,
+     chart:!!approvedBFrame?.querySelector('#official-path-chart.frozen-week-chart'),
+     title:approvedBFrame?.querySelector('.chart-b-title')?.textContent?.trim()||null,
+     eyebrow:approvedBFrame?.querySelector('.chart-b-eyebrow')?.textContent?.trim()||null,
+     quoteBg:approvedBFrame?.querySelector('.fw-quote')?
+       getComputedStyle(approvedBFrame.querySelector('.fw-quote')).backgroundColor:null,
+     inlineStyle:approvedBFrame?.getAttribute('style'),
+     matchesApproved:approvedBFrame?.matches('.chart-area[data-approved-design="B"]'),
+     matchingBackgroundRules:[...document.styleSheets].flatMap(sheet=>{
+       let rules=[];try{rules=[...sheet.cssRules]}catch{}
+       return rules.filter(rule=>rule.selectorText&&approvedBFrame?.matches(rule.selectorText)&&
+         (rule.style?.getPropertyValue('background')||rule.style?.getPropertyValue('background-color'))).
+         map(rule=>({href:sheet.href,selector:rule.selectorText,bg:rule.style.getPropertyValue('background'),
+            color:rule.style.getPropertyValue('background-color'),
+            important:rule.style.getPropertyPriority('background')})).slice(-12);
+     }),
+     styles:[...document.styleSheets].map(sheet=>{
+       let rules=[];try{rules=[...sheet.cssRules]}catch{}
+       return {href:sheet.href,ruleCount:rules.length,approvedBRule:rules.some(rule=>rule.selectorText?.includes('chart-area[data-approved-design'))};
+     })
+   };
+   const approvedBVisual=approvedBProbe.outer&&
+     approvedBProbe.frameBg==='rgb(255, 255, 255)'&&
+     approvedBProbe.chart&&
+     approvedBProbe.title==='Weekly Outlook · B'&&
+     /FROSSEN PROGNOSE|FROZEN FORECAST/.test(approvedBProbe.eyebrow)&&
+     approvedBProbe.quoteBg==='rgb(10, 23, 41)';
+   const bOuterControls=document.querySelectorAll('.chart-b-assets [data-b-asset]').length===2 &&
+     !!document.querySelector('#chart-b-scrub-range') &&
+     document.querySelector('.chart-area[data-approved-design="B"] .fw-horizons')!==null;
+   const rootIsNotDemo=!document.querySelector('.cn-forward-demo a[href*="appdeploy.ai"]');
+   const pathRail=$('#premium-path-rail');
+   const contiguousPath=!!pathRail&&getComputedStyle(pathRail).display==='block'&&
+     pathRail.querySelectorAll('.path-node').length===10&&
+     getComputedStyle(pathRail,'::before').content!=='none';
+   const sourceRef=pathRail?.querySelectorAll('.path-node[data-kind="reference"]').length??0;
+   const sourceSafePhases=sourceRef<=1;
+   const liveBoxes=Array.from(document.querySelectorAll('#proof-live-windows .proof-live-window'));
+   const liveStatus=document.querySelector('#proof-live-status')?.textContent||'';
+   const liveProofSafe=liveBoxes.length===3?
+     liveBoxes.every(b=>b.querySelector('.proof-live-window-score')?.textContent?.trim()&&
+       b.querySelector('.proof-live-window-hours')?.textContent?.trim()):
+     liveBoxes.length===0&&/mangler|unavailable/i.test(liveStatus);
+   const proofSimple=!!document.querySelector('.proof-primer')&&
+     !!document.querySelector('.proof-journey')&&
+     document.querySelector('.proof-window-details')?.open===false&&
+     !!document.querySelector('#premium-proof-copy');
+   const ring=$('#premium-balance-dial');
+   const compassGraphic=!!ring&&['verified','unavailable'].includes(ring.dataset.state)&&
+     ring.getAttribute('aria-label')?.length>12;
+   const officialBull=Number($('#premium-bull')?.textContent||NaN);
+   const compassAngle=ring?.style.getPropertyValue('--dial-needle-angle')?.trim();
+   const evidenceNeedle=ring?.dataset.state==='verified'&&Number.isInteger(officialBull)?
+     compassAngle===String((officialBull-5)*14)+'deg':
+     compassAngle==='0deg';
+   const graphTop=graphHost?.getBoundingClientRect().top-
+      $('#view-overview').getBoundingClientRect().top;
+   const pathBeforeGraphJump=location.pathname;
+   graphLink?.click();
+   const graphClickSafe=location.pathname===pathBeforeGraphJump&&
+     !location.pathname.endsWith('/vnext/')&&document.activeElement===graphHost&&
+     !$('#view-overview').hidden;
+   const graphQuickAccess=!!graphLink&&graphLink.getAttribute('href')==='../#official-path-chart'&&
+     graphHost?.tabIndex===-1&&Number.isFinite(graphTop)&&graphTop<740&&
+     graphLink.textContent.includes('Se grafen')&&graphClickSafe;
+   checks.push(...sizes(graphLink?[graphLink]:[]));
    const chartButtons=Array.from(document.querySelectorAll('[data-fw-asset]'));
    const chartSource=await (await fetch('/data/latest.json',{cache:'no-store'})).json();
    const model=window.CNWeekChart;
    const hourlySource=chartSource.public_live_precision?.hourly_price_path;
    const actualModel=model?.model?.(chartSource,'BTC');
+   // Both languages must tell a screen reader that the observed source is
+   // STALE, not silently describe an old green curve as a live quote.
+   const previousChartLanguage=window.CNI18n?.language||'da';
+   let staleChartAccessible=false;
+   if(actualModel&&typeof model.graphDescription==='function'){
+     window.CNI18n={language:'da'};
+     const daStale=model.graphDescription({...actualModel,stale:true});
+     const daFresh=model.graphDescription({...actualModel,stale:false});
+     window.CNI18n={language:'en'};
+     const enStale=model.graphDescription({...actualModel,stale:true});
+     const enFresh=model.graphDescription({...actualModel,stale:false});
+     window.CNI18n={language:previousChartLanguage};
+     staleChartAccessible=daStale.startsWith('FORÆLDET OBSERVATION.')&&
+       enStale.startsWith('STALE OBSERVATION.')&&
+       !daFresh.startsWith('FORÆLDET OBSERVATION.')&&
+       !enFresh.startsWith('STALE OBSERVATION.')&&
+       daStale.includes('Grøn fuldt optrukken linje')&&
+       enStale.includes('Green solid line');
+   }
    const actualPlan=actualModel?model.linePlan(actualModel):null;
+   // Source-exact original low/high edges, never a fabricated seven-day close.
+   const ranges=actualModel?model.rangePlan(actualModel):[];
+   const originalRangesValid=!!actualModel&&
+     (actualModel.daily.length===7?ranges.length===0:
+       ranges.length===3&&ranges.every((r,i)=>{
+         const first=i===0?0:i===1?2:4,last=i===0?1:i===1?3:6;
+         const source=actualModel.rows[i];
+         return r.low.length===2&&r.high.length===2&&
+           r.low[0].time===actualModel.days[first].time&&
+           r.low[1].time===actualModel.days[last].closeTime&&
+           r.high[0].time===r.low[0].time&&
+           r.high[1].time===r.low[1].time&&
+           r.low.every(p=>p.value===source.forecast_low)&&
+           r.high.every(p=>p.value===source.forecast_high);
+       }));
    const hourlyPublished=hourlySource?.contract==='CN_PUBLIC_HOURLY_PRICE_PATH_v1'&&
       Array.isArray(hourlySource.BTC)&&hourlySource.BTC.length>0;
    const hourlyCurveProof=!hourlyPublished?true:!!actualModel&&
@@ -189,10 +333,17 @@ try{
    const actualPointCount=actualPlan?.actualRuns.reduce((sum,run)=>sum+run.length,0)??0;
    const hourlyPointCount=hourlySource?.BTC?.length??0;
    const forecastPointCount=actualPlan?.forecast.length??0;
+   // Original B is two curves ONLY if the forecast issuer published daily
+   // expected closes; show the source-denial banner otherwise, in both assets.
+   const issuerDenied=!!actualModel&&actualModel.daily.length!==7;
+   const missingForecastBanner=document.querySelector('#official-path-chart .fw-forecast-not-issued');
+
    const actualStatus=document.querySelector('.fw-progress-actual')?.textContent||'';
    const forecastStatus=document.querySelector('.fw-progress-forecast')?.textContent||'';
    const eligibleModels=typeof model?.model==='function'&&
      model.model(chartSource,'BTC')!==null&&model.model(chartSource,'ETH')!==null;
+   const graphBSourceHonesty=!eligibleModels||!issuerDenied||
+      !!missingForecastBanner?.textContent.includes('BLÅ PROGNOSEKURVE IKKE UDSTEDT');
    let chart='ABSTAIN_NO_ELIGIBLE_CHART_SOURCE';
    if(typeof model?.model!=='function')chart='FAIL_CHART_LIBRARY_MISSING';
    else if(eligibleModels&&chartButtons.length!==2)chart='FAIL_ELIGIBLE_CHART_CONTROLS_MISSING';
@@ -216,7 +367,7 @@ try{
          const chosen=document.querySelector('[data-fw-horizon="'+n+'"]');
          const notice=document.querySelector('.fw-horizon-availability')?.textContent||'';
          return chosen?.getAttribute('aria-pressed')==='true'&&
-           (n===7?/7.day original|7 dages original/i.test(notice):notice.includes('8–'+n));
+           (n===7?/seven.day frozen range|syv originale forventede|original seven.day expected/i.test(notice)||/kun originale syvdagesintervaller/i.test(notice):notice.includes('8–'+n));
        };
        const all=hit(14)&&hit(21)&&hit(7);
        forwardButtons=all?'PASS':'FAIL_HORIZON_TOGGLE_OR_SOURCE_DISCLOSURE';
@@ -225,22 +376,23 @@ try{
    }
    overflow.push(safeOverflow());
    return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
-    enText,enPath,daText,daPath,promptHasProof:prompt.includes('scorebook-index.json')&&
+    enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
+    unavailableOneLine,staleChartAccessible,rootBStyle,approvedBVisual,bOuterControls,approvedBProbe,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,evidenceNeedle,
     scorePrice:$('#premium-proof-price-status').textContent,
     scoreDirection:$('#premium-proof-direction-status').textContent,
     scorePullback:$('#premium-proof-pullback-status').textContent,
-    proofCopied,sourceExpiryShown,pathJumpFocus,
+    proofCopied,sourceExpiryShown,priceStatusIndependent,actionReconciled,pathJumpFocus,
     clockRight:sourceClock.right,clockLeft:sourceClock.left,clockWidth:sourceClock.width,
     clockHeight:sourceClock.height,clockText:sourceClockText,buttons:checks,chart,forwardButtons,
-    hourlyCurveProof,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
+    hourlyCurveProof,originalRangesValid,graphBSourceHonesty,hourlyPointCount,actualPointCount,forecastPointCount,actualStatus,forecastStatus,
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
   reports.push(report);
   assert.equal(report.width,width,'Wrong CDP viewport');
   assert.ok(report.overflow<=2,'Horizontal page overflow on '+width+'px '+JSON.stringify(report));
   assert.ok(report.clockText&&report.clockText!=='—'&&
-     /Kompas gyldigt til|Sidste levering/.test(report.clockText)&&
+     /Kompas gyldigt til|Kompas udløb|Sidste levering/.test(report.clockText)&&
      report.clockWidth>0&&report.clockHeight>0,'Source clock missing or placeholder '+width);
   assert.ok(report.clockRight<=width+2&&report.clockLeft>=-2,'Source expiry outside viewport '+width);
   assert.ok(Object.values(report.views).every(q=>q.visible&&q.exclusive&&q.overflow<=2),
@@ -251,11 +403,25 @@ try{
    'Investor lens changed official action');
   assert.equal(report.enText,'Results','English tab content switch missing');
   assert.equal(report.daText,'Resultater','Danish tab restoration missing');
+   assert.equal(report.enChart,'View chart · BTC / ETH ↓','English chart shortcut missing');
+   assert.equal(report.daChart,'Se grafen · BTC / ETH ↓','Danish chart shortcut missing');
+   assert.ok(report.graphQuickAccess,'Approved B graph must be discoverable near overview top: '+report.graphTop);
+  assert.ok(report.rootBStyle,'Official CN chart must be navy from quote to plot');
+  assert.ok(report.approvedBVisual,'Approved B white editorial card / navy source chart mismatch at '+width+': '+JSON.stringify(report.approvedBProbe));
+  assert.ok(report.bOuterControls,'Real B must have external source-bound BTC/ETH selector, scrubber and 7/14/21 controls');
+  assert.ok(report.rootIsNotDemo,'Public product should not link to competing synthetic demo');
+  assert.ok(report.contiguousPath&&report.sourceSafePhases,'PATH should be one source-honest dotted sequence');
+  assert.ok(report.proofSimple,'Proof explanation and progressive detail not rendered');
+  assert.ok(report.liveProofSafe,'Current-week source-joined D1–2/D3–4/D5–7 proof sequencing missing or fake');
+  assert.ok(report.compassGraphic,'Official evidence dial missing or not source-labelled');
+  assert.ok(report.evidenceNeedle,'Dial needle should match verified 0–10 Bull/Bear evidence, not a hardcoded angle');
   assert.equal(report.enPath,'The market cycle','English PATH translation missing');
   assert.equal(report.daPath,'Markeds­cyklussen','Danish PATH restoration missing');
   assert.ok(report.promptHasProof,'Proof AI prompt lacks original source/hash anchors');
   assert.ok(report.proofCopied,'AI verification copy button omitted or changed the original public audit prompt');
   assert.ok(report.sourceExpiryShown,'Expired Official Compass not disclosed in served homepage status');
+  assert.ok(report.actionReconciled,'Official Compass readable action must preserve original verified code without creating BUY/SELL');
+  assert.ok(report.priceStatusIndependent,'Public hourly source freshness must be disclosed separately from Compass');
   assert.ok(report.pathJumpFocus,'Overview-to-PATH anchor lost keyboard focus in hidden panel');
   assert.ok([report.scorePrice,report.scoreDirection,report.scorePullback].every(x=>
      typeof x==='string'&&x.trim()!==''&&x.trim()!=='—'&&x.trim()!=='UNAVAILABLE'),
@@ -267,7 +433,11 @@ try{
 
   assert.ok(!report.chart.startsWith('FAIL'),'BTC/ETH chart controls failed or valid chart source was dropped: '+report.chart);
   assert.ok(!report.forwardButtons.startsWith('FAIL'),'Approved B 7/14/21 horizon controls failed: '+report.forwardButtons);
+  assert.ok(report.unavailableOneLine,'The source-unavailable action must not split or clip on narrow mobile');
+  assert.ok(report.staleChartAccessible,'Stale public observed prices need explicit DA/EN screen-reader warning');
   assert.ok(report.hourlyCurveProof,'Verified hourly actual source dropped / gaps fabricated / forecast filled');
+  assert.ok(report.graphBSourceHonesty,'Approved Graph B must visibly acknowledge absence of source-issued blue expected-close curve');
+  assert.ok(report.originalRangesValid,'Three frozen source windows must form six exact low/high edges');
   if(report.hourlyPointCount>0){
     assert.equal(report.actualPointCount,report.hourlyPointCount,'Actual line must contain exactly each source-valid hour');
     assert.ok(report.actualStatus.includes('timesluk')&&report.forecastStatus,'Progress display must explain observed vs forecast');

@@ -117,6 +117,59 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertEqual(event["causal_authority"], "NONE")
 
 
+    def test_occ_genius_final_rule_is_official_research_event(self):
+        occ = "https://www.occ.gov/news-events/index-news-events.html"
+        bulletin = "https://www.occ.gov/news-issuances/bulletins/2026/bulletin-2026-50.html"
+        html = (
+            '<html><a href="/news-issuances/bulletins/2026/bulletin-2026-50.html">'
+            'GENIUS Act Regulations Final Rule</a></html>'
+        ).encode()
+        article = (
+            '<html><head><title>GENIUS Act Regulations: Final Rule</title></head>'
+            '<body>October 21, 2026. Stablecoin implementation rules.</body></html>'
+        ).encode()
+        sources = (("OCC", "PRIMARY", occ), ("P1", "PRIMARY", "https://p1.test/news"),
+                   ("P2", "PRIMARY", "https://p2.test/news"),
+                   ("P3", "PRIMARY", "https://p3.test/news"))
+        def fake_fetch(url, timeout=15):
+            return self.result(url, html if url == occ else article if url == bulletin else b"<html/>")
+        with tempfile.TemporaryDirectory() as td, patch.object(owner, "SOURCES", sources), patch.object(owner, "fetch", fake_fetch):
+            out = owner.run(Path(td), "2026-10-21")
+        self.assertEqual(out["daily_result"], "MATERIAL_CATALYSTS_FOUND")
+        self.assertEqual(out["run_status"], "PASS")
+        self.assertEqual(len(out["events"]), 1)
+        self.assertEqual(out["events"][0]["catalyst_subtype"], "REGULATORY_CATALYST")
+        self.assertEqual(out["events"][0]["source_receipts"][0]["url"], bulletin)
+
+    def test_official_source_allowlist_rejects_cross_domain_imitation(self):
+        occ = "https://www.occ.gov/news-events/index-news-events.html"
+        url = "https://www.occ.gov/news-issuances/news-releases/2026/nr-occ-2026-92.html"
+        self.assertTrue(owner.source_candidate_allowed("OCC", occ, url))
+        self.assertFalse(owner.source_candidate_allowed("OCC", occ, "https://occ.gov.evil.example/news-issuances/news-releases/2026/fake.html"))
+        self.assertFalse(owner.source_candidate_allowed("OCC", occ, "http://www.occ.gov/news-issuances/news-releases/2026/fake.html"))
+        self.assertFalse(owner.source_candidate_allowed("OCC", occ, "https://www.occ.gov/about/news.html"))
+
+    def test_china_equity_bear_market_headline_is_discovery_not_trade(self):
+        self.assertTrue(owner.relevant("China stock market enters bear market"))
+        risk_class, subtype, _, lanes = owner.classify("China stock market enters bear market", "SITUATION_ROOM")
+        self.assertEqual(risk_class, "MARKET_RELEVANT")
+        self.assertEqual(subtype, "EQUITY_RISK_SPILLOVER")
+        self.assertIn("MACRO_RISK", lanes)
+
+    def test_partial_primary_source_failure_cannot_claim_clean_no_event(self):
+        sources = (("OCC", "PRIMARY", "https://occ.test/landing"),
+                   ("P1", "PRIMARY", "https://p1.test/news"),
+                   ("P2", "PRIMARY", "https://p2.test/news"),
+                   ("P3", "PRIMARY", "https://p3.test/news"))
+        def fake_fetch(url, timeout=15):
+            return self.result(url, status="FAIL" if "occ.test" in url else "PASS")
+        with tempfile.TemporaryDirectory() as td, patch.object(owner, "SOURCES", sources), patch.object(owner, "fetch", fake_fetch):
+            out = owner.run(Path(td), "2026-10-21")
+        self.assertEqual(out["source_coverage"]["primary_pass"], 3)
+        self.assertEqual(out["source_coverage"]["primary_total"], 4)
+        self.assertEqual(out["daily_result"], "UNKNOWN_DUE_TO_SOURCE_FAILURE")
+        self.assertEqual(out["run_status"], "DEGRADED")
+
     def persisted_row(self, run_id, detection, status, daily_result, *, static=False):
         row = {
             "contract": "SITUATION_ROOM_DAILY_OWNER_v1",

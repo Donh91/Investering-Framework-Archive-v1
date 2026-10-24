@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const DAY=86400000,BLUE='#5f96ff',GREEN='#27c59a';
-  let instance=null,asset='BTC',selected=null,horizon=7;
+  let instance=null,asset='BTC',selected=null,horizon=7,scrubHour=null;
   const txt=(en,da)=>window.CNI18n?.language==='da'?da:en;
   const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num=v=>typeof v==='number'&&Number.isFinite(v)&&v>0;
@@ -77,9 +77,26 @@
     if(current.length)actualRuns.push(current);
     return {forecast,actualRuns};
   }
+  // Six DASHED low/high original source interval edges; no constructed daily close.
+  function rangePlan(m){
+    if(m.daily.length===7)return [];
+    return m.rows.map((source,index)=>{
+      const first=index===0?0:index===1?2:4,last=index===0?1:index===1?3:6;
+      return {
+        low:[{time:m.days[first].time,value:source.forecast_low},{time:m.days[last].closeTime,value:source.forecast_low}],
+        high:[{time:m.days[first].time,value:source.forecast_high},{time:m.days[last].closeTime,value:source.forecast_high}]
+      };
+    });
+  }
   // Screen-reader contract mirrors what is actually plotted. Source-absent
   // seven-day forecasts are intervals, not a daily forecast curve.
   function graphDescription(m){
+    // Accessible chart summary must fail stale CLOSED just like the visible
+    // source badge. A historical observed price is never a current quote.
+    const freshnessWarning=m.stale
+      ?txt('STALE OBSERVATION. Last source price is not a current market quote. ',
+           'FORÆLDET OBSERVATION. Seneste kildepris er ikke en aktuel markedskurs. ')
+      :'';
     const observed=(m.hourly?.length||0)>0||m.days.some(d=>d.actual);
     const observationCopy=m.hourly?.length
       ?txt('Green solid line: verified hourly closing prices only; missing hours break the line. Measured daily high/low whiskers require complete coverage.',
@@ -90,11 +107,11 @@
       :txt('No eligible observed daily prices yet: no green actual line or measured high/low whiskers are displayed.',
            'Endnu ingen gyldige observerede dagspriser: ingen grøn faktisk kurve eller målte lav/høj-markeringer vises.');
     if(m.daily.length){
-      return txt('Blue dotted line: seven original frozen daily expected closing prices, aligned to the end of each UTC day, with original forecast low/high envelope.',
+      return freshnessWarning+txt('Blue dotted line: seven original frozen daily expected closing prices, aligned to the end of each UTC day, with original forecast low/high envelope.',
                  'Blå stiplet linje: syv oprindeligt frosne forventede dagslukkepriser placeret ved hver UTC-dags afslutning med oprindeligt lav/høj-prognoseinterval.')
         +' '+observationCopy;
     }
-    return txt('No original seven-day closing-price forecast was published. Only three frozen price-range intervals are shown, with no daily forecast line.',
+    return freshnessWarning+txt('No original seven-day closing-price forecast was published. Only three frozen price-range intervals are shown, with no daily forecast line.',
                'Ingen oprindelig syvdagesprognose for dagslukkepriser blev offentliggjort. Kun tre frosne prisintervaller vises uden daglig prognoselinje.')
       +' '+observationCopy;
   }
@@ -119,8 +136,13 @@
           if([left,right,top,bottom].some(v=>v===null))return;
           const l=Math.max(0,left),rr=Math.min(size.width,right);
           const gradient=c.createLinearGradient(0,top,0,bottom);gradient.addColorStop(0,'rgba(95,150,255,.13)');gradient.addColorStop(1,'rgba(95,150,255,.045)');c.fillStyle=gradient;c.fillRect(l,top,rr-l,bottom-top);
-          c.strokeStyle='rgba(95,150,255,.44)';c.lineWidth=1;c.setLineDash([4,4]);
-          c.beginPath();c.moveTo(l,top);c.lineTo(rr,top);c.moveTo(l,bottom);c.lineTo(rr,bottom);c.stroke();c.setLineDash([]);
+          if(!m.approvedB){
+            // Preserve exact historical/legacy evidence outlines; only the
+            // approved B product simplifies the dominant visual to shaded
+            // evidence windows instead of pseudo-forecast blue lines.
+            c.strokeStyle='rgba(95,150,255,.44)';c.lineWidth=1;c.setLineDash([4,4]);
+            c.beginPath();c.moveTo(l,top);c.lineTo(rr,top);c.moveTo(l,bottom);c.lineTo(rr,bottom);c.stroke();c.setLineDash([]);
+          }
         });
       }
       // Approved B: original range evidence remains in the blue source bands.
@@ -145,9 +167,18 @@
     if(!host)return;
     const m=model(data,asset);if(!m){host.innerHTML='<p>'+txt('Frozen weekly data unavailable.','Frosne ugedata er ikke tilgængelige.')+'</p>';return;}
     const lib=window.LightweightCharts;
-    const last=m.days.filter(d=>d.actual).at(-1),lastHour=m.hourly.at(-1),picked=m.days.find(d=>d.index===selected)||last||m.days[0];selected=picked.index;
+    const last=m.days.filter(d=>d.actual).at(-1),sourceLast=m.hourly.at(-1);
+    const lastEligibleHour=sourceLast?Math.max(0,Math.min(167,Math.floor((sourceLast.time*1000-m.start)/3600000))):0;
+    if(scrubHour!==null)scrubHour=Math.min(lastEligibleHour,Math.max(0,scrubHour));
+    const shownUntil=scrubHour===null?Infinity:(m.start/1000+(scrubHour+1)*3600);
+    const visibleHours=m.hourly.filter(p=>p.time<=shownUntil);
+    const lastHour=visibleHours.at(-1);
+    const shownDays=m.days.map(d=>({...d,actual:d.closeTime<=shownUntil?d.actual:null}));
+    const plotModel={...m,hourly:visibleHours,days:shownDays,scrubbing:scrubHour!==null,
+      approvedB:!!host.closest?.('.chart-area[data-approved-design="B"]')};
+    const picked=m.days.find(d=>d.index===selected)||last||m.days[0];selected=picked.index;
     const rangeLabel=new Date(m.start).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{day:'numeric',month:'short',timeZone:'UTC'})+' – '+new Date(m.start+(horizon-1)*DAY).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
-    host.innerHTML='<div class="fw-toolbar"><div class="fw-assets" role="group" aria-label="'+txt('Chart asset','Grafens aktiv')+'">'+['BTC','ETH'].map(k=>'<button type="button" data-fw-asset="'+k+'" aria-pressed="'+(k===asset)+'">'+k+'</button>').join('')+'</div><span class="fw-period">'+(horizon/7)+'W <i>·</i> '+rangeLabel+'</span><button type="button" class="fw-reset" aria-label="'+txt('Reset chart view','Nulstil grafvisning')+'">⌖</button></div><div class="fw-quote"><div><span>'+asset+' / USD · '+txt(m.daily.length?'FORECAST VS ACTUAL':'WEEKLY RANGE ONLY',m.daily.length?'FORECAST VS FAKTISK':'KUN UGEINTERVAL')+'</span><strong>'+money(lastHour?.value??last?.actual?.close)+'</strong></div><div class="fw-source"><span class="'+(m.stale?'stale':'fresh')+'">'+txt(m.stale?'STALE SNAPSHOT':'OBSERVED',m.stale?'FORÆLDET ØJEBLIKSBILLEDE':'OBSERVERET')+'</span><small>'+escape(Number.isFinite(m.cutoff)?stamp(m.cutoff):txt('No observation time','Intet observationstidspunkt'))+'</small></div></div><div class="fw-legend"><span><i class="'+(m.daily.length?'forecast':'interval')+'"></i>'+txt(m.daily.length?'Frozen forecast · dashed':'Frozen source ranges · forecast unavailable',m.daily.length?'Frossen prognose · stiplet':'Kildeintervaller · prognose afventer')+'</span><span><i class="actual"></i>'+txt(m.hourly.length?'Actual price · hourly':'Actual price · daily',m.hourly.length?'Faktisk kurs · timevis':'Faktisk kurs · daglig')+'</span></div><div class="fw-progress-summary"><span class="fw-progress-actual">'+escape(txt(m.hourly.length?'Verified actual hourly closes: ':'Verified observed days: ',m.hourly.length?'Verificerede faktiske timesluk: ':'Verificerede observationsdage: '))+'<strong>'+(m.hourly.length||m.days.filter(d=>d.actual).length)+'</strong></span><span class="fw-progress-forecast">'+escape(txt(m.daily.length?'7 original forecast closes':'No published daily forecast line',m.daily.length?'7 oprindelige prognosepunkter':'Ingen offentliggjort dagsprognoselinje'))+'</span></div><div class="fw-canvas" role="img" aria-label="'+escape(graphDescription(m))+'"></div><div class="fw-days" role="group" aria-label="'+txt('Select UTC day','Vælg UTC-dag')+'">'+m.days.map(d=>'<button type="button" data-fw-day="'+d.index+'" aria-pressed="'+(picked.index===d.index)+'">'+new Date(d.time*1000).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{weekday:'short',timeZone:'UTC'})+'<small>'+new Date(d.time*1000).getUTCDate()+'</small></button>').join('')+'</div><div class="fw-readout" aria-live="polite"></div><div class="fw-note">'+txt(m.daily.length?'Dotted forecast covers the original seven UTC daily closes; solid actual follows only eligible observations. No intraday movement implied.':'Only three frozen range windows exist. No authentic daily forecast was published, so no forecast curve is drawn.',m.daily.length?'Den prikkede forecastkurve viser de oprindelige syv UTC-dagspunkter. Den fuldt optrukne faktiske kurve følger kun gyldige observationer. Ingen intradagbevægelse udledes.':'Der findes kun tre frosne prisintervaller. Ingen ægte dagsprognose blev offentliggjort, derfor tegnes ingen forecastkurve.')+'</div><div class="fw-footer"><span>'+txt('Frozen before outcomes','Fastlåst før udfald')+' · CN #'+m.live.public_issue_number+'</span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a></div><div class="fw-attribution" data-no-translate>Copyright (с) 2025 TradingView, Inc.</div>';
+    host.innerHTML='<div class="fw-toolbar"><div class="fw-assets" role="group" aria-label="'+txt('Chart asset','Grafens aktiv')+'">'+['BTC','ETH'].map(k=>'<button type="button" data-fw-asset="'+k+'" aria-pressed="'+(k===asset)+'">'+k+'</button>').join('')+'</div><span class="fw-period">'+(horizon/7)+'W <i>·</i> '+rangeLabel+'</span><button type="button" class="fw-reset" aria-label="'+txt('Reset chart view','Nulstil grafvisning')+'">⌖</button></div><div class="fw-quote"><div><span>'+asset+' / USD · '+txt(m.daily.length?'FORECAST VS ACTUAL':'WEEKLY RANGE ONLY',m.daily.length?'FORECAST VS FAKTISK':'KUN UGEINTERVAL')+'</span><strong>'+money(scrubHour!==null?lastHour?.value:(lastHour?.value??last?.actual?.close))+'</strong></div><div class="fw-source"><span class="'+(m.stale?'stale':'fresh')+'">'+txt(m.stale?'STALE SNAPSHOT':'OBSERVED',m.stale?'FORÆLDET ØJEBLIKSBILLEDE':'OBSERVERET')+'</span><small>'+escape(Number.isFinite(lastHour?.time)?stamp(lastHour.time*1000):Number.isFinite(m.cutoff)?stamp(m.cutoff):txt('No observation time','Intet observationstidspunkt'))+'</small><span class="fw-week-range">'+escape(rangeLabel)+'</span></div></div><div class="fw-legend"><span><i class="'+(m.daily.length?'forecast':'interval')+'"></i>'+txt(m.daily.length?'Frozen forecast · dashed':'Frozen source ranges · forecast unavailable',m.daily.length?'Frossen prognose · stiplet':'Kildeintervaller · prognose afventer')+'</span><span><i class="actual"></i>'+txt(m.hourly.length?'Actual price · hourly':'Actual price · daily',m.hourly.length?'Faktisk kurs · timevis':'Faktisk kurs · daglig')+'</span></div><div class="fw-progress-summary"><span class="fw-progress-actual">'+escape(txt(m.hourly.length?'Verified actual hourly closes: ':'Verified observed days: ',m.hourly.length?'Verificerede faktiske timesluk: ':'Verificerede observationsdage: '))+'<strong>'+(m.hourly.length||m.days.filter(d=>d.actual).length)+'</strong></span><span class="fw-progress-forecast">'+escape(txt(m.daily.length?'7 original forecast closes':'No published daily forecast line',m.daily.length?'7 oprindelige prognosepunkter':'Ingen offentliggjort dagsprognoselinje'))+'</span></div><div class="fw-canvas" role="img" aria-label="'+escape(graphDescription(m))+'"></div><div class="fw-days" role="group" aria-label="'+txt('Select UTC day','Vælg UTC-dag')+'">'+m.days.map(d=>'<button type="button" data-fw-day="'+d.index+'" aria-pressed="'+(picked.index===d.index)+'">'+new Date(d.time*1000).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{weekday:'short',timeZone:'UTC'})+'<small>'+new Date(d.time*1000).getUTCDate()+'</small></button>').join('')+'</div><div class="fw-readout" aria-live="polite"></div><div class="fw-note">'+txt(m.daily.length?'Dotted forecast covers the original seven UTC daily closes; solid actual follows only eligible observations. No intraday movement implied.':'Only three frozen range windows exist. No authentic daily forecast was published, so no forecast curve is drawn.',m.daily.length?'Den prikkede forecastkurve viser de oprindelige syv UTC-dagspunkter. Den fuldt optrukne faktiske kurve følger kun gyldige observationer. Ingen intradagbevægelse udledes.':'Der findes kun tre frosne prisintervaller. Ingen ægte dagsprognose blev offentliggjort, derfor tegnes ingen forecastkurve.')+'</div><div class="fw-footer"><span>'+txt('Frozen before outcomes','Fastlåst før udfald')+' · CN #'+m.live.public_issue_number+'</span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a></div><div class="fw-attribution" data-no-translate>Copyright (с) 2025 TradingView, Inc.</div>';
     // Approved B interface. These buttons change the visible time horizon,
     // never extend a frozen forecast or invent a future price path.
     if(host.ownerDocument?.createElement && host.querySelector){
@@ -164,17 +195,39 @@
         button.append(count,label);buttons.append(button);
       }
       const toolbar=host.querySelector('.fw-toolbar');
-      if(toolbar?.insertAdjacentElement)toolbar.insertAdjacentElement('afterend',buttons);
+      const outer=host.closest?.('.chart-area[data-approved-design="B"]');
+      outer?.querySelector('.fw-horizons')?.remove();
+      if(outer&&host.insertAdjacentElement)host.insertAdjacentElement('afterend',buttons);
+      else if(toolbar?.insertAdjacentElement)toolbar.insertAdjacentElement('afterend',buttons);
       const availability=host.ownerDocument.createElement('p');
       availability.className='fw-horizon-availability';
       availability.setAttribute('role','status');
       availability.textContent=horizon===7?
-        txt('7-day original source. Unpublished expected closes remain unplotted.',
-            '7 dages originalkilde. Manglende forventede dagsluk tegnes ikke.'):
+        txt(m.daily.length?'Original seven-day expected closes issued and frozen.':'Seven-day frozen range source only. No daily expected-close curve was issued.',
+            m.daily.length?'Syv originale forventede dagsluk udstedt og fastlåst.':'Kun originale syvdagesintervaller. Ingen daglig prognosekurve blev udstedt.'):
         txt('Days 8–'+horizon+': no prospectively frozen BTC/ETH price path issued. Only the original seven days and verified observations are plotted.',
             'Dag 8–'+horizon+': ingen forhåndsfrossen BTC/ETH-prissti udstedt. Kun de oprindelige syv dage og verificerede observationer tegnes.');
       const canvasHost=host.querySelector('.fw-canvas');
       if(canvasHost?.insertAdjacentElement)canvasHost.insertAdjacentElement('afterend',availability);
+    }
+    // Graph B needs two genuine curves. Never disguise three frozen price
+    // windows as a prospectively published expected-close trajectory.
+    // This notification is separate from the observed-price freshness badge.
+    if(!m.daily.length && host.ownerDocument?.createElement){
+      const note=host.ownerDocument.createElement('div');
+      note.className='fw-forecast-not-issued';
+      note.dataset.forecastState='UNISSUED';
+      note.setAttribute('role','status');
+      const marker=host.ownerDocument.createElement('span');
+      marker.className='fw-forecast-not-issued-marker';marker.setAttribute('aria-hidden','true');
+      const copy=host.ownerDocument.createElement('div');
+      const heading=host.ownerDocument.createElement('strong');
+      heading.textContent=txt('BLUE FORECAST CURVE NOT ISSUED','BLÅ PROGNOSEKURVE IKKE UDSTEDT');
+      const reason=host.ownerDocument.createElement('small');
+      reason.textContent=txt('Source contains original interval bounds, not a frozen day-by-day BTC/ETH forecast. The approved B two-line view activates only for genuine pre-outcome source points.',
+        'Kilden har originale prisintervaller, men ingen fastlåst dag-for-dag-prognose for BTC/ETH. Den godkendte B-graf med to kurver aktiveres kun ved ægte prognosepunkter fra før udfaldet.');
+      copy.append(heading,reason);note.append(marker,copy);
+      (host.querySelector('.fw-horizon-availability')||host.querySelector('.fw-canvas'))?.insertAdjacentElement('afterend',note);
     }
     function readout(d){
       const f=d.forecast,p=d.actual,r=d.range;
@@ -203,7 +256,7 @@
       else host.append(drawer);
     }
     host.querySelectorAll('[data-fw-day]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.fwDay);readout(m.days[selected]);});
-    host.querySelectorAll('[data-fw-asset]').forEach(b=>b.onclick=()=>{asset=b.dataset.fwAsset;mount(host,data);});
+    host.querySelectorAll('[data-fw-asset]').forEach(b=>b.onclick=()=>{asset=b.dataset.fwAsset;scrubHour=null;mount(host,data);});
     if(!lib){host.querySelector('.fw-canvas').innerHTML='<p>'+txt('Chart could not load. Exact values remain available below.','Grafen kunne ikke indlæses. Præcise værdier er stadig tilgængelige nedenfor.')+'</p>';return;}
     const canvas=host.querySelector('.fw-canvas');
     const values=[...m.rows.flatMap(r=>[r.forecast_low,r.forecast_high]),...m.daily.flatMap(p=>[p.low,p.high]),...m.hourly.flatMap(p=>[p.value]),...m.days.filter(d=>d.actual).flatMap(d=>[d.actual.low,d.actual.high])];
@@ -214,8 +267,18 @@
       return new Date(ms).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{weekday:'short',timeZone:'UTC'});
     }},crosshair:{mode:lib.CrosshairMode.Normal,vertLine:{color:'#6b809b',width:1,style:lib.LineStyle.Dashed,labelBackgroundColor:'#30435d'},horzLine:{color:'#6b809b',width:1,style:lib.LineStyle.Dashed,labelBackgroundColor:'#30435d'}},localization:{locale:window.CNI18n?.language==='da'?'da-DK':'en-US',priceFormatter:money,timeFormatter:t=>new Date(t*1000).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'})},handleScroll:{mouseWheel:false,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:false},handleScale:{mouseWheel:true,pinch:true,axisPressedMouseMove:{time:true,price:true}}});
     const opts={priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:true,lineWidth:2,autoscaleInfoProvider:()=>({priceRange:{minValue:min-padding,maxValue:max+padding}})};
-    const plan=linePlan(m);
+    const plan=linePlan(plotModel);
     const baseline=chart.addSeries(lib.LineSeries,{...opts,color:BLUE,lineType:lib.LineType.Simple,lineStyle:lib.LineStyle.Dashed,lineWidth:2});baseline.setData(plan.forecast);
+    // Source interval bounds, NOT prospective seven-day daily close forecasts.
+    // Genuine dashed chart series are reliably visible above grid/primitive.
+    // Approved B has no blue point forecast in UNAVAILABLE weeks. Original
+    // interval evidence stays as source-exact shaded blocks, not six false
+    // blue pseudo-price trajectories.
+    if(!host.closest?.('.chart-area[data-approved-design="B"]'))
+      for(const r of rangePlan(m))for(const segment of [r.low,r.high]){
+      const edge=chart.addSeries(lib.LineSeries,{...opts,color:'rgba(95,150,255,.86)',lineStyle:lib.LineStyle.Dashed,lineWidth:2,crosshairMarkerVisible:false,priceLineVisible:false,lastValueVisible:false});
+      edge.setData(segment);
+    }
     const scaleAnchor=chart.addSeries(lib.LineSeries,{...opts,color:'transparent',lineVisible:false,crosshairMarkerVisible:false});
     // Time-axis-only continuation, not a forecast series or observable price.
     // Never place a visible blue/green point beyond eligible source timestamps.
@@ -224,7 +287,7 @@
     // One original-source overlay in BOTH modes: exact 7d daily low/high envelope
     // plus observed high/low whiskers, or the three genuine legacy intervals.
     // Visual hierarchy remains just two primary closing-price strokes.
-    scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor));
+    scaleAnchor.attachPrimitive(new EvidenceOverlay(plotModel,scaleAnchor));
     // Separate observed runs rather than trusting a line to bridge missing evidence.
     plan.actualRuns.forEach((points,i)=>{const latest=i===plan.actualRuns.length-1;const series=chart.addSeries(lib.LineSeries,{...opts,color:GREEN,lineStyle:lib.LineStyle.Solid,lineWidth:4,pointMarkersVisible:true,pointMarkersRadius:3,lastValueVisible:latest,priceLineVisible:latest,priceLineColor:'rgba(39,197,154,.30)',priceLineStyle:lib.LineStyle.Dashed});series.setData(points);});
     chart.timeScale().fitContent();
@@ -232,15 +295,35 @@
     chart.subscribeCrosshairMove(p=>{if(p.time===undefined)return;const d=m.days.find(d=>p.time>d.time&&p.time<=d.closeTime)||m.days.find(d=>p.time===d.time&&d.index===0);if(d)select(d);});
     chart.subscribeClick(p=>{if(p.time===undefined)return;const d=m.days.find(d=>p.time>d.time&&p.time<=d.closeTime)||m.days.find(d=>p.time===d.time&&d.index===0);if(d)select(d);});
     host.querySelectorAll('[data-fw-day]').forEach(b=>b.onclick=()=>select(m.days[Number(b.dataset.fwDay)]));
-    host.querySelectorAll('[data-fw-asset]').forEach(b=>b.onclick=()=>{asset=b.dataset.fwAsset;mount(host,data);});
-    host.querySelectorAll('[data-fw-horizon]').forEach(button=>button.onclick=()=>{
+    host.querySelectorAll('[data-fw-asset]').forEach(b=>b.onclick=()=>{asset=b.dataset.fwAsset;scrubHour=null;mount(host,data);});
+    (host.closest?.('.chart-area')||host).querySelectorAll('[data-fw-horizon]').forEach(button=>button.onclick=()=>{
       const next=Number(button.dataset.fwHorizon);
       if(![7,14,21].includes(next))return;
       horizon=next;mount(host,data);
     });
     host.querySelector('.fw-reset').onclick=()=>chart.timeScale().fitContent();
+    const frame=host.closest?.('.chart-area[data-approved-design="B"]');
+    if(frame){
+      frame.querySelectorAll('[data-b-asset]').forEach(button=>{
+        button.setAttribute('aria-pressed',String(button.dataset.bAsset===asset));
+        button.onclick=()=>{asset=button.dataset.bAsset;scrubHour=null;selected=null;mount(host,data);};
+      });
+      const slider=frame.querySelector('#chart-b-scrub-range');
+      const playbackLabel=frame.querySelector('#chart-b-scrub-label');
+      if(slider){
+        slider.max=String(lastEligibleHour);
+        slider.value=String(scrubHour===null?lastEligibleHour:scrubHour);
+        slider.disabled=!sourceLast;
+        if(playbackLabel)playbackLabel.textContent=lastHour?stamp(lastHour.time*1000):txt('No observation yet','Endnu ingen observation');
+        slider.oninput=()=>{
+          const next=Number(slider.value);
+          if(!Number.isInteger(next)||next<0||next>lastEligibleHour)return;
+          scrubHour=next;selected=Math.min(6,Math.floor(next/24));mount(host,data);
+        };
+      }
+    }
     instance={chart,host,data};
   }
-  window.CNWeekChart={mount,model,linePlan,graphDescription};
+  window.CNWeekChart={mount,model,linePlan,rangePlan,graphDescription};
   document.addEventListener('cn-language-change',()=>{if(instance?.host.isConnected)mount(instance.host,instance.data);});
 })();

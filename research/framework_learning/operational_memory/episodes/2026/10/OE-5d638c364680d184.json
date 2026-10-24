@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-5d638c364680d184",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE. Owner authorized resolving and merging qualified open PRs in current chat 2026-10-22. Exact-head checks verified; no formal independent APPROVED claimed; Codex review quota unavailable. Public fallback uses fixed error code, preserving NOT_PUBLISHED/UNAVAILABLE semantics. Postmerge Pages/source consumer readback remains separate.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs": "d624df4aed8138334106e0aedc66430bc2e679c1",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "e45a644a5e0b7fa06f1f802d9313cc354910355a"
+  },
+  "source_commit_sha": "5d638c364680d184808a70a71144000f990df545",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-22T13:17:21-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "security(site): redact internal Compass fallback errors (#1732)"
+}

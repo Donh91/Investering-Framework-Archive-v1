@@ -22,12 +22,14 @@ KEYWORDS = (
     "treasury buyback", "buyback", "liquidity", "fomc", "interest rate", "rates",
     "sanction", "cyber", "hack", "security breach", "geopolit", "tariff",
     "market structure", "clarity act", "securities law", "regulation crypto",
+    "genius act", "bear market", "china stocks", "equity selloff",
 )
 
 SOURCES = (
     ("SITUATION_ROOM", "DISCOVERY_ONLY", "https://situationroom.space/briefings"),
     ("SEC", "PRIMARY", "https://www.sec.gov/newsroom/press-releases"),
     ("TREASURY", "PRIMARY", "https://home.treasury.gov/news/press-releases"),
+    ("OCC", "PRIMARY", "https://www.occ.gov/news-events/index-news-events.html"),
     ("WHITE_HOUSE", "PRIMARY", "https://www.whitehouse.gov/news/"),
     ("CFTC", "PRIMARY", "https://www.cftc.gov/PressRoom/PressReleases"),
     ("FEDERAL_RESERVE", "PRIMARY", "https://www.federalreserve.gov/newsevents/pressreleases.htm"),
@@ -206,8 +208,10 @@ def family_key(title: str) -> str:
 
 def classify(title: str, source_id: str) -> tuple[str, str, str, list[str]]:
     t = title.lower()
-    if any(k in t for k in ("regulation crypto", "crypto asset", "digital asset", "clarity act", "stablecoin", "tokenized")):
+    if any(k in t for k in ("regulation crypto", "crypto asset", "digital asset", "clarity act", "genius act", "stablecoin", "tokenized")):
         return "STRUCTURAL", "REGULATORY_CATALYST", "WEEKS_TO_MONTHS", ["CATALYST_NEWS", "MACRO_RISK", "CRYPTO_POLICY"]
+    if any(k in t for k in ("bear market", "china stocks", "equity selloff")):
+        return "MARKET_RELEVANT", "EQUITY_RISK_SPILLOVER", "HOURS_TO_DAYS", ["CATALYST_NEWS", "MACRO_RISK", "BTC", "ETH", "LEVERAGE"]
     if "buyback" in t or (source_id == "TREASURY" and "liquidity" in t):
         return "SYSTEMIC", "MACRO_LIQUIDITY_POLICY", "DAYS_TO_MONTHS", ["MACRO_RISK", "LIQUIDITY", "BTC", "ETH"]
     if any(k in t for k in ("fomc", "interest rate", "rates", "monetary policy")):
@@ -222,6 +226,9 @@ def classify(title: str, source_id: str) -> tuple[str, str, str, list[str]]:
 def source_candidate_allowed(source_id: str, base_url: str, absolute: str) -> bool:
     parsed = urlparse(absolute)
     base = urlparse(base_url)
+    if (parsed.scheme != "https" or not parsed.hostname or not base.hostname or
+        parsed.hostname.lower().removeprefix("www.") != base.hostname.lower().removeprefix("www.")):
+        return False
     path = parsed.path.rstrip("/")
     base_path = base.path.rstrip("/")
     if path == base_path:
@@ -235,6 +242,8 @@ def source_candidate_allowed(source_id: str, base_url: str, absolute: str) -> bo
         return low.startswith("/news/press-releases/")
     if source_id == "CFTC":
         return low.startswith("/pressroom/pressreleases/")
+    if source_id == "OCC":
+        return low.startswith(("/news-issuances/news-releases/", "/news-issuances/bulletins/"))
     if source_id == "FEDERAL_RESERVE":
         if not low.startswith("/newsevents/pressreleases/"):
             return False
@@ -365,6 +374,8 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         daily_result = "UNKNOWN_DUE_TO_SOURCE_FAILURE"
     elif events:
         daily_result = "MATERIAL_CATALYSTS_FOUND"
+    elif primary_pass < primary_total:
+        daily_result = "UNKNOWN_DUE_TO_SOURCE_FAILURE"
     elif unresolved:
         daily_result = "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES"
     elif current_discoveries:
@@ -378,7 +389,7 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         "run_id": "SRDO_" + hashlib.sha256((date_utc + detection).encode()).hexdigest()[:16],
         "observation_date_utc": date_utc,
         "detection_time_utc": detection,
-        "run_status": "PASS" if daily_result in {"MATERIAL_CATALYSTS_FOUND", "NO_NEW_MATERIAL_CATALYST"} else "DEGRADED",
+        "run_status": "PASS" if primary_pass == primary_total and daily_result in {"MATERIAL_CATALYSTS_FOUND", "NO_NEW_MATERIAL_CATALYST"} else "DEGRADED",
         "daily_result": daily_result,
         "source_coverage": {"primary_pass": primary_pass, "primary_total": primary_total, "receipts": receipts},
         "events": events,

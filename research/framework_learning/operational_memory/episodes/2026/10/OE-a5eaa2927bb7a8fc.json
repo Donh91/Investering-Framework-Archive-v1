@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/prompts/DAILY_DIRECTOR_SHADOW.txt",
+    "scripts/api_agent/augment_director_compounding_learning_context.py",
+    "scripts/api_agent/augment_director_news_intelligence_context.py",
+    "scripts/api_agent/check_delta_ready.py",
+    "scripts/api_agent/check_director_freshness.py",
+    "tests/api_agent/test_director_news_intelligence_context.py",
+    "tests/api_agent/test_director_situation_room_shadow.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-a5eaa2927bb7a8fc",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized 2026-10-22. Exact-head CI pass, source and paid-budget firewalls retained, research-only news context, deduplicated news-only analysis. Backup safepoint branch verified against premerge main; postmerge consumer readback pending.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/prompts/DAILY_DIRECTOR_SHADOW.txt": "61ec0b5bc7ccb14c062f0037da39554f579cf707",
+    "scripts/api_agent/augment_director_compounding_learning_context.py": "926d01d3c8d385082170f8b3279280cfb070c966",
+    "scripts/api_agent/augment_director_news_intelligence_context.py": "9f11f87bba2575d0994c9831d0cd070394f59b78",
+    "scripts/api_agent/check_delta_ready.py": "20483cfb19047a487826b6dcc46dbd5b823f5d92",
+    "scripts/api_agent/check_director_freshness.py": "11793d6d2a1f9e2bcc37ca1b8700c7ccdc99daed",
+    "tests/api_agent/test_director_news_intelligence_context.py": "20891a78e314cc03cff4395ba936abe49e1db42d",
+    "tests/api_agent/test_director_situation_room_shadow.py": "da320a9e83c282f162f84cf00c7fd719ed826d40"
+  },
+  "source_commit_sha": "a5eaa2927bb7a8fc126544744c0aea3ca7703f7a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-21T23:53:33-07:00",
+  "task_class": "API_AGENT",
+  "task_summary": "research(news): integrate verified news into Daily Director context (#1734)"
+}

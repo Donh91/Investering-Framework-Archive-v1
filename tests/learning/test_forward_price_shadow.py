@@ -257,6 +257,30 @@ class ShadowPriceTests(unittest.TestCase):
         self.assertIsNone(alt["high_usd"])
         self.assertIsNone(alt["joint_coverage_probability"])
 
+    def test_degenerate_optional_envelope_does_not_reject_primary(self):
+        # Most one-day observations are flat. Tail excursions still give the
+        # primary q10/q90 a valid band, while marginal q25/q75 collapses.
+        data = fixture(365)
+        for i, bar in enumerate(data["bars"]):
+            bar.update(close_usd=100.0,
+                       low_usd=90.0 if i % 5 == 0 else 100.0,
+                       high_usd=110.0 if i % 5 == 0 else 100.0)
+        data["source_rows_sha256"] = hashlib.sha256(canonical(data["bars"])).hexdigest()
+        before = copy.deepcopy(data)
+        result = build_shadow(data)
+        primary = result["horizons_days"]["1"]
+        optional = result["descriptive_q25_q75_horizons_days"]["1"]
+        self.assertEqual(data, before)
+        self.assertEqual(primary["status"], "SHADOW_BASELINE_ONLY")
+        self.assertAlmostEqual(primary["low_usd"], 90.0)
+        self.assertAlmostEqual(primary["high_usd"], 110.0)
+        self.assertEqual(optional["status"], "ABSTAIN")
+        self.assertEqual(optional["reason"], "DEGENERATE_DESCRIPTIVE_ENVELOPE")
+        self.assertIsNone(optional["low_usd"])
+        self.assertIsNone(optional["high_usd"])
+        self.assertIsNone(optional["joint_coverage_probability"])
+        self.assertEqual(result["authority"], "SHADOW_NOT_ISSUED")
+
     def test_missing_source_manifest_sha(self):
         self.reject(lambda x: x.update(source_manifest_sha256="x"))
 

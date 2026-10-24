@@ -68,14 +68,24 @@
   "missing_is_zero": false,
   "no_backdating": true,
   "prospective_activation": {
-    "activation_pr": null,
-    "collection_state": "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE",
+    "activation_pr": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1740",
+    "collection_state": "ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION",
     "earliest_theoretical_complete_ethbtc_window_utc": "2026-08-30T08:00:00Z",
     "implementation_merge_commit": "f7de1f0b92278d3d887077d40d61fc453fc9e084",
     "implementation_merged_at_utc": "2026-08-23T08:18:29Z",
     "post_repair_source_capture_not_before_utc": "2026-08-23T08:18:29Z",
     "readiness_must_be_reproduced_from_actual_bound_sources": true,
-    "rule": "A separate activation review must set a future floor only after the implementation merge and a complete 168-hour ETHBTC window, dated breadth bundle and CMC verification all captured after the implementation boundary."
+    "rule": "A separate activation review must set a future floor only after the implementation merge and a complete 168-hour ETHBTC window, dated breadth bundle and CMC verification all captured after the implementation boundary.",
+    "activation_evidence": {
+      "source_readiness_commit_sha": "fa579abe688f21613345e600294b6f8b9b9b9b5b",
+      "source_readiness_path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/ACTIVATION_SOURCE_READINESS_2026-10-22.md",
+      "latest_source_capture_at_utc": "2026-10-22T10:35:54Z",
+      "readiness_evidence_cutoff_utc": "2026-10-22T11:04:03Z",
+      "activation_reviewed_at_utc": "2026-10-22T11:05:00Z",
+      "activation_freeze_time_utc": "2026-10-22T11:06:08Z",
+      "activation_adjudication_path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/ACTIVATION_ADJUDICATION_2026-10-22.md",
+      "validator_repair_version": "SHARED_ROW_ACTIVATION_PHASE_GATE_v1_1"
+    }
   },
   "source_binding_contract": {
     "contract": "SHARED_ROW_SOURCE_BINDING_MANIFEST_v1",
@@ -98,10 +108,10 @@
     "reason": "INDEPENDENT_WORK_AUDIT_ARCHITECTURAL_RISK",
     "status": "P0_REPAIR_IMPLEMENTED_AWAITING_POST_REPAIR_EVIDENCE_AND_ACTIVATION_REVIEW"
   },
-  "prospective_eligibility_start": "2026-09-30T00:00:00Z",
-  "prospective_eligibility_status": "CONTAINMENT_SENTINEL_NOT_AN_ACTIVATION_FLOOR",
+  "prospective_eligibility_start": "2026-10-24T12:00:00Z",
+  "prospective_eligibility_status": "ACTIVE_POST_REPAIR_FLOOR",
   "prospective_robustness_design": {
-    "activation": "PREREGISTERED_NOT_ACTIVE_UNTIL_NEW_FLOOR",
+    "activation": "ACTIVATE_PROSPECTIVE_ONLY_AT_POST_REPAIR_FLOOR",
     "calendar_only_verdict_forbidden": true,
     "fixed_block_anchor": "FINAL_POST_REPAIR_ELIGIBILITY_FLOOR",
     "fixed_block_width_days": 28,

@@ -11,7 +11,7 @@
   },
   "contract": "FRAMEWORK_STRATEGIST_BRIEF_v1",
   "covered_source_count": 8,
-  "generated_at_utc": "2026-10-21T19:30:13.820060Z",
+  "generated_at_utc": "2026-10-24T08:22:10.165977Z",
   "goal_alignment": [
     {
       "evidence_requirement": "Independent production readback and accepted safety/integrity receipts",
@@ -66,12 +66,12 @@
           "contract": "FRAMEWORK_RESOURCE_BUDGET_ADVISORY_v1",
           "name": "resource_budget",
           "path": "research/framework_learning/resource_budget/LATEST.json",
-          "sha256": "270503984b4e0c500a49ecb496d13aca5c3a839af5442847e2315ef42be113c9",
-          "source_generated_at_utc": "2026-10-21T19:30:13.773388Z",
+          "sha256": "0de8f93e4003979beb53053076d7d107268447286e3f93bffa048cf91079a3f8",
+          "source_generated_at_utc": "2026-10-24T08:22:10.133017Z",
           "status": "CURRENT"
         }
       ],
-      "evidence_fingerprint": "1dc8c26b745390ba48742f07",
+      "evidence_fingerprint": "6c9cdd045c960bb725c4e06d",
       "evidence_sources": [
         "resource_budget"
       ],
@@ -84,46 +84,6 @@
       "routing": "SUPERVISOR_ATTENTION",
       "scientific_status": "NOT_ASSESSED",
       "severity": "CRITICAL"
-    },
-    {
-      "authority": "PROPOSAL_ONLY",
-      "automatic_code_write": false,
-      "automatic_grok_call": false,
-      "automatic_market_change": false,
-      "code": "OPERATIONAL_INTEGRITY_ATTENTION",
-      "dispatch_allowed": false,
-      "evidence_bindings": [
-        {
-          "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
-          "name": "health",
-          "path": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
-          "sha256": "48051285eafa4907f40f3541d90abeda62970e1b9fd1230014773d99e82ff159",
-          "source_generated_at_utc": "2026-10-21T19:26:18.058958Z",
-          "status": "CURRENT"
-        },
-        {
-          "contract": "SELF_IMPROVEMENT_ADVISORY_v1",
-          "name": "self_improvement",
-          "path": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
-          "sha256": "1ccf9bc3a222fd0ed5becad296f8e9358a5868189c3f55a31d4e4e511c532e5d",
-          "source_generated_at_utc": "2026-10-21T19:30:13.723071Z",
-          "status": "CURRENT"
-        }
-      ],
-      "evidence_fingerprint": "0adc039a604d447d1180b49f",
-      "evidence_sources": [
-        "health",
-        "self_improvement"
-      ],
-      "goal_id": "RELIABILITY",
-      "grok_bridge_state": "NOT_REQUESTED",
-      "id": "3b1feeed0d1f54dd1c4cc29e",
-      "interpretation": "Operational degradation is observed; not proof of any fixed root cause.",
-      "owner": "#1156",
-      "question": "Ask existing #1156 to check root-cause and production evidence before declaring recovery.",
-      "routing": "SUPERVISOR_ATTENTION",
-      "scientific_status": "NOT_ASSESSED",
-      "severity": "HIGH"
     },
     {
       "authority": "PROPOSAL_ONLY",
@@ -155,42 +115,73 @@
       "routing": "SUPERVISOR_ATTENTION",
       "scientific_status": "NOT_ASSESSED",
       "severity": "HIGH"
+    },
+    {
+      "authority": "PROPOSAL_ONLY",
+      "automatic_code_write": false,
+      "automatic_grok_call": false,
+      "automatic_market_change": false,
+      "code": "MATERIAL_HYPOTHESIS_FAMILY_REVISION",
+      "dispatch_allowed": false,
+      "evidence_bindings": [
+        {
+          "contract": "WEEKLY_LEARNING_DELTA_v1",
+          "name": "weekly_delta",
+          "path": "research/framework_learning/LATEST_WEEKLY_LEARNING_DELTA.json",
+          "sha256": "44b1a6fa584a4c5741eba8f52e3f0296b99e0bc2cad69eabd6c335db0f71fa0c",
+          "source_generated_at_utc": "2026-10-24T08:22:10.012842Z",
+          "status": "CURRENT"
+        }
+      ],
+      "evidence_fingerprint": "f4d88a63d2a0029aafbd147f",
+      "evidence_sources": [
+        "weekly_delta"
+      ],
+      "goal_id": "RESEARCH_RIGOR",
+      "grok_bridge_state": "NOT_REQUESTED",
+      "id": "a5e6d3f15063d24a1fde6155",
+      "interpretation": "5 distinct changed compounding-family identities; may share original roots, never evidence of alpha.",
+      "owner": "#1157",
+      "question": "Which changed hypothesis families have genuinely new evidence, and which merely changed labels?",
+      "routing": "SUPERVISOR_ATTENTION",
+      "scientific_status": "DESCRIPTIVE_RESEARCH_ONLY",
+      "severity": "MEDIUM"
     }
   ],
   "source_receipts": {
     "health": {
       "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
       "path": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
-      "sha256": "48051285eafa4907f40f3541d90abeda62970e1b9fd1230014773d99e82ff159",
-      "source_generated_at_utc": "2026-10-21T19:26:18.058958Z",
+      "sha256": "4044bad97f74bf7df971dda8cef25cb09387521ab28d327d40b56b4c2fa2ab3a",
+      "source_generated_at_utc": "2026-10-24T08:17:48.998970Z",
       "status": "CURRENT"
     },
     "learning_memory": {
       "contract": "FRAMEWORK_LEARNING_MEMORY_v1",
       "path": "research/framework_learning/LATEST_LEARNING_MEMORY.json",
-      "sha256": "ae8b3e68bdaf5920ba80b372dc53816f10967b5c5839ce6c954f9cdbbe8a2cb3",
-      "source_generated_at_utc": "2026-10-21T19:30:13.643116Z",
+      "sha256": "c95e684bf6c3e66c80d0a00ff27e38961acb77fb7917bb45261e79bc7ccac6c6",
+      "source_generated_at_utc": "2026-10-24T08:22:10.012842Z",
       "status": "CURRENT"
     },
     "resource_budget": {
       "contract": "FRAMEWORK_RESOURCE_BUDGET_ADVISORY_v1",
       "path": "research/framework_learning/resource_budget/LATEST.json",
-      "sha256": "270503984b4e0c500a49ecb496d13aca5c3a839af5442847e2315ef42be113c9",
-      "source_generated_at_utc": "2026-10-21T19:30:13.773388Z",
+      "sha256": "0de8f93e4003979beb53053076d7d107268447286e3f93bffa048cf91079a3f8",
+      "source_generated_at_utc": "2026-10-24T08:22:10.133017Z",
       "status": "CURRENT"
     },
     "self_improvement": {
       "contract": "SELF_IMPROVEMENT_ADVISORY_v1",
       "path": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
-      "sha256": "1ccf9bc3a222fd0ed5becad296f8e9358a5868189c3f55a31d4e4e511c532e5d",
-      "source_generated_at_utc": "2026-10-21T19:30:13.723071Z",
+      "sha256": "9e0dc958f43d282174d3c1bdbeb32b25ef8a2b1346698e09b2e788a6c3226691",
+      "source_generated_at_utc": "2026-10-24T08:22:10.076012Z",
       "status": "CURRENT"
     },
     "staleness": {
       "contract": "METHOD_STALENESS_REGISTER_v1",
       "path": "research/framework_learning/LATEST_METHOD_STALENESS_REGISTER.json",
-      "sha256": "4792cd3f11058c80f2707d53c072a6b049b7d00ed40ce9e082a744291c0c5f8d",
-      "source_generated_at_utc": "2026-10-21T19:30:13.643116Z",
+      "sha256": "593be94524a742dc94b07c505965c954da93ba0aaa90d2bdfcdc962006f2f27d",
+      "source_generated_at_utc": "2026-10-24T08:22:10.012842Z",
       "status": "CURRENT"
     },
     "strategic_intent": {
@@ -203,15 +194,15 @@
     "unconsumed": {
       "contract": "UNCONSUMED_INFORMATION_REGISTER_v1",
       "path": "research/framework_learning/LATEST_UNCONSUMED_INFORMATION.json",
-      "sha256": "c47894f09c61c17fc1db29c0b81eeb2045e7119c9250f2a982b72edaec8ca953",
-      "source_generated_at_utc": "2026-10-21T19:30:13.643116Z",
+      "sha256": "6b6cdd3fce615ffacaf9e0c20d33b602088be046ec561591bd761d3e03f67440",
+      "source_generated_at_utc": "2026-10-24T08:22:10.012842Z",
       "status": "CURRENT"
     },
     "weekly_delta": {
       "contract": "WEEKLY_LEARNING_DELTA_v1",
       "path": "research/framework_learning/LATEST_WEEKLY_LEARNING_DELTA.json",
-      "sha256": "c63fb44e91ae6f90176771122a7270bd30f0f6e8e4d917a7f6f1eb55f409b9ba",
-      "source_generated_at_utc": "2026-10-21T19:30:13.643116Z",
+      "sha256": "44b1a6fa584a4c5741eba8f52e3f0296b99e0bc2cad69eabd6c335db0f71fa0c",
+      "source_generated_at_utc": "2026-10-24T08:22:10.012842Z",
       "status": "CURRENT"
     },
     "weekly_forensics": {

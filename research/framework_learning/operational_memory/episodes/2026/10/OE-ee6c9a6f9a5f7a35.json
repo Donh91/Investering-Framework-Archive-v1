@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/shared-row-tournament-research-gate.yml",
+    "scripts/research/shared_row_activation_phase_gate.py",
+    "scripts/research/validate_core_prospective_freeze.py",
+    "tests/research/test_shared_row_activation_phase_gate.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-ee6c9a6f9a5f7a35",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-complete-phase-activation-fail-closed-controls-1739",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(task2): enforce frozen definitions, runtime parity, readiness/adjudication and freeze clocks * fix(task2): bind activation validator to actual runtime state * test(task2): add runtime, frozen decision, timestamp and evidence fail-closed cases * ci(task2): rerun research gate when phase-activation helper changes",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/shared-row-tournament-research-gate.yml": "e0f91135d9ac1904948cb8c2a5f1f940289065e3",
+    "scripts/research/shared_row_activation_phase_gate.py": "2901a2230f94edf882348916b6da8d68208f2284",
+    "scripts/research/validate_core_prospective_freeze.py": "0bd97f52421d8d65007629ddba0f6244b37ca37f",
+    "tests/research/test_shared_row_activation_phase_gate.py": "af5d7ab3e9f14f147df43519390a28739eac8b9c"
+  },
+  "source_commit_sha": "ee6c9a6f9a5f7a355617268354118eb567e78d00",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-22T04:01:50-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): complete phase-activation fail-closed controls (#1739)"
+}

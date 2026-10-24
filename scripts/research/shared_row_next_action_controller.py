@@ -15,6 +15,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from backtest_engine.statistics import wilson_interval
+from shared_row_tournament_weekly import filter_consumer_rows
 
 
 DEFAULT_ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
@@ -423,12 +424,18 @@ def main():
         raise SystemExit("INVALID_NOW")
 
     policy = json.loads((root / "RESEARCH_NEXT_ACTION_POLICY_v1.json").read_text())
-    rows = read_csv(root / "data/PROSPECTIVE_SHARED_ROW_LEDGER.csv")
-    divs = read_csv(root / "14_DIVERGENCE_FNP_LEDGER.csv")
+    raw_rows = read_csv(root / "data/PROSPECTIVE_SHARED_ROW_LEDGER.csv")
+    raw_divs = read_csv(root / "14_DIVERGENCE_FNP_LEDGER.csv")
     hist_path = root / "data/NEXT_ACTION_LEDGER.csv"
     history = read_csv(hist_path)
     registry = candidate_registry(root)
     runtime = json.loads((root / "RUNTIME_STATUS.json").read_text())
+    # Use exactly the same source- and immutable-row gate as weekly/relevance;
+    # no autonomous stress/review packet may consume raw unverified outcomes.
+    rows, divs, exclusions = filter_consumer_rows(
+        raw_rows, raw_divs, runtime,
+        outcome_details=read_csv(root / "data/OUTCOME_DETAIL_LEDGER.csv"),
+    )
     floor = parse_dt(runtime.get("core_prospective_eligibility_start"))
     ev = evidence(rows, divs, policy, floor)
     action, target, reason = choose_action(root, rows, ev, policy, now, history)
@@ -442,6 +449,13 @@ def main():
         "automatic_next_action_selection": True,
         "research_action_gate": "JUSTIFIED" if action in {"PROMOTE_FOR_CANONICAL_REVIEW", "DEPRIORITIZE", "RESEARCH_NEW_HYPOTHESIS", "STRESS_TEST", "INVESTIGATE_DIVERGENCE", "INVESTIGATE_DATA_GAP"} else "COLLECT_MORE_EVIDENCE",
         "terminal_verdict": "INSUFFICIENT_EVIDENCE",
+        "consumer_integrity_filter": {
+            "raw_rows": len(raw_rows),
+            "raw_divergences": len(raw_divs),
+            "excluded": exclusions,
+            "eligible_rows": len(rows),
+            "eligible_divergences": len(divs),
+        },
     }
 
     if args.dry_run:

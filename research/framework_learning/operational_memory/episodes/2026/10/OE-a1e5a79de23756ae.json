@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_terminal/situation_room_daily_owner.py",
+    "tests/data_terminal/test_situation_room_daily_owner.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-a1e5a79de23756ae",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "news-occ-primary-source-fail-closed-partial-coverage",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized 2026-10-22. Exact-head source/daily-capture CI green, four new source integrity regressions pass, current main and premerge safepoint verified. Research-only. Postmerge natural source+Director readback still required.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_terminal/situation_room_daily_owner.py": "3a512c827a8d78158a00c090ef3d167ad3f9cf0e",
+    "tests/data_terminal/test_situation_room_daily_owner.py": "fcf24beada503b7402d7d7754d313268f43d0218"
+  },
+  "source_commit_sha": "a1e5a79de23756aea54fcbfd4bb7b49e10571d82",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-21T23:59:30-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(news): add OCC primary source and fail-closed partial coverage (#1735)"
+}

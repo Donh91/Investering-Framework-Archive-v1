@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/shared-row-tournament-research-gate.yml",
+    "scripts/research/shared_row_next_action_controller.py",
+    "scripts/research/shared_row_outcome_receipt_gate.py",
+    "scripts/research/shared_row_tournament_weekly.py",
+    "tests/research/test_shared_row_consumer_integrity.py",
+    "tests/research/test_shared_row_outcome_receipt_gate.py",
+    "tests/research/test_shared_row_p0_integrity.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-7c8e517a61476951",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-matured-outcomes-divergences-before-edge-scoring-1744",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(task2): add fail-closed outcome receipt and maturity-clock verifier * fix(task2): require one hash-bound matured outcome receipt per scored horizon * fix(task2): bind autonomous research decisions to current exact outcome-detail ledger * test(task2): prohibit forged matured outcome without original detail receipt * test(task2): prove mature outcome provenance, clock and parent mismatch rejection * ci(task2): require matured-outcome receipt and tamper-negative test suite * test(task2): validate actual outcome owner receipt against the research scoring gate * fix(task2): require diver",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/shared-row-tournament-research-gate.yml": "61190e35e7c96d050a7e0d30d44ecbf4c12bab74",
+    "scripts/research/shared_row_next_action_controller.py": "6dfcfcce378ddb179f84dcf51a50d65dbad7cb19",
+    "scripts/research/shared_row_outcome_receipt_gate.py": "6075ecd3130c54de4da76647299bb9aac9a44b18",
+    "scripts/research/shared_row_tournament_weekly.py": "b2156be76502cb7897a95d45e68b2da43dd551f2",
+    "tests/research/test_shared_row_consumer_integrity.py": "76b33b31b4daa185e06460985f565be21bd636f3",
+    "tests/research/test_shared_row_outcome_receipt_gate.py": "a36845e97c6553a47dd16d96e649871cc0be7196",
+    "tests/research/test_shared_row_p0_integrity.py": "f84303c88ef8f694812c12cd2aaf9d343448e8c3"
+  },
+  "source_commit_sha": "7c8e517a614769518f9ee668b4a2b27b866f418f",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-22T06:01:42-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): bind matured outcomes and divergences before edge scoring (#1744)"
+}

@@ -72,6 +72,34 @@ class ShadowCompassV2OutcomeTests(unittest.TestCase):
             writer.writerows(rows)
         return root / forecast_rel
 
+    def test_shadow_target_due_before_issue_is_quarantined_without_write(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            path = self.fixture(root)
+            doc = json.loads(path.read_text())
+            doc["issued_at_utc"] = "2026-09-01T13:00:00Z"
+            path.write_text(json.dumps(doc))
+            before = path.read_bytes()
+            out = mature_one(root, path, "12h", datetime(2026, 9, 1, 14, tzinfo=timezone.utc))
+            self.assertEqual(out["status"], "QUARANTINED_NONPROSPECTIVE_TIME_BASIS")
+            self.assertEqual(out["reason"], "TARGET_NOT_AFTER_ISSUED_AT")
+            self.assertEqual(path.read_bytes(), before)
+            self.assertFalse((root / "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes").exists())
+
+    def test_shadow_future_reference_is_quarantined_without_write(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            path = self.fixture(root)
+            doc = json.loads(path.read_text())
+            doc["issued_at_utc"] = "2026-08-31T23:59:00Z"
+            path.write_text(json.dumps(doc))
+            before = path.read_bytes()
+            out = mature_one(root, path, "12h", datetime(2026, 9, 1, 14, tzinfo=timezone.utc))
+            self.assertEqual(out["status"], "QUARANTINED_NONPROSPECTIVE_TIME_BASIS")
+            self.assertEqual(out["reason"], "START_REFERENCE_AFTER_ISSUED_AT")
+            self.assertEqual(path.read_bytes(), before)
+            self.assertFalse((root / "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes").exists())
+
     def test_cannot_mature_before_horizon(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

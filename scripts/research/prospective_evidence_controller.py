@@ -364,6 +364,15 @@ def verify_source_bindings(row: dict[str, Any], cutoff: datetime) -> dict[str, A
     state = "FALLING_PATH" if c < b_value < a else "RISING_RECLAIM" if b_value < a and c > b_value else "MIXED_PATH"
     if row.get("btcd_provider") != "CoinMarketCap" or row.get("btcd_derived_state") != state:
         raise ValueError("BTC.D row fields do not reconcile to bound source")
+    # Replay precisely the issuance-time source age guard, so even a
+    # correctly hashed but late-submitted/stale row cannot reach any consumer.
+    core.require_fresh_sources(
+        cutoff,
+        ethbtc_hour=baseline["ts"],
+        breadth_capture=retrieval,
+        btcd_verified=max(btcd_verified),
+        btcd_last_settled_print=core.parse_ts(btcd_rows[-1]["source_timestamp_utc"]),
+    )
     return {"manifest": manifest, "ethbtc_window": window, "baseline": expected_baseline}
 
 

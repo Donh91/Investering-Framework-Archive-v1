@@ -73,11 +73,63 @@ def evaluate(context: Path, output_root: Path, now: datetime | None = None) -> d
             if run_id:
                 seen.add(run_id)
     unseen = current_run_id not in seen
+    # A verified news event may deserve analysis even when the market owner
+    # run was already analyzed. Count only completed, non-blocked Director
+    # outputs, never skipped contexts, as proof that the news was processed.
+    try:
+        context_data = json.loads(context.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        context_data = {}
+    news = context_data.get("news_intelligence")
+    news_fp = None
+    if (isinstance(news, dict)
+        and news.get("news_only_review_eligible") is True
+        and news.get("verified_count", 0) > 0
+        and news.get("canonical_effect") is False
+        and news.get("portfolio_effect") is False):
+        candidate = news.get("event_fingerprint")
+        if isinstance(candidate, str) and len(candidate) == 64:
+            news_fp = candidate
+    news_analyzed = False
+    if news_fp and output_root.exists():
+        for old_context in output_root.rglob("context.json"):
+            previous_output = old_context.parent / "DAILY_DIRECTOR_OUTPUT.json"
+            if not previous_output.is_file():
+                continue
+            try:
+                old = json.loads(old_context.read_text(encoding="utf-8"))
+                outcome = json.loads(previous_output.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if not isinstance(old, dict) or not isinstance(outcome, dict):
+                continue
+            if outcome.get("status") in {"BLOCKED", "SKIPPED", "UNAVAILABLE", "FAILED"}:
+                continue
+            old_news = old.get("news_intelligence")
+            if isinstance(old_news, dict) and old_news.get("event_fingerprint") == news_fp:
+                news_analyzed = True
+                break
+    news_ready = bool(news_fp and not news_analyzed)
+    coverage = context_data.get("coverage") if isinstance(context_data.get("coverage"), dict) else {}
+    try:
+        comparable = int(coverage.get("comparable_numeric_metrics", 0))
+    except (ValueError, TypeError):
+        comparable = 0
+    market_ready = comparable > 0 and context_data.get("delta_status") in {
+        "DELTA_READY", "DELTA_DEGRADED_STALE_PREDECESSOR"
+    }
+    # Do not rerun on yesterday's already analyzed news merely because a
+    # different market capture ID appeared without a material market delta.
+    ready = (unseen and market_ready) or news_ready
     return {
         **diagnostics,
         "identity_unseen": unseen,
-        "fresh_ready": unseen,
-        "fresh_reason": "NEW_OWNER_RUN_FRESH_SOURCE" if unseen else "OWNER_RUN_ALREADY_ANALYZED",
+        "news_review_ready": news_ready,
+        "news_already_analyzed": news_analyzed,
+        "fresh_ready": ready,
+        "fresh_reason": ("NEW_OWNER_RUN_FRESH_SOURCE" if unseen and market_ready else
+                         "NEW_VERIFIED_NEWS_CONTEXT" if news_ready else
+                         "OWNER_RUN_AND_NEWS_ALREADY_ANALYZED"),
     }
 
 
@@ -97,6 +149,8 @@ def main() -> None:
         "fresh_reason",
         "current_run_id",
         "identity_unseen",
+        "news_review_ready",
+        "news_already_analyzed",
         "source_timestamp_valid",
         "source_timestamp_utc",
         "source_age_seconds",

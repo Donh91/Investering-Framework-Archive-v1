@@ -401,6 +401,34 @@ assert.match(client,/finally\{clearTimeout\(deadline\);loading=false;refresh\(\)
 
 assert.match(site,/resolve\(outputDir,"vnext"\)/);
 assert.match(site,/await copyFile\(resolve\(siteDir,"vnext-live",file\),resolve\(vnextDir,file\)\)/);
+// Price freshness is independent of Compass source expiry; never reuse Pages
+// build time or weekly freeze time as fresh hourly close evidence.
+const priceStatusSource=client.slice(client.indexOf('function priceSourceAgeStatus('),client.indexOf('function drawStatus(){'));
+assert.match(priceStatusSource,/CN_PUBLIC_HOURLY_PRICE_PATH_v1/);
+assert.match(html,/id="price-source-warning"/);
+const getPriceStatus=new Function('latest','now',priceStatusSource+';return priceSourceAgeStatus(latest,now);');
+const priceFixture={public_live_precision:{
+ contract:'CN_PUBLIC_LIVE_PRICE_PRECISION_v1',forecast_week:'2026-W43',public_issue_number:30,
+ freshness_sla_minutes:90,live_as_of_utc:'2026-10-23T04:00:00Z',
+ hourly_price_path:{contract:'CN_PUBLIC_HOURLY_PRICE_PATH_v1',
+  semantics:'OBSERVED_HOURLY_CLOSE_NOT_A_PROSPECTIVE_FORECAST',
+  source:'HOURLY_SPOT_PASS_ONLY',forecast_week:'2026-W43',public_issue_number:30,
+  observed_through_utc:'2026-10-23T04:00:00Z',BTC:[{observed_at_utc:'2026-10-23T04:00:00Z',close:80000}],
+  ETH:[{observed_at_utc:'2026-10-23T04:00:00Z',close:2400}]}}};
+assert.equal(getPriceStatus(priceFixture,Date.parse('2026-10-23T05:00:00Z')).state,'FRESH');
+assert.equal(getPriceStatus(priceFixture,Date.parse('2026-10-23T05:30:00Z')).state,'FRESH');
+assert.equal(getPriceStatus(priceFixture,Date.parse('2026-10-23T06:08:00Z')).state,'STALE');
+assert.equal(getPriceStatus(priceFixture,Date.parse('2026-10-23T03:59:59Z')).state,'UNAVAILABLE');
+for(const mutate of [
+ x=>{x.public_live_precision.hourly_price_path.forecast_week='2026-W42'},
+ x=>{x.public_live_precision.hourly_price_path.BTC=[]},
+ x=>{x.public_live_precision.hourly_price_path.source='SYNTHETIC'},
+ x=>{x.public_live_precision.hourly_price_path.observed_through_utc='2026-10-23T03:00:00Z'},
+ x=>{x.public_live_precision.freshness_sla_minutes=null}
+]){
+ const v=structuredClone(priceFixture);mutate(v);
+ assert.equal(getPriceStatus(v,Date.parse('2026-10-23T04:30:00Z')).state,'UNAVAILABLE');
+}
 // Actual status renderer regression: a newer Pages delivery timestamp must
 // NEVER disguise the older owner's expired Official Compass freshness.
 const statusSlice=client.slice(client.indexOf('function drawStatus(){'),client.indexOf('function drawOverview(){'));
@@ -418,7 +446,7 @@ const displayStatus=(at,language='da',state='UNAVAILABLE')=>{
  };
  const simulatedDate={now:()=>Date.parse(at),parse:Date.parse};
  new Function('view','feeds','error','tr','stamp','$','show','Date',
-   statusSlice+'; drawStatus();')(
+   priceStatusSource+statusSlice+'; drawStatus();')(
    {weekly:{state:'DEGRADED'},compass:{state}},
    fakeFeed,false,(da,en)=>language==='en'?en:da,
    utc=>utc,()=>({className:''}),
@@ -439,3 +467,18 @@ assert.match(eligibleOwner['source-status'],/aktuelt/);
 
 execFileSync(process.execPath,['--check',resolve(dir,'app.mjs')],{stdio:'pipe'});
 console.log('PASS vNext: W43 source truth, official freshness, score isolation, negative gates, four-view product shell, i18n and syntax');
+
+
+// B graph absence is a first-class visible source state, never a
+// synthetic blue path derived from the three original low/high windows.
+const chartImplementation=readFileSync(new URL('../frozen-week-chart.js',import.meta.url),'utf8');
+const chartStyles=readFileSync(new URL('../frozen-week-chart.css',import.meta.url),'utf8');
+assert.match(chartImplementation,/fw-forecast-not-issued/);
+assert.match(chartImplementation,/data-fw-horizon/);
+assert.match(chartImplementation,/CN_FROZEN_DAILY_PRICE_PATH_v1/);
+assert.match(chartImplementation,/const forecast=m.daily.length===7/);
+assert.match(chartImplementation,/baseline.setData\(plan.forecast\)/);
+assert.match(chartImplementation,/forecast=m.daily.length===7[\s\S]*?:\[\];/);
+assert.match(chartStyles,/\.fw-forecast-not-issued\{/);
+assert.match(html,/id="official-chart-heading"/);
+assert.match(client,/show\('official-chart-heading',hasDaily\?/);

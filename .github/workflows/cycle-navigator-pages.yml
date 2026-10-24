@@ -68,6 +68,11 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
       - name: Build public live Price Range precision
         run: python3 scripts/cycle_navigator/build_public_live_precision.py
+      - name: Verify actual hourly capture reaches public bundle without fabrication
+        run: |
+          python3 scripts/cycle_navigator/check_publication_lineage.py --self-test
+          python3 scripts/cycle_navigator/check_publication_lineage.py
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/publication-lineage.json
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Verify browser failures cannot bypass mobile release gate
@@ -103,6 +108,7 @@ jobs:
           ! grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'SITE SOURCE OF RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'FROZEN MONDAY PATH' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          grep -q 'CN_PUBLICATION_LINEAGE_RELEASE_RECEIPT_v1' 05_CYCLE_NAVIGATOR/site/dist/data/publication-lineage.json
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"refresh_cadence": "HOURLY_OWNER_CHAIN"' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json

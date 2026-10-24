@@ -1,6 +1,6 @@
 /* Product alignment executable negatives. Synthetic fixtures ONLY; no seeded market claims. */
 import assert from 'node:assert/strict';
-import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel} from './premium-experience.mjs';
+import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel,priceSequenceModel,presentOfficialAction} from './premium-experience.mjs';
 const bullBear={
  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',
  semantics:'EVIDENCE_BALANCE_NOT_PROBABILITY',
@@ -103,3 +103,131 @@ for(const needed of ['scorebook-index.json','source_commit','SHA-256','ABSTAIN',
 }
 assert.doesNotMatch(prompt,/OPENAI_API_KEY|private key|seed\.json/);
 console.log('PASS 27 source-authority and source-loss premium experience assertions');
+
+
+// Verified owner-published D1–2 / D3–4 / D5–7 provisional price evidence.
+ // Distinct from settled weekly Price Range and future Direction/Pullback Edge.
+const precisionFixture={
+ public_live_precision:{
+  contract:'CN_PUBLIC_LIVE_PRICE_PRECISION_v1',
+  authority:'PUBLIC_FORECAST_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY',
+  score_family:'PRICE_RANGE_PRECISION',formula:'70pct_containment_plus_30pct_jaccard',
+  forecast_week:'2026-W43',public_issue_number:30,
+  live_as_of_utc:'2026-10-23T04:00:00Z',freshness_sla_minutes:90,
+  window_scores:{
+   day_1_2:{phase:'COMPLETE',score_to_date:72.5,rows_scored:2,rows_total:2,
+    observed_hours:48,expected_hours_final:48,coverage_complete_to_date:true},
+   day_3_4:{phase:'LIVE',score_to_date:63.2,rows_scored:2,rows_total:2,
+    observed_hours:42,expected_hours_final:48,coverage_complete_to_date:true},
+   day_5_7:{phase:'NOT_STARTED',score_to_date:null,rows_scored:0,rows_total:2,
+    observed_hours:0,expected_hours_final:72,coverage_complete_to_date:false}
+  }
+ }
+};
+const snapshotAt=Date.parse('2026-10-23T05:00:00Z');
+const sequence=priceSequenceModel(view,precisionFixture,snapshotAt);
+assert.equal(sequence.state,'FRESH');
+assert.equal(sequence.week,'2026-W43');
+assert.equal(sequence.windows.length,3);
+assert.deepEqual(sequence.windows.map(x=>x.score),[72.5,63.2,null]);
+assert.deepEqual(sequence.windows.map(x=>x.state),['CLOSED_PROVISIONAL','LIVE_PROVISIONAL','PENDING']);
+const later=priceSequenceModel(view,precisionFixture,Date.parse('2026-10-23T06:08:00Z'));
+assert.equal(later.state,'STALE');
+assert.ok(later.windows.every(x=>x.score===null),'Stale rows cannot appear as live scores');
+const badWeek=structuredClone(precisionFixture);
+badWeek.public_live_precision.forecast_week='2026-W42';
+assert.equal(priceSequenceModel(view,badWeek,snapshotAt).state,'UNAVAILABLE');
+const badFamily=structuredClone(precisionFixture);
+badFamily.public_live_precision.score_family='PULLBACK_EDGE';
+assert.equal(priceSequenceModel(view,badFamily,snapshotAt).state,'UNAVAILABLE');
+const partial=structuredClone(precisionFixture);
+partial.public_live_precision.window_scores.day_3_4.rows_scored=1;
+assert.equal(priceSequenceModel(view,partial,snapshotAt).windows[1].score,null);
+const corrupted=structuredClone(precisionFixture);
+corrupted.public_live_precision.window_scores.day_1_2.score_to_date=110;
+assert.equal(priceSequenceModel(view,corrupted,snapshotAt).windows[0].score,null);
+assert.equal(priceSequenceModel(view,precisionFixture,Date.parse('2026-10-23T03:00:00Z')).state,'UNAVAILABLE');
+console.log('PASS source-joined live price-range sequences, stale/partial/future/source negatives');
+
+// Human-readable official code mapping must never create unissued signals.
+assert.deepEqual(presentOfficialAction('HOLD_WAIT',true,'da').label,'AFVENT');
+assert.deepEqual(presentOfficialAction('HOLD_WAIT',true,'en').label,'WAIT');
+assert.equal(presentOfficialAction('HOLD_WAIT',true,'da').code,'HOLD_WAIT');
+assert.equal(presentOfficialAction('HOLD_WAIT',false,'da').code,null);
+assert.equal(presentOfficialAction('SELL',false,'en').label,'AWAITING SOURCE');
+assert.equal(presentOfficialAction('BUY',true,'en').code,'BUY');
+assert.equal(presentOfficialAction('UNRECOGNIZED',true,'da').label,'UNRECOGNIZED');
+assert.equal(presentOfficialAction('UNRECOGNIZED',true,'da').verified,true);
+assert.equal(presentOfficialAction('UNAVAILABLE',true,'da').code,null);
+assert.equal(presentOfficialAction('UTILGÆNGELIG',true,'da').verified,false);
+// Adversarial source codes must not inherit JavaScript object prototype keys.
+// A verified unknown code remains visible as itself; unverified data never gains authority.
+for(const sourceCode of ['constructor','__proto__','toString','valueOf','hasOwnProperty']){
+ for(const language of ['da','en']){
+  const verified=presentOfficialAction(sourceCode,true,language);
+  assert.deepEqual(verified,{label:sourceCode,code:sourceCode,verified:true,
+   explanation:language==='da'?'Uændret officiel kildekode.':'Unmodified official source code.'},
+   'Inherited object property must not turn a verified unknown source code into a blank label');
+  const unavailable=presentOfficialAction(sourceCode,false,language);
+  assert.equal(unavailable.verified,false,'Unverified code must never be promoted');
+  assert.equal(unavailable.code,null,'Unverified code must never be shown as official');
+  assert.equal(unavailable.label,language==='da'?'AFVENTER KILDE':'AWAITING SOURCE');
+ }
+}
+console.log('PASS Official action translation is source-bound, no hidden signal remapping');
+
+
+// Approved B graph is a production-source contract, never a synthetic preview.
+// This static lock complements, but does not replace, 390/430px browser/pixel QA.
+import {readFileSync} from 'node:fs';
+const designFile=(relative)=>readFileSync(new URL(relative,import.meta.url),'utf8');
+const pageMarkup=designFile('./index.html');
+const chartCss=designFile('../frozen-week-chart.css');
+const chartJs=designFile('../frozen-week-chart.js');
+const premiumCss=designFile('./premium-experience.css');
+const appJs=designFile('./app.mjs');
+// One and only one official B chart host, supplied by unchanged approved scripts.
+assert.equal((pageMarkup.match(/id="official-path-chart"/g)||[]).length,1);
+assert.match(pageMarkup,/<div id="official-path-chart" class="frozen-week-chart"/);
+assert.match(pageMarkup,/href="\.\.\/frozen-week-chart\.css"/);
+assert.match(pageMarkup,/src="\.\.\/frozen-week-chart\.js"/);
+assert.match(pageMarkup,/src="\.\.\/vendor\/lightweight-charts-5\.2\.0\.js"/);
+assert.match(premiumCss,/\.chart-area #official-path-chart\.frozen-week-chart/);
+assert.match(chartCss,/\.frozen-week-chart\{[^}]*background:#0d1b2c/);
+assert.match(chartCss,/\.fw-legend \.forecast\{[^}]*border-top:2px dashed #5f96ff/);
+assert.match(chartCss,/\.fw-legend \.actual\{background:#27c59a/);
+assert.match(chartJs,/const DAY=86400000,BLUE='#5f96ff',GREEN='#27c59a'/);
+assert.match(chartJs,/CN_FROZEN_DAILY_PRICE_PATH_v1/);
+assert.match(chartJs,/window\.LightweightCharts/);
+assert.match(chartJs,/window\.CNWeekChart/);
+assert.match(appJs,/\.\.\/data\/latest\.json/);
+assert.match(appJs,/\.\.\/data\/compass\.json/);
+assert.match(appJs,/window\.CNWeekChart\?\.mount/);
+console.log('PASS canonical B chart single host, approved palette, official feed + dated forecast gate');
+
+
+// Exact visual-authority lock: production root must adopt the owner's
+// approved Weekly Outlook B chrome from the isolated design lab, but never
+// its synthetic SVG price curves, artificial prices or its second URL.
+const productionPremiumCss=designFile('./premium-experience.css');
+const productionMarkup=designFile('./index.html');
+const productionApp=designFile('./app.mjs');
+assert.match(productionMarkup,/data-approved-design="B"/);
+assert.match(productionMarkup,/class="chart-b-title" data-t="chartBTitle"/);
+assert.match(productionMarkup,/id="official-path-chart" class="frozen-week-chart"/);
+assert.match(productionPremiumCss,/B LIVE VISUAL PARITY/);
+assert.match(productionPremiumCss,/\.chart-area\[data-approved-design="B"\]\{/);
+assert.match(productionPremiumCss,/\.chart-area\[data-approved-design="B"\] \.fw-canvas\{/);
+assert.match(productionApp,/chartBTitle:'Weekly Outlook · B'/);
+assert.match(productionApp,/chartBTitle:'Weekly Outlook · B'/);
+assert.doesNotMatch(productionMarkup,/appdeploy\.ai/);
+assert.doesNotMatch(productionApp,/Math\.sin\([^)]*\/\s*(?:17|4\.7|2\.7)/);
+console.log('PASS: production B card, DA/EN chrome, single source-bound chart, no AppDeploy demo series');
+
+assert.match(productionMarkup,/data-b-asset="BTC"/);
+assert.match(productionMarkup,/data-b-asset="ETH"/);
+assert.match(productionMarkup,/id="chart-b-scrub-range"/);
+assert.match(chartJs,/visibleHours=m.hourly.filter\(p=>p.time<=shownUntil\)/);
+assert.match(chartJs,/const plan=linePlan\(plotModel\)/);
+assert.match(chartJs,/chart-b-scrub-label/);
+assert.match(productionPremiumCss,/B original layout v2/);

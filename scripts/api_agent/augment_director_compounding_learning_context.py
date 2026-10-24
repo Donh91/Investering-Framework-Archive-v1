@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.api_agent.augment_director_situation_room_shadow import situation_room_shadow
+from scripts.api_agent.augment_director_news_intelligence_context import news_intelligence, DEFAULT_OWNER_POINTER
 
 BASE = Path("00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1")
 DEFAULT_STATE = BASE / "STATE.json"
@@ -199,6 +200,7 @@ def main() -> int:
     parser.add_argument("--backlog", type=Path, default=DEFAULT_BACKLOG)
     parser.add_argument("--health", type=Path, default=DEFAULT_HEALTH)
     parser.add_argument("--situation-room-pointer", type=Path, default=DEFAULT_SITUATION_ROOM_POINTER)
+    parser.add_argument("--news-owner-pointer", type=Path, default=DEFAULT_OWNER_POINTER)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -208,6 +210,8 @@ def main() -> int:
 
     situation_routed, situation_paths = situation_room_shadow(args.situation_room_pointer)
     context["situation_room_shadow"] = situation_routed
+    news_routed, news_paths = news_intelligence(args.news_owner_pointer)
+    context["news_intelligence"] = news_routed
 
     provenance = context.get("learning_context_provenance")
     if not isinstance(provenance, list):
@@ -227,6 +231,13 @@ def main() -> int:
                 "path": str(path),
                 "sha256": sha256(path),
             })
+    for idx, path in enumerate(news_paths):
+        if path.is_file():
+            provenance.append({
+                "field": f"news_intelligence_{idx}",
+                "path": str(path),
+                "sha256": sha256(path),
+            })
     context["learning_context_provenance"] = provenance
 
     contract = context.get("context_routing_contract")
@@ -240,13 +251,17 @@ def main() -> int:
     required = contract.get("required_context_families")
     if not isinstance(required, list):
         required = []
-    for family in ("compounding_learning", "situation_room_shadow"):
+    for family in ("compounding_learning", "situation_room_shadow", "news_intelligence"):
         if family not in required:
             required.append(family)
     contract["required_context_families"] = required
     contract["no_automatic_authority_promotion"] = True
     contract["situation_room_shadow_rule"] = (
         "VERIFIED_SHADOW_CONTEXT_MAY_INFORM_ANALYSIS_ONLY; PENDING_DISCOVERIES_ARE_NOT_EVIDENCE"
+    )
+    contract["news_intelligence_rule"] = (
+        "VERIFIED_PRIMARY_NEWS_IS_CONTEXT_ONLY; FAILED_SOURCES_ARE_UNKNOWN_NOT_NO_EVENT; "
+        "NEVER_CHANGE_CANONICAL_STATE_OR_PORTFOLIO_AUTHORITY"
     )
     context["context_routing_contract"] = contract
 
@@ -258,6 +273,9 @@ def main() -> int:
         "situation_room_shadow_status": situation_routed.get("status"),
         "situation_room_verified_count": situation_routed.get("verified_count", 0),
         "situation_room_pending_count": situation_routed.get("pending_count", 0),
+        "news_intelligence_status": news_routed.get("status"),
+        "news_verified_count": news_routed.get("verified_count", 0),
+        "news_failed_sources": news_routed.get("failed_sources", []),
     }, sort_keys=True))
     return 0
 

@@ -6,13 +6,13 @@ import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
 import {sourceTrace} from './source-trace.mjs';
 import {forwardOutlook} from './forward-outlook.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
-import {renderProductExperience,initProductExperience} from './premium-experience.mjs';
+import {renderProductExperience,initProductExperience,presentOfficialAction} from './premium-experience.mjs';
 const $=id=>document.getElementById(id),keys=['overview','compass','path','results'];
 const H=[['NEXT_12H','0–12h'],['NEXT_1_3D','1–3d'],['NEXT_5_7D','5–7d'],['NEXT_2_3W','2–3u'],['CYCLE_ALTCOINS_3_8W','3–8u']];
 const T=['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'];
 const dict={
-da:{tabOverview:'Overblik',tabCompass:'Kompas',tabPath:'PATH',tabResults:'Resultater',overviewEyebrow:'MARKEDSBILLEDE / LIGE NU',heroOne:'Forstå',heroTwo:'retningen.',heroIntro:'Én tydelig læsning. Én officiel handling. Ægte markedsdata.',weeklyState:'UGENS MARKEDSSTATUS',actionLabel:'OFFICIEL HANDLING · NU',proxyLabel:'RETNINGSPROXY · 0–12 TIMER',proxyCaveat:'Observeret bevægelse, ikke selvstændigt valideret prognose.',riskLabel:'PULLBACK-RISIKO',distributionLabel:'DISTRIBUTION',nextGateLabel:'NÆSTE BEKRÆFTELSE',cycleHeading:'Hvor i cyklussen?',noEta:'Ingen udokumenteret ETA',forecastHeading:'Prognose møder virkelighed.',frozenRange:'Oprindeligt fastlåst interval',chartTitle:'Frossen prognose / faktiske priser',chartTrust:'Grafen viser kun frosne kildepunkter og gyldige observationer. Manglende dagsprognoser tegnes ikke.',compassHeading:'Tydeligere beslutninger.',compassSub:'Markedsretning, handling og tid adskilles. Ingen nye handelssignaler skabes her.',forwardTitle:'Længere udsyn.',forwardDisclaimer:'To frosne tidshorisonter. Strategisk analyse, ikke en ny handelsbeslutning.',forwardTwoThree:'2–3 UGER / FROSSEN UGE',forwardTwentyThirty:'21–30 DAGE / STRATEGISK',forwardPriceMissing:'BTC/ETH-prissti: Ikke udstedt. Ingen konstrueret prognosekurve.',forwardMore:'Scenarier, modbeviser og kildekontrol',forwardIssued:'Oprindeligt udstedt',forwardAssets:'BTC / ETH · forventet retning',forwardSafe:'Kun kildens egne formuleringer. Ingen beregnede prisniveauer, sandsynligheder eller ETA’er.',forwardDemo:'Vis separat interaktiv designprototype',forwardDemoWarn:'Kun syntetiske kurver, ikke den aktuelle markedsprognose.',forwardDemoLink:'Åbn 7/14/21-dages test ↗',horizonsHeading:'Tidshorisonter',ownerOfficial:'Kun officielt Kompas',time:'Tid',direction:'Retning',actionShort:'Handling',tiersHeading:'Kapitalrotation',asset:'Aktiv',state:'Status',protectionHeading:'Beskyttelse og re-entry',pullback:'PULLBACK',resultsHeading:'Beviser frem for hype.',resultsSub:'Den senest afsluttede uge, dens reelle dækning og seks frosne intervaller. Ikke en opdigtet samlet præcision.',completedPrecision:'SENEST AFSLUTTEDE PRISPRÆCISION',coverage:'KILDEDÆKNING',hours:'Kvalificerede observationstimer',weeklyScoreTable:'Frossent interval vs. faktisk',sixWindows:'BTC / ETH · 3 vinduer',assetWindow:'Aktiv / vindue',frozenForecast:'Frossen prognose',observed:'Observeret',precision:'Præcision',methodHeading:'Hvad er egentlig verificeret?',methodText:'Prisintervaller måles med 70/30-metoden. Strukturanalyse scores ikke i procent efter CN #26. Uafhængig forsegling må ikke påstås uden bevis.',openScoreRepo:'Åbn offentligt kildearkiv ↗',openPath:'Se den fulde cyklusrejse →',previewOnly:'Ikke standardforsiden',legacySite:'Åbn eksisterende site ↗',mondayTitle:'Hvad viser mandagens grundlag?',mondayAnalytics:'ANALYSEGRUNDLAG',mondayEvidence:'KILDESTATUS · IKKE HANDELSSIGNAL',mondayScore:'SCORECARD',mondayTranslation:'OPERATIONEL ANALYSE',mondayApi:'AI-FORSKNING · SHADOW',mondayBoundary:'Frosset ugegrundlag er historisk kontekst. Kun et friskt, kildeverificeret Official Compass kan eje handlingen NU.'},
-en:{tabOverview:'Overview',tabCompass:'Compass',tabPath:'PATH',tabResults:'Results',overviewEyebrow:'MARKET OVERVIEW / RIGHT NOW',heroOne:'Read',heroTwo:'the shift.',heroIntro:'One clear reading. One official action. Real market evidence.',weeklyState:'THIS WEEK’S MARKET STATUS',actionLabel:'OFFICIAL ACTION · NOW',proxyLabel:'DIRECTION PROXY · 0–12 HOURS',proxyCaveat:'Observed continuation, not an independently validated forecast.',riskLabel:'PULLBACK RISK',distributionLabel:'DISTRIBUTION',nextGateLabel:'NEXT CONFIRMATION',cycleHeading:'Where are we in the cycle?',noEta:'No unsupported ETA',forecastHeading:'Forecast meets reality.',frozenRange:'Originally frozen weekly range',chartTitle:'Frozen forecast / actual prices',chartTrust:'Only original frozen points and eligible observations are shown. Missing daily forecasts are not drawn.',compassHeading:'Clearer decisions.',compassSub:'Direction, action and timing remain separate. No new trading signals are created here.',forwardTitle:'The longer view.',forwardDisclaimer:'Two original horizons. Strategic analysis, not a new trading decision.',forwardTwoThree:'2–3 WEEKS / FROZEN WEEKLY',forwardTwentyThirty:'21–30 DAYS / STRATEGIC',forwardPriceMissing:'BTC/ETH price path: Not issued. No constructed forecast curve.',forwardMore:'Scenarios, falsifiers and source',forwardIssued:'First issued',forwardAssets:'BTC / ETH · expected direction',forwardSafe:'Only original source wording. No calculated price targets, probabilities or ETA.',forwardDemo:'Show separate interactive design prototype',forwardDemoWarn:'Synthetic curves only, not a current market forecast.',forwardDemoLink:'Open 7/14/21-day test ↗',horizonsHeading:'Time horizons',ownerOfficial:'Official Compass only',time:'Horizon',direction:'Direction',actionShort:'Action',tiersHeading:'Capital rotation',asset:'Asset',state:'Status',protectionHeading:'Protection and re-entry',pullback:'PULLBACK',resultsHeading:'Receipts, not hype.',resultsSub:'Last completed week, real evidence coverage and six original frozen windows. No invented overall accuracy.',completedPrecision:'LATEST COMPLETED PRICE PRECISION',coverage:'SOURCE COVERAGE',hours:'Eligible observation hours',weeklyScoreTable:'Frozen range vs actual',sixWindows:'BTC / ETH · 3 windows',assetWindow:'Asset / window',frozenForecast:'Frozen forecast',observed:'Observed',precision:'Precision',methodHeading:'What is actually verified?',methodText:'Price ranges use the established 70/30 method. Structure analysis has no percentage score after CN #26. No claim of independent sealing without proof.',openScoreRepo:'Open public source archive ↗',openPath:'Explore the full market cycle →',previewOnly:'Not the default homepage',legacySite:'Open existing site ↗',mondayTitle:'What does Monday’s evidence show?',mondayAnalytics:'ANALYTICAL CONTEXT',mondayEvidence:'SOURCE STATUS · NOT A TRADE SIGNAL',mondayScore:'SCORECARD',mondayTranslation:'OPERATIONAL ANALYSIS',mondayApi:'AI RESEARCH · SHADOW',mondayBoundary:'Frozen completed-week evidence is historical context. Only a fresh, source-verified Official Compass owns the action NOW.'}};
+da:{tabOverview:'Overblik',tabCompass:'Kompas',tabPath:'PATH',tabResults:'Resultater',overviewEyebrow:'MARKEDSBILLEDE / LIGE NU',heroOne:'Forstå',heroTwo:'retningen.',heroIntro:'Én tydelig læsning. Én officiel handling. Ægte markedsdata.',openChart:'Se grafen · BTC / ETH ↓',weeklyState:'UGENS MARKEDSSTATUS',actionLabel:'OFFICIEL HANDLING · NU',proxyLabel:'RETNINGSPROXY · 0–12 TIMER',proxyCaveat:'Observeret bevægelse, ikke selvstændigt valideret prognose.',riskLabel:'PULLBACK-RISIKO',distributionLabel:'DISTRIBUTION',nextGateLabel:'NÆSTE BEKRÆFTELSE',cycleHeading:'Hvor i cyklussen?',noEta:'Ingen udokumenteret ETA',forecastHeading:'Prognose møder virkelighed.',frozenRange:'Oprindeligt fastlåst interval',chartTitle:'FROSSEN PROGNOSE / UGENS BEVÆGELSE',chartBTitle:'Weekly Outlook · B',chartBIntro:'Kursretning, forventede udsving og faktiske observationer.',chartBScrub:'Spol gennem ugen',chartBMonday:'Mandag',chartBSunday:'Søndag',chartTrust:'Grafen viser kun frosne kildepunkter og gyldige observationer. Manglende dagsprognoser tegnes ikke.',compassHeading:'Tydeligere beslutninger.',compassSub:'Markedsretning, handling og tid adskilles. Ingen nye handelssignaler skabes her.',forwardTitle:'Længere udsyn.',forwardDisclaimer:'To frosne tidshorisonter. Strategisk analyse, ikke en ny handelsbeslutning.',forwardTwoThree:'2–3 UGER / FROSSEN UGE',forwardTwentyThirty:'21–30 DAGE / STRATEGISK',forwardPriceMissing:'BTC/ETH-prissti: Ikke udstedt. Ingen konstrueret prognosekurve.',forwardMore:'Scenarier, modbeviser og kildekontrol',forwardIssued:'Oprindeligt udstedt',forwardAssets:'BTC / ETH · forventet retning',forwardSafe:'Kun kildens egne formuleringer. Ingen beregnede prisniveauer, sandsynligheder eller ETA’er.',forwardDemo:'Vis separat interaktiv designprototype',forwardDemoWarn:'Kun syntetiske kurver, ikke den aktuelle markedsprognose.',forwardDemoLink:'Åbn 7/14/21-dages test ↗',horizonsHeading:'Tidshorisonter',ownerOfficial:'Kun officielt Kompas',time:'Tid',direction:'Retning',actionShort:'Handling',tiersHeading:'Kapitalrotation',asset:'Aktiv',state:'Status',protectionHeading:'Beskyttelse og re-entry',pullback:'PULLBACK',resultsHeading:'Beviser frem for hype.',resultsSub:'Den senest afsluttede uge, dens reelle dækning og seks frosne intervaller. Ikke en opdigtet samlet præcision.',completedPrecision:'SENEST AFSLUTTEDE PRISPRÆCISION',coverage:'KILDEDÆKNING',hours:'Kvalificerede observationstimer',weeklyScoreTable:'Frossent interval vs. faktisk',sixWindows:'BTC / ETH · 3 vinduer',assetWindow:'Aktiv / vindue',frozenForecast:'Frossen prognose',observed:'Observeret',precision:'Præcision',methodHeading:'Hvad er egentlig verificeret?',methodText:'Prisintervaller måles med 70/30-metoden. Strukturanalyse scores ikke i procent efter CN #26. Uafhængig forsegling må ikke påstås uden bevis.',openScoreRepo:'Åbn offentligt kildearkiv ↗',openPath:'Se den fulde cyklusrejse →',previewOnly:'Ikke standardforsiden',legacySite:'Åbn eksisterende site ↗',mondayTitle:'Hvad viser mandagens grundlag?',mondayAnalytics:'ANALYSEGRUNDLAG',mondayEvidence:'KILDESTATUS · IKKE HANDELSSIGNAL',mondayScore:'SCORECARD',mondayTranslation:'OPERATIONEL ANALYSE',mondayApi:'AI-FORSKNING · SHADOW',mondayBoundary:'Frosset ugegrundlag er historisk kontekst. Kun et friskt, kildeverificeret Official Compass kan eje handlingen NU.'},
+en:{tabOverview:'Overview',tabCompass:'Compass',tabPath:'PATH',tabResults:'Results',overviewEyebrow:'MARKET OVERVIEW / RIGHT NOW',heroOne:'Read',heroTwo:'the shift.',heroIntro:'One clear reading. One official action. Real market evidence.',openChart:'View chart · BTC / ETH ↓',weeklyState:'THIS WEEK’S MARKET STATUS',actionLabel:'OFFICIAL ACTION · NOW',proxyLabel:'DIRECTION PROXY · 0–12 HOURS',proxyCaveat:'Observed continuation, not an independently validated forecast.',riskLabel:'PULLBACK RISK',distributionLabel:'DISTRIBUTION',nextGateLabel:'NEXT CONFIRMATION',cycleHeading:'Where are we in the cycle?',noEta:'No unsupported ETA',forecastHeading:'Forecast meets reality.',frozenRange:'Originally frozen weekly range',chartTitle:'FROZEN FORECAST / WEEKLY MOVEMENT',chartBTitle:'Weekly Outlook · B',chartBIntro:'Price direction, expected ranges and actual observations.',chartBScrub:'Explore the week',chartBMonday:'Monday',chartBSunday:'Sunday',chartTrust:'Only original frozen points and eligible observations are shown. Missing daily forecasts are not drawn.',compassHeading:'Clearer decisions.',compassSub:'Direction, action and timing remain separate. No new trading signals are created here.',forwardTitle:'The longer view.',forwardDisclaimer:'Two original horizons. Strategic analysis, not a new trading decision.',forwardTwoThree:'2–3 WEEKS / FROZEN WEEKLY',forwardTwentyThirty:'21–30 DAYS / STRATEGIC',forwardPriceMissing:'BTC/ETH price path: Not issued. No constructed forecast curve.',forwardMore:'Scenarios, falsifiers and source',forwardIssued:'First issued',forwardAssets:'BTC / ETH · expected direction',forwardSafe:'Only original source wording. No calculated price targets, probabilities or ETA.',forwardDemo:'Show separate interactive design prototype',forwardDemoWarn:'Synthetic curves only, not a current market forecast.',forwardDemoLink:'Open 7/14/21-day test ↗',horizonsHeading:'Time horizons',ownerOfficial:'Official Compass only',time:'Horizon',direction:'Direction',actionShort:'Action',tiersHeading:'Capital rotation',asset:'Asset',state:'Status',protectionHeading:'Protection and re-entry',pullback:'PULLBACK',resultsHeading:'Receipts, not hype.',resultsSub:'Last completed week, real evidence coverage and six original frozen windows. No invented overall accuracy.',completedPrecision:'LATEST COMPLETED PRICE PRECISION',coverage:'SOURCE COVERAGE',hours:'Eligible observation hours',weeklyScoreTable:'Frozen range vs actual',sixWindows:'BTC / ETH · 3 windows',assetWindow:'Asset / window',frozenForecast:'Frozen forecast',observed:'Observed',precision:'Precision',methodHeading:'What is actually verified?',methodText:'Price ranges use the established 70/30 method. Structure analysis has no percentage score after CN #26. No claim of independent sealing without proof.',openScoreRepo:'Open public source archive ↗',openPath:'Explore the full market cycle →',previewOnly:'Not the default homepage',legacySite:'Open existing site ↗',mondayTitle:'What does Monday’s evidence show?',mondayAnalytics:'ANALYTICAL CONTEXT',mondayEvidence:'SOURCE STATUS · NOT A TRADE SIGNAL',mondayScore:'SCORECARD',mondayTranslation:'OPERATIONAL ANALYSIS',mondayApi:'AI RESEARCH · SHADOW',mondayBoundary:'Frozen completed-week evidence is historical context. Only a fresh, source-verified Official Compass owns the action NOW.'}};
 Object.assign(dict.da,{
  longHorizonEyebrow:'FROSSET / RESEARCH · IKKE HANDLING NU',
  longHorizonTitle:'Længere tidshorisonter',
@@ -39,6 +39,25 @@ const clear=id=>{const el=$(id);el.replaceChildren();return el};
 function row(id,values){const tr=document.createElement('tr');for(const value of values){const td=document.createElement('td');td.textContent=String(value??'—');tr.append(td)}$(id).append(tr)}
 function missing(id,n=3){clear(id);const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=n;td.textContent=trText('Ingen godkendelige officielle data','No eligible official data');tr.append(td);$(id).append(tr)}
 function trText(da,en){return tr(da,en)}
+// The live BTC/ETH chart and Official Compass have different freshness owners.
+// Never turn a newer Compass issue into a "fresh price" claim.
+function priceSourceAgeStatus(latest,now=Date.now()){
+ const v=latest?.public_live_precision,path=v?.hourly_price_path;
+ if(v?.contract!=='CN_PUBLIC_LIVE_PRICE_PRECISION_v1'||
+    path?.contract!=='CN_PUBLIC_HOURLY_PRICE_PATH_v1'||
+    path?.semantics!=='OBSERVED_HOURLY_CLOSE_NOT_A_PROSPECTIVE_FORECAST'||
+    path?.source!=='HOURLY_SPOT_PASS_ONLY'||
+    path?.forecast_week!==v?.forecast_week||
+    path?.public_issue_number!==v?.public_issue_number||
+    !Array.isArray(path?.BTC)||!Array.isArray(path?.ETH)||
+    !path.BTC.length||!path.ETH.length||
+    path.observed_through_utc!==v.live_as_of_utc)
+   return {state:'UNAVAILABLE',asOf:null};
+ const cutoff=Date.parse(path.observed_through_utc),sla=Number(v.freshness_sla_minutes);
+ if(!Number.isFinite(cutoff)||cutoff>now||!Number.isFinite(sla)||sla<=0)
+   return {state:'UNAVAILABLE',asOf:null};
+ return {state:now-cutoff>sla*60000?'STALE':'FRESH',asOf:path.observed_through_utc};
+}
 function drawStatus(){
  const fresh=view?.compass?.state==='FRESH',valid=view?.weekly?.state==='OK'||view?.weekly?.state==='DEGRADED';
  // Never present Pages re-publication time as fresh Official market evidence.
@@ -57,15 +76,27 @@ function drawStatus(){
    valid?tr('Kompas ikke aktuelt · frossen ugegrundlag vises','Compass not current · frozen weekly context shown'):
    tr('Ingen aktuel kildeverificeret handling','No current source-verified action'));
  show('source-clock',Number.isFinite(expiryMs)?
-   tr('Kompas gyldigt til ','Compass valid until ')+stamp(ownerExpiry):
+   (expired?tr('Kompas udløb ','Compass expired at '):tr('Kompas gyldigt til ','Compass valid until '))+stamp(ownerExpiry):
    tr('Sidste levering ','Last delivery ')+stamp(feeds?.latest?.generated_at));
+ // Fail stale closed, independently of the Official Compass action clock.
+ // Source is checked again on existing one-minute client refresh.
+ const warning=$('price-source-warning'),price=priceSourceAgeStatus(feeds?.latest);
+ if(warning){
+   warning.hidden=!feeds||price.state==='FRESH';
+   if(!warning.hidden)warning.textContent=price.state==='STALE'?
+     tr('Kursgraf forældet · seneste timesluk '+stamp(price.asOf)+' · Kompas vurderes separat.',
+        'Price chart stale · last hourly close '+stamp(price.asOf)+' · Compass assessed separately.'):
+     tr('Kursgraf uden verificerede timepriser · Kompas vurderes separat.',
+        'Price chart has no verified hourly prices · Compass assessed separately.');
+ }
 }
 function drawOverview(){
  const w=view?.weekly||{},c=view?.compass||{},p=view?.path||{},verified=c.state==='FRESH'&&c.permit_path_live_gates===true,official=verified?feeds.compass:null;
  show('headline',w.state==='DEGRADED'?tr('Begrænset dækning','Limited coverage'):w.state==='OK'?tr('Kildebundet','Source bound'):tr('Kilde afventer','Awaiting source'));
  show('week-label','CN #'+(w.public_issue_number??'—')+' · '+(w.forecast_week||'—'));
- show('action',official?(val(c.action_now)||'UNAVAILABLE'):'UNAVAILABLE');
- show('action-note',official?tr('Udstedt','Issued')+' '+stamp(official.issued_at_utc):tr('Ingen verificeret aktuel handling','No verified current action'));
+ const translatedAction=presentOfficialAction(c.action_now,!!official,lang);
+ show('action',translatedAction.label);
+ show('action-note',official&&translatedAction.code?(translatedAction.code+' · '+tr('Udstedt','Issued')+' '+stamp(official.issued_at_utc)):translatedAction.explanation);
  show('direction',official?(val(official.horizons?.NEXT_12H?.expected_direction)||'UNKNOWN'):'UNKNOWN');
  show('risk',official?(val(c.pullback_risk_state)||'UNKNOWN'):'UNKNOWN');
  show('risk-2',official?(val(c.pullback_risk_state)||'UNKNOWN'):'UNKNOWN');
@@ -79,6 +110,12 @@ function drawOverview(){
  const path=feeds?.latest?.public_live_precision?.daily_price_path;
  const hasDaily=['BTC','ETH'].some(k=>path?.[k]?.status==='PUBLISHED'&&path?.[k]?.points?.length===7);
  show('chart-evidence',hasDaily?tr('Oprindelige dagsprognoser','Original daily forecasts'):tr('Ingen original dagskurve','No original daily curve'));
+ // A 7-day interval-only source must not be advertised as a complete
+ // "forecast versus actual" TWO-CURVE instrument. Graph B remains mounted
+ // unchanged, with honest first-known forecast availability.
+ show('official-chart-heading',hasDaily?
+   tr('Prognose møder virkelighed.','Forecast meets reality.'):
+   tr('Frosne intervaller. Faktisk kurs.','Frozen ranges. Observed prices.'));
  window.CNI18n={language:lang};const host=$('official-path-chart');
  const chartData=feeds?.latest?.public_live_precision&&window.CNWeekChart?.mount&&window.LightweightCharts?feeds.latest:null;
  if(chartData){
@@ -213,6 +250,16 @@ async function load(){
 // The shared document base must not turn the skip link into a page reload.
 document.querySelector('.skip').addEventListener('click',event=>{
  event.preventDefault();$('content').focus();
+});
+// The canonical root injects <base href="./vnext/">. Stay on the current
+// document when opening the original B chart, never jump to /vnext/.
+document.querySelector('.cn-chart-jump')?.addEventListener('click',event=>{
+ event.preventDefault();
+ if(tab!=='overview')selectTab('overview');
+ const target=$('official-path-chart');
+ if(!target)return;
+ target.scrollIntoView({block:'start'});
+ target.focus({preventScroll:true});
 });
 initProductExperience(()=>({view,feeds,lang}));
 document.querySelectorAll('[data-nav-to]').forEach(a=>a.addEventListener('click',e=>{

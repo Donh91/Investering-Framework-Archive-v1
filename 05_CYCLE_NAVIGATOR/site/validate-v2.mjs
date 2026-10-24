@@ -2,13 +2,52 @@ import './tests/full-stack-readback.test.mjs';
 import './vnext-live/validate.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {resolve} from 'node:path';
+const thisRepoRoot=resolve(fileURLToPath(new URL('.',import.meta.url)),'../..');
+execFileSync('python3',['scripts/cycle_navigator/check_publication_lineage.py','--self-test'],
+  {cwd:thisRepoRoot,stdio:'inherit',timeout:30000});
+
 import { preserveLegacyShell, releasePremiumShell } from './premium-release.mjs';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,css,history,premium,premiumCss,compassV5,precision,precisionCss,precisionBuilder]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./public-product.css'),read('./history-scoreboard.json'),read('./market-compass-premium.js'),read('./market-compass-premium.css'),read('./compass-product-v5.js'),read('./precision-accountability.js'),read('./precision-accountability.css'),read('../../scripts/cycle_navigator/build_public_live_precision.py')]);
+// Security regression, Cloudflare-inspired trust-boundary audit:
+// an unavailable private source must not serialize a raw filesystem exception into
+// public data/compass.json. Exercise the real fallback function with a synthetic
+// failure. The negative control recreates the old unsafe assignment in memory only.
+const compassFactoryStart=build.indexOf('async function buildCompassSnapshot(');
+const compassFactoryEnd=build.indexOf('// PUBLIC_COMPASS_FULL_STACK_READBACK_v1:',compassFactoryStart);
+if(compassFactoryStart<0||compassFactoryEnd<=compassFactoryStart)throw Error('Compass fallback regression cannot isolate actual builder');
+const compassFactorySource=build.slice(compassFactoryStart,compassFactoryEnd);
+const safeFailureMarker='OFFICIAL_COMPASS_SOURCE_UNAVAILABLE';
+const syntheticInternalPath='/synthetic/internal/location/not-for-public';
+const failingSource=async()=>{throw Error('ENOENT: '+syntheticInternalPath)};
+const makeCompassFactory=source=>new Function('readJson','COMPASS_POINTER_PATH',source+';return buildCompassSnapshot;')(failingSource,'synthetic-public-pointer');
+const safeFallback=await makeCompassFactory(compassFactorySource)({});
+if(safeFallback.failure_state!==safeFailureMarker||
+   safeFallback.data_status!=='NOT_PUBLISHED'||
+   safeFallback.action_now!=='UNAVAILABLE'||
+   JSON.stringify(safeFallback).includes(syntheticInternalPath))
+  throw Error('Internal Compass exception was exposed in public fallback');
+const unsafeSource=compassFactorySource.replace(
+  'failure_state:"OFFICIAL_COMPASS_SOURCE_UNAVAILABLE"',
+  'failure_state:String(error?.message||error)');
+if(unsafeSource===compassFactorySource)throw Error('No security guard to mutation-test');
+const unsafeFallback=await makeCompassFactory(unsafeSource)({});
+if(!JSON.stringify(unsafeFallback).includes(syntheticInternalPath))
+  throw Error('Security negative control did not detect the previous path disclosure');
+
 const h=JSON.parse(history);
 const chartSource=await read('./frozen-week-chart.js'),chartCss=await read('./frozen-week-chart.css');
 const vnextShell=await read('./vnext-live/index.html');
 
+const lineageSource=await read('../../scripts/cycle_navigator/check_publication_lineage.py');
+if(!lineageSource.includes('PUBLIC_HOURLY_PRICE_DIVERGENCE_')||
+   !lineageSource.includes('PUBLIC_HOURLY_FUTURE_CUTOFF')||
+   !lineageSource.includes('PUBLIC_HOURLY_FUTURE_OBSERVATION')||
+   !lineageSource.includes('CN_PUBLICATION_LINEAGE_RELEASE_RECEIPT_v1'))
+  throw Error('Publication lineage source-first no-hindsight guards missing');
 const proofSource=await read('./validate-compass-site-v5.mjs');
 const helperStart=proofSource.indexOf('function verifiedRawDigest(');
 const helperEnd=proofSource.indexOf('const [op,ap,wp,shp,stp]',helperStart);
@@ -168,13 +207,14 @@ const checks=[
    hourlyRender.series.filter(s=>s.options?.color==='#27c59a').map(s=>s.data.length).join(',')==='3,2'&&
    hourlyRender.series.filter(s=>s.options?.color==='#5f96ff').every(s=>s.data.length===0)&&
    chartSource.includes('chart.timeScale().fitContent()')],
- ['Approved B minimal shell preserves source evidence behind native disclosure and exposes source-bound forward outlook with optional demo test',
+ ['Official owner-approved B navy shell retains source evidence, and no longer competes with a synthetic external design demo',
    chartSource.includes("drawer.className='fw-evidence-details'")&&
    chartSource.includes("host.ownerDocument?.createElement")&&
    chartCss.includes('.fw-evidence-details summary{min-height:44px')&&
    vnextShell.includes('class="cn-original-ranges"')&&
    vnextShell.includes('id="btc-range"')&&vnextShell.includes('id="eth-range"')&&
-   vnextShell.includes('cycle-navigator-forward-outlook-1-3w-z8say7.v2.appdeploy.ai')&&
+   vnextShell.includes('id="official-path-chart" class="frozen-week-chart"')&&
+   !vnextShell.includes('cycle-navigator-forward-outlook-1-3w-z8say7.v2.appdeploy.ai')&&
    vnextShell.includes('class="cn-forward"')&&
    vnextShell.includes('data-t="forwardPriceMissing"')&&
    chartSource.includes("No authentic daily forecast was published, so no forecast curve is drawn.")],
@@ -220,7 +260,7 @@ const checks=[
     gappedPlan.actualRuns.every(run=>run.length===1)&&
     gappedPlan.actualRuns[0][0].time===Date.parse(chartModel(observedGap,'BTC').days[0].actual.as_of_utc)/1000&&
     gappedPlan.actualRuns[1][0].time===Date.parse(chartModel(observedGap,'BTC').days[2].actual.as_of_utc)/1000],
- ['Approved B two-curve display has dashed frozen 7d forecast and dominant solid actual, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dashed,lineWidth:2')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(m,scaleAnchor))')&&chartCss.includes('border-top:2px dashed #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
+ ['Approved B two-curve display has dashed frozen 7d forecast and dominant solid actual, with honest missing-path fallback',chartSource.includes('lineStyle:lib.LineStyle.Dashed,lineWidth:2')&&chartSource.includes('lineStyle:lib.LineStyle.Solid')&&chartSource.includes('scaleAnchor.attachPrimitive(new EvidenceOverlay(plotModel,scaleAnchor))')&&chartCss.includes('border-top:2px dashed #5f96ff')&&chartSource.includes('No authentic daily forecast was published, so no forecast curve is drawn.')&&chartModel(dailyFixture,'BTC').daily.length===7&&chartModel(synthetic,'BTC').daily.length===0&&chartModel(dailyFixture,'BTC').days.slice(2).every(d=>!d.actual)],
  ['VoiceOver: W42-style missing daily forecast is explicitly not presented as a daily forecast curve in both languages',
     a11yUnavailableEn.includes('No original seven-day')&&a11yUnavailableEn.includes('no daily forecast line')&&
     a11yUnavailableDa.includes('Ingen oprindelig syvdagesprognose')&&a11yUnavailableDa.includes('uden daglig prognoselinje')&&
