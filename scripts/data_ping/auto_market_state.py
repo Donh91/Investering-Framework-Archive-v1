@@ -518,11 +518,47 @@ def replacement_score(registry: Any, health: Mapping[str, Mapping[str, Any]], re
 
 
 def prior_packet(snapshot: Any) -> tuple[Any, dict[str, Any]]:
-    pointer, _ = read_json(snapshot, "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
-    if not pointer:
-        return None, {"status": "NOT_AVAILABLE_FIRST_PACKET"}
-    packet, _ = read_json(snapshot, pointer.get("packet_path", ""))
-    return packet, {"status": "AVAILABLE" if packet else "UNAVAILABLE", "packet_sha256": pointer.get("packet_sha256")}
+    """Read the predecessor only when pointer, packet and canonical bytes agree."""
+    pointer, pointer_health = read_json(snapshot, "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
+    if pointer is None:
+        # Preserve the established first-packet absence. A malformed existing
+        # pointer is not a first packet and must never be silently accepted.
+        if pointer_health.get("classification") == "GITHUB_SOURCE_READ_FAIL":
+            return None, {"status": "NOT_AVAILABLE_FIRST_PACKET"}
+        return None, {"status": "UNAVAILABLE", "classification": "PREDECESSOR_POINTER_UNREADABLE"}
+
+    def reject(reason: str) -> tuple[None, dict[str, Any]]:
+        return None, {"status": "UNAVAILABLE", "classification": "PREDECESSOR_PACKET_IDENTITY_FAIL", "reason": reason}
+
+    if not isinstance(pointer, Mapping) or pointer.get("contract") != POINTER:
+        return reject("POINTER_CONTRACT_MISMATCH")
+    packet_path = pointer.get("packet_path")
+    declared = pointer.get("packet_sha256")
+    if not isinstance(packet_path, str) or not packet_path:
+        return reject("POINTER_TARGET_MISSING")
+    if not isinstance(declared, str) or len(declared) != 64 or any(
+        char not in "0123456789abcdef" for char in declared
+    ):
+        return reject("POINTER_DIGEST_INVALID")
+
+    packet, packet_health = read_json(snapshot, packet_path)
+    if packet is None:
+        return None, {
+            "status": "UNAVAILABLE",
+            "classification": packet_health.get("classification", "PREDECESSOR_TARGET_UNAVAILABLE"),
+        }
+    if not isinstance(packet, Mapping) or packet.get("contract") != CONTRACT:
+        return reject("PACKET_CONTRACT_MISMATCH")
+    packet_digest = packet.get("packet_sha256")
+    if not isinstance(packet_digest, str) or packet_digest != declared:
+        return reject("PACKET_POINTER_DIGEST_MISMATCH")
+    try:
+        recalculated = h(canon({key: value for key, value in packet.items() if key != "packet_sha256"}))
+    except (TypeError, ValueError, OverflowError):
+        return reject("PACKET_CANONICAL_HASH_INVALID")
+    if recalculated != packet_digest:
+        return reject("PACKET_CONTENT_DIGEST_MISMATCH")
+    return packet, {"status": "AVAILABLE", "packet_sha256": declared}
 
 
 def delta(current: Any, predecessor: Any) -> dict[str, Any] | None:
