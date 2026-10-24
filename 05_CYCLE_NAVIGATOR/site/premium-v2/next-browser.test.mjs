@@ -43,23 +43,41 @@ const origin='http://127.0.0.1:'+server.address().port+base;
 const errors=[],responses=[];
 let profile=null,browser=null,socket=null;
 try{
- profile=mkdtempSync(join(tmpdir(),'cn-next-browser-'));
- browser=spawn(chrome,['--headless=new','--no-sandbox','--disable-gpu',
-  '--disable-dev-shm-usage','--no-zygote','--no-first-run',
-  '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],
-  {stdio:['ignore','ignore','pipe']});
- let stderr='';
- browser.stderr.on('data',data=>{stderr=(stderr+data.toString()).slice(-2400)});
+ // One fresh retry mirrors the canonical Chrome gate and never bypasses
+ // browser assertions or the release when both startup attempts fail.
+ const failures=[];
  let port=null;
- for(let i=0;i<120;i++){
-  if(browser.exitCode!==null)break;
-  try{
-   const p=Number(readFileSync(join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);
-   if(Number.isInteger(p)&&p>0){port=p;break}
-  }catch{}
-  await delay(100);
+ for(let attempt=1;attempt<=2&&!port;attempt++){
+  profile=mkdtempSync(join(tmpdir(),'cn-next-browser-'));
+  browser=spawn(chrome,['--headless=new','--no-sandbox','--disable-gpu',
+   '--disable-dev-shm-usage',...(attempt===1?['--no-zygote']:[]),
+   '--no-first-run','--no-default-browser-check',
+   '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],
+   {stdio:['ignore','ignore','pipe']});
+  let stderr='',startupError='';
+  browser.on('error',err=>{startupError=String(err.message||err)});
+  browser.stderr?.on('data',data=>{stderr=(stderr+data.toString()).slice(-2400)});
+  for(let i=0;i<120;i++){
+   if(startupError||browser.exitCode!==null||browser.signalCode!==null)break;
+   try{
+    const p=Number(readFileSync(join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);
+    if(Number.isInteger(p)&&p>0){port=p;break}
+   }catch{}
+   await delay(100);
+  }
+  if(port)break;
+  failures.push({attempt,exitCode:browser.exitCode,signal:browser.signalCode,
+   error:startupError,stderr:stderr.slice(-700)});
+  if(browser.exitCode===null&&browser.signalCode===null){
+   browser.kill('SIGTERM');
+   await Promise.race([new Promise(ok=>browser.once('close',ok)),delay(1000)]);
+   if(browser.exitCode===null&&browser.signalCode===null)browser.kill('SIGKILL');
+  }
+  try{rmSync(profile,{recursive:true,force:true})}catch{}
+  profile=null;browser=null;
+  if(attempt===1)await delay(400);
  }
- assert.ok(port,'NEXT_CHROME_STARTUP_FAILED:'+stderr);
+ assert.ok(port,'NEXT_CHROME_BOTH_STARTUPS_FAILED:'+JSON.stringify(failures));
  const pages=await (await fetch('http://127.0.0.1:'+port+'/json')).json();
  const page=pages.find(p=>p.type==='page');
  assert.ok(page?.webSocketDebuggerUrl,'NEXT_NO_CDP_TARGET');
