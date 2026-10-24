@@ -128,6 +128,17 @@ def mature_one(repo: Path, forecast_path: Path, horizon: str, now: datetime) -> 
         }
 
     target = start_reference + timedelta(hours=HORIZONS[horizon])
+    # Preserve immutable input and refuse retrospective/future-reference rows.
+    # The horizon target is measured from the source reference, not the issue.
+    if start_reference > issued or target <= issued:
+        return {
+            "status": "QUARANTINED_NONPROSPECTIVE_TIME_BASIS",
+            "forecast_id": forecast.get("forecast_id"),
+            "horizon": horizon,
+            "target_at_utc": target.isoformat().replace("+00:00", "Z"),
+            "reason": ("START_REFERENCE_AFTER_ISSUED_AT" if start_reference > issued
+                       else "TARGET_NOT_AFTER_ISSUED_AT"),
+        }
     if now < target:
         return None
 

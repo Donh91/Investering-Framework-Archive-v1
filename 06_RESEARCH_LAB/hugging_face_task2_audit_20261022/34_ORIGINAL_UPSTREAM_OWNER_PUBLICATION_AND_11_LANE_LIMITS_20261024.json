@@ -1,0 +1,87 @@
+{
+  "contract": "TASK2_R1_ORIGINAL_UPSTREAM_OWNER_PUSH_V1",
+  "date": "2026-10-24",
+  "status": "TWO_PRIMARY_PUBLICATION_CHAINS_VERIFIED_PROVIDER_FIRST_KNOWN_UNRESOLVED",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL_NOT_PIT_ADMISSION",
+  "cohort": {
+    "original_forecast_id": "CMP-20261012-904299b09eca",
+    "issued_at_utc": "2026-10-12T19:59:38Z",
+    "auto_packet_path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/12/195803_d6d9ee28ede4.json",
+    "auto_packet_git_blob_sha1": "2612c9b8272ad375c6a75ba917351f2465e1fd1b",
+    "auto_packet_first_push_commit": "6495f36225e51d4bab9c3afafb9bd27ce56e4bfc",
+    "auto_packet_first_push_ack_at_utc": "2026-10-12T19:58:05.7521591Z",
+    "immutable_original_source_snapshot_sha40": "74130fa250fe47309ca963fe8707f5846507d82a",
+    "forecast_bound_main_sha40": "4dc4a52d897b298b3b016b622b4315f52b30ec54"
+  },
+  "upstream_source_owners": [
+    {
+      "lane": "hourly_market",
+      "source_run_id": 38300707143,
+      "source_job_id": 114982684268,
+      "original_target_path": "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/10/12/195437_HOURLY_SEQUENCE_20261012T195437Z_bd7813511171.json",
+      "first_original_git_commit": "c75d764d4c3662e458a205ef8acd69a907c4f29b",
+      "original_commit_log_at_utc": "2026-10-12T19:54:43.4181471Z",
+      "original_server_push_ack_at_utc": "2026-10-12T19:54:45.1493682Z",
+      "exact_target_git_blob_sha1": "c4ebfb8e6fba65927aa64f8b64e727e8f1418156",
+      "first_commit_is_ancestor_of_source_snapshot": true,
+      "target_blob_matches_original_source_snapshot": true,
+      "original_pointer_freshness": "PASS",
+      "original_observation_age_seconds_approx": 3483.118081,
+      "provider_first_available_utc_verified": false
+    },
+    {
+      "lane": "live_anchor",
+      "source_run_id": 38287411350,
+      "source_job_id": 114938987021,
+      "original_target_path": "03_DAILY_CAPTURE_LOGS/captures/2026/10/12/175549_gh-38287411350-1.json",
+      "first_original_git_commit": "8c44f6cb55ad17a93947f299e25d1d270ea19f4f",
+      "original_commit_log_at_utc": "2026-10-12T17:55:50.1196905Z",
+      "original_server_push_ack_at_utc": "2026-10-12T17:55:52.2834655Z",
+      "exact_target_git_blob_sha1": "8cf11be4f9488642c1b972b57fb211752900bf42",
+      "first_commit_is_ancestor_of_source_snapshot": true,
+      "target_blob_matches_original_source_snapshot": true,
+      "original_pointer_freshness": "PASS",
+      "original_source_observation_freshness": "UNAVAILABLE",
+      "provider_first_available_utc_verified": false
+    }
+  ],
+  "mandatory_health_lane_census": {
+    "original_required_lane_count": 11,
+    "original_required_lane_status_PASS_count": 11,
+    "direct_provenance_in_original_health_count": 8,
+    "direct_provenance_lanes": [
+      "hourly_market",
+      "live_anchor",
+      "btc_dominance",
+      "breadth",
+      "settled_etf",
+      "stablecoin_liquidity",
+      "macro_risk",
+      "entry_signal_reference"
+    ],
+    "derived_without_independent_lane_health_git_binding_count": 3,
+    "derived_lanes": [
+      "derivatives",
+      "sentiment",
+      "altseason_context"
+    ],
+    "derived_lineage_owner": "live_anchor",
+    "primary_source_owner_server_push_chains_recovered_count": 2,
+    "vendor_first_publication_claims_admitted_count": 0,
+    "note": "Eight Git-provenance health lanes do not equal eight vendor-level first-known attestations. Three dependent live-anchor lanes cannot inflate event independence."
+  },
+  "source_interpretation": "Original source-owner GitHub publication, not original external venue/provider data first-publication. Original source snapshots and input Git blobs are immutable evidence; Git commit timestamps alone were not used for push proof, original server Actions job push acknowledgments were retrieved. Availability at upstream vendor, all eleven lane vintage gates, independent source event families, investor delivery and after-cost outcomes remain unproven.",
+  "science_gates": {
+    "original_auto_packet_publication_11_of_11": "VERIFIED_SEPARATE_RECEIPT_33",
+    "upstream_owner_git_published_before_forecast": "VERIFIED_FOR_EXACT_TWO_INPUT_OWNERS",
+    "full_R1_first_known": "NOT_ADMITTED",
+    "certified_R2": "NO",
+    "Round3_hypothesis_testing": "OFF",
+    "new_signal_policy": "NONE",
+    "market_values_published": false,
+    "forecast_or_outcome_rewrite": false,
+    "paid_provider_calls": 0,
+    "new_workflows_or_schedulers": 0
+  },
+  "next_existing_owner": "Use Task2 #1596 exact original primary packet and eight source-health provenance entries to obtain vendor first-known/availability receipts for each required source family, preserving the three live-anchor dependencies; do not infer from Git source push."
+}

@@ -1,0 +1,61 @@
+{
+  "contract": "TASK2_R1_ORIGINAL_PUBLICATION_LOG_RECOVERY_v1",
+  "recorded_at_utc_date": "2026-10-24",
+  "scope": "ORIGINAL_11_ATTEMPT_12H_SCOPED_PACKET_PUBLICATION_ONLY",
+  "authority": "RESEARCH_ONLY_NOT_SOURCE_FIRST_KNOWN_OR_R1_ADMISSION",
+  "previous_as_of_report": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/23_SOURCE_CUSTODY_AND_SCOPED_DEVELOPMENT_20261023.md",
+  "previous_scoped_publication_proved": 10,
+  "new_scoped_publication_proved": 11,
+  "denominator_original_attempts": 11,
+  "recovered_original_forecast": {
+    "compass_id": "CMP-20261012-904299b09eca",
+    "issued_at_utc": "2026-10-12T19:59:38Z",
+    "original_immutable_forecast_git_blob_sha1": "1e2ffaac86e4837de9ebb1813a5971cb596f2f3a",
+    "original_forecast_sha256": "9149d23e55f530491879eceff76d2ddf8ad7dfa4494382f77a15bc2f4abaab24",
+    "bound_main_sha40": "4dc4a52d897b298b3b016b622b4315f52b30ec54",
+    "source_packet_path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/12/195803_d6d9ee28ede4.json",
+    "bound_packet_sha256": "d6d9ee28ede454e1408bff0f0e1366e7348715e55269c970c661bc39791a44d4"
+  },
+  "server_actions_job": {
+    "run_id": 38300767397,
+    "job_id": 114983897925,
+    "job_conclusion": "success",
+    "server_log_retrieved_on": "2026-10-24",
+    "original_source_packet_generated_at_utc": "2026-10-12T19:58:03Z",
+    "original_commit_sha40": "6495f36225e51d4bab9c3afafb9bd27ce56e4bfc",
+    "original_commit_log_utc": "2026-10-12T19:58:03.8341518Z",
+    "original_git_push_ack_utc": "2026-10-12T19:58:05.7521591Z",
+    "original_git_push_log_excerpt": "74130fa250..6495f36225  HEAD -> main",
+    "original_source_job_finished_at_utc": "2026-10-12T19:58:12Z",
+    "original_job_commit_step_success": true,
+    "source_packet_git_blob_sha1_on_first_push_commit": "2612c9b8272ad375c6a75ba917351f2465e1fd1b"
+  },
+  "source_verification": {
+    "exact_source_packet_path_exists_at_first_push_commit": true,
+    "packet_contract": "AUTO_MARKET_STATE_PACKET_v1",
+    "declared_packet_sha256_matches_forecast_binding": true,
+    "original_packet_git_blob_same_at_forecast_bound_main": true,
+    "pushed_commit_ancestor_of_forecast_bound_main": true,
+    "compare_status": "ahead",
+    "commits_between_publication_and_forecast_bound_main": 2,
+    "original_forecast_issued_after_original_push": true,
+    "original_forecast_issued_after_job_complete": true,
+    "original_market_values_republished": false,
+    "original_frozen_outcomes_or_forecasts_modified": false,
+    "vendor_source_first_known_established": false,
+    "all_eleven_health_lane_first_known_established": false,
+    "full_original_R1_PIT_admitted": false
+  },
+  "research_interpretation": "The formerly unavailable original server job commit/push log was recovered, with exact packet path/hash and Git ancestry verified at the forecast-bound source commit. This upgrades solely the scoped original market-packet publication chain from 10/11 to 11/11. Prior 2026-10-23 archival receipts remain immutable as-of observations. Evidence does not authenticate underlying provider first-known clocks, complete upstream required eligibility-lane vintages, independent event blocks, user delivery, fills, forecast skill or Round3 analysis.",
+  "invariants": {
+    "round3_analysis": "OFF",
+    "automatic_market_rule_change": false,
+    "score_or_policy_rewrite": false,
+    "no_new_provider_call": true,
+    "no_paid_api": true,
+    "no_workflow_dispatch": true,
+    "no_private_restricted_provider_values_published": true,
+    "full_R1_information_gate": "NOT_ADMITTED"
+  },
+  "next_existing_owner": "Task2 Science #1596: resolve original eleven health-lane vintage/first-known with exact immutable receipts; use existing EXPEDITED Codex predecessor packet identity work under Supervisor #1156; no duplicate repair."
+}
