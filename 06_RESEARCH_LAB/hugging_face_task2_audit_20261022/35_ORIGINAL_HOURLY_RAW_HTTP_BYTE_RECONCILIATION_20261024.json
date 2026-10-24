@@ -1,0 +1,106 @@
+{
+  "contract": "TASK2_R1_ORIGINAL_RAW_RESPONSE_HASH_RECONCILIATION_v1",
+  "recorded_date_utc": "2026-10-24",
+  "authority": "RESEARCH_ONLY_PROVIDER_VALUE_FREE_SOURCE_BYTE_IDENTITY",
+  "cohort": "CMP-20261012-904299b09eca",
+  "forecast_original_issued_at_utc": "2026-10-12T19:59:38Z",
+  "source_run_id": 38300707143,
+  "source_job_id": 114982684268,
+  "source_original_retrieved_at_utc": "2026-10-12T19:54:37Z",
+  "source_original_published_to_github_at_utc": "2026-10-12T19:54:45.1493682Z",
+  "source_original_first_git_commit": "c75d764d4c3662e458a205ef8acd69a907c4f29b",
+  "source_original_frozen_snapshot_commit": "74130fa250fe47309ca963fe8707f5846507d82a",
+  "source_original_receipt_path": "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/10/12/195437_HOURLY_SEQUENCE_20261012T195437Z_bd7813511171.json",
+  "source_original_receipt_git_blob_sha1": "c4ebfb8e6fba65927aa64f8b64e727e8f1418156",
+  "original_archived_artifact_id": 11769784713,
+  "original_actions_zip_sha256": "2823f02586837236c36c7ce8524239d212e893e91c2737c0d756068290a82ef7",
+  "emergency_recovered_bundle_sha256": "1042566c2c8396166828ac1c3b78249c772f8a33aaaf3c65d83ae34c594d3130",
+  "source_archive_role": "OWNER_ACCESSIBLE_CHAT_ATTACHMENT_ONLY_NOT_DURABLE_PRIVATE_REPOSITORY",
+  "procedure": "Read original 17-ZIP custody bundle; extract additional_hourly/task2_original_hourly_evidence_11769784713.zip; for each of the nine raw JSON entries, independently SHA256 hash the exact unmodified bytes and count bytes. Match original source_records using filename stem, remove _okx suffix for six OKX source entries and compare against pinned public original Git receipt at original immutable commit, not a later current pointer.",
+  "original_response_count": 9,
+  "exact_byte_sha256_matches": 9,
+  "exact_byte_size_matches": 9,
+  "unmatched": [],
+  "raw_records": [
+    {
+      "name": "BTCUSDT_spot",
+      "expected_original_sha256": "bfcc4a12ba9d8f78e4a43912d742953811c25bc138c3a1b3aa20a789dbc82233",
+      "original_source_receipt_size_bytes": 4631,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    },
+    {
+      "name": "ETHUSDT_spot",
+      "expected_original_sha256": "717771747d5493c588a9323a9582e001d3eaf73340d3b72c8878a63279a4cf68",
+      "original_source_receipt_size_bytes": 4593,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    },
+    {
+      "name": "ETHBTC_spot",
+      "expected_original_sha256": "1ca422ffd3cb619b3613c9a6ec335620711633af113aa95c38f8fa558c4e7ff0",
+      "original_source_receipt_size_bytes": 3804,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    },
+    {
+      "name": "BTCUSDT_oi",
+      "expected_original_sha256": "1975cd3819a638e54f9e37ecd47cba4bac9aaf5446ad8e229ac18890d9c59d6c",
+      "original_source_receipt_size_bytes": 2360,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    },
+    {
+      "name": "BTCUSDT_long_short",
+      "expected_original_sha256": "a735da0501d9c843b72ab636d23d69620c31fa37b6b2cb9ba9eb4fa840ac24be",
+      "original_source_receipt_size_bytes": 680,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    },
+    {
+      "name": "BTCUSDT_funding",
+      "expected_original_sha256": "b2bbe255d7ba1e5a87961793df2aa87ca7c6a970c24dcdf8785323486e3fd551",
+      "original_source_receipt_size_bytes": 19520,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    },
+    {
+      "name": "ETHUSDT_oi",
+      "expected_original_sha256": "ad1704e8032aa4810fca071c09190636c934e1930911b4f6ae5a8082a36f7e6a",
+      "original_source_receipt_size_bytes": 2307,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    },
+    {
+      "name": "ETHUSDT_long_short",
+      "expected_original_sha256": "88ce4be13db94c9f5e9d026e84dda0f7eb3f0fba4df4da7696812c8f1919ec85",
+      "original_source_receipt_size_bytes": 679,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    },
+    {
+      "name": "ETHUSDT_funding",
+      "expected_original_sha256": "39ae55f836600536d36ee83487be6edf12b6fd5291f975f9bf31fd5f828d97c1",
+      "original_source_receipt_size_bytes": 19594,
+      "recovered_original_archive_bytes_sha256_match": true,
+      "recovered_original_archive_bytes_size_match": true
+    }
+  ],
+  "scientific_limits": {
+    "authenticated_source_response_bytes_at_original_capture": true,
+    "observed_and_published_by_framework_before_original_forecast_issue": true,
+    "provider_first_publication_time_independently_authenticated": false,
+    "all_original_11_mandatory_health_lanes_first_known_proven": false,
+    "full_original_R1_admitted": false,
+    "prospective_R2_certified": false,
+    "original_independent_event_families_certified": false,
+    "Round3_outcome_analysis_authorized": false,
+    "trade_or_live_rule_change": false,
+    "private_market_response_values_copied_publicly": false,
+    "restricted_original_bytes_private_repo_durability_verified": false
+  },
+  "existing_owners": {
+    "science_issue": 1596,
+    "supervisor_issue": 1156
+  }
+}
