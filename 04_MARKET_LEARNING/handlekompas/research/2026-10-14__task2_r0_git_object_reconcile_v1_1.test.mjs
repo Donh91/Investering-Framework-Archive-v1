@@ -1,5 +1,5 @@
 // Offline Node 20+ regression tests for v1.1: synthetic Git objects, never private data.
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,chmodSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync,spawnSync} from 'node:child_process';
@@ -112,5 +112,39 @@ try{
   test('legacy graft cannot forge ancestry even with --no-replace-objects',()=>{const target=git('commit-tree',baseTree,'-m','unrelated-root-graft');const graftPath=join(dir,git('rev-parse','--git-path','info/grafts'));writeFileSync(graftPath,target+' '+base+'\n');try{const vulnerable=spawnSync('git',['--no-replace-objects','merge-base','--is-ancestor',base,target],{cwd:dir});assert.equal(vulnerable.status,0);const guarded=run(inventory,target,baseTree);assert.equal(guarded.status,1,guarded.stdout);assert.match(guarded.stderr,/Legacy Git grafts present/)}finally{rmSync(graftPath,{force:true})}});
   test('annotated-tag SHA is not direct commit',()=>{git('tag','-a','r0-test-annotated','-m','tag object',base);const tag=git('rev-parse','refs/tags/r0-test-annotated');assert.equal(git('cat-file','-t',tag),'tag');const r=run(inventory,tag,baseTree);assert.equal(r.status,1);assert.match(r.stderr,/direct commit/)});
   test('file URL path decodes spaces',()=>{const u=new URL('./synthetic%20space/script.mjs',import.meta.url);assert.ok(fileURLToPath(u).includes('synthetic space'))});
+  test('untrusted GIT_DIR cannot redirect pinned source ancestry',()=>{
+    const prior=process.env.GIT_DIR;
+    process.env.GIT_DIR=join(dir,'nonexistent-git-dir-for-isolation');
+    try{
+      const r=run(inventory,base,baseTree);
+      assert.equal(r.status,0,r.stderr);
+      assert.equal(JSON.parse(r.stdout).verified_unchanged_source_set,true);
+    }finally{
+      if(prior===undefined)delete process.env.GIT_DIR;
+      else process.env.GIT_DIR=prior;
+    }
+  });
+  test('Git ancestry infrastructure failure never masquerades as not-ancestor',()=>{
+    const shim=mkdtempSync(join(tmpdir(),'task2-r0-git-fault-'));
+    const executable=join(shim,'git'),gitBin=execFileSync('which',['git'],{encoding:'utf8'}).trim();
+    // Deliberately fail only the ancestry command; all pinned object reads
+    // still reach the real Git binary. This is a controlled operational error.
+    writeFileSync(executable,
+      '#!/bin/sh\n' +
+      'if [ "$1" = "--no-replace-objects" ] && [ "$2" = "merge-base" ]; then exit 128; fi\n' +
+      'exec "'+gitBin+'" "$@"\n');
+    chmodSync(executable,0o755);
+    const prior=process.env.PATH;
+    process.env.PATH=shim+':'+prior;
+    try{
+      const injected=spawnSync('git',['--no-replace-objects','merge-base','--is-ancestor',base,head],{cwd:dir,encoding:'utf8'});
+      assert.equal(injected.status,128,'Fault shim must actually intercept ancestry');
+      const r=run(inventory,head,tree);
+      assert.equal(r.status,1,r.stdout);
+      assert.match(r.stderr,/Ancestry Git operation unverified/);
+      assert.doesNotMatch(r.stderr,/not descended/);
+      assert.equal(r.stdout,'');
+    }finally{process.env.PATH=prior;rmSync(shim,{recursive:true,force:true});}
+  });
   console.log('ALL '+count+' R0 v1.1 TESTS PASS (synthetic Git fixture only)');
 }finally{rmSync(dir,{recursive:true,force:true})}
