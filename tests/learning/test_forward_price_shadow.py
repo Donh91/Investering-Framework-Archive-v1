@@ -199,6 +199,62 @@ class ShadowPriceTests(unittest.TestCase):
                 self.assertAlmostEqual(row["low_usd"] / 1e308, 0.9, places=14)
                 self.assertAlmostEqual(row["high_usd"] / 1e308, 1.1, places=14)
 
+    def test_q25_q75_is_explicitly_distinct_uncalibrated_comparator(self):
+        data = fixture(365)
+        result = build_shadow(data)
+        self.assertEqual(result["method"], "CLOSED_DAILY_HISTORICAL_BLOCK_EXTREMA_Q10_Q90_v0_1")
+        self.assertEqual(result["descriptive_alternative_method"],
+                         "CLOSED_DAILY_HISTORICAL_BLOCK_EXTREMA_Q25_Q75_DESCRIPTIVE_v0_1")
+        self.assertTrue(result["alternative_is_unissued_non_authoritative"])
+        self.assertFalse(result["probabilities_claimed"])
+        for horizon in ("1", "7", "14", "21"):
+            with self.subTest(horizon=horizon):
+                primary = result["horizons_days"][horizon]
+                alt = result["descriptive_q25_q75_horizons_days"][horizon]
+                self.assertEqual(alt["status"], "SHADOW_BASELINE_ONLY")
+                self.assertEqual(alt["marginal_low_quantile"], 0.25)
+                self.assertEqual(alt["marginal_high_quantile"], 0.75)
+                self.assertIsNone(alt["joint_coverage_probability"])
+                self.assertIsNone(primary["coverage_probability"])
+                self.assertGreaterEqual(alt["low_usd"], primary["low_usd"])
+                self.assertLessEqual(alt["high_usd"], primary["high_usd"])
+                self.assertEqual(alt["overlapping_windows"], primary["overlapping_windows"])
+                self.assertEqual(alt["nonoverlap_upper_bound"], primary["nonoverlap_upper_bound"])
+
+    def test_q25_q75_quantile_numeric_oracle_from_frozen_bars(self):
+        data = fixture(253)
+        # Independently enumerate eligible windows at the ORIGINAL issue cutoff.
+        result = build_shadow(data)
+        bars = data["bars"]
+        anchor = bars[-1]["close_usd"]
+        for horizon in (1, 7, 14, 21):
+            with self.subTest(horizon=horizon):
+                lows, highs = [], []
+                for j in range(1, len(bars) - horizon + 1):
+                    reference = bars[j - 1]["close_usd"]
+                    period = bars[j:j + horizon]
+                    lows.append(min(row["low_usd"] for row in period) / reference)
+                    highs.append(max(row["high_usd"] for row in period) / reference)
+                def linear_percentile(values, q):
+                    ordered = sorted(values)
+                    p = (len(ordered) - 1) * q
+                    n = int(p)
+                    return ordered[n] * (1 - (p - n)) + ordered[min(n + 1, len(ordered) - 1)] * (p - n)
+                alt = result["descriptive_q25_q75_horizons_days"][str(horizon)]
+                self.assertAlmostEqual(alt["low_usd"], anchor * linear_percentile(lows, 0.25),
+                                       delta=anchor * 1e-10)
+                self.assertAlmostEqual(alt["high_usd"], anchor * linear_percentile(highs, 0.75),
+                                       delta=anchor * 1e-10)
+                self.assertEqual(alt["overlapping_windows"], 253 - horizon)
+
+    def test_alternative_21_day_abstention_matches_source_gate(self):
+        result = build_shadow(fixture(252))
+        alt = result["descriptive_q25_q75_horizons_days"]["21"]
+        self.assertEqual(alt["status"], "ABSTAIN")
+        self.assertIsNone(alt["low_usd"])
+        self.assertIsNone(alt["high_usd"])
+        self.assertIsNone(alt["joint_coverage_probability"])
+
     def test_missing_source_manifest_sha(self):
         self.reject(lambda x: x.update(source_manifest_sha256="x"))
 
