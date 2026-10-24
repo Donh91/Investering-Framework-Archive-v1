@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.data_ping.native_handlekompas import AUTHORITY, build, load_auto_state, write
+from scripts.data_ping.native_handlekompas import AUTHORITY, build, load_auto_state, owner_freshness, write
 
 
 class NativeHandlekompasTest(unittest.TestCase):
@@ -79,6 +79,29 @@ class NativeHandlekompasTest(unittest.TestCase):
         self.assertEqual(out["action"]["NOW"], "HOLD_WAIT_DATA_DEGRADED")
         self.assertEqual(out["DATA_HEALTH"]["status"], "DEGRADED")
         self.assertEqual(out["DATA_HEALTH"]["owner_freshness"]["status"], "STALE_OR_UNAVAILABLE")
+
+    def test_missing_owner_age_policy_fails_closed(self):
+        packet = self.packet()
+        freshness = packet["source_health"]["hourly_market"]["freshness"]
+        for lane in (
+            "pointer_freshness", "retrieval_freshness",
+            "session_coverage_freshness", "source_observation_freshness",
+        ):
+            freshness[lane].pop("max_age_seconds")
+        now = datetime(2026, 9, 9, 4, 0, tzinfo=timezone.utc)
+        verdict = owner_freshness(packet, now)
+        self.assertEqual(verdict["status"], "STALE_OR_UNAVAILABLE")
+        self.assertIn("OWNER_FRESHNESS_MAX_AGE_UNAVAILABLE", verdict["reasons"])
+        self.assertEqual(verdict["checks"], [])
+        out = build(packet, now=now)
+        self.assertEqual(out["action"]["NOW"], "HOLD_WAIT_DATA_DEGRADED")
+
+    def test_current_owner_age_policy_still_passes(self):
+        packet = self.packet()
+        now = datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc)
+        verdict = owner_freshness(packet, now)
+        self.assertEqual(verdict["status"], "PASS")
+        self.assertEqual(len(verdict["checks"]), 5)
 
     def test_degraded_state_cannot_be_prepare(self):
         out = build(self.packet(decision="DEGRADED", blockers=["hourly_market"]), now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
