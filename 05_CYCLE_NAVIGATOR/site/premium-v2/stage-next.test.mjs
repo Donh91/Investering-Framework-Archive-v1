@@ -55,6 +55,7 @@ test('NEXT-only addition preserves all public asset hashes and manifest names',a
   assertCanonicalTreeUnchanged(before,after);
   assert.equal(Object.keys(after).length,protectedPaths.length+1);
   assert.ok(!Object.keys(after).some(name=>name.startsWith('next/')));
+ });
 });
 test('a missing or changed unlisted canonical CSS/JS asset blocks staging',async()=>{
  await withProtected(async dir=>{
