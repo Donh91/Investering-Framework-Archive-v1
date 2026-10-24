@@ -44,6 +44,8 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Prove isolated NEXT Vite build and preserve entire canonical artifact
         run: node 05_CYCLE_NAVIGATOR/site/premium-v2/stage-next.mjs
+      - name: Verify actual NEXT Pages-prefix browser behavior at 390/430
+        run: node 05_CYCLE_NAVIGATOR/site/premium-v2/next-browser.test.mjs
       - name: Verify browser failures cannot bypass mobile release gate
         run: node 05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs
       - name: Verify real 390/430 Premium Chrome mobile behavior
