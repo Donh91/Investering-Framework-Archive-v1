@@ -33,7 +33,13 @@ function reconcile(inventory,head,expectedTree,git,verifyObject){
   if(git(['cat-file','-t',inventory.main_commit])!=='commit'||git(['cat-file','-t',head])!=='commit')throw Error('Pinned anchors must name direct commit objects');
   if(git(['rev-parse','--verify',inventory.main_commit+'^{tree}'])!==inventory.main_tree)throw Error('Pinned inventory root-tree SHA mismatch');
   if(git(['rev-parse','--verify',head+'^{tree}'])!==expectedTree)throw Error('Current pinned root-tree SHA mismatch');
-  try{git(['merge-base','--is-ancestor',inventory.main_commit,head]);}catch{throw Error('Compared commit is not descended from pinned inventory');}
+  try{git(['merge-base','--is-ancestor',inventory.main_commit,head]);}
+  catch(e){
+    // Git's documented exit 1 denotes a genuine non-descendant. Fatal
+    // subprocess failures (e.g. 128) are UNKNOWN, never source genealogy.
+    if(e?.status===1)throw Error('Compared commit is not descended from pinned inventory');
+    throw Error('Ancestry Git operation unverified');
+  }
   if(inventory.families.length===0)throw Error('Empty source-family inventory');
   const indexed=new Map(),families=[];let refs=0;const seenFamilyIds=new Set();
   for(const family of inventory.families){if(!family||typeof family.id!=='string'||!family.id||!Array.isArray(family.sources))throw Error('Invalid source family');
@@ -67,7 +73,13 @@ function reconcile(inventory,head,expectedTree,git,verifyObject){
 }
 try{
   const a=parseArgs(process.argv.slice(2));const cwd=a['--repo-dir']||process.cwd();
-  const git=(args,discardOutput=false)=>{const result=execFileSync('git',['--no-replace-objects',...args],{cwd,encoding:'utf8',stdio:['ignore',discardOutput?'ignore':'pipe','pipe'],maxBuffer:2e6});return result?.trim()||'';};
+  // Don't let inherited GIT_DIR/GIT_WORK_TREE/GIT_CONFIG_* redirect a
+  // purported exact-checkout verification to another repository.
+  const gitEnv={...process.env};
+  for(const key of Object.keys(gitEnv))if(key.startsWith('GIT_'))delete gitEnv[key];
+  gitEnv.GIT_CONFIG_NOSYSTEM='1';
+  gitEnv.GIT_CONFIG_GLOBAL=os.devnull;
+  const git=(args,discardOutput=false)=>{const result=execFileSync('git',['--no-replace-objects',...args],{cwd,env:gitEnv,encoding:'utf8',stdio:['ignore',discardOutput?'ignore':'pipe','pipe'],maxBuffer:2e6});return result?.trim()||'';};
   // --no-replace-objects does NOT disable legacy .git/info/grafts; grafts can forge ancestry.
   // Fail closed in such repositories instead of accepting a synthetic parent relationship.
   const graftPath=path.resolve(cwd,git(['rev-parse','--git-path','info/grafts']));
@@ -85,7 +97,7 @@ try{
     const fd=fs.openSync(pathname,'w+');
     try{
       execFileSync('git',['--no-replace-objects','cat-file',type,sha],{
-        cwd,stdio:['ignore',fd,'pipe'],maxBuffer:2e6
+        cwd,env:gitEnv,stdio:['ignore',fd,'pipe'],maxBuffer:2e6
       });
       const size=fs.fstatSync(fd).size;
       const h=createHash('sha1').update(Buffer.from(type+' '+size+'\0'));

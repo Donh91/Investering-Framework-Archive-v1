@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=40077939778:success,40032178202:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=40095787726:success,40077939778:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=40079307473:success,40077684297:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=40119983911:success,40079307473:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,13 +54,8 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=40077444822,40010998666 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=40119887879,40077444822 checks=40119887879:registered_workflow_count=0;40119887879:api_error='HTTPError:HTTP Error 502: Bad Gateway'",
           "kind": "N_HEALTH_HISTORY_MATCH",
-          "pass": true
-        },
-        {
-          "evidence": "MISSION_CONVERGENCE_REQUIRED",
-          "kind": "MISSION_CONVERGENCE",
           "pass": false
         }
       ]
@@ -69,13 +64,8 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=40077444822,40010998666 checks=PASS",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=40119887879,40077444822 checks=40119887879:registered_workflow_count=0;40119887879:api_error='HTTPError:HTTP Error 502: Bad Gateway'",
           "kind": "N_HEALTH_HISTORY_MATCH",
-          "pass": true
-        },
-        {
-          "evidence": "MISSION_CONVERGENCE_REQUIRED",
-          "kind": "MISSION_CONVERGENCE",
           "pass": false
         }
       ]
@@ -104,8 +94,8 @@
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
     "machine_spec_configured": 5,
-    "machine_spec_unconfigured": 30,
-    "post_fix_total": 35
+    "machine_spec_unconfigured": 31,
+    "post_fix_total": 36
   },
   "skipped": [
     {
@@ -247,6 +237,11 @@
     {
       "candidate_id": "codex-research-task2-okx-funding-settlement-clock-v1",
       "post_fix_gate": "EXACT_MAIN_CODE_FIX_PLUS_POSITIVE_NEGATIVE_TIMECLOCK_FIXTURES_PLUS_NATIVE_HANDLEKOMPAS_REGRESSION_SUITE_PLUS_MERGED_SOURCE_HASH_READBACK_PLUS_INDEPENDENT_REVIEW_PLUS_ZERO_HISTORICAL_FORECAST_MUTATIONS",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-task2-predecessor-packet-identity-v1",
+      "post_fix_gate": "Existing #1596 science and #1156 integration retain ownership. Admit through existing controller, then exact-head tested repair, genuine independent review/release authority, applicable safepoint and source/recovery separation, CI SUCCESS and exact main blob readback. Natural producer/consumer observation must show a valid predecessor identity accepted and no corruption propagated before RESOLVED; otherwise POST_FIX_OBSERVATION. No self-merge and no automatic R1/edge admission.",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     },
     {
