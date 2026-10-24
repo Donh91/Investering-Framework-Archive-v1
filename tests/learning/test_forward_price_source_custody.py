@@ -136,3 +136,20 @@ class SourceCustodyTests(unittest.TestCase):
         item = manifest['items'][0]
         item.update(bytes=len(blobs['pair']), sha256=hashlib.sha256(blobs['pair']).hexdigest())
         with self.assertRaises(ValueError): inspect_custody(manifest, blobs, as_of_utc=asof)
+
+    def test_malformed_private_number_never_leaks_in_exception_or_traceback(self):
+        import traceback
+        manifest, blobs, asof = fixture()
+        marker = 'SYNTHETIC_RESTRICTED_NUMBER_SENTINEL'
+        doc = json.loads(blobs['daily'])
+        doc['result']['XXBTZUSD'][0][3] = marker
+        blobs['daily'] = json.dumps(doc).encode()
+        item = manifest['items'][1]
+        item.update(bytes=len(blobs['daily']), sha256=hashlib.sha256(blobs['daily']).hexdigest())
+        try:
+            inspect_custody(manifest, blobs, as_of_utc=asof)
+        except ValueError as error:
+            self.assertEqual(str(error), 'PROVIDER_VALUE_INVALID')
+            self.assertNotIn(marker, ''.join(traceback.format_exception(error)))
+        else:
+            self.fail('malformed private provider number was accepted')

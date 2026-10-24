@@ -44,7 +44,12 @@ def _json(raw: bytes) -> dict:
 
 def _number(value: Any, *, positive=True) -> float:
     if not isinstance(value, str): raise ValueError('PROVIDER_NUMERIC_STRING_REQUIRED')
-    number = float(value)
+    try:
+        number = float(value)
+    except (ValueError, OverflowError):
+        # Raw malformed provider strings must not enter public logs or a
+        # chained traceback when this inspector runs in the private plane.
+        raise ValueError('PROVIDER_VALUE_INVALID') from None
     if not math.isfinite(number) or (number <= 0 if positive else number < 0):
         raise ValueError('PROVIDER_VALUE_INVALID')
     return number
