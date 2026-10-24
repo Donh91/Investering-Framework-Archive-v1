@@ -56,3 +56,32 @@ test('window scores not independently sealed and missing scored rows cannot be f
  const a=make();a.public_live_precision.window_scores.day_1_2.score_to_date=null;
  assert.equal(sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-23T17:30:00Z'}).reason,'COMPLETE_SCORE_MISSING');
 });
+
+test('canonical NOT_STARTED third window retains valid earlier score and frozen ranges',()=>{
+ const a=make(),w=a.public_live_precision.window_scores;
+ a.public_live_precision.live_as_of_utc='2026-10-22T12:00:00Z';
+ w.day_3_4.phase='LIVE';w.day_3_4.observed_hours=36;
+ w.day_5_7.phase='NOT_STARTED';w.day_5_7.observed_hours=0;
+ w.day_5_7.rows_scored=0;w.day_5_7.score_to_date=null;
+ const v=sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-22T12:30:00Z'});
+ assert.equal(v.status,'PROVISIONAL_SOURCE_READBACK');
+ assert.deepEqual(v.window_items.map(x=>x.state),[
+  'WINDOW_OBSERVED_COMPLETE','WINDOW_IN_PROGRESS','PENDING']);
+ assert.equal(v.window_items[0].source_reported_score_to_date,83.9);
+ assert.equal(v.window_items[2].source_reported_score_to_date,null);
+ assert.equal(v.window_items[2].original_ranges.length,2);
+ assert.equal(v.proof_sealed,false);
+});
+test('NOT_STARTED cannot conceal any score, actual observation, or spoofed phase',()=>{
+ const a=make(),w=a.public_live_precision.window_scores.day_5_7;
+ w.phase='NOT_STARTED';w.observed_hours=0;w.rows_scored=0;
+ a.public_live_precision.live_as_of_utc='2026-10-22T12:00:00Z';
+ let v=sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-22T12:30:00Z'});
+ assert.equal(v.reason,'PENDING_HAS_OBSERVATIONS');
+ w.score_to_date=null;w.observed_hours=1;
+ v=sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-22T12:30:00Z'});
+ assert.equal(v.reason,'PENDING_HAS_OBSERVATIONS');
+ w.observed_hours=0;w.phase='UNKNOWN_STARTED';
+ v=sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-22T12:30:00Z'});
+ assert.equal(v.reason,'WINDOW_PHASE_INVALID');
+});
