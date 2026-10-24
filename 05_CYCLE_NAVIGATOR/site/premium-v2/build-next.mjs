@@ -25,7 +25,7 @@ export function stagingPlan(){
  const from=resolve(site,'premium-v2'),to=resolve(site,'dist','next');
  if(relative(resolve(site,'dist'),to)!=='next')throw Error('NEXT_DEPLOYMENT_OUT_OF_SANDBOX');
  if(new Set(approvedAssets).size!==approvedAssets.length)throw Error('DUPLICATE_ALLOWLIST');
- if(approvedAssets.some(f=>f.startsWith('/')||f.includes('..')||f.includes('reference')||!/^[-/.a-z0-9]+$/.test(f)))
+ if(approvedAssets.some(f=>f.startsWith('/')||f.includes('..')||f.includes('reference')||!/^[-/._A-Za-z0-9]+$/.test(f)))
   throw Error('QUARANTINED_ASSET_IMPORT_FORBIDDEN');
  return{from,to,assets:approvedAssets};
 }
