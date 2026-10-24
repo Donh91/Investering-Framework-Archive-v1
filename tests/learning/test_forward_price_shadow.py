@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
 import unittest
 from datetime import datetime, timedelta, timezone
 
@@ -241,10 +242,11 @@ class ShadowPriceTests(unittest.TestCase):
                     n = int(p)
                     return ordered[n] * (1 - (p - n)) + ordered[min(n + 1, len(ordered) - 1)] * (p - n)
                 alt = result["descriptive_q25_q75_horizons_days"][str(horizon)]
-                self.assertAlmostEqual(alt["low_usd"], anchor * linear_percentile(lows, 0.25),
-                                       delta=anchor * 1e-10)
-                self.assertAlmostEqual(alt["high_usd"], anchor * linear_percentile(highs, 0.75),
-                                       delta=anchor * 1e-10)
+                # Percentile interpolation is in LOG-excursion space by contract.
+                expected_low = anchor * math.exp(linear_percentile([math.log(x) for x in lows], 0.25))
+                expected_high = anchor * math.exp(linear_percentile([math.log(x) for x in highs], 0.75))
+                self.assertAlmostEqual(alt["low_usd"], expected_low, delta=anchor * 1e-12)
+                self.assertAlmostEqual(alt["high_usd"], expected_high, delta=anchor * 1e-12)
                 self.assertEqual(alt["overlapping_windows"], 253 - horizon)
 
     def test_alternative_21_day_abstention_matches_source_gate(self):
