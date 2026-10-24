@@ -113,3 +113,30 @@ This is a **delta to approved AFL v1.0**, not a new engine, Strategist, schedule
 - **SITE #1578:** consumes sanctioned projection only after valid original source, no interpolated blue curve from hypothetical percentile endpoints, preserve original weekly frozen price chart.
 
 **No interpretation as executed:** the entries above are acceptance contracts and assigned future evidence, not a claim that authentic BTC/ETH source bytes, original shadow forecasts, matched real-world outcomes, or validated strategy improvement have already been observed.
+
+### 2026-10-24 source-custody implementation, no source admission
+
+Original private BTC/USD AssetPairs, daily and hourly responses are now preserved
+through `Donh91/secrets` PR #200, merge
+`921f7ad0a99d1ad679e9a6382f8a09ce48dda825`. The value-free binding is
+[`source_custody/2026/10/24/20261024T133724013031Z.json`](source_custody/2026/10/24/20261024T133724013031Z.json).
+Both source clocks have 720 completed contiguous bars, with the last current
+uncommitted interval excluded. Existing FRLP B6 identifies Kraken as an actuals
+fallback; that precedent does not automatically admit this challenger source.
+
+`scripts/learning/forward_price_source_custody.py::inspect_custody` inspects exact
+raw hashes, provider pair identity, separate retrieval/HTTP/candle clocks,
+contiguity, finite OHLC, completeness, final-bar exclusion and the existing 48h
+source-age limit. It runs offline, writes nothing and returns no price values.
+Its result is always `CAPTURED_NOT_ADMITTED`, `source_admitted=false` and forecast
+`UNAVAILABLE`. Existing Compass Outcomes test collection imports its synthetic
+adversarial tests. There is no new scheduled invocation or source consumer.
+
+The actual capture proves receiver availability at 13:37:24-13:37:42 UTC on
+24 October. It does not prove original historical provider first-publication,
+historical PIT vintages or a versioned collector commit. Those fields remain
+unverified/null. Never set `provider_first_known_proven=True` from this capture.
+Existing #1516/#1593 must either obtain original publication evidence or explicitly
+admit receiver-first-observed snapshots for prospective use only through the
+governed source contract. Until then, F3-F6 remain blocked; no qualified issuance,
+outcome, learning receipt, site prediction or Official action change is claimed.
