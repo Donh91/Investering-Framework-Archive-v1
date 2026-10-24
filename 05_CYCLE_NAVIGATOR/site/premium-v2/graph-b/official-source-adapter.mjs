@@ -87,8 +87,12 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
      forecastStatus='SOURCE_ISSUED';
    }else forecastStatus='PUBLISHED_INVALID_FAIL_CLOSED';
  }
- const age=now-cutoff;
- const stale=age>Math.max(30,Number(m.freshness_sla_minutes)||90)*60000;
+ // The global cutoff is provenance, NOT the last price for this asset.
+ // BTC may have missing rows while ETH continues to publish fresh closes.
+ const lastAssetClose=points.at(-1)?.observed_at_utc||null;
+ const lastAssetTime=date(lastAssetClose);
+ const stale=!Number.isFinite(lastAssetTime)||
+   now-lastAssetTime>Math.max(30,Number(m.freshness_sla_minutes)||90)*60000;
  const lineageOK=!publication_lineage||(
    publication_lineage.contract==='CN_PUBLICATION_LINEAGE_RELEASE_RECEIPT_v1'&&
    publication_lineage.forecast_week===m.forecast_week&&
@@ -103,7 +107,8 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
    source_status:'SOURCE_BOUNDED',source_reason:null,
    forecast_status:forecastStatus,forecast,bands:lowHigh,
    hourly_observations:points,actual_segments:runs(points),
-   last_observed_at_utc:h.observed_through_utc,
+   last_observed_at_utc:lastAssetClose,
+   provenance_observed_through_utc:h.observed_through_utc,
    live_freshness:stale?'STALE':'FRESH',
    source_freshness_sla_minutes:Math.max(30,Number(m.freshness_sla_minutes)||90),
    is_current_quote:!stale&&points.length>0,
