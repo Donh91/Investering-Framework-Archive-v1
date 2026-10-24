@@ -268,6 +268,40 @@ Required tests:
 Falsifier:
 If hit-rate improvement comes mainly from tiny wins and larger losses, or disappears after costs, reject the architecture despite attractive win rate.
 
+### Exit-target sensitivity: bounded research intake, 2026-10-24
+
+Source and authority:
+- User-supplied visual titled `SMALLER PROFIT TARGETS` (ZCT). Source authorship and empirical sample have not been independently verified. Treat the pictured 1R / 2R / 3R hit rates as **illustrative arithmetic, not observed framework, Alpha Lab or market outcomes**.
+- Classification: `REFINES_EXISTING_OWNER / RESEARCH_ONLY / NOT_A_NEW_ENGINE`. Reuse AT-HYP-0014, the existing Auto Trading experiment owner **#885**, and Alpha Lab denominator/outcome owner **#1340**. Do not revive the retired E0-E7 Exit Ladder, alter Official Compass SELL/Swing rules, create an independent exit scorer, or trade capital.
+
+Testable proposition:
+Holding the **same point-in-time entry, initial invalidation stop, position risk and feasible execution assumptions** fixed, an earlier exit target may produce greater after-cost realized expectancy or terminal risk-adjusted capital than a farther target. This is a comparison to falsify, **not** a default instruction to take profits at 1R.
+
+Frozen comparison arms, only when #885's existing scientific lifecycle admits the test:
+- Fixed 1R, 1.5R, 2R and 3R exits versus the existing baseline exit policy.
+- Separately: predeclared staged partial exits, breakeven-stop movement, time-loss exit and trailing remainder, with each policy's full path and change in subsequent risk modeled. These are **distinct** arms, not fee-free combinations.
+- Identical entry universe and opportunity denominator across arms, same causal observation clock, initial stop, risk budget, sizing, execution feasibility, and asset/regime splits. No arm may retroactively select only trades that hit its preferred target.
+- Preregister one primary objective (e.g. net realized expectancy in units of initial risk), secondary objectives (drawdown, profit factor, terminal capital, turnover, missed upside, tail loss), comparison window, trial count/multiplicity treatment, cost ranges and independent out-of-time validation before inspecting the test outcomes.
+
+Measurement / ambiguity gates:
+1. Set `1R` from **entry-to-initial-stop monetary risk including the actual position size**; report gross and **post-fee, spread, gas, MEV and slippage** returns in consistent R units. A changing stop must not rewrite the originally frozen denominator.
+2. Reconstruct **ordered executable price/liquidity paths**. MFE/MAE or candle high/low alone cannot prove whether target or stop was hit first. Ambiguous same-bar collisions remain `UNKNOWN`, with an explicit conservative stop-first sensitivity, never optimistic target-first imputation.
+3. Apply the same fee, latency, size, available depth and sellability model to every arm. Failed exits, rugs, delistings, unsellable inventory, no-fill and liquidation risk must remain in the denominators with defensible loss bounds, not silently disappear as `NO_TRADE` or missing winners.
+4. Preserve **all** prequalified opportunities, rejects, missed alerts, ordinary outcomes and unresolved cases via existing #1340 candidate identities; never mix retrospective reconstructive cases with genuinely frozen prospective outcomes.
+5. Compare within a paired trade cohort, quantify uncertainty with dependence-aware intervals (e.g. regime/date-cluster resampling), include negative/placebo controls, assess parameter and cost sensitivity, and correct for searching multiple targets and regimes. Small illustrative samples such as 30 trades are not a proof threshold.
+6. Report **coverage and unresolved-rate separately** from payoff metrics. Missing source evidence remains `UNKNOWN`, not zero, win, loss or fabricated fill. No post-outcome editing of frozen inputs.
+
+Illustrative sanity check only (gross, all losers -1R, no partials and zero costs):
+- 1R hit rate 60% gives `0.60 * 1 - 0.40 * 1 = +0.20R`.
+- 2R hit rate 35% gives `0.35 * 2 - 0.65 * 1 = +0.05R`.
+- 3R hit rate 20% gives `0.20 * 3 - 0.80 * 1 = -0.20R`.
+These examples are **not framework observations**. Different fills, loss tails, partial exits, costs, capital occupation and trade dependencies can reverse the ranking.
+
+Decision and falsifier:
+- Promote **nothing** from the image. `RESEARCH_CANDIDATE` only, until a #885-governed immutable test with independent validation and permitted data survives the existing gates.
+- Reject the early-target proposal if its apparent win-rate advantage disappears after costs, harms out-of-time realized expectancy/drawdown, relies on same-bar path guessing, introduces worse liquidity tails, or fails to outperform the existing exit baseline with uncertainty accounted for.
+- A successful local calculation, Markdown plan, model agreement or green CI is **not** a strategy proof, natural-production readback, or authority for Kompas/auto-trading changes.
+
 ---
 
 ## AT-HYP-0015 - DCA can inflate headline win rate and hide capital-weighted risk
