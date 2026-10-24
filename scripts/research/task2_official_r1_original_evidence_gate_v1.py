@@ -87,6 +87,11 @@ def original_outcome_assessment(forecast,forecast_path,outcome,outcome_path,hori
         t=utc(outcome.get("target_at_utc"))
         observed=utc(outcome.get("target_observation_at_utc"))
         maturity=utc(outcome.get("matured_at_utc"))
+        # A valid recorded outcome may still be nonprospective if its target
+        # precedes (or equals) the original forecast issue. Quarantine without
+        # rewriting immutable outcome data or scoring historical performance.
+        issued=utc(forecast.get("issued_at_utc"))
+        if t<=issued:reasons.append("ORIGINAL_TARGET_NOT_AFTER_ISSUE")
         if maturity<t:reasons.append("MATURITY_BEFORE_OUTCOME_TARGET")
         if maturity>utc(CUTOFF):reasons.append("OUTCOME_MATURITY_AFTER_FROZEN_CUTOFF")
         if t!=observed:reasons.append("TARGET_OBSERVATION_CLOCK_MISMATCH")
