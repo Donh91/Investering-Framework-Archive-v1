@@ -15,6 +15,8 @@ This folder must not create a parallel market framework. It must reuse existing 
 
 ## Grok + ChatGPT research archive agreement (2026-10-24)
 
+**Research entrypoint:** [paired research tracks and packet index](research_inputs/PAIRED_RESEARCH_ARCHIVE.md). Grok source, ChatGPT reviews, ChatGPT original research and future external reviews stay in distinct linked tracks.
+
 Use [the standing source-bound intake/adjudication agreement](source_notes/2026-10-24__grok_bridge_research_intake_and_pr65_adjudication.md). Grok submits original private Bridge research; ChatGPT adds a separate substantive review and archives only privacy-cleared material here through existing S1/Research Lab operations. Preserve both voices, negative findings and source hashes. No new routine, automatic copier, trading authority or paper/live deployment is created.
 
 ## Historical Kompas / DATA PING cross-archive pre-audit handover (2026-10-10)
