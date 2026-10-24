@@ -1,7 +1,7 @@
 # Premium v2.1 · staged candidate acceptance matrix
 
 **Date:** 2026-10-23 · **Owner:** SITE #1578 · **Oversight:** #1156  
-**Current state:** ISOLATED DEVELOPMENT ONLY, NOT LIVE, NOT OWNER VISUALLY APPROVED.  
+**Current state (2026-10-24):** PREMIUM NEXT BUILT + CHROME CI VERIFIED; ISOLATED /next/ RELEASE NOT YET DEPLOYED; physical Safari and independent review outstanding.  
 **DRAFT PR:** #1769. Do not merge or switch canonical root from this status.
 
 ## Source and design freeze
@@ -145,3 +145,29 @@ Owner's full phased mandate approved in chat on 2026-10-23 for phases 1–5, gov
 - Real exact-head GitHub Actions gate run 40030844172/job/120678411322 (evaluated on HEAD fb1c689b) FAILED the **existing canonical** test 05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs:408 with Graph B top=747.4375 CSS px, threshold <=740. It is not a pass and cannot be waived. Root is protected by separate release contract. Route to established SITE owner for legitimate DOM/layout fix, compare latest main, run both 390 and 430 mobile tests. Preserve this failure in acceptance evidence.
 - Security research checked upstream vitejs/vite Oct 21 advisory GHSA-8g5g-mxqh-grgj and signed v6.4.5 release. Pinned Vite updated from 6.3.6 to patched 6.4.5 (source-only dependency change, no runtime behavior assumed). The future reviewed package-lock must be generated against 6.4.5. No npm install/Vite compile is claimed from this patch.
 - The earlier branch-head check outcomes are superseded after any further commit. Re-read current exact head before any merge/release, and do not bypass Actions exhausted-month policy.
+
+## 2026-10-24 · Actual GitHub runner source + Vite + browser evidence · supersedes older readiness notes
+
+**Authority:** SITE #1578, oversight #1156, owner's explicit phases 1–5 noncanonical /next release mandate. Historical 2026-10-23 notes above correctly describe the earlier failures; **their 'no lockfile', '33 behind', 'not wired', 'CI failure' and 'no real Vite/browser test' status statements are now superseded**. Keep the history for traceability.
+
+### Verified actual-source work, not estimated
+
+- PR #1769 safe main synchronization at merge commit `1a6914bdbe2fdf1091bd722168bd00e382ec7780`, without force or change to main; comparing main against pre-documentation head yielded **0 behind**, exclusively premium-v2 source plus the two pre-existing workflow files. Main may change later; recheck.
+- Real npm v3 lockfile committed at `05_CYCLE_NAVIGATOR/site/premium-v2/package-lock.json`, directly reconstructed from a GitHub hosted npm runner receipt SHA256 `03c1f1eaed810408a37771270e18322d05d321af2f802dddf8fff0dab633a321`; Vite 6.4.5 and TS 5.7.3 pinned, 66 package entries. The temporary PR-restricted lock-bootstrap step was REMOVED. No hand-written dependency graph.
+- Existing `cn-site-v2-gate.yml` now tests Premium via Node, reproducible npm ci + full test suite + actual Vite dual-entry build, artifact validator and actual 390/430 Chrome CDP at the **GitHub Pages prefix**, then canonical existing 390/430 browser tests. No new workflow. Verified 61/61 Premium Node unit/negative tests both before AND after install, 0 fail.
+- Real Vite artifact `CN_NEXT_VITE_ARTIFACT_CHECK_v1 = PASS`: `site/dist/next/index.html` and `site/dist/next/graph-b/source-graph-b.html` plus SHA256-hashed CSS/JS, base `/Investering-Framework-Archive-v1/next/`. Zero demo forecasts. Current candidate artifact hash receipts from GitHub CI: index `aa0017b1ec3db7d05ef765ad3347d74dae261681f3df36edd00f8d9222ead6a2`, nested B HTML `c28011aae6fe10cf8a96277f318810607adfb156bc86c2ee9dcdc7aef3af625b`.
+- `stage-next.mjs` snapshots **all 62 existing canonical public artifact files** by name and SHA256 before/after build, not just original six sentinels. `ALL_NON_NEXT_ARTIFACT_HASHES_IDENTICAL` PASS. New CSS/JS, missing or changed canonical files and symlinks cause hard fail. Existing `build-public.mjs` still wipes site/dist, so staging remains sequenced strictly **after** canonical build/score/live/lineage/social/final-shell checks.
+- Actual headless Chrome CDP `NEXT_VITE_BROWSER_REAL_CDP_PASS` at 390 and 430 CSS px, 0 overflow, original B/Proof/Kompas/PATH on NEXT root, DA/EN, ETH/BTC, nested B entry, real CN logo, no HTTP asset errors, no JS exceptions. Browser runner may restart Chrome once with a new isolated profile; both failures still fail the job. THIS IS NOT PHYSICAL IPHONE SAFARI.
+- The previous canonical B top=747.4 mobile failure was superseded by newer `main` reconciliation, with canonical Chrome 390/430 tests PASS (not threshold change or bypass).
+- ONE step in **existing** `cycle-navigator-pages.yml` is coded **only on this unmerged branch**, after finalized canonical integrity checks and before existing `upload-pages-artifact@v4`, using `node 05_CYCLE_NAVIGATOR/site/premium-v2/stage-next.mjs`. Exactly one Pages workflow/upload/deploy; root remains the original site. Staging on main is **not** active yet.
+- Best last exact-head CI evidence before this documentation commit: head `f9d245485fcb268afe4e836e6f20706e3f257f0d`, **8 SUCCESS, 3 SKIPPED, 0 FAIL**. Real Node/Vite/browser run: https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/40071828979/job/120806725536 . **After ANY subsequent source/documentation commit, rerun/re-read exact HEAD checks; do not extrapolate this evidence.**
+
+### Still NOT satisfied, nonwaivable staging acceptance
+
+- Independent exact-head reviewer approval/adversarial audit: GitHub reviews on PR #1769 = 0 at last check. Review requested in PR conversation / SITE #1578 / Supervisor #1156. Do not impersonate reviewer. Same author cannot self-certify independence.
+- Approved 390/430 iPhone Safari original B screenshot/geometry/text parity; actual Safari, zoom/VoiceOver, reduced motion and hands-on source/expiry interactions NOT fully certified by Chrome.
+- `/next/` live GitHub Pages 200 + asset checks + canonical root/legacy/data rollback readback must be checked **after** governed merge/deploy. AppDeploy READY is only DEV QA: https://cycle-navigator-premium-v2-1-github-source-qa-71fr1g.v2.appdeploy.ai/
+- Need re-read fresh main, exact head, actual GitHub required rules, Actions budget and independent recovery point; no CI bypass, no paid-minute subscription, no direct main push.
+- **Separate owner acceptance required to replace official root** after user sees and approves `/next/` on iPhone; current mandate alone authorizes only governed noncanonical staging.
+
+Durable execution summary and explicit reviewer assignment: SITE https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1578#issuecomment-6381161809 and Supervisor https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6381165679 .
