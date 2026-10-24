@@ -7,7 +7,7 @@ const $=id=>document.getElementById(id);
 const dataUrl=new URL('../../data/compass.json',import.meta.url);
 const latestUrl=new URL('../../data/latest.json',import.meta.url);
 const lang=(da,en)=>document.documentElement.lang==='en'?en:da;
-let currentModel=null,sourceCompass=null,sourceLatest=null,expiryTimer=null;
+let currentModel=null,sourceCompass=null,sourceLatest=null,expiryTimer=null,requestGeneration=0;
 const DA_PHASES={
  'BTC leadership':'BTC fører',
  'ETH leadership':'ETH fører',
@@ -110,24 +110,38 @@ async function fetchJson(url){
  if(!x.ok)throw Error('PUBLIC_FEED_HTTP_'+x.status);
  return x.json();
 }
-async function init(){
- clearUnissued();
+function invalidateCompass(){
+ currentModel=null;sourceCompass=null;sourceLatest=null;
  if(expiryTimer!==null){clearTimeout(expiryTimer);expiryTimer=null;}
+ clearUnissued();
+}
+function repaintFromCurrentClock(){
+ // Always re-derive Official freshness; NEVER reuse a cached current flag.
+ if(!sourceCompass||!sourceLatest){invalidateCompass();localizeCompass();return}
+ currentModel=readOfficialCompassPath(sourceCompass,sourceLatest,{now_utc:new Date().toISOString()});
+ paint(currentModel);
+}
+async function init(){
+ const request=++requestGeneration;
+ // Immediately invalidate old actions while new evidence is in flight.
+ invalidateCompass();
  try{
   const [compass,latest]=await Promise.all([fetchJson(dataUrl),fetchJson(latestUrl)]);
+  if(request!==requestGeneration)return; // slower prior request cannot resurrect an old source
   sourceCompass=compass;sourceLatest=latest;
-  currentModel=readOfficialCompassPath(compass,latest,{now_utc:new Date().toISOString()});
-  paint(currentModel);
-  if(currentModel.status==='SOURCE_CURRENT'){
+  repaintFromCurrentClock();
+  if(currentModel?.status==='SOURCE_CURRENT'){
    const ms=Date.parse(currentModel.valid_until_utc)-Date.now()+150;
    if(ms>0&&ms<2147483000)expiryTimer=setTimeout(()=>{
-     currentModel=readOfficialCompassPath(sourceCompass,sourceLatest,{now_utc:new Date().toISOString()});
-     paint(currentModel);
+     if(request!==requestGeneration)return;
+     repaintFromCurrentClock();
    },ms);
   }
- }catch{clearUnissued()}
+ }catch{
+  if(request===requestGeneration)invalidateCompass(); // never retain a previously current model
+ }
 }
 init();
 
-document.addEventListener('cn:languagechange',()=>{if(currentModel)paint(currentModel);else localizeCompass()});
+document.addEventListener('cn:languagechange',repaintFromCurrentClock);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)init()});
