@@ -1,0 +1,183 @@
+/**
+ * Real NEXT artifact smoke on the exact GitHub Pages repository prefix.
+ * Bounded headless Chrome/CDP test, no npm browser dependencies.
+ * Emulates 390 and 430 CSS px; NOT physical iPhone Safari approval.
+ */
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {spawn} from 'node:child_process';
+import {existsSync,readFileSync,mkdtempSync,rmSync} from 'node:fs';
+import {resolve,dirname,extname,join,sep} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {tmpdir} from 'node:os';
+import {setTimeout as delay} from 'node:timers/promises';
+
+const here=dirname(fileURLToPath(import.meta.url));
+const dist=resolve(here,'../dist');
+const base='/Investering-Framework-Archive-v1/';
+const chrome=[process.env.CHROME_BIN,'/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser']
+ .find(path=>path&&existsSync(path));
+assert.ok(chrome,'NEXT_BROWSER_NO_CHROME');
+assert.ok(existsSync(resolve(dist,'next/index.html')),'NEXT_BROWSER_NO_REAL_VITE_ROOT');
+assert.ok(existsSync(resolve(dist,'next/graph-b/source-graph-b.html')),'NEXT_BROWSER_NO_B_ENTRY');
+
+const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript',
+ '.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png'};
+const server=createServer((req,res)=>{
+ let path;
+ try{path=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname)}
+ catch{res.writeHead(400).end();return;}
+ if(!path.startsWith(base)){res.writeHead(404).end();return;}
+ let rel=path.slice(base.length);
+ if(!rel||rel.endsWith('/'))rel+='index.html';
+ const file=resolve(dist,rel);
+ if(!file.startsWith(dist+sep)){res.writeHead(403).end();return;}
+ try{
+  const bytes=readFileSync(file);
+  res.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream',
+   'Cache-Control':'no-store'}).end(bytes);
+ }catch{res.writeHead(404).end('Not found');}
+});
+await new Promise((ok,bad)=>server.once('error',bad).listen(0,'127.0.0.1',ok));
+const origin='http://127.0.0.1:'+server.address().port+base;
+const errors=[],responses=[];
+let profile=null,browser=null,socket=null;
+try{
+ profile=mkdtempSync(join(tmpdir(),'cn-next-browser-'));
+ browser=spawn(chrome,['--headless=new','--no-sandbox','--disable-gpu',
+  '--disable-dev-shm-usage','--no-zygote','--no-first-run',
+  '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],
+  {stdio:['ignore','ignore','pipe']});
+ let stderr='';
+ browser.stderr.on('data',data=>{stderr=(stderr+data.toString()).slice(-2400)});
+ let port=null;
+ for(let i=0;i<120;i++){
+  if(browser.exitCode!==null)break;
+  try{
+   const p=Number(readFileSync(join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);
+   if(Number.isInteger(p)&&p>0){port=p;break}
+  }catch{}
+  await delay(100);
+ }
+ assert.ok(port,'NEXT_CHROME_STARTUP_FAILED:'+stderr);
+ const pages=await (await fetch('http://127.0.0.1:'+port+'/json')).json();
+ const page=pages.find(p=>p.type==='page');
+ assert.ok(page?.webSocketDebuggerUrl,'NEXT_NO_CDP_TARGET');
+ socket=new WebSocket(page.webSocketDebuggerUrl);
+ await new Promise((ok,bad)=>{socket.onopen=ok;socket.onerror=bad});
+ const pending=new Map();
+ let id=0;
+ socket.onmessage=e=>{
+  const msg=JSON.parse(e.data);
+  if(msg.method==='Runtime.exceptionThrown'){
+   errors.push(String(msg.params?.exceptionDetails?.text||'RUNTIME_EXCEPTION'));
+  }
+  if(msg.method==='Network.responseReceived'){
+   const response=msg.params?.response||{};
+   if(response.status>=400&&/\.(?:html|js|css|json|svg)(?:$|\?)/.test(response.url||''))
+    responses.push({url:response.url,status:response.status});
+  }
+  if(msg.id&&pending.has(msg.id)){
+   const entry=pending.get(msg.id);pending.delete(msg.id);
+   msg.error?entry.reject(Error(JSON.stringify(msg.error))):entry.resolve(msg.result);
+  }
+ };
+ function send(method,params={}){
+  return new Promise((ok,bad)=>{
+   const serial=++id;
+   pending.set(serial,{resolve:ok,reject:bad});
+   socket.send(JSON.stringify({id:serial,method,params}));
+   const timeout=setTimeout(()=>{
+    if(pending.has(serial)){pending.delete(serial);bad(Error('NEXT_CDP_TIMEOUT:'+method))}
+   },10000);
+   timeout.unref();
+  });
+ }
+ async function evaluate(fn){
+  const result=await send('Runtime.evaluate',{expression:'('+fn.toString()+')()',
+   returnByValue:true,awaitPromise:true});
+  if(result.exceptionDetails)throw Error('NEXT_BROWSER_EVALUATION:'+JSON.stringify(result.exceptionDetails));
+  return result.result?.value;
+ }
+ await send('Page.enable');
+ await send('Runtime.enable');
+ await send('Network.enable');
+ const results=[];
+ for(const width of [390,430]){
+  await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:932,
+   deviceScaleFactor:1,mobile:true});
+  await send('Page.navigate',{url:origin+'next/'});
+  let ready=false;
+  for(let attempt=0;attempt<100;attempt++){
+   await delay(100);
+   ready=await evaluate(()=>document.readyState==='complete'&&
+    !!document.getElementById('official-pilot-path')&&
+    (document.getElementById('feed-status')?.textContent||'')!=='Kontrollerer kanonisk, offentligt CN-datasæt. Ingen demo-priser.');
+   if(ready)break;
+  }
+  assert.ok(ready,'NEXT_SOURCE_APP_NOT_READY:'+width);
+  const report=await evaluate(()=>{
+   const $=q=>document.querySelector(q);
+   const ids=['variant-panel','chart','proof-explorer','official-product-pilot','official-pilot-path'];
+   const present=ids.every(id=>!!document.getElementById(id));
+   const logo=$('.dev-brand img');
+   const label=$('[data-asset="BTC"]');
+   const alternate=$('[data-asset="ETH"]');
+   const touch=[...document.querySelectorAll('[data-asset],[data-lang]')].map(b=>{
+    const r=b.getBoundingClientRect();return {w:r.width,h:r.height};
+   });
+   const before=$('.premium-entry-navigation [data-premium-nav="compass"]')?.textContent||'';
+   $('[data-lang="en"]')?.click();
+   const english=$('.premium-entry-navigation [data-premium-nav="compass"]')?.textContent||'';
+   $('[data-lang="da"]')?.click();
+   const danish=$('.premium-entry-navigation [data-premium-nav="compass"]')?.textContent||'';
+   alternate?.click();
+   return {width:innerWidth,overflow:Math.max(document.body.scrollWidth,document.documentElement.scrollWidth)-innerWidth,
+    present,logo:!!logo?.complete&&logo.naturalWidth>0,
+    originalB:!!$('#chart[viewBox="0 0 1000 405"]'),links:[...document.querySelectorAll('.premium-entry-navigation a')].map(a=>a.getAttribute('href')),
+    before,english,danish,touch,sourceState:$('#source-state')?.textContent||'',
+    sourceStatus:$('#feed-status')?.textContent||'',
+    btc:!!label,eth:!!alternate,rootPath:location.pathname,
+    title:$('h1[data-premium-copy="title"]')?.textContent||''};
+  });
+  await delay(400);
+  const selection=await evaluate(()=>({
+   ethSelected:document.querySelector('[data-asset="ETH"]')?.getAttribute('aria-pressed')==='true',
+   pair:document.getElementById('pair')?.textContent
+  }));
+  assert.equal(report.width,width,'NEXT_WRONG_VIEWPORT');
+  assert.ok(report.present&&report.originalB,'NEXT_MISSING_REAL_PREMIUM_MARKUP:'+width);
+  assert.ok(report.logo,'NEXT_REAL_CN_LOGO_NOT_LOADED:'+width);
+  assert.ok(report.overflow<=2,'NEXT_HORIZONTAL_OVERFLOW:'+width+':'+report.overflow);
+  assert.equal(report.english,'Compass','NEXT_LANGUAGE_EN');
+  assert.equal(report.danish,'Kompas','NEXT_LANGUAGE_DA');
+  assert.ok(report.links.includes('#proof-explorer')&&report.links.includes('#official-pilot-path'),
+   'NEXT_MISSING_SECTION_NAV');
+  assert.ok(report.touch.every(x=>x.w>=44&&x.h>=44),'NEXT_TOUCH_TARGET_TOO_SMALL');
+  assert.ok(selection.ethSelected&&selection.pair==='ETH / USD','NEXT_BTC_ETH_NOT_INTERACTIVE');
+  assert.ok(report.rootPath.endsWith('/next/'),'NEXT_WRONG_BASEPATH');
+  assert.equal(errors.length,0,'NEXT_BROWSER_JS_EXCEPTIONS:'+JSON.stringify(errors));
+  assert.equal(responses.length,0,'NEXT_BROWSER_FAILED_ASSETS:'+JSON.stringify(responses));
+  results.push({width,overflow:report.overflow,originalB:true,logo:true,
+   officialInputsPresent:report.present,daEn:true,ethSelected:true,failClosed:!!report.sourceStatus});
+ }
+ await send('Page.navigate',{url:origin+'next/graph-b/source-graph-b.html'});
+ let nested=false;
+ for(let i=0;i<40;i++){
+  await delay(100);
+  nested=await evaluate(()=>document.readyState==='complete'&&!!document.getElementById('chart'));
+  if(nested)break;
+ }
+ assert.ok(nested,'NEXT_NESTED_B_ENTRY_NOT_AVAILABLE');
+ assert.deepEqual(responses,[],'NEXT_NESTED_ASSET_MISSING');
+ assert.deepEqual(errors,[],'NEXT_NESTED_RUNTIME_EXCEPTION');
+ console.log('NEXT_VITE_BROWSER_REAL_CDP_PASS '+JSON.stringify({
+  base,engine:'CHROME_HEADLESS_CDP_NOT_SAFARI',results,nested_graph_b:true,
+  http_asset_errors:responses.length,js_exceptions:errors.length
+ }));
+}finally{
+ try{socket?.close()}catch{}
+ if(browser&&browser.exitCode===null)browser.kill('SIGTERM');
+ try{rmSync(profile,{recursive:true,force:true})}catch{}
+ await new Promise(resolve=>server.close(resolve));
+}
