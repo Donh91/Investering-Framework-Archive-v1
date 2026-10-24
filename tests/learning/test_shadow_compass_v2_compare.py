@@ -200,6 +200,25 @@ class ShadowOfficialPairingTests(unittest.TestCase):
                     self.assertEqual(report["quarantined_candidate_count"], 1)
                     self.assertEqual(report["quarantined_candidates"][0]["reason"], "V3_TIME_BASIS_INVALID_PRE_SELECTION")
 
+    def test_nonprospective_issue_clock_is_quarantined_before_pairing(self):
+        for side in ("shadow", "official"):
+            for issue in ("2026-10-01T04:59:00Z", "2026-10-01T17:00:00Z"):
+                with self.subTest(side=side, issue=issue):
+                    shadow = outcome(shadow=True, ident="S1", issued="2026-10-01T06:12:00Z", result="CORRECT")
+                    official = outcome(shadow=False, ident="O1", issued="2026-10-01T06:10:00Z", result="CORRECT")
+                    (shadow if side == "shadow" else official)["issued_at_utc"] = issue
+                    result = pair_outcomes([official], [shadow])
+                    self.assertEqual(result["pair_count"], 0)
+                    self.assertEqual(result["quarantined_candidate_count"], 1)
+                    self.assertEqual(
+                        result["quarantined_candidates"][0]["reason"],
+                        "V3_TIME_BASIS_INVALID_PRE_SELECTION",
+                    )
+        # Existing valid issue/reference/target chronology remains comparable.
+        shadow = outcome(shadow=True, ident="Svalid", issued="2026-10-01T05:00:00Z", result="CORRECT")
+        official = outcome(shadow=False, ident="Ovalid", issued="2026-10-01T05:00:00Z", result="CORRECT")
+        self.assertEqual(pair_outcomes([official], [shadow])["pair_count"], 1)
+
     def test_future_batch_cannot_steal_valid_pair_slot(self):
         closer = outcome(shadow=True, ident="Sfuture", issued="2026-10-01T06:01:00Z", result="CORRECT")
         closer["target_source_window_end_utc"] = "2099-01-01T00:00:00Z"
