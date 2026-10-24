@@ -71,8 +71,14 @@ def _v3_time_basis_valid(row: dict[str, Any], *, shadow: bool) -> bool:
     collected = parse_utc(row.get("target_source_window_end_utc"))
     matured = parse_utc(row.get("matured_at_utc"))
     reference = parse_utc(tb.get("start_reference_at_utc"))
+    issued = parse_utc(row.get("issued_at_utc"))
     target = parse_utc(row.get("target_at_utc"))
-    if None in (opened, closed, collected, matured, reference, target):
+    if None in (opened, closed, collected, matured, reference, issued, target):
+        return False
+    # An outcome can describe a nominal reference-based window without being
+    # a prospective issued forecast. Keep its immutable row, but quarantine it
+    # from comparison when the reference is future-dated or the target is due.
+    if not reference <= issued < target:
         return False
     if opened.minute or opened.second or opened.microsecond:
         return False
