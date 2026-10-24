@@ -121,6 +121,16 @@ class ForwardPriceResearchOracleTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     inspect_completed_window(sample(), rows, observed_as_of_utc='2026-10-26T09:01:00Z')
 
+    def test_extreme_numeric_inputs_fail_closed_not_overflow_or_inf_output(self):
+        issue=sample(); issue['anchor_usd']=10**1000
+        issue['freeze_sha256']=digest({k:v for k,v in issue.items() if k!='freeze_sha256'})
+        with self.assertRaisesRegex(ValueError,'POSITIVE_FINITE_PRICE_REQUIRED'): check_issue(issue)
+        issue=sample(); issue['anchor_usd']=1e-308
+        issue['candidates'][0].update(low_usd=1e308,high_usd=1.1e308)
+        issue['freeze_sha256']=digest({k:v for k,v in issue.items() if k!='freeze_sha256'})
+        with self.assertRaisesRegex(ValueError,'RESEARCH_DIAGNOSTIC_NONFINITE'):
+            inspect_completed_window(issue,observations(),observed_as_of_utc='2026-10-26T09:01:00Z')
+
     def test_malformed_extra_outcome_or_method_id_rejected(self):
         row=sample(); row['candidates'][0]['method']=''
         row['freeze_sha256']=digest({k:v for k,v in row.items() if k!='freeze_sha256'})
