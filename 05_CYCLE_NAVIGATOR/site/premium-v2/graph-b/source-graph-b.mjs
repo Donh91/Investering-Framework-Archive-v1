@@ -76,6 +76,22 @@ function textLabels(){
   const v=rootWords[el.dataset.premiumCopy];if(v)el.textContent=v;
  });
 
+ const staticLabels=[
+  ['[data-t="cardEyebrow"]',t('FROSSEN PROGNOSE / UGENS BEVÆGELSE','FROZEN FORECAST / WEEKLY MOVEMENT')],
+  ['[data-t="freeze"]',model?.forecast_status==='SOURCE_ISSUED'?
+   t('Original kildeudstedt prognose','Original source-issued forecast'):
+   t('Original prognose · afventer kilde','Original forecast · source pending')],
+  ['.dev-brand span',document.querySelector('.premium-entry')?
+   t('PREMIUM v2.1 · IKKE OFFICIEL FORSIDE','PREMIUM v2.1 · NOT OFFICIAL HOMEPAGE'):
+   t('DESIGN QA · IKKE PRODUKTION','DESIGN QA · NOT PRODUCTION')]
+ ];
+ for(const [selector,value] of staticLabels){const n=document.querySelector(selector);if(n)n.textContent=value}
+ for(const [selector,value] of [
+  ['.asset-select',t('Aktiv','Asset')],
+  ['.premium-entry-navigation',t('Premium sektioner','Premium sections')],
+  ['#hour-slider',t('Time for den observerede kurve','Hour of the observed curve')]
+ ]){const n=document.querySelector(selector);if(n)n.setAttribute('aria-label',value)}
+ set('play-text',playTimer===null?t('Afspil uge','Play week'):t('Stop','Pause'));
  document.documentElement.lang=language;
  document.querySelectorAll('[data-lang]').forEach(button=>
   button.setAttribute('aria-pressed',String(button.dataset.lang===language)));
@@ -115,7 +131,7 @@ function plot(){
  const bands=model.bands||[],hourly=model.hourly_observations||[];
  const start=Date.parse(bands[0].window_start_utc),end=Date.parse(bands.at(-1).window_end_utc);
  if(!Number.isFinite(start)||!Number.isFinite(end)||end-start!==7*DAY){model=null;plot();return}
- const availableMax=hourly.length?Math.max(0,Math.min(167,Math.floor((hourly.at(-1).time*1000-start)/HOUR))):0;
+ const availableMax=hourly.length?Math.max(0,Math.min(168,Math.floor((hourly.at(-1).time*1000-start)/HOUR))):0;
  sliderHour=Math.min(Math.max(0,sliderHour),availableMax);
  const hourInput=$('hour-slider');hourInput.max=String(availableMax);hourInput.value=String(sliderHour);
  hourInput.disabled=!hourly.length;
@@ -221,7 +237,7 @@ async function refresh(){
   const start=Date.parse(next.bands?.[0]?.window_start_utc||'');
   const end=Date.parse(next.last_observed_at_utc||'');
   sliderHour=Number.isFinite(start)&&Number.isFinite(end)?
-   Math.max(0,Math.min(167,Math.floor((end-start)/HOUR))):0;
+   Math.max(0,Math.min(168,Math.floor((end-start)/HOUR))):0;
  }catch{
   if(request!==requestGeneration||selected!==asset)return;
   model=null;

@@ -9,7 +9,7 @@ const HOME='https://raw.githubusercontent.com/Donh91/CycleNavigator-scores/main/
 const latest=new URL('../../data/latest.json',import.meta.url);
 const INDEX=HOME+'v2/scorebook-index.json';
 const RECEIPT=HOME+'v2/source-receipts/2026/2026-10-20_PUBLIC_READBACK.json';
-let view=null,links=[],step='freeze';
+let view=null,sourceSnapshot=null,expiryTimer=null,links=[],step='freeze';
 const label={
  freeze:['Oprindelig udstedelse og fastlåste intervaller.','Original freeze and unchanged source ranges.'],
  observed:['Efterfølgende observeret dækning, aldrig bagudkonstrueret.','Later observation coverage, never hindsight reconstruction.'],
@@ -85,6 +85,10 @@ function renderSources(){
 
 function localizeProof(){
  const en=document.documentElement.lang==='en';
+ const eyebrow=document.querySelector('.proof-eyebrow');if(eyebrow)eyebrow.textContent=en?
+  'RESULTS / ORIGINAL → OBSERVED → SCORE':'RESULTATER / ORIGINAL → OBSERVERET → SCORE';
+ const steps=document.querySelector('.proof-steps');if(steps)steps.setAttribute('aria-label',en?'Proof steps':'Proof-trin');
+ $('proof-windows').setAttribute('aria-label',en?'Three weekly price windows':'Tre ugentlige prisvinduer');
  const heading=$('proof-title');if(heading)heading.textContent=en?
   'Proof. Check what was actually forecast.':'Proof. Se hvad der faktisk blev forudsagt.';
  const sub=document.querySelector('.proof-head p');if(sub)sub.textContent=en?
@@ -104,7 +108,22 @@ function localizeProof(){
 }
 
 function display(){
+ // Re-derive freshness on every repaint, including language/tab interactions.
+ if(sourceSnapshot)view=sourceOnlyPriceRangeProof(sourceSnapshot,{now_utc:new Date().toISOString()});
+ if(expiryTimer!==null){clearTimeout(expiryTimer);expiryTimer=null;}
+ if(view?.status==='PROVISIONAL_SOURCE_READBACK'&&!view.source_stale){
+  const ms=Date.parse(view.source_valid_until_utc)-Date.now()+1;
+  if(ms>0&&ms<2147483000)expiryTimer=setTimeout(display,ms);
+ }
  localizeProof();
+ const available=view?.status==='PROVISIONAL_SOURCE_READBACK';
+ const freshness=$('proof-freshness');
+ freshness.dataset.freshness=available?(view.source_stale?'stale':'current'):'unavailable';
+ freshness.textContent=available?
+  (view.source_stale?'STALE':'CURRENT')+' · '+local('Observation','Observed')+' '+view.live_as_of_utc+
+  ' · '+local('Friskhedsgrænse','Freshness limit')+' '+view.source_freshness_sla_minutes+
+  ' min · '+local('gyldig til','valid until')+' '+view.source_valid_until_utc:
+  local('Observationstid og kildefriskhed utilgængelig.','Observation time and source freshness unavailable.');
  $('proof-status').textContent=view?.status==='PROVISIONAL_SOURCE_READBACK'?
   local('FORELØBIG · '+view.forecast_week,'PROVISIONAL · '+view.forecast_week):
   local('KILDE MANGLER','SOURCE MISSING');
@@ -119,9 +138,10 @@ function display(){
 }
 async function initialize(){
  try{
-  const latestJson=await json(latest);
-  view=sourceOnlyPriceRangeProof(latestJson,{now_utc:new Date().toISOString()});
- }catch{view={status:'UNAVAILABLE'};}
+  sourceSnapshot=await json(latest);
+ }catch{sourceSnapshot=null;view={status:'UNAVAILABLE'};}
+ // Render and arm expiry before optional external Proof links finish loading.
+ display();
  try{
   const [index,receipt]=await Promise.all([json(INDEX),json(RECEIPT)]);
   links=sourceReadbackProofRows(index,receipt);
@@ -146,4 +166,6 @@ $('proof-copy-audit')?.addEventListener('click',async()=>{
  }catch{$('proof-copy-status').textContent=local('Kopiér manuelt fra kildeoversigten','Use sources above manually')}
 });
 document.addEventListener('cn:languagechange',()=>display());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)display()});
+window.addEventListener('pageshow',display);
 initialize();

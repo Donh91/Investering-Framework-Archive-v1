@@ -121,9 +121,9 @@ try{
  await send('Runtime.enable');
  await send('Network.enable');
  const results=[];
- for(const width of [390,430]){
-  await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:932,
-   deviceScaleFactor:1,mobile:true});
+ for(const width of [390,430,1440]){
+  await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:width===430?932:1000,
+   deviceScaleFactor:1,mobile:width<600});
   await send('Page.navigate',{url:origin+'next/'});
   let ready=false;
   for(let attempt=0;attempt<100;attempt++){
@@ -192,14 +192,18 @@ try{
     document.querySelector('[data-lang="en"]')?.click();
     const status=document.getElementById('official-pilot-status')?.textContent||'';
     const action=document.getElementById('official-pilot-action')?.textContent||'';
+    const bias=document.getElementById('official-pilot-bias')?.textContent||'';
+    const biasNote=document.getElementById('official-pilot-bias-note')?.textContent||'';
     document.querySelector('[data-asset="BTC"]')?.click();
     document.querySelector('[data-lang="da"]')?.click();
     const quote=document.getElementById('observed-value')?.textContent||'';
     const pair=document.getElementById('pair')?.textContent||'';
-    return {status,action,quote,pair};
+    return {status,action,quote,pair,bias,biasNote};
    });
    assert.equal(staleAction.status,'SOURCE UNAVAILABLE','NEXT_OFFLINE_RESURRECTED_CURRENT_COMPASS');
    assert.equal(staleAction.action,'—','NEXT_OFFLINE_RESTORED_CURRENT_ACTION');
+   assert.equal(staleAction.bias,'—','NEXT_OFFLINE_RETAINED_BULL_BEAR');
+   assert.match(staleAction.biasNote,/No verified Bull\/Bear/,'NEXT_OFFLINE_RETAINED_BIAS_VALIDITY');
    assert.equal(staleAction.quote,'—','NEXT_ASSET_SWITCH_BORROWED_PRIOR_PRICE');
    assert.equal(staleAction.pair,'BTC / USD','NEXT_ASSET_SWITCH_WRONG_SELECTED_PAIR');
   }

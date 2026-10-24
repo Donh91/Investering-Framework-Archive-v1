@@ -171,3 +171,23 @@ Owner's full phased mandate approved in chat on 2026-10-23 for phases 1–5, gov
 - **Separate owner acceptance required to replace official root** after user sees and approves `/next/` on iPhone; current mandate alone authorizes only governed noncanonical staging.
 
 Durable execution summary and explicit reviewer assignment: SITE https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1578#issuecomment-6381161809 and Supervisor https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6381165679 .
+
+## 2026-10-24 · Final-review remediation, current execution
+
+Owner mission: repair/review/release existing #1769 to isolated `/next/` only; no root promotion. Earlier historical counts do not certify this new head.
+
+- P2-A: `clearUnissued()` clears Bull/Bear value and explanatory validity. Expired sources also suppress numerical Bull/Bear; current values show original issue and expiry. Offline refresh + DA/EN + open-tab expiry tested.
+- P2-B: slider HTML, available observation cap and refresh initialization now allow closing hour 168. Runtime tests distinguish exact hour 167/168 and absent final close, without filling gaps or altering source.
+- P2-C: Proof exposes separate observation timestamp, 90-minute source SLA/deadline and STALE/CURRENT alongside unchanged PROVISIONAL score maturity. Every repaint revalidates against clock; one local deadline timer updates an open tab, also before optional external links return; visibility/pageshow revalidate. No extra polling or score computation.
+- P2-D: retained existing asset invalidation/request-generation implementation. New runtime adversarial test keeps ETH fetch unresolved while language/slider change, then resolves a newer BTC request before the older ETH response. No old-asset quote survives.
+- Real Chrome source QA exposed untranslated static labels; bounded DA/EN heading, ARIA-label and source-status translations added without geometry/redesign or source changes.
+- Added 9 runtime tests against actual UI modules + actual source adapters: full Premium suite **76/76 PASS**, genuine committed-lockfile `npm ci` PASS, actual Vite **6.4.5** BOTH entrypoints PASS, compiled asset/basepath verifier PASS. Test-only clock/DOM fixtures never enter published Vite modules.
+- Guard-removal negative controls caught **4/4** A/B/C/D regressions; originals restored and full suite passed. This is implementation testing, not independent approval or physical Safari.
+- Canonical pipeline: **166/166** existing public product release checks PASS; hourly, source freshness, full-stack, public live precision, lineage self-tests/readback PASS. Full pre/post `stage-next.mjs` SHA-256 inventory: **62/62 non-NEXT canonical assets identical**, no added/deleted/modified outside `next/`.
+- Public source at local build: W43/CN #30, observed through `2026-10-24T07:00:00Z`, source equality PASS, STALE_AT_BUNDLE_TIME; Compass `DEGRADED` correctly unavailable, not invented current evidence. Original daily forecast unavailable, no synthetic blue curve.
+- Main locally reconciled via ordinary nonforce merge `1bc9208cc` from source `108f02db1da3421b99d46e0455cb21852fdb72b5` (13 newer commits). Only existing Premium subtree and two preexisting site workflow diffs relative to main; no canonical source changes authored in this execution.
+- Existing Chrome CI test expanded to 390×844, 430×932 and 1440×1000 plus offline Bull/Bear assertions. Execution on the new exact head must be read back before release; historical Chrome runs are not substituted.
+
+**Still required:** genuinely independent new-head review and applicable platform checks; physical iPhone Safari/VoiceOver/zoom and owner visual acceptance required above; contemporary recovery/safepoint verification before high-impact workflow integration; actual live Pages readback only after governed merge. No waiver or fabricated approval. Root and canonical data remain protected.
+
+Publication note: this host can fetch but ordinary Git push has no GitHub credential. Publish the tested exact tree through the connected Git object API with both original PR head and current-main parent, then fast-forward the existing branch with expected-head verification. No force, direct main write or new PR.

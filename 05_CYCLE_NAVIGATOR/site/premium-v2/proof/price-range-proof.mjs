@@ -24,6 +24,7 @@ export function sourceOnlyPriceRangeProof(snapshot,{now_utc}={}){
  const issued=parse(m.frozen_at_utc),first=parse(m.scoring_valid_from_utc),cutoff=parse(m.live_as_of_utc);
  if(!Number.isFinite(issued)||!Number.isFinite(first)||issued>=first||
     !Number.isFinite(cutoff)||cutoff>now)return bad('ISSUANCE_OR_OBSERVATION_CLOCK_UNVERIFIED');
+ const freshnessSlaMinutes=Math.max(30,Number(m.freshness_sla_minutes)||90);
  const results=[];
  for(const id of WINS){
   const w=m.window_scores?.[id];
@@ -67,7 +68,9 @@ export function sourceOnlyPriceRangeProof(snapshot,{now_utc}={}){
   forecast_week:m.forecast_week,public_issue_number:m.public_issue_number,
   freeze_issued_at_utc:m.frozen_at_utc,scoring_valid_from_utc:m.scoring_valid_from_utc,
   live_as_of_utc:m.live_as_of_utc,
-  source_stale:now-cutoff>Math.max(30,Number(m.freshness_sla_minutes)||90)*60000,
+  source_freshness_sla_minutes:freshnessSlaMinutes,
+  source_valid_until_utc:new Date(cutoff+freshnessSlaMinutes*60000).toISOString(),
+  source_stale:now-cutoff>freshnessSlaMinutes*60000,
   window_items:results,price_range_family:m.score_family,formula:m.formula,
   edge_score:null,score_sealed:false,proof_sealed:false
  };

@@ -32,10 +32,21 @@ function clearUnissued(){
  $('official-pilot-phase-note').textContent=lang('Ingen verificeret aktuel PATH-position.',
   'No verified current PATH position.');
  $('official-pilot-gate').textContent='';
+ $('official-pilot-bias').textContent='—';
+ $('official-pilot-bias-note').textContent=lang(
+  'Ingen verificeret Bull/Bear-evidens eller gyldighed.',
+  'No verified Bull/Bear evidence or validity.');
 }
 
 function localizeCompass(){
  const en=document.documentElement.lang==='en';
+ for(const [selector,da,english] of [
+  ['.official-pilot-eyebrow','KOMPAS / KILDEAUTORITET','COMPASS / SOURCE AUTHORITY'],
+  ['.official-pilot-action > span','OFFICIEL HANDLING','OFFICIAL ACTION'],
+  ['.official-pilot-state > span','MARKED / BULL · BEAR','MARKET / BULL · BEAR']
+ ]){const n=document.querySelector(selector);if(n)n.textContent=en?english:da}
+ $('official-product-pilot').setAttribute('aria-label',en?'Compass and PATH · isolated development':'Kompas og PATH · isoleret udvikling');
+ $('official-pilot-horizons').setAttribute('aria-label',en?'Five Official horizons':'Fem officielle horisonter');
  const heading=document.querySelector('.official-pilot-head h2');
  if(heading)heading.textContent=en?'Decision compass.':'Handlingskompas.';
  const subtitle=document.querySelector('.official-pilot-head p');
@@ -68,12 +79,14 @@ function paint(model){
   'Original Official action: '+code+'. Issued '+model.issued_at_utc):
   lang('Historisk '+code+' (IKKE aktuelt). Gyldig til '+model.valid_until_utc,
        'Historical '+code+' (NOT current). Valid until '+model.valid_until_utc);
- const g=model.bull_bear?.['1_3d'];
+ const g=now?model.bull_bear?.['1_3d']:null;
  $('official-pilot-bias').textContent=g?
   g.bull+' / '+g.bear:'—';
- $('official-pilot-bias-note').textContent=lang(
-  'BULL / BEAR, kildeudstedt evidensbalance, ikke sandsynlighed.',
-  'BULL / BEAR, source-issued evidence balance, not probability.');
+ $('official-pilot-bias-note').textContent=g?lang(
+  'BULL / BEAR, kildeudstedt evidensbalance, ikke sandsynlighed. Udstedt '+model.issued_at_utc+' · gyldig til '+model.valid_until_utc,
+  'BULL / BEAR, source-issued evidence balance, not probability. Issued '+model.issued_at_utc+' · valid until '+model.valid_until_utc):lang(
+  'Ingen aktuel verificeret Bull/Bear-evidens.',
+  'No current verified Bull/Bear evidence.');
  const h=$('official-pilot-horizons');h.replaceChildren();
  const translations={NEXT_12H:'12H',NEXT_1_3D:'1–3D',NEXT_5_7D:'5–7D',
  NEXT_2_3W:'2–3U',CYCLE_ALTCOINS_3_8W:'3–8U'};
