@@ -1,0 +1,81 @@
+{
+  "admission_blockers": [
+    "ORIGINAL_PROVIDER_FIRST_KNOWN_UNVERIFIED",
+    "INTERACTIVE_COLLECTOR_LINEAGE_UNVERIFIED",
+    "NEW_CHALLENGER_SOURCE_USE_NOT_ADMITTED"
+  ],
+  "asset": "BTC",
+  "capture_id": "20261024T133724013031Z",
+  "collector_commit_sha": null,
+  "contract": "FORWARD_PRICE_SOURCE_CUSTODY_PUBLIC_BINDING_v1",
+  "forecast_issued": false,
+  "historical_replay_allowed": false,
+  "instrument_id": "XXBTZUSD",
+  "manifest": {
+    "bytes": 4141,
+    "exact_path": "raw/FORWARD_PRICE_SOURCE_QUALIFICATION_V1/2026/10/24/20261024T133724013031Z/MANIFEST.json",
+    "git_blob_sha1": "456af693124d63bc11960bf2241ef206497338ad",
+    "sha256": "fc6ad120074208ac334664bb3f1e28f06d44a5b7f2c5d5130f8e1791381a2f8f"
+  },
+  "members": [
+    {
+      "bytes": 561,
+      "exact_path": "raw/FORWARD_PRICE_SOURCE_QUALIFICATION_V1/2026/10/24/20261024T133724013031Z/pair.json",
+      "name": "pair",
+      "retrieval_end_utc": "2026-10-24T13:37:29.281198Z",
+      "retrieval_start_utc": "2026-10-24T13:37:24.014191Z",
+      "schema_id": "KRAKEN_ASSET_PAIRS_PUBLIC_V1",
+      "sha256": "5dc381d15b5c5b808ba1845b840cc08630bba718fa765fc1a9033b0f818d032a"
+    },
+    {
+      "bytes": 62311,
+      "completed_rows": 720,
+      "exact_path": "raw/FORWARD_PRICE_SOURCE_QUALIFICATION_V1/2026/10/24/20261024T133724013031Z/daily.json",
+      "excluded_final_current_interval": 1,
+      "first_completed_open_utc": "2024-11-03T00:00:00Z",
+      "gap_count": 0,
+      "interval_seconds": 86400,
+      "latest_completed_close_utc": "2026-10-24T00:00:00Z",
+      "name": "daily",
+      "retrieval_end_utc": "2026-10-24T13:37:35.805944Z",
+      "retrieval_start_utc": "2026-10-24T13:37:29.282008Z",
+      "returned_rows": 721,
+      "schema_id": "KRAKEN_OHLC_TIME_OPEN_HIGH_LOW_CLOSE_VWAP_VOLUME_COUNT_V1",
+      "sha256": "c9d7e6c0353cf62ceb122f65f78b5f9120ad996b66a3fd3ded09a08a54c55685"
+    },
+    {
+      "bytes": 59433,
+      "completed_rows": 720,
+      "exact_path": "raw/FORWARD_PRICE_SOURCE_QUALIFICATION_V1/2026/10/24/20261024T133724013031Z/hourly.json",
+      "excluded_final_current_interval": 1,
+      "first_completed_open_utc": "2026-09-24T13:00:00Z",
+      "gap_count": 0,
+      "interval_seconds": 3600,
+      "latest_completed_close_utc": "2026-10-24T13:00:00Z",
+      "name": "hourly",
+      "retrieval_end_utc": "2026-10-24T13:37:42.134553Z",
+      "retrieval_start_utc": "2026-10-24T13:37:35.956467Z",
+      "returned_rows": 721,
+      "schema_id": "KRAKEN_OHLC_TIME_OPEN_HIGH_LOW_CLOSE_VWAP_VOLUME_COUNT_V1",
+      "sha256": "e4fc9d8b49e5521d6c888a080d522fd42aeaa8b6eff21d0703cec2a816bab338"
+    }
+  ],
+  "original_historical_provider_first_known_verified": false,
+  "outcome_scoring_allowed": false,
+  "owner": "#1516",
+  "private_commit_main_reachability_verified": true,
+  "private_commit_sha": "921f7ad0a99d1ad679e9a6382f8a09ce48dda825",
+  "private_pr": 200,
+  "private_repository": "Donh91/secrets",
+  "provider": "KRAKEN",
+  "quote": "USD",
+  "schema_id": "FORWARD_PRICE_SOURCE_CUSTODY_RESEARCH_RECEIPT_v1",
+  "schema_sha256": null,
+  "source_admitted": false,
+  "source_contract_id": "FRLP_V0_1_20260708_B6_KRAKEN_ACTUALS_FALLBACK_REFERENCE_ONLY",
+  "source_contract_scope": "EXISTING_FRLP_ACTUALS_FALLBACK_REFERENCE_NOT_CHALLENGER_TRAINING_ADMISSION",
+  "status": "CAPTURED_NOT_ADMITTED",
+  "supervisor": "#1156",
+  "use_scope": "RECORD_ONLY_SOURCE_QUALIFICATION",
+  "weekly_owner": "#1593"
+}
