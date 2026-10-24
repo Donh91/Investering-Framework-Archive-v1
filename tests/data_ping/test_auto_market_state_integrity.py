@@ -101,6 +101,37 @@ class AutoMarketStateIntegrityTests(unittest.TestCase):
                 self.assertEqual(health["status"], "UNAVAILABLE", f"{scenario}: {health}")
                 self.assertIsNone(delta(100, None), f"{scenario}: no numeric delta from corrupt input")
 
+    def test_existing_pointer_with_corrupt_git_blob_is_not_first_packet(self):
+        import subprocess
+        import tempfile
+        from pathlib import Path
+        from scripts.data_ping.auto_market_state import prior_packet
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            snapshot = self._predecessor_snapshot(td, scenario="valid")
+            pointer_path = "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json"
+            blob = subprocess.check_output(
+                ["git", "rev-parse", "HEAD:" + pointer_path],
+                cwd=root, text=True,
+            ).strip()
+            object_file = root / ".git" / "objects" / blob[:2] / blob[2:]
+            self.assertTrue(object_file.is_file())
+            original_bytes = object_file.read_bytes()
+            original_mode = object_file.stat().st_mode & 0o777
+            object_file.chmod(0o600)
+            try:
+                # The entry EXISTS in the immutable tree but its object is
+                # corrupt. This is not a legitimate first-packet absence.
+                object_file.write_bytes(b"corrupted-synthetic-object")
+                found, health = prior_packet(snapshot)
+                self.assertIsNone(found)
+                self.assertEqual(health["status"], "UNAVAILABLE")
+                self.assertNotEqual(health["status"], "NOT_AVAILABLE_FIRST_PACKET")
+            finally:
+                object_file.write_bytes(original_bytes)
+                object_file.chmod(original_mode)
+
     def test_predecessor_real_git_valid_and_first_packet_controls(self):
         import tempfile
         from scripts.data_ping.auto_market_state import prior_packet, delta
