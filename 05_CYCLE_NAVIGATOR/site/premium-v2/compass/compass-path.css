@@ -1,0 +1,57 @@
+/* Premium v2.1 · minimal OFFICIAL Compass + PATH visual candidate
+   Quiet Precision; no market state is computed by these styles. */
+.official-product-pilot{background:#fff;color:#07172f;border:1px solid #e0e7ef;
+ border-radius:17px;padding:clamp(15px,3vw,28px);margin:0 0 60px;
+ box-shadow:0 10px 30px #081b3506}
+.official-pilot-head{display:flex;align-items:start;justify-content:space-between;gap:15px}
+.official-pilot-eyebrow{font-size:10px;letter-spacing:.12em;color:#6a8db6;font-weight:800}
+.official-pilot-head h2{font-size:clamp(27px,3.9vw,40px);letter-spacing:-.055em;
+ margin:7px 0;font-weight:730}
+.official-pilot-head p,.official-pilot-subhead p{color:#8291a3;font-size:12px;line-height:1.6;margin:0}
+.official-pilot-status{font-size:10px;max-width:165px;min-width:0;text-align:center;
+ border-radius:9px;color:#6b8299;border:1px solid #d7e2ee;background:#f4f7fb;
+ padding:9px 11px;font-weight:770}
+.official-pilot-main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
+ gap:11px;margin-top:23px}
+.official-pilot-main article{border:1px solid #dce6f0;border-radius:12px;
+ padding:19px;display:flex;flex-direction:column;gap:9px}
+.official-pilot-main article>span{font-size:10px;letter-spacing:.095em;font-weight:800;color:#7590aa}
+.official-pilot-main article strong{font-size:clamp(25px,4vw,42px);letter-spacing:-.04em}
+.official-pilot-main article small{font-size:11px;color:#71869c;line-height:1.65}
+.official-pilot-action{background:#092342;color:#fff}
+.official-pilot-action>span{color:#a5bfdc!important}
+.official-pilot-action small{color:#bed0e4!important}
+.official-pilot-horizons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:14px 0}
+.official-pilot-horizon{border:1px solid #e2eaf2;background:#fbfcff;
+ border-radius:10px;padding:13px 11px;min-width:0}
+.official-pilot-horizon span{font-size:10px;color:#8295aa;font-weight:760;letter-spacing:.04em}
+.official-pilot-horizon strong{display:block;font-size:13px;color:#193b61;
+ margin:8px 0 2px;overflow-wrap:anywhere}
+.official-pilot-horizon small{font-size:10px;color:#7990a7;line-height:1.6}
+.official-pilot-subhead{border-top:1px solid #e4ebf4;margin-top:25px;padding-top:19px}
+.official-pilot-subhead h3{margin:0 0 6px;font-size:17px;letter-spacing:-.02em}
+.official-pilot-rotation{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));
+ gap:4px;margin:13px 0}
+.official-pilot-tier{border:1px solid #dfe8f1;border-radius:8px;padding:10px 4px;
+ text-align:center;background:#f7f9fb;min-width:0}
+.official-pilot-tier strong{font-size:11px;color:#254768;display:block;overflow-wrap:anywhere}
+.official-pilot-tier small{font-size:9px;line-height:1.5;color:#8799ab}
+.official-pilot-path{display:flex;flex-wrap:wrap;align-items:stretch;gap:5px;
+ list-style:none;margin:13px 0;padding:0;counter-reset:stage}
+.official-pilot-path li{counter-increment:stage;border:1px solid #e0e7ef;
+ background:#f7f9fc;padding:9px 10px;min-width:115px;flex:1 0 14%;
+ border-radius:9px;color:#5e7894;font-size:10px;font-weight:670}
+.official-pilot-path li::before{content:counter(stage, decimal-leading-zero);
+ display:block;color:#94a9bf;font-size:9px;letter-spacing:.1em;margin-bottom:6px}
+.official-pilot-path li[aria-current=step]{border-color:#5c8ad4;background:#ebf4ff;color:#124888}
+.official-pilot-gate{color:#7088a0;font-size:11px;line-height:1.65;margin:15px 0 0}
+@media(max-width:720px){.official-pilot-horizons{grid-template-columns:repeat(2,minmax(0,1fr))}
+.official-pilot-rotation{grid-template-columns:repeat(4,minmax(0,1fr))}
+.official-pilot-path li{flex-basis:28%;min-width:0}}
+@media(max-width:430px){.official-pilot-head{flex-direction:column}
+.official-pilot-status{max-width:none;text-align:left}
+.official-pilot-main{grid-template-columns:1fr}
+.official-pilot-horizons{grid-template-columns:repeat(2,minmax(0,1fr))}
+.official-pilot-path li{flex-basis:45%}}
+@media(prefers-reduced-motion:reduce){.official-product-pilot *, .official-product-pilot *::before{
+ animation:none!important;transition:none!important}}

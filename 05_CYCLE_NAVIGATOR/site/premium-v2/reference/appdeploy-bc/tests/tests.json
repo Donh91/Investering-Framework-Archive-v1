@@ -1,0 +1,70 @@
+[
+  {
+    "name": "Switch from B to C without changing forecast semantics",
+    "sanity": true,
+    "viewport": "desktop",
+    "covers": [
+      "variant B/C selector",
+      "different palettes and typographic treatment",
+      "fixed graph data across themes"
+    ],
+    "description": "Verify B is dark navy and C is warm ivory with cyan line, and changing theme preserves source and cursor.",
+    "steps": [
+      "Open the test site in default B and observe a navy chart, forecast line, shaded swing band and actual line.",
+      "Click alternative C.",
+      "Switch back to B and compare the displayed price and current time."
+    ],
+    "expected": "C renders an ivory light chart with teal forecast and dark actual curve, while B uses navy with blue and green. The selected hour and illustrative price remain unchanged; no tables are displayed."
+  },
+  {
+    "name": "BTC ETH data toggle and hourly playback",
+    "viewport": "desktop",
+    "covers": [
+      "BTC/ETH toggle",
+      "hourly progress slider",
+      "play pause week animation",
+      "frozen forecast"
+    ],
+    "description": "Check asset controls and that forecast stays fixed when hourly actual series advances.",
+    "steps": [
+      "Set slider near Monday and note the length of the actual line.",
+      "Click Afspil uge and then Stop, verifying that only actual line extends.",
+      "Switch from BTC to ETH."
+    ],
+    "expected": "Actual line grows hour by hour while the full forecast and intraday low/high envelope remain fixed; ETH shows distinct labelled simulated values."
+  },
+  {
+    "name": "Mobile minimalist layouts and bilingual controls",
+    "viewport": "mobile",
+    "covers": [
+      "375px responsive layout",
+      "DA EN translation",
+      "variant switch",
+      "touch targets"
+    ],
+    "description": "Ensure both distinct variants remain operable without horizontal scrolling on narrow iPhone-like viewport.",
+    "steps": [
+      "Open on mobile and choose C.",
+      "Switch language to EN and inspect weekly graph labels.",
+      "Choose B, then BTC and ETH."
+    ],
+    "expected": "No horizontal page overflow, plot and days are visible, navigation and buttons remain readable, and both Danish and English labels render correctly."
+  },
+  {
+    "name": "Fail-closed missing original forecast source",
+    "viewport": "mobile",
+    "covers": [
+      "missing-source guard",
+      "forecast and band hidden",
+      "observed data remain",
+      "restore demo"
+    ],
+    "description": "No prospective forecast line should appear when the source is explicitly marked unavailable.",
+    "steps": [
+      "Click Test uden prognose.",
+      "Inspect the forecast line, shaded low/high band and status text.",
+      "Click Vis forecast-design to restore the sample."
+    ],
+    "expected": "Blue/teal forecast and shaded band disappear with a missing-original-source message while the actual path remains visible. Demo reappears only on explicit restore."
+  }
+]
