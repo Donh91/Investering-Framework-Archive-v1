@@ -27,7 +27,8 @@ test('changing even a single official data source is not a legal NEXT-only stagi
  await withProtected(async dir=>{
   const original=await snapshotProtected(dir);
   await writeFile(join(dir,'data/compass.json'),'tampered');
-  assert.throws(()=>assertUnchanged(original,await snapshotProtected(dir)),/CANONICAL_PAGES_ARTIFACT_CHANGED:data\/compass.json/);
+  const modified=await snapshotProtected(dir);
+  assert.throws(()=>assertUnchanged(original,modified),/CANONICAL_PAGES_ARTIFACT_CHANGED:data\/compass.json/);
  });
 });
 test('missing public lineage or legacy shell fails closed before staging',async()=>{
@@ -61,10 +62,12 @@ test('a missing or changed unlisted canonical CSS/JS asset blocks staging',async
   await writeFile(join(dir,'assets/original.css'),'body{color:#07172f}');
   const baseline=await snapshotCanonicalTree(dir);
   await writeFile(join(dir,'assets/original.css'),'body{color:red}');
-  assert.throws(()=>assertCanonicalTreeUnchanged(baseline,await snapshotCanonicalTree(dir)),
+  const changedCss=await snapshotCanonicalTree(dir);
+  assert.throws(()=>assertCanonicalTreeUnchanged(baseline,changedCss),
    /CANONICAL_PAGES_BUNDLE_CHANGED:assets\/original.css/);
   await rm(join(dir,'assets/original.css'));
-  assert.throws(()=>assertCanonicalTreeUnchanged(baseline,await snapshotCanonicalTree(dir)),
+  const missingCss=await snapshotCanonicalTree(dir);
+  assert.throws(()=>assertCanonicalTreeUnchanged(baseline,missingCss),
    /CANONICAL_PAGES_BUNDLE_CHANGED:assets\/original.css/);
  });
 });
@@ -72,7 +75,8 @@ test('a new non-NEXT root artifact cannot silently enter the public site',async(
  await withProtected(async dir=>{
   const baseline=await snapshotCanonicalTree(dir);
   await writeFile(join(dir,'unauthorized.js'),'console.log("added")');
-  assert.throws(()=>assertCanonicalTreeUnchanged(baseline,await snapshotCanonicalTree(dir)),
+  const added=await snapshotCanonicalTree(dir);
+  assert.throws(()=>assertCanonicalTreeUnchanged(baseline,added),
    /CANONICAL_PAGES_BUNDLE_CHANGED:unauthorized.js/);
  });
 });
