@@ -1,0 +1,94 @@
+{
+  "automatic_scientific_admission": false,
+  "context_snapshot_replay": {
+    "cfgi_raw_http_response_replay_available": false,
+    "context_equalities_are_not_blanket_feature_admission": true,
+    "okx_member_hash_checks": 56,
+    "original_artifact_archives_matched": 7,
+    "original_okx_raw_response_replays_equal": 42,
+    "original_selected_funding_cfgi_equalities": 55
+  },
+  "contract": "TASK2_SCOPED_ORIGINAL_SOURCE_REPLAY_AUDIT_v1",
+  "engine_git_blob": "d00d38bed517861fa2487dce42d330bf05812f6d",
+  "forecast_id": "CMP-20261012-468da783e9d8",
+  "full_compass_admission": false,
+  "hourly_original_artifact": {
+    "artifact_id": 11779038695,
+    "bytes": 10728,
+    "run_id": 38321418868,
+    "sha256": "0d83427d97e0793e4f3b894cf2c96c0e9c3a1dc7dc82035e18c36762c0a5f5d8",
+    "source_job_completed_at_utc": "2026-10-12T23:18:56Z",
+    "upload_completed_at_utc": "2026-10-12T23:18:46Z"
+  },
+  "input_git_blobs": {
+    "forecast": "5239ba0450c97e425e5d5791e9c6c6cfa07e1613",
+    "hourly_csv": "dbdace82840e7c38c7fb40f26a85268d48e4ae88",
+    "hourly_target": "9873b58e231891e4685c475c76c497609d1a10d4",
+    "okx_collector": "db67b1a429794c0b022f2f06db1e36d58b8e2b50",
+    "packet": "48a061318da52279c761cff46456a17f0822954f",
+    "predecessor": "036325b0607e0ebd50d01a0b72783d7d524faf9d",
+    "producer": "6196286539bd3e3688dc3bbcf322b15112b9ef5c"
+  },
+  "investor_delivery_or_economic_edge_verified": false,
+  "limitations": [
+    "One inspected development forecast, no untouched holdout",
+    "Nine original target-bound rows share one overlap block",
+    "Context provider numeric values do not compute 12h direction; original health predicates remain gating",
+    "CN-dependent horizons, full Compass and investor economics excluded",
+    "Original frozen R1 ledger unchanged"
+  ],
+  "negative_controls": {
+    "future_availability_rejected": true,
+    "missing_required_health_predicate_rejected": true,
+    "wrong_packet_binding_rejected": true,
+    "wrong_raw_member_hash_rejected": true
+  },
+  "original_12h_direction_replay_equal": true,
+  "original_action_and_market_replay_equal": true,
+  "original_packet_publication": {
+    "commit_sha": "7ed9e997573fc23b2b89fd4998b69391e4063306",
+    "job_id": 115051297353,
+    "remote_push_reported_at_utc": "2026-10-12T23:22:47Z",
+    "run_id": 38321473523,
+    "source_job_completed_at_utc": "2026-10-12T23:22:54Z"
+  },
+  "outcome_data_read_or_scored": false,
+  "price_comparisons": [
+    {
+      "current_and_predecessor_exact_rows": true,
+      "original_csv_current_equal": true,
+      "original_unrounded_delta_equal": true,
+      "raw_member_sha256": "b1cbcd776f51fb62a1d5e14360897740afac52644f406cc3282999f5d1b1b28f",
+      "raw_rows": 26,
+      "raw_to_original_prices_equal": true,
+      "selected_feature_bindings_equal": true,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "current_and_predecessor_exact_rows": true,
+      "original_csv_current_equal": true,
+      "original_unrounded_delta_equal": true,
+      "raw_member_sha256": "f282e95b320daf1c8d24c484aa3febd4932519c77959e7a0c07ea6d3691945ed",
+      "raw_rows": 26,
+      "raw_to_original_prices_equal": true,
+      "selected_feature_bindings_equal": true,
+      "symbol": "ETHUSDT"
+    },
+    {
+      "current_and_predecessor_exact_rows": true,
+      "original_csv_current_equal": true,
+      "original_unrounded_delta_equal": true,
+      "raw_member_sha256": "ad299f9cccc9a32e420126086e5fb331d2876cc3834dc4b4f0aab57e4fa01f13",
+      "raw_rows": 26,
+      "raw_to_original_prices_equal": true,
+      "selected_feature_bindings_equal": true,
+      "symbol": "ETHBTC"
+    }
+  ],
+  "provider_exact_first_publication_verified": false,
+  "required_health_lane_count": 11,
+  "required_health_predicates_replayed": true,
+  "scope": "ORIGINAL_NEXT_12H_DIRECTION_DEVELOPMENT_SOURCE_CHAIN_ONLY",
+  "source_chain_checks_passed": true,
+  "timing_binding_semantics": "Coordinator-verified original server logs; offline checks do not fetch/re-authenticate logs"
+}

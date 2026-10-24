@@ -1,0 +1,71 @@
+{
+  "acceptance_tests": {
+    "negative": [
+      "Before implementing, freeze negative regressions for wrong pointer digest, missing/malformed digest, altered content retaining declared self hash, different valid target with pointer digest mismatch, wrong pointer/packet contract, and malformed/unreadable target.",
+      "For corrupt predecessor inputs, verify the parent path cannot compute deltas from the corrupt payload or certify identity as AVAILABLE/PASS. Preserve existing failure semantics; escalate rather than invent a new market gate.",
+      "In isolated mutants remove pointer digest comparison and canonical content recomputation independently; each corresponding negative test must fail. Keep a valid positive control and run exact scoped producer integration.",
+      "Do not rewrite original forecasts/packets/outcomes, loosen source guards, add deadbands/lookback limits, change direction/scoring/market rules, use paid providers or start new workflows."
+    ],
+    "positive": [
+      "Valid canonical predecessor packet and matching pointer are accepted, including UTF-8 canonical byte/hash convention, with byte-identical valid-input original deltas and normal producer output apart from explicitly justified diagnostic metadata.",
+      "Absent pointer retains existing NOT_AVAILABLE_FIRST_PACKET semantics; actual missing target and traversal fail closed. Existing bounded auto-market-state tests execute with nonzero collection.",
+      "Use an independently captured valid fixture through real snapshot and parent assembly, not a test stub that replaces identity validation."
+    ]
+  },
+  "allowed_change_scope": [
+    "scripts/data_ping/auto_market_state.py",
+    "tests/data_ping/test_auto_market_state_integrity.py"
+  ],
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "candidate_id": "codex-research-task2-predecessor-packet-identity-v1",
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "0bd0e83b14c49c0dd9a2c6d940e4a0d784d3c13e",
+      "summary": "Immutable producer version used by reproducible probe; same producer blob confirmed on main 91636f1bad8e444111855f31f4838a07e4503b6e. This is input integrity, not proof original historical packets were corrupt."
+    },
+    {
+      "kind": "TEST",
+      "ref": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/task2_predecessor_integrity_probe_v1.py",
+      "summary": "Research-only eight-case real-Git reproduction, SHA256 0fa7d5dba485d1285bae21324a3a0393cecb4b0f9a596f2d72a30a31386265a7. It asserts existing vulnerable observations, NOT repaired security behavior. Future regression suite must reverse negative expectations."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/31_EXECUTED_REPLAY_PUBLICATION_AND_INTEGRITY_20261023.json",
+      "summary": "Executed source-bound evidence, SHA256 5063e1e5cc4b19583ab9d7117727cc44fd1995c62f0184aa4ff67d653f8bd721. Original selected Oct14 packets passed actual hash recomputation; historical first-known remains separate."
+    }
+  ],
+  "finding_key": "auto-market-state:prior-packet:declared-and-canonical-hash-not-enforced-v1",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "predecessor selection or time policy",
+    "historical frozen data and forecasts",
+    "Round3 analysis or scoring",
+    "new workflows, schedulers, agents, providers or credentials"
+  ],
+  "linked_health_signature": null,
+  "objective": "Repair ONLY predecessor input-identity validation in existing prior_packet/read path. The exact producer Git blob 6196286539bd3e3688dc3bbcf322b15112b9ef5c accepts a wrong pointer hash, content changed without updating its packet hash, a different valid target with mismatched pointer hash, and wrong packet contract. All four were reproduced with the real pinned GitCliSnapshot in temporary Git repositories; two changed the sign of the synthetic original delta. Preserve the existing canonical packet hash convention (canon excluding packet_sha256), exact declared pointer-to-packet identity, existing packet/pointer contracts, current valid-input outputs and legitimate first-packet absence behavior. Reject corrupt predecessor inputs before use and expose the existing appropriate integrity-failure reason. Do not change predecessor selection, freshness/window semantics or numerical rules. If a safe parent failure route cannot be implemented without new market-policy semantics, STOP and return NEEDS_MORE_EVIDENCE for existing framework-owner adjudication.",
+  "origin": {
+    "source_paths": [
+      "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/task2_predecessor_integrity_probe_v1.py",
+      "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/31_EXECUTED_REPLAY_PUBLICATION_AND_INTEGRITY_20261023.json",
+      "scripts/data_ping/auto_market_state.py"
+    ],
+    "thread_label": "Task 2 owner-authorized Work continuation; #1596 / PR #1747",
+    "type": "RESEARCH_THREAD"
+  },
+  "post_fix_gate": "Existing #1596 science and #1156 integration retain ownership. Admit through existing controller, then exact-head tested repair, genuine independent review/release authority, applicable safepoint and source/recovery separation, CI SUCCESS and exact main blob readback. Natural producer/consumer observation must show a valid predecessor identity accepted and no corruption propagated before RESOLVED; otherwise POST_FIX_OBSERVATION. No self-merge and no automatic R1/edge admission.",
+  "primary_target": "scripts/data_ping/auto_market_state.py",
+  "reproduction": "From the research PR checkout: python3 06_RESEARCH_LAB/hugging_face_task2_audit_20261022/task2_predecessor_integrity_probe_v1.py --repo-root . --source-commit 0bd0e83b14c49c0dd9a2c6d940e4a0d784d3c13e . Expected existing result: EXISTING_GUARD_GAP_REPRODUCED_NOT_REPAIRED, cases_executed=8, integrity_violations_accepted=4; valid control accepted and missing/traversal inputs unavailable. Actual GitCliSnapshot and pinned producer functions execute; no hash/path reader is mocked. The probe deliberately refuses a changed producer blob. For remediation, first bind fresh current main/queue/owner and reproduce on the actual target version; never claim that replaying the frozen vulnerable version verifies the repaired current code.",
+  "requested_priority": "EXPEDITED",
+  "requires_framework_owner_authority": false,
+  "status": "SUBMITTED",
+  "submitted_at_utc": "2026-10-23T20:31:04.142932Z",
+  "title": "Validate existing predecessor packet identity before accepting delta inputs"
+}

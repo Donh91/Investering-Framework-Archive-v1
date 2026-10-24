@@ -1,0 +1,107 @@
+# TASK 2 · EXTREME WORK + CODEX RESEARCH MISSION v1.0
+**Date:** 2026-10-22, Europe/Copenhagen. **Classification:** OWNER_APPROVAL_PENDING / DESIGN_ONLY / PUBLIC_SAFE. **Home:** existing Task 2 #1596 and Hugging Face audit PR #1747. **No run has been authorized by this packet.**
+**Intended coordinator after separate owner approval:** one ChatGPT Work coordinator. **Primary implementation and technical testing partner:** Codex, used substantially for genuinely bounded code/test/replay work when account usage and runtime access permit. Work is responsible for evidence, source truth, priorities, scientific verdict and guarded integration. Codex does not gain source or release authority by being the primary technical partner. **Falsifier:** independent Research Lab. **Continuity:** existing Supervisor #1156. No new permanent agent, scheduler, task, workflow, queue, paid plan or authority plane.
+
+## 0. Executive order: finish, falsify, improve
+The requested result is **not** a bigger pile of datasets, models, experiments or elegant prose. Deliver the maximum *honest* progress toward a reproducible answer to these six questions:
+1. What did the original system genuinely know at decision time (source time, provider first-known, forecast issue and delivery)?
+2. Does the original frozen framework beat fair, cheap same-clock baselines *on independent data* after accounting for abstention, missingness, censoring and source revision?
+3. Does a verified actionable signal produce superior **holder vs hold / new cash vs wait** results after realistic costs, delays, false exits, missed upside and required reentry?
+4. Which existing sensor families help, which are redundant, which degrade under regime change, and which should be killed?
+5. Where is the meaningful asymmetric defensive **and offensive** advantage across BTC, ETH, large/mid, small/micro, memes, news and Alpha? Where is it absent?
+6. Can Hugging Face, strictly as an external candidate source and model challenger, unlock previously blocked scientific admissions without contaminating evidence or usurping an existing owner?
+
+No invented track record, scientific admission, performance lift, AI consensus-as-proof, unverifiable first-known timestamps, biased lookahead, non-original outcomes, or assumed historical executable fills. FAILURE/UNKNOWN/BLOCKED/REJECT are valid and valuable findings.
+
+## 0.1 Self-audit correction, v1.1 (2026-10-22): execution beats breadth
+**Why this correction exists:** The v1.0 package optimized for completeness more than execution feasibility. The independent plan critique found stale PR assumptions, unavailable Codex review capacity, excessive parallel-domain ambition, no sufficiently explicit first-experiment decision tree and an insufficiently salient distinction between externally reconstructed prices and original framework knowledge.
+
+### Fresh-checkpoint facts vs stale planning assumptions
+- Latest available GitHub read in this audit returned only two currently open Archive PRs: **#1747 and #1733**. Former P0 #1746/#1748 and other #1736/#1732 were found **CLOSED**. This is not evidence of MERGED, independent reviewed, CI-green, current-main blob integration or a healthy natural producer/consumer. Recheck exact current main and PR integration events before using/repairing any of them.
+- GitHub comments for #1746/#1748 show that Codex automated code review hit usage limits. Any assumption of accessible Codex code reviews, Work credits, external model or Actions capacity is conditional and must be verified. Review failure or unavailable quota must never be relabeled as an independent PASS.
+- PR #1747 remains an unmerged draft and carries both HF source-audit files and this plan. It is not executable authoritative `main`; it may be behind newer main. Do not spawn a competing PR just to make these documents easier to discover.
+- The 2026-10-24 12:00Z prospective start is a **frozen eligibility floor**, not a service activation deadline or proof that first signal/outcome exists. Confirm actual collectors and consumer safety independently and do not backfill missing captures.
+- As of the retrieved operational dashboard, the experiment registry showed **591 candidates, including 500 INCUBATING**. These are workflow inventory counts, not scientific trial/outcome counts. Before generating more hypotheses, triage stalled and duplicate candidates under current lifecycle/owners.
+
+### Corrected mission priority, dynamic rather than snapshot-driven
+**P0 scientific continuity**: first reconcile whether closed P0 PRs are MERGED, CLOSED_UNMERGED or SUPERSEDED, and confirm exact main blob + original negative controls + natural producer/consumer state. If fixes are absent or stale, route one bounded known defect into existing owner. If genuine main inclusion is proven but natural readback pending, classify `POST_FIX_OBSERVATION`, do not reflexively issue a new patch.
+**P1 first earned scientific step**: choose ONE original R1 cohort with smallest trustworthy provenance gap and ONE independent same-clock baseline that can be preregistered after admission. If no source meets time-proof, produce a named blocker and original-evidence recovery request. This is better than 20 impressive invalid replays.
+**P1 HF**: ONE cheap price-source T1 file pilot if it actually resolves a named R1 or independent outcome/baseline problem; otherwise retain HF as secondary source QA, without displacing original-issue recovery.
+**P2 falsification & economics**: protect existing negative pullback results; compare false positives AND false negatives on honest holder/new-cash cohorts. No retrospective rescue of a losing exit by cherry-picked reentry.
+**P3 advanced AI, Alpha/News expansion**: enable only after independent owner value and baseline requirements. A new GPU model or 80GB source is not success by itself.
+
+### One-conclusion-first routing rule
+Before every costly or broad investigation, ask **(1)** which specific current blocker or decision it resolves, **(2)** what smallest original evidence or fixture falsifies it, **(3)** which existing owner and code already cover it, **(4)** what completed receipt will exist, **(5)** how much capacity it consumes and **(6)** what it will replace or retire. If no concrete answer, `DO_NOT_RUN_EXPLANATORY_ONLY`. No mandatory run of every R0–R7 family merely because listed.
+
+### Correct two-lane research permission
+**Lane A, legal and safe right now after owner approves Work:** source/contract inspection, reproducible deterministic tests, reason-coded admission, pre-registration, file/clock QA within rights, cheaper negative controls, static source-review work and scoped allowed repairs. 
+**Lane B, CONDITIONAL:** historical information skill only after verified originally issued point-in-time evidence; economic edge only with original deliverability and realistic holder/cash execution; prospective claims only when signed frozen gates and matured observations exist.
+A Hub dataset uploaded after an old forecast may reconstruct the realized market but **cannot retroactively prove source publication or availability to the old forecast issuer**. Where original first-known cannot be established, `NOT_IDENTIFIABLE_YET` is the scientific conclusion, not a license for proxy fill.
+
+### Anti-loop, scope and honest completion
+One active source-specific question per owner, max two non-progressing attempts before escalation/different evidence, no serial expensive model reviews of identical PR heads. Stop data acquisition when file rights, timestamp custody or first decision divergence fail. Close or reject work as a positive result if it eliminates unsupported complexity. Report incremental verifiable admissions, not documents written or number of nominal experiments. **Work is not a background daemon; this design does not launch Work, Codex or recurrent runs.**
+
+## 0.2 User execution clarification, v1.2: a substantial Work + Codex mission
+**Owner input:** Work and Codex are explicitly the intended execution stack. Owner reports freshly reset **96% usage remaining** on 2026-10-22. This is an owner statement, not account telemetry; verify current availability at mission start. Do not infer whether both products debit the same quota. Existing Codex PR-review failure messages preceded this reported reset and must be freshly re-tested only if appropriate.
+
+**Strategic adjustment:** Use the available capacity for one high-yield cross-phase research-and-build mission instead of a status audit or a few tiny standalone Codex tickets. Work coordinates 5 evidence waves; Codex is the preferred hands-on engineering partner for narrow, reproducible pieces in parallel with Work's original-history and scientific review work. The real objective is a *newly established or honestly falsified scientifically admissible result* and tested durable code, not high token consumption or large nominal job counts.
+
+**Value-first hierarchy:** (1) real unresolved integrity/freeze fault, verified against closed/merged main first; (2) one original R1 PIT cohort and complete denominator; (3) validated, small, immutable Hugging Face file for exact source or matched cheap-baseline question; (4) genuine R2 matched-control or R3 after-cost decision study only where admission/actionability permits; (5) highest-upside permitted R4–R7 and owner-linked Alpha/News challenge after preceding gates. Actively preserve the ability to return a rigorous null or rejection.
+
+**Credit efficiency:** Prefer fixed-scope Codex coding and negative-test execution over repeated generic reviews; reserve Work for high-context synthesis, private authority only if authorized, cross-repo reconciliation and decision making. Use existing GitHub branch/PR and existing CI, not a speculative multi-agent swarm. Record completed useful outputs per observed usage, readjust dynamically; do not force predefined percentage spending or continue merely because credits remain.
+
+**Concrete first major Work deliverable:** write a live source/PR/owner truth reconciliation plus **one reproducible engineering or source-custody fix** and **one independently reviewable candidate scientific result**. The latter may be a valid R1 admission ledger, a negative evidence study with decisive baseline or a bounded T1 HF source QA result that unblocks a named gate. If R1 no-hindsight admission is genuinely impossible, terminate that path with named exact original evidence needed and switch to next lawful high-value priority.
+
+**Risk gate:** Work/Codex execution requires a new separate owner authorization. This design update alone does not dispatch Work, Codex cloud, paid HF Jobs or paid API. All current AGENTS, review, branch, provenance and private-data rules remain in force.
+
+## 1. Source of truth and mandatory starting reads
+Before analysis and again before execution, read fresh current `main`, `AGENTS.md`, `LATEST_OPERATIONS_DASHBOARD.json`, `LATEST_HANDOFF.json`, architecture/automation health, remediation/Codex ready/execution pointers, `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`, `CROSS_REPO_AGENT_CONTEXT_MAP.json`, current index/addenda and active test registry. Public control plane `Donh91/Investering-Framework-Archive-v1`; private restricted data plane `Donh91/secrets`; credentials stay in approved secret manager. If original restricted authority cannot be proven, use `PRIVATE_DATA_AUTHORITY_UNAVAILABLE`, do not substitute public approximations. Round 3 remains prospective collection only unless the current signed owner independently opens an analysis gate.
+
+Read existing scientific canonical owners:
+- `04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md`
+- `04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R0_R7_EXECUTION_ROADMAP_AND_RELEASE_GATES_v1.md`
+- `04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_EDGE_NEW_THREAD_HANDOVER_v1.md`
+- `06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DEEP_RESEARCH_INDEPENDENT_REVIEW_PACKET_v1.md`
+- existing Task 2 #1596, EDGE #1530, risk/action #1553, current Research Lab registry, related source/candidate owners
+- **entire** existing HF audit folder `06_RESEARCH_LAB/hugging_face_task2_audit_20261022/`, and current Draft PR #1747; this dossier is additive and does not supersede its source manifests.
+- existing Alpha source harvest and `trenches_point_in_time_ablation_v1.py`, Situation Room and news receipts, not duplicate collectors.
+Read live PR states, *heads*, comments, reviews, blockers, test evidence and true main merges; dated documents are historical checkpoints.
+
+## 2. Priority contract, do not invert
+**P0-A Scientific integrity for prospective evidence:** verify latest *closure/merge state* and current-main + natural consumer proof of former #1746 owner/freeze/monitor and former #1748 CMC settled-print fix before creating work. Both PRs were CLOSED at the v1.1 checkpoint, a fact that does not itself prove merger or health; do not reopen/duplicate a proven repair. If required CI is unavailable due October Actions minutes cap, record BLOCKED_CI, do local deterministic proof where supported, and preserve genuine review gate. Never weaken source freshness to increase coverage.
+**P0-B Data-first, bounded to one admissible cohort:** R0/R1 proof of original source and official forecast issue + delivery, including unresolved original cohort denominators. R0 object identity alone is not historical PIT; existing 0/11 native-v3 admitted checkpoint is historical, not a prediction of current admissible N.
+**P1 Scientific unblock:** only after eligible R1 partial cohort, preregister and run first R2 same-clock cheap-control study; if no admissible cohort, produce honest `R2_NOT_IDENTIFIABLE_YET` and spend effort on exact R1 blocker.
+**P1 HF pilot:** pinned BTC/ETH single-file OHLCV source custody and gap/clock verification, not a wholesale 80GB dataset mirror. Reuse PR #1747's prior census and manifest.
+**P1 R3 protective economics:** negative and successful exit/reentry examples with actual frozen warnings and delivery, net fee/slippage/turnover, rebound cost, and no 'warning = sell'.
+**P2 R4-R7:** robust regime/noise/survival/ablation, prospectively frozen challengers, economic usefulness, feature reduction and closure. Deep models are *conditional challengers*, not default.
+**P2 Domain extensions:** additive and owner-scoped news, liquidity, stablecoins, derivatives, Polymarket, and Alpha; minimum economic/decision relevance criteria.
+**P3 Nice-to-have:** visualizations and richer narratives only after evidence is produced and source custody is durable.
+
+## 3. Non-negotiable scientific invariants
+- Original pre-outcome issue, original target, original model/scorer/policy, first-known source and delivered time are distinct immutable fields. Knowledge time cannot be fabricated from `published_at` alone or a later Git author timestamp.
+- `INFORMATION_EDGE` requires source/issue/target plus matched baseline; `INVESTOR_ACTION_EDGE` ALSO requires original user-visible delivery, executable timing, correct holder/new-cash policy, market depth and realistic net economics. Never infer action edge from price hindsight.
+- Source-candidate `T0 metadata` != `T1 actual row QA` != `T2 PIT admitted` != `T3 matched baseline` != `T4 prospective held-out`. Censored, unknown, pending and no-signal stay in denominators and never become zeros or excluded silently.
+- BTC and ETH observations, overlapping event windows, intraday horizons, token cohorts, 144 synthetic variants and 46 historical pullback anchors are **not** automatically independent experiments.
+- Survivorship, symbol/delist universe, venue timestamp, as-of joins, last settled MARKET PRINT freshness and provider revisions must fail closed.
+- Reporting threshold/performance tuning after looking at test outcomes is forbidden; negative results and failed models belong in ledger with exactly the same prominence as wins.
+- No production risk threshold, Kompas/CN numeric forecast, portfolio action, auto-sell, paid HF Jobs, new credentials, model deployment, external content redistribution or private-data publication from this mission. Any proposed change follows existing owner, preregistered forward test, independent review and governance.
+- GitHub Actions minutes reportedly exhausted until **2026-11-01**. Verify current billing/runtime independently before any CI expectation. No circumvention or unapproved extra billing. No auto-spend on OpenAI API/HF compute/Work/Codex until the owner explicitly approves the separate execution and extant budget permits it.
+
+## 4. Deliverables, execution discipline
+This is an **execution mission**, not a status-only review. After approval Work must:
+A. Produce a frozen current truth inventory of active owners, six-or-current open PRs, exact heads, existing science and evidence gates; list no-op duplicates and P0 blockers.
+B. Convert proof-backed gaps into scoped fixes under existing owners and Codex intake, with failing negative test first, then repair, targeted tests, current real review/CI and **merge only when platform rules and explicit owner authorization permit**. Not every Work run must create a PR.
+C. Run genuinely allowed offline R0/R1/T1 QA on pinned inputs, publish reproducible source hashes, run commands, results and exact cohort/coverage. Keep raw restricted material private.
+D. Launch conditional R2/R3/R4/R5/R6/R7 work only when each gate is met. Never promote qualitative resemblance to formal backtest.
+E. Publish independent red-team / cost-balanced evaluation and compact public-safe completion matrix, with close, block, defer, reject or owner-merge disposition.
+F. Leave **one current searchable, source-linked handoff** in the existing Task 2 / Research Lab owner path, not a new framework supervisor.
+
+Stage details: [12_PHASE_EXECUTION_AND_CODEX_DELEGATION.md](12_PHASE_EXECUTION_AND_CODEX_DELEGATION.md).
+HF controls: [13_HF_SOURCE_PILOTS_AND_MODEL_CHALLENGERS.md](13_HF_SOURCE_PILOTS_AND_MODEL_CHALLENGERS.md).
+Scientific falsification: [14_SCIENTIFIC_TEST_MATRIX_AND_KILL_GATES.md](14_SCIENTIFIC_TEST_MATRIX_AND_KILL_GATES.md).
+Release and approval: [15_APPROVAL_RESOURCE_AND_ACCEPTANCE_CONTRACT.md](15_APPROVAL_RESOURCE_AND_ACCEPTANCE_CONTRACT.md).
+
+## 5. Success means evidence, not task completion theater
+Report, by R-stage and owner: `NOT_STARTED / RUNNING / VERIFIED_RESEARCH_ONLY / BLOCKED / FALSIFIED / FORWARD_TEST / ELIGIBLE_FOR_OWNER_REVIEW`, the exact change in eligible original rows, independent event groups, matched-baseline studies run, negative controls failed-as-designed, unresolved reason codes, actual merged PRs and verified consumer readback. A blocked result must identify the cheapest real unblock, not request another huge model review. Research Lab may and should recommend terminating a branch of complexity.
+
+**PAUSE HERE BEFORE WORK START:** owner requested to approve execution in a *separate* chat referencing this GitHub packet. This file and its siblings authorize no automated task, Codex Cloud usage, HF Jobs, paid API or code merge by themselves.
