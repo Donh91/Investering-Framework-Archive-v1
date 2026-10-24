@@ -144,13 +144,21 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
         q25_low = anchor * math.exp(_quantile(lows, 0.25))
         q75_high = anchor * math.exp(_quantile(highs, 0.75))
         if not (0 < q25_low < q75_high and math.isfinite(q25_low) and math.isfinite(q75_high)):
-            raise ValueError("degenerate_descriptive_envelope")
-        descriptive_q25_q75[str(horizon)] = {
-            "status": "SHADOW_BASELINE_ONLY", "low_usd": q25_low, "high_usd": q75_high,
-            "overlapping_windows": len(lows), "nonoverlap_upper_bound": nonoverlap_max,
-            "marginal_low_quantile": 0.25, "marginal_high_quantile": 0.75,
-            "joint_coverage_probability": None, "calibration_status": "NOT_CALIBRATED",
-        }
+            # A rejected optional comparator must not invalidate the original
+            # q10/q90 challenger, even when its own interval is well-formed.
+            descriptive_q25_q75[str(horizon)] = {
+                "status": "ABSTAIN", "reason": "DEGENERATE_DESCRIPTIVE_ENVELOPE",
+                "low_usd": None, "high_usd": None,
+                "overlapping_windows": len(lows), "nonoverlap_upper_bound": nonoverlap_max,
+                "joint_coverage_probability": None,
+            }
+        else:
+            descriptive_q25_q75[str(horizon)] = {
+                "status": "SHADOW_BASELINE_ONLY", "low_usd": q25_low, "high_usd": q75_high,
+                "overlapping_windows": len(lows), "nonoverlap_upper_bound": nonoverlap_max,
+                "marginal_low_quantile": 0.25, "marginal_high_quantile": 0.75,
+                "joint_coverage_probability": None, "calibration_status": "NOT_CALIBRATED",
+            }
         low = anchor * math.exp(_quantile(lows, 0.10))
         high = anchor * math.exp(_quantile(highs, 0.90))
         if not (0 < low < high and math.isfinite(low) and math.isfinite(high)):
