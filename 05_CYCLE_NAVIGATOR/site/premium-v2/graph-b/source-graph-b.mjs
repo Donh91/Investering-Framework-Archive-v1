@@ -59,15 +59,15 @@ function textLabels(){
  // NEXT's single-source Premium entry uses this same DA/EN control.
  // The isolated nested B reference has no Premium navigation, so these are NOOPs there.
  const rootWords=language==='en'?{
-  title:'A clearer view of the market.',
-  intro:'Explore the original forecast, observed outcomes and source-issued signals in one instrument.',
-  disclaimer:'Development view. Original public sources, no demo prices. The official homepage is unchanged.',
-  graph:'Graph B',compass:'Compass',path:'PATH',proof:'Proof',official:'Official site ↗'
+  title:'Forecast meets reality.',
+  intro:'Original forecast versus actual movement, week by week.',
+  disclaimer:'Preview · Source-backed, without demo prices.',
+  graph:'Graph B',compass:'Compass',path:'PATH',proof:'Proof',official:'Official site ↗',meta:'STATUS / SOURCES'
  }:{
-  title:'Et klarere blik på markedet.',
-  intro:'Følg den originale prognose, den faktiske udvikling og kildeudstedte signaler i ét instrument.',
-  disclaimer:'Udviklingsvisning. Originale offentlige kilder, ingen demonstrationskurser. Den officielle forside er uændret.',
-  graph:'Graf B',compass:'Kompas',path:'PATH',proof:'Proof',official:'Officiel side ↗'
+  title:'Prognose møder virkelighed.',
+  intro:'Original prognose mod faktisk udvikling, uge for uge.',
+  disclaimer:'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
+  graph:'Graf B',compass:'Kompas',path:'PATH',proof:'Proof',official:'Officiel side ↗',meta:'STATUS / KILDER'
  };
  document.querySelectorAll('[data-premium-nav]').forEach(el=>{
   const v=rootWords[el.dataset.premiumNav];if(v)el.textContent=v;

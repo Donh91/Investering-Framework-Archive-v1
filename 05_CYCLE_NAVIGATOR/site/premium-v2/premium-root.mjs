@@ -16,17 +16,19 @@ const substitutions=[
 const navigation=[
  '<div class="premium-entry">',
  '<div class="premium-entry-intro"><span class="premium-entry-overline">CYCLE NAVIGATOR / NEXT</span>',
- '<h1 data-premium-copy="title">Et klarere blik på markedet.</h1>',
- '<p data-premium-copy="intro">Følg den originale prognose, den faktiske udvikling og kildeudstedte signaler i ét instrument.</p></div>',
+ '<h1 data-premium-copy="title">Prognose møder virkelighed.</h1>',
+ '<p data-premium-copy="intro">Original prognose mod faktisk udvikling, uge for uge.</p></div>',
+ '<p class="premium-entry-disclaimer" data-premium-copy="disclaimer">Forhåndsvisning · Kildebaseret, uden demonstrationskurser.</p>',
+ '</div>'
+].join('\n');
+const navigationAfterGraph=[
  '<nav class="premium-entry-navigation" aria-label="Premium sektioner">',
  '<a href="#variant-panel" data-premium-nav="graph">Graf B</a>',
+ '<a href="#proof-explorer" data-premium-nav="proof">Proof</a>',
  '<a href="#official-product-pilot" data-premium-nav="compass">Kompas</a>',
  '<a href="#official-pilot-path" data-premium-nav="path">PATH</a>',
- '<a href="#proof-explorer" data-premium-nav="proof">Proof</a>',
  '<a href="../" class="premium-entry-canonical" data-premium-nav="official">Officiel side ↗</a>',
- '</nav>',
- '<p class="premium-entry-disclaimer" data-premium-copy="disclaimer">Udviklingsvisning. Originale offentlige kilder, ingen demonstrationskurser. Den officielle forside er uændret.</p>',
- '</div>'
+ '</nav>'
 ].join('\n');
 const style=[
  '<style>',
@@ -59,10 +61,26 @@ export function buildPremiumRootHtml(source){
   source=source.replace(from,to);
  }
  once(source,'</head>','head-end');
- source=source.replace('</head>',style+'</head>');
+ source=source.replace('</head>',style+'<link rel="stylesheet" href="./premium-overhaul.css"></head>');
+ once(source,'<body>','body');
+ source=source.replace('<body>','<body class="premium-next">');
  const marker='<p class="source-audit-status" id="feed-status"';
  once(source,marker,'source-status');
  source=source.replace(marker,navigation+'\n'+marker);
+ const afterGraph='</section>\n\n<section id="proof-explorer"';
+ once(source,afterGraph,'graph-end');
+ source=source.replace(afterGraph,'</section>\n'+navigationAfterGraph+'\n<section id="proof-explorer"');
+ // Keep one live status node, but place source telemetry after the product.
+ const statusStart=source.indexOf(marker),statusEnd=source.indexOf('</p>',statusStart)+4;
+ if(statusEnd<4)throw Error('CN_PREMIUM_ROOT_SOURCE_MISMATCH:status-end');
+ const status=source.slice(statusStart,statusEnd);
+ source=source.slice(0,statusStart)+source.slice(statusEnd);
+ const pathStart='<header class="official-pilot-subhead"><h3>PATH · Cyklens ti faser</h3>';
+ once(source,pathStart,'path-start');
+ source=source.replace(pathStart,'</section>\n<section class="official-product-pilot premium-path" aria-label="PATH · Cyklens ti faser">\n'+pathStart);
+ once(source,'</section>\n</main>','main-end');
+ source=source.replace('</section>\n</main>',
+  '</section>\n<aside class="premium-meta" aria-label="Kilder og status"><span class="premium-meta-label" data-premium-copy="meta">STATUS / KILDER</span>'+status+'</aside>\n</main>');
  for(const id of ['variant-panel','official-product-pilot','official-pilot-path','proof-explorer'])
   once(source,'id="'+id+'"',id);
  if(!source.includes('name="robots" content="noindex,nofollow"'))

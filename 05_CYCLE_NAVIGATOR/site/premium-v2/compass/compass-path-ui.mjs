@@ -45,13 +45,13 @@ function localizeCompass(){
   ['.official-pilot-action > span','OFFICIEL HANDLING','OFFICIAL ACTION'],
   ['.official-pilot-state > span','MARKED / BULL · BEAR','MARKET / BULL · BEAR']
  ]){const n=document.querySelector(selector);if(n)n.textContent=en?english:da}
- $('official-product-pilot').setAttribute('aria-label',en?'Compass and PATH · isolated development':'Kompas og PATH · isoleret udvikling');
+ $('official-product-pilot').setAttribute('aria-label',en?'Official Compass':'Officielt Kompas');
  $('official-pilot-horizons').setAttribute('aria-label',en?'Five Official horizons':'Fem officielle horisonter');
  const heading=document.querySelector('.official-pilot-head h2');
  if(heading)heading.textContent=en?'Decision compass.':'Handlingskompas.';
  const subtitle=document.querySelector('.official-pilot-head p');
- if(subtitle)subtitle.textContent=en?'Official source only. No new action inference.':
-  'Official-first. Ingen nye køb-/salgsbeslutninger fra denne visning.';
+ if(subtitle)subtitle.textContent=en?'Source-issued actions and horizons.':
+  'Kildeudstedte handlinger og horisonter.';
  const subs=document.querySelectorAll('.official-pilot-subhead');
  if(subs[0]){
   subs[0].querySelector('h3').textContent=en?'Capital rotation':'Kapitalrotation';
@@ -89,7 +89,7 @@ function paint(model){
   'No current verified Bull/Bear evidence.');
  const h=$('official-pilot-horizons');h.replaceChildren();
  const translations={NEXT_12H:'12H',NEXT_1_3D:'1–3D',NEXT_5_7D:'5–7D',
- NEXT_2_3W:'2–3U',CYCLE_ALTCOINS_3_8W:'3–8U'};
+ NEXT_2_3W:lang('2–3U','2–3W'),CYCLE_ALTCOINS_3_8W:lang('3–8U','3–8W')};
  for(const w of model.horizons){
   const c=make('article','official-pilot-horizon');
   c.append(make('span','',translations[w.id]||w.id));
