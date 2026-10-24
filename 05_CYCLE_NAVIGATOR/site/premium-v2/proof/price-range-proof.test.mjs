@@ -76,6 +76,9 @@ test('NOT_STARTED cannot conceal any score, actual observation, or spoofed phase
  const a=make(),w=a.public_live_precision.window_scores.day_5_7;
  w.phase='NOT_STARTED';w.observed_hours=0;w.rows_scored=0;
  a.public_live_precision.live_as_of_utc='2026-10-22T12:00:00Z';
+ // Make the preceding window genuinely live at the earlier Wednesday cutoff.
+ a.public_live_precision.window_scores.day_3_4.phase='LIVE';
+ a.public_live_precision.window_scores.day_3_4.observed_hours=36;
  let v=sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-22T12:30:00Z'});
  assert.equal(v.reason,'PENDING_HAS_OBSERVATIONS');
  w.score_to_date=null;w.observed_hours=1;
