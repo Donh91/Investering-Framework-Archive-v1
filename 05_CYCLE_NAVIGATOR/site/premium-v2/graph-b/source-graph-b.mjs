@@ -82,6 +82,11 @@ function textLabels(){
 }
 function plot(){
  textLabels();
+ // A source outage must never make the selected BTC/ETH control lie.
+ // Update focus and pair before the early missing-source return.
+ document.querySelectorAll('[data-asset]').forEach(b=>
+  b.setAttribute('aria-pressed',String(b.dataset.asset===asset)));
+ set('pair',asset+' / USD');
  const card=$('variant-panel');card.dataset.variant='b';
  card.dataset.source=model?.forecast_status==='SOURCE_ISSUED'?'published':'missing';
  const headerWeek=document.querySelector('.instrument-right > span');
