@@ -521,10 +521,21 @@ def prior_packet(snapshot: Any) -> tuple[Any, dict[str, Any]]:
     """Read the predecessor only when pointer, packet and canonical bytes agree."""
     pointer, pointer_health = read_json(snapshot, "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
     if pointer is None:
-        # Preserve the established first-packet absence. A malformed existing
-        # pointer is not a first packet and must never be silently accepted.
+        # Missing and unreadable Git objects share GITHUB_SOURCE_READ_FAIL.
+        # Only a successful exact-commit tree lookup proving path ABSENCE may
+        # mean legitimate first-packet startup; existing corrupt blobs fail closed.
         if pointer_health.get("classification") == "GITHUB_SOURCE_READ_FAIL":
-            return None, {"status": "NOT_AVAILABLE_FIRST_PACKET"}
+            try:
+                absent = (
+                    isinstance(snapshot, ti.GitCliSnapshot)
+                    and snapshot.pinned_path_absent(
+                        "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json"
+                    )
+                )
+            except Exception:
+                return None, {"status": "UNAVAILABLE", "classification": "PREDECESSOR_POINTER_ABSENCE_UNVERIFIED"}
+            if absent:
+                return None, {"status": "NOT_AVAILABLE_FIRST_PACKET"}
         return None, {"status": "UNAVAILABLE", "classification": "PREDECESSOR_POINTER_UNREADABLE"}
 
     def reject(reason: str) -> tuple[None, dict[str, Any]]:
