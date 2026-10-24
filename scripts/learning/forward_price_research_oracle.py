@@ -28,9 +28,15 @@ def stamp(value: Any) -> datetime:
 
 
 def positive(value: Any) -> float:
-    if type(value) not in (float, int) or not math.isfinite(value) or value <= 0:
+    if type(value) not in (float, int):
         raise ValueError('POSITIVE_FINITE_PRICE_REQUIRED')
-    return float(value)
+    try:
+        number = float(value)
+    except (OverflowError, ValueError):
+        raise ValueError('POSITIVE_FINITE_PRICE_REQUIRED') from None
+    if not math.isfinite(number) or number <= 0:
+        raise ValueError('POSITIVE_FINITE_PRICE_REQUIRED')
+    return number
 
 
 def digest(value: Any) -> str:
@@ -137,6 +143,8 @@ def inspect_completed_window(issue: dict, observations: Any, *, observed_as_of_u
         low, high = positive(entry['low_usd']), positive(entry['high_usd'])
         width = (high - low) / anchor * 100
         breach = (max(0.0, low - actual_low) + max(0.0, actual_high - high)) / anchor * 100
+        if not math.isfinite(width) or not math.isfinite(breach) or not math.isfinite(width + 2.0 * breach):
+            raise ValueError('RESEARCH_DIAGNOSTIC_NONFINITE')
         # Width + 2 x observed breach is a *descriptive research loss*, not a
         # proper interval score, predicted coverage or calibrated probability.
         rows.append({'method': entry['method'], 'status': 'DESCRIPTIVE_ONLY',
