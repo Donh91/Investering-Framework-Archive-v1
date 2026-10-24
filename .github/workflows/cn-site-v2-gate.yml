@@ -25,15 +25,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
-      # CN_NEXT_LOCK_BOOTSTRAP: One-time PR #1769-only reproducible npm lock receipt.
-      # Prints PUBLIC dependency metadata only; never npm secrets, no deploy/write credentials.
-      # MUST REMOVE after actual lockfile has been committed and npm ci verified.
-      - name: Bootstrap reviewed NEXT npm lockfile receipt (PR 1769 only)
-        if: github.event_name == 'pull_request' && github.event.pull_request.number == 1769
-        run: |
-          cd 05_CYCLE_NAVIGATOR/site/premium-v2
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-          node -e 'const fs=require("node:fs"),crypto=require("node:crypto");const b=fs.readFileSync("package-lock.json","utf8");const j=JSON.stringify(b);const hash=crypto.createHash("sha256").update(b).digest("hex");console.log("CN_NEXT_LOCK_START sha256="+hash);for(let i=0;i<j.length;i+=500)console.log("CN_NEXT_LOCK_PART_"+String(i/500).padStart(4,"0")+"="+j.slice(i,i+500));console.log("CN_NEXT_LOCK_END parts="+Math.ceil(j.length/500));'
       - name: Verify Premium v2.1 isolated source contracts (no dependencies)
         run: npm test --prefix 05_CYCLE_NAVIGATOR/site/premium-v2
       - name: Validate and build
@@ -51,6 +42,8 @@ jobs:
           python3 scripts/cycle_navigator/check_publication_lineage.py --self-test
           python3 scripts/cycle_navigator/check_publication_lineage.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Prove isolated NEXT Vite build and preserve entire canonical artifact
+        run: node 05_CYCLE_NAVIGATOR/site/premium-v2/stage-next.mjs
       - name: Verify browser failures cannot bypass mobile release gate
         run: node 05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs
       - name: Verify real 390/430 Premium Chrome mobile behavior
