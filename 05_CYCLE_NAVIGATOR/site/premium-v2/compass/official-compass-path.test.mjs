@@ -48,3 +48,30 @@ test('path checkpoint never invented when original market cycle phase absent',()
  const v=readOfficialCompassPath(official(),l,{now_utc:'2026-10-23T17:30:00Z'});
  assert.equal(v.path_current_phase,'UNAVAILABLE');assert.equal(v.rotation_confirmed,false);
 });
+
+test('canonical phase machine codes map to the actual 10-stage PATH without ETA',()=>{
+ const cases=[
+  ['PRE_ROTATION','BTC leadership'],
+  ['ROTATION','Large + Mid rotation'],
+  ['BROAD_ALTSEASON','Broad altseason'],
+  ['PARABOLIC_ALTSEASON','Mania / euphoria'],
+  ['DISTRIBUTION','Distribution'],
+  ['EXIT_RISK','Exit / protection']
+ ];
+ for(const [code,expected] of cases){
+  const l=latest();l.package.market_cycle_context.current_phase=code;
+  const m=readOfficialCompassPath(official(),l,{now_utc:'2026-10-23T17:30:00Z'});
+  assert.equal(m.path_current_phase,expected,code);
+  assert.equal(m.rotation_confirmed,true,code);
+  assert.equal(m.path_phases.filter(p=>p===expected).length,1);
+  assert.equal(m.decision_authority,false);
+ }
+});
+test('defensive, unsupported and missing producer phase cannot invent reentry or current step',()=>{
+ for(const code of ['DEFENSIVE','CONSOLIDATION','UNCLEAR','UNAVAILABLE',null]){
+  const l=latest();l.package.market_cycle_context.current_phase=code;
+  const m=readOfficialCompassPath(official(),l,{now_utc:'2026-10-23T17:30:00Z'});
+  assert.equal(m.path_current_phase,'UNAVAILABLE',String(code));
+  assert.equal(m.rotation_confirmed,false,String(code));
+ }
+});
