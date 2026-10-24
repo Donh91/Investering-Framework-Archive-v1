@@ -97,3 +97,32 @@ test('blue path must have frozen at source before first scored hour (no hindsigh
  assert.equal(readOfficialGraphB(sample,'BTC',{now_utc:'2026-10-19T08:00:00Z'}).forecast_status,
    'PUBLISHED_INVALID_FAIL_CLOSED');
 });
+
+test('one asset stale despite fresh shared ETH/global cutoff is NEVER shown as current BTC',()=>{
+ const x=fixture(),h=x.public_live_precision.hourly_price_path;
+ h.ETH.push({observed_at_utc:'2026-10-19T05:00:00Z',close:2440});
+ h.ETH.push({observed_at_utc:'2026-10-19T06:00:00Z',close:2460});
+ h.observed_through_utc='2026-10-19T06:00:00Z';
+ x.public_live_precision.daily_observations.observed_through_utc='2026-10-19T06:00:00Z';
+ const nowTime='2026-10-19T06:20:00Z';
+ const btc=readOfficialGraphB(x,'BTC',{now_utc:nowTime});
+ const eth=readOfficialGraphB(x,'ETH',{now_utc:nowTime});
+ assert.equal(btc.source_status,'SOURCE_BOUNDED');
+ assert.equal(btc.last_observed_at_utc,'2026-10-19T04:00:00Z');
+ assert.equal(btc.provenance_observed_through_utc,'2026-10-19T06:00:00Z');
+ assert.equal(btc.live_freshness,'STALE');
+ assert.equal(btc.is_current_quote,false);
+ assert.equal(eth.live_freshness,'FRESH');
+ assert.equal(eth.last_observed_at_utc,'2026-10-19T06:00:00Z');
+ assert.equal(eth.is_current_quote,true);
+});
+test('empty selected asset can never borrow other asset current quote',()=>{
+ const x=fixture();
+ x.public_live_precision.hourly_price_path.BTC=[];
+ const m=readOfficialGraphB(x,'BTC',{now_utc:now});
+ assert.equal(m.source_status,'SOURCE_BOUNDED');
+ assert.equal(m.last_observed_at_utc,null);
+ assert.equal(m.live_freshness,'STALE');
+ assert.equal(m.is_current_quote,false);
+ assert.equal(m.hourly_observations.length,0);
+});
