@@ -1,34 +1,34 @@
 # Daily Machine Throughput
 
-Date: **2026-10-22** (Europe/Copenhagen)
+Date: **2026-10-23** (Europe/Copenhagen)
 Status: **PASS**
 
 ## Throughput
 
-- Workflow runs started: **1000** (64 scheduled)
+- Workflow runs started: **1000** (26 scheduled)
 - Scheduled workflow failures: **0**
 - Live-anchor captures: **6**
-- Unique hourly observation rows: **22**
-- Core observation units: **28**
+- Unique hourly observation rows: **21**
+- Core observation units: **27**
 - Owner collection attempts: **36**
-- Instrumented physical source calls: **99**
-- Instrumented source response bytes: **639896**
-- Durable evidence bytes at window close: **11310665**
-- Structural normalized values: **206272**
+- Instrumented physical source calls: **90**
+- Instrumented source response bytes: **582060**
+- Durable evidence bytes at window close: **10863326**
+- Structural normalized values: **204041**
 
 ## AI and learning
 
-- API-agent receipts: **9**
-- Actual model calls: **9**
+- API-agent receipts: **6**
+- Actual model calls: **6**
 - Daily Director model calls: **4**
-- Input/output tokens: **416286 / 35844**
-- Recorded API cost: **$0.300849**
+- Input/output tokens: **401777 / 25675**
+- Recorded API cost: **$0.165830**
 - New experiment candidates: **8**
-- New experiment observations: **2280**
+- New experiment observations: **2312**
 - New forecast-memory artifacts: **20**
 
 ## Instrumentation boundary
 
-Physical HTTP-call total: **PARTIAL_INSTRUMENTATION**. The hourly lane contributes 99 exact recorded calls; 36 owner invocations remain outside physical-request counting. No total is inferred.
+Physical HTTP-call total: **PARTIAL_INSTRUMENTATION**. The hourly lane contributes 90 exact recorded calls; 36 owner invocations remain outside physical-request counting. No total is inferred.
 
-Receipt SHA-256: `789f0009c8ff90cfa5648fb211e95266322978a461a5cb4ac7f6e385f3ad32f7`
+Receipt SHA-256: `7ff6fd2cc4645df341cc23a23b32492c3d998ff66394a9b20d94339889c8f900`
