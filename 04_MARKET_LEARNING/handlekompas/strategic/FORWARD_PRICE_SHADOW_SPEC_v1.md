@@ -32,6 +32,21 @@ At issue, anchor to last fully settled daily close. For h = 1,7,14,21 calendar d
 
 Source manifest hash/canonical bar digest prove input consistency but **do not prove original provider first-known/published clocks**; input flag is an assertion, and output makes this limitation explicit. No real bar data is distributed with PR. All tests use synthetic bars.
 
+## 24 Oct 2026 high-priority BTC quantitative ranges: research comparator only
+
+Owner handoff: [#1516 approved feature specification](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1516#issuecomment-6383170981). The original ChatGPT BTCUSDT challenger is a separate, already issued issue-comment record, not retroactively an Official forecast or a true USD input to this code.
+
+This same **unissued offline research** implementation now returns two explicitly different hypotheses from the *same completed USD daily OHLC history and original cutoff*:
+
+1. Original, unchanged `horizons_days` q10 of log forward-min excursions and q90 of log forward-max excursions, method `CLOSED_DAILY_HISTORICAL_BLOCK_EXTREMA_Q10_Q90_v0_1`.
+2. New, separate `descriptive_q25_q75_horizons_days` q25 of forward-min log excursions and q75 of forward-max log excursions, method `CLOSED_DAILY_HISTORICAL_BLOCK_EXTREMA_Q25_Q75_DESCRIPTIVE_v0_1`. Explicit keys record each marginal quantile and `joint_coverage_probability: null`.
+
+The latter is **NOT** a “50% confidence range”, independently validated simultaneous coverage, end-of-horizon CLOSE, issuance record, actionable signal, or authority to publish a blue path. Both candidates share the original source and historical overlapping-window sample. They share an upper bound on possible nonoverlap blocks, NOT an independent sample-size estimate. No candidate is auto-selected or assigned model skill.
+
+This PR still covers **daily-bar 1/7/14/21 calendar day research only**. No 12h/24h/72h result can be manufactured from 1-day OHLC. Future short-horizon candidates require legitimate completed hourly bars and independent provider first-known receipts through the EXISTING hourly source/Compass owner. The 21–30d and 4–8w channels remain governed strategic/SHADOW UNAVAILABLE until independently source-admissible and outcome-mature.
+
+The existing #1516/#1593 freeze-and-outcome owner, existing 12/72/168h Official scorer and #1596 scientific Task 1.5 retain their authority. This PR does not connect to production, persist any original forecast, initiate a collector, perform automatic score settlement, change any BUY/SELL threshold, or assert live range improvement. The missing next artifacts are genuine source-custody receipt; original prospective issuance; same-clock matched simple ATR/realized-volatility and four-week baseline candidate; matured full-window low/high; scorer/readback with joint containment, width and abstentions. Score possible low/high *jointly* rather than multiplying marginal quantile interpretations. No promoted precision statistic without eligible independent matured cases and negative controls.
+
 ## Full owner-preserving integration design (NOT implemented by this PR)
 
 **Stage A: Source custody & natural issuance.** Use existing #1516 and #1593 producers only, with no new schedule. Acquire authentically settled USD price bars and first-known source receipts via existing data plane and source owner, fail CLOSED if unavailable. Freeze each prospective shadow run BEFORE target opens: forecast_id, asset, quote, venue, source-owner, issue week and public issue, issued_at_utc, source first-known/cutoff, original raw/normalized hashes, code/parameters, original target UTC start/end, horizon, lower/upper values or UNAVAILABLE/ABSTAIN. Keep failed/no-issue attempts in denominator. The existing append-only forecast ledger owns storage, not a new system. Git commit timestamps alone do not prove true earlier provider availability; source and first delivery separately verified.
