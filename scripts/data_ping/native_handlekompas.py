@@ -632,6 +632,8 @@ def owner_freshness(auto_state: Mapping[str, Any], as_of: datetime) -> dict[str,
             if status != "PASS":
                 reasons.append(f"{lane.upper()}_STALE")
             checks.append({"lane": lane, "status": status, "age_seconds": age, "max_age_seconds": maximum, "timestamp": row.get("timestamp")})
+    if not owner_max_ages:
+        reasons.append("OWNER_FRESHNESS_MAX_AGE_UNAVAILABLE")
     if packet_time is not None and owner_max_ages:
         maximum = min(owner_max_ages)
         age = (as_of - packet_time).total_seconds()
