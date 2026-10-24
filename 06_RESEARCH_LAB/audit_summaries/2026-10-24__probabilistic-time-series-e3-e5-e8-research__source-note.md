@@ -114,3 +114,36 @@ Sources screened on 2026-10-24. The table distinguishes *published peer-reviewed
 3. E3/E5/E8 reproducible evaluation fixtures and paired baseline results, only if original data and required clocks pass.
 4. Compass-facing uncertainty fields remain shadow-only until independent prospective admission.
 5. Each claim reports actual test command, commit SHA, review, CI and production state separately.
+
+
+## 7. Archive deduplication audit and corrected implementation route (24 October 2026)
+
+**Critical correction to section 6:** Do not build a new calibration engine, evidence registry, replay engine or decision ledger. Search of main uncovered existing implementations and Fable evidence not yet enumerated in the initial source note.
+
+| Existing owner asset | Canonical path | Required reuse |
+|---|---|---|
+| Statistical primitives | `backtest_engine/statistics.py` | Already contains pinball loss, interval score, empirical coverage, mean interval width, Wilson interval and walk-forward structures. Extend only after unit and API audit. |
+| Forecast settlement/calibration | `scripts/learning/build_model_calibration_ledger.py` | Existing frozen forecast digest, lineage, settlement eligibility and population checks; add optional research fields via backward-compatible schema, never parallel ledger. |
+| Historical no-hindsight spec | `canonical-project-archive/05_RESEARCH_LAB/research_operating_system/no_hindsight_replay_harness_v0_2/README.md` | Reuse as historical replay specification; archived template is not proof of live execution. |
+| Historical evidence registry | `canonical-project-archive/05_RESEARCH_LAB/research_operating_system/evidence_registry_v1/README.md` | Historical evidence/provenance reference; reconcile with current Task 2 authority rather than create new registry. |
+| Fable P2b decision ledger | `canonical-project-archive/05_RESEARCH_LAB/fable_research/decision_ledger_p2b/p2b_decision_ledger_backtest_readiness_opus_fallback_2026-07-08.md` | Explicit `DECISION_BACKTEST_BLOCKED_LEDGER_MISSING`; zero valid exposure rows in examined bundle. Do not claim framework-vs-benchmark returns. Provenance is Opus fallback, not Fable canonical. |
+| Fable P2 Dream Audit | `canonical-project-archive/05_RESEARCH_LAB/fable_research/cycle_navigator_skill_audit/governance_intake_fable_p2_dream_audit_2026-07-07.md` | Independent raw OHLC actuals, self-reported actuals quarantine, range score != composite score; naive ATR/fixed bands can match/beat CN in tested subset. Mandatory challenger baselines, no skill promotion. |
+| Fable P1b | `canonical-project-archive/05_RESEARCH_LAB/fable_research/p1b_ohlc_flow_upgrade/P1b_Executed_Ratification_2026-07-06.md` | Retain E3 negative result, E5 conditional gate integrity and E8 ledger-only uncertainty. |
+
+### Single-owner architecture
+- **One forecast freeze/settlement lineage:** existing calibration ledger.
+- **One metric library:** existing `backtest_engine/statistics.py`; no copied score implementations.
+- **One current evidence admission authority:** Task 2 R0–R7 and existing owner issues; archived Fable evidence registry remains provenance input, not rival authority.
+- **One research-only comparison lane:** extend existing Task 2 experiment evaluations with Fable P2 naive bands and E3/E5/E8 only where inputs are truly comparable. Distinguish range coverage from direction accuracy and from decision returns.
+- **One supervisor release gate:** #1156; no new agents, schedulers, workflow, site calibration controller, UI path, or public ledger.
+
+### Revised execution order and test gates
+1. Inventory exact existing APIs and tests for `backtest_engine/statistics.py` and `scripts/learning/build_model_calibration_ledger.py`; check current Task 2 population contract and open PR ownership before coding.
+2. Restore/check original Fable data and source clocks; record missingness, independent labels and forecast freeze hashes.
+3. Add **tests first** for known interval-score examples, invalid intervals, non-independent episodes, unavailable outcomes, cutoff violations, and negative baselines. No numerical double-counting.
+4. Add only missing research evaluation adapters to the existing metric library and ledger; avoid a new replay/calibration implementation.
+5. Compare prospective admitted forecasts with naive ATR/fixed/prior-week ranges and calibrated intervals on exactly matched horizons and outcomes.
+6. Keep missing decision ledger as explicit block to portfolio performance claims; no live Compass behavior changes.
+7. Review independent source/data tests and resource gates; only then consider merge of bounded executable changes.
+
+**Do-not-duplicate rule:** if a matching module, experiment, registry, issue or PR exists, extend it or annotate its existing owner. New code requires documented evidence of a missing capability. Archive note itself is non-binding and no code has been executed or merged.
