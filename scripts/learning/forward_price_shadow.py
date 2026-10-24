@@ -16,6 +16,7 @@ from typing import Any
 CONTRACT = "FORWARD_PRICE_SHADOW_PRICE_ONLY_CHALLENGER_v0_1"
 INPUT_CONTRACT = "FORWARD_PRICE_DAILY_BAR_INPUT_v0_1"
 METHOD = "CLOSED_DAILY_HISTORICAL_BLOCK_EXTREMA_Q10_Q90_v0_1"
+ALTERNATIVE_METHOD = "CLOSED_DAILY_HISTORICAL_BLOCK_EXTREMA_Q25_Q75_DESCRIPTIVE_v0_1"
 HORIZONS = (1, 7, 14, 21)
 UTC_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 HASH_PATTERN = re.compile(r"[a-f0-9]{64}")
@@ -113,6 +114,7 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
 
     anchor = cleaned[-1][2]  # Last *settled* close, NOT an invented intraday spot.
     horizons: dict[str, dict[str, Any]] = {}
+    descriptive_q25_q75: dict[str, dict[str, Any]] = {}
     for horizon in HORIZONS:
         lows: list[float] = []
         highs: list[float] = []
@@ -130,7 +132,25 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
                 "low_usd": None, "high_usd": None,
                 "overlapping_windows": len(lows), "nonoverlap_upper_bound": nonoverlap_max,
             }
+            descriptive_q25_q75[str(horizon)] = {
+                "status": "ABSTAIN", "reason": "TOO_FEW_INDEPENDENT_HORIZON_BLOCKS",
+                "low_usd": None, "high_usd": None,
+                "overlapping_windows": len(lows), "nonoverlap_upper_bound": nonoverlap_max,
+                "joint_coverage_probability": None,
+            }
             continue
+        # Separate fixed research hypothesis: marginal low q25 and high q75.
+        # Neither pair of marginal quantiles implies any joint coverage probability.
+        q25_low = anchor * math.exp(_quantile(lows, 0.25))
+        q75_high = anchor * math.exp(_quantile(highs, 0.75))
+        if not (0 < q25_low < q75_high and math.isfinite(q25_low) and math.isfinite(q75_high)):
+            raise ValueError("degenerate_descriptive_envelope")
+        descriptive_q25_q75[str(horizon)] = {
+            "status": "SHADOW_BASELINE_ONLY", "low_usd": q25_low, "high_usd": q75_high,
+            "overlapping_windows": len(lows), "nonoverlap_upper_bound": nonoverlap_max,
+            "marginal_low_quantile": 0.25, "marginal_high_quantile": 0.75,
+            "joint_coverage_probability": None, "calibration_status": "NOT_CALIBRATED",
+        }
         low = anchor * math.exp(_quantile(lows, 0.10))
         high = anchor * math.exp(_quantile(highs, 0.90))
         if not (0 < low < high and math.isfinite(low) and math.isfinite(high)):
@@ -150,6 +170,9 @@ def build_shadow(payload: dict[str, Any]) -> dict[str, Any]:
         "source_first_known_asserted": True, "source_first_known_independently_rechecked": False,
         "source_bars": len(cleaned), "anchor_source": "LAST_SETTLED_DAILY_CLOSE",
         "anchor_usd": anchor, "horizons_days": horizons,
+        "descriptive_alternative_method": ALTERNATIVE_METHOD,
+        "descriptive_q25_q75_horizons_days": descriptive_q25_q75,
+        "alternative_is_unissued_non_authoritative": True,
         "direction_used_in_price_construction": False,
         "probabilities_claimed": False, "outcome_matured": False,
         "no_publication": True, "no_model_selection": True,
