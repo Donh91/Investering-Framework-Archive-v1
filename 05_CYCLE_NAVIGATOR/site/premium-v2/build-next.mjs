@@ -8,6 +8,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 const here=dirname(fileURLToPath(import.meta.url));
 const site=resolve(here,'..');
 export const approvedAssets=[
+ 'premium-overhaul.css',
  'graph-b/source-graph-b.html',
  'graph-b/source-graph-b.css',
  'graph-b/source-graph-b.mjs',

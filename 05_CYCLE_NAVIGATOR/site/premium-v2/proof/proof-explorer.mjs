@@ -16,6 +16,8 @@ const label={
  assess:['Kun kildeberegnede Price Range-resultater til dato.','Only source-reported Price Range scores to date.']
 };
 const local=(da,en)=>document.documentElement.lang==='en'?en:da;
+const windowName={day_1_2:'D1–2',day_3_4:'D3–4',day_5_7:'D5–7'};
+const integer=n=>Number(n).toLocaleString(document.documentElement.lang==='en'?'en-GB':'da-DK');
 function node(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;
  if(text!==undefined)n.textContent=String(text);return n}
 function score(n){return typeof n==='number'&&Number.isFinite(n)?n.toLocaleString(
@@ -36,15 +38,15 @@ function focus(){
  const rows=view.window_items;
  let text=local(...label[step]);
  if(step==='freeze')text+=' '+rows.map(w=>{
-  const r=w.original_ranges.map(x=>x.asset+' '+x.low+'–'+x.high).join(' / ');
-  return w.window+': '+r;
+  const r=w.original_ranges.map(x=>x.asset+' '+integer(x.low)+'–'+integer(x.high)+' USD').join(' / ');
+  return windowName[w.window]+': '+r;
  }).join(' · ');
  if(step==='observed')text+=' '+rows.map(w=>
-  w.window+': '+w.observed_hours+'/'+w.expected_hours_final+
-  'h ('+w.state+')').join(' · ');
+  windowName[w.window]+': '+w.observed_hours+'/'+w.expected_hours_final+
+  'h').join(' · ');
  if(step==='assess')text+=' '+rows.map(w=>
-  w.window+' '+score(w.source_reported_score_to_date)+' · '+
-  (w.observed_complete?'WINDOW COMPLETE':'PROVISIONAL')).join(' / ')+
+  windowName[w.window]+' '+score(w.source_reported_score_to_date)+' · '+
+  (w.observed_complete?local('afsluttet','closed'):local('foreløbig','provisional'))).join(' / ')+
   '. '+local('Ingen af tallene er uafhængigt Proof-seglet.',
              'None of these readings is independently proof-sealed.');
  host.textContent=text;
@@ -52,14 +54,17 @@ function focus(){
 function renderWindows(){
  const host=$('proof-windows');host.replaceChildren();
  if(view?.status!=='PROVISIONAL_SOURCE_READBACK')return;
- const map={'day_1_2':'D1–2','day_3_4':'D3–4','day_5_7':'D5–7'};
  for(const w of view.window_items){
   const card=node('article','proof-window');card.dataset.status=w.observed_complete?'complete':'live';
-  card.append(node('span','proof-kicker',map[w.window]+' · '+(w.observed_complete?'CLOSED':'PROVISIONAL')));
+  card.setAttribute('title',w.state);
+  card.append(node('span','proof-kicker',windowName[w.window]+' · '+(w.observed_complete?
+   local('AFSLUTTET','CLOSED'):local('FORELØBIG','PROVISIONAL'))));
   card.append(node('strong','proof-score',score(w.source_reported_score_to_date)));
   card.append(node('p','',w.observed_hours+'/'+w.expected_hours_final+'h · '+
     local('observeret kildedækning','observed source coverage')));
-  card.append(node('p','',w.state));
+  card.append(node('p','',w.observed_complete?
+   local('Kildedækning afsluttet','Source coverage complete'):
+   local('Observation fortsætter','Observation ongoing')));
   host.append(card);
  }
 }

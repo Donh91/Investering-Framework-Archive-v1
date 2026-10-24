@@ -6,7 +6,7 @@ const here=new URL('./',import.meta.url);
 test('staged v2 asset list excludes AppDeploy demos and canonical root',()=>{
  const p=stagingPlan();
  assert.ok(p.to.endsWith('/site/dist/next'));
- assert.equal(p.assets.length,12);
+ assert.equal(p.assets.length,13);
  assert.ok(!approvedAssets.some(x=>x.includes('reference/')||x.includes('src/main.ts')));
 });
 test('original B and Proof imports resolve only to staged first-party sources',async()=>{
