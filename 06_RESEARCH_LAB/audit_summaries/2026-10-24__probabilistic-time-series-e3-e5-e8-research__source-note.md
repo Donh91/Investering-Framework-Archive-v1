@@ -67,3 +67,50 @@ Sources screened on 2026-10-24. The table distinguishes *published peer-reviewed
 **Verdict: archive-worthy HIGH relevance for measurement discipline, LOW evidence for immediate improved market edge.** The most useful near-term work is *not* another forecast engine: repair source evidence for P1b (if available), preserve paired E5 episode denominators, redesign E8 cost uncertainty honestly, and defend E3 from post-selection. Current Task 2 already has a source-admission bottleneck, so no expensive model tournament should precede that gate.
 
 **Handoff:** Reuse current #1596, #1530 and Task 2 R0-R7 as scientific owner tracks. This note is an isolated research source note for human review; it is not a new mission, scanner, scheduled Friday task, Codex-ready defect, output service or release request. No code, credentials, secret provider data, live rules, trading signals or portfolio instructions are included.
+
+
+## 6. Owner-authorized implementation contract, 24 October 2026
+
+**Mandate:** Implement all research relevance within existing framework ownership, but never infer that a literature note is an admitted predictive edge. This is an execution specification and not a claim that code, tests, historical data, or production have been changed.
+
+### A. P0 evidence gate (existing Task 2 owners)
+- Resolve original Fable P1b machine files and manifests if accessible; bind each to immutable source SHA, availability time, unit, episode ID and exact experiment configuration.
+- Report `ORIGINAL_DATA_UNAVAILABLE` if any essential file cannot be authenticated. Do not substitute public hindsight series for original point-in-time inputs.
+- Preserve Task 2 R1 `NOT_ADMITTED`; use current original census and independent-event constraints. No Round 3 unblinding.
+- Acceptance: one row per source artifact, digest and provenance status, missing artifacts explicit, no restricted provider values in public output.
+
+### B. P1 E5 classification robustness
+- Research-only paired binary-vs-hybrid per-episode replay, with original close/wick distinction and pre-frozen outcome labels.
+- Report event denominators, paired contingency matrix, false-death/true-death rates, event-cluster confidence interval and leave-one-episode-out sensitivity.
+- Regimes defined using only pre-issue information; missing regime -> UNKNOWN, not inferred from outcomes.
+- Acceptance: synthetic fixture verifies that duplicate bars cannot inflate event count; missing source clocks block admission; zero output changes to live hybrid gate.
+
+### C. P1 E8 uncertainty audit
+- Retain FNP historical prior as ledger-only, never promote historical 7.8% median or ~12% p90 to a calibrated live interval.
+- Define research-only asymmetric quantile intervals at 50/80/90%, evaluate coverage, mean width, interval score, regime-conditioned coverage and tail exceedance on *matured independent* episodes.
+- Compare frozen historical-quantile baseline with online adaptive conformal; ECI/CPTC/CAP remain challenger-only after adequate observations.
+- Acceptance: explicit LOW_SAMPLE and NOT_ESTIMABLE on insufficient events; censored and overlapping episodes excluded or appropriately grouped; future outcome not used for earlier prediction.
+
+### D. P1 E3 selection-bias audit
+- Preserve existing price-edge NOT_SUPPORTED verdict and discipline-only status.
+- Frozen N1/N2/N3 definitions; full eligible episode universe including negative and abstained outcomes; report all tested regime/flow cells and multiple-comparison count.
+- Acceptance: any retrospective best-subgroup selection is tagged EXPLORATORY, not a new live threshold.
+
+### E. P2 Compass and Task 2 interfaces
+- No forecast probability reconstruction from directional labels; T05 structured confidence sidecar requires exact original header/output hash and prospective candidate lineage.
+- Prepare non-operative evaluation schema with `issue_id, issue_at_utc, source_available_at_utc, outcome_matures_at_utc, horizon, target, regime_known_at_issue, episode_id, interval_lower, interval_upper, nominal_coverage, observed_value, admitted, censor_reason, model_version, baseline_id`.
+- Evaluate WIS/interval score, coverage, sharpness, tail misses and regime recovery only for admitted, naturally matured rows.
+- Any UI disclosure must distinguish historical diagnostic, research-only forward test and independently admitted production forecast. Do not publish probability or improved skill claims without measured prospective evidence.
+
+### F. Release and resource gates
+- Existing owner tracks: #1596, #1530, #1553, #1156. No competing owner or scheduler.
+- GitHub Actions minutes exhausted until November 1 per owner operational context. This is not permission to bypass CI, fake checks or merge production changes without actual platform gates.
+- No paid compute/API, new scheduled jobs, new secrets or credential access, no restricted data transfer to public repo.
+- This source-note PR is documentation-only; follow-on executable implementation belongs in existing research owner branches after source admission and actual test review.
+
+### Done criteria
+1. Research note merged with platform/governance gates and post-merge readback, or explicit blocker recorded.
+2. Original source evidence admitted or explicit unavailable state.
+3. E3/E5/E8 reproducible evaluation fixtures and paired baseline results, only if original data and required clocks pass.
+4. Compass-facing uncertainty fields remain shadow-only until independent prospective admission.
+5. Each claim reports actual test command, commit SHA, review, CI and production state separately.
