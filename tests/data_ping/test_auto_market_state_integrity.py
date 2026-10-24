@@ -118,6 +118,8 @@ class AutoMarketStateIntegrityTests(unittest.TestCase):
             object_file = root / ".git" / "objects" / blob[:2] / blob[2:]
             self.assertTrue(object_file.is_file())
             original_bytes = object_file.read_bytes()
+            original_mode = object_file.stat().st_mode & 0o777
+            object_file.chmod(0o600)
             try:
                 # The entry EXISTS in the immutable tree but its object is
                 # corrupt. This is not a legitimate first-packet absence.
@@ -128,6 +130,7 @@ class AutoMarketStateIntegrityTests(unittest.TestCase):
                 self.assertNotEqual(health["status"], "NOT_AVAILABLE_FIRST_PACKET")
             finally:
                 object_file.write_bytes(original_bytes)
+                object_file.chmod(original_mode)
 
     def test_predecessor_real_git_valid_and_first_packet_controls(self):
         import tempfile
