@@ -129,11 +129,16 @@ try{
     const executable=join(shim,'git'),gitBin=execFileSync('which',['git'],{encoding:'utf8'}).trim();
     // Deliberately fail only the ancestry command; all pinned object reads
     // still reach the real Git binary. This is a controlled operational error.
-    writeFileSync(executable,'#!/bin/sh\\nif [ "$1" = "--no-replace-objects" ] && [ "$2" = "merge-base" ]; then exit 128; fi\\nexec "'+gitBin+'" "$@"\\n'.replaceAll('\\n','\n'));
+    writeFileSync(executable,
+      '#!/bin/sh\n' +
+      'if [ "$1" = "--no-replace-objects" ] && [ "$2" = "merge-base" ]; then exit 128; fi\n' +
+      'exec "'+gitBin+'" "$@"\n');
     chmodSync(executable,0o755);
     const prior=process.env.PATH;
     process.env.PATH=shim+':'+prior;
     try{
+      const injected=spawnSync('git',['--no-replace-objects','merge-base','--is-ancestor',base,head],{cwd:dir,encoding:'utf8'});
+      assert.equal(injected.status,128,'Fault shim must actually intercept ancestry');
       const r=run(inventory,head,tree);
       assert.equal(r.status,1,r.stdout);
       assert.match(r.stderr,/Ancestry Git operation unverified/);
