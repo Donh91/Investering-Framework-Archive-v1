@@ -92,3 +92,15 @@ At the experiment registration gate freeze: full attempted denominator, baseline
 - Existing broader HF challenger inventory: 06_RESEARCH_LAB/hugging_face_task2_audit_20261022/13_HF_SOURCE_PILOTS_AND_MODEL_CHALLENGERS.md
 
 No external upstream repo was modified. No model performance is claimed.
+
+
+## H. Adversarial literature cross-check (peer-reviewed vs critique)
+
+Zeng et al., **AAAI 2023**, "Are Transformers Effective for Time Series Forecasting?" (DOI 10.1609/aaai.v37i9.26317), reported surprisingly strong simple Linear/DLinear/NLinear baselines on nine non-crypto long-horizon datasets. However, the Hugging Face 2023 "Yes, Transformers are Effective for Time Series Forecasting" replication/critique argues some original cross-architecture comparisons are not equivalent and can reverse under matched model-size/settings. **No general winner follows from either source** for BTC/ETH.
+
+Relevant sources:
+- https://ojs.aaai.org/index.php/AAAI/article/view/26317 (peer reviewed)
+- https://huggingface.co/blog/autoformer (technical counter-analysis, NOT peer reviewed)
+- https://github.com/cure-lab/LTSF-Linear (author-linked implementation)
+
+Research implication: include at least one equal-information **DLinear/NLinear-style transparent control only when the preregistered trial size allows**, and match training budget, forecast target, history length, exogenous covariates and data availability. Do not add a thirteenth mandatory trained arm just because a paper or GitHub project is popular. No positive performance evidence added here.
