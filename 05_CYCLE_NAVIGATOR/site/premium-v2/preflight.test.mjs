@@ -64,3 +64,32 @@ test('Original B small badge survives localization and unavailable source clears
  assert.match(js,/\$\('playhead'\)\.setAttribute\('visibility','hidden'\)/);
  assert.match(js,/card\.dataset\.source=model\?\.forecast_status==='SOURCE_ISSUED'/);
 });
+
+
+test('NEXT staging is isolated and sequenced after canonical builders and before existing Pages upload',async()=>{
+ const pages=await from('../../../.github/workflows/cycle-navigator-pages.yml');
+ const gate=await from('../../../.github/workflows/cn-site-v2-gate.yml');
+ const builder=await from('../build-public.mjs');
+ const steps=[
+  'Build privacy-safe public bundle',
+  'Build public live Price Range precision',
+  'Build and verify social preview',
+  'Verify final investor-facing shell and privacy',
+  'Stage verified isolated NEXT, preserving all canonical public assets',
+  'Upload Cycle Navigator public bundle only'
+ ];
+ let last=-1;
+ for(const step of steps){
+  const at=pages.indexOf(step);
+  assert.ok(at>last,'PAGES_NEXT_STAGE_ORDER_INVALID:'+step);
+  last=at;
+ }
+ assert.equal((pages.match(/stage-next\.mjs/g)||[]).length,1);
+ assert.equal((pages.match(/upload-pages-artifact@v4/g)||[]).length,1);
+ assert.equal((pages.match(/deploy-pages@v4/g)||[]).length,1);
+ assert.match(pages,/path: 05_CYCLE_NAVIGATOR\/site\/dist/);
+ assert.doesNotMatch(builder,/premium-v2/);
+ assert.ok(gate.includes('Prove isolated NEXT Vite build'));
+ assert.ok(gate.includes('next-browser.test.mjs'));
+ assert.ok(gate.indexOf('stage-next.mjs')<gate.indexOf('next-browser.test.mjs'));
+});
