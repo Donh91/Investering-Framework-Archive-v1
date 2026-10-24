@@ -257,6 +257,18 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
             "reason": "MARKET_REFERENCE_OBSERVATION_TIME_MISSING",
         }
     target = start_reference + timedelta(hours=hours)
+    # A horizon anchored to a stale reference may already be over when the
+    # forecast is issued. Likewise, a future reference is not a pre-issue
+    # observable. Keep frozen forecasts and outcomes untouched; quarantine.
+    if start_reference > issued or target <= issued:
+        return {
+            "status": "QUARANTINED_NONPROSPECTIVE_TIME_BASIS",
+            "horizon": horizon,
+            "compass_id": freeze.get("compass_id"),
+            "target_at_utc": target.isoformat().replace("+00:00", "Z"),
+            "reason": ("START_REFERENCE_AFTER_ISSUED_AT" if start_reference > issued
+                       else "TARGET_NOT_AFTER_ISSUED_AT"),
+        }
     if now < target:
         return None
 
@@ -415,7 +427,7 @@ def main() -> None:
                 results.append({
                     "compass_id": freeze.get("compass_id"),
                     "horizon": horizon,
-                    "eligible": bool(target and now >= target),
+                    "eligible": bool(target and start_reference <= issued < target and now >= target),
                     "target_at_utc": target.isoformat().replace("+00:00", "Z") if target else None,
                 })
             else:
