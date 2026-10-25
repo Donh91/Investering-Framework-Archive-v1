@@ -101,6 +101,8 @@ def original_outcome_assessment(forecast,forecast_path,outcome,outcome_path,hori
     # never rescores, repairs or retrospectively promotes an outcome.
     # Legacy v1/v2 receipts may not contain time_basis at all; absence remains
     # unchanged here and is handled by the separate scientific-admission gate.
+    if "time_basis" not in outcome and forecast.get("scoring_contract")==V3:
+        reasons.append("ORIGINAL_V3_TIME_BASIS_MISSING")
     if "time_basis" in outcome:
         basis=outcome.get("time_basis")
         if not isinstance(basis,dict):
