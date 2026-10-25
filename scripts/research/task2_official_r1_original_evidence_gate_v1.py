@@ -96,6 +96,32 @@ def original_outcome_assessment(forecast,forecast_path,outcome,outcome_path,hori
         if maturity>utc(CUTOFF):reasons.append("OUTCOME_MATURITY_AFTER_FROZEN_CUTOFF")
         if t!=observed:reasons.append("TARGET_OBSERVATION_CLOCK_MISMATCH")
     except (ValueError,TypeError):reasons.append("ORIGINAL_OUTCOME_CLOCK_INVALID")
+    # This is only a deterministic integrity check of the ORIGINAL recorded
+    # time basis. It does not establish source first-knowledge or delivery and
+    # never rescores, repairs or retrospectively promotes an outcome.
+    # Legacy v1/v2 receipts may not contain time_basis at all; absence remains
+    # unchanged here and is handled by the separate scientific-admission gate.
+    if "time_basis" not in outcome and forecast.get("scoring_contract")==V3:
+        reasons.append("ORIGINAL_V3_TIME_BASIS_MISSING")
+    if "time_basis" in outcome:
+        basis=outcome.get("time_basis")
+        if not isinstance(basis,dict):
+            reasons.append("ORIGINAL_TIME_BASIS_MALFORMED")
+        else:
+            expected_hours={"12h":12,"72h":72,"168h":168}.get(horizon)
+            if expected_hours is not None:
+                if type(basis.get("nominal_horizon_hours")) is not int or basis["nominal_horizon_hours"]!=expected_hours:
+                    reasons.append("ORIGINAL_TIME_BASIS_HORIZON_MISMATCH")
+                effective=basis.get("effective_window_hours")
+                if type(effective) not in (int,float) or effective!=expected_hours:
+                    reasons.append("ORIGINAL_TIME_BASIS_EFFECTIVE_WINDOW_MISMATCH")
+                try:
+                    reference=utc(basis.get("start_reference_at_utc"))
+                    target=utc(outcome.get("target_at_utc"))
+                    if target!=reference+timedelta(hours=expected_hours):
+                        reasons.append("ORIGINAL_TARGET_REFERENCE_WINDOW_MISMATCH")
+                except (ValueError,TypeError):
+                    reasons.append("ORIGINAL_REFERENCE_CLOCK_INVALID")
     classes=Counter()
     direction=outcome.get("direction_accuracy")
     if not isinstance(direction,dict):
