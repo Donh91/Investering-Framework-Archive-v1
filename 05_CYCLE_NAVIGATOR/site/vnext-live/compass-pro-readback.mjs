@@ -33,7 +33,7 @@ const invalid=(lang)=>({
 });
 
 function weekBounds(iso){
-  if(typeof iso!=='string'||!/^20\\d{2}-W(?:0[1-9]|[1-4][0-9]|5[0-3])$/.test(iso))return null;
+  if(typeof iso!=='string'||!/^20\d{2}-W(?:0[1-9]|[1-4][0-9]|5[0-3])$/.test(iso))return null;
   const [year,week]=iso.split('-W').map(Number),jan4=new Date(Date.UTC(year,0,4));
   const firstMon=new Date(jan4.getTime()-((jan4.getUTCDay()+6)%7)*86400000);
   const start=new Date(firstMon.getTime()+(week-1)*7*86400000);
