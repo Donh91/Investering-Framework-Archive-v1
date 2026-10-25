@@ -1,6 +1,6 @@
 /**
  * Premium v2.1 / Graph B · SOURCE-ONLY domain adapter.
- * Development-only; NOT wired to Pages root/build-public.
+ * Source-only; approved root wiring is performed by site/promote-root.mjs.
  * Mirrors canonical source gates in site/frozen-week-chart.js instead of
  * deriving market predictions from graphic geometry.
  * No I/O, remote providers, mutable scores, Math.sin or synthetic sample data.
