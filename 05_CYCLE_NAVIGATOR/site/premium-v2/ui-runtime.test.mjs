@@ -257,6 +257,18 @@ test('Compass five horizons expose only source-issued direction, posture and nat
  assert.equal(english[1].children[2].textContent,'WAIT');
  assert.equal(english[1].children[3].children[0].textContent,'Source detail');
 });
+test('Danish Compass renders official HOLD_WAIT on horizons and tiers without raw English codes',async()=>{
+ const issued=compass();
+ issued.horizons.NEXT_1_3D.action_posture='HOLD_WAIT';
+ issued.capitalization_ladder[0].status='HOLD_WAIT';
+ const h=await harness('./compass/compass-path-ui.mjs',{fetcher:url=>Promise.resolve({
+  ok:true,json:async()=>String(url).endsWith('compass.json')?issued:snapshot()
+ })});
+ assert.equal(h.get('official-pilot-horizons').children[1].children[2].textContent,'AFVENT');
+ assert.equal(h.get('official-pilot-rotation').children[0].children[1].textContent,'AFVENT');
+ h.language('en');
+ assert.equal(h.get('official-pilot-horizons').children[1].children[2].textContent,'HOLD_WAIT');
+});
 test('Expired Compass removes current horizon and rotation postures without backfilling',async()=>{
  const h=await harness('./compass/compass-path-ui.mjs');
  // Let the 5-min refresh start, but NEVER resolve it. Only the original
