@@ -34,6 +34,7 @@ function displayUtc(value){
 function make(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;
  if(text!==undefined)el.textContent=String(text);return el}
 function clearUnissued(){
+ $('official-product-pilot').dataset.sourceState='unavailable';
  $('official-pilot-status').textContent=lang('KILDE MANGLER','SOURCE UNAVAILABLE');
  $('official-pilot-action').textContent='—';$('official-pilot-action-note').textContent=
   lang('Ingen verificeret officiel handling.','No verified Official action.');
@@ -76,6 +77,7 @@ function paint(model){
  localizeCompass();
  if(model.status==='UNAVAILABLE'){clearUnissued();return}
  const now=model.official_action_current;
+ $('official-product-pilot').dataset.sourceState=now?'current':'expired';
  $('official-pilot-status').textContent=now?
   lang('OFFICIEL KILDE · AKTUEL','OFFICIAL SOURCE · CURRENT'):
   lang('UDLØBET · HISTORIK','EXPIRED · HISTORY');
@@ -84,7 +86,8 @@ function paint(model){
   BUY:'KØB',SELL:'SÆLG',UNAVAILABLE:'UTILGÆNGELIG'};
  const en={HOLD_WAIT:'WAIT',HARD_WAIT:'WAIT',HOLD:'HOLD',WAIT:'WAIT',
   BUY:'BUY',SELL:'SELL',UNAVAILABLE:'UNAVAILABLE'};
- $('official-pilot-action').textContent=now?(lang(da[code]||code,en[code]||code)):'—';
+ $('official-pilot-action').textContent=now&&model.action_allowed_to_display_as_current?
+  lang(da[code]||code,en[code]||code):'—';
  $('official-pilot-action-note').textContent=now?
   lang('Kildeudstedt '+displayUtc(model.issued_at_utc)+' · '+code,
   'Source issued '+displayUtc(model.issued_at_utc)+' · '+code):
@@ -103,19 +106,32 @@ function paint(model){
  NEXT_2_3W:lang('2–3U','2–3W'),CYCLE_ALTCOINS_3_8W:lang('3–8U','3–8W')};
  for(const w of model.horizons){
   const c=make('article','official-pilot-horizon');
-  c.append(make('span','',translations[w.id]||w.id));
-  const direction=make('strong','',displayCode(w.direction||'UNAVAILABLE'));
-  direction.title=w.direction||'UNAVAILABLE';c.append(direction);
-  const action=make('small','',displayCode(w.action_posture||'—'));
-  action.title=w.action_posture||'—';c.append(action);h.append(c);
+  c.dataset.sourceState=now?'current':'expired';
+  c.append(make('span','official-pilot-horizon-label',translations[w.id]||w.id));
+  const direction=make('strong','official-pilot-horizon-direction',
+   now?displayCode(w.direction||'UNAVAILABLE'):'—');
+  direction.title=now?(w.direction||'UNAVAILABLE'):'EXPIRED';
+  c.append(direction);
+  const action=make('small','official-pilot-horizon-posture',
+   now?displayCode(w.action_posture||'UNAVAILABLE'):lang('UDLØBET','EXPIRED'));
+  action.title=now?(w.action_posture||'UNAVAILABLE'):'EXPIRED';
+  c.append(action);
+  // Native disclosure exposes the exact issuer's scenario, not a browser prediction.
+  if(now&&typeof w.description==='string'&&w.description.trim()){
+   const detail=make('details','official-pilot-horizon-context');
+   detail.append(make('summary','',lang('Læs kildegrundlag','Source detail')));
+   detail.append(make('p','',w.description));
+   c.append(detail);
+  }
+  h.append(c);
  }
  const rotation=$('official-pilot-rotation');rotation.replaceChildren();
  for(const segment of model.capitalization_ladder){
   const item=make('div','official-pilot-tier');
   const labels={LARGE_CAPS:'LARGE',MID_CAPS:'MID',SMALL_CAPS:'SMALL',MICROCAPS:'MICRO'};
   item.append(make('strong','',labels[segment.segment]||segment.segment));
-  const status=make('small','',displayCode(segment.status||'—'));
-  status.title=segment.status||'—';item.append(status);
+  const status=make('small','',now?displayCode(segment.status||'—'):'—');
+  status.title=now?(segment.status||'—'):'EXPIRED';item.append(status);
   rotation.append(item);
  }
  const steps=$('official-pilot-path');steps.replaceChildren();
