@@ -59,17 +59,18 @@ function textLabels(){
 
  // NEXT's single-source Premium entry uses this same DA/EN control.
  // The isolated nested B reference has no Premium navigation, so these are NOOPs there.
+ const officialHome=!!document.body?.classList?.contains('premium-home');
  const rootWords=language==='en'?{
   title:'Forecast meets reality.',
   intro:'Original forecast versus actual movement, week by week.',
-  disclaimer:'Preview · Source-backed, without demo prices.',
-  graph:'Graph B',compass:'Compass',path:'PATH',proof:'Proof',official:'Official site ↗',meta:'STATUS / SOURCES',
+  disclaimer:officialHome?'Source-backed · Original ranges and observed prices.':'Preview · Source-backed, without demo prices.',
+  graph:'Graph B',compass:'Compass',path:'PATH',proof:'Proof',official:officialHome?'Previous version ↗':'Official site ↗',meta:'STATUS / SOURCES',
   cnSource:'CN source ↗',compassSource:'Compass source ↗'
  }:{
   title:'Prognose møder virkelighed.',
   intro:'Original prognose mod faktisk udvikling, uge for uge.',
-  disclaimer:'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
-  graph:'Graf B',compass:'Kompas',path:'PATH',proof:'Proof',official:'Officiel side ↗',meta:'STATUS / KILDER',
+  disclaimer:officialHome?'Kildebaseret · Oprindelige intervaller og observerede kurser.':'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
+  graph:'Graf B',compass:'Kompas',path:'PATH',proof:'Proof',official:officialHome?'Forrige version ↗':'Officiel side ↗',meta:'STATUS / KILDER',
   cnSource:'CN-data ↗',compassSource:'Kompas-data ↗'
  };
  document.querySelectorAll('[data-premium-nav]').forEach(el=>{
@@ -84,7 +85,8 @@ function textLabels(){
   ['[data-t="freeze"]',model?.forecast_status==='SOURCE_ISSUED'?
    t('Original kildeudstedt prognose','Original source-issued forecast'):
    t('Original prognose · afventer kilde','Original forecast · source pending')],
-  ['.dev-brand span',document.querySelector('.premium-entry')?
+  ['.dev-brand span',officialHome?t('CYCLE NAVIGATOR · OFFICIEL','CYCLE NAVIGATOR · OFFICIAL'):
+   document.querySelector('.premium-entry')?
    t('PREMIUM v2.1 · IKKE OFFICIEL FORSIDE','PREMIUM v2.1 · NOT OFFICIAL HOMEPAGE'):
    t('DESIGN QA · IKKE PRODUKTION','DESIGN QA · NOT PRODUCTION')]
  ];

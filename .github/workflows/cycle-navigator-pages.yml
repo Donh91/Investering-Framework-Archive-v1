@@ -180,6 +180,10 @@ jobs:
           ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
       - name: Stage verified isolated NEXT, preserving all canonical public assets
         run: node 05_CYCLE_NAVIGATOR/site/premium-v2/stage-next.mjs
+      - name: Promote owner-approved Graph B to root, retaining prior version
+        run: node 05_CYCLE_NAVIGATOR/site/premium-v2/promote-root.mjs
+      - name: Verify official Graph B root on 390/430 Chrome mobile
+        run: node 05_CYCLE_NAVIGATOR/site/premium-v2/next-browser.test.mjs --root
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload Cycle Navigator public bundle only

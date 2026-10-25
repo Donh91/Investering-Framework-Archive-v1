@@ -134,3 +134,7 @@ jobs:
           ! grep -q 'HANDLEKOMPAS ·' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -q 'MASTER MONDAY →' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+      - name: Promote owner-approved Graph B to root, retaining prior version
+        run: node 05_CYCLE_NAVIGATOR/site/premium-v2/promote-root.mjs
+      - name: Verify official Graph B root on 390/430 Chrome mobile
+        run: node 05_CYCLE_NAVIGATOR/site/premium-v2/next-browser.test.mjs --root
