@@ -61,6 +61,31 @@ class OriginalOutcomeTimeBasisTests(unittest.TestCase):
     def test_valid_frozen_12h_basis_passes(self):
         self.assertEqual(assess(measured_outcome()), [])
 
+    def test_valid_72h_and_168h_original_windows(self):
+        for horizon, hours, target, matured in (
+            ("72h", 72, "2026-10-15T05:00:00Z", "2026-10-15T06:00:00Z"),
+            ("168h", 168, "2026-10-19T05:00:00Z", "2026-10-19T06:00:00Z"),
+        ):
+            with self.subTest(horizon=horizon):
+                forecast = original()
+                forecast["issued_at_utc"] = "2026-10-12T06:00:00Z"
+                outcome = measured_outcome()
+                outcome["issued_at_utc"] = forecast["issued_at_utc"]
+                outcome["horizon"] = horizon
+                outcome["target_at_utc"] = target
+                outcome["target_observation_at_utc"] = target
+                outcome["matured_at_utc"] = matured
+                outcome["time_basis"].update({
+                    "start_reference_at_utc": "2026-10-12T05:00:00Z",
+                    "nominal_horizon_hours": hours,
+                    "effective_window_hours": hours,
+                })
+                reasons, labels = m.original_outcome_assessment(
+                    forecast, FORECAST_PATH, outcome, Path("outcome.json"), horizon
+                )
+                self.assertEqual(reasons, [])
+                self.assertEqual(labels, {"CORRECT": 1, "ABSTAINED": 1})
+
     def test_wrong_horizon_claim_is_quarantined_even_if_file_name_matches(self):
         altered = measured_outcome()
         altered["time_basis"]["nominal_horizon_hours"] = 72
