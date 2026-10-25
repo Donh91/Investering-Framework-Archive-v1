@@ -42,8 +42,20 @@
    <div class="product-risk" aria-label="Official pullback risk classification"><div class="product-risk-heading"><div><small id="premium-risk-title">Pullback</small><h3 id="premium-risk-name">—</h3></div><span class="product-risk-label" id="premium-risk-state">—</span></div>
     <div id="premium-risk-steps" class="risk-class-rail" aria-label="Ordinal stages, not probability"></div><small id="premium-risk-detail">—</small>
     <div class="product-risk-facts"><span id="premium-risk-window">—</span><span id="premium-risk-quality">—</span></div>
+    <div class="pro-risk-metrics" aria-label="Kompas PRO pullback risk and uncertainty">
+      <div><span id="pro-stage-label">RISIKOTRIN</span><strong id="pro-risk-stage">—</strong></div>
+      <div><span id="pro-quality-label">EVIDENSKVALITET</span><strong id="pro-risk-quality">—</strong></div>
+      <div><span id="pro-eta-label">PULLBACK ETA</span><strong id="pro-onset-eta">—</strong></div>
+      <div><span id="pro-depth-label">FORVENTET FALDDYBDE</span><strong id="pro-depth">—</strong></div>
+    </div>
+    <div class="pro-risk-timing"><span id="pro-window-label">KILDEVINDUE</span><strong id="pro-watch-window">—</strong><span id="pro-review-label">NÆSTE VURDERING</span><strong id="pro-next-review">—</strong></div>
     <small id="premium-risk-impact">—</small><small id="premium-sell-caveat">—</small></div>
    <div class="product-protection"><div><span data-exp-t="sell">SELL / TRIM</span><strong id="premium-sell">—</strong></div><div><span data-exp-t="distribution">Distribution</span><strong id="premium-distribution">—</strong></div></div>
+   <section class="pro-action-now" aria-label="Kompas PRO decision support, not trade permission">
+    <small id="pro-guidance-label">YOUR ACTION NOW · VEJLEDENDE PLAN</small>
+    <strong id="pro-guidance">Afventer kilde</strong>
+    <p id="pro-guidance-caveat">Beslutningsstøtte, ikke selvstændigt handleråd eller handelstilladelse.</p>
+   </section>
    <div class="product-investor"><div class="product-lenses" role="group" aria-label="Investor reading focus">
     <button type="button" data-investor-lens="holder" aria-pressed="true">HODL / beskyttelse</button>
     <button type="button" data-investor-lens="active" aria-pressed="false">Aktiv / swing</button>
@@ -51,6 +63,15 @@
     <strong id="premium-lens-heading">—</strong><p id="premium-lens-note">—</p><p class="product-caveat" id="premium-lens-caveat">—</p></div>
   </section>
   <section class="section"><div class="section-heading"><h2 data-t="horizonsHeading">Tidshorisonter</h2><span data-t="ownerOfficial" class="subtle">Kun officielt Kompas</span></div><div class="table-scroll"><table><thead><tr><th data-t="time">Tid</th><th data-t="direction">Retning</th><th data-t="actionShort">Handling</th></tr></thead><tbody id="horizon-body"></tbody></table></div></section>
+   <section class="section pro-price-range" aria-label="Kompas PRO source-issued forward price ranges">
+     <div class="section-heading"><h2 id="pro-price-title">PRICE RANGE NAVIGATOR</h2><span class="subtle" id="pro-range-week">—</span></div>
+     <p class="pro-price-label" id="pro-price-week-label">FROSSET UGEINTERVAL</p>
+     <div class="pro-price-pair"><article><span id="pro-btc-label">BTC</span><strong id="pro-price-btc">—</strong></article><article><span id="pro-eth-label">ETH</span><strong id="pro-price-eth">—</strong></article></div>
+     <p class="small" id="pro-price-status">—</p>
+     <p class="small" id="pro-price-caveat">Kildens ugeinterval er ikke en 1–3-dagesprognose.</p>
+     <h3 id="pro-forward-title">FREMTIDIGE INTERVALLER · BTC / ETH</h3>
+     <div class="table-scroll"><table><thead><tr><th id="pro-horizon-label">Tid</th><th>BTC</th><th>ETH</th></tr></thead><tbody id="pro-forward-rows"></tbody></table></div>
+   </section>
    <section class="cn-forward" aria-labelledby="cn-forward-title">
     <div class="cn-forward-head"><div><p class="eyebrow">FORWARD OUTLOOK / KOMPAS</p><h2 id="cn-forward-title" data-t="forwardTitle">Længere udsyn.</h2></div><span id="cn-forward-source-status" class="cn-forward-status" role="status">UNAVAILABLE</span></div>
     <p class="cn-forward-disclaimer" data-t="forwardDisclaimer">To frosne tidshorisonter. Strategisk analyse, ikke en ny handelsbeslutning.</p>
