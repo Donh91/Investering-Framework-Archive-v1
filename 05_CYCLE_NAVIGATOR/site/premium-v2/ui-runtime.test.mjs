@@ -48,7 +48,9 @@ function compass(){
    authority:{probability_model:false},horizons:Object.fromEntries(['1_3d','5_7d','2_3w'].map(k=>[k,{bull:8,bear:2}]))}};
 }
 class Element{
- constructor(){this.textContent='';this.dataset={};this.style={};this.children=[];this.attrs={};this.listeners={};}
+ constructor(tag=''){this.tagName=tag.toUpperCase();this.textContent='';this.dataset={};this.style={};this.children=[];this.attrs={};this.listeners={};this.open=false;this.didFocus=false;}
+ get firstElementChild(){return this.children[0]||null}
+ focus(){this.didFocus=true}
  append(...nodes){this.children.push(...nodes)}
  replaceChildren(...nodes){this.children=nodes;this.textContent=''}
  setAttribute(k,v){this.attrs[k]=String(v)}
@@ -57,7 +59,7 @@ class Element{
  addEventListener(k,fn){this.listeners[k]=fn}
  click(){return this.listeners.click?.({currentTarget:this})}
 }
-async function harness(path,{latest=snapshot(),fetcher=null}={}){
+async function harness(path,{latest=snapshot(),fetcher=null,sourceTransform=null}={}){
  let now=Date.parse('2026-10-26T00:30:00Z'),serial=0;
  const timers=new Map(),elements=new Map(),events={};
  const get=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id)};
@@ -66,7 +68,7 @@ async function harness(path,{latest=snapshot(),fetcher=null}={}){
   buttons[key]=values.map(value=>{const e=new Element();e.dataset[key]=value;return e});
  }
  const doc={documentElement:{lang:'da'},hidden:false,getElementById:get,
-  createElement:()=>new Element(),createElementNS:()=>new Element(),createTextNode:text=>({textContent:text}),
+  createElement:tag=>new Element(tag),createElementNS:(namespace,tag)=>new Element(tag),createTextNode:text=>({textContent:text}),
   querySelector:()=>null,querySelectorAll:q=>q==='[data-asset]'?buttons.asset:q==='[data-lang]'?buttons.lang:q==='[data-proof-step]'?buttons.proofStep:[],
   addEventListener:(k,fn)=>(events[k]??=[]).push(fn),dispatchEvent:e=>(events[e.type]||[]).forEach(fn=>fn(e))};
  const timer=(fn,ms)=>{const id=++serial;timers.set(id,{fn,at:now+ms});return id};
@@ -77,8 +79,9 @@ async function harness(path,{latest=snapshot(),fetcher=null}={}){
   setTimeout:timer,clearTimeout:id=>timers.delete(id),setInterval:timer,clearInterval:id=>timers.delete(id),
   readOfficialCompassPath,readOfficialGraphB,replayObservedUntil,sourceOnlyPriceRangeProof,
   sourceReadbackProofRows:()=>[],console,navigator:{}};
- const source=(await readFile(new URL(path,import.meta.url),'utf8'))
+ let source=(await readFile(new URL(path,import.meta.url),'utf8'))
   .replace(/^import .*;\n/gm,'').replaceAll('import.meta.url',JSON.stringify('https://test.invalid/next/assets/app.js'));
+ if(sourceTransform)source=sourceTransform(source);
  vm.runInNewContext(source,context,{filename:path});
  const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve))};
  await settle();
@@ -234,6 +237,9 @@ test('Compass five horizons expose only source-issued direction, posture and nat
 });
 test('Expired Compass removes current horizon and rotation postures without backfilling',async()=>{
  const h=await harness('./compass/compass-path-ui.mjs');
+ // Let the 5-min refresh start, but NEVER resolve it. Only the original
+ // deadline timer can expire the source-issued numbers and disclosures.
+ h.setFetch(()=>new Promise(()=>{}));
  await h.advance('2026-10-26T02:00:01Z');
  assert.equal(h.get('official-product-pilot').dataset.sourceState,'expired');
  const first=h.get('official-pilot-horizons').children[0];
@@ -243,4 +249,44 @@ test('Expired Compass removes current horizon and rotation postures without back
  assert.equal(h.get('official-pilot-rotation').children[0].children[1].textContent,'—');
  h.language('en');
  assert.equal(h.get('official-pilot-horizons').children[0].children[2].textContent,'EXPIRED');
+});
+
+test('An unchanged background source refresh preserves an expanded official scenario and summary focus',async()=>{
+ const h=await harness('./compass/compass-path-ui.mjs');
+ const cards=h.get('official-pilot-horizons').children;
+ const old=cards[1].children[3],summary=old.children[0];
+ old.open=true;h.doc.activeElement=summary;
+ await h.advance('2026-10-26T00:35:01Z'); // 5-min source refresh; same issued source
+ const next=h.get('official-pilot-horizons').children[1].children[3];
+ assert.notEqual(next,old);
+ assert.equal(next.open,true);
+ assert.equal(next.children[0].didFocus,true);
+ h.doc.activeElement=next.children[0];
+ h.language('en');
+ const en=h.get('official-pilot-horizons').children[1].children[3];
+ assert.equal(en.open,true);
+ assert.equal(en.children[0].didFocus,true);
+ assert.equal(en.children[0].textContent,'Source detail');
+});
+test('A live original deadline masks horizons despite an unresolved periodic refresh and catches a removed timer guard',async()=>{
+ const source='./compass/compass-path-ui.mjs';
+ const run=async sourceTransform=>{
+  const h=await harness(source,{sourceTransform});
+  h.setFetch(()=>new Promise(()=>{}));
+  await h.advance('2026-10-26T02:00:01Z');
+  return h;
+ };
+ const live=await run(null);
+ assert.equal(live.get('official-pilot-action').textContent,'—');
+ assert.equal(live.get('official-pilot-horizons').children[0].children[2].textContent,'UDLØBET');
+ assert.equal(live.get('official-pilot-horizons').children[0].children.length,3);
+ const mutated=await run(code=>{
+  const sentinel='if(ms>0&&ms<2147483000)expiryTimer=setTimeout';
+  assert.ok(code.includes(sentinel),'timer guard must be present for negative control');
+  return code.replace(sentinel,'if(false)expiryTimer=setTimeout');
+ });
+ assert.notEqual(mutated.get('official-pilot-action').textContent,'—',
+  'negative control must expose previously retained current action');
+ assert.equal(mutated.get('official-pilot-horizons').children[0].children[3].tagName,'DETAILS',
+  'negative control must retain stale source disclosure');
 });
