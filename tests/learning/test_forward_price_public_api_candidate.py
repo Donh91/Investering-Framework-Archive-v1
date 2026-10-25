@@ -265,8 +265,11 @@ class ForwardPricePublicApiCandidateTests(unittest.TestCase):
         self.assertNotIn("low_usd", str(answer))
         self.assertNotIn("api_key", str(answer))
         r = self.req
-        self.assertNotIn("api_key", str(r))
-        self.assertNotIn("secret", str(r))
+        # Public metadata includes "requires_api_key": False; that label is not a credential.
+        self.assertNotIn("api_key", r)
+        self.assertFalse(r["requires_api_key"])
+        self.assertNotIn("secret_private_synthetic", str(r))
+        self.assertNotIn("api_key=", r["url"])
 
     def test_no_request_network_fetch_or_market_side_effect(self):
         h, w, k = pointers()
