@@ -213,3 +213,119 @@ def existing_source_roles(hourly_pointer: Mapping[str, Any],
         "approved_forecast_price_owner": None,
         "market_rule_change": False, "portfolio_action": False,
     }
+
+
+# Existing active source is Binance SPOT BTCUSDT. DO NOT re-label as USD.
+# Endpoint/shape matches scripts/daily_capture/build_hourly_sequence.py and
+# scripts/daily_capture/build_weekly_market_close_package.py on current main.
+BINANCE_REQUEST_CONTRACT = "BINANCE_PUBLIC_SPOT_BTCUSDT_REQUEST_v1"
+BINANCE_RESEARCH_CONTRACT = "FORWARD_PRICE_BINANCE_NATIVE_USDT_RESEARCH_PROBE_v1"
+BINANCE_SPOT_CANDLES_URL = "https://data-api.binance.vision/api/v3/klines"
+BINANCE_INTERVALS = {"1h": 3600, "1d": 86400}
+
+
+def binance_request_window(start_utc: str, end_utc: str,
+                           interval: str) -> dict[str, Any]:
+    """Construct a bounded Binance PUBLIC spot BTCUSDT request, without calling it."""
+    if interval not in BINANCE_INTERVALS:
+        raise ValueError("BINANCE_INTERVAL_NOT_ALLOWED")
+    start, end = stamp(start_utc), stamp(end_utc)
+    step = BINANCE_INTERVALS[interval]
+    seconds = unix(end) - unix(start)
+    count = seconds // step
+    if seconds <= 0 or seconds % step or not 1 <= count <= 1000:
+        raise ValueError("BINANCE_WINDOW_LENGTH_NOT_SUPPORTED")
+    if unix(start) % step or unix(end) % step:
+        raise ValueError("BINANCE_WINDOW_NOT_ALIGNED")
+    url = BINANCE_SPOT_CANDLES_URL + "?" + urlencode({
+        "symbol": "BTCUSDT", "interval": interval,
+        "startTime": str(unix(start) * 1000),
+        "endTime": str(unix(end) * 1000 - 1),
+        "limit": str(count),
+    })
+    return {
+        "contract": BINANCE_REQUEST_CONTRACT, "provider": "BINANCE",
+        "source": "PUBLIC_SPOT_MARKET_DATA_ONLY", "symbol": "BTCUSDT",
+        "market": "SPOT", "asset": "BTC", "quote": "USDT",
+        "interval": interval, "window_start_utc": start_utc,
+        "window_end_utc": end_utc, "requested_candles": count,
+        "url": url, "requires_api_key": False,
+        "source_admitted": False, "forecast_issued": False,
+    }
+
+
+def inspect_binance_spot_response(raw: bytes, request: Mapping[str, Any], *,
+                                  received_at_utc: str) -> dict[str, Any]:
+    """Offline SOURCE-only BTCUSDT candle validation, never auto-admission.
+
+    Strict canonical 12-column SPOT kline shape from public Binance market-data.
+    USDT quote is never transmuted into USD and mark/futures candles are rejected
+    by the pinned request identity. Client must separately attest endpoint raw.
+    """
+    received = stamp(received_at_utc)
+    if not isinstance(request, Mapping) or request.get("contract") != BINANCE_REQUEST_CONTRACT:
+        raise ValueError("BINANCE_REQUEST_CONTRACT_REQUIRED")
+    if any(not isinstance(request.get(k), str) for k in
+           ("window_start_utc", "window_end_utc", "interval")):
+        raise ValueError("BINANCE_REQUEST_FIELDS_INVALID")
+    expected = binance_request_window(
+        request["window_start_utc"], request["window_end_utc"], request["interval"])
+    if dict(request) != expected:
+        raise ValueError("BINANCE_REQUEST_IDENTITY_OR_AUTHORITY_CONFLICT")
+    if received < stamp(request["window_end_utc"]):
+        raise ValueError("BINANCE_RECEIVED_BEFORE_SETTLED_END")
+    if not isinstance(raw, bytes) or not 1 <= len(raw) <= 750_000:
+        raise ValueError("BINANCE_RAW_BYTES_INVALID")
+    try:
+        bars = json.loads(raw, object_pairs_hook=unique_pairs,
+                          parse_constant=nonfinite)
+    except (UnicodeError, json.JSONDecodeError):
+        raise ValueError("BINANCE_JSON_INVALID") from None
+    if not isinstance(bars, list) or len(bars) != request["requested_candles"]:
+        raise ValueError("BINANCE_COUNT_OR_SCHEMA_INVALID")
+    start_ms = unix(stamp(request["window_start_utc"])) * 1000
+    end_ms = unix(stamp(request["window_end_utc"])) * 1000
+    step_ms = BINANCE_INTERVALS[request["interval"]] * 1000
+    starts = []
+    for candle in bars:
+        if not isinstance(candle, list) or len(candle) != 12:
+            raise ValueError("BINANCE_SPOT_12_FIELDS_REQUIRED")
+        ts, closed = candle[0], candle[6]
+        if type(ts) is not int or type(closed) is not int:
+            raise ValueError("BINANCE_TIMESTAMP_TYPE_INVALID")
+        if ts % step_ms or ts < start_ms or ts + step_ms > end_ms or (
+            closed != ts + step_ms - 1
+        ):
+            raise ValueError("BINANCE_NOT_EXACT_COMPLETED_KLINE")
+        o, h, l, c = (positive_decimal(candle[k]) for k in (1, 2, 3, 4))
+        for k in (5, 7, 9, 10):
+            positive_decimal(candle[k], may_zero=True)
+        if type(candle[8]) is not int or candle[8] < 0:
+            raise ValueError("BINANCE_INVALID_TRADE_COUNT")
+        if not isinstance(candle[11], str):
+            raise ValueError("BINANCE_IGNORE_COLUMN_TYPE_INVALID")
+        if not l <= min(o, c) <= max(o, c) <= h:
+            raise ValueError("BINANCE_OHLC_INVALID")
+        starts.append(ts)
+    starts.sort()
+    if starts != list(range(start_ms, end_ms, step_ms)):
+        raise ValueError("BINANCE_CONTIGUITY_DUPLICATE_OR_GAP")
+    return {
+        "contract": BINANCE_RESEARCH_CONTRACT, "provider": "BINANCE",
+        "source": "PUBLIC_SPOT_MARKET_DATA_ONLY", "symbol": "BTCUSDT",
+        "market": "SPOT", "asset": "BTC", "quote": "USDT",
+        "status": "CAPTURE_VALIDATED_SOURCE_NOT_ADMITTED",
+        "request_contract": BINANCE_REQUEST_CONTRACT,
+        "source_raw_sha256": hashlib.sha256(raw).hexdigest(),
+        "source_raw_bytes": len(raw),
+        "complete_closed_candles": len(starts), "gap_count": 0,
+        "received_at_utc": received_at_utc,
+        "receiver_first_observed_only": True,
+        "historical_provider_first_known_verified": False,
+        "versioned_collector_verified": False,
+        "separate_private_manifest_required": True,
+        "source_admitted": False, "historical_replay_allowed": False,
+        "forecast_issued": False, "eligible_for_canonical_score": False,
+        "eligible_for_public_price": False, "portfolio_action": False,
+        "usd_equivalence_assumed": False,
+    }
