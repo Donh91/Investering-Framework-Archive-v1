@@ -336,3 +336,63 @@ It may not:
 `AGENTS.md` is the bootstrap enforcement point. Any repository-aware model or agent entering a fresh Investering thread must treat the three hard trigger words as a direct route to this contract before generating the compass.
 
 Conversation memory may improve continuity, but it may not replace current repository verification.
+
+## 5.2 Owner-approved decision-support overlay · Kompas PRO (2026-10-25)
+
+Owner authorization in Investering: merge the best of the already-approved
+mobile Kompas layout (#1810) and Kompas PRO as the **permanent complete
+human-readable Kompas format**. This is a PRESENTATION AND RECOMMENDATION
+extension only; none of Sections 3, 4, 5.1, 6, 7, the production source
+contracts or their buy/sell authority are overridden. The two compact
+action tables and no third-party widgets remain mandatory.
+
+A normal `Kompas` now must prioritize answers to five human questions:
+
+1. **What do I do now?** Lead with the actual fresh OFFICIAL action, then
+   a separately labeled **MY RECOMMENDATION** in clear, usable language:
+   e.g. hold core exposure, do not add speculative beta, prepare a
+   position-by-position protection/trim plan, or wait for a specific
+   source-confirmation. Recommendation is an independent opinion based
+   on disclosed evidence, not a new official trade state, automatic SELL,
+   or portfolio order. Do not present static site checklist text as new
+   real-time AI inference. Avoid ambiguous `HOLD` alone.
+2. **How severe is pullback risk, and how confident are we?** Use the
+   existing source-owned ordinal 5-stage classification
+   NORMAL/BUILDING/ELEVATED/HIGH/CONFIRMED; a `3/5` ordinal location
+   describes the **third category**, not a 60% probability, expected
+   decline of 3/5, or calibrated confidence. Show qualitative
+   **evidence quality** separately. The occurrence probability is
+   `NOT CALIBRATED` until independently prospectively measured.
+3. **How soon and how deep?** Show typed, prospectively bound pullback
+   onset/start-window only when actually available and eligible. Show
+   next official reassessment window separately, never as event ETA.
+   Expected drawdown percent and depth class remain
+   `NOT QUANTIFIED` until a governed typed frozen forecast exists.
+   Explicitly say when a former week's scenario ETA has expired.
+4. **At what BTC/ETH prices could this unfold?** Print real source-frozen
+   ranges for their EXACT forecast horizons and asset pairs. Give source
+   issuer/week and label base/bull/bear conditional envelopes only when
+   their own frozen evidence exists; otherwise `NOT ISSUED`.
+   NEVER stretch weekly W43 bands into upcoming W44 or a new 1–3d/2–3w
+   forecast; do not invent expected closing price, drawdown, confidence,
+   calibration or date from qualitative `MIXED`.
+5. **What about SELL, protection and re-entry?** Always display the
+   separate official SELL/TRIM state with its owner status, distribution,
+   re-entry, confirmation/invalidation criteria and supported timing.
+   If the SELL decision owner is absent, explicitly say
+   `SELL UNAVAILABLE: NO GOVERNED SIGNAL`; do not suppress the question
+   or silently infer a reduction from pullback HIGH/CONFIRMED. Offer a
+   nonbinding, concrete risk-preparation plan and the evidence that
+   would justify reconsidering it. Actual portfolio execution remains
+   exclusively the user's decision.
+
+**End with `YOUR ACTION NOW` and the `🧠 MIN FORTOLKNING` section**,
+explicit about 1–3d and 5–7d disagreement, uncertainty, what changes the
+view and next meaningful review. The user's investment choice remains
+their own; do not imply predictive certainty or know portfolio-specific
+taxes, liquidity and cost basis without authorized source evidence.
+
+Production requirements and science remain under existing #1516 and
+#1578, site overlay under `SITE_CONTRACT.md`. The source-only
+`compass-pro-readback.mjs` may produce pre-authored planning text, but
+**never** an official market classifier, SELL rule or trading signal.

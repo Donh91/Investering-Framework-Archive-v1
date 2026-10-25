@@ -5,6 +5,7 @@
 import {officialBullBear} from './official-bullbear.mjs';
 import {officialPullbackStage} from './official-pullback-stage.mjs';
 import {officialPathView} from './official-path.mjs';
+import {compassProReadback,compassProLabels} from './compass-pro-readback.mjs';
 
 const RISK=['NORMAL','BUILDING','ELEVATED','HIGH','CONFIRMED'];
 const STAGE_LABELS={
@@ -244,6 +245,42 @@ export function renderProductExperience(view,feeds,lang='da'){
  set('premium-risk-quality',t.quality+': '+decision.riskQuality);
  set('premium-risk-impact',t.impact);
  set('premium-sell-caveat',t.noSell);
+ // Approved Kompas PRO display. No client-side forecast/sell/re-entry engine.
+ const pro=compassProReadback(view,feeds?.compass,{lang});
+ const labels=compassProLabels(lang);
+ for(const [id,text] of [
+  ['pro-stage-label',labels.stage],['pro-quality-label',labels.quality],
+  ['pro-eta-label',labels.eta],['pro-depth-label',labels.depth],
+  ['pro-window-label',labels.window],['pro-review-label',labels.review],
+  ['pro-guidance-label',labels.guidance],['pro-guidance-caveat',labels.guidanceCaveat],
+  ['pro-price-title',labels.priceTitle],['pro-price-week-label',labels.priceWeek],
+  ['pro-btc-label',labels.btc],['pro-eth-label',labels.eth],
+  ['pro-price-caveat',labels.rangeCaveat],['pro-forward-title',labels.longTitle],
+  ['pro-horizon-label',labels.horizon]
+ ])set(id,text);
+ set('pro-risk-stage',pro.severity===null?pro.riskLabel:(String(pro.severity)+'/5 · '+pro.riskLabel));
+ set('pro-risk-quality',pro.evidenceQuality);
+ set('pro-onset-eta',pro.onsetEta);
+ set('pro-depth',pro.depth);
+ set('pro-watch-window',pro.watchWindow);
+ set('pro-next-review',pro.nextReview);
+ set('pro-guidance',pro.guidance);
+ const source=pro.sourceWeekly;
+ const asMoney=n=>Number.isFinite(n)&&n>0?'$'+new Intl.NumberFormat(lang==='en'?'en-US':'da-DK',{maximumFractionDigits:0}).format(n):'—';
+ const amount=r=>r?asMoney(r.low)+' – '+asMoney(r.high):'—';
+ set('pro-range-week',source.week||labels.rangeUnavailable);
+ set('pro-price-btc',amount(source.btc));set('pro-price-eth',amount(source.eth));
+ set('pro-price-status',source.status==='FROZEN_CURRENT_WEEK'?labels.sourceLive:
+  source.status==='FROZEN_FUTURE_WEEK'?labels.sourceFuture:
+  source.status==='HISTORICAL_FROZEN_WEEK'?labels.sourceHistorical:labels.sourceUnavailable);
+ const forward=reset('pro-forward-rows');
+ if(forward)for(const entry of pro.forecastRows){
+  const tr=document.createElement('tr');
+  for(const value of [entry.horizon,entry.btc?amount(entry.btc):labels.rangeUnavailable,
+                      entry.eth?amount(entry.eth):labels.rangeUnavailable])
+    tr.append(element('td','',value));
+  forward.append(tr);
+ }
  const steps=reset('premium-risk-steps');
  if(steps){RISK.forEach((s,i)=>{const e=element('span','risk-step',riskStageLabel(s,lang));
    e.dataset.sourceState=s;

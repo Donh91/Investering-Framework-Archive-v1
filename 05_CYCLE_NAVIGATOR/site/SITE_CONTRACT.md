@@ -242,3 +242,46 @@ The repository owner explicitly deferred the current independent Vault acceptanc
 
 This exception grants no recovery credentials, Vault read/write, destructive action, force operation, permission broadening, source-truth or market-rule change. Permanent separation of destructive authority remains binding. Future independent backup/restore acceptance remains a separately owned requirement; this exception applies only to this named release.
 
+
+## Kompas PRO owner-approved decision readback (2026-10-25, additive candidate)
+
+This is the owner-approved presentation consolidation of the existing mobile-first
+Kompas layout and Kompas PRO (risk preparation + price horizons). This is NOT
+a new autonomous market engine or new trading decision owner. Existing premium
+site design, DA/EN, the validated Public Compass projection, CN weekly freeze,
+Master Monday/CN alignment, current price-clock separation and existing
+two-table horizon/tier display remain intact.
+
+The premium Compass may show:
+- risk **ordinal stage** from Official `COMPASS_PROTECTION_TRACKER_v1`
+  NORMAL / BUILDING / ELEVATED / HIGH / CONFIRMED (1/5 to 5/5 describes
+  category position only; not event severity in percent or a probability);
+- independent qualitative evidence quality, prospective event-window ETA
+  only from the governed typed source window, and *separately* the next
+  official 1–3d decision review; never relabel the review as pullback onset;
+- drawdown magnitude, percentage risk and multiweek price envelopes ONLY
+  when a prospectively issued, owner-bound, safely published source exists;
+  absence stays `NOT ISSUED` or `NOT QUANTIFIED`;
+- separate official SELL / TRIM and re-entry statuses. Protection warnings
+  do not grant BUY, REDUCE, SELL or EXIT authority;
+- `YOUR ACTION NOW` as explicitly **predefined, non-binding risk-preparation
+  guidance** adapted conservatively to the source state, and never as a
+  freshly invoked AI model or personal portfolio execution permission;
+- this week's original exact frozen BTC/ETH interval as a
+  SOURCE WEEK REFERENCE, not a forward day-range. Once the source week ends,
+  the range is automatically labeled HISTORICAL; it cannot become W+1 or
+  another horizon by time arithmetic. Future 1–3d / 5–7d / 2–3w / 21–30d /
+  4–8w columns may remain empty until #1516's existing prospective
+  price-forecast owner actually issues and validates them.
+
+The single source adapter is
+`05_CYCLE_NAVIGATOR/site/vnext-live/compass-pro-readback.mjs`,
+consumed by existing `premium-experience.mjs`, with adversarial checks
+in `test-compass-pro-readback.mjs`. The builder must copy the adapter
+to the actual public `/vnext/` package and official premium root.
+No additional scheduler, third-party widget, portfolio interface or
+private source ingestion is authorized.
+
+Forecast science and calibration remain #1516; SITE release and live page
+verification remain #1578; Supervisor oversight remains #1156.
+A PR or preview is not proof of a successful production release.

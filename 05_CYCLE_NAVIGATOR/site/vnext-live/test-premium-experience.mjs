@@ -1,5 +1,6 @@
 /* Product alignment executable negatives. Synthetic fixtures ONLY; no seeded market claims. */
 import assert from 'node:assert/strict';
+import './test-compass-pro-readback.mjs';
 import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel,priceSequenceModel,presentOfficialAction} from './premium-experience.mjs';
 const bullBear={
  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',
@@ -227,6 +228,18 @@ console.log('PASS: production B card, DA/EN chrome, single source-bound chart, n
 assert.match(productionMarkup,/data-b-asset="BTC"/);
 assert.match(productionMarkup,/data-b-asset="ETH"/);
 assert.match(productionMarkup,/id="chart-b-scrub-range"/);
+const proScript=designFile('./premium-experience.mjs');
+assert.equal((proScript.match(/export function initProductExperience/g)||[]).length,1,
+ 'Premium renderer must remain unique (no accidental duplicated tail)');
+assert.match(proScript,/compassProReadback\(view,feeds\?\.compass,\{lang\}\)/);
+assert.match(productionMarkup,/id="pro-risk-stage"/);
+assert.match(productionMarkup,/id="pro-onset-eta"/);
+assert.match(productionMarkup,/id="pro-depth"/);
+assert.match(productionMarkup,/id="pro-guidance"/);
+assert.match(productionMarkup,/id="pro-forward-rows"/);
+assert.match(productionPremiumCss,/\.pro-risk-metrics/);
+assert.match(productionPremiumCss,/\.pro-action-now/);
+
 assert.match(chartJs,/visibleHours=m.hourly.filter\(p=>p.time<=shownUntil\)/);
 assert.match(chartJs,/const plan=linePlan\(plotModel\)/);
 assert.match(chartJs,/chart-b-scrub-label/);

@@ -12,6 +12,7 @@ const index=await readFile(resolve(dist,'legacy/index.html'),'utf8');
 const premiumHome=await readFile(resolve(dist,'index.html'),'utf8');
 const renderer=await readFile(resolve(dist,'compass-product-v5.js'),'utf8');
 const premiumRenderer=await readFile(resolve(site,'market-compass-premium.js'),'utf8');
+const premiumVNextRenderer=await readFile(resolve(site,'vnext-live/premium-experience.mjs'),'utf8');
 const event=JSON.parse(await readFile(resolve(dist,'data/compass-event.json'),'utf8'));
 const f=compass.full_stack;
 if(f?.contract!=='PUBLIC_COMPASS_FULL_STACK_READBACK_v1')throw Error('missing combined Compass');
@@ -27,6 +28,7 @@ if(f.shadow?.status==='ALIGNED_RESEARCH'||f.shadow?.status==='STALE_RESEARCH'){
 if(!renderer.includes('fullStackSection(c)'))throw Error('missing combined renderer');
 if(!premiumRenderer.includes('compositeIntel(compass,readingState)')||!premiumRenderer.includes("const verified=readingState==='CURRENT'"))throw Error('active premium renderer does not bind integrated Compass to current Official freshness');
 if(!premiumRenderer.includes('CN_PREMIUM_COMPASS_OWNER = true'))throw Error('premium owner not detected');
+if(!premiumVNextRenderer.includes('compassProReadback(view,feeds?.compass,{lang})'))throw Error('Kompas PRO approved premium vNext source readback not wired');
 if(!premiumRenderer.includes('RESEARCH_ONLY')&&!premiumRenderer.includes('Model research')&&!premiumRenderer.includes('Research direction'))throw Error('premium research disclosure absent');
 // Independent end-to-end producer-digest and weekly-source regression checks.
 const root=resolve(site,'../..');
