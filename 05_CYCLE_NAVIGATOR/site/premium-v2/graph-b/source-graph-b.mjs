@@ -81,6 +81,8 @@ function textLabels(){
  });
 
  const staticLabels=[
+  ['.premium-entry-overline',officialHome?t('CYCLE NAVIGATOR / OFFICIEL','CYCLE NAVIGATOR / OFFICIAL'):
+   'CYCLE NAVIGATOR / NEXT'],
   ['[data-t="cardEyebrow"]',t('FROSSEN PROGNOSE / UGENS BEVÆGELSE','FROZEN FORECAST / WEEKLY MOVEMENT')],
   ['[data-t="freeze"]',model?.forecast_status==='SOURCE_ISSUED'?
    t('Original kildeudstedt prognose','Original source-issued forecast'):
