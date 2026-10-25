@@ -41,11 +41,18 @@ function reconcile(inventory,head,expectedTree,git,verifyObject){
     throw Error('Ancestry Git operation unverified');
   }
   if(inventory.families.length===0)throw Error('Empty source-family inventory');
-  const indexed=new Map(),families=[];let refs=0;const seenFamilyIds=new Set();
+  const indexed=new Map(),families=[],excludedFamilies=[];let refs=0;const seenFamilyIds=new Set();
   for(const family of inventory.families){if(!family||typeof family.id!=='string'||!family.id||!Array.isArray(family.sources))throw Error('Invalid source family');
-    if(family.sources.length===0)throw Error('Empty source family: '+family.id);
     if(seenFamilyIds.has(family.id))throw Error('Duplicate source family: '+family.id);
-    seenFamilyIds.add(family.id);families.push(family.id);
+    seenFamilyIds.add(family.id);
+    if(family.sources.length===0){
+      // The original public inventory explicitly retains an unavailable private
+      // lane. Keep it visible as excluded, never as verified source/event evidence.
+      if(family.visibility!=='RESTRICTED_NOT_FETCHED'||family.admission!=='PRIVATE_OWNER_GATE'||typeof family.blocker!=='string'||!family.blocker.trim())throw Error('Empty source family: '+family.id);
+      excludedFamilies.push({id:family.id,visibility:family.visibility,admission:family.admission,reason:'DECLARED_RESTRICTED_NOT_FETCHED',source_references:0});
+      continue;
+    }
+    families.push(family.id);
     for(const s of family.sources){refs++;if(!checkPath(s.path)||!HEX40.test(s.git_object_sha)||!['tree','blob'].includes(s.git_object_type))throw Error('Invalid source path/SHA/type');
       const norm=s.path.replace(/\/$/,'');let r=indexed.get(norm);if(r){if(r.pinned_object_sha!==s.git_object_sha||r.type!==s.git_object_type)throw Error('Conflicting shared source path: '+norm);r.families.push(family.id);}
       else indexed.set(norm,{path:s.path,type:s.git_object_type,pinned_object_sha:s.git_object_sha,families:[family.id]});
@@ -69,7 +76,7 @@ function reconcile(inventory,head,expectedTree,git,verifyObject){
   // It invalidates the registered source contract: fail operationally closed
   // rather than returning the same drift exit code as a missing source.
   if(counts.TYPE_MISMATCH>0)throw Error('Compared source object TYPE_MISMATCH: '+rows.filter(x=>x.status==='TYPE_MISMATCH').map(x=>x.path).join(', '));
-  return {contract:'TASK2_R0_GIT_OBJECT_RECONCILIATION_v1_1',original_pinned_source_objects_verified:true,scope:'PUBLIC_GIT_OBJECTS_ONLY_NOT_MARKET_PIT',inventory_base_commit:inventory.main_commit,inventory_base_tree:inventory.main_tree,compared_commit:head,compared_tree:expectedTree,family_count:families.length,source_references:refs,distinct_source_paths:rows.length,counts,verified_all_paths:counts.MISSING===0&&counts.TYPE_MISMATCH===0,verified_unchanged_source_set:counts.CHANGED===0&&counts.MISSING===0&&counts.TYPE_MISMATCH===0,rows,market_first_known_admitted:false,economic_edge_established:false};
+  return {contract:'TASK2_R0_GIT_OBJECT_RECONCILIATION_v1_1',original_pinned_source_objects_verified:true,scope:'PUBLIC_GIT_OBJECTS_ONLY_NOT_MARKET_PIT',inventory_base_commit:inventory.main_commit,inventory_base_tree:inventory.main_tree,compared_commit:head,compared_tree:expectedTree,family_count:families.length,declared_family_count:inventory.families.length,excluded_family_count:excludedFamilies.length,excluded_families:excludedFamilies,inventory_coverage_complete:excludedFamilies.length===0,source_references:refs,distinct_source_paths:rows.length,counts,verified_all_paths:counts.MISSING===0&&counts.TYPE_MISMATCH===0,verified_unchanged_source_set:counts.CHANGED===0&&counts.MISSING===0&&counts.TYPE_MISMATCH===0,rows,market_first_known_admitted:false,economic_edge_established:false};
 }
 try{
   const a=parseArgs(process.argv.slice(2));const cwd=a['--repo-dir']||process.cwd();
