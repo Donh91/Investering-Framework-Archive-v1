@@ -12,6 +12,7 @@
 import {readOfficialGraphB,replayObservedUntil} from './official-source-adapter.mjs';
 const $=id=>document.getElementById(id);
 const SVG='http://www.w3.org/2000/svg',HOUR=3600000,DAY=86400000;
+const SOURCE_RECHECK_MS=5*60*1000;
 let asset='BTC',language='da',model=null,sliderHour=0,playTimer=null,staleTimer=null,requestGeneration=0;
 const s=(n)=>typeof n==='number'&&Number.isFinite(n)&&n>0;
 const t=(da,en)=>language==='da'?da:en;
@@ -210,23 +211,28 @@ function plot(){
  document.querySelectorAll('[data-asset]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.asset===asset)));
 }
 async function getJson(url){
- const r=await fetch(url,{cache:'no-store',credentials:'omit'});
+ const r=await fetch(url,{cache:'no-store',credentials:'omit',redirect:'error',
+  signal:AbortSignal.timeout(12000)});
  if(!r.ok)throw Error('PUBLIC_FEED_HTTP_'+r.status);
  return r.json();
 }
-async function refresh(){
+async function refresh({background=false}={}){
  const request=++requestGeneration,selected=asset;
- clearPlaying();
- if(staleTimer!==null){clearTimeout(staleTimer);staleTimer=null;}
- // Invalidate prior-asset values immediately, before either fetch resolves.
- model=null;
- sliderHour=0;
- plot();
+ const oldMax=Number($('hour-slider')?.max||0);
+ const followLatest=sliderHour>=oldMax;
+ const replayHour=sliderHour;
+ if(!background){
+  clearPlaying();
+  if(staleTimer!==null){clearTimeout(staleTimer);staleTimer=null;}
+  // Asset changes invalidate the old asset immediately.
+  model=null;sliderHour=0;plot();
+ }
  try{
   const [snapshot,lineage]=await Promise.all([getJson(sourceUrl),getJson(lineageUrl)]);
   if(request!==requestGeneration||selected!==asset)return;
   const next=readOfficialGraphB(snapshot,selected,{now_utc:new Date().toISOString(),publication_lineage:lineage});
   if(next.asset!==asset)return;
+  if(staleTimer!==null){clearTimeout(staleTimer);staleTimer=null;}
   model=next;
   if(next.source_status==='SOURCE_BOUNDED'&&next.live_freshness==='FRESH'){
    const deadline=Date.parse(next.last_observed_at_utc)+next.source_freshness_sla_minutes*60000;
@@ -241,11 +247,14 @@ async function refresh(){
   }
   const start=Date.parse(next.bands?.[0]?.window_start_utc||'');
   const end=Date.parse(next.last_observed_at_utc||'');
-  sliderHour=Number.isFinite(start)&&Number.isFinite(end)?
+  const latestHour=Number.isFinite(start)&&Number.isFinite(end)?
    Math.max(0,Math.min(168,Math.floor((end-start)/HOUR))):0;
+  sliderHour=background&&!followLatest?Math.min(replayHour,latestHour):latestHour;
  }catch{
   if(request!==requestGeneration||selected!==asset)return;
-  model=null;
+  clearPlaying();
+  if(staleTimer!==null){clearTimeout(staleTimer);staleTimer=null;}
+  model=null;sliderHour=0;
  }
  plot();
 }
@@ -268,4 +277,8 @@ $('play')?.addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearPlaying();else refresh()});
 window.addEventListener('pagehide',clearPlaying);
+// Pages can publish a new source bundle while the iPhone tab stays open.
+// Re-read the public files; never extend a quote's freshness from a local timer.
+const sourceRecheck=setInterval(()=>{if(!document.hidden&&playTimer===null)refresh({background:true})},SOURCE_RECHECK_MS);
+window.addEventListener('pagehide',()=>clearInterval(sourceRecheck));
 refresh();

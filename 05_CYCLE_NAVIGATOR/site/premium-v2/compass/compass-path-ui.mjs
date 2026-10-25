@@ -8,6 +8,7 @@ const dataUrl=new URL('../../data/compass.json',import.meta.url);
 const latestUrl=new URL('../../data/latest.json',import.meta.url);
 const lang=(da,en)=>document.documentElement.lang==='en'?en:da;
 let currentModel=null,sourceCompass=null,sourceLatest=null,expiryTimer=null,requestGeneration=0;
+const SOURCE_RECHECK_MS=5*60*1000;
 const DA_PHASES={
  'BTC leadership':'BTC fører',
  'ETH leadership':'ETH fører',
@@ -149,13 +150,14 @@ function repaintFromCurrentClock(){
  currentModel=readOfficialCompassPath(sourceCompass,sourceLatest,{now_utc:new Date().toISOString()});
  paint(currentModel);
 }
-async function init(){
+async function init({background=false}={}){
  const request=++requestGeneration;
  // Immediately invalidate old actions while new evidence is in flight.
- invalidateCompass();
+ if(!background)invalidateCompass();
  try{
   const [compass,latest]=await Promise.all([fetchJson(dataUrl),fetchJson(latestUrl)]);
   if(request!==requestGeneration)return; // slower prior request cannot resurrect an old source
+  if(expiryTimer!==null){clearTimeout(expiryTimer);expiryTimer=null;}
   sourceCompass=compass;sourceLatest=latest;
   repaintFromCurrentClock();
   if(currentModel?.status==='SOURCE_CURRENT'){
@@ -173,3 +175,5 @@ init();
 
 document.addEventListener('cn:languagechange',repaintFromCurrentClock);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)init()});
+const sourceRecheck=setInterval(()=>{if(!document.hidden)init({background:true})},SOURCE_RECHECK_MS);
+window.addEventListener('pagehide',()=>clearInterval(sourceRecheck));
