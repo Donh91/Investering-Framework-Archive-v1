@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=40095787726:success,40077939778:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=40120271519:success,40095787726:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=40121432998:success,40119983911:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=40180072637:success,40121432998:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,7 +54,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=40119887879,40077444822 checks=40119887879:registered_workflow_count=0;40119887879:api_error='HTTPError:HTTP Error 502: Bad Gateway'",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=40179879299,40119887879 checks=40119887879:registered_workflow_count=0;40119887879:api_error='HTTPError:HTTP Error 502: Bad Gateway'",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": false
         }
@@ -64,7 +64,7 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=40119887879,40077444822 checks=40119887879:registered_workflow_count=0;40119887879:api_error='HTTPError:HTTP Error 502: Bad Gateway'",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=40179879299,40119887879 checks=40119887879:registered_workflow_count=0;40119887879:api_error='HTTPError:HTTP Error 502: Bad Gateway'",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": false
         }
@@ -94,8 +94,8 @@
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
     "machine_spec_configured": 5,
-    "machine_spec_unconfigured": 31,
-    "post_fix_total": 36
+    "machine_spec_unconfigured": 34,
+    "post_fix_total": 39
   },
   "skipped": [
     {
@@ -157,6 +157,11 @@
     {
       "candidate_id": "codex-research-evidence-gap-mixed-capability-routing-v1",
       "post_fix_gate": "CI and mixed-capability positive and negative fixtures must pass, followed by registry readback preserving both existing route classes.",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-experiment-outcome-maturity-censoring-v1",
+      "post_fix_gate": "Owner chooses versioned compatibility with downstream weekly/yearly consumers; focused positive/negative tests and exact-head CI; independent nonauthoring review; governed merge; main SHA and unchanged immutable outcome SHA readback; later natural regenerated registry and sensor readout verified with no false prospective flag, no scientific edge promotion. Remediation maturation controller alone owns CODEX_READY, not the research thread.",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     },
     {
@@ -242,6 +247,16 @@
     {
       "candidate_id": "codex-research-task2-predecessor-packet-identity-v1",
       "post_fix_gate": "Existing #1596 science and #1156 integration retain ownership. Admit through existing controller, then exact-head tested repair, genuine independent review/release authority, applicable safepoint and source/recovery separation, CI SUCCESS and exact main blob readback. Natural producer/consumer observation must show a valid predecessor identity accepted and no corruption propagated before RESOLVED; otherwise POST_FIX_OBSERVATION. No self-merge and no automatic R1/edge admission.",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-task2-r0-graft-ancestry-hardening-v1",
+      "post_fix_gate": "Exact PR1627 branch + no-duplicate preflight, proven graft negative fixture fails closed, normal positive child PASS, previous 14 tests PASS, Git operational errors appropriately UNKNOWN, exact changed blob hashes, independent code/security review, repository CI green, no original R0 receipts/data rewritten, no merge without reviewer.",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-task2-r0-sol2-git-object-error-isolation-v1",
+      "post_fix_gate": "REFRESH_EXACT_MAIN_AND_PR_HEAD, RUN_FULL_OLD_AND_NEW_R0_GIT_FIXTURES_AND_NEGATIVE_GRAFT_ENV_TESTS, INDEPENDENT_NONAUTHOR_CODE_REVIEW, EXISTING_CI, NO_PRIVATE_VALUES, NORMAL_MERGE_CHECKS, POSTMERGE_BLOB_READBACK, SEPARATELY_KEEP_R1_HISTORICAL_PIT_BLOCKED",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     },
     {
