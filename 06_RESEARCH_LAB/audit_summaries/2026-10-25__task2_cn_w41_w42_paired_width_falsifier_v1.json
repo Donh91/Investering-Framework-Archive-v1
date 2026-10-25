@@ -1,0 +1,402 @@
+{
+  "contract": "TASK2_CN_FROZEN_SAME_METRIC_BASELINE_FALSIFIER_v1",
+  "generated_at_date_utc": "2026-10-25",
+  "status": "RESEARCH_ONLY_NO_SCIENTIFIC_SOURCE_PIT_ADMISSION",
+  "purpose": "Direct same-metric W41+W42 CN, pre-existing four-week B1, same-width centred diagnostic and very wide +/-15pct box; all errors retained; no automatic model promotion.",
+  "locked_input_summary": "original current Git blobs bound per asset/week; original 168/168 UTC observations, paired target/quote caveat",
+  "scientific_eligible_n": 0,
+  "actual_independent_market_weeks_upper_bound": 2,
+  "raw_asset_week_rows": 4,
+  "forecast_original_dollar_band_actual_binance_usdt_proxy": true,
+  "full_week_iso_window_straddles_original_cn_issuance": true,
+  "original_issued_future_after_now": false,
+  "missing_horizons": [
+    "W43_not_fully_mature",
+    "21d_close_path_unavailable",
+    "4_8w_quantitative_forecast_unavailable"
+  ],
+  "metric_semantics": {
+    "joint_containment": "realized_low>=band_low AND realized_high<=band_high",
+    "relative_width_pct": "100*(band_high-band_low)/original_B1_previous_week_close",
+    "breach_pct": "100*positive_out_of_band_excursion/previous_week_close",
+    "jaccard": "intersection_length/union_length",
+    "public_style_accountability_score_noncanonical": "100*[0.7*(intersection_length/actual_envelope_width)+0.3*jaccard], rounded 2 decimals; RESEARCH ONLY, NOT original public score or properly calibrated joint interval loss",
+    "probabilistic_claim": "NONE; not a proper joint LOW/HIGH score",
+    "hypothesis_control_note": "CN band and B1 were original candidate/baseline. SAME_WIDTH uses the CN width (not an independent predictor); +/-15% control chosen retrospectively, not prospectively issued. Same metric does not cure causal issue-clock/source-quote mismatch."
+  },
+  "negative_controls": {
+    "wide_range_skill_inflation": "FIXED_PLUS_MINUS_15PCT_RETROSPECTIVE contains 4/4 despite much wider width",
+    "original_cn_miss_preserved": "2026-W41 both BTC/ETH full-week miss downside",
+    "original_cn_hit_preserved": "2026-W42 both BTC/ETH full-week contain",
+    "baseline_not_retrofit": "Original B1 files only exist for W41 onward, do not retro-write W39/40 baseline releases",
+    "source_and_time_gate": "R1_NOT_ADMITTED and publication 5-7h after Mon00; no official score rewrite"
+  },
+  "summary": {
+    "CN_ORIGINAL": {
+      "n_asset_week_rows": 4,
+      "contained_rows": 2,
+      "mean_relative_width_pct": 14.07356,
+      "mean_research_only_accountability_score": 70.955,
+      "mean_jaccard": 0.44415,
+      "mean_lower_breach_pct": 1.87496
+    },
+    "B1_ORIGINAL": {
+      "n_asset_week_rows": 4,
+      "contained_rows": 0,
+      "mean_relative_width_pct": 7.97695,
+      "mean_research_only_accountability_score": 38.602,
+      "mean_jaccard": 0.28306,
+      "mean_lower_breach_pct": 5.25371
+    },
+    "SAME_WIDTH_PRIOR_CLOSE_DIAGNOSTIC": {
+      "n_asset_week_rows": 4,
+      "contained_rows": 2,
+      "mean_relative_width_pct": 14.07356,
+      "mean_research_only_accountability_score": 75.025,
+      "mean_jaccard": 0.48021,
+      "mean_lower_breach_pct": 1.43608
+    },
+    "FIXED_PLUS_MINUS_15PCT_RETROSPECTIVE": {
+      "n_asset_week_rows": 4,
+      "contained_rows": 4,
+      "mean_relative_width_pct": 30,
+      "mean_research_only_accountability_score": 78.888,
+      "mean_jaccard": 0.29634,
+      "mean_lower_breach_pct": 0
+    }
+  },
+  "rows": [
+    {
+      "week": "2026-W41",
+      "asset": "BTC",
+      "full_week_observation_source": "ARCHIVED_UTC_168H_BINANCE_USDT_PROXY",
+      "original_forecast_source": "SITE_FROZEN",
+      "original_cn_issued_unix": 1791180846,
+      "cn_public_scoring_valid_from_utc": "2026-10-05T07:00:00Z",
+      "iso_target_started_before_cn_issue": true,
+      "anchor_prior_week_close": 86530,
+      "observed_low": 80393.56,
+      "observed_high": 86999.11,
+      "baseline_lookback_weeks": [
+        "2026-W37",
+        "2026-W38",
+        "2026-W39",
+        "2026-W40"
+      ],
+      "baseline_sha256": "2094eae654e90010faa5b01fb18996294055d51d38a58399b15bf5eb63e3efc8",
+      "source_paths": [
+        {
+          "path": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+          "git_blob_sha1": "91702e1bed4981e7b76bc07e990b7a676f9c0e57"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+          "git_blob_sha1": "8279a30c00d5607d67558f2d80e1ea53dd75a7de"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/forecasts/2026/W41.json",
+          "git_blob_sha1": "75483fb0f81317b019d3a9f543ff11c060a651ee"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/scores/2026/W41.json",
+          "git_blob_sha1": "1a6346b46276eb0fe2f51e0d0277ac4fb02ebaa3"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W41.json",
+          "git_blob_sha1": "7d77c1b18bc792a787a9f09cf3468fe226ec6efd"
+        }
+      ],
+      "models": {
+        "CN_ORIGINAL": {
+          "forecast_low": 82000,
+          "forecast_high": 92000,
+          "joint_containment": false,
+          "relative_width_pct": 11.55669,
+          "lower_breach_pct": 1.85651,
+          "upper_breach_pct": 0,
+          "jaccard": 0.430719,
+          "public_style_accountability_score_noncanonical": 65.9
+        },
+        "B1_ORIGINAL": {
+          "forecast_low": 84497.083987,
+          "forecast_high": 90814.027013,
+          "joint_containment": false,
+          "relative_width_pct": 7.30029,
+          "lower_breach_pct": 4.74231,
+          "upper_breach_pct": 0,
+          "jaccard": 0.240107,
+          "public_style_accountability_score_noncanonical": 33.72
+        },
+        "SAME_WIDTH_PRIOR_CLOSE_DIAGNOSTIC": {
+          "forecast_low": 81530,
+          "forecast_high": 91530,
+          "joint_containment": false,
+          "relative_width_pct": 11.55669,
+          "lower_breach_pct": 1.31335,
+          "upper_breach_pct": 0,
+          "jaccard": 0.4911,
+          "public_style_accountability_score_noncanonical": 72.69
+        },
+        "FIXED_PLUS_MINUS_15PCT_RETROSPECTIVE": {
+          "forecast_low": 73550.5,
+          "forecast_high": 99509.5,
+          "joint_containment": true,
+          "relative_width_pct": 30,
+          "lower_breach_pct": 0,
+          "upper_breach_pct": 0,
+          "jaccard": 0.254461,
+          "public_style_accountability_score_noncanonical": 77.63
+        }
+      }
+    },
+    {
+      "week": "2026-W41",
+      "asset": "ETH",
+      "full_week_observation_source": "ARCHIVED_UTC_168H_BINANCE_USDT_PROXY",
+      "original_forecast_source": "SITE_FROZEN",
+      "original_cn_issued_unix": 1791180846,
+      "cn_public_scoring_valid_from_utc": "2026-10-05T07:00:00Z",
+      "iso_target_started_before_cn_issue": true,
+      "anchor_prior_week_close": 2726.94,
+      "observed_low": 2406.11,
+      "observed_high": 2738,
+      "baseline_lookback_weeks": [
+        "2026-W37",
+        "2026-W38",
+        "2026-W39",
+        "2026-W40"
+      ],
+      "baseline_sha256": "2094eae654e90010faa5b01fb18996294055d51d38a58399b15bf5eb63e3efc8",
+      "source_paths": [
+        {
+          "path": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+          "git_blob_sha1": "91702e1bed4981e7b76bc07e990b7a676f9c0e57"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/weekly/2026/W41/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+          "git_blob_sha1": "8279a30c00d5607d67558f2d80e1ea53dd75a7de"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/forecasts/2026/W41.json",
+          "git_blob_sha1": "75483fb0f81317b019d3a9f543ff11c060a651ee"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/scores/2026/W41.json",
+          "git_blob_sha1": "1a6346b46276eb0fe2f51e0d0277ac4fb02ebaa3"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W41.json",
+          "git_blob_sha1": "7d77c1b18bc792a787a9f09cf3468fe226ec6efd"
+        }
+      ],
+      "models": {
+        "CN_ORIGINAL": {
+          "forecast_low": 2560,
+          "forecast_high": 2960,
+          "joint_containment": false,
+          "relative_width_pct": 14.66846,
+          "lower_breach_pct": 5.64332,
+          "upper_breach_pct": 0,
+          "jaccard": 0.321363,
+          "public_style_accountability_score_noncanonical": 47.18
+        },
+        "B1_ORIGINAL": {
+          "forecast_low": 2641.178565,
+          "forecast_high": 2892.665583,
+          "joint_containment": false,
+          "relative_width_pct": 9.22232,
+          "lower_breach_pct": 8.62023,
+          "upper_breach_pct": 0,
+          "jaccard": 0.198994,
+          "public_style_accountability_score_noncanonical": 26.39
+        },
+        "SAME_WIDTH_PRIOR_CLOSE_DIAGNOSTIC": {
+          "forecast_low": 2526.94,
+          "forecast_high": 2926.94,
+          "joint_containment": false,
+          "relative_width_pct": 14.66846,
+          "lower_breach_pct": 4.43097,
+          "upper_breach_pct": 0,
+          "jaccard": 0.405238,
+          "public_style_accountability_score_noncanonical": 56.67
+        },
+        "FIXED_PLUS_MINUS_15PCT_RETROSPECTIVE": {
+          "forecast_low": 2317.899,
+          "forecast_high": 3135.981,
+          "joint_containment": true,
+          "relative_width_pct": 30,
+          "lower_breach_pct": 0,
+          "upper_breach_pct": 0,
+          "jaccard": 0.405693,
+          "public_style_accountability_score_noncanonical": 82.17
+        }
+      }
+    },
+    {
+      "week": "2026-W42",
+      "asset": "BTC",
+      "full_week_observation_source": "ARCHIVED_UTC_168H_BINANCE_USDT_PROXY",
+      "original_forecast_source": "SITE_FROZEN",
+      "original_cn_issued_unix": 1791786745,
+      "cn_public_scoring_valid_from_utc": "2026-10-12T07:00:00Z",
+      "iso_target_started_before_cn_issue": true,
+      "anchor_prior_week_close": 83773.12,
+      "observed_low": 79800,
+      "observed_high": 84352,
+      "baseline_lookback_weeks": [
+        "2026-W38",
+        "2026-W39",
+        "2026-W40",
+        "2026-W41"
+      ],
+      "baseline_sha256": "aabfddf7b01190bde420af146886c237696f69fe62adfdc833dbe795e18c5475",
+      "source_paths": [
+        {
+          "path": "05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+          "git_blob_sha1": "71704b60f7a5c7f41c553e0ddfab6ef9ccd5c95b"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+          "git_blob_sha1": "23cc92462819381c882749fd2c9efd3eb0c46d79"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/forecasts/2026/W42.json",
+          "git_blob_sha1": "fdce8a2b3ea64804452c5f5dbe48c122258d0d97"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/scores/2026/W42.json",
+          "git_blob_sha1": "f29aa58c8662c9efeb98e432da2a4accc3b6fa0f"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W42.json",
+          "git_blob_sha1": "4ec1b7424ba499fcec8d86091e13c980a99bc3ec"
+        }
+      ],
+      "models": {
+        "CN_ORIGINAL": {
+          "forecast_low": 78000,
+          "forecast_high": 88000,
+          "joint_containment": true,
+          "relative_width_pct": 11.937,
+          "lower_breach_pct": 0,
+          "upper_breach_pct": 0,
+          "jaccard": 0.4552,
+          "public_style_accountability_score_noncanonical": 83.66
+        },
+        "B1_ORIGINAL": {
+          "forecast_low": 81804.973495,
+          "forecast_high": 87920.656219,
+          "joint_containment": false,
+          "relative_width_pct": 7.30029,
+          "lower_breach_pct": 2.39334,
+          "upper_breach_pct": 0,
+          "jaccard": 0.313648,
+          "public_style_accountability_score_noncanonical": 48.58
+        },
+        "SAME_WIDTH_PRIOR_CLOSE_DIAGNOSTIC": {
+          "forecast_low": 78773.12,
+          "forecast_high": 88773.12,
+          "joint_containment": true,
+          "relative_width_pct": 11.937,
+          "lower_breach_pct": 0,
+          "upper_breach_pct": 0,
+          "jaccard": 0.4552,
+          "public_style_accountability_score_noncanonical": 83.66
+        },
+        "FIXED_PLUS_MINUS_15PCT_RETROSPECTIVE": {
+          "forecast_low": 71207.152,
+          "forecast_high": 96339.088,
+          "joint_containment": true,
+          "relative_width_pct": 30,
+          "lower_breach_pct": 0,
+          "upper_breach_pct": 0,
+          "jaccard": 0.181124,
+          "public_style_accountability_score_noncanonical": 75.43
+        }
+      }
+    },
+    {
+      "week": "2026-W42",
+      "asset": "ETH",
+      "full_week_observation_source": "ARCHIVED_UTC_168H_BINANCE_USDT_PROXY",
+      "original_forecast_source": "SITE_FROZEN",
+      "original_cn_issued_unix": 1791786745,
+      "cn_public_scoring_valid_from_utc": "2026-10-12T07:00:00Z",
+      "iso_target_started_before_cn_issue": true,
+      "anchor_prior_week_close": 2536.94,
+      "observed_low": 2318,
+      "observed_high": 2579.88,
+      "baseline_lookback_weeks": [
+        "2026-W38",
+        "2026-W39",
+        "2026-W40",
+        "2026-W41"
+      ],
+      "baseline_sha256": "aabfddf7b01190bde420af146886c237696f69fe62adfdc833dbe795e18c5475",
+      "source_paths": [
+        {
+          "path": "05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+          "git_blob_sha1": "71704b60f7a5c7f41c553e0ddfab6ef9ccd5c95b"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/weekly/2026/W42/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json",
+          "git_blob_sha1": "23cc92462819381c882749fd2c9efd3eb0c46d79"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/forecasts/2026/W42.json",
+          "git_blob_sha1": "fdce8a2b3ea64804452c5f5dbe48c122258d0d97"
+        },
+        {
+          "path": "05_CYCLE_NAVIGATOR/range_baselines/scores/2026/W42.json",
+          "git_blob_sha1": "f29aa58c8662c9efeb98e432da2a4accc3b6fa0f"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W42.json",
+          "git_blob_sha1": "4ec1b7424ba499fcec8d86091e13c980a99bc3ec"
+        }
+      ],
+      "models": {
+        "CN_ORIGINAL": {
+          "forecast_low": 2260,
+          "forecast_high": 2720,
+          "joint_containment": true,
+          "relative_width_pct": 18.13208,
+          "lower_breach_pct": 0,
+          "upper_breach_pct": 0,
+          "jaccard": 0.569304,
+          "public_style_accountability_score_noncanonical": 87.08
+        },
+        "B1_ORIGINAL": {
+          "forecast_low": 2451.416226,
+          "forecast_high": 2656.525029,
+          "joint_containment": false,
+          "relative_width_pct": 8.08489,
+          "lower_breach_pct": 5.25894,
+          "upper_breach_pct": 0,
+          "jaccard": 0.379481,
+          "public_style_accountability_score_noncanonical": 45.72
+        },
+        "SAME_WIDTH_PRIOR_CLOSE_DIAGNOSTIC": {
+          "forecast_low": 2306.94,
+          "forecast_high": 2766.94,
+          "joint_containment": true,
+          "relative_width_pct": 18.13208,
+          "lower_breach_pct": 0,
+          "upper_breach_pct": 0,
+          "jaccard": 0.569304,
+          "public_style_accountability_score_noncanonical": 87.08
+        },
+        "FIXED_PLUS_MINUS_15PCT_RETROSPECTIVE": {
+          "forecast_low": 2156.399,
+          "forecast_high": 2917.481,
+          "joint_containment": true,
+          "relative_width_pct": 30,
+          "lower_breach_pct": 0,
+          "upper_breach_pct": 0,
+          "jaccard": 0.344089,
+          "public_style_accountability_score_noncanonical": 80.32
+        }
+      }
+    }
+  ]
+}
