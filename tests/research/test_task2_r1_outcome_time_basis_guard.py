@@ -3,9 +3,7 @@
 Research-only regressions.  They never upgrade original outcome labels, infer
 first-knowledge timing or authorize a forecast/model/portfolio action.
 """
-import copy
 import unittest
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from scripts.research import task2_official_r1_original_evidence_gate_v1 as m
