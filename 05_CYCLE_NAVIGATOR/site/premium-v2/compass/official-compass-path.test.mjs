@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readOfficialCompassPath} from './official-compass-path.mjs';
-const latest=()=>({schema:'CN_PUBLIC_SNAPSHOT_V2',package:{market_cycle_context:{
+const latest=()=>({schema:'CN_PUBLIC_SNAPSHOT_V2',
+ public_series:{current_public_projection:{forecast_week:'2026-W43',public_issue_number:30}},
+ package:{market_cycle_context:{
  current_phase:'UNAVAILABLE',next_gate:'Need durable ETH leadership'}}});
 function official(){
  const directions={NEXT_12H:'UP',NEXT_1_3D:'MIXED',NEXT_5_7D:'MIXED',
@@ -9,6 +11,8 @@ function official(){
  const tiers=['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'];
  return {contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',
   issued_at_utc:'2026-10-23T17:05:30Z',action_now:'HOLD_WAIT',compass_id:'CMP-TEST-READONLY',
+  weekly_context:{contract:'CN_COMPASS_WEEKLY_ALIGNMENT_v1',status:'ALIGNED',
+   forecast_week:'2026-W43',public_issue_number:30},
   full_stack:{official_freshness:{contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',
    status:'VERIFIED_OWNER_POLICY',source_asof_utc:'2026-10-23T15:00:00Z',
    valid_until_utc:'2026-10-23T18:00:00Z'}},
@@ -27,13 +31,28 @@ test('official HOLD_WAIT remains display-only and never becomes BUY or probabili
  assert.equal(v.official_action_current,true);assert.equal(v.bull_bear_semantics,'EVIDENCE_BALANCE_NOT_PROBABILITY');
  assert.equal(v.horizons.length,5);assert.equal(v.capitalization_ladder.length,7);
  assert.equal(v.path_phases.length,10);assert.equal(v.path_current_phase,'UNAVAILABLE');
+ assert.equal(v.path_weekly_alignment,'ALIGNED');
  assert.equal(v.rotation_confirmed,false);assert.equal(v.probability_model,false);
 });
 test('after official expiry, historical action cannot be current',()=>{
- const v=readOfficialCompassPath(official(),latest(),{now_utc:'2026-10-23T18:01:00Z'});
+ const l=latest();l.package.market_cycle_context.current_phase='ROTATION';
+ const v=readOfficialCompassPath(official(),l,{now_utc:'2026-10-23T18:01:00Z'});
  assert.equal(v.status,'SOURCE_EXPIRED');assert.equal(v.official_action,'HOLD_WAIT');
  assert.equal(v.official_action_current,false);
  assert.equal(v.action_allowed_to_display_as_current,false);
+ assert.equal(v.path_current_phase,'UNAVAILABLE');
+ assert.equal(v.rotation_confirmed,false);
+ assert.equal(v.path_next_gate,null);
+});
+test('an unmatched weekly issue cannot borrow the current Official action for PATH',()=>{
+ const l=latest();l.package.market_cycle_context.current_phase='ROTATION';
+ const c=official();c.weekly_context.public_issue_number=29;
+ const v=readOfficialCompassPath(c,l,{now_utc:'2026-10-23T17:30:00Z'});
+ assert.equal(v.official_action_current,true);
+ assert.equal(v.path_weekly_alignment,'UNVERIFIED');
+ assert.equal(v.path_current_phase,'UNAVAILABLE');
+ assert.equal(v.rotation_confirmed,false);
+ assert.equal(v.path_next_gate,null);
 });
 test('spoofed freshness, missing segment or unofficial action fail closed',()=>{
  const v=official();v.full_stack.official_freshness.status='SELF_DECLARED';

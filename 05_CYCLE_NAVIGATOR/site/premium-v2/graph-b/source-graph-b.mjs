@@ -62,12 +62,14 @@ function textLabels(){
   title:'Forecast meets reality.',
   intro:'Original forecast versus actual movement, week by week.',
   disclaimer:'Preview · Source-backed, without demo prices.',
-  graph:'Graph B',compass:'Compass',path:'PATH',proof:'Proof',official:'Official site ↗',meta:'STATUS / SOURCES'
+  graph:'Graph B',compass:'Compass',path:'PATH',proof:'Proof',official:'Official site ↗',meta:'STATUS / SOURCES',
+  cnSource:'CN source ↗',compassSource:'Compass source ↗'
  }:{
   title:'Prognose møder virkelighed.',
   intro:'Original prognose mod faktisk udvikling, uge for uge.',
   disclaimer:'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
-  graph:'Graf B',compass:'Kompas',path:'PATH',proof:'Proof',official:'Officiel side ↗',meta:'STATUS / KILDER'
+  graph:'Graf B',compass:'Kompas',path:'PATH',proof:'Proof',official:'Officiel side ↗',meta:'STATUS / KILDER',
+  cnSource:'CN-data ↗',compassSource:'Kompas-data ↗'
  };
  document.querySelectorAll('[data-premium-nav]').forEach(el=>{
   const v=rootWords[el.dataset.premiumNav];if(v)el.textContent=v;
@@ -107,6 +109,10 @@ function plot(){
  set('pair',asset+' / USD');
  const card=$('variant-panel');card.dataset.variant='b';
  card.dataset.source=model?.forecast_status==='SOURCE_ISSUED'?'published':'missing';
+ card.dataset.freshness=model?.source_status==='SOURCE_BOUNDED'?model.live_freshness.toLowerCase():'unavailable';
+ const actualLabel=document.querySelector('.instrument-left small');
+ if(actualLabel&&model?.live_freshness==='STALE')actualLabel.textContent=
+  t('Forældet observation · ikke aktuel kurs','Stale observation · not a current price');
  const headerWeek=document.querySelector('.instrument-right > span');
  if(headerWeek)headerWeek.textContent=model?.forecast_week?
   model.forecast_week+' · CN #'+model.public_issue_number:t('UGE · KILDE AFVENTER','WEEK · SOURCE PENDING');
@@ -123,7 +129,6 @@ function plot(){
   set('source-state',t('Ingen verificeret kilde','No verified source'));
   $('hour-slider').disabled=true;$('hour-slider').value='0';$('hour-slider').max='0';
   $('playhead').setAttribute('visibility','hidden');
-  $('endpoint')?.setAttribute('visibility','hidden');$('endpoint-halo')?.setAttribute('visibility','hidden');
   $('endpoint')?.setAttribute('visibility','hidden');$('endpoint-halo')?.setAttribute('visibility','hidden');
   set('feed-status',t('Afventer gyldige officielle CN-data. Ingen prognose eller pris vises.','No valid official CN source. No forecast or price shown.'));
   return;

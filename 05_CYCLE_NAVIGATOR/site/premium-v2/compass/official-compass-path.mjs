@@ -55,13 +55,25 @@ export function readOfficialCompassPath(compass,latest,{now_utc}={}){
        obj.bull>=1&&obj.bull<=10&&obj.bear>=1&&obj.bear<=10;
    })?scale.horizons:null;
  const ctx=latest.package?.market_cycle_context||{};
+ const weekly=compass.weekly_context||{};
+ const projection=latest.public_series?.current_public_projection||{};
+ // The Official daily action has its own expiry. PATH additionally depends on
+ // the exact weekly CN issue which supplied the phase context. A current
+ // daily action must not lend authority to a different or expired PATH week.
+ const weeklyAligned=weekly.contract==='CN_COMPASS_WEEKLY_ALIGNMENT_v1'&&
+   weekly.status==='ALIGNED'&&
+   Number.isInteger(projection.public_issue_number)&&
+   projection.public_issue_number===weekly.public_issue_number&&
+   typeof projection.forecast_week==='string'&&projection.forecast_week!==''&&
+   projection.forecast_week===weekly.forecast_week;
  // Never silently compare producer machine codes against display text.
  // Unsupported/DEFENSIVE/UNAVAILABLE codes must not invent a blue PATH position.
  const code=typeof ctx.current_phase==='string'?ctx.current_phase:'UNAVAILABLE';
  const candidate=SOURCE_PHASE_TO_PATH[code]||
    (PHASES.includes(code)?code:null);
- const phase=candidate&&PHASES.includes(candidate)?candidate:'UNAVAILABLE';
  const current=now<validTo;
+ const pathCurrent=current&&weeklyAligned;
+ const phase=pathCurrent&&candidate&&PHASES.includes(candidate)?candidate:'UNAVAILABLE';
  return {
   contract:'CN_PREMIUM_V2_COMPASS_PATH_UI_v1',status:current?'SOURCE_CURRENT':'SOURCE_EXPIRED',
   official_compass_id:compass.compass_id,issued_at_utc:compass.issued_at_utc,
@@ -76,7 +88,8 @@ export function readOfficialCompassPath(compass,latest,{now_utc}={}){
   bull_bear:gauge,
   bull_bear_semantics:gauge?'EVIDENCE_BALANCE_NOT_PROBABILITY':'UNAVAILABLE',
   path_phases:PHASES,path_current_phase:phase,
-  path_next_gate:typeof ctx.next_gate==='string'?ctx.next_gate:null,
+  path_weekly_alignment:weeklyAligned?'ALIGNED':'UNVERIFIED',
+  path_next_gate:pathCurrent&&typeof ctx.next_gate==='string'?ctx.next_gate:null,
   rotation_confirmed:phase!=='UNAVAILABLE',
   price_source_current:current,probability_model:false,decision_authority:false
  };

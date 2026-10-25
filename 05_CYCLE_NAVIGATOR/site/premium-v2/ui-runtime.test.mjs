@@ -40,6 +40,8 @@ function compass(){
   issued_at_utc:'2026-10-26T00:00:00Z',full_stack:{official_freshness:{
    contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',status:'VERIFIED_OWNER_POLICY',
    source_asof_utc:'2026-10-26T00:00:00Z',valid_until_utc:'2026-10-26T02:00:00Z'}},
+  weekly_context:{contract:'CN_COMPASS_WEEKLY_ALIGNMENT_v1',status:'ALIGNED',
+   forecast_week:'2026-W43',public_issue_number:30},
   horizons:Object.fromEntries(['NEXT_12H','NEXT_1_3D','NEXT_5_7D','NEXT_2_3W','CYCLE_ALTCOINS_3_8W'].map(k=>[k,{expected_direction:'UP'}])),
   capitalization_ladder:['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'].map(segment=>({segment,status:'SOURCE'})),
   bull_bear_scale:{contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',semantics:'EVIDENCE_BALANCE_NOT_PROBABILITY',
@@ -87,14 +89,14 @@ async function harness(path,{latest=snapshot(),fetcher=null}={}){
 test('P2-A loaded Bull/Bear clears on offline refresh and stays unavailable across DA/EN',async()=>{
  const h=await harness('./compass/compass-path-ui.mjs');
  assert.equal(h.get('official-pilot-bias').textContent,'8 / 2');
- assert.match(h.get('official-pilot-bias-note').textContent,/2026-10-26T02:00:00Z/);
+ assert.match(h.get('official-pilot-bias-note').textContent,/2026.*UTC/);
  h.setFetch(async()=>{throw Error('TEST_OFFLINE')});
  h.doc.dispatchEvent({type:'visibilitychange'});await h.settle();
  for(const language of ['en','da','en']){
   h.language(language);
   assert.equal(h.get('official-pilot-bias').textContent,'—');
   assert.equal(h.get('official-pilot-action').textContent,'—');
-  assert.doesNotMatch(h.get('official-pilot-bias-note').textContent,/8 \/ 2|2026-/);
+  assert.doesNotMatch(h.get('official-pilot-bias-note').textContent,/8 \/ 2|2026/);
  }
  await h.advance('2026-10-26T03:00:00Z');h.language('en');
  assert.equal(h.get('official-pilot-status').textContent,'SOURCE UNAVAILABLE');
@@ -164,8 +166,10 @@ test('Graph missing selected prices shows no borrowed quote and disables replay'
 test('Graph freshness expires in an already-open tab without another fetch',async()=>{
  const h=await harness('./graph-b/source-graph-b.mjs');
  assert.doesNotMatch(h.get('feed-status').textContent,/FORÆLDEDE/);
+ assert.equal(h.get('variant-panel').dataset.freshness,'fresh');
  await h.advance('2026-10-26T01:30:01Z');
  assert.match(h.get('feed-status').textContent,/FORÆLDEDE/);
+ assert.equal(h.get('variant-panel').dataset.freshness,'stale');
  h.buttons.lang[1].click();assert.match(h.get('feed-status').textContent,/STALE OBSERVATIONS/);
 });
 test('Proof expiry is armed even when optional external source links never respond',async()=>{

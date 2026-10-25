@@ -20,6 +20,16 @@ const DA_PHASES={
  'Exit / protection':'Exit / beskyttelse',
  'Cooldown / re-entry':'Afkøling / genkøb'
 };
+const DA_CODES={UP:'OP',DOWN:'NED',MIXED:'BLANDET',UNAVAILABLE:'UTILGÆNGELIG',
+ HOLD:'BEHOLD',WAIT:'AFVENT',HARD_WAIT:'STRIKT AFVENT',BUY:'KØB',SELL:'SÆLG'};
+const displayCode=code=>document.documentElement.lang==='en'?code:(DA_CODES[code]||code);
+function displayUtc(value){
+ const date=new Date(value);
+ if(!Number.isFinite(date.getTime()))return '—';
+ return new Intl.DateTimeFormat(document.documentElement.lang==='en'?'en-GB':'da-DK',{
+  timeZone:'UTC',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'
+ }).format(date)+' UTC';
+}
 function make(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;
  if(text!==undefined)el.textContent=String(text);return el}
 function clearUnissued(){
@@ -75,16 +85,16 @@ function paint(model){
   BUY:'BUY',SELL:'SELL',UNAVAILABLE:'UNAVAILABLE'};
  $('official-pilot-action').textContent=now?(lang(da[code]||code,en[code]||code)):'—';
  $('official-pilot-action-note').textContent=now?
-  lang('Original officiel handling: '+code+'. Kilde '+model.issued_at_utc,
-  'Original Official action: '+code+'. Issued '+model.issued_at_utc):
-  lang('Historisk '+code+' (IKKE aktuelt). Gyldig til '+model.valid_until_utc,
-       'Historical '+code+' (NOT current). Valid until '+model.valid_until_utc);
+  lang('Kildeudstedt '+displayUtc(model.issued_at_utc)+' · '+code,
+  'Source issued '+displayUtc(model.issued_at_utc)+' · '+code):
+  lang('Historisk '+code+' · udløb '+displayUtc(model.valid_until_utc),
+       'Historical '+code+' · expired '+displayUtc(model.valid_until_utc));
  const g=now?model.bull_bear?.['1_3d']:null;
  $('official-pilot-bias').textContent=g?
   g.bull+' / '+g.bear:'—';
  $('official-pilot-bias-note').textContent=g?lang(
-  'BULL / BEAR, kildeudstedt evidensbalance, ikke sandsynlighed. Udstedt '+model.issued_at_utc+' · gyldig til '+model.valid_until_utc,
-  'BULL / BEAR, source-issued evidence balance, not probability. Issued '+model.issued_at_utc+' · valid until '+model.valid_until_utc):lang(
+  'Kildeudstedt evidensbalance, ikke sandsynlighed · gyldig til '+displayUtc(model.valid_until_utc),
+  'Source-issued evidence balance, not probability · valid until '+displayUtc(model.valid_until_utc)):lang(
   'Ingen aktuel verificeret Bull/Bear-evidens.',
   'No current verified Bull/Bear evidence.');
  const h=$('official-pilot-horizons');h.replaceChildren();
@@ -93,15 +103,18 @@ function paint(model){
  for(const w of model.horizons){
   const c=make('article','official-pilot-horizon');
   c.append(make('span','',translations[w.id]||w.id));
-  c.append(make('strong','',w.direction||'UNAVAILABLE'));
-  c.append(make('small','',w.action_posture||'—'));h.append(c);
+  const direction=make('strong','',displayCode(w.direction||'UNAVAILABLE'));
+  direction.title=w.direction||'UNAVAILABLE';c.append(direction);
+  const action=make('small','',displayCode(w.action_posture||'—'));
+  action.title=w.action_posture||'—';c.append(action);h.append(c);
  }
  const rotation=$('official-pilot-rotation');rotation.replaceChildren();
  for(const segment of model.capitalization_ladder){
   const item=make('div','official-pilot-tier');
   const labels={LARGE_CAPS:'LARGE',MID_CAPS:'MID',SMALL_CAPS:'SMALL',MICROCAPS:'MICRO'};
   item.append(make('strong','',labels[segment.segment]||segment.segment));
-  item.append(make('small','',segment.status||'—'));
+  const status=make('small','',displayCode(segment.status||'—'));
+  status.title=segment.status||'—';item.append(status);
   rotation.append(item);
  }
  const steps=$('official-pilot-path');steps.replaceChildren();
@@ -112,6 +125,8 @@ function paint(model){
  }
  $('official-pilot-phase-note').textContent=model.rotation_confirmed?
   lang('Kildebekræftet fase: '+model.path_current_phase,'Source-confirmed phase: '+model.path_current_phase):
+  model.path_weekly_alignment!=='ALIGNED'?
+  lang('Ugentlig kildebinding afventer. Ingen blå positionsmarkør.','Weekly source alignment pending. No blue position marker.'):
   lang('Aktuel fase ikke fastslået. Ingen blå positionsmarkør.','Current phase not established. No blue position marker.');
  $('official-pilot-gate').textContent=model.path_next_gate?
   lang('NÆSTE KILDEGATE · ','NEXT SOURCE GATE · ')+model.path_next_gate:
