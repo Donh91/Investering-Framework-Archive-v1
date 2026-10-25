@@ -1,0 +1,24 @@
+{
+  "signature": "ff1c1d6794fc131c6991",
+  "candidate_id": "codex-research-task2-r0-sol2-git-object-error-isolation-v1",
+  "candidate_sha256": "8d9e8aa20d4438d8a159175b5ff7893dcafb147d0535a2bb80df9f35a37a3c0a",
+  "task_contract_sha256": "a7fd5b9541b0d6b2c7b35b37eb92940bed8008703436d522c0b6706c5ebe45c9",
+  "post_fix_gate": "REFRESH_EXACT_MAIN_AND_PR_HEAD, RUN_FULL_OLD_AND_NEW_R0_GIT_FIXTURES_AND_NEGATIVE_GRAFT_ENV_TESTS, INDEPENDENT_NONAUTHOR_CODE_REVIEW, EXISTING_CI, NO_PRIVATE_VALUES, NORMAL_MERGE_CHECKS, POSTMERGE_BLOB_READBACK, SEPARATELY_KEEP_R1_HISTORICAL_PIT_BLOCKED",
+  "contract": "CODEX_RESEARCH_DIRECT_MERGE_RECEIPT_v1",
+  "status": "DIRECT_MERGE_VERIFIED",
+  "resolution_mode": "DIRECT_NON_CODEX_REPAIR",
+  "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+  "branch": "agent/task2-20261024-r0-operational-git-failure-isolation",
+  "pr_number": 1785,
+  "merge_commit_sha": "c7315b3444025eaa3802023130615c29fe94f6e5",
+  "merged_at_utc": "2026-10-24T16:52:11Z",
+  "verified_at_utc": "2026-10-25T07:53:22Z",
+  "verification_evidence": [
+    "GitHub PR #1785 merged from exact branch agent/task2-20261024-r0-operational-git-failure-isolation at c7315b3444025eaa3802023130615c29fe94f6e5; source HEAD 1b1413787ea52b61927c18ea32a2bed01cc3ff9e.",
+    "GitHub compare confirms merge commit is ancestor of current main 3317da992fea82d55293e946158b761fc8406f25 with behind_by=0 and merge_base_commit equal to merged commit.",
+    "Independent current-main local R0 suite: all 29 synthetic Git fixtures PASS, including legacy graft/replacement/GIT_DIR and operational-error rejection.",
+    "This is existing-lifecycle merge reconciliation only: no claim of full post-fix gate, natural producer/consumer verification, original vendor PIT, science edge, code dispatch or completion.",
+    "Do not dispatch duplicate implementation; existing controller should consume this receipt into POST_FIX_OBSERVATION, not RESOLVED."
+  ],
+  "receipt_sha256": "40396c06c1d19e6badac7a3334f4be2272331bb91c2f557456f26c5c7f0abd4a"
+}
