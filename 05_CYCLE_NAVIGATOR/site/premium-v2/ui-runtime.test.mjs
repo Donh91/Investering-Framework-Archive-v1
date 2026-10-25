@@ -166,6 +166,28 @@ test('Graph missing selected prices shows no borrowed quote and disables replay'
  assert.equal(h.get('hour-slider').disabled,true);
  assert.equal(h.get('actual').attrs.d,'');
 });
+test('Graph B SLA expires during unresolved 5-minute refresh; old generation gate is caught',async()=>{
+ const run=async sourceTransform=>{
+  const h=await harness('./graph-b/source-graph-b.mjs',{sourceTransform});
+  assert.equal(h.get('variant-panel').dataset.freshness,'fresh');
+  h.setFetch(()=>new Promise(()=>{})); // Periodic request never resolves.
+  await h.advance('2026-10-26T01:30:01Z'); // Refresh at 00:35; source SLA at 01:30.
+  return h;
+ };
+ const live=await run(null);
+ assert.equal(live.get('variant-panel').dataset.freshness,'stale');
+ assert.match(live.get('feed-status').textContent,/FORÆLDEDE OBSERVATIONER/);
+ const mutated=await run(code=>{
+  const sentinel='if(asset!==selected)return;\\n      const currentDeadline='
+   .replace('\\n','\n');
+  assert.ok(code.includes(sentinel),'source deadline guard must be present');
+  return code.replace(sentinel,
+   'if(request!==requestGeneration||asset!==selected)return;\n      const currentDeadline=');
+ });
+ assert.equal(mutated.get('variant-panel').dataset.freshness,'fresh',
+  'negative control must recreate the stale masking from the earlier guard');
+ assert.doesNotMatch(mutated.get('feed-status').textContent,/FORÆLDEDE OBSERVATIONER/);
+});
 test('Graph freshness expires in an already-open tab without another fetch',async()=>{
  const h=await harness('./graph-b/source-graph-b.mjs');
  assert.doesNotMatch(h.get('feed-status').textContent,/FORÆLDEDE/);
