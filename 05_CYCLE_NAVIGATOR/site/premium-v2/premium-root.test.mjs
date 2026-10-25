@@ -22,6 +22,8 @@ test('Premium root renders original Graph B, Proof, official Compass and PATH',(
  assert.ok(root.indexOf('id="official-product-pilot"')<root.indexOf('class="official-product-pilot premium-path"'));
  assert.ok(root.indexOf('class="official-product-pilot premium-path"')<root.indexOf('class="premium-meta"'));
  assert.equal((root.match(/id="feed-status"/g)||[]).length,1);
+ assert.match(root,/href="\.\.\/data\/latest\.json" data-premium-nav="cnSource"/);
+ assert.match(root,/href="\.\.\/data\/compass\.json" data-premium-nav="compassSource"/);
  assert.match(root,/href="\.\/premium-overhaul\.css"/);
 });
 test('root asset paths stay under NEXT and original nested HTML remains immutable',()=>{

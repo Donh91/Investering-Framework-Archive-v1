@@ -80,7 +80,8 @@ export function buildPremiumRootHtml(source){
  source=source.replace(pathStart,'</section>\n<section class="official-product-pilot premium-path" aria-label="PATH · Cyklens ti faser">\n'+pathStart);
  once(source,'</section>\n</main>','main-end');
  source=source.replace('</section>\n</main>',
-  '</section>\n<aside class="premium-meta" aria-label="Kilder og status"><span class="premium-meta-label" data-premium-copy="meta">STATUS / KILDER</span>'+status+'</aside>\n</main>');
+  '</section>\n<aside class="premium-meta" aria-label="Kilder og status"><span class="premium-meta-label" data-premium-copy="meta">STATUS / KILDER</span>'+status+
+  '<div class="premium-meta-links"><a href="../data/latest.json" data-premium-nav="cnSource">CN-data ↗</a><a href="../data/compass.json" data-premium-nav="compassSource">Kompas-data ↗</a></div></aside>\n</main>');
  for(const id of ['variant-panel','official-product-pilot','official-pilot-path','proof-explorer'])
   once(source,'id="'+id+'"',id);
  if(!source.includes('name="robots" content="noindex,nofollow"'))
