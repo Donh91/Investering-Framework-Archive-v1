@@ -23,6 +23,8 @@ Originals with restricted Alpha/provider/proprietary material remain private. Pu
 
 - [AT-GROK-20261024-001: RUN-002 gap research](AT-GROK-20261024-001/README.md) — original private source + public extract + separate ChatGPT adjudication. No ChatGPT experiment or external review is claimed.
 - [AT-GROK-20261025-002: CN miss / NO_TRADE target-EV constraints](AT-GROK-20261025-002/README.md) — private Bridge PR #67 bound to a sanitized Grok extract and separate ChatGPT review; no experiment or external review is claimed.
+- [AT-GROK-20261024-002: frozen Compass source / NO_TRADE inventory](AT-GROK-20261024-002/README.md) — Bridge PR #66, historical Compass snapshot, separate review; source-input limitations retained.
+- [AT-GROK-20261023-002: edge-completion and matched-baseline falsifier](AT-GROK-20261023-002/README.md) — Bridge PR #63 and its prior ChatGPT companion; the un-reproduced B1 number remains rejected.
 
 ## Toward a future app
 
