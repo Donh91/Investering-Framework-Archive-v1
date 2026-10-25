@@ -6,6 +6,146 @@ from scripts.data_ping.auto_market_state import capitalization_transmission_prox
 
 
 class AutoMarketStateIntegrityTests(unittest.TestCase):
+    @staticmethod
+    def _predecessor_snapshot(tmp_root, *, scenario):
+        import json
+        import os
+        import subprocess
+        from pathlib import Path
+        from scripts.data_ping.auto_market_state import canon, h
+        from scripts.data_ping.truth_integrity import GitCliSnapshot
+
+        base = Path(tmp_root)
+        home = "04_MARKET_LEARNING/entry_signals/auto_market_state"
+        target = home + "/runs/2026/10/01/120000_test.json"
+        alternate = home + "/runs/2026/10/01/130000_test.json"
+        pointer_path = home + "/LATEST.json"
+
+        def packet(price):
+            value = {
+                "contract": "AUTO_MARKET_STATE_PACKET_v1",
+                "packet_generated_at_utc": "2026-10-01T12:00:00Z",
+                "normalized_state": {"scalar_values": {"btc_usdt": price}},
+            }
+            value["packet_sha256"] = h(canon(value))
+            return value
+
+        primary = packet(99)
+        other = packet(101)
+        pointer = {
+            "contract": "AUTO_MARKET_STATE_LATEST_POINTER_v1",
+            "packet_path": target,
+            "packet_sha256": primary["packet_sha256"],
+        }
+        if scenario == "pointer_mismatch":
+            pointer["packet_sha256"] = "0" * 64
+        elif scenario == "pointer_digest_missing":
+            pointer.pop("packet_sha256")
+        elif scenario == "pointer_digest_malformed":
+            pointer["packet_sha256"] = "not-a-sha"
+        elif scenario == "modified_payload":
+            primary["normalized_state"]["scalar_values"]["btc_usdt"] = 101
+        elif scenario == "wrong_target":
+            pointer["packet_path"] = alternate
+        elif scenario == "wrong_pointer_contract":
+            pointer["contract"] = "WRONG_POINTER_CONTRACT"
+        elif scenario == "wrong_packet_contract":
+            primary["contract"] = "WRONG_PACKET_CONTRACT"
+            primary["packet_sha256"] = h(canon({k: v for k, v in primary.items() if k != "packet_sha256"}))
+            pointer["packet_sha256"] = primary["packet_sha256"]
+        elif scenario == "missing_target":
+            primary = None
+        elif scenario == "traversal":
+            pointer["packet_path"] = "../outside.json"
+
+        files = {target: primary, alternate: other, pointer_path: pointer}
+        if scenario == "no_pointer":
+            files.pop(pointer_path)
+        env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+        env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
+                   GIT_AUTHOR_NAME="Task2 Test", GIT_AUTHOR_EMAIL="fixture@example.invalid",
+                   GIT_COMMITTER_NAME="Task2 Test", GIT_COMMITTER_EMAIL="fixture@example.invalid")
+        def git(*args):
+            return subprocess.run(["git", "-c", "core.hooksPath=" + os.devnull, *args],
+                                  cwd=base, env=env, check=True, capture_output=True)
+        git("init", "--quiet")
+        for name, value in files.items():
+            if value is None:
+                continue
+            file = base / name
+            file.parent.mkdir(parents=True, exist_ok=True)
+            raw = canon(value)
+            if scenario == "malformed_pointer" and name == pointer_path:
+                raw = b"not-json"
+            if scenario == "malformed_target" and name == target:
+                raw = b"not-json"
+            file.write_bytes(raw)
+        git("add", "--all")
+        git("commit", "-m", "Synthetic predecessor fixture")
+        return GitCliSnapshot.open_repo(base, ref="HEAD")
+
+    def test_predecessor_real_git_identity_negative_matrix(self):
+        import tempfile
+        from scripts.data_ping.auto_market_state import prior_packet, delta
+        invalid = (
+            "pointer_mismatch", "pointer_digest_missing",
+            "pointer_digest_malformed", "modified_payload", "wrong_target",
+            "wrong_pointer_contract", "wrong_packet_contract",
+            "missing_target", "traversal", "malformed_target", "malformed_pointer",
+        )
+        for scenario in invalid:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as td:
+                snapshot = self._predecessor_snapshot(td, scenario=scenario)
+                found, health = prior_packet(snapshot)
+                self.assertIsNone(found, f"{scenario}: corrupted predecessor must never be consumed")
+                self.assertEqual(health["status"], "UNAVAILABLE", f"{scenario}: {health}")
+                self.assertIsNone(delta(100, None), f"{scenario}: no numeric delta from corrupt input")
+
+    def test_existing_pointer_with_corrupt_git_blob_is_not_first_packet(self):
+        import subprocess
+        import tempfile
+        from pathlib import Path
+        from scripts.data_ping.auto_market_state import prior_packet
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            snapshot = self._predecessor_snapshot(td, scenario="valid")
+            pointer_path = "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json"
+            blob = subprocess.check_output(
+                ["git", "rev-parse", "HEAD:" + pointer_path],
+                cwd=root, text=True,
+            ).strip()
+            object_file = root / ".git" / "objects" / blob[:2] / blob[2:]
+            self.assertTrue(object_file.is_file())
+            original_bytes = object_file.read_bytes()
+            original_mode = object_file.stat().st_mode & 0o777
+            object_file.chmod(0o600)
+            try:
+                # The entry EXISTS in the immutable tree but its object is
+                # corrupt. This is not a legitimate first-packet absence.
+                object_file.write_bytes(b"corrupted-synthetic-object")
+                found, health = prior_packet(snapshot)
+                self.assertIsNone(found)
+                self.assertEqual(health["status"], "UNAVAILABLE")
+                self.assertNotEqual(health["status"], "NOT_AVAILABLE_FIRST_PACKET")
+            finally:
+                object_file.write_bytes(original_bytes)
+                object_file.chmod(original_mode)
+
+    def test_predecessor_real_git_valid_and_first_packet_controls(self):
+        import tempfile
+        from scripts.data_ping.auto_market_state import prior_packet, delta
+        with tempfile.TemporaryDirectory() as td:
+            snapshot = self._predecessor_snapshot(td, scenario="valid")
+            found, health = prior_packet(snapshot)
+            self.assertEqual(health["status"], "AVAILABLE")
+            self.assertEqual(delta(100, found["normalized_state"]["scalar_values"]["btc_usdt"])["pct"] > 0, True)
+        with tempfile.TemporaryDirectory() as td:
+            snapshot = self._predecessor_snapshot(td, scenario="no_pointer")
+            found, health = prior_packet(snapshot)
+            self.assertIsNone(found)
+            self.assertEqual(health["status"], "NOT_AVAILABLE_FIRST_PACKET")
+
     def test_c5e_breadth_owner_contract_and_timestamp_alias_are_accepted(self):
         membership = "b" * 64
         value = {

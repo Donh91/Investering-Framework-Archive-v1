@@ -1,0 +1,127 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "OFFICIAL_SOURCE_REFRESH_DUE",
+    "MARKET_STATE_CHANGED",
+    "SCHEDULED_FREEZE_MISSING"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT",
+  "current_data_status": "OK",
+  "current_ladder": [
+    [
+      "BTC",
+      "HOLD"
+    ],
+    [
+      "ETH",
+      "HOLD"
+    ],
+    [
+      "LARGE_CAPS",
+      "WAIT"
+    ],
+    [
+      "MID_CAPS",
+      "WAIT"
+    ],
+    [
+      "SMALL_CAPS",
+      "WAIT"
+    ],
+    [
+      "MICROCAPS",
+      "HARD_WAIT"
+    ],
+    [
+      "MEMES",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "action_permission": "HOLD_WAIT",
+    "btc_delta_pct": -0.23205090968007047,
+    "directional_state": "BEARISH",
+    "eth_delta_pct": -0.1720650321887618,
+    "eth_relative_state": "STRENGTHENING",
+    "ethbtc_delta_pct": 0.06795786612299182,
+    "market_observation_open_utc": "2026-10-24T06:00:00Z",
+    "new_price_observation": true,
+    "predecessor_market_observation_open_utc": "2026-10-24T03:00:00Z",
+    "regime": "BEARISH",
+    "summary": "BTC and ETH are both declining over the latest governed comparison interval; this does not create sell authority."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "LOW",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "OK",
+    "decisive_public_drivers": [
+      "W42 BTC fell from 83,773.12 to 82,116.00 and ETH from 2,536.94 to 2,410.31, but both rebounded materially from their weekly lows.",
+      "ETH/BTC fell from 0.03029 to 0.02937; the 30d shadow rotation score fell from 57 to 33.",
+      "Five settled ETF sessions totaled \u2212228.4 BTC and \u2212320.1 ETH in reported units.",
+      "The final Master Monday characterizes deterioration and retest risk as low-confidence, not confirmed uninterrupted downside or durable distribution."
+    ],
+    "distribution_risk": "UNKNOWN",
+    "eta_window": "A renewed retest is possible during W43; onset timing is unsupported.",
+    "invalidation": "The retest concern weakens if price resilience persists alongside ETH-relative stabilization, broader participation and improving settled flows. Neither a forecast-band breach nor negative flows alone confirm distribution.",
+    "last_material_change_at": "2026-10-19T05:19:45Z",
+    "public_explanation": {
+      "action_authority": false,
+      "contract": "CN_PUBLIC_PROTECTION_COPY_v1",
+      "forecast_week": "2026-W43",
+      "method": "EXISTING_WEEKLY_LLM_PUBLIC_LANGUAGE_FILTER",
+      "onset_end_utc": null,
+      "onset_start_utc": null,
+      "risk_class": "RENEWED-RETEST RISK AFTER A NEGATIVE WEEK WITH MATERIAL REBOUNDS; SEVERITY AND ONSET UNQUANTIFIED.",
+      "risk_state": "ELEVATED",
+      "summary": "Pullback risk remains elevated, although rebounds from recent lows argue against assuming an uninterrupted decline; distribution is unconfirmed.",
+      "watch_for": "Watch whether a recovery holds while Ethereum strengthens relative to Bitcoin and participation broadens.",
+      "weakens_if": "Concern eases if price resilience, relative strength, participation and flows improve together."
+    },
+    "pullback_class": "RENEWED-RETEST RISK AFTER A NEGATIVE WEEK WITH MATERIAL REBOUNDS; SEVERITY AND ONSET UNQUANTIFIED.",
+    "pullback_risk_state": "ELEVATED",
+    "reentry_message": "No re-entry review is active.",
+    "reentry_state": "INACTIVE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-10-24T07:22:51Z",
+  "heat_detail": {
+    "btc_return_24h_pct": -0.94321,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": -0.64333,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": -1.1267
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 9488.0,
+  "last_requested_source_sha": "6995009f5f59feddd3b3adabdd54fe00248667908ab0ed054f8bc93149cc7538",
+  "latest_compass_source_packet_sha256": "6995009f5f59feddd3b3adabdd54fe00248667908ab0ed054f8bc93149cc7538",
+  "missing_freeze_observation_only": true,
+  "missing_scheduled_freeze": "MORNING",
+  "protective_bypass": true,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 39249.0,
+  "source_packet_sha256": "d21e09319ccf7dd398fa16aa735a3bad216d9ceadcabd73615d2da04c8ef494f",
+  "suppressed_cause_codes": [],
+  "temporary_source_continuity": {
+    "active": true,
+    "expires_local_date": "2026-11-01",
+    "expiry_at_utc": "2026-10-24T07:00:00Z",
+    "refresh_admitted": true,
+    "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION"
+  },
+  "upstream_refresh_required": false
+}

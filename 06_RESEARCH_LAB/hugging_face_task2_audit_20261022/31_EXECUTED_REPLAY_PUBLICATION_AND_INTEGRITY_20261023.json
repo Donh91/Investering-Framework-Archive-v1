@@ -1,0 +1,857 @@
+{
+  "P0_prior_release_reconciliation": [
+    {
+      "merge_sha": "52cb3492c3fbb43e83ab920394111979972fe229",
+      "pr": 1746,
+      "reimplemented": false,
+      "state": "MERGED"
+    },
+    {
+      "merge_sha": "64b1f1b79aeba70115d5720fb2cbdf1f4e896e6b",
+      "pr": 1748,
+      "reimplemented": false,
+      "state": "MERGED"
+    }
+  ],
+  "contract": "TASK2_EXECUTED_HISTORY_PUBLICATION_AND_PREDECESSOR_DELTA_v1",
+  "executed_at_utc": "2026-10-23T20:30:02.160428Z",
+  "existing_predecessor_reader_probe": {
+    "cases": [
+      {
+        "case": "valid_binding",
+        "case_class": "POSITIVE_CONTROL",
+        "observed_status": "AVAILABLE",
+        "packet_accepted": true,
+        "packet_canonical_self_hash_valid": true,
+        "pointer_matches_declared_packet_hash": true,
+        "synthetic_delta_sign_only": "POSITIVE",
+        "temporary_snapshot_pinned": true,
+        "violation_accepted": false
+      },
+      {
+        "case": "wrong_pointer_hash",
+        "case_class": "INTEGRITY_VIOLATION",
+        "observed_status": "AVAILABLE",
+        "packet_accepted": true,
+        "packet_canonical_self_hash_valid": true,
+        "pointer_matches_declared_packet_hash": false,
+        "synthetic_delta_sign_only": "POSITIVE",
+        "temporary_snapshot_pinned": true,
+        "violation_accepted": true
+      },
+      {
+        "case": "payload_tamper_with_unchanged_self_hash",
+        "case_class": "INTEGRITY_VIOLATION",
+        "observed_status": "AVAILABLE",
+        "packet_accepted": true,
+        "packet_canonical_self_hash_valid": false,
+        "pointer_matches_declared_packet_hash": true,
+        "synthetic_delta_sign_only": "NEGATIVE",
+        "temporary_snapshot_pinned": true,
+        "violation_accepted": true
+      },
+      {
+        "case": "different_valid_target_same_pointer_hash",
+        "case_class": "INTEGRITY_VIOLATION",
+        "observed_status": "AVAILABLE",
+        "packet_accepted": true,
+        "packet_canonical_self_hash_valid": true,
+        "pointer_matches_declared_packet_hash": false,
+        "synthetic_delta_sign_only": "NEGATIVE",
+        "temporary_snapshot_pinned": true,
+        "violation_accepted": true
+      },
+      {
+        "case": "wrong_packet_contract",
+        "case_class": "INTEGRITY_VIOLATION",
+        "observed_status": "AVAILABLE",
+        "packet_accepted": true,
+        "packet_canonical_self_hash_valid": true,
+        "pointer_matches_declared_packet_hash": true,
+        "synthetic_delta_sign_only": "POSITIVE",
+        "temporary_snapshot_pinned": true,
+        "violation_accepted": true
+      },
+      {
+        "case": "missing_target",
+        "case_class": "EXISTING_FAILCLOSED_CONTROL",
+        "observed_status": "UNAVAILABLE",
+        "packet_accepted": false,
+        "packet_canonical_self_hash_valid": null,
+        "pointer_matches_declared_packet_hash": null,
+        "synthetic_delta_sign_only": null,
+        "temporary_snapshot_pinned": true,
+        "violation_accepted": false
+      },
+      {
+        "case": "path_traversal",
+        "case_class": "EXISTING_FAILCLOSED_CONTROL",
+        "observed_status": "UNAVAILABLE",
+        "packet_accepted": false,
+        "packet_canonical_self_hash_valid": null,
+        "pointer_matches_declared_packet_hash": null,
+        "synthetic_delta_sign_only": null,
+        "temporary_snapshot_pinned": true,
+        "violation_accepted": false
+      },
+      {
+        "case": "absent_pointer",
+        "case_class": "EXISTING_FIRST_PACKET_CONTROL",
+        "observed_status": "NOT_AVAILABLE_FIRST_PACKET",
+        "packet_accepted": false,
+        "packet_canonical_self_hash_valid": null,
+        "pointer_matches_declared_packet_hash": null,
+        "synthetic_delta_sign_only": null,
+        "temporary_snapshot_pinned": true,
+        "violation_accepted": false
+      }
+    ],
+    "cases_executed": 8,
+    "contract": "TASK2_PREDECESSOR_INTEGRITY_REPRODUCTION_v1",
+    "historical_forecasts_modified": false,
+    "integrity_violations_accepted": 4,
+    "production_code_modified": false,
+    "provider_data_read": false,
+    "scientific_pit_admission": false,
+    "scope": "PINNED_PRIOR_PACKET_FUNCTION_REAL_GIT_SNAPSHOT_SYNTHETIC_DATA_ONLY",
+    "source_binding": {
+      "full_assemble_or_native_forecast_executed": false,
+      "functions_executed": [
+        "canon",
+        "delta",
+        "h",
+        "num",
+        "prior_packet",
+        "read_json"
+      ],
+      "integrity_git_blob_sha1": "d089da1f2d4bb423fa0cdb4fc3187882a1e43e98",
+      "integrity_path": "scripts/data_ping/truth_integrity.py",
+      "producer_git_blob_sha1": "6196286539bd3e3688dc3bbcf322b15112b9ef5c",
+      "producer_path": "scripts/data_ping/auto_market_state.py",
+      "source_commit": "0bd0e83b14c49c0dd9a2c6d940e4a0d784d3c13e"
+    },
+    "status": "EXISTING_GUARD_GAP_REPRODUCED_NOT_REPAIRED",
+    "trade_or_signal_emitted": false
+  },
+  "full_original_history_replay": {
+    "contract": "TASK2_ORIGINAL_DIRECTION_COVERAGE_REPLAY_v1",
+    "directional_counts": {
+      "NEXT_12H": 49,
+      "NEXT_1_3D": 0,
+      "NEXT_5_7D": 0
+    },
+    "first_known_certified": false,
+    "forecast_receipts": [
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "300f8664a681e9eaf97bd00a8834a08198894201",
+        "git_blob_sha1": "61428529c3911abd950128fce304a090ae7cb7f4",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-071d8b16df61.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "229204df46844dfe6b67d7ad0e7d60aaf1d0ade9",
+        "git_blob_sha1": "c8164d306dfebe7c6e156fa2bbcf4ef22f39d181",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-0d5260422ba4.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "d6fb0dcdb1ef434fb799e36a6f23560704faf9a9",
+        "git_blob_sha1": "03c1da76fa6cb237aa2bac6d6b4bb28c8e9f5c16",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-3f1e99c2868e.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "b7b677f4565bf13a775af3189d1b53de75c249e7",
+        "git_blob_sha1": "5239ba0450c97e425e5d5791e9c6c6cfa07e1613",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-468da783e9d8.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "63508d9b919a44cd93518318e4aca97e7e97b52d",
+        "git_blob_sha1": "f4ceea6d1bf0021c157fdb8de355844c37f5692d",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-5edb3c548e12.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "91d8a8d85de1050a2aafd1474b22187786e605d5",
+        "git_blob_sha1": "be9e73c14f226364e235ecca42aaf577c06c113e",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-5ee3762df330.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "4dc4a52d897b298b3b016b622b4315f52b30ec54",
+        "git_blob_sha1": "1e2ffaac86e4837de9ebb1813a5971cb596f2f3a",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-904299b09eca.json"
+      },
+      {
+        "cn_source_blob_sha1": "b9ad80f9b22acb569f4c54d30eefbb875b609160",
+        "cn_source_commit": "c300bb1a985a24f4186ccd6fc096aeb53b8b26d9",
+        "git_blob_sha1": "d5000beeeda8e6e74cd142907e54b446af8f27d6",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/12/CMP-20261012-e6f233e124f9.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "2ec34cb9e2388a5699385b21c0f451d92f1000ee",
+        "git_blob_sha1": "dd10707a3fb9d2e3bd8a2ca9ba2c1d73e2de6577",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-88618d3ad2a7.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "4b47609305e19d910b794c3e73fff93b18277e95",
+        "git_blob_sha1": "0e0de03fd8c1b77dbd29fe1b780c293d4df173d1",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-aa70b21fc6b0.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "0049766598c1ba71f6628bbd91efa5545d39e237",
+        "git_blob_sha1": "dbcdb9d32801255b83f420f008f254c84b1305d6",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-aecf113aab74.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "d3f5f0e6dc43e631bf8dace8b438c3c5d301357a",
+        "git_blob_sha1": "3e9df922dc4606f576d8c0e63031fc62dfeb3d9d",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-af3bcdea9173.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "c1f0e4d27a1c27727dbdb7fb4216b1a0678781f2",
+        "git_blob_sha1": "13e28b56eb2623c45d4f0e5ce1b00cd9b6d7c819",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-b1af85bff6f8.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "e7408b8efb40a9360158f756a2e4cb0d417ff8c0",
+        "git_blob_sha1": "ef379fef88597cb3336303e736e81c2699fd2acf",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-bfb7ff123449.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "b10a512d73b88d6fe289b80961c53f87704a8ba6",
+        "git_blob_sha1": "3c13349cd17c2ec3fff90ced8d6ee792e4b44130",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-cb70ee1b10f3.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "750e163d45c1ed555824cd2ed91b988d561850ed",
+        "git_blob_sha1": "a40d03f651117f3518940698e0f4ca248dd5a66c",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-d649788e5270.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "e8e5e3f2dd6d48546d0d4f57454c18ce54a82dde",
+        "git_blob_sha1": "6edf7a23dfc9d24c6f8cfb0475bfca0708a301f6",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/13/CMP-20261013-f34752e8e3c4.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "fc23487a2f8bca3c3190a73879aa72733bb29e54",
+        "git_blob_sha1": "fed4127e85cfeecea6a5a835eea5dfe1a8a9aba7",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/14/CMP-20261014-18699903db9f.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "e334738bb979d41df5ae81f0a4f7a24e958338c8",
+        "git_blob_sha1": "5b2edb0e86def0ccf89e57085de08b6c4fdcea56",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/14/CMP-20261014-34b416163f12.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "6ab6af109f09a578cf7910dfe8f1a61dd96f2b4e",
+        "git_blob_sha1": "1a465ba3d1325dbd1534bff6c9791bd81f57cfa8",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/14/CMP-20261014-3aa8ce4931eb.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "123a40d51d9f5c492995d396aeddbf664d22eb4b",
+        "git_blob_sha1": "5dae1c3dead521b93ce8733bf5d71fe043eacbcf",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/14/CMP-20261014-a4e38e3a1db1.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "917c0feb95086adcf43fa51f8bcb6929d6b5c51e",
+        "git_blob_sha1": "e9914a65731de9bdea6d6d17b8425257a945ef3f",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/14/CMP-20261014-cdd1f365da26.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "80c1ef5000c6c6344817ce09a6e34f669e2aae3b",
+        "git_blob_sha1": "34e7693d1da848126e18989a0d4293bd5abb4114",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/14/CMP-20261014-e84827a7fb53.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "97885a4162b73f20d640300ee7d0451d15c33315",
+        "git_blob_sha1": "ffd5226157223962169622fd6ee25aac9f1c4578",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-039be85c9be3.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "27748240bd47ae69585684c5e80b05e811ad51c9",
+        "git_blob_sha1": "f37bf8cc2b37b9548fc744becd364d806fa283a1",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-180dceef1011.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "8df9c5668e0686ed1105aec23afa6aec296b8e08",
+        "git_blob_sha1": "eb1005b6a8edb8ef5d2d8ed89766c3d06c253801",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-5bb68423546c.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "2697d75b359affc245fd027c7f3d5b49a0220f84",
+        "git_blob_sha1": "2f99c06ae38bdf0b6334326b4e2385544776213b",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-6f28a2d9076c.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "b43c9c276698db46c9016371b33e6ec7d6c65b5b",
+        "git_blob_sha1": "ce997e4b233b3c365d617f3a8a410b6c2cb46193",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-8c98265ad1f3.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "9871f05e61c97134b8499743d6b37c6df4103b38",
+        "git_blob_sha1": "e0327828436b3b766e98559a435343d2815c9509",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-af12d4acf722.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "5fc193f7f30d29662a25828f5101839fcc100e76",
+        "git_blob_sha1": "75e4a83d95074c0c95a3d517598fb5e4af635099",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-e94d60b561f9.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "0dc1ed8fd261300c6ee9992f2ac6a3ec802558e8",
+        "git_blob_sha1": "e682a5549136728878917321251e2ff82bb5df25",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-f10b2f7d3409.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "e2cd5c191f239003be31f027658816e1eddb34d1",
+        "git_blob_sha1": "74ccef3862412c3e4eea7c8df619166a86f12978",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/15/CMP-20261015-faae8e77ba86.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "d39d4175cdda39f53407f130fb44173f5995d1b5",
+        "git_blob_sha1": "80f1aac81bbb2674de4209040ffb4f8bff803685",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/16/CMP-20261016-2b9ff64fba0d.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "627e8306242c5a9e7960115df2da9885bf20f534",
+        "git_blob_sha1": "a2866be9891d61e4cb6d4c6e82191e23b981c32c",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/16/CMP-20261016-38784d61aaad.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "bd217e352f1c0f56d2a6738d1f6f22a2ce96c159",
+        "git_blob_sha1": "4b7ad81e56bd43b267411c8e1dab5d0d981983bd",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/16/CMP-20261016-465a2e130b49.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "8b407daf3f1547a8c4bc3ef58735081539be08c7",
+        "git_blob_sha1": "7619bf5535ab4714a4d2c3c0b1dfa42ad509c2e8",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/16/CMP-20261016-7cc265a20b9e.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "58c9f8957f0adafbf048c4f8e77adb19098e04e9",
+        "git_blob_sha1": "f4aa1e5be2e649f6b02c699c565ceaf2cfc3205e",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/16/CMP-20261016-99b7b7c2bba5.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "fb50caed3ebba40c31200b656eeb9df43418eaac",
+        "git_blob_sha1": "af712caaed0bd89fba0f64f261382d5ff104242d",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/16/CMP-20261016-d9b3a6e7eb5a.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "9bf62659f64b0396a66eb603852840009ed408c1",
+        "git_blob_sha1": "38f37bad90b58d3d6a5fe39b4cb2362863d5bfad",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-08965ef948b8.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "130c43ae90c8808c85a11218e1196ab053ff50f2",
+        "git_blob_sha1": "64ba4cc01f00cd42144c401a4061876b44a1541a",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-46892eb78fe5.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "19a764474c277273365d0079b30aa12ca035f95f",
+        "git_blob_sha1": "0b835cf7d32ef8f44029c3c4f1e12ab367c479c2",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-51df3fecfdc3.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "886ca0de8b5a2c0962cc79f98ffc2d702195b1e0",
+        "git_blob_sha1": "db9f8a26cb6a1b76f344264826c6e4e6b9fbbf7a",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-5a43bef561ae.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "28a298a66fc81df3fa54ea450fb3f6efd4bdaa05",
+        "git_blob_sha1": "be241628d94521abe34038a5089fd5a3aceb7e27",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-793beb150e8f.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "7da6f78ac7ed2787267f1965d9a1ee02156dbf28",
+        "git_blob_sha1": "97f38854f91b3ac488d739f6239a6b190eb30e9f",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-b0ce1aad22dd.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "e336e1eeb86c7ed24101bad068a27b6181416482",
+        "git_blob_sha1": "06b36212e155936067cabb8cd452bae294b49d90",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-ef8f058b7b4b.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "480a332bc42d4bc32ad5cd50e53a88177fc8828c",
+        "git_blob_sha1": "de225eb23b8d77577fa7caaf7eff19580e419335",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-f168daafb892.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "3352a2598e4bd20132ad0ad75e2ff66b7831d603",
+        "git_blob_sha1": "8654f8deddac38291da0fa4732655fe83497eda7",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/17/CMP-20261017-fe4042f95df1.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "0becc14f6f88d067203121f48c8fd62fcb68f02a",
+        "git_blob_sha1": "138e75cbe7dc932a0f337bf8522e98e050ca24ff",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/18/CMP-20261018-1ed9827b3e02.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "9136615b7d5e8d7a35696c193167aa7af6452e34",
+        "git_blob_sha1": "0a77d2791aa2adabf75763f045b87ebcba2a929c",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/18/CMP-20261018-26c2fe0be4c6.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "436fa626baad0ec1e9a6caa498e0dd323479c38b",
+        "git_blob_sha1": "628717d323560393af1f012561f396fdb6389677",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/18/CMP-20261018-4d8024c68496.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "b64e10f2594f5a7403be1739f560479237083a42",
+        "git_blob_sha1": "8b4914b0c029da8a3135187cd9c738943ceccb7c",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/18/CMP-20261018-6c9409ff2826.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "7303533b57981afb784e964502ab5a183601443a",
+        "git_blob_sha1": "13074dc80fcab610484efc8f6d959f50c7ef5c9c",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/18/CMP-20261018-bb557a94ee87.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "8147b675387ed204ba26b82222b1187dd9df72a4",
+        "git_blob_sha1": "6985160f5ef9de87ea6a0173e977679c512951ac",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/18/CMP-20261018-c325fb4602a0.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "658d03822e6032da83fe57be3e2a64bf7a025382",
+        "git_blob_sha1": "9859d4aeebd8e64002d56a2e1f73611624c0c78a",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/19/CMP-20261019-289a377db430.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "17542b336488625bb943a553702ad314d74e1138",
+        "git_blob_sha1": "6a24fe062013c869962b1eb29878c270532432ae",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/19/CMP-20261019-4a82fcf3661f.json"
+      },
+      {
+        "cn_source_blob_sha1": "819a17d1c7aa35ae4df2cf392b013d195e107a07",
+        "cn_source_commit": "dbc4784444db496212395b625c089d92f6be7c9f",
+        "git_blob_sha1": "1fbbd1f92278aa0ad3f003978b1175ab5abdafb9",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/19/CMP-20261019-6ab68e8d421e.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "ddad4afed19b94718b655c6b87e766b787ecc8ea",
+        "git_blob_sha1": "f8eec0d37a178cea485e3cd5f2a18c0a41c7e089",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/19/CMP-20261019-6b86d0efe3bd.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "b5790419553650849772af3c166e786da04e491f",
+        "git_blob_sha1": "36f6552d80ddb54fba4f710ae7d902cbc252d982",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/19/CMP-20261019-8ca1978b5bd2.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "b72746d8ab19d8f53838d964fa2559055bbbfc38",
+        "git_blob_sha1": "6734affd02d732177e9b1502189b239ab88cd3bf",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/19/CMP-20261019-d382621b2e77.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "83a496bbfdf2e32fc9842da51002f50fd3c686a2",
+        "git_blob_sha1": "4b161d81f5ffba6815d129f9cef5f03e8e7140e3",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/19/CMP-20261019-d481c3df2aac.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "c2a06cca8002a324f761d5ee1553fdc52f86b515",
+        "git_blob_sha1": "b8efe441b92696955df133bc29b96fc0aeb8ae20",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-1960f7b95b22.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "82c867792153e6f5b9a4fcdaac85f4dddcf9c88d",
+        "git_blob_sha1": "64f32d21fc2401c4929994cd0bbdf04391401001",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-25f44feb3a4b.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "c29f30836bf731b7df99ef76d597d561b7a498c8",
+        "git_blob_sha1": "e6b30b89ee7f623fbe69e96b847d672e2668c510",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-4372aaef04b8.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "aa328f3f2ec12d2b6c4551cba081fa7ba2a1ba8a",
+        "git_blob_sha1": "32872b6c0f3b3fcb211143340d2d31e2961d95c4",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-66ea670f72eb.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "8b263e0a3708484d29bc11e73763ad0146fff139",
+        "git_blob_sha1": "900d537ebd15235f17f1f2ee1e79bc5a6be88bbf",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-6b5add67c21e.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "9993dd9c8afde1afefaa2064075cb907d8c43b38",
+        "git_blob_sha1": "2fa09a5d5500a62efdecda309ffe012c1d1ffcdd",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-7e387282cc73.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "ae079c55aa5b10166d50325a597177e7fc481f9e",
+        "git_blob_sha1": "bba8aa42cd3f01f82c78850521c2caddebd5508a",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-90624e752b4d.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "be16f880d5e13a683710e097d3a31c1bef63c6f6",
+        "git_blob_sha1": "18d5f17699c82c5053f510ea0d4423f61ac1e0dc",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-c7c12eb79ce8.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "41af7cbcd50dd159d7d51b40461581b8ad54a4af",
+        "git_blob_sha1": "5c12ee8ed1cfd8d0e7ac5f854be507ba0e9dc84c",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-e7dee54fe675.json"
+      },
+      {
+        "cn_source_blob_sha1": "1896a53dfab329fd4ee2e723058197bee39e9fec",
+        "cn_source_commit": "05ad220a977a27acf0dd00c16b81fb540af02274",
+        "git_blob_sha1": "66da8967ac483f85387a1c8689101f84b5181cfa",
+        "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/20/CMP-20261020-f5137ca7d15a.json"
+      }
+    ],
+    "freshness_counts": {
+      "PASS": 64,
+      "STALE_OR_UNAVAILABLE": 6
+    },
+    "independent_events_certified": false,
+    "label_counts": {
+      "NEXT_12H": {
+        "DOWN": 26,
+        "MIXED": 11,
+        "UNAVAILABLE": 10,
+        "UP": 23
+      },
+      "NEXT_1_3D": {
+        "MIXED": 64,
+        "UNAVAILABLE": 6
+      },
+      "NEXT_5_7D": {
+        "MIXED": 64,
+        "UNAVAILABLE": 6
+      }
+    },
+    "original_cn_blob_counts": {
+      "1896a53dfab329fd4ee2e723058197bee39e9fec": 16,
+      "819a17d1c7aa35ae4df2cf392b013d195e107a07": 53,
+      "b9ad80f9b22acb569f4c54d30eefbb875b609160": 1
+    },
+    "original_forecasts": 70,
+    "original_horizon_attempts": 210,
+    "original_outcomes_read": false,
+    "original_source_commit": "5fd81f3714e95198cfc731e7db6b1404056a51e1",
+    "per_day": {
+      "2026-10-12": {
+        "NEXT_12H": {
+          "DOWN": 3,
+          "MIXED": 1,
+          "UNAVAILABLE": 2,
+          "UP": 2
+        },
+        "NEXT_1_3D": {
+          "MIXED": 6,
+          "UNAVAILABLE": 2
+        },
+        "NEXT_5_7D": {
+          "MIXED": 6,
+          "UNAVAILABLE": 2
+        },
+        "original_forecasts": 8
+      },
+      "2026-10-13": {
+        "NEXT_12H": {
+          "DOWN": 4,
+          "MIXED": 1,
+          "UP": 4
+        },
+        "NEXT_1_3D": {
+          "MIXED": 9
+        },
+        "NEXT_5_7D": {
+          "MIXED": 9
+        },
+        "original_forecasts": 9
+      },
+      "2026-10-14": {
+        "NEXT_12H": {
+          "DOWN": 2,
+          "MIXED": 2,
+          "UNAVAILABLE": 2
+        },
+        "NEXT_1_3D": {
+          "MIXED": 4,
+          "UNAVAILABLE": 2
+        },
+        "NEXT_5_7D": {
+          "MIXED": 4,
+          "UNAVAILABLE": 2
+        },
+        "original_forecasts": 6
+      },
+      "2026-10-15": {
+        "NEXT_12H": {
+          "DOWN": 2,
+          "MIXED": 1,
+          "UNAVAILABLE": 3,
+          "UP": 3
+        },
+        "NEXT_1_3D": {
+          "MIXED": 7,
+          "UNAVAILABLE": 2
+        },
+        "NEXT_5_7D": {
+          "MIXED": 7,
+          "UNAVAILABLE": 2
+        },
+        "original_forecasts": 9
+      },
+      "2026-10-16": {
+        "NEXT_12H": {
+          "DOWN": 2,
+          "MIXED": 1,
+          "UP": 3
+        },
+        "NEXT_1_3D": {
+          "MIXED": 6
+        },
+        "NEXT_5_7D": {
+          "MIXED": 6
+        },
+        "original_forecasts": 6
+      },
+      "2026-10-17": {
+        "NEXT_12H": {
+          "DOWN": 4,
+          "MIXED": 1,
+          "UNAVAILABLE": 1,
+          "UP": 3
+        },
+        "NEXT_1_3D": {
+          "MIXED": 9
+        },
+        "NEXT_5_7D": {
+          "MIXED": 9
+        },
+        "original_forecasts": 9
+      },
+      "2026-10-18": {
+        "NEXT_12H": {
+          "DOWN": 3,
+          "UNAVAILABLE": 1,
+          "UP": 2
+        },
+        "NEXT_1_3D": {
+          "MIXED": 6
+        },
+        "NEXT_5_7D": {
+          "MIXED": 6
+        },
+        "original_forecasts": 6
+      },
+      "2026-10-19": {
+        "NEXT_12H": {
+          "DOWN": 2,
+          "MIXED": 1,
+          "UNAVAILABLE": 1,
+          "UP": 3
+        },
+        "NEXT_1_3D": {
+          "MIXED": 7
+        },
+        "NEXT_5_7D": {
+          "MIXED": 7
+        },
+        "original_forecasts": 7
+      },
+      "2026-10-20": {
+        "NEXT_12H": {
+          "DOWN": 4,
+          "MIXED": 3,
+          "UP": 3
+        },
+        "NEXT_1_3D": {
+          "MIXED": 10
+        },
+        "NEXT_5_7D": {
+          "MIXED": 10
+        },
+        "original_forecasts": 10
+      }
+    },
+    "scoring_or_portfolio_actions_performed": false,
+    "scoring_versions": {
+      "OFFICIAL_DAILY_COMPASS_SCORING_v2": 6,
+      "OFFICIAL_DAILY_COMPASS_SCORING_v3": 64
+    },
+    "source_failclosed_causes": {
+      "NO_NEW_OBSERVATION": 4,
+      "STALE_FAILCLOSED": 6
+    },
+    "status": "RESEARCH_ONLY_NOT_R1_ADMITTED"
+  },
+  "integration_owner_issue": 1156,
+  "main_at_preflight": "91636f1bad8e444111855f31f4838a07e4503b6e",
+  "new_code_content_bindings": {
+    "task2_original_direction_coverage_v1.py": {
+      "git_blob_sha1": "4d64baecdb34d3e357023e4cc4e3d932eed289e6",
+      "sha256": "b9790e983e98f5f9d1c5833f73322da54d0ae80c87d1a67c94d91d911780bdd5"
+    },
+    "task2_predecessor_integrity_probe_v1.py": {
+      "git_blob_sha1": "e5d8c3564d8c290a9c9e0c82620db04d68cb5ac1",
+      "sha256": "0fa7d5dba485d1285bae21324a3a0393cecb4b0f9a596f2d72a30a31386265a7"
+    },
+    "test_task2_original_direction_coverage_v1.py": {
+      "git_blob_sha1": "0c4f551d12f4790ef2a456c8729d31c252a17c94",
+      "sha256": "3b8f06f8b30a9264361aec7fc9edf20343f193f7fe3c3bb5336260caaabee7a3"
+    }
+  },
+  "next_existing_owner_action": "Review and admit bounded predecessor identity candidate through existing Codex intake; authenticate original eleven upstream gate vintages before any full R1 admission.",
+  "original_publication_recovery": {
+    "absolute_earliest_provider_or_all_branch_first_publication_certified": false,
+    "all_eleven_upstream_health_lane_vintages_authenticated": false,
+    "both_canonical_self_hashes_recomputed": true,
+    "both_push_acknowledgements_before_original_issue": true,
+    "claim": "CANONICAL_PACKET_AVAILABLE_NO_LATER_THAN_AUTHENTICATED_PUSH_ACK",
+    "contract": "TASK2_ORIGINAL_PACKET_PUBLICATION_BOUND_v1",
+    "current": {
+      "bytes": 81939,
+      "commit": "0b0bce2b70b70db8dcb8f582571e70204bee3fe6",
+      "generated_at_utc": "2026-10-14T13:47:30Z",
+      "git_blob_sha1": "df3dc63c8d16a59617a1f54345e6a1d3d083cb09",
+      "job_completed_at_utc": "2026-10-14T13:47:46Z",
+      "job_conclusion": "success",
+      "job_id": 115888594250,
+      "kind": "current",
+      "matches_original_blob": true,
+      "packet_sha256": "b9e954da85756ea2891641d4f41adb919bedf5c160fd0eec552732f02a8aac22",
+      "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/14/134730_b9e954da8575.json",
+      "predecessor_declared": "4b9c5284b3a330fbaf6dbfbe4fe484279e32150f6076bb58d94865223f472366",
+      "push_ack_at_utc": "2026-10-14T13:47:34.7489062Z",
+      "push_log_excerpt": "2822340c87..0b0bce2b70  HEAD -> main",
+      "raw_sha256": "1c5382ec4f3fabe3a29f142737ff8cad92f7ce4479d68d76860f019571c37f56",
+      "run_id": 38574158892,
+      "self_hash_recomputed_matches": true,
+      "source_snapshot_commit": "2822340c87784e50d6e2724fb12dbb5d085c80ba",
+      "source_snapshot_logged_at_utc": "2026-10-14T13:47:30.2651919Z"
+    },
+    "full_original_R1_admitted": false,
+    "original_forecast_git_blob_sha1": "e9914a65731de9bdea6d6d17b8425257a945ef3f",
+    "original_forecast_id": "CMP-20261014-cdd1f365da26",
+    "original_forecast_issued_at_utc": "2026-10-14T13:49:20Z",
+    "original_forecast_source_commit": "5fd81f3714e95198cfc731e7db6b1404056a51e1",
+    "original_market_values_republished": false,
+    "predecessor": {
+      "bytes": 62634,
+      "commit": "6969afecbcc63fa20550661547c232bde14ead73",
+      "generated_at_utc": "2026-10-14T08:03:33Z",
+      "git_blob_sha1": "6ac2de2bc38ff666e86c6ec9711b79613fef8812",
+      "job_completed_at_utc": "2026-10-14T08:03:42Z",
+      "job_conclusion": "success",
+      "job_id": 115747191134,
+      "kind": "predecessor",
+      "matches_original_blob": true,
+      "packet_sha256": "4b9c5284b3a330fbaf6dbfbe4fe484279e32150f6076bb58d94865223f472366",
+      "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/10/14/080333_4b9c5284b3a3.json",
+      "predecessor_declared": "0ef0fc12949dade3f02e267d1080b915ba63b2954a928ac19cf1dace5def5bef",
+      "push_ack_at_utc": "2026-10-14T08:03:37.5753266Z",
+      "push_log_excerpt": "bdff7f91d0..6969afecbc  HEAD -> main",
+      "raw_sha256": "67817e6e3baab7d4204bc01e39a8137e4de0d38677a15a319526116d3c2f00d4",
+      "rebase_note": "Local pre-rebase e82e0c29f5 was NOT the published commit; authenticated final pushed commit is 6969afecbcc63fa20550661547c232bde14ead73.",
+      "run_id": 38532424807,
+      "self_hash_recomputed_matches": true,
+      "source_snapshot_commit": "0e9cb68d4f59481434de264d57e5dc382110657a"
+    },
+    "predecessor_declared_hash_matches_exact_previous_packet": true,
+    "vendor_quote_first_known_certified": false
+  },
+  "raw_replay_stdout_sha256": "bdcebeb4b99a6f468fc9cb78c20e7b3a8b149073794e395a1197df16da35dd6e",
+  "replay_source_fix": {
+    "changed_scope": "Research replay only; no original forecast, producer, label, gate or scoring changes.",
+    "first_original_forecast_checkout": "300f8664a681e9eaf97bd00a8834a08198894201",
+    "isolated_mutants_rejected": [
+      "older_auto_snapshot_reference",
+      "removed_cn_blob_guard"
+    ],
+    "outcome_data_read": false,
+    "root_cause": "CN was independently loaded by Official producer from original bound_main_sha, not auto_market_state.source_snapshot_commit_sha.",
+    "symptom": "Original CLI stopped on the first Oct12 issue: W42 CN package absent in older auto-packet snapshot e3a8a4a90931ac9c43344c428a7cda86973bce40.",
+    "tests_after_fix": 12,
+    "tests_before_fix": "10 existing passed; new source-epoch regression failed with missing CN object."
+  },
+  "research_parent_head": "0bd0e83b14c49c0dd9a2c6d940e4a0d784d3c13e",
+  "research_pr": 1747,
+  "resources": {
+    "hf_jobs_started": 0,
+    "manual_actions_dispatch_or_reruns": 0,
+    "new_automations": 0,
+    "paid_model_calls_started": 0,
+    "remaining_account_quota": "UNKNOWN",
+    "subagents_spawned": 0
+  },
+  "science_limits": {
+    "certified_R2": "BLOCKED",
+    "full_original_R1": "NOT_ADMITTED",
+    "investor_R3": "NOT_ADMITTED",
+    "market_rules_or_original_records_modified": false,
+    "new_outcome_scoring_performed": false,
+    "prospective_floor_utc": "2026-10-24T12:00:00Z",
+    "prospective_maturation": "NOT_YET_DUE_AT_RUN",
+    "provider_first_known_inferred_from_git": false,
+    "untouched_holdout_created": false
+  },
+  "scientific_owner_issue": 1596,
+  "status": "VERIFIED_RESEARCH_PROGRESS_NOT_FULL_R1_ADMISSION"
+}

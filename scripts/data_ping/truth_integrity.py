@@ -168,7 +168,26 @@ class GitCliSnapshot(PinnedGitHubSnapshot):
                 raise IntegrityError("GITHUB_SOURCE_READ_FAIL", path) from exc
             return GitHubObject(path=path, commit_sha=pinned_sha, raw=raw, git_blob_sha=blob)
 
-        return cls(repository, commit_sha, reader)
+        snapshot = cls(repository, commit_sha, reader)
+        snapshot._git_root = root
+        return snapshot
+
+    def pinned_path_absent(self, path: str) -> bool:
+        """Only a successful exact-commit tree lookup can prove file absence."""
+        safe_path = _safe_repo_path(path, "github_path")
+        root = getattr(self, "_git_root", None)
+        if root is None:
+            raise IntegrityError("GITHUB_SOURCE_READ_FAIL", "no_git_root_for_absence_probe")
+        try:
+            entries = subprocess.check_output(
+                ["git", "--no-replace-objects", "ls-tree", "-z", "--full-tree",
+                 self.commit_sha, "--", ":(literal)" + safe_path],
+                cwd=root,
+                stderr=subprocess.PIPE,
+            )
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise IntegrityError("GITHUB_SOURCE_READ_FAIL", "pinned_tree_absence_probe_failed") from exc
+        return not bool(entries)
 
 
 @dataclass(frozen=True)

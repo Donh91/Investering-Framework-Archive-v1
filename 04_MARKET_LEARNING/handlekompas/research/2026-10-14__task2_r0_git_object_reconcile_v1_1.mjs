@@ -33,13 +33,26 @@ function reconcile(inventory,head,expectedTree,git,verifyObject){
   if(git(['cat-file','-t',inventory.main_commit])!=='commit'||git(['cat-file','-t',head])!=='commit')throw Error('Pinned anchors must name direct commit objects');
   if(git(['rev-parse','--verify',inventory.main_commit+'^{tree}'])!==inventory.main_tree)throw Error('Pinned inventory root-tree SHA mismatch');
   if(git(['rev-parse','--verify',head+'^{tree}'])!==expectedTree)throw Error('Current pinned root-tree SHA mismatch');
-  try{git(['merge-base','--is-ancestor',inventory.main_commit,head]);}catch{throw Error('Compared commit is not descended from pinned inventory');}
+  try{git(['merge-base','--is-ancestor',inventory.main_commit,head]);}
+  catch(e){
+    // Git's documented exit 1 denotes a genuine non-descendant. Fatal
+    // subprocess failures (e.g. 128) are UNKNOWN, never source genealogy.
+    if(e?.status===1)throw Error('Compared commit is not descended from pinned inventory');
+    throw Error('Ancestry Git operation unverified');
+  }
   if(inventory.families.length===0)throw Error('Empty source-family inventory');
-  const indexed=new Map(),families=[];let refs=0;const seenFamilyIds=new Set();
+  const indexed=new Map(),families=[],excludedFamilies=[];let refs=0;const seenFamilyIds=new Set();
   for(const family of inventory.families){if(!family||typeof family.id!=='string'||!family.id||!Array.isArray(family.sources))throw Error('Invalid source family');
-    if(family.sources.length===0)throw Error('Empty source family: '+family.id);
     if(seenFamilyIds.has(family.id))throw Error('Duplicate source family: '+family.id);
-    seenFamilyIds.add(family.id);families.push(family.id);
+    seenFamilyIds.add(family.id);
+    if(family.sources.length===0){
+      // The original public inventory explicitly retains an unavailable private
+      // lane. Keep it visible as excluded, never as verified source/event evidence.
+      if(family.visibility!=='RESTRICTED_NOT_FETCHED'||family.admission!=='PRIVATE_OWNER_GATE'||typeof family.blocker!=='string'||!family.blocker.trim())throw Error('Empty source family: '+family.id);
+      excludedFamilies.push({id:family.id,visibility:family.visibility,admission:family.admission,reason:'DECLARED_RESTRICTED_NOT_FETCHED',source_references:0});
+      continue;
+    }
+    families.push(family.id);
     for(const s of family.sources){refs++;if(!checkPath(s.path)||!HEX40.test(s.git_object_sha)||!['tree','blob'].includes(s.git_object_type))throw Error('Invalid source path/SHA/type');
       const norm=s.path.replace(/\/$/,'');let r=indexed.get(norm);if(r){if(r.pinned_object_sha!==s.git_object_sha||r.type!==s.git_object_type)throw Error('Conflicting shared source path: '+norm);r.families.push(family.id);}
       else indexed.set(norm,{path:s.path,type:s.git_object_type,pinned_object_sha:s.git_object_sha,families:[family.id]});
@@ -63,11 +76,17 @@ function reconcile(inventory,head,expectedTree,git,verifyObject){
   // It invalidates the registered source contract: fail operationally closed
   // rather than returning the same drift exit code as a missing source.
   if(counts.TYPE_MISMATCH>0)throw Error('Compared source object TYPE_MISMATCH: '+rows.filter(x=>x.status==='TYPE_MISMATCH').map(x=>x.path).join(', '));
-  return {contract:'TASK2_R0_GIT_OBJECT_RECONCILIATION_v1_1',original_pinned_source_objects_verified:true,scope:'PUBLIC_GIT_OBJECTS_ONLY_NOT_MARKET_PIT',inventory_base_commit:inventory.main_commit,inventory_base_tree:inventory.main_tree,compared_commit:head,compared_tree:expectedTree,family_count:families.length,source_references:refs,distinct_source_paths:rows.length,counts,verified_all_paths:counts.MISSING===0&&counts.TYPE_MISMATCH===0,verified_unchanged_source_set:counts.CHANGED===0&&counts.MISSING===0&&counts.TYPE_MISMATCH===0,rows,market_first_known_admitted:false,economic_edge_established:false};
+  return {contract:'TASK2_R0_GIT_OBJECT_RECONCILIATION_v1_1',original_pinned_source_objects_verified:true,scope:'PUBLIC_GIT_OBJECTS_ONLY_NOT_MARKET_PIT',inventory_base_commit:inventory.main_commit,inventory_base_tree:inventory.main_tree,compared_commit:head,compared_tree:expectedTree,family_count:families.length,declared_family_count:inventory.families.length,excluded_family_count:excludedFamilies.length,excluded_families:excludedFamilies,inventory_coverage_complete:excludedFamilies.length===0,source_references:refs,distinct_source_paths:rows.length,counts,verified_all_paths:counts.MISSING===0&&counts.TYPE_MISMATCH===0,verified_unchanged_source_set:counts.CHANGED===0&&counts.MISSING===0&&counts.TYPE_MISMATCH===0,rows,market_first_known_admitted:false,economic_edge_established:false};
 }
 try{
   const a=parseArgs(process.argv.slice(2));const cwd=a['--repo-dir']||process.cwd();
-  const git=(args,discardOutput=false)=>{const result=execFileSync('git',['--no-replace-objects',...args],{cwd,encoding:'utf8',stdio:['ignore',discardOutput?'ignore':'pipe','pipe'],maxBuffer:2e6});return result?.trim()||'';};
+  // Don't let inherited GIT_DIR/GIT_WORK_TREE/GIT_CONFIG_* redirect a
+  // purported exact-checkout verification to another repository.
+  const gitEnv={...process.env};
+  for(const key of Object.keys(gitEnv))if(key.startsWith('GIT_'))delete gitEnv[key];
+  gitEnv.GIT_CONFIG_NOSYSTEM='1';
+  gitEnv.GIT_CONFIG_GLOBAL=os.devnull;
+  const git=(args,discardOutput=false)=>{const result=execFileSync('git',['--no-replace-objects',...args],{cwd,env:gitEnv,encoding:'utf8',stdio:['ignore',discardOutput?'ignore':'pipe','pipe'],maxBuffer:2e6});return result?.trim()||'';};
   // --no-replace-objects does NOT disable legacy .git/info/grafts; grafts can forge ancestry.
   // Fail closed in such repositories instead of accepting a synthetic parent relationship.
   const graftPath=path.resolve(cwd,git(['rev-parse','--git-path','info/grafts']));
@@ -85,7 +104,7 @@ try{
     const fd=fs.openSync(pathname,'w+');
     try{
       execFileSync('git',['--no-replace-objects','cat-file',type,sha],{
-        cwd,stdio:['ignore',fd,'pipe'],maxBuffer:2e6
+        cwd,env:gitEnv,stdio:['ignore',fd,'pipe'],maxBuffer:2e6
       });
       const size=fs.fstatSync(fd).size;
       const h=createHash('sha1').update(Buffer.from(type+' '+size+'\0'));

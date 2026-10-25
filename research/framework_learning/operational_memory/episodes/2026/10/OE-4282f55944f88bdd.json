@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_ping/native_handlekompas.py",
+    "tests/data_ping/test_native_handlekompas.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-4282f55944f88bdd",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "compass-fail-closed-owner-freshness-age-policy-1770",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(compass): fail closed when owner freshness ages are missing * test(compass): reject missing age policy and retain fresh path",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_ping/native_handlekompas.py": "15b7a5fe0f3b2064fbd2018ea1041d5a8a330569",
+    "tests/data_ping/test_native_handlekompas.py": "897aea98da5db3b7b107f24404466d73e9368cf2"
+  },
+  "source_commit_sha": "4282f55944f88bdd043d7d63196f2b3262e20d81",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-23T23:20:48-07:00",
+  "task_class": "MARKET_STATE",
+  "task_summary": "fix(compass): fail closed without owner freshness age policy (#1770)"
+}

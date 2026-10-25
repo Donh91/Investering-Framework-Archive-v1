@@ -105,6 +105,40 @@ class CompassOutcomeTest(unittest.TestCase):
             result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
             self.assertEqual(result["status"], "PENDING_SCORING_CONTRACT_MISMATCH")
 
+    def test_nonprospective_original_issue_to_target_is_quarantined(self):
+        # The target may have valid hourly evidence and still be earlier than
+        # issuance. Never write an ex-post outcome as a prospective success.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            f = self.freeze()
+            f["issued_at_utc"] = "2026-09-17T01:00:00Z"
+            path.write_text(json.dumps(f))
+            before = path.read_bytes()
+            self.write_hourly(root)
+            result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "QUARANTINED_NONPROSPECTIVE_TIME_BASIS")
+            self.assertEqual(result["reason"], "TARGET_NOT_AFTER_ISSUED_AT")
+            self.assertEqual(path.read_bytes(), before)
+            self.assertFalse((root / "04_MARKET_LEARNING/handlekompas/official/outcomes").exists())
+
+    def test_future_reference_relative_to_issue_is_quarantined(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            f = self.freeze()
+            f["issued_at_utc"] = "2026-09-16T11:59:00Z"
+            path.write_text(json.dumps(f))
+            before = path.read_bytes()
+            self.write_hourly(root)
+            result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), Path("04_MARKET_LEARNING/handlekompas/official"))
+            self.assertEqual(result["status"], "QUARANTINED_NONPROSPECTIVE_TIME_BASIS")
+            self.assertEqual(result["reason"], "START_REFERENCE_AFTER_ISSUED_AT")
+            self.assertEqual(path.read_bytes(), before)
+            self.assertFalse((root / "04_MARKET_LEARNING/handlekompas/official/outcomes").exists())
+
     def test_cannot_score_before_maturity(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

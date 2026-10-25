@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/transitions/a2838fc5808208860a9c.json",
+    "scripts/data_ping/auto_market_state.py",
+    "tests/data_ping/test_auto_market_state_integrity.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-3ad7193211a897e6",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-enforce-predecessor-packet-identity-read-1777",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* test(task2): freeze Git-backed predecessor hash and contract rejection matrix * fix(task2): fail closed on predecessor pointer, packet and content hash mismatch * governance(task2): bind existing CODEX_READY candidate to same remediation PR",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/transitions/a2838fc5808208860a9c.json": "5e908353227934dc89b6a448cfbb99db7f5ad208",
+    "scripts/data_ping/auto_market_state.py": "43a74bc8939f268fa277358d4817b43f0ce0f264",
+    "tests/data_ping/test_auto_market_state_integrity.py": "c93a905d11950891b9c738789bc6c120474ba0e9"
+  },
+  "source_commit_sha": "3ad7193211a897e676850d8c126ec3cef085565b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-24T05:53:04-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): enforce predecessor packet identity on read (#1777)"
+}

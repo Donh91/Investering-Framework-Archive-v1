@@ -1,0 +1,24 @@
+{
+  "signature": "ad6c41744767265f7c5a",
+  "candidate_id": "codex-research-task2-r0-graft-ancestry-hardening-v1",
+  "candidate_sha256": "8980f75bb49750123ecd000a3b751c3be059bb38912aaaf97e951cd334b5eca0",
+  "task_contract_sha256": "f5c5974cbaa5f9ac16dd73b962b07a1872fdb629d1045d7df77da5de29145254",
+  "post_fix_gate": "Exact PR1627 branch + no-duplicate preflight, proven graft negative fixture fails closed, normal positive child PASS, previous 14 tests PASS, Git operational errors appropriately UNKNOWN, exact changed blob hashes, independent code/security review, repository CI green, no original R0 receipts/data rewritten, no merge without reviewer.",
+  "contract": "CODEX_RESEARCH_DIRECT_MERGE_RECEIPT_v1",
+  "status": "DIRECT_MERGE_VERIFIED",
+  "resolution_mode": "DIRECT_NON_CODEX_REPAIR",
+  "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+  "branch": "agent/task2-20261024-r0-operational-git-failure-isolation",
+  "pr_number": 1785,
+  "merge_commit_sha": "c7315b3444025eaa3802023130615c29fe94f6e5",
+  "merged_at_utc": "2026-10-24T16:52:11Z",
+  "verified_at_utc": "2026-10-25T07:53:22Z",
+  "verification_evidence": [
+    "GitHub PR #1785 merged from exact branch agent/task2-20261024-r0-operational-git-failure-isolation at c7315b3444025eaa3802023130615c29fe94f6e5; source HEAD 1b1413787ea52b61927c18ea32a2bed01cc3ff9e.",
+    "GitHub compare confirms merge commit is ancestor of current main 3317da992fea82d55293e946158b761fc8406f25 with behind_by=0 and merge_base_commit equal to merged commit.",
+    "Independent current-main local R0 suite: all 29 synthetic Git fixtures PASS, including legacy graft/replacement/GIT_DIR and operational-error rejection.",
+    "This is existing-lifecycle merge reconciliation only: no claim of full post-fix gate, natural producer/consumer verification, original vendor PIT, science edge, code dispatch or completion.",
+    "Do not dispatch duplicate implementation; existing controller should consume this receipt into POST_FIX_OBSERVATION, not RESOLVED."
+  ],
+  "receipt_sha256": "d523055b29fe8d01629d5c30f44b8cb2181d06daf085790237047b96cd0e79de"
+}

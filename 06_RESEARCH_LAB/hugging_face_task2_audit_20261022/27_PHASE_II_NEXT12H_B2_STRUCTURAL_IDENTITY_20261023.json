@@ -1,0 +1,68 @@
+{
+  "contract": "TASK2_PHASE_II_V3_ORIGINAL_NEXT12H_B2_STRUCTURAL_IDENTITY_v1",
+  "date": "2026-10-23",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "proof_classification": "SOURCE_CODE_IDENTITY_PLUS_FINITE_SIGN_STATE_CONSISTENCY_NOT_SIGNAL_EDGE",
+  "pinned_original_public_source_commit": "86112a8d4c4efbf05826a3c3ca1d3a690f968883",
+  "pinned_original_engine_path": "scripts/data_ping/native_handlekompas.py",
+  "original_engine_git_blob_sha1": "d00d38bed517861fa2487dce42d330bf05812f6d",
+  "same_git_blob_on_all_six_original_oct14_source_snapshots": true,
+  "six_original_forecast_ids": [
+    "CMP-20261014-3aa8ce4931eb",
+    "CMP-20261014-18699903db9f",
+    "CMP-20261014-e84827a7fb53",
+    "CMP-20261014-cdd1f365da26",
+    "CMP-20261014-34b416163f12",
+    "CMP-20261014-a4e38e3a1db1"
+  ],
+  "code_dependency_trace": [
+    "evidence_snapshot selected BTC and ETH delta features are _delta_pct(auto_state,'btc_usdt') and _delta_pct(auto_state,'eth_usdt')",
+    "derive_market_now computes btc=_delta_pct(auto_state,'btc_usdt') and eth=_delta_pct(auto_state,'eth_usdt')",
+    "With healthy source, derive_market_now yields BULLISH iff btc>0 AND eth>0 and BEARISH iff btc<0 AND eth<0; incomplete/conflicting data yields MIXED, no-new-observation not directional",
+    "horizon_map computes d12 = map(derive_market_now(...).directional_state), BULLISH->UP, BEARISH->DOWN, missing/no-health->UNAVAILABLE",
+    "B2 original prior-packet sign independently applied to each asset maps same _delta_pct input positive->UP, negative->DOWN, zero/missing->ABSTAIN",
+    "Therefore for every original as-issued NEXT_12H label UP or DOWN, both BTC and ETH B2 sign labels are necessarily identical to original direction. Directional agreement and per-slot correctness equivalence against B2 in that shared conditional subset are structural, not a measured independent informational uplift."
+  ],
+  "finite_sign_sanity": {
+    "states_per_btc_eth_ethbtc": [
+      null,
+      -1,
+      0,
+      1
+    ],
+    "healthy_source_states": [
+      true,
+      false
+    ],
+    "same_price_observation_states": [
+      true,
+      false
+    ],
+    "case_count": 256,
+    "directional_original_case_count": 16,
+    "non_directional_case_count": 240,
+    "conditional_directional_sign_mismatch_count": 0,
+    "forecast_direction_counts": {
+      "MIXED": 104,
+      "DOWN": 8,
+      "UNAVAILABLE": 130,
+      "UP": 8,
+      "SIDEWAYS": 6
+    },
+    "source_truth_table_not_full_runtime_replay": true,
+    "none_numeric_provider_values_used": true
+  },
+  "independent_natural_12h_diagnostic_prior_oct12_13": "EXPOSED_16_PAIRED_SLOTS_ZERO_LIFT_PREVIOUS_RESULT",
+  "oct14_diagnostic": "EXPOSED_4_PAIRED_SLOTS_ZERO_LIFT_TWO_DIRECTIONAL_ORIGINAL_ISSUANCES",
+  "no_genuine_independent_baseline_competition_for_next_12h_UP_DOWN": true,
+  "important_caveat": "Matched directional correctness equality is guaranteed by identical directional labels on each matched BTC/ETH asset, but observed correctness rates and economic outcomes are NOT predetermined; abstention/coverage and longer-horizon CN-conditioned decisions remain separately testable. Neither structural identity nor one overlap block establishes predictive skill.",
+  "required_research_redirect": [
+    "R2: compare coverage-aware B2 plus identical no-new and source freshness filters with Compass, measuring abstention/uncertainty rather than redundant same-signal directional accuracy",
+    "R2: evaluate original 1-3D and 5-7D CN-conditioned horizons against time-matched cheap benchmarks only after source-vintage and original CN decision projection R1 admission",
+    "R3: test risk/protection actions versus HOLD and WAIT with actual delivery/fill/cost evidence, strictly separate source clocks from investment action",
+    "R6: obtain genuinely untouched prospective independent market-event-family holdout, do not extend ex-post one-block sample and call it independent N"
+  ],
+  "original_full_R1_not_admitted": true,
+  "original_model_or_policy_changes": false,
+  "no_automated_trading_or_external_provider_values": true
+}

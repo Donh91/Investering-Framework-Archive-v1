@@ -75,6 +75,29 @@ jobs:
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
           echo "source_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Preflight actual newly completed owner hour
+        id: hourly_public_hour
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Deterministic tests and exact owner-pointer freshness BEFORE dispatch.
+          python3 scripts/cycle_navigator/verify_hourly_pages_handoff.py --self-test
+          hour=$(python3 scripts/cycle_navigator/verify_hourly_pages_handoff.py --source-only | awk '$1=="CN_HOURLY_NEW_SOURCE_HOUR" {print $2}')
+          test -n "$hour"
+          echo "hour=$hour" >> "$GITHUB_OUTPUT"
+      - name: Publish updated hourly observations to Cycle Navigator Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Bot pushes do not start the Pages push trigger. This existing
+          # workflow_dispatch is the bounded handoff after source persistence.
+          # Dispatch with the exact source-issued hour, not just a best-effort fire-and-forget hint.
+          # The existing Pages job validates the real CDN after deploy.
+          gh workflow run cycle-navigator-pages.yml --ref main \
+            -f expected_hour_utc="${{ steps.hourly_public_hour.outputs.hour }}"
+          echo "CN_PAGES_HOURLY_HANDOFF_DISPATCHED_NOT_DELIVERED source_commit=${{ steps.persist_hourly.outputs.source_commit_sha }} expected_hour=${{ steps.hourly_public_hour.outputs.hour }}"
       - name: Dispatch Entry Signal after hourly owner publish
         if: github.event_name != 'workflow_dispatch' || inputs.chain_entry_signal == true
         env:

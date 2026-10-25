@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_MARKET_LEARNING",
+  "episode_id": "OE-c7315b3444025eaa",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-r0-isolate-git-env-ancestry-operation-errors",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* test(task2 R0): freeze Git env isolation and ambiguous ancestry operation failures * fix(task2 R0): separate Git ancestry outages and isolate untrusted Git environment * test(task2 R0): correct fault shim script and assert actual Git injection activation",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs": "be4ae52b5747aa23a2ec41630fad5e4b05bcecb3",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs": "39746a4054421a90bebee06e7a54376809b93312"
+  },
+  "source_commit_sha": "c7315b3444025eaa3802023130615c29fe94f6e5",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-24T09:52:10-07:00",
+  "task_class": "MARKET_STATE",
+  "task_summary": "fix(task2 R0): isolate Git env and ancestry operation errors (#1785)"
+}

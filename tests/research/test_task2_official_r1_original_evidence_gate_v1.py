@@ -36,6 +36,25 @@ class OriginalEvidenceTests(unittest.TestCase):
         r,labels=m.original_outcome_assessment(forecast(),REL,x,Path("a"),"12h")
         self.assertEqual(labels["ABSTAINED"],1)
         self.assertEqual(labels["INCORRECT"],1)
+    def test_original_target_at_or_before_issue_is_quarantined(self):
+        # Frozen original cannot be prospective when its target is already due
+        # before issuance; outcome maturity can still be later and valid.
+        for target in (ISSUE, "2026-10-12T11:00:00Z"):
+            with self.subTest(target=target):
+                item=outcome()
+                item["target_at_utc"]=target
+                item["target_observation_at_utc"]=target
+                item["matured_at_utc"]="2026-10-13T01:00:00Z"
+                problems,_=m.original_outcome_assessment(
+                    forecast(),REL,item,Path("unchanged.json"),"12h")
+                self.assertIn("ORIGINAL_TARGET_NOT_AFTER_ISSUE",problems)
+
+    def test_original_target_after_issue_remains_valid(self):
+        problems,_=m.original_outcome_assessment(
+            forecast(),REL,outcome(),Path("unchanged.json"),"12h")
+        self.assertNotIn("ORIGINAL_TARGET_NOT_AFTER_ISSUE",problems)
+        self.assertEqual(problems,[])
+
     def test_target_mismatch_quarantines(self):
         x=outcome();x["target_observation_at_utc"]="2026-10-13T01:00:00Z"
         a,_=m.original_outcome_assessment(forecast(),REL,x,Path("x"),"12h")
