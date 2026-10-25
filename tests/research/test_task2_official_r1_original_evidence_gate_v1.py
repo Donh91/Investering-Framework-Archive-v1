@@ -19,13 +19,25 @@ def forecast(version=m.V3):
             "outcome_maturity":{"12h":"PENDING_MATURITY","72h":"PENDING_MATURITY","168h":"PENDING_MATURITY"}}
 
 def outcome(version=m.V3):
-    return {"contract":m.EXPECTED_OUTCOME,"horizon":"12h","compass_id":CASE,
+    item = {"contract":m.EXPECTED_OUTCOME,"horizon":"12h","compass_id":CASE,
             "compass_sha256":"a"*64,"forecast_path":REL,
             "scoring_contract":version,"issued_at_utc":ISSUE,
             "target_at_utc":"2026-10-13T00:00:00Z",
             "target_observation_at_utc":"2026-10-13T00:00:00Z",
             "matured_at_utc":"2026-10-13T01:00:00Z",
             "direction_accuracy":{"btc":{"result":"ABSTAINED"},"eth":{"result":"INCORRECT"}}}
+    # The original v3 outcome contract records an explicit, source-bound
+    # 12h window. Keep this valid synthetic fixture consistent with that
+    # contract. Missing time_basis is tested separately as a negative case.
+    # Historic v1/v2 need not carry the later mandatory field.
+    if version == m.V3:
+        item["time_basis"] = {
+            "nominal_horizon_hours": 12,
+            "effective_window_hours": 12,
+            "start_reference_at_utc": ISSUE,
+            "endpoint_semantics": "HOURLY_CLOSE_TIME_NEAREST_TO_REFERENCE_PLUS_HORIZON",
+        }
+    return item
 
 class OriginalEvidenceTests(unittest.TestCase):
     def test_base_source_witness_structurally_consistent(self):
