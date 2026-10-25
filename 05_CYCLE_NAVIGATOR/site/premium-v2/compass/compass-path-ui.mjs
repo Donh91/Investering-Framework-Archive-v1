@@ -101,12 +101,32 @@ function paint(model){
   'Source-issued evidence balance, not probability · valid until '+displayUtc(model.valid_until_utc)):lang(
   'Ingen aktuel verificeret Bull/Bear-evidens.',
   'No current verified Bull/Bear evidence.');
- const h=$('official-pilot-horizons');h.replaceChildren();
+ const h=$('official-pilot-horizons');
+ // Keep an open source-issued disclosure (and its keyboard focus) when the
+ // *same* still-current evidence refreshes or DA/EN repaints. Never preserve
+ // disclosure state across source changes, expiry or unavailable input.
+ const preserved=new Map();
+ if(now)for(const card of h.children){
+  const detail=[...card.children].find(child=>child.tagName==='DETAILS');
+  if(!detail)continue;
+  const summary=detail.firstElementChild;
+  const focused=summary===document.activeElement;
+  if(detail.open||focused)preserved.set(card.dataset.horizonId,{
+   sourceKey:card.dataset.sourceKey,open:detail.open===true,focused
+  });
+ }
+ h.replaceChildren();
+ let restoreSummary=null;
  const translations={NEXT_12H:'12H',NEXT_1_3D:'1–3D',NEXT_5_7D:'5–7D',
  NEXT_2_3W:lang('2–3U','2–3W'),CYCLE_ALTCOINS_3_8W:lang('3–8U','3–8W')};
  for(const w of model.horizons){
   const c=make('article','official-pilot-horizon');
   c.dataset.sourceState=now?'current':'expired';
+  c.dataset.horizonId=w.id;
+  // Exact source content identity, not a synthesized market/state classifier.
+  const sourceKey=JSON.stringify([model.official_compass_id,model.issued_at_utc,
+   model.valid_until_utc,w.id,w.direction,w.action_posture,w.description]);
+  c.dataset.sourceKey=sourceKey;
   c.append(make('span','official-pilot-horizon-label',translations[w.id]||w.id));
   const direction=make('strong','official-pilot-horizon-direction',
    now?displayCode(w.direction||'UNAVAILABLE'):'—');
@@ -121,10 +141,16 @@ function paint(model){
    const detail=make('details','official-pilot-horizon-context');
    detail.append(make('summary','',lang('Læs kildegrundlag','Source detail')));
    detail.append(make('p','',w.description));
+   const previous=preserved.get(w.id);
+   if(previous?.sourceKey===sourceKey){
+    detail.open=previous.open;
+    if(previous.focused)restoreSummary=detail.firstElementChild;
+   }
    c.append(detail);
   }
   h.append(c);
  }
+ restoreSummary?.focus({preventScroll:true});
  const rotation=$('official-pilot-rotation');rotation.replaceChildren();
  for(const segment of model.capitalization_ladder){
   const item=make('div','official-pilot-tier');
@@ -179,7 +205,9 @@ async function init({background=false}={}){
   if(currentModel?.status==='SOURCE_CURRENT'){
    const ms=Date.parse(currentModel.valid_until_utc)-Date.now()+150;
    if(ms>0&&ms<2147483000)expiryTimer=setTimeout(()=>{
-     if(request!==requestGeneration)return;
+     // A pending 5-minute background fetch increments requestGeneration. That
+     // must NEVER cancel the currently issued deadline: use the cached owner
+     // source to expire on the original clock while a fetch is unresolved.
      repaintFromCurrentClock();
    },ms);
   }
