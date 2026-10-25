@@ -38,6 +38,13 @@ class RangeControlTests(unittest.TestCase):
             for asset, low, high, actual_low, actual_high in (("BTC",82000,92000,80393.56,86999.11),("ETH",2560,2960,2406.11,2738)):
                 self.matrixweek["windows"].append({"asset":asset,"window":window,"forecast_low":low,"forecast_high":high,
                     "actual_low":actual_low,"actual_high":actual_high,"joint_contained":False,"observed_hours":n})
+        self.actual_pack = {"iso_year": 2026, "iso_week": 41, "readiness": "READY",
+          "hourly_gap_diagnostics": {"observed_hours": 168}, "day_window_actuals": {"windows": {}}}
+        for window, hours in (("DAY1_2",48),("DAY3_4",48),("DAY5_7",72)):
+            self.actual_pack["day_window_actuals"]["windows"][window] = {
+              "observed_hours": hours,
+              "btc": {"low": 80393.56, "high": 86999.11},
+              "eth": {"low": 2406.11, "high": 2738}}
         self.matrix = {"contract":"TASK2_CN_RETROSPECTIVE_ORIGINAL_TEXT_V1",
             "authority":"RESEARCH_ONLY_NOT_SOURCE_ADMITTED","summary":{"science_admitted_pairs":0},
             "weeks":[self.matrixweek]}
@@ -45,7 +52,7 @@ class RangeControlTests(unittest.TestCase):
 
     def write_all(self):
         self.matrixweek["source_git_blob_sha1"] = write(self.root, self.source_path, {"original":"never_rewrite"})
-        self.matrixweek["weekly_actuals_git_blob_sha1"] = write(self.root, self.week_path, {"observed":"immutable"})
+        self.matrixweek["weekly_actuals_git_blob_sha1"] = write(self.root, self.week_path, self.actual_pack)
         write(self.root, self.prior_path, self.prior)
         write(self.root, MATRIX_PATH, self.matrix)
 
@@ -87,6 +94,25 @@ class RangeControlTests(unittest.TestCase):
     def test_detect_actual_source_mutation(self):
         write(self.root, self.week_path, {"observed":"tampered"})
         with self.assertRaisesRegex(ValueError,"immutable_source_sha_mismatch"):
+            build(self.root)
+
+    def test_matrix_outcome_below_real_source_rejected(self):
+        self.matrixweek["windows"][0]["actual_low"] = 90000
+        self.matrixweek["windows"][0]["joint_contained"] = False
+        self.write_all()
+        with self.assertRaisesRegex(ValueError,"archived_outcome_disagrees_with_matrix"):
+            build(self.root)
+
+    def test_wrong_window_duration_rejected(self):
+        self.matrixweek["windows"][0]["observed_hours"] = 72
+        self.write_all()
+        with self.assertRaisesRegex(ValueError,"unsupported_row_or_partial_window"):
+            build(self.root)
+
+    def test_incomplete_original_actual_window_rejected(self):
+        self.actual_pack["day_window_actuals"]["windows"]["DAY3_4"]["observed_hours"] = 47
+        self.write_all()
+        with self.assertRaisesRegex(ValueError,"actual_window_not_complete"):
             build(self.root)
 
     def test_duplicate_row_rejected(self):
