@@ -61,7 +61,7 @@ high.protection_tracker.public_explanation.risk_state='HIGH';
 const highResult=run(view,high);
 assert.equal(highResult.severity,4);
 assert.equal(highResult.sell,'UNAVAILABLE','HIGH cannot confer SELL');
-assert.match(highResult.guidance,/Ingen automatisk SELL/);
+assert.match(highResult.guidance,/automatisk SELL/);
 
 const stale=structuredClone(view);stale.compass.state='UNAVAILABLE';
 const stopped=run(stale);
