@@ -42,7 +42,7 @@ function compass(){
    source_asof_utc:'2026-10-26T00:00:00Z',valid_until_utc:'2026-10-26T02:00:00Z'}},
   weekly_context:{contract:'CN_COMPASS_WEEKLY_ALIGNMENT_v1',status:'ALIGNED',
    forecast_week:'2026-W43',public_issue_number:30},
-  horizons:Object.fromEntries(['NEXT_12H','NEXT_1_3D','NEXT_5_7D','NEXT_2_3W','CYCLE_ALTCOINS_3_8W'].map(k=>[k,{expected_direction:'UP'}])),
+  horizons:Object.fromEntries(['NEXT_12H','NEXT_1_3D','NEXT_5_7D','NEXT_2_3W','CYCLE_ALTCOINS_3_8W'].map(k=>[k,{expected_direction:'UP',action_posture:'WAIT',expected_path:'Source-issued scenario only'}])),
   capitalization_ladder:['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'].map(segment=>({segment,status:'SOURCE'})),
   bull_bear_scale:{contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',semantics:'EVIDENCE_BALANCE_NOT_PROBABILITY',
    authority:{probability_model:false},horizons:Object.fromEntries(['1_3d','5_7d','2_3w'].map(k=>[k,{bull:8,bear:2}]))}};
@@ -214,4 +214,33 @@ test('Open Graph B follows a newly published close while a manual replay stays p
  await replay.advance('2026-10-26T00:35:01Z');
  assert.equal(slider.value,'167');
  assert.match(replay.get('observed-value').textContent,/80[.,]167/);
+});
+
+test('Compass five horizons expose only source-issued direction, posture and native disclosures',async()=>{
+ const h=await harness('./compass/compass-path-ui.mjs');
+ const rows=h.get('official-pilot-horizons').children;
+ assert.equal(rows.length,5);
+ assert.equal(h.get('official-product-pilot').dataset.sourceState,'current');
+ assert.equal(rows[1].children[0].textContent,'1–3D');
+ assert.equal(rows[1].children[1].textContent,'OP');
+ assert.equal(rows[1].children[2].textContent,'AFVENT');
+ assert.equal(rows[1].children[3].children[0].textContent,'Læs kildegrundlag');
+ assert.equal(rows[1].children[3].children[1].textContent,'Source-issued scenario only');
+ h.language('en');
+ const english=h.get('official-pilot-horizons').children;
+ assert.equal(english[1].children[1].textContent,'UP');
+ assert.equal(english[1].children[2].textContent,'WAIT');
+ assert.equal(english[1].children[3].children[0].textContent,'Source detail');
+});
+test('Expired Compass removes current horizon and rotation postures without backfilling',async()=>{
+ const h=await harness('./compass/compass-path-ui.mjs');
+ await h.advance('2026-10-26T02:00:01Z');
+ assert.equal(h.get('official-product-pilot').dataset.sourceState,'expired');
+ const first=h.get('official-pilot-horizons').children[0];
+ assert.equal(first.children[1].textContent,'—');
+ assert.equal(first.children[2].textContent,'UDLØBET');
+ assert.equal(first.children.length,3);
+ assert.equal(h.get('official-pilot-rotation').children[0].children[1].textContent,'—');
+ h.language('en');
+ assert.equal(h.get('official-pilot-horizons').children[0].children[2].textContent,'EXPIRED');
 });
