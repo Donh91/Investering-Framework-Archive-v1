@@ -40,13 +40,25 @@ def week_for_close(closed):
 
 def source_hour(pointer, now):
     require(pointer.get('contract') == 'HOURLY_SEQUENCE_LATEST_POINTER_v2_2', 'SOURCE_CONTRACT')
-    require(pointer.get('status') == 'COMPLETE', 'SOURCE_NOT_COMPLETE')
+    # SITE evidence may be PARTIAL if non-spot lanes are incomplete.
+    # The market-owner writer and Intraday must never depend on this SITE gate.
+    require(pointer.get('status') in ('COMPLETE','PARTIAL'), 'SOURCE_STATUS_NOT_USABLE')
+    coverage = pointer.get('spot_complete_hours')
+    requested = pointer.get('requested_hours')
+    require(type(coverage) is int and type(requested) is int and requested > 0
+            and coverage == requested, 'SOURCE_SPOT_COVERAGE_INCOMPLETE')
     close = utc(pointer.get('window_end_utc'))
+    retrieved = utc(pointer.get('retrieved_at_utc'))
     require(close.minute == close.second == close.microsecond == 0, 'SOURCE_HOUR_NOT_ALIGNED')
     require(close <= now, 'SOURCE_FUTURE_CLOCK')
-    require(close >= now.replace(minute=0, second=0, microsecond=0),
+    require(retrieved <= now and now-retrieved <= timedelta(minutes=90),
+            'SOURCE_POINTER_STALE')
+    require(close <= retrieved, 'SOURCE_CUTOFF_AFTER_RETRIEVAL')
+    # Anchor to retrieval time, NOT job-end time: a run crossing the hour
+    # boundary must not mask otherwise source-usable spot data.
+    require(close >= retrieved.replace(minute=0, second=0, microsecond=0),
             'SOURCE_HOUR_DID_NOT_ADVANCE')
-    require(now - close <= timedelta(minutes=90), 'SOURCE_OLDER_THAN_SLA')
+    require(now-close <= timedelta(minutes=90), 'SOURCE_OLDER_THAN_SLA')
     return close
 
 def assert_public(snapshot, lineage, expected, now):
@@ -100,8 +112,12 @@ def get_public(filename):
 def self_test():
     now=utc('2026-10-25T13:12:00Z')
     pointer={'contract':'HOURLY_SEQUENCE_LATEST_POINTER_v2_2',
-             'status':'COMPLETE','window_end_utc':'2026-10-25T13:00:00Z'}
+             'status':'COMPLETE','window_end_utc':'2026-10-25T13:00:00Z',
+             'retrieved_at_utc':'2026-10-25T13:09:00Z',
+             'spot_complete_hours':26,'requested_hours':26}
     expected=source_hour(pointer,now)
+    assert source_hour({**pointer,'status':'PARTIAL'},now)==expected
+    assert source_hour(pointer,utc('2026-10-25T14:01:00Z'))==expected
     assert week_for_close(utc('2026-10-26T00:00:00Z'))=='2026-W43'
     assert week_for_close(utc('2026-10-26T01:00:00Z'))=='2026-W44'
     hour={'contract':'CN_PUBLIC_HOURLY_PRICE_PATH_v1','forecast_week':'2026-W43',
@@ -123,7 +139,9 @@ def self_test():
     cases=[
         (lambda:source_hour({**pointer,'window_end_utc':'2026-10-25T12:00:00Z'},now),
          'SOURCE_HOUR_DID_NOT_ADVANCE'),
-        (lambda:source_hour({**pointer,'status':'FAILED'},now),'SOURCE_NOT_COMPLETE'),
+        (lambda:source_hour({**pointer,'status':'FAILED'},now),'SOURCE_STATUS_NOT_USABLE'),
+        (lambda:source_hour({**pointer,'status':'PARTIAL','spot_complete_hours':25},now),
+         'SOURCE_SPOT_COVERAGE_INCOMPLETE'),
         (lambda:source_hour({**pointer,'window_end_utc':'2026-10-25T14:00:00Z'},now),
          'SOURCE_FUTURE_CLOCK'),
         (lambda:assert_public({**snap,'public_live_precision':{

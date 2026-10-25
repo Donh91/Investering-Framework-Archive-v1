@@ -15,7 +15,10 @@ import {setTimeout as delay} from 'node:timers/promises';
 
 const ORIGIN='https://donh91.github.io/Investering-Framework-Archive-v1/';
 const dist=resolve(dirname(fileURLToPath(import.meta.url)),'../dist');
+// Explicit directory URL is the investor entry, not merely /index.html.
+const HOME_ALIAS='canonical-homepage';
 const canonicalFiles=[
+  HOME_ALIAS,
   'index.html',
   'vnext/index.html',
   'vnext/premium.css',
@@ -59,6 +62,7 @@ async function discoverFiles(root,prefix){
 const publicUrl=(path,allowed)=>{
   safePath(path);
   assert.ok(allowed.has(path),'NOT_AN_ALLOWLISTED_PUBLIC_ASSET');
+  if(path===HOME_ALIAS)return ORIGIN;
   const url=new URL(path,ORIGIN);
   assert.equal(url.origin,'https://donh91.github.io');
   assert.equal(decodeURIComponent(url.pathname),'/Investering-Framework-Archive-v1/'+path);
@@ -82,7 +86,7 @@ async function check(path,allowed,{readAsset=readFile,fetchAsset=fetch,root=dist
   const url=publicUrl(path,allowed);
   let expected=null;
   try{
-    expected=sha(await readAsset(resolve(root,path)));
+    expected=sha(await readAsset(resolve(root,path===HOME_ALIAS?'index.html':path)));
   }catch{
     // A missing/unreadable uploaded asset must still produce a failure receipt.
     // Retrying the CDN cannot repair the local release bundle.
@@ -122,6 +126,7 @@ if(process.argv.includes('--self-test')){
     const files=[...new Set([...canonicalFiles,...discovered])];
     const allowed=new Set(files);
     assert.equal(publicUrl('next/assets/app-A1.css',allowed),ORIGIN+'next/assets/app-A1.css');
+    assert.equal(publicUrl(HOME_ALIAS,allowed),ORIGIN);
     assert.throws(()=>publicUrl('../secrets/password',allowed),/PUBLIC_ASSET_PATH_INVALID/);
     assert.throws(()=>publicUrl('next/not-built.js',allowed),/NOT_AN_ALLOWLISTED_PUBLIC_ASSET/);
     assert.equal(new Set(files).size,files.length);
@@ -133,6 +138,13 @@ if(process.argv.includes('--self-test')){
     assert.equal(pass.status,'PASS');
     assert.equal(pass.expected,sha(bytes));
     assert.equal(pass.actual,sha(bytes));
+    // Negative control: /index.html matches while the ACTUAL root URL does not.
+    const homepageStale=await check(HOME_ALIAS,allowed,{
+      readAsset,fetchAsset:async url=>new Response(url===ORIGIN?'stale homepage':bytes),
+      root:temporary});
+    assert.equal(homepageStale.status,'MISMATCH');
+    assert.equal((await check('index.html',allowed,{
+      readAsset,fetchAsset:async()=>new Response(bytes),root:temporary})).status,'PASS');
     assert.equal((await check('index.html',allowed,{readAsset,
       fetchAsset:async()=>new Response('stale bytes'),root:temporary})).status,'MISMATCH');
     const denied=await check('index.html',allowed,{readAsset,

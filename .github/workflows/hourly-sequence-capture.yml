@@ -77,6 +77,7 @@ jobs:
           echo "source_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Preflight actual newly completed owner hour
         id: hourly_public_hour
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
@@ -86,6 +87,8 @@ jobs:
           test -n "$hour"
           echo "hour=$hour" >> "$GITHUB_OUTPUT"
       - name: Publish updated hourly observations to Cycle Navigator Pages
+        if: steps.hourly_public_hour.outcome == 'success'
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
