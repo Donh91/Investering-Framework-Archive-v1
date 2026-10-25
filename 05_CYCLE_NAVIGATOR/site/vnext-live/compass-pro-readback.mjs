@@ -89,7 +89,13 @@ export function compassProReadback(view,official,{lang='da',nowUtc=new Date().to
               {LOW:'Low',MEDIUM:'Medium',HIGH:'High'}[raw.confidence_quality]):out.evidenceQuality;
   const wk=weekBounds(view.weekly.forecast_week);
   const windowCurrent=wk&&wk.from<=now&&now<wk.until;
-  const typedWindow=ok&&risk.windowKind==='GOVERNED_PROSPECTIVE_WINDOW'&&windowCurrent;
+  const declared=raw?.public_explanation;
+  const start=Date.parse(declared?.onset_start_utc),end=Date.parse(declared?.onset_end_utc);
+  const issued=Date.parse(official.issued_at_utc);
+  const typedWindow=ok&&risk.windowKind==='GOVERNED_PROSPECTIVE_WINDOW'&&
+    windowCurrent&&Number.isFinite(start)&&Number.isFinite(end)&&
+    Number.isFinite(issued)&&start>=issued&&
+    start>=wk.from&&end<=wk.until&&start<=end;
   out.onsetEta=typedWindow?risk.etaLabel:out.onsetEta;
   out.watchWindow=ok&&windowCurrent?risk.etaLabel:
       tr(lang,'Ingen aktuelt verificeret startvindue','No current verified onset window');
@@ -126,4 +132,34 @@ export function compassProReadback(view,official,{lang='da',nowUtc=new Date().to
       eth:validRange(eth)?{low:eth.low,high:eth.high}:null};
   }
   return out;
+}
+
+/** UI wording only; values are always populated from the source-bound readback. */
+export function compassProLabels(lang='da'){
+ const da=lang!=='en';
+ return da?{
+  stage:'RISIKOTRIN · KATEGORI',quality:'EVIDENSKVALITET',eta:'PULLBACK ETA',
+  depth:'FORVENTET FALDDYBDE',window:'KILDEVINDUE',review:'NÆSTE VURDERING',
+  guidance:'YOUR ACTION NOW · VEJLEDENDE PLAN',guidanceCaveat:'Forslag til risikoberedskab. Ingen ny automatisk BUY/SELL-tilladelse eller personlig porteføljeordre.',
+  priceTitle:'PRICE RANGE NAVIGATOR',priceWeek:'FROSSET UGEINTERVAL',
+  btc:'BTC',eth:'ETH',rangeCaveat:'Ugeintervallet gælder den angivne CN-uge, ikke en særskilt kommende 1–3-dages prognose. Ingen langsigtede priser konstrueres.',
+  longTitle:'FREMTIDIGE INTERVALLER · BTC / ETH',horizon:'Tid',
+  rangeUnavailable:'Ikke udstedt',
+  sourceLive:'Kildens frosne interval for denne uge',
+  sourceFuture:'Frosset interval for kommende uge',
+  sourceHistorical:'Historisk frosset uge · ikke fremtidig prognose',
+  sourceUnavailable:'Ingen verificeret ugeprisprognose'
+ }:{
+  stage:'RISK CLASS · ORDINAL',quality:'EVIDENCE QUALITY',eta:'PULLBACK ETA',
+  depth:'EXPECTED DRAWDOWN',window:'SOURCE WATCH WINDOW',review:'NEXT REVIEW',
+  guidance:'YOUR ACTION NOW · PLANNING GUIDANCE',guidanceCaveat:'Risk preparation guidance only. No new automatic BUY/SELL permission or portfolio order.',
+  priceTitle:'PRICE RANGE NAVIGATOR',priceWeek:'FROZEN WEEKLY RANGE',
+  btc:'BTC',eth:'ETH',rangeCaveat:'The weekly range belongs to the stated CN week, not a new 1–3 day forecast. No longer-term price levels are synthesized.',
+  longTitle:'FORWARD INTERVALS · BTC / ETH',horizon:'Horizon',
+  rangeUnavailable:'Not issued',
+  sourceLive:'Source-frozen range for the current week',
+  sourceFuture:'Frozen range for the upcoming week',
+  sourceHistorical:'Historical frozen week · not a forward prediction',
+  sourceUnavailable:'No verified weekly price range'
+ };
 }
