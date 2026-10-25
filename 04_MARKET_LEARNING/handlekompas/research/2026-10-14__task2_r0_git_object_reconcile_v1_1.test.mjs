@@ -6,6 +6,7 @@ import {execFileSync,spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
 import {deflateSync} from 'node:zlib';
+import {createHash} from 'node:crypto';
 const dir=mkdtempSync(join(tmpdir(),'task2-r0-v11-'));let count=0;
 function git(...args){return execFileSync('git',args,{cwd:dir,encoding:'utf8'}).trim()}
 function run(inv,head,tree){writeFileSync(join(dir,'inventory.json'),JSON.stringify(inv));return spawnSync(process.execPath,[fileURLToPath(new URL('./2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs',import.meta.url)),'--inventory',join(dir,'inventory.json'),'--head',head,'--expected-tree',tree,'--repo-dir',dir],{encoding:'utf8'});}
@@ -94,6 +95,34 @@ try{
   test('newline path rejected',()=>{const d=structuredClone(inventory);d.families[0].sources[0].path='bad\nname';const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Invalid source path/)});
   test('empty source-family census fails closed',()=>{const d=structuredClone(inventory);d.families=[];const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Empty source-family inventory/)});
   test('empty family source list fails closed',()=>{const d=structuredClone(inventory);d.families[0].sources=[];const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Empty source family/)});
+  const restrictedPlaceholder={id:'PORTFOLIO_ACTION_EXECUTION_PRIVATE',visibility:'RESTRICTED_NOT_FETCHED',admission:'PRIVATE_OWNER_GATE',blocker:'Private execution records require their separate owner.',sources:[]};
+  test('declared restricted placeholder is excluded, never source evidence',()=>{
+    const d=structuredClone(inventory);d.families.push(restrictedPlaceholder);
+    const r=run(d,base,baseTree);assert.equal(r.status,0,r.stderr);const j=JSON.parse(r.stdout);
+    assert.equal(j.family_count,2);assert.equal(j.declared_family_count,3);assert.equal(j.excluded_family_count,1);
+    assert.equal(j.source_references,4);assert.equal(j.distinct_source_paths,3);assert.equal(j.inventory_coverage_complete,false);
+    assert.deepEqual(j.excluded_families,[{id:restrictedPlaceholder.id,visibility:'RESTRICTED_NOT_FETCHED',admission:'PRIVATE_OWNER_GATE',reason:'DECLARED_RESTRICTED_NOT_FETCHED',source_references:0}]);
+    assert.equal(j.market_first_known_admitted,false);assert.equal(j.economic_edge_established,false);
+  });
+  test('partial or public empty family cannot masquerade as restricted placeholder',()=>{
+    for(const patch of [{visibility:'PUBLIC_METADATA'},{admission:'INVENTORY_ONLY'},{blocker:''},{blocker:'   '},{blocker:null}]){
+      const d=structuredClone(inventory);d.families.push({...restrictedPlaceholder,...patch});
+      const r=run(d,base,baseTree);assert.equal(r.status,1,r.stdout);assert.equal(r.stdout,'');assert.match(r.stderr,/Empty source family/);
+    }
+  });
+  test('all declared restricted placeholders still fail vacuous census',()=>{
+    const d={...inventory,families:[restrictedPlaceholder]};const r=run(d,base,baseTree);
+    assert.equal(r.status,1,r.stdout);assert.match(r.stderr,/Vacuous source inventory/);assert.equal(r.stdout,'');
+  });
+  test('excluded placeholder cannot hide duplicate family identity',()=>{
+    const d=structuredClone(inventory);d.families.push({...restrictedPlaceholder,id:'A'});
+    const r=run(d,base,baseTree);assert.equal(r.status,1,r.stdout);assert.match(r.stderr,/Duplicate source family/);
+  });
+  test('nonempty restricted design family still validates every original source',()=>{
+    const d=structuredClone(inventory);Object.assign(d.families[0],{visibility:'RESTRICTED_NOT_FETCHED',admission:'PRIVATE_OWNER_GATE',blocker:'Not permission to skip present sources.'});
+    d.families[0].sources[0].git_object_sha='0'.repeat(40);d.families[1].sources[0].git_object_sha='0'.repeat(40);
+    const r=run(d,base,baseTree);assert.equal(r.status,1,r.stdout);assert.match(r.stderr,/Original pinned source SHA\/type mismatch/);
+  });
   test('duplicate family identifier fails closed',()=>{const d=structuredClone(inventory);d.families[1].id='A';const r=run(d,head,tree);assert.equal(r.status,1);assert.match(r.stderr,/Duplicate source family/)});
   test('same original commit and tree succeeds',()=>{const r=run(inventory,base,baseTree);assert.equal(r.status,0,r.stderr);const j=JSON.parse(r.stdout);assert.equal(j.verified_all_paths,true);assert.equal(j.counts.UNCHANGED,3)});
   test('full content validation does not buffer large valid source payloads',()=>{
@@ -147,4 +176,25 @@ try{
     }finally{process.env.PATH=prior;rmSync(shim,{recursive:true,force:true});}
   });
   console.log('ALL '+count+' R0 v1.1 TESTS PASS (synthetic Git fixture only)');
+  // Deliberate full-history integration mode. Missing history is a failure,
+  // never an implicit skip or an invitation to rewrite the frozen inventory.
+  if(process.argv.includes('--original-replay')){
+    const repo=fileURLToPath(new URL('../../../',import.meta.url));
+    const inventoryPath=fileURLToPath(new URL('./2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json',import.meta.url));
+    const originalBytes=readFileSync(inventoryPath);
+    assert.equal(createHash('sha256').update(originalBytes).digest('hex'),'59ab9478912338a068bc7320b71b58fc5657a1dc5e0f971c086200dd1bb7fa77');
+    const original=JSON.parse(originalBytes);
+    const targets=[['original baseline',original.main_commit,original.main_tree],['current checkout',execFileSync('git',['rev-parse','HEAD'],{cwd:repo,encoding:'utf8'}).trim(),execFileSync('git',['rev-parse','HEAD^{tree}'],{cwd:repo,encoding:'utf8'}).trim()]];
+    for(const [label,h,t] of targets){
+      const r=spawnSync(process.execPath,[fileURLToPath(new URL('./2026-10-14__task2_r0_git_object_reconcile_v1_1.mjs',import.meta.url)),'--inventory',inventoryPath,'--head',h,'--expected-tree',t,'--repo-dir',repo],{encoding:'utf8'});
+      assert.ok(r.status===0||r.status===2,r.stderr);const j=JSON.parse(r.stdout);
+      assert.equal(j.declared_family_count,17);assert.equal(j.family_count,16);assert.equal(j.excluded_family_count,1);
+      assert.equal(j.source_references,37);assert.equal(j.distinct_source_paths,36);assert.equal(j.original_pinned_source_objects_verified,true);
+      assert.equal(j.excluded_families[0].id,'PORTFOLIO_ACTION_EXECUTION_PRIVATE');assert.equal(j.inventory_coverage_complete,false);
+      assert.equal(j.market_first_known_admitted,false);assert.equal(j.economic_edge_established,false);
+      if(label==='original baseline'){assert.equal(r.status,0);assert.equal(j.counts.UNCHANGED,36);}
+      assert.deepEqual(readFileSync(inventoryPath),originalBytes);
+      console.log('PASS real '+label+' '+h+' exit='+r.status+' counts='+JSON.stringify(j.counts));
+    }
+  }
 }finally{rmSync(dir,{recursive:true,force:true})}
