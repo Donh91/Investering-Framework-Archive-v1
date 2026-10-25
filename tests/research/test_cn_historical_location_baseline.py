@@ -53,100 +53,116 @@ class RangeControlTests(unittest.TestCase):
     def write_all(self):
         self.matrixweek["source_git_blob_sha1"] = write(self.root, self.source_path, {"original":"never_rewrite"})
         self.matrixweek["weekly_actuals_git_blob_sha1"] = write(self.root, self.week_path, self.actual_pack)
-        write(self.root, self.prior_path, self.prior)
-        write(self.root, MATRIX_PATH, self.matrix)
+        self.prior_sha = write(self.root, self.prior_path, self.prior)
+        self.matrix_sha = write(self.root, MATRIX_PATH, self.matrix)
+
+    def run_build(self):
+        return build(self.root, matrix_sha=self.matrix_sha,
+                     previous_shas={"2026-W40": self.prior_sha})
 
     def test_basic_output_6_rows(self):
-        v=build(self.root)
+        v=self.run_build()
         self.assertEqual(v["summary"]["n_asset_windows"],6)
         self.assertEqual(v["summary"]["methods"]["cn_original"]["joint_contained"],0)
         self.assertEqual(v["scientifically_admitted_n"],0)
         self.assertEqual(v["rows"][0]["anchor"],86530)
 
     def test_issue_window_straddle_explicit(self):
-        v=build(self.root)
+        v=self.run_build()
         self.assertTrue(v["rows"][0]["full_iso_first_window_straddles_issue"])
         self.assertFalse(v["rows"][2]["full_iso_first_window_straddles_issue"])
 
     def test_exclude_degraded_previous_week_no_fake_baseline(self):
         self.prior["readiness"]="DEGRADED"
         self.write_all()
-        v=build(self.root)
+        v=self.run_build()
         self.assertEqual(v["summary"]["n_asset_windows"],0)
         self.assertEqual(v["excluded"][0]["reason"],"PREVIOUS_WEEK_NOT_FULLY_READY")
 
     def test_exclude_missing_candles(self):
         self.prior["hourly_gap_diagnostics"]["observed_hours"]=40
         self.write_all()
-        self.assertEqual(build(self.root)["summary"]["n_asset_windows"],0)
+        self.assertEqual(self.run_build()["summary"]["n_asset_windows"],0)
 
     def test_detect_hindsight_prior_pack(self):
         self.prior["generated_at_utc"]="2026-10-05T08:10:00Z"
         self.write_all()
         with self.assertRaisesRegex(ValueError,"prior_pack_published_after_issue"):
-            build(self.root)
+            self.run_build()
 
     def test_detect_forecast_source_mutation(self):
         write(self.root, self.source_path, {"original":"tampered"})
         with self.assertRaisesRegex(ValueError,"forecast_origin_blob_mismatch"):
-            build(self.root)
+            self.run_build()
 
     def test_detect_actual_source_mutation(self):
         write(self.root, self.week_path, {"observed":"tampered"})
         with self.assertRaisesRegex(ValueError,"immutable_source_sha_mismatch"):
-            build(self.root)
+            self.run_build()
 
     def test_matrix_outcome_below_real_source_rejected(self):
         self.matrixweek["windows"][0]["actual_low"] = 90000
         self.matrixweek["windows"][0]["joint_contained"] = False
         self.write_all()
         with self.assertRaisesRegex(ValueError,"archived_outcome_disagrees_with_matrix"):
-            build(self.root)
+            self.run_build()
 
     def test_wrong_window_duration_rejected(self):
         self.matrixweek["windows"][0]["observed_hours"] = 72
         self.write_all()
         with self.assertRaisesRegex(ValueError,"unsupported_row_or_partial_window"):
-            build(self.root)
+            self.run_build()
 
     def test_incomplete_original_actual_window_rejected(self):
         self.actual_pack["day_window_actuals"]["windows"]["DAY3_4"]["observed_hours"] = 47
         self.write_all()
         with self.assertRaisesRegex(ValueError,"actual_window_not_complete"):
-            build(self.root)
+            self.run_build()
+
+    def test_immutable_matrix_binding_rejects_relabelled_forecast(self):
+        self.matrixweek["windows"][0]["forecast_low"] = 60000
+        write(self.root, MATRIX_PATH, self.matrix)  # no new original hash authority
+        with self.assertRaisesRegex(ValueError, "immutable_source_sha_mismatch"):
+            self.run_build()
+
+    def test_immutable_prior_pack_binding_rejects_changed_close(self):
+        self.prior["day_window_actuals"]["windows"]["DAY5_7"]["btc"]["close"] = 200000
+        write(self.root, self.prior_path, self.prior)  # no new original hash authority
+        with self.assertRaisesRegex(ValueError, "immutable_source_sha_mismatch"):
+            self.run_build()
 
     def test_duplicate_row_rejected(self):
         self.matrixweek["windows"].append(copy.deepcopy(self.matrixweek["windows"][0]))
         self.write_all()
         with self.assertRaisesRegex(ValueError,"duplicate_original_forecast_row"):
-            build(self.root)
+            self.run_build()
 
     def test_tampered_original_containment_rejected(self):
         self.matrixweek["windows"][0]["joint_contained"]=True
         self.write_all()
         with self.assertRaisesRegex(ValueError,"original_containment_changed"):
-            build(self.root)
+            self.run_build()
 
     def test_invalid_bounds_rejected(self):
         self.matrixweek["windows"][0]["forecast_high"]=81000
         self.write_all()
         with self.assertRaisesRegex(ValueError,"inverted_range"):
-            build(self.root)
+            self.run_build()
 
     def test_naive_forecast_clock_rejected(self):
         self.matrixweek["freeze_recorded_at_utc"]="2026-10-05T06:14:06"
         self.write_all()
         with self.assertRaisesRegex(ValueError,"timezone_required"):
-            build(self.root)
+            self.run_build()
 
     def test_same_width_control_matched_and_wide_control_thirty_pct(self):
-        v=build(self.root)
+        v=self.run_build()
         for row in v["rows"]:
             self.assertAlmostEqual(row["same_width_prior_close"]["width_pct_of_previous_close"],row["cn_original"]["width_pct_of_previous_close"],places=5)
             self.assertAlmostEqual(row["fixed_15pct_prior_close"]["width_pct_of_previous_close"],30,places=5)
 
     def test_no_fake_proper_interval_score(self):
-        v=build(self.root)
+        v=self.run_build()
         self.assertNotIn("proper_interval_score",str(v))
         self.assertEqual(v["authority"],"RESEARCH_ONLY_DIAGNOSTIC_NOT_PIT_ADMITTED")
 
@@ -164,7 +180,7 @@ class RangeControlTests(unittest.TestCase):
         self.assertEqual(v["scientifically_admitted_n"], 0)
 
     def test_deterministic(self):
-        self.assertEqual(build(self.root),build(self.root))
+        self.assertEqual(self.run_build(),self.run_build())
 
 if __name__=="__main__":
     unittest.main()
