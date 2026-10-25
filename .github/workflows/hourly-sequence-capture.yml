@@ -75,6 +75,16 @@ jobs:
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
           echo "source_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Publish updated hourly observations to Cycle Navigator Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Bot pushes do not start the Pages push trigger. This existing
+          # workflow_dispatch is the bounded handoff after source persistence.
+          gh workflow run cycle-navigator-pages.yml --ref main
+          echo "CN_PAGES_HOURLY_HANDOFF_DISPATCHED source_commit=${{ steps.persist_hourly.outputs.source_commit_sha }}"
       - name: Dispatch Entry Signal after hourly owner publish
         if: github.event_name != 'workflow_dispatch' || inputs.chain_entry_signal == true
         env:
