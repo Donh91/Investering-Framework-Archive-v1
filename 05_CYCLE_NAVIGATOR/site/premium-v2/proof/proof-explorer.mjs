@@ -9,7 +9,8 @@ const HOME='https://raw.githubusercontent.com/Donh91/CycleNavigator-scores/main/
 const latest=new URL('../../data/latest.json',import.meta.url);
 const INDEX=HOME+'v2/scorebook-index.json';
 const RECEIPT=HOME+'v2/source-receipts/2026/2026-10-20_PUBLIC_READBACK.json';
-let view=null,sourceSnapshot=null,expiryTimer=null,links=[],step='freeze';
+let view=null,sourceSnapshot=null,expiryTimer=null,links=[],step='freeze',requestGeneration=0;
+const SOURCE_RECHECK_MS=5*60*1000;
 const label={
  freeze:['Oprindelig udstedelse og fastlåste intervaller.','Original freeze and unchanged source ranges.'],
  observed:['Efterfølgende observeret dækning, aldrig bagudkonstrueret.','Later observation coverage, never hindsight reconstruction.'],
@@ -141,12 +142,21 @@ function display(){
  });
  renderWindows();focus();renderSources();
 }
-async function initialize(){
+async function refreshLatest(){
+ const request=++requestGeneration;
  try{
-  sourceSnapshot=await json(latest);
- }catch{sourceSnapshot=null;view={status:'UNAVAILABLE'};}
+  const next=await json(latest);
+  if(request!==requestGeneration)return;
+  sourceSnapshot=next;
+ }catch{
+  if(request!==requestGeneration)return;
+  sourceSnapshot=null;view={status:'UNAVAILABLE'};
+ }
  // Render and arm expiry before optional external Proof links finish loading.
  display();
+}
+async function initialize(){
+ await refreshLatest();
  try{
   const [index,receipt]=await Promise.all([json(INDEX),json(RECEIPT)]);
   links=sourceReadbackProofRows(index,receipt);
@@ -171,6 +181,8 @@ $('proof-copy-audit')?.addEventListener('click',async()=>{
  }catch{$('proof-copy-status').textContent=local('Kopiér manuelt fra kildeoversigten','Use sources above manually')}
 });
 document.addEventListener('cn:languagechange',()=>display());
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)display()});
-window.addEventListener('pageshow',display);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshLatest()});
+window.addEventListener('pageshow',()=>{refreshLatest()});
+const sourceRecheck=setInterval(()=>{if(!document.hidden)refreshLatest()},SOURCE_RECHECK_MS);
+window.addEventListener('pagehide',()=>clearInterval(sourceRecheck));
 initialize();

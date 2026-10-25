@@ -141,7 +141,7 @@ test('P2-C Proof renders timestamp and SLA separately from provisional score; op
  const h=await harness('./proof/proof-explorer.mjs');
  assert.match(h.get('proof-freshness').textContent,/CURRENT.*2026-10-26T00:00:00Z.*90 min/);
  assert.match(h.get('proof-status').textContent,/FORELØBIG/);
- assert.equal(h.timers.size,1);
+ assert.ok([...h.timers.values()].some(t=>t.at===Date.parse('2026-10-26T01:30:00.001Z')));
  await h.advance('2026-10-26T01:30:00.001Z');
  assert.equal(h.get('proof-freshness').dataset.freshness,'stale');
  assert.match(h.get('proof-freshness').textContent,/^STALE/);
@@ -179,4 +179,39 @@ test('Proof expiry is armed even when optional external source links never respo
  assert.equal(h.get('proof-freshness').dataset.freshness,'current');
  await h.advance('2026-10-26T01:30:00.001Z');
  assert.equal(h.get('proof-freshness').dataset.freshness,'stale');
+});
+test('Open tab rechecks all three public feeds and clears evidence on source failure',async()=>{
+ for(const [path,assertCleared] of [
+  ['./graph-b/source-graph-b.mjs',h=>{
+   assert.equal(h.get('observed-value').textContent,'—');
+   assert.equal(h.get('forecast').attrs.d,'');
+  }],
+  ['./compass/compass-path-ui.mjs',h=>{
+   assert.equal(h.get('official-pilot-action').textContent,'—');
+   assert.equal(h.get('official-pilot-bias').textContent,'—');
+  }],
+  ['./proof/proof-explorer.mjs',h=>{
+   assert.equal(h.get('proof-status').textContent,'KILDE MANGLER');
+   assert.equal(h.get('proof-windows').children.length,0);
+  }]
+ ]){
+  const h=await harness(path);
+  h.setFetch(async()=>{throw Error('SOURCE_OUTAGE')});
+  await h.advance('2026-10-26T00:35:01Z');
+  assertCleared(h);
+ }
+});
+test('Open Graph B follows a newly published close while a manual replay stays put',async()=>{
+ const initial=snapshot({last:167}),updated=snapshot({last:168});
+ const h=await harness('./graph-b/source-graph-b.mjs',{latest:initial});
+ h.setFetch(url=>Promise.resolve({ok:true,json:async()=>
+  String(url).endsWith('latest.json')?updated:null}));
+ await h.advance('2026-10-26T00:35:01Z');
+ assert.equal(h.get('hour-slider').max,'168');
+ assert.match(h.get('observed-value').textContent,/80[.,]168/);
+ const replay=await harness('./graph-b/source-graph-b.mjs',{latest:updated});
+ const slider=replay.get('hour-slider');slider.value='167';slider.listeners.input({currentTarget:slider});
+ await replay.advance('2026-10-26T00:35:01Z');
+ assert.equal(slider.value,'167');
+ assert.match(replay.get('observed-value').textContent,/80[.,]167/);
 });
