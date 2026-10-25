@@ -1,5 +1,6 @@
 /* Product alignment executable negatives. Synthetic fixtures ONLY; no seeded market claims. */
 import assert from 'node:assert/strict';
+import './test-compass-pro-readback.mjs';
 import {decisionModel,pathModel,publicAuditPrompt,riskStageLabel,priceSequenceModel,presentOfficialAction} from './premium-experience.mjs';
 const bullBear={
  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',
