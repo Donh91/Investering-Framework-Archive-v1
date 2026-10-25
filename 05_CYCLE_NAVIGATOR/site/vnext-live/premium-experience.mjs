@@ -5,6 +5,7 @@
 import {officialBullBear} from './official-bullbear.mjs';
 import {officialPullbackStage} from './official-pullback-stage.mjs';
 import {officialPathView} from './official-path.mjs';
+import {compassProReadback,compassProLabels} from './compass-pro-readback.mjs';
 
 const RISK=['NORMAL','BUILDING','ELEVATED','HIGH','CONFIRMED'];
 const STAGE_LABELS={
@@ -244,6 +245,115 @@ export function renderProductExperience(view,feeds,lang='da'){
  set('premium-risk-quality',t.quality+': '+decision.riskQuality);
  set('premium-risk-impact',t.impact);
  set('premium-sell-caveat',t.noSell);
+ // Approved Kompas PRO display. No client-side forecast/sell/re-entry engine.
+ const pro=compassProReadback(view,feeds?.compass,{lang});
+ const labels=compassProLabels(lang);
+ for(const [id,text] of [
+  ['pro-stage-label',labels.stage],['pro-quality-label',labels.quality],
+  ['pro-eta-label',labels.eta],['pro-depth-label',labels.depth],
+  ['pro-window-label',labels.window],['pro-review-label',labels.review],
+  ['pro-guidance-label',labels.guidance],['pro-guidance-caveat',labels.guidanceCaveat],
+  ['pro-price-title',labels.priceTitle],['pro-price-week-label',labels.priceWeek],
+  ['pro-btc-label',labels.btc],['pro-eth-label',labels.eth],
+  ['pro-price-caveat',labels.rangeCaveat],['pro-forward-title',labels.longTitle],
+  ['pro-horizon-label',labels.horizon]
+ ])set(id,text);
+ set('pro-risk-stage',pro.severity===null?pro.riskLabel:(String(pro.severity)+'/5 · '+pro.riskLabel));
+ set('pro-risk-quality',pro.evidenceQuality);
+ set('pro-onset-eta',pro.onsetEta);
+ set('pro-depth',pro.depth);
+ set('pro-watch-window',pro.watchWindow);
+ set('pro-next-review',pro.nextReview);
+ set('pro-guidance',pro.guidance);
+ const source=pro.sourceWeekly;
+ const asMoney=n=>Number.isFinite(n)&&n>0?'
+ if(steps){RISK.forEach((s,i)=>{const e=element('span','risk-step',riskStageLabel(s,lang));
+   e.dataset.sourceState=s;
+   e.dataset.current=String(i===decision.riskIndex);e.dataset.prior=String(i<decision.riskIndex);
+   steps.append(e)})}
+ set('premium-lens-heading',t[selectedLens]);set('premium-lens-note',t[selectedLens+'Note']);
+ set('premium-lens-caveat',t.info);
+ for(const b of document.querySelectorAll('[data-investor-lens]')){
+  const key=b.dataset.investorLens;b.textContent=t[key];b.setAttribute('aria-pressed',String(selectedLens===key));
+ }
+ set('premium-path-now',path.now);set('premium-path-next',path.next);
+ set('premium-path-gate',path.gate);set('premium-path-alt',path.alt);
+ set('premium-path-alt-status',path.altStatus);set('premium-path-source',path.source);
+ set('premium-path-explainer',t.pathNote);set('premium-path-eta',t.pathNoEta);
+ const rail=reset('premium-path-rail');
+ if(rail){path.phases.forEach((x,i)=>{const e=element('li','path-node'),name=element('strong','',x.label);
+    e.dataset.kind=x.kind;e.append(element('span','path-number',String(i+1).padStart(2,'0')),name);
+    if(x.kind==='reference')e.append(element('small','',t.pathFrozen));
+    if(x.kind==='next')e.append(element('small','',t.wait));
+    rail.append(e)});
+   if(path.phases.length===0)rail.append(element('li','path-empty',t.pathUnavailable));}
+ const rot=reset('premium-rotation');
+ if(rot){for(const x of path.rotation){const row=element('li','rotation-tier');
+    row.append(element('b','',x.key),element('strong','',x.action),element('small','',x.eta));rot.append(row)}
+   if(!path.rotation.length)rot.append(element('li','path-empty',t.pathUnavailable));}
+ // Render this week's existing published *provisional* price-range sequences.
+ // They do not imply Direction/Rotation or Pullback Edge, nor final weekly score.
+ const seq=priceSequenceModel(view,feeds?.latest);
+ const seqRoot=reset('proof-live-windows');
+ set('proof-live-week',seq.week||t.unavailable);
+ set('proof-live-status',seq.state==='UNAVAILABLE'?t.proofLiveMissing:
+   seq.state==='STALE'?t.proofLiveStale:t.proofLiveFresh);
+ if(seqRoot){
+   for(const item of seq.windows){
+     const box=element('article','proof-live-window');
+     box.dataset.state=item.state;
+     const top=element('div','proof-live-window-head');
+     top.append(element('span','proof-live-window-day',t.proofLiveWindow+' '+item.days));
+     const state=item.state==='LIVE_PROVISIONAL'?t.proofLiveTracking:
+       item.state==='CLOSED_PROVISIONAL'?t.proofLiveClosed:
+       item.state==='DEGRADED'?t.proofLiveDegraded:t.proofLivePending;
+     top.append(element('small','',state));
+     const score=element('strong','proof-live-window-score',
+       item.score===null?'—':item.score.toLocaleString(lang==='da'?'da-DK':'en-US',{maximumFractionDigits:2})+'%');
+     const count=element('span','proof-live-window-hours',
+       item.hours===null||item.expected===null?t.proofLiveNoScore:
+         item.hours+' / '+item.expected+' '+t.proofLiveHours);
+     box.append(top,score,count);
+     seqRoot.append(box);
+   }
+ }
+ set('premium-proof-price-status',view?.completed_score?.state==='FINAL_PUBLIC_SCORECARD'?t.rangeEligible:t.rangeUnavailable);
+ set('premium-proof-direction-status',t.edgeUnavailable);
+ set('premium-proof-pullback-status',t.edgeUnavailable);
+ set('premium-proof-title',t.proofTitle);set('premium-proof-info',t.proofInfo);
+ set('premium-proof-status',t.proofStatus);set('premium-proof-button',t.proofButton);
+ set('premium-proof-open',t.proofOpen);set('premium-proof-archive',t.proofArchive);
+ const prompt=holder('premium-proof-prompt');if(prompt)prompt.value=publicAuditPrompt(lang);
+}
+export function initProductExperience(getContext){
+ document.querySelectorAll('[data-investor-lens]').forEach(b=>b.addEventListener('click',()=>{
+  selectedLens=['holder','active','micro'].includes(b.dataset.investorLens)?b.dataset.investorLens:'holder';
+  const {view,feeds,lang}=getContext();renderProductExperience(view,feeds,lang);
+ }));
+ const copy=holder('premium-proof-copy');
+ if(copy)copy.addEventListener('click',async()=>{
+  const {lang}=getContext(),prompt=publicAuditPrompt(lang),box=holder('premium-proof-prompt');
+  let success=false;
+  try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(prompt);success=true}}catch{}
+  if(!success&&box){box.focus();box.select();try{success=document.execCommand('copy')}catch{}}
+  set('premium-copy-status',success?txt(lang).proofCopied:txt(lang).proofFailure);
+ });
+}
++new Intl.NumberFormat(lang==='en'?'en-US':'da-DK',{maximumFractionDigits:0}).format(n):'—';
+ const amount=r=>r?asMoney(r.low)+' – '+asMoney(r.high):'—';
+ set('pro-range-week',source.week||labels.rangeUnavailable);
+ set('pro-price-btc',amount(source.btc));set('pro-price-eth',amount(source.eth));
+ set('pro-price-status',source.status==='FROZEN_CURRENT_WEEK'?labels.sourceLive:
+  source.status==='FROZEN_FUTURE_WEEK'?labels.sourceFuture:
+  source.status==='HISTORICAL_FROZEN_WEEK'?labels.sourceHistorical:labels.sourceUnavailable);
+ const forward=reset('pro-forward-rows');
+ if(forward)for(const entry of pro.forecastRows){
+  const tr=document.createElement('tr');
+  for(const value of [entry.horizon,entry.btc?amount(entry.btc):labels.rangeUnavailable,
+                      entry.eth?amount(entry.eth):labels.rangeUnavailable])
+    tr.append(element('td','',value));
+  forward.append(tr);
+ }
  const steps=reset('premium-risk-steps');
  if(steps){RISK.forEach((s,i)=>{const e=element('span','risk-step',riskStageLabel(s,lang));
    e.dataset.sourceState=s;
