@@ -6,7 +6,7 @@
 import {officialPullbackStage} from './official-pullback-stage.mjs';
 
 const STAGES=['NORMAL','BUILDING','ELEVATED','HIGH','CONFIRMED'];
-const ACTIONS=new Set(['HOLD_WAIT','HOLD','BUY','SELL','UNAVAILABLE']);
+// Official action vocabulary may evolve; require exact verified source echo, never derive a new action.
 const SELL_STATES=new Set(['UNAVAILABLE','NONE','WATCH','PREPARE','REDUCE','SELL','EXIT','CONFIRMED']);
 const QUALITY=new Set(['LOW','MEDIUM','HIGH']);
 const tr=(lang,da,en)=>lang==='en'?en:da;
@@ -73,7 +73,8 @@ export function compassProReadback(view,official,{lang='da',nowUtc=new Date().to
      official.weekly_context?.status!=='ALIGNED'||
      official.weekly_context?.forecast_week!==view?.weekly?.forecast_week||
      official.weekly_context?.public_issue_number!==view.weekly.public_issue_number||
-     !ACTIONS.has(official.action_now)||official.action_now!==view.compass.action_now)
+     typeof official.action_now!=='string'||official.action_now.length>64||
+     official.action_now==='UNAVAILABLE'||official.action_now!==view.compass.action_now)
     return out;
 
   out.status='OFFICIAL_SOURCE_BOUND';
@@ -121,7 +122,7 @@ export function compassProReadback(view,official,{lang='da',nowUtc=new Date().to
   out.guidance=ok?plan(official.action_now,riskState,lang):
      tr(lang,'Risikoen er ikke kildeverificeret. Hold beslutningen på pause.',
              'Risk is not source-verified. Pause the decision.');
-  if(wk&&view.weekly.state!=='UNAVAILABLE'&&
+  if(wk&&['OK','DEGRADED'].includes(view.weekly.state)&&
      Number.isInteger(view.weekly.public_issue_number)){
     const btc=view.weekly.btc_range,eth=view.weekly.eth_range;
     const validRange=x=>finite(x?.low)&&finite(x?.high)&&x.low>0&&x.high>x.low;
