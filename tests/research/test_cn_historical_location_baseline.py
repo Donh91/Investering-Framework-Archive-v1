@@ -124,6 +124,19 @@ class RangeControlTests(unittest.TestCase):
         self.assertNotIn("proper_interval_score",str(v))
         self.assertEqual(v["authority"],"RESEARCH_ONLY_DIAGNOSTIC_NOT_PIT_ADMITTED")
 
+    def test_real_repo_regression_on_original_nine_week_panel(self):
+        repo = Path(__file__).resolve().parents[2]
+        if not (repo / MATRIX_PATH).is_file():
+            self.skipTest("full GitHub checkout required for nine-week source-bound replay")
+        v = build(repo)
+        self.assertEqual(v["summary"]["n_asset_windows"], 48)
+        self.assertEqual(v["summary"]["n_distinct_weeks"], 8)
+        self.assertEqual(v["summary"]["methods"]["cn_original"]["joint_contained"], 27)
+        self.assertEqual(v["summary"]["methods"]["same_width_prior_close"]["joint_contained"], 25)
+        self.assertEqual(v["summary"]["methods"]["fixed_15pct_prior_close"]["joint_contained"], 44)
+        self.assertEqual([x["week"] for x in v["excluded"]], ["2026-W33"])
+        self.assertEqual(v["scientifically_admitted_n"], 0)
+
     def test_deterministic(self):
         self.assertEqual(build(self.root),build(self.root))
 
