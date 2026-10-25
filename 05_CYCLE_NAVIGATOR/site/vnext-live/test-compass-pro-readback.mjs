@@ -76,6 +76,15 @@ const wrongIssue=structuredClone(official);wrongIssue.weekly_context.public_issu
 assert.equal(run(view,wrongIssue).status,'UNAVAILABLE');
 const wrongAction=structuredClone(official);wrongAction.action_now='SELL';
 assert.equal(run(view,wrongAction).status,'UNAVAILABLE','Different published official action must fail closed');
+const futureAction=structuredClone(official),futureView=structuredClone(view);
+futureAction.action_now='HOLD_DEFENSIVE_WAIT';futureView.compass.action_now='HOLD_DEFENSIVE_WAIT';
+assert.equal(run(futureView,futureAction).status,'OFFICIAL_SOURCE_BOUND',
+ 'New source-matching official actions must not blank the protection radar');
+assert.equal(run(futureView,futureAction).sell,'UNAVAILABLE',
+ 'A new official action code must not grant SELL without the owner');
+const mismatchedWeekly=structuredClone(view);mismatchedWeekly.weekly.state='MISMATCH';
+assert.equal(run(mismatchedWeekly).sourceWeekly.btc,null,
+ 'A mismatched weekly source cannot display original frozen ranges');
 
 const seller=structuredClone(official);
 seller.sell_assessment.state='SELL';
