@@ -27,7 +27,7 @@ The current official projection is `CMP-20261025-188684501994`, `HOLD_WAIT`, `po
 
 This was a read-only source/document audit. I did not rerun tests, recompute the retrospective matrix, access restricted provider values, initiate Actions, issue a paid model call, validate a backtest or authenticate a Grok provider invocation. The source files report their own analyses; those results are not recreated by this review.
 
-The numerical matrix readback matched its source JSON: 54 pairs; 32 joint hits; 0.592593 ratio; 0 science-admitted pairs. The Compass pointer and projection blobs matched the reviewed snapshot paths/hashes. No independent outcome evidence was added.
+The numerical matrix readback matched its source JSON: 54 pairs; 32 joint hits; 0.592593 ratio; 0 science-admitted pairs. The pointer path and projection blob were read at the pinned snapshot; their ID, timestamp, action posture and authority fields agree. I did not independently recompute the pointer's declared content SHA-256. No independent outcome evidence was added.
 
 ## Finite next gate
 
