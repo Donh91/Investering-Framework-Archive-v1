@@ -2,6 +2,16 @@
 
 **Current research checkpoint: 23 October 2026.** Existing owner [#1596](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596); evidence package [draft PR #1747](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1747). Public source QA, the original-file census, eleven exact 12h input/engine replays and an exposed matched B2 diagnostic have been executed. The package remains unmerged. Original no-hindsight information edge and investor economic edge remain unestablished.
 
+## Verified continuation, 25 October 2026
+
+This additive checkpoint supersedes the unmerged/pending wording below without rewriting the dated receipts. Current main at inspection: `6072b70ad72ebb795d3c4e5ecd66ab1a27650a0f`. Public #1787, #1784, #1791, #1794 and #1795 are merged. Private custody #201 is merged. The [execution receipt in Science #1596](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6395646629) records exact private ten-ZIP readback, #1794 release checks and the first actual eligible Shared Row. It is not a full independent recovery backup claim.
+
+- [38, original-capture overlap reproduction](38_ORIGINAL_CAPTURE_OVERLAP_REPRODUCTION_20261025.json): 10 original ZIPs, 90 actual responses, 3,820 row instances, 577 endpoint/timestamp pairs, 3,243 repeated exposures (84.895%), zero observed conflicting pairs. Neither 3,820 nor 577 is an independent-event or forecast-outcome denominator. Zero conflicts in this archive does not prove vendor revision immunity.
+- Reproduce locally with authorized original bytes: `python scripts/research/task2_original_capture_overlap.py --bundle /private/path/TASK2_10_ORIGINAL_HOURLY_PRIVATE_CUSTODY_2026-10-24.zip`. Exact package SHA/size, nested ZIP hashes/CRC and all nine endpoints per capture are required. Only value-free counts leave the process; do not commit the input archive. Synthetic negative controls: `python -m unittest discover -s tests/research -p test_task2_original_capture_overlap.py -v`.
+- The 25 owner-resubmitted source documents are byte-identical to the existing [August 4 source manifest](../../04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/intake/2026-08-04/SOURCE_PACK_RELEVANCE_MANIFEST.jsonl), blob `fdbb91d7750488df7f0224956fb4a024de9b8b30`. They add no new original source identity, first-known proof or independent sample. No duplicate intake or paid-source public copy was created.
+- Actual prospective monitor at `2026-10-25T08:53:03Z`: one eligible row, zero matured outcomes. Row `PSR_20261025T085302Z` is a prospective C01-C07 research observation, not a Compass forecast skill result. First 24h target is October 26 08:53:02Z, additionally requiring the existing owner's complete settled source candle/path. Collection continuity remains to be observed.
+- Original eleven-lane vendor-first-known remains unresolved. No new PIT admission, R2 certification, Round3 analysis, model promotion or economic utility claim follows from this checkpoint.
+
 ## Start with current execution evidence
 
 1. Fresh `AGENTS.md`, cross-repository boundary/map, current operational cockpit and the canonical Task 2 handoff override this dated gateway.
