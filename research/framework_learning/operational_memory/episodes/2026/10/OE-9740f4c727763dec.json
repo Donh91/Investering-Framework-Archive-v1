@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/handlekompas/strategic/FORWARD_PRICE_PUBLIC_PRICE_SOURCE_REUSE_v1.md",
+    "scripts/learning/forward_price_public_api_candidate.py",
+    "tests/learning/test_forward_price_binance_native_usdt_candidate.py",
+    "tests/learning/test_forward_price_public_api_candidate.py",
+    "tests/learning/test_strategic_compass.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-9740f4c727763dec",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Source-only, no network, no issuance or admission; 157 Strategic Compass tests PASS on exact head, 7 CI checks success; independent Codex no findings. Preserve USDT/USD split, existing source owners, Vault recovery and freeze policy.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/handlekompas/strategic/FORWARD_PRICE_PUBLIC_PRICE_SOURCE_REUSE_v1.md": "f209edc32941ab3521fde350ac539ee2dcafdfb9",
+    "scripts/learning/forward_price_public_api_candidate.py": "0e0000677dc0ee52ccd028c1b392a4c70b3e318b",
+    "tests/learning/test_forward_price_binance_native_usdt_candidate.py": "b818a567f8e6e9fd85402d2e484b5dbad86f5fa2",
+    "tests/learning/test_forward_price_public_api_candidate.py": "892f89f14ea6c826bacd7f8ffb26d1f9d0cd2b4e",
+    "tests/learning/test_strategic_compass.py": "5f9a60cf7d7d8eaa269a46ce3476231c011f8375"
+  },
+  "source_commit_sha": "9740f4c727763dec25120172d7e5f6e48fb45a91",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-25T11:18:53-07:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "research: verify native Binance BTCUSDT and optional Coinbase BTCUSD source identity (#1807)"
+}

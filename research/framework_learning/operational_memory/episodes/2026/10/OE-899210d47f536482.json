@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    ".github/workflows/hourly-sequence-capture.yml",
+    "05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs",
+    "scripts/cycle_navigator/verify_hourly_pages_handoff.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-899210d47f536482",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-verified-hourly-github-pages-public-delivery-closure",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized SITE #1578 / Supervisor #1156. Preserve market-owner chain, make Hourly\u2192Pages source handoff attributable and fail closed, verify real public homepage and byte parity and protect W43/W44 clock. Exact-head 13 CI pass / 7 skip, Codex no findings, prior P1 fixed. Postmerge natural production readback REQUIRED.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "4ed9f1fe10c428dff78deab272829318d37cfdaa",
+    ".github/workflows/cycle-navigator-pages.yml": "d1f78689f0bc0d1b383b04f9187b58b66771e2f6",
+    ".github/workflows/hourly-sequence-capture.yml": "2f955624934fc7ca93e2d9972a81dba16d3c4b24",
+    "05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs": "adb0f7eea38ed9b54e98a14d8961f81c35e87279",
+    "scripts/cycle_navigator/verify_hourly_pages_handoff.py": "5aabec49e137a4f22ed425b7ff6f270b1909fb22"
+  },
+  "source_commit_sha": "899210d47f5364823d64ec08d6e7e450ce1a5201",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-25T07:50:53-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site): verified Hourly\u2192GitHub Pages public delivery closure"
+}

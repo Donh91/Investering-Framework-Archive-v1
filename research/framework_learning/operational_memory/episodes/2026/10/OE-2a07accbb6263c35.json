@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/forward_price_admission_horizon_guard.py",
+    "tests/learning/test_forward_price_admission_horizon_guard.py",
+    "tests/learning/test_strategic_compass.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-2a07accbb6263c35",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Bounded research-only source/horizon diagnostic + 12 existing CI-run regressions; no source admission, forecast publication, market rules or trading. Exact head Codex advisory review no findings; 5 public CI checks success.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/forward_price_admission_horizon_guard.py": "d612b20d89f959fef68deda908ca4f78c062f330",
+    "tests/learning/test_forward_price_admission_horizon_guard.py": "d7d4576361ef865ce5310a52030eb253280ff656",
+    "tests/learning/test_strategic_compass.py": "e21827bfc3bb0d2601771509f15a0bfd720ca371"
+  },
+  "source_commit_sha": "2a07accbb6263c35d3f8b5d7b4d21b46328d63c9",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-25T10:45:48-07:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "research: add fail-closed BTC captured-source horizon diagnostic (#1806)"
+}
