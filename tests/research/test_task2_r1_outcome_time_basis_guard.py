@@ -113,6 +113,17 @@ class OriginalOutcomeTimeBasisTests(unittest.TestCase):
         altered["time_basis"]["start_reference_at_utc"] = "2026-10-19T23:00:00+02:00"
         self.assertIn("ORIGINAL_REFERENCE_CLOCK_INVALID", assess(altered))
 
+    def test_v3_missing_required_time_basis_is_quarantined(self):
+        altered = measured_outcome()
+        altered.pop("time_basis")
+        self.assertIn("ORIGINAL_V3_TIME_BASIS_MISSING", assess(altered))
+
+    def test_reference_only_mutation_quarantines_valid_target_observation(self):
+        altered = measured_outcome()
+        altered["time_basis"]["start_reference_at_utc"] = "2026-10-19T20:00:00Z"
+        self.assertEqual(altered["target_at_utc"], altered["target_observation_at_utc"])
+        self.assertIn("ORIGINAL_TARGET_REFERENCE_WINDOW_MISMATCH", assess(altered))
+
     def test_historical_outcome_without_optional_basis_remains_unmodified(self):
         legacy = measured_outcome()
         legacy.pop("time_basis")
