@@ -16,6 +16,19 @@ from pathlib import Path
 
 MATRIX_PATH = "06_RESEARCH_LAB/audit_summaries/2026-10-25__task2_cn_weekly_retrospective_originals_v1.json"
 CONTRACT = "TASK2_CN_POSITION_SHARPNESS_CONTROL_v1"
+# Archive versions pinned BEFORE evaluating this original nine-week case cohort.
+MATRIX_GIT_BLOB_SHA1 = "185c324b78434e4c02e8de6dd7a481df8109854a"
+PRIOR_PACK_GIT_BLOBS = {
+    "2026-W32": "5181268d563fee7227ff1b0c9f1bba27a1cf0edc",
+    "2026-W33": "c204f7e249a635982780c49a3c53e17a5636927f",
+    "2026-W35": "52ae3711204ea78be0d15b62187f9a10f8d9cefe",
+    "2026-W36": "335060bbef0b1d7dc8bf90e40a84574ca34fccdb",
+    "2026-W37": "7a0fd1ba70dfad2d2ac5c2981c69fe477aa0fd4c",
+    "2026-W38": "186eccaeecb338aa8e1cad6c3ef21727c2556093",
+    "2026-W39": "57c74653e29999008a30f53a90233d2bd21ee38c",
+    "2026-W40": "8d7f0ac227a250c9e71af68e063800b7f80979c2",
+    "2026-W41": "7d77c1b18bc792a787a9f09cf3468fe226ec6efd",
+}
 
 
 def _utc(s: str) -> datetime:
@@ -84,9 +97,12 @@ def _summary(rows: list[dict]) -> dict:
     }
 
 
-def build(repo_root: Path, matrix_path: str = MATRIX_PATH) -> dict:
+def build(repo_root: Path, matrix_path: str = MATRIX_PATH, *,
+          matrix_sha: str = MATRIX_GIT_BLOB_SHA1,
+          previous_shas: dict[str, str] | None = None) -> dict:
     root = repo_root.resolve()
-    panel = _read_verified(root, matrix_path)
+    pinned_prior = PRIOR_PACK_GIT_BLOBS if previous_shas is None else previous_shas
+    panel = _read_verified(root, matrix_path, matrix_sha)
     if panel.get("contract") != "TASK2_CN_RETROSPECTIVE_ORIGINAL_TEXT_V1" or panel.get("authority") != "RESEARCH_ONLY_NOT_SOURCE_ADMITTED":
         raise ValueError("unapproved_input_contract")
     if panel.get("summary", {}).get("science_admitted_pairs") != 0:
@@ -113,7 +129,10 @@ def build(repo_root: Path, matrix_path: str = MATRIX_PATH) -> dict:
         expected_blob = hashlib.sha1(b"blob " + str(len(blob)).encode() + b"\0" + blob).hexdigest()
         if expected_blob != week["source_git_blob_sha1"]:
             raise ValueError("forecast_origin_blob_mismatch")
-        prior_pack = _read_verified(root, prior_path)
+        prior_key = f"{prior.year}-W{prior.week:02d}"
+        if prior_key not in pinned_prior:
+            raise ValueError("prior_pack_immutable_binding_missing:" + prior_key)
+        prior_pack = _read_verified(root, prior_path, pinned_prior[prior_key])
         if (prior_pack.get("iso_year"), prior_pack.get("iso_week")) != (prior.year, prior.week):
             raise ValueError("prior_week_identity_mismatch")
         has_complete_anchor = prior_pack.get("readiness") == "READY" and (prior_pack.get("hourly_gap_diagnostics") or {}).get("observed_hours") == 168
