@@ -22,7 +22,7 @@ const DA_PHASES={
  'Cooldown / re-entry':'Afkøling / genkøb'
 };
 const DA_CODES={UP:'OP',DOWN:'NED',MIXED:'BLANDET',UNAVAILABLE:'UTILGÆNGELIG',
- HOLD:'BEHOLD',WAIT:'AFVENT',HARD_WAIT:'STRIKT AFVENT',BUY:'KØB',SELL:'SÆLG'};
+ HOLD:'BEHOLD',WAIT:'AFVENT',HOLD_WAIT:'AFVENT',HARD_WAIT:'STRIKT AFVENT',BUY:'KØB',SELL:'SÆLG'};
 const displayCode=code=>document.documentElement.lang==='en'?code:(DA_CODES[code]||code);
 function displayUtc(value){
  const date=new Date(value);
