@@ -242,8 +242,13 @@ async function refresh({background=false}={}){
    const deadline=Date.parse(next.last_observed_at_utc)+next.source_freshness_sla_minutes*60000;
    const ms=deadline-Date.now()+150;
    if(ms>0&&ms<2147483000)staleTimer=setTimeout(()=>{
-      if(request!==requestGeneration||asset!==selected)return;
-      if(model?.asset===selected&&model.source_status==='SOURCE_BOUNDED'){
+      // The original observation's SLA must expire even if a periodic fetch hangs.
+      // requestGeneration guards fetched responses, NOT the active source deadline.
+      if(asset!==selected)return;
+      const currentDeadline=Date.parse(model?.last_observed_at_utc||'')+
+       Number(model?.source_freshness_sla_minutes)*60000;
+      if(model?.asset===selected&&model.source_status==='SOURCE_BOUNDED'&&
+         model.live_freshness==='FRESH'&&Number.isFinite(currentDeadline)&&Date.now()>=currentDeadline){
        model={...model,live_freshness:'STALE',is_current_quote:false};
        plot();
       }

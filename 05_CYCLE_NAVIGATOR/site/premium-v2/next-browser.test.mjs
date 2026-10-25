@@ -146,6 +146,16 @@ try{
    const touch=[...document.querySelectorAll('[data-asset],[data-lang]')].map(b=>{
     const r=b.getBoundingClientRect();return {w:r.width,h:r.height};
    });
+   const horizonCards=[...document.querySelectorAll('.official-pilot-horizon')];
+   const horizonSourceState=$('#official-product-pilot')?.dataset.sourceState||'unavailable';
+   const horizonsPresent=horizonCards.length===5;
+   const horizonSemantics=horizonCards.every(card=>{
+    const posture=card.querySelector('.official-pilot-horizon-posture');
+    return !!card.querySelector('.official-pilot-horizon-direction')&&!!posture&&
+     card.dataset.sourceState===horizonSourceState&&
+     (horizonSourceState!=='expired'||(posture.textContent==='UDLØBET'||posture.textContent==='EXPIRED'));
+   });
+   const pathStageCount=document.querySelectorAll('#official-pilot-path li').length;
    const before=$('.premium-entry-navigation [data-premium-nav="compass"]')?.textContent||'';
    $('[data-lang="en"]')?.click();
    const english=$('.premium-entry-navigation [data-premium-nav="compass"]')?.textContent||'';
@@ -155,7 +165,8 @@ try{
    return {width:innerWidth,overflow:Math.max(document.body.scrollWidth,document.documentElement.scrollWidth)-innerWidth,
     present,logo:!!logo?.complete&&logo.naturalWidth>0,
     originalB:!!$('#chart[viewBox="0 0 1000 405"]'),links:[...document.querySelectorAll('.premium-entry-navigation a')].map(a=>a.getAttribute('href')),
-    before,english,danish,touch,sourceState:$('#source-state')?.textContent||'',
+    before,english,danish,touch,horizonsPresent,horizonSemantics,horizonSourceState,pathStageCount,
+    sourceState:$('#source-state')?.textContent||'',
     sourceStatus:$('#feed-status')?.textContent||'',
     btc:!!label,eth:!!alternate,rootPath:location.pathname,
     officialHome:document.body.classList.contains('premium-home'),
@@ -178,6 +189,10 @@ try{
   assert.ok(report.links.includes('#proof-explorer')&&report.links.includes('#official-pilot-path'),
    'NEXT_MISSING_SECTION_NAV');
   assert.ok(report.touch.every(x=>x.w>=44&&x.h>=44),'NEXT_TOUCH_TARGET_TOO_SMALL');
+  assert.ok(report.horizonSemantics,'NEXT_COMPASS_HORIZON_MARKUP_OR_EXPIRED_ACTION');
+  assert.ok(report.horizonSourceState==='unavailable'||
+    (report.horizonsPresent&&report.pathStageCount===10),
+   'NEXT_HORIZON_SOURCE_OR_PATH_COUNT_MISMATCH');
   assert.ok(selection.ethSelected&&selection.pair==='ETH / USD','NEXT_BTC_ETH_NOT_INTERACTIVE');
   assert.ok(report.rootPath.endsWith(rootMode?base:base+'next/'),'NEXT_WRONG_BASEPATH');
   if(rootMode){

@@ -42,13 +42,15 @@ function compass(){
    source_asof_utc:'2026-10-26T00:00:00Z',valid_until_utc:'2026-10-26T02:00:00Z'}},
   weekly_context:{contract:'CN_COMPASS_WEEKLY_ALIGNMENT_v1',status:'ALIGNED',
    forecast_week:'2026-W43',public_issue_number:30},
-  horizons:Object.fromEntries(['NEXT_12H','NEXT_1_3D','NEXT_5_7D','NEXT_2_3W','CYCLE_ALTCOINS_3_8W'].map(k=>[k,{expected_direction:'UP'}])),
+  horizons:Object.fromEntries(['NEXT_12H','NEXT_1_3D','NEXT_5_7D','NEXT_2_3W','CYCLE_ALTCOINS_3_8W'].map(k=>[k,{expected_direction:'UP',action_posture:'WAIT',expected_path:'Source-issued scenario only'}])),
   capitalization_ladder:['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'].map(segment=>({segment,status:'SOURCE'})),
   bull_bear_scale:{contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',semantics:'EVIDENCE_BALANCE_NOT_PROBABILITY',
    authority:{probability_model:false},horizons:Object.fromEntries(['1_3d','5_7d','2_3w'].map(k=>[k,{bull:8,bear:2}]))}};
 }
 class Element{
- constructor(){this.textContent='';this.dataset={};this.style={};this.children=[];this.attrs={};this.listeners={};}
+ constructor(tag=''){this.tagName=tag.toUpperCase();this.textContent='';this.dataset={};this.style={};this.children=[];this.attrs={};this.listeners={};this.open=false;this.didFocus=false;}
+ get firstElementChild(){return this.children[0]||null}
+ focus(){this.didFocus=true}
  append(...nodes){this.children.push(...nodes)}
  replaceChildren(...nodes){this.children=nodes;this.textContent=''}
  setAttribute(k,v){this.attrs[k]=String(v)}
@@ -57,7 +59,7 @@ class Element{
  addEventListener(k,fn){this.listeners[k]=fn}
  click(){return this.listeners.click?.({currentTarget:this})}
 }
-async function harness(path,{latest=snapshot(),fetcher=null}={}){
+async function harness(path,{latest=snapshot(),fetcher=null,sourceTransform=null}={}){
  let now=Date.parse('2026-10-26T00:30:00Z'),serial=0;
  const timers=new Map(),elements=new Map(),events={};
  const get=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id)};
@@ -66,7 +68,7 @@ async function harness(path,{latest=snapshot(),fetcher=null}={}){
   buttons[key]=values.map(value=>{const e=new Element();e.dataset[key]=value;return e});
  }
  const doc={documentElement:{lang:'da'},hidden:false,getElementById:get,
-  createElement:()=>new Element(),createElementNS:()=>new Element(),createTextNode:text=>({textContent:text}),
+  createElement:tag=>new Element(tag),createElementNS:(namespace,tag)=>new Element(tag),createTextNode:text=>({textContent:text}),
   querySelector:()=>null,querySelectorAll:q=>q==='[data-asset]'?buttons.asset:q==='[data-lang]'?buttons.lang:q==='[data-proof-step]'?buttons.proofStep:[],
   addEventListener:(k,fn)=>(events[k]??=[]).push(fn),dispatchEvent:e=>(events[e.type]||[]).forEach(fn=>fn(e))};
  const timer=(fn,ms)=>{const id=++serial;timers.set(id,{fn,at:now+ms});return id};
@@ -77,8 +79,9 @@ async function harness(path,{latest=snapshot(),fetcher=null}={}){
   setTimeout:timer,clearTimeout:id=>timers.delete(id),setInterval:timer,clearInterval:id=>timers.delete(id),
   readOfficialCompassPath,readOfficialGraphB,replayObservedUntil,sourceOnlyPriceRangeProof,
   sourceReadbackProofRows:()=>[],console,navigator:{}};
- const source=(await readFile(new URL(path,import.meta.url),'utf8'))
+ let source=(await readFile(new URL(path,import.meta.url),'utf8'))
   .replace(/^import .*;\n/gm,'').replaceAll('import.meta.url',JSON.stringify('https://test.invalid/next/assets/app.js'));
+ if(sourceTransform)source=sourceTransform(source);
  vm.runInNewContext(source,context,{filename:path});
  const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve))};
  await settle();
@@ -163,6 +166,28 @@ test('Graph missing selected prices shows no borrowed quote and disables replay'
  assert.equal(h.get('hour-slider').disabled,true);
  assert.equal(h.get('actual').attrs.d,'');
 });
+test('Graph B SLA expires during unresolved 5-minute refresh; old generation gate is caught',async()=>{
+ const run=async sourceTransform=>{
+  const h=await harness('./graph-b/source-graph-b.mjs',{sourceTransform});
+  assert.equal(h.get('variant-panel').dataset.freshness,'fresh');
+  h.setFetch(()=>new Promise(()=>{})); // Periodic request never resolves.
+  await h.advance('2026-10-26T01:30:01Z'); // Refresh at 00:35; source SLA at 01:30.
+  return h;
+ };
+ const live=await run(null);
+ assert.equal(live.get('variant-panel').dataset.freshness,'stale');
+ assert.match(live.get('feed-status').textContent,/FORÆLDEDE OBSERVATIONER/);
+ const mutated=await run(code=>{
+  const sentinel='if(asset!==selected)return;\\n      const currentDeadline='
+   .replace('\\n','\n');
+  assert.ok(code.includes(sentinel),'source deadline guard must be present');
+  return code.replace(sentinel,
+   'if(request!==requestGeneration||asset!==selected)return;\n      const currentDeadline=');
+ });
+ assert.equal(mutated.get('variant-panel').dataset.freshness,'fresh',
+  'negative control must recreate the stale masking from the earlier guard');
+ assert.doesNotMatch(mutated.get('feed-status').textContent,/FORÆLDEDE OBSERVATIONER/);
+});
 test('Graph freshness expires in an already-open tab without another fetch',async()=>{
  const h=await harness('./graph-b/source-graph-b.mjs');
  assert.doesNotMatch(h.get('feed-status').textContent,/FORÆLDEDE/);
@@ -214,4 +239,88 @@ test('Open Graph B follows a newly published close while a manual replay stays p
  await replay.advance('2026-10-26T00:35:01Z');
  assert.equal(slider.value,'167');
  assert.match(replay.get('observed-value').textContent,/80[.,]167/);
+});
+
+test('Compass five horizons expose only source-issued direction, posture and native disclosures',async()=>{
+ const h=await harness('./compass/compass-path-ui.mjs');
+ const rows=h.get('official-pilot-horizons').children;
+ assert.equal(rows.length,5);
+ assert.equal(h.get('official-product-pilot').dataset.sourceState,'current');
+ assert.equal(rows[1].children[0].textContent,'1–3D');
+ assert.equal(rows[1].children[1].textContent,'OP');
+ assert.equal(rows[1].children[2].textContent,'AFVENT');
+ assert.equal(rows[1].children[3].children[0].textContent,'Læs kildegrundlag');
+ assert.equal(rows[1].children[3].children[1].textContent,'Source-issued scenario only');
+ h.language('en');
+ const english=h.get('official-pilot-horizons').children;
+ assert.equal(english[1].children[1].textContent,'UP');
+ assert.equal(english[1].children[2].textContent,'WAIT');
+ assert.equal(english[1].children[3].children[0].textContent,'Source detail');
+});
+test('Danish Compass renders official HOLD_WAIT on horizons and tiers without raw English codes',async()=>{
+ const issued=compass();
+ issued.horizons.NEXT_1_3D.action_posture='HOLD_WAIT';
+ issued.capitalization_ladder[0].status='HOLD_WAIT';
+ const h=await harness('./compass/compass-path-ui.mjs',{fetcher:url=>Promise.resolve({
+  ok:true,json:async()=>String(url).endsWith('compass.json')?issued:snapshot()
+ })});
+ assert.equal(h.get('official-pilot-horizons').children[1].children[2].textContent,'AFVENT');
+ assert.equal(h.get('official-pilot-rotation').children[0].children[1].textContent,'AFVENT');
+ h.language('en');
+ assert.equal(h.get('official-pilot-horizons').children[1].children[2].textContent,'HOLD_WAIT');
+});
+test('Expired Compass removes current horizon and rotation postures without backfilling',async()=>{
+ const h=await harness('./compass/compass-path-ui.mjs');
+ // Let the 5-min refresh start, but NEVER resolve it. Only the original
+ // deadline timer can expire the source-issued numbers and disclosures.
+ h.setFetch(()=>new Promise(()=>{}));
+ await h.advance('2026-10-26T02:00:01Z');
+ assert.equal(h.get('official-product-pilot').dataset.sourceState,'expired');
+ const first=h.get('official-pilot-horizons').children[0];
+ assert.equal(first.children[1].textContent,'—');
+ assert.equal(first.children[2].textContent,'UDLØBET');
+ assert.equal(first.children.length,3);
+ assert.equal(h.get('official-pilot-rotation').children[0].children[1].textContent,'—');
+ h.language('en');
+ assert.equal(h.get('official-pilot-horizons').children[0].children[2].textContent,'EXPIRED');
+});
+
+test('An unchanged background source refresh preserves an expanded official scenario and summary focus',async()=>{
+ const h=await harness('./compass/compass-path-ui.mjs');
+ const cards=h.get('official-pilot-horizons').children;
+ const old=cards[1].children[3],summary=old.children[0];
+ old.open=true;h.doc.activeElement=summary;
+ await h.advance('2026-10-26T00:35:01Z'); // 5-min source refresh; same issued source
+ const next=h.get('official-pilot-horizons').children[1].children[3];
+ assert.notEqual(next,old);
+ assert.equal(next.open,true);
+ assert.equal(next.children[0].didFocus,true);
+ h.doc.activeElement=next.children[0];
+ h.language('en');
+ const en=h.get('official-pilot-horizons').children[1].children[3];
+ assert.equal(en.open,true);
+ assert.equal(en.children[0].didFocus,true);
+ assert.equal(en.children[0].textContent,'Source detail');
+});
+test('A live original deadline masks horizons despite an unresolved periodic refresh and catches a removed timer guard',async()=>{
+ const source='./compass/compass-path-ui.mjs';
+ const run=async sourceTransform=>{
+  const h=await harness(source,{sourceTransform});
+  h.setFetch(()=>new Promise(()=>{}));
+  await h.advance('2026-10-26T02:00:01Z');
+  return h;
+ };
+ const live=await run(null);
+ assert.equal(live.get('official-pilot-action').textContent,'—');
+ assert.equal(live.get('official-pilot-horizons').children[0].children[2].textContent,'UDLØBET');
+ assert.equal(live.get('official-pilot-horizons').children[0].children.length,3);
+ const mutated=await run(code=>{
+  const sentinel='if(ms>0&&ms<2147483000)expiryTimer=setTimeout';
+  assert.ok(code.includes(sentinel),'timer guard must be present for negative control');
+  return code.replace(sentinel,'if(false)expiryTimer=setTimeout');
+ });
+ assert.notEqual(mutated.get('official-pilot-action').textContent,'—',
+  'negative control must expose previously retained current action');
+ assert.equal(mutated.get('official-pilot-horizons').children[0].children[3].tagName,'DETAILS',
+  'negative control must retain stale source disclosure');
 });

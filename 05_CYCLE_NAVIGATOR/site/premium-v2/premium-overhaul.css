@@ -335,3 +335,191 @@
     transition: none !important;
   }
 }
+
+/* 2026-10-25 SITE #1578: Editorial Compass + ten-stage PATH polish.
+ * Presentation-only. No action, time horizon, probability or phase is inferred.
+ * Applied to official root and /next/ from the same approved source files. */
+.premium-next .official-product-pilot {
+  border-color:#dce5ee;
+  background:linear-gradient(165deg,#fff 0%,#fff 72%,#f9fbfe 100%);
+}
+.premium-next .official-pilot-eyebrow {
+  color:#3977ba;letter-spacing:.19em;
+}
+.premium-next .official-pilot-head h2 {
+  font-weight:720;letter-spacing:-.055em;
+}
+.premium-next .official-pilot-main {
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+}
+.premium-next .official-pilot-action {
+  background:linear-gradient(150deg,#07172f 0%,#11365a 100%);
+  box-shadow:inset 0 1px 0 #ffffff20;
+}
+.premium-next .official-pilot-state {
+  background:linear-gradient(150deg,#f8fbff,#edf3f9);
+}
+.premium-next .official-pilot-horizons {
+  gap:10px;
+  align-items:stretch;
+}
+.premium-next .official-pilot-horizon {
+  position:relative;
+  display:flex;flex-direction:column;align-items:flex-start;
+  min-height:144px;
+  border:1px solid #dce5ee;
+  border-top:2px solid #aec6dc;
+  border-radius:13px;
+  padding:17px 14px 15px;
+  background:linear-gradient(155deg,#fff 0%,#f6f9fd 100%);
+  box-shadow:0 8px 22px #11365a06;
+  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.premium-next .official-pilot-horizon[data-source-state="expired"] {
+  border-top-color:#cdd5df;
+  background:#f6f8fa;
+}
+.premium-next .official-pilot-horizon .official-pilot-horizon-label {
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:.09em;font-weight:820;color:#597994;
+}
+.premium-next .official-pilot-horizon .official-pilot-horizon-label::before {
+  content:"";width:6px;height:6px;flex:none;border-radius:50%;
+  background:#5288bf;box-shadow:0 0 0 3px #5288bf18;
+}
+.premium-next .official-pilot-horizon[data-source-state="expired"] .official-pilot-horizon-label::before {
+  background:#a0afbd;box-shadow:none;
+}
+.premium-next .official-pilot-horizon .official-pilot-horizon-direction {
+  display:block;
+  margin:20px 0 6px;
+  font-size:clamp(16px,1.8vw,21px);
+  font-weight:760;
+  letter-spacing:-.035em;
+  color:#122d4e;
+  overflow-wrap:anywhere;
+}
+.premium-next .official-pilot-horizon .official-pilot-horizon-posture {
+  display:inline-flex;align-items:center;
+  min-height:25px;
+  padding:4px 9px;
+  border-radius:7px;
+  background:#e7eef7;
+  color:#36597d;
+  font-size:10px;line-height:1.35;letter-spacing:.03em;
+  font-weight:760;overflow-wrap:anywhere;
+}
+.premium-next .official-pilot-horizon[data-source-state="expired"] .official-pilot-horizon-posture {
+  background:#e8ecf1;color:#667789;
+}
+.premium-next .official-pilot-horizon-context {
+  width:100%;margin-top:auto;padding-top:12px;
+  border-top:1px solid #e5ebf2;
+  color:#5b7188;
+}
+.premium-next .official-pilot-horizon-context summary {
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;min-height:44px;
+  font-size:11px;line-height:1.45;font-weight:680;color:#416e9f;
+  list-style:none;
+}
+.premium-next .official-pilot-horizon-context summary::-webkit-details-marker {display:none}
+.premium-next .official-pilot-horizon-context summary::after {
+  content:"+";font-size:17px;color:#7190b0;margin-left:8px;
+}
+.premium-next .official-pilot-horizon-context[open] summary::after {content:"−"}
+.premium-next .official-pilot-horizon-context p {
+  font-size:11px;line-height:1.62;color:#506a85;
+  margin:0 0 5px;overflow-wrap:anywhere;
+}
+.premium-next .official-pilot-horizon-context summary:focus-visible {
+  outline:2px solid #2f6fda;outline-offset:2px;border-radius:6px;
+}
+.premium-next .official-product-pilot[data-source-state="expired"] .official-pilot-action,
+.premium-next .official-product-pilot[data-source-state="unavailable"] .official-pilot-action {
+  background:#34475c;
+}
+.premium-next .official-pilot-tier {
+  position:relative;
+  background:#f8fbfe;
+  border-color:#e0e8f0;
+  min-height:67px;
+}
+.premium-next .official-pilot-tier strong {
+  font-weight:790;letter-spacing:.035em;
+}
+.premium-next .premium-path .official-pilot-path {
+  row-gap:21px;column-gap:8px;
+}
+.premium-next .premium-path .official-pilot-path li {
+  border-top:2px solid #d8e4ee;
+  border-left:1px solid #e2e9f0;
+  background:linear-gradient(145deg,#fafcff,#f4f8fc);
+  padding:25px 10px 14px 13px;
+  min-height:91px;
+  box-shadow:0 4px 14px #0f2a4b05;
+}
+.premium-next .premium-path .official-pilot-path li::after {
+  top:-7px;left:16px;right:auto;
+  width:9px;height:9px;
+  border:2px solid #afc2d5;
+  box-shadow:0 0 0 3px #f3f7fb;
+}
+.premium-next .premium-path .official-pilot-path li[aria-current=step] {
+  border-top-color:#2f6fda;
+  border-left-color:#96b7d9;
+  background:linear-gradient(145deg,#edf5ff,#e3effc);
+  box-shadow:0 8px 18px #2f6fda11;
+}
+.premium-next .premium-path .official-pilot-path li[aria-current=step]::after {
+  background:#2f6fda;border-color:#2f6fda;
+  box-shadow:0 0 0 5px #2f6fda1f;
+}
+.premium-next .premium-path .official-pilot-phase-note {
+  color:#627a93;
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference) {
+  .premium-next .official-pilot-horizon:hover {
+    transform:translateY(-2px);
+    border-color:#bed0e3;
+    box-shadow:0 12px 27px #11365a11;
+  }
+}
+@media(max-width:760px) {
+ .premium-next .official-pilot-main {grid-template-columns:1fr}
+ .premium-next .official-pilot-horizon {min-height:128px}
+ .premium-next .premium-path .official-pilot-path {
+   row-gap:0;column-gap:0;
+ }
+ .premium-next .premium-path .official-pilot-path li {
+   min-height:62px;
+   border:0;border-left:2px solid #d8e4ee;
+   background:transparent;
+   box-shadow:none;
+   padding:12px 10px 12px 24px;
+ }
+ .premium-next .premium-path .official-pilot-path li::after {
+   top:calc(50% - 6px);left:-7px;
+   width:9px;height:9px;
+ }
+ .premium-next .premium-path .official-pilot-path li[aria-current=step] {
+   border-left-color:#2f6fda;
+ }
+}
+@media(max-width:430px) {
+ .premium-next .official-pilot-horizons {
+   grid-template-columns:repeat(2,minmax(0,1fr));
+   gap:8px;
+ }
+ .premium-next .official-pilot-horizon {padding:14px 11px;min-height:135px}
+ .premium-next .official-pilot-horizon:last-child {
+   grid-column:1 / -1;
+   min-height:0;
+ }
+ .premium-next .official-pilot-horizon .official-pilot-horizon-direction {
+   font-size:18px;margin-top:16px;
+ }
+}
+@media(prefers-reduced-motion:reduce) {
+ .premium-next .official-pilot-horizon {transition:none!important;transform:none!important}
+}
