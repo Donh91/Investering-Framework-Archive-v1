@@ -13,6 +13,8 @@ on:
       - '05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md'
       - 'scripts/cycle_navigator/validate_public_series.py'
       - '.github/workflows/cycle-navigator-pages.yml'
+      - '.github/workflows/hourly-sequence-capture.yml'
+      - 'scripts/cycle_navigator/verify_hourly_pages_handoff.py'
       - '.github/workflows/native-handlekompas.yml'
       - '.github/workflows/cn-site-v2-gate.yml'
   workflow_dispatch:
@@ -25,6 +27,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
+      - name: Verify Hourly-to-public-CDN source provenance and fail-closed negative controls
+        run: python3 scripts/cycle_navigator/verify_hourly_pages_handoff.py --self-test
       - name: Verify Premium v2.1 isolated source contracts (no dependencies)
         run: npm test --prefix 05_CYCLE_NAVIGATOR/site/premium-v2
       - name: Validate and build
