@@ -211,9 +211,12 @@ class NativeUsdtShadowPriceTests(unittest.TestCase):
         self.assertFalse(out["source_first_known_independently_rechecked"])
         self.assertFalse(out["probabilities_claimed"])
         self.assertIsNone(out["horizons_days"]["30"]["coverage_probability"])
-        self.assertNotIn("low_usd", str(out))
-        self.assertNotIn("high_usd", str(out))
-        self.assertNotIn("anchor_usd", str(out))
+        # Check exact schema keys, not substrings: low_usdt naturally contains low_usd.
+        self.assertNotIn("low_usd", out["horizons_days"]["1"])
+        self.assertNotIn("high_usd", out["horizons_days"]["1"])
+        self.assertNotIn("low_usd", out["descriptive_q25_q75_horizons_days"]["1"])
+        self.assertNotIn("high_usd", out["descriptive_q25_q75_horizons_days"]["1"])
+        self.assertNotIn("anchor_usd", out)
         self.assertTrue(out["alternative_is_unissued_non_authoritative"])
         self.assertTrue(out["no_publication"])
 
