@@ -4,6 +4,9 @@ import tempfile
 import unittest
 from pathlib import Path
 from scripts.research import task2_official_r1_original_evidence_gate_v1 as m
+# Existing validate_edge CI executes this module; import the bounded V3
+# clock regression TestCase here without adding any new GitHub workflow.
+from tests.research.test_task2_r1_outcome_time_basis_guard import OriginalOutcomeTimeBasisTests
 
 ISSUE="2026-10-12T12:00:00Z"
 CASE="CMP-20261012-synthetic-original"
