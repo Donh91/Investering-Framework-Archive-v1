@@ -17,6 +17,7 @@ from tests.learning.test_forward_price_research_oracle import ForwardPriceResear
 from tests.learning.test_forward_price_admission_horizon_guard import ForwardPriceAdmissionHorizonGuardTests  # noqa: F401
 from tests.learning.test_forward_price_public_api_candidate import ForwardPricePublicApiCandidateTests  # noqa: F401
 from tests.learning.test_forward_price_binance_native_usdt_candidate import BinanceNativeUsdtSourceTests  # noqa: F401
+from tests.learning.test_forward_price_native_usdt_shadow import NativeUsdtShadowPriceTests  # noqa: F401
 
 
 def write(path: Path, value: dict) -> None:
