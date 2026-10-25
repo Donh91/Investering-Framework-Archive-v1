@@ -14,6 +14,7 @@ from tests.learning.test_strategic_compass_long_range_validation import LongRang
 from tests.learning.test_forward_price_shadow import ShadowPriceTests  # noqa: F401
 from tests.learning.test_forward_price_source_custody import SourceCustodyTests  # noqa: F401
 from tests.learning.test_forward_price_research_oracle import ForwardPriceResearchOracleTests  # noqa: F401
+from tests.learning.test_forward_price_admission_horizon_guard import ForwardPriceAdmissionHorizonGuardTests  # noqa: F401
 
 
 def write(path: Path, value: dict) -> None:
