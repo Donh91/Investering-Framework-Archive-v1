@@ -15,11 +15,13 @@ import {setTimeout as delay} from 'node:timers/promises';
 const here=dirname(fileURLToPath(import.meta.url));
 const dist=resolve(here,'../dist');
 const base='/Investering-Framework-Archive-v1/';
+const rootMode=process.argv.includes('--root');
 const chrome=[process.env.CHROME_BIN,'/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser']
  .find(path=>path&&existsSync(path));
 assert.ok(chrome,'NEXT_BROWSER_NO_CHROME');
 assert.ok(existsSync(resolve(dist,'next/index.html')),'NEXT_BROWSER_NO_REAL_VITE_ROOT');
 assert.ok(existsSync(resolve(dist,'next/graph-b/source-graph-b.html')),'NEXT_BROWSER_NO_B_ENTRY');
+if(rootMode)assert.ok(existsSync(resolve(dist,'index.html')),'ROOT_BROWSER_MISSING_OFFICIAL_ENTRY');
 
 const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript',
  '.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png'};
@@ -124,7 +126,7 @@ try{
  for(const width of [390,430,1440]){
   await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:width===430?932:1000,
    deviceScaleFactor:1,mobile:width<600});
-  await send('Page.navigate',{url:origin+'next/'});
+  await send('Page.navigate',{url:origin+(rootMode?'':'next/')});
   let ready=false;
   for(let attempt=0;attempt<100;attempt++){
    await delay(100);
@@ -156,6 +158,10 @@ try{
     before,english,danish,touch,sourceState:$('#source-state')?.textContent||'',
     sourceStatus:$('#feed-status')?.textContent||'',
     btc:!!label,eth:!!alternate,rootPath:location.pathname,
+    officialHome:document.body.classList.contains('premium-home'),
+    noindex:!!document.querySelector('meta[name="robots"][content*="noindex"]'),
+    priorLink:$('.premium-entry-canonical')?.getAttribute('href'),
+    dataLinks:[...document.querySelectorAll('.premium-meta-links a')].map(a=>a.getAttribute('href')),
     title:$('h1[data-premium-copy="title"]')?.textContent||''};
   });
   await delay(400);
@@ -173,7 +179,12 @@ try{
    'NEXT_MISSING_SECTION_NAV');
   assert.ok(report.touch.every(x=>x.w>=44&&x.h>=44),'NEXT_TOUCH_TARGET_TOO_SMALL');
   assert.ok(selection.ethSelected&&selection.pair==='ETH / USD','NEXT_BTC_ETH_NOT_INTERACTIVE');
-  assert.ok(report.rootPath.endsWith('/next/'),'NEXT_WRONG_BASEPATH');
+  assert.ok(report.rootPath.endsWith(rootMode?base:base+'next/'),'NEXT_WRONG_BASEPATH');
+  if(rootMode){
+   assert.ok(report.officialHome&&!report.noindex,'ROOT_NOT_OFFICIAL_OR_NOINDEX');
+   assert.equal(report.priorLink,'./vnext/','ROOT_PRIOR_VERSION_LINK');
+   assert.deepEqual(report.dataLinks,['./data/latest.json','./data/compass.json'],'ROOT_DATA_LINKS');
+  }
   assert.equal(errors.length,0,'NEXT_BROWSER_JS_EXCEPTIONS:'+JSON.stringify(errors));
   assert.equal(responses.length,0,'NEXT_BROWSER_FAILED_ASSETS:'+JSON.stringify(responses));
   results.push({width,overflow:report.overflow,originalB:true,logo:true,
@@ -218,7 +229,7 @@ try{
  assert.ok(nested,'NEXT_NESTED_B_ENTRY_NOT_AVAILABLE');
  assert.deepEqual(responses,[],'NEXT_NESTED_ASSET_MISSING');
  assert.deepEqual(errors,[],'NEXT_NESTED_RUNTIME_EXCEPTION');
- console.log('NEXT_VITE_BROWSER_REAL_CDP_PASS '+JSON.stringify({
+ console.log((rootMode?'ROOT':'NEXT')+'_VITE_BROWSER_REAL_CDP_PASS '+JSON.stringify({
   base,engine:'CHROME_HEADLESS_CDP_NOT_SAFARI',results,nested_graph_b:true,
   http_asset_errors:responses.length,js_exceptions:errors.length
  }));
