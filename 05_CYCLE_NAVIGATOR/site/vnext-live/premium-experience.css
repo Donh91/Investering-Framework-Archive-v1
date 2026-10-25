@@ -551,3 +551,26 @@
   margin-bottom:11px;
  }
 }
+
+/* Kompas PRO: one source-bound decision surface, consistent with premium
+ * Quiet Precision, no additional independent action lane. */
+.pro-risk-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 10px}
+.pro-risk-metrics>div{padding:11px 10px;background:#fff;border:1px solid #e2e9f1;border-radius:9px;min-width:0}
+.pro-risk-metrics span,.pro-risk-timing span,.pro-price-label{display:block;color:#7a8c9e;font-size:10px;font-weight:750;letter-spacing:.045em;line-height:1.4}
+.pro-risk-metrics strong{display:block;margin:6px 0 0;font-size:14px;line-height:1.4;color:#173450;overflow-wrap:anywhere}
+.pro-risk-timing{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:5px 12px;align-items:baseline;margin:9px 0 13px}
+.pro-risk-timing strong{font-size:11px;color:#314f70;font-weight:700;line-height:1.5;overflow-wrap:anywhere}
+.pro-action-now{padding:15px 18px 14px;border:1px solid #cad8e8;border-left:3px solid #376fca;border-radius:11px;background:#f3f7fd;margin:3px 0 13px}
+.pro-action-now>small{display:block;font-size:10px;letter-spacing:.085em;font-weight:800;color:#456d9a}
+.pro-action-now strong{display:block;color:#17344f;font-size:15px;line-height:1.5;font-weight:740;margin-top:8px}
+.pro-action-now p{font-size:11px;line-height:1.6;color:#637991;margin:7px 0 0}
+.pro-price-range{background:#fff}
+.pro-price-range .section-heading{margin-bottom:14px}
+.pro-price-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:8px 0}
+.pro-price-pair article{padding:14px 15px;background:#f7f9fc;border:1px solid #e4eaf1;border-radius:10px;min-width:0}
+.pro-price-pair span{display:block;font-size:10px;color:#6c7f93;font-weight:750}
+.pro-price-pair strong{display:block;font-size:clamp(14px,2vw,19px);margin-top:5px;color:#143351;overflow-wrap:anywhere}
+.pro-price-range h3{font-size:12px;letter-spacing:.04em;color:#173450;margin:17px 0 10px}
+.pro-price-range .small{font-size:11px;color:#6c8094}
+@media(max-width:760px){.pro-risk-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.pro-risk-metrics{gap:6px}.pro-risk-metrics>div{padding:10px 8px}.pro-risk-metrics strong{font-size:12px}.pro-risk-timing{grid-template-columns:1fr;gap:3px}.pro-risk-timing strong{margin-bottom:7px}.pro-action-now{padding:14px}.pro-price-pair article{padding:12px 10px}.pro-price-pair strong{font-size:14px}}
