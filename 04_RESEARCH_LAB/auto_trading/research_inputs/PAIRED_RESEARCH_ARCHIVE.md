@@ -22,6 +22,7 @@ Originals with restricted Alpha/provider/proprietary material remain private. Pu
 ## Current packets
 
 - [AT-GROK-20261024-001: RUN-002 gap research](AT-GROK-20261024-001/README.md) — original private source + public extract + separate ChatGPT adjudication. No ChatGPT experiment or external review is claimed.
+- [AT-GROK-20261025-002: CN miss / NO_TRADE target-EV constraints](AT-GROK-20261025-002/README.md) — private Bridge PR #67 bound to a sanitized Grok extract and separate ChatGPT review; no experiment or external review is claimed.
 
 ## Toward a future app
 
