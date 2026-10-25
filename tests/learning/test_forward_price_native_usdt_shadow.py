@@ -146,7 +146,7 @@ class NativeUsdtShadowPriceTests(unittest.TestCase):
                 self.reject(ch)
         self.reject(lambda p: p["bars"][0].update(extra_usd=999))
         self.reject(lambda p: p.update(next_price_usd=999))
-        self.reject(lambda p: p.update("forecaster_status", "ISSUED"))
+        self.reject(lambda p: p.update(forecaster_status="ISSUED"))
 
     def test_reject_unverified_provider_or_untimestamped_vintage(self):
         self.reject(lambda p: p.update(provider_first_known_proven=False))
