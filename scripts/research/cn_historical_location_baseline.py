@@ -101,10 +101,14 @@ def build(repo_root: Path, matrix_path: str = MATRIX_PATH) -> dict:
         original_monday = date.fromisocalendar(year, number, 1)
         prior = (original_monday - timedelta(days=7)).isocalendar()
         prior_path = f"03_DAILY_CAPTURE_LOGS/weekly/{prior.year}/W{prior.week:02d}.json"
-        _read_verified(root, week["weekly_actuals_path"], week["weekly_actuals_git_blob_sha1"])
+        actual_pack = _read_verified(root, week["weekly_actuals_path"], week["weekly_actuals_git_blob_sha1"])
+        if (actual_pack.get("iso_year"), actual_pack.get("iso_week")) != (year, number):
+            raise ValueError("actual_week_identity_mismatch")
+        if actual_pack.get("readiness") != "READY" or (actual_pack.get("hourly_gap_diagnostics") or {}).get("observed_hours") != 168:
+            raise ValueError("actual_week_not_complete")
         original_source = root / week["source_path"]
-        if not original_source.is_file():
-            raise ValueError("forecast_origin_missing")
+        if not original_source.is_file() or original_source.is_symlink() or not original_source.resolve().is_relative_to(root):
+            raise ValueError("forecast_origin_missing_or_outside_root")
         blob = original_source.read_bytes()
         expected_blob = hashlib.sha1(b"blob " + str(len(blob)).encode() + b"\0" + blob).hexdigest()
         if expected_blob != week["source_git_blob_sha1"]:
@@ -136,8 +140,18 @@ def build(repo_root: Path, matrix_path: str = MATRIX_PATH) -> dict:
                 raise ValueError("duplicate_original_forecast_row")
             seen.add(identity)
             asset = row["asset"]
-            if asset not in prices or row["window"] not in ("DAY1_2", "DAY3_4", "DAY5_7") or row.get("observed_hours") not in (48, 72):
+            window_hours = {"DAY1_2": 48, "DAY3_4": 48, "DAY5_7": 72}
+            if asset not in prices or row["window"] not in window_hours or row.get("observed_hours") != window_hours.get(row["window"]):
                 raise ValueError("unsupported_row_or_partial_window")
+            archived_window = actual_pack["day_window_actuals"]["windows"][row["window"]]
+            if archived_window.get("observed_hours") != window_hours[row["window"]]:
+                raise ValueError("actual_window_not_complete")
+            archived_asset = archived_window[asset.lower()]
+            for field in ("low", "high"):
+                actual_value = _positive(archived_asset[field], "original_actual_" + field)
+                matrix_value = _positive(row["actual_" + field], "matrix_actual_" + field)
+                if not math.isclose(actual_value, matrix_value, rel_tol=0.0, abs_tol=0.000001):
+                    raise ValueError("archived_outcome_disagrees_with_matrix:" + field)
             a = prices[asset]
             low, high = float(row["forecast_low"]), float(row["forecast_high"])
             al, ah = float(row["actual_low"]), float(row["actual_high"])
