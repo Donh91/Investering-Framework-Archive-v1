@@ -64,13 +64,13 @@ function textLabels(){
   title:'Forecast meets reality.',
   intro:'Original forecast versus actual movement, week by week.',
   disclaimer:officialHome?'Source-backed · Original ranges and observed prices.':'Preview · Source-backed, without demo prices.',
-  graph:'Graph B',compass:'Compass',path:'PATH',proof:'Proof',official:officialHome?'Previous version ↗':'Official site ↗',meta:'STATUS / SOURCES',
+  graph:'Graph B',compass:'Compass',pro:'Compass PRO ↗',path:'PATH',proof:'Proof',official:officialHome?'Previous version ↗':'Official site ↗',meta:'STATUS / SOURCES',
   cnSource:'CN source ↗',compassSource:'Compass source ↗'
  }:{
   title:'Prognose møder virkelighed.',
   intro:'Original prognose mod faktisk udvikling, uge for uge.',
   disclaimer:officialHome?'Kildebaseret · Oprindelige intervaller og observerede kurser.':'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
-  graph:'Graf B',compass:'Kompas',path:'PATH',proof:'Proof',official:officialHome?'Forrige version ↗':'Officiel side ↗',meta:'STATUS / KILDER',
+  graph:'Graf B',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:'Proof',official:officialHome?'Forrige version ↗':'Officiel side ↗',meta:'STATUS / KILDER',
   cnSource:'CN-data ↗',compassSource:'Kompas-data ↗'
  };
  document.querySelectorAll('[data-premium-nav]').forEach(el=>{
