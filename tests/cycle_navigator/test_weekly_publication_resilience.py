@@ -208,7 +208,7 @@ def test_existing_weekly_api_owns_conditional_daily_scenario_without_extra_call(
     assert "CONDITIONAL BASE-CASE daily analytical path" in source
     assert "A MIXED market" in source
     assert "the other asset may still publish independently" in source
-    assert "do not force an unsupported path" in source.lower()
+    assert "or force an unsupported path" in source.lower()
     assert "daily_path_issue_summary(freeze.get(\"daily_price_path\")" in source
     assert '"daily_path_issuance": daily_path_issue' in source
     # The original single call remains before source/receipt production.
