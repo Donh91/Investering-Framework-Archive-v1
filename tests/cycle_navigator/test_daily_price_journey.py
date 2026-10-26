@@ -4,7 +4,7 @@ import copy
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from scripts.cycle_navigator.daily_price_journey import CONTRACT, COPY_CONTRACT, validate_daily_path, validated_public_copy
+from scripts.cycle_navigator.daily_price_journey import CONTRACT, COPY_CONTRACT, validate_daily_path, validated_public_copy, daily_path_issue_summary
 from scripts.cycle_navigator.build_public_live_precision import daily_observations
 
 
@@ -32,6 +32,37 @@ def test_forecast_cannot_publish_wrong_dates_or_invented_bounds(defect):
     elif defect == 'boolean': path['BTC']['points'][0]['expected_close'] = True
     else: path['BTC']['status'] = 'UNAVAILABLE'
     with pytest.raises(ValueError): validate_daily_path(path, freeze, 2026, 41)
+
+
+
+def test_daily_path_issuance_summary_partial_and_full_fail_closed():
+    freeze, path = forecast()
+    full = daily_path_issue_summary(path, freeze, 2026, 41)
+    assert full['contract'] == 'CN_DAILY_PATH_ISSUANCE_READBACK_v1'
+    assert full['status'] == 'PUBLISHED_BOTH'
+    assert full['assets']['BTC']['point_count'] == 7
+    assert full['assets']['ETH']['point_count'] == 7
+    assert full['scoring_authority'] is False
+    assert full['portfolio_execution'] is False
+    assert 'expected_close' not in full
+    assert 'points' not in full
+    path['ETH'] = {'status':'UNAVAILABLE','reason':'Insufficient evidence','points':[]}
+    partial = daily_path_issue_summary(path, freeze, 2026, 41)
+    assert partial['status'] == 'PARTIAL'
+    assert partial['assets']['BTC']['point_count'] == 7
+    assert partial['assets']['ETH']['point_count'] == 0
+    path['BTC'] = {'status':'UNAVAILABLE','reason':'Insufficient evidence','points':[]}
+    assert daily_path_issue_summary(path, freeze, 2026, 41)['status'] == 'UNAVAILABLE'
+
+
+@pytest.mark.parametrize('bad', ['week','six','range'])
+def test_daily_path_issuance_summary_rejects_unverified_source(bad):
+    freeze, path = forecast()
+    if bad == 'week': path['forecast_week'] = '2026-W40'
+    if bad == 'six': path['BTC']['points'].pop()
+    if bad == 'range': path['BTC']['points'][0]['expected_close'] = 1000
+    with pytest.raises(ValueError):
+        daily_path_issue_summary(path, freeze, 2026, 41)
 
 
 def observations(hours=24):
