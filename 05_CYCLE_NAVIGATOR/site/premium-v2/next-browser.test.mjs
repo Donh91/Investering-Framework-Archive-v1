@@ -212,6 +212,14 @@ try{
     'NEXT_GATE_NOT_IN_SUMMARY:'+width);
   assert.ok(fold.summary.bottom<=fold.graph.top+2&&fold.graph.bottom<=fold.detail.top+2,
     'NEXT_WRONG_DECISION_GRAPH_DETAIL_ORDER:'+width);
+  if(width<=430){
+   assert.ok(fold.action.bottom<=fold.viewportHeight,
+    'NEXT_MOBILE_ACTION_BELOW_FIRST_FOLD:'+width+':'+JSON.stringify(fold));
+   assert.ok(fold.gate.height===0||fold.gate.bottom<=fold.viewportHeight,
+    'NEXT_MOBILE_SOURCE_CONFIRMATION_BELOW_FIRST_FOLD:'+width+':'+JSON.stringify(fold));
+   assert.ok(fold.graph.top<fold.viewportHeight,
+    'NEXT_MOBILE_APPROVED_GRAPH_B_BELOW_FIRST_FOLD:'+width+':'+JSON.stringify(fold));
+  }
   assert.ok(report.overflow<=2,'NEXT_HORIZONTAL_OVERFLOW:'+width+':'+report.overflow);
   assert.equal(report.english,'Compass','NEXT_LANGUAGE_EN');
   assert.equal(report.danish,'Kompas','NEXT_LANGUAGE_DA');
