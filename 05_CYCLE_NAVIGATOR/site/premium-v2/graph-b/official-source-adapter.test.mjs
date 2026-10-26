@@ -126,3 +126,17 @@ test('empty selected asset can never borrow other asset current quote',()=>{
  assert.equal(m.is_current_quote,false);
  assert.equal(m.hourly_observations.length,0);
 });
+
+
+test('a midweek backfill cannot turn retrospective daily prices into original blue forecast',()=>{
+ const v=fixture();
+ v.public_live_precision.frozen_at_utc='2026-10-20T08:00:00Z';
+ v.public_live_precision.window_scores.day_1_2.scoring_start_utc='2026-10-20T09:00:00Z';
+ v.public_live_precision.scoring_valid_from_utc='2026-10-20T09:00:00Z';
+ v.public_live_precision.daily_price_path.BTC={status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
+  day:i+1,low:81000,high:84000,expected_close:82000+i*100
+ }))};
+ const result=readOfficialGraphB(v,'BTC',{now_utc:'2026-10-20T10:00:00Z'});
+ assert.equal(result.forecast_status,'PUBLISHED_INVALID_FAIL_CLOSED');
+ assert.equal(result.forecast.length,0);
+});
