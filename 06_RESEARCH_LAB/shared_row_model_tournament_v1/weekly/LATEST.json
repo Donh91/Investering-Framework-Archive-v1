@@ -5,15 +5,15 @@
     "C01_ETHBTC": {
       "24h": {
         "false_negative_rate": null,
-        "false_positive_rate": null,
+        "false_positive_rate": 0.0,
         "fn": 0,
         "fp": 0,
-        "mae_mean": null,
-        "mfe_mean": null,
-        "n": 0,
+        "mae_mean": -0.58399176,
+        "mfe_mean": 0.30917211,
+        "n": 1,
         "precision": null,
         "recall": null,
-        "tn": 0,
+        "tn": 1,
         "tp": 0
       },
       "72h": {
@@ -46,15 +46,15 @@
     "C02_BREADTH": {
       "24h": {
         "false_negative_rate": null,
-        "false_positive_rate": null,
+        "false_positive_rate": 0.0,
         "fn": 0,
         "fp": 0,
-        "mae_mean": null,
-        "mfe_mean": null,
-        "n": 0,
+        "mae_mean": -0.58399176,
+        "mfe_mean": 0.30917211,
+        "n": 1,
         "precision": null,
         "recall": null,
-        "tn": 0,
+        "tn": 1,
         "tp": 0
       },
       "72h": {
@@ -87,15 +87,15 @@
     "C03_BTCD": {
       "24h": {
         "false_negative_rate": null,
-        "false_positive_rate": null,
+        "false_positive_rate": 0.0,
         "fn": 0,
         "fp": 0,
-        "mae_mean": null,
-        "mfe_mean": null,
-        "n": 0,
+        "mae_mean": -0.58399176,
+        "mfe_mean": 0.30917211,
+        "n": 1,
         "precision": null,
         "recall": null,
-        "tn": 0,
+        "tn": 1,
         "tp": 0
       },
       "72h": {
@@ -128,15 +128,15 @@
     "C04_ETHBTC_BREADTH": {
       "24h": {
         "false_negative_rate": null,
-        "false_positive_rate": null,
+        "false_positive_rate": 0.0,
         "fn": 0,
         "fp": 0,
-        "mae_mean": null,
-        "mfe_mean": null,
-        "n": 0,
+        "mae_mean": -0.58399176,
+        "mfe_mean": 0.30917211,
+        "n": 1,
         "precision": null,
         "recall": null,
-        "tn": 0,
+        "tn": 1,
         "tp": 0
       },
       "72h": {
@@ -169,15 +169,15 @@
     "C05_ETHBTC_BTCD": {
       "24h": {
         "false_negative_rate": null,
-        "false_positive_rate": null,
+        "false_positive_rate": 0.0,
         "fn": 0,
         "fp": 0,
-        "mae_mean": null,
-        "mfe_mean": null,
-        "n": 0,
+        "mae_mean": -0.58399176,
+        "mfe_mean": 0.30917211,
+        "n": 1,
         "precision": null,
         "recall": null,
-        "tn": 0,
+        "tn": 1,
         "tp": 0
       },
       "72h": {
@@ -210,15 +210,15 @@
     "C06_BREADTH_BTCD": {
       "24h": {
         "false_negative_rate": null,
-        "false_positive_rate": null,
+        "false_positive_rate": 0.0,
         "fn": 0,
         "fp": 0,
-        "mae_mean": null,
-        "mfe_mean": null,
-        "n": 0,
+        "mae_mean": -0.58399176,
+        "mfe_mean": 0.30917211,
+        "n": 1,
         "precision": null,
         "recall": null,
-        "tn": 0,
+        "tn": 1,
         "tp": 0
       },
       "72h": {
@@ -251,15 +251,15 @@
     "C07_SIMPLE_3": {
       "24h": {
         "false_negative_rate": null,
-        "false_positive_rate": null,
+        "false_positive_rate": 0.0,
         "fn": 0,
         "fp": 0,
-        "mae_mean": null,
-        "mfe_mean": null,
-        "n": 0,
+        "mae_mean": -0.58399176,
+        "mfe_mean": 0.30917211,
+        "n": 1,
         "precision": null,
         "recall": null,
-        "tn": 0,
+        "tn": 1,
         "tp": 0
       },
       "72h": {
@@ -496,25 +496,28 @@
     }
   },
   "canonical_effect": false,
-  "consensus_rows": 0,
+  "consensus_rows": 6,
   "consumer_integrity_filter": {
     "excluded": {
+      "divergence_decision": 0,
+      "divergence_outcome": 0,
       "divergence_parent": 0,
       "divergence_provenance": 0,
       "duplicate_event_id": 0,
       "immutable_provenance": 0,
       "integrity_contract": 0,
+      "outcome_receipt": 0,
       "pre_floor_or_timestamp": 0,
       "runtime_inactive": 0,
       "source_binding": 0
     },
     "raw_divergences": 0,
-    "raw_rows": 0
+    "raw_rows": 6
   },
   "contract": "SHARED_ROW_TOURNAMENT_WEEKLY_v1",
   "divergences_total": 0,
-  "eligible_rows_total": 0,
-  "generated_at_utc": "2026-10-19T13:15:42Z",
+  "eligible_rows_total": 6,
+  "generated_at_utc": "2026-10-26T14:16:20Z",
   "incremental_value_matrix": [
     {
       "addition": "C08_SIMPLE_3_ETF",
@@ -567,14 +570,14 @@
       "vs": "C07_SIMPLE_3"
     }
   ],
-  "iso_week": 43,
+  "iso_week": 44,
   "iso_year": 2026,
   "matured": {
     "24h": 0,
     "72h": 0,
     "7d": 0
   },
-  "status": "COLLECTING",
+  "status": "EVALUATING",
   "tail_error_prevention": {
     "n": 0,
     "status": "UNAVAILABLE"
