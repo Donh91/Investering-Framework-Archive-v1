@@ -17,25 +17,14 @@
   "decision": "FALSIFY",
   "decision_reason": "Resolve deterministic integrity/cohort blockers before scoring or external interpretation.",
   "deltas": [
-    "m6_event_count:112->125",
-    "feature_row_count:112->125",
-    "pit_verified_feature_rows:110->122",
-    "pit_unverified_feature_rows:2->3",
-    "matured_event_counts.14d:12->13",
-    "matured_event_counts.24h:102->112",
-    "matured_event_counts.72h:81->91",
-    "matured_event_counts.7d:52->60",
-    "matured_family_counts.14d:1->2",
-    "unknown_horizon_counts.24h:1->0",
-    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
-    "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
+    "unknown_horizon_counts.7d:0->1"
   ],
   "external_routing": {
     "automatic_dispatch": false,
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-10-26T07:47:48.770353Z",
+  "generated_at_utc": "2026-10-26T07:54:43.384294Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -44,7 +33,7 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "64fd7c61f84003587be8fbb2a49ca8373c46bf1745fc947048c0328ebe5f4f42",
+  "semantic_fingerprint": "655a25e6811ab54fe7523c9584e1eeb80d1b6af0ade403668d311e802e41e6d2",
   "semantic_state": {
     "blockers": [
       "PIT_UNVERIFIED_FEATURE_ROWS"
@@ -106,14 +95,14 @@
       "24h": 0,
       "30d": 0,
       "72h": 0,
-      "7d": 0
+      "7d": 1
     },
     "verified_independent_adverse_family_count": null
   },
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "7a84ddc126b21776cea6852f09ec088229383579b30ea02916fef1b84789303e",
+      "sha256": "b1f8ae059413458855d69c5c5e43faf3b87948b78ce5c5ebc0d84830b6bf5171",
       "status": "PASS"
     },
     "compass_freeze": {
@@ -140,7 +129,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "2c628ca78d73bf243db8d9b7aff0f83c83b090a31f10b073d47e12c79e7f1f00",
+      "sha256": "c62f9e93a3263af98679665fec9deaeb8f5efdf01286ea742b913138fd00ef32",
       "status": "PASS"
     },
     "task15_gate": {
