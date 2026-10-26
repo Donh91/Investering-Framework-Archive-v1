@@ -165,6 +165,7 @@ try{
     graph:bounds($('#variant-panel')),
     detail:bounds($('.premium-compass-detail')),
     gateCount:document.querySelectorAll('#official-pilot-gate').length,
+    gateWithinSummary:$('.premium-decision-summary')?.contains($('#official-pilot-gate'))===true,
     actionCount:document.querySelectorAll('#official-pilot-action').length,
     headingCount:document.querySelectorAll('#official-product-pilot').length,
     viewportHeight:innerHeight
@@ -207,9 +208,13 @@ try{
   assert.ok(fold.action.top>=fold.summary.top&&
     fold.action.bottom<=fold.summary.bottom+3,
     'NEXT_ACTION_NOT_IN_SUMMARY:'+width);
-  assert.ok(fold.gate.top>=fold.summary.top&&
+  assert.ok(fold.gateWithinSummary,
+    'NEXT_SOURCE_GATE_MUST_BELONG_TO_DECISION_SUMMARY:'+width);
+  // UNAVAILABLE or expired data may deliberately hide the source gate.
+  // A display:none element has a zero rectangle and must not fail geometry.
+  if(fold.gate.height>0)assert.ok(fold.gate.top>=fold.summary.top&&
     fold.gate.bottom<=fold.summary.bottom+3,
-    'NEXT_GATE_NOT_IN_SUMMARY:'+width);
+    'NEXT_VISIBLE_GATE_NOT_IN_SUMMARY:'+width);
   assert.ok(fold.summary.bottom<=fold.graph.top+2&&fold.graph.bottom<=fold.detail.top+2,
     'NEXT_WRONG_DECISION_GRAPH_DETAIL_ORDER:'+width);
   if(width<=430){
