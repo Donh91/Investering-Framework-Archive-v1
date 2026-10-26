@@ -3,7 +3,117 @@
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "automatic_rule_changes": false,
   "contract": "SHADOW_WEEKLY_RELEVANCE_SNAPSHOT_v1",
-  "generated_at_utc": "2026-10-19T11:13:51.149371+00:00",
+  "cross_domain_review": {
+    "anti_double_counting": "SHARED_MARKET_OUTCOMES_AND_CROSS_REPO_DERIVATIVES_ARE_NOT_INDEPENDENT_TRIALS",
+    "authority": "RESEARCH_ONLY_NON_CANONICAL",
+    "contract": "SHADOW_CROSS_DOMAIN_WEEKLY_REVIEW_v1",
+    "cost_and_execution": {
+      "automatic_execution": false,
+      "automatic_market_rule_change": false,
+      "automatic_model_promotion": false,
+      "external_llm_calls": 0,
+      "incremental_paid_api_usd": 0,
+      "incremental_provider_calls": 0,
+      "new_schedulers": 0,
+      "wallet_signing": false
+    },
+    "generated_at_utc": "2026-10-26T13:31:19.667395Z",
+    "lanes": [
+      {
+        "independent_review_complete": false,
+        "lane_id": "COMPASS",
+        "metrics": {
+          "calibration_eligible_rows_not_independent_forecasts": 652,
+          "calibration_warning_rows_not_proven_alerts": 440,
+          "economic_action_edge": "NOT_ESTABLISHED",
+          "qualified_buy_sell_net_return": null
+        },
+        "owner": "Official Compass / EDGE #1530 / risk-to-action #1553",
+        "paper_or_live_trading_authorized": false,
+        "public_source_evidence": [
+          {
+            "expected_contract": "SHADOW_COMPASS_V2_LATEST_POINTER_v1",
+            "path": "04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json",
+            "sha256": "432d92ae6a709907dba96fd3b022470c0e96bb4aa74fa2592c86b80d69a47b27",
+            "source_at_utc": "2026-10-25T21:56:24Z",
+            "source_status": "CURRENT_CONTRACT_VALID"
+          },
+          {
+            "expected_contract": "ACTION_COMPASS_PROTECTION_CALIBRATION_v2",
+            "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
+            "sha256": "b1f8ae059413458855d69c5c5e43faf3b87948b78ce5c5ebc0d84830b6bf5171",
+            "source_at_utc": "2026-10-26T07:53:30Z",
+            "source_status": "CURRENT_CONTRACT_VALID"
+          },
+          {
+            "expected_contract": "EDGE_COMPOUND_GOVERNOR_v1",
+            "path": "research/framework_memory/edge_compound_governor/LATEST.json",
+            "sha256": "6e9a34fc90dd9842a738664ad85f3aea474def625074bf458bbaed74839f482b",
+            "source_at_utc": "2026-10-26T07:54:43.384294Z",
+            "source_status": "CURRENT_CONTRACT_VALID"
+          }
+        ],
+        "review_question": "WATCH_MATURATION_AND_DELIVERED_AFTER_COST_OUTCOMES",
+        "scientific_edge": "UNPROVEN",
+        "source_status": "SOURCE_OBSERVED"
+      },
+      {
+        "independent_review_complete": false,
+        "lane_id": "AUTO_TRADING",
+        "metrics": {
+          "global_proposal_time_trial_denominator": null,
+          "research_candidate_count_NOT_GLOBAL_TRIAL_DENOMINATOR": 564,
+          "research_queue_shadow_only": null,
+          "verified_paper_trade_net_return": null
+        },
+        "owner": "AUTO_TRADING #1557 / Experiment Lifecycle",
+        "paper_or_live_trading_authorized": false,
+        "public_source_evidence": [
+          {
+            "expected_contract": "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1",
+            "path": "research/experiment_lifecycle/weekly_adjudication/LATEST.json",
+            "sha256": "c739e4b946858de9f0892327526b1511d4856052500fe65f8261d34a7e6609de",
+            "source_at_utc": "2026-10-19T14:27:52Z",
+            "source_status": "CURRENT_CONTRACT_VALID"
+          },
+          {
+            "expected_contract": "SEQUENTIAL_RESEARCH_QUEUE_v1",
+            "path": "research/experiment_lifecycle/SEQUENTIAL_RESEARCH_QUEUE_v1.json",
+            "sha256": "8b97443ff0e7b89b14b9f926f90745abe691ed79cada991c9477389edd0067f4",
+            "source_at_utc": null,
+            "source_status": "MISSING_SOURCE_CLOCK"
+          }
+        ],
+        "review_question": "REPAIR_GLOBAL_TRIAL_DENOMINATOR_BEFORE_BROAD_SEARCH",
+        "scientific_edge": "UNPROVEN",
+        "source_status": "SOURCE_INCOMPLETE"
+      },
+      {
+        "independent_review_complete": false,
+        "lane_id": "ALPHA_LAB",
+        "metrics": {
+          "private_wallet_data_ingested": false,
+          "prospective_tradable_edge": null
+        },
+        "owner": "Meme-Alpha-Lab domain owners / Archive #1340",
+        "paper_or_live_trading_authorized": false,
+        "public_source_evidence": [],
+        "review_question": "AWAIT_AUTHENTICATED_PUBLIC_SAFE_CROSS_REPO_OWNER_RECEIPT",
+        "scientific_edge": "UNPROVEN",
+        "source_status": "PRIVATE_REPO_SOURCE_NOT_IMPORTED"
+      }
+    ],
+    "summary": {
+      "lane_count": 3,
+      "no_promotion_without_independent_review": true,
+      "private_source_boundaries_preserved": true,
+      "profitability_claim": "NONE_VERIFIED",
+      "qualified_live_trading_strategies": 0,
+      "supervisor_advisory_only": true
+    },
+    "week": "2026-W44"
+  },
+  "generated_at_utc": "2026-10-26T13:31:19.667395+00:00",
   "interpretation_rule": "This runtime records evidence availability and pre-registered evaluator outputs. It does not infer NOISE, REDUNDANT or PROMOTION from file presence alone.",
   "portfolio_execution": false,
   "promotion_requires_separate_review": true,
@@ -12,7 +122,7 @@
       "calibration_readiness": "SCORABLE",
       "entry_signal_summary": {
         "activation_event_count": 8,
-        "generated_at_utc": "2026-10-19T11:05:08.627316+00:00",
+        "generated_at_utc": "2026-10-26T11:07:37.773679+00:00",
         "horizons": {
           "14d": {
             "btc_mean_return_pct": 3.3901803523940455,
@@ -50,7 +160,7 @@
       "evaluator_binding": {
         "contract": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
         "output_path": "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
-        "output_sha256": "e2bccb6df719fa543c5fc569e7efa5c4a398e8b1405bcdaf6c35a37ac2908b00",
+        "output_sha256": "c9c0ad92eb86a712d77a9c96a24edc4a5162f29faf1452c91f9800294c147c30",
         "producer_path": "scripts/entry_signal/entry_signal_ledger.py",
         "producer_sha256": "46a4c3edfcf6d1b610aa61f7c209965c3714976135003030fe9ce5d7fd0b5268",
         "reason": "REGISTERED_EVALUATOR_OUTPUT_VALID",
@@ -60,14 +170,14 @@
       },
       "evidence": [
         {
-          "commit": "a05c64b12606c3fe6f6af68f99ab876bc901ff6e",
-          "committed_at": "2026-10-19T11:05:09Z",
+          "commit": "e2ae8aff6d85ec2bd23dc682e357fa5aee1a7ec5",
+          "committed_at": "2026-10-26T11:07:38Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/LATEST.json"
         },
         {
-          "commit": "a05c64b12606c3fe6f6af68f99ab876bc901ff6e",
-          "committed_at": "2026-10-19T11:05:09Z",
+          "commit": "e2ae8aff6d85ec2bd23dc682e357fa5aee1a7ec5",
+          "committed_at": "2026-10-26T11:07:38Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json"
         },
@@ -78,8 +188,8 @@
           "path": "04_MARKET_LEARNING/entry_signals/events"
         },
         {
-          "commit": "a05c64b12606c3fe6f6af68f99ab876bc901ff6e",
-          "committed_at": "2026-10-19T11:05:09Z",
+          "commit": "e2ae8aff6d85ec2bd23dc682e357fa5aee1a7ec5",
+          "committed_at": "2026-10-26T11:07:38Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/outcomes"
         }
@@ -280,26 +390,26 @@
           "path": "04_MARKET_LEARNING/shadow_registry/SHARED_ROW_TOURNAMENT_POINTER.json"
         },
         {
-          "commit": "4d66c1dc4912db6aa10df91a3b445b25804ec891",
-          "committed_at": "2026-08-23T10:22:59+02:00",
+          "commit": "d1409817f0e9652f651b96a6845224b22c590a66",
+          "committed_at": "2026-10-22T04:06:22-07:00",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json"
         },
         {
-          "commit": "4d66c1dc4912db6aa10df91a3b445b25804ec891",
-          "committed_at": "2026-08-23T10:22:59+02:00",
+          "commit": "52cb3492c3fbb43e83ab920394111979972fe229",
+          "committed_at": "2026-10-22T13:14:41-07:00",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/OWNER_BINDING_MATRIX.json"
         },
         {
-          "commit": "4d66c1dc4912db6aa10df91a3b445b25804ec891",
-          "committed_at": "2026-08-23T10:22:59+02:00",
+          "commit": "f0e23d6f66357cd31df5973440d60068dc17971d",
+          "committed_at": "2026-10-22T04:06:19-07:00",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/TRANSFORM_FREEZE_REGISTRY.json"
         },
         {
-          "commit": "f7de1f0b92278d3d887077d40d61fc453fc9e084",
-          "committed_at": "2026-08-23T10:18:29+02:00",
+          "commit": "ca99fc4e3f3ccd110d5022f7c7d61560dcae9e71",
+          "committed_at": "2026-10-26T11:34:05Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv"
         },
@@ -316,20 +426,20 @@
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/CATALYST_LEDGER.csv"
         },
         {
-          "commit": "9456665f8b0b8710e9401d336014b4eb3cb30ae4",
-          "committed_at": "2026-10-19T10:19:48Z",
+          "commit": "ca99fc4e3f3ccd110d5022f7c7d61560dcae9e71",
+          "committed_at": "2026-10-26T11:34:05Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json"
         },
         {
-          "commit": "9456665f8b0b8710e9401d336014b4eb3cb30ae4",
-          "committed_at": "2026-10-19T10:19:48Z",
+          "commit": "ca99fc4e3f3ccd110d5022f7c7d61560dcae9e71",
+          "committed_at": "2026-10-26T11:34:05Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json"
         },
         {
-          "commit": "a9551501af2e544ad7c1b3b807c42419c2d9de57",
-          "committed_at": "2026-10-12T15:25:59Z",
+          "commit": "ed5f49557c89f19a5a2b037c8aae9e547efedb09",
+          "committed_at": "2026-10-19T13:15:43Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/LATEST.json"
         }
@@ -349,5 +459,5 @@
     "sensor_count": 9,
     "source_missing_count": 0
   },
-  "week": "2026-W43"
+  "week": "2026-W44"
 }
