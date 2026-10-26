@@ -153,6 +153,39 @@ def load_auto_state_bundle(repo_root: Path, pointer_path: Path) -> tuple[Mapping
     return pointer, packet, packet_path
 
 
+def load_prior_compass(repo_root: Path, pointer_path: Path) -> Mapping[str, Any]:
+    """Read prior protection/re-entry context only through its exact binding.
+
+    An absent pointer may be handled by a first-issuance caller. A present but
+    corrupt pointer must never be treated as an empty or trustworthy prior.
+    """
+    pointer = read_json(repo_root / pointer_path)
+    if not isinstance(pointer, Mapping) or pointer.get("contract") != OFFICIAL_COMPASS_POINTER:
+        raise ValueError("PRIOR_COMPASS_POINTER_INVALID")
+    path_raw = pointer.get("compass_path")
+    if not isinstance(path_raw, str) or not path_raw:
+        raise ValueError("PRIOR_COMPASS_PATH_MISSING")
+    path = (repo_root / path_raw).resolve()
+    if not path.is_relative_to(repo_root.resolve()):
+        raise ValueError("PRIOR_COMPASS_PATH_OUTSIDE_REPOSITORY")
+    raw = path.read_bytes()
+    if pointer.get("compass_content_sha256") != digest(raw):
+        raise ValueError("PRIOR_COMPASS_CONTENT_HASH_MISMATCH")
+    compass = json.loads(raw)
+    if not isinstance(compass, Mapping) or compass.get("contract") != OFFICIAL_COMPASS_CONTRACT:
+        raise ValueError("PRIOR_COMPASS_CONTRACT_INVALID")
+    self_digest = digest(canon({key: value for key, value in compass.items() if key != "compass_sha256"}))
+    if compass.get("compass_sha256") != self_digest or pointer.get("compass_sha256") != self_digest:
+        raise ValueError("PRIOR_COMPASS_SELF_HASH_MISMATCH")
+    compass_id = compass.get("compass_id")
+    issued = compass.get("issued_at_utc")
+    if (not isinstance(compass_id, str) or not compass_id
+            or pointer.get("compass_id") != compass_id or path.stem != compass_id
+            or _parse_utc(issued) is None or pointer.get("issued_at_utc") != issued):
+        raise ValueError("PRIOR_COMPASS_IDENTITY_MISMATCH")
+    return compass
+
+
 def load_cn_context(repo_root: Path, pointer_path: Path = DEFAULT_CN_POINTER) -> tuple[Mapping[str, Any] | None, dict[str, Any]]:
     path = repo_root / pointer_path
     if not path.exists():
@@ -1623,15 +1656,7 @@ def main() -> None:
         prior_compass = None
         prior_pointer_path = args.repo_root / args.output_root / "LATEST_COMPASS.json"
         if prior_pointer_path.exists():
-            try:
-                prior_pointer = read_json(prior_pointer_path)
-                prior_path_raw = prior_pointer.get("compass_path")
-                if isinstance(prior_path_raw, str) and prior_path_raw:
-                    prior_path = args.repo_root / Path(prior_path_raw)
-                    if prior_path.exists():
-                        prior_compass = read_json(prior_path)
-            except Exception:
-                prior_compass = None
+            prior_compass = load_prior_compass(args.repo_root, args.output_root / "LATEST_COMPASS.json")
         compass = build_official_compass(
             auto_state,
             packet_path=packet_path,
