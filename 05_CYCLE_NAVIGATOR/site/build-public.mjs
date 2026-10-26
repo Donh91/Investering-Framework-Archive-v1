@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preserveLegacyShell, releasePremiumShell } from "./premium-release.mjs";
+import { prospectiveRangeReadback } from "./prospective-range-readback.mjs";
 const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(siteDir,"../.."); const outputDir=resolve(siteDir,"dist"); const dataDir=resolve(outputDir,"data");
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
@@ -243,7 +244,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     }
   }catch{}
   const autoSource=auto?.packet_sha256;
-  let autoValidated=false,nativeValidated=false,nativeAligned=false,nativeTarget=null;
+  let autoValidated=false,nativeValidated=false,nativeAligned=false,nativeTarget=null,nativeHealth=null;
   try{
     const p=verifiedRelative(auto?.packet_path,"04_MARKET_LEARNING/entry_signals/auto_market_state/runs/");
     const checked=p?await readVerifiedArtifact(p,"packet_sha256",autoSource):null;
@@ -255,10 +256,15 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     const p=verifiedRelative(native?.handlekompas_path,"04_MARKET_LEARNING/handlekompas/runs/");
     const checked=p?await readVerifiedArtifact(p,"handlekompas_sha256",native?.handlekompas_sha256):null;
     const run=checked?.data;
+    // Native's producer emits a health object; its pointer carries only the
+    // status. Compare that scalar and expose no internal provider diagnostics.
+    const health=run?.DATA_HEALTH;
+    nativeHealth=health&&!Array.isArray(health)&&typeof health==="object"&&
+      ["PASS","DEGRADED","UNAVAILABLE"].includes(health.status)?health.status:null;
     nativeValidated=Boolean(autoValidated&&native?.source_packet_sha256===autoSource&&
       run?.contract==="NATIVE_HANDLEKOMPAS_v1"&&checked?.valid&&
       run?.source?.packet_sha256===autoSource&&run?.action?.NOW===native?.NOW&&
-      run?.DATA_HEALTH===native?.data_health&&run?.generated_at_utc===native?.generated_at_utc);
+      nativeHealth!==null&&nativeHealth===native?.data_health&&run?.generated_at_utc===native?.generated_at_utc);
     if(nativeValidated)nativeTarget=run;
     nativeAligned=Boolean(nativeValidated&&officialSource&&officialSource===autoSource);
   }catch{}
@@ -451,7 +457,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage){
     official_action:officialValid?compass.action_now:"UNAVAILABLE",
     official_data_status:String(compass?.data_status||"NOT_PUBLISHED"),
     master_monday:mondayPublic,
-    native:nativeValidated?{now:researchEnum(nativeTarget.action.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:nativeTarget.DATA_HEALTH||"UNAVAILABLE",checked_at_utc:nativeTarget.generated_at_utc,official_source_aligned:nativeAligned}:{now:"UNAVAILABLE",data_health:"UNVERIFIED",official_source_aligned:false},
+    native:nativeValidated?{now:researchEnum(nativeTarget.action.NOW,["HOLD_WAIT","PREPARE","BUY","HOLD","UNAVAILABLE"]),data_health:nativeHealth,checked_at_utc:nativeTarget.generated_at_utc,official_source_aligned:nativeAligned}:{now:"UNAVAILABLE",data_health:"UNVERIFIED",official_source_aligned:false},
     shadow:shadow||{status:"UNVERIFIED",authority:"RESEARCH_ONLY_NO_ACTION_PERMISSION",horizons:{}},
     strategic:strategic||{status:"UNVERIFIED",authority:"CYCLE_NAVIGATOR_ONLY"},
     weekly:{status:String(weeklyPointer?.status||"UNAVAILABLE"),iso_week:weeklyPointer?.iso_week||null,iso_year:weeklyPointer?.iso_year||null,direction_2_3w:weeklyAligned?researchEnum(weeklyPackage?.decision_projection?.next_2_3w?.direction,directionValues):"UNAVAILABLE",
@@ -476,7 +482,7 @@ const packagePath=resolve(repoRoot,pointer.week_dir,"CYCLE_NAVIGATOR_MACHINE_PAC
 if(Number(pointer.issue_number)!==Number(pkg.issue_number)) throw new Error("Pointer/package issue mismatch");
 const standaloneFreeze=await readJson(resolve(repoRoot,pointer.week_dir,"CYCLE_NAVIGATOR_FORECAST_FREEZE.json")).catch(()=>null);
 const rangeScore=await readJson(RANGE_SCORE_PATH).catch(()=>null);
-const prospectiveRange=await readJson(PROSPECTIVE_RANGE_PATH).catch(()=>null);
+const prospectiveRange=await prospectiveRangeReadback(repoRoot,pointer,pkg);
 const publicSeriesRaw=await readJson(PUBLIC_SERIES_INDEX_PATH).catch(()=>null);
 let publicScorecard=null;
 if(publicSeriesRaw?.latest_completed_score?.scorecard_path){

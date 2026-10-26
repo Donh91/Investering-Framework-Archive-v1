@@ -6,7 +6,7 @@ import json
 import math
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+from scripts.cycle_navigator.prospective_range_bridge import load_bridge
 from scripts.learning.shadow_compass_v2_compare import pair_outcomes as pair_shadow_official_outcomes
 
 COPENHAGEN = ZoneInfo("Europe/Copenhagen")
@@ -831,6 +832,10 @@ def main() -> None:
     start = ts(freeze["window_start_utc"])
     end = ts(freeze["window_end_utc"])
     director_context = collect_director_context(args.daily_output_root, start, end)
+    target_week = (date.fromisocalendar(int(freeze["iso_year"]), int(freeze["iso_week"]), 1)
+                   + timedelta(days=7)).isocalendar()
+    prospective_bridge = load_bridge(args.repo_root, target_year=target_week.year, target_week=target_week.week,
+        freeze_at=ts(freeze.get("created_at_utc") or freeze.get("generated_at_utc") or freeze["window_end_utc"]))
     context = {
         "contract": "WEEKLY_API_CALIBRATION_CONTEXT_v6",
         "authority": "SHADOW_ONLY",
@@ -846,7 +851,7 @@ def main() -> None:
         "experiment_learning": load_experiment_learning(args.experiment_registry, args.experiment_outcome_root, start, end,
             repo_root=args.repo_root, forecast_root=args.experiment_forecast_root),
         "cycle_navigator_range_score": load_json(args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json") if (args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json").exists() else {"status": "UNAVAILABLE"},
-        "cycle_navigator_prospective_range": load_json(args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json") if (args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json").exists() else {"status": "UNAVAILABLE"},
+        "cycle_navigator_prospective_range": prospective_bridge,
         "deterministic_range_baseline_learning": load_deterministic_range_learning(args.repo_root, int(freeze["iso_year"]), int(freeze["iso_week"])),
         "compass_learning": load_compass_learning(args.repo_root, start, end),
         "selection_rule": "latest eligible row per Europe/Copenhagen local date within frozen local week, deduplicated by timestamp and output hash",

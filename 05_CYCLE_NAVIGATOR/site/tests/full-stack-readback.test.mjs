@@ -136,11 +136,13 @@ for(const mode of ['missing-pointer','missing-file','wrong-public-digest','wrong
  assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH','No validated shadow source when public pointer mismatched: '+mode);
 }
 // Native metadata must come from the hash-verified target, not a mutable pointer.
-for(const mode of ['valid','health','time']){
+for(const mode of ['valid','valid-degraded','health','time','scalar-health','missing-health-status','unknown-health-status']){
  f=fixture();const auto=f.pointers.get('auto');const path='04_MARKET_LEARNING/handlekompas/runs/n.json';
- const run={contract:'NATIVE_HANDLEKOMPAS_v1',action:{NOW:'HOLD_WAIT'},source:{packet_sha256:auto.packet_sha256},DATA_HEALTH:'PASS',generated_at_utc:auto.packet_generated_at_utc};const n=signed(run,'handlekompas_sha256');
- f.files.set(resolve(f.root,path),n.raw);f.pointers.set('native',{handlekompas_path:path,handlekompas_sha256:n.hash,source_packet_sha256:auto.packet_sha256,NOW:'HOLD_WAIT',data_health:mode==='health'?'DEGRADED':'PASS',generated_at_utc:mode==='time'?'2099-01-01T00:00:00Z':run.generated_at_utc});
- result=await f.run();assert.equal(result.source_status.native,mode==='valid'?'SOURCE_ALIGNED':'UNVERIFIED');
+ const run={contract:'NATIVE_HANDLEKOMPAS_v1',action:{NOW:'HOLD_WAIT'},source:{packet_sha256:auto.packet_sha256},DATA_HEALTH:mode==='scalar-health'?'PASS':mode==='missing-health-status'?{}:{status:mode==='unknown-health-status'?'PRIVATE_UNKNOWN_STATUS':mode==='valid-degraded'?'DEGRADED':'PASS',provider_health:{private_detail:'MUST_NOT_BE_PUBLISHED'}},generated_at_utc:auto.packet_generated_at_utc};const n=signed(run,'handlekompas_sha256');
+ f.files.set(resolve(f.root,path),n.raw);f.pointers.set('native',{handlekompas_path:path,handlekompas_sha256:n.hash,source_packet_sha256:auto.packet_sha256,NOW:'HOLD_WAIT',data_health:mode==='health'||mode==='valid-degraded'?'DEGRADED':'PASS',generated_at_utc:mode==='time'?'2099-01-01T00:00:00Z':run.generated_at_utc});
+ result=await f.run();assert.equal(result.source_status.native,['valid','valid-degraded'].includes(mode)?'SOURCE_ALIGNED':'UNVERIFIED','Producer native health schema: '+mode);
+ if(['valid','valid-degraded'].includes(mode)){assert.equal(result.native.data_health,mode==='valid-degraded'?'DEGRADED':'PASS');assert.equal(result.native.now,'HOLD_WAIT');}
+ assert.doesNotMatch(JSON.stringify(result.native),/MUST_NOT_BE_PUBLISHED|PRIVATE_UNKNOWN_STATUS/);
 }
 // Preserve Python integral-float bytes rather than parse/stringify reconstruction.
 f=fixture();const raw='{"contract":"FLOAT_TEST","number":1.0}';const digest=hash(raw),withDigest='{"contract":"FLOAT_TEST","number":1.0,"z_sha256":"'+digest+'"}';assert.equal(f.context.digest(withDigest,JSON.parse(withDigest),'z_sha256',digest),true);assert.equal(f.context.digest(withDigest.replace('1.0','2.0'),JSON.parse(withDigest.replace('1.0','2.0')),'z_sha256',digest),false);

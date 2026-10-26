@@ -1,0 +1,118 @@
+{
+  "contract": "CN_OPERATIONAL_DATA_QUALITY_READBACK_v1",
+  "derived_spot_flow": {
+    "BTC": {
+      "contract": "WEEKLY_SPOT_FLOW_READBACK_v1",
+      "market_interpretation": false,
+      "net_aggressive_quote_flow_sum": -56131089.58131981,
+      "observed_hours": 168,
+      "quote_unit": "USDT",
+      "quote_volume_sum": 7653324952.44194,
+      "semantics": "RETAINED_SPOT_EXCHANGE_BARS_NOT_MARKET_WIDE_CVD_OR_BUY_CONFIRMATION",
+      "source_rows_sha256": "e55340ce924944a7d577b345df2b6d2d9ecdc7d77b405bbb7acef31e3dfb9431",
+      "status": "COMPLETE_FOR_OBSERVED_ROWS",
+      "symbol": "BTCUSDT",
+      "taker_buy_quote_share_weighted": 0.49633289518417806,
+      "taker_buy_quote_volume_sum": 3798596931.43082,
+      "taker_sell_quote_volume_sum": 3854728021.01214,
+      "valid_flow_hours": 168,
+      "weekly_completeness_authority": "PARENT_HOURLY_GAP_DIAGNOSTICS"
+    },
+    "ETH": {
+      "contract": "WEEKLY_SPOT_FLOW_READBACK_v1",
+      "market_interpretation": false,
+      "net_aggressive_quote_flow_sum": 48942428.11816001,
+      "observed_hours": 168,
+      "quote_unit": "USDT",
+      "quote_volume_sum": 3866873785.72437,
+      "semantics": "RETAINED_SPOT_EXCHANGE_BARS_NOT_MARKET_WIDE_CVD_OR_BUY_CONFIRMATION",
+      "source_rows_sha256": "9b5659236fe1679c0afa3102c7c34553173a7747c06c334ce850bdd7d604abde",
+      "status": "COMPLETE_FOR_OBSERVED_ROWS",
+      "symbol": "ETHUSDT",
+      "taker_buy_quote_share_weighted": 0.506328423273006,
+      "taker_buy_quote_volume_sum": 1957908106.92154,
+      "taker_sell_quote_volume_sum": 1908965678.80338,
+      "valid_flow_hours": 168,
+      "weekly_completeness_authority": "PARENT_HOURLY_GAP_DIAGNOSTICS"
+    }
+  },
+  "findings": [
+    {
+      "consumer": "Master Monday / CN weekly context",
+      "field": "hourly_sequence.spot_flow_readback",
+      "producer": "scripts/daily_capture/build_weekly_calibration.py",
+      "reason": "Original summary forwarded counts but discarded directional taker-flow values. Readback derives retained W43 bars; it does not amend original forecast.",
+      "status": "REPAIRED_CODE_NOT_IN_ORIGINAL_W44"
+    },
+    {
+      "consumer": "site/build-public.mjs",
+      "field": "native.DATA_HEALTH.status",
+      "producer": "native_handlekompas",
+      "reason": "Object-to-scalar mismatch rejected producer-shaped Native payload.",
+      "status": "REPAIRED_CODE_PENDING_RELEASE"
+    },
+    {
+      "consumer": "public site",
+      "field": "cycle_phase_and_capitalization_transmission",
+      "producer": "canonical framework / CN",
+      "reason": "No confirmed phase or independently resolved full capitalization ladder; not cured by complete BTC/ETH bars.",
+      "status": "EVIDENCE_INSUFFICIENT"
+    },
+    {
+      "consumer": "Graph B",
+      "field": "daily_price_path",
+      "producer": "CN frozen weekly synthesis",
+      "reason": "No original daily expected-close points. Blue prospective line remains unavailable.",
+      "status": "EVIDENCE_INSUFFICIENT"
+    },
+    {
+      "consumer": "Master Monday / CN / site",
+      "field": "W45_range_bridge",
+      "producer": "CN prospective range source owner",
+      "reason": "Legacy W39 bridge has no recurring source-bound producer; W44 source week has not yet closed. Independent deterministic benchmark must not become model input.",
+      "status": "SOURCE_UNAVAILABLE"
+    },
+    {
+      "consumer": "weekly presentation",
+      "field": "MasterMonday.scorecard_and_operational_translation",
+      "producer": "WEEKLY_CALIBRATION_SHADOW",
+      "reason": "Use separately bound Official Compass for action and public CN scorecard for public score; shadow fields have no portfolio authority.",
+      "status": "INTENTIONAL_CONTRACT_OMISSION"
+    }
+  ],
+  "flow_source": {
+    "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W43/WEEKLY_HOURLY_ENRICHED.csv",
+    "sha256": "8d9506a539393a5c92cb7d2ff5ab85ed9b0c8b97c7da5f1315fbd6904341eaba"
+  },
+  "forecast_week": "2026-W44",
+  "generated_at_utc": "2026-10-26T11:08:50.553818+00:00",
+  "historical_forecast_modified": false,
+  "new_original_forecast": false,
+  "original_freeze_binding": {
+    "path": "05_CYCLE_NAVIGATOR/weekly/2026/W44/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+    "sha256": "34504a6b40c49eab9c7ca44e13e77cb86c48c65b8965670e69170fb121dd37d0"
+  },
+  "original_machine_binding": {
+    "path": "05_CYCLE_NAVIGATOR/weekly/2026/W44/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json",
+    "sha256": "f7d2360385ff1cb9a0f84f9eae8c4dfa38d5f973df695ec24741757b9442be96"
+  },
+  "portfolio_authority": false,
+  "range_bridge": {
+    "consumer": "WEEKLY_CN_AND_MASTER_MONDAY_CONTEXT",
+    "content_sha256": "a73371bd7d1545d2cd01bccb986fd57a357d7b508a28e9fb1f3c54bfe09c440e",
+    "contract": "CN_PROSPECTIVE_RANGE_CONSUMER_READBACK_v1",
+    "observed_target_week": "2026-W39",
+    "portfolio_authority": false,
+    "producer": "CN_PROSPECTIVE_RANGE_BRIDGE_v1",
+    "range_values_admitted": false,
+    "reason_codes": [
+      "BRIDGE_TARGET_WEEK_MISMATCH"
+    ],
+    "scientific_admission": false,
+    "source_path": "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
+    "status": "STALE",
+    "target_week": "2026-W44"
+  },
+  "scientific_admission": false,
+  "source_main_commit": "8a60ec6a0333f1ba02486a420b18e39c2b95d754"
+}
