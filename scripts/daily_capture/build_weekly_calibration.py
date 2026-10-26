@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
+import math
 import json
 import os
 import statistics
@@ -258,6 +260,49 @@ def day_window_actuals(rows: list[dict[str, str]], iso_year: int, iso_week: int)
     return result
 
 
+def weekly_spot_flow(rows: list[dict[str, str]], prefix: str) -> dict[str, Any]:
+    """Expose retained exchange-bar flow values, never market-wide CVD."""
+    fields = ("quote_volume", "taker_buy_quote_volume", "taker_sell_quote_volume", "taker_buy_quote_share")
+    evidence = [{"timestamp_utc": row.get("timestamp_utc"), "spot_status": row.get("spot_status"),
+                 **{field: row.get(f"{prefix}_{field}") for field in fields}} for row in rows]
+    valid = []
+    for row in evidence:
+        values = [None if isinstance(row[field], bool) else f(row[field]) for field in fields]
+        if row["spot_status"] != "PASS" or any(value is None or not math.isfinite(value) for value in values):
+            continue
+        total, buy, sell, share = values
+        if (total <= 0 or not 0 <= buy <= total or sell < 0 or not 0 <= share <= 1
+                or not math.isclose(buy + sell, total, rel_tol=1e-8, abs_tol=1e-6)
+                or not math.isclose(buy / total, share, rel_tol=1e-8, abs_tol=1e-8)):
+            continue
+        valid.append((total, buy, sell))
+    try:
+        stamps = [parse_utc(row["timestamp_utc"]) for row in evidence]
+        identity_ok = (len(stamps) == len(set(stamps)) and stamps == sorted(stamps)
+                       and len({stamp.isocalendar()[:2] for stamp in stamps}) == 1
+                       and all(stamp.minute == stamp.second == stamp.microsecond == 0 for stamp in stamps))
+    except (TypeError, ValueError, OverflowError):
+        identity_ok = False
+    complete = len(rows) > 0 and len(valid) == len(rows) and identity_ok
+    total = sum(row[0] for row in valid) if complete else None
+    buy = sum(row[1] for row in valid) if complete else None
+    sell = sum(row[2] for row in valid) if complete else None
+    return {
+        "contract": "WEEKLY_SPOT_FLOW_READBACK_v1",
+        "status": "COMPLETE_FOR_OBSERVED_ROWS" if complete else "UNAVAILABLE_INVALID_OR_MISSING_FLOW",
+        "observed_hours": len(rows), "valid_flow_hours": len(valid),
+        "source_rows_sha256": hashlib.sha256((json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n").encode()).hexdigest(),
+        "quote_unit": "USDT", "symbol": prefix.upper() + "USDT",
+        "quote_volume_sum": total, "taker_buy_quote_volume_sum": buy,
+        "taker_sell_quote_volume_sum": sell,
+        "net_aggressive_quote_flow_sum": buy - sell if complete else None,
+        "taker_buy_quote_share_weighted": buy / total if complete else None,
+        "semantics": "RETAINED_SPOT_EXCHANGE_BARS_NOT_MARKET_WIDE_CVD_OR_BUY_CONFIRMATION",
+        "weekly_completeness_authority": "PARENT_HOURLY_GAP_DIAGNOSTICS",
+        "market_interpretation": False,
+    }
+
+
 def hourly_sequence_summary(rows: list[dict[str, str]]) -> dict[str, Any]:
     expected = 168
     timestamps = [row.get("timestamp_utc") for row in rows if row.get("timestamp_utc")]
@@ -287,6 +332,7 @@ def hourly_sequence_summary(rows: list[dict[str, str]]) -> dict[str, Any]:
         "hourly_coverage_pct": round((len(rows) / expected) * 100.0, 3) if expected else 0.0,
         "spot_complete_hours": len(spot_complete),
         "spot_flow_complete_hours": len(flow_complete),
+        "spot_flow_readback": {asset.upper(): weekly_spot_flow(rows, asset) for asset in ("btc", "eth")},
         "derivatives_oi_complete_hours": len(oi_complete),
         "long_short_complete_hours": len(ls_complete),
         "first_hour_utc": timestamps[0] if timestamps else None,

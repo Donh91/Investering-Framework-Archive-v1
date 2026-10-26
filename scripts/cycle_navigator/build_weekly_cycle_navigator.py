@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.cycle_navigator.prospective_range_bridge import load_bridge
 from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
@@ -696,7 +697,7 @@ def main() -> None:
         "previous_score_parameter_ids": expected_score_parameter_ids(prev_machine),
         "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"),
         "completed_week_hourly_capture": weekly_capture,
-        "prospective_range_bridge": maybe_json(repo / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json"),
+        "prospective_range_bridge": load_bridge(repo, target_year=target_year, target_week=target_week, freeze_at=datetime.now(timezone.utc)),
         "range_continuity_rule": "READY 168h hourly capture makes BTC/ETH weekly and intraday ranges mandatory."
     }
     prompt = (
