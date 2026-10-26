@@ -233,7 +233,11 @@ try{
   assert.equal(responses.length,0,'NEXT_BROWSER_FAILED_ASSETS:'+JSON.stringify(responses));
   results.push({width,overflow:report.overflow,originalB:true,logo:true,
    officialInputsPresent:report.present,daEn:true,ethSelected:true,failClosed:!!report.sourceStatus,
-   decisionFirst:true,actionVisibleInFirstFold:fold.action.top<fold.viewportHeight});
+   decisionFirst:true,actionVisibleInFirstFold:fold.action.top<fold.viewportHeight,
+   firstFoldMetrics:{viewportHeight:fold.viewportHeight,summaryTop:Math.round(fold.summary.top),
+    summaryBottom:Math.round(fold.summary.bottom),actionTop:Math.round(fold.action.top),
+    actionBottom:Math.round(fold.action.bottom),gateTop:Math.round(fold.gate.top),
+    gateBottom:Math.round(fold.gate.bottom),graphTop:Math.round(fold.graph.top)}});
   if(width===430){
    // Adversarial live refresh failure, not merely an adapter unit assertion:
    // a previously rendered Official action must not reappear on language switch.
