@@ -44,6 +44,14 @@ class ProspectiveBridgeTests(unittest.TestCase):
             'provenance': provenance, 'weekly': bands,
             'intraday': {k: copy.deepcopy(bands) for k in ('day_1_2', 'day_3_4', 'day_5_7')}}
         self.freeze = datetime(2026, 10, 26, 7, tzinfo=timezone.utc)
+        (self.repo / BRIDGE_PATH).write_text(json.dumps(self.bridge))
+        self.commit_bridge('2026-10-26T06:30:00Z')
+
+    def commit_bridge(self, stamp):
+        subprocess.run(['git', '-C', str(self.repo), 'add', BRIDGE_PATH.as_posix()], check=True)
+        subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=Fixture',
+            '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Frozen bridge'],
+            check=True, env={**os.environ, 'GIT_AUTHOR_DATE': stamp, 'GIT_COMMITTER_DATE': stamp})
 
     def read(self):
         (self.repo / BRIDGE_PATH).write_text(json.dumps(self.bridge))
@@ -60,6 +68,24 @@ class ProspectiveBridgeTests(unittest.TestCase):
         result = self.read()
         self.assertEqual(result['consumer_receipt']['status'], 'READY')
         self.assertFalse(result['consumer_receipt']['scientific_admission'])
+
+    def test_mutable_bridge_cannot_reuse_original_source_custody(self):
+        self.bridge['weekly']['BTC']['high'] = 21
+        self.reject('BRIDGE_COMMITTED_BYTES_MISMATCH')
+
+    def test_bridge_never_committed_is_not_original_forecast(self):
+        path = Path('uncommitted-bridge.json')
+        (self.repo / path).write_text(json.dumps(self.bridge))
+        result = load_bridge(self.repo, target_year=2026, target_week=44,
+                             freeze_at=self.freeze, path=path)
+        self.assertEqual(result['reason_codes'], ['BRIDGE_COMMIT_UNVERIFIED'])
+        self.assertNotIn('weekly', result)
+
+    def test_bridge_commit_later_than_forecast_freeze(self):
+        self.bridge['weekly']['BTC']['high'] = 21
+        (self.repo / BRIDGE_PATH).write_text(json.dumps(self.bridge))
+        self.commit_bridge('2026-10-26T07:00:01Z')
+        self.reject('BRIDGE_COMMITTED_AFTER_FORECAST_FREEZE')
 
     def test_wrong_week_or_year(self):
         for target in ('2026-W39', '2025-W44'):

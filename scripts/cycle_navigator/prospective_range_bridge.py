@@ -130,6 +130,30 @@ def load_bridge(repo: Path, *, target_year: int, target_week: int,
             if (type(low) not in (int, float) or type(high) not in (int, float)
                     or not math.isfinite(low) or not math.isfinite(high) or not 0 < low < high):
                 return reject('BRIDGE_RANGES_INVALID')
+    # Source custody alone cannot freeze a mutable bridge. Bind its own exact
+    # bytes to the latest path commit reachable from HEAD before the forecast.
+    try:
+        bridge_commit = subprocess.check_output(
+            ['git', '-C', str(repo), 'log', '-1', '--format=%H', 'HEAD', '--', path.as_posix()],
+            stderr=subprocess.DEVNULL, timeout=10).decode().strip()
+        if not re.fullmatch(r'[0-9a-f]{40}', bridge_commit):
+            return reject('BRIDGE_COMMIT_UNVERIFIED', 'SOURCE_UNAVAILABLE')
+        subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor', bridge_commit, 'HEAD'],
+                       check=True, capture_output=True, timeout=10)
+        committed_bridge = subprocess.check_output(
+            ['git', '-C', str(repo), 'show', bridge_commit + ':' + path.as_posix()],
+            stderr=subprocess.DEVNULL, timeout=10)
+        bridge_committed_at = _time(subprocess.check_output(
+            ['git', '-C', str(repo), 'show', '-s', '--format=%cI', bridge_commit],
+            stderr=subprocess.DEVNULL, timeout=10).decode().strip())
+    except (subprocess.SubprocessError, OSError, ValueError):
+        return reject('BRIDGE_COMMIT_UNVERIFIED', 'SOURCE_UNAVAILABLE')
+    if committed_bridge != raw:
+        return reject('BRIDGE_COMMITTED_BYTES_MISMATCH')
+    if bridge_committed_at > freeze_at:
+        return reject('BRIDGE_COMMITTED_AFTER_FORECAST_FREEZE')
+    result['bridge_commit'] = bridge_commit
+    result['bridge_committed_at_utc'] = bridge_committed_at.isoformat()
     return {**bridge, 'consumer_receipt': {**result, 'status': 'READY',
         'range_values_admitted': True, 'validated_for_freeze_at_utc': freeze_at.isoformat()}}
 
