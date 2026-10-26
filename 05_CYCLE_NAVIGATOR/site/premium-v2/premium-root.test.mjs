@@ -14,6 +14,9 @@ test('Premium root renders original Graph B, Proof, official Compass and PATH',(
  assert.match(root,/Weekly Outlook <span class="alt-token">B<\/span>/);
  assert.match(root,/aria-label="Premium sektioner"/);
  assert.match(root,/data-premium-nav="compass"/);
+ assert.match(root,/href="\/Investering-Framework-Archive-v1\/vnext\/#compass" class="premium-entry-pro" data-premium-nav="pro"/);
+ assert.equal((root.match(/data-premium-nav="pro"/g)||[]).length,1);
+ assert.match(root,/\.premium-entry-navigation \.premium-entry-pro\{/);
  assert.match(root,/data-premium-copy="disclaimer"/);
  assert.match(root,/name="robots" content="noindex,nofollow"/);
  assert.ok(root.indexOf('id="variant-panel"')<root.indexOf('id="proof-explorer"'));
@@ -72,4 +75,9 @@ test('Graph B existing DA/EN control covers real Premium heading and navigation'
  assert.match(js,/data-premium-copy/);
  assert.match(js,/Forecast meets reality/);
  assert.match(js,/Prognose møder virkelighed/);
+ assert.match(js,/pro:'Compass PRO ↗'/);
+ assert.match(js,/pro:'Kompas PRO ↗'/);
+ const app=await readFile(new URL('../vnext-live/app.mjs',import.meta.url),'utf8');
+ assert.match(app,/const initial=location\.hash\.slice\(1\)/);
+ assert.match(app,/selectTab\(keys\.includes\(initial\)\?initial:'overview'\)/);
 });

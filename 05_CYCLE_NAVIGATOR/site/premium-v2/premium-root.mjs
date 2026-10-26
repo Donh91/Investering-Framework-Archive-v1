@@ -26,6 +26,7 @@ const navigationAfterGraph=[
  '<a href="#variant-panel" data-premium-nav="graph">Graf B</a>',
  '<a href="#proof-explorer" data-premium-nav="proof">Proof</a>',
  '<a href="#official-product-pilot" data-premium-nav="compass">Kompas</a>',
+ '<a href="/Investering-Framework-Archive-v1/vnext/#compass" class="premium-entry-pro" data-premium-nav="pro" aria-label="Kompas PRO, udvidet officiel kildevisning i separat preview">Kompas PRO ↗</a>',
  '<a href="#official-pilot-path" data-premium-nav="path">PATH</a>',
  '<a href="../" class="premium-entry-canonical" data-premium-nav="official">Officiel side ↗</a>',
  '</nav>'
@@ -39,6 +40,7 @@ const style=[
  '.premium-entry-navigation{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}',
  '.premium-entry-navigation a{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;min-height:44px;border:1px solid #dce4ed;background:#fff;border-radius:10px;color:#07172f;font-size:13px;font-weight:650;text-decoration:none}',
  '.premium-entry-navigation a:hover,.premium-entry-navigation a:focus-visible{border-color:#2f6fda;outline-offset:3px}',
+ '.premium-entry-navigation .premium-entry-pro{border-color:#bad0ef;background:#edf4ff;color:#214e86;font-weight:780}',
  '.premium-entry-navigation .premium-entry-canonical{margin-left:auto;color:#2f6fda}',
  '.premium-entry-disclaimer{font-size:11px;line-height:1.55;color:#62758a;margin:0 0 15px}',
  '#variant-panel,#official-product-pilot,#official-pilot-path,#proof-explorer{scroll-margin-top:16px}',
