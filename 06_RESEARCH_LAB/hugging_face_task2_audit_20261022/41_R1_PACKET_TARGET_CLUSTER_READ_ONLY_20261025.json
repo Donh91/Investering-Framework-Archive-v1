@@ -1,0 +1,325 @@
+{
+  "contract": "TASK2_R1_PACKET_TARGET_CLUSTER_DIAGNOSTIC_v1",
+  "created_utc_date": "2026-10-25",
+  "authority": "RESEARCH_ONLY_NO_SIGNAL_NO_PIT_PROMOTION",
+  "source_blobs": [
+    {
+      "path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/39_R1_EVIDENCE_RECONCILIATION_AND_PROSPECTIVE_ACCEPTANCE_20261025.json",
+      "git_blob": "9c3ba50fad507de00b5f6c2281605dd0af5f93b1"
+    },
+    {
+      "path": "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json",
+      "git_blob": "9e728b835de294e5777222c171a89874a69dae95"
+    }
+  ],
+  "method": "Join originals by immutable forecast_id, require exact packet blob and issuance; cross-check capture/packet-push preissue clocks. Only group on exact original packet blob plus original frozen target. If target absent in ORIGINAL admission receipt, never infer a target from future observations.",
+  "counts": {
+    "issued_rows": 11,
+    "original_target_bound": 9,
+    "original_target_absent": 2,
+    "unique_packet_blobs": 10,
+    "packet_target_groups": 8,
+    "reused_packet_target_groups": 1,
+    "diagnostic_over_1800s": 1,
+    "capture_and_push_before_issue": 11,
+    "certified_independent_market_events": null,
+    "fully_external_PIT_admitted": 0
+  },
+  "negative_controls": [
+    {
+      "case": "altered_lead_seconds",
+      "pass": true,
+      "reason": "CLAIMED_AGE_MISMATCH"
+    },
+    {
+      "case": "postissue_capture",
+      "pass": true,
+      "reason": "POSTISSUE_CAPTURE"
+    },
+    {
+      "case": "postissue_packet_publication",
+      "pass": true,
+      "reason": "POSTISSUE_OR_UNPROVEN_PUSH"
+    },
+    {
+      "case": "substitute_packet_blob",
+      "pass": true,
+      "reason": "ORIGINAL_PACKET_BLOB_CONFLICT"
+    },
+    {
+      "case": "false_PIT_promotion",
+      "pass": true,
+      "reason": "PROMOTION_FORBIDDEN"
+    },
+    {
+      "case": "backfill_target_into_unbound_row",
+      "pass": true,
+      "reason": "TARGET_BACKFILLED"
+    }
+  ],
+  "groups": [
+    {
+      "packet_git_blob": "2612c9b8272ad375c6a75ba917351f2465e1fd1b",
+      "original_target_at_utc": "2026-10-13T07:00:00Z",
+      "forecast_ids": [
+        "CMP-20261012-904299b09eca"
+      ],
+      "issuances": 1
+    },
+    {
+      "packet_git_blob": "48a061318da52279c761cff46456a17f0822954f",
+      "original_target_at_utc": "2026-10-13T11:00:00Z",
+      "forecast_ids": [
+        "CMP-20261012-468da783e9d8"
+      ],
+      "issuances": 1
+    },
+    {
+      "packet_git_blob": "cfc95696b8a1a11aa40da265f21ef221cc684abb",
+      "original_target_at_utc": "2026-10-13T12:00:00Z",
+      "forecast_ids": [
+        "CMP-20261013-d649788e5270"
+      ],
+      "issuances": 1
+    },
+    {
+      "packet_git_blob": "d8d1524093a77987cf16561f16960aeb67c7fbc6",
+      "original_target_at_utc": "2026-10-13T14:00:00Z",
+      "forecast_ids": [
+        "CMP-20261013-cb70ee1b10f3"
+      ],
+      "issuances": 1
+    },
+    {
+      "packet_git_blob": "b4480d84b1376774839bb6a4d26147b248dd54ee",
+      "original_target_at_utc": "2026-10-13T19:00:00Z",
+      "forecast_ids": [
+        "CMP-20261013-88618d3ad2a7"
+      ],
+      "issuances": 1
+    },
+    {
+      "packet_git_blob": "f9a225a3dec1da892c25a1f5d5f0d82d2d86f2fb",
+      "original_target_at_utc": "2026-10-14T00:00:00Z",
+      "forecast_ids": [
+        "CMP-20261013-aa70b21fc6b0",
+        "CMP-20261013-bfb7ff123449"
+      ],
+      "issuances": 2
+    },
+    {
+      "packet_git_blob": "3b32df58b5a13148b5c983e353dccb31d4fd53c1",
+      "original_target_at_utc": "2026-10-14T03:00:00Z",
+      "forecast_ids": [
+        "CMP-20261013-b1af85bff6f8"
+      ],
+      "issuances": 1
+    },
+    {
+      "packet_git_blob": "42186ec26819437d65242d62d54460b66307d0c9",
+      "original_target_at_utc": "2026-10-14T05:00:00Z",
+      "forecast_ids": [
+        "CMP-20261013-f34752e8e3c4"
+      ],
+      "issuances": 1
+    }
+  ],
+  "rows": [
+    {
+      "forecast_id": "CMP-20261012-904299b09eca",
+      "issued_at_utc": "2026-10-12T19:59:38Z",
+      "original_packet_git_blob": "2612c9b8272ad375c6a75ba917351f2465e1fd1b",
+      "original_target_at_utc": "2026-10-13T07:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-12T19:54:49Z",
+      "remote_packet_push_ack_utc": "2026-10-12T19:58:05.7521591Z",
+      "capture_age_seconds": 289,
+      "packet_ack_preissue_seconds": 92.248,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 39622,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": "2612c9b8272ad375c6a75ba917351f2465e1fd1b|2026-10-13T07:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261012-468da783e9d8",
+      "issued_at_utc": "2026-10-12T23:24:24Z",
+      "original_packet_git_blob": "48a061318da52279c761cff46456a17f0822954f",
+      "original_target_at_utc": "2026-10-13T11:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-12T23:18:56Z",
+      "remote_packet_push_ack_utc": "2026-10-12T23:22:47.4283319Z",
+      "capture_age_seconds": 328,
+      "packet_ack_preissue_seconds": 96.572,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 41736,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": "48a061318da52279c761cff46456a17f0822954f|2026-10-13T11:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-d649788e5270",
+      "issued_at_utc": "2026-10-13T00:49:07Z",
+      "original_packet_git_blob": "cfc95696b8a1a11aa40da265f21ef221cc684abb",
+      "original_target_at_utc": "2026-10-13T12:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-13T00:38:40Z",
+      "remote_packet_push_ack_utc": "2026-10-13T00:42:06.8538623Z",
+      "capture_age_seconds": 627,
+      "packet_ack_preissue_seconds": 420.147,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 40253,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": "cfc95696b8a1a11aa40da265f21ef221cc684abb|2026-10-13T12:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-cb70ee1b10f3",
+      "issued_at_utc": "2026-10-13T02:13:56Z",
+      "original_packet_git_blob": "d8d1524093a77987cf16561f16960aeb67c7fbc6",
+      "original_target_at_utc": "2026-10-13T14:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-13T02:09:00Z",
+      "remote_packet_push_ack_utc": "2026-10-13T02:12:16.8520062Z",
+      "capture_age_seconds": 296,
+      "packet_ack_preissue_seconds": 99.148,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 42364,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": "d8d1524093a77987cf16561f16960aeb67c7fbc6|2026-10-13T14:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-88618d3ad2a7",
+      "issued_at_utc": "2026-10-13T07:46:16Z",
+      "original_packet_git_blob": "b4480d84b1376774839bb6a4d26147b248dd54ee",
+      "original_target_at_utc": "2026-10-13T19:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-13T07:42:15Z",
+      "remote_packet_push_ack_utc": "2026-10-13T07:45:12.6897770Z",
+      "capture_age_seconds": 241,
+      "packet_ack_preissue_seconds": 63.311,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 40424,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": "b4480d84b1376774839bb6a4d26147b248dd54ee|2026-10-13T19:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-aa70b21fc6b0",
+      "issued_at_utc": "2026-10-13T12:20:35Z",
+      "original_packet_git_blob": "f9a225a3dec1da892c25a1f5d5f0d82d2d86f2fb",
+      "original_target_at_utc": "2026-10-14T00:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-13T12:15:57Z",
+      "remote_packet_push_ack_utc": "2026-10-13T12:19:02.2447391Z",
+      "capture_age_seconds": 278,
+      "packet_ack_preissue_seconds": 92.756,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 41965,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": "f9a225a3dec1da892c25a1f5d5f0d82d2d86f2fb|2026-10-14T00:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-bfb7ff123449",
+      "issued_at_utc": "2026-10-13T14:14:43Z",
+      "original_packet_git_blob": "f9a225a3dec1da892c25a1f5d5f0d82d2d86f2fb",
+      "original_target_at_utc": "2026-10-14T00:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-13T12:15:57Z",
+      "remote_packet_push_ack_utc": "2026-10-13T12:19:02.2447391Z",
+      "capture_age_seconds": 7126,
+      "packet_ack_preissue_seconds": 6940.756,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 35117,
+      "research_age_over_1800s": true,
+      "event_equivalence_key": "f9a225a3dec1da892c25a1f5d5f0d82d2d86f2fb|2026-10-14T00:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-b1af85bff6f8",
+      "issued_at_utc": "2026-10-13T16:10:20Z",
+      "original_packet_git_blob": "3b32df58b5a13148b5c983e353dccb31d4fd53c1",
+      "original_target_at_utc": "2026-10-14T03:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-13T15:57:31Z",
+      "remote_packet_push_ack_utc": "2026-10-13T16:01:20.4594939Z",
+      "capture_age_seconds": 769,
+      "packet_ack_preissue_seconds": 539.541,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 38980,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": "3b32df58b5a13148b5c983e353dccb31d4fd53c1|2026-10-14T03:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-f34752e8e3c4",
+      "issued_at_utc": "2026-10-13T17:48:02Z",
+      "original_packet_git_blob": "42186ec26819437d65242d62d54460b66307d0c9",
+      "original_target_at_utc": "2026-10-14T05:00:00Z",
+      "original_target_status": "ORIGINAL_FROZEN",
+      "capture_upper_bound_utc": "2026-10-13T17:42:27Z",
+      "remote_packet_push_ack_utc": "2026-10-13T17:46:21.9785478Z",
+      "capture_age_seconds": 335,
+      "packet_ack_preissue_seconds": 100.022,
+      "nominal_reference_to_target_seconds": 43200,
+      "realized_issue_to_target_seconds": 40318,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": "42186ec26819437d65242d62d54460b66307d0c9|2026-10-14T05:00:00Z",
+      "original_outcome_status": "PRESENT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-aecf113aab74",
+      "issued_at_utc": "2026-10-13T21:21:40Z",
+      "original_packet_git_blob": "eb9a8257de8ab3b89121a49af0f1977ab40c1eff",
+      "original_target_at_utc": null,
+      "original_target_status": "ORIGINAL_ABSENT_NO_BACKFILL",
+      "capture_upper_bound_utc": "2026-10-13T21:14:15Z",
+      "remote_packet_push_ack_utc": "2026-10-13T21:18:25.8962368Z",
+      "capture_age_seconds": 445,
+      "packet_ack_preissue_seconds": 194.104,
+      "nominal_reference_to_target_seconds": null,
+      "realized_issue_to_target_seconds": null,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": null,
+      "original_outcome_status": "ABSENT_AT_ORIGINAL_SNAPSHOT",
+      "scientific_admitted": false
+    },
+    {
+      "forecast_id": "CMP-20261013-af3bcdea9173",
+      "issued_at_utc": "2026-10-13T23:03:36Z",
+      "original_packet_git_blob": "c4427d270cd92ec8ee7efb77c01f79e7fb8aac19",
+      "original_target_at_utc": null,
+      "original_target_status": "ORIGINAL_ABSENT_NO_BACKFILL",
+      "capture_upper_bound_utc": "2026-10-13T22:58:23Z",
+      "remote_packet_push_ack_utc": "2026-10-13T23:01:27.3030635Z",
+      "capture_age_seconds": 313,
+      "packet_ack_preissue_seconds": 128.697,
+      "nominal_reference_to_target_seconds": null,
+      "realized_issue_to_target_seconds": null,
+      "research_age_over_1800s": false,
+      "event_equivalence_key": null,
+      "original_outcome_status": "ABSENT_AT_ORIGINAL_SNAPSHOT",
+      "scientific_admitted": false
+    }
+  ],
+  "policy_notes": [
+    "1800s source age is only an exploratory diagnostic, not approved source SLA; Heyaskr also suggested 900s prospectively, unresolved conflict.",
+    "Nine target-bound issued rows form eight exact packet-target equivalence groups, but independent market shock count remains UNKNOWN.",
+    "Two original targets absent from the historical evidence; later inferred times cannot be scored as original forecasts.",
+    "Nominal 12-hour anchor is NOT the actual issue-to-target horizon.",
+    "Nothing in this receipt upgrades scientific admissibility or legalizes investment decisions."
+  ],
+  "original_artifacts_modified": false,
+  "owner_issue": 1596
+}
