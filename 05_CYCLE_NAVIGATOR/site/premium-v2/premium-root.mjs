@@ -101,13 +101,18 @@ export function buildPremiumRootHtml(source){
  once(source,graphStart,'graph-start');
  const start=source.indexOf(summaryStart),split=source.indexOf(detailStart,start);
  if(split<=start)throw Error('CN_PREMIUM_ROOT_SOURCE_MISMATCH:decision-layout');
+ const gate='<p class="official-pilot-gate" id="official-pilot-gate"></p>';
+ once(source,gate,'source-owned-next-confirmation');
  const summary=source.slice(start,split).trimEnd().replace(summaryStart,
   '<section class="official-product-pilot premium-decision-summary" id="official-product-pilot"');
+ // Keep the same source-owned next gate id and paint/expiry logic; move only its
+ // node so the first mobile viewport can state what would change the outlook.
+ source=source.replace(gate,'');
  source=source.slice(0,start)+
   '<section class="official-product-pilot premium-compass-detail" aria-label="Kompas horisonter og kapitalrotation">\n'+
   source.slice(split);
- source=source.replace(graphStart,summary+'\n</section>\n'+graphStart);
- for(const id of ['official-product-pilot','official-pilot-action','official-pilot-status','variant-panel'])
+ source=source.replace(graphStart,summary+'\n'+gate+'\n</section>\n'+graphStart);
+ for(const id of ['official-product-pilot','official-pilot-action','official-pilot-status','official-pilot-gate','variant-panel'])
   once(source,'id="'+id+'"','decision-singleton-'+id);
  return source;
 }
