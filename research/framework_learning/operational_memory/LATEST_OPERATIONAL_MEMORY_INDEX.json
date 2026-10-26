@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 6159,
-  "generated_at_utc": "2026-10-26T09:19:38.962349Z",
+  "episode_count": 6162,
+  "generated_at_utc": "2026-10-26T10:25:52.133994Z",
   "rows": [
     {
       "changed_paths": [
@@ -171601,10 +171601,10 @@
         "research/architecture_health/history/40224626853-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 7,
         "checked": 8,
         "removed": 0,
-        "same": 6,
+        "same": 1,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -171692,11 +171692,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 4,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-f0d5af99c0915ddf",
@@ -171704,7 +171704,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "f0d5af99c0915ddf338bf2a53672b200dd14ba8b",
       "source_timestamp": "2026-10-25T19:27:37Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -173031,11 +173031,11 @@
         "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-988a74ab177eeb00",
@@ -174414,11 +174414,11 @@
         "research/framework_memory/m6_warning_events/LATEST.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 18,
         "removed": 0,
-        "same": 18,
-        "status": "EXACT"
+        "same": 15,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-f09cfd698c6d3abf",
@@ -174704,7 +174704,92 @@
       "source_timestamp": "2026-10-26T08:58:06Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: adaptive cadence observation 40295928223"
+    },
+    {
+      "changed_paths": [
+        "research/api_agent/outputs/weekly_red_team/2026/W43/100433/WEEKLY_ADVERSARIAL_RECEIPT.json",
+        "research/api_agent/outputs/weekly_red_team/2026/W43/100433/WEEKLY_ADVERSARIAL_REVIEW.json",
+        "research/api_agent/outputs/weekly_red_team/2026/W43/100433/context.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-b39586c136939886",
+      "episode_path": "episodes/2026/10/OE-b39586c136939886.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "b39586c13693988646c41e0a7857c17b3c85ae95",
+      "source_timestamp": "2026-10-26T10:04:34Z",
+      "task_class": "API_AGENT",
+      "task_summary": "ai: weekly Sol adversarial review 40304398965"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_7D.json",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json",
+        "research/architecture_health/history/40306612054-attempt-1.json",
+        "research/architecture_health/hourly_source_sla/daily/2026-10-25.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 9,
+        "removed": 0,
+        "same": 9,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-16ba0c75d389f372",
+      "episode_path": "episodes/2026/10/OE-16ba0c75d389f372.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "16ba0c75d389f3720d2f24656f776b5bea4e35bb",
+      "source_timestamp": "2026-10-26T10:24:20Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 40306612054"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-8cb967a3890c540f",
+      "episode_path": "episodes/2026/10/OE-8cb967a3890c540f.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "8cb967a3890c540f9a3ab43b07b97426a5eb9262",
+      "source_timestamp": "2026-10-26T10:25:04Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 40307164040"
     }
   ],
-  "source_head_sha": "c49b3f4c94ffbef0b5ecf5deeff311394b0207d8"
+  "source_head_sha": "8cb967a3890c540f9a3ab43b07b97426a5eb9262"
 }
