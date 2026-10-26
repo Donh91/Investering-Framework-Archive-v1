@@ -2,8 +2,12 @@ import json
 import hashlib
 import tempfile
 import unittest
+from unittest import mock
 from datetime import datetime, timezone
 from pathlib import Path
+
+from scripts.data_ping import native_handlekompas as nh
+from scripts.data_ping import compass_event_refresh as refresh
 
 from scripts.cycle_navigator.build_weekly_cycle_navigator import (
     output_schema as cycle_navigator_output_schema,
@@ -1037,6 +1041,144 @@ class OfficialDailyCompassTest(unittest.TestCase):
         self.assertEqual(refresh["run_reason"], "ON_DEMAND")
         self.assertEqual(refresh["same_source_behavior"], "REUSE_EXISTING_IMMUTABLE_FREEZE")
         self.assertFalse(route["official_compass_policy"]["render_request_creates_new_freeze"])
+
+
+class PriorCompassBindingTest(unittest.TestCase):
+    """Synthetic source integrity, never investment performance or delivery proof."""
+
+    def fixture(self, root):
+        compass = {
+            "contract": nh.OFFICIAL_COMPASS_CONTRACT,
+            "compass_id": "CMP-20261026-fixture",
+            "issued_at_utc": "2026-10-26T08:00:00Z",
+            "protection_tracker": {"pullback_risk_state": "HIGH", "reentry_state": "WAIT_FOR_RECLAIM"},
+        }
+        compass["compass_sha256"] = nh.digest(nh.canon(compass))
+        target = root / "official" / "daily" / (compass["compass_id"] + ".json")
+        target.parent.mkdir(parents=True)
+        target.write_bytes(nh.canon(compass))
+        pointer = {
+            "contract": nh.OFFICIAL_COMPASS_POINTER,
+            "compass_id": compass["compass_id"], "issued_at_utc": compass["issued_at_utc"],
+            "compass_path": target.relative_to(root).as_posix(),
+            "compass_sha256": compass["compass_sha256"],
+            "compass_content_sha256": nh.digest(target.read_bytes()),
+        }
+        pointer_path = root / "official" / "LATEST_COMPASS.json"
+        pointer_path.write_bytes(nh.canon(pointer))
+        return compass, pointer, pointer_path, target
+
+    def test_bound_prior_and_absolute_internal_target_are_read_without_mutation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            compass, pointer, pointer_path, target = self.fixture(root)
+            original = target.read_bytes()
+            self.assertEqual(nh.load_prior_compass(root, pointer_path), compass)
+            pointer["compass_path"] = str(target)
+            pointer_path.write_bytes(nh.canon(pointer))
+            self.assertEqual(nh.load_prior_compass(root, pointer_path), compass)
+            self.assertEqual(target.read_bytes(), original)
+
+    def test_missing_or_mismatched_pointer_hash_and_identity_are_rejected(self):
+        for field, replacement in (
+            ("compass_content_sha256", None), ("compass_content_sha256", "0" * 64),
+            ("compass_sha256", None), ("compass_sha256", "0" * 64),
+            ("compass_id", "OTHER"), ("issued_at_utc", "2026-10-26T09:00:00Z"),
+            ("contract", "OTHER"), ("compass_path", ""),
+        ):
+            with self.subTest(field=field, value=replacement), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _, pointer, pointer_path, _ = self.fixture(root)
+                if replacement is None:
+                    pointer.pop(field)
+                else:
+                    pointer[field] = replacement
+                pointer_path.write_bytes(nh.canon(pointer))
+                with self.assertRaisesRegex(ValueError, "PRIOR_COMPASS_"):
+                    nh.load_prior_compass(root, pointer_path)
+
+    def test_modified_reentry_state_cannot_pass_even_if_raw_hash_is_rebound(self):
+        for rebind_raw in (False, True):
+            with self.subTest(rebind_raw=rebind_raw), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                compass, pointer, pointer_path, target = self.fixture(root)
+                compass["protection_tracker"]["reentry_state"] = "REVIEW"
+                target.write_bytes(nh.canon(compass))
+                if rebind_raw:
+                    pointer["compass_content_sha256"] = nh.digest(target.read_bytes())
+                    pointer_path.write_bytes(nh.canon(pointer))
+                with self.assertRaisesRegex(ValueError, "PRIOR_COMPASS_.*HASH_MISMATCH"):
+                    nh.load_prior_compass(root, pointer_path)
+
+    def test_target_cannot_escape_repo_or_change_contract(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            compass, pointer, pointer_path, target = self.fixture(root)
+            pointer["compass_path"] = "../outside.json"
+            pointer_path.write_bytes(nh.canon(pointer))
+            with self.assertRaisesRegex(ValueError, "PRIOR_COMPASS_PATH_OUTSIDE_REPOSITORY"):
+                nh.load_prior_compass(root, pointer_path)
+            pointer["compass_path"] = target.relative_to(root).as_posix()
+            compass["contract"] = "PUBLIC_COMPASS_PROJECTION_v1"
+            target.write_bytes(nh.canon(compass))
+            pointer["compass_content_sha256"] = nh.digest(target.read_bytes())
+            pointer_path.write_bytes(nh.canon(pointer))
+            with self.assertRaisesRegex(ValueError, "PRIOR_COMPASS_CONTRACT_INVALID"):
+                nh.load_prior_compass(root, pointer_path)
+
+    def test_native_entrypoint_rejects_unbound_prior_before_build_or_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, pointer, pointer_path, _ = self.fixture(root)
+            pointer.pop("compass_content_sha256")
+            pointer_path.write_bytes(nh.canon(pointer))
+            with mock.patch.object(nh, "load_auto_state_bundle", return_value=({}, {}, Path("auto.json"))), \
+                 mock.patch.object(nh, "load_cn_context", return_value=(None, {})), \
+                 mock.patch.object(nh, "build_official_compass", return_value={}) as build, \
+                 mock.patch.object(nh, "write_official_compass", return_value={}) as write, \
+                 mock.patch("builtins.print"), \
+                 mock.patch("sys.argv", ["native", "--repo-root", tmp, "--output-root", "official", "--official-daily-compass"]):
+                with self.assertRaisesRegex(ValueError, "PRIOR_COMPASS_CONTENT_HASH_MISMATCH"):
+                    nh.main()
+                build.assert_not_called()
+                write.assert_not_called()
+
+    def test_native_first_issuance_without_pointer_still_builds(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(nh, "load_auto_state_bundle", return_value=({}, {}, Path("auto.json"))), \
+             mock.patch.object(nh, "load_cn_context", return_value=(None, {})), \
+             mock.patch.object(nh, "build_official_compass", return_value={}) as build, \
+             mock.patch("builtins.print"), \
+             mock.patch("sys.argv", ["native", "--repo-root", tmp, "--output-root", "official", "--official-daily-compass", "--no-write"]):
+            nh.main()
+            self.assertIsNone(build.call_args.kwargs["prior_compass"])
+
+    def test_event_entrypoint_checks_prior_before_materiality_or_state_write(self):
+        for valid in (False, True):
+            with self.subTest(valid=valid), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                compass, pointer, pointer_path, _ = self.fixture(root)
+                if not valid:
+                    pointer["compass_content_sha256"] = "0" * 64
+                    pointer_path.write_bytes(nh.canon(pointer))
+                def read_fixture(path):
+                    if path == pointer_path:
+                        return pointer
+                    if path == root / pointer["compass_path"]:
+                        return compass
+                    return {"packet_path": "auto.json"}
+                with mock.patch.object(refresh, "COMPASS_POINTER", pointer_path), \
+                     mock.patch.object(refresh, "read_json", side_effect=read_fixture), \
+                     mock.patch.object(nh, "load_cn_context", return_value=(None, {})), \
+                     mock.patch.object(refresh, "evaluate", return_value={"dispatch": False, "heat_state": "NORMAL"}) as evaluate:
+                    if valid:
+                        refresh.run(root, Path("refresh-output"))
+                        self.assertEqual(evaluate.call_args.kwargs["latest_compass"], compass)
+                    else:
+                        with self.assertRaisesRegex(ValueError, "PRIOR_COMPASS_CONTENT_HASH_MISMATCH"):
+                            refresh.run(root, Path("refresh-output"))
+                        evaluate.assert_not_called()
+                        self.assertFalse((root / "refresh-output").exists())
 
 
 if __name__ == "__main__":

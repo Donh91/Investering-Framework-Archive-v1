@@ -548,8 +548,7 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     auto_pointer = read_json(repo_root / AUTO_POINTER)
     auto_state = read_json(repo_root / Path(str(auto_pointer["packet_path"])))
-    compass_pointer = read_json(repo_root / COMPASS_POINTER)
-    latest_compass = read_json(repo_root / Path(str(compass_pointer["compass_path"])))
+    latest_compass = nh.load_prior_compass(repo_root, COMPASS_POINTER)
     entry_latest = read_json(repo_root / ENTRY_LATEST)
     state_path = repo_root / output_root / "STATE.json"
     prior_state = read_json(state_path) if state_path.exists() else None
