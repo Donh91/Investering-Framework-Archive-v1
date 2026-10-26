@@ -56,6 +56,34 @@ def validate_daily_path(value: Any, freeze: Mapping[str, Any], year: int, week: 
     return value
 
 
+def daily_path_issue_summary(value: Any, freeze: Mapping[str, Any], year: int, week: int) -> dict[str, Any]:
+    """Value-free coverage readback for an ORIGINAL weekly analytical issue.
+
+    Only the already validated frozen CN path may enter this summary.  This
+    does NOT synthesize prices, add action permission or claim forecast edge.
+    """
+    validated = validate_daily_path(value, freeze, year, week)
+    assets: dict[str, dict[str, Any]] = {}
+    for asset in ("BTC", "ETH"):
+        item = (validated or {}).get(asset) if isinstance(validated, dict) else None
+        issued = isinstance(item, dict) and item.get("status") == "PUBLISHED"
+        assets[asset] = {
+            "status": "PUBLISHED" if issued else "UNAVAILABLE",
+            "point_count": 7 if issued else 0,
+        }
+    published = sum(row["status"] == "PUBLISHED" for row in assets.values())
+    return {
+        "contract": "CN_DAILY_PATH_ISSUANCE_READBACK_v1",
+        "forecast_week": f"{year:04d}-W{week:02d}",
+        "source": "EXISTING_WEEKLY_CYCLE_NAVIGATOR_SYNTHESIS",
+        "status": "PUBLISHED_BOTH" if published == 2 else "PARTIAL" if published else "UNAVAILABLE",
+        "assets": assets,
+        "prospective_price_model_authority": False,
+        "scoring_authority": False,
+        "portfolio_execution": False,
+    }
+
+
 def public_copy_schema() -> dict[str, Any]:
     return {"type": "object", "additionalProperties": False,
             "required": ["contract", "summary", "watch_for", "weakens_if", "onset_start_day", "onset_end_day"],
