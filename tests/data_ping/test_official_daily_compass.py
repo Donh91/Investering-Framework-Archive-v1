@@ -1153,6 +1153,19 @@ class PriorCompassBindingTest(unittest.TestCase):
             nh.main()
             self.assertIsNone(build.call_args.kwargs["prior_compass"])
 
+    def test_native_relative_repo_root_loads_existing_bound_prior(self):
+        with tempfile.TemporaryDirectory(dir=".") as tmp:
+            root = Path(tmp).resolve().relative_to(Path.cwd())
+            self.assertFalse(root.is_absolute())
+            compass, _, _, _ = self.fixture(root)
+            with mock.patch.object(nh, "load_auto_state_bundle", return_value=({}, {}, Path("auto.json"))), \
+                 mock.patch.object(nh, "load_cn_context", return_value=(None, {})), \
+                 mock.patch.object(nh, "build_official_compass", return_value={}) as build, \
+                 mock.patch("builtins.print"), \
+                 mock.patch("sys.argv", ["native", "--repo-root", str(root), "--output-root", "official", "--official-daily-compass", "--no-write"]):
+                nh.main()
+                self.assertEqual(build.call_args.kwargs["prior_compass"], compass)
+
     def test_event_entrypoint_checks_prior_before_materiality_or_state_write(self):
         for valid in (False, True):
             with self.subTest(valid=valid), tempfile.TemporaryDirectory() as tmp:

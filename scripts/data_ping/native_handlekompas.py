@@ -1656,7 +1656,7 @@ def main() -> None:
         prior_compass = None
         prior_pointer_path = args.repo_root / args.output_root / "LATEST_COMPASS.json"
         if prior_pointer_path.exists():
-            prior_compass = load_prior_compass(args.repo_root, prior_pointer_path)
+            prior_compass = load_prior_compass(args.repo_root, args.output_root / "LATEST_COMPASS.json")
         compass = build_official_compass(
             auto_state,
             packet_path=packet_path,
