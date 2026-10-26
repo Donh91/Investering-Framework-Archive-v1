@@ -103,6 +103,54 @@ class NativeHandlekompasTest(unittest.TestCase):
         self.assertEqual(verdict["status"], "PASS")
         self.assertEqual(len(verdict["checks"]), 5)
 
+    def test_one_missing_or_invalid_owner_ttl_cannot_borrow_other_lane_policy(self):
+        now = datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc)
+        for lane in ("pointer_freshness", "retrieval_freshness",
+                     "session_coverage_freshness", "source_observation_freshness"):
+            for maximum in (None, True, False, -1, float("nan"), float("inf"), "10800"):
+                with self.subTest(lane=lane, maximum=maximum):
+                    packet = self.packet()
+                    row = packet["source_health"]["hourly_market"]["freshness"][lane]
+                    if maximum is None:
+                        row.pop("max_age_seconds")
+                    else:
+                        row["max_age_seconds"] = maximum
+                    verdict = owner_freshness(packet, now)
+                    self.assertEqual(verdict["status"], "STALE_OR_UNAVAILABLE")
+                    self.assertIn(f"{lane.upper()}_MAX_AGE_UNAVAILABLE", verdict["reasons"])
+                    out = build(packet, now=now)
+                    self.assertEqual(out["action"]["NOW"], "HOLD_WAIT_DATA_DEGRADED")
+                    self.assertEqual(out["DATA_HEALTH"]["status"], "DEGRADED")
+
+    def test_omitted_ttl_cannot_hide_stale_or_future_observation(self):
+        now = datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc)
+        for stamp, status in (("2026-09-01T00:00:00Z", "STALE"),
+                              ("2026-09-09T00:00:00Z", "FUTURE")):
+            with self.subTest(stamp=stamp):
+                packet = self.packet()
+                row = packet["source_health"]["hourly_market"]["freshness"]["source_observation_freshness"]
+                row.update(timestamp=stamp, status=status)
+                row.pop("max_age_seconds")
+                self.assertEqual(owner_freshness(packet, now)["status"], "STALE_OR_UNAVAILABLE")
+                self.assertEqual(build(packet, now=now)["action"]["NOW"], "HOLD_WAIT_DATA_DEGRADED")
+
+    def test_optional_unavailable_dimension_and_zero_age_boundary_preserved(self):
+        now = datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc)
+        for omit in (False, True):
+            with self.subTest(omit=omit):
+                packet = self.packet()
+                freshness = packet["source_health"]["hourly_market"]["freshness"]
+                if omit:
+                    del freshness["source_observation_freshness"]
+                else:
+                    freshness["source_observation_freshness"] = {
+                        "status": "UNAVAILABLE", "timestamp": None,
+                        "age_seconds": None, "max_age_seconds": None,
+                    }
+                freshness["retrieval_freshness"]["max_age_seconds"] = 0
+                self.assertEqual(owner_freshness(packet, now)["status"], "PASS")
+                self.assertEqual(build(packet, now=now)["action"]["NOW"], "HOLD_WAIT")
+
     def test_degraded_state_cannot_be_prepare(self):
         out = build(self.packet(decision="DEGRADED", blockers=["hourly_market"]), now=datetime(2026,9,8,20,0,tzinfo=timezone.utc))
         self.assertEqual(out["action"]["NOW"], "HOLD_WAIT_DATA_DEGRADED")

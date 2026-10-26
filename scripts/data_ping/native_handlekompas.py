@@ -103,9 +103,9 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text())
 
 
-def file_binding(repo_root: Path, rel_path: Path) -> dict[str, Any]:
+def file_binding(repo_root: Path, rel_path: Path, *, raw: bytes | None = None) -> dict[str, Any]:
     path = repo_root / rel_path
-    raw = path.read_bytes()
+    raw = path.read_bytes() if raw is None else raw
     blob = None
     try:
         blob = subprocess.check_output(
@@ -165,14 +165,23 @@ def load_cn_context(repo_root: Path, pointer_path: Path = DEFAULT_CN_POINTER) ->
     abs_package = repo_root / package_path
     if not abs_package.exists():
         return None, {"status": "UNAVAILABLE", "reason": "CN_MACHINE_PACKAGE_MISSING"}
-    package = read_json(abs_package)
+    # Bind the exact bytes we parse, before consuming any protection or
+    # forecast projection. Matching the issue number alone is not custody.
+    package_raw = abs_package.read_bytes()
+    package_sha = digest(package_raw)
+    declared_sha = pointer.get("machine_package_sha256")
+    if not isinstance(declared_sha, str) or not declared_sha:
+        return None, {"status": "DEGRADED", "reason": "CN_POINTER_PACKAGE_HASH_MISSING"}
+    if declared_sha != package_sha:
+        return None, {"status": "DEGRADED", "reason": "CN_POINTER_PACKAGE_HASH_MISMATCH"}
+    package = json.loads(package_raw)
     if pointer.get("issue_number") != package.get("issue_number"):
         return None, {"status": "DEGRADED", "reason": "CN_POINTER_PACKAGE_ISSUE_MISMATCH"}
 
     binding: dict[str, Any] = {
         "status": "PASS",
         "pointer": file_binding(repo_root, pointer_path),
-        "machine_package": file_binding(repo_root, package_path),
+        "machine_package": file_binding(repo_root, package_path, raw=package_raw),
         "issue_number": package.get("issue_number"),
         "iso_week": pointer.get("iso_week"),
         "iso_year": pointer.get("iso_year"),
@@ -188,7 +197,6 @@ def load_cn_context(repo_root: Path, pointer_path: Path = DEFAULT_CN_POINTER) ->
         abs_addendum = repo_root / addendum_path
         if abs_addendum.exists():
             addendum = read_json(abs_addendum)
-            package_sha = digest(abs_package.read_bytes())
             valid = (
                 isinstance(addendum, Mapping)
                 and addendum.get("contract") == "CYCLE_NAVIGATOR_DECISION_PROJECTION_ADDENDUM_v1"
@@ -618,9 +626,16 @@ def owner_freshness(auto_state: Mapping[str, Any], as_of: datetime) -> dict[str,
             row = freshness.get(lane)
             if not isinstance(row, Mapping):
                 continue
+            # The upstream vector permits explicitly unavailable optional
+            # dimensions. A present observation, however, cannot borrow a
+            # different dimension's TTL or disappear from issuance checks.
+            if (row.get("status") == "UNAVAILABLE" and row.get("timestamp") is None
+                    and row.get("max_age_seconds") is None):
+                continue
             maximum = finite(row.get("max_age_seconds"))
             stamp = _parse_utc(row.get("timestamp"))
-            if maximum is None:
+            if maximum is None or maximum < 0:
+                reasons.append(f"{lane.upper()}_MAX_AGE_UNAVAILABLE")
                 continue
             owner_max_ages.append(maximum)
             if stamp is None:
