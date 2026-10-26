@@ -123,10 +123,10 @@ try{
  await send('Runtime.enable');
  await send('Network.enable');
  const results=[];
- // Narrow CSS viewport approximates 200% browser text/page zoom at 390px.
- // Chrome emulation is a regression proxy, NOT native Safari zoom certification.
- for(const width of [390,430,1440,195]){
-  await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:width===430?932:width===195?422:1000,
+ // 320 CSS-px reflow is an additional automated narrow-viewport proxy.
+ // This is NOT a physical iPhone Safari/VoiceOver/200% zoom certification.
+ for(const width of [390,430,1440,320]){
+  await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:width===430?932:width===320?700:1000,
    deviceScaleFactor:1,mobile:width<600});
   await send('Page.navigate',{url:origin+(rootMode?'':'next/')});
   let ready=false;
