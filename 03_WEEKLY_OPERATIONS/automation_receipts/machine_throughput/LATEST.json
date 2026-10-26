@@ -1,38 +1,38 @@
 {
   "ai_analysis": {
-    "actual_model_calls": 7,
-    "api_agent_receipts": 7,
+    "actual_model_calls": 6,
+    "api_agent_receipts": 6,
     "daily_conflict_review_model_calls": 0,
     "daily_director_model_calls": 4,
     "daily_director_receipts": 4,
-    "estimated_cost_usd": 0.22615,
-    "input_tokens": 419392,
-    "output_tokens": 28903,
+    "estimated_cost_usd": 0.170454,
+    "input_tokens": 403539,
+    "output_tokens": 24999,
     "zero_cost_skips": 0
   },
   "authority": "OPERATIONAL_OBSERVABILITY_ONLY",
   "contract": "DAILY_MACHINE_THROUGHPUT_RECEIPT_v1",
   "durable_repository_throughput": {
-    "created_evidence_paths": 5815,
-    "durable_end_state_bytes": 12929408,
+    "created_evidence_paths": 5057,
+    "durable_end_state_bytes": 11053999,
     "modified_evidence_paths": 8,
-    "normalized_json_scalar_values": 239708,
-    "normalized_values_total_structural": 240875,
-    "touched_evidence_paths": 5823,
-    "unique_end_state_content_hashes": 5821
+    "normalized_json_scalar_values": 208004,
+    "normalized_values_total_structural": 209336,
+    "touched_evidence_paths": 5065,
+    "unique_end_state_content_hashes": 5063
   },
   "efficiency": {
-    "actual_model_calls_per_100_core_observation_units": 25.925926,
-    "api_cost_usd_per_100_core_observation_units": 0.837593,
-    "new_experiment_candidates_per_1000_normalized_values": 0.041515,
-    "new_experiment_candidates_per_100_core_observation_units": 37.037037
+    "actual_model_calls_per_100_core_observation_units": 20.0,
+    "api_cost_usd_per_100_core_observation_units": 0.56818,
+    "new_experiment_candidates_per_1000_normalized_values": 0.033439,
+    "new_experiment_candidates_per_100_core_observation_units": 23.333333
   },
   "failures": {
     "owner_failures": 0,
     "scheduled_workflow_failed_runs": 0,
     "workflow_failed_runs": 5
   },
-  "generated_at_utc": "2026-10-25T00:38:04.937623Z",
+  "generated_at_utc": "2026-10-26T01:52:08.880926Z",
   "instrumentation": {
     "exact_metrics": [
       "workflow run counts within the closed window",
@@ -45,7 +45,7 @@
     ],
     "physical_external_source_calls": {
       "exact_total_physical_http_calls": null,
-      "instrumented_count": 90,
+      "instrumented_count": 126,
       "instrumented_scope": "HOURLY_SEQUENCE source_records with one recorded URL/response per record",
       "reason": "Existing point-in-time and specialist owners do not all expose one physical-request counter per network request. No inferred total is permitted.",
       "status": "PARTIAL_INSTRUMENTATION",
@@ -54,64 +54,64 @@
     "semantic_warning": "Counts measure machine throughput and observability only. They do not measure forecast skill, information value or portfolio edge by themselves."
   },
   "learning_activity": {
-    "experiment_candidates_created": 10,
-    "experiment_dispatch_artifacts_created": 1349,
-    "experiment_observations_created": 2925,
-    "forecast_memory_created": 25,
+    "experiment_candidates_created": 7,
+    "experiment_dispatch_artifacts_created": 1081,
+    "experiment_observations_created": 2375,
+    "forecast_memory_created": 20,
     "outcome_memory_created": 20
   },
   "market_observation_throughput": {
-    "core_observation_units": 27,
-    "hourly_nonempty_normalized_cells": 1167,
-    "hourly_sequence_runs": 10,
-    "instrumented_physical_source_calls": 90,
-    "instrumented_source_response_bytes": 581872,
-    "instrumented_source_rows_returned": 1882,
+    "core_observation_units": 30,
+    "hourly_nonempty_normalized_cells": 1332,
+    "hourly_sequence_runs": 14,
+    "instrumented_physical_source_calls": 126,
+    "instrumented_source_response_bytes": 814813,
+    "instrumented_source_rows_returned": 2638,
     "live_anchor_captures": 6,
     "live_anchor_normalized_scalar_values": 1372,
     "owner_collection_attempts": 36,
-    "owner_declared_artifact_bytes": 12684839,
-    "owner_declared_raw_source_bytes": 2760325,
+    "owner_declared_artifact_bytes": 12680916,
+    "owner_declared_raw_source_bytes": 2760941,
     "owner_expected_skips": 11,
     "owner_failures": 0,
     "owner_successes": 25,
-    "unique_hourly_observation_rows": 21
+    "unique_hourly_observation_rows": 24
   },
   "market_rule_change": false,
   "model_weight_change": false,
   "portfolio_action": false,
-  "receipt_sha256": "46ebb55551771229a7de2c6ca45c19d62467718cd38700788c830d1e20e52537",
+  "receipt_sha256": "77232fdad1992bace3dc99dcc6ff5da8432c70fbb11b83f2b4fb2455c8de405e",
   "status": "PASS",
   "window": {
     "closed_window": true,
-    "end_commit_sha": "f507793aa67f7ce72da951ddcc3279593f192623",
-    "end_utc": "2026-10-24T22:00:00Z",
-    "local_date": "2026-10-24",
-    "start_commit_sha": "706ab9fe9aab180612c6ffdb652ff0384daebdc7",
-    "start_utc": "2026-10-23T22:00:00Z",
+    "end_commit_sha": "a514a4818f2cb6974055237c49217f9710343ecb",
+    "end_utc": "2026-10-25T23:00:00Z",
+    "local_date": "2026-10-25",
+    "start_commit_sha": "f507793aa67f7ce72da951ddcc3279593f192623",
+    "start_utc": "2026-10-24T22:00:00Z",
     "timezone": "Europe/Copenhagen"
   },
   "workflow_activity": {
     "by_conclusion": {
-      "cancelled": 6,
+      "cancelled": 1,
       "failure": 5,
-      "skipped": 770,
-      "success": 219
+      "skipped": 781,
+      "success": 213
     },
     "by_event": {
-      "issue_comment": 770,
-      "pull_request": 129,
-      "push": 9,
-      "repository_dispatch": 4,
-      "schedule": 41,
-      "workflow_dispatch": 39,
+      "issue_comment": 781,
+      "pull_request": 100,
+      "push": 5,
+      "repository_dispatch": 3,
+      "schedule": 50,
+      "workflow_dispatch": 53,
       "workflow_run": 8
     },
-    "cancelled_runs": 6,
+    "cancelled_runs": 1,
     "failed_runs": 5,
     "runs_started": 1000,
     "scheduled_failed_runs": 0,
-    "scheduled_runs": 41,
-    "scheduled_success_rate_pct": 97.561
+    "scheduled_runs": 50,
+    "scheduled_success_rate_pct": 100.0
   }
 }
