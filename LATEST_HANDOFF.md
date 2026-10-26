@@ -1,11 +1,11 @@
 # LATEST HANDOFF
 
-Generated: 2026-10-26T00:49:17.909119Z
-Hash: `59875f2d12e4bfa81da39874cb1cfbd3ade46a6be17de385d3ce5d7c3d6a9e07`
+Generated: 2026-10-26T10:25:02.694111Z
+Hash: `adc3f2de0c018a6027f332da24685899aaacccd71a48b6d671f3a519d566a9e5`
 
 - **latest_capture**: `03_DAILY_CAPTURE_LOGS/captures/LATEST.json`
 - **latest_director_output**: `research/api_agent/outputs/daily/2026/10/26/003703/DAILY_DIRECTOR_OUTPUT.json`
-- **latest_weekly_output**: `research/api_agent/outputs/weekly/2026/W42/MASTER_MONDAY_DELIVERY_POINTER.json`
+- **latest_weekly_output**: `research/api_agent/outputs/weekly/2026/W43/MASTER_MONDAY_DELIVERY_POINTER.json`
 - **health**: `research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json`
 - **latest_accepted_data_ping**: `UNAVAILABLE`
 - **experiment_registry**: `research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json`
