@@ -38,10 +38,12 @@ from scripts.data_ping import native_handlekompas as nh
 AUTO_POINTER = Path("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
 COMPASS_POINTER = Path("04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json")
 ENTRY_LATEST = Path("04_MARKET_LEARNING/entry_signals/LATEST.json")
+HOURLY_POINTER = Path("03_DAILY_CAPTURE_LOGS/hourly/LATEST.json")
 DEFAULT_ROOT = Path("04_MARKET_LEARNING/handlekompas/event_refresh")
 CONTRACT = "COMPASS_EVENT_REFRESH_DECISION_v1"
 PUBLIC_CONTRACT = "PUBLIC_COMPASS_EVENT_STATUS_v1"
 STATE_CONTRACT = "COMPASS_EVENT_REFRESH_STATE_v1"
+HOURLY_OWNER_LIVENESS_MAX_AGE_SECONDS = 65 * 60  # Existing live-anchor source rule.
 REQUEST_RETRY_SECONDS = 20 * 60
 NON_PROTECTIVE_COOLDOWN_SECONDS = 3 * 60 * 60
 SCHEDULE_PROXIMITY_SECONDS = 30 * 60
@@ -76,6 +78,36 @@ def parse_utc(value: Any) -> datetime | None:
     if dt.utcoffset() is None:
         return None
     return dt.astimezone(timezone.utc)
+
+
+def hourly_source_liveness(pointer: Mapping[str, Any] | None, now: datetime) -> dict[str, Any]:
+    """Mirror the EXISTING 65m Hourly observed-window gate, not 3h Compass TTL.
+
+    This is a read-only recovery trigger, never approval of a market signal or
+    an original price forecast. An absent, incomplete or future-dated pointer
+    must request source recovery rather than issue fresh Compass over old bars.
+    """
+    if not isinstance(pointer, Mapping) or pointer.get("contract") != "HOURLY_SEQUENCE_LATEST_POINTER_v2_2":
+        return {"status": "STALE", "reason": "HOURLY_POINTER_UNVERIFIED"}
+    if pointer.get("status") != "COMPLETE":
+        return {"status": "STALE", "reason": "HOURLY_WINDOW_NOT_COMPLETE"}
+    expected = pointer.get("requested_hours")
+    fields = ("spot_complete_hours", "spot_flow_complete_hours",
+              "derivatives_oi_complete_hours", "long_short_complete_hours")
+    if type(expected) is not int or expected <= 0 or any(
+        type(pointer.get(k)) is not int or pointer[k] < expected for k in fields
+    ):
+        return {"status": "STALE", "reason": "HOURLY_WINDOW_COVERAGE_UNVERIFIED"}
+    end = parse_utc(pointer.get("window_end_utc"))
+    retrieved = parse_utc(pointer.get("retrieved_at_utc"))
+    if end is None or retrieved is None or retrieved < end or retrieved > now:
+        return {"status": "STALE", "reason": "HOURLY_SOURCE_CLOCK_UNVERIFIED"}
+    age = (now - end).total_seconds()
+    if not 0 <= age <= HOURLY_OWNER_LIVENESS_MAX_AGE_SECONDS:
+        return {"status": "STALE", "reason": "HOURLY_OBSERVATION_OLDER_THAN_65M",
+                "age_seconds": age}
+    return {"status": "PASS", "reason": "HOURLY_OBSERVATION_FRESH",
+            "age_seconds": age}
 
 
 def finite(value: Any) -> float | None:
@@ -287,6 +319,7 @@ def evaluate(
     cn_package: Mapping[str, Any] | None,
     cn_binding: Mapping[str, Any] | None,
     now: datetime,
+    hourly_pointer: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     prior_state = prior_state or {}
     source_sha = str(auto_pointer.get("packet_sha256") or auto_state.get("packet_sha256") or "")
@@ -305,6 +338,33 @@ def evaluate(
             "heat_state": heat,
             "heat_detail": heat_detail,
         }
+
+    # Separate the Hourly observation SLA from the upstream decision packet's
+    # longer TTL. The existing 65m live-anchor check may report STALE while the
+    # Compass owner_freshness still says PASS (observed 26 Oct 21:38 UTC).
+    # Do not reissue Compass over stale bars or substitute synthetic forecasts.
+    if hourly_pointer is not None:
+        hourly = hourly_source_liveness(hourly_pointer, now)
+        if hourly["status"] != "PASS":
+            return {
+                "contract": CONTRACT,
+                "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
+                "dispatch": False,
+                "upstream_refresh_required": True,
+                "reason": "HOURLY_OWNER_OBSERVATION_STALE",
+                "hourly_source_reason": hourly["reason"],
+                "hourly_source_age_seconds": hourly.get("age_seconds"),
+                "source_packet_sha256": source_sha,
+                "latest_compass_source_packet_sha256": compass_source_sha or None,
+                "heat_state": heat,
+                "heat_detail": heat_detail,
+                "authority": {
+                    "portfolio_execution": False,
+                    "forecast_change": False,
+                    "market_threshold_change": False,
+                    "purpose": "REQUEST_EXISTING_HOURLY_RECOVERY_BEFORE_COMPASS_REASSESSMENT",
+                },
+            }
 
     owner_freshness = nh.owner_freshness(auto_state, now)
     if str(owner_freshness.get("status") or "") != "PASS":
@@ -553,6 +613,10 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
     state_path = repo_root / output_root / "STATE.json"
     prior_state = read_json(state_path) if state_path.exists() else None
     cn_package, cn_binding = nh.load_cn_context(repo_root)
+    try:
+        hourly_pointer = read_json(repo_root / HOURLY_POINTER)
+    except (OSError, ValueError, TypeError):
+        hourly_pointer = {}  # Missing or malformed source must fail closed.
 
     decision = evaluate(
         auto_state=auto_state,
@@ -563,6 +627,7 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
         cn_package=cn_package,
         cn_binding=cn_binding,
         now=now,
+        hourly_pointer=hourly_pointer,
     )
 
     heat = str(decision.get("heat_state") or "NORMAL")

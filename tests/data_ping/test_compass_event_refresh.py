@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, _missing_scheduled_freeze, _public_refresh_message, evaluate, heat_state
+from scripts.data_ping.compass_event_refresh import _ladder_materially_changed, _missing_scheduled_freeze, _public_refresh_message, evaluate, heat_state, hourly_source_liveness
 
 
 NOW = datetime(2026, 9, 18, 16, 0, tzinfo=timezone.utc)
@@ -119,10 +119,66 @@ def decision(**kwargs):
         cn_package=cn_package(),
         cn_binding={"status": "PASS"},
         now=NOW,
+        hourly_pointer=kwargs.pop("hourly_pointer", None),
     )
 
 
+def hourly_fixture(*, minutes_old=40):
+    observed = (NOW - timedelta(minutes=minutes_old)).isoformat().replace("+00:00", "Z")
+    retrieved = (NOW - timedelta(minutes=5)).isoformat().replace("+00:00", "Z")
+    return {
+        "contract": "HOURLY_SEQUENCE_LATEST_POINTER_v2_2",
+        "status": "COMPLETE",
+        "window_end_utc": observed,
+        "retrieved_at_utc": retrieved,
+        "requested_hours": 26,
+        "spot_complete_hours": 26,
+        "spot_flow_complete_hours": 26,
+        "derivatives_oi_complete_hours": 26,
+        "long_short_complete_hours": 26,
+    }
+
+
 class CompassEventRefreshTests(unittest.TestCase):
+    def test_hourly_stale_even_when_compass_owner_packet_is_fresh(self):
+        # Exact incident class: 101.25-minute-old source, but source packet TTL
+        # still PASS. Hourly recovery must precede any new Compass dispatch.
+        pointer = hourly_fixture(minutes_old=101.25)
+        a = auto_state(fresh_minutes=10)
+        out = decision(auto=a, hourly_pointer=pointer, latest=compass(source_sha="old-source"))
+        self.assertFalse(out["dispatch"])
+        self.assertTrue(out["upstream_refresh_required"])
+        self.assertEqual(out["reason"], "HOURLY_OWNER_OBSERVATION_STALE")
+        self.assertEqual(out["hourly_source_reason"], "HOURLY_OBSERVATION_OLDER_THAN_65M")
+        self.assertFalse(out["authority"]["portfolio_execution"])
+        self.assertFalse(out["authority"]["forecast_change"])
+
+    def test_hourly_missing_malformed_or_incomplete_is_recovery_only(self):
+        cases = ({}, {"contract": "HOURLY_SEQUENCE_LATEST_POINTER_v2_2"},
+                 dict(hourly_fixture(minutes_old=40), spot_complete_hours=25),
+                 dict(hourly_fixture(minutes_old=40), status="DEGRADED"),
+                 dict(hourly_fixture(minutes_old=40), retrieved_at_utc="2099-01-01T00:00:00Z"))
+        for pointer in cases:
+            with self.subTest(pointer=pointer):
+                out = decision(hourly_pointer=pointer)
+                self.assertTrue(out["upstream_refresh_required"])
+                self.assertFalse(out["dispatch"])
+                self.assertEqual(out["reason"], "HOURLY_OWNER_OBSERVATION_STALE")
+
+    def test_hourly_65m_boundary_and_observation_from_future(self):
+        self.assertEqual(hourly_source_liveness(hourly_fixture(minutes_old=65), NOW)["status"], "PASS")
+        self.assertEqual(hourly_source_liveness(hourly_fixture(minutes_old=65.01), NOW)["status"], "STALE")
+        self.assertEqual(hourly_source_liveness(hourly_fixture(minutes_old=-1), NOW)["status"], "STALE")
+
+    def test_fresh_hourly_does_not_change_existing_compass_semantics(self):
+        out = decision(auto=auto_state(source_sha="same"),
+                       latest=compass(source_sha="same"),
+                       hourly_pointer=hourly_fixture(minutes_old=40))
+        self.assertFalse(out["dispatch"])
+        self.assertFalse(out["upstream_refresh_required"])
+        self.assertEqual(out["reason"], "LATEST_COMPASS_ALREADY_BINDS_CURRENT_OWNER_PACKET")
+
+
     def test_schema_only_unavailable_rung_is_not_material(self):
         previous = [
             {"segment": "BTC", "status": "HOLD"},
