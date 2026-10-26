@@ -123,8 +123,10 @@ try{
  await send('Runtime.enable');
  await send('Network.enable');
  const results=[];
- for(const width of [390,430,1440]){
-  await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:width===430?932:1000,
+ // Narrow CSS viewport approximates 200% browser text/page zoom at 390px.
+ // Chrome emulation is a regression proxy, NOT native Safari zoom certification.
+ for(const width of [390,430,1440,195]){
+  await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:width===430?932:width===195?422:1000,
    deviceScaleFactor:1,mobile:width<600});
   await send('Page.navigate',{url:origin+(rootMode?'':'next/')});
   let ready=false;
@@ -217,7 +219,7 @@ try{
     'NEXT_VISIBLE_GATE_NOT_IN_SUMMARY:'+width);
   assert.ok(fold.summary.bottom<=fold.graph.top+2&&fold.graph.bottom<=fold.detail.top+2,
     'NEXT_WRONG_DECISION_GRAPH_DETAIL_ORDER:'+width);
-  if(width<=430){
+  if(width===390||width===430){
    assert.ok(fold.action.bottom<=fold.viewportHeight,
     'NEXT_MOBILE_ACTION_BELOW_FIRST_FOLD:'+width+':'+JSON.stringify(fold));
    assert.ok(fold.gate.height===0||fold.gate.bottom<=fold.viewportHeight,
