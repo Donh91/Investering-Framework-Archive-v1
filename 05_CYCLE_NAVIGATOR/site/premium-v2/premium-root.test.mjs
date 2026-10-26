@@ -21,13 +21,24 @@ test('Premium root renders original Graph B, Proof, official Compass and PATH',(
  assert.match(root,/name="robots" content="noindex,nofollow"/);
  assert.ok(root.indexOf('id="variant-panel"')<root.indexOf('id="proof-explorer"'));
  assert.ok(root.indexOf('id="variant-panel"')<root.indexOf('aria-label="Premium sektioner"'));
- assert.ok(root.indexOf('id="proof-explorer"')<root.indexOf('id="official-product-pilot"'));
+ assert.ok(root.indexOf('id="official-product-pilot"')<root.indexOf('id="variant-panel"'));
+ assert.ok(root.indexOf('id="proof-explorer"')<root.indexOf('class="official-product-pilot premium-compass-detail"'));
  assert.ok(root.indexOf('id="official-product-pilot"')<root.indexOf('class="official-product-pilot premium-path"'));
  assert.ok(root.indexOf('class="official-product-pilot premium-path"')<root.indexOf('class="premium-meta"'));
  assert.equal((root.match(/id="feed-status"/g)||[]).length,1);
  assert.match(root,/href="\.\.\/data\/latest\.json" data-premium-nav="cnSource"/);
  assert.match(root,/href="\.\.\/data\/compass\.json" data-premium-nav="compassSource"/);
  assert.match(root,/href="\.\/premium-overhaul\.css"/);
+});
+test('first fold moves the single source-issued action ahead of original Graph B',()=>{
+ const html=buildPremiumRootHtml(original);
+ for(const id of ['official-product-pilot','official-pilot-action','official-pilot-status','variant-panel'])
+  assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id);
+ assert.ok(html.indexOf('premium-decision-summary')<html.indexOf('id="variant-panel"'));
+ assert.ok(html.indexOf('id="variant-panel"')<html.indexOf('premium-compass-detail'));
+ for(const id of ['official-pilot-horizons','official-pilot-rotation','official-pilot-path'])
+  assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(html,/Weekly Outlook <span class="alt-token">B<\/span>/);
 });
 test('root asset paths stay under NEXT and original nested HTML remains immutable',()=>{
  const before=original;
