@@ -663,6 +663,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 "iso_week": 39,
                 "iso_year": 2026,
                 "week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W39",
+                "machine_package_sha256": package_sha,
             }))
             projection = {
                 "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
@@ -704,6 +705,51 @@ class OfficialDailyCompassTest(unittest.TestCase):
             )
             self.assertNotIn("decision_projection", loaded_bad)
             self.assertEqual(binding_bad["decision_projection_source"], "INVALID_COMPATIBILITY_ADDENDUM_IGNORED")
+
+    def test_cn_pointer_binds_exact_package_before_official_protection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            week = Path("05_CYCLE_NAVIGATOR/weekly/2026/W39")
+            (root / week).mkdir(parents=True)
+            package = self.cn()
+            package["issue_number"] = 27
+            target = root / week / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+            original = (json.dumps(package, sort_keys=True) + "\n").encode()
+            target.write_bytes(original)
+            pointer_path = Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
+            pointer = {"issue_number": 27, "iso_year": 2026, "iso_week": 39,
+                       "week_dir": week.as_posix(),
+                       "machine_package_sha256": hashlib.sha256(original).hexdigest()}
+            (root / pointer_path).write_text(json.dumps(pointer))
+            loaded, binding = load_cn_context(root, pointer_path)
+            self.assertEqual(loaded, package)
+            self.assertEqual(binding["status"], "PASS")
+
+            # Same issue identity is insufficient: an altered risk state must
+            # not enter the next Official freeze under the original pointer.
+            package["decision_projection"]["protection"]["pullback_risk_state"] = "CONFIRMED"
+            target.write_text(json.dumps(package))
+            loaded, binding = load_cn_context(root, pointer_path)
+            self.assertIsNone(loaded)
+            self.assertEqual(binding["reason"], "CN_POINTER_PACKAGE_HASH_MISMATCH")
+            out = build_official_compass(
+                self.auto(), packet_path=Path("unused.json"), cn_package=loaded,
+                cn_binding=binding, repo_root=root,
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+            )
+            self.assertEqual(out["data_status"], "DEGRADED")
+            self.assertEqual(out["protection_tracker"]["pullback_risk_state"], "UNAVAILABLE")
+            self.assertEqual(out["sell_assessment"]["state"], "UNAVAILABLE")
+            self.assertFalse(out["authority"]["portfolio_execution"])
+
+            target.write_bytes(original)
+            for declared in (None, "", "0" * 64, True):
+                with self.subTest(declared=declared):
+                    pointer["machine_package_sha256"] = declared
+                    (root / pointer_path).write_text(json.dumps(pointer))
+                    loaded, binding = load_cn_context(root, pointer_path)
+                    self.assertIsNone(loaded)
+                    self.assertEqual(binding["status"], "DEGRADED")
 
     def test_public_projection_does_not_leak_internal_bindings_or_threshold_contract(self):
         with tempfile.TemporaryDirectory() as tmp:
