@@ -156,6 +156,19 @@ try{
      (horizonSourceState!=='expired'||(posture.textContent==='UDLØBET'||posture.textContent==='EXPIRED'));
    });
    const pathStageCount=document.querySelectorAll('#official-pilot-path li').length;
+   const bounds=el=>{if(!el)return null;const r=el.getBoundingClientRect();
+    return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height};};
+   const decisionFold={
+    summary:bounds($('.premium-decision-summary')),
+    action:bounds($('.premium-decision-summary .official-pilot-action')),
+    gate:bounds($('.premium-decision-summary #official-pilot-gate')),
+    graph:bounds($('#variant-panel')),
+    detail:bounds($('.premium-compass-detail')),
+    gateCount:document.querySelectorAll('#official-pilot-gate').length,
+    actionCount:document.querySelectorAll('#official-pilot-action').length,
+    headingCount:document.querySelectorAll('#official-product-pilot').length,
+    viewportHeight:innerHeight
+   };
    const before=$('.premium-entry-navigation [data-premium-nav="compass"]')?.textContent||'';
    $('[data-lang="en"]')?.click();
    const english=$('.premium-entry-navigation [data-premium-nav="compass"]')?.textContent||'';
@@ -167,7 +180,7 @@ try{
     originalB:!!$('#chart[viewBox="0 0 1000 405"]'),links:[...document.querySelectorAll('.premium-entry-navigation a')].map(a=>a.getAttribute('href')),
     before,english,danish,touch,horizonsPresent,horizonSemantics,horizonSourceState,pathStageCount,
     sourceState:$('#source-state')?.textContent||'',
-    sourceStatus:$('#feed-status')?.textContent||'',
+    sourceStatus:$('#feed-status')?.textContent||'',decisionFold,
     btc:!!label,eth:!!alternate,rootPath:location.pathname,
     officialHome:document.body.classList.contains('premium-home'),
     noindex:!!document.querySelector('meta[name="robots"][content*="noindex"]'),
@@ -183,6 +196,22 @@ try{
   assert.equal(report.width,width,'NEXT_WRONG_VIEWPORT');
   assert.ok(report.present&&report.originalB,'NEXT_MISSING_REAL_PREMIUM_MARKUP:'+width);
   assert.ok(report.logo,'NEXT_REAL_CN_LOGO_NOT_LOADED:'+width);
+  const fold=report.decisionFold;
+  assert.ok(fold.summary&&fold.action&&fold.graph&&fold.detail&&fold.gate,
+    'NEXT_DECISION_FIRST_MARKUP_MISSING:'+width);
+  assert.equal(fold.actionCount,1,'NEXT_ACTION_ISSUER_DUPLICATED:'+width);
+  assert.equal(fold.headingCount,1,'NEXT_COMPASS_ISSUER_DUPLICATED:'+width);
+  assert.equal(fold.gateCount,1,'NEXT_SOURCE_GATE_DUPLICATED:'+width);
+  assert.ok(fold.summary.top>=0&&fold.summary.top<fold.viewportHeight,
+    'NEXT_FIRST_FOLD_SUMMARY_NOT_VISIBLE:'+width+':'+JSON.stringify(fold));
+  assert.ok(fold.action.top>=fold.summary.top&&
+    fold.action.bottom<=fold.summary.bottom+3,
+    'NEXT_ACTION_NOT_IN_SUMMARY:'+width);
+  assert.ok(fold.gate.top>=fold.summary.top&&
+    fold.gate.bottom<=fold.summary.bottom+3,
+    'NEXT_GATE_NOT_IN_SUMMARY:'+width);
+  assert.ok(fold.summary.bottom<=fold.graph.top+2&&fold.graph.bottom<=fold.detail.top+2,
+    'NEXT_WRONG_DECISION_GRAPH_DETAIL_ORDER:'+width);
   assert.ok(report.overflow<=2,'NEXT_HORIZONTAL_OVERFLOW:'+width+':'+report.overflow);
   assert.equal(report.english,'Compass','NEXT_LANGUAGE_EN');
   assert.equal(report.danish,'Kompas','NEXT_LANGUAGE_DA');
@@ -203,7 +232,8 @@ try{
   assert.equal(errors.length,0,'NEXT_BROWSER_JS_EXCEPTIONS:'+JSON.stringify(errors));
   assert.equal(responses.length,0,'NEXT_BROWSER_FAILED_ASSETS:'+JSON.stringify(responses));
   results.push({width,overflow:report.overflow,originalB:true,logo:true,
-   officialInputsPresent:report.present,daEn:true,ethSelected:true,failClosed:!!report.sourceStatus});
+   officialInputsPresent:report.present,daEn:true,ethSelected:true,failClosed:!!report.sourceStatus,
+   decisionFirst:true,actionVisibleInFirstFold:fold.action.top<fold.viewportHeight});
   if(width===430){
    // Adversarial live refresh failure, not merely an adapter unit assertion:
    // a previously rendered Official action must not reappear on language switch.
