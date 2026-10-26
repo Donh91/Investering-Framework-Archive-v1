@@ -36,6 +36,8 @@ test('first fold moves the single source-issued action ahead of original Graph B
   assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id);
  assert.ok(html.indexOf('premium-decision-summary')<html.indexOf('id="variant-panel"'));
  assert.ok(html.indexOf('id="variant-panel"')<html.indexOf('premium-compass-detail'));
+ assert.equal((html.match(/id="official-pilot-gate"/g)||[]).length,1);
+ assert.ok(html.indexOf('id="official-pilot-gate"')<html.indexOf('id="variant-panel"'));
  for(const id of ['official-pilot-horizons','official-pilot-rotation','official-pilot-path'])
   assert.match(html,new RegExp('id="'+id+'"'));
  assert.match(html,/Weekly Outlook <span class="alt-token">B<\/span>/);
