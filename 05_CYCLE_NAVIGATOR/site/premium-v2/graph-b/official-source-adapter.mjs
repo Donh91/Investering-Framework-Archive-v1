@@ -78,7 +78,7 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
    const issued=date(m.frozen_at_utc),values=block.points;
    const firstEligible=date(m.scoring_valid_from_utc||a?.scoring_start_utc);
    const good=Number.isFinite(issued)&&Number.isFinite(firstEligible)&&firstEligible>=start&&firstEligible<end&&
-      issued<=now&&issued<firstEligible&&Array.isArray(values)&&values.length===7&&
+      issued<=now&&issued<firstEligible&&issued<start+DAY&&Array.isArray(values)&&values.length===7&&
       values.every((p,i)=>p?.day===i+1&&NUM(p?.expected_close)&&NUM(p?.low)&&NUM(p?.high)&&
       p.low<p.high&&p.low<=p.expected_close&&p.expected_close<=p.high);
    if(good){
