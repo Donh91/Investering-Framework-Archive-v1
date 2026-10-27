@@ -138,10 +138,19 @@ class CapabilityRouterTests(unittest.TestCase):
     def test_synthesis_routes_to_terra_not_sol(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-6-luna", "gpt-5.6-terra", "gpt-6-sol"),
+            runtime("gpt-6-luna", "gpt-6.1-terra", "gpt-6-sol"),
             profile(complexity="SYNTHESIS", capabilities=["synthesis"], effort="medium"),
         )
-        self.assertEqual(plan["units"][0]["model"], "gpt-5.6-terra")
+        self.assertEqual(plan["units"][0]["model"], "gpt-6.1-terra")
+
+    def test_current_terra_wins_same_class_against_legacy_when_both_runtime_qualified(self):
+        plan = build_execution_plan(
+            self.policy,
+            runtime("gpt-5.6-terra", "gpt-6.1-terra", "gpt-6.1-sol"),
+            profile(complexity="SYNTHESIS", capabilities=["synthesis"], effort="medium"),
+        )
+        self.assertEqual(plan["status"], "READY")
+        self.assertEqual(plan["units"][0]["model"], "gpt-6.1-terra")
 
     def test_difficult_reasoning_routes_to_sol_when_astra_not_required(self):
         plan = build_execution_plan(
