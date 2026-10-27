@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_ping/compass_event_refresh.py",
+    "tests/data_ping/test_compass_event_refresh.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-d8e619c55decdb58",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "compass-recover-stale-hourly-before-new-event-driven",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE. Bounded non-trading recovery guard under #1156. Exact HEAD 6cfd521121a9d3f2f89ac355fc9d0ce9a0bd98d6: five GitHub workflows SUCCESS, 38 Compass event tests PASS, one expected PR-only skip. No formal independent GitHub approval; branch rules not required; source authority and market semantics unchanged. Post-merge natural source->Compass->Pages observation still required.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_ping/compass_event_refresh.py": "43f4f625a909b9f6daa68e5e363a7e654de997bf",
+    "tests/data_ping/test_compass_event_refresh.py": "0a804f7566375c4cc710f5e828029bedeb0f806b"
+  },
+  "source_commit_sha": "d8e619c55decdb58c2b121c965ea69dbc9ea5b22",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-26T15:44:28-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(compass): recover stale Hourly before new event-driven issue (#1819)"
+}

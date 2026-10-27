@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.test.mjs",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "scripts/cycle_navigator/daily_price_journey.py",
+    "tests/cycle_navigator/test_daily_price_journey.py",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-8005fff4576714b2",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized 2026-10-27 exact-head bounded release. 7/7 applicable GitHub workflows SUCCESS; 13/13 independent static invariant checks; authored new targeted Python test execution remains unverified and is not claimed PASS. No W44 rewrite, trading rule, new producer, schedule or model call. Natural W45 issuance and public readback remain pending.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.mjs": "cde5d3fffbbb5b9d87a200dd06ac9ad24a6455b8",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.test.mjs": "143163da079c8729b3497afe695b01b1aa46f551",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "f237b9dfd74e500c283a1afd2f380c42b19e7455",
+    "scripts/cycle_navigator/daily_price_journey.py": "c259198a19414e75d954513289615088ed009623",
+    "tests/cycle_navigator/test_daily_price_journey.py": "bda8cb9e38fec5009dc666769cefe6a7408ad532",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py": "ef1ee0c81fbd504cae4b0dab156dca8209670aa4"
+  },
+  "source_commit_sha": "8005fff4576714b25891ba095f3a287cb3d899b4",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-27T01:57:08-07:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "CN: future-only conditional daily forecast issuance with hindsight guard"
+}
