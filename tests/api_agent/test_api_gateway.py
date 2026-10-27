@@ -106,6 +106,25 @@ class ApiGatewayTests(unittest.TestCase):
         self.assertEqual(estimate_cost('gpt-6-sol',1000000,1000000),12.0)
         self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),1.4)
         self.assertEqual(estimate_cost('gpt-5.6-sol',1000000,1000000),24.0)
+    def test_paid_gateway_rejects_astra_even_if_supplied_as_task_model(self):
+        from scripts.api_agent.api_gateway import build_request
+        task_cfg = {
+            "model": "gpt-6-astra", "reasoning_effort": "high",
+            "max_output_tokens": 1000,
+        }
+        with self.assertRaisesRegex(ValueError, "paid_api_model_class_forbidden"):
+            build_request("DAILY_DIRECTOR_SHADOW", task_cfg, "test", {})
+
+    def test_current_terra_high_and_max_are_supported_without_astra(self):
+        from scripts.api_agent.api_gateway import build_request
+        cfg = {"model": "gpt-6.1-terra", "reasoning_effort": "high", "max_output_tokens": 2000}
+        request = build_request("DAILY_CONFLICT_REVIEW", cfg, "test", {})
+        self.assertEqual(request["model"], "gpt-6.1-terra")
+        self.assertEqual(request["reasoning"]["effort"], "high")
+        cfg["reasoning_effort"] = "max"
+        request = build_request("DAILY_CONFLICT_REVIEW", cfg, "test", {})
+        self.assertEqual(request["reasoning"]["effort"], "max")
+
     def test_automation_orchestration_tasks_use_luna_then_gpt_6_1_sol(self):
         data=load_registry(REGISTRY)
         triage=data['tasks']['AUTOMATION_ORCHESTRATOR_TRIAGE']
