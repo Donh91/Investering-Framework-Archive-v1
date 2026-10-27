@@ -4,7 +4,7 @@
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "fc5194d1adc047259b26d57c18f70d758b97766c7146afe91b0924de9cda7d55",
+  "evidence_fingerprint": "601d886fa81b99fb32a15e9e81b662c546c071ee025f0e5cab1c03d697c783c1",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
@@ -38,6 +38,21 @@
       "reason": "Persistent weakness is visible in rotation but the next four-settlement checkpoint has not matured. Continue observing without research escalation.",
       "source": "CN_PRECISION_META_LEARNING",
       "target": ""
+    },
+    {
+      "action": "CONTINUE_OBSERVING",
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "4b5513b1238e74c499b4cd9a7625107bcb821c5044685843a48f808ffdaa2645",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "no fresh adjudicated uncertainty justifies a new child-test proposal",
+      "source": "COMPOUNDING_LEARNING",
+      "target": "EXPERIMENT_LIFECYCLE"
     },
     {
       "action": "CONTINUE_CALIBRATION",
@@ -98,21 +113,6 @@
       "reason": "terminal/closeout source state has no independent decision upside unless linked to a current high-value blocker",
       "source": "SOURCE_RECOVERY",
       "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
-    },
-    {
-      "action": "STRESS_TEST_REGIME_SPECIFICITY",
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "986a87138b378de3ee3d5bf2da46693f47e26c2f0679ca886dafabae513656f6",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "COMPOUNDING_LEARNING",
-      "target": "EC-3b5610a3c12b040694a9"
     }
   ],
   "queue_n": 7,
