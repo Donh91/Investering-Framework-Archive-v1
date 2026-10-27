@@ -824,3 +824,148 @@ jobs:
             state=$(python -c "import json;print(json.load(open('runtime/terra-endgame-archive-batch1/live/receipt.json'))['status'])")
           fi
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "NEW Terra MAX Archive ENDGAME batch #1823/#1814: $state. Real Actions run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Distinct owner authorization, one attempt only, no auto-retry, no code merged or market skill claimed. See artifact for output and model receipt."
+
+  terra-high-shared-row-ci-fix-20261027:
+    # Distinct P0 real API review on the already open Archive PR. No new PR.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027'
+    concurrency:
+      group: terra-high-shared-row-ci-fix-20261027-single-liability
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Scope, retry and governed-model guard
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          t=r['tasks']['TERRA_HIGH_SHARED_ROW_CI_FIX_20261027']
+          assert t['model']=='gpt-6.1-terra' and t['reasoning_effort']=='high'
+          assert t['max_output_tokens']==20000 and t['max_attempts']==1
+          assert t['automatic_merge'] is False and t['automatic_code_write'] is False
+          assert r['single_run_hard_stop_usd']==3
+          PY
+      - name: Single liability claim precheck
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          found=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1156/comments?per_page=100" --jq '.[] | select(.body | contains("[TERRA_HIGH_SHARED_ROW_CI_FIX_CLAIM_v1]")) | .id' | head -n1)
+          if [ -n "$found" ]; then echo "run_api=false" >> "$GITHUB_OUTPUT"; else echo "run_api=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Enforce real 30 USD organization cap with conservative reserved headroom
+        if: steps.gate.outputs.run_api == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/shared-row-endgame-main refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/shared-row-endgame-main/research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 11
+      - name: Build bounded source-accurate PR 1814 failure reproduction
+        if: steps.gate.outputs.run_api == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/shared-row-api-fix
+          python - <<'PY'
+          import json,os,subprocess,hashlib
+          from pathlib import Path
+          repo=os.environ['GITHUB_REPOSITORY']
+          pr=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/pulls/1814']))
+          files=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/pulls/1814/files?per_page=100']))
+          def read(ref,path,limit):
+              try:
+                  raw=subprocess.check_output(['git','show',f'{ref}:{path}'])
+                  return {'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),'excerpt':raw.decode(errors='replace')[:limit]}
+              except subprocess.CalledProcessError:return {'status':'UNAVAILABLE'}
+          context={
+              'exact_original_PR_1814_head':pr['head']['sha'],'original_base':pr['base']['sha'],'draft':pr['draft'],
+              'prior_failed_gate_run_id':40309130816,
+              'original_failure_reason':'2026-10-26 gate: actions/checkout@v4 depth=1; all five parent rows are source_binding excluded, monitor exit 2; synthetic positive/negative tests and other preliminary source validators pass.',
+              'changed_files':[{'path':f['filename'],'status':f['status'],'patch':(f.get('patch') or '')[:4000]} for f in files[:5]],
+              'original_workflow':read('refs/remotes/origin/main','.github/workflows/shared-row-tournament-research-gate.yml',6300),
+              'original_research_gate':read('refs/remotes/origin/main','scripts/research/shared_row_tournament_monitor.py',4300),
+              'source_unavailable_is_a_hard_block':True,'model_cannot_merge':True
+          }
+          root=Path('runtime/shared-row-api-fix')
+          (root/'context.json').write_text(json.dumps(context,sort_keys=True))
+          (root/'prompt.txt').write_text('Return a concise exact-scoped code-review fix of existing PR #1814 failing Shared Row source binding CI. Focus exclusively on source Git commit ancestry vs shallow checkout, preserve all fail-closed negative tests, describe exact patch and ways to falsify it. Output in strict gateway schema, forecast_candidates=[]. NO claim of merge or live edge.')
+          print('EXACT_SHARED_ROW_GATE_EVIDENCE',pr['head']['sha'])
+          PY
+          python scripts/api_agent/api_gateway.py --task TERRA_HIGH_SHARED_ROW_CI_FIX_20261027 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/shared-row-api-fix/prompt.txt --context-file runtime/shared-row-api-fix/context.json --output-dir runtime/shared-row-api-fix/dry --intended-write-prefix research/api_agent/outputs/terra_high_shared_row_ci_fix/ --dry-run
+      - name: Check model exists and credentials before claim
+        if: steps.gate.outputs.run_api == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          k=os.environ.get('OPENAI_API_KEY')
+          if not k:raise SystemExit('KEY_MISSING')
+          with urllib.request.urlopen(urllib.request.Request('https://api.openai.com/v1/models/gpt-6.1-terra',headers={'Authorization':'Bearer '+k}),timeout=20) as r:assert r.status==200
+          PY
+      - name: Record irrevocable distinct paid attempt
+        if: steps.gate.outputs.run_api == 'true'
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/1156/comments" -f body="[TERRA_HIGH_SHARED_ROW_CI_FIX_CLAIM_v1] Run $GITHUB_RUN_ID, exactly one new source-specific Terra HIGH P0 code-fix call, prior MAX claims remain consumed. NO automatic retry, no merge before original-gate proof. " > runtime/shared-row-api-fix/claim.json
+          test -s runtime/shared-row-api-fix/claim.json
+      - name: Real Terra HIGH code-fix API review
+        if: steps.gate.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task TERRA_HIGH_SHARED_ROW_CI_FIX_20261027 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/shared-row-api-fix/prompt.txt --context-file runtime/shared-row-api-fix/context.json --output-dir runtime/shared-row-api-fix/live --intended-write-prefix research/api_agent/outputs/terra_high_shared_row_ci_fix/
+      - name: Verify strict structured reply and no merge invention
+        if: steps.gate.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/shared-row-api-fix/live')
+          r=json.loads((p/'receipt.json').read_text())
+          o=json.loads((p/'output.json').read_text())
+          assert r['status']=='PASS',r
+          assert r['model']=='gpt-6.1-terra' and r['reasoning_effort']=='high'
+          assert r['attempt_count']==1 and r['estimated_cost_usd']<=3
+          assert o['forecast_candidates']==[]
+          assert all(not b for b in r['authority'].values())
+          print('MODEL_REVIEW_VALID_TECHNICAL_PROPOSAL_ONLY')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terra-high-shared-row-ci-fix-${{ github.run_id }}
+          path: runtime/shared-row-api-fix/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Persist terminal result to existing #1156
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=NO_RECEIPT
+          if [ -f runtime/shared-row-api-fix/live/receipt.json ]; then
+            status=$(python -c 'import json;print(json.load(open("runtime/shared-row-api-fix/live/receipt.json"))["status"])')
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Scoped Terra HIGH #1814 source-binding exact-code review: $status. Evidence/artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . No auto retry, new PR, merge, or historical-skill claim."
