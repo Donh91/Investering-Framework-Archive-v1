@@ -523,3 +523,35 @@
 @media(prefers-reduced-motion:reduce) {
  .premium-next .official-pilot-horizon {transition:none!important;transform:none!important}
 }
+
+/* SITE #1578: decision first, original Graph B remains untouched. */
+.premium-next .premium-decision-summary {
+ margin:0 0 18px;padding:clamp(17px,2.5vw,24px);background:#fff;
+ border:1px solid #dce5ee;border-radius:18px;box-shadow:0 8px 25px #0b26400a
+}
+.premium-next .premium-decision-summary .official-pilot-head h2 {
+ font-size:clamp(21px,2.6vw,29px);line-height:1.15;max-width:none;margin:4px 0 6px
+}
+.premium-next .premium-decision-summary .official-pilot-head p {max-width:none;font-size:12px}
+.premium-next .premium-decision-summary .official-pilot-main {margin-top:15px;gap:10px}
+.premium-next .premium-decision-summary .official-pilot-main article {min-height:112px;padding:16px 18px}
+.premium-next .premium-compass-detail {margin-top:28px}
+.premium-next .premium-compass-detail .official-pilot-horizons {margin-top:0}
+@media(max-width:760px) {
+ .premium-next .premium-decision-summary {margin:0 0 15px;padding:15px}
+ .premium-next .premium-decision-summary .official-pilot-main {
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:12px
+ }
+ .premium-next .premium-decision-summary .official-pilot-main article {min-height:116px;padding:13px 12px}
+ .premium-next .premium-decision-summary .official-pilot-main strong {overflow-wrap:anywhere}
+}
+@media(max-width:355px) {
+ .premium-next .premium-decision-summary .official-pilot-main {grid-template-columns:1fr}
+}
+
+/* Source-owned NEXT confirmation, never inferred by the site. */
+.premium-next .premium-decision-summary .official-pilot-gate {
+ margin:12px 0 0;padding:12px 2px 0;border-top:1px solid #e1e8f0;
+ color:#526b84;font-size:12px;line-height:1.6;min-height:0;
+}
+.premium-next .premium-decision-summary .official-pilot-gate:empty {display:none}
