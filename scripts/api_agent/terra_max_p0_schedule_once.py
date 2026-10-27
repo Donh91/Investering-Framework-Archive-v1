@@ -152,7 +152,7 @@ def build(output: Path) -> dict:
         "Root cause of GitHub schedule service is UNKNOWN absent provider proof. "
         "Output strict JSON COMPACT: summary <=450 chars; each evidence_for, "
         "evidence_against, uncertainties and hypotheses <=2 strings <=350 chars. "
-        "Include actual known source sha and evidence limitations. forecast_candidates []."
+        "Include actual known source sha and evidence limitations. forecast_candidates MUST equal []."
     )
     output.mkdir(parents=True, exist_ok=True)
     (output / "context.json").write_bytes(data)
