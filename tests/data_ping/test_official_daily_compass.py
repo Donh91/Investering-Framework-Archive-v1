@@ -310,6 +310,20 @@ class OfficialDailyCompassTest(unittest.TestCase):
             public = build_public_projection(out)
             self.assertEqual(public["sell_assessment"], sell)
 
+    def test_hourly_spot_evidence_quote_is_usdt_not_usd(self):
+        # Correct future evidence labels only; do not convert numbers or rewrite freezes.
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp)
+            rows = {row["feature_id"]: row for row in out["evidence_snapshot"]["selected_features"]}
+            for feature_id, expected in (("btc_usdt", 75654.0), ("eth_usdt", 2396.86)):
+                self.assertEqual(rows[feature_id]["unit"], "USDT")
+                self.assertEqual(rows[feature_id]["source_owner"], "HOURLY_SEQUENCE")
+                self.assertEqual(rows[feature_id]["value"], expected)
+                self.assertEqual(out["market_reference"][feature_id], expected)
+            self.assertEqual(rows["ethbtc"]["unit"], "ratio")
+            self.assertEqual(rows["stablecoin_total_usd"]["unit"], "USD")
+            self.assertFalse(out["authority"]["portfolio_execution"])
+
     def test_missing_values_remain_null_not_zero(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, btc=None, eth=None, ethbtc=None)
