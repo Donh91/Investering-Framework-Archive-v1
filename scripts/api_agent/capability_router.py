@@ -72,7 +72,7 @@ def _is_hardened_profile(policy: dict[str, Any], profile: dict[str, Any]) -> boo
 
 def paid_api_model_class(model_id: str) -> str | None:
     """Exact model class gate. Version selection remains a separately qualified policy decision."""
-    match = re.fullmatch(r"gpt-[0-9]+(?:\\.[0-9]+)?-(luna|terra|sol)", model_id)
+    match = re.fullmatch(r"gpt-[0-9]+(?:[.][0-9]+)?-(luna|terra|sol)", model_id)
     return match.group(1) if match else None
 
 
