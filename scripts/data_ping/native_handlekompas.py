@@ -570,8 +570,8 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
     derivative_hourly_observed = derivative_hourly.get("observation_open_utc") or live.get("observation_open_utc")
 
     rows = [
-        _feature("btc_usdt", finite(live.get("btc_usdt")), "USD", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="HOURLY_SEQUENCE"),
-        _feature("eth_usdt", finite(live.get("eth_usdt")), "USD", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="HOURLY_SEQUENCE"),
+        _feature("btc_usdt", finite(live.get("btc_usdt")), "USDT", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="HOURLY_SEQUENCE"),
+        _feature("eth_usdt", finite(live.get("eth_usdt")), "USDT", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="HOURLY_SEQUENCE"),
         _feature("ethbtc", finite(live.get("ethbtc")), "ratio", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="HOURLY_SEQUENCE"),
         _feature("breadth_advance_ratio", breadth_ratio, "ratio", packet_source, breadth_observed, breadth_health, source_owner=str(current_breadth.get("source") or "RICH_BREADTH_OWNER")),
         _feature("breadth_advancers", breadth_advancers, "count", packet_source, breadth_observed, breadth_health, source_owner=str(current_breadth.get("source") or "RICH_BREADTH_OWNER")),
