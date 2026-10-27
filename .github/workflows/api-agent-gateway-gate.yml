@@ -102,7 +102,7 @@ jobs:
             --output-dir api-agent-output \
             --intended-write-prefix research/api_agent/outputs/daily/ \
             --dry-run
-      - name: Dry-run GPT-6 Sol senior repair audit lane
+      - name: Dry-run GPT-6.1 Sol senior repair audit lane
         if: github.event_name == 'pull_request' || inputs.mode == 'dry-run'
         run: |
           python scripts/api_agent/api_gateway.py \
@@ -117,7 +117,7 @@ jobs:
           import json
           from pathlib import Path
           r=json.loads(Path('senior-repair-audit-output/receipt.json').read_text())
-          assert r['model']=='gpt-6-sol'
+          assert r['model']=='gpt-6.1-sol'
           assert r['reasoning_effort']=='high'
           assert r['allowed_write_prefix']=='research/api_agent/outputs/senior_repair_audit/'
           assert r['intended_write_prefix']==r['allowed_write_prefix']
