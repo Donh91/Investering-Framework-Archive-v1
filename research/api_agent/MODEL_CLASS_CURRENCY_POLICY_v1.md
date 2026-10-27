@@ -6,7 +6,7 @@
 - Luna: `gpt-6-luna` (routine, inexpensive)
 - Terra: `gpt-6.1-terra` (bounded synthesis, visual/computer use, selected scoped code tasks)
 - Sol: `gpt-6.1-sol` (deep reviews, scientific audit, complex reasoning)
-- Astra: `gpt-6-astra` (highest-complexity work)
+- Astra: `gpt-6-astra` (historical pricing/readback metadata ONLY; prohibited for new API execution)
 
 **Rule:** select the newest officially documented *and actually available and qualified* model inside the already approved capability class. A higher version is not a reason to change task ownership, role, budget, model class, output contract, or decision authority.
 
@@ -21,3 +21,12 @@
 
 ## Scope of this patch
 Update active central API routing, relevant consumers/CI tests, and site/CN model defaults. Frozen PDLT v1.1 arms and historical receipts retain original identifiers. Rollout waits for CI availability, independent review and controlled live API confirmation. GitHub Actions quota can delay verification; do not bypass the release gates.
+
+## Owner override · API class whitelist (27 October 2026)
+The only approved **paid OpenAI API** model classes in this framework are **Luna, Terra and Sol**. This excludes Astra from routing, independent-model review, task overrides and other paid API invocation. An Astra model appearing in `/v1/models` is NOT authorization. Preserve old Astra/legacy prices for historical cost receipts, but never call Astra. ChatGPT Work or other non-API model selection is a separate owner decision, not an API loophole.
+
+Preferred currently documented IDs: `gpt-6-luna`, `gpt-6.1-terra`, `gpt-6.1-sol`. Routine model selection follows minimum sufficient capability, verified runtime qualification, source/prompt scope, budget and expected *cost of successful completion*. Luna for cheap routine; Terra High for medium reviews/supervisor API escalation; Sol High for hard scientific/architecture issues. Terra Max is owner-authorized only for ONE bounded endgame audit; never periodic or default. Code changes remain the existing Codex/GitHub PR owner's responsibility; model output cannot merge or trade.
+
+When OpenAI releases a later Luna/Terra/Sol model, agents may PROPOSE the latest same-class model, but production activation requires official model ID+pricing, account availability, representative output contract/negative smoke, budget proof, updated checked-in allowlist/pricing and independent code review. Runtime model listings are discovery, **not** qualification. No silent auto-migration, no version-to-price guesses. If a task requires Astra-exclusive capability, fail closed rather than paying for Astra or pretending the capability is met.
+
+Never increase monthly/per-call hard stops, create parallel supervisors, launch an automatic paid retry, or bypass backup/source integrity gates to force activation. Existing GitHub Actions changes in PR #1823 are HIGH_IMPACT and require independent recovery evidence and exact-head CI before merge. Changes on the isolated PR branch are not production activation.
