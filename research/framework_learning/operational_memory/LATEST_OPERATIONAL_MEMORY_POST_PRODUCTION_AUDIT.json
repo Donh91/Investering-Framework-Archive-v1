@@ -9,16 +9,16 @@
   "automatic_escalation_required": false,
   "candidate_revalidation_count": 1,
   "compatibility_counts": {
-    "DRIFTED": 948,
+    "DRIFTED": 949,
     "EXACT": 785,
-    "PARTIAL": 4537,
+    "PARTIAL": 4538,
     "REMOVED": 11,
     "UNKNOWN": 47
   },
   "contract": "OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1",
-  "episode_count": 6328,
+  "episode_count": 6330,
   "failures": [],
-  "generated_at_utc": "2026-10-27T09:19:35.561174Z",
+  "generated_at_utc": "2026-10-27T10:01:21.220177Z",
   "materialized_candidate_count": 26,
   "measurement": {
     "failed_task_rate": "BASELINE_ACCUMULATING",
@@ -29,30 +29,12 @@
     "useful_retrieval_precision": 1.0
   },
   "memory_reuse_allowed": true,
-  "new_episode_count": 80,
+  "new_episode_count": 2,
   "procedural_candidate_count": 26,
   "recommended_action": "CONTINUE_SHADOW_AND_ACCUMULATE_BASELINE",
   "retrieval_probe": {
     "probe_count": 12,
     "results": [
-      {
-        "episode_id": "OE-ccd7a258598e7c78",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-e95c7cc285014bc8",
-        "expected_task_class": "MARKET_STATE",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "MARKET_STATE"
-      },
       {
         "episode_id": "OE-714580d004339223",
         "expected_task_class": "MARKET_STATE",
@@ -142,14 +124,32 @@
         "selected_count": 5,
         "top_class_match": true,
         "top_task_class": "MARKET_STATE"
+      },
+      {
+        "episode_id": "OE-b0a43e9332b5ebeb",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-be643df3766459ce",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 1,
+        "revalidation_count": 4,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
       }
     ],
     "stale_reuse_violations": 0,
     "top_task_class_hits": 12,
     "top_task_class_precision": 1.0
   },
-  "source_head_sha": "378565b9dd2b5d2868e8bf8cf2a33dcf05206e26",
-  "stale_share": 0.1515,
+  "source_head_sha": "be643df3766459ce0093d002a1f8540ac87ebeed",
+  "stale_share": 0.1517,
   "status": "WARN",
   "warnings": [
     "candidate_requires_revalidation:1"
