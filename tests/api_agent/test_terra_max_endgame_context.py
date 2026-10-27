@@ -34,8 +34,8 @@ class TerraMaxEndgameContextTests(unittest.TestCase):
         self.assertEqual(mod.REASONING, "max")
 
     def test_owner_branch_manual_dispatch_is_not_blocked_by_ui_mode(self):
-        # GitHub mobile submitted 'live-smoke' but Actions twice executed
-        # ordinary dry-run. This checks the mutually exclusive branch gates.
+        # GitHub iOS run #599 and #600 each selected live-smoke but the mode
+        # check behaved as dry-run. Explicitly route one owner branch only.
         workflow = Path(".github/workflows/api-agent-gateway-gate.yml").read_text()
         gate = workflow.split("  gateway-gate:", 1)[1].split("  terra-max-endgame-once:", 1)[0]
         max_job = workflow.split("  terra-max-endgame-once:", 1)[1]
@@ -43,14 +43,16 @@ class TerraMaxEndgameContextTests(unittest.TestCase):
         max_condition = max_job.split("    if: >-", 1)[1].split("    concurrency:", 1)[0]
         self.assertIn("github.event_name == 'workflow_dispatch'", max_condition)
         self.assertIn("github.actor == 'Donh91'", max_condition)
-        self.assertIn("github.run_attempt == 1", max_condition)
-        self.assertIn("refs/heads/chore/model-class-currency-20261027", max_condition)
+        self.assertIn("github.ref == 'refs/heads/chore/model-class-currency-20261027'", max_condition)
         self.assertNotIn("inputs.mode", max_condition)
+        self.assertNotIn("github.run_attempt", max_condition)
         self.assertNotIn("inputs.mode", gate_condition)
-        self.assertIn("github.actor == 'Donh91'", gate_condition)
-        self.assertIn("terra_max_endgame_claim.py", max_job)
+        self.assertIn("github.actor != 'Donh91'", gate_condition)
+        self.assertIn("github.ref != 'refs/heads/chore/model-class-currency-20261027'", gate_condition)
+        self.assertIn("github.event_name != 'workflow_dispatch'", gate_condition)
+        self.assertIn('test "$GITHUB_RUN_ATTEMPT" = "1"', max_job)
+        self.assertLess(max_job.index("NO_PAID_RERUN"), max_job.index("terra_max_endgame_claim.py"))
         self.assertLess(max_job.index("terra_max_endgame_claim.py"), max_job.index("      - name: 'ONE API call"))
-        self.assertIn("github.run_attempt == 1", max_condition)
         claim = Path("scripts/api_agent/terra_max_endgame_claim.py").read_text()
         self.assertIn("NO_PAID_RERUN", claim)
         self.assertIn("ONE_TIME_PAID_LIABILITY_ALREADY_CLAIMED", claim)
