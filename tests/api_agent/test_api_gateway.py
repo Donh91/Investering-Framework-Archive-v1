@@ -158,6 +158,45 @@ class ApiGatewayTests(unittest.TestCase):
             self.assertEqual(receipt["attempt_count"], 1)
             self.assertEqual(receipt["status"], "PROVIDER_CHARGE_UNKNOWN_NO_RETRY")
 
+    def test_unreadable_paid_http_body_is_unknown_liability_no_retry(self):
+        registry = load_registry(REGISTRY)
+        registry["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]["max_attempts"] = 2
+        task = registry["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]
+        errors = [
+            json.JSONDecodeError("truncated", "{", 0),
+            UnicodeDecodeError("utf-8", bytes([255]), 0, 1, "invalid start byte"),
+        ]
+        for err in errors:
+            with self.subTest(error=type(err).__name__), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                (root / "registry.json").write_text(json.dumps(registry))
+                (root / "prompt.txt").write_text("public scoped P0 evidence")
+                (root / "context.json").write_text('{"synthetic":true}')
+                argv = [
+                    "api_gateway.py", "--task", "TERRA_MAX_P0_SCHEDULE_ONCE",
+                    "--registry", str(root / "registry.json"),
+                    "--prompt-file", str(root / "prompt.txt"),
+                    "--context-file", str(root / "context.json"),
+                    "--output-dir", str(root / "out"),
+                    "--intended-write-prefix", task["allowed_write_prefix"],
+                ]
+                with patch.object(sys, "argv", argv), \
+                     patch.dict(os.environ, {"OPENAI_API_KEY": "DUMMY_NOT_TO_PRINT"}), \
+                     patch.object(gateway, "call_api", side_effect=err) as called:
+                    with self.assertRaisesRegex(SystemExit, "PROVIDER_CHARGE_UNKNOWN_NO_RETRY"):
+                        gateway.main()
+                called.assert_called_once()
+                receipt = json.loads((root / "out" / "receipt.json").read_text())
+                output = json.loads((root / "out" / "output.json").read_text())
+                self.assertEqual(receipt["status"], "PROVIDER_CHARGE_UNKNOWN_NO_RETRY")
+                self.assertEqual(receipt["transport_error_class"], type(err).__name__)
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], 3)
+                self.assertIsNone(receipt["actual_provider_cost_usd"])
+                self.assertTrue(receipt["no_automatic_retry"])
+                self.assertEqual(output["status"], "BLOCKED")
+                self.assertEqual(output["forecast_candidates"], [])
+
     def test_http_error_is_not_misclassified_as_unknown_disconnect(self):
         registry = load_registry(REGISTRY)
         task = registry["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]

@@ -369,7 +369,10 @@ def main() -> None:
                 # A definitive HTTP error is not a silent transport disconnect.
                 # Preserve the prior fail-closed provider rejection path.
                 raise
-            except (OSError, ConnectionError, TimeoutError, urllib.error.URLError) as exc:
+            except (OSError, ConnectionError, TimeoutError, urllib.error.URLError,
+                    json.JSONDecodeError, UnicodeError) as exc:
+                # Even HTTP 200 with truncated or undecodable JSON may be billable.
+                # Treat this as UNKNOWN liability with no automatic retry.
                 receipt = write_unknown_transport_receipt(
                     output_dir=args.output_dir, task=args.task, task_cfg=task_cfg,
                     registry=registry, request_hash=request_hash, prompt=prompt,
