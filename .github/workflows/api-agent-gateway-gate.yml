@@ -230,6 +230,21 @@ jobs:
           python scripts/api_agent/terra_max_endgame_context.py \
             --repo-root . --output-dir runtime/terra-max-endgame
 
+      - name: Fail closed if source packet or public readback incomplete
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('runtime/terra-max-endgame/manifest.json').read_text())
+          assert r['contract']=='TERRA_MAX_ENDGAME_GITHUB_ONCE_v1'
+          assert r['source_missing_count']==0, 'REQUIRED_PUBLIC_SOURCE_MISSING'
+          assert r['public_readback_success_count']==2, 'PAGES_LINEAGE_READBACK_UNAVAILABLE'
+          assert r['source_file_count']==15
+          assert r['api_calls_from_packet_builder']==0
+          assert r['automatic_code_write'] is False
+          assert r['automatic_merge'] is False
+          PY
+
       - name: Dry-run existing strict API gateway at zero cost
         run: |
           python scripts/api_agent/api_gateway.py \
