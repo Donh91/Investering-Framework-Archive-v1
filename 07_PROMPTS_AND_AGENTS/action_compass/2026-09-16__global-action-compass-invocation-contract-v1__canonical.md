@@ -206,6 +206,21 @@ Rules for both tables:
 
 This user-facing format supplements rather than supersedes the Three-Horizon action vocabulary and all exact current-pointer / fail-closed rules.
 
+## 5.2 Permanent user override, unqualified Kompas means KOMPAS PRO (2026-10-27)
+
+**Owner instruction:** Every unqualified `Kompas` prompt, including `send Kompas`, `Kompas nu` and an explicit `Kompas PRO`, must render the latest agreed **KOMPAS PRO** as the *default* human view. Do **not** silently return the former compact two-table-only answer. The English `Compass` alias uses the equivalent PRO view. Only show the shorter legacy view if the user explicitly asks for it. The explicit `Handlekompas` specialized command retains its existing distinct contract.
+
+KOMPAS PRO is **presentation and readback only** over the current source-governed full Compass stack. Preserve both mandatory three-column chat tables in section 5.1, the same seven assets, short-term and strategic horizons, Official-vs-Shadow distinction and the assistant's forward-time labelled interpretation. Add these source-bound PRO sections in a compact, iPhone-first, **TEXT_ONLY** answer:
+
+1. Current market state, timestamp, owner data freshness and material source limitations.
+2. **Pullback Radar PRO:** original official risk state mapped only to ordinal 1–5; separate qualitative evidence quality; no interpretation as an event probability. Distinguish *pullback onset ETA*, *source week watch window*, and *next decision review*. Mark unsupported onset, probability, severity in price returns or drawdown depth as unquantified/unavailable.
+3. **Price Range Navigator:** original current-week frozen BTC/ETH ranges and any exact eligible owner-issued time windows. Preserve original issue week and freeze; never stretch a weekly envelope into a daily/21–30d/4–8w forecast, backfill a missing path or manufacture new prices.
+4. **SELL / Swing / distribution / re-entry:** each typed source lane separate; a pullback warning or risk score is **not** official SELL or risk-off permission.
+5. **Your Action Now:** display official controlled action separately from clearly non-binding assistant planning guidance. No model-generated portfolio action, no privately inferred position amounts.
+6. Finish with **🧠 MIN FORTOLKNING — <SPECIFIC FORWARD HORIZON>**, indicating direction and counterevidence, not merely restating the tables.
+
+The merged site-side Kompas PRO source-only reference is `05_CYCLE_NAVIGATOR/site/vnext-live/compass-pro-readback.mjs` (site PR #1811), with link integration PR #1812. This reference **does not** promote vNext as the canonical public homepage or allow on-demand code execution to replace missing official evidence. Future owner-approved PRO improvements may extend the presentation without changing this default intent. Source authority, freshness, public/private data protection, forecast freezing, two-table requirement, no-widgets policy and action permissions remain unchanged.
+
 ## 6. No-widget / internal-tool rendering policy
 
 Compass threads are human decision surfaces, not tool dashboards.
@@ -272,10 +287,10 @@ This gives the user a genuinely on-demand Compass when new canonical evidence ex
 
 ## 9. Language and naming
 
-Default user-facing title in Danish threads:
+Default user-facing title in Danish threads for an unqualified Kompas invocation:
 
 ```text
-🧭 KOMPAS
+🧭 KOMPAS PRO
 ```
 
 `HANDLEKOMPAS` remains an accepted user trigger and historical label. `COMPASS` is the English trigger and may be used as the title when the user is writing in English.

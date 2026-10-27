@@ -36,8 +36,8 @@
     "global_action_compass_translation"
   ],
   "output": {
-    "default_title_da": "🧭 KOMPAS",
-    "default_title_en": "🧭 COMPASS",
+    "default_title_da": "🧭 KOMPAS PRO",
+    "default_title_en": "🧭 COMPASS PRO",
     "visible_output_policy": "TEXT_ONLY",
     "required_horizons": [
       "NOW_0_3D",
@@ -81,6 +81,40 @@
       "independent_interpretation": "EXPLICITLY_LABEL_NON_BINDING_WITH_HORIZON",
       "markdown_tables_are_widgets": false,
       "presentation_only_no_market_rule_change": true
+    },
+    "default_chat_presentation": "KOMPAS_PRO_CURRENT",
+    "prompt_presentation_routing": {
+      "kompas": "KOMPAS_PRO_CURRENT",
+      "kompas pro": "KOMPAS_PRO_CURRENT",
+      "compass": "KOMPAS_PRO_CURRENT",
+      "send kompas": "KOMPAS_PRO_CURRENT",
+      "kompas nu": "KOMPAS_PRO_CURRENT",
+      "handlekompas": "EXPLICIT_HANDLEKOMPAS_SPECIALIZED_CONTRACT",
+      "user_explicitly_requests_short_classic_version": "LEGACY_COMPACT_ON_REQUEST"
+    },
+    "kompas_pro_presentational_contract": {
+      "upstream_reference": "05_CYCLE_NAVIGATOR/site/vnext-live/compass-pro-readback.mjs",
+      "source_authority": "UNCHANGED_OFFICIAL_NATIVE_STRATEGIC_CN_WITH_NONBINDING_SHADOW",
+      "required_sections": [
+        "MARKET_STATE_AND_SOURCE_AGE",
+        "MIT_TAKTISKE_KOMPAS",
+        "AKTIVKLASSER",
+        "PULLBACK_RADAR_1_5",
+        "PRICE_RANGE_NAVIGATOR",
+        "SELL_SWING_DISTRIBUTION_REENTRY",
+        "YOUR_ACTION_NOW_OFFICIAL_SEPARATE_FROM_NONBINDING",
+        "ASSISTANT_INTERPRETATION_FORWARD_TIME"
+      ],
+      "pullback_ordinal_risk_is_probability": false,
+      "risk_quality_is_probability": false,
+      "requires_source_supported_eta_and_depth": true,
+      "unavailable_eta_depth_probability": "EXPLICIT_UNAVAILABLE_NOT_INFERRED",
+      "week_only_watch_is_onset_eta": false,
+      "future_price_ranges": "ONLY_ORIGINALLY_FROZEN_ELIGIBLE_OWNER_RANGES",
+      "no_new_buy_sell_authority": true,
+      "legacy_short_version_requires_explicit_request": true,
+      "no_widgets": true,
+      "effect": "PRESENTATION_ONLY"
     }
   },
   "official_compass_policy": {
@@ -205,6 +239,7 @@
     "site_projection_attached_to": "PUBLIC_COMPASS_PROJECTION_v1",
     "output_policy": "TEXT_ONLY_NO_WIDGETS",
     "fail_closed": "SOURCE_GAPS_EXPLICIT_NO_SHADOW_PROMOTION",
-    "on_demand_render_creates_receipt": false
+    "on_demand_render_creates_receipt": false,
+    "default_chat_presentation": "KOMPAS_PRO_CURRENT"
   }
 }
