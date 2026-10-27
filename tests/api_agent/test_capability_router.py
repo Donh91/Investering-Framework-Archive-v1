@@ -336,12 +336,13 @@ class CapabilityRouterTests(unittest.TestCase):
             task=task,
             task_cfg=registry["tasks"][task],
             policy=self.policy,
-            runtime=runtime("gpt-6-luna", "gpt-5.6-terra", qualified=["gpt-6-luna"]),
+            runtime=runtime("gpt-6-luna", "gpt-6.1-terra", qualified=["gpt-6-luna"]),
             profile=profile(task=task, capabilities=["structured_output"], effort="low"),
             activate_routing=False,
         )
         self.assertEqual(receipt["recommended"]["model"], "gpt-6-luna")
-        self.assertEqual(effective["model"], "gpt-5.6-terra")
+        self.assertEqual(effective["model"], registry["tasks"][task]["model"])
+        self.assertEqual(effective["model"], "gpt-6.1-terra")
         self.assertEqual(receipt["mode"], "SHADOW_RECOMMENDATION")
         self.assertEqual(receipt["selection_pool"], "AVAILABLE_MODELS_SHADOW")
         self.assertIsNone(receipt["delegation_lineage"])
