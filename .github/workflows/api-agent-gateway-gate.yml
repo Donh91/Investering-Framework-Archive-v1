@@ -34,8 +34,8 @@ jobs:
     # Branch+owner+attempt+durable claim control payment, not a fragile dropdown.
     if: >-
       github.event_name != 'workflow_dispatch' ||
-      (github.ref == 'refs/heads/chore/model-class-currency-20261027' &&
-       github.actor == 'Donh91')
+      github.ref != 'refs/heads/chore/model-class-currency-20261027' ||
+      github.actor != 'Donh91'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -182,8 +182,7 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/chore/model-class-currency-20261027' &&
-      github.actor == 'Donh91' &&
-      github.run_attempt == 1
+      github.actor == 'Donh91'
     concurrency:
       group: terra-max-owner-endgame-20261027-once
       cancel-in-progress: false
@@ -202,6 +201,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: No paid rerun, even if Actions job conditional is evaluated differently
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1" || { echo 'NO_PAID_RERUN'; exit 1; }
       - name: Freeze exact current public main and compile bounded machinery
         run: |
           git fetch origin main
