@@ -1,0 +1,80 @@
+{
+  "contract": "KOMPAS_PRO_TERRA_HIGH_BOUNDED_HANDOFF_v1",
+  "date": "2026-10-27",
+  "kind": "ONE_SHOT_EXISTING_OWNER_AUDIT_TO_REMEDIATION",
+  "execution_status": "NOT_DISPATCHED",
+  "source_main_sha_at_audit": "8b449cdc34c7de0e723fbf54a02c552a2602be67",
+  "api": {
+    "model_requested": "gpt-6.1-terra",
+    "reasoning_effort": "high",
+    "role": "ADVISORY_FORENSIC_AUDIT_ONLY",
+    "model_availability": "VERIFY_IN_ACTUAL_ACCOUNT",
+    "budget_gate": {
+      "monthly_usd": 40,
+      "single_call_usd": 3,
+      "raise_limits": false
+    },
+    "single_execution_requires": "EXISTING_APPROVED_API_OWNER_ROUTE_AND_LIVE_RECEIPT",
+    "retry_consumed_terra_max": false,
+    "automatic_code_write": false,
+    "automatic_merge": false
+  },
+  "parent_owners": {
+    "price_source_issuer": "#1516",
+    "weekly_producer": "#1593",
+    "site_consumer": "#1578",
+    "scientific_admission": "#1596",
+    "protection": "#1553",
+    "integrator": "#1156"
+  },
+  "evidence": {
+    "w44_freeze": "05_CYCLE_NAVIGATOR/weekly/2026/W44/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+    "range_bridge": "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
+    "range_bridge_target": "2026-W39",
+    "current_cn_target": "2026-W44",
+    "range_bridge_readback": "research/cycle_navigator/operational_readback/2026-10-26_W44.json",
+    "range_bridge_status": "STALE",
+    "range_bridge_reason": "BRIDGE_TARGET_WEEK_MISMATCH",
+    "official_compass_pointer": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+    "official_compass_at_audit": "CMP-20261027-2178a2d6c0d4",
+    "official_data_status": "DEGRADED",
+    "official_action_now": "HOLD_WAIT",
+    "missing_feature": "altseason_score_90d",
+    "missingness_status": "FAIL_PASS_LANE_MISSING_VALUE",
+    "graph_b_w44_daily_expected_closes": "UNAVAILABLE",
+    "pullback_class": "ELEVATED",
+    "sell": "UNAVAILABLE"
+  },
+  "objectives": [
+    "Prove whether a recurring eligible prospective range issuer exists in current #1516 implementation or is intentionally unissued",
+    "Restore only a provenance-valid exact-target-week W45+ source-to-consumer link, or preserve SOURCE_UNAVAILABLE",
+    "Preserve frozen W44 weekly and window ranges as authored CN analytical forecasts without misattributing bridge provenance",
+    "Audit Official/Native/Strategic/Shadow, seven asset rungs, six horizons, source status, separate SELL/Swing, pullback ordinal vs probability, memecoin ownership",
+    "Audit GitHub Pages site/CDN and Graph B source truth, keep absent blue line absent",
+    "Fix only verified bounded P0/P1 code defects on this same PR branch with regression/negative controls"
+  ],
+  "acceptance": {
+    "positive": [
+      "Same-week eligible prospective source has exact source, creation-time, cutoff, commit, SHA and quote-unit verification, with receipt",
+      "Official Kompas action/parity and seven-rung / six-horizon source-bound fields survive current/DEGRADED status with truthful display",
+      "Site/CDN readback matches released source and Graph B only renders prospectively frozen expected-close data",
+      "Same PR branch has real code changes, tests, independent exact-head review and owner-governed merge readback"
+    ],
+    "negative": [
+      "Stale W39 bridge never allowed to claim W44/W45 prospective issuance",
+      "Historical or deterministic baseline never silently replaces issuer",
+      "Tampered/late/unclosed/wrong-quote bridge is rejected with no value",
+      "Missing 90d altseason feature and DEGRADED do not silently pass as OK",
+      "Pullback class 3/5 not construed as 60% likelihood or SELL",
+      "Unissued daily expected-close series never synthesized from bands",
+      "Historical W44 forecast freezes and Task 2 outcomes never rewritten"
+    ]
+  },
+  "deliverable_md": "research/master_monday_preflight/2026-10-27__KOMPAS_PRO_TERRA_6_1_HIGH_REPAIR_MISSION_v1.md",
+  "release_gate": "NO_MERGE_UNTIL_ACTUAL_CODE_AND_TESTS_AND_INDEPENDENT_REVIEW_AND_RECOVERY_AND_POSTMERGE_PROOF",
+  "not_a_queue_authority": true,
+  "not_an_api_invocation_receipt": true,
+  "recurring_schedule_added": false,
+  "pricing_policy_changed": false,
+  "portfolio_authority": false
+}
