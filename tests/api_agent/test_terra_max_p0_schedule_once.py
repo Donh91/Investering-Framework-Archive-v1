@@ -112,6 +112,29 @@ class TerraMaxP0ScheduleOnceTests(unittest.TestCase):
         self.assertEqual(len(records), 1)
         self.assertNotEqual(p.MARKER, "[TERRA_MAX_ENDGAME_ONCE_CLAIM_v1]")
 
+    def test_consumed_one_shot_jobs_are_terminally_disabled(self):
+        # Both historical Max attempts and High P0 have already placed durable
+        # owner-paid claim markers. A new PR commit must NOT wake these jobs.
+        workflow = Path(".github/workflows/api-agent-gateway-gate.yml").read_text()
+        for name in (
+            "terra-max-endgame-once",
+            "terra-high-p0-once",
+            "terra-max-p0-schedule-once",
+        ):
+            with self.subTest(job=name):
+                part = workflow.split("  " + name + ":\n", 1)[1]
+                admission = part.split("    if: >-\n", 1)[1].split("    concurrency:", 1)[0]
+                self.assertTrue(
+                    admission.lstrip().startswith("false &&"),
+                    "CONSUMED_API_JOB_REMAINS_PAYABLE:" + name,
+                )
+                self.assertIn("github.actor == 'Donh91'", admission)
+        # Normal free gateway validation remains reachable by pull_request.
+        gateway = workflow.split("  gateway-gate:\n", 1)[1].split(
+            "  terra-max-endgame-once:\n", 1
+        )[0]
+        self.assertNotIn("false &&", gateway)
+
     def test_branch_one_shot_routing_and_separate_concurrency(self):
         workflow = Path(".github/workflows/api-agent-gateway-gate.yml").read_text()
         self.assertIn("  terra-max-p0-schedule-once:", workflow)
