@@ -181,6 +181,7 @@ jobs:
     # Paid claim step independently requires first-run-attempt and a unique GitHub
     # issue #1156 bot-created marker BEFORE the single model request.
     if: >-
+      false &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/chore/model-class-currency-20261027' &&
       github.actor == 'Donh91'
@@ -347,6 +348,7 @@ jobs:
     # Owner-authorized single-use P0 only. This is a PR-scoped one-time API step,
     # not a scheduler or production source-writer. Existing PR #1823 only.
     if: >-
+      false &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.number == 1823 &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -508,6 +510,7 @@ jobs:
     # SECOND distinct explicit owner authorization, after first Max + High claims
     # already consumed. Existing PR branch only, no main cron or extra workflow.
     if: >-
+      false &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.number == 1823 &&
       github.event.pull_request.head.repo.full_name == github.repository &&
