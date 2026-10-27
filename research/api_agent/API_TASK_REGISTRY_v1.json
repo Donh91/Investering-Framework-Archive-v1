@@ -14,7 +14,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/daily/"
     },
     "DAILY_CONFLICT_REVIEW": {
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6.1-terra",
       "reasoning_effort": "medium",
       "max_output_tokens": 1600,
       "manual_only": false,
@@ -22,7 +22,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/conflicts/"
     },
     "WEEKLY_CALIBRATION_SHADOW": {
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6.1-terra",
       "reasoning_effort": "medium",
       "max_output_tokens": 3000,
       "manual_only": false,
@@ -30,7 +30,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/weekly/"
     },
     "WEEKLY_ADVERSARIAL_REVIEW": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 3500,
       "manual_only": false,
@@ -38,7 +38,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/weekly_red_team/"
     },
     "MONTHLY_LEARNING_ANALYST": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 2800,
       "manual_only": false,
@@ -46,7 +46,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/monthly_learning_council/"
     },
     "MONTHLY_LEARNING_ADVERSARIAL": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 2800,
       "manual_only": false,
@@ -54,7 +54,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/monthly_learning_council/"
     },
     "CYCLE_NAVIGATOR_WEEKLY_PUBLICATION": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 5000,
       "manual_only": false,
@@ -62,7 +62,7 @@
       "allowed_write_prefix": "05_CYCLE_NAVIGATOR/weekly/"
     },
     "MASTER_MONDAY_PREP_SHADOW": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 4500,
       "manual_only": true,
@@ -70,7 +70,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/master_monday/"
     },
     "DEEP_RESEARCH_MANUAL": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 6000,
       "manual_only": true,
@@ -78,7 +78,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/research/"
     },
     "SENIOR_REPAIR_AUDIT": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 9000,
       "manual_only": false,
@@ -88,11 +88,11 @@
       "advisory_only": true,
       "automatic_code_write": false,
       "automatic_merge": false,
-      "governed_instruction": "Perform an independent adversarial architecture and repair audit of the supplied evidence package. Try to falsify the repairs and authority boundaries rather than restate them. Use only supplied evidence and preserve missingness. forecast_candidates MUST be empty. Be concise: summary <= 900 characters; each evidence/uncertainty/hypothesis list <= 8 items; each item <= 600 characters. The summary MUST begin with PASS, PASS_WITH_FINDINGS, or FAIL and contain MODEL_USED=gpt-6-sol, NO_CODE_WRITE_PERFORMED, and NO_AUTHORITY_CHANGE. Put actionable findings in evidence_against as P0|..., P1|..., P2|..., or P3|... with affected path or commit and deterministic reproduction. Put verified defenses in evidence_for, unresolved proof gaps in uncertainties, and proposal-only owner routing in hypotheses. Never request or imply a repository write, merge, market-rule change, threshold/weight change, canonical promotion, or portfolio action.",
+      "governed_instruction": "Perform an independent adversarial architecture and repair audit of the supplied evidence package. Try to falsify the repairs and authority boundaries rather than restate them. Use only supplied evidence and preserve missingness. forecast_candidates MUST be empty. Be concise: summary <= 900 characters; each evidence/uncertainty/hypothesis list <= 8 items; each item <= 600 characters. The summary MUST begin with PASS, PASS_WITH_FINDINGS, or FAIL and contain MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, and NO_AUTHORITY_CHANGE. Put actionable findings in evidence_against as P0|..., P1|..., P2|..., or P3|... with affected path or commit and deterministic reproduction. Put verified defenses in evidence_for, unresolved proof gaps in uncertainties, and proposal-only owner routing in hypotheses. Never request or imply a repository write, merge, market-rule change, threshold/weight change, canonical promotion, or portfolio action.",
       "retry_max_output_tokens": 18000
     },
     "CN_PRECISION_4W_REVIEW": {
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6.1-terra",
       "reasoning_effort": "medium",
       "max_output_tokens": 2600,
       "manual_only": false,
@@ -101,7 +101,7 @@
       "governed_instruction": "Perform a research-only four-settlement Cycle Navigator internal precision review. Use only supplied settled internal evidence. Search for recurring error classes, cross-family blind spots, regime dependence, timing bias, range-shape problems, and overly rigid frozen claims that a single weekly review could miss. Try to falsify an apparent weakness before accepting it. forecast_candidates MUST be empty. Hypotheses must be bounded, falsifiable, and suitable only for later shadow/scientific admission. Never recommend or imply changes to SITE/X public precision semantics, historical public scores, canonical thresholds, model weights, market state, forecast authority, portfolio actions, or repository writes."
     },
     "CN_PRECISION_ADVERSARIAL_REVIEW": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 3200,
       "manual_only": false,
@@ -211,10 +211,10 @@
     "source": "OPENAI_OFFICIAL_API_PRICING_AND_MODEL_CATALOG",
     "latest_verified_ids": {
       "luna": "gpt-6-luna",
-      "terra": "gpt-5.6-terra",
+      "terra": "gpt-6.1-terra",
       "sol": "gpt-6.1-sol",
       "astra": "gpt-6-astra",
-      "legacy_sol": "gpt-6-sol"
+      "legacy_sol": "gpt-6.1-sol"
     },
     "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27"
   }
