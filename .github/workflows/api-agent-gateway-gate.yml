@@ -51,7 +51,8 @@ jobs:
             tests.api_agent.test_director_learning_context \
             tests.api_agent.test_director_situation_room_shadow \
             tests.api_agent.test_daily_director_conflict_budget \
-            tests.api_agent.test_daily_director_workflow_contract -v
+            tests.api_agent.test_daily_director_workflow_contract \
+            tests.api_agent.test_terra_max_endgame_context -v
       - name: Verify GPT-6.1 Sol owner release and no-repeat paid admission
         run: |
           python -m py_compile scripts/api_agent/research_lab_sol_dispatch.py
