@@ -222,7 +222,7 @@
     "self_merge": false
   },
   "model_refresh": {
-    "verified_at_utc_date": "2026-09-30",
+    "verified_at_utc_date": "2026-10-27",
     "source": "OPENAI_OFFICIAL_API_PRICING_AND_MODEL_CATALOG",
     "latest_verified_ids": {
       "luna": "gpt-6-luna",
@@ -231,6 +231,19 @@
       "astra": "gpt-6-astra",
       "legacy_sol": "gpt-6.1-sol"
     },
-    "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27"
+    "terra_note": "GPT-6.1 Terra is a verified current class model; runtime qualification still required for any live dynamic override.",
+    "paid_api_allowed_classes": [
+      "luna",
+      "terra",
+      "sol"
+    ],
+    "astra_paid_api_allowed": false,
+    "astra_model_id_in_historical_metadata_not_api_authority": true,
+    "new_release_behavior": "EXISTING_MODEL_CLASS_CURRENCY_REVIEW_ONLY_NO_AUTO_UPGRADE",
+    "expected_latest_models": {
+      "luna": "gpt-6-luna",
+      "terra": "gpt-6.1-terra",
+      "sol": "gpt-6.1-sol"
+    }
   }
 }
