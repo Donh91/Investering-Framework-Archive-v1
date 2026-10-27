@@ -1,0 +1,313 @@
+{
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "portfolio_action": false,
+    "state_change": false
+  },
+  "contract": "HOURLY_SEQUENCE_CAPTURE_v2_2",
+  "derivatives_oi_complete_hours": 26,
+  "derivatives_status": "PASS",
+  "derivatives_venue": "OKX",
+  "directional_summary": {
+    "authority": {
+      "binding": false,
+      "canonical_acceptance": false,
+      "portfolio_action": false,
+      "state_change": false
+    },
+    "completeness": "PARTIAL",
+    "contract": "HOURLY_DIRECTIONAL_SUMMARY_v1",
+    "directional_complete_hours": 25,
+    "evidence_semantics": {
+      "availability": "AVAILABLE",
+      "confirmation_level": "AVAILABLE_NOT_CONFIRMING",
+      "evidence_role": "OWNER_EVIDENCE",
+      "market_interpretation": "NOT_PERFORMED",
+      "registered_threshold_compatibility": "UNCONFIRMED_HOURLY_NOT_SETTLED_SESSION"
+    },
+    "latest_observations": [
+      {
+        "btc_close": 79871.15,
+        "btc_return_1h_pct": 0.08073254984040101,
+        "eth_close": 2313.84,
+        "eth_minus_btc_return_1h_pp": -0.12652286475680619,
+        "eth_return_1h_pct": -0.04579031491640517,
+        "ethbtc_close": 0.02897,
+        "ethbtc_return_1h_pct": -0.1034482758620725,
+        "timestamp_utc": "2026-10-27T08:00:00Z"
+      },
+      {
+        "btc_close": 79776.99,
+        "btc_return_1h_pct": -0.11788987638213788,
+        "eth_close": 2313.05,
+        "eth_minus_btc_return_1h_pp": 0.08374749834390016,
+        "eth_return_1h_pct": -0.03414237803823772,
+        "ethbtc_close": 0.02899,
+        "ethbtc_return_1h_pct": 0.06903693476010275,
+        "timestamp_utc": "2026-10-27T09:00:00Z"
+      },
+      {
+        "btc_close": 79968.01,
+        "btc_return_1h_pct": 0.23944247583167488,
+        "eth_close": 2316.49,
+        "eth_minus_btc_return_1h_pp": -0.09072109064762746,
+        "eth_return_1h_pct": 0.14872138518404743,
+        "ethbtc_close": 0.02897,
+        "ethbtc_return_1h_pct": -0.06898930665746317,
+        "timestamp_utc": "2026-10-27T10:00:00Z"
+      },
+      {
+        "btc_close": 79910.01,
+        "btc_return_1h_pct": -0.07252900253489347,
+        "eth_close": 2316.04,
+        "eth_minus_btc_return_1h_pp": 0.05310306070048787,
+        "eth_return_1h_pct": -0.019425941834405602,
+        "ethbtc_close": 0.02898,
+        "ethbtc_return_1h_pct": 0.034518467380051376,
+        "timestamp_utc": "2026-10-27T11:00:00Z"
+      },
+      {
+        "btc_close": 80365.66,
+        "btc_return_1h_pct": 0.5702039081211696,
+        "eth_close": 2335.22,
+        "eth_minus_btc_return_1h_pp": 0.2579337751658084,
+        "eth_return_1h_pct": 0.828137683286978,
+        "ethbtc_close": 0.02906,
+        "ethbtc_return_1h_pct": 0.2760524499654915,
+        "timestamp_utc": "2026-10-27T12:00:00Z"
+      },
+      {
+        "btc_close": 80045.0,
+        "btc_return_1h_pct": -0.39900126496814625,
+        "eth_close": 2322.32,
+        "eth_minus_btc_return_1h_pp": -0.15340921455839762,
+        "eth_return_1h_pct": -0.5524104795265439,
+        "ethbtc_close": 0.02902,
+        "ethbtc_return_1h_pct": -0.13764624913970014,
+        "timestamp_utc": "2026-10-27T13:00:00Z"
+      },
+      {
+        "btc_close": 80356.23,
+        "btc_return_1h_pct": 0.3888187894309336,
+        "eth_close": 2334.83,
+        "eth_minus_btc_return_1h_pp": 0.1498666630476153,
+        "eth_return_1h_pct": 0.5386854524785489,
+        "ethbtc_close": 0.02906,
+        "ethbtc_return_1h_pct": 0.1378359751895264,
+        "timestamp_utc": "2026-10-27T14:00:00Z"
+      },
+      {
+        "btc_close": 80562.27,
+        "btc_return_1h_pct": 0.25640824613102353,
+        "eth_close": 2347.18,
+        "eth_minus_btc_return_1h_pp": 0.2725381867998422,
+        "eth_return_1h_pct": 0.5289464329308657,
+        "ethbtc_close": 0.02913,
+        "ethbtc_return_1h_pct": 0.240880935994503,
+        "timestamp_utc": "2026-10-27T15:00:00Z"
+      }
+    ],
+    "latest_relative_performance": {
+      "eth_minus_btc_return_1h_pp": 0.2725381867998422,
+      "ethbtc_return_1h_pct": 0.240880935994503,
+      "timestamp_utc": "2026-10-27T15:00:00Z"
+    },
+    "registered_directional_counts": {
+      "eth_leads_btc": {
+        "definition": "ETH_RETURN_1H_PCT_GT_BTC_RETURN_1H_PCT_WITHIN_SOURCE_WINDOW",
+        "unit": "CLOSED_1H_OWNER_CANDLE",
+        "value": 15
+      },
+      "ethbtc_positive_hours": {
+        "unit": "CLOSED_1H_OWNER_CANDLE",
+        "value": 15
+      },
+      "trailing_ethbtc_positive_run": {
+        "definition": "CONSECUTIVE_TRAILING_SOURCE_REPORTED_ETHBTC_RETURN_1H_PCT_GT_ZERO",
+        "unit": "CLOSED_1H_OWNER_CANDLE",
+        "value": 2
+      }
+    },
+    "requested_hours": 26,
+    "source_hourly_run_id": "HOURLY_SEQUENCE_20261027T165554Z_c0839a30556c",
+    "source_output_receipts": [
+      {
+        "bytes": 18276,
+        "logical_path": "HOURLY_SEQUENCE_ROOT/2026/10/2026-10-26.csv",
+        "raw_payload_sha256": "47e9b49c144da66dd5987e4f6642c5924951116cb9c0b637f16e5a4885d19fbc"
+      },
+      {
+        "bytes": 12546,
+        "logical_path": "HOURLY_SEQUENCE_ROOT/2026/10/2026-10-27.csv",
+        "raw_payload_sha256": "26e3772ba6fa02c86628336a0d48dcc28ad062f72feb27e3bacda85ae02312b8"
+      }
+    ],
+    "source_raw_receipts": [
+      {
+        "name": "BTCUSDT_spot",
+        "raw_response_sha256": "a897a5c7cea0c4d38230ff97acec2e68d0116c2ae41abe381d7d9b01e9eb7543"
+      },
+      {
+        "name": "ETHUSDT_spot",
+        "raw_response_sha256": "1a5d34204892479bab41694440ea386d40101f67a3b9b49e48e93f886dbf8717"
+      },
+      {
+        "name": "ETHBTC_spot",
+        "raw_response_sha256": "e1ff4d26469fdcb603e42f72a6ecdb5779bc0fed331d194e526a17de0464dc3d"
+      },
+      {
+        "name": "BTCUSDT_oi",
+        "raw_response_sha256": "1f10420f99394dbc18245eab4be4fee699ca8141b522e360dea969d43b1fce16"
+      },
+      {
+        "name": "BTCUSDT_long_short",
+        "raw_response_sha256": "43c72cb51fa072a707262429eb3c3b909616c1326458b67fe89d7e1c410f9140"
+      },
+      {
+        "name": "BTCUSDT_funding",
+        "raw_response_sha256": "262b262a518c402fca3a22b45de86bf611f89d68de3cae7cb43518973e31fff4"
+      },
+      {
+        "name": "ETHUSDT_oi",
+        "raw_response_sha256": "f44834f655d42326ad126103ab2dc840542e19e8da32dff7cd86d1e0dab71402"
+      },
+      {
+        "name": "ETHUSDT_long_short",
+        "raw_response_sha256": "947cdf60da6b5d91207cce4e56def0c57c6dafa06fe8185096c4ba87f364d99e"
+      },
+      {
+        "name": "ETHUSDT_funding",
+        "raw_response_sha256": "acb03e6792d98c793fdaff77be6dc0ca2550e6a00691681d527bb151ec53c9b3"
+      }
+    ],
+    "source_rows_normalized_sha256": "669b7b9008e6e470beecb4fe72ffe7b2ddea04750764f89d6c60665ba318cf22",
+    "source_window": {
+      "end_utc": "2026-10-27T16:00:00Z",
+      "start_utc": "2026-10-26T14:00:00Z"
+    },
+    "summary_sha256": "174caf23944896453acd8476477e4d703e16795af933b5944c2ee441c619c36a"
+  },
+  "directional_summary_sha256": "174caf23944896453acd8476477e4d703e16795af933b5944c2ee441c619c36a",
+  "forward_fill": false,
+  "interpolation": false,
+  "long_short_complete_hours": 26,
+  "permanent_output_receipts": [
+    {
+      "bytes": 18276,
+      "logical_path": "HOURLY_SEQUENCE_ROOT/2026/10/2026-10-26.csv",
+      "raw_payload_sha256": "47e9b49c144da66dd5987e4f6642c5924951116cb9c0b637f16e5a4885d19fbc"
+    },
+    {
+      "bytes": 12546,
+      "logical_path": "HOURLY_SEQUENCE_ROOT/2026/10/2026-10-27.csv",
+      "raw_payload_sha256": "26e3772ba6fa02c86628336a0d48dcc28ad062f72feb27e3bacda85ae02312b8"
+    }
+  ],
+  "permanent_outputs": [
+    "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-26.csv",
+    "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-27.csv"
+  ],
+  "requested_hours": 26,
+  "retrieved_at_utc": "2026-10-27T16:55:54Z",
+  "run_id": "HOURLY_SEQUENCE_20261027T165554Z_c0839a30556c",
+  "source_records": [
+    {
+      "bytes": 4645,
+      "error": null,
+      "name": "BTCUSDT_spot",
+      "row_count": 26,
+      "sha256": "a897a5c7cea0c4d38230ff97acec2e68d0116c2ae41abe381d7d9b01e9eb7543",
+      "status": "PASS",
+      "url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=1793023200000&endTime=1793116799999&limit=1000",
+      "venue": "BINANCE_SPOT"
+    },
+    {
+      "bytes": 4568,
+      "error": null,
+      "name": "ETHUSDT_spot",
+      "row_count": 26,
+      "sha256": "1a5d34204892479bab41694440ea386d40101f67a3b9b49e48e93f886dbf8717",
+      "status": "PASS",
+      "url": "https://data-api.binance.vision/api/v3/klines?symbol=ETHUSDT&interval=1h&startTime=1793023200000&endTime=1793116799999&limit=1000",
+      "venue": "BINANCE_SPOT"
+    },
+    {
+      "bytes": 3765,
+      "error": null,
+      "name": "ETHBTC_spot",
+      "row_count": 26,
+      "sha256": "e1ff4d26469fdcb603e42f72a6ecdb5779bc0fed331d194e526a17de0464dc3d",
+      "status": "PASS",
+      "url": "https://data-api.binance.vision/api/v3/klines?symbol=ETHBTC&interval=1h&startTime=1793023200000&endTime=1793116799999&limit=1000",
+      "venue": "BINANCE_SPOT"
+    },
+    {
+      "bytes": 2364,
+      "error": null,
+      "name": "BTCUSDT_oi",
+      "row_count": 26,
+      "sha256": "1f10420f99394dbc18245eab4be4fee699ca8141b522e360dea969d43b1fce16",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-history?instId=BTC-USDT-SWAP&period=1H&begin=1793019600000&end=1793116799999&limit=100",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 678,
+      "error": null,
+      "name": "BTCUSDT_long_short",
+      "row_count": 26,
+      "sha256": "43c72cb51fa072a707262429eb3c3b909616c1326458b67fe89d7e1c410f9140",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=BTC&period=1H&begin=1793023200000&end=1793116799999",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 19508,
+      "error": null,
+      "name": "BTCUSDT_funding",
+      "row_count": 3,
+      "sha256": "262b262a518c402fca3a22b45de86bf611f89d68de3cae7cb43518973e31fff4",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/public/funding-rate-history?instId=BTC-USDT-SWAP&limit=100",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 2277,
+      "error": null,
+      "name": "ETHUSDT_oi",
+      "row_count": 26,
+      "sha256": "f44834f655d42326ad126103ab2dc840542e19e8da32dff7cd86d1e0dab71402",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-history?instId=ETH-USDT-SWAP&period=1H&begin=1793019600000&end=1793116799999&limit=100",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 679,
+      "error": null,
+      "name": "ETHUSDT_long_short",
+      "row_count": 26,
+      "sha256": "947cdf60da6b5d91207cce4e56def0c57c6dafa06fe8185096c4ba87f364d99e",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=ETH&period=1H&begin=1793023200000&end=1793116799999",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 19614,
+      "error": null,
+      "name": "ETHUSDT_funding",
+      "row_count": 3,
+      "sha256": "acb03e6792d98c793fdaff77be6dc0ca2550e6a00691681d527bb151ec53c9b3",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/public/funding-rate-history?instId=ETH-USDT-SWAP&limit=100",
+      "venue": "OKX"
+    }
+  ],
+  "spot_complete_hours": 26,
+  "spot_flow_complete_hours": 26,
+  "spot_status": "PASS",
+  "spot_venue": "BINANCE",
+  "status": "COMPLETE",
+  "window_end_utc": "2026-10-27T16:00:00Z",
+  "window_start_utc": "2026-10-26T14:00:00Z"
+}
