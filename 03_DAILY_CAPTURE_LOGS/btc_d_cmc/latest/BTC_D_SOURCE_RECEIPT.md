@@ -1,11 +1,11 @@
 # BTC.D CoinMarketCap Raw Source Receipt
 
 - Provider: CoinMarketCap public website data endpoint
-- Endpoint: `https://api.coinmarketcap.com/data-api/v3/global-metrics/quotes/historical?convertId=2781&timeStart=1672531200&timeEnd=1792886400&interval=1d`
-- Retrieval timestamp: `2026-10-26T13:29:47Z`
-- Raw SHA-256: `db3ad580b84ce457b028611e0e8eb44c4bc9d965e3a84b1ccfc7ef204746e7ef`
-- Raw bytes: `841958`
-- Raw quote records: `1393`
+- Endpoint: `https://api.coinmarketcap.com/data-api/v3/global-metrics/quotes/historical?convertId=2781&timeStart=1672531200&timeEnd=1792972800&interval=1d`
+- Retrieval timestamp: `2026-10-27T12:38:04Z`
+- Raw SHA-256: `74009aa226f35fa657fd82ee8b49488ecd68002b6ab7d3bae2e14b3862e0b553`
+- Raw bytes: `842564`
+- Raw quote records: `1394`
 - Authentication: none
 - Source convention: `CMC_DIRECT_SOURCE_CONVENTION`
 - TradingView equivalence: `NO`
