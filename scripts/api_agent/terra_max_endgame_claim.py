@@ -45,18 +45,28 @@ def api(method: str, route: str, payload: dict | None = None) -> dict | list:
 
 def existing_claim() -> dict | None:
     route = "/repos/" + REPOSITORY + "/issues/" + str(ISSUE) + "/comments"
-    for page in range(1, 15):
-        comments = api("GET", route + "?per_page=100&page=" + str(page))
-        if not isinstance(comments, list):
+    # Issue #1156 had 528 long owner comments on 2026-10-27: fetching 100
+    # exceeds api()'s 400 KB response ceiling before ANY model call.
+    # Keep the size ceiling; page more narrowly rather than bypassing it.
+    page_size = 25
+    for page in range(1, 101):
+        comments = api("GET", route + f"?per_page={page_size}&page={page}")
+        if not isinstance(comments, list) or len(comments) > page_size:
             raise RuntimeError("INVALID_GITHUB_ISSUE_COMMENT_COLLECTION")
         for comment in comments:
+            if not isinstance(comment, dict):
+                raise RuntimeError("INVALID_GITHUB_ISSUE_COMMENT_ROW")
+            user = comment.get("user")
+            if not isinstance(user, dict):
+                raise RuntimeError("INVALID_GITHUB_COMMENT_AUTHOR")
             if (
-                (comment.get("user") or {}).get("login") == BOT
+                user.get("login") == BOT
                 and str(comment.get("body") or "").startswith(MARKER)
             ):
                 return {"id": comment.get("id"), "url": comment.get("html_url")}
-        if len(comments) < 100:
+        if len(comments) < page_size:
             return None
+    # Never authorize paid inference from an incomplete comment census.
     raise RuntimeError("GITHUB_COMMENT_CENSUS_NOT_EXHAUSTIVE")
 
 
