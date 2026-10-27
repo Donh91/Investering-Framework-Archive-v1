@@ -1,0 +1,104 @@
+{
+  "actual_direction": "DOWN",
+  "adjudication_delay_hours": 0.671878,
+  "authority": {
+    "automatic_rule_changes": false,
+    "portfolio_execution": false,
+    "shadow_only": true
+  },
+  "brier_score": null,
+  "calibration_group": "ETH:24H:DOWN:5_of_8",
+  "calibration_key": "5_of_8",
+  "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+  "due_at_utc": "2026-10-27T01:00:00Z",
+  "end_value": 2327.12,
+  "evidence_candle_open_utc": "2026-10-27T00:00:00Z",
+  "evidence_deadline_utc": "2026-10-27T02:30:00Z",
+  "evidence_horizon_error_hours": 0.0,
+  "evidence_observation_utc": "2026-10-27T01:00:00Z",
+  "evidence_semantics": "EXACT_DUE_CLOSED_1H_OWNER_CANDLE",
+  "evidence_source_binding_sha256": "aeb39ab117e40dbf4d4f144331085d5c6350a780e2ab2c30d2573f9e25b01166",
+  "evidence_source_commit_sha": "c5b84d91d8e388685444d3c68bd1f67702d2ef77",
+  "evidence_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-27.csv",
+  "evidence_source_snapshot_utc": "2026-10-27T01:39:39Z",
+  "frozen_calibrated_probability_pct": null,
+  "horizon_hours": 24,
+  "issued_at_utc": "2026-10-26T01:09:31.192198Z",
+  "measured_at_utc": "2026-10-27T01:40:18.760052Z",
+  "miss_analysis": {
+    "families_aligned_with_actual": [
+      "return_4h",
+      "taker_balance",
+      "taker_change",
+      "ethbtc_1h",
+      "breadth_balance"
+    ],
+    "families_opposed_to_actual": [
+      "return_1h",
+      "session_vwap",
+      "momentum_acceleration"
+    ]
+  },
+  "predicted_direction": "DOWN",
+  "prediction_path": "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/26/20261026T010931Z.json",
+  "prediction_sha256": "908ef37498ad5b40932cb8f4eb4eb74b83d8d2ba0328fc34936368cf9a3f6f5a",
+  "production_context": {
+    "commit_sha": "c5b84d91d8e388685444d3c68bd1f67702d2ef77",
+    "event": "workflow_dispatch",
+    "ref": "refs/heads/main",
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "run_attempt": "1",
+    "run_id": "40433817332"
+  },
+  "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+  "registration_receipt_sha256": "a61938f9b772f204ab0d5bc1e11798e51ee313bf1e1857f3d6bafd7b6bdf66d2",
+  "result": "HIT",
+  "return_pct": -0.12360515,
+  "source_candle_open_utc": "2026-10-26T00:00:00+00:00",
+  "source_price_observation_utc": "2026-10-26T01:00:00Z",
+  "start_value": 2330.0,
+  "status": "MATURED",
+  "target": "ETH",
+  "votes": [
+    {
+      "direction": "UP",
+      "family": "return_1h",
+      "value": 0.00557971045596
+    },
+    {
+      "direction": "DOWN",
+      "family": "return_4h",
+      "value": -0.7365941149155009
+    },
+    {
+      "direction": "UP",
+      "family": "session_vwap",
+      "value": 0.06398071802271588
+    },
+    {
+      "direction": "UP",
+      "family": "momentum_acceleration",
+      "value": 0.25240662371129335
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_balance",
+      "value": 0.454018408268
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_change",
+      "value": -0.01323820826033334
+    },
+    {
+      "direction": "DOWN",
+      "family": "ethbtc_1h",
+      "value": -0.103163686382
+    },
+    {
+      "direction": "DOWN",
+      "family": "breadth_balance",
+      "value": 0.47
+    }
+  ]
+}
