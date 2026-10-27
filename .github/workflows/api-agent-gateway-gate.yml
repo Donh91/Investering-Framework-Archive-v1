@@ -268,7 +268,7 @@ jobs:
             --source-sha "$(git rev-parse refs/remotes/origin/main)" \
             > runtime/terra-max-endgame/claim.json
 
-      - name: ONE API call: GPT-6.1 Terra Max endgame
+      - name: 'ONE API call: GPT-6.1 Terra Max endgame'
         id: paid_call
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
