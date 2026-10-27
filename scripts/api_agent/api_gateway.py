@@ -290,6 +290,56 @@ def blocked_output(reason: str) -> dict[str, Any]:
     }
 
 
+
+def write_unknown_transport_receipt(
+    *, output_dir: Path, task: str, task_cfg: dict[str, Any],
+    registry: dict[str, Any], request_hash: str, prompt: str,
+    context: dict[str, Any], allowed_prefix: str, attempt_number: int,
+    transport_error: BaseException,
+) -> dict[str, Any]:
+    """Conservatively reserve an UNKNOWN charge when provider connection vanishes.
+
+    The request may have been executed server-side even with no HTTP response.
+    Do not fake zero-token usage or claim precise billing, and NEVER retry.
+    """
+    if type(attempt_number) is not int or attempt_number < 1:
+        raise ValueError("unknown_liability_attempt_invalid")
+    hard_stop = float(registry["single_run_hard_stop_usd"])
+    if not (0 < hard_stop <= 3.0):
+        raise ValueError("unknown_liability_hard_stop_invalid")
+    blocked = blocked_output("PROVIDER_TRANSPORT_ERROR_CHARGE_UNKNOWN_NO_RETRY")
+    output_bytes = canonical_bytes(blocked)
+    receipt = {
+        "contract": "API_UNKNOWN_LIABILITY_RESERVATION_v1",
+        "task": task,
+        "model": task_cfg["model"],
+        "reasoning_effort": task_cfg["reasoning_effort"],
+        "request_hash": request_hash,
+        "context_hash": sha256_bytes(canonical_bytes(context)),
+        "prompt_hash": sha256_bytes(prompt.encode()),
+        "output_hash": sha256_bytes(output_bytes),
+        "response_id": None,
+        "attempt_count": attempt_number,
+        # RESERVATION only, not a claim that actual OpenAI spend was USD 3.
+        "estimated_cost_usd": hard_stop,
+        "cost_basis": "PESSIMISTIC_SINGLE_RUN_HARD_STOP_NOT_ACTUAL_SPEND",
+        "actual_provider_cost_usd": None,
+        "provider_charge_status": "UNKNOWN",
+        "transport_error_class": type(transport_error).__name__,
+        "status": "PROVIDER_CHARGE_UNKNOWN_NO_RETRY",
+        "no_automatic_retry": True,
+        "created_unix": int(time.time()),
+        "allowed_write_prefix": allowed_prefix,
+        "intended_write_prefix": allowed_prefix,
+        "forecast_candidate_count": 0,
+        "authority": registry["authority"],
+    }
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "output.json").write_bytes(output_bytes)
+    (output_dir / "receipt.json").write_bytes(canonical_bytes(receipt))
+    return receipt
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", required=True);parser.add_argument("--registry", type=Path, required=True);parser.add_argument("--prompt-file", type=Path, required=True)
@@ -313,7 +363,21 @@ def main() -> None:
             payload = dict(request_payload)
             if attempt == 1:
                 payload["max_output_tokens"] = retry_output_token_limit(task_cfg)
-            response = call_api(api_key, payload, timeout_seconds=request_timeout_seconds(task_cfg))
+            try:
+                response = call_api(api_key, payload, timeout_seconds=request_timeout_seconds(task_cfg))
+            except urllib.error.HTTPError:
+                # A definitive HTTP error is not a silent transport disconnect.
+                # Preserve the prior fail-closed provider rejection path.
+                raise
+            except (OSError, ConnectionError, TimeoutError, urllib.error.URLError) as exc:
+                receipt = write_unknown_transport_receipt(
+                    output_dir=args.output_dir, task=args.task, task_cfg=task_cfg,
+                    registry=registry, request_hash=request_hash, prompt=prompt,
+                    context=context, allowed_prefix=allowed_prefix,
+                    attempt_number=attempt + 1, transport_error=exc,
+                )
+                print(json.dumps(receipt, sort_keys=True))
+                raise SystemExit("PROVIDER_CHARGE_UNKNOWN_NO_RETRY") from exc
             responses.append(response)
             try:
                 output = extract_output(response)
