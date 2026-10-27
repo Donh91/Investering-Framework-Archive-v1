@@ -503,3 +503,144 @@ jobs:
           fi
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
             --body "Terra 6.1 HIGH P0 one-time API: $state (estimated USD $cost). This is advisory, NOT a deployed data-chain repair. One paid attempt only, never auto-retry. Frozen source, output and receipt artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Continue P0 under existing GitHub PR owners; no AppDeploy or parallel workflow."
+
+  terra-max-p0-schedule-once:
+    # SECOND distinct explicit owner authorization, after first Max + High claims
+    # already consumed. Existing PR branch only, no main cron or extra workflow.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027' &&
+      github.actor == 'Donh91'
+    concurrency:
+      group: terra-max-p0-schedule-one-time-20261027
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate owner, distinct claim, exact contract and cheap negative tests
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1" || { echo 'NO_PAID_RERUN'; exit 1; }
+          python -m py_compile scripts/api_agent/terra_max_p0_schedule_once.py scripts/api_agent/api_gateway.py
+          python -m unittest -v tests.api_agent.test_terra_max_p0_schedule_once tests.api_agent.test_api_gateway
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path("research/api_agent/API_TASK_REGISTRY_v1.json").read_text())
+          t=j["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]
+          assert t["model"] == "gpt-6.1-terra" and t["reasoning_effort"] == "max"
+          assert t["max_attempts"] == 1 and t["max_output_tokens"] == 45000
+          assert t["manual_only"] is False and t["automatic_code_write"] is False
+          assert t["automatic_merge"] is False
+          assert t["allowed_write_prefix"] == "research/api_agent/outputs/terra_max_p0_schedule_once/"
+          assert j["monthly_hard_stop_usd"] == 40 and j["single_run_hard_stop_usd"] == 3
+          assert j["tasks"]["TERRA_MAX_ENDGAME_ONCE"]["max_attempts"] == 1
+          print("SECOND_TERRA_MAX_OWNER_SCOPE_AND_BUDGET_PASS")
+          PY
+      - name: Skip if new P0 Max liability is already claimed; require old Max claim
+        id: admit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from scripts.api_agent.terra_max_p0_schedule_once import MARKER, scan_existing_marker
+          prior=scan_existing_marker("[TERRA_MAX_ENDGAME_ONCE_CLAIM_v1]")
+          if not prior:
+              raise SystemExit("FIRST_MAX_PAID_CLAIM_REQUIRED_NO_SECOND_MISSION")
+          fresh=scan_existing_marker(MARKER) is None
+          print("run_max=" + ("true" if fresh else "false"))
+          print("SECOND_MAX_CLAIM_AVAILABLE=" + str(fresh))
+          PY
+      - name: Enforce original global and separate P0 Max one-shot budget
+        if: steps.admit.outputs.run_max == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/terra-max-p0-main refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/terra-max-p0-main/research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4.0
+          python scripts/api_agent/check_api_lane_budget.py --receipt-root /tmp/terra-max-p0-main/research/api_agent/outputs --task TERRA_MAX_P0_SCHEDULE_ONCE --cap-usd 1.0 --reserve-usd 0.50
+      - name: Freeze latest public main, two public CDN files, real incident evidence
+        if: steps.admit.outputs.run_max == 'true'
+        run: |
+          mkdir -p runtime/terra-max-p0-schedule
+          python scripts/api_agent/terra_max_p0_schedule_once.py build --output-dir runtime/terra-max-p0-schedule
+          python scripts/api_agent/api_gateway.py --task TERRA_MAX_P0_SCHEDULE_ONCE --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/terra-max-p0-schedule/prompt.txt --context-file runtime/terra-max-p0-schedule/context.json --output-dir runtime/terra-max-p0-schedule/dry --intended-write-prefix research/api_agent/outputs/terra_max_p0_schedule_once/ --dry-run
+      - name: Verify exact Terra model listing without inference
+        if: steps.admit.outputs.run_max == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          key=os.environ.get("OPENAI_API_KEY")
+          if not key: raise SystemExit("OPENAI_API_KEY_NOT_CONFIGURED")
+          req=urllib.request.Request("https://api.openai.com/v1/models/gpt-6.1-terra",headers={"Authorization":"Bearer "+key})
+          with urllib.request.urlopen(req,timeout=20) as res:
+              if res.status!=200: raise SystemExit("TERRA_MODEL_NOT_AVAILABLE")
+          print("TERRA_MODEL_AVAILABLE_NO_INFERENCE")
+          PY
+      - name: Claim distinct second owner-authorized paid liability before OpenAI call
+        if: steps.admit.outputs.run_max == 'true'
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python scripts/api_agent/terra_max_p0_schedule_once.py claim --run-id "$GITHUB_RUN_ID" --main-sha "$(git rev-parse refs/remotes/origin/main)" > runtime/terra-max-p0-schedule/claim.json
+      - name: ONE paid Terra 6.1 Max schedule-liveness closure API response
+        if: steps.admit.outputs.run_max == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task TERRA_MAX_P0_SCHEDULE_ONCE --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/terra-max-p0-schedule/prompt.txt --context-file runtime/terra-max-p0-schedule/context.json --output-dir runtime/terra-max-p0-schedule/live --intended-write-prefix research/api_agent/outputs/terra_max_p0_schedule_once/
+      - name: Validate one-shot MAX structured receipt, never call advisory an actual repair
+        if: steps.admit.outputs.run_max == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("runtime/terra-max-p0-schedule/live")
+          r=json.loads((p/"receipt.json").read_text())
+          o=json.loads((p/"output.json").read_text())
+          assert r["status"]=="PASS", "SECOND_MAX_OUTPUT_UNACCEPTED_NO_RETRY"
+          assert r["model"]=="gpt-6.1-terra" and r["reasoning_effort"]=="max"
+          assert r["attempt_count"]==1 and r["estimated_cost_usd"]<=3.0
+          assert o["forecast_candidates"]==[]
+          assert all(v is False for v in r["authority"].values())
+          assert len(o["evidence_against"])<=2 and len(o["hypotheses"])<=2
+          print("SECOND_TERRA_MAX_P0_STRICT_OUTPUT_PASS_ADVISORY_NOT_MERGED")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.admit.outputs.run_max == 'true'
+        with:
+          name: terra-max-p0-schedule-once-${{ github.run_id }}
+          path: runtime/terra-max-p0-schedule/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Log second Max result to existing S1 GitHub issue, no paid retry
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f runtime/terra-max-p0-schedule/live/receipt.json ]; then
+            status=$(python -c "import json;print(json.load(open('runtime/terra-max-p0-schedule/live/receipt.json'))['status'])")
+            cost=$(python -c "import json;print(json.load(open('runtime/terra-max-p0-schedule/live/receipt.json'))['estimated_cost_usd'])")
+          else
+            status="PAID_RECEIPT_MISSING_COST_UNKNOWN"
+            cost="UNKNOWN"
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Second distinct owner-authorized Terra MAX P0 schedule liveness: $status (estimated USD $cost). Exactly one API attempt, consumed claim, NEVER auto-retry. Source-bound proposed fix, frozen context and receipt under https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Not a code merge or proof of six natural schedule hours."
