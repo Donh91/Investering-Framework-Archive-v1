@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import os
 import urllib.request
 from datetime import datetime, timezone
@@ -67,6 +68,12 @@ def _delegation_policy(policy: dict[str, Any]) -> dict[str, Any]:
 
 def _is_hardened_profile(policy: dict[str, Any], profile: dict[str, Any]) -> bool:
     return profile.get("contract") == _delegation_policy(policy).get("hardened_profile_contract")
+
+
+def paid_api_model_class(model_id: str) -> str | None:
+    """Exact model class gate. Version selection remains a separately qualified policy decision."""
+    match = re.fullmatch(r"gpt-[0-9]+(?:\\.[0-9]+)?-(luna|terra|sol)", model_id)
+    return match.group(1) if match else None
 
 
 def validate_policy(policy: dict[str, Any]) -> None:
@@ -138,6 +145,11 @@ def validate_policy(policy: dict[str, Any]) -> None:
     for key in ("long_context_input_multiplier", "long_context_output_multiplier"):
         if not isinstance(pricing.get(key), (int, float)) or float(pricing[key]) < 1:
             raise ValueError(f"invalid_pricing_multiplier:{key}")
+    allowed_classes = policy.get("execution", {}).get("api_model_class_allowlist")
+    if allowed_classes != ["luna", "terra", "sol"]:
+        raise ValueError("only_luna_terra_sol_api_classes_allowed")
+    if policy.get("execution", {}).get("astra_api_execution_permitted") is not False:
+        raise ValueError("astra_api_execution_forbidden")
     models = policy.get("models")
     if not isinstance(models, dict) or not models:
         raise ValueError("capability_policy_models_required")
@@ -150,6 +162,8 @@ def validate_policy(policy: dict[str, Any]) -> None:
             raise ValueError(f"invalid_model_capabilities:{model_id}")
         if not isinstance(cfg.get("reasoning_efforts"), list):
             raise ValueError(f"invalid_model_reasoning_efforts:{model_id}")
+        if cfg.get("api_eligible") is True and paid_api_model_class(model_id) not in allowed_classes:
+            raise ValueError(f"forbidden_paid_api_model_class:{model_id}")
         price = cfg.get("price_per_million")
         if not isinstance(price, dict) or not isinstance(price.get("input"), (int, float)) or not isinstance(price.get("output"), (int, float)):
             raise ValueError(f"invalid_model_price:{model_id}")
@@ -360,15 +374,20 @@ def _select_api_model(
     required = set(required_values)
     requested_effort = str(unit.get("reasoning_effort") or "low")
     requires_astra = bool(unit.get("requires_astra", False))
+    # Owner policy: Astra cannot be used by this API estate, even if /models lists it.
+    # A profile requiring Astra must fail closed, never silently downgrade its requirements.
+    if requires_astra:
+        return None
+    allowed_classes = set(policy["execution"]["api_model_class_allowlist"])
     estimated_input = int(unit.get("estimated_input_tokens", 0) or 0)
     estimated_output = int(unit.get("estimated_output_tokens", 0) or 0)
     candidates: list[tuple[float, int, str, dict[str, Any]]] = []
     for model_id, cfg in policy["models"].items():
-        if model_id in exclude or model_id not in available or cfg.get("api_eligible") is not True:
+        if (model_id in exclude or model_id not in available
+                or cfg.get("api_eligible") is not True
+                or paid_api_model_class(model_id) not in allowed_classes):
             continue
         if cfg.get("rank", 0) < complexity_rank:
-            continue
-        if requires_astra and model_id != "gpt-6-astra":
             continue
         if requested_effort not in set(cfg.get("reasoning_efforts", [])):
             continue
