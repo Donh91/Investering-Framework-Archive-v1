@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: dry-run or controlled live smoke call
+        description: Normal main smoke mode; owner-only endgame branch triggers its one-time job regardless of this UI value
         required: true
         default: dry-run
         type: choice
@@ -29,11 +29,13 @@ permissions:
 
 jobs:
   gateway-gate:
-    # Redirect only the owner branch live-smoke to the Terra Max one-shot job.
+    # For this finite OWNER-SPECIFIC branch, any manual dispatch is the Terra Max one-shot.
+    # GitHub mobile has twice submitted UI 'live-smoke' as normal dry-run behavior.
+    # Branch+owner+attempt+durable claim control payment, not a fragile dropdown.
     if: >-
       github.event_name != 'workflow_dispatch' ||
-      inputs.mode != 'live-smoke' ||
-      github.ref != 'refs/heads/chore/model-class-currency-20261027'
+      (github.ref == 'refs/heads/chore/model-class-currency-20261027' &&
+       github.actor == 'Donh91')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -173,10 +175,12 @@ jobs:
 
 
   terra-max-endgame-once:
-    # Isolated owner PR branch only: no schedule, no source write or merge.
+    # One finite owner-approved endgame dispatch. GitHub UI mode is NOT a trusted
+    # control: an exact owner+branch manual event is the only dispatch path.
+    # Paid claim step independently requires first-run-attempt and a unique GitHub
+    # issue #1156 bot-created marker BEFORE the single model request.
     if: >-
       github.event_name == 'workflow_dispatch' &&
-      inputs.mode == 'live-smoke' &&
       github.ref == 'refs/heads/chore/model-class-currency-20261027' &&
       github.actor == 'Donh91' &&
       github.run_attempt == 1
