@@ -1541,3 +1541,14 @@
 @media(prefers-reduced-motion:reduce){
  .premium-next #variant-panel .chart-surface *{animation:none!important;transition:none!important}
 }
+
+
+/* Visual QA receipt 390/430 2026-10-29: mobile scrub control is secondary,
+ * not a full-width dark trade-looking CTA. Preserve 44px accessible target. */
+@media(max-width:760px){
+ .premium-next #variant-panel .interaction{gap:10px!important;padding-top:14px!important}
+ .premium-next #variant-panel .interaction-buttons{justify-content:flex-end!important;align-items:center!important}
+ .premium-next #variant-panel .interaction-buttons button{flex:0 0 auto!important;min-height:44px!important;min-width:122px!important;padding:10px 16px!important}
+ .premium-next #variant-panel .play-btn{background:#f1f5fb!important;color:#20486f!important;border:1px solid #d8e2ef!important;box-shadow:none!important}
+ .premium-next #variant-panel .play-btn:focus-visible{outline:3px solid #326fc7!important;outline-offset:2px}
+}
