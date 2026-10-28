@@ -180,7 +180,7 @@ function plot(){
   return;
  }
  const bands=model.bands||[],hourly=model.hourly_observations||[];
- if($('cn-demo-warning'))$('cn-demo-warning').hidden=model.forecast_status==='SOURCE_ISSUED'||model.daily_range_status==='SOURCE_ISSUED';
+ if($('cn-demo-warning'))$('cn-demo-warning').hidden=model.forecast_status==='SOURCE_ISSUED'||model.daily_range_status==='SOURCE_ISSUED'||model.forecast_week!=='2026-W44';
  paintFrozenWindowLedger(bands);
  const hasDailyRanges=model.daily_range_status==='SOURCE_ISSUED'&&model.daily_ranges?.length===7;
  paintDailyResearchNotes(hasDailyRanges?model.daily_ranges:[]);
@@ -240,11 +240,11 @@ function plot(){
   // The line is kept separately in the SVG demo layer and deleted whenever
   // an authentic issued path is available.
   const demo=$('illustrative-test-curve');
-  if(demo){
+  if(demo&&model.forecast_week==='2026-W44'){
    const pts=bands.map(w=>({x:x((Date.parse(w.window_start_utc)+Date.parse(w.window_end_utc))/2),y:y((w.forecast_low+w.forecast_high)/2)}));
    attr('illustrative-test-curve','d',movePath(pts));
    demo.setAttribute('visibility','visible');
-  }
+  }else if(demo){attr('illustrative-test-curve','d','');demo.setAttribute('visibility','hidden')}
   attr('forecast','d','');
   // Each frozen intraweek window is already a prospective range forecast.
   // Draw the authentic three-step horizon envelope directly; do NOT imply
