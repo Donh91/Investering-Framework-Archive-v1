@@ -1,4 +1,5 @@
 import './tests/full-stack-readback.test.mjs';
+import './tests/nowcast-disclosure.test.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
