@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.api_agent.endgame_progress_packet import manifest, build
+from scripts.api_agent.endgame_progress_packet import manifest, build, original_pr_head_admitted
 
 
 class EndgameProgressPacketTests(unittest.TestCase):
@@ -23,6 +23,33 @@ class EndgameProgressPacketTests(unittest.TestCase):
         x=self.valid()
         x["active"]["expected_pr_head"]="unknown"
         with self.assertRaises(ValueError):manifest(x)
+
+    def test_self_pr_single_commit_checkout_admitted_only_for_exact_parent(self):
+        x = self.valid()
+        x["active"].update(owner_pr=1823, expected_pr_head="a" * 40)
+        with patch("scripts.api_agent.endgame_progress_packet.git",
+                   side_effect=[b"b" * 40, b"a" * 40]) as git_read:
+            self.assertTrue(original_pr_head_admitted(x["active"], "b" * 40))
+            self.assertEqual(git_read.call_count, 2)
+
+    def test_self_pr_stale_or_wrong_checkout_fails_closed(self):
+        x = self.valid()
+        x["active"].update(owner_pr=1823, expected_pr_head="a" * 40)
+        for checkout, parent in (("c" * 40, "a" * 40),
+                                 ("b" * 40, "c" * 40)):
+            with self.subTest(checkout=checkout, parent=parent), patch(
+                "scripts.api_agent.endgame_progress_packet.git",
+                side_effect=[checkout.encode(), parent.encode()]
+            ):
+                self.assertFalse(original_pr_head_admitted(x["active"], "b" * 40))
+
+    def test_other_pr_head_drift_never_uses_parent_exception(self):
+        x = self.valid()
+        x["active"].update(owner_pr=1814, expected_pr_head="a" * 40)
+        with patch("scripts.api_agent.endgame_progress_packet.git") as git_read:
+            self.assertFalse(original_pr_head_admitted(x["active"], "b" * 40))
+            git_read.assert_not_called()
+        self.assertTrue(original_pr_head_admitted(x["active"], "a" * 40))
 
     def test_no_path_escape(self):
         for bad in ("../secrets/README.md","/etc/passwd","research/../secrets/README.md"):
