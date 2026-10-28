@@ -1,7 +1,11 @@
 import json
 import unittest
+import os
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 
-from scripts.api_agent.endgame_progress_packet import manifest
+from scripts.api_agent.endgame_progress_packet import manifest, build
 
 
 class EndgameProgressPacketTests(unittest.TestCase):
@@ -45,6 +49,40 @@ class EndgameProgressPacketTests(unittest.TestCase):
         x["contract"]="INVALID"
         with self.assertRaises(ValueError):manifest(x)
 
+    def test_packet_preserves_full_diff_and_rejects_missing_patch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'queue.json').write_text(json.dumps(self.valid()))
+            pr = {'head': {'sha': 'a' * 40, 'ref': 'original'}, 'state': 'open',
+                  'base': {'sha': 'b' * 40}, 'draft': False}
+            files = [{'filename': 'scripts/x.py', 'status': 'modified', 'patch': 'x' * 5000}]
+            with patch('scripts.api_agent.endgame_progress_packet.ROOT', root), \
+                 patch('scripts.api_agent.endgame_progress_packet.git', side_effect=[b'c' * 40, b'source']), \
+                 patch('scripts.api_agent.endgame_progress_packet.subprocess.check_output',
+                       side_effect=[json.dumps(pr).encode(), json.dumps(files).encode()]), \
+                 patch.dict(os.environ, {'GITHUB_REPOSITORY': 'Donh91/Investering-Framework-Archive-v1'}):
+                result = build(root / 'out', Path('queue.json'))
+                self.assertEqual(result['original_pr']['files'][0]['patch'], 'x' * 5000)
+            files[0]['patch'] = None
+            with patch('scripts.api_agent.endgame_progress_packet.ROOT', root), \
+                 patch('scripts.api_agent.endgame_progress_packet.git', side_effect=[b'c' * 40, b'source']), \
+                 patch('scripts.api_agent.endgame_progress_packet.subprocess.check_output',
+                       side_effect=[json.dumps(pr).encode(), json.dumps(files).encode()]), \
+                 patch.dict(os.environ, {'GITHUB_REPOSITORY': 'Donh91/Investering-Framework-Archive-v1'}):
+                with self.assertRaisesRegex(ValueError, 'PR_DIFF_INCOMPLETE'):
+                    build(root / 'out2', Path('queue.json'))
+
+    def test_oversized_source_fails_before_api(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'queue.json').write_text(json.dumps(self.valid()))
+            with patch('scripts.api_agent.endgame_progress_packet.ROOT', root), \
+                 patch('scripts.api_agent.endgame_progress_packet.git', side_effect=[b'c' * 40, b'x' * 100001]):
+                with self.assertRaisesRegex(ValueError, 'SOURCE_TOO_LARGE'):
+                    build(root / 'out', Path('queue.json'))
+            self.assertFalse((root / 'out').exists())
+
 
 if __name__=="__main__":
     unittest.main()
+

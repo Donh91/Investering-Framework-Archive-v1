@@ -12,6 +12,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 QUEUE = Path("research/api_agent/ENDGAME_PROGRESS_QUEUE_v1.json")
 WORK_ID_RE = re.compile(r"[A-Z][A-Z0-9_]{7,74}")
+MAX_SOURCE_BYTES = 100_000
+MAX_PACKET_BYTES = 500_000
 
 
 def manifest(data: object) -> dict:
@@ -25,7 +27,7 @@ def manifest(data: object) -> dict:
     if not re.fullmatch(r"[0-9a-f]{40}", str(work.get("expected_pr_head", ""))):
         raise ValueError("EXPECTED_PR_HEAD_MISSING_OR_INVALID")
     paths = work.get("paths", [])
-    if not isinstance(paths, list) or not (1 <= len(paths) <= 9):
+    if not isinstance(paths, list) or not (1 <= len(paths) <= 20) or len(set(paths)) != len(paths):
         raise ValueError("SOURCE_LIST_MISSING_OR_UNBOUNDED")
     for p in paths:
         if not isinstance(p, str) or not p or p.startswith("/") or "\\" in p or ".." in Path(p).parts:
@@ -48,10 +50,12 @@ def build(output: Path, queue: Path = QUEUE) -> dict:
     for path in work["paths"]:
         try:
             raw = git("show", f"{main}:{path}")
+            if len(raw) > MAX_SOURCE_BYTES:
+                raise ValueError("SOURCE_TOO_LARGE:" + path)
             evidence.append({"path": path, "sha256": hashlib.sha256(raw).hexdigest(),
-                             "bytes": len(raw), "excerpt": (lambda t: t if len(t) <= 21000 else t[:5500] + "\\n...[SOURCE_EXCERPT_TRUNCATED]...\\n" + t[-14500:])(raw.decode("utf-8", "replace"))})
+                             "bytes": len(raw), "excerpt": raw.decode("utf-8", "strict")})
         except subprocess.CalledProcessError:
-            evidence.append({"path": path, "status": "SOURCE_UNAVAILABLE"})
+            raise ValueError("SOURCE_UNAVAILABLE:" + path) from None
 
     repo = os.environ.get("GITHUB_REPOSITORY")
     if repo != "Donh91/Investering-Framework-Archive-v1":
@@ -63,17 +67,22 @@ def build(output: Path, queue: Path = QUEUE) -> dict:
         raise ValueError("PR_HEAD_CHANGED_OR_NOT_OPEN_FAIL_CLOSED")
     changed = json.loads(subprocess.check_output(
         ["gh", "api", f"repos/{repo}/pulls/{work['owner_pr']}/files?per_page=100"], timeout=20))
+    if len(changed) >= 100 or any(f.get("patch") is None for f in changed):
+        raise ValueError("PR_DIFF_INCOMPLETE")
     pr_evidence = {"number": work["owner_pr"],"head_sha":original_head,
                    "head_branch":pr["head"]["ref"],"base_sha":pr["base"]["sha"],
                    "draft":pr["draft"],"files":[{"path":f["filename"],
-                   "status":f["status"],"patch":str(f.get("patch") or "")[:4200]}
-                   for f in changed[:9]]}
+                   "status":f["status"],"patch":f["patch"]}
+                   for f in changed]}
     packet = {"contract":"TERRA_ENDGAME_PROGRESS_PACKET_v1","work_id":work["work_id"],
               "owner_pr":work["owner_pr"],"owner_issue":work.get("owner_issue"),
               "exact_original_main_sha":main,"original_pr":pr_evidence,"evidence":evidence,"public_only":True,
               "backup_and_separation_are_not_verified":True,"production_authority":False}
+    context = json.dumps(packet,ensure_ascii=False,sort_keys=True)
+    if len(context.encode("utf-8")) > MAX_PACKET_BYTES:
+        raise ValueError("PACKET_TOO_LARGE")
     output.mkdir(parents=True, exist_ok=True)
-    (output / "context.json").write_text(json.dumps(packet,ensure_ascii=False,sort_keys=True))
+    (output / "context.json").write_text(context)
     (output / "prompt.txt").write_text(
         "Owner ENDGAME actual code closure. Work ID: " + work["work_id"] + ". Target existing PR #"
         + str(work["owner_pr"]) + ". Objective: " + str(work["objective"])
@@ -93,3 +102,4 @@ if __name__ == "__main__":
         raise SystemExit("Usage: endgame_progress_packet.py build OUTPUT_DIR")
     p=build(Path(sys.argv[2]))
     print("ENDGAME_PACKET_FROZEN", p["work_id"], p["exact_original_main_sha"], len(p["evidence"]))
+
