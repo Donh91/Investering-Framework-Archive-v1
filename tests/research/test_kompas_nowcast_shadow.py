@@ -18,6 +18,7 @@ def fixture():
         "compass_id": "CMP-SYNTHETIC-1",
         "issued_at_utc": "2026-10-27T12:00:00Z",
         "market_reference": {"observation_open_utc": "2026-10-27T11:00:00Z"},
+        "source_packet_sha256": "a" * 64,
         "horizons": {"NEXT_12H": {"expected_direction": "UP"}}
     }
     from scripts.learning.compass_outcomes import canon
@@ -101,6 +102,45 @@ class KompasShadowTests(unittest.TestCase):
 
         self.assertEqual(compare_shadow_12h([fixture(),fixture()])["provisional_paired"],1)
         self.assertIn("DUPLICATE",compare_shadow_12h([fixture(),fixture()])["rows"][1]["reason"])
+
+    def test_relabeling_same_original_source_packet_never_inflates_event_count(self):
+        from scripts.learning.compass_outcomes import canon
+        first = fixture()
+        second = copy.deepcopy(first)
+        # Two independently named forecast objects and different caller event
+        # IDs tied to the identical immutable source packet.
+        forecast = json.loads(second["forecast_original_json"])
+        forecast["compass_id"] = "CMP-SYNTHETIC-2"
+        forecast["compass_sha256"] = hashlib.sha256(canon({
+            k: v for k, v in forecast.items() if k != "compass_sha256"
+        })).hexdigest()
+        outcome = json.loads(second["outcome_original_json"])
+        outcome["compass_id"] = forecast["compass_id"]
+        outcome["compass_sha256"] = forecast["compass_sha256"]
+        outcome["outcome_sha256"] = hashlib.sha256(canon({
+            k: v for k, v in outcome.items() if k != "outcome_sha256"
+        })).hexdigest()
+        second["forecast_original_json"], second["forecast_blob_sha256"] = _encode(forecast)
+        second["outcome_original_json"], second["outcome_blob_sha256"] = _encode(outcome)
+        second["source_event_id"] = "RELABELED_DIFFERENT_SOURCE_EVENT"
+        paired = compare_shadow_12h([first, second])
+        self.assertEqual(paired["provisional_paired"], 1)
+        self.assertEqual(paired["rows"][1]["reason"], "DUPLICATE_SOURCE_PACKET_TARGET")
+        self.assertEqual(paired["rows"][0]["source_packet_sha256"], "a" * 64)
+
+    def test_missing_or_malformed_original_source_packet_digest_cannot_score(self):
+        from scripts.learning.compass_outcomes import canon
+        for value in (None, "bad", "a" * 63, "G" * 64):
+            with self.subTest(value=value):
+                def mutate(obj):
+                    obj["source_packet_sha256"] = value
+                    obj["compass_sha256"] = hashlib.sha256(canon({
+                        k: v for k, v in obj.items() if k != "compass_sha256"
+                    })).hexdigest()
+                row = changed_blob(fixture(), "forecast_original_json", "forecast_blob_sha256", mutate)
+                result = compare_shadow_12h([row])
+                self.assertEqual(result["provisional_paired"], 0)
+                self.assertEqual(result["rows"][0]["reason"], "FORECAST_SOURCE_PACKET_SHA_UNBOUND")
 
     def test_immutable_outcome_binding_target_and_maturity(self):
         edits = (
