@@ -99,6 +99,43 @@ class EndgameProgressPacketTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'PR_DIFF_INCOMPLETE'):
                     build(root / 'out2', Path('queue.json'))
 
+    def test_exact_original_pr_added_file_is_admissible_not_unverified_main(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            work=self.valid()
+            (root/"queue.json").write_text(json.dumps(work))
+            pr={"head":{"sha":"a"*40,"ref":"original"},"base":{"sha":"b"*40},
+                "state":"open","draft":False}
+            changed=[{"filename":"scripts/cycle_navigator/prospective_range_bridge.py",
+                      "status":"added","patch":"+real source"}]
+            with patch("scripts.api_agent.endgame_progress_packet.ROOT",root), \
+                 patch("scripts.api_agent.endgame_progress_packet.git",
+                       side_effect=[b"c"*40,subprocess.CalledProcessError(1,"git"),b"real source"]), \
+                 patch("scripts.api_agent.endgame_progress_packet.subprocess.check_output",
+                       side_effect=[json.dumps(pr).encode(),json.dumps(changed).encode(),
+                                    json.dumps(pr).encode(),json.dumps(changed).encode()]), \
+                 patch.dict(os.environ,{"GITHUB_REPOSITORY":"Donh91/Investering-Framework-Archive-v1"}):
+                out=build(root/"out",Path("queue.json"))
+            self.assertEqual(out["evidence"][0]["source_ref"],"PINNED_PR_ADDED:"+"a"*40)
+
+    def test_missing_main_source_cannot_be_forged_by_modified_pr_file(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            (root/"queue.json").write_text(json.dumps(self.valid()))
+            pr={"head":{"sha":"a"*40},"state":"open"}
+            changes=[{"filename":"scripts/cycle_navigator/prospective_range_bridge.py",
+                      "status":"modified","patch":"@@ changed"}]
+            with patch("scripts.api_agent.endgame_progress_packet.ROOT",root), \
+                 patch("scripts.api_agent.endgame_progress_packet.git",
+                       side_effect=[b"c"*40,subprocess.CalledProcessError(1,"git")]), \
+                 patch("scripts.api_agent.endgame_progress_packet.subprocess.check_output",
+                       side_effect=[json.dumps(pr).encode(),json.dumps(changes).encode()]), \
+                 patch.dict(os.environ,{"GITHUB_REPOSITORY":"Donh91/Investering-Framework-Archive-v1"}):
+                with self.assertRaisesRegex(ValueError,"SOURCE_UNAVAILABLE"):
+                    build(root/"blocked",Path("queue.json"))
+
     def test_oversized_source_fails_before_api(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -1,19 +1,18 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "API_DELIVERY_SELF_PR_RECEIPT_CLOSURE_20261028",
+    "work_id": "API_DELIVERY_PR_ADDED_SOURCE_BOUND_20261028",
     "owner_pr": 1823,
     "owner_issue": 1156,
-    "expected_pr_head": "386d6bfeeddb36333ba749f16385c7ef0b71e53f",
-    "objective": "P0 original API lane #1823 closure after two verified code/test commits. Audit current full PR patch and original exact checkout vs declared parent pin in scripts/api_agent/endgame_progress_packet.py; prove single-commit self-PR update permitted, intervening PR head/drift forbidden, external PR strict SHA unaffected, replay/claim never reused. Examine event-driven only vs self-driving claim, one-charge-per-ID concurrency, $3 per-call and lower $30 org cap with $12 unknown liability reserve, owner $15 incremental cap and release recovery separation. Find at most three exact reproducible code/test defects on original #1823 branch or report NO_FIX_REQUIRED with precise still-missing independent recovery/CI/actual provider billing. No other subsystem edits, no claimed API automation, no generic reviews or duplicate research PR.",
+    "expected_pr_head": "1195ef3a545238f0a570182377871bd531574f48",
+    "objective": "P0 distinct ROOT_CAUSE: prior API_DELIVERY_SELF_PR_RECEIPT_CLOSURE_20261028 failed at preflight with SOURCE_UNAVAILABLE for PR-added script, no claim and no charge (run 40689612846). Inspect newly implemented PR-added source path exact-head custody, original PR patch status, main-vs-branch hash, source provenance, 100-file fail-close, parent pin and denial cases. Find concrete bypass and exact-fix+test on current #1823 only; otherwise NO_FIX_REQUIRED and release HOLD with independent Vault, real provider bill and CI gaps. This is NOT a rerun of the previous work ID, and its material subject is branch-only evidence custody.",
     "paths": [
       "scripts/api_agent/endgame_progress_packet.py",
       "tests/api_agent/test_endgame_progress_packet.py",
       ".github/workflows/api-agent-gateway-gate.yml",
       "scripts/api_agent/api_gateway.py",
-      "scripts/api_agent/check_monthly_cost_guard.py",
-      "tests/api_agent/test_api_gateway.py"
+      "scripts/api_agent/check_monthly_cost_guard.py"
     ]
   },
-  "semantics": "Exactly one materially distinct owner-approved P0 API-delivery test on existing PR #1823. Expected SHA is pinned to queue-update parent and admission requires new checkout HEAD with exactly that parent. No reused claim IDs. Paid run may only occur on GitHub PR synchronize, within real remaining billing; no automatic code write/merge; all subsequent changes need separate issue review and budget admission."
+  "semantics": "New independent P0 after uncharged preflight failure. Original branch-only added files are admitted only when exact PR head and complete changed-file entry establish source custody. At most one actual API attempt, never auto-merge."
 }

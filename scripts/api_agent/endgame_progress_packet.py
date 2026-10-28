@@ -73,7 +73,32 @@ def build(output: Path, queue: Path = QUEUE) -> dict:
             evidence.append({"path": path, "sha256": hashlib.sha256(raw).hexdigest(),
                              "bytes": len(raw), "excerpt": raw.decode("utf-8", "strict")})
         except subprocess.CalledProcessError:
-            raise ValueError("SOURCE_UNAVAILABLE:" + path) from None
+            # A NEW file may legitimately exist only on the exact original
+            # PR head. Never silently substitute arbitrary branch content.
+            repo = os.environ.get("GITHUB_REPOSITORY")
+            if repo != "Donh91/Investering-Framework-Archive-v1":
+                raise ValueError("ORIGINAL_REPOSITORY_AUTHORITY_UNVERIFIED")
+            pr_source = json.loads(subprocess.check_output(
+                ["gh", "api", f"repos/{repo}/pulls/{work['owner_pr']}"], timeout=20))
+            pr_head = str(pr_source["head"]["sha"])
+            if pr_source["state"] != "open" or not original_pr_head_admitted(work, pr_head):
+                raise ValueError("PR_HEAD_CHANGED_OR_NOT_OPEN_FAIL_CLOSED")
+            changes = json.loads(subprocess.check_output(
+                ["gh", "api", f"repos/{repo}/pulls/{work['owner_pr']}/files?per_page=100"], timeout=20))
+            if len(changes) >= 100 or not any(
+                f.get("filename") == path and f.get("status") == "added"
+                and f.get("patch") is not None for f in changes
+            ):
+                raise ValueError("SOURCE_UNAVAILABLE:" + path)
+            try:
+                raw = git("show", f"{pr_head}:{path}")
+            except subprocess.CalledProcessError:
+                raise ValueError("PR_ADDED_SOURCE_BLOB_MISSING:" + path) from None
+            if len(raw) > MAX_SOURCE_BYTES:
+                raise ValueError("SOURCE_TOO_LARGE:" + path)
+            evidence.append({"path": path, "source_ref": "PINNED_PR_ADDED:" + pr_head,
+                             "sha256": hashlib.sha256(raw).hexdigest(),
+                             "bytes": len(raw), "excerpt": raw.decode("utf-8", "strict")})
 
     repo = os.environ.get("GITHUB_REPOSITORY")
     if repo != "Donh91/Investering-Framework-Archive-v1":
