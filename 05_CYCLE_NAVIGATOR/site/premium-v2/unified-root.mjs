@@ -108,7 +108,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   const nav=html.slice(n,nEnd+navClose.length);
   html=html.slice(0,n)+html.slice(nEnd+navClose.length);
   const target=unique(html,'<section id="compass-pro"','pro-nav-target');
-  html=html.slice(0,target)+nav+'\\n'+html.slice(target);
+  html=html.slice(0,target)+nav+'\n'+html.slice(target);
   const oldScript='<script type="module" src="./compass/compass-path-ui.mjs"></script>';
   unique(html,oldScript,'legacy-compass-script');
   html=html.replace(oldScript,
