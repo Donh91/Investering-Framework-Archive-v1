@@ -99,7 +99,10 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
             prior_end = _clock(attempt["prior_hour_end_at_utc"])
             target = _clock(outcome["target_at_utc"])
             matured = _clock(outcome["matured_at_utc"])
-            reference = reference_close_time(forecast.get("market_reference") or {})
+            reference_data = forecast.get("market_reference")
+            if not isinstance(reference_data, Mapping):
+                raise ValueError("SCORER_REFERENCE_NOT_MAPPING")
+            reference = reference_close_time(reference_data)
             if reference is None:
                 raise ValueError("REFERENCE_CLOSE_NOT_BOUND")
             if source_first > issued or prior_first > issued or prior_end > issued:
@@ -108,7 +111,9 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
                 raise ValueError("PRIOR_HOUR_FIRST_KNOWN_BEFORE_CLOSE")
             if reference > issued or target != reference + timedelta(hours=12):
                 raise ValueError("SCORER_REFERENCE_PLUS_12H_MISMATCH")
-            time_basis = outcome.get("time_basis") or {}
+            time_basis = outcome.get("time_basis")
+            if not isinstance(time_basis, Mapping):
+                raise ValueError("SCORER_TIME_BASIS_NOT_MAPPING")
             if (_clock(time_basis.get("start_reference_at_utc")) != reference
                 or time_basis.get("nominal_horizon_hours") != 12):
                 raise ValueError("SCORER_REFERENCE_TIME_BASIS_MISMATCH")
