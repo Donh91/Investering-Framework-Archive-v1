@@ -31,7 +31,10 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     'pro-core');
   const extra=excerpt(proSource,
     '<section class="section"><div class="section-heading"><h2 data-t="horizonsHeading">',
-    '<section class="cn-forward"', 'pro-horizons-and-ranges');
+    '<section class="cn-forward"', 'pro-horizons-and-ranges')
+    .replace('data-t="horizonsHeading"','id="pro-horizon-heading" data-t="horizonsHeading"')
+    .replace('<span data-t="ownerOfficial"','<span id="pro-horizon-owner" data-t="ownerOfficial"')
+    .replace('<div class="table-scroll"><table>','<div class="table-scroll"><table id="pro-horizon-table">');
   const path=excerpt(proSource,
     '<section id="view-path"', '<section id="view-results"', 'pro-path')
     .replace('<section id="view-path" class="view" hidden role="tabpanel" aria-labelledby="tab-path">',
