@@ -122,6 +122,24 @@ function paintFrozenWindowLedger(bands){
   box.append(tag,value,title);parent.append(box);
  }
 }
+function paintDailyResearchNotes(daily){
+ const details=$('cn-daily-research-notes'),body=$('cn-daily-research-rows');
+ if(!details||!body)return;
+ body.replaceChildren();
+ const ok=Array.isArray(daily)&&daily.length===7;
+ details.hidden=!ok;
+ if(!ok){details.open=false;return}
+ const nf=new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0});
+ for(const point of daily){
+  const article=document.createElement('article');article.className='cn-daily-note';
+  const title=document.createElement('strong');title.textContent=
+   (language==='da'?'Dag ':'Day ')+point.day+' · '+nf.format(point.low)+' – '+nf.format(point.high)+' USD';
+  const reason=document.createElement('p');reason.textContent=point.why;
+  const condition=document.createElement('small');condition.textContent=
+    (language==='da'?'Ugyldig hvis: ':'Invalid if: ')+point.invalidate_if;
+  article.append(title,reason,condition);body.append(article);
+ }
+}
 function plot(){
  // Never present BTC-source numeric evidence as ETH while a new fetch is pending.
  if(model && model.asset!==asset)model=null;
@@ -148,6 +166,7 @@ function plot(){
   warning.textContent=t('Blå dagsprognose ikke udstedt','Blue daily forecast not issued');
  if(!model||model.source_status!=='SOURCE_BOUNDED'){
   paintFrozenWindowLedger([]);
+  paintDailyResearchNotes([]);
   if($('cn-demo-warning'))$('cn-demo-warning').hidden=true;
   $('illustrative-test-curve')?.setAttribute('visibility','hidden');
   ['range-band','range-upper','range-lower','forecast','actual','illustrative-test-curve'].forEach(id=>attr(id,'d',''));
@@ -161,8 +180,12 @@ function plot(){
   return;
  }
  const bands=model.bands||[],hourly=model.hourly_observations||[];
- if($('cn-demo-warning'))$('cn-demo-warning').hidden=model.forecast_status==='SOURCE_ISSUED';
+ if($('cn-demo-warning'))$('cn-demo-warning').hidden=model.forecast_status==='SOURCE_ISSUED'||model.daily_range_status==='SOURCE_ISSUED';
  paintFrozenWindowLedger(bands);
+ const hasDailyRanges=model.daily_range_status==='SOURCE_ISSUED'&&model.daily_ranges?.length===7;
+ paintDailyResearchNotes(hasDailyRanges?model.daily_ranges:[]);
+ const rlabel=document.querySelector('.swatch-band + span');
+ if(rlabel&&hasDailyRanges)rlabel.textContent=t('7 daglige frosne high/low-intervaller','7 original daily high/low ranges');
  const start=Date.parse(bands[0].window_start_utc),end=Date.parse(bands.at(-1).window_end_utc);
  if(!Number.isFinite(start)||!Number.isFinite(end)||end-start!==7*DAY){model=null;plot();return}
  const availableMax=hourly.length?Math.max(0,Math.min(168,Math.floor((hourly.at(-1).time*1000-start)/HOUR))):0;
@@ -174,6 +197,7 @@ function plot(){
  const observedRuns=replayObservedUntil(model,new Date(cursor).toISOString());
  const visible=observedRuns.flat();
  const values=[...bands.flatMap(b=>[b.forecast_low,b.forecast_high]),
+  ...(hasDailyRanges?model.daily_ranges.flatMap(d=>[d.low,d.high]):[]),
   ...model.forecast.flatMap(p=>[p.expected_close,p.low,p.high]),...hourly.map(p=>p.value)].filter(s);
  if(values.length===0){model=null;plot();return}
  const min=Math.min(...values),max=Math.max(...values),padding=(max-min||1)*.07;
@@ -191,6 +215,25 @@ function plot(){
   attr('range-band','d',area(model.forecast));
   attr('range-upper','d',movePath(model.forecast.map(p=>({x:x(p.time*1000),y:y(p.high)}))));
   attr('range-lower','d',movePath(model.forecast.map(p=>({x:x(p.time*1000),y:y(p.low)}))));
+ }else if(hasDailyRanges){
+  // Authentic daily high/low envelope only. Never draw an implied close line.
+  attr('illustrative-test-curve','d','');
+  $('illustrative-test-curve')?.setAttribute('visibility','hidden');
+  attr('forecast','d','');
+  const d=model.daily_ranges;
+  const segments=d.map(p=>{
+   const left=x(Date.parse(p.window_start_utc)),right=x(Date.parse(p.window_end_utc));
+   return 'M'+left+','+y(p.high)+' L'+right+','+y(p.high)+
+     ' L'+right+','+y(p.low)+' L'+left+','+y(p.low)+' Z';
+  });
+  attr('range-band','d',segments.join(' '));
+  const edge=key=>d.map(p=>{
+   const left=x(Date.parse(p.window_start_utc)),right=x(Date.parse(p.window_end_utc));
+   return 'M'+left.toFixed(2)+','+y(p[key]).toFixed(2)+
+     ' L'+right.toFixed(2)+','+y(p[key]).toFixed(2);
+  }).join(' ');
+  attr('range-upper','d',edge('high'));
+  attr('range-lower','d',edge('low'));
  }else{
   // Explicitly illustrative QA line: three range midpoints ARE NOT an issued
   // daily forecast, never used as science, trading, or accuracy scoring.
@@ -251,6 +294,7 @@ function plot(){
  set('timeline-label',utc(cursor));
  const st=model.forecast_status==='SOURCE_ISSUED'?
   t('BLÅ KURVE FRA ORIGINAL KILDE','BLUE CURVE FROM ORIGINAL SOURCE'):
+  hasDailyRanges?t('7 ORIGINALE DAGLIGE HIGH/LOW · INGEN KURSMIDTPUNKTER','7 ORIGINAL DAILY HIGH/LOW · NO INVENTED MIDPOINTS'):
   t('MANDAGENS 3 PROGNOSEVINDUER · INGEN DAGLIG KURSLINJE','MONDAY’S 3 FORECAST WINDOWS · NO DAILY PRICE PATH');
  set('source-state',st);
  const stale=model.live_freshness==='STALE';
