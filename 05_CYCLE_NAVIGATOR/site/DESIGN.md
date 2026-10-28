@@ -126,3 +126,22 @@ The weekly price instrument is a restrained dark navy exception inside the exist
 PATH uses one visible narrative thread: leadership → rotation → altseason → protection/reset. Its connector dots encode source-published time distance only, using fewer illuminated dots for longer windows and none for unsupported timing. They never depict completion or probability. Frozen weekly timing is the conservative ceiling when a faster live review window disagrees.
 
 The DA/ENG control is a compact upper-right segmented button, with a navy active state and a saved language preference. Keep both controls readable and operable on narrow iPhone screens. Technical validation is separate from Morten's visual acceptance.
+
+
+## Premium Finish · site chart design contract (29 October 2026)
+
+**Original references**: official site https://donh91.github.io/Investering-Framework-Archive-v1/ ; owner-provided iPhone screenshots 28–29 October (dark Graph B, oversized explanation, uninformative flat dashed line). Site design-skill review used the real site capture and extracted site tokens: navy `#0A2546`, light background `#F5F7FA`, accent blue `#346ED7`, ink `#07172F`; typography uses the existing system font stack. Hex tokens are *observed source colors*, while the new chart-specific quiet navy `#0c1b31`, green `#56d6ae`, and forecast blue `#8fbbfa` are **authored design choices**, not extracted brand facts.
+
+### Editorial hierarchy and constraints
+
+1. Outside chart: one white editorial surface. Inside: quiet dark navy instrument, compact BTC/ETH readout and a two-item legend (actual price; original high/low). Third dashed-forecast legend item appears only if independently issued original seven-point expected-close data are valid.
+2. Preserve three verified Monday forecast range windows as subtle independent *bands and boundaries*, not an interpolated expected-price trajectory. Seven independently issued daily low/high points take precedence when admissible; both retain initial freeze and reason. Real observed hourly price has green unbroken stroke only across contiguous verified samples.
+3. Remove all synthetic W44 test-line/three-midpoint curve, the large test-warning box, and duplicate "not issued" banners; nothing new may invent an official daily closing-price path. No consumer-visible letter "B".
+4. Hide detailed low/high tables behind one accessible minimum-44px summary, and keep seven per-day research explanations behind another optional disclosure. Values remain selectable and source exact.
+5. At 390 and 430 CSS pixels, graph must not horizontally overflow; show 248px tall plot with 46px compact price-axis rail, short labels and clear observed stroke. On desktop show 282px plot, and do not stretch typography. Use system-font numerical tabular lining and keep labels readable.
+6. Source not available, stale, and cross-asset switching must fail closed and show truthful state. No independent trading actions, score authority, or probability interpretation.
+7. **Two independent release gates**: technical/exact-head E2E and data/source integrity + actual rendered screenshot at 390/430 and desktop checked for hierarchy, contrast, truncation, responsive layout and whether green actual vs blue frozen range is visually unambiguous. Screenshots captured on PR via existing root Chrome CDP smoke (markers `CN_DESIGN_SCREENSHOT_390_PART`, `CN_DESIGN_SCREENSHOT_430_PART`). A screenshot *saved or captured* is not visual approval by itself. Physical Safari, VoiceOver, and zoom remain unverified unless actually inspected.
+
+### Research/product split
+
+The original daily forecast contract `CN_FROZEN_DAILY_RANGE_PLAN_v1` is a prospective producer with per-day `low/high/why/invalidate_if`. It is *conditional on source evidence*, and refusal remains valid. Daily 2–3-week macro-influenced scenarios are an explicitly separate Task 2 shadow research horizon, not a public numerical signal until proved with point-in-time freezes, width-aware baseline scores and post-outcome evaluation. Do not backfill W44.
