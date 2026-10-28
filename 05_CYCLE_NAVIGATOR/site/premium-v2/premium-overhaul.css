@@ -1458,3 +1458,9 @@
    overflow:hidden!important;
  }
 }
+
+
+/* Keep decorative/test SVG paths from contributing phantom mobile page width.
+ * The source plot coordinates are fully inside the 1000-unit viewBox. */
+.premium-next #variant-panel .plot-shell{min-width:0;max-width:100%;overflow:hidden}
+.premium-next #variant-panel .plot-shell svg{display:block;min-width:0;max-width:100%;overflow:hidden}
