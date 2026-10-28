@@ -126,6 +126,13 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     'id="official-pilot-horizons"','id="official-pilot-rotation"',
     'id="official-pilot-path"','id="official-path-chart"'
   ])if(html.includes(x))throw Error('CN_UNIFIED_ROOT_LEGACY_DUPLICATE:'+x);
+  // The original B root shipped anchor CSS for the now-retired legacy pilot.
+  // Rewrite only the anchor list in the unified HTML, never the approved B
+  // SVG, renderer or source gate. No orphan anchor names on the official route.
+  const oldAnchors='#variant-panel,#official-product-pilot,#official-pilot-path,#proof-explorer{scroll-margin-top:16px}';
+  const newAnchors='#variant-panel,#compass-pro,#official-path-view,#proof-explorer{scroll-margin-top:16px}';
+  if(!html.includes(oldAnchors))throw Error('CN_UNIFIED_ROOT_SCROLL_ANCHOR_SOURCE_MISMATCH');
+  html=html.replace(oldAnchors,newAnchors);
   if(html.includes('src="./compass/compass-path-ui.mjs"')||
      html.includes('href="/Investering-Framework-Archive-v1/vnext/#compass"'))
     throw Error('CN_UNIFIED_ROOT_COMPETING_COMPASS');
