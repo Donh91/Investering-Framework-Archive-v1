@@ -9,6 +9,17 @@ const DAY=86400000;
 const HOUR=3600000;
 const NUM=x=>typeof x==='number'&&Number.isFinite(x)&&x>0;
 const date=t=>typeof t==='string'?Date.parse(t):NaN;
+// The seven-day range must be the ISO week actually named by its original source.
+// Duration alone lets a perfectly formed W39 window be relabelled as W44/W45.
+const isoMonday=label=>{
+ const m=/^(\\d{4})-W(\\d{2})$/.exec(String(label||''));
+ if(!m)return NaN;
+ const year=Number(m[1]),week=Number(m[2]);
+ if(year<1970||year>9998||week<1||week>53)return NaN;
+ const jan4=Date.UTC(year,0,4);
+ const monday=jan4-((new Date(jan4).getUTCDay()+6)%7)*DAY+(week-1)*7*DAY;
+ return new Date(monday+3*DAY).getUTCFullYear()===year?monday:NaN;
+};
 const empty=(asset,reason)=>({
  contract:'CN_PREMIUM_V2_GRAPH_B_PRESENTATION_v1',
  asset,source_status:'UNAVAILABLE',source_reason:reason,
@@ -41,7 +52,8 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
     !/^\d{4}-W\d{2}$/.test(String(m.forecast_week||'')))return bad('PUBLIC_WEEK_OR_ISSUE_MISMATCH');
  const a=m?.window_scores?.day_1_2,b=m?.window_scores?.day_5_7;
  const start=date(a?.window_start_utc),end=date(b?.window_end_utc);
- if(!Number.isFinite(start)||end-start!==7*DAY)return bad('FROZEN_WEEK_BOUNDS_INVALID');
+ if(!Number.isFinite(start)||!Number.isFinite(end)||end-start!==7*DAY||
+    start!==isoMonday(m.forecast_week))return bad('FROZEN_WEEK_BOUNDS_INVALID');
  const keys=['day_1_2','day_3_4','day_5_7'];
  const rows=keys.map(w=>(m.rows||[]).find(x=>x.asset===asset&&x.window===w));
  if(rows.some(r=>!r||!NUM(r.forecast_low)||!NUM(r.forecast_high)||r.forecast_low>=r.forecast_high))
