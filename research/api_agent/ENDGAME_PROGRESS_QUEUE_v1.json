@@ -1,19 +1,17 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "CONNECTION_DAG_SOURCE_CLOCK_FAILCLOSE_20261028",
+    "work_id": "TASK2_PACKET_HASH_EVENT_INDEPENDENCE_REVIEW_20261028",
     "owner_pr": 1814,
     "owner_issue": 1596,
-    "expected_pr_head": "3a1636c9b75c4c817016674cc0d7bb36fea56c2b",
-    "objective": "Distinct P0 #1827 CONNECTION INTEGRITY, different from preceding 12h NOWCAST science and API packet/claim closure. On latest original #1814 head, audit exact source->transform->Official Compass/12h->outcome branch with hourly 26h LATEST, nowcast source and time clocks, source-first-known/issuance, optional missingness, duplicate/circular signals, stale pointer false greens, and outcome target > issuance. Inspect new research-only kompas_nowcast_shadow.py and tests on original PR. Identify MAX THREE specific deterministic bypasses in this code path (e.g. first-known receipt self-attestation vs actual original SHA, regressed observed timestamps string equality and null/zero; verify rather than assume). Supply minimal targeted code+negative-mutation test in original PR branch ONLY, no weakening of Official decisions or promotion/retroactive forecast change. Distinguish provider first-known UNKNOWN from valid UTC candle end. Existing Grok Bridge #81 found potential source DAG/cadence holes, but no independent full link proof. If no original evidence, return SOURCE_BLOCKED rather than create parallel auditor, review PR, signal engine or speculative forecast. No duplicate Task2 baseline/Shared Row denominator work.",
+    "expected_pr_head": "859a251ebd39db0102a57f59a5910c022a61e94d",
+    "objective": "Distinct P0 post-fix denominator proof, NOT a repeat of billed clock/first-known audits. Original #1814 exact head has 5/5 CI PASS. Red-team the new source-hash dedup in scripts/research/kompas_nowcast_shadow.py and exact associated tests: can different forecast compass_ids and relabeled caller source_event_ids that share the same originally source-hash-bound packet and target inflate counted trials? Are genuinely independent source packets incorrectly collapsed? Is missing/malformed source_packet_sha256 correctly rejected AFTER forecast/outcome hash bonds? Verify source SHA custodian limitations and first-known caller self-attestation. Return at most TWO new reproducible concrete flaws with code line, test fixture, minimal same-PR patch; else STOP_NO_FURTHER_TUNING. No new PR, paid repeat, portfolio action, source fabrication, retroactive tuning or live forecast change. Vault recovery and independent provider first-known remain RELEASE_HOLD regardless of tests.",
     "paths": [
-      "scripts/data_ping/native_handlekompas.py",
-      "scripts/learning/compass_outcomes.py",
       "scripts/research/kompas_nowcast_shadow.py",
       "tests/research/test_kompas_nowcast_shadow.py",
-      "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
-      "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+      "scripts/learning/compass_outcomes.py",
+      ".github/workflows/shared-row-tournament-research-gate.yml"
     ]
   },
-  "semantics": "One new owner-approved P0 connections/clock integrity falsifier, not a re-run of consumed historical 12h work; exact original PR #1814 current head, diff, source hashes, fail-closed unknown original first-known. Existing workflow only, one paid attempt, advisory, no autonomous code/merge, owner max extra USD15 and effective org lower cap/reserve."
+  "semantics": "One original-owner exact-head post-fix independent cluster audit, one bounded Terra xhigh API attempt; owner incremental $15, org $30 lower cap with $12 conservative reserve, $3 single call cap. Advisory, no code/merge authorization, repeat historical API work IDs forbidden."
 }
