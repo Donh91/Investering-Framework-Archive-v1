@@ -30,7 +30,7 @@
                     Weekly Outlook <span class="alt-token">B</span>
                   </h2>
                   <p class="card-desc" data-t="cardDesc">
-                    Kursretning, forventede udsving og faktiske observationer.
+                    Oprindelige prisintervaller og verificerede timekurser. Dagsprognoser vises kun, hvis de blev udstedt før udfaldet.
                   </p>
                 </div>
                 <div class="asset-select" role="group" aria-label="Aktiv">
@@ -60,15 +60,15 @@
                 <div class="legend">
                   <div>
                     <i class="swatch-forecast"></i
-                    ><span data-t="blueLegend">Forventet kurs</span>
+                    ><span data-t="blueLegend">Udstedt dagsprognose</span>
                   </div>
                   <div>
                     <i class="swatch-actual"></i
-                    ><span data-t="greenLegend">Faktisk kurs</span>
+                    ><span data-t="greenLegend">Observeret timekurs</span>
                   </div>
                   <div>
                     <i class="swatch-band"></i
-                    ><span data-t="rangeLegend">Forventet low / high</span>
+                    ><span data-t="rangeLegend">Frosset prisinterval</span>
                   </div>
                 </div>
                 <div class="plot-shell">
@@ -190,18 +190,18 @@
 <section id="proof-explorer" class="proof-explorer" aria-labelledby="proof-title">
  <header class="proof-head"><div>
   <span class="proof-eyebrow">RESULTATER / ORIGINAL → OBSERVERET → SCORE</span>
-  <h2 id="proof-title">Proof. Se hvad der faktisk blev forudsagt.</h2>
-  <p>Frosne kilder, observerede udfald, åben metode. Ingen omskrivning.</p>
+  <h2 id="proof-title">Efterkontrol. Prognose først, resultat bagefter.</h2>
+  <p>Sammenlign den oprindelige prognose med verificerede markedsobservationer. Manglende data tæller ikke som et korrekt resultat.</p>
  </div><span id="proof-status" class="proof-status" role="status">Henter offentlige kilder…</span></header>
  <div class="proof-steps" role="group" aria-label="Proof-trin">
-  <button type="button" data-proof-step="freeze" aria-pressed="true"><span>01</span> Frossen kilde</button>
-  <button type="button" data-proof-step="observed" aria-pressed="false"><span>02</span> Observation</button>
-  <button type="button" data-proof-step="assess" aria-pressed="false"><span>03</span> Score & kilde</button>
+  <button type="button" data-proof-step="freeze" aria-pressed="true"><span>01</span> Oprindelig prognose</button>
+  <button type="button" data-proof-step="observed" aria-pressed="false"><span>02</span> Faktiske priser</button>
+  <button type="button" data-proof-step="assess" aria-pressed="false"><span>03</span> Metode og resultat</button>
  </div>
  <div id="proof-focus" class="proof-hero" aria-live="polite">Afventer kildelæsning.</div>
  <div id="proof-windows" class="proof-windows" aria-label="Tre ugentlige prisvinduer"></div>
  <p id="proof-freshness" class="proof-method" role="status"></p>
- <p id="proof-method" class="proof-method">Price Range 70/30 og Direction/Edge er adskilte evidensfamilier, ikke afkast.</p>
+ <p id="proof-method" class="proof-method">70/30-scoren gælder prisintervaller, ikke afkast. Markedsretning, rotation og pullback kræver selvstændig dokumentation, før de kan få en præcisionsscore.</p>
  <details class="proof-source-details"><summary>Originale GitHub-kilder og metode</summary>
   <div id="proof-sources">Afventer kildehenvisninger.</div></details>
  <div class="proof-foot">
@@ -213,20 +213,20 @@
 
 <section class="official-product-pilot" id="official-product-pilot" aria-label="Officielt Kompas">
  <header class="official-pilot-head"><div>
-  <span class="official-pilot-eyebrow">KOMPAS / KILDEAUTORITET</span>
-  <h2>Handlingskompas.</h2>
-  <p>Kildeudstedte handlinger og horisonter.</p>
+  <span class="official-pilot-eyebrow">OFFICIEL KILDEVURDERING</span>
+  <h2>Officiel handling og retning.</h2>
+  <p>Viser kun gyldige kildevurderinger. Momentum er ikke en valideret 12-timersprognose, og risiko er ikke i sig selv en salgsordre.</p>
  </div><span class="official-pilot-status" id="official-pilot-status" role="status">Indlæser verificeret Kompas…</span></header>
  <div class="official-pilot-main">
   <article class="official-pilot-action"><span>OFFICIEL HANDLING</span>
    <strong id="official-pilot-action">—</strong>
    <small id="official-pilot-action-note">Kilden kontrolleres.</small></article>
-  <article class="official-pilot-state"><span>MARKED / BULL · BEAR</span>
+  <article class="official-pilot-state"><span>MARKEDSRETNING · BULL / BEAR</span>
    <strong id="official-pilot-bias">—</strong>
    <small id="official-pilot-bias-note">Evidensbalance, aldrig en sandsynlighed.</small></article>
  </div>
  <div class="official-pilot-horizons" id="official-pilot-horizons" aria-label="Fem officielle horisonter"></div>
- <header class="official-pilot-subhead"><h3>Kapitalrotation</h3><p>Syv kildeudstedte trin, ikke en købsanvisning.</p></header>
+ <header class="official-pilot-subhead"><h3>Kapitalrotation</h3><p>BTC, ETH, store og små altcoins, microcaps og memes vurderes særskilt. Ingen automatisk købsanbefaling.</p></header>
  <div class="official-pilot-rotation" id="official-pilot-rotation"></div>
  <header class="official-pilot-subhead"><h3>PATH · Cyklens ti faser</h3><p id="official-pilot-phase-note">Ingen fase uden officiel kilde.</p></header>
  <ol class="official-pilot-path" id="official-pilot-path"></ol>
