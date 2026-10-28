@@ -37,7 +37,7 @@
     root.innerHTML = '';
     root.append(node('span', 'kicker negative', 'DAILY MARKET COMPASS'));
     root.append(node('h2', '', 'Short-horizon Compass unavailable'));
-    root.append(node('p', 'hero-lede', payload?.conclusion || 'No official Compass is published. The site does not synthesize one from live prices.'));
+    root.append(node('p', 'hero-lede', 'Current navigation is unavailable or degraded. No stale or unsupported 12-hour direction is shown.'));
   }
 
   function render(payload) {
