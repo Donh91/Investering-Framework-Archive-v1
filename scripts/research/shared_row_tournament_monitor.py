@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from shared_row_tournament_weekly import filter_consumer_rows
+from shared_row_tournament_weekly import filter_consumer_rows, verified_matured_divergence_counts
 
 ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
 REGISTRY = Path("04_MARKET_LEARNING/shadow_registry/REGISTRY.json")
@@ -18,23 +18,6 @@ INTEGRITY = "SHARED_ROW_P0_BINDING_v1"
 def read_csv(path: Path):
     with path.open(newline="", encoding="utf-8-sig") as handle:
         return list(csv.DictReader(handle))
-
-
-def verified_matured_divergence_counts(valid_rows: list[dict], divergences: list[dict]) -> dict:
-    """A timestamp marker is NOT an outcome; only admitted parent receipts count.
-
-    The shared consumer gate already checked each parent outcome against its
-    immutable owner receipt and all copied pairwise outcome columns.
-    """
-    parents = {row["event_id"]: row for row in valid_rows}
-    return {
-        horizon: sum(
-            str(parents.get(div.get("event_id"), {}).get(f"outcome_{horizon}", "")) in {"0", "1"}
-            and str(div.get(f"outcome_{horizon}", "")) in {"0", "1"}
-            for div in divergences
-        )
-        for horizon in ("24h", "72h", "7d")
-    }
 
 
 def verified_matured_shared_row_counts(valid_rows: list[dict]) -> dict:
@@ -174,3 +157,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

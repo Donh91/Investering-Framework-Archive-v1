@@ -398,6 +398,7 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
     def test_weekly_and_relevance_use_the_same_fail_closed_filter(self) -> None:
         self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)
         rows, divs = self.adversarial_data()
+        divs[0]['matured_24h_utc'] = '2026-10-02T00:00:00Z'
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write_csv(root / "data" / "PROSPECTIVE_SHARED_ROW_LEDGER.csv", rows)
@@ -418,8 +419,10 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
             weekly_report = json.loads((root / "weekly" / "LATEST.json").read_text())
             relevance_report = json.loads((root / "RELEVANCE_STATE.json").read_text())
             self.assertEqual((weekly_report["eligible_rows_total"], weekly_report["divergences_total"]), (1, 1))
+            self.assertEqual(weekly_report['matured']['24h'], 0)
             self.assertEqual((relevance_report["eligible_row_n"], relevance_report["divergence_n"]), (1, 1))
 
 
 if __name__ == "__main__":
     unittest.main()
+
