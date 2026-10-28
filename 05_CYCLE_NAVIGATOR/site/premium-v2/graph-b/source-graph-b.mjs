@@ -103,6 +103,25 @@ function textLabels(){
  document.querySelectorAll('[data-lang]').forEach(button=>
   button.setAttribute('aria-pressed',String(button.dataset.lang===language)));
 }
+function paintFrozenWindowLedger(bands){
+ const parent=$('cn-frozen-window-ledger');
+ if(!parent)return;
+ parent.replaceChildren();
+ if(!Array.isArray(bands)||bands.length!==3)return;
+ for(let i=0;i<3;i++){
+  const v=bands[i];
+  if(!s(v.forecast_low)||!s(v.forecast_high)||v.forecast_low>=v.forecast_high)return parent.replaceChildren();
+  const box=document.createElement('div');box.className='cn-frozen-window';
+  const tag=document.createElement('span');tag.className='cn-frozen-window-day';
+  tag.textContent=(language==='en'?'DAYS ':'DAG ')+['1–2','3–4','5–7'][i];
+  const value=document.createElement('strong');value.textContent=
+   new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(v.forecast_low)+
+   ' – '+new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(v.forecast_high)+' USD';
+  const title=document.createElement('small');
+  title.textContent=language==='en'?'Original frozen range':'Originalt frosset interval';
+  box.append(tag,value,title);parent.append(box);
+ }
+}
 function plot(){
  // Never present BTC-source numeric evidence as ETH while a new fetch is pending.
  if(model && model.asset!==asset)model=null;
@@ -128,6 +147,7 @@ function plot(){
  if(warning&&model?.forecast_status!=='SOURCE_ISSUED')
   warning.textContent=t('Blå dagsprognose ikke udstedt','Blue daily forecast not issued');
  if(!model||model.source_status!=='SOURCE_BOUNDED'){
+  paintFrozenWindowLedger([]);
   ['range-band','range-upper','range-lower','forecast','actual'].forEach(id=>attr(id,'d',''));
   $('price-axis')?.replaceChildren();$('grid')?.replaceChildren();
   set('observed-value','—');set('time-label','—');set('timeline-label','—');
@@ -139,6 +159,7 @@ function plot(){
   return;
  }
  const bands=model.bands||[],hourly=model.hourly_observations||[];
+ paintFrozenWindowLedger(bands);
  const start=Date.parse(bands[0].window_start_utc),end=Date.parse(bands.at(-1).window_end_utc);
  if(!Number.isFinite(start)||!Number.isFinite(end)||end-start!==7*DAY){model=null;plot();return}
  const availableMax=hourly.length?Math.max(0,Math.min(168,Math.floor((hourly.at(-1).time*1000-start)/HOUR))):0;
