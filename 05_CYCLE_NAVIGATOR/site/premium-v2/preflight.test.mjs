@@ -57,7 +57,7 @@ test('Original B small badge survives localization and unavailable source clears
  const html=await from('./graph-b/source-graph-b.html');
  const js=await from('./graph-b/source-graph-b.mjs');
  assert.match(html,/class="alt-token">B<\/span>/);
- assert.match(js,/heading\.replaceChildren\(document\.createTextNode\('Weekly Outlook '\)\)/);
+ assert.ok(js.includes("heading.replaceChildren(document.createTextNode(t('Ugens prisgraf ','Weekly outlook ')))"));
  assert.match(js,/badge\.textContent='B'/);
  assert.doesNotMatch(html,/ONS 15:00 UTC/);
  assert.doesNotMatch(html,/Illustrative forecast against observed path/);
