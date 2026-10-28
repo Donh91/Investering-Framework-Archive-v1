@@ -148,7 +148,8 @@ function plot(){
   warning.textContent=t('Blå dagsprognose ikke udstedt','Blue daily forecast not issued');
  if(!model||model.source_status!=='SOURCE_BOUNDED'){
   paintFrozenWindowLedger([]);
-  ['range-band','range-upper','range-lower','forecast','actual'].forEach(id=>attr(id,'d',''));
+  $('illustrative-test-curve')?.setAttribute('visibility','hidden');
+  ['range-band','range-upper','range-lower','forecast','actual','illustrative-test-curve'].forEach(id=>attr(id,'d',''));
   $('price-axis')?.replaceChildren();$('grid')?.replaceChildren();
   set('observed-value','—');set('time-label','—');set('timeline-label','—');
   set('source-state',t('Ingen verificeret kilde','No verified source'));
@@ -181,12 +182,24 @@ function plot(){
  const area=arr=>movePath(arr.map(p=>({x:x(p.time*1000),y:y(p.high)})))+' '+
    movePath(arr.slice().reverse().map(p=>({x:x(p.time*1000),y:y(p.low)}))).replace(/^M/,'L')+' Z';
  if(model.forecast_status==='SOURCE_ISSUED'){
+  attr('illustrative-test-curve','d','');
+  $('illustrative-test-curve')?.setAttribute('visibility','hidden');
   const f=model.forecast.map(p=>({time:p.time,value:p.expected_close}));
   attr('forecast','d',movePath(f.map(xy)));
   attr('range-band','d',area(model.forecast));
   attr('range-upper','d',movePath(model.forecast.map(p=>({x:x(p.time*1000),y:y(p.high)}))));
   attr('range-lower','d',movePath(model.forecast.map(p=>({x:x(p.time*1000),y:y(p.low)}))));
  }else{
+  // Explicitly illustrative QA line: three range midpoints ARE NOT an issued
+  // daily forecast, never used as science, trading, or accuracy scoring.
+  // The line is kept separately in the SVG demo layer and deleted whenever
+  // an authentic issued path is available.
+  const demo=$('illustrative-test-curve');
+  if(demo){
+   const pts=bands.map(w=>({x:x((Date.parse(w.window_start_utc)+Date.parse(w.window_end_utc))/2),y:y((w.forecast_low+w.forecast_high)/2)}));
+   attr('illustrative-test-curve','d',movePath(pts));
+   demo.setAttribute('visibility','visible');
+  }
   attr('forecast','d','');
   // Each frozen intraweek window is already a prospective range forecast.
   // Draw the authentic three-step horizon envelope directly; do NOT imply
