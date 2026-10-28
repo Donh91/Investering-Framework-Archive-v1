@@ -26,8 +26,8 @@ test('isolated unified candidate contains ONE original B, ONE original Kompas PR
  assert.equal((html.match(/<nav class="premium-entry-navigation"/g)||[]).length,1);
  assert.ok(html.indexOf('class="premium-entry-navigation"')<html.indexOf('id="compass-pro"'));
  assert.ok(html.indexOf('id="compass-pro"')<html.indexOf('id="variant-panel"'));
- assert.ok(html.indexOf('id="variant-panel"')<html.indexOf('id="proof-explorer"'));
- assert.ok(html.indexOf('id="proof-explorer"')<html.indexOf('id="official-path-view"'));
+ assert.ok(html.indexOf('id="variant-panel"')<html.indexOf('id="official-path-view"'));
+ assert.ok(html.indexOf('id="official-path-view"')<html.indexOf('id="proof-explorer"'));
  assert.match(html,/href="#compass-pro" data-premium-nav="compass">Kompas PRO/);
  assert.match(html,/href="#official-path-view" data-premium-nav="path"/);
  assert.doesNotMatch(html,/\/vnext\/#compass/);
