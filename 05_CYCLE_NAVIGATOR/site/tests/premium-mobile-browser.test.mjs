@@ -6,6 +6,7 @@
  * The producer may be stale: ABSTAIN and neutral PATH are valid outputs.
  */
 import assert from 'node:assert/strict';
+import {assertExactMobileViewport} from './viewport-metrics.mjs';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:http';
 import {existsSync,readFileSync,mkdtempSync,rmSync} from 'node:fs';
@@ -116,6 +117,17 @@ try{
       state.status&&!state.status.includes('Kontrollerer')){ready=true;break}
   }
   assert.ok(ready,'PREMIUM_BROWSER_NOT_READY at '+width+'px');
+  // Before any tab or language clicks, record whether CDP mobile emulation
+  // already produced a larger layout viewport. Never override the observation.
+  const beforeViewport=await evaluate(()=>({
+   width:innerWidth,height:innerHeight,
+   documentClientWidth:document.documentElement.clientWidth,
+   documentScrollWidth:document.documentElement.scrollWidth,
+   bodyScrollWidth:document.body?.scrollWidth??null,
+   visualViewportWidth:window.visualViewport?.width??null,
+   screenWidth:screen.width,
+   viewportMeta:document.querySelector('meta[name="viewport"]')?.content??null
+  }));
   const report=await evaluate(async()=>{
    const check=condition=>!!condition, $=s=>document.querySelector(s);
    const safeOverflow=()=>Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)-window.innerWidth;
@@ -375,7 +387,12 @@ try{
      }
    }
    overflow.push(safeOverflow());
-   return {width:innerWidth,overflow:Math.max(...overflow),views,lens,before,five,phases,
+   return {width:innerWidth,height:innerHeight,
+    documentClientWidth:document.documentElement.clientWidth,
+    documentScrollWidth:document.documentElement.scrollWidth,
+    visualViewportWidth:window.visualViewport?.width??null,
+    viewportMeta:document.querySelector('meta[name="viewport"]')?.content??null,
+    overflow:Math.max(...overflow),views,lens,before,five,phases,
     enText,enPath,daText,daPath,enChart,daChart,graphQuickAccess,graphTop,promptHasProof:prompt.includes('scorebook-index.json')&&
       prompt.includes('SHA-256')&&prompt.includes('source_commit'),
     unavailableOneLine,staleChartAccessible,rootBStyle,approvedBVisual,bOuterControls,approvedBProbe,rootIsNotDemo,contiguousPath,sourceSafePhases,proofSimple,liveProofSafe,compassGraphic,evidenceNeedle,
@@ -389,7 +406,7 @@ try{
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
   reports.push(report);
-  assert.equal(report.width,width,'Wrong CDP viewport');
+  assertExactMobileViewport(report,width,height,beforeViewport);
   assert.ok(report.overflow<=2,'Horizontal page overflow on '+width+'px '+JSON.stringify(report));
   assert.ok(report.clockText&&report.clockText!=='—'&&
      /Kompas gyldigt til|Kompas udløb|Sidste levering/.test(report.clockText)&&
