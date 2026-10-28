@@ -77,6 +77,8 @@ function paint(){
   root.dataset.sourceCurrent=fresh?'true':'false';
   root.dataset.weeklyHealth=w?.state||'UNAVAILABLE';
  }
+ const proNav=document.querySelector('[data-premium-nav="compass"]');
+ if(proNav)proNav.textContent=lang==='en'?'Compass PRO':'Kompas PRO';
  // Only neutral presentation labels; all action, SELL, risk, state, price and
  // source-provenance labels remain produced by existing PRO/source modules.
  const copy=lang==='en'?{
