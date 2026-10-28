@@ -9,6 +9,7 @@ import {fileURLToPath} from 'node:url';
 import {defineConfig} from 'vite';
 import {readFileSync} from 'node:fs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
+import {buildUnifiedRootHtml} from './unified-root.mjs';
 const root=fileURLToPath(new URL('.',import.meta.url));
 export default defineConfig({
  plugins:[{
@@ -17,10 +18,15 @@ export default defineConfig({
   transformIndexHtml:{
    order:'pre',
    handler(html,context){
-    // Only replace /next/index.html, NEVER the nested source Graph B entry.
-    if(resolve(context.filename||'')!==resolve(root,'index.html'))return html;
+    // /next/index.html is the current release candidate and stays immutable.
+    // /next/unified.html is an isolated noindex product convergence preview,
+    // NEVER a promotion instruction or an extra canonical homepage.
+    const entry=resolve(context.filename||'');
+    if(entry!==resolve(root,'index.html')&&entry!==resolve(root,'unified.html'))return html;
     const original=readFileSync(resolve(root,'graph-b/source-graph-b.html'),'utf8');
-    return buildPremiumRootHtml(original);
+    if(entry===resolve(root,'index.html'))return buildPremiumRootHtml(original);
+    const pro=readFileSync(resolve(root,'../vnext-live/index.html'),'utf8');
+    return buildUnifiedRootHtml(original,pro);
    }
   }
  }],
@@ -33,6 +39,7 @@ export default defineConfig({
    rollupOptions:{
      input:{
        index:resolve(root,'index.html'),
+       unified:resolve(root,'unified.html'),
        graphB:resolve(root,'graph-b/source-graph-b.html')
      }
    }
