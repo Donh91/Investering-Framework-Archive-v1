@@ -148,6 +148,7 @@ function plot(){
   warning.textContent=t('Blå dagsprognose ikke udstedt','Blue daily forecast not issued');
  if(!model||model.source_status!=='SOURCE_BOUNDED'){
   paintFrozenWindowLedger([]);
+  if($('cn-demo-warning'))$('cn-demo-warning').hidden=true;
   $('illustrative-test-curve')?.setAttribute('visibility','hidden');
   ['range-band','range-upper','range-lower','forecast','actual','illustrative-test-curve'].forEach(id=>attr(id,'d',''));
   $('price-axis')?.replaceChildren();$('grid')?.replaceChildren();
@@ -160,6 +161,7 @@ function plot(){
   return;
  }
  const bands=model.bands||[],hourly=model.hourly_observations||[];
+ if($('cn-demo-warning'))$('cn-demo-warning').hidden=model.forecast_status==='SOURCE_ISSUED';
  paintFrozenWindowLedger(bands);
  const start=Date.parse(bands[0].window_start_utc),end=Date.parse(bands.at(-1).window_end_utc);
  if(!Number.isFinite(start)||!Number.isFinite(end)||end-start!==7*DAY){model=null;plot();return}
