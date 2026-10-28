@@ -250,7 +250,15 @@ async function load(){
   clearTimeout(timeout);inflight=false;paint();
  }
 }
-initProductExperience(()=>({view,feeds,lang:document.documentElement.lang==='en'?'en':'da'}));
+// A trader may switch lens BETWEEN periodic clock checks. Re-evaluate the
+// official source expiry synchronously on every lens interaction, never
+// replay a cached 'FRESH' action after its owner validity deadline.
+initProductExperience(()=>{
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ try{view=feeds?inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang}):null}
+ catch{view=null}
+ return {view,feeds,lang};
+});
 document.addEventListener('cn:languagechange',paint);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 window.addEventListener('focus',()=>{if(!document.hidden)load()});
