@@ -156,3 +156,26 @@ test('a midweek backfill cannot turn retrospective daily prices into original bl
  assert.equal(result.forecast_status,'PUBLISHED_INVALID_FAIL_CLOSED');
  assert.equal(result.forecast.length,0);
 });
+
+test('seven original frozen daily high/low points become source-bound graphic data only',()=>{
+ const v=fixture(),m=v.public_live_precision;
+ m.daily_range_plan={contract:'CN_FROZEN_DAILY_RANGE_PLAN_v1',forecast_week:'2026-W43',
+  BTC:{status:'PUBLISHED',reason:'Original research',
+   points:Array.from({length:7},(_,i)=>({day:i+1,low:79000+i*100,high:85000+i*100,
+    why:'Prospective weekly structure assessed before outcomes',
+    invalidate_if:'Weekly support is invalidated'}))},
+  ETH:{status:'UNAVAILABLE',reason:'No source-based timing',points:[]}};
+ const out=readOfficialGraphB(v,'BTC',{now_utc:'2026-10-19T08:20:00Z'});
+ assert.equal(out.daily_range_status,'SOURCE_ISSUED');
+ assert.equal(out.daily_ranges.length,7);
+ assert.equal(out.forecast_status,'UNAVAILABLE');
+ assert.deepEqual(out.forecast,[]);
+ assert.equal(out.daily_ranges[0].low,79000);
+ assert.equal(out.daily_ranges[6].day,7);
+ assert.equal(readOfficialGraphB(v,'ETH',{now_utc:'2026-10-19T08:20:00Z'}).daily_range_status,'UNAVAILABLE');
+ m.daily_range_plan.BTC.points[3].day=6;
+ assert.equal(readOfficialGraphB(v,'BTC',{now_utc:'2026-10-19T08:20:00Z'}).daily_range_status,'PUBLISHED_INVALID_FAIL_CLOSED');
+ m.daily_range_plan.BTC.points[3].day=4;
+ m.frozen_at_utc='2026-10-19T06:00:00Z'; // first eligible observation already began
+ assert.equal(readOfficialGraphB(v,'BTC',{now_utc:'2026-10-19T08:20:00Z'}).daily_range_status,'PUBLISHED_INVALID_FAIL_CLOSED');
+});
