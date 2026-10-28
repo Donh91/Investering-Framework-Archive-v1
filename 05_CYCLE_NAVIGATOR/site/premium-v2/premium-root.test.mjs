@@ -86,8 +86,8 @@ test('Graph B existing DA/EN control covers real Premium heading and navigation'
  const js=await readFile(new URL('./graph-b/source-graph-b.mjs',import.meta.url),'utf8');
  assert.match(js,/data-premium-nav/);
  assert.match(js,/data-premium-copy/);
- assert.match(js,/Forecast meets reality/);
- assert.match(js,/Prognose møder virkelighed/);
+ assert.match(js,/This week’s forecast\. Observed prices\./);
+ assert.match(js,/Ugens prognose\. Faktiske kurser\./);
  assert.match(js,/pro:'Compass PRO ↗'/);
  assert.match(js,/pro:'Kompas PRO ↗'/);
  const app=await readFile(new URL('../vnext-live/app.mjs',import.meta.url),'utf8');
