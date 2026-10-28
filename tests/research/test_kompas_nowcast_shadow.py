@@ -273,6 +273,45 @@ class KompasShadowTests(unittest.TestCase):
         self.assertIsNone(x["provisional_coverage"])
         self.assertFalse(x["scientific_edge_verified"])
 
+    def test_malformed_nested_scorer_objects_are_excluded_not_batch_crashes(self):
+        # Original bytes and both canonical self-digests remain valid: these
+        # negatives must reach schema guards rather than a hash mismatch.
+        from scripts.learning.compass_outcomes import canon
+        invalid_basis = changed_blob(
+            fixture(), "outcome_original_json", "outcome_blob_sha256",
+            lambda o: (
+                o.update(time_basis="not-an-object"),
+                o.update(outcome_sha256=hashlib.sha256(canon({
+                    k: v for k, v in o.items() if k != "outcome_sha256"
+                })).hexdigest()),
+            ),
+        )
+        invalid_reference = fixture()
+        forecast = json.loads(invalid_reference["forecast_original_json"])
+        forecast["market_reference"] = "not-an-object"
+        forecast["compass_sha256"] = hashlib.sha256(canon({
+            k: v for k, v in forecast.items() if k != "compass_sha256"
+        })).hexdigest()
+        outcome = json.loads(invalid_reference["outcome_original_json"])
+        outcome["compass_sha256"] = forecast["compass_sha256"]
+        outcome["outcome_sha256"] = hashlib.sha256(canon({
+            k: v for k, v in outcome.items() if k != "outcome_sha256"
+        })).hexdigest()
+        invalid_reference["forecast_original_json"], invalid_reference["forecast_blob_sha256"] = _encode(forecast)
+        invalid_reference["outcome_original_json"], invalid_reference["outcome_blob_sha256"] = _encode(outcome)
+
+        for bad, expected in (
+            (invalid_basis, "SCORER_TIME_BASIS_NOT_MAPPING"),
+            (invalid_reference, "SCORER_REFERENCE_NOT_MAPPING"),
+        ):
+            with self.subTest(reason=expected):
+                batch = compare_shadow_12h([bad, fixture()])
+                self.assertEqual(batch["attempted"], 2)
+                self.assertEqual(batch["provisional_paired"], 1)
+                self.assertEqual(batch["rows"][0]["reason"], expected)
+                self.assertEqual(batch["rows"][1]["status"], "PROVISIONAL_RESEARCH_ONLY")
+                self.assertFalse(batch["scientific_edge_verified"])
+
     def test_non_directional_signal_never_receives_accuracy(self):
         row=changed_blob(fixture(),"forecast_original_json","forecast_blob_sha256",
                          lambda f:f["horizons"]["NEXT_12H"].update(expected_direction="MIXED"))
