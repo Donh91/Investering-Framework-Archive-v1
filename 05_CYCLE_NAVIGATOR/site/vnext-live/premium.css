@@ -201,3 +201,13 @@
  * public-proof 'table{min-width:440px}' must NEVER stretch that internal
  * LightweightCharts canvas on a 390px iPhone. Source data unaffected. */
 #official-path-chart table { min-width:0!important; }
+
+
+/* Source strings can be longer than a 390px screen: grid tracks must
+ * shrink and wrap the authentic status rather than expanding the page. */
+#view-overview .decision{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+#view-overview .decision article{min-width:0;max-width:100%}
+#view-overview .decision-side #direction{
+ max-width:100%;min-width:0;white-space:normal;
+ overflow-wrap:anywhere;word-break:break-word;hyphens:auto;
+}
