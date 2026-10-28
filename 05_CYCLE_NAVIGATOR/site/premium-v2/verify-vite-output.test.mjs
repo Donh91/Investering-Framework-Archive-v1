@@ -11,6 +11,13 @@ async function withBundle(run){
   await mkdir(join(dir,'graph-b'),{recursive:true});
   await mkdir(join(dir,'assets'),{recursive:true});
   await writeFile(join(dir,'index.html'),'<!doctype html><html><head><meta name="robots" content="noindex,nofollow"></head><body><img src="./assets/logo.svg"><a href="./graph-b/source-graph-b.html">B</a><svg id="chart"></svg><section id="variant-panel"></section><section id="proof-explorer"></section><section id="official-product-pilot"><ol id="official-pilot-path"></ol></section></body></html>');
+  await writeFile(join(dir,'unified.html'),
+    '<!doctype html><html><head><meta name="robots" content="noindex,nofollow"></head><body>'+
+    '<section id="compass-pro"><strong id="premium-now-action"></strong><div id="premium-risk-steps"></div>'+
+    '<table><tbody id="pro-forward-rows"></tbody></table></section>'+
+    '<section id="variant-panel"><svg id="chart"></svg></section>'+
+    '<section id="proof-explorer"></section><section id="official-path-view"><ol id="premium-path-rail"></ol></section>'+
+    '<script type="module" src="./assets/app.js"></script></body></html>');
   await writeFile(join(dir,'graph-b/source-graph-b.html'),'<!doctype html><html><head><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/Investering-Framework-Archive-v1/next/assets/site.css"></head><body><svg id="chart"></svg><script type="module" src="/Investering-Framework-Archive-v1/next/assets/app.js"></script></body></html>');
   await writeFile(join(dir,'assets/site.css'),'body{color:#07172f}');
   await writeFile(join(dir,'assets/logo.svg'),'<svg xmlns="http://www.w3.org/2000/svg"/>');
@@ -19,12 +26,12 @@ async function withBundle(run){
  }finally{await rm(dir,{recursive:true,force:true})}
 }
 
-test('both Vite pages, emitted assets and 3 source references PASS',async()=>{
+test('three Vite preview pages, emitted assets and 3 source references PASS',async()=>{
  await withBundle(async dir=>{
   const result=await verifyViteOutput(dir);
   assert.equal(result.status,'PASS');
-  assert.deepEqual(result.entrypoints,['index.html','graph-b/source-graph-b.html']);
-  assert.equal(result.asset_count,5);
+  assert.deepEqual(result.entrypoints,['index.html','unified.html','graph-b/source-graph-b.html']);
+  assert.equal(result.asset_count,6);
   assert.ok(result.assets.every(x=>/^[a-f0-9]{64}$/.test(x.sha256)));
  });
 });
@@ -65,5 +72,34 @@ test('placeholder root without original Graph B, Proof or Compass cannot be rele
  await withBundle(async dir=>{
   await writeFile(join(dir,'index.html'),'<html><head><meta name="robots" content="noindex"></head><body><a href="./graph-b/source-graph-b.html">Open demo</a></body></html>');
   await assert.rejects(verifyViteOutput(dir),/MISSING_PREMIUM_ROOT_MARKUP/);
+ });
+});
+
+test('missing unified PRO entry blocks staging even with original B intact',async()=>{
+ await withBundle(async dir=>{
+  await rm(join(dir,'unified.html'));
+  await assert.rejects(verifyViteOutput(dir),/MISSING_ENTRY:unified.html/);
+ });
+});
+test('missing or duplicate single Graph B and PRO nodes fail compiled artifact',async()=>{
+ await withBundle(async dir=>{
+  const path=join(dir,'unified.html');
+  const {readFile}=await import('node:fs/promises');
+  const original=await readFile(path,'utf8');
+  await writeFile(path,original.replace('id="compass-pro"','id="wrong-pro"'));
+  await assert.rejects(verifyViteOutput(dir),/UNIFIED_SINGLETON_ID:compass-pro/);
+  await writeFile(path,original.replace('</body>','<svg id="chart"></svg></body>'));
+  await assert.rejects(verifyViteOutput(dir),/UNIFIED_SINGLETON_ID:chart/);
+ });
+});
+test('legacy second Compass or competing PRO route fail independently',async()=>{
+ await withBundle(async dir=>{
+  const path=join(dir,'unified.html');
+  const {readFile}=await import('node:fs/promises');
+  const original=await readFile(path,'utf8');
+  await writeFile(path,original.replace('</body>','<div id="official-product-pilot"></div></body>'));
+  await assert.rejects(verifyViteOutput(dir),/UNIFIED_LEGACY_DUPLICATE/);
+  await writeFile(path,original.replace('</body>','<a href="/vnext/#compass">2nd PRO</a></body>'));
+  await assert.rejects(verifyViteOutput(dir),/UNIFIED_COMPETING_COMPASS_ROUTE/);
  });
 });
