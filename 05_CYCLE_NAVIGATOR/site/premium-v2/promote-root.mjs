@@ -96,8 +96,10 @@ export async function promoteRoot(root=dist){
  for(const required of ['vnext/index.html','legacy/index.html','data/latest.json',
   'data/compass.json','data/publication-lineage.json'])await readFile(resolve(root,required));
  const before=await snapshotCanonicalTree(root);
- const next=await readFile(resolve(root,'next/index.html'),'utf8');
- const promoted=promoteHtml(next);
+ // Promote the already verified SINGLE PRO + original B entry, not the
+ // old /next/index.html pilot. Its Vite assets remain immutable in /next/.
+ const next=await readFile(resolve(root,'next/unified.html'),'utf8');
+ const promoted=promoteUnifiedHtml(next);
  await writeFile(resolve(root,'index.html'),promoted);
  const after=await snapshotCanonicalTree(root);
  for(const path of new Set([...Object.keys(before),...Object.keys(after)])){
@@ -106,6 +108,7 @@ export async function promoteRoot(root=dist){
  if(before['index.html']===after['index.html'])throw Error('ROOT_PROMOTION_NO_CHANGE');
  return {stage:'OWNER_APPROVED_ROOT',previous_root_sha256:before['index.html'],
   promoted_root_sha256:sha(promoted),next_sha256:sha(next),
+  source_entry:'next/unified.html',single_compass:'compass-pro',approved_graph:'graph-b',
   unchanged_non_root_assets:Object.keys(before).length-1,prior_version:'/vnext/',
   protected_data:['data/latest.json','data/compass.json','data/publication-lineage.json']};
 }
