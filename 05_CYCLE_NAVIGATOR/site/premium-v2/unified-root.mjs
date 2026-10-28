@@ -39,6 +39,12 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<section class="cn-forward"',
     '<section class="section"><div class="section-heading"><h2 data-t="tiersHeading"',
     'pro-long-range');
+  // Preserve the existing optional Master Monday/source-trace PRO drawer, not
+  // a second source, page, action or execution owner.
+  const interpretation=excerpt(proSource,
+    '<details class="product-more"><summary data-exp-t="interpretation">',
+    '<details class="product-more"><summary data-exp-t="protection">',
+    'pro-source-interpretation');
   const reentry='<section class="cn-pro-reentry" aria-labelledby="pro-reentry-heading">'+
     '<h3 id="pro-reentry-heading">Genkøb · officiel status</h3>'+
     '<strong id="pro-reentry-state">Afventer kilde</strong>'+
@@ -55,10 +61,12 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   unique(core,riskMarker,'pro-risk-marker');
   const coreDisclosure=core.replace(riskMarker,
     '<details class="cn-pro-more"><summary>Risiko, beskyttelse og trader-visning</summary>'+riskMarker)
-    .replace(/<\/section>\s*$/,extra+'\n'+forward+'\n'+reentry+'\n</details>\n</section>');
+    .replace(/<\/section>\s*$/,extra+'\n'+forward+'\n'+reentry+'\n'+interpretation+'\n</details>\n</section>');
   if(!coreDisclosure.includes('id="pro-forward-rows"')||
      !coreDisclosure.includes('id="cn-forward-source-status"')||
      !coreDisclosure.includes('id="pro-reentry-state"')||
+     !coreDisclosure.includes('id="monday-reading"')||
+     !coreDisclosure.includes('id="source-trace-body"')||
      !coreDisclosure.includes('id="premium-risk-steps"'))
     throw Error('CN_UNIFIED_ROOT_PRO_FEATURES_MISSING');
   const pro='<section id="compass-pro" class="cn-pro-surface" aria-labelledby="pro-heading">'+
