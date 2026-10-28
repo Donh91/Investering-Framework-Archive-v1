@@ -34,6 +34,22 @@ test('W43 genuine ranges+actual does NOT become an invented blue forecast',()=>{
  assert.equal(m.actual_segments.length,2); // exact 03:00 UTC missing gap
  assert.equal(m.live_freshness,'FRESH');
 });
+test('range windows cannot borrow another ISO week label even with valid 7-day duration',()=>{
+ const proper=readOfficialGraphB(fixture(),'BTC',{now_utc:now});
+ assert.equal(proper.source_status,'SOURCE_BOUNDED');
+ for(const mislabeled of ['2026-W44','2026-W45','2026-W53']){
+   const v=fixture(),m=v.public_live_precision;
+   v.public_series.current_public_projection.forecast_week=mislabeled;
+   m.forecast_week=mislabeled;
+   m.hourly_price_path.forecast_week=mislabeled;
+   m.daily_price_path.forecast_week=mislabeled;
+   const output=readOfficialGraphB(v,'BTC',{now_utc:now});
+   assert.equal(output.source_reason,'FROZEN_WEEK_BOUNDS_INVALID',mislabeled);
+   assert.equal(output.source_status,'UNAVAILABLE',mislabeled);
+   assert.deepEqual(output.bands,[],mislabeled);
+   assert.deepEqual(output.forecast,[],mislabeled);
+ }
+});
 test('wrong issue/asset/clock/source provenance FAIL CLOSED',()=>{
  const v=fixture();v.public_live_precision.public_issue_number=31;
  assert.equal(readOfficialGraphB(v,'BTC',{now_utc:now}).source_reason,'PUBLIC_WEEK_OR_ISSUE_MISMATCH');

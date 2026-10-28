@@ -1,0 +1,59 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-cn-w44-range-bridge-target-mismatch-v1",
+  "submitted_at_utc": "2026-10-27T22:07:36Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "source_paths": [
+      "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
+      "research/cycle_navigator/operational_readback/2026-10-26_W44.json"
+    ]
+  },
+  "title": "Repair missing CN prospective source bridge for future weeks",
+  "objective": "Reproduce the W39 bridge target mismatch on W44 and inspect recurring source production in existing CN weekly workflow. Preserve the current strict validator and W44 immutable forecast. If a valid prospective source is available, repair only the existing future weekly handoff. Otherwise preserve SOURCE_UNAVAILABLE.",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "Donh91/Investering-Framework-Archive-v1:scripts/cycle_navigator/prospective_range_bridge.py",
+    "Donh91/Investering-Framework-Archive-v1:tests/cycle_navigator/test_prospective_range_bridge.py"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
+      "summary": "Targets W39, not W44."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "research/cycle_navigator/operational_readback/2026-10-26_W44.json",
+      "summary": "W44 readback returns BRIDGE_TARGET_WEEK_MISMATCH and excludes values."
+    }
+  ],
+  "reproduction": "Read latest source and run python -m unittest -v tests.cycle_navigator.test_prospective_range_bridge. Show W39 bridge rejected as W44; trace producer in existing weekly writer before any code patch.",
+  "acceptance_tests": {
+    "positive": [
+      "A timely, immutable and eligible future-week W45 bridge is source-admitted by existing strict validator or correctly stays SOURCE_UNAVAILABLE.",
+      "W44 frozen forecasts remain unchanged."
+    ],
+    "negative": [
+      "W39 bridge must never be admitted for W44 or W45.",
+      "Late publication, false source hash and after-issue source changes fail closed, with guard-sensitive regression fixtures."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical forecast rewrite",
+    "independent baseline promotion",
+    "new workflow",
+    "automatic merge"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "FOCUSED_POSITIVE_AND_MUTATION_NEGATIVE_TESTS_PASS_PLUS_W44_IMMUTABILITY_PLUS_EXACT_HEAD_INDEPENDENT_REVIEW_PLUS_MAIN_SOURCE_READBACK"
+}

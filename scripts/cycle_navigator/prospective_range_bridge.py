@@ -110,8 +110,24 @@ def load_bridge(repo: Path, *, target_year: int, target_week: int,
                 actuals = json.loads(source_raw)
                 if (actuals.get('iso_year'), actuals.get('iso_week')) != (prior.year, prior.week):
                     return reject('BRIDGE_ACTUALS_WEEK_MISMATCH')
-                if actuals.get('readiness') != 'READY' or _time(actuals.get('generated_at_utc')) > generated:
+                actuals_generated = _time(actuals.get('generated_at_utc'))
+                if (actuals.get('readiness') != 'READY'
+                        or actuals_generated < cutoff or actuals_generated > generated):
                     return reject('BRIDGE_ACTUALS_NOT_FINAL_AT_GENERATION')
+                hours = actuals.get('hourly_gap_diagnostics')
+                if (not isinstance(hours, dict)
+                        or hours.get('expected_hours') != 168
+                        or hours.get('observed_hours') != 168
+                        or hours.get('missing_hour_count') != 0):
+                    return reject('BRIDGE_ACTUALS_HOURLY_COVERAGE_UNVERIFIED', 'SOURCE_UNAVAILABLE')
+                # 168 observed clocks cannot certify BTC/ETH inputs if per-field
+                # price observations are incomplete or the producer omits them.
+                fields = hours.get('per_field_completeness')
+                if (not isinstance(fields, dict)
+                        or any(not isinstance(fields.get(asset), dict)
+                               or fields[asset].get('complete_hours') != 168
+                               for asset in ('btc_close', 'eth_close'))):
+                    return reject('BRIDGE_ACTUALS_PRICE_FIELD_COVERAGE_UNVERIFIED', 'SOURCE_UNAVAILABLE')
             except (ValueError, TypeError, AttributeError):
                 return reject('BRIDGE_ACTUALS_INVALID')
     windows = [bridge.get('weekly')]
@@ -152,6 +168,8 @@ def load_bridge(repo: Path, *, target_year: int, target_week: int,
         return reject('BRIDGE_COMMITTED_BYTES_MISMATCH')
     if bridge_committed_at > freeze_at:
         return reject('BRIDGE_COMMITTED_AFTER_FORECAST_FREEZE')
+    if bridge_committed_at < generated:
+        return reject('BRIDGE_COMMITTED_BEFORE_GENERATION')
     result['bridge_commit'] = bridge_commit
     result['bridge_committed_at_utc'] = bridge_committed_at.isoformat()
     return {**bridge, 'consumer_receipt': {**result, 'status': 'READY',

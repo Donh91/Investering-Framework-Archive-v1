@@ -127,6 +127,17 @@ def append_forward_ranges(
     freeze: dict[str, Any],
 ) -> None:
     intraday = freeze.get("intraday_map") if isinstance(freeze.get("intraday_map"), dict) else {}
+    # A full-week or day-window range is NOT prospectively frozen for its
+    # entire window when the original issue was generated after it began.
+    # This only classifies NEW append-only ledger rows; never rewrite history.
+    week_start = datetime.combine(date.fromisocalendar(year, week, 1),
+                                  datetime.min.time(), tzinfo=timezone.utc)
+    generated_at = datetime.fromtimestamp(generated_unix, tz=timezone.utc)
+    window_offsets = {"weekly": 0, "day_1_2": 0, "day_3_4": 2, "day_5_7": 4}
+    def window_status(window: str) -> str:
+        start = week_start + timedelta(days=window_offsets[window])
+        return ("FROZEN_PROSPECTIVE" if generated_at <= start
+                else "ISSUED_AFTER_WINDOW_START")
     rows: list[dict[str, Any]] = []
     for asset, prefix in (("BTC", "btc"), ("ETH", "eth")):
         low, high = freeze.get(f"{prefix}_range_low"), freeze.get(f"{prefix}_range_high")
@@ -142,7 +153,7 @@ def append_forward_ranges(
                 "forecast_high": float(high),
                 "generated_unix": generated_unix,
                 "source": "CYCLE_NAVIGATOR_FORECAST_FREEZE",
-                "status": "FROZEN_PROSPECTIVE",
+                "status": window_status("weekly"),
             })
     for window in ("day_1_2", "day_3_4", "day_5_7"):
         text = str(intraday.get(window) or "")
@@ -160,7 +171,7 @@ def append_forward_ranges(
                     "forecast_high": float(m.group(2).replace(",", "")),
                     "generated_unix": generated_unix,
                     "source": "CYCLE_NAVIGATOR_FORECAST_FREEZE",
-                    "status": "FROZEN_PROSPECTIVE",
+                    "status": window_status(window),
                 })
     if not rows:
         return
