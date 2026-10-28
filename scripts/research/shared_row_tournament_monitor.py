@@ -91,9 +91,21 @@ def main() -> None:
     matured = verified_matured_divergence_counts(valid_rows, divergences)
     matured_shared_rows = verified_matured_shared_row_counts(valid_rows)
     rule = freeze.get("core_activation_rule", {})
-    collection_state = rule.get("collection_state")
-    quarantined = collection_state != ACTIVE or rule.get("containment_floor_sentinel") is not False
-    if issues and "UNVERIFIED_PROSPECTIVE_ROW_OR_DIVERGENCE" in issues:
+    freeze_collection_state = rule.get("collection_state")
+    runtime_collection_state = runtime.get("collection_state")
+    freeze_active = freeze_collection_state == ACTIVE
+    runtime_active = runtime_collection_state == ACTIVE
+    if freeze_active != runtime_active:
+        issues.append("COLLECTION_STATE_MISMATCH")
+    quarantined = not (freeze_active and runtime_active
+                       and rule.get("containment_floor_sentinel") is False)
+    collection_state = (ACTIVE if not quarantined else
+                        "INCONSISTENT" if freeze_active != runtime_active
+                        else "QUARANTINED")
+    if "COLLECTION_STATE_MISMATCH" in issues:
+        next_event = "RECONCILE_RUNTIME_AND_FREEZE_COLLECTION_STATE"
+        readiness = "FAIL_CLOSED_INCONSISTENT_RUNTIME"
+    elif issues and "UNVERIFIED_PROSPECTIVE_ROW_OR_DIVERGENCE" in issues:
         next_event = "RECONCILE_ORIGINAL_ROW_HASH_GIT_SOURCE_AND_OUTCOME_DETAILS"
         readiness = "FAIL_CLOSED_UNVERIFIED_RESEARCH_EVIDENCE"
     elif quarantined:
@@ -124,6 +136,8 @@ def main() -> None:
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "status": "PASS" if not issues else "FAIL",
         "collection_state": collection_state,
+        "freeze_collection_state": freeze_collection_state,
+        "runtime_collection_state": runtime_collection_state,
         "scoring_readiness": readiness,
         "eligible_row_n": len(valid_rows),
         "excluded_pre_repair_row_n": len(all_rows) - len(valid_rows),

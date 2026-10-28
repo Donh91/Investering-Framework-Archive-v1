@@ -137,7 +137,7 @@ def matured_consensus_fixture():
 
 
 class SharedRowConsumerIntegrityTests(unittest.TestCase):
-    def monitor_fixture(self, parents, details, source_verifier=verifier):
+    def monitor_fixture(self, parents, details, source_verifier=verifier, runtime_active=True):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / "lab"
             root.mkdir()
@@ -153,7 +153,7 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
                 "core_activation_rule": {"collection_state": monitor.ACTIVE,
                                          "containment_floor_sentinel": False}
             }))
-            (root / "RUNTIME_STATUS.json").write_text(json.dumps(runtime()))
+            (root / "RUNTIME_STATUS.json").write_text(json.dumps(runtime(runtime_active)))
             for name in ("03_CANDIDATE_REGISTRY.json", "04_SHARED_ROW_SCHEMA.json", "RELEVANCE_STATE.json"):
                 (root / name).write_text("{}")
             registry = root / "registry.json"
@@ -167,6 +167,31 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
                     monitor.main()
                 result = json.loads((root / "monitor/LATEST.json").read_text())
             return caught.exception.code, result
+
+    def test_monitor_runtime_quarantine_cannot_report_active_pass(self):
+        parent, detail = matured_consensus_fixture()
+        code, result = self.monitor_fixture([parent], [detail], runtime_active=False)
+        self.assertEqual(code, 2)
+        self.assertEqual(result["status"], "FAIL")
+        self.assertIn("COLLECTION_STATE_MISMATCH", result["issues"])
+        self.assertEqual(result["collection_state"], "INCONSISTENT")
+        self.assertEqual(result["freeze_collection_state"], monitor.ACTIVE)
+        self.assertEqual(result["runtime_collection_state"], runtime(False)["collection_state"])
+        self.assertEqual(result["eligible_row_n"], 0)
+        self.assertEqual(result["matured_shared_rows"]["24h"], 0)
+        self.assertEqual(result["scoring_readiness"], "FAIL_CLOSED_INCONSISTENT_RUNTIME")
+        self.assertEqual(result["exact_next_evidence_event"],
+                         "RECONCILE_RUNTIME_AND_FREEZE_COLLECTION_STATE")
+
+    def test_monitor_active_controls_still_admit_verified_consensus(self):
+        parent, detail = matured_consensus_fixture()
+        code, result = self.monitor_fixture([parent], [detail], runtime_active=True)
+        self.assertEqual(code, 0)
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["collection_state"], monitor.ACTIVE)
+        self.assertEqual(result["freeze_collection_state"], monitor.ACTIVE)
+        self.assertEqual(result["runtime_collection_state"], monitor.ACTIVE)
+        self.assertEqual(result["matured_shared_rows"]["24h"], 1)
 
     def test_monitor_consensus_parent_matures_without_divergence(self):
         parent, detail = matured_consensus_fixture()
