@@ -49,10 +49,22 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<h3 id="pro-reentry-heading">Genkøb · officiel status</h3>'+
     '<strong id="pro-reentry-state">Afventer kilde</strong>'+
     '<p id="pro-reentry-note">En risikoadvarsel er ikke et genkøbssignal.</p></section>';
+  // Target milestone is source-owned ALT_IGNITION, immediately before
+  // micro acceleration in the existing 10-stage journey. No fake ETA.
   const path=excerpt(proSource,
     '<section id="view-path"', '<section id="view-results"', 'pro-path')
     .replace('<section id="view-path" class="view" hidden role="tabpanel" aria-labelledby="tab-path">',
-      '<section id="official-path-view" class="cn-path-source" aria-label="PATH · kildeverificeret markedsforløb">');
+      '<section id="official-path-view" class="cn-path-source" aria-label="PATH · kildeverificeret markedsforløb">')
+    .replace('<section class="section"><div class="section-heading"><div><p class="eyebrow">02 / MARKET CYCLE</p>',
+      '<aside class="cn-alt-milestone" aria-labelledby="cn-alt-milestone-title">'+
+      '<div><span class="cn-milestone-eyebrow">NÆSTE STORE ALTCOIN-MILEPÆL</span>'+
+      '<h2 id="cn-alt-milestone-title">Altseason ignition</h2>'+
+      '<p id="cn-alt-milestone-subtitle">Før small/micro-acceleration · kræver verificeret rotation</p></div>'+
+      '<div class="cn-milestone-eta"><span id="cn-alt-milestone-eta-label">Tid til fase</span>'+
+      '<strong id="cn-alt-milestone-eta">Ingen verificeret ETA</strong>'+
+      '<small id="cn-alt-milestone-state">Betinget watch · ikke nedtælling</small></div>'+
+      '</aside>'+
+      '<section class="section"><div class="section-heading"><div><p class="eyebrow">02 / MARKET CYCLE</p>');
 
   // The original PRO product's one official action is visible immediately.
   // Risk, trading lenses and longer official horizons stay within the same
@@ -69,14 +81,32 @@ export function buildUnifiedRootHtml(graphSource,proSource){
      !coreDisclosure.includes('id="source-trace-body"')||
      !coreDisclosure.includes('id="premium-risk-steps"'))
     throw Error('CN_UNIFIED_ROOT_PRO_FEATURES_MISSING');
+  // Three purposeful first-fold readings: authoritative action, 12h observed
+  // momentum (NOT a forecast) and official source-issued 1–3d posture.
+  const compactCore=coreDisclosure.replace(
+    '<strong id="premium-now-direction">—</strong></div></div>',
+    '<strong id="premium-now-direction">—</strong></div>'+
+    '<div class="product-cell cn-13d" aria-label="Official 1–3 day source reading">'+
+    '<small id="cn-horizon-13-label">1–3 dage · kildevurdering</small>'+
+    '<strong id="cn-horizon-13">—</strong>'+
+    '<span class="product-action-meaning" id="cn-horizon-13-posture">—</span>'+
+    '</div></div>');
+  if(!compactCore.includes('id="cn-horizon-13"'))
+    throw Error('CN_QUIET_PRO_FIRST_FOLD_INSERT_FAILED');
   const pro='<section id="compass-pro" class="cn-pro-surface" aria-labelledby="pro-heading">'+
     '<div class="cn-pro-intro"><span class="small-kicker">OFFICIEL BESLUTNINGSSTØTTE</span>'+
     '<h2 id="pro-heading">Kompas PRO</h2>'+
     '<p>Handling, observeret retning og risiko vises hver for sig. '+
     'Kun gyldige officielle kildebeslutninger er aktuelle.</p></div>'+
     '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p>'+
-    coreDisclosure.replace('<details class="cn-pro-more">',
-      '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p><details class="cn-pro-more">')+'</section>';
+    compactCore.replace('<details class="cn-pro-more">',
+      '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
+      '<section class="cn-risk-quick" aria-label="Pullback classification">'+
+      '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">PULLBACK / 5 RISIKOKLASSER</small>'+
+      '<strong id="cn-risk-quick-state">Afventer kilde</strong></div>'+
+      '<span id="cn-risk-quick-note">Kildens trin · ikke sandsynlighed</span></div>'+
+      '<div id="cn-risk-quick-steps" class="risk-class-rail" aria-hidden="true"></div>'+
+      '</section><details class="cn-pro-more">')+'</section>';
 
   const oldDecision='<section class="official-product-pilot premium-decision-summary"';
   const graph='<section id="variant-panel"';
@@ -89,7 +119,12 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   const c=unique(html,details,'legacy-details');
   const d=unique(html,meta,'source-meta');
   if(d<=c)throw Error('CN_UNIFIED_ROOT_LEGACY_ORDER');
-  html=html.slice(0,c)+path+'\n'+html.slice(d);
+  // Decision -> chart -> cycle / altseason -> proof. Do not bury the user's
+  // actionable source-bound market timeline underneath the audit appendix.
+  const proofAt=unique(html,'<section id="proof-explorer"','source-proof');
+  if(proofAt>=c)throw Error('CN_QUIET_PROOF_ORDER_SOURCE_MISMATCH');
+  const originalProof=html.slice(proofAt,c);
+  html=html.slice(0,proofAt)+path+'\n'+originalProof+html.slice(d);
   html=html.replace('<a href="#official-product-pilot" data-premium-nav="compass">Kompas</a>',
     '<a href="#compass-pro" data-premium-nav="compass">Kompas PRO</a>');
   // No second PRO route or second graph entry in the official navigation.

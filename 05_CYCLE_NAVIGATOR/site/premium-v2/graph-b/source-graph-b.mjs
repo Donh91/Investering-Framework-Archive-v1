@@ -175,7 +175,17 @@ function plot(){
    return 'M'+left+','+up+' L'+right+','+up+' L'+right+','+down+
     ' L'+left+','+down+' Z';
   }).join(' '));
-  attr('range-upper','d','');attr('range-lower','d','');
+  // Visibly retain the full issued high/low envelope without a giant blue
+  // rectangle dominating the price chart: restrained horizontal boundary
+  // rails per independently frozen window, NOT a connected forecast curve.
+  const edge=key=>bands.map(b=>{
+   const left=x(Date.parse(b.window_start_utc)),right=x(Date.parse(b.window_end_utc));
+   const level=y(b[key]);
+   return 'M'+left.toFixed(2)+','+level.toFixed(2)+
+     ' L'+right.toFixed(2)+','+level.toFixed(2);
+  }).join(' ');
+  attr('range-upper','d',edge('forecast_high'));
+  attr('range-lower','d',edge('forecast_low'));
  }
  attr('actual','d',observedRuns.map(run=>movePath(run.map(xy))).join(' '));
  const last=visible.at(-1);

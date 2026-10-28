@@ -66,9 +66,9 @@ export function promoteUnifiedHtml(input){
  let html=input;
  for(const [from,to] of [
   ['<meta name="robots" content="noindex,nofollow">',
-   '<meta name="description" content="Cycle Navigator: officielt Kompas PRO, original Graph B, markedets kildeverificerede prisintervaller og dokumenteret efterkontrol.">'],
+   '<meta name="description" content="Cycle Navigator: Kompas PRO, ugens markedsudsyn, frosne kildeintervaller og dokumenteret efterkontrol.">'],
   ['<title>Cycle Navigator · Premium v2.1 · NEXT</title>',
-   '<title>Cycle Navigator · Kompas PRO & Graph B</title>'],
+   '<title>Cycle Navigator · Kompas PRO · Ugens markedsudsyn</title>'],
   ['<body class="premium-next">','<body class="premium-next premium-home">'],
   ['CYCLE NAVIGATOR / NEXT','CYCLE NAVIGATOR / OFFICIEL'],
   ['PREMIUM v2.1 · IKKE OFFICIEL FORSIDE','CYCLE NAVIGATOR · OFFICIEL'],

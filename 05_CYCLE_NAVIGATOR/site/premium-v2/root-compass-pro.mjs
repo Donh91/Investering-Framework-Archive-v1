@@ -53,6 +53,65 @@ function horizons(){
   body.append(r);
  }
 }
+function renderQuickDecision(){
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const eligible=view?.compass?.state==='FRESH'&&
+   view?.compass?.permit_path_live_gates===true&&
+   feeds?.compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
+   feeds.compass.data_status==='OK'&&
+   feeds.compass.compass_id===view.compass.compass_id;
+ const h=eligible?feeds.compass.horizons?.NEXT_1_3D:null;
+ const direction=safe(h?.expected_direction);
+ const posture=safe(h?.action_posture);
+ set('cn-horizon-13',eligible?direction:'UNAVAILABLE');
+ set('cn-horizon-13-posture',eligible?posture:'—');
+ set('cn-horizon-13-label',lang==='en'?'1–3 days · official outlook':'1–3 dage · officiel vurdering');
+ const twelve=$('premium-now-direction')?.closest('.product-cell')?.querySelector('small');
+ if(twelve)twelve.textContent=lang==='en'?
+  '12 hours · observed momentum (not forecast)':
+  '12 timer · observeret momentum (ikke prognose)';
+}
+function renderRiskQuick(){
+ const en=document.documentElement.lang==='en';
+ set('cn-risk-quick-label',en?'PULLBACK / FIVE OFFICIAL RISK CLASSES':
+   'PULLBACK / 5 OFFICIELLE RISIKOKLASSER');
+ set('cn-risk-quick-state',$('premium-risk-name')?.textContent||'UNAVAILABLE');
+ set('cn-risk-quick-note',en?'Source-owned stages · not probability':
+   'Kildens trin · ikke sandsynlighed');
+ // Render the already-calculated official ordinal stages a second time
+ // for accessibility on the first fold; NEVER create an alternate risk model.
+ const source=$('premium-risk-steps'),target=$('cn-risk-quick-steps');
+ if(source&&target){
+  target.replaceChildren(...[...source.children].map(el=>{
+   const copy=el.cloneNode(true);copy.removeAttribute('id');return copy;
+  }));
+ }
+}
+function renderAltMilestone(){
+ const en=document.documentElement.lang==='en';
+ const eligible=view?.path?.state==='SOURCE_BOUND'&&
+  view?.compass?.state==='FRESH'&&
+  view.compass.permit_path_live_gates===true&&
+  view.path.source_issue===view?.weekly?.public_issue_number&&
+  view.path.source_week===view?.weekly?.forecast_week&&
+  view.path.source_identity===view.compass.compass_id;
+ const p=eligible?view.path:null;
+ set('cn-alt-milestone-title',en?'Altseason ignition':'Altseason begynder');
+ set('cn-alt-milestone-subtitle',en?
+  'Before small/micro acceleration · independently verified rotation required':
+  'Før small/micro-acceleration · kræver verificeret rotation');
+ set('cn-alt-milestone-eta-label',en?'Time to phase':'Tid til fase');
+ // No structured authoritative future absolute timestamp exists in PATH v3.
+ // A prose watch window is not a countdown, date or probability.
+ set('cn-alt-milestone-eta',en?'No verified ETA':'Ingen verificeret ETA');
+ const state=eligible&&p?.altseason?.status==='WATCH_ONLY'?
+   (en?'Conditional watch · not confirmed':'Betinget watch · ikke bekræftet'):
+   (en?'Awaiting verified transition':'Afventer verificeret overgang');
+ set('cn-alt-milestone-state',state);
+ const panel=$('cn-alt-milestone-title')?.closest('.cn-alt-milestone');
+ if(panel)panel.dataset.state=eligible&&p.altseason?.status==='WATCH_ONLY'?
+   'watch':'unverified';
+}
 function renderForward(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  const say=(da,en)=>lang==='en'?en:da;
@@ -185,6 +244,9 @@ function paint(){
  // Official source gate remains upstream. An expired issuer can never be
  // refreshed via a newer Pages bundle timestamp or cached prior DOM text.
  renderProductExperience(view,feeds,lang);
+ renderQuickDecision();
+ renderRiskQuick();
+ renderAltMilestone();
  horizons();
  renderForward();
  renderReentry();
@@ -219,12 +281,12 @@ function paint(){
  // Only neutral presentation labels; all action, SELL, risk, state, price and
  // source-provenance labels remain produced by existing PRO/source modules.
  const copy=lang==='en'?{
-  risk:'Risk, protection and trader view',
+  risk:'All horizons · detailed risk & trader view',
   horizon:'Time horizons',
   owner:'Official Compass only',
   time:'Horizon',direction:'Direction',action:'Source posture'
  }:{
-  risk:'Risiko, beskyttelse og trader-visning',
+  risk:'Alle tidshorisonter · risiko og trader-visning',
   horizon:'Tidshorisonter',
   owner:'Kun officielt Kompas',
   time:'Tid',direction:'Retning',action:'Kildens position'

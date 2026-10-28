@@ -297,7 +297,8 @@ export function renderProductExperience(view,feeds,lang='da'){
  set('premium-path-explainer',t.pathNote);set('premium-path-eta',t.pathNoEta);
  const rail=reset('premium-path-rail');
  if(rail){path.phases.forEach((x,i)=>{const e=element('li','path-node'),name=element('strong','',x.label);
-    e.dataset.kind=x.kind;e.append(element('span','path-number',String(i+1).padStart(2,'0')),name);
+    e.dataset.kind=x.kind;e.dataset.phase=x.key;
+    e.append(element('span','path-number',String(i+1).padStart(2,'0')),name);
     if(x.kind==='reference')e.append(element('small','',t.pathFrozen));
     if(x.kind==='next')e.append(element('small','',t.wait));
     rail.append(e)});

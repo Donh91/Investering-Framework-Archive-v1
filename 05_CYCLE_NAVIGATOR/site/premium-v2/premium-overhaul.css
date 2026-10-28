@@ -982,3 +982,391 @@
  .premium-next #compass-pro .section,
  .premium-next #official-path-view .section {padding: 13px;}
 }
+
+
+/* QUIET PRECISION v2 · SITE #1578 · SOURCE-GOVERNED DESIGN ONLY
+ * Single official PRO, one original weekly chart, source-first market journey.
+ * The width of frozen bands is NEVER narrowed; only ink, opacity and boundary
+ * rails change. No unavailable market stage becomes active through CSS. */
+.premium-next:has(#compass-pro) {
+  --qp-ink:#081b33;
+  --qp-soft:#60768d;
+  --qp-line:#e1e8f0;
+  --qp-blue:#2768bd;
+  --qp-paper:#fff;
+  background:#f5f7fa;
+  color:var(--qp-ink);
+}
+.premium-next:has(#compass-pro) .wrap {max-width:1088px}
+.premium-next:has(#compass-pro) .premium-entry {
+  padding-block:clamp(18px,3vw,34px) 13px;
+  border-bottom:0;
+}
+.premium-next:has(#compass-pro) .premium-entry-intro h1 {
+  max-width:15ch;
+  font-size:clamp(32px,4.8vw,58px);
+  line-height:1.02;
+  font-weight:740;
+  letter-spacing:-.065em;
+}
+.premium-next:has(#compass-pro) .premium-entry-intro p {max-width:53ch;color:#60758b}
+.premium-next:has(#compass-pro) .premium-entry-navigation {
+  margin:6px 0 15px;
+  padding:0 4px;
+  border-top:1px solid #e2e8f0;
+  border-bottom:1px solid #e2e8f0;
+  gap:clamp(16px,2vw,28px);
+}
+.premium-next:has(#compass-pro) .premium-entry-navigation a {
+  font-size:12px;font-weight:700;letter-spacing:.005em;
+  color:#5d7389;min-height:44px;display:inline-flex;align-items:center;
+}
+.premium-next:has(#compass-pro) .premium-entry-navigation a[href="#compass-pro"] {color:#173e69}
+.premium-next #compass-pro {
+  padding:clamp(19px,3.4vw,39px);
+  border:1px solid #e1e7ee;
+  border-radius:18px;
+  box-shadow:0 22px 58px rgba(17,41,73,.045);
+  margin-bottom:22px;
+}
+.premium-next .cn-pro-intro {margin-bottom:13px;gap:6px}
+.premium-next .cn-pro-intro .small-kicker {color:#688198;letter-spacing:.12em}
+.premium-next .cn-pro-intro h2 {font-size:clamp(31px,4.2vw,49px);letter-spacing:-.065em;font-weight:740}
+.premium-next .cn-pro-intro p {max-width:61ch;color:#6b7e92;font-size:13px}
+.premium-next #compass-pro .product-kicker {
+  color:#7790a8;font-size:10px;letter-spacing:.12em;
+  margin-bottom:9px;
+}
+.premium-next #compass-pro .product-decision {
+  grid-template-columns:minmax(0,1.24fr) repeat(2,minmax(0,.95fr));
+  gap:10px;align-items:stretch;margin-bottom:0;
+}
+.premium-next #compass-pro .product-decision .product-cell {
+  background:#f8fafc;
+  color:#0b2543;
+  border:1px solid #e3eaf2;
+  padding:clamp(14px,2vw,21px);
+  border-radius:13px;
+  min-height:148px;
+  display:flex;flex-direction:column;justify-content:flex-start;
+}
+.premium-next #compass-pro .product-decision .product-cell:first-child {
+  background:#071c35;
+  color:#fff;
+  border-color:#071c35;
+}
+.premium-next #compass-pro .product-decision .product-cell:first-child small {color:#acbfd6}
+.premium-next #compass-pro .product-decision .product-cell small {
+  font-size:10px;font-weight:750;letter-spacing:.035em;line-height:1.5;
+  color:#607994;
+}
+.premium-next #compass-pro .product-decision .product-cell strong {
+  margin:12px 0 9px;
+  color:inherit;
+  font-size:clamp(20px,2.7vw,28px);
+  letter-spacing:-.035em;
+  font-weight:735;
+  line-height:1.12;
+  overflow-wrap:anywhere;
+}
+.premium-next #compass-pro .product-decision .product-cell:first-child strong {
+  font-size:clamp(24px,3.2vw,35px);
+}
+.premium-next #compass-pro .product-decision .product-action-meaning,
+.premium-next #compass-pro .product-decision .product-action-code {
+  color:#8296ab;font-size:11px;line-height:1.5;
+}
+.premium-next #compass-pro .product-decision .product-cell:first-child .product-action-meaning,
+.premium-next #compass-pro .product-decision .product-cell:first-child .product-action-code {color:#c5d4e5}
+.premium-next #compass-pro .cn-13d {border-top:2px solid #9bbdf0}
+.premium-next #compass-pro .cn-pro-source {
+  display:block;
+  background:transparent;
+  border:0;border-bottom:1px solid #e8edf2;
+  border-radius:0;
+  margin:0 0 18px;
+  padding:7px 0 14px;
+  color:#698098;font-size:11px;
+}
+.premium-next #compass-pro[data-weekly-health=DEGRADED] .cn-pro-source {
+  border-left:0;border-bottom-color:#d5b68b;color:#855f3c;
+}
+.premium-next #compass-pro .cn-pro-next-gate {font-size:11px;font-weight:600;color:#526b85}
+.premium-next #compass-pro .cn-pro-more {
+  margin-top:18px;border:1px solid #e7ecf2;border-radius:12px;
+  background:#fbfcfd;
+}
+.premium-next #compass-pro .cn-pro-more > summary {
+  font-size:12px;font-weight:680;color:#254e77;letter-spacing:.01em;
+}
+.premium-next #compass-pro .cn-pro-more[open] {background:#fff}
+.premium-next #compass-pro .product-risk {
+  border:1px solid #e5ebf2;background:#fafbfc;
+  padding:clamp(16px,2.3vw,23px);
+}
+.premium-next #compass-pro .product-risk h3 {font-size:clamp(18px,2.4vw,24px);letter-spacing:-.045em}
+.premium-next #compass-pro .risk-class-rail {
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  position:relative;gap:5px;margin:15px 0 10px;
+}
+.premium-next #compass-pro .risk-step {
+  border-top:5px solid #e2e8ef;
+  padding:10px 4px 0;
+  color:#708298;
+  font-size:clamp(9px,1.1vw,12px);
+  line-height:1.45;
+  font-weight:690;
+}
+.premium-next #compass-pro .risk-step[data-prior=true] {
+  border-top-color:#b5c8da;color:#52728f;
+}
+.premium-next #compass-pro .risk-step[data-current=true] {
+  border-top-color:#286bc1;color:#164d8c;
+}
+.premium-next #compass-pro .risk-step[data-current=true]:first-child {
+  border-top-color:#2d8a78;color:#207869;
+}
+.premium-next #compass-pro .risk-step:last-child:not([data-current=true]):not([data-prior=true]) {
+  opacity:.56;
+}
+.premium-next #compass-pro .pro-risk-metrics>div {
+  background:#fff;border-color:#e8edf3;border-radius:10px;
+}
+.premium-next #compass-pro .pro-action-now {
+  background:#f0f5fb;border:1px solid #deebfa;border-radius:12px;
+}
+.premium-next #compass-pro .product-investor {border-top:1px solid #edf0f4}
+.premium-next #compass-pro .product-lenses button {
+  min-height:44px;border-radius:9px;font-size:11px;
+}
+.premium-next #compass-pro .section {
+  background:#fff;border:1px solid #e9edf2;border-radius:12px;
+}
+.premium-next #compass-pro .cn-forward-horizons article,
+.premium-next #compass-pro .cn-pro-reentry {background:#f8fafc}
+
+/* Calm, legible Graph B. Preserve all source high/low geometry;
+ * less solid blue ink, fine full-envelope bounds and real hourly observed line.
+ * Dashed #forecast remains reserved for seven SOURCE_ISSUED daily closes. */
+.premium-next #variant-panel {
+  border:1px solid #e1e9f1;
+  border-radius:17px;
+  box-shadow:0 15px 36px rgba(17,41,73,.035);
+  overflow:hidden;
+}
+.premium-next #variant-panel .alt-token {display:none!important}
+.premium-next #variant-panel #card-heading {
+  font-size:clamp(25px,3.1vw,37px);
+  font-weight:730;letter-spacing:-.05em;
+}
+.premium-next #variant-panel .card-desc {max-width:64ch;color:#72849b;font-size:12px}
+.premium-next #variant-panel .chart-surface {
+  border-radius:14px;
+}
+.premium-next #variant-panel #range-band {
+  opacity:.075;
+  pointer-events:none;
+}
+.premium-next #variant-panel .range-edge {
+  stroke:#72a3ea;
+  stroke-opacity:.63;
+  stroke-width:1.75;
+  stroke-dasharray:5 9;
+  vector-effect:non-scaling-stroke;
+}
+.premium-next #variant-panel #forecast {
+  stroke:#649ef5;
+  stroke-width:2.75;
+  stroke-dasharray:8 7;
+  stroke-linecap:round;
+  vector-effect:non-scaling-stroke;
+}
+.premium-next #variant-panel #actual {vector-effect:non-scaling-stroke}
+.premium-next #variant-panel .legend {gap:13px;flex-wrap:wrap}
+
+/* One connected source-bound 10-stage cycle route.
+ * Distribution/exit remain deliberately dormant if NOT source-confirmed. */
+.premium-next #official-path-view .cn-alt-milestone {
+  display:grid;
+  grid-template-columns:minmax(0,1.3fr) minmax(200px,.7fr);
+  gap:20px;align-items:center;
+  margin:24px 0 26px;
+  padding:clamp(18px,3vw,30px);
+  color:#fff;background:#0a1f3b;
+  border:1px solid #163453;
+  border-radius:16px;
+}
+.premium-next #official-path-view .cn-milestone-eyebrow {
+  font-size:10px;letter-spacing:.14em;color:#92adcc;font-weight:740;
+}
+.premium-next #official-path-view .cn-alt-milestone h2 {
+  color:#fff;font-size:clamp(23px,3vw,35px);font-weight:710;
+  line-height:1.14;letter-spacing:-.052em;margin:9px 0;
+}
+.premium-next #official-path-view .cn-alt-milestone p {
+  color:#b4c5d8;font-size:12px;line-height:1.62;margin:0;
+}
+.premium-next #official-path-view .cn-milestone-eta {
+  border-left:1px solid #294865;padding-left:22px;
+  display:flex;flex-direction:column;gap:7px;
+}
+.premium-next #official-path-view .cn-milestone-eta span {
+  font-size:10px;color:#a0b7d1;letter-spacing:.08em;font-weight:750;
+}
+.premium-next #official-path-view .cn-milestone-eta strong {
+  font-size:clamp(16px,2vw,22px);line-height:1.2;color:#fff;
+  letter-spacing:-.025em;
+}
+.premium-next #official-path-view .cn-milestone-eta small {font-size:11px;color:#b5c5d9}
+.premium-next #official-path-view .path-route {
+  display:flex;gap:0;overflow-x:auto;max-width:100%;
+  padding:10px 12px 22px;
+  list-style:none;
+  scroll-snap-type:x proximity;
+  scrollbar-color:#d1dce8 transparent;
+  position:relative;
+}
+.premium-next #official-path-view .path-route::before {
+  content:"";position:absolute;top:20px;left:26px;
+  width:max(1500px,calc(100% - 50px));height:2px;
+  background:#dce5ef;pointer-events:none;
+}
+.premium-next #official-path-view .path-node {
+  flex:0 0 152px;
+  display:flex;flex-direction:column;
+  min-height:112px;margin:0;padding:31px 12px 10px;
+  border:0;background:transparent!important;
+  scroll-snap-align:start;
+  position:relative;
+}
+.premium-next #official-path-view .path-node::before {
+  position:absolute;inset:auto auto auto auto;top:2px;left:12px;
+  width:14px;height:14px;
+  content:"";border:2px solid #c5d3e2;
+  border-radius:50%;background:#fff;z-index:1;
+}
+.premium-next #official-path-view .path-node .path-number {
+  width:auto;color:#8c9bad;font-size:10px;letter-spacing:.08em;
+}
+.premium-next #official-path-view .path-node strong {
+  color:#60768d;font-size:12px;font-weight:680;line-height:1.42;
+}
+.premium-next #official-path-view .path-node[data-kind=reference]::before {
+  background:#2768bd;border-color:#2768bd;box-shadow:0 0 0 3px #e6f0fd;
+}
+.premium-next #official-path-view .path-node[data-kind=reference] strong {color:#174f90}
+.premium-next #official-path-view .path-node[data-kind=next]::before {
+  background:#fff;border-color:#bd8f56;box-shadow:0 0 0 3px #fbf0df;
+}
+.premium-next #official-path-view .path-node[data-kind=next] strong {color:#886235}
+.premium-next #official-path-view .path-node:not([data-kind=reference]):not([data-kind=next]) {
+  opacity:.55;
+}
+.premium-next #official-path-view .path-watch {
+  background:#f8fafc;border:1px solid #e4ebf1;border-radius:12px;
+  border-left:3px solid #b8c9db;
+}
+@media(max-width:760px){
+  .premium-next #compass-pro .product-decision {
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  }
+  .premium-next #compass-pro .product-decision .product-cell {
+    min-height:113px;padding:14px 12px;
+  }
+  .premium-next #compass-pro .product-decision .product-cell:first-child {
+    grid-column:1/-1;min-height:114px;
+  }
+  .premium-next #official-path-view .cn-alt-milestone {
+    grid-template-columns:1fr;gap:16px;
+  }
+  .premium-next #official-path-view .cn-milestone-eta {
+    border-left:0;border-top:1px solid #294865;
+    padding:14px 0 0;
+  }
+}
+@media(max-width:430px){
+  .premium-next #compass-pro {padding:18px 13px}
+  .premium-next .cn-pro-intro h2 {font-size:32px}
+  .premium-next #compass-pro .product-decision .product-cell {
+    padding:12px 11px;min-height:124px;
+  }
+  .premium-next #compass-pro .product-decision .product-cell:first-child {min-height:110px}
+  .premium-next #compass-pro .product-decision .product-cell strong {font-size:19px}
+  .premium-next #compass-pro .product-decision .product-cell:first-child strong {font-size:26px}
+  .premium-next #compass-pro .risk-step {font-size:9px;letter-spacing:-.01em}
+  .premium-next #variant-panel {border-radius:12px}
+  .premium-next #official-path-view .path-node {flex-basis:136px}
+}
+@media(prefers-reduced-motion:reduce){
+ .premium-next:has(#compass-pro) *, .premium-next:has(#compass-pro) *::before {
+   scroll-behavior:auto;transition:none!important;animation:none!important;
+ }
+}
+
+
+/* Cycle checkpoints and altseason hierarchy with dark emphasis reserved
+ * for the source-owned current reference only. Distribution remains dormant. */
+.premium-next #official-path-view .path-hero {
+ background:#f0f5fb;border:1px solid #e1eaf4;border-radius:14px;
+ padding:clamp(17px,2.8vw,27px);color:#133659;
+ box-shadow:none;
+}
+.premium-next #official-path-view .path-hero strong {
+ font-size:clamp(19px,2.8vw,27px);letter-spacing:-.04em;
+}
+.premium-next #official-path-view .path-main-row article {
+ background:#fff;border:1px solid #e3eaf2;border-radius:13px;
+}
+.premium-next #official-path-view .path-main-row article strong {
+ color:#173b61;font-size:clamp(16px,2vw,21px);
+}
+.premium-next #official-path-view .path-node[data-kind=unverified][data-phase=DISTRIBUTION],
+.premium-next #official-path-view .path-node[data-kind=unverified][data-phase=PROTECTION] {
+ opacity:.38;
+}
+.premium-next #official-path-view .path-rotation {
+ gap:7px;
+}
+.premium-next #official-path-view .rotation-tier {
+ border-radius:10px;border:1px solid #e5ebf2;
+ background:#fafbfc;
+}
+
+
+/* Five source-owned pullback classes appear above the detail fold.
+ * Duplicate visual marks only: their data and active index are cloned from
+ * the existing single official risk renderer, not independently calculated. */
+.premium-next #compass-pro .cn-risk-quick {
+  background:#f7f9fc;
+  border:1px solid #e3eaf2;
+  padding:clamp(15px,2vw,20px);
+  border-radius:13px;
+  margin:15px 0 0;
+}
+.premium-next #compass-pro .cn-risk-quick-head {
+ display:flex;justify-content:space-between;align-items:end;
+ gap:10px 15px;flex-wrap:wrap;
+}
+.premium-next #compass-pro .cn-risk-quick-head small {
+ display:block;font-size:10px;font-weight:750;letter-spacing:.085em;
+ color:#7b8ea1;margin-bottom:7px;
+}
+.premium-next #compass-pro .cn-risk-quick-head strong {
+ font-size:clamp(16px,2.1vw,22px);font-weight:720;
+ color:#163c64;letter-spacing:-.025em;line-height:1.22;
+}
+.premium-next #compass-pro .cn-risk-quick-head > span {
+ font-size:11px;color:#768da1;
+}
+.premium-next #compass-pro .cn-risk-quick .risk-class-rail {
+ margin:14px 0 0;gap:5px;
+}
+.premium-next #compass-pro .cn-risk-quick .risk-step {
+ font-size:clamp(9px,1vw,11px);
+ padding:10px 3px 0;
+}
+@media(max-width:430px){
+ .premium-next #compass-pro .cn-risk-quick {padding:13px 10px}
+ .premium-next #compass-pro .cn-risk-quick-head {gap:5px}
+ .premium-next #compass-pro .cn-risk-quick .risk-step {font-size:8.5px;letter-spacing:-.02em}
+}
