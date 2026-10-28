@@ -195,3 +195,9 @@
  #view-overview > .section:first-of-type {margin-top:6px;padding-top:8px}
  #view-overview > .section:first-of-type .section-heading {margin-bottom:4px}
 }
+
+
+/* Native price chart uses an internally sized HTML <table>; the global
+ * public-proof 'table{min-width:440px}' must NEVER stretch that internal
+ * LightweightCharts canvas on a 390px iPhone. Source data unaffected. */
+#official-path-chart table { min-width:0!important; }
