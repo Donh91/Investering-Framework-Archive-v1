@@ -53,12 +53,14 @@ test('real CN logo and Vite multi-entry keep isolated B visible at /next/graph-b
  assert.match(config,/publicDir:false/);
 });
 
-test('Vite source port is an explicit two-entry build rather than a default single-index',async()=>{
+test('Vite build has old B, isolated unified PRO, and the current index without root promotion',async()=>{
  const vite=await readFile(new URL('./vite.config.mjs',here),'utf8');
  const pkg=JSON.parse(await readFile(new URL('./package.json',here),'utf8'));
  const index=await readFile(new URL('./index.html',here),'utf8');
  assert.match(vite,/graphB:resolve\(root,'graph-b\/source-graph-b\.html'\)/);
  assert.match(vite,/index:resolve\(root,'index\.html'\)/);
+ assert.match(vite,/unified:resolve\(root,'unified\.html'\)/);
+ assert.match(vite,/buildUnifiedRootHtml\(original,pro\)/);
  assert.match(vite,/base:'\/Investering-Framework-Archive-v1\/next\/'/);
  assert.match(vite,/publicDir:false/);
  assert.equal(pkg.scripts['build:next'],'vite build --config vite.config.mjs');
