@@ -30,6 +30,7 @@ def fixture():
         "issued_at_utc": "2026-10-27T12:00:00Z", "horizon": "12h",
         "target_at_utc": "2026-10-28T00:00:00Z",
         "target_observation_at_utc": "2026-10-28T00:00:00Z",
+        "target_observation_open_at_utc": "2026-10-27T23:00:00Z",
         "time_basis": {"start_reference_at_utc": "2026-10-27T12:00:00Z", "nominal_horizon_hours": 12},
         "matured_at_utc": "2026-10-28T00:10:00Z",
         "direction_accuracy": {"btc": {"realized_pct": -1.0}, "eth": {"realized_pct": 2.0}}
@@ -154,6 +155,63 @@ class KompasShadowTests(unittest.TestCase):
                 result = compare_shadow_12h([row])
                 self.assertEqual(result["provisional_paired"], 0)
                 self.assertEqual(result["rows"][0]["reason"], "FORECAST_SOURCE_PACKET_SHA_UNBOUND")
+
+    def test_original_target_candle_open_and_issuance_nominal_horizon(self):
+        # Synthetic controls do not authenticate an external receipt or give
+        # scientific/trading authority. Preserve the official 12h target.
+        from scripts.learning.compass_outcomes import canon
+
+        self.assertEqual(compare_shadow_12h([fixture()])["provisional_paired"], 1)
+
+        def original_outcome_with_open(open_value):
+            row = fixture()
+            outcome = json.loads(row["outcome_original_json"])
+            if open_value is None:
+                outcome.pop("target_observation_open_at_utc")
+            else:
+                outcome["target_observation_open_at_utc"] = open_value
+            outcome["outcome_sha256"] = hashlib.sha256(canon({
+                k: v for k, v in outcome.items() if k != "outcome_sha256"
+            })).hexdigest()
+            row["outcome_original_json"], row["outcome_blob_sha256"] = _encode(outcome)
+            return row
+
+        for name, open_value, reason in (
+            ("missing", None, "MISSING_CLOCK"),
+            ("wrong_open", "2026-10-27T22:00:00Z", "TARGET_OBSERVATION_OPEN_CLOSE_MISMATCH"),
+            ("future_open", "2026-10-28T00:00:00Z", "TARGET_OBSERVATION_OPEN_CLOSE_MISMATCH"),
+        ):
+            with self.subTest(name=name):
+                verdict = compare_shadow_12h([original_outcome_with_open(open_value)])
+                self.assertEqual(verdict["provisional_paired"], 0)
+                self.assertEqual(verdict["rows"][0]["reason"], reason)
+
+        def rehashed_issuance(clock):
+            row = fixture()
+            forecast = json.loads(row["forecast_original_json"])
+            forecast["issued_at_utc"] = clock
+            forecast["compass_sha256"] = hashlib.sha256(canon({
+                k: v for k, v in forecast.items() if k != "compass_sha256"
+            })).hexdigest()
+            outcome = json.loads(row["outcome_original_json"])
+            outcome["issued_at_utc"] = clock
+            outcome["compass_sha256"] = forecast["compass_sha256"]
+            outcome["outcome_sha256"] = hashlib.sha256(canon({
+                k: v for k, v in outcome.items() if k != "outcome_sha256"
+            })).hexdigest()
+            row["forecast_original_json"], row["forecast_blob_sha256"] = _encode(forecast)
+            row["outcome_original_json"], row["outcome_blob_sha256"] = _encode(outcome)
+            return row
+
+        for clock, reason in (
+            ("2026-10-27T21:00:00Z", "ISSUANCE_TO_12H_TARGET_DRIFT"),
+            ("2026-10-27T23:30:00Z", "TARGET_CANDLE_OPEN_BEFORE_ISSUANCE"),
+        ):
+            with self.subTest(issued=clock):
+                verdict = compare_shadow_12h([rehashed_issuance(clock)])
+                self.assertEqual(verdict["provisional_paired"], 0)
+                self.assertEqual(verdict["rows"][0]["reason"], reason)
+                self.assertFalse(verdict["scientific_edge_verified"])
 
     def test_immutable_outcome_binding_target_and_maturity(self):
         from scripts.learning.compass_outcomes import canon
