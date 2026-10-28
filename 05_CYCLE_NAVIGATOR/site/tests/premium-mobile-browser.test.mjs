@@ -409,6 +409,9 @@ try{
   if(beforeViewport.documentScrollWidth>width){
    const offenders=await evaluate(()=>[...document.querySelectorAll('body *')].map(el=>({tag:el.tagName,outer:el.outerHTML.slice(0,150),parent:el.parentElement?.tagName+'#'+el.parentElement?.id,id:el.id,cls:String(el.className?.baseVal||el.className||'').slice(0,40),left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right)})).filter(q=>q.right>390+8||q.left<-8).sort((a,b)=>b.right-a.right).slice(0,20));
    console.log('WIDTH_DEBUG',width,JSON.stringify(offenders));
+   const widthOwners=await evaluate(()=>[document.documentElement,document.body,...document.querySelectorAll('body *')].map(el=>({tag:el.tagName,id:el.id,cls:String(el.className?.baseVal||el.className||'').slice(0,45),sw:el.scrollWidth,cw:el.clientWidth,ow:el.offsetWidth,overflow:getComputedStyle(el).overflowX,display:getComputedStyle(el).display})).filter(x=>x.sw>x.cw+16).sort((a,b)=>b.sw-a.sw).slice(0,25));
+   console.log('SCROLL_DEBUG',width,JSON.stringify(widthOwners));
+
   }
   assertExactMobileViewport(report,width,height,beforeViewport);
   assert.ok(report.overflow<=2,'Horizontal page overflow on '+width+'px '+JSON.stringify(report));
