@@ -18,7 +18,7 @@ def fixture():
         "compass_id": "CMP-SYNTHETIC-1",
         "issued_at_utc": "2026-10-27T12:00:00Z",
         "market_reference": {"observation_open_utc": "2026-10-27T11:00:00Z"},
-        "source_packet_sha256": "a" * 64,
+        "source_bindings": {"auto_market_state": {"packet_sha256": "a" * 64}},
         "horizons": {"NEXT_12H": {"expected_direction": "UP"}}
     }
     from scripts.learning.compass_outcomes import canon
@@ -49,8 +49,8 @@ def fixture():
         "source_receipt_ref": "independent:synthetic:source",
         "outcome_receipt_ref": "independent:synthetic:outcome",
         "prior_hour_receipt_ref": "independent:synthetic:prior",
-        "forecast_first_known_at_utc": "2026-10-27T12:00:05Z",
-        "source_first_known_at_utc": "2026-10-27T11:10:00Z",
+        "forecast_first_known_at_utc": "2026-10-27T12:00:00Z",
+        "source_first_known_at_utc": "2026-10-27T12:00:00Z",
         "prior_hour_first_known_at_utc": "2026-10-27T11:01:00Z",
         "prior_hour_end_at_utc": "2026-10-27T11:00:00Z",
         "prior_hour_btc_delta_pct": 0.2, "prior_hour_eth_delta_pct": -0.3,
@@ -133,7 +133,10 @@ class KompasShadowTests(unittest.TestCase):
         for value in (None, "bad", "a" * 63, "G" * 64):
             with self.subTest(value=value):
                 def mutate(obj):
-                    obj["source_packet_sha256"] = value
+                    obj["source_bindings"]["auto_market_state"]["packet_sha256"] = value
+                    # Spoofed legacy top-level SHA must never rescue a missing
+                    # real producer binding.
+                    obj["source_packet_sha256"] = "a" * 64
                     obj["compass_sha256"] = hashlib.sha256(canon({
                         k: v for k, v in obj.items() if k != "compass_sha256"
                     })).hexdigest()
@@ -181,7 +184,7 @@ class KompasShadowTests(unittest.TestCase):
         second = copy.deepcopy(original)
         forecast = json.loads(second["forecast_original_json"])
         forecast["compass_id"] = "CMP-SYNTHETIC-2"
-        forecast["source_packet_sha256"] = "b" * 64
+        forecast["source_bindings"]["auto_market_state"]["packet_sha256"] = "b" * 64
         forecast["compass_sha256"] = hashlib.sha256(canon({
             k: v for k, v in forecast.items() if k != "compass_sha256"
         })).hexdigest()
@@ -230,22 +233,33 @@ class KompasShadowTests(unittest.TestCase):
         self.assertEqual(rows2["provisional_paired"],1)
         self.assertIn("DUPLICATE",rows2["rows"][1]["reason"])
 
-    def test_issuer_receipt_must_be_near_as_issued_not_hours_later(self):
-        # A receipt arriving before the 12h target is insufficient if it
-        # arrived too late to prove the prediction existed at issuance.
-        late = fixture()
-        late["forecast_first_known_at_utc"] = "2026-10-27T12:05:01Z"
-        denied = compare_shadow_12h([late])
-        self.assertEqual(denied["provisional_paired"], 0)
-        self.assertEqual(
-            denied["rows"][0]["reason"],
-            "FORECAST_FIRST_KNOWN_TOO_LATE_FOR_ISSUANCE",
-        )
+    def test_as_issued_receipt_one_second_late_cannot_score(self):
+        # An after-issuance receipt does not prove a signal existed when
+        # issued. Even a five-minute grace would be hindsight-permissive.
+        for timestamp in ("2026-10-27T12:00:01Z", "2026-10-27T12:05:00Z"):
+            with self.subTest(timestamp=timestamp):
+                late = fixture()
+                late["forecast_first_known_at_utc"] = timestamp
+                denied = compare_shadow_12h([late])
+                self.assertEqual(denied["provisional_paired"], 0)
+                self.assertEqual(
+                    denied["rows"][0]["reason"],
+                    "FORECAST_FIRST_KNOWN_AFTER_ISSUANCE",
+                )
         boundary = fixture()
-        boundary["forecast_first_known_at_utc"] = "2026-10-27T12:05:00Z"
         allowed = compare_shadow_12h([boundary])
         self.assertEqual(allowed["provisional_paired"], 1)
         self.assertFalse(allowed["scientific_edge_verified"])
+
+    def test_source_cannot_be_first_known_before_reference_candle_closes(self):
+        row = fixture()
+        row["source_first_known_at_utc"] = "2026-10-27T11:59:59Z"
+        result = compare_shadow_12h([row])
+        self.assertEqual(result["provisional_paired"], 0)
+        self.assertEqual(
+            result["rows"][0]["reason"],
+            "SOURCE_FIRST_KNOWN_BEFORE_SCORER_REFERENCE_CLOSE",
+        )
 
     def test_stale_candle_cannot_masquerade_as_prior_hour_baseline(self):
         row = fixture()
