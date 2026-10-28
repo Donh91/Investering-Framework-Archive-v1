@@ -12,7 +12,8 @@ const bullBear={
 };
 const official={
  contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',
- horizons:{NEXT_12H:{expected_direction:'MIXED'}},
+ market_now:{directional_state:'BULLISH'},
+ horizons:{NEXT_12H:{expected_direction:'DOWN'}},
  bull_bear_scale:bullBear,
  protection_tracker:{
   contract:'COMPASS_PROTECTION_TRACKER_v1',
@@ -39,7 +40,9 @@ const view={
 const now=decisionModel(view,official,'da');
 assert.equal(now.eligible,true);
 assert.equal(now.action,'HOLD_WAIT');
-assert.equal(now.direction,'MIXED');
+assert.equal(now.direction,'BULLISH','Current momentum must come from market_now, even when the old 12h field differs');
+const missingMomentum=structuredClone(official);delete missingMomentum.market_now;
+assert.equal(decisionModel(view,missingMomentum,'da').direction,'UTILGÆNGELIG','Do not fall back to the forecast field');
 assert.equal(now.bull,5);
 assert.equal(now.bear,5);
 assert.equal(now.bias,'NEUTRAL');
@@ -54,6 +57,7 @@ const stale=structuredClone(view);stale.compass.state='UNAVAILABLE';
 const staleDecision=decisionModel(stale,official,'da');
 assert.equal(staleDecision.eligible,false);
 assert.equal(staleDecision.action,'UTILGÆNGELIG');
+assert.equal(staleDecision.direction,'UTILGÆNGELIG','Stale current momentum must be unavailable');
 assert.equal(staleDecision.bull,null);
 assert.equal(staleDecision.riskIndex,-1);
 assert.equal(staleDecision.sell,'UTILGÆNGELIG');
