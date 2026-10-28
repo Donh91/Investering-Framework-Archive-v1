@@ -70,3 +70,22 @@ Keep approved **Quiet Precision**: light canvas, navy typography, CN blue, one o
 **Stage 4:** optional subtle motion or illustration only *after* data + content + source semantics are stable.
 
 No new workflow, market model, external provider, paid API, artificial forecast, or standalone app introduced.
+
+
+## Stage 2A implementation update · 28 October 2026 · SAME Draft PR #1835
+
+**Code completed on branch (NOT deployed / NOT production approved):**
+
+1. `unified-root.mjs`: compose the already-approved B from original `graph-b/source-graph-b.html` and selected first-party **existing** Kompas PRO markup from `vnext-live/index.html`. The legacy root Compass decision/horizon/rotation DOM is REMOVED from this preview, not hidden. Original B SVG/IDs, B JS, BTC/ETH controls and Proof are not modified. One new PRO source-status element and one verified next gate are placed before the collapsible risk section; one PATH is placed after the original Proof. Only one nav link to the local PRO.
+2. `root-compass-pro.mjs`: reuse exact `inspectOfficialPublicFeeds`, `renderProductExperience`, `initProductExperience`, `sourceTrace`, `forwardOutlook`, original `compassProReadback` and Official source guard. All requests are read-only to the existing `/data/latest.json` and `/data/compass.json`. No independent action/forecast/score engine. Fail stale or missing source closed; re-evaluate owner expiry at least each minute, re-fetch every five minutes plus focus.
+3. Source-issued *current* action and momentum remain distinct from *long-horizon strategic* conditions; PRO disclosure includes official risk, SELL/TRIM, investor reading lenses, horizon and issued price range table, source-only forward outlook + falsifiers, and source-bound re-entry state. **The extra Monday/Shadow/source-trace detail subsections from the historical /vnext Compass are not yet proven 1:1 ported**; their exact functional parity remains a release gate.
+4. `unified.html` is an **isolated, noindex Vite entrypoint**, built under `/next/unified.html` in the same original existing Pages artifact only when the existing staging job runs. Current `/next/index.html` and official `/` remain architecturally unchanged. This is not a second canonical home or a permanent extra public product. No new workflow.
+5. The optional unified-output check in `verify-vite-output.mjs` verifies its single B, PRO, PATH and absence of legacy Compass DOM and validates references against actual bundle files. Existing original tests are preserved; new `unified-root.test.mjs` and grammar/DOM readback were added.
+
+**Actual validation performed here:**
+- PASS in-memory source-built unified page: exactly ONE `variant-panel`, `chart`, `forecast`, `actual`, `compass-pro`, `premium-now-action`, `premium-risk-steps`, `pro-forward-rows`, `official-path-view`, `premium-path-rail`, `proof-explorer`, `pro-reentry-state`, source status and next gate; **zero duplicated `id` values across the candidate HTML**.
+- PASS absent old root owner `official-product-pilot`, old action, old horizons, old PATH and legacy Compass module. No external `/vnext/#compass` canonical navigation.
+- PASS legacy `buildPremiumRootHtml` stays unchanged and the original B drawing module is untouched. Rejected a mutated missing original PRO source. Runtime modules, Vite config and regression test pass in-memory JS grammar.
+- **NOT VERIFIED**: actual npm ci/test and Vite output, browser JS boot/asset relative paths and CSS collisions, Chrome CDP 390/430, physical Safari/VoiceOver/200% zoom, full PRO feature parity, production Pages CDN readback / source freshness over natural runs. None of those are silently promoted to PASS.
+
+**Gate for Stage 2B:** exact full PRO inventory + real Vite compiled bundle and browser readback, complete native Safari/DA/EN interactive QA and source fail-closed tests. After that, deliberate governed root promotion may replace legacy root in a single reviewed release. Keep `/vnext/` as rollback path; never accidentally deploy both as two competing official products. Do not rely on GitHub Actions minutes while they are exhausted (known 3000/3000 to November 1). Scientific #1827 remains unresolved independently.
