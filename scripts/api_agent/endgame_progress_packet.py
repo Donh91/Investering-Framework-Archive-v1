@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 QUEUE = Path("research/api_agent/ENDGAME_PROGRESS_QUEUE_v1.json")
-WORK_ID_RE = re.compile(r"[A-Z][A-Z0-9_]{7,74}\\Z")
+WORK_ID_RE = re.compile(r"[A-Z][A-Z0-9_]{7,74}")
 
 
 def manifest(data: object) -> dict:
