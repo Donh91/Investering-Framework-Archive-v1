@@ -79,6 +79,17 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   html=html.replace(proLink,'');
   html=html.replace('href="#official-pilot-path" data-premium-nav="path"',
     'href="#official-path-view" data-premium-nav="path"');
+  // The single product navigation belongs before the single PRO first fold,
+  // rather than being discovered only after scrolling past the weekly chart.
+  const navStart='<nav class="premium-entry-navigation"';
+  const navClose='</nav>';
+  const n=unique(html,navStart,'single-navigation');
+  const nEnd=html.indexOf(navClose,n);
+  if(nEnd<0)throw Error('CN_UNIFIED_ROOT_NAV_UNCLOSED');
+  const nav=html.slice(n,nEnd+navClose.length);
+  html=html.slice(0,n)+html.slice(nEnd+navClose.length);
+  const target=unique(html,'<section id="compass-pro"','pro-nav-target');
+  html=html.slice(0,target)+nav+'\\n'+html.slice(target);
   const oldScript='<script type="module" src="./compass/compass-path-ui.mjs"></script>';
   unique(html,oldScript,'legacy-compass-script');
   html=html.replace(oldScript,
