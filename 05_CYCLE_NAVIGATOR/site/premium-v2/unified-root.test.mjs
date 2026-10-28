@@ -86,3 +86,29 @@ test('existing /next index and original B build remain immutable and separate',a
  assert.match(runtime,/weeklyHealth/);
  assert.doesNotMatch(runtime,/\bMath\.sin\s*\(/);
 });
+
+test('PRO inventory is maintained without duplicate legacy presentation',()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ const section=pro.slice(pro.indexOf('<section id="view-compass"'),
+   pro.indexOf('<section id="view-path"'));
+ const expected=[...section.matchAll(/\\bid="([^"]+)"/g)].map(x=>x[1]);
+ const present=new Set([...html.matchAll(/\\bid="([^"]+)"/g)].map(x=>x[1]));
+ const allowedOmissions=new Set([
+  // vNext tab/page containers are deliberately not repeated in the single page.
+  'view-compass','compass-title',
+  // The only seven-tier rotation is the PATH rail below Proof.
+  'tier-body',
+  // Legacy duplicate SELL/re-entry/risk readbacks are consolidated into
+  // the one full PRO risk+SELL group and source-owned re-entry section.
+  'sell-state','reentry-state','risk-2','sell-note'
+ ]);
+ const missing=expected.filter(x=>!present.has(x));
+ assert.deepEqual(missing.sort(),[...allowedOmissions].sort(),
+  'unexpected loss of an existing PRO feature or reintroduced duplicate');
+ assert.equal(id(html,'pro-reentry-state'),1);
+ assert.equal(id(html,'source-trace-body'),1);
+ assert.equal(id(html,'monday-reading'),1);
+ assert.equal(id(html,'cn-forward-source-status'),1);
+ assert.equal(id(html,'premium-rotation'),1);
+ // PRO source reuse must still be source-only, never an independent engine.
+});
