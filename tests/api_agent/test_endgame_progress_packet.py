@@ -136,6 +136,56 @@ class EndgameProgressPacketTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,"SOURCE_UNAVAILABLE"):
                     build(root/"blocked",Path("queue.json"))
 
+    def test_self_pr_equal_expected_cannot_hide_different_checkout(self):
+        x=self.valid()
+        x["active"].update(owner_pr=1823,expected_pr_head="a"*40)
+        with patch("scripts.api_agent.endgame_progress_packet.git",
+                   return_value=b"b"*40) as reader:
+            self.assertFalse(original_pr_head_admitted(x["active"],"a"*40))
+            reader.assert_called_once_with("rev-parse","HEAD")
+
+    def test_added_file_pr_diff_snapshot_swap_is_denied(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            (root/"queue.json").write_text(json.dumps(self.valid()))
+            pr={"head":{"sha":"a"*40,"ref":"original"},
+                "base":{"sha":"b"*40},"state":"open","draft":False}
+            initial=[{"filename":"scripts/cycle_navigator/prospective_range_bridge.py",
+                      "status":"added","patch":"+original"}]
+            changed=[dict(initial[0],patch="+swapped")]
+            with patch("scripts.api_agent.endgame_progress_packet.ROOT",root), \
+                 patch("scripts.api_agent.endgame_progress_packet.git",
+                       side_effect=[b"c"*40,subprocess.CalledProcessError(1,"git"),b"source"]), \
+                 patch("scripts.api_agent.endgame_progress_packet.subprocess.check_output",
+                       side_effect=[json.dumps(pr).encode(),json.dumps(initial).encode(),
+                                    json.dumps(pr).encode(),json.dumps(changed).encode()]), \
+                 patch.dict(os.environ,{"GITHUB_REPOSITORY":"Donh91/Investering-Framework-Archive-v1"}):
+                with self.assertRaisesRegex(ValueError,"PR_SNAPSHOT_MOVED_DURING_CAPTURE"):
+                    build(root/"blocked",Path("queue.json"))
+
+    def test_modified_source_has_separate_main_and_pr_head_digests(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            (root/"queue.json").write_text(json.dumps(self.valid()))
+            pr={"head":{"sha":"a"*40,"ref":"original"},
+                "base":{"sha":"b"*40},"state":"open","draft":False}
+            files=[{"filename":"scripts/cycle_navigator/prospective_range_bridge.py",
+                    "status":"modified","patch":"@@ -1 +1 @@"}]
+            with patch("scripts.api_agent.endgame_progress_packet.ROOT",root), \
+                 patch("scripts.api_agent.endgame_progress_packet.git",
+                       side_effect=[b"c"*40,b"main evidence",b"PR evidence"]), \
+                 patch("scripts.api_agent.endgame_progress_packet.subprocess.check_output",
+                       side_effect=[json.dumps(pr).encode(),json.dumps(files).encode()]), \
+                 patch.dict(os.environ,{"GITHUB_REPOSITORY":"Donh91/Investering-Framework-Archive-v1"}):
+                out=build(root/"out",Path("queue.json"))
+            e=out["evidence"][0]
+            self.assertEqual(e["source_ref"],"PINNED_MAIN:"+"c"*40)
+            self.assertEqual(e["sha256"],hashlib.sha256(b"main evidence").hexdigest())
+            self.assertEqual(e["pr_head_sha256"],hashlib.sha256(b"PR evidence").hexdigest())
+            self.assertNotEqual(e["sha256"],e["pr_head_sha256"])
+
     def test_oversized_source_fails_before_api(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
