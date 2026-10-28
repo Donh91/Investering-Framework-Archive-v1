@@ -230,6 +230,30 @@ class KompasShadowTests(unittest.TestCase):
         self.assertEqual(rows2["provisional_paired"],1)
         self.assertIn("DUPLICATE",rows2["rows"][1]["reason"])
 
+    def test_issuer_receipt_must_be_near_as_issued_not_hours_later(self):
+        # A receipt arriving before the 12h target is insufficient if it
+        # arrived too late to prove the prediction existed at issuance.
+        late = fixture()
+        late["forecast_first_known_at_utc"] = "2026-10-27T12:05:01Z"
+        denied = compare_shadow_12h([late])
+        self.assertEqual(denied["provisional_paired"], 0)
+        self.assertEqual(
+            denied["rows"][0]["reason"],
+            "FORECAST_FIRST_KNOWN_TOO_LATE_FOR_ISSUANCE",
+        )
+        boundary = fixture()
+        boundary["forecast_first_known_at_utc"] = "2026-10-27T12:05:00Z"
+        allowed = compare_shadow_12h([boundary])
+        self.assertEqual(allowed["provisional_paired"], 1)
+        self.assertFalse(allowed["scientific_edge_verified"])
+
+    def test_stale_candle_cannot_masquerade_as_prior_hour_baseline(self):
+        row = fixture()
+        row["prior_hour_end_at_utc"] = "2026-10-27T10:00:00Z"
+        result = compare_shadow_12h([row])
+        self.assertEqual(result["provisional_paired"], 0)
+        self.assertEqual(result["rows"][0]["reason"], "PRIOR_HOUR_BASELINE_STALE_OR_FUTURE")
+
     def test_no_original_records_is_no_scientific_claim(self):
         x=compare_shadow_12h([])
         self.assertIsNone(x["provisional_coverage"])
