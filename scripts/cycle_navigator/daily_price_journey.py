@@ -111,3 +111,66 @@ def validated_public_copy(protection: Mapping[str, Any], year: int, week: int) -
     result["onset_start_utc"] = (monday + timedelta(days=a-1)).isoformat().replace("+00:00", "Z") if a else None
     result["onset_end_utc"] = (monday + timedelta(days=b)).isoformat().replace("+00:00", "Z") if b else None
     return result
+
+
+# Separate original daily high/low research ranges; not a smoothed
+# reconstruction from the 3-window range, nor a daily expected close.
+DAILY_RANGE_CONTRACT = "CN_FROZEN_DAILY_RANGE_PLAN_v1"
+
+
+def daily_range_plan_schema() -> dict[str, Any]:
+    point = {"type": "object", "additionalProperties": False,
+             "required": ["day", "low", "high", "why", "invalidate_if"],
+             "properties": {
+                 "day": {"type": "integer", "minimum": 1, "maximum": 7},
+                 "low": {"type": "number", "exclusiveMinimum": 0},
+                 "high": {"type": "number", "exclusiveMinimum": 0},
+                 "why": {"type": "string", "minLength": 12, "maxLength": 340},
+                 "invalidate_if": {"type": "string", "minLength": 8, "maxLength": 240}}}
+    asset = {"type": "object", "additionalProperties": False,
+             "required": ["status", "reason", "points"],
+             "properties": {
+                 "status": {"type": "string", "enum": ["PUBLISHED", "UNAVAILABLE"]},
+                 "reason": {"type": "string"},
+                 "points": {"type": "array", "maxItems": 7, "items": point}}}
+    return {"type": "object", "additionalProperties": False,
+            "required": ["contract", "forecast_week", "BTC", "ETH"],
+            "properties": {"contract": {"type": "string", "const": DAILY_RANGE_CONTRACT},
+                           "forecast_week": {"type": "string"},
+                           "BTC": asset, "ETH": asset}}
+
+
+def validate_daily_range_plan(value: Any, freeze: Mapping[str, Any], year: int, week: int) -> dict[str, Any] | None:
+    """Original point-in-time DAILY range research, no score/action permission.
+
+    Legacy freezes without this additive field stay immutable and compatible.
+    Cross-check independently against both the canonical whole-week envelope
+    and its actual original 1-2/3-4/5-7 window, NEVER derive a point from it.
+    """
+    if value is None:
+        return None
+    if not isinstance(value, dict) or value.get("contract") != DAILY_RANGE_CONTRACT or value.get("forecast_week") != f"{year:04d}-W{week:02d}":
+        raise ValueError("daily_range_identity_invalid")
+    for asset in ("BTC", "ETH"):
+        block = value.get(asset)
+        if not isinstance(block, dict) or block.get("status") not in ("PUBLISHED", "UNAVAILABLE"):
+            raise ValueError("daily_range_asset_invalid")
+        points = block.get("points")
+        if block["status"] == "UNAVAILABLE":
+            if points != [] or not str(block.get("reason") or "").strip():
+                raise ValueError("daily_range_abstention_invalid")
+            continue
+        if not isinstance(points, list) or len(points) != 7:
+            raise ValueError("daily_range_seven_days_required")
+        wlow, whigh = freeze.get(asset.lower() + "_range_low"), freeze.get(asset.lower() + "_range_high")
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and v > 0 for v in (wlow, whigh)) or wlow >= whigh:
+            raise ValueError("daily_range_week_bounds_missing")
+        for i, point in enumerate(points, 1):
+            if not isinstance(point, dict) or point.get("day") != i:
+                raise ValueError("daily_range_day_sequence_invalid")
+            lo, hi = point.get("low"), point.get("high")
+            if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in (lo, hi)) or not wlow <= lo < hi <= whigh:
+                raise ValueError("daily_range_outside_frozen_week")
+            if any(not isinstance(point.get(key), str) or len(point[key].strip()) < 8 for key in ("why", "invalidate_if")):
+                raise ValueError("daily_range_explanation_missing")
+    return value

@@ -99,6 +99,30 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
      forecastStatus='SOURCE_ISSUED';
    }else forecastStatus='PUBLISHED_INVALID_FAIL_CLOSED';
  }
+ // Seven individual prospective high/low ranges from the original freeze.
+ // Never infer a daily closing-price path, outcome or action from these rows.
+ const dr=m.daily_range_plan,drAsset=dr?.[asset];
+ let dailyRanges=[],dailyRangeStatus='UNAVAILABLE';
+ if(dr?.contract==='CN_FROZEN_DAILY_RANGE_PLAN_v1'&&dr.forecast_week===m.forecast_week&&drAsset?.status==='PUBLISHED'){
+  const issued=date(m.frozen_at_utc),eligible=date(m.scoring_valid_from_utc||a?.scoring_start_utc);
+  const data=drAsset.points;
+  const weekLow=Math.min(...lowHigh.map(w=>w.forecast_low));
+  const weekHigh=Math.max(...lowHigh.map(w=>w.forecast_high));
+  const good=Number.isFinite(issued)&&Number.isFinite(eligible)&&issued<eligible&&
+     issued<=now&&issued<start+DAY&&eligible>=start&&eligible<end&&
+     Array.isArray(data)&&data.length===7&&
+     data.every((p,i)=>p?.day===i+1&&NUM(p?.low)&&NUM(p?.high)&&
+       p.low>=weekLow&&p.high<=weekHigh&&p.low<p.high&&
+       typeof p.why==='string'&&p.why.length>=12&&
+       typeof p.invalidate_if==='string'&&p.invalidate_if.length>=8);
+  if(good){
+   dailyRanges=data.map((p,i)=>({day:i+1,low:p.low,high:p.high,
+      why:p.why,invalidate_if:p.invalidate_if,
+      window_start_utc:new Date(start+i*DAY).toISOString(),
+      window_end_utc:new Date(start+(i+1)*DAY).toISOString()}));
+   dailyRangeStatus='SOURCE_ISSUED';
+  }else dailyRangeStatus='PUBLISHED_INVALID_FAIL_CLOSED';
+ }
  // The global cutoff is provenance, NOT the last price for this asset.
  // BTC may have missing rows while ETH continues to publish fresh closes.
  const lastAssetClose=points.at(-1)?.observed_at_utc||null;
@@ -118,6 +142,7 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
    asset,public_issue_number:m.public_issue_number,forecast_week:m.forecast_week,
    source_status:'SOURCE_BOUNDED',source_reason:null,
    forecast_status:forecastStatus,forecast,bands:lowHigh,
+   daily_range_status:dailyRangeStatus,daily_ranges:dailyRanges,
    hourly_observations:points,actual_segments:runs(points),
    last_observed_at_utc:lastAssetClose,
    provenance_observed_through_utc:h.observed_through_utc,

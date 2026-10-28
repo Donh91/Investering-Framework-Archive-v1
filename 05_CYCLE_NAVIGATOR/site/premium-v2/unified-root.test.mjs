@@ -180,3 +180,15 @@ test('frozen intraday windows are forecast presentation even without expected-cl
  assert.equal(frozen.daily_price_path.BTC.status,'UNAVAILABLE');
  assert.equal(frozen.daily_price_path.ETH.status,'UNAVAILABLE');
 });
+
+test('visually explicit test line cannot pass for issued daily forecast',async()=>{
+ const renderer=await read('./graph-b/source-graph-b.mjs');
+ assert.match(renderer,/illustrative-test-curve/);
+ assert.match(renderer,/forecast_low\+w\.forecast_high/);
+ assert.match(renderer,/model\.forecast_status==='SOURCE_ISSUED'/);
+ const html=await read('./graph-b/source-graph-b.html');
+ assert.match(html,/TESTLINJE · ILLUSTRATION/);
+ assert.match(html,/Ikke udstedt dagsprognose og aldrig med i score/);
+ assert.match(html,/id="illustrative-test-curve"/);
+ assert.match(html,/id="cn-demo-warning"/);
+});

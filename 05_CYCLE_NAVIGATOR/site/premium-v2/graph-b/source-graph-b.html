@@ -71,6 +71,7 @@
                     ><span data-t="rangeLegend">Frosset prisinterval</span>
                   </div>
                 </div>
+                <div id="cn-demo-warning" class="cn-demo-warning" role="note" hidden><span class="cn-demo-dot"></span><strong>TESTLINJE · ILLUSTRATION</strong><span>Blå stiplet midtlinje er kun en visuel test mellem tre frosne intervaller. Ikke udstedt dagsprognose og aldrig med i score.</span></div>
                 <div class="plot-shell">
                   <svg
                     id="chart"
@@ -125,6 +126,7 @@
                       stroke-linejoin="round"
                       stroke-linecap="round"
                     ></path>
+                    <path id="illustrative-test-curve" fill="none" stroke="#9ec5ff" stroke-width="2.1" stroke-dasharray="8 10" opacity=".8" visibility="hidden" aria-label="Illustrativ testlinje, ikke officiel prognose"></path>
                     <path
                       id="actual"
                       fill="none"
@@ -157,6 +159,10 @@
                 </div>
               </div>
               <div id="cn-frozen-window-ledger" class="cn-frozen-window-ledger" aria-label="Mandagens frosne prisprognoser" aria-live="polite"></div>
+              <details id="cn-daily-research-notes" class="cn-daily-research-notes" hidden>
+               <summary>7 daglige high/low-prognoser · kilder og begrundelser</summary>
+               <div id="cn-daily-research-rows" class="cn-daily-research-rows"></div>
+              </details>
                               <div class="interaction">
                 <div class="time-control">
                   <div class="time-control-head">

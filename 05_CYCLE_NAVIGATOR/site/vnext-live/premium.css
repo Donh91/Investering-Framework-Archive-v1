@@ -195,3 +195,29 @@
  #view-overview > .section:first-of-type {margin-top:6px;padding-top:8px}
  #view-overview > .section:first-of-type .section-heading {margin-bottom:4px}
 }
+
+
+/* Native price chart uses an internally sized HTML <table>; the global
+ * public-proof 'table{min-width:440px}' must NEVER stretch that internal
+ * LightweightCharts canvas on a 390px iPhone. Source data unaffected. */
+#official-path-chart table { min-width:0!important; }
+
+
+/* Source strings can be longer than a 390px screen: grid tracks must
+ * shrink and wrap the authentic status rather than expanding the page. */
+#view-overview .decision{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+#view-overview .decision article{min-width:0;max-width:100%}
+#view-overview .decision-side #direction{
+ max-width:100%;min-width:0;white-space:normal;
+ overflow-wrap:anywhere;word-break:break-word;hyphens:auto;
+}
+
+
+@media(max-width:520px){
+ #view-overview .decision-side #direction {
+   font-size:clamp(12px,3.45vw,16px)!important;
+   line-height:1.2!important;
+   letter-spacing:-.015em;
+ }
+ #view-overview .decision-side .small{font-size:9px;line-height:1.35}
+}

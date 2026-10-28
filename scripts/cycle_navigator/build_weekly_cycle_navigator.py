@@ -15,7 +15,7 @@ from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.cycle_navigator.prospective_range_bridge import load_bridge
-from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary
+from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary, daily_range_plan_schema, validate_daily_range_plan
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
 
@@ -341,7 +341,7 @@ def output_schema() -> dict[str, Any]:
             },
             "forecast_freeze": {
                 "type": "object", "additionalProperties": False,
-                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_analysis", "bull_bear_scale", "forecast_horizon_days", "intraday_map", "daily_price_path"],
+                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_analysis", "bull_bear_scale", "forecast_horizon_days", "intraday_map", "daily_price_path", "daily_range_plan"],
                 "properties": {
                     "scoring_contract": {"type": "string", "const": "CN_PUBLIC_CONTINUITY_v1"},
                     "btc_range_low": nullable_num, "btc_range_high": nullable_num,
@@ -410,6 +410,7 @@ def output_schema() -> dict[str, Any]:
                     },
                     "forecast_horizon_days": {"type": "integer", "minimum": 5, "maximum": 10},
                     "daily_price_path": daily_path_schema(),
+                    "daily_range_plan": daily_range_plan_schema(),
                     "intraday_map": intraday_schema
                 }
             },
@@ -543,6 +544,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
         "market_cycle_context describes the current accepted weekly macro regime, not a projected destination or a tactical segment permission. Use UNAVAILABLE when no stable phase is established. Translate why and next_gate into brief public English, without implying a scheduled transition. "
+        "NEW DAILY RANGE RESEARCH: In forecast_freeze.daily_range_plan issue seven prospective, separate high/low ranges for UTC Monday–Sunday, independently for BTC and ETH, with per-day short causal explanation WHY and observable invalidate_if trigger. The ranges MUST be generated from evidence BEFORE outcomes, bounded by the authoritative frozen whole-week envelope; they are NOT derived or subdivided mechanically from the three 1-2/3-4/5-7 legacy windows, nor retrofilled using realized prices. Make the seven-day ranges plausible as uncertain conditional scenarios, not precise claims of clock-time turns. If insufficient evidence to time a day, asset status UNAVAILABLE, points=[], explicit reason; do not invent false precision. Preserve separately mandatory 3-window ranges, daily expected-close field, and current public scoring. Future 2–3-week daily ranges remain shadow research ONLY until independently verified. This new per-day research contract is append-only, nonauthoritative and forward-evaluated 1–4 weeks after freeze, with issue/clock/source IDs bound. "
         "Also populate forecast_freeze.daily_price_path with prospective BTC/ETH UTC Monday-Sunday daily expected closing prices and low/high ranges inside the weekly envelope, day 1 through 7. This is the CONDITIONAL BASE-CASE daily analytical path from the existing final Master Monday synthesis, not a statistically calibrated probability or a trade signal. Decide independently for BTC and ETH. A MIXED market, a possible retest, or competing BULL/BEAR alternatives does not alone rule out a conditional BASE-CASE path: first evaluate whether the evidence, accepted weekly range, and base_case_this_week support one coherent seven-day expected-close sequence. If they do, issue all seven authentic analytical expected closes with justified daily low/high bounds. Describe conditional reversals through base-case assumptions and existing protection text, not made-up oscillations. Do not fabricate a daily turning point, derive expected closes from range midpoints, copy last week's observed closes, infer future prices from target-week outcomes, or force an unsupported path. If an asset has no defensible day-by-day time profile, set its status to UNAVAILABLE with an explicit reason and points=[]; the other asset may still publish independently. Weekly and 3-window range publication must continue even when the daily path abstains. The daily path is a presentation-only uncalibrated forecast, not automatic economic edge or official action, and does not change public price precision scoring. "
         "In protection.public_explanation, translate the internal analysis into three short plain-English evidence statements: summary, watch_for, weakens_if. No internal jargon, numbers, dates, percentages or trading instructions in that copy. Preserve risk classification and uncertainty. onset_start_day/onset_end_day are nullable UTC days 1-7 of the forecast week for a supported possible onset window, never decline duration. Both must be null if timing is unsupported. This copy has no action authority. "
         "Populate decision_projection as the sole machine-readable directional/protection projection, including next_1_3d, next_5_7d, next_2_3w, next_21_30d, weeks_4_8 and protection. In next_21_30d, scenario weights are uncalibrated analytical weights, never probabilities, and BTC/ETH/ETHBTC directions must be explicit. It must be semantically equivalent to the narrative but never inferred by downstream keyword parsing. "
@@ -864,6 +866,7 @@ def main() -> None:
         if hourly_ready and bucket_value.upper() == "UNAVAILABLE":
             raise SystemExit(f"RANGE_CONTINUITY_BLOCK:intraday_{bucket}_unavailable_despite_168h_ready")
 
+    validate_daily_range_plan(freeze.get("daily_range_plan"), freeze, target_year, target_week)
     daily_path_issue = daily_path_issue_summary(freeze.get("daily_price_path"), freeze, target_year, target_week)
     source_manifest = {"daily_path_issuance": daily_path_issue, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     generated_unix = int(time.time())
