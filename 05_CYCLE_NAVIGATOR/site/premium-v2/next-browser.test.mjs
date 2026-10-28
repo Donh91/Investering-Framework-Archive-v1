@@ -425,8 +425,10 @@ try{
       'ROOT_FAILED_REFRESH_KEPT_PREVIOUS_SOURCE:'+JSON.stringify(offline));
     assert.equal(offline.current,'false','ROOT_OFFLINE_STILL_CURRENT');
     assert.equal(offline.reentry,'UNAVAILABLE','ROOT_OFFLINE_REENTRY_LEAK');
-    assert.ok(!/BUY|SELL|TRIM|REDUCE|ENTER/i.test(offline.action),
-      'ROOT_OFFLINE_PRESERVED_TRADE_ACTION:'+JSON.stringify(offline));
+    // AFVENTER contains the substring "ENTER"; do not mistake the
+    // exact fail-closed source-wait state for an ENTER trading instruction.
+    assert.equal(offline.action,'AFVENTER KILDE',
+      'ROOT_OFFLINE_DID_NOT_FAIL_CLOSED_TO_SOURCE_WAIT:'+JSON.stringify(offline));
     assert.match(offline.gate,/Afventer|Awaiting/,'ROOT_OFFLINE_GATE_LEAK');
    }
    released.push({width,oneB:true,onePRO:true,source:true});
