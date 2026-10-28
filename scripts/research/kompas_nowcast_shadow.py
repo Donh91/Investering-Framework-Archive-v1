@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Mapping
 
@@ -56,7 +57,7 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
 
     Inputs must include externally audited first-known flags and immutable bytes;
     caller-supplied attestations are *not* an independent proof by themselves.
-    Distinct issuance and (source_event_id,target) dedup both apply.
+    Distinct issuance and (original forecast-bound source packet SHA256,target)\n    dedup both apply; caller source_event_id is an unauthenticated display tag.
     """
     if not isinstance(attempts, list):
         raise ValueError("ATTEMPT_LIST_REQUIRED")
@@ -121,9 +122,14 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
                 or outcome.get("issued_at_utc") != forecast["issued_at_utc"]
                 or outcome.get("compass_sha256") != forecast.get("compass_sha256")):
                 raise ValueError("FORECAST_OUTCOME_CUSTODY_UNBOUND")
-            group = (str(attempt["source_event_id"]), target.isoformat())
+            source_sha = forecast.get("source_packet_sha256")
+            if not isinstance(source_sha, str) or re.fullmatch(r"[a-f0-9]{64}", source_sha) is None:
+                raise ValueError("FORECAST_SOURCE_PACKET_SHA_UNBOUND")
+            # Never use an externally supplied source_event_id as the cluster
+            # identity: relabeling the same packet could inflate scientific N.
+            group = (source_sha, target.isoformat())
             if group in seen_events:
-                raise ValueError("DUPLICATE_SOURCE_EVENT_TARGET")
+                raise ValueError("DUPLICATE_SOURCE_PACKET_TARGET")
             expected = forecast["horizons"]["NEXT_12H"]["expected_direction"]
             if expected not in ("UP", "DOWN"):
                 raise ValueError("NON_DIRECTIONAL_FORECAST")
@@ -137,7 +143,9 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
             decision = {
                 "compass_id": ident, "status": "PROVISIONAL_RESEARCH_ONLY",
                 "reason": "EXTERNALLY_ATTESTED_FIELDS_NOT_INDEPENDENTLY_VALIDATED_HERE",
-                "source_event_id": group[0], "target_at_utc": outcome["target_at_utc"],
+                "source_event_id": str(attempt["source_event_id"]),
+                "source_packet_sha256": source_sha,
+                "target_at_utc": outcome["target_at_utc"],
                 "issued_direction": expected,
                 "btc_correct": expected == btc_actual, "eth_correct": expected == eth_actual,
                 "persistence_btc_correct": btc_persist == btc_actual,
