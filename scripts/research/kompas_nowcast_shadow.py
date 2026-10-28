@@ -121,6 +121,21 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
             if not (issued < selected <= matured and
                     abs((selected - target).total_seconds()) <= 3600):
                 raise ValueError("TARGET_OBSERVATION_OUTSIDE_SCORER_TOLERANCE")
+            # Validate the ORIGINAL chosen hourly candle, not merely the
+            # claimed target close. The scorer records its real open as well
+            # as its close; missing/mismatched opens must not be inferred.
+            target_open = _clock(outcome.get("target_observation_open_at_utc"))
+            if target_open + timedelta(hours=1) != selected:
+                raise ValueError("TARGET_OBSERVATION_OPEN_CLOSE_MISMATCH")
+            if target_open < issued:
+                raise ValueError("TARGET_CANDLE_OPEN_BEFORE_ISSUANCE")
+            # A rehashed issuance many hours after the scorer reference can
+            # otherwise inherit the frozen reference+12h close and be scored
+            # as a nominal 12h forecast, despite being issued near maturity.
+            nominal_from_issuance = issued + timedelta(hours=12)
+            if (abs((target - nominal_from_issuance).total_seconds()) > 3600
+                or abs((selected - nominal_from_issuance).total_seconds()) > 3600):
+                raise ValueError("ISSUANCE_TO_12H_TARGET_DRIFT")
             # Strict as-issued research eligibility: an independently first-known
             # forecast receipt AFTER the declared issuance cannot prove the
             # direction existed at issuance, even if only seconds later.
