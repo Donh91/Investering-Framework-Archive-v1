@@ -1,0 +1,19 @@
+{
+  "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
+  "active": {
+    "work_id": "CN_W45_PROSPECTIVE_ISSUER_P0_20261028",
+    "owner_pr": 1825,
+    "owner_issue": 1516,
+    "objective": "Fix verified missing prospective range bridge issuer for W45+ without manufacturing W44 provenance or promoting deterministic benchmark. Analyze producer and consumer, identify smallest source-bound patch and exact negative controls on ORIGINAL #1825.",
+    "paths": [
+      "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+      "scripts/cycle_navigator/prospective_range_bridge.py",
+      "tests/cycle_navigator/test_prospective_range_bridge.py",
+      ".github/workflows/cycle-navigator-weekly-publication.yml",
+      "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
+      "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json",
+      "05_CYCLE_NAVIGATOR/weekly/2026/W44/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+    ]
+  },
+  "semantics": "Single active distinct scientifically falsifiable unit. On later material progress, replace active work_id and objective on THIS same PR branch; no cron, no automatic paid retry, no second PR. Claim is immutable comment before one API call; do not mutate old work_id."
+}

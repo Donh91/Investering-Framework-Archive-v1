@@ -1111,3 +1111,130 @@ jobs:
             status=$(python -c 'import json;print(json.load(open("runtime/terra-xhigh-task2/live/receipt.json"))["status"])')
           fi
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Terra 6.1 XHIGH Task 2 original-cohort scientific gate: $status. Exact Actions artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . One-time, no auto retry, no historical edge without PIT. No new PR or merge authority."
+
+  terra-xhigh-endgame-progress-v1:
+    # Reusable bounded event-driven PR lane: one distinct paid work_id per material PR update.
+    # No schedule, no new PR, no model-authorized code writes or auto-merge.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027'
+    concurrency:
+      group: terra-xhigh-endgame-progress-v1-single-liability
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact single-call profile and bounded work manifest
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          python -m unittest tests.api_agent.test_endgame_progress_packet -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.api_agent.endgame_progress_packet import manifest
+          r=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          c=r['tasks']['TERRA_XHIGH_ENDGAME_PROGRESS_V1']
+          assert (c['model'],c['reasoning_effort'],c['max_attempts'])==('gpt-6.1-terra','xhigh',1)
+          assert c['automatic_code_write'] is False and c['automatic_merge'] is False
+          assert r['single_run_hard_stop_usd']==3
+          manifest(json.loads(Path('research/api_agent/ENDGAME_PROGRESS_QUEUE_v1.json').read_text()))
+          print('ENDGAME_SCOPE_AND_RETRY_GATE_PASS')
+          PY
+      - name: One-charge-per-work-ID precheck
+        id: admit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work=$(python -c "import json;print(json.load(open('research/api_agent/ENDGAME_PROGRESS_QUEUE_v1.json'))['active']['work_id'])")
+          marker="[TERRA_ENDGAME_WORK_${work}_CLAIM_v1]"
+          existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1156/comments?per_page=100" --jq ".[] | select(.body | contains(\"$marker\")) | .id" | head -n1)
+          echo "work=$work" >> "$GITHUB_OUTPUT"
+          if [ -n "$existing" ]; then echo "run_api=false" >> "$GITHUB_OUTPUT"; else echo "run_api=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Check lower actual organization limit with conservative liability reserve
+        if: steps.admit.outputs.run_api == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/endgame-progress-source refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/endgame-progress-source/research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 12
+      - name: Freeze only original public-source bytes and validate gateway schema
+        if: steps.admit.outputs.run_api == 'true'
+        run: |
+          python scripts/api_agent/endgame_progress_packet.py build runtime/endgame-progress
+          python scripts/api_agent/api_gateway.py --task TERRA_XHIGH_ENDGAME_PROGRESS_V1 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/endgame-progress/prompt.txt --context-file runtime/endgame-progress/context.json --output-dir runtime/endgame-progress/dry --intended-write-prefix research/api_agent/outputs/terra_xhigh_endgame_progress/ --dry-run
+      - name: Verify provider model access with actual project credential
+        if: steps.admit.outputs.run_api == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          key=os.environ.get('OPENAI_API_KEY')
+          if not key:raise SystemExit('API_KEY_MISSING')
+          with urllib.request.urlopen(urllib.request.Request('https://api.openai.com/v1/models/gpt-6.1-terra',headers={'Authorization':'Bearer '+key}),timeout=20) as r:assert r.status==200
+          print('TERRA_MODEL_ACCESS_QUALIFIED_NO_INFERENCE')
+          PY
+      - name: Claim unique new work ID irrevocably before inference
+        if: steps.admit.outputs.run_api == 'true'
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORK_ID: ${{ steps.admit.outputs.work }}
+        run: |
+          marker="[TERRA_ENDGAME_WORK_${WORK_ID}_CLAIM_v1]"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/1156/comments" -f body="$marker Finite owner-approved, new materially distinct Terra xhigh original-PR task; run $GITHUB_RUN_ID; one paid attempt, never auto-retry or re-label consumed work. No merge until tests + policy." > runtime/endgame-progress/claim.json
+          test -s runtime/endgame-progress/claim.json
+      - name: ONE real Terra xhigh ENDGAME original-PR API work unit
+        if: steps.admit.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task TERRA_XHIGH_ENDGAME_PROGRESS_V1 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/endgame-progress/prompt.txt --context-file runtime/endgame-progress/context.json --output-dir runtime/endgame-progress/live --intended-write-prefix research/api_agent/outputs/terra_xhigh_endgame_progress/
+      - name: Validate accepted output, prohibit model self-merge and ungrounded edge
+        if: steps.admit.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/endgame-progress/live')
+          r=json.loads((p/'receipt.json').read_text());o=json.loads((p/'output.json').read_text())
+          assert r['status']=='PASS'
+          assert r['model']=='gpt-6.1-terra' and r['reasoning_effort']=='xhigh'
+          assert r['attempt_count']==1 and r['estimated_cost_usd']<=3
+          assert o['forecast_candidates']==[]
+          assert all(v is False for v in r['authority'].values())
+          print('FINITE_XHIGH_WORK_UNIT_ACCEPTED_EVIDENCE_NOT_MERGE')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terra-xhigh-endgame-progress-${{ github.run_id }}
+          path: runtime/endgame-progress/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Record terminal proof in existing owner issue without another PR
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORK_ID: ${{ steps.admit.outputs.work }}
+        run: |
+          status="RECEIPT_UNKNOWN_NO_RETRY"
+          if [ -f runtime/endgame-progress/live/receipt.json ]; then
+            status=$(python -c 'import json;print(json.load(open("runtime/endgame-progress/live/receipt.json"))["status"])')
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Terra xhigh ENDGAME work $WORK_ID: $status. Exact receipt and source snapshot: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . One attempt per work_id, no code/merge claimed; next scope requires material verified progress."
