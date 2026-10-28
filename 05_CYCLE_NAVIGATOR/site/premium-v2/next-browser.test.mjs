@@ -293,8 +293,66 @@ try{
  assert.ok(nested,'NEXT_NESTED_B_ENTRY_NOT_AVAILABLE');
  assert.deepEqual(responses,[],'NEXT_NESTED_ASSET_MISSING');
  assert.deepEqual(errors,[],'NEXT_NESTED_RUNTIME_EXCEPTION');
+
+ // The third built page must load its REAL bundled PRO/Graph B source modules.
+ // A static HTML string test alone cannot detect missing JS/CSS or broken events.
+ const unified=[];
+ for(const width of [390,430]){
+  await send('Emulation.setDeviceMetricsOverride',{
+    width,height:width===390?844:932,deviceScaleFactor:1,mobile:true});
+  await send('Page.navigate',{url:origin+'next/unified.html'});
+  let ready=false;
+  for(let attempt=0;attempt<100;attempt++){
+   await delay(100);
+   ready=await evaluate(()=>document.readyState==='complete'&&
+     !!document.getElementById('compass-pro')&&!!document.getElementById('chart')&&
+     (document.getElementById('pro-source-status')?.textContent||'')!==
+       'Kontrollerer officiel kilde og gyldighed…');
+   if(ready)break;
+  }
+  assert.ok(ready,'UNIFIED_MODULE_BOOT_MISSING:'+width);
+  const measured=await evaluate(()=>{
+   const id=x=>document.querySelectorAll('[id="'+x+'"]').length;
+   const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);
+   const pro=document.getElementById('compass-pro'),graph=document.getElementById('variant-panel');
+   const source=document.getElementById('pro-source-status')?.textContent||'';
+   const nav=document.querySelector('.premium-entry-navigation');
+   document.querySelector('[data-lang="en"]')?.click();
+   const english=document.getElementById('pro-heading')?.textContent;
+   document.querySelector('[data-lang="da"]')?.click();
+   const danish=document.getElementById('pro-heading')?.textContent;
+   document.querySelector('[data-investor-lens="micro"]')?.click();
+   return {
+    width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+    source,english,danish,
+    micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
+    uniqueIds:new Set(ids).size===ids.length,
+    singleton:['chart','variant-panel','compass-pro','premium-now-action',
+      'premium-risk-steps','premium-path-rail','official-path-view','proof-explorer',
+      'pro-reentry-state','cn-forward-source-status'].every(x=>id(x)===1),
+    noLegacy:!document.getElementById('official-product-pilot'),
+    noindex:document.querySelector('meta[name="robots"]')?.content?.includes('noindex'),
+    navBeforePro:nav?.getBoundingClientRect().top<pro?.getBoundingClientRect().top,
+    proBeforeGraph:pro?.getBoundingClientRect().top<graph?.getBoundingClientRect().top
+   };
+  });
+  assert.equal(measured.width,width,'UNIFIED_WRONG_VIEWPORT');
+  assert.ok(measured.overflow<=2,'UNIFIED_OVERFLOW:'+JSON.stringify(measured));
+  assert.ok(measured.uniqueIds&&measured.singleton&&measured.noLegacy,
+    'UNIFIED_DUPLICATE_OR_MISSING_NODE:'+JSON.stringify(measured));
+  assert.ok(measured.noindex&&measured.navBeforePro&&measured.proBeforeGraph,
+    'UNIFIED_PREVIEW_OR_ORDER_MISMATCH:'+JSON.stringify(measured));
+  assert.equal(measured.english,'Compass PRO','UNIFIED_EN_LABEL');
+  assert.equal(measured.danish,'Kompas PRO','UNIFIED_DA_LABEL');
+  assert.equal(measured.micro,'true','UNIFIED_MICRO_LENS_BROKEN');
+  assert.ok(measured.source&&measured.source!=='—','UNIFIED_SOURCE_STATUS_MISSING');
+  assert.deepEqual(errors,[],'UNIFIED_JS_EXCEPTIONS');
+  assert.deepEqual(responses,[],'UNIFIED_HTTP_ASSET_FAILURES');
+  unified.push({width,source_status:true,one_graph_one_pro:true,interactive:true});
+ }
+
  console.log((rootMode?'ROOT':'NEXT')+'_VITE_BROWSER_REAL_CDP_PASS '+JSON.stringify({
-  base,engine:'CHROME_HEADLESS_CDP_NOT_SAFARI',results,nested_graph_b:true,
+  base,engine:'CHROME_HEADLESS_CDP_NOT_SAFARI',results,nested_graph_b:true,unified,
   http_asset_errors:responses.length,js_exceptions:errors.length
  }));
 }finally{
