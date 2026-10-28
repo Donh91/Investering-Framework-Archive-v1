@@ -110,7 +110,9 @@ def load_bridge(repo: Path, *, target_year: int, target_week: int,
                 actuals = json.loads(source_raw)
                 if (actuals.get('iso_year'), actuals.get('iso_week')) != (prior.year, prior.week):
                     return reject('BRIDGE_ACTUALS_WEEK_MISMATCH')
-                if actuals.get('readiness') != 'READY' or _time(actuals.get('generated_at_utc')) > generated:
+                actuals_generated = _time(actuals.get('generated_at_utc'))
+                if (actuals.get('readiness') != 'READY'
+                        or actuals_generated < cutoff or actuals_generated > generated):
                     return reject('BRIDGE_ACTUALS_NOT_FINAL_AT_GENERATION')
             except (ValueError, TypeError, AttributeError):
                 return reject('BRIDGE_ACTUALS_INVALID')
@@ -152,6 +154,8 @@ def load_bridge(repo: Path, *, target_year: int, target_week: int,
         return reject('BRIDGE_COMMITTED_BYTES_MISMATCH')
     if bridge_committed_at > freeze_at:
         return reject('BRIDGE_COMMITTED_AFTER_FORECAST_FREEZE')
+    if bridge_committed_at < generated:
+        return reject('BRIDGE_COMMITTED_BEFORE_GENERATION')
     result['bridge_commit'] = bridge_commit
     result['bridge_committed_at_utc'] = bridge_committed_at.isoformat()
     return {**bridge, 'consumer_receipt': {**result, 'status': 'READY',
