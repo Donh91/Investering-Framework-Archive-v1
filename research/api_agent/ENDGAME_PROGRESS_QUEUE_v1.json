@@ -1,20 +1,17 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "TASK2_PIT_ORIGINAL_R1_ELIGIBILITY_20261028",
-    "owner_pr": 1814,
-    "owner_issue": 1596,
-    "expected_pr_head": "9886ea4b1d1570b6bb60a1598732323080337d91",
-    "objective": "Fourth distinct ENDGAME unit after actual code+CI fixes on PR #1825; switch to original Task2 science PR #1814 (all its existing checks were green after source checkout repair). Historical R1 cohort has 0/11 first_known_verified and must NOT receive predictive edge credit. Analyze ORIGINAL as-of publication chain and Shared Row parent/outcome source binding with exact PR diff. Find ONE real fixable code-level defect and one guard-sensitive positive/negative test in ORIGINAL #1814 without inventing original first-known receipts or historical skill; or state scientifically SOURCE_BLOCKED with exact missing receipt and the smallest prospective same-row trial needed. Preserve actual dedup, finite unit denominator, no synthetic historical CN edge or live trading. Terminal answer should be implementable in existing PR or an evidence-grounded NO_FIX_REQUIRED.",
+    "work_id": "CN_POSTFIX_COVERAGE_CONTRACT_GAP_20261028",
+    "owner_pr": 1825,
+    "owner_issue": 1593,
+    "expected_pr_head": "f6484774a19b19bc846f6e8ee0331b0f8d1953db",
+    "objective": "New post-implementation task: inspect actual producer-to-consumer hourly gap-diagnostics schema and PR #1825 complete-week checks, including whether observed clocks, missing-hour diagnostics and BTC/ETH completeness faithfully certify the same 168 unique UTC hours. Identify a reproducible remaining code defect only if demonstrated with exact source and a positive plus guard-sensitive negative fixture; propose smallest code and test change on existing PR. If the producer evidence or schema is absent, return SOURCE_BLOCKED with the exact missing source. Preserve W44 immutable forecasts, original first-known custody, W39 rejection and no fabricated W45. This is not a repeat of the pre-fix coverage audit.",
     "paths": [
-      "scripts/research/shared_row_tournament_monitor.py",
-      "scripts/research/validate_core_prospective_freeze.py",
-      "tests/research/test_shared_row_consumer_integrity.py",
-      "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/18_ORIGINAL_V3_PUBLICATION_CHAIN_R1_20261023.md",
-      "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/19_ORIGINAL_V3_PUBLICATION_CENSUS_20261023.md",
-      "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/SHARED_ROW_TOURNAMENT_WEEKLY_2026-W44.json",
-      "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
-      "04_MARKET_LEARNING/shadow_registry/REGISTRY.json"
+      "scripts/cycle_navigator/prospective_range_bridge.py",
+      "tests/cycle_navigator/test_prospective_range_bridge.py",
+      "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+      "tests/cycle_navigator/test_forward_range_window_clock.py",
+      "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json"
     ]
   },
   "semantics": "Single active distinct scientifically falsifiable unit. On later material progress, replace active work_id and objective on THIS same PR branch; no cron, no automatic paid retry, no second PR. Claim is immutable comment before one API call; do not mutate old work_id."
