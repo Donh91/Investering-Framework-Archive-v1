@@ -1,17 +1,18 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "CN_POSTFIX_COVERAGE_CONTRACT_GAP_20261028",
+    "work_id": "CN_COVERAGE_PRODUCER_CONSUMER_CUSTODY_20261028",
     "owner_pr": 1825,
     "owner_issue": 1593,
     "expected_pr_head": "f6484774a19b19bc846f6e8ee0331b0f8d1953db",
-    "objective": "New post-implementation task: inspect actual producer-to-consumer hourly gap-diagnostics schema and PR #1825 complete-week checks, including whether observed clocks, missing-hour diagnostics and BTC/ETH completeness faithfully certify the same 168 unique UTC hours. Identify a reproducible remaining code defect only if demonstrated with exact source and a positive plus guard-sensitive negative fixture; propose smallest code and test change on existing PR. If the producer evidence or schema is absent, return SOURCE_BLOCKED with the exact missing source. Preserve W44 immutable forecasts, original first-known custody, W39 rejection and no fabricated W45. This is not a repeat of the pre-fix coverage audit.",
+    "objective": "New source-enriched follow-up to SOURCE_BLOCKED work CN_POSTFIX_COVERAGE_CONTRACT_GAP_20261028. Analyze load_hourly_rows and hourly_gap_diagnostics in the actual weekly producer alongside PR #1825 consumer patch and real weekly W38 source. Establish if deduplication, ISO-week filter, UTC hour alignment, missing-hour list and per-asset completeness genuinely guarantee identical 168 expected clocks, including duplicates, malformed/non-numeric/zero/NaN/Infinity, off-hour stamps and contradictory diagnostics. Name concrete failing inputs and exact minimal code and regression tests on original PR only when supported. Preserve W44 historical freezes, W39 rejection, source custody, no fabricated W45. If no actionable defect explain why. Return usable patch-oriented details, not review PR or speculative findings.",
     "paths": [
+      "scripts/daily_capture/build_weekly_calibration.py",
       "scripts/cycle_navigator/prospective_range_bridge.py",
       "tests/cycle_navigator/test_prospective_range_bridge.py",
+      "03_DAILY_CAPTURE_LOGS/weekly/2026/W38.json",
       "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
-      "tests/cycle_navigator/test_forward_range_window_clock.py",
-      "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json"
+      "tests/cycle_navigator/test_forward_range_window_clock.py"
     ]
   },
   "semantics": "Single active distinct scientifically falsifiable unit. On later material progress, replace active work_id and objective on THIS same PR branch; no cron, no automatic paid retry, no second PR. Claim is immutable comment before one API call; do not mutate old work_id."
