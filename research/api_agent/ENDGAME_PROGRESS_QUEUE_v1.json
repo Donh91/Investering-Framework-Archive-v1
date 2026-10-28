@@ -1,17 +1,19 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "KOMPAS_NOWCAST_PIT_SHADOW_NEGATIVE_20261028",
+    "work_id": "CONNECTION_DAG_SOURCE_CLOCK_FAILCLOSE_20261028",
     "owner_pr": 1814,
     "owner_issue": 1596,
-    "expected_pr_head": "747bb1e0df0ce16a06a15aa59eb5f70cd1a164ad",
-    "objective": "P0 #1827 code-level Kompas NOWCAST-AS-12H-FORECAST test, materially distinct from prior Task2 Shared Row/PIT/denominator reviews. Original scripts/data_ping/native_handlekompas.py derives BULLISH/BEARISH from latest BTC/ETH deltas and horizon_map maps it directly into NEXT_12H expected_direction, 297/301 historical close alignment reported in Grok Bridge PR #81. Investigate exact source-time and immutable first-known record, build smallest independent research-only prospective shadow falsifier and negative tests against naive last-hour sign/persistence and always-HOLD, with event/issuance dedup, no post-issue leakage, explicit source gating and measured coverage. Cited 27 Oct 12h DOWN miss is a single observed case, not evidence of price edge or new model thresholds. Original #1814 scientific PR can incorporate only bounded additive research/test code, leave production horizon_map and frozen CMP rows unchanged, no new PR. Require a concrete testable patch suggestion or SOURCE_BLOCKED with missing original receipts, no forecast promotion, no fabricated W45 evidence.",
+    "expected_pr_head": "3a1636c9b75c4c817016674cc0d7bb36fea56c2b",
+    "objective": "Distinct P0 #1827 CONNECTION INTEGRITY, different from preceding 12h NOWCAST science and API packet/claim closure. On latest original #1814 head, audit exact source->transform->Official Compass/12h->outcome branch with hourly 26h LATEST, nowcast source and time clocks, source-first-known/issuance, optional missingness, duplicate/circular signals, stale pointer false greens, and outcome target > issuance. Inspect new research-only kompas_nowcast_shadow.py and tests on original PR. Identify MAX THREE specific deterministic bypasses in this code path (e.g. first-known receipt self-attestation vs actual original SHA, regressed observed timestamps string equality and null/zero; verify rather than assume). Supply minimal targeted code+negative-mutation test in original PR branch ONLY, no weakening of Official decisions or promotion/retroactive forecast change. Distinguish provider first-known UNKNOWN from valid UTC candle end. Existing Grok Bridge #81 found potential source DAG/cadence holes, but no independent full link proof. If no original evidence, return SOURCE_BLOCKED rather than create parallel auditor, review PR, signal engine or speculative forecast. No duplicate Task2 baseline/Shared Row denominator work.",
     "paths": [
       "scripts/data_ping/native_handlekompas.py",
-      "tests/data_ping/test_native_handlekompas.py",
       "scripts/learning/compass_outcomes.py",
-      "scripts/research/shared_row_tournament_weekly.py"
+      "scripts/research/kompas_nowcast_shadow.py",
+      "tests/research/test_kompas_nowcast_shadow.py",
+      "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+      "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
     ]
   },
-  "semantics": "ONE fresh materially distinct Terra xhigh paid advisory source-grounded Kompas prospective scientific falsification under existing #1596 and PR #1814; no live forecast change, no new scheduler/owner/PR, no repeat claims. Must read terminal receipt, then implement reproducible shadow tests only if direct original owner and source evidence permit. Budget min(owner extra USD15, remaining org cap USD30 less USD12 liability reserve, USD3/call)."
+  "semantics": "One new owner-approved P0 connections/clock integrity falsifier, not a re-run of consumed historical 12h work; exact original PR #1814 current head, diff, source hashes, fail-closed unknown original first-known. Existing workflow only, one paid attempt, advisory, no autonomous code/merge, owner max extra USD15 and effective org lower cap/reserve."
 }
