@@ -33,13 +33,13 @@ function clearPlaying(){
 }
 function textLabels(){
  const labels={
-  da:{card:'Weekly Outlook · B',desc:'Oprindelige prisintervaller og verificerede timekurser. Dagsprognoser vises kun, hvis de blev udstedt før udfaldet.',
-    actual:'Faktiske timeslukkepriser · kun kildeverificerede',missing:'Original blå dagsprognose er ikke udstedt',
-    forecast:'Udstedt dagsprognose',observed:'Observeret timekurs',bounds:'Mandagens intraday-prognose · 1–2 / 3–4 / 5–7 dage',
+  da:{card:'Ugens markedsudsyn',desc:'Mandagens frosne high/low sammenholdt med faktisk kurs.',
+    actual:'Verificerede timesluk · UTC',missing:'Ingen udstedt dagsprognose',
+    forecast:'Forventet dagskurs',observed:'Faktisk kurs',bounds:'Frossen high/low',
     title:'Spol gennem ugen',mon:'Mandag',sun:'Søndag'},
-  en:{card:'Weekly Outlook · B',desc:'Original price ranges and verified hourly closes. A daily forecast appears only when issued before the outcome.',
-    actual:'Observed hourly closes · source verified only',missing:'Original blue daily forecast not issued',
-    forecast:'Issued daily forecast',observed:'Observed hourly close',bounds:'Monday intraday forecast · days 1–2 / 3–4 / 5–7',
+  en:{card:'Weekly outlook',desc:'Monday’s original high/low compared with observed prices.',
+    actual:'Verified hourly closes · UTC',missing:'No issued daily forecast',
+    forecast:'Expected daily close',observed:'Observed price',bounds:'Frozen high/low',
     title:'Explore the week',mon:'Monday',sun:'Sunday'}
  }[language];
  // Preserve the ORIGINAL AppDeploy "B" accent badge, not flattened text.
@@ -62,13 +62,13 @@ function textLabels(){
  const officialHome=!!document.body?.classList?.contains('premium-home');
  const rootWords=language==='en'?{
   title:'This week’s forecast. Observed prices.',
-  intro:'Original frozen ranges versus verified hourly prices. No daily forecast line without prior issuance.',
+  intro:'Monday’s original price range versus observed prices.',
   disclaimer:officialHome?'Source-backed · Original ranges and observed prices.':'Preview · Source-backed, without demo prices.',
   graph:'Weekly chart',compass:'Compass',pro:'Compass PRO ↗',path:'PATH',proof:'Results & method',official:officialHome?'Previous version ↗':'Official site ↗',meta:'STATUS / SOURCES',
   cnSource:'CN source ↗',compassSource:'Compass source ↗'
  }:{
   title:'Ugens prognose. Faktiske kurser.',
-  intro:'Frosne prisintervaller mod verificerede timesluk. Ingen blå dagsprognose uden forudgående udstedelse.',
+  intro:'Mandagens frosne high/low mod den faktiske kursudvikling.',
   disclaimer:officialHome?'Kildebaseret · Oprindelige intervaller og observerede kurser.':'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
   graph:'Ugens graf',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:'Resultat og metode',official:officialHome?'Forrige version ↗':'Officiel side ↗',meta:'STATUS / KILDER',
   cnSource:'CN-data ↗',compassSource:'Kompas-data ↗'
@@ -86,7 +86,7 @@ function textLabels(){
   ['[data-t="cardEyebrow"]',t('FROSSET PRISINTERVAL / OBSERVERET KURS','FROZEN PRICE RANGE / OBSERVED PRICE')],
   ['[data-t="freeze"]',model?.forecast_status==='SOURCE_ISSUED'?
    t('Original kildeudstedt prognose','Original source-issued forecast'):
-   t('Tre frosne prognosevinduer · ingen daglig forventet slutkurs','Three frozen forecast windows · no daily expected close')],
+   t('Oprindelig ugeprognose','Original weekly forecast')],
   ['.dev-brand span',officialHome?t('CYCLE NAVIGATOR · OFFICIEL','CYCLE NAVIGATOR · OFFICIAL'):
    document.querySelector('.premium-entry')?
    t('PREMIUM v2.1 · IKKE OFFICIEL FORSIDE','PREMIUM v2.1 · NOT OFFICIAL HOMEPAGE'):
@@ -161,15 +161,12 @@ function plot(){
  const dayWords=language==='da'?['MAN','TIR','ONS','TOR','FRE','LØR','SØN']:
   ['MON','TUE','WED','THU','FRI','SAT','SUN'];
  document.querySelectorAll('.day-axis [data-day]').forEach((item,i)=>{item.textContent=dayWords[i]||''});
- const warning=card.querySelector('.swatch-forecast + span');
- if(warning&&model?.forecast_status!=='SOURCE_ISSUED')
-  warning.textContent=t('Blå dagsprognose ikke udstedt','Blue daily forecast not issued');
+ const forecastLegend=$('cn-forecast-legend');
+ if(forecastLegend)forecastLegend.hidden=model?.forecast_status!=='SOURCE_ISSUED';
  if(!model||model.source_status!=='SOURCE_BOUNDED'){
   paintFrozenWindowLedger([]);
   paintDailyResearchNotes([]);
-  if($('cn-demo-warning'))$('cn-demo-warning').hidden=true;
-  $('illustrative-test-curve')?.setAttribute('visibility','hidden');
-  ['range-band','range-upper','range-lower','forecast','actual','illustrative-test-curve'].forEach(id=>attr(id,'d',''));
+  ['range-band','range-upper','range-lower','forecast','actual'].forEach(id=>attr(id,'d',''));
   $('price-axis')?.replaceChildren();$('grid')?.replaceChildren();
   set('observed-value','—');set('time-label','—');set('timeline-label','—');
   set('source-state',t('Ingen verificeret kilde','No verified source'));
@@ -180,7 +177,6 @@ function plot(){
   return;
  }
  const bands=model.bands||[],hourly=model.hourly_observations||[];
- if($('cn-demo-warning'))$('cn-demo-warning').hidden=model.forecast_status==='SOURCE_ISSUED'||model.daily_range_status==='SOURCE_ISSUED'||model.forecast_week!=='2026-W44';
  paintFrozenWindowLedger(bands);
  const hasDailyRanges=model.daily_range_status==='SOURCE_ISSUED'&&model.daily_ranges?.length===7;
  paintDailyResearchNotes(hasDailyRanges?model.daily_ranges:[]);
@@ -208,8 +204,6 @@ function plot(){
  const area=arr=>movePath(arr.map(p=>({x:x(p.time*1000),y:y(p.high)})))+' '+
    movePath(arr.slice().reverse().map(p=>({x:x(p.time*1000),y:y(p.low)}))).replace(/^M/,'L')+' Z';
  if(model.forecast_status==='SOURCE_ISSUED'){
-  attr('illustrative-test-curve','d','');
-  $('illustrative-test-curve')?.setAttribute('visibility','hidden');
   const f=model.forecast.map(p=>({time:p.time,value:p.expected_close}));
   attr('forecast','d',movePath(f.map(xy)));
   attr('range-band','d',area(model.forecast));
@@ -217,8 +211,6 @@ function plot(){
   attr('range-lower','d',movePath(model.forecast.map(p=>({x:x(p.time*1000),y:y(p.low)}))));
  }else if(hasDailyRanges){
   // Authentic daily high/low envelope only. Never draw an implied close line.
-  attr('illustrative-test-curve','d','');
-  $('illustrative-test-curve')?.setAttribute('visibility','hidden');
   attr('forecast','d','');
   const d=model.daily_ranges;
   const segments=d.map(p=>{
@@ -235,16 +227,6 @@ function plot(){
   attr('range-upper','d',edge('high'));
   attr('range-lower','d',edge('low'));
  }else{
-  // Explicitly illustrative QA line: three range midpoints ARE NOT an issued
-  // daily forecast, never used as science, trading, or accuracy scoring.
-  // The line is kept separately in the SVG demo layer and deleted whenever
-  // an authentic issued path is available.
-  const demo=$('illustrative-test-curve');
-  if(demo&&model.forecast_week==='2026-W44'){
-   const pts=bands.map(w=>({x:x((Date.parse(w.window_start_utc)+Date.parse(w.window_end_utc))/2),y:y((w.forecast_low+w.forecast_high)/2)}));
-   attr('illustrative-test-curve','d',movePath(pts));
-   demo.setAttribute('visibility','visible');
-  }else if(demo){attr('illustrative-test-curve','d','');demo.setAttribute('visibility','hidden')}
   attr('forecast','d','');
   // Each frozen intraweek window is already a prospective range forecast.
   // Draw the authentic three-step horizon envelope directly; do NOT imply
@@ -293,9 +275,9 @@ function plot(){
  set('time-label',last?utc(last.time*1000):'—');
  set('timeline-label',utc(cursor));
  const st=model.forecast_status==='SOURCE_ISSUED'?
-  t('BLÅ KURVE FRA ORIGINAL KILDE','BLUE CURVE FROM ORIGINAL SOURCE'):
-  hasDailyRanges?t('7 ORIGINALE DAGLIGE HIGH/LOW · INGEN KURSMIDTPUNKTER','7 ORIGINAL DAILY HIGH/LOW · NO INVENTED MIDPOINTS'):
-  t('MANDAGENS 3 PROGNOSEVINDUER · INGEN DAGLIG KURSLINJE','MONDAY’S 3 FORECAST WINDOWS · NO DAILY PRICE PATH');
+  t('Kildeudstedt dagsprognose','Source-issued daily forecast'):
+  hasDailyRanges?t('7 frosne dagsintervaller','7 frozen daily ranges'):
+  t('Original prognose · 3 vinduer','Original forecast · 3 windows');
  set('source-state',st);
  const stale=model.live_freshness==='STALE';
  set('feed-status',(stale?t('FORÆLDEDE OBSERVATIONER · IKKE AKTUEL KURS. ','STALE OBSERVATIONS · NOT CURRENT PRICE. '):'')+
