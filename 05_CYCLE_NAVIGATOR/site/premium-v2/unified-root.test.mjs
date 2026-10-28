@@ -117,7 +117,8 @@ test('PRO inventory is maintained without duplicate legacy presentation',()=>{
 test('Quiet Precision v2 keeps the 12h nowcast distinct from 1–3d official horizon',()=>{
  const html=buildUnifiedRootHtml(original,pro);
  for(const idName of ['cn-horizon-13','cn-horizon-13-label',
-  'cn-horizon-13-posture','premium-now-direction','premium-now-action'])
+  'cn-horizon-13-posture','premium-now-direction','premium-now-action',
+  'cn-risk-quick-state','cn-risk-quick-steps'])
   assert.equal(id(html,idName),1,idName);
  assert.match(html,/1–3 dage · kildevurdering/);
  assert.match(html,/id="cn-alt-milestone-eta"/);
@@ -141,6 +142,7 @@ test('design keeps W44 without invented daily forecast, and source-issued 7d pat
  assert.match(style,/#variant-panel #range-band/);
  assert.match(style,/#variant-panel \.alt-token \{display:none!important\}/);
  assert.match(runtime,/renderQuickDecision\(\)/);
+ assert.match(runtime,/renderRiskQuick\(\)/);
  assert.match(runtime,/renderAltMilestone\(\)/);
  assert.match(runtime,/No verified ETA/);
 });
