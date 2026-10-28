@@ -1,18 +1,18 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "CN_COVERAGE_PRODUCER_CONSUMER_CUSTODY_20261028",
-    "owner_pr": 1825,
-    "owner_issue": 1593,
-    "expected_pr_head": "f6484774a19b19bc846f6e8ee0331b0f8d1953db",
-    "objective": "New source-enriched follow-up to SOURCE_BLOCKED work CN_POSTFIX_COVERAGE_CONTRACT_GAP_20261028. Analyze load_hourly_rows and hourly_gap_diagnostics in the actual weekly producer alongside PR #1825 consumer patch and real weekly W38 source. Establish if deduplication, ISO-week filter, UTC hour alignment, missing-hour list and per-asset completeness genuinely guarantee identical 168 expected clocks, including duplicates, malformed/non-numeric/zero/NaN/Infinity, off-hour stamps and contradictory diagnostics. Name concrete failing inputs and exact minimal code and regression tests on original PR only when supported. Preserve W44 historical freezes, W39 rejection, source custody, no fabricated W45. If no actionable defect explain why. Return usable patch-oriented details, not review PR or speculative findings.",
+    "work_id": "TASK2_SHARED_ROW_BASELINE_PIT_CLOSURE_20261028",
+    "owner_pr": 1814,
+    "owner_issue": 1596,
+    "expected_pr_head": "f22ba3b954913c3c4941cb4df58badb393ad688f",
+    "objective": "Distinct science implementation mission: examine exact current original Shared Row PR after runtime-vs-freeze repair. Trace original issue/first-known receipt evidence to row eligibility, dedup and baseline comparisons; find a demonstrable remaining point-in-time leakage or denominator/duplicate defect and provide minimal concrete patch and guard-sensitive tests in this existing PR. Do not repeat already repaired runtime-vs-freeze mismatch. If original first-known is absent, retain SOURCE_BLOCKED and specify implementable prospective collection that requires no fabricated timestamps. No forecasts, claimed edge, new PR or authority changes.",
     "paths": [
-      "scripts/daily_capture/build_weekly_calibration.py",
-      "scripts/cycle_navigator/prospective_range_bridge.py",
-      "tests/cycle_navigator/test_prospective_range_bridge.py",
-      "03_DAILY_CAPTURE_LOGS/weekly/2026/W38.json",
-      "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
-      "tests/cycle_navigator/test_forward_range_window_clock.py"
+      "scripts/research/shared_row_tournament_monitor.py",
+      "scripts/research/validate_core_prospective_freeze.py",
+      "tests/research/test_shared_row_consumer_integrity.py",
+      "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/18_ORIGINAL_V3_PUBLICATION_CHAIN_R1_20261023.md",
+      "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/19_ORIGINAL_V3_PUBLICATION_CENSUS_20261023.md",
+      "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/SHARED_ROW_TOURNAMENT_WEEKLY_2026-W44.json"
     ]
   },
   "semantics": "Single active distinct scientifically falsifiable unit. On later material progress, replace active work_id and objective on THIS same PR branch; no cron, no automatic paid retry, no second PR. Claim is immutable comment before one API call; do not mutate old work_id."
