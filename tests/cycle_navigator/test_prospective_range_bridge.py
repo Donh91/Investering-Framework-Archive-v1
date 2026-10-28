@@ -18,7 +18,10 @@ class ProspectiveBridgeTests(unittest.TestCase):
         self.repo = Path(self.tmp.name)
         (self.repo / BRIDGE_PATH).parent.mkdir(parents=True)
         actuals = {'iso_year': 2026, 'iso_week': 43, 'readiness': 'READY',
-                   'generated_at_utc': '2026-10-26T05:00:00Z'}
+                   'generated_at_utc': '2026-10-26T05:00:00Z',
+                   'hourly_gap_diagnostics': {'expected_hours': 168,
+                                              'observed_hours': 168,
+                                              'missing_hour_count': 0}}
         self.sources = {'prior_published_ranges': 'published.md',
                         'completed_week_actuals': 'actuals.json'}
         (self.repo / 'published.md').write_text('Original published ranges')
@@ -184,6 +187,31 @@ class ProspectiveBridgeTests(unittest.TestCase):
         (self.repo / BRIDGE_PATH).write_text(json.dumps(self.bridge))
         self.commit_bridge('2026-10-26T06:35:00Z')
         self.reject('BRIDGE_COMMITTED_BEFORE_GENERATION')
+
+    def rebind_original_actuals(self, value):
+        raw = json.dumps(value).encode()
+        (self.repo / 'actuals.json').write_bytes(raw)
+        subprocess.run(['git', '-C', str(self.repo), 'add', 'actuals.json'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=Fixture',
+            '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Bound source health'],
+            check=True, env={**os.environ, 'GIT_AUTHOR_DATE': '2026-10-26T05:40:00Z',
+                            'GIT_COMMITTER_DATE': '2026-10-26T05:40:00Z'})
+        self.bridge['provenance']['completed_week_actuals_commit'] = subprocess.check_output(
+            ['git', '-C', str(self.repo), 'rev-parse', 'HEAD']).decode().strip()
+        self.bridge['provenance']['completed_week_actuals_sha256'] = hashlib.sha256(raw).hexdigest()
+
+    def test_ready_label_without_hourly_diagnostics_is_rejected(self):
+        value = json.loads((self.repo / 'actuals.json').read_text())
+        del value['hourly_gap_diagnostics']
+        self.rebind_original_actuals(value)
+        self.reject('BRIDGE_ACTUALS_HOURLY_COVERAGE_UNVERIFIED')
+
+    def test_ready_label_with_zero_observed_hours_is_rejected(self):
+        value = json.loads((self.repo / 'actuals.json').read_text())
+        value['hourly_gap_diagnostics']['observed_hours'] = 0
+        value['hourly_gap_diagnostics']['missing_hour_count'] = 168
+        self.rebind_original_actuals(value)
+        self.reject('BRIDGE_ACTUALS_HOURLY_COVERAGE_UNVERIFIED')
 
     def test_invalid_band_no_partial_admission(self):
         self.bridge['intraday']['day_5_7']['ETH']['low'] = float('nan')

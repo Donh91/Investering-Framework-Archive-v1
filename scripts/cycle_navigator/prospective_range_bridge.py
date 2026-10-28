@@ -114,6 +114,12 @@ def load_bridge(repo: Path, *, target_year: int, target_week: int,
                 if (actuals.get('readiness') != 'READY'
                         or actuals_generated < cutoff or actuals_generated > generated):
                     return reject('BRIDGE_ACTUALS_NOT_FINAL_AT_GENERATION')
+                hours = actuals.get('hourly_gap_diagnostics')
+                if (not isinstance(hours, dict)
+                        or hours.get('expected_hours') != 168
+                        or hours.get('observed_hours') != 168
+                        or hours.get('missing_hour_count') != 0):
+                    return reject('BRIDGE_ACTUALS_HOURLY_COVERAGE_UNVERIFIED', 'SOURCE_UNAVAILABLE')
             except (ValueError, TypeError, AttributeError):
                 return reject('BRIDGE_ACTUALS_INVALID')
     windows = [bridge.get('weekly')]
