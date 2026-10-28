@@ -1,18 +1,20 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "CN_W45_PROSPECTIVE_ISSUER_P0_20261028",
+    "work_id": "CN_W45_PRODUCER_ORIGINAL_PR_20261028",
     "owner_pr": 1825,
     "owner_issue": 1516,
-    "objective": "Fix verified missing prospective range bridge issuer for W45+ without manufacturing W44 provenance or promoting deterministic benchmark. Analyze producer and consumer, identify smallest source-bound patch and exact negative controls on ORIGINAL #1825.",
+    "expected_pr_head": "beab673a2244126a1449c288de6a8977b81fa637",
+    "objective": "Second distinct materially new unit AFTER first xhigh API 40648478714: original PR #1825 has now applied and CI-tested two independent negative provenance guards: actuals_generated cannot predate Monday cutoff; bridge_committed_at cannot predate reported generation. This is already resolved. NOW investigate the missing recurring source PRODUCER/WRITER for a real W45+ continuity bridge in existing weekly cycle-navigator workflow, exact PR head. Identify smallest existing-file producer fix and PIT source receipts, source cutoff vs freeze, positive and two adversarial tests; never fake W45 before completed W44 data or relabel W39. If first party data needed after Nov2, SOURCE_BLOCKED with one smallest future proof instead of guessed values.",
     "paths": [
       "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
       "scripts/cycle_navigator/prospective_range_bridge.py",
       "tests/cycle_navigator/test_prospective_range_bridge.py",
       ".github/workflows/cycle-navigator-weekly-publication.yml",
       "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
-      "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json",
-      "05_CYCLE_NAVIGATOR/weekly/2026/W44/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+      "05_CYCLE_NAVIGATOR/weekly/2026/W44/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+      "03_DAILY_CAPTURE_LOGS/weekly/2026/W43.json",
+      "03_DAILY_CAPTURE_LOGS/weekly/2026/W44.json"
     ]
   },
   "semantics": "Single active distinct scientifically falsifiable unit. On later material progress, replace active work_id and objective on THIS same PR branch; no cron, no automatic paid retry, no second PR. Claim is immutable comment before one API call; do not mutate old work_id."

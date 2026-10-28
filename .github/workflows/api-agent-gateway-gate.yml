@@ -1174,6 +1174,8 @@ jobs:
           python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/endgame-progress-source/research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 12
       - name: Freeze only original public-source bytes and validate gateway schema
         if: steps.admit.outputs.run_api == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           python scripts/api_agent/endgame_progress_packet.py build runtime/endgame-progress
           python scripts/api_agent/api_gateway.py --task TERRA_XHIGH_ENDGAME_PROGRESS_V1 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/endgame-progress/prompt.txt --context-file runtime/endgame-progress/context.json --output-dir runtime/endgame-progress/dry --intended-write-prefix research/api_agent/outputs/terra_xhigh_endgame_progress/ --dry-run

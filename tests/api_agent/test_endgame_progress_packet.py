@@ -8,12 +8,17 @@ class EndgameProgressPacketTests(unittest.TestCase):
     def valid(self):
         return {"contract":"TERRA_ENDGAME_PROGRESS_QUEUE_v1","active":
                 {"work_id":"CN_W45_PROSPECTIVE_ISSUER_P0_20261028",
-                 "owner_pr":1825,"objective":"Bounded original source audit",
+                 "owner_pr":1825,"expected_pr_head":"a"*40,"objective":"Bounded original source audit",
                  "paths":["scripts/cycle_navigator/prospective_range_bridge.py"]}}
 
     def test_valid_original_pr(self):
         x=manifest(self.valid())
         self.assertEqual(x["owner_pr"],1825)
+
+    def test_original_pr_exact_head_required(self):
+        x=self.valid()
+        x["active"]["expected_pr_head"]="unknown"
+        with self.assertRaises(ValueError):manifest(x)
 
     def test_no_path_escape(self):
         for bad in ("../secrets/README.md","/etc/passwd","research/../secrets/README.md"):
