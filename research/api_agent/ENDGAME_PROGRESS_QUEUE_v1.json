@@ -1,18 +1,18 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "M2_API_SEMANTIC_PASS_COST_RACE_FIX_20261028",
-    "owner_pr": 1823,
-    "owner_issue": 1156,
-    "expected_pr_head": "582e619b34dd5480ffac93ae36be4fe9f43efbd8",
-    "objective": "ENDGAME 2.0 MISSION 2 PART 1/5, first independent API payment/reporting code closure (not M1 Chrome and not consumed Task2). VERIFIABLE REAL INCIDENT: original #1823 Terra xhigh run 40729789060, artifact 12834072823 live/receipt.json has gateway status PASS, attempt 1, estimated USD 0.117601, but same run live/output.json has substantive status BLOCKED, summary SOURCE_BLOCKED, zero proven code fix. Yet job 'Record terminal proof in existing owner issue' posted comment #6475150734 saying only PASS, leading downstream agents to potentially mark false closure. Same for run 40730777200 artifact 12835480896: receipt PASS, output BLOCKED, gateway estimated USD 0.113679. Investigate exact code in existing .github/workflows/api-agent-gateway-gate.yml, api_gateway and endgame packet, make minimal P0 repair proposal IN ORIGINAL #1823 to report gateway_status AND substantive output.status/summary, with bounded redacted safe fields and guaranteed no secret/market value leakage. Negative tests: PASS/BLOCKED, PASS/FAIL, invalid or missing JSON, and double-read stale run must never be marked fixed; positive PASS/PASS still requires code/CI/live readback separately. SECOND possible defect, only if proven from source: distinct paid work IDs on concurrent PR events both reading monthly receipts on main before claim, bypassing current org USD30 / USD12 reserve or unknown-cost liability; reproduce true race or explicitly falsify it, propose smallest fail-closed atomic liability preflight without new scheduler, key, budget increase or paid retry. MAX TWO confirmed defects with exact file/function, smallest code diff and executable positive plus mutation-negative tests; otherwise report SOURCE_BLOCKED and precise blockers. Never change production market/scoring weights, raw private data, source/recovery separation, budgets, trading, or self-merge. Do not declare exact-head #1823 release allowed until independent Vault/recovery and billing verification.",
+    "work_id": "M3_KOMPAS_PIT_NOWCAST_ISSUANCE_PROOF_20261028",
+    "owner_pr": 1814,
+    "owner_issue": 1596,
+    "expected_pr_head": "ba84b69e98ef17a8455cd20e1351cc3c496a9f86",
+    "objective": "ENDGAME 2.0 MISSION 3 PART 1/5, DISTINCT prospective scientific integrity task on original Task2 PR #1814. Known evidence: Original #1814 as of current exact head ba84b69e98ef17a8455cd20e1351cc3c496a9f86 has 14/14 synthetic Kompas shadow tests and 5/5 CI successful, with recent verified source SHA nesting and malformed market_reference/time_basis Mapping guards already fixed. Do NOT repeat these solved defects. Actual historic R1 issuer first-known verification remains 0/11; no historically proven forecasting edge. Grok audit of actual Official Kompas 12h suggests 297/301 direction agrees with NOW momentum, 283/301 HOLD variants and approximately 48% on 150 scored observations, but this is cited external audit, NOT actual independently reproduced historical skill. On source code trace native_handlekompas.derive_market_now -> horizon_map NEXT_12H vs 72h/168h -> official/Shadow comparator -> outcome matching and site consumption. Identify MAX TWO NEW code-level P0/P1 falsifiers that let a contemporaneous NOWCAST be mistaken for prospective 12h forecast, or let scorer count a record whose issuer/source first_known is after freeze, original target, or outcome reference close. Build minimal original #1814 scientific research-only positive and mutation-negative tests requiring as-issued immutable source SHA, first-known UTC, target opening/settlement, material source freshness, distinct baseline/ABSTAIN; no historical data reconstruction, no retroactive forecast rescore, no live trading changes. If original source receipts absent, explicitly return NO_SCIENTIFIC_ADMISSION, precise missing evidence, and the smallest prospective capture remedy in EXISTING research owner. Favor one actual code patch/test that future comparators can use, not an unbounded redesign. Preserve W44 frozen and W45 prospective-as-of, B2/R1 clustering, Round3 collection-only, no unrelated PR, no fake skill/performance gain, no recovery privilege or automatic merge.",
     "paths": [
-      ".github/workflows/api-agent-gateway-gate.yml",
-      "scripts/api_agent/api_gateway.py",
-      "scripts/api_agent/check_monthly_cost_guard.py",
-      "scripts/api_agent/check_api_lane_budget.py",
-      "scripts/api_agent/endgame_progress_packet.py"
+      "scripts/data_ping/native_handlekompas.py",
+      "scripts/learning/compass_outcomes.py",
+      "scripts/research/task2_r1_original_admission.py",
+      "scripts/research/kompas_nowcast_shadow.py",
+      ".github/workflows/shared-row-tournament-research-gate.yml"
     ]
   },
-  "semantics": "M2.1 original API PR code-fix evidence, 2 observed real PASS-vs-BLOCKED misreports and conditional atomic billing race. Distinct unique xhigh ID, one paid attempt, $3/call, org $30 reserve $12, full exact-head contract. No new backend workflow, no bypass, no merge unless independent release guard passes. After M2.1 skip overlap then proceed M3 PIT/Kompas or M1 natural source health."
+  "semantics": "M3.1 first source-proof/issuance-gate scientific unit. Exact original PR #1814 pinned, source/clock no-hindsight, prospective only. Earlier producer source SHA nesting & Mapping bug are already repaired, must dedup. Distinct one xhigh paid attempt, no self-code/merge, no API retry, USD30/org reserve12 USD3/call. No implication of trading/forecast edge."
 }
