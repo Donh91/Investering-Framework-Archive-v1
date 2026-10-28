@@ -1464,3 +1464,15 @@
  * The source plot coordinates are fully inside the 1000-unit viewBox. */
 .premium-next #variant-panel .plot-shell{min-width:0;max-width:100%;overflow:hidden}
 .premium-next #variant-panel .plot-shell svg{display:block;min-width:0;max-width:100%;overflow:hidden}
+
+
+/* Daily research stays folded: official site shows one elegant forecast card,
+ * internally seven original range rows remain inspectable for later scoring. */
+.premium-next #variant-panel .cn-daily-research-notes{margin:0;background:#0a172b;color:#c5d5eb;border-top:1px solid #243754;padding:4px clamp(17px,3vw,29px) 12px}
+.premium-next #variant-panel .cn-daily-research-notes[hidden]{display:none!important}
+.premium-next #variant-panel .cn-daily-research-notes summary{cursor:pointer;font-size:11px;font-weight:680;min-height:42px;display:flex;align-items:center;color:#9ebfe8}
+.premium-next #variant-panel .cn-daily-research-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;padding:6px 0 12px}
+.premium-next #variant-panel .cn-daily-note{border:1px solid #2a3e59;border-radius:9px;padding:11px;background:#0e213b;color:#dceafa}
+.premium-next #variant-panel .cn-daily-note strong{font-size:12px}
+.premium-next #variant-panel .cn-daily-note p{font-size:11px;line-height:1.5;color:#b3c8dd;margin:6px 0}
+.premium-next #variant-panel .cn-daily-note small{font-size:10px;color:#91accb;line-height:1.4}
