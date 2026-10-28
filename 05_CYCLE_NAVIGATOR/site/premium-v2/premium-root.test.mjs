@@ -10,7 +10,7 @@ test('Premium root renders original Graph B, Proof, official Compass and PATH',(
  const root=buildPremiumRootHtml(original);
  for(const id of ['variant-panel','chart','proof-explorer','official-product-pilot','official-pilot-path'])
   assert.ok(root.includes('id="'+id+'"'),id);
- assert.match(root,/<h1 data-premium-copy="title">Prognose møder virkelighed\.<\/h1>/);
+ assert.match(root,/<h1 data-premium-copy="title">Ugens prognose\. Faktiske kurser\.<\/h1>/);
  assert.match(root,/Weekly Outlook <span class="alt-token">B<\/span>/);
  assert.match(root,/aria-label="Premium sektioner"/);
  assert.match(root,/data-premium-nav="compass"/);
