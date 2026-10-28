@@ -119,7 +119,12 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   const c=unique(html,details,'legacy-details');
   const d=unique(html,meta,'source-meta');
   if(d<=c)throw Error('CN_UNIFIED_ROOT_LEGACY_ORDER');
-  html=html.slice(0,c)+path+'\n'+html.slice(d);
+  // Decision -> chart -> cycle / altseason -> proof. Do not bury the user's
+  // actionable source-bound market timeline underneath the audit appendix.
+  const proofAt=unique(html,'<section id="proof-explorer"','source-proof');
+  if(proofAt>=c)throw Error('CN_QUIET_PROOF_ORDER_SOURCE_MISMATCH');
+  const originalProof=html.slice(proofAt,c);
+  html=html.slice(0,proofAt)+path+'\n'+originalProof+html.slice(d);
   html=html.replace('<a href="#official-product-pilot" data-premium-nav="compass">Kompas</a>',
     '<a href="#compass-pro" data-premium-nav="compass">Kompas PRO</a>');
   // No second PRO route or second graph entry in the official navigation.
