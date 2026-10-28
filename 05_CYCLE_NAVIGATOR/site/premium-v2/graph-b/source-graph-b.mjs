@@ -46,7 +46,7 @@ function textLabels(){
  const heading=$('card-heading');
  if(heading){
   const badge=heading.querySelector('.alt-token');
-  heading.replaceChildren(document.createTextNode('Weekly Outlook '));
+  heading.replaceChildren(document.createTextNode(t('Ugens prisgraf ','Weekly outlook ')));
   if(badge){badge.textContent='B';heading.append(badge)}
   else{const b=document.createElement('span');b.className='alt-token';b.textContent='B';heading.append(b)}
  }
