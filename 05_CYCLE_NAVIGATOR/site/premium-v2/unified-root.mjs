@@ -57,7 +57,8 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<p>Handling, observeret retning og risiko vises hver for sig. '+
     'Kun gyldige officielle kildebeslutninger er aktuelle.</p></div>'+
     '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p>'+
-    coreDisclosure+'<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p></section>';
+    coreDisclosure.replace('<details class="cn-pro-more">',
+      '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p><details class="cn-pro-more">')+'</section>';
 
   const oldDecision='<section class="official-product-pilot premium-decision-summary"';
   const graph='<section id="variant-panel"';
