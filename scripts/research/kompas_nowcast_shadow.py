@@ -118,6 +118,15 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
                 raise ValueError("TARGET_OBSERVATION_OUTSIDE_SCORER_TOLERANCE")
             if not (issued <= first < target <= matured):
                 raise ValueError("NONPROSPECTIVE_ISSUER_TARGET_OR_OUTCOME")
+            # A post-hoc issuer receipt hours after issue time is not an as-issued
+            # forecast, even when it predates the 12h outcome. Permit only a
+            # bounded five-minute publication/collection delay in SHADOW.
+            if first > issued + timedelta(minutes=5):
+                raise ValueError("FORECAST_FIRST_KNOWN_TOO_LATE_FOR_ISSUANCE")
+            # A caller-labelled prior-hour comparator must be adjacent to the
+            # original scorer reference, not an arbitrarily stale candle.
+            if not (reference - timedelta(hours=1) <= prior_end <= reference):
+                raise ValueError("PRIOR_HOUR_BASELINE_STALE_OR_FUTURE")
             if (outcome.get("compass_id") != ident or outcome.get("horizon") != "12h"
                 or outcome.get("issued_at_utc") != forecast["issued_at_utc"]
                 or outcome.get("compass_sha256") != forecast.get("compass_sha256")):
