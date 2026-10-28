@@ -5,6 +5,8 @@
  */
 import '../vnext-live/premium-experience.css';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
+import {sourceTrace} from '../vnext-live/source-trace.mjs';
+import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -50,6 +52,77 @@ function horizons(){
   body.append(r);
  }
 }
+function renderForward(){
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const say=(da,en)=>lang==='en'?en:da;
+ const direction=value=>
+  value==='UP'?say('OP','UP'):
+  value==='DOWN'?say('NED','DOWN'):
+  value==='MIXED'?say('BLANDET','MIXED'):
+  value==='SIDEWAYS'?say('SIDEVÆRTS','SIDEWAYS'):
+  value==='NO_EDGE'?say('INGEN PÅVIST EDGE','NO DEMONSTRATED EDGE'):'UNAVAILABLE';
+ let out=null;
+ try{
+   const trace=sourceTrace(feeds?.latest,feeds?.compass,view);
+   out=forwardOutlook(feeds?.latest,feeds?.compass,trace);
+ }catch{out=null}
+ set('cn-forward-source-status',out?.status||'UNAVAILABLE');
+ set('cn-forward-week-direction',direction(out?.weekly?.direction));
+ set('cn-forward-strategic-direction',direction(out?.strategic?.direction));
+ set('cn-forward-week-copy',out?.weekly?.summary||
+   say('Ingen kvalificeret 2–3-ugers vurdering udstedt.','No eligible 2–3 week outlook issued.'));
+ set('cn-forward-strategic-copy',out?.strategic?.summary||
+   say('Ingen kildeverificeret strategisk vurdering.','No source-verified strategic outlook.'));
+ set('cn-forward-issued',out?.strategic?.issued_at_utc?time(out.strategic.issued_at_utc):'—');
+ set('cn-forward-assets',out?.strategic?.available?
+   'BTC '+direction(out.strategic.btc_direction)+' / ETH '+
+   direction(out.strategic.eth_direction)+' · '+safe(out.strategic.confidence):'—');
+ set('cn-forward-path',out?.strategic?.expected_path||
+   say('Ingen understøttet forventet markedssti.','No supported expected market path.'));
+ const reset=id=>{const e=$(id);if(e)e.replaceChildren();return e};
+ const scenarios=reset('cn-forward-scenarios');
+ if(scenarios)for(const item of (out?.strategic?.scenarios||[])){
+   const article=document.createElement('article');
+   const name=document.createElement('strong');name.textContent=safe(item.label);
+   const desc=document.createElement('p');desc.textContent=safe(item.thesis);
+   article.append(name,desc);scenarios.append(article);
+ }
+ const falsifiers=reset('cn-forward-falsifiers');
+ if(falsifiers&&(out?.strategic?.falsifiers||[]).length){
+   const name=document.createElement('strong');
+   name.textContent=say('Hvad kan modbevise vurderingen?','What would falsify this outlook?');
+   const list=document.createElement('ul');
+   for(const value of out.strategic.falsifiers){
+     const li=document.createElement('li');li.textContent=safe(value);list.append(li)
+   }
+   falsifiers.append(name,list);
+ }
+ const i18n={
+  da:{title:'Længere udsyn · kildevurdering',detail:'Scenarier og kildebevis',
+      caveat:'Kun udstedte, kildeverificerede tidshorisonter. Ingen garanteret kurssti.',
+      reentry:'Genkøb · officiel status'},
+  en:{title:'Longer outlook · source context',detail:'Scenarios and evidence',
+      caveat:'Only originally issued, source-verified horizons. No guaranteed price path.',
+      reentry:'Re-entry · official status'}
+ }[lang];
+ const title=$('cn-forward-title');if(title)title.textContent=i18n.title;
+ const details=$('compass-pro')?.querySelector('.cn-forward-details summary');
+ if(details)details.textContent=i18n.detail;
+ const caveat=$('compass-pro')?.querySelector('.cn-forward-disclaimer');
+ if(caveat)caveat.textContent=i18n.caveat;
+ set('pro-reentry-heading',i18n.reentry);
+}
+function renderReentry(){
+ const eligible=view?.compass?.state==='FRESH'&&
+  view?.compass?.permit_path_live_gates===true&&
+  feeds?.compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
+  feeds?.compass?.data_status==='OK';
+ const source=eligible?feeds.compass.protection_tracker:null;
+ set('pro-reentry-state',source?safe(source.reentry_state):'UNAVAILABLE');
+ set('pro-reentry-note',source&&typeof source.reentry_message==='string'?
+  source.reentry_message:t('Ingen kildeverificeret genkøbsstatus. Risiko er ikke automatisk et købssignal.',
+   'No source-verified re-entry status. Risk alone never authorizes buying.'));
+}
 function paint(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  try{view=feeds?inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang}):null}
@@ -58,6 +131,8 @@ function paint(){
  // refreshed via a newer Pages bundle timestamp or cached prior DOM text.
  renderProductExperience(view,feeds,lang);
  horizons();
+ renderForward();
+ renderReentry();
  const c=view?.compass,w=view?.weekly;
  const fresh=c?.state==='FRESH'&&c?.permit_path_live_gates===true;
  const weekly=w?.state==='DEGRADED'?t(' · UGEKILDE: BEGRÆNSET DÆKNING',' · WEEKLY SOURCE: LIMITED COVERAGE'):
