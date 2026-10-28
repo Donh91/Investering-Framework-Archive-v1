@@ -1,18 +1,17 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "API_DELIVERY_PR_ADDED_SOURCE_BOUND_20261028",
-    "owner_pr": 1823,
-    "owner_issue": 1156,
-    "expected_pr_head": "1195ef3a545238f0a570182377871bd531574f48",
-    "objective": "P0 distinct ROOT_CAUSE: prior API_DELIVERY_SELF_PR_RECEIPT_CLOSURE_20261028 failed at preflight with SOURCE_UNAVAILABLE for PR-added script, no claim and no charge (run 40689612846). Inspect newly implemented PR-added source path exact-head custody, original PR patch status, main-vs-branch hash, source provenance, 100-file fail-close, parent pin and denial cases. Find concrete bypass and exact-fix+test on current #1823 only; otherwise NO_FIX_REQUIRED and release HOLD with independent Vault, real provider bill and CI gaps. This is NOT a rerun of the previous work ID, and its material subject is branch-only evidence custody.",
+    "work_id": "KOMPAS_NOWCAST_PIT_SHADOW_NEGATIVE_20261028",
+    "owner_pr": 1814,
+    "owner_issue": 1596,
+    "expected_pr_head": "747bb1e0df0ce16a06a15aa59eb5f70cd1a164ad",
+    "objective": "P0 #1827 code-level Kompas NOWCAST-AS-12H-FORECAST test, materially distinct from prior Task2 Shared Row/PIT/denominator reviews. Original scripts/data_ping/native_handlekompas.py derives BULLISH/BEARISH from latest BTC/ETH deltas and horizon_map maps it directly into NEXT_12H expected_direction, 297/301 historical close alignment reported in Grok Bridge PR #81. Investigate exact source-time and immutable first-known record, build smallest independent research-only prospective shadow falsifier and negative tests against naive last-hour sign/persistence and always-HOLD, with event/issuance dedup, no post-issue leakage, explicit source gating and measured coverage. Cited 27 Oct 12h DOWN miss is a single observed case, not evidence of price edge or new model thresholds. Original #1814 scientific PR can incorporate only bounded additive research/test code, leave production horizon_map and frozen CMP rows unchanged, no new PR. Require a concrete testable patch suggestion or SOURCE_BLOCKED with missing original receipts, no forecast promotion, no fabricated W45 evidence.",
     "paths": [
-      "scripts/api_agent/endgame_progress_packet.py",
-      "tests/api_agent/test_endgame_progress_packet.py",
-      ".github/workflows/api-agent-gateway-gate.yml",
-      "scripts/api_agent/api_gateway.py",
-      "scripts/api_agent/check_monthly_cost_guard.py"
+      "scripts/data_ping/native_handlekompas.py",
+      "tests/data_ping/test_native_handlekompas.py",
+      "scripts/learning/compass_outcomes.py",
+      "scripts/research/shared_row_tournament_weekly.py"
     ]
   },
-  "semantics": "New independent P0 after uncharged preflight failure. Original branch-only added files are admitted only when exact PR head and complete changed-file entry establish source custody. At most one actual API attempt, never auto-merge."
+  "semantics": "ONE fresh materially distinct Terra xhigh paid advisory source-grounded Kompas prospective scientific falsification under existing #1596 and PR #1814; no live forecast change, no new scheduler/owner/PR, no repeat claims. Must read terminal receipt, then implement reproducible shadow tests only if direct original owner and source evidence permit. Budget min(owner extra USD15, remaining org cap USD30 less USD12 liability reserve, USD3/call)."
 }
