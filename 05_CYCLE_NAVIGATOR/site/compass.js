@@ -3,7 +3,6 @@
 
   const URL = './data/compass.json';
   const horizonOrder = [
-    ['NEXT_12H', 'Next 12h'],
     ['NEXT_1_3D', 'Next 1–3d'],
     ['NEXT_5_7D', 'Next 5–7d'],
     ['CYCLE_ALTCOINS_3_8W', 'Cycle / altcoins · 3–8w'],
@@ -44,7 +43,7 @@
   function render(payload) {
     const root = ensureRoot();
     if (!root) return;
-    if (!payload || payload.data_status === 'NOT_PUBLISHED' || !payload.compass_id) {
+    if (!payload || payload.data_status !== 'OK' || !payload.compass_id) {
       renderUnavailable(root, payload);
       return;
     }
@@ -65,6 +64,12 @@
     root.append(lead);
 
     const horizonGrid = node('div', 'change-grid');
+    const momentum = node('article', 'panel change-card');
+    momentum.append(node('span', 'kicker', 'CURRENT MOMENTUM'));
+    momentum.append(node('strong', '', now.directional_state || 'UNAVAILABLE'));
+    momentum.append(node('p', '', 'Current-state proxy, not a validated 12-hour forecast.'));
+    momentum.append(node('small', '', 'No independent forward 12-hour direction is issued by this view.'));
+    horizonGrid.append(momentum);
     for (const [key, label] of horizonOrder) {
       const value = payload.horizons?.[key];
       const card = node('article', 'panel change-card');
@@ -98,9 +103,9 @@
     root.append(ladder);
 
     const conclusion = node('div', 'forecast-note');
-    conclusion.append(node('strong', '', 'Conclusion'));
-    conclusion.append(node('p', '', payload.conclusion || 'No conclusion published.'));
-    if (payload.next_meaningful_change_eta) conclusion.append(node('small', '', `Next meaningful change ETA: ${payload.next_meaningful_change_eta}`));
+    conclusion.append(node('strong', '', 'Current evidence and official action'));
+    conclusion.append(node('p', '', now.summary || 'No current market summary published.'));
+    conclusion.append(node('small', '', `Official action: ${payload.action_now || 'UNAVAILABLE'}. Current momentum is not a validated 12-hour forecast.`));
     root.append(conclusion);
   }
 
