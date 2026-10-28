@@ -463,6 +463,31 @@ try{
    }
    released.push({width,oneB:true,onePRO:true,source:true});
   }
+  // Desktop pixels complete the same two-gate visual inspection.
+  if(process.env.GITHUB_EVENT_NAME==='pull_request'){
+   await send('Emulation.setDeviceMetricsOverride',{width:1440,height:960,deviceScaleFactor:1,mobile:false});
+   await send('Page.navigate',{url:origin});
+   let desktopReady=false;
+   for(let attempt=0;attempt<80;attempt++){
+    await delay(100);
+    desktopReady=await evaluate(()=>document.readyState==='complete'&&
+      !!document.querySelector('#variant-panel #chart')&&
+      document.getElementById('observed-value')?.textContent!=='—');
+    if(desktopReady)break;
+   }
+   assert.ok(desktopReady,'DESKTOP_VISUAL_SOURCE_NOT_READY');
+   const desktopLayout=await evaluate(()=>{
+    document.querySelector('#variant-panel').scrollIntoView({block:'start',behavior:'instant'});
+    return {width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth};
+   });
+   assert.ok(desktopLayout.width===1440&&desktopLayout.overflow<=2,'DESKTOP_VISUAL_OVERFLOW');
+   await delay(150);
+   const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+   assert.ok(shot.data?.length>1000,'DESKTOP_SCREENSHOT_MISSING');
+   console.log('CN_DESIGN_SCREENSHOT_1440_BEGIN');
+   for(const chunk of shot.data.match(/.{1,8000}/g))console.log('CN_DESIGN_SCREENSHOT_1440_PART '+chunk);
+   console.log('CN_DESIGN_SCREENSHOT_1440_END');
+  }
   console.log('ROOT_UNIFIED_CHROME_CDP_PASS '+JSON.stringify(released));
  }
 
