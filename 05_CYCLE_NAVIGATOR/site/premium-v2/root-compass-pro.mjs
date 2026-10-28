@@ -71,6 +71,22 @@ function renderQuickDecision(){
   '12 hours · observed momentum (not forecast)':
   '12 timer · observeret momentum (ikke prognose)';
 }
+function renderRiskQuick(){
+ const en=document.documentElement.lang==='en';
+ set('cn-risk-quick-label',en?'PULLBACK / FIVE OFFICIAL RISK CLASSES':
+   'PULLBACK / 5 OFFICIELLE RISIKOKLASSER');
+ set('cn-risk-quick-state',$('premium-risk-name')?.textContent||'UNAVAILABLE');
+ set('cn-risk-quick-note',en?'Source-owned stages · not probability':
+   'Kildens trin · ikke sandsynlighed');
+ // Render the already-calculated official ordinal stages a second time
+ // for accessibility on the first fold; NEVER create an alternate risk model.
+ const source=$('premium-risk-steps'),target=$('cn-risk-quick-steps');
+ if(source&&target){
+  target.replaceChildren(...[...source.children].map(el=>{
+   const copy=el.cloneNode(true);copy.removeAttribute('id');return copy;
+  }));
+ }
+}
 function renderAltMilestone(){
  const en=document.documentElement.lang==='en';
  const eligible=view?.path?.state==='SOURCE_BOUND'&&
@@ -229,6 +245,7 @@ function paint(){
  // refreshed via a newer Pages bundle timestamp or cached prior DOM text.
  renderProductExperience(view,feeds,lang);
  renderQuickDecision();
+ renderRiskQuick();
  renderAltMilestone();
  horizons();
  renderForward();
