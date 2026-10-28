@@ -38,7 +38,11 @@ export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
  const files=new Set(inventory.map(x=>x.path));
  for(const path of mandatory)if(!files.has(path))errors.push('MISSING_ENTRY:'+path);
  const pages={};
- for(const path of mandatory){
+ // The isolated unified candidate is optional in prior fixtures, mandatory
+ // once emitted by the current multi-page build. It may never be promoted by
+ // this verification step, but its source graph/PRO integrity is audited.
+ const pagesToCheck=[...mandatory,...(files.has('unified.html')?['unified.html']:[])];
+ for(const path of pagesToCheck){
   if(!files.has(path))continue;
   const html=await readFile(resolve(root,path),'utf8');
   pages[path]=html.length;
@@ -49,6 +53,20 @@ export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
    for(const id of ['chart','variant-panel','proof-explorer','official-product-pilot','official-pilot-path']){
     if(!html.includes('id="'+id+'"'))errors.push('MISSING_PREMIUM_ROOT_MARKUP:'+id);
    }
+  }
+  if(path==='unified.html'){
+   for(const id of [
+    'chart','variant-panel','proof-explorer','compass-pro',
+    'premium-now-action','premium-risk-steps','pro-forward-rows',
+    'official-path-view','premium-path-rail'
+   ])if((html.match(new RegExp('id="'+id+'"','g'))||[]).length!==1)
+     errors.push('UNIFIED_SINGLETON_ID:'+id);
+   for(const id of ['official-product-pilot','official-pilot-action',
+     'official-pilot-path','official-path-chart'])
+    if(html.includes('id="'+id+'"'))errors.push('UNIFIED_LEGACY_DUPLICATE:'+id);
+   if(html.includes('/vnext/#compass')||
+      html.includes('src="./compass/compass-path-ui.mjs"'))
+     errors.push('UNIFIED_COMPETING_COMPASS_ROUTE');
   }
   const entryUrl=new URL(base+path,host);
   const refPattern=/<(?:script|link|img)\b[^>]*?\s(?:src|href)=["']([^"']+)["']/gi;
