@@ -403,6 +403,32 @@ try{
    assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
    assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
    assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
+   // Live negative control on the RELEASED root, not only the /next pilot.
+   // Deliberately break BOTH public feed requests after initial boot. A stale
+   // cached BUY/SELL or next-gate must never survive a failed refresh.
+   if(width===430){
+    await evaluate(()=>{
+     window.fetch=async()=>{throw Error('UNIFIED_ROOT_INTENTIONAL_OFFLINE_TEST')};
+     Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});
+     document.dispatchEvent(new Event('visibilitychange'));
+     return true;
+    });
+    await delay(500);
+    const offline=await evaluate(()=>({
+     source:document.getElementById('pro-source-status')?.textContent||'',
+     current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
+     gate:document.getElementById('pro-next-gate')?.textContent||'',
+     reentry:document.getElementById('pro-reentry-state')?.textContent||'',
+     action:document.getElementById('premium-now-action')?.textContent||''
+    }));
+    assert.match(offline.source,/Indlæsning mislykkedes|Source fetch failed/,
+      'ROOT_FAILED_REFRESH_KEPT_PREVIOUS_SOURCE:'+JSON.stringify(offline));
+    assert.equal(offline.current,'false','ROOT_OFFLINE_STILL_CURRENT');
+    assert.equal(offline.reentry,'UNAVAILABLE','ROOT_OFFLINE_REENTRY_LEAK');
+    assert.ok(!/BUY|SELL|TRIM|REDUCE|ENTER/i.test(offline.action),
+      'ROOT_OFFLINE_PRESERVED_TRADE_ACTION:'+JSON.stringify(offline));
+    assert.match(offline.gate,/Afventer|Awaiting/,'ROOT_OFFLINE_GATE_LEAK');
+   }
    released.push({width,oneB:true,onePRO:true,source:true});
   }
   console.log('ROOT_UNIFIED_CHROME_CDP_PASS '+JSON.stringify(released));
