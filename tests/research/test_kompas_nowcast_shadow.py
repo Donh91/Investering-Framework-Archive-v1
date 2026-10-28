@@ -13,17 +13,27 @@ def _encode(value):
 
 def fixture():
     forecast = {
-        "compass_id": "CMP-SYNTHETIC-1", "compass_sha256": "f" * 64,
+        "contract": "OFFICIAL_DAILY_COMPASS_v1",
+        "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "compass_id": "CMP-SYNTHETIC-1",
         "issued_at_utc": "2026-10-27T12:00:00Z",
+        "market_reference": {"observation_open_utc": "2026-10-27T11:00:00Z"},
         "horizons": {"NEXT_12H": {"expected_direction": "UP"}}
     }
+    from scripts.learning.compass_outcomes import canon
+    forecast["compass_sha256"] = hashlib.sha256(canon(forecast)).hexdigest()
     outcome = {
-        "compass_id": "CMP-SYNTHETIC-1", "compass_sha256": "f" * 64,
+        "contract": "OFFICIAL_DAILY_COMPASS_OUTCOME_v1",
+        "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "compass_id": "CMP-SYNTHETIC-1", "compass_sha256": forecast["compass_sha256"],
         "issued_at_utc": "2026-10-27T12:00:00Z", "horizon": "12h",
         "target_at_utc": "2026-10-28T00:00:00Z",
+        "target_observation_at_utc": "2026-10-28T00:00:00Z",
+        "time_basis": {"start_reference_at_utc": "2026-10-27T12:00:00Z", "nominal_horizon_hours": 12},
         "matured_at_utc": "2026-10-28T00:10:00Z",
         "direction_accuracy": {"btc": {"realized_pct": -1.0}, "eth": {"realized_pct": 2.0}}
     }
+    outcome["outcome_sha256"] = hashlib.sha256(canon(outcome)).hexdigest()
     fb, fh = _encode(forecast)
     ob, oh = _encode(outcome)
     return {
@@ -104,6 +114,35 @@ class KompasShadowTests(unittest.TestCase):
             row=changed_blob(fixture(),"outcome_original_json","outcome_blob_sha256",edit)
             with self.subTest(edit=edit):
                 self.assertEqual(compare_shadow_12h([row])["provisional_paired"],0)
+
+    def test_integrity_and_time_basis_adversarial_mutations(self):
+        from scripts.learning.compass_outcomes import canon
+        def mutate_forecast(obj):
+            obj["horizons"]["NEXT_12H"]["expected_direction"]="DOWN"
+            # Caller blob hash will change; production canonical self hash will not.
+        row=changed_blob(fixture(),"forecast_original_json","forecast_blob_sha256",mutate_forecast)
+        self.assertEqual(compare_shadow_12h([row])["provisional_paired"],0)
+        self.assertEqual(compare_shadow_12h([row])["rows"][0]["reason"],"CANONICAL_SELF_DIGEST_MISMATCH")
+        def time_shift(o):
+            o["target_at_utc"]="2026-10-28T00:05:00Z"
+            o.pop("outcome_sha256")
+            o["outcome_sha256"]=hashlib.sha256(canon(o)).hexdigest()
+        row=changed_blob(fixture(),"outcome_original_json","outcome_blob_sha256",time_shift)
+        self.assertEqual(compare_shadow_12h([row])["provisional_paired"],0)
+        self.assertEqual(compare_shadow_12h([row])["rows"][0]["reason"],"SCORER_REFERENCE_PLUS_12H_MISMATCH")
+        row=fixture()
+        row["prior_hour_first_known_at_utc"]="2026-10-27T10:59:00Z"
+        self.assertEqual(compare_shadow_12h([row])["rows"][0]["reason"],"PRIOR_HOUR_FIRST_KNOWN_BEFORE_CLOSE")
+
+    def test_invalid_first_then_valid_same_id_is_not_poisoned(self):
+        bad=fixture()
+        bad["source_first_known_verified"]=False
+        rows=compare_shadow_12h([bad,fixture()])
+        self.assertEqual((rows["attempted"],rows["provisional_paired"]), (2,1))
+        self.assertEqual(rows["rows"][1]["status"],"PROVISIONAL_RESEARCH_ONLY")
+        rows2=compare_shadow_12h([fixture(),fixture()])
+        self.assertEqual(rows2["provisional_paired"],1)
+        self.assertIn("DUPLICATE",rows2["rows"][1]["reason"])
 
     def test_no_original_records_is_no_scientific_claim(self):
         x=compare_shadow_12h([])

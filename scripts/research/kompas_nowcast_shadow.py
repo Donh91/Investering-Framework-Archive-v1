@@ -8,8 +8,10 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Mapping
+
+from scripts.learning.compass_outcomes import canon, reference_close_time
 
 
 def _clock(value: object) -> datetime:
@@ -30,6 +32,15 @@ def _original(blob: object, sha: object) -> dict:
     if not isinstance(obj, dict):
         raise ValueError("SOURCE_NOT_OBJECT")
     return obj
+
+
+def _self_digest(obj: dict, field: str) -> None:
+    declared = obj.get(field)
+    if not isinstance(declared, str) or len(declared) != 64:
+        raise ValueError("CANONICAL_SELF_DIGEST_MISSING")
+    actual = hashlib.sha256(canon({k: v for k, v in obj.items() if k != field})).hexdigest()
+    if actual != declared:
+        raise ValueError("CANONICAL_SELF_DIGEST_MISMATCH")
 
 
 def _direction(value: object) -> str:
@@ -59,10 +70,16 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
                 raise ValueError("NOT_MAPPING")
             forecast = _original(attempt.get("forecast_original_json"), attempt.get("forecast_blob_sha256"))
             outcome = _original(attempt.get("outcome_original_json"), attempt.get("outcome_blob_sha256"))
+            if (forecast.get("contract") != "OFFICIAL_DAILY_COMPASS_v1"
+                or outcome.get("contract") != "OFFICIAL_DAILY_COMPASS_OUTCOME_v1"
+                or forecast.get("scoring_contract") != "OFFICIAL_DAILY_COMPASS_SCORING_v3"
+                or outcome.get("scoring_contract") != "OFFICIAL_DAILY_COMPASS_SCORING_v3"):
+                raise ValueError("UNSUPPORTED_OR_UNBOUND_CONTRACT")
+            _self_digest(forecast, "compass_sha256")
+            _self_digest(outcome, "outcome_sha256")
             ident = forecast.get("compass_id")
             if not isinstance(ident, str) or not ident or ident in seen_issuances:
                 raise ValueError("DUPLICATE_OR_MISSING_ISSUANCE")
-            seen_issuances.add(ident)
             decision["compass_id"] = ident
             if not all(attempt.get(field) is True for field in (
                 "forecast_first_known_verified", "source_first_known_verified",
@@ -81,8 +98,23 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
             prior_end = _clock(attempt["prior_hour_end_at_utc"])
             target = _clock(outcome["target_at_utc"])
             matured = _clock(outcome["matured_at_utc"])
+            reference = reference_close_time(forecast.get("market_reference") or {})
+            if reference is None:
+                raise ValueError("REFERENCE_CLOSE_NOT_BOUND")
             if source_first > issued or prior_first > issued or prior_end > issued:
                 raise ValueError("LOOKAHEAD_SOURCE_OR_PRIOR_HOUR")
+            if prior_end > prior_first:
+                raise ValueError("PRIOR_HOUR_FIRST_KNOWN_BEFORE_CLOSE")
+            if reference > issued or target != reference + timedelta(hours=12):
+                raise ValueError("SCORER_REFERENCE_PLUS_12H_MISMATCH")
+            time_basis = outcome.get("time_basis") or {}
+            if (_clock(time_basis.get("start_reference_at_utc")) != reference
+                or time_basis.get("nominal_horizon_hours") != 12):
+                raise ValueError("SCORER_REFERENCE_TIME_BASIS_MISMATCH")
+            selected = _clock(outcome.get("target_observation_at_utc"))
+            if not (issued < selected <= matured and
+                    abs((selected - target).total_seconds()) <= 3600):
+                raise ValueError("TARGET_OBSERVATION_OUTSIDE_SCORER_TOLERANCE")
             if not (issued <= first < target <= matured):
                 raise ValueError("NONPROSPECTIVE_ISSUER_TARGET_OR_OUTCOME")
             if (outcome.get("compass_id") != ident or outcome.get("horizon") != "12h"
@@ -100,6 +132,7 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
             btc_actual, eth_actual = _direction(btc_real), _direction(eth_real)
             btc_persist = _direction(attempt["prior_hour_btc_delta_pct"])
             eth_persist = _direction(attempt["prior_hour_eth_delta_pct"])
+            seen_issuances.add(ident)
             seen_events.add(group)
             decision = {
                 "compass_id": ident, "status": "PROVISIONAL_RESEARCH_ONLY",
