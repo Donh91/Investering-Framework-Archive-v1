@@ -146,3 +146,18 @@ test('design keeps W44 without invented daily forecast, and source-issued 7d pat
  assert.match(runtime,/renderAltMilestone\(\)/);
  assert.match(runtime,/No verified ETA/);
 });
+
+
+test('this week W44 frozen Monday ranges do not authorize a blue expected-close curve',async()=>{
+ const frozen=JSON.parse(await read('../../weekly/2026/W44/CYCLE_NAVIGATOR_FORECAST_FREEZE.json'));
+ assert.equal(frozen.daily_price_path.contract,'CN_FROZEN_DAILY_PRICE_PATH_v1');
+ assert.equal(frozen.daily_price_path.forecast_week,'2026-W44');
+ assert.equal(frozen.daily_price_path.BTC.status,'UNAVAILABLE');
+ assert.equal(frozen.daily_price_path.ETH.status,'UNAVAILABLE');
+ assert.deepEqual(frozen.daily_price_path.BTC.points,[]);
+ assert.deepEqual(frozen.daily_price_path.ETH.points,[]);
+ assert.equal(frozen.btc_range_low,75000);
+ assert.equal(frozen.btc_range_high,86000);
+ assert.equal(frozen.eth_range_low,2150);
+ assert.equal(frozen.eth_range_high,2550);
+});
