@@ -264,6 +264,11 @@ initProductExperience(()=>{
  catch{view=null}
  return {view,feeds,lang};
 });
+// Keep headline source banner/gate synchronized on a trader-lens click.
+// initProductExperience already evaluates the eligibility for the action;
+// this final paint also invalidates the visible SOURCE CURRENT badge and gate.
+document.querySelectorAll('[data-investor-lens]').forEach(button=>
+ button.addEventListener('click',paint));
 document.addEventListener('cn:languagechange',paint);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 window.addEventListener('focus',()=>{if(!document.hidden)load()});
