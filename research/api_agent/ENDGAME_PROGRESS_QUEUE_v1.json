@@ -1,18 +1,18 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "TASK2_KOMPAS_PRODUCER_DAG_SOURCE_HEALTH_FALSIFIER_20261028",
-    "owner_pr": 1814,
-    "owner_issue": 1596,
-    "expected_pr_head": "99c3fc1081697ce195b50cf12d047cb8832083b1",
-    "objective": "NEW DISTINCT P0 Task2 producer/consumer causal audit, NOT the four consumed source-hash/clock tests. On exact #1814, trace original scripts/data_ping/native_handlekompas.py derive_market_now -> horizon_map NEXT_12H and CN longer-horizon inputs, distinguish a true forward forecast from 12h copied momentum. Cross-check scoring reference_close_time and current shadow comparator; test whether issuer-first-known +5m and 1h persistence freshness are genuinely no-hindsight, and whether CN binding PASS can coexist with DEGRADED source health. Return at most TWO independently reproducible high-impact defects with exact code path, concrete negative test, smallest repair in ORIGINAL #1814 for scientific comparator or existing #1827 for producer; else SOURCE_BLOCKED/STOP. No new PR, no live forecast/threshold changes, no retroactive score, no claimed edge, no API repeat, no merge; missing private custody/recovery remains HOLD.",
+    "work_id": "M1_SITE_CHROME_CDP_TWO_FAIL_FIX_20261028",
+    "owner_pr": 1823,
+    "owner_issue": 1578,
+    "expected_pr_head": "4d5c19a7a4cee5774d9b15a43fff4c04074e587f",
+    "objective": "ENDGAME 2.0 MISSION 1, PART 1/5, new distinct P0 site-release incident, not consumed Kompas DAG work. Produce a bounded, source-accurate fix for the actual dual Chrome failures on original Pages workflow: 2026-10-28 14:00Z runs 40701638240/40703323980/40705331859 report Wrong CDP viewport 614 !== 390 at premium-mobile-browser.test.mjs:392, and run 40716013038 reports NO_CHROME_DEVTOOLS_PORT. Inspect exact current original GitHub Actions Pages and CN site gate workflow, Chrome launch/bootstrap/viewport setup and bounded negative startup test. Distinguish same-commit browser race, wrong CDP target/tab, viewport emulation sequencing and runner startup failures, compare both distinct logs/fingerprints; do not assert same root cause without evidence. Deliver MAX TWO independently reproducible P0/P1 defects, exact path/line or function, minimal patch for existing SITE #1578 owner, positive+mutation-negative tests proving genuine CDP 390x844 and 430x932 + DA/EN/clock fallback, and explicit fail-closed criteria. If source/log evidence insufficient, output SOURCE_BLOCKED with exact missing run logs; no speculative code fix and no new long-lived PR. Preserve original Graph B, no invented forecast line, no stale-data concealment, no test bypass, no automatic commit/merge or claimed real CDN pass. External Safari/VoiceOver and six naturally scheduled source hours remain separate observation gates. Cite actual filenames and cases rather than generic advice.",
     "paths": [
-      "scripts/data_ping/native_handlekompas.py",
-      "scripts/learning/compass_outcomes.py",
-      "scripts/research/kompas_nowcast_shadow.py",
-      "tests/research/test_kompas_nowcast_shadow.py",
-      "05_CYCLE_NAVIGATOR/README.md"
+      ".github/workflows/cycle-navigator-pages.yml",
+      ".github/workflows/cn-site-v2-gate.yml",
+      "05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs",
+      "05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs",
+      "05_CYCLE_NAVIGATOR/site/premium-v2/QUALITY_AND_RELEASE_GATES.md"
     ]
   },
-  "semantics": "Distinct fifth one-time Terra xhigh P0 producer-DAG scientific falsifier, source pinned to exact original Task2 PR #1814; existing owner budget incremental $15, org $30 cap with $12 reserve and $3/call. One charge per work_id, advisory only, no autonomous writes/merges; previous four work IDs irrevocably consumed."
+  "semantics": "ENDGAME 2.0 phase M1/3, sub-work M1.1/5, unique one-time Terra 6.1 xhigh paid work ID, current original PR #1823 self-head parent-pin; model is advisory and cannot write or merge. Subsequent distinct work IDs ordered: M1.2 official Pages/CDN proof, M1.3 hourly scheduler/host issue, M1.4 recovery state machine, M1.5 six natural hours readback; then M2 API/Task2 and M3 Kompas science. BEFORE each distinct next charge, inspect new run/model receipt, original PR state, source and budget; skip duplicates and stop on external proof gaps. Existing $30 org/$12 reserve/$3 per-run budget; never repeat consumed IDs; no self-execute or trade."
 }
