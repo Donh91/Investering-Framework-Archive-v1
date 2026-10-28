@@ -4,7 +4,7 @@ import copy
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from scripts.cycle_navigator.daily_price_journey import CONTRACT, COPY_CONTRACT, validate_daily_path, validated_public_copy, daily_path_issue_summary
+from scripts.cycle_navigator.daily_price_journey import CONTRACT, COPY_CONTRACT, validate_daily_path, validated_public_copy, daily_path_issue_summary, DAILY_RANGE_CONTRACT, validate_daily_range_plan, daily_range_plan_schema
 from scripts.cycle_navigator.build_public_live_precision import daily_observations
 
 
@@ -109,3 +109,24 @@ def test_llm_public_filter_binds_state_and_calendar_without_action_authority():
 def test_public_filter_rejects_new_actions_numbers_and_internal_jargon(text):
     p = protection_copy(); p['public_explanation']['summary'] = text
     assert validated_public_copy(p, 2026, 41) is None
+
+def test_prospective_daily_range_plan_seven_days_and_fail_closed():
+    freeze, _ = forecast()
+    item = {'status': 'PUBLISHED', 'reason': 'Evidenced research',
+            'points': [{'day': day, 'low': 89.0, 'high': 111.0,
+                        'why': 'Prospective context and observable market inputs',
+                        'invalidate_if': 'Weekly key support fails'} for day in range(1, 8)]}
+    plan = {'contract': DAILY_RANGE_CONTRACT, 'forecast_week': '2026-W41',
+            'BTC': copy.deepcopy(item), 'ETH': copy.deepcopy(item)}
+    assert validate_daily_range_plan(plan, freeze, 2026, 41) == plan
+    assert validate_daily_range_plan(None, freeze, 2026, 40) is None
+    assert daily_range_plan_schema()['properties']['BTC']['properties']['points']['maxItems'] == 7
+    plan['ETH'] = {'status':'UNAVAILABLE','reason':'No safe daily timing','points':[]}
+    assert validate_daily_range_plan(plan, freeze, 2026, 41) == plan
+    plan['BTC']['points'][3]['high'] = 121.0
+    with pytest.raises(ValueError, match='daily_range_outside_frozen_week'):
+        validate_daily_range_plan(plan, freeze, 2026, 41)
+    plan['BTC']['points'][3]['high'] = 111.0
+    plan['BTC']['points'][2]['why'] = ''
+    with pytest.raises(ValueError, match='daily_range_explanation_missing'):
+        validate_daily_range_plan(plan, freeze, 2026, 41)
