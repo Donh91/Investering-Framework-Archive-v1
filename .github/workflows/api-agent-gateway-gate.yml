@@ -55,7 +55,8 @@ jobs:
             tests.api_agent.test_daily_director_conflict_budget \
             tests.api_agent.test_daily_director_workflow_contract \
             tests.api_agent.test_terra_max_endgame_context \
-            tests.api_agent.test_terra_high_p0_once -v
+            tests.api_agent.test_terra_high_p0_once \
+            tests.api_agent.test_endgame_semantic_report -v
       - name: Verify GPT-6.1 Sol owner release and no-repeat paid admission
         run: |
           python -m py_compile scripts/api_agent/research_lab_sol_dispatch.py
@@ -1235,8 +1236,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           WORK_ID: ${{ steps.admit.outputs.work }}
         run: |
-          status="RECEIPT_UNKNOWN_NO_RETRY"
-          if [ -f runtime/endgame-progress/live/receipt.json ]; then
-            status=$(python -c 'import json;print(json.load(open("runtime/endgame-progress/live/receipt.json"))["status"])')
-          fi
-          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Terra xhigh ENDGAME work $WORK_ID: $status. Exact receipt and source snapshot: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . One attempt per work_id, no code/merge claimed; next scope requires material verified progress."
+          set -euo pipefail
+          python scripts/api_agent/endgame_semantic_report.py \
+            --root runtime/endgame-progress \
+            --work-id "$WORK_ID" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            > runtime/endgame-progress/semantic_report.txt
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
+            --body-file runtime/endgame-progress/semantic_report.txt
