@@ -116,3 +116,31 @@
 .price-source-warning{font-size:11px;line-height:1.55;color:#895d27;margin:0 0 9px;padding:8px 12px;border-left:2px solid #c79b58;background:#f7f3ed;border-radius:0 5px 5px 0}
 .price-source-warning[hidden]{display:none!important}
 @media(max-width:520px){.price-source-warning{font-size:10px;padding:7px 9px;margin-bottom:8px}}
+
+
+/* SITE #1578 | Source-first mobile fold calibration.
+ * Keep full official action and 44px controls. Reduce surplus spacing rather
+ * than move/hide the approved B, collapse provenance or alter chart semantics.
+ * The actual Chrome 390 gate requires B to start < 740px from overview top. */
+@media (max-width:520px) {
+ #view-overview > .hero {
+   padding-top: 16px;
+   padding-bottom: 15px;
+   gap: 14px;
+ }
+ #view-overview > .decision {
+   margin-bottom: 9px;
+ }
+ #view-overview > .decision article {
+   padding-top: 14px;
+   padding-bottom: 14px;
+   min-height: 130px;
+ }
+ #view-overview > .section:first-of-type {
+   margin-top: 12px;
+   padding-top: 13px;
+ }
+ #view-overview > .section:first-of-type .section-heading {
+   margin-bottom: 10px;
+ }
+}
