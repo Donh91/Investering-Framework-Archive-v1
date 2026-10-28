@@ -116,13 +116,18 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
             if not (issued < selected <= matured and
                     abs((selected - target).total_seconds()) <= 3600):
                 raise ValueError("TARGET_OBSERVATION_OUTSIDE_SCORER_TOLERANCE")
-            if not (issued <= first < target <= matured):
+            # Strict as-issued research eligibility: an independently first-known
+            # forecast receipt AFTER the declared issuance cannot prove the
+            # direction existed at issuance, even if only seconds later.
+            if first > issued:
+                raise ValueError("FORECAST_FIRST_KNOWN_AFTER_ISSUANCE")
+            if not (issued < target <= matured):
                 raise ValueError("NONPROSPECTIVE_ISSUER_TARGET_OR_OUTCOME")
-            # A post-hoc issuer receipt hours after issue time is not an as-issued
-            # forecast, even when it predates the 12h outcome. Permit only a
-            # bounded five-minute publication/collection delay in SHADOW.
-            if first > issued + timedelta(minutes=5):
-                raise ValueError("FORECAST_FIRST_KNOWN_TOO_LATE_FOR_ISSUANCE")
+            # The canonical scorer anchors to the hourly close. An original
+            # source packet first known before that close cannot attest to a
+            # completed reference candle; no future-bar proxy admission.
+            if source_first < reference:
+                raise ValueError("SOURCE_FIRST_KNOWN_BEFORE_SCORER_REFERENCE_CLOSE")
             # A caller-labelled prior-hour comparator must be adjacent to the
             # original scorer reference, not an arbitrarily stale candle.
             if not (reference - timedelta(hours=1) <= prior_end <= reference):
@@ -131,7 +136,12 @@ def compare_shadow_12h(attempts: list[Mapping[str, object]]) -> dict:
                 or outcome.get("issued_at_utc") != forecast["issued_at_utc"]
                 or outcome.get("compass_sha256") != forecast.get("compass_sha256")):
                 raise ValueError("FORECAST_OUTCOME_CUSTODY_UNBOUND")
-            source_sha = forecast.get("source_packet_sha256")
+            # Actual OFFICIAL_DAILY_COMPASS_v1 producer stores this binding
+            # under source_bindings.auto_market_state, NOT at forecast top level.
+            # The synthetic fixture must match that real producer contract.
+            bindings = forecast.get("source_bindings")
+            auto_binding = bindings.get("auto_market_state") if isinstance(bindings, Mapping) else None
+            source_sha = auto_binding.get("packet_sha256") if isinstance(auto_binding, Mapping) else None
             if not isinstance(source_sha, str) or re.fullmatch(r"[a-f0-9]{64}", source_sha) is None:
                 raise ValueError("FORECAST_SOURCE_PACKET_SHA_UNBOUND")
             # Never use an externally supplied source_event_id as the cluster
