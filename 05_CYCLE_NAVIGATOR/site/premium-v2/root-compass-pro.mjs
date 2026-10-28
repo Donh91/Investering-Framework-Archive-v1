@@ -211,6 +211,11 @@ function paint(){
  }
  const proNav=document.querySelector('[data-premium-nav="compass"]');
  if(proNav)proNav.textContent=lang==='en'?'Compass PRO':'Kompas PRO';
+ const heading=$('pro-heading');if(heading)heading.textContent=lang==='en'?'Compass PRO':'Kompas PRO';
+ const intro=$('compass-pro')?.querySelector('.cn-pro-intro > p');
+ if(intro)intro.textContent=lang==='en'?
+  'Action, observed market direction and risk are separate. Only eligible official source decisions are current.':
+  'Handling, observeret retning og risiko vises hver for sig. Kun gyldige officielle kildebeslutninger er aktuelle.';
  // Only neutral presentation labels; all action, SELL, risk, state, price and
  // source-provenance labels remain produced by existing PRO/source modules.
  const copy=lang==='en'?{
