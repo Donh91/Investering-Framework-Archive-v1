@@ -35,11 +35,11 @@ function textLabels(){
  const labels={
   da:{card:'Weekly Outlook · B',desc:'Oprindelige prisintervaller og verificerede timekurser. Dagsprognoser vises kun, hvis de blev udstedt før udfaldet.',
     actual:'Faktiske timeslukkepriser · kun kildeverificerede',missing:'Original blå dagsprognose er ikke udstedt',
-    forecast:'Udstedt dagsprognose',observed:'Observeret timekurs',bounds:'Frosset prisinterval',
+    forecast:'Udstedt dagsprognose',observed:'Observeret timekurs',bounds:'Mandagens intraday-prognose · 1–2 / 3–4 / 5–7 dage',
     title:'Spol gennem ugen',mon:'Mandag',sun:'Søndag'},
   en:{card:'Weekly Outlook · B',desc:'Original price ranges and verified hourly closes. A daily forecast appears only when issued before the outcome.',
     actual:'Observed hourly closes · source verified only',missing:'Original blue daily forecast not issued',
-    forecast:'Issued daily forecast',observed:'Observed hourly close',bounds:'Frozen price range',
+    forecast:'Issued daily forecast',observed:'Observed hourly close',bounds:'Monday intraday forecast · days 1–2 / 3–4 / 5–7',
     title:'Explore the week',mon:'Monday',sun:'Sunday'}
  }[language];
  // Preserve the ORIGINAL AppDeploy "B" accent badge, not flattened text.
@@ -86,7 +86,7 @@ function textLabels(){
   ['[data-t="cardEyebrow"]',t('FROSSET PRISINTERVAL / OBSERVERET KURS','FROZEN PRICE RANGE / OBSERVED PRICE')],
   ['[data-t="freeze"]',model?.forecast_status==='SOURCE_ISSUED'?
    t('Original kildeudstedt prognose','Original source-issued forecast'):
-   t('Original prognose · afventer kilde','Original forecast · source pending')],
+   t('Tre frosne prognosevinduer · ingen daglig forventet slutkurs','Three frozen forecast windows · no daily expected close')],
   ['.dev-brand span',officialHome?t('CYCLE NAVIGATOR · OFFICIEL','CYCLE NAVIGATOR · OFFICIAL'):
    document.querySelector('.premium-entry')?
    t('PREMIUM v2.1 · IKKE OFFICIEL FORSIDE','PREMIUM v2.1 · NOT OFFICIAL HOMEPAGE'):
@@ -215,15 +215,15 @@ function plot(){
  set('timeline-label',utc(cursor));
  const st=model.forecast_status==='SOURCE_ISSUED'?
   t('BLÅ KURVE FRA ORIGINAL KILDE','BLUE CURVE FROM ORIGINAL SOURCE'):
-  t('INGEN ORIGINAL DAGLIG PROGNOSE · KUN KILDEINTERVALLER','NO ORIGINAL DAILY FORECAST · SOURCE RANGES ONLY');
+  t('MANDAGENS 3 PROGNOSEVINDUER · INGEN DAGLIG KURSLINJE','MONDAY’S 3 FORECAST WINDOWS · NO DAILY PRICE PATH');
  set('source-state',st);
  const stale=model.live_freshness==='STALE';
  set('feed-status',(stale?t('FORÆLDEDE OBSERVATIONER · IKKE AKTUEL KURS. ','STALE OBSERVATIONS · NOT CURRENT PRICE. '):'')+
  t('Kilde: offentlig CN '+model.forecast_week+' · #'+model.public_issue_number,
  'Source: public CN '+model.forecast_week+' · #'+model.public_issue_number)+
  ' · '+t('senest målt','last observed')+' '+(model.last_observed_at_utc||'—'));
- set('chart-title',t('Frossen kildeprognose mod faktisk kurs','Original forecast versus observed price'));
- set('chart-description',t('Kun verificerede timeslukkepriser; manglende timer er afbrudt. Blå dagsprognose vises kun, hvis den findes som originalt udstedte punkter.',
+ set('chart-title',t('Mandagens intraday-intervaller mod faktisk kurs','Monday intraday forecast ranges versus observed price'));
+ set('chart-description',t('Mandagens tre originale prognoseintervaller vises for dag 1–2, 3–4 og 5–7. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
  'Verified hourly prices only; missing hours break the path. Blue daily forecasts require original published points.'));
  document.querySelectorAll('[data-asset]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.asset===asset)));
 }
