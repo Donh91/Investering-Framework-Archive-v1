@@ -17,7 +17,7 @@ export function riskStageLabel(stage,lang='da'){
 }
 const TXT={
  da:{
-  unavailable:'UTILGÆNGELIG',action:'Handling nu',direction:'0–12t · observeret retning',bull:'Bull',bear:'Bear',
+  unavailable:'UTILGÆNGELIG',action:'Handling nu',direction:'Aktuelt momentum · ikke prognose',bull:'Bull',bear:'Bear',
   balance:'Officiel evidensbalance, ikke sandsynlighed eller handelssignal',
   risk:'Pullback · officiel risikoklasse',severity:'Trin i fem kategorier, ikke procent eller sandsynlighed',
   sell:'SELL / TRIM',distribution:'Distribution',window:'Muligt kildevindue',quality:'Evidenskvalitet',
@@ -25,7 +25,7 @@ const TXT={
   noSell:'Pullback er ikke en selvstændig salgstilladelse',
   holder:'HODL / beskyttelse',active:'Aktiv / swing',micro:'Micro / meme',
   holderNote:'Følg officiel SELL-vurdering, distribution og pullback. En watch-status er ikke automatisk exit.',
-  activeNote:'Adskil 0–12 timers observeret retning fra officiel handling. Kontrollér kildevindue og ugyldiggørelse før positionering.',
+  activeNote:'Adskil aktuelt momentum fra officiel handling. Kontrollér kildevindue og ugyldiggørelse før positionering.',
   microNote:'Høj beta kræver særskilt aktivering. Microcaps kan aldrig give MEMES en handelstilladelse; afvent egne kildesignalers status.',
   info:'Visningsfokus ændrer kun forklaring, ikke signal, risikomodel eller kilde.',
   pathNow:'Aktuelt checkpoint',pathNext:'Næste bekræftelse',pathWatch:'Altseason-watch',
@@ -54,7 +54,7 @@ const TXT={
   proofPrompt:'Uafhængig kildeaudit af Cycle Navigator: Åbn følgende OFFENTLIGE arkiver. Læs README, v2/scorebook-index.json og latest_readback. For hver påstand: hent ORIGINAL prognose ved præcist source_commit, kontroller offentlig CN-identitet, forecast_week, offentliggørelsestid før outcome, byte-eksakt SHA-256, gældende 70/30-metode, 168-timers dækning og seks frosne BTC/ETH-vinduer. Skeln Price Range-præcision fra Direction/Flow/Rotation og Pullback Edge, som kan være ABSTAIN/PENDING. Kontroller censur, fejl, datamangler og baseline. Kræv uafhængigt verificeret timestamp og immutable release før VERIFIED. Rapporter PASS/FAIL/UNVERIFIED med konkrete kilde-URL\'er; gæt aldrig manglende data.'
  },
  en:{
-  unavailable:'UNAVAILABLE',action:'Official action now',direction:'0–12h · observed direction',bull:'Bull',bear:'Bear',
+  unavailable:'UNAVAILABLE',action:'Official action now',direction:'Current momentum · not a forecast',bull:'Bull',bear:'Bear',
   balance:'Official evidence balance, not probability or trading permission',
   risk:'Pullback · official risk class',severity:'Five ordinal categories, not a percent or event probability',
   sell:'SELL / TRIM',distribution:'Distribution',window:'Possible source window',quality:'Evidence quality',
@@ -62,7 +62,7 @@ const TXT={
   noSell:'A pullback watch never independently authorizes selling',
   holder:'HODL / protect',active:'Active / swing',micro:'Micro / meme',
   holderNote:'Watch the official sell assessment, distribution and pullback. Watch status does not automatically mean exit.',
-  activeNote:'Separate observed 0–12h direction from official action. Verify the source window and invalidation before positioning.',
+  activeNote:'Separate current momentum from official action. Verify the source window and invalidation before positioning.',
   microNote:'High beta needs its own confirmation. Microcap status never authorizes MEMES; await dedicated source confirmation.',
   info:'This lens changes presentation only, never action, source authority or risk classification.',
   pathNow:'Current checkpoint',pathNext:'Next confirmation',pathWatch:'Altseason watch',
@@ -128,7 +128,7 @@ export function decisionModel(view,official,lang='da'){
    RISK.indexOf(risk.sourceRiskState):-1;
  return {
   eligible:!!current,action:safe(view?.compass?.action_now)&&current?view.compass.action_now:t.unavailable,
-  direction:current?(safe(current.horizons?.NEXT_12H?.expected_direction)||t.unavailable):t.unavailable,
+  direction:current?(safe(current.market_now?.directional_state)||t.unavailable):t.unavailable,
   bull:bb?.bull??null,bear:bb?.bear??null,bias:bb?.bias??t.unavailable,
   riskIndex,riskState:riskIndex<0?t.unavailable:risk.sourceRiskState,
   riskLabel:riskIndex<0?t.unavailable:risk.stageLabel,

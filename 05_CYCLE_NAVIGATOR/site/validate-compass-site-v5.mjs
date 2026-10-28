@@ -1,4 +1,5 @@
 import './tests/full-stack-readback.test.mjs';
+import './tests/nowcast-disclosure.test.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
@@ -142,7 +143,7 @@ if(!premiumHome.includes('<base href="./vnext/">')||!premiumHome.includes('PREMI
  throw Error('Premium canonical homepage shell not activated');
 if(!premiumHome.includes('src="./app.mjs"')||premiumHome.includes('src="./public-product.js"')||premiumHome.includes('src="./compass-product-v5.js"'))
  throw Error('Premium homepage contaminated by legacy renderer');
-for(const token of ['MARKET COMPASS','NEXT 12 HOURS','NEXT 1–3 DAYS','NEXT 5–7 DAYS','ALTCOIN ACTION · OFFICIAL COMPASS','Bitcoin → memes','CURRENT POSITION','NEXT IF CONFIRMED','NEXT WINDOW','Time horizon: now → 5–7 days.','ROTATION POSITION','EXPECTED WINDOW','08:17 / 20:17 CPH','nextCompassAt','MARKET MOVE DETECTED','Compass reassessment in progress','NEXT SCHEDULED COMPASS','event refresh can publish earlier','PROTECTION & RE-ENTRY','PULLBACK RISK','RE-ENTRY','portfolio actions stay private','MARKET WEATHER · LIVE COMPASS','Directional pressure','1–3 DAYS','5–7 DAYS','2–3 WEEKS','Evidence balance · not probability','AWAITING COMPASS']) if(!renderer.includes(token)) throw Error(`renderer missing ${token}`);
+for(const token of ['MARKET COMPASS','CURRENT MOMENTUM','NEXT 1–3 DAYS','NEXT 5–7 DAYS','ALTCOIN ACTION · OFFICIAL COMPASS','Bitcoin → memes','CURRENT POSITION','NEXT IF CONFIRMED','NEXT WINDOW','Time horizon: now → 5–7 days.','ROTATION POSITION','EXPECTED WINDOW','Scheduled slots are targets, not guaranteed publication times.','MARKET MOVE DETECTED','Compass reassessment in progress','COMPASS UPDATES','Current-state proxy, not a validated 12-hour forecast.','PROTECTION & RE-ENTRY','PULLBACK RISK','RE-ENTRY','portfolio actions stay private','MARKET WEATHER · LIVE COMPASS','Directional pressure','1–3 DAYS','5–7 DAYS','2–3 WEEKS','Evidence balance · not probability','AWAITING COMPASS']) if(!renderer.includes(token)) throw Error(`renderer missing ${token}`);
 if(/HANDLEKOMPAS|MASTER MONDAY/.test(renderer)) throw Error('internal product language leaked');
 if(/source_bindings|evidence_snapshot/.test(JSON.stringify(compass))) throw Error('private Compass evidence leaked');
 const protectionText=JSON.stringify(compass.protection_tracker||{});
