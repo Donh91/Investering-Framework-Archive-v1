@@ -416,6 +416,23 @@ try{
    assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
    assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
    assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
+   // DESIGN GATE: real rendered Chrome pixels of the EXACT staged root.
+   // Read via GitHub CI logs before merge; no invented visual QA receipt.
+   if(process.env.GITHUB_EVENT_NAME==='pull_request'){
+    const position=await evaluate(()=>{
+     const box=document.querySelector('#variant-panel');
+     if(!box)return false;
+     box.scrollIntoView({block:'start',behavior:'instant'});
+     return true;
+    });
+    assert.equal(position,true,'VISUAL_QA_CHART_NOT_FOUND');
+    await delay(150);
+    const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    assert.ok(shot.data?.length>1000,'VISUAL_QA_SCREENSHOT_MISSING');
+    console.log('CN_DESIGN_SCREENSHOT_'+width+'_BEGIN');
+    for(const chunk of shot.data.match(/.{1,8000}/g))console.log('CN_DESIGN_SCREENSHOT_'+width+'_PART '+chunk);
+    console.log('CN_DESIGN_SCREENSHOT_'+width+'_END');
+   }
    // Live negative control on the RELEASED root, not only the /next pilot.
    // Deliberately break BOTH public feed requests after initial boot. A stale
    // cached BUY/SELL or next-gate must never survive a failed refresh.
