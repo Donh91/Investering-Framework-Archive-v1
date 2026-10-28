@@ -144,3 +144,41 @@
    margin-bottom: 10px;
  }
 }
+
+
+/* SITE #1578 mobile-first refinement after actual Chrome graph quick-access
+ * threshold failure. Fewer empty vertical pixels; original B and source state
+ * unchanged. Keep controls at 44px and retain explicit official action text. */
+@media (max-width:520px) {
+ #view-overview > .hero {
+   padding: 13px 17px 12px;
+   gap: 9px;
+   margin-bottom: 8px;
+ }
+ #view-overview > .hero h1 {font-size: 37px;line-height: 1.04;}
+ #view-overview > .hero .intro {
+   font-size: 12px;
+   line-height: 1.48;
+   margin-top: 8px;
+ }
+ #view-overview > .hero .hero-indicator {
+   padding: 10px 14px;
+   min-height: 0;
+ }
+ #view-overview > .hero .hero-indicator .hero-value {
+   font-size: clamp(20px, 5.6vw, 23px);
+   line-height: 1.16;
+   margin: 6px 0 3px;
+ }
+ #view-overview > .decision article {
+   min-height: 0;
+   padding: 12px 13px;
+ }
+ #view-overview > .section:first-of-type {
+   margin-top: 9px;
+   padding-top: 10px;
+ }
+ #view-overview > .section:first-of-type .section-heading {
+   margin-bottom: 7px;
+ }
+}
