@@ -3,11 +3,20 @@
  * Actual positive 390/430 assertions still run with the real browser.
  */
 import assert from 'node:assert/strict';
+import {assertExactMobileViewport} from './viewport-metrics.mjs';
 import {spawnSync} from 'node:child_process';
 import {mkdtempSync,writeFileSync,chmodSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
+// Browser-independent contract tests: a wrong height must fail even if
+// Chrome reports the correct 390/430 width. Do not weaken the real CDP gate.
+for (const [width,height] of [[390,844],[430,932]]) {
+ const observed={width,height,documentClientWidth:width,documentScrollWidth:width};
+ assert.doesNotThrow(()=>assertExactMobileViewport(observed,width,height));
+ assert.throws(()=>assertExactMobileViewport({...observed,width:614},width,height),/Wrong CDP viewport width/);
+ assert.throws(()=>assertExactMobileViewport({...observed,height:height-100},width,height),/Wrong CDP viewport height/);
+}
 const root=mkdtempSync(join(tmpdir(),'cn-chrome-negative-'));
 try {
  const fake=join(root,'mock-chrome');
@@ -24,7 +33,7 @@ try {
  assert.match(run.stderr,/"attempt":2/);
  assert.match(run.stderr,/SIMULATED_BOOT_FAILURE/);
  assert.match(run.stderr,/"exitCode":71/);
- console.log('PASS Chrome dual-failure fails closed with bounded stderr and no false release');
+ console.log('PASS Chrome dual-failure and 390/430 height/width mutation-negative checks fail closed');
 } finally {
  rmSync(root,{recursive:true,force:true});
 }
