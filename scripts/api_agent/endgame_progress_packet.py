@@ -52,25 +52,31 @@ def original_pr_head_admitted(work: dict, observed_head: str) -> bool:
     heads, different checkouts, and changes to other owning PRs.
     """
     expected = str(work["expected_pr_head"])
+    if int(work["owner_pr"]) != 1823:
+        return observed_head == expected
+    # Self-PR must ALWAYS bind the observed PR head to the actual executing
+    # checkout, including when the expected SHA happens to match directly.
+    checkout_head = git("rev-parse", "HEAD").decode().strip()
+    if observed_head != checkout_head:
+        return False
     if observed_head == expected:
         return True
-    if int(work["owner_pr"]) != 1823:
-        return False
-    checkout_head = git("rev-parse", "HEAD").decode().strip()
     parent_head = git("rev-parse", "HEAD^").decode().strip()
-    return observed_head == checkout_head and expected == parent_head
+    return expected == parent_head
 
 
 def build(output: Path, queue: Path = QUEUE) -> dict:
     work = manifest(json.loads((ROOT / queue).read_text()))
     main = git("rev-parse", "refs/remotes/origin/main").decode().strip()
     evidence = []
+    branch_snapshots = []
     for path in work["paths"]:
         try:
             raw = git("show", f"{main}:{path}")
             if len(raw) > MAX_SOURCE_BYTES:
                 raise ValueError("SOURCE_TOO_LARGE:" + path)
-            evidence.append({"path": path, "sha256": hashlib.sha256(raw).hexdigest(),
+            evidence.append({"path": path, "source_ref": "PINNED_MAIN:" + main,
+                             "sha256": hashlib.sha256(raw).hexdigest(),
                              "bytes": len(raw), "excerpt": raw.decode("utf-8", "strict")})
         except subprocess.CalledProcessError:
             # A NEW file may legitimately exist only on the exact original
@@ -90,6 +96,10 @@ def build(output: Path, queue: Path = QUEUE) -> dict:
                 and f.get("patch") is not None for f in changes
             ):
                 raise ValueError("SOURCE_UNAVAILABLE:" + path)
+            branch_snapshots.append((
+                pr_head, str(pr_source["base"]["sha"]),
+                hashlib.sha256(json.dumps(changes, sort_keys=True).encode()).hexdigest()
+            ))
             try:
                 raw = git("show", f"{pr_head}:{path}")
             except subprocess.CalledProcessError:
@@ -112,6 +122,34 @@ def build(output: Path, queue: Path = QUEUE) -> dict:
         ["gh", "api", f"repos/{repo}/pulls/{work['owner_pr']}/files?per_page=100"], timeout=20))
     if len(changed) >= 100 or any(f.get("patch") is None for f in changed):
         raise ValueError("PR_DIFF_INCOMPLETE")
+    final_snapshot = (
+        original_head, str(pr["base"]["sha"]),
+        hashlib.sha256(json.dumps(changed, sort_keys=True).encode()).hexdigest()
+    )
+    if any(snapshot != final_snapshot for snapshot in branch_snapshots):
+        raise ValueError("PR_SNAPSHOT_MOVED_DURING_CAPTURE")
+    changed_by_path = {f["filename"]: f for f in changed}
+    for source in evidence:
+        item = changed_by_path.get(source["path"])
+        if not item:
+            continue
+        if item.get("status") == "removed":
+            source["pr_head_source_status"] = "REMOVED"
+            source["pr_head_sha256"] = None
+            continue
+        if source["source_ref"].startswith("PINNED_PR_ADDED:"):
+            source["pr_head_sha256"] = source["sha256"]
+            source["pr_head_source_status"] = "ADDED"
+            continue
+        try:
+            head_bytes = git("show", f"{original_head}:{source['path']}")
+        except subprocess.CalledProcessError:
+            raise ValueError("PR_HEAD_SOURCE_BLOB_MISSING:" + source["path"]) from None
+        if len(head_bytes) > MAX_SOURCE_BYTES:
+            raise ValueError("PR_HEAD_SOURCE_TOO_LARGE:" + source["path"])
+        source["pr_head_sha256"] = hashlib.sha256(head_bytes).hexdigest()
+        source["pr_head_bytes"] = len(head_bytes)
+        source["pr_head_source_status"] = str(item.get("status") or "UNKNOWN")
     pr_evidence = {"number": work["owner_pr"],"head_sha":original_head,
                    "head_branch":pr["head"]["ref"],"base_sha":pr["base"]["sha"],
                    "draft":pr["draft"],"files":[{"path":f["filename"],
