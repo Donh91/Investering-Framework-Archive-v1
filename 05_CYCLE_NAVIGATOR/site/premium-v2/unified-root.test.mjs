@@ -91,8 +91,8 @@ test('PRO inventory is maintained without duplicate legacy presentation',()=>{
  const html=buildUnifiedRootHtml(original,pro);
  const section=pro.slice(pro.indexOf('<section id="view-compass"'),
    pro.indexOf('<section id="view-path"'));
- const expected=[...section.matchAll(/\\bid="([^"]+)"/g)].map(x=>x[1]);
- const present=new Set([...html.matchAll(/\\bid="([^"]+)"/g)].map(x=>x[1]));
+ const expected=[...section.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
+ const present=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]));
  const allowedOmissions=new Set([
   // vNext tab/page containers are deliberately not repeated in the single page.
   'view-compass','compass-title',
