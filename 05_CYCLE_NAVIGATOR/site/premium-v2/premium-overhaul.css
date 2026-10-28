@@ -619,3 +619,147 @@
 @media (prefers-reduced-motion: reduce) {
   .premium-next .premium-entry-navigation a { transition: none; }
 }
+
+
+/* SITE #1578 · Single-Compass / original-B isolated design candidate.
+ * All new rules apply only when the unified preview includes #compass-pro.
+ * Do not restyle or change SVG geometry of the source-ported Graph B.
+ */
+.premium-next:has(#compass-pro) {
+  --pro-ink: #07172f;
+  --pro-accent: #2f6fda;
+}
+.premium-next #compass-pro {
+  margin: 0 0 clamp(22px, 3vw, 34px);
+  padding: clamp(18px, 3.2vw, 34px);
+  background: #fff;
+  border: 1px solid #dbe4ee;
+  border-radius: 22px;
+  box-shadow: 0 14px 46px #0b264009;
+}
+.premium-next .cn-pro-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 19px;
+}
+.premium-next .cn-pro-intro h2 {
+  font-size: clamp(27px, 3.5vw, 40px);
+  letter-spacing: -.055em;
+  line-height: 1.1;
+  color: #07172f;
+  margin: 0;
+}
+.premium-next .cn-pro-intro p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #5b7188;
+  max-width: 68ch;
+  margin: 0;
+}
+.premium-next #compass-pro .product-first {
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+.premium-next #compass-pro .product-decision {
+  margin: 0 0 12px;
+}
+.premium-next #compass-pro .product-cell {
+  min-width: 0;
+}
+.premium-next #compass-pro #premium-now-action,
+.premium-next #compass-pro #premium-now-direction,
+.premium-next #compass-pro #pro-risk-stage,
+.premium-next #compass-pro #pro-price-btc,
+.premium-next #compass-pro #pro-price-eth {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.premium-next .cn-pro-source,
+.premium-next .cn-pro-next-gate {
+  font-size: 12px;
+  color: #506985;
+  line-height: 1.58;
+}
+.premium-next .cn-pro-source {
+  padding: 11px 14px;
+  margin: 0 0 14px;
+  background: #f4f7fb;
+  border: 1px solid #e3ebf3;
+  border-radius: 9px;
+}
+.premium-next #compass-pro[data-source-current=false] .cn-pro-source {
+  color: #80552d;
+  border-color: #efddc5;
+  background: #fff9f1;
+}
+.premium-next #compass-pro[data-weekly-health=DEGRADED] .cn-pro-source {
+  border-left: 3px solid #c38f4e;
+}
+.premium-next .cn-pro-next-gate {
+  border-top: 1px solid #e1e8ef;
+  margin: 15px 0 0;
+  padding-top: 13px;
+  font-weight: 590;
+}
+.premium-next .cn-pro-more {
+  margin-top: 12px;
+  border: 1px solid #e0e7f0;
+  border-radius: 12px;
+  padding: 0 16px;
+}
+.premium-next .cn-pro-more > summary {
+  list-style: none;
+  position: relative;
+  display: block;
+  min-height: 48px;
+  padding: 15px 26px 15px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #183d66;
+  cursor: pointer;
+}
+.premium-next .cn-pro-more > summary::-webkit-details-marker {display: none;}
+.premium-next .cn-pro-more > summary::after {
+  content: '+';
+  position: absolute;
+  top: 11px;
+  right: 0;
+  font-size: 20px;
+  font-weight: 400;
+}
+.premium-next .cn-pro-more[open] > summary::after {content: '−';}
+.premium-next .cn-pro-more > summary:focus-visible {
+  outline: 2px solid #2f6fda;
+  outline-offset: 3px;
+}
+.premium-next .cn-pro-more[open] > summary {
+  border-bottom: 1px solid #e1e8f0;
+  margin-bottom: 18px;
+}
+.premium-next #official-path-view {
+  margin-top: 26px;
+  border-top: 1px solid #dce5ee;
+  padding-top: clamp(20px, 4vw, 45px);
+}
+.premium-next #official-path-view .page-head h1 {
+  font-size: clamp(27px, 3vw, 42px);
+  color: #07172f;
+  letter-spacing: -.045em;
+}
+@media(max-width:430px) {
+  .premium-next #compass-pro {padding: 15px; border-radius: 16px;}
+  .premium-next .cn-pro-intro h2 {font-size: 30px;}
+  .premium-next .cn-pro-intro p {font-size: 13px;}
+  .premium-next .cn-pro-more {padding: 0 11px;}
+  .premium-next .cn-pro-source {padding: 10px 11px;}
+}
+@media(prefers-reduced-motion: reduce) {
+  .premium-next #compass-pro, .premium-next #compass-pro * {
+    scroll-behavior: auto;
+  }
+}
