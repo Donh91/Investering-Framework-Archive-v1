@@ -11,7 +11,7 @@ import {fileURLToPath} from 'node:url';
 const project=resolve(fileURLToPath(new URL('.',import.meta.url)));
 const base='/Investering-Framework-Archive-v1/next/';
 const host='https://donh91.github.io';
-const mandatory=['index.html','graph-b/source-graph-b.html'];
+const mandatory=['index.html','unified.html','graph-b/source-graph-b.html'];
 
 export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
  const root=resolve(dist),inventory=[],errors=[];
@@ -38,11 +38,9 @@ export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
  const files=new Set(inventory.map(x=>x.path));
  for(const path of mandatory)if(!files.has(path))errors.push('MISSING_ENTRY:'+path);
  const pages={};
- // The isolated unified candidate is optional in prior fixtures, mandatory
- // once emitted by the current multi-page build. It may never be promoted by
- // this verification step, but its source graph/PRO integrity is audited.
- const pagesToCheck=[...mandatory,...(files.has('unified.html')?['unified.html']:[])];
- for(const path of pagesToCheck){
+ // All three preview entries are explicit build outputs. If unified is missing,
+ // staging fails instead of silently shipping the old duplicate Compass layout.
+ for(const path of mandatory){
   if(!files.has(path))continue;
   const html=await readFile(resolve(root,path),'utf8');
   pages[path]=html.length;
