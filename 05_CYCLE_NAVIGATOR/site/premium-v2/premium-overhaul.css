@@ -1442,3 +1442,19 @@
  .premium-next #variant-panel .cn-frozen-window-ledger{gap:5px}
  .premium-next #variant-panel .cn-frozen-window strong{font-size:10.5px!important}
 }
+
+
+/* Mobile intrinsic sizing guard for the existing Lightweight Charts fallback.
+ * Chart canvases must not expand the viewport before ResizeObserver settles. */
+@media(max-width:760px){
+ .premium-next #view-overview,
+ .premium-next #view-overview .chart-area,
+ .premium-next #view-overview #official-path-chart,
+ .premium-next #view-overview .fw-canvas{
+   min-width:0!important;max-width:100%!important;box-sizing:border-box;
+ }
+ .premium-next #view-overview .fw-canvas{
+   contain:inline-size;
+   overflow:hidden!important;
+ }
+}
