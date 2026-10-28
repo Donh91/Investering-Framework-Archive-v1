@@ -16,15 +16,15 @@ const substitutions=[
 const navigation=[
  '<div class="premium-entry">',
  '<div class="premium-entry-intro"><span class="premium-entry-overline">CYCLE NAVIGATOR / NEXT</span>',
- '<h1 data-premium-copy="title">Prognose møder virkelighed.</h1>',
- '<p data-premium-copy="intro">Original prognose mod faktisk udvikling, uge for uge.</p></div>',
+ '<h1 data-premium-copy="title">Ugens prognose. Faktiske kurser.</h1>',
+ '<p data-premium-copy="intro">Frosne prisintervaller mod verificerede timesluk. Ingen blå dagsprognose uden forudgående udstedelse.</p></div>',
  '<p class="premium-entry-disclaimer" data-premium-copy="disclaimer">Forhåndsvisning · Kildebaseret, uden demonstrationskurser.</p>',
  '</div>'
 ].join('\n');
 const navigationAfterGraph=[
  '<nav class="premium-entry-navigation" aria-label="Premium sektioner">',
- '<a href="#variant-panel" data-premium-nav="graph">Graf B</a>',
- '<a href="#proof-explorer" data-premium-nav="proof">Proof</a>',
+ '<a href="#variant-panel" data-premium-nav="graph">Ugens graf</a>',
+ '<a href="#proof-explorer" data-premium-nav="proof">Resultat og metode</a>',
  '<a href="#official-product-pilot" data-premium-nav="compass">Kompas</a>',
  '<a href="/Investering-Framework-Archive-v1/vnext/#compass" class="premium-entry-pro" data-premium-nav="pro" aria-label="Kompas PRO, udvidet officiel kildevisning i separat preview">Kompas PRO ↗</a>',
  '<a href="#official-pilot-path" data-premium-nav="path">PATH</a>',

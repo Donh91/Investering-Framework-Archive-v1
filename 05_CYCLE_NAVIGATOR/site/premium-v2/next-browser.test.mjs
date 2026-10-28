@@ -128,7 +128,7 @@ try{
  for(const width of [390,430,1440,320]){
   await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:width===430?932:width===320?700:1000,
    deviceScaleFactor:1,mobile:width<600});
-  await send('Page.navigate',{url:origin+(rootMode?'':'next/')});
+  await send('Page.navigate',{url:origin+'next/'});
   let ready=false;
   for(let attempt=0;attempt<100;attempt++){
    await delay(100);
@@ -238,12 +238,8 @@ try{
     (report.horizonsPresent&&report.pathStageCount===10),
    'NEXT_HORIZON_SOURCE_OR_PATH_COUNT_MISMATCH');
   assert.ok(selection.ethSelected&&selection.pair==='ETH / USD','NEXT_BTC_ETH_NOT_INTERACTIVE');
-  assert.ok(report.rootPath.endsWith(rootMode?base:base+'next/'),'NEXT_WRONG_BASEPATH');
-  if(rootMode){
-   assert.ok(report.officialHome&&!report.noindex,'ROOT_NOT_OFFICIAL_OR_NOINDEX');
-   assert.equal(report.priorLink,'./vnext/','ROOT_PRIOR_VERSION_LINK');
-   assert.deepEqual(report.dataLinks,['./data/latest.json','./data/compass.json'],'ROOT_DATA_LINKS');
-  }
+  assert.ok(report.rootPath.endsWith(base+'next/'),'NEXT_WRONG_BASEPATH');
+  // Current NEXT pilot is retained for source/rollback coverage; root audited below.
   assert.equal(errors.length,0,'NEXT_BROWSER_JS_EXCEPTIONS:'+JSON.stringify(errors));
   assert.equal(responses.length,0,'NEXT_BROWSER_FAILED_ASSETS:'+JSON.stringify(responses));
   results.push({width,overflow:report.overflow,originalB:true,logo:true,
@@ -293,8 +289,155 @@ try{
  assert.ok(nested,'NEXT_NESTED_B_ENTRY_NOT_AVAILABLE');
  assert.deepEqual(responses,[],'NEXT_NESTED_ASSET_MISSING');
  assert.deepEqual(errors,[],'NEXT_NESTED_RUNTIME_EXCEPTION');
+
+ // The third built page must load its REAL bundled PRO/Graph B source modules.
+ // A static HTML string test alone cannot detect missing JS/CSS or broken events.
+ const unified=[];
+ for(const width of [390,430]){
+  await send('Emulation.setDeviceMetricsOverride',{
+    width,height:width===390?844:932,deviceScaleFactor:1,mobile:true});
+  await send('Page.navigate',{url:origin+'next/unified.html'});
+  let ready=false;
+  for(let attempt=0;attempt<100;attempt++){
+   await delay(100);
+   ready=await evaluate(()=>document.readyState==='complete'&&
+     !!document.getElementById('compass-pro')&&!!document.getElementById('chart')&&
+     (document.getElementById('pro-source-status')?.textContent||'')!==
+       'Kontrollerer officiel kilde og gyldighed…');
+   if(ready)break;
+  }
+  assert.ok(ready,'UNIFIED_MODULE_BOOT_MISSING:'+width);
+  const measured=await evaluate(()=>{
+   const id=x=>document.querySelectorAll('[id="'+x+'"]').length;
+   const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);
+   const pro=document.getElementById('compass-pro'),graph=document.getElementById('variant-panel');
+   const source=document.getElementById('pro-source-status')?.textContent||'';
+   const nav=document.querySelector('.premium-entry-navigation');
+   document.querySelector('[data-lang="en"]')?.click();
+   const english=document.getElementById('pro-heading')?.textContent;
+   document.querySelector('[data-lang="da"]')?.click();
+   const danish=document.getElementById('pro-heading')?.textContent;
+   document.querySelector('[data-investor-lens="micro"]')?.click();
+   return {
+    width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+    source,english,danish,
+    micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
+    uniqueIds:new Set(ids).size===ids.length,
+    singleton:['chart','variant-panel','compass-pro','premium-now-action',
+      'premium-risk-steps','premium-path-rail','official-path-view','proof-explorer',
+      'pro-reentry-state','cn-forward-source-status'].every(x=>id(x)===1),
+    noLegacy:!document.getElementById('official-product-pilot'),
+    noindex:document.querySelector('meta[name="robots"]')?.content?.includes('noindex'),
+    navBeforePro:nav?.getBoundingClientRect().top<pro?.getBoundingClientRect().top,
+    proBeforeGraph:pro?.getBoundingClientRect().top<graph?.getBoundingClientRect().top
+   };
+  });
+  assert.equal(measured.width,width,'UNIFIED_WRONG_VIEWPORT');
+  assert.ok(measured.overflow<=2,'UNIFIED_OVERFLOW:'+JSON.stringify(measured));
+  assert.ok(measured.uniqueIds&&measured.singleton&&measured.noLegacy,
+    'UNIFIED_DUPLICATE_OR_MISSING_NODE:'+JSON.stringify(measured));
+  assert.ok(measured.noindex&&measured.navBeforePro&&measured.proBeforeGraph,
+    'UNIFIED_PREVIEW_OR_ORDER_MISMATCH:'+JSON.stringify(measured));
+  assert.equal(measured.english,'Compass PRO','UNIFIED_EN_LABEL');
+  assert.equal(measured.danish,'Kompas PRO','UNIFIED_DA_LABEL');
+  assert.equal(measured.micro,'true','UNIFIED_MICRO_LENS_BROKEN');
+  assert.ok(measured.source&&measured.source!=='—','UNIFIED_SOURCE_STATUS_MISSING');
+  assert.deepEqual(errors,[],'UNIFIED_JS_EXCEPTIONS');
+  assert.deepEqual(responses,[],'UNIFIED_HTTP_ASSET_FAILURES');
+  unified.push({width,source_status:true,one_graph_one_pro:true,interactive:true});
+ }
+
+
+ if(rootMode){
+  const released=[];
+  for(const width of [390,430]){
+   await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:932,
+    deviceScaleFactor:1,mobile:true});
+   await send('Page.navigate',{url:origin});
+   let ready=false;
+   for(let attempt=0;attempt<100;attempt++){
+    await delay(100);
+    ready=await evaluate(()=>document.readyState==='complete'&&
+     !!document.getElementById('compass-pro')&&
+     (document.getElementById('pro-source-status')?.textContent||'')!==
+      'Kontrollerer officiel kilde og gyldighed…');
+    if(ready)break;
+   }
+   assert.ok(ready,'ROOT_UNIFIED_NOT_BOOTED:'+width);
+   const report=await evaluate(()=>{
+    const id=x=>document.querySelectorAll('[id="'+x+'"]').length;
+    const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);
+    const graph=document.getElementById('variant-panel');
+    const pro=document.getElementById('compass-pro');
+    const source=document.getElementById('pro-source-status')?.textContent||'';
+    document.querySelector('[data-lang="en"]')?.click();
+    const en=document.getElementById('pro-heading')?.textContent;
+    document.querySelector('[data-lang="da"]')?.click();
+    const da=document.getElementById('pro-heading')?.textContent;
+    document.querySelector('[data-investor-lens="micro"]')?.click();
+    return {
+     width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+     source,en,da,micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
+     preview:!!document.querySelector('meta[name="robots"][content*="noindex"]'),
+     unique:new Set(ids).size===ids.length,
+     singleton:['chart','variant-panel','compass-pro','premium-now-action',
+      'premium-risk-steps','premium-path-rail','official-path-view',
+      'proof-explorer','pro-reentry-state','cn-forward-source-status'].every(x=>id(x)===1),
+     old:!!document.getElementById('official-product-pilot'),
+     homepage:document.body.classList.contains('premium-home'),
+     order:pro.getBoundingClientRect().top<graph.getBoundingClientRect().top,
+     rollback:document.querySelector('.premium-entry-canonical')?.getAttribute('href'),
+     data:[...document.querySelectorAll('.premium-meta-links a')].map(x=>x.getAttribute('href'))
+    };
+   });
+   assert.equal(report.width,width,'ROOT_UNIFIED_VIEWPORT_WRONG');
+   assert.ok(report.overflow<=2,'ROOT_UNIFIED_OVERFLOW:'+JSON.stringify(report));
+   assert.ok(report.homepage&&!report.preview&&!report.old,'ROOT_PROMOTED_LEGACY_OR_PREVIEW');
+   assert.ok(report.unique&&report.singleton&&report.order,'ROOT_UNIFIED_COMPETING_SOURCE');
+   assert.equal(report.rollback,'./vnext/','ROOT_NO_PRIOR_VERSION');
+   assert.deepEqual(report.data,['./data/latest.json','./data/compass.json'],
+      'ROOT_SOURCE_DATA_LINKS');
+   assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
+   assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
+   assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
+   assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
+   assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
+   // Live negative control on the RELEASED root, not only the /next pilot.
+   // Deliberately break BOTH public feed requests after initial boot. A stale
+   // cached BUY/SELL or next-gate must never survive a failed refresh.
+   if(width===430){
+    await evaluate(()=>{
+     window.fetch=async()=>{throw Error('UNIFIED_ROOT_INTENTIONAL_OFFLINE_TEST')};
+     Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});
+     document.dispatchEvent(new Event('visibilitychange'));
+     return true;
+    });
+    await delay(500);
+    const offline=await evaluate(()=>({
+     source:document.getElementById('pro-source-status')?.textContent||'',
+     current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
+     gate:document.getElementById('pro-next-gate')?.textContent||'',
+     reentry:document.getElementById('pro-reentry-state')?.textContent||'',
+     action:document.getElementById('premium-now-action')?.textContent||''
+    }));
+    assert.match(offline.source,/Indlæsning mislykkedes|Source fetch failed/,
+      'ROOT_FAILED_REFRESH_KEPT_PREVIOUS_SOURCE:'+JSON.stringify(offline));
+    assert.equal(offline.current,'false','ROOT_OFFLINE_STILL_CURRENT');
+    assert.equal(offline.reentry,'UNAVAILABLE','ROOT_OFFLINE_REENTRY_LEAK');
+    // AFVENTER contains the substring "ENTER"; do not mistake the
+    // exact fail-closed source-wait state for an ENTER trading instruction.
+    assert.equal(offline.action,'AFVENTER KILDE',
+      'ROOT_OFFLINE_DID_NOT_FAIL_CLOSED_TO_SOURCE_WAIT:'+JSON.stringify(offline));
+    assert.match(offline.gate,/Afventer|Awaiting/,'ROOT_OFFLINE_GATE_LEAK');
+   }
+   released.push({width,oneB:true,onePRO:true,source:true});
+  }
+  console.log('ROOT_UNIFIED_CHROME_CDP_PASS '+JSON.stringify(released));
+ }
+
  console.log((rootMode?'ROOT':'NEXT')+'_VITE_BROWSER_REAL_CDP_PASS '+JSON.stringify({
-  base,engine:'CHROME_HEADLESS_CDP_NOT_SAFARI',results,nested_graph_b:true,
+  base,engine:'CHROME_HEADLESS_CDP_NOT_SAFARI',results,nested_graph_b:true,unified,
   http_asset_errors:responses.length,js_exceptions:errors.length
  }));
 }finally{

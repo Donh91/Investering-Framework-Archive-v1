@@ -11,7 +11,7 @@ import {fileURLToPath} from 'node:url';
 const project=resolve(fileURLToPath(new URL('.',import.meta.url)));
 const base='/Investering-Framework-Archive-v1/next/';
 const host='https://donh91.github.io';
-const mandatory=['index.html','graph-b/source-graph-b.html'];
+const mandatory=['index.html','unified.html','graph-b/source-graph-b.html'];
 
 export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
  const root=resolve(dist),inventory=[],errors=[];
@@ -38,6 +38,8 @@ export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
  const files=new Set(inventory.map(x=>x.path));
  for(const path of mandatory)if(!files.has(path))errors.push('MISSING_ENTRY:'+path);
  const pages={};
+ // All three preview entries are explicit build outputs. If unified is missing,
+ // staging fails instead of silently shipping the old duplicate Compass layout.
  for(const path of mandatory){
   if(!files.has(path))continue;
   const html=await readFile(resolve(root,path),'utf8');
@@ -49,6 +51,20 @@ export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
    for(const id of ['chart','variant-panel','proof-explorer','official-product-pilot','official-pilot-path']){
     if(!html.includes('id="'+id+'"'))errors.push('MISSING_PREMIUM_ROOT_MARKUP:'+id);
    }
+  }
+  if(path==='unified.html'){
+   for(const id of [
+    'chart','variant-panel','proof-explorer','compass-pro',
+    'premium-now-action','premium-risk-steps','pro-forward-rows',
+    'official-path-view','premium-path-rail'
+   ])if((html.match(new RegExp('id="'+id+'"','g'))||[]).length!==1)
+     errors.push('UNIFIED_SINGLETON_ID:'+id);
+   for(const id of ['official-product-pilot','official-pilot-action',
+     'official-pilot-path','official-path-chart'])
+    if(html.includes('id="'+id+'"'))errors.push('UNIFIED_LEGACY_DUPLICATE:'+id);
+   if(html.includes('/vnext/#compass')||
+      html.includes('src="./compass/compass-path-ui.mjs"'))
+     errors.push('UNIFIED_COMPETING_COMPASS_ROUTE');
   }
   const entryUrl=new URL(base+path,host);
   const refPattern=/<(?:script|link|img)\b[^>]*?\s(?:src|href)=["']([^"']+)["']/gi;
@@ -69,6 +85,12 @@ export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
  const jsText=(await Promise.all(javascript.map(x=>readFile(resolve(root,x.path),'utf8')))).join('\n');
  for(const feed of ['latest.json','compass.json','publication-lineage.json'])
   if(!jsText.includes(feed))errors.push('MISSING_FIRST_PARTY_FEED_REFERENCE:'+feed);
+ // HTML singletons are insufficient: fail if Vite emitted an empty or
+ // chart-only JS bundle instead of the actual protected PRO source controller.
+ for(const marker of [
+  'premium-now-action','pro-reentry-state','source-trace-body',
+  'CN_VNEXT_PUBLIC_FEED_PARITY_v1','OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1'
+ ])if(!jsText.includes(marker))errors.push('MISSING_UNIFIED_PRO_JS_BINDING:'+marker);
  if(errors.length)throw Error('NEXT_VITE_ARTIFACT_INVALID:'+errors.join(';'));
  return {contract:'CN_NEXT_VITE_ARTIFACT_CHECK_v1',status:'PASS',
   output_root:'site/dist/next',base,entrypoints:mandatory,asset_count:inventory.length,

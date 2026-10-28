@@ -33,13 +33,13 @@ function clearPlaying(){
 }
 function textLabels(){
  const labels={
-  da:{card:'Weekly Outlook · B',desc:'Kursretning, oprindelige intervaller og faktiske observationer.',
+  da:{card:'Weekly Outlook · B',desc:'Oprindelige prisintervaller og verificerede timekurser. Dagsprognoser vises kun, hvis de blev udstedt før udfaldet.',
     actual:'Faktiske timeslukkepriser · kun kildeverificerede',missing:'Original blå dagsprognose er ikke udstedt',
-    forecast:'Original kildeudstedt kurs',observed:'Faktisk kurs',bounds:'Oprindelige low/high',
+    forecast:'Udstedt dagsprognose',observed:'Observeret timekurs',bounds:'Frosset prisinterval',
     title:'Spol gennem ugen',mon:'Mandag',sun:'Søndag'},
-  en:{card:'Weekly Outlook · B',desc:'Price direction, original ranges and verified observations.',
+  en:{card:'Weekly Outlook · B',desc:'Original price ranges and verified hourly closes. A daily forecast appears only when issued before the outcome.',
     actual:'Observed hourly closes · source verified only',missing:'Original blue daily forecast not issued',
-    forecast:'Original issued forecast',observed:'Observed price',bounds:'Original low/high',
+    forecast:'Issued daily forecast',observed:'Observed hourly close',bounds:'Frozen price range',
     title:'Explore the week',mon:'Monday',sun:'Sunday'}
  }[language];
  // Preserve the ORIGINAL AppDeploy "B" accent badge, not flattened text.
@@ -61,16 +61,16 @@ function textLabels(){
  // The isolated nested B reference has no Premium navigation, so these are NOOPs there.
  const officialHome=!!document.body?.classList?.contains('premium-home');
  const rootWords=language==='en'?{
-  title:'Forecast meets reality.',
-  intro:'Original forecast versus actual movement, week by week.',
+  title:'This week’s forecast. Observed prices.',
+  intro:'Original frozen ranges versus verified hourly prices. No daily forecast line without prior issuance.',
   disclaimer:officialHome?'Source-backed · Original ranges and observed prices.':'Preview · Source-backed, without demo prices.',
-  graph:'Graph B',compass:'Compass',pro:'Compass PRO ↗',path:'PATH',proof:'Proof',official:officialHome?'Previous version ↗':'Official site ↗',meta:'STATUS / SOURCES',
+  graph:'Weekly chart',compass:'Compass',pro:'Compass PRO ↗',path:'PATH',proof:'Results & method',official:officialHome?'Previous version ↗':'Official site ↗',meta:'STATUS / SOURCES',
   cnSource:'CN source ↗',compassSource:'Compass source ↗'
  }:{
-  title:'Prognose møder virkelighed.',
-  intro:'Original prognose mod faktisk udvikling, uge for uge.',
+  title:'Ugens prognose. Faktiske kurser.',
+  intro:'Frosne prisintervaller mod verificerede timesluk. Ingen blå dagsprognose uden forudgående udstedelse.',
   disclaimer:officialHome?'Kildebaseret · Oprindelige intervaller og observerede kurser.':'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
-  graph:'Graf B',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:'Proof',official:officialHome?'Forrige version ↗':'Officiel side ↗',meta:'STATUS / KILDER',
+  graph:'Ugens graf',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:'Resultat og metode',official:officialHome?'Forrige version ↗':'Officiel side ↗',meta:'STATUS / KILDER',
   cnSource:'CN-data ↗',compassSource:'Kompas-data ↗'
  };
  document.querySelectorAll('[data-premium-nav]').forEach(el=>{
@@ -83,7 +83,7 @@ function textLabels(){
  const staticLabels=[
   ['.premium-entry-overline',officialHome?t('CYCLE NAVIGATOR / OFFICIEL','CYCLE NAVIGATOR / OFFICIAL'):
    'CYCLE NAVIGATOR / NEXT'],
-  ['[data-t="cardEyebrow"]',t('FROSSEN PROGNOSE / UGENS BEVÆGELSE','FROZEN FORECAST / WEEKLY MOVEMENT')],
+  ['[data-t="cardEyebrow"]',t('FROSSET PRISINTERVAL / OBSERVERET KURS','FROZEN PRICE RANGE / OBSERVED PRICE')],
   ['[data-t="freeze"]',model?.forecast_status==='SOURCE_ISSUED'?
    t('Original kildeudstedt prognose','Original source-issued forecast'):
    t('Original prognose · afventer kilde','Original forecast · source pending')],

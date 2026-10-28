@@ -10,7 +10,7 @@ test('Premium root renders original Graph B, Proof, official Compass and PATH',(
  const root=buildPremiumRootHtml(original);
  for(const id of ['variant-panel','chart','proof-explorer','official-product-pilot','official-pilot-path'])
   assert.ok(root.includes('id="'+id+'"'),id);
- assert.match(root,/<h1 data-premium-copy="title">Prognose møder virkelighed\.<\/h1>/);
+ assert.match(root,/<h1 data-premium-copy="title">Ugens prognose\. Faktiske kurser\.<\/h1>/);
  assert.match(root,/Weekly Outlook <span class="alt-token">B<\/span>/);
  assert.match(root,/aria-label="Premium sektioner"/);
  assert.match(root,/data-premium-nav="compass"/);
@@ -86,8 +86,8 @@ test('Graph B existing DA/EN control covers real Premium heading and navigation'
  const js=await readFile(new URL('./graph-b/source-graph-b.mjs',import.meta.url),'utf8');
  assert.match(js,/data-premium-nav/);
  assert.match(js,/data-premium-copy/);
- assert.match(js,/Forecast meets reality/);
- assert.match(js,/Prognose møder virkelighed/);
+ assert.match(js,/This week’s forecast\. Observed prices\./);
+ assert.match(js,/Ugens prognose\. Faktiske kurser\./);
  assert.match(js,/pro:'Compass PRO ↗'/);
  assert.match(js,/pro:'Kompas PRO ↗'/);
  const app=await readFile(new URL('../vnext-live/app.mjs',import.meta.url),'utf8');
