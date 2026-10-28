@@ -128,7 +128,7 @@ try{
  for(const width of [390,430,1440,320]){
   await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:width===430?932:width===320?700:1000,
    deviceScaleFactor:1,mobile:width<600});
-  await send('Page.navigate',{url:origin+(rootMode?'':'next/')});
+  await send('Page.navigate',{url:origin+'next/'});
   let ready=false;
   for(let attempt=0;attempt<100;attempt++){
    await delay(100);
@@ -238,12 +238,8 @@ try{
     (report.horizonsPresent&&report.pathStageCount===10),
    'NEXT_HORIZON_SOURCE_OR_PATH_COUNT_MISMATCH');
   assert.ok(selection.ethSelected&&selection.pair==='ETH / USD','NEXT_BTC_ETH_NOT_INTERACTIVE');
-  assert.ok(report.rootPath.endsWith(rootMode?base:base+'next/'),'NEXT_WRONG_BASEPATH');
-  if(rootMode){
-   assert.ok(report.officialHome&&!report.noindex,'ROOT_NOT_OFFICIAL_OR_NOINDEX');
-   assert.equal(report.priorLink,'./vnext/','ROOT_PRIOR_VERSION_LINK');
-   assert.deepEqual(report.dataLinks,['./data/latest.json','./data/compass.json'],'ROOT_DATA_LINKS');
-  }
+  assert.ok(report.rootPath.endsWith(base+'next/'),'NEXT_WRONG_BASEPATH');
+  // Current NEXT pilot is retained for source/rollback coverage; root audited below.
   assert.equal(errors.length,0,'NEXT_BROWSER_JS_EXCEPTIONS:'+JSON.stringify(errors));
   assert.equal(responses.length,0,'NEXT_BROWSER_FAILED_ASSETS:'+JSON.stringify(responses));
   results.push({width,overflow:report.overflow,originalB:true,logo:true,
@@ -349,6 +345,67 @@ try{
   assert.deepEqual(errors,[],'UNIFIED_JS_EXCEPTIONS');
   assert.deepEqual(responses,[],'UNIFIED_HTTP_ASSET_FAILURES');
   unified.push({width,source_status:true,one_graph_one_pro:true,interactive:true});
+ }
+
+
+ if(rootMode){
+  const released=[];
+  for(const width of [390,430]){
+   await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:932,
+    deviceScaleFactor:1,mobile:true});
+   await send('Page.navigate',{url:origin});
+   let ready=false;
+   for(let attempt=0;attempt<100;attempt++){
+    await delay(100);
+    ready=await evaluate(()=>document.readyState==='complete'&&
+     !!document.getElementById('compass-pro')&&
+     (document.getElementById('pro-source-status')?.textContent||'')!==
+      'Kontrollerer officiel kilde og gyldighed…');
+    if(ready)break;
+   }
+   assert.ok(ready,'ROOT_UNIFIED_NOT_BOOTED:'+width);
+   const report=await evaluate(()=>{
+    const id=x=>document.querySelectorAll('[id="'+x+'"]').length;
+    const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);
+    const graph=document.getElementById('variant-panel');
+    const pro=document.getElementById('compass-pro');
+    const source=document.getElementById('pro-source-status')?.textContent||'';
+    document.querySelector('[data-lang="en"]')?.click();
+    const en=document.getElementById('pro-heading')?.textContent;
+    document.querySelector('[data-lang="da"]')?.click();
+    const da=document.getElementById('pro-heading')?.textContent;
+    document.querySelector('[data-investor-lens="micro"]')?.click();
+    return {
+     width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+     source,en,da,micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
+     preview:!!document.querySelector('meta[name="robots"][content*="noindex"]'),
+     unique:new Set(ids).size===ids.length,
+     singleton:['chart','variant-panel','compass-pro','premium-now-action',
+      'premium-risk-steps','premium-path-rail','official-path-view',
+      'proof-explorer','pro-reentry-state','cn-forward-source-status'].every(x=>id(x)===1),
+     old:!!document.getElementById('official-product-pilot'),
+     homepage:document.body.classList.contains('premium-home'),
+     order:pro.getBoundingClientRect().top<graph.getBoundingClientRect().top,
+     rollback:document.querySelector('.premium-entry-canonical')?.getAttribute('href'),
+     data:[...document.querySelectorAll('.premium-meta-links a')].map(x=>x.getAttribute('href'))
+    };
+   });
+   assert.equal(report.width,width,'ROOT_UNIFIED_VIEWPORT_WRONG');
+   assert.ok(report.overflow<=2,'ROOT_UNIFIED_OVERFLOW:'+JSON.stringify(report));
+   assert.ok(report.homepage&&!report.preview&&!report.old,'ROOT_PROMOTED_LEGACY_OR_PREVIEW');
+   assert.ok(report.unique&&report.singleton&&report.order,'ROOT_UNIFIED_COMPETING_SOURCE');
+   assert.equal(report.rollback,'./vnext/','ROOT_NO_PRIOR_VERSION');
+   assert.deepEqual(report.data,['./data/latest.json','./data/compass.json'],
+      'ROOT_SOURCE_DATA_LINKS');
+   assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
+   assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
+   assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
+   assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
+   assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
+   released.push({width,oneB:true,onePRO:true,source:true});
+  }
+  console.log('ROOT_UNIFIED_CHROME_CDP_PASS '+JSON.stringify(released));
  }
 
  console.log((rootMode?'ROOT':'NEXT')+'_VITE_BROWSER_REAL_CDP_PASS '+JSON.stringify({
