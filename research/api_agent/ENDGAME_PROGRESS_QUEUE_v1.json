@@ -1,17 +1,18 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "TASK2_PACKET_HASH_EVENT_INDEPENDENCE_REVIEW_20261028",
+    "work_id": "TASK2_KOMPAS_PRODUCER_DAG_SOURCE_HEALTH_FALSIFIER_20261028",
     "owner_pr": 1814,
     "owner_issue": 1596,
-    "expected_pr_head": "859a251ebd39db0102a57f59a5910c022a61e94d",
-    "objective": "Distinct P0 post-fix denominator proof, NOT a repeat of billed clock/first-known audits. Original #1814 exact head has 5/5 CI PASS. Red-team the new source-hash dedup in scripts/research/kompas_nowcast_shadow.py and exact associated tests: can different forecast compass_ids and relabeled caller source_event_ids that share the same originally source-hash-bound packet and target inflate counted trials? Are genuinely independent source packets incorrectly collapsed? Is missing/malformed source_packet_sha256 correctly rejected AFTER forecast/outcome hash bonds? Verify source SHA custodian limitations and first-known caller self-attestation. Return at most TWO new reproducible concrete flaws with code line, test fixture, minimal same-PR patch; else STOP_NO_FURTHER_TUNING. No new PR, paid repeat, portfolio action, source fabrication, retroactive tuning or live forecast change. Vault recovery and independent provider first-known remain RELEASE_HOLD regardless of tests.",
+    "expected_pr_head": "99c3fc1081697ce195b50cf12d047cb8832083b1",
+    "objective": "NEW DISTINCT P0 Task2 producer/consumer causal audit, NOT the four consumed source-hash/clock tests. On exact #1814, trace original scripts/data_ping/native_handlekompas.py derive_market_now -> horizon_map NEXT_12H and CN longer-horizon inputs, distinguish a true forward forecast from 12h copied momentum. Cross-check scoring reference_close_time and current shadow comparator; test whether issuer-first-known +5m and 1h persistence freshness are genuinely no-hindsight, and whether CN binding PASS can coexist with DEGRADED source health. Return at most TWO independently reproducible high-impact defects with exact code path, concrete negative test, smallest repair in ORIGINAL #1814 for scientific comparator or existing #1827 for producer; else SOURCE_BLOCKED/STOP. No new PR, no live forecast/threshold changes, no retroactive score, no claimed edge, no API repeat, no merge; missing private custody/recovery remains HOLD.",
     "paths": [
+      "scripts/data_ping/native_handlekompas.py",
+      "scripts/learning/compass_outcomes.py",
       "scripts/research/kompas_nowcast_shadow.py",
       "tests/research/test_kompas_nowcast_shadow.py",
-      "scripts/learning/compass_outcomes.py",
-      ".github/workflows/shared-row-tournament-research-gate.yml"
+      "05_CYCLE_NAVIGATOR/README.md"
     ]
   },
-  "semantics": "One original-owner exact-head post-fix independent cluster audit, one bounded Terra xhigh API attempt; owner incremental $15, org $30 lower cap with $12 conservative reserve, $3 single call cap. Advisory, no code/merge authorization, repeat historical API work IDs forbidden."
+  "semantics": "Distinct fifth one-time Terra xhigh P0 producer-DAG scientific falsifier, source pinned to exact original Task2 PR #1814; existing owner budget incremental $15, org $30 cap with $12 reserve and $3/call. One charge per work_id, advisory only, no autonomous writes/merges; previous four work IDs irrevocably consumed."
 }
