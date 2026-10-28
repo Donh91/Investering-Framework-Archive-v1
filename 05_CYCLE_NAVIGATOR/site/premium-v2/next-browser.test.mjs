@@ -378,6 +378,13 @@ try{
     return {
      width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
      source,en,da,micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
+     quick13:document.getElementById('cn-horizon-13')?.textContent,
+     riskQuick:document.querySelectorAll('#cn-risk-quick-steps .risk-step').length,
+     officialRisk:document.querySelectorAll('#premium-risk-steps .risk-step').length,
+     futurePath:document.getElementById('cn-alt-milestone-eta')?.textContent,
+     pathSteps:document.querySelectorAll('#premium-path-rail .path-node').length,
+     hiddenB:getComputedStyle(document.querySelector('#variant-panel .alt-token')).display==='none',
+     cleanTitle:!document.title.includes('Graph B'),
      preview:!!document.querySelector('meta[name="robots"][content*="noindex"]'),
      unique:new Set(ids).size===ids.length,
      singleton:['chart','variant-panel','compass-pro','premium-now-action',
@@ -400,6 +407,12 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.quick13&&report.riskQuick===5&&report.officialRisk===5,
+     'ROOT_SOURCE_BOUND_12H_1_3D_AND_FIVE_RISK_STAGES:'+JSON.stringify(report));
+   assert.equal(report.pathSteps,10,'ROOT_TEN_CYCLE_STAGES');
+   assert.ok(report.futurePath==='Ingen verificeret ETA'||report.futurePath==='No verified ETA',
+     'ROOT_INVENTED_ALTSEASON_COUNTDOWN:'+JSON.stringify(report));
+   assert.ok(report.hiddenB&&report.cleanTitle,'ROOT_INTERNAL_VARIANT_B_STILL_VISIBLE');
    assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
    assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
    assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
