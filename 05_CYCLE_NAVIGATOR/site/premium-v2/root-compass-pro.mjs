@@ -6,6 +6,7 @@
 import '../vnext-live/premium-experience.css';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
 import {sourceTrace} from '../vnext-live/source-trace.mjs';
+import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {
   renderProductExperience,initProductExperience
@@ -123,6 +124,60 @@ function renderReentry(){
   source.reentry_message:t('Ingen kildeverificeret genkøbsstatus. Risiko er ikke automatisk et købssignal.',
    'No source-verified re-entry status. Risk alone never authorizes buying.'));
 }
+function sourceRows(){
+ let trace=null;
+ try{trace=sourceTrace(feeds?.latest,feeds?.compass,view)}catch{trace=null}
+ const status=trace?.reason==='OFFICIAL_NOT_CURRENT_CONTEXT_ONLY'?
+  t('Officiel handling ikke aktuel · kontekst kan vises','Official action not current · context only'):
+  trace?.status==='COMPLETE'?t('Krævede kildeled verificeret','Required sources verified'):
+  trace?.status==='PARTIAL_OR_DEGRADED'?t('Delvist dokumenteret grundlag','Partial source evidence'):
+  t('Kildestatus utilgængelig','Source status unavailable');
+ set('source-trace-status',status);
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const row=(target,values)=>{
+  const el=$(target);if(!el)return;
+  const tr=document.createElement('tr');
+  for(const v of values)cell(tr,String(v??'—'));
+  el.append(tr);
+ };
+ const long=$('long-horizon-body');if(long)long.replaceChildren();
+ const source=$('source-trace-body');if(source)source.replaceChildren();
+ const periods={'2_3w':'2–3w','21_30d':'21–30d','4_8w':'4–8w'};
+ for(const item of (trace?.long_horizons||[])){
+  const owner=item.owner==='CYCLE_NAVIGATOR_WEEKLY'?
+    t('Cycle Navigator · frossen uge','Cycle Navigator · frozen week'):
+    item.owner==='CYCLE_NAVIGATOR_STRATEGIC_CONTEXT'?
+      t('Cycle Navigator · strategisk kontekst','Cycle Navigator · strategic context'):
+      t('Strategisk forskning · ikke-bindende','Strategic research · nonbinding');
+  row('long-horizon-body',[periods[item.id]||safe(item.id),safe(item.direction),owner]);
+ }
+ for(const item of (trace?.sources||[]))row('source-trace-body',[safe(item.name),safe(item.status)]);
+ const title=$('source-trace-title');
+ if(title)title.textContent=lang==='da'?'Længere tidshorisonter · kildekontekst':'Longer horizons · source context';
+ const sourceSummary=$('compass-pro')?.querySelector('.source-trace-details > summary');
+ if(sourceSummary)sourceSummary.textContent=lang==='da'?
+  'Se kildeled og deres status':'Inspect source layers and their status';
+}
+function mondayReadback(){
+ let m=null;
+ try{m=mondayContext(feeds?.latest,feeds?.compass,view)}catch{m=null}
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ let labels=null;try{if(m)labels=mondayLabels(m,lang)}catch{}
+ const valid=m?.source_state==='SOURCE_ALIGNED';
+ set('monday-reading',labels?.title||'UNAVAILABLE');
+ set('monday-explanation',labels?.evidence||t('Ugens kildegrundlag mangler','Weekly source unavailable'));
+ set('monday-week',valid?m.completed_week:'—');
+ set('monday-source',valid?t('Verificeret ugegrundlag','Verified weekly source'):
+   t('Ugegrundlag ikke verificeret','Weekly source unverified'));
+ set('monday-source-explanation',t('Ugeanalyse er kontekst, ikke en ny handelstilladelse.',
+   'Weekly analysis is context, not new trade permission.'));
+ set('monday-scorecard',valid?m.scorecard_status:'UNAVAILABLE');
+ set('monday-translation',valid?m.operational_translation_status:'UNAVAILABLE');
+ set('monday-api',valid&&m.api_analysis_status==='AVAILABLE_SHADOW_ONLY'?
+  t('Research tilgængelig · ikke-bindende','Research available · nonbinding'):'UNAVAILABLE');
+ const title=$('monday-title');
+ if(title)title.textContent=t('Mandagens dokumenterede ugegrundlag','Monday’s verified weekly context');
+}
 function paint(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  try{view=feeds?inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang}):null}
@@ -133,6 +188,8 @@ function paint(){
  horizons();
  renderForward();
  renderReentry();
+ sourceRows();
+ mondayReadback();
  const c=view?.compass,w=view?.weekly;
  const fresh=c?.state==='FRESH'&&c?.permit_path_live_gates===true;
  const weekly=w?.state==='DEGRADED'?t(' · UGEKILDE: BEGRÆNSET DÆKNING',' · WEEKLY SOURCE: LIMITED COVERAGE'):
