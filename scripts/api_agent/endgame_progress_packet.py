@@ -43,6 +43,24 @@ def git(*args: str) -> bytes:
     return subprocess.check_output(["git", *args], cwd=ROOT, stderr=subprocess.DEVNULL)
 
 
+def original_pr_head_admitted(work: dict, observed_head: str) -> bool:
+    """Exact-head admission, including one atomic self-PR queue update.
+
+    A queue stored on PR #1823 cannot predict its own new commit SHA. For that
+    PR alone, permit the exact checkout HEAD when the queue pins its immediate
+    parent. This keeps the one-commit update auditable while rejecting stale
+    heads, different checkouts, and changes to other owning PRs.
+    """
+    expected = str(work["expected_pr_head"])
+    if observed_head == expected:
+        return True
+    if int(work["owner_pr"]) != 1823:
+        return False
+    checkout_head = git("rev-parse", "HEAD").decode().strip()
+    parent_head = git("rev-parse", "HEAD^").decode().strip()
+    return observed_head == checkout_head and expected == parent_head
+
+
 def build(output: Path, queue: Path = QUEUE) -> dict:
     work = manifest(json.loads((ROOT / queue).read_text()))
     main = git("rev-parse", "refs/remotes/origin/main").decode().strip()
@@ -63,7 +81,7 @@ def build(output: Path, queue: Path = QUEUE) -> dict:
     pr = json.loads(subprocess.check_output(
         ["gh", "api", f"repos/{repo}/pulls/{work['owner_pr']}"], timeout=20))
     original_head = str(pr["head"]["sha"])
-    if original_head != work["expected_pr_head"] or pr["state"] != "open":
+    if pr["state"] != "open" or not original_pr_head_admitted(work, original_head):
         raise ValueError("PR_HEAD_CHANGED_OR_NOT_OPEN_FAIL_CLOSED")
     changed = json.loads(subprocess.check_output(
         ["gh", "api", f"repos/{repo}/pulls/{work['owner_pr']}/files?per_page=100"], timeout=20))
