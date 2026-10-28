@@ -1,20 +1,20 @@
 # Operations Dashboard
 
 Overall: **AMBER**
-Generated: `2026-10-28T10:46:13.320664Z`
+Generated: `2026-10-28T11:09:32.463818Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 3.898 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 9.183 |
-| `weekly_output` | **GREEN** | FRESH | 51.847 |
-| `automation_health` | **AMBER** | AMBER | 0.068 |
-| `architecture_health` | **GREEN** | GREEN | 0.014 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 2.061 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 2.079 |
-| `remediation_maturation` | **GREEN** | FRESH | 13.794 |
+| `daily_capture` | **GREEN** | FRESH | 4.287 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 9.572 |
+| `weekly_output` | **GREEN** | FRESH | 52.236 |
+| `automation_health` | **AMBER** | AMBER | 0.457 |
+| `architecture_health` | **GREEN** | GREEN | 0.402 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 2.45 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 2.468 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.294 |
 
 ## AI and learning activity
 
@@ -54,4 +54,4 @@ A gateway PASS alone is not measured downstream value or investment edge.
 - **P1** `automation_health` - SEMANTIC_STATUS_AMBER
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `bdb885b6150b7a28909db830a79447956ec048f9851b0099c9aee8b5301ed476`
+Dashboard SHA-256: `c5aa44487aec31968bde8fe5889a419d0033a9c2d92fc999ba6759d147807370`
