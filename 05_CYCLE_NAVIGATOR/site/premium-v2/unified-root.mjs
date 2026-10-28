@@ -100,7 +100,13 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     'Kun gyldige officielle kildebeslutninger er aktuelle.</p></div>'+
     '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p>'+
     compactCore.replace('<details class="cn-pro-more">',
-      '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p><details class="cn-pro-more">')+'</section>';
+      '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
+      '<section class="cn-risk-quick" aria-label="Pullback classification">'+
+      '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">PULLBACK / 5 RISIKOKLASSER</small>'+
+      '<strong id="cn-risk-quick-state">Afventer kilde</strong></div>'+
+      '<span id="cn-risk-quick-note">Kildens trin · ikke sandsynlighed</span></div>'+
+      '<div id="cn-risk-quick-steps" class="risk-class-rail" aria-hidden="true"></div>'+
+      '</section><details class="cn-pro-more">')+'</section>';
 
   const oldDecision='<section class="official-product-pilot premium-decision-summary"';
   const graph='<section id="variant-panel"';
