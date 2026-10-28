@@ -407,7 +407,7 @@ try{
   });
   reports.push(report);
   if(beforeViewport.documentScrollWidth>width){
-   const offenders=await evaluate(()=>[...document.querySelectorAll('body *')].map(el=>({id:el.id,cls:String(el.className?.baseVal||el.className||'').slice(0,40),left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right)})).filter(q=>q.right>390+8||q.left<-8).sort((a,b)=>b.right-a.right).slice(0,20));
+   const offenders=await evaluate(()=>[...document.querySelectorAll('body *')].map(el=>({tag:el.tagName,outer:el.outerHTML.slice(0,150),parent:el.parentElement?.tagName+'#'+el.parentElement?.id,id:el.id,cls:String(el.className?.baseVal||el.className||'').slice(0,40),left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right)})).filter(q=>q.right>390+8||q.left<-8).sort((a,b)=>b.right-a.right).slice(0,20));
    console.log('WIDTH_DEBUG',width,JSON.stringify(offenders));
   }
   assertExactMobileViewport(report,width,height,beforeViewport);
