@@ -165,8 +165,8 @@ test('this week W44 frozen Monday ranges do not authorize a blue expected-close 
 
 test('frozen intraday windows are forecast presentation even without expected-close path',async()=>{
  const renderer=await read('./graph-b/source-graph-b.mjs');
- assert.match(renderer,/MANDAGENS 3 PROGNOSEVINDUER/);
- assert.match(renderer,/Mandagens intraday-prognose/);
+ assert.match(renderer,/Original prognose · 3 vinduer/);
+ assert.match(renderer,/Frossen high\/low/);
  assert.match(renderer,/bands\.map\(b=>/);
  assert.match(renderer,/paintFrozenWindowLedger\(bands\)/);
  assert.match(renderer,/paintFrozenWindowLedger\(\[\]\)/);
