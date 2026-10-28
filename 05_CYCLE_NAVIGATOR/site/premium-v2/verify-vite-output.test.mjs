@@ -21,7 +21,7 @@ async function withBundle(run){
   await writeFile(join(dir,'graph-b/source-graph-b.html'),'<!doctype html><html><head><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/Investering-Framework-Archive-v1/next/assets/site.css"></head><body><svg id="chart"></svg><script type="module" src="/Investering-Framework-Archive-v1/next/assets/app.js"></script></body></html>');
   await writeFile(join(dir,'assets/site.css'),'body{color:#07172f}');
   await writeFile(join(dir,'assets/logo.svg'),'<svg xmlns="http://www.w3.org/2000/svg"/>');
-  await writeFile(join(dir,'assets/app.js'),'new URL("../../data/latest.json",import.meta.url);new URL("../../data/compass.json",import.meta.url);new URL("../../data/publication-lineage.json",import.meta.url);');
+  await writeFile(join(dir,'assets/app.js'),'new URL("../../data/latest.json",import.meta.url);new URL("../../data/compass.json",import.meta.url);new URL("../../data/publication-lineage.json",import.meta.url);const pro=["premium-now-action","pro-reentry-state","source-trace-body","CN_VNEXT_PUBLIC_FEED_PARITY_v1","OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1"];');
   await run(dir);
  }finally{await rm(dir,{recursive:true,force:true})}
 }
@@ -101,5 +101,17 @@ test('legacy second Compass or competing PRO route fail independently',async()=>
   await assert.rejects(verifyViteOutput(dir),/UNIFIED_LEGACY_DUPLICATE/);
   await writeFile(path,original.replace('</body>','<a href="/vnext/#compass">2nd PRO</a></body>'));
   await assert.rejects(verifyViteOutput(dir),/UNIFIED_COMPETING_COMPASS_ROUTE/);
+ });
+});
+
+test('compiled candidate without the actual PRO source/expiry JS cannot stage',async()=>{
+ await withBundle(async dir=>{
+  const app=join(dir,'assets/app.js');
+  const {readFile}=await import('node:fs/promises');
+  const code=await readFile(app,'utf8');
+  await writeFile(app,code.replace('OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1','REMOVED_SOURCE_FRESHNESS_GUARD'));
+  await assert.rejects(verifyViteOutput(dir),/MISSING_UNIFIED_PRO_JS_BINDING:OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1/);
+  await writeFile(app,code.replace('pro-reentry-state','REMOVED_REENTRY_VIEW'));
+  await assert.rejects(verifyViteOutput(dir),/MISSING_UNIFIED_PRO_JS_BINDING:pro-reentry-state/);
  });
 });
