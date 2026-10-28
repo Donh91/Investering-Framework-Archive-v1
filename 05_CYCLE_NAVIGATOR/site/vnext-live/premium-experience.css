@@ -574,3 +574,11 @@
 .pro-price-range .small{font-size:11px;color:#6c8094}
 @media(max-width:760px){.pro-risk-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.pro-risk-metrics{gap:6px}.pro-risk-metrics>div{padding:10px 8px}.pro-risk-metrics strong{font-size:12px}.pro-risk-timing{grid-template-columns:1fr;gap:3px}.pro-risk-timing strong{margin-bottom:7px}.pro-action-now{padding:14px}.pro-price-pair article{padding:12px 10px}.pro-price-pair strong{font-size:14px}}
+
+
+/* Existing VNext fallback: keep the approved source graph visible within the
+ * first mobile overview without compromising the official decision card.
+ * Measured browser 390px threshold requires only a few pixels reduction. */
+@media(max-width:520px){
+ #view-overview .chart-area{margin-top:0!important}
+}

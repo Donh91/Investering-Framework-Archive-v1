@@ -161,3 +161,22 @@ test('this week W44 frozen Monday ranges do not authorize a blue expected-close 
  assert.equal(frozen.eth_range_low,2150);
  assert.equal(frozen.eth_range_high,2550);
 });
+
+
+test('frozen intraday windows are forecast presentation even without expected-close path',async()=>{
+ const renderer=await read('./graph-b/source-graph-b.mjs');
+ assert.match(renderer,/MANDAGENS 3 PROGNOSEVINDUER/);
+ assert.match(renderer,/Mandagens intraday-prognose/);
+ assert.match(renderer,/bands\.map\(b=>/);
+ assert.match(renderer,/paintFrozenWindowLedger\(bands\)/);
+ assert.match(renderer,/paintFrozenWindowLedger\(\[\]\)/);
+ assert.match(renderer,/cn-frozen-window-day/);
+ const html=buildUnifiedRootHtml(original,pro);
+ assert.equal(id(html,'cn-frozen-window-ledger'),1);
+ assert.match(renderer,/attr\('forecast','d',''\)/);
+ const frozen=JSON.parse(await read('../../weekly/2026/W44/CYCLE_NAVIGATOR_FORECAST_FREEZE.json'));
+ for(const key of ['day_1_2','day_3_4','day_5_7'])
+  assert.ok(frozen.intraday_map[key].includes('BTC')&&frozen.intraday_map[key].includes('ETH'),key);
+ assert.equal(frozen.daily_price_path.BTC.status,'UNAVAILABLE');
+ assert.equal(frozen.daily_price_path.ETH.status,'UNAVAILABLE');
+});
