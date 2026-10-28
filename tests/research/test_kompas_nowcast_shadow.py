@@ -153,17 +153,53 @@ class KompasShadowTests(unittest.TestCase):
                 self.assertEqual(result["rows"][0]["reason"], "FORECAST_SOURCE_PACKET_SHA_UNBOUND")
 
     def test_immutable_outcome_binding_target_and_maturity(self):
+        from scripts.learning.compass_outcomes import canon
+        # Rehash mutated outcome *after* changing the field so each negative
+        # fixture reaches the specific guard under examination.
         edits = (
-            lambda o:o.update(target_at_utc="2026-10-27T11:59:00Z"),
-            lambda o:o.update(matured_at_utc="2026-10-27T23:00:00Z"),
-            lambda o:o.update(compass_sha256="b"*64),
-            lambda o:o.update(horizon="72h"),
-            lambda o:o.update(issued_at_utc="2026-10-27T12:04:00Z"),
+            (lambda o:o.update(target_at_utc="2026-10-27T11:59:00Z"), "SCORER_REFERENCE_PLUS_12H_MISMATCH"),
+            (lambda o:o.update(matured_at_utc="2026-10-27T23:00:00Z"), "TARGET_OBSERVATION_OUTSIDE_SCORER_TOLERANCE"),
+            (lambda o:o.update(compass_sha256="b"*64), "FORECAST_OUTCOME_CUSTODY_UNBOUND"),
+            (lambda o:o.update(horizon="72h"), "FORECAST_OUTCOME_CUSTODY_UNBOUND"),
+            (lambda o:o.update(issued_at_utc="2026-10-27T12:04:00Z"), "FORECAST_OUTCOME_CUSTODY_UNBOUND"),
         )
-        for edit in edits:
-            row=changed_blob(fixture(),"outcome_original_json","outcome_blob_sha256",edit)
-            with self.subTest(edit=edit):
-                self.assertEqual(compare_shadow_12h([row])["provisional_paired"],0)
+        for edit, reason in edits:
+            def mutate(outcome):
+                edit(outcome)
+                outcome["outcome_sha256"] = hashlib.sha256(canon({
+                    k: v for k, v in outcome.items() if k != "outcome_sha256"
+                })).hexdigest()
+            row = changed_blob(fixture(), "outcome_original_json", "outcome_blob_sha256", mutate)
+            with self.subTest(reason=reason):
+                result = compare_shadow_12h([row])
+                self.assertEqual(result["provisional_paired"], 0)
+                self.assertEqual(result["rows"][0]["reason"], reason)
+
+    def test_two_distinct_source_hashes_same_target_remain_two_provisional_events(self):
+        from scripts.learning.compass_outcomes import canon
+        original = fixture()
+        second = copy.deepcopy(original)
+        forecast = json.loads(second["forecast_original_json"])
+        forecast["compass_id"] = "CMP-SYNTHETIC-2"
+        forecast["source_packet_sha256"] = "b" * 64
+        forecast["compass_sha256"] = hashlib.sha256(canon({
+            k: v for k, v in forecast.items() if k != "compass_sha256"
+        })).hexdigest()
+        outcome = json.loads(second["outcome_original_json"])
+        outcome["compass_id"] = forecast["compass_id"]
+        outcome["compass_sha256"] = forecast["compass_sha256"]
+        outcome["outcome_sha256"] = hashlib.sha256(canon({
+            k: v for k, v in outcome.items() if k != "outcome_sha256"
+        })).hexdigest()
+        second["forecast_original_json"], second["forecast_blob_sha256"] = _encode(forecast)
+        second["outcome_original_json"], second["outcome_blob_sha256"] = _encode(outcome)
+        second["source_event_id"] = "SYNTHETIC_DISTINCT_PACKET"
+        result = compare_shadow_12h([original, second])
+        self.assertEqual(result["provisional_paired"], 2)
+        self.assertEqual(result["rows"][1]["status"], "PROVISIONAL_RESEARCH_ONLY")
+        self.assertFalse(result["scientific_edge_verified"])
+        # Distinct hashes are an internal cluster control, NOT independent
+        # evidence of provider first-known source ownership or a trading edge.
 
     def test_integrity_and_time_basis_adversarial_mutations(self):
         from scripts.learning.compass_outcomes import canon
