@@ -1240,7 +1240,7 @@
   position:relative;
 }
 .premium-next #official-path-view .path-node::before {
-  position:absolute;top:2px;left:12px;inset:auto;
+  position:absolute;inset:auto auto auto auto;top:2px;left:12px;
   width:14px;height:14px;
   content:"";border:2px solid #c5d3e2;
   border-radius:50%;background:#fff;z-index:1;
@@ -1301,4 +1301,33 @@
  .premium-next:has(#compass-pro) *, .premium-next:has(#compass-pro) *::before {
    scroll-behavior:auto;transition:none!important;animation:none!important;
  }
+}
+
+
+/* Cycle checkpoints and altseason hierarchy with dark emphasis reserved
+ * for the source-owned current reference only. Distribution remains dormant. */
+.premium-next #official-path-view .path-hero {
+ background:#f0f5fb;border:1px solid #e1eaf4;border-radius:14px;
+ padding:clamp(17px,2.8vw,27px);color:#133659;
+ box-shadow:none;
+}
+.premium-next #official-path-view .path-hero strong {
+ font-size:clamp(19px,2.8vw,27px);letter-spacing:-.04em;
+}
+.premium-next #official-path-view .path-main-row article {
+ background:#fff;border:1px solid #e3eaf2;border-radius:13px;
+}
+.premium-next #official-path-view .path-main-row article strong {
+ color:#173b61;font-size:clamp(16px,2vw,21px);
+}
+.premium-next #official-path-view .path-node[data-kind=unverified][data-phase=DISTRIBUTION],
+.premium-next #official-path-view .path-node[data-kind=unverified][data-phase=PROTECTION] {
+ opacity:.38;
+}
+.premium-next #official-path-view .path-rotation {
+ gap:7px;
+}
+.premium-next #official-path-view .rotation-tier {
+ border-radius:10px;border:1px solid #e5ebf2;
+ background:#fafbfc;
 }
