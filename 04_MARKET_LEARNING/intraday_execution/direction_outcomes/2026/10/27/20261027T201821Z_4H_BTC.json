@@ -1,0 +1,92 @@
+{
+  "actual_direction": "UP",
+  "adjudication_delay_hours": 0.370532,
+  "authority": {
+    "automatic_rule_changes": false,
+    "portfolio_execution": false,
+    "shadow_only": true
+  },
+  "brier_score": null,
+  "calibration_group": "BTC:4H:UP:5_of_6",
+  "calibration_key": "5_of_6",
+  "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+  "due_at_utc": "2026-10-28T00:00:00Z",
+  "end_value": 80909.77,
+  "evidence_candle_open_utc": "2026-10-27T23:00:00Z",
+  "evidence_deadline_utc": "2026-10-28T01:30:00Z",
+  "evidence_horizon_error_hours": 0.0,
+  "evidence_observation_utc": "2026-10-28T00:00:00Z",
+  "evidence_semantics": "EXACT_DUE_CLOSED_1H_OWNER_CANDLE",
+  "evidence_source_binding_sha256": "eaefd545ef0db5fbe1b0e245616c5f2f2000a34e506c0f2299a2709eee8276cb",
+  "evidence_source_commit_sha": "2fc7a4f3135825c6cfba47478e7e566c5f9b2334",
+  "evidence_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-27.csv",
+  "evidence_source_snapshot_utc": "2026-10-28T00:21:40Z",
+  "frozen_calibrated_probability_pct": null,
+  "horizon_hours": 4,
+  "issued_at_utc": "2026-10-27T20:18:21.534734Z",
+  "measured_at_utc": "2026-10-28T00:22:13.914506Z",
+  "miss_analysis": {
+    "families_aligned_with_actual": [
+      "return_1h",
+      "return_4h",
+      "session_vwap",
+      "momentum_acceleration",
+      "taker_balance"
+    ],
+    "families_opposed_to_actual": [
+      "taker_change"
+    ]
+  },
+  "predicted_direction": "UP",
+  "prediction_path": "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/10/27/20261027T201821Z.json",
+  "prediction_sha256": "47aaec01b8a921c2175cd1706e27b0804e9829ce47c48037d3c207dca1e05148",
+  "production_context": {
+    "commit_sha": "2fc7a4f3135825c6cfba47478e7e566c5f9b2334",
+    "event": "workflow_dispatch",
+    "ref": "refs/heads/main",
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "run_attempt": "1",
+    "run_id": "40608187415"
+  },
+  "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+  "registration_receipt_sha256": "a61938f9b772f204ab0d5bc1e11798e51ee313bf1e1857f3d6bafd7b6bdf66d2",
+  "result": "HIT",
+  "return_pct": 0.11384874,
+  "source_candle_open_utc": "2026-10-27T19:00:00+00:00",
+  "source_price_observation_utc": "2026-10-27T20:00:00Z",
+  "start_value": 80817.76,
+  "status": "MATURED",
+  "target": "BTC",
+  "votes": [
+    {
+      "direction": "UP",
+      "family": "return_1h",
+      "value": 0.240325461401
+    },
+    {
+      "direction": "UP",
+      "family": "return_4h",
+      "value": 0.3171335663704422
+    },
+    {
+      "direction": "UP",
+      "family": "session_vwap",
+      "value": 0.7917010091637033
+    },
+    {
+      "direction": "UP",
+      "family": "momentum_acceleration",
+      "value": 0.21467264565366667
+    },
+    {
+      "direction": "UP",
+      "family": "taker_balance",
+      "value": 0.598899411987
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_change",
+      "value": -0.10629909605800003
+    }
+  ]
+}
