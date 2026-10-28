@@ -12,7 +12,7 @@ const date=t=>typeof t==='string'?Date.parse(t):NaN;
 // The seven-day range must be the ISO week actually named by its original source.
 // Duration alone lets a perfectly formed W39 window be relabelled as W44/W45.
 const isoMonday=label=>{
- const m=/^(\\d{4})-W(\\d{2})$/.exec(String(label||''));
+ const m=/^([0-9]{4})-W([0-9]{2})$/.exec(String(label||''));
  if(!m)return NaN;
  const year=Number(m[1]),week=Number(m[2]);
  if(year<1970||year>9998||week<1||week>53)return NaN;
