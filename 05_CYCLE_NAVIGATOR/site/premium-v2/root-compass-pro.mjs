@@ -281,12 +281,12 @@ function paint(){
  // Only neutral presentation labels; all action, SELL, risk, state, price and
  // source-provenance labels remain produced by existing PRO/source modules.
  const copy=lang==='en'?{
-  risk:'Risk, protection and trader view',
+  risk:'All horizons · detailed risk & trader view',
   horizon:'Time horizons',
   owner:'Official Compass only',
   time:'Horizon',direction:'Direction',action:'Source posture'
  }:{
-  risk:'Risiko, beskyttelse og trader-visning',
+  risk:'Alle tidshorisonter · risiko og trader-visning',
   horizon:'Tidshorisonter',
   owner:'Kun officielt Kompas',
   time:'Tid',direction:'Retning',action:'Kildens position'
