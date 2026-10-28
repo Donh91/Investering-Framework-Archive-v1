@@ -406,6 +406,10 @@ try{
     reducedMotion:getComputedStyle(document.documentElement).scrollBehavior};
   });
   reports.push(report);
+  if(beforeViewport.documentScrollWidth>width){
+   const offenders=await evaluate(()=>[...document.querySelectorAll('body *')].map(el=>({id:el.id,cls:String(el.className?.baseVal||el.className||'').slice(0,40),left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right)})).filter(q=>q.right>innerWidth+8||q.left<-8).sort((a,b)=>b.right-a.right).slice(0,20));
+   console.log('WIDTH_DEBUG',width,JSON.stringify(offenders));
+  }
   assertExactMobileViewport(report,width,height,beforeViewport);
   assert.ok(report.overflow<=2,'Horizontal page overflow on '+width+'px '+JSON.stringify(report));
   assert.ok(report.clockText&&report.clockText!=='—'&&
