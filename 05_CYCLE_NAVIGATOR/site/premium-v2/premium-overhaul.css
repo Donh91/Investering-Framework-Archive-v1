@@ -1476,3 +1476,68 @@
 .premium-next #variant-panel .cn-daily-note strong{font-size:12px}
 .premium-next #variant-panel .cn-daily-note p{font-size:11px;line-height:1.5;color:#b3c8dd;margin:6px 0}
 .premium-next #variant-panel .cn-daily-note small{font-size:10px;color:#91accb;line-height:1.4}
+
+
+/* PREMIUM FINISH v1.0 · source-honest chart editorial art direction.
+ * Owner iPhone screenshot 2026-10-29: remove demonstration and visual
+ * verbosity, preserve exact frozen high/low and observed actuals.
+ * No color depends on forecast performance or imaginary daily closes. */
+.premium-next #variant-panel.graph-card{border-radius:15px!important;padding:clamp(9px,2.2vw,18px)!important;background:#fff!important;border:1px solid #e2e9f0!important;box-shadow:0 6px 24px #071c390a!important;}
+.premium-next #variant-panel .card-top{margin-bottom:13px!important}
+.premium-next #variant-panel .card-desc{max-width:56ch!important;font-size:12px!important;line-height:1.45!important;color:#6d8095!important}
+.premium-next #variant-panel .chart-surface{background:#0c1b31!important;border-radius:12px!important;overflow:hidden!important}
+.premium-next #variant-panel .instrument-header{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;gap:9px!important;padding:17px 17px 0!important}
+.premium-next #variant-panel .instrument-left{min-width:0!important}
+.premium-next #variant-panel .instrument-left strong{font-size:clamp(24px,4.5vw,34px)!important;font-weight:690!important;letter-spacing:-.047em!important;margin:4px 0 3px!important;line-height:1.16!important;white-space:nowrap!important}
+.premium-next #variant-panel .instrument-left small{font-size:10px!important;line-height:1.3!important;max-width:none!important;color:#91a7bf!important}
+.premium-next #variant-panel .instrument-right{max-width:118px!important;padding-top:2px!important}
+.premium-next #variant-panel .instrument-right > span{font-size:9px!important;letter-spacing:.065em!important;white-space:normal!important}
+.premium-next #variant-panel .instrument-right strong{font-size:10px!important;margin:6px 0 3px!important;line-height:1.3!important;color:#c9daef!important}
+.premium-next #variant-panel .instrument-right small{font-size:9px!important;line-height:1.35!important;color:#8198b1!important}
+.premium-next #variant-panel .legend{display:flex!important;gap:10px 19px!important;align-items:center!important;margin:0!important;padding:17px 17px 9px!important;flex-wrap:wrap!important}
+.premium-next #variant-panel .legend > div{font-size:10px!important;font-weight:530!important;color:#aec0d4!important;gap:7px!important}
+.premium-next #variant-panel .legend i{width:16px!important}
+.premium-next #variant-panel #cn-forecast-legend[hidden]{display:none!important}
+.premium-next #variant-panel .plot-shell{height:282px!important;margin:4px 9px 0!important;overflow:hidden!important}
+.premium-next #variant-panel .plot-shell #chart{max-height:none!important;height:100%!important;width:calc(100% - 48px)!important}
+.premium-next #variant-panel .chart-price-axis{width:46px!important}
+.premium-next #variant-panel .chart-price-axis span{font-size:9px!important;color:#7f94ae!important;font-weight:500}
+.premium-next #variant-panel .day-axis{margin:0 11px!important;padding:0 48px 0 0!important;min-height:25px!important}
+.premium-next #variant-panel .day-axis span{font-size:9px!important;letter-spacing:.02em!important;color:#8a9fb7!important}
+.premium-next #variant-panel #range-band{opacity:.055!important}
+.premium-next #variant-panel #range-upper,
+.premium-next #variant-panel #range-lower{stroke:#7193c4!important;opacity:.6!important;stroke-width:1.5!important;stroke-dasharray:4 11!important;vector-effect:non-scaling-stroke}
+.premium-next #variant-panel #forecast{stroke:#8fbbfa!important;stroke-width:2.4!important;stroke-dasharray:7 7!important;vector-effect:non-scaling-stroke}
+.premium-next #variant-panel #actual{stroke:#56d6ae!important;stroke-width:3!important;vector-effect:non-scaling-stroke}
+.premium-next #variant-panel #endpoint-halo{opacity:.13!important}
+.premium-next #variant-panel #playhead{opacity:.32!important}
+.premium-next #variant-panel .instrument-foot{margin:3px 17px 0!important;padding:11px 0 13px!important;border-top:1px solid #243b54!important;font-size:9px!important;letter-spacing:.025em!important;font-weight:550!important;color:#859bb5!important;line-height:1.25!important}
+.premium-next #variant-panel .tiny-live{background:#688bb4!important;width:5px!important;height:5px!important}
+.premium-next #variant-panel .cn-range-evidence{background:#fff;border:1px solid #e6edf4;border-top:0;border-radius:0 0 10px 10px;margin:0!important;padding:0 13px!important}
+.premium-next #variant-panel .cn-range-evidence summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;color:#45637f;font-size:10px;font-weight:680;letter-spacing:.01em}
+.premium-next #variant-panel .cn-range-evidence summary::-webkit-details-marker{display:none}
+.premium-next #variant-panel .cn-range-evidence summary:after{content:"+";font-size:19px;color:#7f94a8;font-weight:400}
+.premium-next #variant-panel .cn-range-evidence[open] summary:after{content:"−"}
+.premium-next #variant-panel .cn-range-evidence .cn-evidence-hint{font-weight:480;color:#8a9bb0;margin-left:auto}
+.premium-next #variant-panel .cn-range-evidence .cn-frozen-window-ledger{padding:7px 0 14px!important;margin:0!important;background:#fff!important;gap:7px!important}
+.premium-next #variant-panel .cn-range-evidence .cn-frozen-window{background:#f8fafc!important;border:1px solid #e2eaf3!important;border-radius:8px!important;padding:10px 9px!important;gap:5px!important}
+.premium-next #variant-panel .cn-range-evidence .cn-frozen-window-day{font-size:9px!important;color:#637f9d!important}
+.premium-next #variant-panel .cn-range-evidence .cn-frozen-window strong{font-size:clamp(11px,1.25vw,14px)!important;color:#1c3b5d!important;letter-spacing:-.025em!important}
+.premium-next #variant-panel .cn-range-evidence .cn-frozen-window small{display:none!important}
+.premium-next #variant-panel .cn-demo-warning,
+.premium-next #variant-panel #illustrative-test-curve{display:none!important}
+@media(max-width:430px){
+ .premium-next #variant-panel .instrument-header{padding:14px 12px 0!important;gap:5px!important}
+ .premium-next #variant-panel .instrument-left strong{font-size:clamp(21px,6.4vw,27px)!important}
+ .premium-next #variant-panel .instrument-right{max-width:106px!important}
+ .premium-next #variant-panel .legend{padding:13px 12px 7px!important;gap:8px 12px!important}
+ .premium-next #variant-panel .legend > div{font-size:9px!important}
+ .premium-next #variant-panel .plot-shell{height:248px!important;margin:3px 7px 0!important}
+ .premium-next #variant-panel .instrument-foot{margin:4px 12px 0!important;padding:9px 0 12px!important}
+ .premium-next #variant-panel .cn-range-evidence{padding:0 10px!important}
+ .premium-next #variant-panel .cn-range-evidence .cn-frozen-window{padding:8px 6px!important}
+ .premium-next #variant-panel .cn-range-evidence .cn-frozen-window strong{font-size:10.5px!important;overflow-wrap:anywhere}
+}
+@media(prefers-reduced-motion:reduce){
+ .premium-next #variant-panel .chart-surface *{animation:none!important;transition:none!important}
+}
