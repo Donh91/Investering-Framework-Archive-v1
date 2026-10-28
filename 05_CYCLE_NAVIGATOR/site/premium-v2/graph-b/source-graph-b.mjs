@@ -167,6 +167,9 @@ function plot(){
   attr('range-lower','d',movePath(model.forecast.map(p=>({x:x(p.time*1000),y:y(p.low)}))));
  }else{
   attr('forecast','d','');
+  // Each frozen intraweek window is already a prospective range forecast.
+  // Draw the authentic three-step horizon envelope directly; do NOT imply
+  // a daily expected-close line or interpolate between window centers.
   // Three independently issued aggregate range windows: NEVER fabricate
   // a connecting expected-close price path across missing original days.
   attr('range-band','d',bands.map(b=>{
