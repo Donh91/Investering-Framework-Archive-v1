@@ -35,6 +35,14 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     .replace('data-t="horizonsHeading"','id="pro-horizon-heading" data-t="horizonsHeading"')
     .replace('<span data-t="ownerOfficial"','<span id="pro-horizon-owner" data-t="ownerOfficial"')
     .replace('<div class="table-scroll"><table>','<div class="table-scroll"><table id="pro-horizon-table">');
+  const forward=excerpt(proSource,
+    '<section class="cn-forward"',
+    '<section class="section"><div class="section-heading"><h2 data-t="tiersHeading"',
+    'pro-long-range');
+  const reentry='<section class="cn-pro-reentry" aria-labelledby="pro-reentry-heading">'+
+    '<h3 id="pro-reentry-heading">Genkøb · officiel status</h3>'+
+    '<strong id="pro-reentry-state">Afventer kilde</strong>'+
+    '<p id="pro-reentry-note">En risikoadvarsel er ikke et genkøbssignal.</p></section>';
   const path=excerpt(proSource,
     '<section id="view-path"', '<section id="view-results"', 'pro-path')
     .replace('<section id="view-path" class="view" hidden role="tabpanel" aria-labelledby="tab-path">',
@@ -47,8 +55,10 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   unique(core,riskMarker,'pro-risk-marker');
   const coreDisclosure=core.replace(riskMarker,
     '<details class="cn-pro-more"><summary>Risiko, beskyttelse og trader-visning</summary>'+riskMarker)
-    .replace(/<\/section>\s*$/,extra+'\n</details>\n</section>');
+    .replace(/<\/section>\s*$/,extra+'\n'+forward+'\n'+reentry+'\n</details>\n</section>');
   if(!coreDisclosure.includes('id="pro-forward-rows"')||
+     !coreDisclosure.includes('id="cn-forward-source-status"')||
+     !coreDisclosure.includes('id="pro-reentry-state"')||
      !coreDisclosure.includes('id="premium-risk-steps"'))
     throw Error('CN_UNIFIED_ROOT_PRO_FEATURES_MISSING');
   const pro='<section id="compass-pro" class="cn-pro-surface" aria-labelledby="pro-heading">'+
