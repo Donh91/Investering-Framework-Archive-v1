@@ -120,6 +120,14 @@ def load_bridge(repo: Path, *, target_year: int, target_week: int,
                         or hours.get('observed_hours') != 168
                         or hours.get('missing_hour_count') != 0):
                     return reject('BRIDGE_ACTUALS_HOURLY_COVERAGE_UNVERIFIED', 'SOURCE_UNAVAILABLE')
+                # 168 observed clocks cannot certify BTC/ETH inputs if per-field
+                # price observations are incomplete or the producer omits them.
+                fields = hours.get('per_field_completeness')
+                if (not isinstance(fields, dict)
+                        or any(not isinstance(fields.get(asset), dict)
+                               or fields[asset].get('complete_hours') != 168
+                               for asset in ('btc_close', 'eth_close'))):
+                    return reject('BRIDGE_ACTUALS_PRICE_FIELD_COVERAGE_UNVERIFIED', 'SOURCE_UNAVAILABLE')
             except (ValueError, TypeError, AttributeError):
                 return reject('BRIDGE_ACTUALS_INVALID')
     windows = [bridge.get('weekly')]

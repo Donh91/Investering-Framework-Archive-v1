@@ -21,7 +21,10 @@ class ProspectiveBridgeTests(unittest.TestCase):
                    'generated_at_utc': '2026-10-26T05:00:00Z',
                    'hourly_gap_diagnostics': {'expected_hours': 168,
                                               'observed_hours': 168,
-                                              'missing_hour_count': 0}}
+                                              'missing_hour_count': 0,
+                                              'per_field_completeness': {
+                                                  'btc_close': {'complete_hours': 168},
+                                                  'eth_close': {'complete_hours': 168}}}}
         self.sources = {'prior_published_ranges': 'published.md',
                         'completed_week_actuals': 'actuals.json'}
         (self.repo / 'published.md').write_text('Original published ranges')
@@ -212,6 +215,24 @@ class ProspectiveBridgeTests(unittest.TestCase):
         value['hourly_gap_diagnostics']['missing_hour_count'] = 168
         self.rebind_original_actuals(value)
         self.reject('BRIDGE_ACTUALS_HOURLY_COVERAGE_UNVERIFIED')
+
+    def test_complete_clock_without_btc_price_coverage_is_rejected(self):
+        value = json.loads((self.repo / 'actuals.json').read_text())
+        value['hourly_gap_diagnostics']['per_field_completeness']['btc_close']['complete_hours'] = 167
+        self.rebind_original_actuals(value)
+        self.reject('BRIDGE_ACTUALS_PRICE_FIELD_COVERAGE_UNVERIFIED')
+
+    def test_complete_clock_without_eth_field_evidence_is_rejected(self):
+        value = json.loads((self.repo / 'actuals.json').read_text())
+        del value['hourly_gap_diagnostics']['per_field_completeness']['eth_close']
+        self.rebind_original_actuals(value)
+        self.reject('BRIDGE_ACTUALS_PRICE_FIELD_COVERAGE_UNVERIFIED')
+
+    def test_complete_clock_with_no_per_field_evidence_is_rejected(self):
+        value = json.loads((self.repo / 'actuals.json').read_text())
+        del value['hourly_gap_diagnostics']['per_field_completeness']
+        self.rebind_original_actuals(value)
+        self.reject('BRIDGE_ACTUALS_PRICE_FIELD_COVERAGE_UNVERIFIED')
 
     def test_invalid_band_no_partial_admission(self):
         self.bridge['intraday']['day_5_7']['ETH']['low'] = float('nan')
