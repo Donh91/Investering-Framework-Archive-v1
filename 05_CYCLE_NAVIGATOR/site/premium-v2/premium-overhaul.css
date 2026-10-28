@@ -1331,3 +1331,42 @@
  border-radius:10px;border:1px solid #e5ebf2;
  background:#fafbfc;
 }
+
+
+/* Five source-owned pullback classes appear above the detail fold.
+ * Duplicate visual marks only: their data and active index are cloned from
+ * the existing single official risk renderer, not independently calculated. */
+.premium-next #compass-pro .cn-risk-quick {
+  background:#f7f9fc;
+  border:1px solid #e3eaf2;
+  padding:clamp(15px,2vw,20px);
+  border-radius:13px;
+  margin:15px 0 0;
+}
+.premium-next #compass-pro .cn-risk-quick-head {
+ display:flex;justify-content:space-between;align-items:end;
+ gap:10px 15px;flex-wrap:wrap;
+}
+.premium-next #compass-pro .cn-risk-quick-head small {
+ display:block;font-size:10px;font-weight:750;letter-spacing:.085em;
+ color:#7b8ea1;margin-bottom:7px;
+}
+.premium-next #compass-pro .cn-risk-quick-head strong {
+ font-size:clamp(16px,2.1vw,22px);font-weight:720;
+ color:#163c64;letter-spacing:-.025em;line-height:1.22;
+}
+.premium-next #compass-pro .cn-risk-quick-head > span {
+ font-size:11px;color:#768da1;
+}
+.premium-next #compass-pro .cn-risk-quick .risk-class-rail {
+ margin:14px 0 0;gap:5px;
+}
+.premium-next #compass-pro .cn-risk-quick .risk-step {
+ font-size:clamp(9px,1vw,11px);
+ padding:10px 3px 0;
+}
+@media(max-width:430px){
+ .premium-next #compass-pro .cn-risk-quick {padding:13px 10px}
+ .premium-next #compass-pro .cn-risk-quick-head {gap:5px}
+ .premium-next #compass-pro .cn-risk-quick .risk-step {font-size:8.5px;letter-spacing:-.02em}
+}
