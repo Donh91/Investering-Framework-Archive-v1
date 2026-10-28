@@ -7,6 +7,8 @@ on:
       - 'tests/cycle_navigator/test_v2_edge_forecast_freeze.py'
       - 'scripts/cycle_navigator/prospective_range_bridge.py'
       - 'tests/cycle_navigator/test_prospective_range_bridge.py'
+      - 'scripts/cycle_navigator/build_weekly_cycle_navigator.py'
+      - 'tests/cycle_navigator/test_forward_range_window_clock.py'
       - '05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.mjs'
       - '05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.test.mjs'
       - '.github/workflows/cycle-navigator-weekly-publication.yml'
@@ -30,6 +32,8 @@ jobs:
         run: python -m unittest discover -s tests/cycle_navigator -p test_v2_edge_forecast_freeze.py -v
       - name: Run exact-target prospective bridge custody tests
         run: python -m unittest tests.cycle_navigator.test_prospective_range_bridge -v
+      - name: Enforce first-known forecast window labels without rewriting old ledger
+        run: python -m unittest tests.cycle_navigator.test_forward_range_window_clock -v
       - name: Prevent source-bound Graph B weekly window mislabelling
         run: node --test 05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.test.mjs
       - name: Source capture is not a proof-sealed release or active extra cron
