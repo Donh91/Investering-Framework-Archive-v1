@@ -112,3 +112,35 @@ test('PRO inventory is maintained without duplicate legacy presentation',()=>{
  assert.equal(id(html,'premium-rotation'),1);
  // PRO source reuse must still be source-only, never an independent engine.
 });
+
+
+test('Quiet Precision v2 keeps the 12h nowcast distinct from 1–3d official horizon',()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const idName of ['cn-horizon-13','cn-horizon-13-label',
+  'cn-horizon-13-posture','premium-now-direction','premium-now-action'])
+  assert.equal(id(html,idName),1,idName);
+ assert.match(html,/1–3 dage · kildevurdering/);
+ assert.match(html,/id="cn-alt-milestone-eta"/);
+ assert.match(html,/id="cn-alt-milestone-state"/);
+ assert.match(html,/id="premium-path-rail"/);
+ const runtimeSource=html.indexOf('id="compass-pro"');
+ const chartSource=html.indexOf('id="variant-panel"');
+ assert.ok(runtimeSource>=0&&chartSource>runtimeSource);
+});
+test('design keeps W44 without invented daily forecast, and source-issued 7d path available',async()=>{
+ const adapter=await read('./graph-b/official-source-adapter.mjs');
+ const graph=await read('./graph-b/source-graph-b.mjs');
+ const runtime=await read('./root-compass-pro.mjs');
+ const style=await read('./premium-overhaul.css');
+ assert.match(adapter,/forecastStatus='SOURCE_ISSUED'/);
+ assert.match(adapter,/values\.length===7/);
+ assert.match(adapter,/forecastStatus='PUBLISHED_INVALID_FAIL_CLOSED'/);
+ assert.match(graph,/attr\('forecast','d',''\)/);
+ assert.match(graph,/edge\('forecast_high'\)/);
+ assert.match(graph,/edge\('forecast_low'\)/);
+ assert.match(style,/#variant-panel #range-band/);
+ assert.match(style,/#variant-panel \.alt-token \{display:none!important\}/);
+ assert.match(runtime,/renderQuickDecision\(\)/);
+ assert.match(runtime,/renderAltMilestone\(\)/);
+ assert.match(runtime,/No verified ETA/);
+});
