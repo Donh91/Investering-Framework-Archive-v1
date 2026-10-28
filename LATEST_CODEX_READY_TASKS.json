@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-10-28T10:52:06Z",
+  "generated_at_utc": "2026-10-28T11:20:59Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -48,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-28T10:52:06Z",
+      "last_observed_at_utc": "2026-10-28T11:20:59Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -120,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-10-28T10:52:06Z",
+      "last_observed_at_utc": "2026-10-28T11:20:59Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -153,6 +153,66 @@
       "transition_receipt_path": "research/codex/transitions/923de2eed113038e8a6c.json",
       "transition_receipt_required": true,
       "workflow": "research-intake/codex-research-memes-v3-solana-cross-chain-expansion-v1"
+    },
+    {
+      "allowed_change_scope": [
+        "Donh91/Investering-Framework-Archive-v1:scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+        "Donh91/Investering-Framework-Archive-v1:scripts/cycle_navigator/prospective_range_bridge.py",
+        "Donh91/Investering-Framework-Archive-v1:tests/cycle_navigator/test_prospective_range_bridge.py"
+      ],
+      "candidate_id": "codex-research-cn-w44-range-bridge-target-mismatch-v1",
+      "candidate_path": "research/codex/intake/2026/10/codex-research-cn-w44-range-bridge-target-mismatch-v1.json",
+      "candidate_sha256": "26f5dfd74a3872097edcac42c1e9496700e3c0a199d45f78afa14b4af879ef17",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "RESEARCH_CODE_REMEDIATION_CANDIDATE",
+      "first_observed_at_utc": "2026-10-27T22:07:36Z",
+      "forbidden_changes": [
+        "API budget",
+        "automatic merge",
+        "canonical authority",
+        "historical forecast rewrite",
+        "independent baseline promotion",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "new workflow",
+        "portfolio logic"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a369f29837aa0a0c3c82 --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-10-28T11:20:59Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Reproduce the W39 bridge target mismatch on W44 and inspect recurring source production in existing CN weekly workflow. Preserve the current strict validator and W44 immutable forecast. If a valid prospective source is available, repair only the existing future weekly handoff. Otherwise preserve SOURCE_UNAVAILABLE.",
+      "observations": 1,
+      "post_fix_gate": "FOCUSED_POSITIVE_AND_MUTATION_NEGATIVE_TESTS_PASS_PLUS_W44_IMMUTABILITY_PLUS_EXACT_HEAD_INDEPENDENT_REVIEW_PLUS_MAIN_SOURCE_READBACK",
+      "precondition": "Candidate codex-research-cn-w44-range-bridge-target-mismatch-v1 still exists on main at research/codex/intake/2026/10/codex-research-cn-w44-range-bridge-target-mismatch-v1.json with SHA-256 26f5dfd74a3872097edcac42c1e9496700e3c0a199d45f78afa14b4af879ef17, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
+        "research/cycle_navigator/operational_readback/2026-10-26_W44.json",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "a369f29837aa0a0c3c82",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-10-27T22:07:36Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "FOCUSED_POSITIVE_AND_MUTATION_NEGATIVE_TESTS_PASS_PLUS_W44_IMMUTABILITY_PLUS_EXACT_HEAD_INDEPENDENT_REVIEW_PLUS_MAIN_SOURCE_READBACK"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "88d2898e19125bf4694173db7ebfc00d8d18e69c8f31c4be75e9d8c3ecb62bee",
+      "transition_receipt_path": "research/codex/transitions/a369f29837aa0a0c3c82.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-cn-w44-range-bridge-target-mismatch-v1"
     }
   ]
 }
