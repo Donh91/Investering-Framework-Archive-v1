@@ -24,12 +24,13 @@ test('Graph B chart remains exactly one source-owned SVG',()=>{
 
 test('Chart and proof distinguish original forecasts from verified observations',()=>{
  assert.match(source,/Oprindelige prisintervaller og verificerede timekurser/);
- assert.match(source,/Udstedt dagsprognose/);
- assert.match(source,/Observeret timekurs/);
- assert.match(source,/Frosset prisinterval/);
+ assert.match(source,/Forventet dagskurs/);
+ assert.match(source,/Faktisk kurs/);
+ assert.match(source,/Frossen high\/low/);
  assert.match(source,/70\/30-scoren gælder prisintervaller, ikke afkast/);
  assert.match(source,/Manglende data tæller ikke som et korrekt resultat/);
- assert.match(graphCode,/No daily forecast line without prior issuance/);
+ assert.match(graphCode,/forecastLegend\.hidden=model\?\.forecast_status!=='SOURCE_ISSUED'/);
+ assert.doesNotMatch(graphCode,/illustrative-test-curve|cn-demo-warning/);
  assert.doesNotMatch(source,/Forventet low \/ high/);
 });
 

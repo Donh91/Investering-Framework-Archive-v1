@@ -165,8 +165,8 @@ test('this week W44 frozen Monday ranges do not authorize a blue expected-close 
 
 test('frozen intraday windows are forecast presentation even without expected-close path',async()=>{
  const renderer=await read('./graph-b/source-graph-b.mjs');
- assert.match(renderer,/MANDAGENS 3 PROGNOSEVINDUER/);
- assert.match(renderer,/Mandagens intraday-prognose/);
+ assert.match(renderer,/Original prognose · 3 vinduer/);
+ assert.match(renderer,/Frossen high\/low/);
  assert.match(renderer,/bands\.map\(b=>/);
  assert.match(renderer,/paintFrozenWindowLedger\(bands\)/);
  assert.match(renderer,/paintFrozenWindowLedger\(\[\]\)/);
@@ -181,21 +181,27 @@ test('frozen intraday windows are forecast presentation even without expected-cl
  assert.equal(frozen.daily_price_path.ETH.status,'UNAVAILABLE');
 });
 
-test('visually explicit test line cannot pass for issued daily forecast',async()=>{
+
+test('premium finish: fabricated W44 midpoint curve and large test explanation do not ship',async()=>{
  const renderer=await read('./graph-b/source-graph-b.mjs');
- assert.match(renderer,/illustrative-test-curve/);
- assert.match(renderer,/forecast_low\+w\.forecast_high/);
- assert.match(renderer,/model\.forecast_status==='SOURCE_ISSUED'/);
- const html=await read('./graph-b/source-graph-b.html');
- assert.match(html,/TESTLINJE · ILLUSTRATION/);
- assert.match(html,/Ikke udstedt dagsprognose og aldrig med i score/);
- assert.match(html,/id="illustrative-test-curve"/);
- assert.match(html,/id="cn-demo-warning"/);
+ const html=buildUnifiedRootHtml(original,pro);
+ assert.doesNotMatch(renderer,/illustrative-test-curve|cn-demo-warning|forecast_low\+w\.forecast_high/);
+ assert.doesNotMatch(html,/illustrative-test-curve|cn-demo-warning|TESTLINJE · ILLUSTRATION/);
+ assert.match(html,/class="cn-range-evidence"/);
+ assert.equal(id(html,'cn-frozen-window-ledger'),1);
+ assert.match(html,/id="cn-forecast-legend" hidden/);
+ assert.match(renderer,/forecastLegend\.hidden=model\?\.forecast_status!=='SOURCE_ISSUED'/);
+ assert.match(renderer,/hasDailyRanges/);
+ assert.match(renderer,/paintDailyResearchNotes/);
+ assert.match(renderer,/edge\('forecast_high'\)/);
+ assert.match(renderer,/edge\('forecast_low'\)/);
+ assert.match(renderer,/attr\('forecast','d',movePath\(f\.map\(xy\)\)\)/);
 });
 
-test('illustrative TEST midpoint curve is strictly W44-only and auto-expires for W45',async()=>{
- const src=await read('./graph-b/source-graph-b.mjs');
- assert.match(src,/if\(demo&&model\.forecast_week==='2026-W44'\)/);
- assert.match(src,/model\.forecast_week!=='2026-W44'/);
- assert.match(src,/else if\(demo\)\{attr\('illustrative-test-curve','d',''\)/);
+test('premium finish: visual proof screenshots are captured on exact tested root',async()=>{
+ const browser=await read('./next-browser.test.mjs');
+ assert.match(browser,/CN_DESIGN_SCREENSHOT_/);
+ assert.match(browser,/Page\.captureScreenshot/);
+ assert.match(browser,/scrollIntoView/);
+ assert.match(browser,/assert\.ok\(shot\.data\?\.length>1000/);
 });
