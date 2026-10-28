@@ -555,3 +555,67 @@
  color:#526b84;font-size:12px;line-height:1.6;min-height:0;
 }
 .premium-next .premium-decision-summary .official-pilot-gate:empty {display:none}
+
+
+/* SITE #1578 · Editorial clarity pass. No chart geometry or market logic changes.
+ * Emphasis comes from typography, whitespace and readable source boundaries. */
+.premium-next .premium-entry-intro h1,
+.premium-next .card-top h2,
+.premium-next .proof-head h2,
+.premium-next .official-pilot-head h2 {
+  text-wrap: balance;
+}
+.premium-next .premium-entry-intro p,
+.premium-next .card-desc,
+.premium-next .proof-head p,
+.premium-next .official-pilot-head p {
+  text-wrap: pretty;
+}
+.premium-next .card-desc {
+  max-width: 66ch;
+  line-height: 1.62;
+  font-size: clamp(13px, 1.25vw, 15px);
+}
+.premium-next #observed-value,
+.premium-next #time-label,
+.premium-next .official-pilot-action strong,
+.premium-next .official-pilot-state strong {
+  font-variant-numeric: tabular-nums;
+}
+.premium-next .premium-entry-navigation a {
+  transition: color .14s ease, border-color .14s ease;
+  border-bottom: 2px solid transparent;
+}
+.premium-next .premium-entry-navigation a:focus-visible,
+.premium-next .dev-lang button:focus-visible,
+.premium-next .asset-select button:focus-visible,
+.premium-next .proof-steps button:focus-visible {
+  outline: 2px solid #2f6fda;
+  outline-offset: 3px;
+}
+@media (hover:hover) {
+  .premium-next .premium-entry-navigation a:hover {
+    color: #0c3767;
+    border-bottom-color: #2f6fda;
+  }
+}
+@media (max-width: 430px) {
+  .premium-next .premium-entry-intro h1 {
+    font-size: clamp(31px, 8vw, 40px);
+    line-height: 1.07;
+    letter-spacing: -.045em;
+  }
+  .premium-next .premium-entry-navigation {
+    flex-wrap: wrap;
+    column-gap: 16px;
+    row-gap: 0;
+  }
+  .premium-next .premium-entry-navigation a {
+    min-height: 44px;
+    padding: 10px 0;
+  }
+  .premium-next .card-desc { font-size: 13px; line-height: 1.65; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .premium-next .premium-entry-navigation a { transition: none; }
+}
