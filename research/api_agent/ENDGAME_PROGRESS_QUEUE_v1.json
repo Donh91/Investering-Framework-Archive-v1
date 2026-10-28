@@ -1,20 +1,19 @@
 {
   "contract": "TERRA_ENDGAME_PROGRESS_QUEUE_v1",
   "active": {
-    "work_id": "TASK2_FULL_FILTER_OUTCOME_CUSTODY_20261028",
-    "owner_pr": 1814,
-    "owner_issue": 1596,
-    "expected_pr_head": "f22ba3b954913c3c4941cb4df58badb393ad688f",
-    "objective": "Source-enriched actionable Task2 work after prior missing filter: inspect complete PR patch and actual shared_row_tournament_weekly filter_consumer_rows, prospective_evidence_controller, shared_row_outcome_receipt_gate, relevance consumer and adversarial tests. Find a concrete remaining point-in-time, duplicate identity or outcome denominator bypass with exact reproducible fixture; propose smallest concrete patch and test on existing PR. Do not claim the already-fixed runtime/freeze mismatch as new. If no defect established return NO_FIX_REQUIRED or SOURCE_BLOCKED with exact missing source, not speculative patch. Keep original immutable evidence and no claimed edge.",
+    "work_id": "API_DELIVERY_SELF_PR_RECEIPT_CLOSURE_20261028",
+    "owner_pr": 1823,
+    "owner_issue": 1156,
+    "expected_pr_head": "386d6bfeeddb36333ba749f16385c7ef0b71e53f",
+    "objective": "P0 original API lane #1823 closure after two verified code/test commits. Audit current full PR patch and original exact checkout vs declared parent pin in scripts/api_agent/endgame_progress_packet.py; prove single-commit self-PR update permitted, intervening PR head/drift forbidden, external PR strict SHA unaffected, replay/claim never reused. Examine event-driven only vs self-driving claim, one-charge-per-ID concurrency, $3 per-call and lower $30 org cap with $12 unknown liability reserve, owner $15 incremental cap and release recovery separation. Find at most three exact reproducible code/test defects on original #1823 branch or report NO_FIX_REQUIRED with precise still-missing independent recovery/CI/actual provider billing. No other subsystem edits, no claimed API automation, no generic reviews or duplicate research PR.",
     "paths": [
-      "scripts/research/shared_row_tournament_weekly.py",
-      "scripts/research/prospective_evidence_controller.py",
-      "scripts/research/shared_row_outcome_receipt_gate.py",
-      "scripts/research/shared_row_tournament_relevance.py",
-      "scripts/research/shared_row_tournament_monitor.py",
-      "tests/research/test_shared_row_consumer_integrity.py",
-      "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json"
+      "scripts/api_agent/endgame_progress_packet.py",
+      "tests/api_agent/test_endgame_progress_packet.py",
+      ".github/workflows/api-agent-gateway-gate.yml",
+      "scripts/api_agent/api_gateway.py",
+      "scripts/api_agent/check_monthly_cost_guard.py",
+      "tests/api_agent/test_api_gateway.py"
     ]
   },
-  "semantics": "Single active distinct scientifically falsifiable unit. On later material progress, replace active work_id and objective on THIS same PR branch; no cron, no automatic paid retry, no second PR. Claim is immutable comment before one API call; do not mutate old work_id."
+  "semantics": "Exactly one materially distinct owner-approved P0 API-delivery test on existing PR #1823. Expected SHA is pinned to queue-update parent and admission requires new checkout HEAD with exactly that parent. No reused claim IDs. Paid run may only occur on GitHub PR synchronize, within real remaining billing; no automatic code write/merge; all subsequent changes need separate issue review and budget admission."
 }
