@@ -85,6 +85,12 @@ export async function verifyViteOutput(dist=resolve(project,'../dist/next')){
  const jsText=(await Promise.all(javascript.map(x=>readFile(resolve(root,x.path),'utf8')))).join('\n');
  for(const feed of ['latest.json','compass.json','publication-lineage.json'])
   if(!jsText.includes(feed))errors.push('MISSING_FIRST_PARTY_FEED_REFERENCE:'+feed);
+ // HTML singletons are insufficient: fail if Vite emitted an empty or
+ // chart-only JS bundle instead of the actual protected PRO source controller.
+ for(const marker of [
+  'premium-now-action','pro-reentry-state','source-trace-body',
+  'CN_VNEXT_PUBLIC_FEED_PARITY_v1','OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1'
+ ])if(!jsText.includes(marker))errors.push('MISSING_UNIFIED_PRO_JS_BINDING:'+marker);
  if(errors.length)throw Error('NEXT_VITE_ARTIFACT_INVALID:'+errors.join(';'));
  return {contract:'CN_NEXT_VITE_ARTIFACT_CHECK_v1',status:'PASS',
   output_root:'site/dist/next',base,entrypoints:mandatory,asset_count:inventory.length,
