@@ -192,3 +192,10 @@ test('visually explicit test line cannot pass for issued daily forecast',async()
  assert.match(html,/id="illustrative-test-curve"/);
  assert.match(html,/id="cn-demo-warning"/);
 });
+
+test('illustrative TEST midpoint curve is strictly W44-only and auto-expires for W45',async()=>{
+ const src=await read('./graph-b/source-graph-b.mjs');
+ assert.match(src,/if\(demo&&model\.forecast_week==='2026-W44'\)/);
+ assert.match(src,/model\.forecast_week!=='2026-W44'/);
+ assert.match(src,/else if\(demo\)\{attr\('illustrative-test-curve','d',''\)/);
+});
