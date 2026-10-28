@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.cycle_navigator.daily_price_journey import validate_daily_path
+from scripts.cycle_navigator.daily_price_journey import validate_daily_path, validate_daily_range_plan
 
 
 FORMULA = "70pct_containment_plus_30pct_jaccard"
@@ -314,6 +314,7 @@ def main() -> None:
     ledger_rows = load_range_rows(root, public_issue, forecast_week)
     frozen_intraday = freeze.get("intraday_map") if isinstance(freeze.get("intraday_map"), dict) else {}
     daily_path = validate_daily_path(freeze.get("daily_price_path"), freeze, iso_year, iso_week)
+    daily_ranges = validate_daily_range_plan(freeze.get("daily_range_plan"), freeze, iso_year, iso_week)
     hourly = load_hourly_rows(root, iso_year, iso_week)
     bounds = window_bounds(iso_year, iso_week)
     latest_open = parse_utc(hourly[-1]["timestamp_utc"]) if hourly else None
@@ -448,6 +449,7 @@ def main() -> None:
         "live_as_of_utc": fmt_iso(observed_through),
         "freeze_sha256": digest,
         "daily_price_path": daily_path,
+        "daily_range_plan": daily_ranges,
         "daily_observations": daily_observations(hourly, iso_year, iso_week),
         "hourly_price_path": public_hourly_price_path(hourly, iso_year, iso_week, public_issue, observed_through),
         "freeze_receipt_public_path": f"data/public-freezes/{iso_year}/W{iso_week:02d}/CN{public_issue}_PUBLIC_FREEZE.json",
