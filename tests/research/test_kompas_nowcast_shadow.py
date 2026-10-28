@@ -138,6 +138,16 @@ class KompasShadowTests(unittest.TestCase):
                         k: v for k, v in obj.items() if k != "compass_sha256"
                     })).hexdigest()
                 row = changed_blob(fixture(), "forecast_original_json", "forecast_blob_sha256", mutate)
+                # Keep both original producer objects mutually hash-bound so the
+                # missing source SHA guard, rather than an earlier custody gate,
+                # is the precise failure under test.
+                forecast = json.loads(row["forecast_original_json"])
+                outcome = json.loads(row["outcome_original_json"])
+                outcome["compass_sha256"] = forecast["compass_sha256"]
+                outcome["outcome_sha256"] = hashlib.sha256(canon({
+                    k: v for k, v in outcome.items() if k != "outcome_sha256"
+                })).hexdigest()
+                row["outcome_original_json"], row["outcome_blob_sha256"] = _encode(outcome)
                 result = compare_shadow_12h([row])
                 self.assertEqual(result["provisional_paired"], 0)
                 self.assertEqual(result["rows"][0]["reason"], "FORECAST_SOURCE_PACKET_SHA_UNBOUND")
