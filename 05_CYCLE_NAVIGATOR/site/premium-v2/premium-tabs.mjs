@@ -36,8 +36,15 @@ if (nav && nodes.every(x => x.link && x.panel)) {
   };
   const lang = () => document.querySelector('[data-lang][aria-pressed="true"]')?.getAttribute('data-lang') === 'en' ? 'en' : 'da';
   const paintLabels = () => {
-    for (const x of nodes) x.link.textContent = translations[lang()][x.key];
-    nav.setAttribute('aria-label',lang()==='en'?'Choose market view':'Vælg markedsvisning');
+    const compact=window.matchMedia('(max-width: 440px)').matches;
+    const names={...translations[lang()]};
+    if(compact){
+      names.graph=lang()==='en'?'Forecast':'Prognose';
+      names.path=lang()==='en'?'Cycle':'Cyklus';
+    }
+    for (const x of nodes) if(x.link.textContent!==names[x.key]) x.link.textContent=names[x.key];
+    const navName=lang()==='en'?'Choose market view':'Vælg markedsvisning';
+    if(nav.getAttribute('aria-label')!==navName)nav.setAttribute('aria-label',navName);
   };
   const fromHash = () => nodes.find(x => '#'+x.id === location.hash)?.key;
   const activate = (key, changeUrl=false) => {
@@ -78,4 +85,8 @@ if (nav && nodes.every(x => x.link && x.panel)) {
   paintLabels();
   activate(fromHash()||'compass');
   document.body.classList.add('cn-tabbed-ui');
+  // Existing Graph/PRO owners also update navigation copy on source or language
+  // repaint. Re-apply only when the words differ, avoiding observer loops.
+  new MutationObserver(paintLabels).observe(nav,{subtree:true,childList:true,characterData:true});
+  window.addEventListener('resize',paintLabels);
 }
