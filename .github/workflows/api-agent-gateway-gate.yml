@@ -343,7 +343,7 @@ jobs:
             state="NO_DURABLE_PAID_RECEIPT_CHARGE_UNKNOWN"
           fi
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
-            --body "Terra Max one-time endgame API: $state. Never auto-retry. Frozen source, detailed scientific/repair proposal and exact model/cost receipt available under this Actions run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . No code was automatically merged or marked production verified."
+            --body "Terra Max one-time endgame API: gateway_receipt_status=$state; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT. Never auto-retry. Frozen source, detailed scientific/repair proposal and exact model/cost receipt available under this Actions run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . No code was automatically merged or marked production verified."
 
   terra-high-p0-once:
     # Owner-authorized single-use P0 only. This is a PR-scoped one-time API step,
@@ -505,7 +505,7 @@ jobs:
             cost="UNKNOWN"
           fi
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
-            --body "Terra 6.1 HIGH P0 one-time API: $state (estimated USD $cost). This is advisory, NOT a deployed data-chain repair. One paid attempt only, never auto-retry. Frozen source, output and receipt artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Continue P0 under existing GitHub PR owners; no AppDeploy or parallel workflow."
+            --body "Terra 6.1 HIGH P0 one-time API: gateway_receipt_status=$state; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT (estimated USD $cost). This is advisory, NOT a deployed data-chain repair. One paid attempt only, never auto-retry. Frozen source, output and receipt artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Continue P0 under existing GitHub PR owners; no AppDeploy or parallel workflow."
 
   terra-max-p0-schedule-once:
     # SECOND distinct explicit owner authorization, after first Max + High claims
@@ -647,7 +647,7 @@ jobs:
             status="PAID_RECEIPT_MISSING_COST_UNKNOWN"
             cost="UNKNOWN"
           fi
-          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Second distinct owner-authorized Terra MAX P0 schedule liveness: $status (estimated USD $cost). Exactly one API attempt, consumed claim, NEVER auto-retry. Source-bound proposed fix, frozen context and receipt under https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Not a code merge or proof of six natural schedule hours."
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Second distinct owner-authorized Terra MAX P0 schedule liveness: gateway_receipt_status=$status; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT (estimated USD $cost). Exactly one API attempt, consumed claim, NEVER auto-retry. Source-bound proposed fix, frozen context and receipt under https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Not a code merge or proof of six natural schedule hours."
 
   terra-max-endgame-archive-batch1-20261027:
     # New, separate owner-mandated, branch-only API diagnostic for Archive PRs.
@@ -824,7 +824,7 @@ jobs:
           if [ -f runtime/terra-endgame-archive-batch1/live/receipt.json ]; then
             state=$(python -c "import json;print(json.load(open('runtime/terra-endgame-archive-batch1/live/receipt.json'))['status'])")
           fi
-          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "NEW Terra MAX Archive ENDGAME batch #1823/#1814: $state. Real Actions run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Distinct owner authorization, one attempt only, no auto-retry, no code merged or market skill claimed. See artifact for output and model receipt."
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "NEW Terra MAX Archive ENDGAME batch #1823/#1814: gateway_receipt_status=$state; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT. Real Actions run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Distinct owner authorization, one attempt only, no auto-retry, no code merged or market skill claimed. See artifact for output and model receipt."
 
   terra-high-shared-row-ci-fix-20261027:
     # Distinct P0 real API review on the already open Archive PR. No new PR.
@@ -969,7 +969,7 @@ jobs:
           if [ -f runtime/shared-row-api-fix/live/receipt.json ]; then
             status=$(python -c 'import json;print(json.load(open("runtime/shared-row-api-fix/live/receipt.json"))["status"])')
           fi
-          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Scoped Terra HIGH #1814 source-binding exact-code review: $status. Evidence/artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . No auto retry, new PR, merge, or historical-skill claim."
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Scoped Terra HIGH #1814 source-binding exact-code review: gateway_receipt_status=$status; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT. Evidence/artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . No auto retry, new PR, merge, or historical-skill claim."
 
   terra-xhigh-task2-edge-readiness-20261027:
     # One bounded long-horizon research test of the new xhigh route. No main write.
@@ -1111,7 +1111,7 @@ jobs:
           if [ -f runtime/terra-xhigh-task2/live/receipt.json ]; then
             status=$(python -c 'import json;print(json.load(open("runtime/terra-xhigh-task2/live/receipt.json"))["status"])')
           fi
-          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Terra 6.1 XHIGH Task 2 original-cohort scientific gate: $status. Exact Actions artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . One-time, no auto retry, no historical edge without PIT. No new PR or merge authority."
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Terra 6.1 XHIGH Task 2 original-cohort scientific gate: gateway_receipt_status=$status; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT. Exact Actions artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . One-time, no auto retry, no historical edge without PIT. No new PR or merge authority."
 
   terra-xhigh-endgame-progress-v1:
     # Reusable bounded event-driven PR lane: one distinct paid work_id per material PR update.
