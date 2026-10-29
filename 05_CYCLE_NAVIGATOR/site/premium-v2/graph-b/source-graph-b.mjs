@@ -64,17 +64,19 @@ function textLabels(){
   title:'This week’s forecast. Observed prices.',
   intro:'Monday’s original price range versus observed prices.',
   disclaimer:officialHome?'Source-backed · Original ranges and observed prices.':'Preview · Source-backed, without demo prices.',
-  graph:'Weekly chart',compass:'Compass',pro:'Compass PRO ↗',path:'PATH',proof:'Results & method',official:officialHome?'Previous version ↗':'Official site ↗',meta:'STATUS / SOURCES',
+  graph:'Weekly chart',compass:'Compass',pro:'Compass PRO ↗',path:'PATH',proof:officialHome?'Results':'Results & method',official:officialHome?'Archive ↗':'Official site ↗',meta:'STATUS / SOURCES',
   cnSource:'CN source ↗',compassSource:'Compass source ↗'
  }:{
   title:'Ugens prognose. Faktiske kurser.',
   intro:'Mandagens frosne high/low mod den faktiske kursudvikling.',
   disclaimer:officialHome?'Kildebaseret · Oprindelige intervaller og observerede kurser.':'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
-  graph:'Ugens graf',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:'Resultat og metode',official:officialHome?'Forrige version ↗':'Officiel side ↗',meta:'STATUS / KILDER',
+  graph:'Ugens graf',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:officialHome?'Resultater':'Resultat og metode',official:officialHome?'Arkiv ↗':'Officiel side ↗',meta:'STATUS / KILDER',
   cnSource:'CN-data ↗',compassSource:'Kompas-data ↗'
  };
  document.querySelectorAll('[data-premium-nav]').forEach(el=>{
   const v=rootWords[el.dataset.premiumNav];if(v)el.textContent=v;
+  if(officialHome&&el.dataset.premiumNav==='official')el.setAttribute('aria-label',language==='en'?'Previous version':'Forrige version');
+  if(officialHome&&el.dataset.premiumNav==='proof')el.setAttribute('aria-label',language==='en'?'Results and method':'Resultat og metode');
  });
  document.querySelectorAll('[data-premium-copy]').forEach(el=>{
   const v=rootWords[el.dataset.premiumCopy];if(v)el.textContent=v;
