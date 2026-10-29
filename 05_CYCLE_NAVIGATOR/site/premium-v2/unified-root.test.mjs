@@ -205,3 +205,29 @@ test('premium finish: visual proof screenshots are captured on exact tested root
  assert.match(browser,/scrollIntoView/);
  assert.match(browser,/assert\.ok\(shot\.data\?\.length>1000/);
 });
+
+
+test('site #1578: four genuine views are mounted only in the unified root',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ assert.match(html,/src="\.\/premium-tabs\.mjs"/);
+ assert.match(html,/href="\.\/premium-tabs\.css"/);
+ const tabs=await read('./premium-tabs.mjs');
+ const css=await read('./premium-tabs.css');
+ for(const k of ['compass','graph','path','proof'])
+   assert.match(tabs,new RegExp("'"+k+"'"));
+ for(const id of ['compass-pro','variant-panel','official-path-view','proof-explorer'])
+   assert.match(tabs,new RegExp("'"+id+"'"));
+ assert.match(tabs,/history\.pushState/);
+ assert.match(tabs,/popstate/);
+ assert.match(tabs,/hashchange/);
+ assert.match(tabs,/aria-selected/);
+ assert.match(tabs,/ArrowRight/);
+ assert.match(tabs,/ArrowLeft/);
+ assert.match(tabs,/if \(nav && nodes\.every\(x => x\.link && x\.panel\)\)/);
+ assert.match(css,/\.cn-tabbed-ui \[role="tabpanel"\]\[hidden\]/);
+ assert.match(css,/overflow-x:auto/);
+ assert.match(css,/min-height:44px/);
+ assert.doesNotMatch(tabs,/Math\.sin|forecast_low|forecast_high|fetch\(|probability|probabilit/);
+ const old=buildPremiumRootHtml(original);
+ assert.doesNotMatch(old,/premium-tabs\.mjs|premium-tabs\.css/);
+});
