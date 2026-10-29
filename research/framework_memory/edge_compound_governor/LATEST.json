@@ -17,16 +17,9 @@
   "decision": "FALSIFY",
   "decision_reason": "Resolve deterministic integrity/cohort blockers before scoring or external interpretation.",
   "deltas": [
-    "m6_event_count:151->164",
-    "feature_row_count:151->164",
-    "pit_verified_feature_rows:145->157",
-    "pit_unverified_feature_rows:6->7",
-    "matured_event_counts.14d:28->32",
-    "matured_event_counts.24h:133->150",
-    "matured_event_counts.72h:112->125",
-    "matured_event_counts.7d:77->82",
-    "unknown_horizon_counts.72h:0->1",
-    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
+    "matured_event_counts.24h:150->151",
+    "matured_event_counts.72h:125->126",
+    "unknown_horizon_counts.72h:1->0",
     "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
   ],
   "external_routing": {
@@ -34,7 +27,7 @@
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-10-29T08:28:12.055233Z",
+  "generated_at_utc": "2026-10-29T08:39:03.005925Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -43,7 +36,7 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "61f2f7064201433675f5d352efe8cb0c800a0fb72bea7d7c340836d27029a5cc",
+  "semantic_fingerprint": "b97e788b714b4135135971445aee760dc1b34da7a0ed05be2eaef94dd54b0987",
   "semantic_state": {
     "blockers": [
       "PIT_UNVERIFIED_FEATURE_ROWS"
@@ -68,7 +61,7 @@
     },
     "m6_integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
     "m6_matured_payload_integrity": {
-      "checked": 401,
+      "checked": 403,
       "invalid": 0,
       "reasons": [],
       "status": "PASS"
@@ -76,9 +69,9 @@
     "m6_provisional_family_count": 2,
     "matured_event_counts": {
       "14d": 32,
-      "24h": 150,
+      "24h": 151,
       "30d": 12,
-      "72h": 125,
+      "72h": 126,
       "7d": 82
     },
     "matured_family_counts": {
@@ -104,7 +97,7 @@
       "14d": 0,
       "24h": 0,
       "30d": 0,
-      "72h": 1,
+      "72h": 0,
       "7d": 0
     },
     "verified_independent_adverse_family_count": null
@@ -112,7 +105,7 @@
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "b2fec09ea492edd4a309a3658197d6b991f71fa5ee000c4561adade28e3a1e87",
+      "sha256": "f6ea0086614dae7609cbe662741ee21c297b6f284948affb198b2c570d3f9fb6",
       "status": "PASS"
     },
     "compass_freeze": {
@@ -127,7 +120,7 @@
     },
     "edge_features": {
       "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
-      "sha256": "508d6732539c4b66830840972d2af5d5cc125e1b4d3e5e5b7876759ff0e95ef7",
+      "sha256": "a2ab54837ecc43bb10755c03fc1742c12db41cf74698d9138be8648e7a10f6e2",
       "status": "PASS"
     },
     "latest_sol": {
@@ -139,7 +132,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "ddde244d26e91725b49cd79235c28039d469584678734bd89ee60e97942b1cd1",
+      "sha256": "2e520129d16c40c551bd98623483ab30af07f4965e266e408c2633d900ed5afc",
       "status": "PASS"
     },
     "task15_gate": {
