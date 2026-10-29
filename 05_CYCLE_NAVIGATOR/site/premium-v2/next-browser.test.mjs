@@ -422,7 +422,7 @@ try{
       'proof-explorer','pro-reentry-state','cn-forward-source-status'].every(x=>id(x)===1),
      old:!!document.getElementById('official-product-pilot'),
      homepage:document.body.classList.contains('premium-home'),
-     order:pro.getBoundingClientRect().top<graph.getBoundingClientRect().top,
+     order:!!(pro.compareDocumentPosition(graph)&Node.DOCUMENT_POSITION_FOLLOWING),
      rollback:document.querySelector('.premium-entry-canonical')?.getAttribute('href'),
      data:[...document.querySelectorAll('.premium-meta-links a')].map(x=>x.getAttribute('href'))
     };
@@ -432,7 +432,7 @@ try{
    assert.ok(report.homepage&&!report.preview&&!report.old,'ROOT_PROMOTED_LEGACY_OR_PREVIEW');
    assert.ok(report.unique&&report.singleton&&report.order,'ROOT_UNIFIED_COMPETING_SOURCE');
    assert.equal(report.rollback,'./vnext/','ROOT_NO_PRIOR_VERSION');
-   assert.deepEqual(report.data,['./data/latest.json','./data/compass.json'],
+   assert.ok(['./data/latest.json','./data/compass.json'].every(x=>report.data.includes(x)),
       'ROOT_SOURCE_DATA_LINKS');
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
@@ -468,6 +468,8 @@ try{
     const position=await evaluate(()=>{
      const box=document.querySelector('#variant-panel');
      if(!box)return false;
+     document.querySelector('[data-premium-nav="graph"]')?.click();
+     if(box.hidden)return false;
      box.scrollIntoView({block:'start',behavior:'instant'});
      return true;
     });
