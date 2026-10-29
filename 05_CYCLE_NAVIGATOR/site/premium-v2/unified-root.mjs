@@ -147,7 +147,10 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   const oldScript='<script type="module" src="./compass/compass-path-ui.mjs"></script>';
   unique(html,oldScript,'legacy-compass-script');
   html=html.replace(oldScript,
-    '<script type="module" src="./root-compass-pro.mjs"></script>');
+    '<script type="module" src="./root-compass-pro.mjs"></script>'+
+    '<script type="module" src="./premium-tabs.mjs"></script>');
+  if(!html.includes('</head>'))throw Error('CN_TAB_NAV_MISSING_HEAD');
+  html=html.replace('</head>','<link rel="stylesheet" href="./premium-tabs.css"></head>');
   // The source ports remain available as nonpromoted historical rollback.
   for(const x of [
     'id="variant-panel"','id="chart"','id="forecast"','id="actual"',
