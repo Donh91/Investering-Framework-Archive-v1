@@ -56,6 +56,7 @@ jobs:
             tests.api_agent.test_daily_director_workflow_contract \
             tests.api_agent.test_terra_max_endgame_context \
             tests.api_agent.test_terra_high_p0_once \
+            tests.api_agent.test_legacy_paid_job_retirement \
             tests.api_agent.test_endgame_semantic_report -v
       - name: Verify GPT-6.1 Sol owner release and no-repeat paid admission
         run: |
@@ -653,6 +654,7 @@ jobs:
     # New, separate owner-mandated, branch-only API diagnostic for Archive PRs.
     # This is NOT a rerun of any spent paid one-shot and NEVER writes main.
     if: >-
+      false &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.number == 1823 &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -829,6 +831,7 @@ jobs:
   terra-high-shared-row-ci-fix-20261027:
     # Distinct P0 real API review on the already open Archive PR. No new PR.
     if: >-
+      false &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.number == 1823 &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -974,6 +977,7 @@ jobs:
   terra-xhigh-task2-edge-readiness-20261027:
     # One bounded long-horizon research test of the new xhigh route. No main write.
     if: >-
+      false &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.number == 1823 &&
       github.event.pull_request.head.repo.full_name == github.repository &&
