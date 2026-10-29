@@ -1121,6 +1121,7 @@ jobs:
     # Reusable bounded event-driven PR lane: one distinct paid work_id per material PR update.
     # No schedule, no new PR, no model-authorized code writes or auto-merge.
     if: >-
+      false &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.number == 1823 &&
       github.event.pull_request.head.repo.full_name == github.repository &&
