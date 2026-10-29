@@ -329,15 +329,35 @@ try{
     noLegacy:!document.getElementById('official-product-pilot'),
     noindex:document.querySelector('meta[name="robots"]')?.content?.includes('noindex'),
     navBeforePro:nav?.getBoundingClientRect().top<pro?.getBoundingClientRect().top,
-    proBeforeGraph:pro?.getBoundingClientRect().top<graph?.getBoundingClientRect().top
+    proBeforeGraph:!!(pro.compareDocumentPosition(graph)&Node.DOCUMENT_POSITION_FOLLOWING),
+    tabMode:document.body.classList.contains('cn-tabbed-ui'),
+    tabDefault:!pro.hidden&&graph.hidden,
+    tabs:nav?.querySelectorAll('[role="tab"]').length
    };
   });
   assert.equal(measured.width,width,'UNIFIED_WRONG_VIEWPORT');
   assert.ok(measured.overflow<=2,'UNIFIED_OVERFLOW:'+JSON.stringify(measured));
   assert.ok(measured.uniqueIds&&measured.singleton&&measured.noLegacy,
     'UNIFIED_DUPLICATE_OR_MISSING_NODE:'+JSON.stringify(measured));
-  assert.ok(measured.noindex&&measured.navBeforePro&&measured.proBeforeGraph,
-    'UNIFIED_PREVIEW_OR_ORDER_MISMATCH:'+JSON.stringify(measured));
+  assert.ok(measured.noindex&&measured.navBeforePro&&measured.proBeforeGraph&&
+    measured.tabMode&&measured.tabDefault&&measured.tabs===4,
+    'UNIFIED_PREVIEW_OR_TABS_MISMATCH:'+JSON.stringify(measured));
+  const switching=await evaluate(()=>{
+    const click=k=>document.querySelector('[data-premium-nav="'+k+'"]')?.click();
+    const comp=document.getElementById('compass-pro');
+    const graph=document.getElementById('variant-panel');
+    const path=document.getElementById('official-path-view');
+    const proof=document.getElementById('proof-explorer');
+    click('graph'); const graphVisible=!graph.hidden&&comp.hidden&&
+      document.getElementById('chart').getBoundingClientRect().width>0;
+    click('path'); const pathVisible=!path.hidden&&graph.hidden;
+    click('proof'); const proofVisible=!proof.hidden&&path.hidden;
+    click('compass'); const returned=!comp.hidden&&proof.hidden;
+    return {graphVisible,pathVisible,proofVisible,returned,hash:location.hash};
+  });
+  assert.ok(switching.graphVisible&&switching.pathVisible&&switching.proofVisible&&
+    switching.returned&&switching.hash==='#compass-pro',
+    'UNIFIED_TAB_SWITCH_BROKEN:'+JSON.stringify(switching));
   assert.equal(measured.english,'Compass PRO','UNIFIED_EN_LABEL');
   assert.equal(measured.danish,'Kompas PRO','UNIFIED_DA_LABEL');
   assert.equal(measured.micro,'true','UNIFIED_MICRO_LENS_BROKEN');
