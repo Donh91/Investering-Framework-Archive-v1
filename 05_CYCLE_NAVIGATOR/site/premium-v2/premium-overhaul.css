@@ -1552,3 +1552,51 @@
  .premium-next #variant-panel .play-btn{background:#f1f5fb!important;color:#20486f!important;border:1px solid #d8e2ef!important;box-shadow:none!important}
  .premium-next #variant-panel .play-btn:focus-visible{outline:3px solid #326fc7!important;outline-offset:2px}
 }
+
+
+/* PREMIUM FIRST-FOLD · owner visual acceptance 29 October 2026.
+ * Live 390px browser before: 12h and 1–3d values started below y=850.
+ * Temporary in-browser prototype (source unchanged): both values y=661–697.
+ * Preserve official source status, stale/fail-closed labels and risk detail.
+ * Scope to one canonical home; /next and legacy stay intact. */
+@media(max-width:760px){
+ .premium-next.premium-home .dev-header{
+   height:58px!important;min-height:58px!important;padding:6px 0!important;
+ }
+ .premium-next.premium-home .dev-brand img{max-width:126px!important}
+ .premium-next.premium-home .dev-lang button{min-height:40px!important;min-width:40px!important}
+ .premium-next.premium-home .premium-entry{padding:12px 2px 6px!important}
+ .premium-next.premium-home .premium-entry-intro h1{
+   font-size:clamp(26px,7.5vw,32px)!important;line-height:1.04!important;
+   letter-spacing:-.048em!important;margin:5px 0 6px!important;max-width:20ch!important
+ }
+ .premium-next.premium-home .premium-entry-intro p{
+   font-size:12px!important;line-height:1.42!important;max-width:42ch!important;margin:0!important
+ }
+ /* This repeats the freeze legend and is decorative, not a safety alert.
+    The genuine source/warning line remains inside Kompas PRO. */
+ .premium-next.premium-home .premium-entry-disclaimer{display:none!important}
+ .premium-next.premium-home .premium-entry-navigation{
+   display:flex!important;flex-wrap:nowrap!important;align-items:center!important;
+   overflow-x:auto!important;scrollbar-width:none!important;gap:15px!important;
+   min-height:42px!important;margin:4px 0 8px!important;padding:0 3px!important;
+   -webkit-overflow-scrolling:touch;
+ }
+ .premium-next.premium-home .premium-entry-navigation::-webkit-scrollbar{display:none}
+ .premium-next.premium-home .premium-entry-navigation a{
+   flex:0 0 auto!important;white-space:nowrap!important;min-height:42px!important;
+   display:inline-flex!important;align-items:center!important;font-size:11px!important
+ }
+ .premium-next.premium-home #compass-pro{
+   padding:14px 13px 16px!important;margin-top:0!important
+ }
+ .premium-next.premium-home .cn-pro-intro{margin-bottom:7px!important;gap:3px!important}
+ .premium-next.premium-home .cn-pro-intro h2{font-size:29px!important;line-height:1.05!important}
+ .premium-next.premium-home .cn-pro-intro p{
+   font-size:11px!important;line-height:1.4!important;max-width:32ch!important
+ }
+ .premium-next.premium-home #compass-pro .cn-pro-source{
+   font-size:10px!important;line-height:1.45!important;
+   padding:5px 0 8px!important;margin:0 0 10px!important
+ }
+}
