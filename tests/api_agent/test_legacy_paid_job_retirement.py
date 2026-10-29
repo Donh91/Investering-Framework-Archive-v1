@@ -4,13 +4,14 @@ from pathlib import Path
 
 
 WORKFLOW = Path(".github/workflows/api-agent-gateway-gate.yml")
-CONSUMED_LEGACY_JOBS = (
+PAID_PR_JOBS = (
     "terra-max-endgame-once",
     "terra-high-p0-once",
     "terra-max-p0-schedule-once",
     "terra-max-endgame-archive-batch1-20261027",
     "terra-high-shared-row-ci-fix-20261027",
     "terra-xhigh-task2-edge-readiness-20261027",
+    "terra-xhigh-endgame-progress-v1",
 )
 
 
@@ -36,18 +37,24 @@ class LegacyPaidJobRetirementTests(unittest.TestCase):
     def setUp(self) -> None:
         self.workflow = WORKFLOW.read_text(encoding="utf-8")
 
-    def test_all_consumed_legacy_paid_jobs_are_terminally_disabled(self) -> None:
-        for job in CONSUMED_LEGACY_JOBS:
-            with self.subTest(job=job):
-                expression = _job_if_expression(self.workflow, job)
-                self.assertRegex(expression, r"(?m)^      false &&$")
+    def _assert_all_paid_pr_jobs_are_terminally_disabled(self, workflow: str) -> None:
+        for job in PAID_PR_JOBS:
+            expression = _job_if_expression(workflow, job)
+            self.assertRegex(expression, r"(?m)^      false &&$")
+
+    def test_all_paid_pr_jobs_are_terminally_disabled(self) -> None:
+        self._assert_all_paid_pr_jobs_are_terminally_disabled(self.workflow)
 
     def test_reactivation_mutation_is_detected(self) -> None:
-        for job in CONSUMED_LEGACY_JOBS:
+        for job in PAID_PR_JOBS:
             with self.subTest(job=job):
-                expression = _job_if_expression(self.workflow, job)
-                mutated = expression.replace("      false &&\n", "", 1)
-                self.assertNotRegex(mutated, r"(?m)^      false &&$")
+                mutated = self.workflow.replace(
+                    _job_if_expression(self.workflow, job),
+                    _job_if_expression(self.workflow, job).replace("      false &&\n", "", 1),
+                    1,
+                )
+                with self.assertRaises(AssertionError):
+                    self._assert_all_paid_pr_jobs_are_terminally_disabled(mutated)
 
     def test_free_gateway_and_semantic_reporter_remain_available(self) -> None:
         gateway = _job_if_expression(self.workflow, "gateway-gate")
