@@ -379,6 +379,14 @@ try{
      width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
      source,en,da,micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
      quick13:document.getElementById('cn-horizon-13')?.textContent,
+     firstFold:{
+      viewport:innerHeight,
+      actionTop:Math.round(document.getElementById('premium-now-action')?.getBoundingClientRect().top??9999),
+      h12Bottom:Math.round(document.getElementById('premium-now-direction')?.closest('.product-cell')?.getBoundingClientRect().bottom??9999),
+      h13Bottom:Math.round(document.getElementById('cn-horizon-13')?.closest('.product-cell')?.getBoundingClientRect().bottom??9999),
+      sourceVisible:getComputedStyle(document.getElementById('pro-source-status')).display!=='none',
+      navSingleRow:Math.round(document.querySelector('.premium-entry-navigation')?.getBoundingClientRect().height??9999)<=50
+     },
      riskQuick:document.querySelectorAll('#cn-risk-quick-steps .risk-step').length,
      officialRisk:document.querySelectorAll('#premium-risk-steps .risk-step').length,
      futurePath:document.getElementById('cn-alt-milestone-eta')?.textContent,
@@ -407,6 +415,11 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.firstFold.sourceVisible&&report.firstFold.navSingleRow&&
+     report.firstFold.actionTop<report.firstFold.h12Bottom&&
+     report.firstFold.h12Bottom<=report.firstFold.viewport-20&&
+     report.firstFold.h13Bottom<=report.firstFold.viewport-20,
+     'ROOT_FIRSTFOLD_OFFICIAL_ACTION_AND_BOTH_HORIZONS_NOT_VISIBLE:'+JSON.stringify(report.firstFold));
    assert.ok(report.quick13&&report.riskQuick===5&&report.officialRisk===5,
      'ROOT_SOURCE_BOUND_12H_1_3D_AND_FIVE_RISK_STAGES:'+JSON.stringify(report));
    assert.equal(report.pathSteps,10,'ROOT_TEN_CYCLE_STAGES');
@@ -416,6 +429,17 @@ try{
    assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
    assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
    assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
+   // Independent first-screen QA: capture BEFORE scrolling to the chart.
+   // This specifically guards the owner's request for both short horizons
+   // visible next to the live action on a normal 390/430 iPhone viewport.
+   if(process.env.GITHUB_EVENT_NAME==='pull_request'){
+    const firstFoldShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    assert.ok(firstFoldShot.data?.length>1000,'FIRSTFOLD_SCREENSHOT_MISSING');
+    console.log('CN_FIRSTFOLD_SCREENSHOT_'+width+'_BEGIN');
+    for(const chunk of firstFoldShot.data.match(/.{1,8000}/g))
+     console.log('CN_FIRSTFOLD_SCREENSHOT_'+width+'_PART '+chunk);
+    console.log('CN_FIRSTFOLD_SCREENSHOT_'+width+'_END');
+   }
    // DESIGN GATE: real rendered Chrome pixels of the EXACT staged root.
    // Read via GitHub CI logs before merge; no invented visual QA receipt.
    if(process.env.GITHUB_EVENT_NAME==='pull_request'){
