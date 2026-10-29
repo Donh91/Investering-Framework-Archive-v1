@@ -385,7 +385,9 @@ try{
       h12Bottom:Math.round(document.getElementById('premium-now-direction')?.closest('.product-cell')?.getBoundingClientRect().bottom??9999),
       h13Bottom:Math.round(document.getElementById('cn-horizon-13')?.closest('.product-cell')?.getBoundingClientRect().bottom??9999),
       sourceVisible:getComputedStyle(document.getElementById('pro-source-status')).display!=='none',
-      navSingleRow:Math.round(document.querySelector('.premium-entry-navigation')?.getBoundingClientRect().height??9999)<=50
+      navSingleRow:Math.round(document.querySelector('.premium-entry-navigation')?.getBoundingClientRect().height??9999)<=50,
+      navFits:document.querySelector('.premium-entry-navigation').scrollWidth<=document.querySelector('.premium-entry-navigation').clientWidth+2,
+      archiveA11y:document.querySelector('[data-premium-nav="official"]')?.getAttribute('aria-label')==='Forrige version'
      },
      riskQuick:document.querySelectorAll('#cn-risk-quick-steps .risk-step').length,
      officialRisk:document.querySelectorAll('#premium-risk-steps .risk-step').length,
@@ -415,7 +417,7 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
-   assert.ok(report.firstFold.sourceVisible&&report.firstFold.navSingleRow&&
+   assert.ok(report.firstFold.sourceVisible&&report.firstFold.navSingleRow&&report.firstFold.navFits&&report.firstFold.archiveA11y&&
      report.firstFold.actionTop<report.firstFold.h12Bottom&&
      report.firstFold.h12Bottom<=report.firstFold.viewport-20&&
      report.firstFold.h13Bottom<=report.firstFold.viewport-20,
