@@ -61,6 +61,8 @@ def assess(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     seen: dict[str, Mapping[str, str]] = {}
     for r in rows:
         start = utc(r["timestamp_utc"])  # Binance spot candle OPEN
+        if start.minute or start.second or start.microsecond:
+            raise ValueError("candle_open_not_utc_hour_aligned")
         candle_end = start + timedelta(hours=1)  # completed 1h candle CLOSE
         # source_window_end_utc is the whole collection RUN coverage end,
         # NOT the individual candle end. Repeated values are normal across rows.
@@ -128,7 +130,8 @@ def assess(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     ethbtc0 = number(candles[-4], "ethbtc_close")
     ethbtc1 = number(candles[-1], "ethbtc_close")
     relative = pct(ethbtc0, ethbtc1) if ethbtc0 is not None and ethbtc1 is not None and min(ethbtc0, ethbtc1) > 0 else None
-    prior_vol = [number(r, "btc_quote_volume") for r in candles[-16:-4]]
+    # Twelve immediately preceding recovery hours, indices 1..12 of 16.
+    prior_vol = [number(r, "btc_quote_volume") for r in candles[-15:-3]]
     vol_ratio = None
     if all(v is not None and v > 0 for v in prior_vol) and all(v is not None and v > 0 for v in totals):
         median_prior = statistics.median(prior_vol)
@@ -189,6 +192,12 @@ def replay_census(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     for r in results:
         if r["status"] not in eligible_statuses:
             reason = r.get("reason", r["status"])
+            exclusions[reason] = exclusions.get(reason, 0) + 1
+            continue
+        # Standalone assess allows a 3h stale tolerance. A multi-cutoff census
+        # must NEVER count a carried-forward older candle as a new completed hour.
+        if utc(r["evidence"]["window_end_utc"]) != utc(r["asof_utc"]):
+            reason = "NO_NEW_COMPLETED_CANDLE_AT_CUTOFF"
             exclusions[reason] = exclusions.get(reason, 0) + 1
             continue
         eligible_count += 1
