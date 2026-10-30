@@ -93,6 +93,38 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '</div></div>');
   if(!compactCore.includes('id="cn-horizon-13"'))
     throw Error('CN_QUIET_PRO_FIRST_FOLD_INSERT_FAILED');
+
+  // Three actual official prospective horizons and exact coarse 0–10
+  // bull/bear evidence. These are independent windows, NOT an intraday path.
+  const horizonCard=(id,label)=>'<article class="cn-horizon-card" data-cn-overview="'+id+'">'+
+    '<small>'+label+'</small><div class="cn-horizon-direction">'+
+    '<span class="cn-horizon-arrow" id="cn-overview-'+id+'-arrow" aria-hidden="true">?</span>'+
+    '<strong id="cn-overview-'+id+'-direction">Afventer data</strong></div>'+
+    '<span class="cn-horizon-position" id="cn-overview-'+id+'-position">—</span>'+
+    '<div class="cn-evidence"><div class="cn-evidence-rail" aria-hidden="true">'+
+    '<span id="cn-overview-'+id+'-bar"></span></div>'+
+    '<small id="cn-overview-'+id+'-balance">Evidensbalance afventer</small></div>'+
+    '<p id="cn-overview-'+id+'-summary">Afventer offentliggjort analyse.</p></article>';
+  const horizonStrip='<section class="cn-overview" aria-labelledby="cn-overview-heading">'+
+    '<div class="cn-overview-heading"><h3 id="cn-overview-heading">Kompasforløb</h3>'+
+    '<small id="cn-overview-subtitle">Tre selvstændige prognosehorisonter</small></div>'+
+    '<div class="cn-overview-cards">'+
+    horizonCard('d13','1–3 dage')+horizonCard('d57','5–7 dage')+
+    horizonCard('w23','2–3 uger')+'</div>'+
+    '<p class="cn-overview-foot" id="cn-overview-foot">Pilene angiver kildevurderet retning i hver periode, ikke kursrækkefølge. Bull/Bear er evidenspoint, ikke sandsynlighed.</p>'+
+    '</section>';
+  const rotationPeek='<section class="cn-rotation-peek" aria-labelledby="cn-rotation-heading">'+
+    '<div class="cn-rotation-head"><h3 id="cn-rotation-heading">Positionering og rotation</h3>'+
+    '<a href="#official-path-view" id="cn-rotation-full">Se markedsforløbet</a></div>'+
+    '<p id="cn-rotation-summary">Afventer kildeverificeret klassevurdering.</p>'+
+    '<div id="cn-rotation-classes" class="cn-rotation-classes" role="list"></div>'+
+    '<small id="cn-rotation-disclaimer">HOLD gælder eksisterende positioner og er ikke en ny købshandling.</small>'+
+    '</section>';
+  const positions='<details class="cn-position-guide">'+
+    '<summary id="cn-positions-title">Hvad betyder Afvent, Hold, Overvåg, Køb og Sælg?</summary>'+
+    '<p id="cn-positions-disclaimer">Begrebsforklaring, ikke aktive signaler eller en obligatorisk rækkefølge. WAIT betyder aldrig, at en position allerede er købt.</p>'+
+    '<dl id="cn-position-terms"></dl></details>';
+
   // Source-only reading companion. One visible period at a time; underlying
   // official action, Graph B and protected original source are never copied.
   const reader='<section class="cn-reader" aria-labelledby="cn-reader-title">'+
@@ -133,16 +165,22 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p>'+
     compactCore.replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
+      '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+
+      horizonStrip+
       '<section class="cn-risk-quick" aria-label="Pullback classification">'+
       '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">RISIKO FOR YDERLIGERE FALD</small>'+
       '<strong id="cn-risk-quick-state">— / 5 · afventer nye data</strong></div>'+
       '<span id="cn-risk-quick-note">Risikoniveau, ikke sandsynlighed</span></div>'+
       '<div id="cn-risk-quick-steps" class="risk-class-rail" aria-hidden="true"></div>'+
-      '<div class="cn-risk-quick-guidance" aria-live="polite">'+
+      '<p id="cn-risk-quick-brief" class="cn-risk-quick-brief">Afventer risikovurdering.</p>'+
+      '<details class="cn-risk-more"><summary id="cn-risk-more-title">Læs risikovurderingen</summary>'+
+      '<div class="cn-risk-quick-guidance">'+
       '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer opdateret risikovurdering</span></p>'+
       '<p><small id="cn-risk-quick-action-label">SÅDAN FORHOLDER DU DIG</small><span id="cn-risk-quick-action">Afvent opdateret Kompas før nye beslutninger</span></p>'+
       '<div class="cn-risk-quick-foot"><span id="cn-risk-quick-quality">Evidenskvalitet: ukendt</span><span id="cn-risk-quick-onset">Starttidspunkt: ikke dokumenteret</span></div>'+
-      '</div></section>'+reader+'<details class="cn-pro-more">')+'</section>';
+      '</div></details></section>'+rotationPeek+positions+
+      '<details class="cn-reader-expand"><summary id="cn-reader-expand-title">Flere horisonter, Swing/HODL og dokumentation</summary>'+
+      reader+'</details><details class="cn-pro-more">')+'</section>';
 
   const oldDecision='<section class="official-product-pilot premium-decision-summary"';
   const graph='<section id="variant-panel"';
