@@ -451,6 +451,49 @@ try{
    assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
    assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
    assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
+   // Source-reader user journey: real DOM interaction at each mobile width.
+   // This does not change or mutate the original Official Compass decision.
+   const reader=await evaluate(()=>{
+    const $=id=>document.getElementById(id);
+    const select=id=>document.querySelector('[data-cn-reader-horizon="'+id+'"]');
+    const periods=[...document.querySelectorAll('[data-cn-reader-horizon]')];
+    const actionBefore=$('premium-now-action')?.textContent;
+    const tabsBefore=document.querySelectorAll('.premium-entry-navigation [role="tab"]').length;
+    const first=select('NEXT_1_3D')?.getAttribute('aria-pressed')==='true';
+    select('NEXT_5_7D')?.click();
+    const week=select('NEXT_5_7D')?.getAttribute('aria-pressed')==='true';
+    select('NEXT_2_3W')?.click();
+    const mid=select('NEXT_2_3W')?.getAttribute('aria-pressed')==='true';
+    select('CYCLE_ALTCOINS_3_8W')?.click();
+    const long=select('CYCLE_ALTCOINS_3_8W')?.getAttribute('aria-pressed')==='true';
+    document.querySelector('[data-cn-reader-lens="hodl"]')?.click();
+    const hodl=document.querySelector('[data-cn-reader-lens="hodl"]')?.getAttribute('aria-pressed')==='true';
+    const guide=$('cn-reader-lens-note')?.textContent||'';
+    const glossary=document.querySelector('.cn-reader-glossary');
+    glossary.open=true;
+    const count=glossary.querySelectorAll('tbody tr').length;
+    document.querySelector('[data-lang="en"]')?.click();
+    const enTitle=$('cn-reader-title')?.textContent;
+    document.querySelector('[data-lang="da"]')?.click();
+    const daTitle=$('cn-reader-title')?.textContent;
+    select('NEXT_1_3D')?.click();
+    return {
+      periods:periods.length,first,week,mid,long,hodl,guide,
+      count,glossaryOpen:glossary.open,enTitle,daTitle,
+      source:$('cn-reader-source')?.textContent||'',
+      direction:$('cn-reader-direction')?.textContent||'',
+      originalActionPreserved:actionBefore===$('premium-now-action')?.textContent,
+      tabsPreserved:tabsBefore===4&&document.querySelectorAll('.premium-entry-navigation [role="tab"]').length===4,
+      overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
+    };
+   });
+   assert.ok(reader.periods===4&&reader.first&&reader.week&&reader.mid&&reader.long&&
+     reader.hodl&&reader.count===5&&reader.glossaryOpen&&
+     reader.enTitle==='What is Compass seeing ahead?'&&
+     reader.daTitle==='Hvad viser Kompas fremad?'&&
+     reader.guide.length>20&&reader.source.length>15&&reader.direction.length>2&&
+     reader.originalActionPreserved&&reader.tabsPreserved&&reader.overflow<=2,
+     'ROOT_COMPASS_READER_UX_FAIL:'+JSON.stringify(reader));
    // Independent first-screen QA: capture BEFORE scrolling to the chart.
    // This specifically guards the owner's request for both short horizons
    // visible next to the live action on a normal 390/430 iPhone viewport.
