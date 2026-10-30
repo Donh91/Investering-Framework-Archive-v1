@@ -399,6 +399,8 @@ try{
      width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
      source,en,da,micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
      quick13:document.getElementById('cn-horizon-13')?.textContent,
+     nowcast:document.getElementById('premium-now-direction')?.textContent,
+     actionCode:document.getElementById('premium-action-code')?.textContent,
      firstFold:{
       viewport:innerHeight,
       actionTop:Math.round(document.getElementById('premium-now-action')?.getBoundingClientRect().top??9999),
@@ -437,6 +439,9 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.nowcast&&!report.nowcast.includes('_')&&
+     report.actionCode&&!report.actionCode.includes('HOLD_WAIT'),
+     'ROOT_RAW_INTERNAL_STATE_IN_FIRST_FOLD:'+JSON.stringify({nowcast:report.nowcast,actionCode:report.actionCode}));
    assert.ok(report.firstFold.sourceVisible&&report.firstFold.navSingleRow&&report.firstFold.navFits&&report.firstFold.archiveA11y&&
      report.firstFold.actionTop<report.firstFold.h12Bottom&&
      report.firstFold.h12Bottom<=report.firstFold.viewport-20&&
