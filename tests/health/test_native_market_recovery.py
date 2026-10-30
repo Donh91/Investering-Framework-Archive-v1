@@ -25,6 +25,12 @@ class NativeMarketRecoveryTest(unittest.TestCase):
             pointer.write_text(json.dumps({
                 "retrieved_at_utc":"2026-09-08T18:00:00Z",
                 "window_end_utc":"2026-09-08T18:00:00Z",
+                "status":"COMPLETE",
+                "requested_hours":26,
+                "spot_complete_hours":26,
+                "spot_flow_complete_hours":26,
+                "long_short_complete_hours":26,
+                "derivatives_oi_complete_hours":26,
             }))
             auto=self.auto({"hourly_market":{"status":"PASS","classification":"GITHUB_POINTER_TARGET_CHAIN_VALID"}})
             out=apply_runtime_owner_freshness(repo,auto,datetime(2026,9,8,20,0,tzinfo=timezone.utc))
@@ -107,6 +113,66 @@ class NativeMarketRecoveryTest(unittest.TestCase):
         self.assertFalse(decision["authority"]["portfolio_action"])
         self.assertFalse(decision["authority"]["market_threshold_change"])
         self.assertFalse(decision["authority"]["owner_switch"])
+
+
+    def test_fresh_complete_hourly_pointer_retains_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            pointer=repo/"03_DAILY_CAPTURE_LOGS/hourly/LATEST.json"
+            pointer.parent.mkdir(parents=True)
+            pointer.write_text(json.dumps({
+                "retrieved_at_utc":"2026-09-08T19:55:00Z",
+                "window_end_utc":"2026-09-08T19:00:00Z",
+                "status":"COMPLETE",
+                "requested_hours":26,
+                "spot_complete_hours":26,
+                "spot_flow_complete_hours":26,
+                "long_short_complete_hours":26,
+                "derivatives_oi_complete_hours":26,
+            }))
+            now=datetime(2026,9,8,20,0,tzinfo=timezone.utc)
+            out=apply_runtime_owner_freshness(
+                repo,self.auto({"hourly_market":{"status":"PASS","classification":"GITHUB_POINTER_TARGET_CHAIN_VALID"}}),now
+            )
+            row=out["source_health"]["hourly_market"]
+            self.assertEqual(row["status"],"PASS")
+            self.assertEqual(row["runtime_freshness_check"]["coverage_shortfalls"],[])
+            self.assertEqual(decide(out,default_state(),now)[0]["dispatches"],[])
+
+    def test_fresh_failed_or_partial_hourly_pointer_triggers_existing_recovery(self):
+        complete={
+            "retrieved_at_utc":"2026-09-08T19:55:00Z",
+            "window_end_utc":"2026-09-08T19:00:00Z",
+            "status":"COMPLETE",
+            "requested_hours":26,
+            "spot_complete_hours":26,
+            "spot_flow_complete_hours":26,
+            "long_short_complete_hours":26,
+            "derivatives_oi_complete_hours":26,
+        }
+        now=datetime(2026,9,8,20,0,tzinfo=timezone.utc)
+        cases={
+            "failed_status":{"status":"FAILED"},
+            "missing_status":{"status":None},
+            "partial_spot":{"spot_complete_hours":25},
+            "missing_derivatives":{"derivatives_oi_complete_hours":None},
+            "invalid_requested_hours":{"requested_hours":0},
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            pointer=repo/"03_DAILY_CAPTURE_LOGS/hourly/LATEST.json"
+            pointer.parent.mkdir(parents=True)
+            for name,mutation in cases.items():
+                with self.subTest(case=name):
+                    pointer.write_text(json.dumps({**complete,**mutation}))
+                    out=apply_runtime_owner_freshness(
+                        repo,self.auto({"hourly_market":{"status":"PASS","classification":"GITHUB_POINTER_TARGET_CHAIN_VALID"}}),now
+                    )
+                    row=out["source_health"]["hourly_market"]
+                    self.assertEqual(row["status"],"DEGRADED")
+                    self.assertEqual(row["classification"],"HOURLY_OWNER_INCOMPLETE_AT_RECOVERY_CHECK")
+                    workflows=[item["workflow"] for item in decide(out,default_state(),now)[0]["dispatches"]]
+                    self.assertIn("hourly-sequence-capture.yml",workflows)
 
 
 if __name__=="__main__":
