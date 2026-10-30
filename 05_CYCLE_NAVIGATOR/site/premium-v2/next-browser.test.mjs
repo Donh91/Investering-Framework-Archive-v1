@@ -560,6 +560,10 @@ try{
      console.log('CN_FIRSTFOLD_SCREENSHOT_'+width+'_PART '+chunk);
     console.log('CN_FIRSTFOLD_SCREENSHOT_'+width+'_END');
    }
+   // PR screenshot capture already closes this drawer. The Pages PUSH gate
+   // skips screenshots, so close it explicitly in BOTH modes before checking
+   // the compact default. This is test harness state, not a product issue.
+   await evaluate(()=>{document.querySelector('.cn-reader-expand').open=false});
    // Disclosures remain optional while the real five-class rail stays visible.
    const disclosure=await evaluate(()=>{
     const risk=document.querySelector('.cn-risk-more');
