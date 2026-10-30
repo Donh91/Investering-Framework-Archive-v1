@@ -399,6 +399,8 @@ try{
      width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
      source,en,da,micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
      quick13:document.getElementById('cn-horizon-13')?.textContent,
+     nowcast:document.getElementById('premium-now-direction')?.textContent,
+     actionCode:document.getElementById('premium-action-code')?.textContent,
      firstFold:{
       viewport:innerHeight,
       actionTop:Math.round(document.getElementById('premium-now-action')?.getBoundingClientRect().top??9999),
@@ -437,6 +439,9 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.nowcast&&!report.nowcast.includes('_')&&
+     report.actionCode&&!report.actionCode.includes('HOLD_WAIT'),
+     'ROOT_RAW_INTERNAL_STATE_IN_FIRST_FOLD:'+JSON.stringify({nowcast:report.nowcast,actionCode:report.actionCode}));
    assert.ok(report.firstFold.sourceVisible&&report.firstFold.navSingleRow&&report.firstFold.navFits&&report.firstFold.archiveA11y&&
      report.firstFold.actionTop<report.firstFold.h12Bottom&&
      report.firstFold.h12Bottom<=report.firstFold.viewport-20&&
@@ -451,6 +456,67 @@ try{
    assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
    assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
    assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
+   // Source-reader user journey: real DOM interaction at each mobile width.
+   // This does not change or mutate the original Official Compass decision.
+   const reader=await evaluate(()=>{
+    const $=id=>document.getElementById(id);
+    const select=id=>document.querySelector('[data-cn-reader-horizon="'+id+'"]');
+    const periods=[...document.querySelectorAll('[data-cn-reader-horizon]')];
+    const actionBefore=$('premium-now-action')?.textContent;
+    const tabsBefore=document.querySelectorAll('.premium-entry-navigation [role="tab"]').length;
+    const first=select('NEXT_1_3D')?.getAttribute('aria-pressed')==='true';
+    select('NEXT_5_7D')?.click();
+    const week=select('NEXT_5_7D')?.getAttribute('aria-pressed')==='true';
+    select('NEXT_2_3W')?.click();
+    const mid=select('NEXT_2_3W')?.getAttribute('aria-pressed')==='true';
+    select('CYCLE_ALTCOINS_3_8W')?.click();
+    const long=select('CYCLE_ALTCOINS_3_8W')?.getAttribute('aria-pressed')==='true';
+    document.querySelector('[data-cn-reader-lens="hodl"]')?.click();
+    const hodl=document.querySelector('[data-cn-reader-lens="hodl"]')?.getAttribute('aria-pressed')==='true';
+    const guide=$('cn-reader-lens-note')?.textContent||'';
+    const glossary=document.querySelector('.cn-reader-glossary');
+    glossary.open=true;
+    const count=glossary.querySelectorAll('tbody tr').length;
+    document.querySelector('[data-lang="en"]')?.click();
+    const enTitle=$('cn-reader-title')?.textContent;
+    document.querySelector('[data-lang="da"]')?.click();
+    const daTitle=$('cn-reader-title')?.textContent;
+    select('NEXT_1_3D')?.click();
+    return {
+      periods:periods.length,first,week,mid,long,hodl,guide,
+      count,glossaryOpen:glossary.open,enTitle,daTitle,
+      source:$('cn-reader-source')?.textContent||'',
+      direction:$('cn-reader-direction')?.textContent||'',
+      originalActionPreserved:actionBefore===$('premium-now-action')?.textContent,
+      tabsPreserved:tabsBefore===4&&document.querySelectorAll('.premium-entry-navigation [role="tab"]').length===4,
+      overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
+    };
+   });
+   assert.ok(reader.periods===4&&reader.first&&reader.week&&reader.mid&&reader.long&&
+     reader.hodl&&reader.count===5&&reader.glossaryOpen&&
+     reader.enTitle==='What is Compass seeing ahead?'&&
+     reader.daTitle==='Hvad viser Kompas fremad?'&&
+     reader.guide.length>20&&reader.source.length>15&&reader.direction.length>2&&
+     reader.originalActionPreserved&&reader.tabsPreserved&&reader.overflow<=2,
+     'ROOT_COMPASS_READER_UX_FAIL:'+JSON.stringify(reader));
+   // Visual acceptance of the actual new, active source-reader (not only DOM).
+   if(process.env.GITHUB_EVENT_NAME==='pull_request'){
+    const locationReady=await evaluate(()=>{
+      const panel=document.querySelector('.cn-reader');
+      if(!panel)return false;
+      panel.scrollIntoView({block:'start',behavior:'instant'});
+      return getComputedStyle(panel).display!=='none'&&panel.getBoundingClientRect().width>250;
+    });
+    assert.equal(locationReady,true,'ROOT_COMPASS_READER_VISUAL_NOT_AVAILABLE');
+    await delay(120);
+    const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    assert.ok(shot.data?.length>1000,'ROOT_COMPASS_READER_SCREENSHOT_MISSING');
+    console.log('CN_READER_SCREENSHOT_'+width+'_BEGIN');
+    for(const chunk of shot.data.match(/.{1,8000}/g))
+      console.log('CN_READER_SCREENSHOT_'+width+'_PART '+chunk);
+    console.log('CN_READER_SCREENSHOT_'+width+'_END');
+    await evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+   }
    // Independent first-screen QA: capture BEFORE scrolling to the chart.
    // This specifically guards the owner's request for both short horizons
    // visible next to the live action on a normal 390/430 iPhone viewport.

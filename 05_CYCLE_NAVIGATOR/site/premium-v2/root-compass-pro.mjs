@@ -8,6 +8,7 @@ import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs
 import {sourceTrace} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
+import {VIEWS,readHorizon,lensContext} from './compass-reader.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -23,6 +24,7 @@ const $=id=>document.getElementById(id);
 const safe=s=>typeof s==='string'&&s.trim()?s.trim().slice(0,180):'UNAVAILABLE';
 const t=(da,en)=>document.documentElement.lang==='en'?en:da;
 let feeds=null,view=null,failed=false,request=0,inflight=false;
+let selectedReaderHorizon='NEXT_1_3D',selectedReaderLens='swing';
 const assets=[
  new URL('../../data/latest.json',import.meta.url),
  new URL('../../data/compass.json',import.meta.url)
@@ -86,6 +88,29 @@ function renderQuickDecision(){
  set('cn-horizon-13-posture',eligible?
    readable(postures,posture,lang==='en'?'See details':'Se detaljer'):'—');
  set('cn-horizon-13-label',lang==='en'?'Next 1–3 days':'De næste 1–3 dage');
+ // Translate descriptive 12h data-time and directional states, without
+ // inventing fresh momentum or changing the official action's authority.
+ const nowLabels={
+  BULLISH:['Stigende','Rising'],BEARISH:['Faldende','Falling'],
+  NEUTRAL:['Ingen tydelig retning','No clear direction'],
+  MIXED:['Blandet','Mixed'],UP:['Stigende','Rising'],DOWN:['Faldende','Falling'],
+  SIDEWAYS:['Sideværts','Sideways'],
+  UNCHANGED_NO_NEW_OBSERVATION:['Ingen ny måling','No new observation'],
+  NO_NEW_OBSERVATION:['Ingen ny måling','No new observation'],
+  UNAVAILABLE:['Ingen måling','No reading']
+ };
+ const nowState=eligible?feeds.compass.market_now?.directional_state:null;
+ set('premium-now-direction',nowLabels[nowState]?.[lang==='en'?1:0]||
+   (lang==='en'?'Awaiting valid data':'Afventer gyldige data'));
+ const actionLabels={
+  HOLD_WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
+  WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
+  HOLD:['Officiel vurdering · behold','Official outlook · hold'],
+  ABSTAIN:['Ingen ny handling','No new action']
+ };
+ const officialAction=eligible?feeds.compass.action_now:null;
+ set('premium-action-code',actionLabels[officialAction]?.[lang==='en'?1:0]||
+   (lang==='en'?'No current verified action':'Ingen aktuel verificeret handling'));
  const twelve=$('premium-now-direction')?.closest('.product-cell')?.querySelector('small');
  if(twelve)twelve.textContent=lang==='en'?
   'Past 12 hours · observed direction':
@@ -151,6 +176,62 @@ function renderRiskQuick(){
  const surface=$('compass-pro')?.querySelector('.cn-risk-quick');
  if(surface)surface.dataset.current=stage?'true':'false';
 }
+function renderReader(){
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const en=lang==='en';
+ const reading=readHorizon({
+   latest:feeds?.latest,compass:feeds?.compass,view,lang,id:selectedReaderHorizon
+ });
+ set('cn-reader-overline',en?'PUBLISHED MARKET INTERPRETATION':'OFFENTLIG MARKEDSFORTOLKNING');
+ set('cn-reader-title',en?'What is Compass seeing ahead?':'Hvad viser Kompas fremad?');
+ set('cn-reader-headnote',en?
+   'Previously issued source analysis · not a fresh forecast':
+   'Allerede udstedt kildeanalyse · ikke en ny prognose');
+ for(const v of VIEWS){
+   const b=document.querySelector('[data-cn-reader-horizon="'+v.id+'"]');
+   if(b){b.textContent=en?v.en:v.da;
+     b.setAttribute('aria-pressed',String(v.id===selectedReaderHorizon))}
+ }
+ set('cn-reader-direction',reading.direction);
+ set('cn-reader-posture',reading.posture);
+ set('cn-reader-analysis',reading.description);
+ set('cn-reader-language',reading.current&&!reading.translated?
+   (en?'':'Oprindelig kildetekst på engelsk · ingen verificeret dansk oversættelse'):'');
+ for(const lens of ['swing','hodl']){
+   const b=document.querySelector('[data-cn-reader-lens="'+lens+'"]');
+   if(b)b.setAttribute('aria-pressed',String(selectedReaderLens===lens));
+ }
+ const periods=$('cn-reader-title')?.closest('.cn-reader')?.querySelector('.cn-reader-periods');
+ if(periods)periods.setAttribute('aria-label',en?'Select forecast horizon':'Vælg tidshorisont');
+ const lenses=$('cn-reader-title')?.closest('.cn-reader')?.querySelector('.cn-reader-lens-buttons');
+ if(lenses)lenses.setAttribute('aria-label',en?'Select investor perspective':'Vælg investeringsperspektiv');
+ set('cn-reader-lens-note',lensContext(reading,selectedReaderLens,lang));
+ set('cn-reader-source',reading.current?
+   (en?'Published ':'Udstedt ')+time(reading.publishedAt)+' · '+reading.week+
+   (en?' · checks public updates every 5 min':' · tjekker offentlige opdateringer hvert 5. minut'):
+   (en?'No eligible current assessment · awaiting a new verified publication':
+       'Ingen gyldig aktuel vurdering · afventer ny verificeret udgivelse'));
+ set('cn-reader-glossary-title',en?'Understand the signals · 5 quick definitions':
+   'Forstå signalerne · 5 korte forklaringer');
+ const entries=en?[
+  ['WAIT','Await confirmation; no new trade permission.'],
+  ['MIXED','Evidence points both ways; not a 50/50 probability.'],
+  ['HOLD','Wait for a change in the official stance; not a new buy.'],
+  ['NO EDGE','No demonstrated predictive advantage.'],
+  ['MISSING DATA','No current valid outlook; old signals are not current.']
+ ]:[
+  ['AFVENT','Mangler bekræftelse; ingen ny handelstilladelse.'],
+  ['BLANDET','Tegn peger begge veje; ikke en 50/50-sandsynlighed.'],
+  ['HOLD','Afvent ændring i officiel vurdering; ikke et nyt køb.'],
+  ['INGEN EDGE','Ingen dokumenteret prognosefordel.'],
+  ['MANGLER DATA','Ingen gyldig aktuel vurdering; gamle signaler gælder ikke.']
+ ];
+ entries.forEach(([term,definition],index)=>{
+   set('cn-reader-term-'+(index+1),term);
+   set('cn-reader-definition-'+(index+1),definition);
+ });
+}
+
 function renderAltMilestone(){
  const en=document.documentElement.lang==='en';
  const eligible=view?.path?.state==='SOURCE_BOUND'&&
@@ -310,6 +391,7 @@ function paint(){
  renderProductExperience(view,feeds,lang);
  renderQuickDecision();
  renderRiskQuick();
+ renderReader();
  renderAltMilestone();
  horizons();
  renderForward();
@@ -393,6 +475,17 @@ initProductExperience(()=>{
 // Keep headline source banner/gate synchronized on a trader-lens click.
 // initProductExperience already evaluates the eligibility for the action;
 // this final paint also invalidates the visible SOURCE CURRENT badge and gate.
+// The UI changes what is READ, never what the original market owner issues.
+document.querySelectorAll('[data-cn-reader-horizon]').forEach(button=>
+ button.addEventListener('click',()=>{
+   const id=button.getAttribute('data-cn-reader-horizon');
+   if(VIEWS.some(v=>v.id===id)){selectedReaderHorizon=id;paint()}
+ }));
+document.querySelectorAll('[data-cn-reader-lens]').forEach(button=>
+ button.addEventListener('click',()=>{
+   const lens=button.getAttribute('data-cn-reader-lens');
+   if(lens==='swing'||lens==='hodl'){selectedReaderLens=lens;paint()}
+ }));
 document.querySelectorAll('[data-investor-lens]').forEach(button=>
  button.addEventListener('click',paint));
 document.addEventListener('cn:languagechange',paint);

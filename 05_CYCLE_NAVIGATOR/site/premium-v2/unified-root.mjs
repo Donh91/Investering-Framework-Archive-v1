@@ -93,6 +93,36 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '</div></div>');
   if(!compactCore.includes('id="cn-horizon-13"'))
     throw Error('CN_QUIET_PRO_FIRST_FOLD_INSERT_FAILED');
+  // Source-only reading companion. One visible period at a time; underlying
+  // official action, Graph B and protected original source are never copied.
+  const reader='<section class="cn-reader" aria-labelledby="cn-reader-title">'+
+    '<div class="cn-reader-head"><div><span class="small-kicker" id="cn-reader-overline">KILDEBASERET FORTOLKNING</span>'+
+    '<h3 id="cn-reader-title">Hvad viser Kompas fremad?</h3></div>'+
+    '<small id="cn-reader-headnote">Analyse fra offentliggjort Kompas · ikke en ny prognose</small></div>'+
+    '<div class="cn-reader-periods" role="group" aria-label="Vælg tidshorisont">'+
+    '<button type="button" data-cn-reader-horizon="NEXT_1_3D" aria-pressed="true">1–3 dage</button>'+
+    '<button type="button" data-cn-reader-horizon="NEXT_5_7D" aria-pressed="false">5–7 dage</button>'+
+    '<button type="button" data-cn-reader-horizon="NEXT_2_3W" aria-pressed="false">2–3 uger</button>'+
+    '<button type="button" data-cn-reader-horizon="CYCLE_ALTCOINS_3_8W" aria-pressed="false">3–8 uger</button></div>'+
+    '<div class="cn-reader-outlook">'+
+    '<div class="cn-reader-signal"><strong id="cn-reader-direction">Afventer nye data</strong>'+
+    '<span id="cn-reader-posture">Ingen aktuel handling</span></div>'+
+    '<p id="cn-reader-analysis">Den aktuelle kildeanalyse indlæses.</p>'+
+    '<small id="cn-reader-language"></small></div>'+
+    '<div class="cn-reader-lenses"><div class="cn-reader-lens-buttons" role="group" aria-label="Vælg investeringsperspektiv">'+
+    '<button type="button" data-cn-reader-lens="swing" aria-pressed="true">Swing</button>'+
+    '<button type="button" data-cn-reader-lens="hodl" aria-pressed="false">HODL</button></div>'+
+    '<p id="cn-reader-lens-note">Afvent verificeret signal før nye beslutninger.</p></div>'+
+    '<p class="cn-reader-receipt" id="cn-reader-source">Kontrollerer offentlig kilde …</p>'+
+    '<details class="cn-reader-glossary"><summary id="cn-reader-glossary-title">Forstå status · 5 korte forklaringer</summary>'+
+    '<table aria-label="Kort forklaring af Kompas-status"><tbody>'+
+    '<tr><th id="cn-reader-term-1" scope="row">AFVENT</th><td id="cn-reader-definition-1">Mangler bekræftelse; ingen ny handelstilladelse.</td></tr>'+
+    '<tr><th id="cn-reader-term-2" scope="row">BLANDET</th><td id="cn-reader-definition-2">Tegn peger begge veje; ikke en 50/50-sandsynlighed.</td></tr>'+
+    '<tr><th id="cn-reader-term-3" scope="row">HOLD</th><td id="cn-reader-definition-3">Afvent ændring i den officielle vurdering; ikke et nyt køb.</td></tr>'+
+    '<tr><th id="cn-reader-term-4" scope="row">INGEN EDGE</th><td id="cn-reader-definition-4">Ingen dokumenteret prognosefordel.</td></tr>'+
+    '<tr><th id="cn-reader-term-5" scope="row">MANGLER DATA</th><td id="cn-reader-definition-5">Ingen gyldig aktuel vurdering; tidligere signal gælder ikke.</td></tr>'+
+    '</tbody></table></details></section>';
+
   const pro='<section id="compass-pro" class="cn-pro-surface" aria-labelledby="pro-heading">'+
     '<div class="cn-pro-intro"><span class="small-kicker">MARKEDSBLIK</span>'+
     '<h2 id="pro-heading">Kompas PRO</h2>'+
@@ -110,7 +140,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer opdateret risikovurdering</span></p>'+
       '<p><small id="cn-risk-quick-action-label">SÅDAN FORHOLDER DU DIG</small><span id="cn-risk-quick-action">Afvent opdateret Kompas før nye beslutninger</span></p>'+
       '<div class="cn-risk-quick-foot"><span id="cn-risk-quick-quality">Evidenskvalitet: ukendt</span><span id="cn-risk-quick-onset">Starttidspunkt: ikke dokumenteret</span></div>'+
-      '</div></section><details class="cn-pro-more">')+'</section>';
+      '</div></section>'+reader+'<details class="cn-pro-more">')+'</section>';
 
   const oldDecision='<section class="official-product-pilot premium-decision-summary"';
   const graph='<section id="variant-panel"';
