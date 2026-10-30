@@ -75,17 +75,49 @@ function renderRiskQuick(){
  const en=document.documentElement.lang==='en';
  set('cn-risk-quick-label',en?'PULLBACK / FIVE OFFICIAL RISK CLASSES':
    'PULLBACK / 5 OFFICIELLE RISIKOKLASSER');
- set('cn-risk-quick-state',$('premium-risk-name')?.textContent||'UNAVAILABLE');
- set('cn-risk-quick-note',en?'Source-owned stages · not probability':
-   'Kildens trin · ikke sandsynlighed');
- // Render the already-calculated official ordinal stages a second time
- // for accessibility on the first fold; NEVER create an alternate risk model.
+ // Reuse the existing Official Kompas PRO source-bound result, including
+ // its original 1–5 ordinal. This is not a new market classifier.
+ const eligible=view?.compass?.state==='FRESH'&&
+   view.compass.permit_path_live_gates===true&&
+   feeds?.compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
+   feeds.compass.data_status==='OK'&&
+   feeds.compass.compass_id===view.compass.compass_id&&
+   feeds.compass.weekly_context?.status==='ALIGNED'&&
+   feeds.compass.weekly_context?.forecast_week===view?.weekly?.forecast_week;
+ const p=eligible?feeds.compass.protection_tracker:null;
+ const sourceStage=eligible?$('pro-risk-stage')?.textContent:null;
+ const stage=sourceStage&&/^[1-5]\/5 · /.test(sourceStage)?sourceStage:null;
+ set('cn-risk-quick-state',stage||
+   (en?'No current verified grade':'Ingen aktuel verificeret grad'));
+ set('cn-risk-quick-note',en?'Ordinal risk level, not probability':
+   'Risikoniveau, ikke sandsynlighed');
+ const copy=p?.public_explanation;
+ const bounded=copy?.contract==='CN_PUBLIC_PROTECTION_COPY_v1'&&
+   copy?.action_authority===false&&copy?.risk_state===p?.pullback_risk_state&&
+   copy?.forecast_week===feeds.compass.weekly_context.forecast_week&&
+   typeof copy?.summary==='string'&&copy.summary.length<=240;
+ set('cn-risk-quick-meaning',stage&&bounded?copy.summary:
+   (en?'No verified detailed assessment of cause, timing or depth':
+    'Ingen kildeverificeret forklaring på årsag, start eller dybde'));
+ set('cn-risk-quick-action',stage?($('pro-guidance')?.textContent||
+   (en?'Await the next verified decision':'Afvent næste verificerede handling')):
+   (en?'Await a valid current Compass before taking action':
+    'Afvent gyldigt aktuelt Kompas før handling'));
+ const quality=stage?$('pro-risk-quality')?.textContent:null;
+ const onset=stage?$('pro-onset-eta')?.textContent:null;
+ set('cn-risk-quick-quality',(en?'Evidence quality: ':'Evidenskvalitet: ')+
+   (quality||(en?'unknown':'ukendt')));
+ set('cn-risk-quick-onset',(en?'Possible onset: ':'Mulig start: ')+
+   (onset||(en?'not established':'ikke dokumenteret')));
+ // Same official five source stages, never inferred from hourly prices.
  const source=$('premium-risk-steps'),target=$('cn-risk-quick-steps');
  if(source&&target){
   target.replaceChildren(...[...source.children].map(el=>{
    const copy=el.cloneNode(true);copy.removeAttribute('id');return copy;
   }));
  }
+ const surface=$('compass-pro')?.querySelector('.cn-risk-quick');
+ if(surface)surface.dataset.current=stage?'true':'false';
 }
 function renderAltMilestone(){
  const en=document.documentElement.lang==='en';
