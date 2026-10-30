@@ -267,6 +267,44 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
                 self.assertEqual(c["censored_outcome_count"],0)
 
+    def test_nonadmission_reports_only_reached_anchor_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            row = self.sample_registry(Path(td), [self.outcome("EXP-FC-1")])["candidates"][0]
+            self.assertEqual(row["scientific_score_eligible_outcome_count"], 0)
+            self.assertEqual(row["scientific_score_nonadmission_counts_v1"],
+                             {"FORECAST_SOURCE_ANCHOR_REJECTED": 1})
+
+    def test_nonadmission_does_not_attribute_precheck_failure_to_custody(self):
+        with tempfile.TemporaryDirectory() as td:
+            row = self.sample_registry(Path(td), [self.outcome("EXP-FC-1", score=False)])["candidates"][0]
+            self.assertEqual(row["scientific_score_nonadmission_counts_v1"],
+                             {"OUTCOME_PREREQUISITE_NOT_MET": 1})
+
+    def test_nonadmission_reports_binding_failure_separately(self):
+        from scripts.experiments.experiment_lifecycle import registry
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.sample_registry(root, [self.outcome("EXP-FC-1")])
+            (root / "settlement_bindings/EXP-FC-1.json").unlink()
+            row = registry(root/"candidates", root/"observations", root/"forecasts",
+                           root/"outcomes", root/"receipts", "2026-10-18T01:00:00Z")["candidates"][0]
+            self.assertEqual(row["scientific_score_nonadmission_counts_v1"],
+                             {"BINDING_OR_OTHER_VALIDATION_REJECTED": 1})
+
+    def test_nonadmission_second_anchor_and_positive_fixture(self):
+        from unittest.mock import patch
+        for answers, counts, expected in [
+            ([True, False], {"SETTLEMENT_SOURCE_ANCHOR_REJECTED": 1}, 0),
+            ([True, True], {}, 1),
+        ]:
+            with self.subTest(answers=answers), tempfile.TemporaryDirectory() as td:
+                # Synthetic seam only: never claims a real trusted clock exists.
+                with patch("scripts.experiments.source_git_anchor.AcceptedMainSource.matches",
+                           side_effect=answers):
+                    row = self.sample_registry(Path(td), [self.outcome("EXP-FC-1")])["candidates"][0]
+                self.assertEqual(row["scientific_score_nonadmission_counts_v1"], counts)
+                self.assertEqual(row["scientific_score_eligible_outcome_count"], expected)
+
     def test_physical_maturity_without_scientific_eligibility_never_promotes(self):
         for value in (False,None,"true"):
             with self.subTest(score=value),tempfile.TemporaryDirectory() as td:
