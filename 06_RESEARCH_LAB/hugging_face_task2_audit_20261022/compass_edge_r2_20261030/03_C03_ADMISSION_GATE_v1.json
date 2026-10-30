@@ -1,0 +1,94 @@
+{
+  "contract": "TASK2_C03_PROSPECTIVE_STUDY_ADMISSION_PREFLIGHT_v1",
+  "status": "BLOCKED_NOT_SEALED_NOT_SCORING",
+  "owner_issue": 1596,
+  "source_control": {
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "preregistration_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/03_C03_PROSPECTIVE_PIT_PROTOCOL_PREFLIGHT_v1.md",
+    "preregistration_blob_sha1": "357bd6322d680a9866df95eb898a8e5ea5cb2704",
+    "original_october_development_report_blob_sha1": "3b204c60a44dfb4f90981fe2a9b4bec313ec3af3",
+    "original_R1_admission_blob_sha1": "9e728b835de294e5777222c171a89874a69dae95"
+  },
+  "study_boundaries": {
+    "original_R1_outcomes_immutable": true,
+    "october_2026": "DEVELOPMENT_EX_POST_ONLY",
+    "ftx_2022": "DEVELOPMENT_EX_POST_ONLY",
+    "round3_mode": "PROSPECTIVE_COLLECTION_ONLY",
+    "round3_hypothesis_testing_enabled": false,
+    "round3_outcome_scoring_enabled": false,
+    "live_model_prediction_enabled": false,
+    "trade_authority": "NONE",
+    "paid_API_execution_in_this_PR": false
+  },
+  "scientific_admission": {
+    "original_R1_cases": 11,
+    "original_R1_independently_admitted": 0,
+    "original_R1_first_user_delivery_count": 0,
+    "original_R1_source_feature_slots": 264,
+    "independent_original_vendor_publication_count": 0,
+    "source_clock_census_complete": true,
+    "source_verified_future_candidate_issuance": "NOT_STARTED",
+    "new_first_publicly_known_receipt": "NOT_REGISTERED",
+    "new_prospective_cohort": "NOT_ENROLLED",
+    "new_no_warning_universe": "NOT_ENROLLED",
+    "independent_adverse_event_families_verified": 0,
+    "minimum_exploratory_event_families": 30,
+    "model_comparative_edge": "NONE",
+    "c03_frozen": false
+  },
+  "proposed_target": {
+    "instrument": "BTCUSDT",
+    "quote": "USDT",
+    "decision_reference": "most_recent_eligible_completed_hour_close",
+    "horizon_hours": 72,
+    "binary_outcome": "min(future_72_fully_completed_hour_lows)/decision_reference_close <= 0.95",
+    "censor_on_any_missing_future_bar": true,
+    "not_official_compass_target": true,
+    "not_M6_peak_to_trough": true,
+    "price_source_first_known_required": true,
+    "bar_open_must_not_be_accepted_as_close": true
+  },
+  "evaluation": {
+    "primary": "PAIRED_EVENT_FAMILY_WEIGHTED_BRIER_SKILL_IF_AND_ONLY_IF_BOTH_ARMS_ISSUE_VALID_PROSPECTIVE_PROBABILITIES",
+    "otherwise_primary": "UNSCORABLE_PRIMARY",
+    "required_baselines": [
+      "unconditional train-only no-alarm",
+      "price_return_volatility",
+      "spot_taker_volume",
+      "separate official as-issued if admitted",
+      "always HOLD as action-only"
+    ],
+    "required_reporting": [
+      "coverage",
+      "abstain and source blocked",
+      "unconditional missed events",
+      "false alert episodes",
+      "alert-hours and first lead",
+      "7d/14d/30d event family clustering sensitivity",
+      "negative clock mutations",
+      "cost/execution UNVERIFIED unless independently proven"
+    ],
+    "candidate_tournament_allowed": false
+  },
+  "requirements_before_freeze": [
+    "published and independently verifiable future source/forecast first-seen receipt",
+    "originally knowable same-clock input/source revisions",
+    "actual no-alarm denominator for every eligible market hour",
+    "future-uninspected selection and bar/horizon metadata",
+    "source approved prospective research scorer separate from Round3",
+    "protocol independent review and hash before first enrollment",
+    "bounded compute and cost release",
+    "scientifically meaningful independent event family power"
+  ],
+  "stop_reasons": [
+    "R1_ORIGINAL_VENDOR_PUBLICATION_UNKNOWN",
+    "R1_ORIGINAL_USER_DELIVERY_UNKNOWN",
+    "FUTURE_FIRST_SEEN_RECEIPT_MISSING",
+    "FUTURE_HOLDOUT_NOT_SEALED",
+    "C03_COHORT_NOT_STARTED",
+    "INSUFFICIENT_EVENT_POWER",
+    "API_1823_COST_RELEASE_HOLD"
+  ],
+  "no_promotion": true,
+  "summary": "Reproducible source-custody census and prospective research protocol can be reviewed without declaring historical forecasts PIT-admitted, creating a model, starting a future test, or enabling restricted Round 3 scoring."
+}

@@ -1,0 +1,121 @@
+{
+  "contract": "TASK2_C02_C03_MANUAL_ADVERSARIAL_CHECK_RECEIPT_v1",
+  "status": "PASS_CHECKED_IN_SESSION__NOT_INDEPENDENT_EXTERNAL_REVIEW",
+  "check_method": "Connected GitHub exact-file readback and in-session deterministic JS invariants with cloned JSON mutations; no GitHub Actions, no standalone CI job, no API model call.",
+  "original_ledger": {
+    "path": "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json",
+    "git_blob_sha1": "9e728b835de294e5777222c171a89874a69dae95"
+  },
+  "reviewed_artifacts": [
+    {
+      "path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/02_C02_ORIGINAL_FORECAST_CLOCK_CUSTODY_v1.json",
+      "git_blob_sha1": "e6362510e887789bd26a18881961a47dec736200"
+    },
+    {
+      "path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/03_C03_PROSPECTIVE_PIT_PROTOCOL_PREFLIGHT_v1.md",
+      "git_blob_sha1": "357bd6322d680a9866df95eb898a8e5ea5cb2704"
+    },
+    {
+      "path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/03_C03_ADMISSION_GATE_v1.json",
+      "git_blob_sha1": "7d3d04df0f56793d5c8f9ffda66c298218f4ff2a"
+    }
+  ],
+  "positive_crosschecks": {
+    "all_original_forecast_identifiers_and_blobs_match": true,
+    "all_original_packet_and_capture_blobs_match": true,
+    "issued_after_original_packet_and_capture_commits": true,
+    "original_feature_slots": 264,
+    "original_retrieval_clock_unknown": 143,
+    "original_archived_retrieval_but_vendor_first_known_unknown": 99,
+    "original_funding_settlement_not_quote_clock": 22,
+    "invented_vendor_publication_count": 0,
+    "invented_original_delivery_count": 0,
+    "original_as_issued_admitted": 0,
+    "c03_sealed": false,
+    "round3_scoring_enabled": false,
+    "large_candidate_tournament_allowed": false,
+    "protocol_blob_binding_verified": true
+  },
+  "mutation_tests": [
+    {
+      "case_id": "bad_forecast_blob",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "bad_packet_blob",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "feature_count_missing",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "false_vendor_first_known",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "false_scientific_admission",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "inverted_packet_clock",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "invented_user_delivery",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "c03_premature_frozen",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "round3_scoring_unlocked",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "candidate_tournament_unlocked",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    },
+    {
+      "case_id": "protocol_digest_mismatch",
+      "injected_into_in_memory_clone": true,
+      "expected": "DETECTED",
+      "observed": "DETECTED"
+    }
+  ],
+  "summary": {
+    "positive_validation": "PASS",
+    "negative_mutations_performed": 11,
+    "negative_mutations_detected": 11,
+    "production_tests_run": false,
+    "github_ci_on_current_head": "NOT_YET_CONFIRMED",
+    "review_admission": "PENDING_EXTERNAL"
+  },
+  "limitations": [
+    "An in-session invariant checker is not a committed automated regression harness and not an independent second review.",
+    "This receipt does not establish first-publication, real delivery, actual model skill, a forward test, or after-cost action value.",
+    "The original October baseline hash-pinned replay was carried out separately; no re-scoring in this receipt.",
+    "The C03 protocol remains conditional, no future study enrollment is authorized by this receipt."
+  ]
+}
