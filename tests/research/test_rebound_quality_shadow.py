@@ -187,5 +187,59 @@ class ReboundQualityTest(unittest.TestCase):
         self.assertEqual(out["reason"], "HOURLY_GAP_NO_FORWARD_FILL")
 
 
+    def test_fixed_168h_census_includes_source_free_prefix_and_empty_window(self):
+        end = "2026-10-30T16:00:00Z"
+        sparse = fixture()
+        short = replay_census(sparse, end)
+        none = replay_census([], end)
+        self.assertEqual(short["evaluated_cutoffs"], 168)
+        self.assertEqual(none["evaluated_cutoffs"], 168)
+        self.assertEqual(short["eligible_complete_cutoffs"], 1)
+        self.assertEqual(none["eligible_complete_cutoffs"], 0)
+        self.assertEqual(none["raw_rebound_candidate_cutoffs"], 0)
+        self.assertEqual(sum(none["excluded_cutoffs_by_reason"].values()), 168)
+        self.assertEqual(
+            sum(short["excluded_cutoffs_by_reason"].values()) +
+            short["eligible_complete_cutoffs"], 168)
+        self.assertFalse(none["first_known_verified"])
+        self.assertIsNone(none["after_cost_edge"])
+
+    def test_fixed_168h_census_with_pregrid_warmup_scores_168_not_169(self):
+        base = datetime(2026, 10, 30, tzinfo=timezone.utc)
+        rows = []
+        for i in range(200):
+            ts = base + timedelta(hours=i)
+            row = {
+                "timestamp_utc": ts.isoformat().replace("+00:00", "Z"),
+                "source_window_end_utc":
+                    (ts + timedelta(hours=1)).isoformat().replace("+00:00", "Z"),
+                "btc_close": "100", "btc_quote_volume": "1000",
+                "btc_taker_buy_quote_volume": "500",
+                "ethbtc_close": "0.030", "btc_open_interest": "1000",
+                "spot_status": "PASS", "derivatives_status": "PASS",
+            }
+            rows.append(row)
+        end = base + timedelta(hours=200)
+        report = replay_census(rows, end.isoformat().replace("+00:00", "Z"))
+        self.assertEqual(report["evaluated_cutoffs"], 168)
+        self.assertEqual(report["eligible_complete_cutoffs"], 168)
+        self.assertEqual(report["excluded_cutoffs_by_reason"], {})
+        self.assertEqual(report["raw_rebound_candidate_cutoffs"], 0)
+        self.assertFalse(report["performance_backtest"])
+        self.assertIsNone(report["after_cost_edge"])
+        self.assertEqual(report["official_action_permission"], "NONE")
+
+    def test_fixed_denominator_survives_midnight_and_partial_hour_cutoff(self):
+        rows = fixture()
+        at_midnight = replay_census(rows, "2026-10-31T00:00:00Z")
+        at_minutes = replay_census(rows, "2026-10-30T16:17:30Z")
+        for item in (at_midnight, at_minutes):
+            self.assertEqual(item["evaluated_cutoffs"], 168)
+            self.assertEqual(
+                item["eligible_complete_cutoffs"] +
+                sum(item["excluded_cutoffs_by_reason"].values()), 168)
+            self.assertFalse(item["first_known_verified"])
+
+
 if __name__ == "__main__":
     unittest.main()
