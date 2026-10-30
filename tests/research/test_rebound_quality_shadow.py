@@ -50,6 +50,29 @@ class ReboundQualityTest(unittest.TestCase):
         self.assertIsNone(report["after_cost_edge"])
         self.assertEqual(report["official_action_permission"], "NONE")
 
+    def test_missing_hour_stays_in_census_denominator(self):
+        rows = fixture()
+        report_complete = replay_census(rows, "2026-10-30T16:00:00Z")
+        rows = [r for r in rows if r["timestamp_utc"] != "2026-10-30T08:00:00Z"]
+        report_with_gap = replay_census(rows, "2026-10-30T16:00:00Z")
+        self.assertEqual(report_with_gap["evaluated_cutoffs"],
+                         report_complete["evaluated_cutoffs"])
+        self.assertLess(report_with_gap["eligible_complete_cutoffs"],
+                        report_complete["eligible_complete_cutoffs"])
+        self.assertGreater(sum(report_with_gap["excluded_cutoffs_by_reason"].values()), 0)
+
+    def test_empty_source_does_not_invent_candidate(self):
+        report = replay_census([], "2026-10-30T16:00:00Z")
+        self.assertEqual(report["raw_rebound_candidate_cutoffs"], 0)
+        self.assertFalse(report["first_known_verified"])
+        self.assertIsNone(report["after_cost_edge"])
+
+    def test_cutoff_with_minutes_is_rounded_to_completed_utc_hour(self):
+        rows = fixture()
+        report = replay_census(rows, "2026-10-30T16:17:30Z")
+        self.assertEqual(report["asof_utc"], "2026-10-30T16:17:30Z")
+        self.assertEqual(report["raw_rebound_candidate_cutoffs"], 1)
+
     def test_episode_census_never_promotes_quality_to_accuracy(self):
         rows = fixture()
         report = replay_census(rows, "2026-10-30T16:00:00Z")
