@@ -169,12 +169,11 @@ def replay_census(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     # Form a complete CLOSED-hour UTC grid, including missing owner hours. Building
     # clocks only from observed rows hides gaps from the coverage denominator.
     last_complete = cutoff.replace(minute=0, second=0, microsecond=0)
-    observed_closes = sorted({
-        utc(r["timestamp_utc"]) + timedelta(hours=1) for r in rows
-        if utc(r["timestamp_utc"]) + timedelta(hours=1) <= last_complete
-    })
-    first = (max(observed_closes[0], last_complete - timedelta(hours=168))
-             if observed_closes else last_complete)
+    # Always score the same 168 completed UTC-hour cutoffs regardless of
+    # whether the owner collected the first, last or ANY source hour.
+    # Source rows before the grid may still serve as lookback warmup; they
+    # never alter the denominator. Both endpoints are inclusive (168 total).
+    first = last_complete - timedelta(hours=167)
     if first.minute or first.second or first.microsecond:
         raise ValueError("hourly_candle_not_utc_aligned")
     cutoffs = []
