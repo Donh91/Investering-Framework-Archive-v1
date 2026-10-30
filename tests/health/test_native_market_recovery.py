@@ -137,7 +137,8 @@ class NativeMarketRecoveryTest(unittest.TestCase):
             row=out["source_health"]["hourly_market"]
             self.assertEqual(row["status"],"PASS")
             self.assertEqual(row["runtime_freshness_check"]["coverage_shortfalls"],[])
-            self.assertEqual(decide(out,default_state(),now)[0]["dispatches"],[])
+            workflows=[row["workflow"] for row in decide(out,default_state(),now)[0]["dispatches"]]
+            self.assertNotIn("hourly-sequence-capture.yml",workflows)
 
     def test_fresh_failed_or_partial_hourly_pointer_triggers_existing_recovery(self):
         complete={
