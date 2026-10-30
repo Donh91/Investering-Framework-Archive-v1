@@ -182,8 +182,9 @@ function renderQuickDecision(){
   UNAVAILABLE:['Ingen aktuel vurdering','No current outlook']
  };
  const readable=(map,value,fallback)=>map[value]?.[lang==='en'?1:0]||fallback;
+ const forwardArrow=eligible?directionVisual(direction,lang).arrow:'?';
  set('cn-horizon-13',eligible?
-   readable(directions,direction,lang==='en'?'Not established':'Ikke fastlagt'):
+   forwardArrow+' '+readable(directions,direction,lang==='en'?'Not established':'Ikke fastlagt'):
    lang==='en'?'Awaiting updated data':'Afventer nye data');
  set('cn-horizon-13-posture',eligible?
    readable(postures,posture,lang==='en'?'See details':'Se detaljer'):'—');
@@ -200,7 +201,9 @@ function renderQuickDecision(){
   UNAVAILABLE:['Ingen måling','No reading']
  };
  const nowState=eligible?feeds.compass.market_now?.directional_state:null;
- set('premium-now-direction',nowLabels[nowState]?.[lang==='en'?1:0]||
+ const nowArrow=eligible?directionVisual(nowState,lang).arrow:'?';
+ set('premium-now-direction',nowLabels[nowState]?
+   (nowArrow==='?'?'':nowArrow+' ')+nowLabels[nowState][lang==='en'?1:0]:
    (lang==='en'?'Awaiting valid data':'Afventer gyldige data'));
  const actionLabels={
   HOLD_WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
