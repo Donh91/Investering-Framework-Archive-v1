@@ -62,3 +62,13 @@ python scripts/research/rebound_quality_shadow.py \
 Initial seven tests were only reported in the original draft; the reviewer identified and corrected a real source-window vs candle-clock mapping defect and added two regression fixtures. Exact-head eleven-test execution remains a required check; two additional fixtures enforce no post-cutoff collection and missing-volume source-family failure. Initial seven fixture intentions were: candidate remains no-score/no-trade, rising/falling OI ambiguity, missing derivative status, cutoff exclusion, duplicate conflict, stale owner, gap denial. **GitHub CI, independent review, actual public-data replay, prospective calibration and promotion are not claimed by that local test result.**
 
 This work intentionally introduces **zero** workflow files, API calls, new recurring tasks or immediate official decisions.
+
+## v0.1 extension · bounded replay and episode sensitivity
+
+Optional `--scan` evaluates only the past 168 completed hourly candle closes in the supplied public CSVs. It reports candidate timestamps, coverage, missing cutoffs and **6h/12h/24h overlap grouping sensitivity**. These are DESCRIPTIVE grouping alternatives, not trained or selected parameters. No persistent automated runner or independent validation is created.
+
+Example: `python scripts/research/rebound_quality_shadow.py --csv 03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-29.csv --csv 03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-30.csv --asof 2026-10-30T21:00:00Z --scan`
+
+A separate public-source inspection of 45 rows on 29–30 October found 30 complete 16h cutoffs and 4 candidate cutoffs (29 Oct 16:00Z; 30 Oct 04:00Z, 05:00Z, 06:00Z). Grouping by 6h gaps yields 2 provisional clusters; 12h merges them into 1. Neither is a verified independent market event or a trading win. Clustering must be preregistered, not optimized after observing outcomes.
+
+The census explicitly remains `first_known_verified=false`, `performance_backtest=false`, `directional_accuracy=null`, `after_cost_edge=null`, `official_action_permission=NONE`. Requires independent review and prospective admitted data under #1596.
