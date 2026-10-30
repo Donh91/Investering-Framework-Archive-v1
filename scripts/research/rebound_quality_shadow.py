@@ -166,11 +166,22 @@ def assess(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
 def replay_census(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     """Bounded exploratory census, not first-known evidence or skill backtest."""
     cutoff = utc(asof)
-    cutoffs = sorted({
-        utc(r["timestamp_utc"]) + timedelta(hours=1)
-        for r in rows
-        if cutoff - timedelta(hours=168) <= utc(r["timestamp_utc"]) + timedelta(hours=1) <= cutoff
+    # Form a complete CLOSED-hour UTC grid, including missing owner hours. Building
+    # clocks only from observed rows hides gaps from the coverage denominator.
+    last_complete = cutoff.replace(minute=0, second=0, microsecond=0)
+    observed_closes = sorted({
+        utc(r["timestamp_utc"]) + timedelta(hours=1) for r in rows
+        if utc(r["timestamp_utc"]) + timedelta(hours=1) <= last_complete
     })
+    first = (max(observed_closes[0], last_complete - timedelta(hours=168))
+             if observed_closes else last_complete)
+    if first.minute or first.second or first.microsecond:
+        raise ValueError("hourly_candle_not_utc_aligned")
+    cutoffs = []
+    hour = first
+    while hour <= last_complete:
+        cutoffs.append(hour)
+        hour += timedelta(hours=1)
     results = [assess(rows, t.isoformat()) for t in cutoffs]
     eligible_statuses = {"REPLAY_CANDIDATE_RESEARCH_ONLY", "NO_CANDIDATE_RESEARCH_ONLY"}
     candidates = []
