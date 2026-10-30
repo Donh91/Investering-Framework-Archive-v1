@@ -73,6 +73,32 @@ This historical sample is small and clustered, and the last October events have 
 - The first 12h-cluster candidate has +24h positive rate 8/14. Gross price continuation around half the sample is not a reliable trading rule or a calibrated likelihood.
 - Source provenance and clock availability are the chief P0 bottleneck, NOT the number of visually compelling features.
 
+## Independent Grok Bridge #98 adjudication, scientific HOLD
+
+Grok advisor source report: `Donh91/Investering-AI-Audit-Bridge` PR [#98](https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/98), signed original Archive PR head `48a4ba028a08aa3dfa8edf339027461af7fc3270` and report file `reports/grok/automated/2026/10/2026-10-30T234727Z_GROK_INVESTERING-FRAMEWORK-ARCHIVE-V1_PR1850_48a4ba02_0a6e72da.md`. Grok independently reproduced all principal 83-day historical aggregates using the 17 frozen blobs, not the moving main. Findings are ADVISORY, not formal GitHub approval or statistical validation.
+
+**Source revision, important:** The original manifest above intentionally pins the immutable 2026-10-30 file blob `baf0ffdbb103c025e7061b95712875551f666a10`, containing **21 hourly rows on this PR branch**. The current main path at the new check is blob `ef4c2992085c760683b11259d8329bcd5b598b69`, now **23 hourly rows**. This is a later, different data revision, and must not be silently substituted into the 2,005-candle dataset, the 34-candidate denominator or Grok's baseline. The report is tied to the original commit/blob context, not current main. This resolves the alleged inconsistent provenance by explicitly distinguishing the two versions; it does NOT prove the original first-known clock.
+
+**Independent baseline failure (Grok F6):** Across 31 mature candidate raw hours, 16/31 (51.6%) had positive BTC +24h close returns, often rounded as 52%. The full ex-post eligible 16h-window baseline was approximately **51.6% positive** (Grok independent local computation); its mean +24h return approximately **+0.24%**, versus **-0.18%** on candidate windows. A generic last-3h >=0.75% move without earlier drawdown restriction was 74/156 (47%) positive +24h. The 12h-group first-candidate positive result 8/14 is consistent with chance in Grok's exploratory 20,000-draw permutation (p approximately 0.44), but source/episode dependence means this is **not** a formal p-value. **Verdict: NO DEMONSTRATED EDGE.** Neither predictive calibration nor after-cost improvement is established.
+
+**Source-clock obstacle (Grok F7):** In 1,318 of 2,005 rows, the archival collector coverage end was more than one hour after the individual candle close. This is **consistent with late reaggregation**, not proof that the upstream market provider was late. Most rows cannot establish a legal as-issued hourly signal based only on these files. Any historical operational model with original publication-time assumptions would be invalid. There is no permitted retrospective back-credit.
+
+**Code correction (Grok F1):** Source branch now adds UTC-hour-alignment validation both for `event_end_utc` and for every `timestamp_utc` inside `due_only_outcome_preview` (previously only `assess` enforced this), with two adversarial negative tests. F4 benign duplicate re-collection with revised coverage timestamp remains a distinct P3 usability issue; future remediation should preserve earliest eligible provenance and distinguish market-payload conflicts without tolerating real data revisions.
+
+**Formal verdict:** `SCIENTIFIC_HOLD` for 83-day outcome learning; `INSUFFICIENT_SOURCE_PROOF` for prospective admission and any official Kompas risk/action. Retrospective development descriptions may continue on immutable source files only, if explicitly labeled. Do not publish or train live probabilities from this backtest.
+
+## Five bounded decision-relevant research lanes, implemented as ex-post diagnostics
+
+A new pure read-only module `scripts/research/rqs_five_lanes_expost.py` and deterministic tests `tests/research/test_rqs_five_lanes_expost.py` expand the research without an extra collector, scheduler or classification owner. They expose only aggregate, non-authoritative outputs:
+
+1. **Rebound Failure Detector:** fixed rebound candidates, a provisional 12h grouping, +24h negative continuation/retest of the pre-rebound close trough and +72h realized path.
+2. **Early Pullback Warning:** baseline indicator from past 4h price move <=-1% compared with next 24h worst CLOSE below -3%; report false alarms/misses, never claim direct comparison to official 3/5 alert timing until original issued alert snapshots exist.
+3. **Regime-Conditional Recovery:** fixed preceding 24h high-low CLOSE range >=3% vs below, plus monthly splits, without fitted decision weights or forward regime inference.
+4. **Capital Rotation & Breadth:** ETH/BTC 3h relative direction, BTC taker-buy share, derivative OI side-UNKNOWN. Independent, same-clock altcoin breadth is explicitly `UNAVAILABLE` rather than guessed or counted as a second spot vote.
+5. **Decision Utility Learning:** hypothetical 24h BTC gross return for candidate groups compared with an all-hour historical reference and zero-entry WAIT, plus 0.2%/0.6% total round-trip cost sensitivity. This is **not** an executable strategy, true price matching, net wallet P&L or demonstrated trade alpha.
+
+All five permanently retain `source_first_known_verified=false`, `calibrated_edge=null`, `trade_permission=NONE`; **the code has no network access, automated signal issuance, persistent episode output or active model retraining**. The existing adaptive Pullback Learning episode owner remains suspended under its own eligibility contract. Tests are included in the existing Daily Capture Architecture Gate; full exact-head CI must be independently read back after this source/document change.
+
 ## Research expansion, priority order
 
 1. **Source-time integrity:** bind original collector issuance/first-known to each eligible candle, with ingest time, object sha, source quality and exact owner SHA; explicitly distinguish capture/run coverage from original provider availability; no time back-credit. Do not inject weekly enriched rows into original-issued PIT backtests.
