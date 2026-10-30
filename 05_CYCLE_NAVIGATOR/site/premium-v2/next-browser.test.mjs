@@ -497,7 +497,9 @@ try{
      current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
      gate:document.getElementById('pro-next-gate')?.textContent||'',
      reentry:document.getElementById('pro-reentry-state')?.textContent||'',
-     action:document.getElementById('premium-now-action')?.textContent||''
+     action:document.getElementById('premium-now-action')?.textContent||'',
+     firstfoldRisk:document.getElementById('cn-risk-quick-state')?.textContent||'',
+     firstfoldHorizon:document.getElementById('cn-horizon-13')?.textContent||''
     }));
     assert.match(offline.source,/Indlæsning mislykkedes|Source fetch failed/,
       'ROOT_FAILED_REFRESH_KEPT_PREVIOUS_SOURCE:'+JSON.stringify(offline));
@@ -507,6 +509,10 @@ try{
     // exact fail-closed source-wait state for an ENTER trading instruction.
     assert.equal(offline.action,'AFVENTER KILDE',
       'ROOT_OFFLINE_DID_NOT_FAIL_CLOSED_TO_SOURCE_WAIT:'+JSON.stringify(offline));
+    assert.match(offline.firstfoldRisk,/afventer nye data|awaiting fresh data/i,
+      'ROOT_OFFLINE_RISK_ORDINAL_WAS_NOT_CLEARED:'+JSON.stringify(offline));
+    assert.match(offline.firstfoldHorizon,/Afventer nye data|Awaiting updated data/,
+      'ROOT_OFFLINE_FUTURE_HORIZON_WAS_NOT_CLEARED:'+JSON.stringify(offline));
     assert.match(offline.gate,/Afventer|Awaiting/,'ROOT_OFFLINE_GATE_LEAK');
    }
    released.push({width,oneB:true,onePRO:true,source:true});
