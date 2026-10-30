@@ -37,3 +37,25 @@
 @media(prefers-reduced-motion:reduce){
  .cn-tabbed-ui .premium-entry-navigation {scroll-behavior:auto}
 }
+
+/* Official P-stage remains the sole risk owner. First-fold copy is mirrored
+   from the verified Kompas PRO readback, never from raw market heat. */
+.cn-risk-quick .cn-risk-quick-guidance {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:10px 16px; padding-top:13px; margin-top:10px;
+  border-top:1px solid #dce4ec;
+}
+.cn-risk-quick-guidance p {margin:0; min-width:0; display:grid; gap:4px}
+.cn-risk-quick-guidance small {font-size:11px; font-weight:750; letter-spacing:.06em; color:#496178}
+.cn-risk-quick-guidance p span {font-size:13px; line-height:1.5; color:#20374b}
+.cn-risk-quick-foot {
+  grid-column:1/-1; display:flex; flex-wrap:wrap; gap:6px 16px;
+  color:#596d7e; font-size:11px; border-top:1px solid #e1e8ee;
+  padding-top:9px; line-height:1.4;
+}
+.cn-risk-quick[data-current="false"] .cn-risk-quick-guidance p span {
+  color:#667b8b;
+}
+@media(max-width:540px){
+ .cn-risk-quick .cn-risk-quick-guidance {grid-template-columns:1fr;gap:10px}
+}
