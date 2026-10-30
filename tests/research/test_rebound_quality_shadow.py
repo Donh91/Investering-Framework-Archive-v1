@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Deterministic negative/positive fixtures for RQS research-only diagnostics."""
 import unittest
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
-from scripts.research.rebound_quality_shadow import assess, replay_census
+from scripts.research.rebound_quality_shadow import assess, replay_census, read_public_owner
 
 
 def fixture(*, oi_trend=-8.0, remove_derivatives=False):
@@ -24,6 +25,31 @@ def fixture(*, oi_trend=-8.0, remove_derivatives=False):
 
 
 class ReboundQualityTest(unittest.TestCase):
+    def test_real_public_hourly_owner_readback_no_trade(self):
+        """Integration smoke against existing public 29-30 October Hourly files."""
+        files = [Path("03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-29.csv"),
+                 Path("03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-30.csv")]
+        rows = read_public_owner(Path("."), files)
+        result = assess(rows, "2026-10-30T21:00:00Z")
+        self.assertEqual(result["status"], "NO_CANDIDATE_RESEARCH_ONLY")
+        self.assertEqual(result["evidence"]["window_end_utc"], "2026-10-30T21:00:00Z")
+        self.assertFalse(result["first_known_verified"])
+        self.assertFalse(result["short_covering_proven"])
+        self.assertIsNone(result["score_0_100"])
+        self.assertEqual(result["trade_permission"], "NONE")
+
+    def test_real_public_hourly_replay_never_claims_backtest_edge(self):
+        files = [Path("03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-29.csv"),
+                 Path("03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-30.csv")]
+        rows = read_public_owner(Path("."), files)
+        report = replay_census(rows, "2026-10-30T21:00:00Z")
+        self.assertGreater(report["eligible_complete_cutoffs"], 0)
+        self.assertFalse(report["performance_backtest"])
+        self.assertFalse(report["first_known_verified"])
+        self.assertIsNone(report["directional_accuracy"])
+        self.assertIsNone(report["after_cost_edge"])
+        self.assertEqual(report["official_action_permission"], "NONE")
+
     def test_episode_census_never_promotes_quality_to_accuracy(self):
         rows = fixture()
         report = replay_census(rows, "2026-10-30T16:00:00Z")
