@@ -2,6 +2,8 @@
 """Bounded adversarial tests for ex-post research, not trading signals."""
 from __future__ import annotations
 import unittest
+import csv
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 from scripts.research.rqs_five_lanes_expost import analyze, verified_primitive_rows
@@ -44,6 +46,25 @@ ASOF="2026-10-06T12:00:00Z"
 
 
 class FiveResearchLanes(unittest.TestCase):
+    def test_real_83_day_source_archive_expost_only(self):
+        files=[Path(f"03_DAILY_CAPTURE_LOGS/weekly/2026/W{w:02d}/WEEKLY_HOURLY_ENRICHED.csv")
+               for w in range(32,44)]
+        files += [Path(f"03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-{d:02d}.csv")
+                  for d in range(26,31)]
+        rows=[]
+        for path in files:
+            with path.open(newline="", encoding="utf-8") as handle:
+                rows.extend(csv.DictReader(handle))
+        result=analyze(rows, "2026-10-30T21:00:00Z")
+        self.assertEqual(result["source"]["input_unique_candles"],2005)
+        self.assertGreater(result["source"]["run_coverage_over_1h_after_candle_count"],1000)
+        self.assertGreater(result["source_complete_24h_features"],1900)
+        self.assertGreater(result["five_lanes"]["rebound_failure_detector"]["raw_candidate_hours"],20)
+        self.assertFalse(result["source_first_known_verified"])
+        self.assertEqual(result["trade_permission"],"NONE")
+        self.assertEqual(result["five_lanes"]["capital_rotation_and_breadth"]["independent_same_clock_altcoin_breadth"],"UNAVAILABLE")
+        self.assertIsNone(result["five_lanes"]["decision_utility_learning"]["realized_pnl_or_action_edge"])
+
     def test_all_five_research_lanes_are_non_authoritative(self):
         out=analyze(fixture(),ASOF)
         self.assertEqual(set(out["five_lanes"]),{
