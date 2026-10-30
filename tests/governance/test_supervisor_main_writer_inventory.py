@@ -68,6 +68,44 @@ jobs:
         self.assertEqual(result["coverage"], "BOUNDED_REGEX_EVIDENCE_NOT_EXHAUSTIVE")
         self.assertTrue(result["critical_writers_not_detected"])
 
+    def test_env_group_must_not_masquerade_as_concurrency(self):
+        result = self.check({"test.yml": """jobs:
+  publish:
+    env:
+      group: unrelated-release-context
+    steps:
+      - run: git push origin HEAD:main
+"""})
+        self.assertEqual(result["obvious_direct_main_writer_workflows"], 1)
+        self.assertEqual(result["writers"][0]["concurrency_groups_seen"], [])
+
+    def test_job_scoped_concurrency_group_excludes_env_decoy(self):
+        result = self.check({"test.yml": """jobs:
+  publish:
+    concurrency:
+      group: real-job-lock
+    env:
+      group: unrelated-release-context
+    steps:
+      - run: git push origin HEAD:main
+"""})
+        self.assertEqual(result["writers"][0]["concurrency_groups_seen"], ["real-job-lock"])
+
+    def test_workflow_and_job_concurrency_scopes_are_distinct(self):
+        result = self.check({"test.yml": """concurrency:
+  group: workflow-main-lock
+jobs:
+  publish:
+    concurrency:
+      group: real-job-lock
+    steps:
+      - run: |
+          printf "group: shell-text-is-not-a-lock"
+          git push origin HEAD:main
+"""})
+        self.assertEqual(result["writers"][0]["concurrency_groups_seen"],
+                         ["real-job-lock", "workflow-main-lock"])
+
     def test_missing_checkout_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             with self.assertRaises(FileNotFoundError):
