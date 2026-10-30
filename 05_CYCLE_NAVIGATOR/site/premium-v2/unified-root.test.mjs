@@ -231,3 +231,26 @@ test('site #1578: four genuine views are mounted only in the unified root',async
  const old=buildPremiumRootHtml(original);
  assert.doesNotMatch(old,/premium-tabs\.mjs|premium-tabs\.css/);
 });
+
+test('pullback first fold mirrors only eligible official PRO stages, never raises risk itself',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const marker of [
+  'cn-risk-quick-meaning','cn-risk-quick-action','cn-risk-quick-quality',
+  'cn-risk-quick-onset','cn-risk-quick-state','cn-risk-quick-steps'
+ ])assert.equal(id(html,marker),1,'missing or duplicate source-bound risk field '+marker);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.match(runtime,/view\.compass\.permit_path_live_gates===true/);
+ assert.match(runtime,/feeds\.compass\.data_status==='OK'/);
+ assert.match(runtime,/feeds\.compass\.compass_id===view\.compass\.compass_id/);
+ assert.match(runtime,/feeds\.compass\.weekly_context\?\.status==='ALIGNED'/);
+ assert.match(runtime,/copy\?\.action_authority===false/);
+ assert.match(runtime,/copy\?\.risk_state===p\?\.pullback_risk_state/);
+ assert.match(runtime,/\$\('pro-risk-stage'\)\?\.textContent/);
+ assert.match(runtime,/\$\('pro-guidance'\)\?\.textContent/);
+ assert.match(runtime,/surface\.dataset\.current=stage\?'true':'false'/);
+ assert.doesNotMatch(runtime,/const\s+pullbackThreshold\s*=/);
+ assert.doesNotMatch(html,/eventProbability\s*:\s*\d/);
+ const css=await read('./premium-tabs.css');
+ assert.match(css,/\.cn-risk-quick \.cn-risk-quick-guidance/);
+ assert.match(css,/@media\(max-width:540px\)/);
+});
