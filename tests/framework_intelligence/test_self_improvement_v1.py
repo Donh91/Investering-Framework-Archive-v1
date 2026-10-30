@@ -60,6 +60,34 @@ class SelfImprovementV1Test(unittest.TestCase):
         self.assertFalse(result["authority"]["automatic_promotion"])
         self.assertFalse(result["authority"]["automatic_merge"])
 
+    def test_waiting_for_maturity_remains_unscored_and_not_promoted(self):
+        # Reproduces the real 30 Oct 650-candidate registry's pending state.
+        self.registry["candidates"].append({
+            "candidate_id": "E-pending-maturity",
+            "state": "WAITING_FOR_MATURITY",
+            "matured_outcome_count": 0,
+        })
+        self.registry["candidate_count"] = 4
+        self.registry["state_counts"]["WAITING_FOR_MATURITY"] = 1
+        self._save(self.registry_path, self.registry)
+        result = self.snapshot()
+        self.assertEqual(result["scoreboard"]["INSUFFICIENT_EVIDENCE"], 2)
+        self.assertEqual(result["scoreboard"]["UNPROVEN"], 2)
+        self.assertEqual(result["scoreboard"]["DOCUMENTED_IMPROVEMENT"], 0)
+        self.assertNotIn("E-pending-maturity",
+                         {row["candidate_id"] for row in result["challengers"]})
+        self.assertFalse(result["authority"]["automatic_promotion"])
+        self.assertFalse(result["authority"]["automatic_merge"])
+
+    def test_unknown_future_experiment_state_still_fails_closed(self):
+        self.registry["candidates"][-1]["state"] = "UNKNOWN_FUTURE_STATE"
+        self.registry["state_counts"].pop("INCUBATING")
+        self.registry["state_counts"]["UNKNOWN_FUTURE_STATE"] = 1
+        self._save(self.registry_path, self.registry)
+        with self.assertRaisesRegex(ValueError, "unknown_experiment_state"):
+            self.snapshot()
+        self.assertFalse(self.output.exists())
+
     def test_repeated_same_run_does_not_fake_multiple_incidents(self):
         first = self.snapshot()
         second = self.snapshot()
