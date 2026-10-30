@@ -73,6 +73,21 @@ class ReboundQualityTest(unittest.TestCase):
         out = assess(rows, "2026-10-30T16:00:00Z")
         self.assertEqual(out["status"], "REPLAY_CANDIDATE_RESEARCH_ONLY")
 
+    def test_later_collection_run_cannot_be_replayed_as_earlier_evidence(self):
+        rows = fixture()
+        rows[-1]["source_window_end_utc"] = "2026-10-30T17:00:00Z"
+        out = assess(rows, "2026-10-30T16:00:00Z")
+        self.assertEqual(out["reason"], "NEEDS_16_CONTIGUOUS_COMPLETED_HOURS")
+        self.assertFalse(out["first_known_verified"])
+
+    def test_incomplete_spot_volume_is_not_independent_evidence(self):
+        rows = fixture()
+        rows[-1]["btc_quote_volume"] = ""
+        out = assess(rows, "2026-10-30T16:00:00Z")
+        self.assertIsNone(out["evidence"]["btc_last_3h_taker_buy_quote_share"])
+        self.assertFalse(out["family_independence"]["SPOT_PRICE_FLOW"])
+        self.assertIsNone(out["score_0_100"])
+
     def test_run_coverage_earlier_than_candle_end_fails(self):
         rows = fixture()
         rows[-1]["source_window_end_utc"] = "2026-10-30T13:00:00Z"
