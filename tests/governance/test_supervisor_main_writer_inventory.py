@@ -56,8 +56,8 @@ jobs:
         self.assertEqual(result["obvious_direct_main_writer_workflows"], 0)
 
     def test_different_concurrency_groups_are_visible(self):
-        result = self.check({"framework-learning-supervisor.yml": "group: framework-main-writer\ngit push origin HEAD:main\n",
-                             "hourly-sequence-capture.yml": "group: framework-market-owner-writer\ngit push origin HEAD:main\n"})
+        result = self.check({"framework-learning-supervisor.yml": "concurrency:\n  group: framework-main-writer\ngit push origin HEAD:main\n",
+                             "hourly-sequence-capture.yml": "concurrency:\n  group: framework-market-owner-writer\ngit push origin HEAD:main\n"})
         self.assertEqual(result["obvious_direct_main_writer_workflows"], 2)
         self.assertEqual(len({x for w in result["writers"] for x in w["concurrency_groups_seen"]}), 2)
 
