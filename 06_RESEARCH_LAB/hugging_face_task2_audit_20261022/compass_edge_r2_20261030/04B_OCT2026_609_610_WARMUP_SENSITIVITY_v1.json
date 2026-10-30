@@ -1,0 +1,93 @@
+{
+  "contract": "TASK2_OCT2026_PRICE_DEVELOPMENT_WARMUP_SENSITIVITY_v1",
+  "status": "EXECUTED_EX_POST_DESCRIPTIVE_ONLY",
+  "authority": {
+    "original_expost_609_immutable": true,
+    "original_merging_PR": 1846,
+    "original_research_issue": 1596,
+    "scientific_PIT_admission": false,
+    "model_training": false,
+    "trade_permission": "NONE",
+    "api_spend_usd": 0
+  },
+  "baseline_original_609": {
+    "n": 609,
+    "positive": 47,
+    "negative": 562,
+    "B1": {
+      "tp": 4,
+      "fp": 36,
+      "tn": 526,
+      "fn": 43
+    },
+    "B2": {
+      "tp": 0,
+      "fp": 54,
+      "tn": 508,
+      "fn": 47
+    },
+    "B3": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 562,
+      "fn": 47
+    }
+  },
+  "extra_single_mathematically_eligible_decision": {
+    "decision_bar_open_utc": "2026-10-01T23:00:00Z",
+    "decision_bar_completed_at_utc": "2026-10-02T00:00:00Z",
+    "btc_close_USDT": 84880.05,
+    "next_72h_open_interval_utc": [
+      "2026-10-02T00:00:00Z",
+      "2026-10-04T23:00:00Z"
+    ],
+    "future_completed_bars": 72,
+    "min_future_low_USDT": 83888,
+    "future_downside_gt_or_eq_5pct": false,
+    "past_4h_return_decimal": 0.0024173502185287354,
+    "B1_alert": false,
+    "past_24hour_high_drawdown_decimal": 0.004615728305285338,
+    "B2_alert": false,
+    "B3_alert": false,
+    "earliest_hourly_index": 23,
+    "original_batch_A_start_index": 24
+  },
+  "original_input_Git_blob_sha1": [
+    "c2b3ac0bdf1a7bf616779ff2ad25c6bf7aa351fd",
+    "c0d0f2abc3633d9459292ef7dd90c72ba4ea4394",
+    "80338c7ed3936a1ed9a3fb22816d239e73341828",
+    "760415ac7f52aae862036976cb4639685950dd17"
+  ],
+  "sensitivity_610": {
+    "n": 610,
+    "positive": 47,
+    "negative": 563,
+    "B1": {
+      "tp": 4,
+      "fp": 36,
+      "tn": 527,
+      "fn": 43
+    },
+    "B2": {
+      "tp": 0,
+      "fp": 54,
+      "tn": 509,
+      "fn": 47
+    },
+    "B3": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 563,
+      "fn": 47
+    },
+    "difference_from_original": "one additional true-negative decision for all three naive alarms",
+    "changes_independent_event_family_count": false,
+    "prospective_forecast_skill_claim": false
+  },
+  "caveats": [
+    "The original 609 decisions are preserved unchanged because they were explicitly disjoint batch cohorts.",
+    "The 610 row change is a sensitivity diagnostic on previously exposed outcomes, not a correction silently applied to PR #1846 or a new prospective holdout.",
+    "Neither set is IID: 47 positive future 72h windows arise from about two overlapping adverse episodes.",
+    "Current main CSV revisions are deliberately not substituted for original frozen Git blob inputs."
+  ]
+}
