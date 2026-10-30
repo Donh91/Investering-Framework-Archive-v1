@@ -9,6 +9,7 @@ import {sourceTrace} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE} from './compass-overview.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -40,6 +41,106 @@ function time(utc){
 function cell(parent,value){
  const td=document.createElement('td');td.textContent=value;parent.append(td);
 }
+
+// Three independent SOURCE-ISSUED directions. No continuity, 24h forecast,
+// or rise-then-fall ordering is inferred between or within the windows.
+function renderOverview(){
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const en=lang==='en';
+ const model=publicOverview({latest:feeds?.latest,compass:feeds?.compass,view,lang});
+ const keys=['d13','d57','w23'];
+ set('cn-overview-heading',en?'Compass outlook':'Kompasforløb');
+ set('cn-overview-subtitle',en?'Three independent forecast windows':'Tre selvstændige prognosehorisonter');
+ set('cn-overview-foot',en?
+  'Arrows show source-issued direction for each window, not the order of price moves. Bull/Bear are coarse evidence points, not probabilities.':
+  'Pilene viser retning pr. periode, ikke rækkefølgen af kursbevægelser. Bull/Bear er grove evidenspoint, ikke sandsynligheder.');
+ set('cn-short-meaning',en?
+  '12h is observed momentum, not a new 24h forecast. The 1–3d estimate is a separate source horizon.':
+  '12 timer er målt momentum, ikke en ny 24-timersprognose. De næste 1–3 dage vurderes særskilt.');
+ keys.forEach((key,i)=>{
+  const card=model.cards[i];
+  set('cn-overview-'+key+'-arrow',card.arrow);
+  set('cn-overview-'+key+'-direction',card.direction);
+  set('cn-overview-'+key+'-position',card.position);
+  set('cn-overview-'+key+'-summary',card.summary.text);
+  set('cn-overview-'+key+'-balance',card.evidence?
+   (en?'Evidence points: ':'Evidenspoint: ')+'Bull '+card.evidence.bull+' · Bear '+card.evidence.bear:
+   (en?'No verified evidence balance':'Ingen verificeret evidensbalance'));
+  const bar=$('cn-overview-'+key+'-bar');
+  if(bar)bar.style.width=card.evidence?String(card.evidence.bull*10)+'%':'0%';
+  const root=document.querySelector('[data-cn-overview="'+key+'"]');
+  if(root){
+   root.dataset.sourceCurrent=String(model.valid);
+   root.dataset.direction=card.sourceDirection;
+   root.setAttribute('aria-label',card.title+': '+card.direction+'. '+card.position+
+    '. '+(card.evidence?'Bull '+card.evidence.bull+', Bear '+card.evidence.bear+'. ':'')+
+    card.summary.text);
+  }
+ });
+ set('cn-overview-observed-caption',en?
+  'Current market condition (last 12h context)':'Aktuel markedstilstand (12 timers kontekst)');
+ const rotation=readRotation({compass:feeds?.compass,view,lang});
+ const list=$('cn-rotation-classes');
+ if(list)list.replaceChildren();
+ set('cn-rotation-heading',en?'Positioning & rotation':'Positionering og rotation');
+ set('cn-rotation-full',en?'Explore the cycle':'Se markedsforløbet');
+ set('cn-rotation-disclaimer',en?
+  'HOLD applies only to positions already owned. Class labels are not new buy/sell signals.':
+  'HOLD gælder kun eksisterende positioner. Klassevisningen er ikke nye køb/salg-signaler.');
+ const map=new Map(rotation.rows.map(x=>[x.id,x]));
+ const group=(label,ids)=>{
+  const rows=ids.map(x=>map.get(x));
+  if(rows.some(x=>!x))return null;
+  const same=rows.every(x=>x.sourceAction===rows[0].sourceAction);
+  return same?{name:label,stance:rows[0].stance,source:rows[0].sourceAction}:
+   rows.map(x=>({name:x.name,stance:x.stance,source:x.sourceAction}));
+ };
+ const groups=rotation.valid?[
+  group('BTC / ETH',['BTC','ETH']),
+  group(en?'Large / Mid / Small':'Store / Mellem / Små',['LARGE_CAPS','MID_CAPS','SMALL_CAPS']),
+  group(en?'Microcaps':'Mikroaktiver',['MICROCAPS']),group('Memes',['MEMES'])
+ ].flatMap(x=>Array.isArray(x)?x:x?[x]:[]):[];
+ if(list)for(const g of groups){
+  const row=document.createElement('div');row.className='cn-rotation-class';
+  row.setAttribute('role','listitem');row.dataset.action=g.source;
+  const name=document.createElement('strong');name.textContent=g.name;
+  const stance=document.createElement('span');stance.textContent=g.stance;
+  row.append(name,stance);list.append(row);
+ }
+ const trustedCore=rotation.valid&&map.get('BTC')?.sourceAction==='HOLD'&&
+  map.get('ETH')?.sourceAction==='HOLD';
+ const altNotPromoted=rotation.valid&&['LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS']
+   .every(k=>['WAIT','HARD_WAIT'].includes(map.get(k)?.sourceAction));
+ set('cn-rotation-summary',!rotation.valid?
+  (en?'Class positioning unavailable until the official source is valid.':
+      'Klassevurdering afventer gyldige officielle data.'):
+  trustedCore&&altNotPromoted?
+   (en?'BTC and ETH: maintain existing exposure; broader altcoin rotation remains conditional.':
+       'BTC og ETH: behold eventuel eksisterende eksponering. Bred rotation kræver særskilt bekræftelse.'):
+  trustedCore?
+   (en?'Existing BTC/ETH positions are retained. Follow each additional class on its own official source.':
+       'Eksisterende BTC/ETH-positioner beholdes. Følg hver øvrig klasse efter dens officielle kildevurdering.'):
+   (en?'Position by class follows the issued source; there is no assumed upgrade from WAIT to HOLD.':
+       'Se kildens vurdering af hver klasse. AFVENT bliver ikke automatisk til HOLD.'));
+ set('cn-positions-title',en?
+  'What do WAIT, WATCH, PREPARE, HOLD and SELL mean?':
+  'Hvad betyder Afvent, Overvåg, Forbered, Hold og Sælg?');
+ set('cn-positions-disclaimer',en?
+  'Vocabulary only. Not an active or mandatory trading sequence. WAIT never implies a prior purchase.':
+  'Kun begreber, ikke aktive signaler eller en automatisk handelskæde. AFVENT betyder ikke, at man allerede har købt.');
+ const termRoot=$('cn-position-terms');if(termRoot){
+  termRoot.replaceChildren();
+  for(const [id,da,daMeaning,eng,enMeaning] of POSITION_GUIDE){
+   const dt=document.createElement('dt');dt.textContent=en?eng:da;
+   const dd=document.createElement('dd');dd.textContent=en?enMeaning:daMeaning;
+   dt.dataset.state=id;termRoot.append(dt,dd);
+  }
+ }
+ set('cn-reader-expand-title',en?
+  'Read all horizons, Swing/HODL and source evidence':
+  'Uddyb tidshorisonter, Swing/HODL og kildegrundlag');
+}
+
 function horizons(){
  const body=$('horizon-body');if(!body)return;
  body.replaceChildren();
@@ -50,8 +151,13 @@ function horizons(){
  for(const [key,label] of rows){
   const r=document.createElement('tr'),v=eligible?feeds.compass.horizons?.[key]:null;
   cell(r,key==='NEXT_12H'?t('Aktuelt momentum · ikke prognose','Current momentum · not a forecast'):label);
-  cell(r,eligible?safe(key==='NEXT_12H'?feeds.compass.market_now?.directional_state:v?.expected_direction):'—');
-  cell(r,eligible?safe(v?.action_posture):'—');
+  const rawDirection=key==='NEXT_12H'?feeds?.compass?.market_now?.directional_state:v?.expected_direction;
+  const sourcePosture=v?.action_posture;
+  const words={WAIT:t('Afvent','Wait'),HOLD:t('Behold eksisterende','Hold existing'),
+   HOLD_WAIT:t('Afvent','Wait'),HARD_WAIT:t('Skærpet afvent','Strict wait'),
+   NO_EDGE:t('Ingen påvist fordel','No proven edge'),UNAVAILABLE:t('Ingen vurdering','No outlook')};
+  cell(r,eligible?directionVisual(rawDirection,document.documentElement.lang).text:'—');
+  cell(r,eligible?(words[sourcePosture]||t('Ikke fastlagt','Not established')):'—');
   body.append(r);
  }
 }
@@ -82,8 +188,9 @@ function renderQuickDecision(){
   UNAVAILABLE:['Ingen aktuel vurdering','No current outlook']
  };
  const readable=(map,value,fallback)=>map[value]?.[lang==='en'?1:0]||fallback;
+ const forwardArrow=eligible?directionVisual(direction,lang).arrow:'?';
  set('cn-horizon-13',eligible?
-   readable(directions,direction,lang==='en'?'Not established':'Ikke fastlagt'):
+   forwardArrow+' '+readable(directions,direction,lang==='en'?'Not established':'Ikke fastlagt'):
    lang==='en'?'Awaiting updated data':'Afventer nye data');
  set('cn-horizon-13-posture',eligible?
    readable(postures,posture,lang==='en'?'See details':'Se detaljer'):'—');
@@ -100,7 +207,9 @@ function renderQuickDecision(){
   UNAVAILABLE:['Ingen måling','No reading']
  };
  const nowState=eligible?feeds.compass.market_now?.directional_state:null;
- set('premium-now-direction',nowLabels[nowState]?.[lang==='en'?1:0]||
+ const nowArrow=eligible?directionVisual(nowState,lang).arrow:'?';
+ set('premium-now-direction',nowLabels[nowState]?
+   (nowArrow==='?'?'':nowArrow+' ')+nowLabels[nowState][lang==='en'?1:0]:
    (lang==='en'?'Awaiting valid data':'Afventer gyldige data'));
  const actionLabels={
   HOLD_WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
@@ -154,10 +263,15 @@ function renderRiskQuick(){
   HIGH:'Officielt høj pullback-risiko. Gennemgå beredskab, ikke automatisk salg.',
   CONFIRMED:'Bekræftet officiel risikotilstand. Det er ikke en selvstændig salgstilladelse.'
  };
+ set('cn-risk-more-title',en?'Evidence, protection and timing':'Forklaring, beskyttelse og timing');
  set('cn-risk-quick-meaning',stage&&bounded?
    (en?copy.summary:daStage[p.pullback_risk_state]):
    (en?'The current risk assessment is unavailable or lacks sufficient evidence.':
     'Der mangler en aktuel, tilstrækkeligt dokumenteret risikovurdering.'));
+ set('cn-risk-quick-brief',stage&&bounded?
+   (en?copy.summary:daStage[p.pullback_risk_state]):
+   (en?'No current evidence-backed pullback classification.':
+       'Ingen aktuel kildeverificeret pullback-vurdering.'));
  set('cn-risk-quick-action',stage?($('pro-guidance')?.textContent||
    (en?'Await the next verified decision':'Afvent næste verificerede handling')):
    (en?'Wait for an updated Compass before making a new decision':
@@ -399,6 +513,7 @@ function paint(){
  renderProductExperience(view,feeds,lang);
  renderQuickDecision();
  renderRiskQuick();
+ renderOverview();
  renderReader();
  renderAltMilestone();
  horizons();
@@ -435,12 +550,12 @@ function paint(){
  // Only neutral presentation labels; all action, SELL, risk, state, price and
  // source-provenance labels remain produced by existing PRO/source modules.
  const copy=lang==='en'?{
-  risk:'All horizons · detailed risk & trader view',
+  risk:'Advanced · detailed risk and sources',
   horizon:'Time horizons',
   owner:'Official Compass only',
   time:'Horizon',direction:'Direction',action:'Source posture'
  }:{
-  risk:'Alle tidshorisonter · risiko og trader-visning',
+  risk:'Avanceret · detaljer, risici og kilder',
   horizon:'Tidshorisonter',
   owner:'Kun officielt Kompas',
   time:'Tid',direction:'Retning',action:'Kildens position'
