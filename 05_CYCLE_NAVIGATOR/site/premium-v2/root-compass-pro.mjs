@@ -9,7 +9,7 @@ import {sourceTrace} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward} from './compass-overview.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -54,9 +54,12 @@ function renderOverview(){
  set('cn-overview-foot',en?
   'Arrows show source-issued direction for each window, not the order of price moves. Bull/Bear are coarse evidence points, not probabilities.':
   'Pilene viser retning pr. periode, ikke rækkefølgen af kursbevægelser. Bull/Bear er grove evidenspoint, ikke sandsynligheder.');
- set('cn-short-meaning',en?
-  '12h is observed momentum, not a new 24h forecast. The 1–3d estimate is a separate source horizon.':
-  '12 timer er målt momentum, ikke en ny 24-timersprognose. De næste 1–3 dage vurderes særskilt.');
+ const contrast=shortVsForward({compass:feeds?.compass,view,lang});
+ set('cn-short-meaning',(en?'Now vs 1–3 days: ':'Nu vs. 1–3 dage: ')+contrast.text);
+ const contrastEl=$('cn-short-meaning');if(contrastEl){
+  contrastEl.dataset.contrastState=contrast.state;
+  contrastEl.dataset.sourceBound=String(contrast.sourceBound);
+ }
  keys.forEach((key,i)=>{
   const card=model.cards[i];
   set('cn-overview-'+key+'-arrow',card.arrow);
@@ -78,7 +81,7 @@ function renderOverview(){
   }
  });
  set('cn-overview-observed-caption',en?
-  'Current market condition (last 12h context)':'Aktuel markedstilstand (12 timers kontekst)');
+  'Latest governed market observation':'Seneste verificerede prisobservation');
  const rotation=readRotation({compass:feeds?.compass,view,lang});
  const list=$('cn-rotation-classes');
  if(list)list.replaceChildren();
@@ -224,8 +227,8 @@ function renderQuickDecision(){
  if(adaptive)set('premium-action-meaning',adaptive);
  const twelve=$('premium-now-direction')?.closest('.product-cell')?.querySelector('small');
  if(twelve)twelve.textContent=lang==='en'?
-  'Past 12 hours · observed direction':
-  'Seneste 12 timer · målt retning';
+  'Now · latest observed price move':
+  'Nu · seneste prisbevægelse';
 }
 function renderRiskQuick(){
  const en=document.documentElement.lang==='en';

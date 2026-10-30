@@ -130,3 +130,73 @@ export const POSITION_GUIDE=[
  ['SELL','Sælg/reducer','Kun hvis en godkendt kilde faktisk udsteder signalet.',
           'Sell/trim','Only if an approved source actually issues it.']
 ];
+
+
+/**
+ * Public source-only comparison, NOT a new forecast.
+ *
+ * NEXT_12H merely repeats the latest market_now nowcast. Its "0–12h"
+ * review ETA must never be represented as a 12-hour realized comparison
+ * interval or an independently issued next-24h prediction.
+ *
+ * This helper relates one observed market observation to the independently
+ * published 1–3d direction, with a strict identity/time gate and no
+ * assertion of the ordering or timing of price moves.
+ */
+export function shortVsForward({compass,view,lang='da',now=Date.now()}){
+ const trc=(da,en)=>tr(lang,da,en);
+ const invalid=(reason,da,en)=>({state:reason,text:trc(da,en),sourceBound:false});
+ if(!currentCompass({compass,view,now}))
+  return invalid('SOURCE_INVALID','Ingen gyldig aktuel sammenligning. Afvent friske data.',
+    'No valid current comparison. Await fresh source data.');
+ const market=compass.market_now,h=compass.horizons?.NEXT_1_3D;
+ if(!market||!h)
+  return invalid('SOURCE_INCOMPLETE','Den nødvendige korte observation eller 1–3-dagesvurdering mangler.',
+    'The current observation or 1–3-day outlook is missing.');
+ const prev=market.predecessor_market_observation_open_utc;
+ const actual=market.market_observation_open_utc;
+ // If the governed price owner explicitly flags no new candle, a repeated
+ // observation is never reported as fresh direction.
+ if(market.new_price_observation===false ||
+    (typeof prev==='string'&&prev&&prev===actual) ||
+    market.directional_state==='UNCHANGED_NO_NEW_OBSERVATION'){
+  return {state:'NO_NEW_PRICE_OBSERVATION',sourceBound:true,
+   text:trc('Ingen ny prisobservation. 1–3-dagesvurderingen kan ikke sammenholdes med ny kortsigtet bevægelse.',
+      'No new price observation. The 1–3-day outlook cannot be compared with a fresh short-term move.')};
+ }
+ const current={
+  BULLISH:'UP',BEARISH:'DOWN',NEUTRAL:'SIDEWAYS',MIXED:'MIXED'
+ }[market.directional_state];
+ const forward=h.expected_direction;
+ if(!current||!['UP','DOWN','MIXED','SIDEWAYS','LEAN_BEARISH','LEAN_BULLISH'].includes(forward))
+  return {state:'NO_COMPARABLE_DIRECTIONS',sourceBound:true,
+   text:trc('Der er ikke to sammenlignelige retningsvurderinger. Intet vendetidspunkt er estimeret.',
+      'Two comparable directions are not available. No turning-point time is estimated.')};
+ if(current==='UP'&&forward==='DOWN')
+  return {state:'CONTRAST_UP_DOWN',sourceBound:true,
+   text:trc('Styrke i seneste måling, men 1–3 dage peger ned. Et hurtigt opsving er ikke bekræftet som en vedvarende trend.',
+     'Strength in the latest observation, but 1–3 days point down. A brief bounce is not confirmed as a lasting trend.')};
+ if(current==='DOWN'&&forward==='UP')
+  return {state:'CONTRAST_DOWN_UP',sourceBound:true,
+   text:trc('Svaghed i seneste måling, men 1–3 dage peger op. Et muligt vendepunkt er ikke tidsbestemt.',
+     'Weakness in the latest observation, but 1–3 days point up. No turning-point time is established.')};
+ if(current==='UP'&&forward==='UP')
+  return {state:'DIRECTION_ALIGNED_UP',sourceBound:true,
+   text:trc('Seneste måling og 1–3-dagesvurderingen peger op. Overensstemmelse er ikke et nyt købssignal.',
+     'The latest observation and 1–3-day outlook both lean up. Agreement is not a new buy signal.')};
+ if(current==='DOWN'&&forward==='DOWN')
+  return {state:'DIRECTION_ALIGNED_DOWN',sourceBound:true,
+   text:trc('Seneste måling og 1–3-dagesvurderingen peger ned. Det er ikke et selvstændigt salgssignal.',
+     'The latest observation and 1–3-day outlook both lean down. This is not an independent sell signal.')};
+ if(current==='UP'&&forward==='MIXED')
+  return {state:'CURRENT_STRENGTH_FORWARD_MIXED',sourceBound:true,
+   text:trc('Styrke i seneste måling, men ingen klar 1–3-dages fortsættelse. Ikke et bekræftet trendskifte.',
+     'Strength in the latest observation, but no clear 1–3-day follow-through. Not a confirmed trend change.')};
+ if(current==='DOWN'&&forward==='MIXED')
+  return {state:'CURRENT_WEAKNESS_FORWARD_MIXED',sourceBound:true,
+   text:trc('Svaghed i seneste måling, mens 1–3-dagesretningen er blandet. Ingen bekræftet fortsættelse eller vending.',
+     'Weakness in the latest observation while 1–3 days are mixed. No confirmed continuation or reversal.')};
+ return {state:'MIXED_OR_UNRESOLVED',sourceBound:true,
+  text:trc('Kilderne giver ikke en tydelig fælles retning. Rækkefølge og tidspunkt for næste kursbevægelse er ikke kendt.',
+     'The sources do not establish one clear direction. The order and timing of the next move are unknown.')};
+}

@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
 import {VIEWS,currentCompass,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward} from './compass-overview.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [original,pro]=await Promise.all([
@@ -494,4 +494,57 @@ test('official horizon evidence and capital ladder remain source-bound, not prob
  assert.ok(!Object.keys(horizons).includes('NEXT_24H'));
  assert.doesNotMatch((awaitedPositionDescription()),/WAIT.*=>.*HOLD/);
  function awaitedPositionDescription(){return POSITION_GUIDE.map(p=>p.slice(0,3).join(' ')).join(' | ')}
+});
+
+
+test('latest observation vs 1–3d sourced contrast refuses to invent 12h/24h trajectory',async()=>{
+ const now=Date.parse('2026-10-30T21:20:00Z');
+ const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CID-REAL'},
+  weekly:{forecast_week:'2026-W44'}};
+ const compass={
+  contract:'PUBLIC_COMPASS_PROJECTION_v1',compass_id:'CID-REAL',
+  issued_at_utc:'2026-10-30T21:18:55Z',data_status:'OK',
+  full_stack:{official_freshness:{valid_until_utc:'2026-10-30T23:30:00Z'}},
+  weekly_context:{status:'ALIGNED',forecast_week:'2026-W44'},
+  market_now:{new_price_observation:true,
+   market_observation_open_utc:'2026-10-30T20:00:00Z',
+   predecessor_market_observation_open_utc:'2026-10-30T19:00:00Z',
+   directional_state:'BULLISH'},
+  horizons:{NEXT_1_3D:{expected_direction:'DOWN'}}
+ };
+ const measure=(overrides={})=>shortVsForward({compass:{...compass,...overrides},view,now,lang:'da'});
+ const opposite=measure();
+ assert.equal(opposite.state,'CONTRAST_UP_DOWN');
+ assert.equal(opposite.sourceBound,true);
+ assert.match(opposite.text,/Styrke i seneste måling/);
+ assert.match(opposite.text,/ikke bekræftet/);
+ assert.doesNotMatch(opposite.text,/24.timersprognose|sikker|BUY|SELL/);
+ assert.equal(measure({horizons:{NEXT_1_3D:{expected_direction:'MIXED'}}}).state,
+  'CURRENT_STRENGTH_FORWARD_MIXED');
+ assert.equal(measure({horizons:{NEXT_1_3D:{expected_direction:'UP'}}}).state,
+  'DIRECTION_ALIGNED_UP');
+ assert.equal(measure({market_now:{...compass.market_now,directional_state:'BEARISH'},
+  horizons:{NEXT_1_3D:{expected_direction:'UP'}}}).state,'CONTRAST_DOWN_UP');
+ assert.equal(measure({market_now:{...compass.market_now,directional_state:'MIXED'},
+  horizons:{NEXT_1_3D:{expected_direction:'MIXED'}}}).state,'MIXED_OR_UNRESOLVED');
+ assert.equal(measure({market_now:{...compass.market_now,directional_state:'UNCHANGED_NO_NEW_OBSERVATION',
+  new_price_observation:false,
+  predecessor_market_observation_open_utc:'2026-10-30T20:00:00Z'},
+  horizons:{NEXT_1_3D:{expected_direction:'DOWN'}}}).state,'NO_NEW_PRICE_OBSERVATION');
+ assert.equal(measure({market_now:{...compass.market_now,
+  predecessor_market_observation_open_utc:'2026-10-30T20:00:00Z'}}).state,'NO_NEW_PRICE_OBSERVATION');
+ assert.equal(measure({horizons:{NEXT_1_3D:{expected_direction:'UNAVAILABLE'}}}).state,
+  'NO_COMPARABLE_DIRECTIONS');
+ assert.equal(shortVsForward({compass,view:{...view,compass:{...view.compass,state:'STALE'}},now}).state,
+  'SOURCE_INVALID');
+ assert.equal(shortVsForward({compass,view,now:Date.parse('2026-10-30T23:31:00Z')}).state,
+  'SOURCE_INVALID');
+ assert.equal(shortVsForward({compass:{...compass,weekly_context:{...compass.weekly_context,
+  forecast_week:'2026-W45'}},view,now}).state,'SOURCE_INVALID');
+ assert.match(shortVsForward({compass,view,lang:'en',now}).text,/latest observation/);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.match(runtime,/shortVsForward\(/);
+ assert.match(runtime,/Now · latest observed price move/);
+ assert.match(runtime,/Nu · seneste prisbevægelse/);
+ assert.doesNotMatch(runtime,/Seneste 12 timer · målt retning/);
 });
