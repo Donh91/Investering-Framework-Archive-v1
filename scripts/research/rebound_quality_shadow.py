@@ -162,6 +162,61 @@ def assess(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     return base
 
 
+
+def replay_census(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
+    """Bounded exploratory census, not first-known evidence or skill backtest."""
+    cutoff = utc(asof)
+    cutoffs = sorted({
+        utc(r["timestamp_utc"]) + timedelta(hours=1)
+        for r in rows
+        if cutoff - timedelta(hours=168) <= utc(r["timestamp_utc"]) + timedelta(hours=1) <= cutoff
+    })
+    results = [assess(rows, t.isoformat()) for t in cutoffs]
+    eligible_statuses = {"REPLAY_CANDIDATE_RESEARCH_ONLY", "NO_CANDIDATE_RESEARCH_ONLY"}
+    candidates = []
+    eligible_count = 0
+    exclusions: dict[str, int] = {}
+    for r in results:
+        if r["status"] not in eligible_statuses:
+            reason = r.get("reason", r["status"])
+            exclusions[reason] = exclusions.get(reason, 0) + 1
+            continue
+        eligible_count += 1
+        if r["evidence"].get("candidate") is True:
+            candidates.append(utc(r["evidence"]["window_end_utc"]))
+    cluster_sensitivity = {}
+    for cooldown in (6, 12, 24):
+        groups: list[list[datetime]] = []
+        for stamp in candidates:
+            if not groups or stamp - groups[-1][-1] > timedelta(hours=cooldown):
+                groups.append([stamp])
+            else:
+                groups[-1].append(stamp)
+        cluster_sensitivity[str(cooldown) + "h"] = {
+            "cluster_count": len(groups),
+            "groups": [
+                {"first_utc": group[0].isoformat().replace("+00:00", "Z"),
+                 "last_utc": group[-1].isoformat().replace("+00:00", "Z"),
+                 "raw_candidates": len(group)} for group in groups
+            ],
+        }
+    return {
+        "contract": "REBOUND_QUALITY_EXPLORATORY_REPLAY_CENSUS_v0",
+        "asof_utc": cutoff.isoformat().replace("+00:00", "Z"),
+        "evaluated_cutoffs": len(results),
+        "eligible_complete_cutoffs": eligible_count,
+        "excluded_cutoffs_by_reason": exclusions,
+        "raw_rebound_candidate_cutoffs": len(candidates),
+        "cluster_sensitivity_NOT_CHOSEN_OR_CALIBRATED": cluster_sensitivity,
+        "first_known_verified": False,
+        "performance_backtest": False,
+        "directional_accuracy": None,
+        "after_cost_edge": None,
+        "official_action_permission": "NONE",
+        "warning": "Exploratory retrospective census only. No first-known, holdout, causal or performance proof.",
+    }
+
+
 def read_public_owner(repo: Path, files: list[Path]) -> list[dict[str, str]]:
     root = (repo / PUBLIC_OWNER_ROOT).resolve()
     out: list[dict[str, str]] = []
@@ -179,8 +234,11 @@ def main() -> None:
     ap.add_argument("--repo", type=Path, default=Path("."))
     ap.add_argument("--csv", type=Path, required=True, action="append")
     ap.add_argument("--asof", required=True, help="UTC snapshot cutoff, not retrospective issuance proof")
+    ap.add_argument("--scan", action="store_true", help="exploratory last-168h census, not a performance test")
     args = ap.parse_args()
-    print(json.dumps(assess(read_public_owner(args.repo, args.csv), args.asof), sort_keys=True, indent=2))
+    rows = read_public_owner(args.repo, args.csv)
+    result = replay_census(rows, args.asof) if args.scan else assess(rows, args.asof)
+    print(json.dumps(result, sort_keys=True, indent=2))
 
 
 if __name__ == "__main__":
