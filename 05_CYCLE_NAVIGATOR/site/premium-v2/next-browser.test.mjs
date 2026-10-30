@@ -574,7 +574,7 @@ try{
      rotationRows:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
      action:document.getElementById('premium-now-action')?.textContent,
      legendExplainsNoMandatorySequence:
-      /ingen.*automatisk|not an active|mandatory/.test(
+      /ikke aktive signaler|not an active|mandatory/.test(
        document.getElementById('cn-positions-disclaimer')?.textContent?.toLowerCase()||''),
      readerClosed:!proof.open
     };
