@@ -464,7 +464,7 @@ test('official horizon evidence and capital ladder remain source-bound, not prob
  const source=publicOverview({compass,latest:{},view,now,lang:'da'});
  assert.equal(source.valid,true);
  assert.deepEqual(source.observed12,{arrow:'↘',text:'Faldende',source:'DOWN'});
- assert.deepEqual(source.cards.map(x=>x.arrow),['↗ ↘','↘','↗']);
+ assert.deepEqual(source.cards.map(x=>x.arrow),['↗/↘','↘','↗']);
  assert.deepEqual(source.cards.map(x=>x.evidence),[
    {bull:5,bear:5},{bull:2,bear:8},{bull:7,bear:3}
  ]);
