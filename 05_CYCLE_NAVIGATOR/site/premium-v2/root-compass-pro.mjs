@@ -8,7 +8,7 @@ import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs
 import {sourceTrace} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
-import {VIEWS,readHorizon,lensContext} from './compass-reader.mjs';
+import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -111,6 +111,8 @@ function renderQuickDecision(){
  const officialAction=eligible?feeds.compass.action_now:null;
  set('premium-action-code',actionLabels[officialAction]?.[lang==='en'?1:0]||
    (lang==='en'?'No current verified action':'Ingen aktuel verificeret handling'));
+ const adaptive=explainCurrentAction({latest:feeds?.latest,compass:feeds?.compass,view,lang});
+ if(adaptive)set('premium-action-meaning',adaptive);
  const twelve=$('premium-now-direction')?.closest('.product-cell')?.querySelector('small');
  if(twelve)twelve.textContent=lang==='en'?
   'Past 12 hours · observed direction':
@@ -195,6 +197,10 @@ function renderReader(){
  set('cn-reader-direction',reading.direction);
  set('cn-reader-posture',reading.posture);
  set('cn-reader-analysis',reading.description);
+ set('cn-reader-why',explainPosture(reading,lang));
+ const watch=sourceWatch({latest:feeds?.latest,compass:feeds?.compass,view,lang});
+ set('cn-reader-watch',watch?
+   (en?'Watch for: ':'Hold øje med: ')+watch.text:'');
  set('cn-reader-language',reading.current&&!reading.translated?
    (en?'':'Oprindelig kildetekst på engelsk · ingen verificeret dansk oversættelse'):'');
  for(const lens of ['swing','hodl']){
@@ -214,13 +220,13 @@ function renderReader(){
  set('cn-reader-glossary-title',en?'Understand the signals · 5 quick definitions':
    'Forstå signalerne · 5 korte forklaringer');
  const entries=en?[
-  ['WAIT','Await confirmation; no new trade permission.'],
+  ['WAIT','No new trade is confirmed yet. Not a prediction of flat prices.'],
   ['MIXED','Evidence points both ways; not a 50/50 probability.'],
   ['HOLD','Wait for a change in the official stance; not a new buy.'],
   ['NO EDGE','No demonstrated predictive advantage.'],
   ['MISSING DATA','No current valid outlook; old signals are not current.']
  ]:[
-  ['AFVENT','Mangler bekræftelse; ingen ny handelstilladelse.'],
+  ['AFVENT','Nyt køb/salg er ikke bekræftet. Prisen kan stadig bevæge sig.'],
   ['BLANDET','Tegn peger begge veje; ikke en 50/50-sandsynlighed.'],
   ['HOLD','Afvent ændring i officiel vurdering; ikke et nyt køb.'],
   ['INGEN EDGE','Ingen dokumenteret prognosefordel.'],
