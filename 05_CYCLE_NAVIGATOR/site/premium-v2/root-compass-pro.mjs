@@ -64,7 +64,7 @@ function renderOverview(){
   set('cn-overview-'+key+'-position',card.position);
   set('cn-overview-'+key+'-summary',card.summary.text);
   set('cn-overview-'+key+'-balance',card.evidence?
-   'Bull '+card.evidence.bull+' · Bear '+card.evidence.bear:
+   (en?'Evidence points: ':'Evidenspoint: ')+'Bull '+card.evidence.bull+' · Bear '+card.evidence.bear:
    (en?'No verified evidence balance':'Ingen verificeret evidensbalance'));
   const bar=$('cn-overview-'+key+'-bar');
   if(bar)bar.style.width=card.evidence?String(card.evidence.bull*10)+'%':'0%';
@@ -108,12 +108,17 @@ function renderOverview(){
  }
  const trustedCore=rotation.valid&&map.get('BTC')?.sourceAction==='HOLD'&&
   map.get('ETH')?.sourceAction==='HOLD';
+ const altNotPromoted=rotation.valid&&['LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS']
+   .every(k=>['WAIT','HARD_WAIT'].includes(map.get(k)?.sourceAction));
  set('cn-rotation-summary',!rotation.valid?
   (en?'Class positioning unavailable until the official source is valid.':
       'Klassevurdering afventer gyldige officielle data.'):
-  trustedCore?
+  trustedCore&&altNotPromoted?
    (en?'BTC and ETH: maintain existing exposure; broader altcoin rotation remains conditional.':
        'BTC og ETH: behold eventuel eksisterende eksponering. Bred rotation kræver særskilt bekræftelse.'):
+  trustedCore?
+   (en?'Existing BTC/ETH positions are retained. Follow each additional class on its own official source.':
+       'Eksisterende BTC/ETH-positioner beholdes. Følg hver øvrig klasse efter dens officielle kildevurdering.'):
    (en?'Position by class follows the issued source; there is no assumed upgrade from WAIT to HOLD.':
        'Se kildens vurdering af hver klasse. AFVENT bliver ikke automatisk til HOLD.'));
  set('cn-positions-title',en?
