@@ -63,18 +63,38 @@ function renderQuickDecision(){
  const h=eligible?feeds.compass.horizons?.NEXT_1_3D:null;
  const direction=safe(h?.expected_direction);
  const posture=safe(h?.action_posture);
- set('cn-horizon-13',eligible?direction:'UNAVAILABLE');
- set('cn-horizon-13-posture',eligible?posture:'—');
- set('cn-horizon-13-label',lang==='en'?'1–3 days · official outlook':'1–3 dage · officiel vurdering');
+ // Presentation-only translations of known official enums: never infer new
+ // forward direction, time, permission or source validity.
+ const directions={
+  UP:['Stigende','Rising'],DOWN:['Faldende','Falling'],
+  MIXED:['Blandet','Mixed'],SIDEWAYS:['Sideværts','Sideways'],
+  LEAN_BEARISH:['Overvejende svagt','Leaning bearish'],
+  LEAN_BULLISH:['Overvejende stærkt','Leaning bullish'],
+  NO_EDGE:['Intet pålideligt signal','No reliable signal'],
+  UNAVAILABLE:['Ingen aktuel vurdering','No current outlook']
+ };
+ const postures={
+  HOLD:['Behold','Hold'],HOLD_WAIT:['Afvent','Wait'],WAIT:['Afvent','Wait'],
+  ABSTAIN:['Ingen ny handling','No new action'],
+  NO_EDGE:['Intet pålideligt signal','No reliable signal'],
+  UNAVAILABLE:['Ingen aktuel vurdering','No current outlook']
+ };
+ const readable=(map,value,fallback)=>map[value]?.[lang==='en'?1:0]||fallback;
+ set('cn-horizon-13',eligible?
+   readable(directions,direction,lang==='en'?'Not established':'Ikke fastlagt'):
+   lang==='en'?'Awaiting updated data':'Afventer nye data');
+ set('cn-horizon-13-posture',eligible?
+   readable(postures,posture,lang==='en'?'See details':'Se detaljer'):'—');
+ set('cn-horizon-13-label',lang==='en'?'Next 1–3 days':'De næste 1–3 dage');
  const twelve=$('premium-now-direction')?.closest('.product-cell')?.querySelector('small');
  if(twelve)twelve.textContent=lang==='en'?
-  '12 hours · observed momentum (not forecast)':
-  '12 timer · observeret momentum (ikke prognose)';
+  'Past 12 hours · observed direction':
+  'Seneste 12 timer · målt retning';
 }
 function renderRiskQuick(){
  const en=document.documentElement.lang==='en';
- set('cn-risk-quick-label',en?'PULLBACK / FIVE OFFICIAL RISK CLASSES':
-   'PULLBACK / 5 OFFICIELLE RISIKOKLASSER');
+ set('cn-risk-quick-label',en?'RISK OF A FURTHER DECLINE':
+   'RISIKO FOR YDERLIGERE FALD');
  // Reuse the existing Official Kompas PRO source-bound result, including
  // its original 1–5 ordinal. This is not a new market classifier.
  const eligible=view?.compass?.state==='FRESH'&&
@@ -88,7 +108,7 @@ function renderRiskQuick(){
  const sourceStage=eligible?$('pro-risk-stage')?.textContent:null;
  const stage=sourceStage&&/^[1-5]\/5 · /.test(sourceStage)?sourceStage:null;
  set('cn-risk-quick-state',stage||
-   (en?'No current verified grade':'Ingen aktuel verificeret grad'));
+   (en?'— / 5 · awaiting fresh data':'— / 5 · afventer nye data'));
  set('cn-risk-quick-note',en?'Ordinal risk level, not probability':
    'Risikoniveau, ikke sandsynlighed');
  const copy=p?.public_explanation;
@@ -107,12 +127,12 @@ function renderRiskQuick(){
  };
  set('cn-risk-quick-meaning',stage&&bounded?
    (en?copy.summary:daStage[p.pullback_risk_state]):
-   (en?'No verified detailed assessment of cause, timing or depth':
-    'Ingen kildeverificeret forklaring på årsag, start eller dybde'));
+   (en?'The current risk assessment is unavailable or lacks sufficient evidence.':
+    'Der mangler en aktuel, tilstrækkeligt dokumenteret risikovurdering.'));
  set('cn-risk-quick-action',stage?($('pro-guidance')?.textContent||
    (en?'Await the next verified decision':'Afvent næste verificerede handling')):
-   (en?'Await a valid current Compass before taking action':
-    'Afvent gyldigt aktuelt Kompas før handling'));
+   (en?'Wait for an updated Compass before making a new decision':
+    'Afvent opdateret Kompas før nye beslutninger'));
  const quality=stage?$('pro-risk-quality')?.textContent:null;
  const onset=stage?$('pro-onset-eta')?.textContent:null;
  set('cn-risk-quick-quality',(en?'Evidence quality: ':'Evidenskvalitet: ')+
@@ -296,19 +316,19 @@ function paint(){
  mondayReadback();
  const c=view?.compass,w=view?.weekly;
  const fresh=c?.state==='FRESH'&&c?.permit_path_live_gates===true;
- const weekly=w?.state==='DEGRADED'?t(' · UGEKILDE: BEGRÆNSET DÆKNING',' · WEEKLY SOURCE: LIMITED COVERAGE'):
-   w?.state==='OK'?'':t(' · UGEKILDE UTILGÆNGELIG',' · WEEKLY SOURCE UNAVAILABLE');
+ const weekly=w?.state==='DEGRADED'?t(' · Ugens datagrundlag er ufuldstændigt',' · Weekly data is incomplete'):
+   w?.state==='OK'?'':t(' · Ugens data er ikke tilgængelige',' · Weekly data is unavailable');
  const expires=feeds?.compass?.full_stack?.official_freshness?.valid_until_utc;
  const deadline=Date.parse(expires);
  const validUntil=Number.isFinite(deadline)?time(expires):'—';
  const last=feeds?.compass?.issued_at_utc;
  set('pro-source-status',failed?t('Indlæsning mislykkedes · ingen aktuel handling','Source fetch failed · no current action'):
-   fresh?t('Kildeverificeret handling · udstedt ','Source-verified action · issued ')+time(last)+
+   fresh?t('Aktuel vurdering · opdateret ','Current verified outlook · updated ')+time(last)+
          t(' · gyldig til ',' · valid until ')+validUntil+weekly:
-   t('Ingen gyldig aktuel handling · kilde udløbet, mangler eller matcher ikke uge','No eligible current action · source expired, missing or wrong week')+weekly);
+   t('Ingen aktuel vurdering: data er for gamle, mangler eller passer ikke til denne uge','No current outlook: data are too old, missing or do not match this week')+weekly);
  const gate=fresh&&view?.path?.state==='SOURCE_BOUND'?safe(view.path.next_gate):'UNAVAILABLE';
  set('pro-next-gate',t('Næste bekræftelse: ','Next confirmation: ')+(gate==='UNAVAILABLE'?
-   t('Afventer kildeverificeret betingelse','Awaiting source-verified condition'):gate));
+   t('Afventer pålidelige data','Awaiting reliable data'):gate));
  const root=$('compass-pro');if(root){
   root.dataset.sourceCurrent=fresh?'true':'false';
   root.dataset.weeklyHealth=w?.state||'UNAVAILABLE';
@@ -318,8 +338,8 @@ function paint(){
  const heading=$('pro-heading');if(heading)heading.textContent=lang==='en'?'Compass PRO':'Kompas PRO';
  const intro=$('compass-pro')?.querySelector('.cn-pro-intro > p');
  if(intro)intro.textContent=lang==='en'?
-  'Action, observed market direction and risk are separate. Only eligible official source decisions are current.':
-  'Handling, observeret retning og risiko vises hver for sig. Kun gyldige officielle kildebeslutninger er aktuelle.';
+  'Current market direction, risk and what could change the outlook. Missing or outdated data are clearly marked.':
+  'Aktuel markedsretning, risiko og hvad der kan ændre udsynet. Manglende eller gamle data vises tydeligt.';
  // Only neutral presentation labels; all action, SELL, risk, state, price and
  // source-provenance labels remain produced by existing PRO/source modules.
  const copy=lang==='en'?{
