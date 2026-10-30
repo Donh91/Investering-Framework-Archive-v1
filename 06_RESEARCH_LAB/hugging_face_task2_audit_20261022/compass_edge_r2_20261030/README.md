@@ -6,6 +6,7 @@ This directory contains **research-only** artifacts. Nothing here can change Off
 
 ## Actually executed
 
+- [01_KOMPAS_PRO_SOURCE_AUTHORITY_AUDIT.md](01_KOMPAS_PRO_SOURCE_AUTHORITY_AUDIT.md): source-code grounded distinction between 12h NOWCAST, source-owned P risk, explicitly governed HOLD_WAIT, and 24-feature original PIT custody/mixed breadth ownership.
 - [04_OCT2026_DEVELOPMENT_BASELINE_REPORT.md](04_OCT2026_DEVELOPMENT_BASELINE_REPORT.md): full source-hash audit, deterministic October BTC downside-price baseline, complete event-window denominators, negative cases and warnings.
 - [04_PRICE_BASELINE_DEVELOPMENT_RESULTS.json](04_PRICE_BASELINE_DEVELOPMENT_RESULTS.json): typed, machine-readable exact aggregated counts and scientific nonadmission.
 
