@@ -96,8 +96,9 @@ function renderOverview(){
    rows.map(x=>({name:x.name,stance:x.stance,source:x.sourceAction}));
  };
  const groups=rotation.valid?[
-  group('BTC / ETH',['BTC','ETH']),group('Large / Mid / Small',['LARGE_CAPS','MID_CAPS','SMALL_CAPS']),
-  group('Microcaps',['MICROCAPS']),group('Memes',['MEMES'])
+  group('BTC / ETH',['BTC','ETH']),
+  group(en?'Large / Mid / Small':'Store / Mellem / Små',['LARGE_CAPS','MID_CAPS','SMALL_CAPS']),
+  group(en?'Microcaps':'Mikroaktiver',['MICROCAPS']),group('Memes',['MEMES'])
  ].flatMap(x=>Array.isArray(x)?x:x?[x]:[]):[];
  if(list)for(const g of groups){
   const row=document.createElement('div');row.className='cn-rotation-class';
@@ -549,12 +550,12 @@ function paint(){
  // Only neutral presentation labels; all action, SELL, risk, state, price and
  // source-provenance labels remain produced by existing PRO/source modules.
  const copy=lang==='en'?{
-  risk:'All horizons · detailed risk & trader view',
+  risk:'Advanced · detailed risk and sources',
   horizon:'Time horizons',
   owner:'Official Compass only',
   time:'Horizon',direction:'Direction',action:'Source posture'
  }:{
-  risk:'Alle tidshorisonter · risiko og trader-visning',
+  risk:'Avanceret · detaljer, risici og kilder',
   horizon:'Tidshorisonter',
   owner:'Kun officielt Kompas',
   time:'Tid',direction:'Retning',action:'Kildens position'
