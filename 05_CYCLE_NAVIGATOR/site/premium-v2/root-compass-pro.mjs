@@ -198,7 +198,8 @@ function renderReader(){
  set('cn-reader-posture',reading.posture);
  set('cn-reader-analysis',reading.description);
  set('cn-reader-why',explainPosture(reading,lang));
- const watch=sourceWatch({latest:feeds?.latest,compass:feeds?.compass,view,lang});
+ const riskHorizon=['NEXT_1_3D','NEXT_5_7D'].includes(selectedReaderHorizon);
+ const watch=riskHorizon?sourceWatch({latest:feeds?.latest,compass:feeds?.compass,view,lang}):null;
  set('cn-reader-watch',watch?
    (en?'Watch for: ':'Hold øje med: ')+watch.text:'');
  set('cn-reader-language',reading.current&&!reading.translated?
