@@ -1,20 +1,20 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-10-30T21:00:42.756536Z`
+Generated: `2026-10-30T21:23:19.734010Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.415 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.299 |
-| `weekly_output` | **GREEN** | FRESH | 110.089 |
-| `automation_health` | **RED** | RED | 0.064 |
-| `architecture_health` | **GREEN** | GREEN | 0.026 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 1.299 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 12.266 |
-| `remediation_maturation` | **GREEN** | FRESH | 9.959 |
+| `daily_capture` | **GREEN** | FRESH | 2.792 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.676 |
+| `weekly_output` | **GREEN** | FRESH | 110.466 |
+| `automation_health` | **RED** | RED | 0.44 |
+| `architecture_health` | **GREEN** | GREEN | 0.403 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 1.675 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 12.643 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.349 |
 
 ## AI and learning activity
 
@@ -24,7 +24,7 @@ Generated: `2026-10-30T21:00:42.756536Z`
 - Experiment candidates: **650**
 - Experiment dispatch requests: **44966**
 - Codex-ready remediation tasks: **3**
-- Needs-more-evidence items: **5**
+- Needs-more-evidence items: **4**
 
 ## Incidents
 
@@ -54,4 +54,4 @@ A gateway PASS alone is not measured downstream value or investment edge.
 - **P0** `automation_health` - ['framework-learning-supervisor.yml:LATEST_RUN_FAILED']
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `16faf595e85d7263ba11cf8465e055f4cc27ede7e80cf3790e9b9d98c7698f3e`
+Dashboard SHA-256: `954406c54d015a1448be00bef5aef4e345911fc01c1ea4e2bab3ec481965a64a`
