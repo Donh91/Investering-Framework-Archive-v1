@@ -33,13 +33,13 @@ function clearPlaying(){
 }
 function textLabels(){
  const labels={
-  da:{card:'Ugens markedsudsyn',desc:'Mandagens frosne high/low sammenholdt med faktisk kurs.',
+  da:{card:'Ugens markedsudsyn',desc:'Mandagens prisprognose sammenholdt med de faktiske kurser.',
     actual:'Verificerede timesluk · UTC',missing:'Ingen udstedt dagsprognose',
-    forecast:'Forventet dagskurs',observed:'Faktisk kurs',bounds:'Frossen high/low',
+    forecast:'Forventet dagskurs',observed:'Faktisk kurs',bounds:'Mandagens prisinterval',
     title:'Spol gennem ugen',mon:'Mandag',sun:'Søndag'},
-  en:{card:'Weekly outlook',desc:'Monday’s original high/low compared with observed prices.',
+  en:{card:'Weekly outlook',desc:'Monday’s forecast range compared with observed prices.',
     actual:'Verified hourly closes · UTC',missing:'No issued daily forecast',
-    forecast:'Expected daily close',observed:'Observed price',bounds:'Frozen high/low',
+    forecast:'Expected daily close',observed:'Observed price',bounds:'Monday’s price range',
     title:'Explore the week',mon:'Monday',sun:'Sunday'}
  }[language];
  // Preserve the ORIGINAL AppDeploy "B" accent badge, not flattened text.
@@ -85,7 +85,7 @@ function textLabels(){
  const staticLabels=[
   ['.premium-entry-overline',officialHome?t('CYCLE NAVIGATOR / OFFICIEL','CYCLE NAVIGATOR / OFFICIAL'):
    'CYCLE NAVIGATOR / NEXT'],
-  ['[data-t="cardEyebrow"]',t('FROSSET PRISINTERVAL / OBSERVERET KURS','FROZEN PRICE RANGE / OBSERVED PRICE')],
+  ['[data-t="cardEyebrow"]',t('UGENS PROGNOSE / FAKTISKE KURSER','WEEKLY FORECAST / OBSERVED PRICES')],
   ['[data-t="freeze"]',model?.forecast_status==='SOURCE_ISSUED'?
    t('Original kildeudstedt prognose','Original source-issued forecast'):
    t('Oprindelig ugeprognose','Original weekly forecast')],
