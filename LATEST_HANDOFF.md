@@ -1,7 +1,7 @@
 # LATEST HANDOFF
 
-Generated: 2026-10-30T02:16:08.691807Z
-Hash: `19ae24656d94b7cc3d95bf95de9d9fe1ff6cfe6828816190ae21fb684052fdb9`
+Generated: 2026-10-30T11:01:27.389908Z
+Hash: `e679fdc6c213ab47f2a1e2adbe94dd08574b7c419d7b0ec554d373d469c696f4`
 
 - **latest_capture**: `03_DAILY_CAPTURE_LOGS/captures/LATEST.json`
 - **latest_director_output**: `research/api_agent/outputs/daily/2026/10/30/020731/DAILY_DIRECTOR_OUTPUT.json`
@@ -14,7 +14,7 @@ Hash: `19ae24656d94b7cc3d95bf95de9d9fe1ff6cfe6828816190ae21fb684052fdb9`
 - **remediation_queue**: `research/remediation/LATEST_REMEDIATION_QUEUE.json`
 - **codex_ready_tasks**: `research/remediation/LATEST_CODEX_READY_TASKS.json`
 
-Open incidents: 23 of 137 incident files
+Open incidents: 24 of 138 incident files
 Resolved incidents with valid receipts: 114
 Invalid incident resolution receipts: 0
 Pending forecast candidates: 271 distinct actionable
