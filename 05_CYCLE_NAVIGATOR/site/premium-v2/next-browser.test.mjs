@@ -502,7 +502,8 @@ try{
      reader.enTitle==='What is Compass seeing ahead?'&&
      reader.daTitle==='Hvad viser Kompas fremad?'&&
      reader.guide.length>20&&reader.source.length>15&&reader.direction.length>2&&
-     reader.why.length>20&&
+     reader.why.length>20&&!reader.watch.includes('Hold øje med: Hold øje med')&&
+     !reader.watch.includes('Watch for: Watch')&&
      reader.originalActionPreserved&&reader.tabsPreserved&&reader.overflow<=2,
      'ROOT_COMPASS_READER_UX_FAIL:'+JSON.stringify(reader));
    // Visual acceptance of the actual new, active source-reader (not only DOM).
