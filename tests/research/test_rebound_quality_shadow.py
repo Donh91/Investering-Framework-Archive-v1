@@ -49,7 +49,7 @@ class ReboundQualityTest(unittest.TestCase):
 
     def test_future_bars_excluded_and_gap_denied(self):
         rows = fixture()
-        before = assess(rows, rows[-2]["source_window_end_utc"])
+        before = assess(rows, "2026-10-30T15:00:00Z")
         self.assertEqual(before["reason"], "NEEDS_16_CONTIGUOUS_COMPLETED_HOURS")
         rows.pop(5)
         out = assess(rows, (datetime(2026, 10, 31, tzinfo=timezone.utc)).isoformat())
@@ -65,6 +65,19 @@ class ReboundQualityTest(unittest.TestCase):
         rows = fixture()
         result = assess(rows, "2026-10-31T10:00:00Z")
         self.assertEqual(result["reason"], "OWNER_DATA_STALE")
+
+    def test_repeated_collection_end_is_not_duplicate_candle(self):
+        rows = fixture()
+        for r in rows:
+            r["source_window_end_utc"] = "2026-10-30T16:00:00Z"
+        out = assess(rows, "2026-10-30T16:00:00Z")
+        self.assertEqual(out["status"], "REPLAY_CANDIDATE_RESEARCH_ONLY")
+
+    def test_run_coverage_earlier_than_candle_end_fails(self):
+        rows = fixture()
+        rows[-1]["source_window_end_utc"] = "2026-10-30T13:00:00Z"
+        with self.assertRaisesRegex(ValueError, "source_coverage_ends_before_candle"):
+            assess(rows, "2026-10-30T16:00:00Z")
 
     def test_hourly_gap_cannot_be_filled(self):
         rows = fixture() + [{**fixture()[0], "timestamp_utc": "2026-10-30T19:00:00Z", "source_window_end_utc": "2026-10-30T20:00:00Z"}]
