@@ -456,7 +456,8 @@ try{
    assert.ok(report.horizonOverview.length===3&&
      report.horizonOverview.every(x=>x.direction?.length>1&&x.arrow?.length>0&&x.balance?.length>4)&&
      report.riskCollapsed&&report.readerCollapsed&&report.positionsCollapsed&&
-     report.rotationRows>0&&!report.rotationHasUnknownRaw,
+     report.rotationRows>0&&!report.rotationHasUnknownRaw&&
+     report.horizonOverview.every(x=>/Evidenspoint|Evidence points|Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance)),
      'ROOT_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report.horizonOverview));
    assert.ok(report.actionWhy.length>22&&!report.actionWhy.includes('HOLD_WAIT'),
      'ROOT_VERDICT_NO_ADAPTIVE_PLAIN_LANGUAGE_EXPLANATION:'+JSON.stringify(report));
@@ -558,6 +559,48 @@ try{
     for(const chunk of firstFoldShot.data.match(/.{1,8000}/g))
      console.log('CN_FIRSTFOLD_SCREENSHOT_'+width+'_PART '+chunk);
     console.log('CN_FIRSTFOLD_SCREENSHOT_'+width+'_END');
+   }
+   // Disclosures remain optional while the real five-class rail stays visible.
+   const disclosure=await evaluate(()=>{
+    const risk=document.querySelector('.cn-risk-more');
+    const legend=document.querySelector('.cn-position-guide');
+    const proof=document.querySelector('.cn-reader-expand');
+    risk.open=true;legend.open=true;
+    const state={
+     riskOpen:risk.open,
+     legendOpen:legend.open,
+     glossaryTerms:legend.querySelectorAll('#cn-position-terms dt').length,
+     riskStages:document.querySelectorAll('#cn-risk-quick-steps .risk-step').length,
+     rotationRows:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
+     action:document.getElementById('premium-now-action')?.textContent,
+     legendExplainsNoMandatorySequence:
+      /ingen.*automatisk|not an active|mandatory/.test(
+       document.getElementById('cn-positions-disclaimer')?.textContent?.toLowerCase()||''),
+     readerClosed:!proof.open
+    };
+    risk.open=false;legend.open=false;
+    return state;
+   });
+   assert.ok(disclosure.riskOpen&&disclosure.legendOpen&&
+     disclosure.glossaryTerms===8&&disclosure.riskStages===5&&
+     disclosure.rotationRows>0&&disclosure.readerClosed&&
+     disclosure.legendExplainsNoMandatorySequence,
+     'ROOT_DISCREET_DISCLOSURE_FAILED:'+JSON.stringify(disclosure));
+   if(process.env.GITHUB_EVENT_NAME==='pull_request'){
+    const visible=await evaluate(()=>{
+     const panel=document.querySelector('.cn-risk-quick');
+     if(!panel||panel.hidden)return false;
+     panel.scrollIntoView({block:'start',behavior:'instant'});
+     return panel.getBoundingClientRect().width>280;
+    });
+    assert.equal(visible,true,'ROOT_PULLBACK_RAIL_VISUAL_MISSING');
+    await delay(120);
+    const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    assert.ok(shot.data?.length>1000,'ROOT_PULLBACK_SCREENSHOT_MISSING');
+    console.log('CN_OVERVIEW_RISK_SCREENSHOT_'+width+'_BEGIN');
+    for(const chunk of shot.data.match(/.{1,8000}/g))
+     console.log('CN_OVERVIEW_RISK_SCREENSHOT_'+width+'_PART '+chunk);
+    console.log('CN_OVERVIEW_RISK_SCREENSHOT_'+width+'_END');
    }
    // DESIGN GATE: real rendered Chrome pixels of the EXACT staged root.
    // Read via GitHub CI logs before merge; no invented visual QA receipt.
