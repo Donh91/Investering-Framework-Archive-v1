@@ -28,6 +28,14 @@ const tr=(da,en,lang)=>lang==='en'?en:da;
 const label=(dict,key,lang,fallback)=>dict[key]?.[lang==='en'?1:0]||fallback;
 const isPlain=s=>typeof s==='string'&&s.length>=6&&s.length<=900&&!/[\u0000-\u001f<>]/.test(s);
 const cleanSentence=s=>s.length<=380?s:s.slice(0,377).replace(/\s+\S*$/,'')+'…';
+// Replace only machine vocabulary inside the already-issued public sentence.
+// No inference, changed price, probability, trading authority or time horizon.
+const readableSource=(text,lang)=>cleanSentence(text)
+  .replace(/\bUNAVAILABLE\b/g,lang==='en'?'not established':'ikke fastlagt')
+  .replace(/\bMIXED\b/g,lang==='en'?'mixed':'blandet')
+  .replace(/\bNO_EDGE\b/g,lang==='en'?'no proven edge':'ingen påvist fordel')
+  .replace(/\bHOLD_WAIT\b/g,lang==='en'?'wait':'afvent');
+
 
 export function currentCompass({compass,view,now=Date.now()}){
   const until=Date.parse(compass?.full_stack?.official_freshness?.valid_until_utc);
@@ -45,16 +53,16 @@ export function currentCompass({compass,view,now=Date.now()}){
 
 export function sourceTranslation(sentence,latest,lang){
   if(!isPlain(sentence))return {text:'',translated:false};
-  if(lang==='en')return {text:cleanSentence(sentence),translated:true};
+  if(lang==='en')return {text:readableSource(sentence,lang),translated:true};
   const pair=Array.isArray(latest?.presentation_translations)?
     latest.presentation_translations.find(x=>x?.en===sentence&&isPlain(x?.da)):null;
   // Only an exact, authored source-to-source translation is allowed.
-  if(pair)return {text:cleanSentence(pair.da),translated:true};
+  if(pair)return {text:readableSource(pair.da,lang),translated:true};
   // This is the exact translation of a known public sentence, not a new call.
   if(sentence==='Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap.'){
     return {text:'Den korte vurdering holdes op mod ugens marked. Bredere deltagelse skal forbedres, før risiko flyttes til mindre kryptovalutaer.',translated:true};
   }
-  return {text:cleanSentence(sentence),translated:false};
+  return {text:readableSource(sentence,lang),translated:false};
 }
 
 export function readHorizon({latest,compass,view,lang='da',id='NEXT_1_3D',now=Date.now()}){
