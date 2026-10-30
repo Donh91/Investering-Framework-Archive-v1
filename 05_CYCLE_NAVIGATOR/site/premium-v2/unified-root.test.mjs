@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
 import {VIEWS,currentCompass,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE} from './compass-overview.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [original,pro]=await Promise.all([
@@ -396,4 +397,100 @@ test('source-bound interpretation is attached to original verdict without adding
  assert.match(reader,/No new buy or sell is confirmed/);
  const css=await read('./premium-tabs.css');
  assert.match(css,/\.cn-reader-outlook \.cn-reader-why/);
+});
+
+
+test('visible Kompas product v3 has 12h observation, three sourced horizon cards, pullback rail and class summary in that order',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ const markers=[
+  'id="premium-now-action"','id="premium-now-direction"','id="cn-horizon-13"',
+  'id="cn-overview-heading"','data-cn-overview="d13"',
+  'data-cn-overview="d57"','data-cn-overview="w23"',
+  'id="cn-risk-quick-steps"','id="cn-risk-quick-brief"',
+  'id="cn-rotation-classes"','id="cn-position-terms"','id="cn-reader-title"'
+ ];
+ for(const marker of markers)assert.equal((html.match(new RegExp(marker,'g'))||[]).length,1,marker);
+ const positions=markers.map(x=>html.indexOf(x));
+ for(let i=1;i<positions.length;i++)assert.ok(positions[i]>positions[i-1],
+  'OUT_OF_ORDER '+markers[i-1]+' -> '+markers[i]);
+ assert.match(html,/<details class="cn-risk-more">/);
+ assert.match(html,/<details class="cn-reader-expand">/);
+ assert.match(html,/<details class="cn-position-guide">/);
+ assert.doesNotMatch(html,/<details class="cn-risk-more" open/);
+ assert.doesNotMatch(html,/<details class="cn-reader-expand" open/);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.match(runtime,/renderOverview\(\)/);
+ assert.match(runtime,/readRotation\(/);
+ assert.match(runtime,/publicOverview\(/);
+ assert.match(runtime,/cn-overview-d13-balance/);
+ const css=await read('./premium-tabs.css');
+ assert.match(css,/\.cn-overview-cards/);
+ assert.match(css,/\.cn-rotation-classes/);
+ assert.match(css,/\.cn-risk-more/);
+ assert.match(css,/\.cn-position-guide/);
+});
+
+test('official horizon evidence and capital ladder remain source-bound, not probabilities or invented 24h paths',()=>{
+ const now=Date.parse('2026-10-30T09:00:00Z');
+ const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CID'},
+  weekly:{forecast_week:'2026-W44'}};
+ const horizons={
+ NEXT_1_3D:{expected_direction:'MIXED',action_posture:'WAIT',expected_path:'Mixed early readings are conflicting.'},
+ NEXT_5_7D:{expected_direction:'DOWN',action_posture:'WAIT',expected_path:'Source issued bearish weekly context.'},
+ NEXT_2_3W:{expected_direction:'UP',action_posture:'WAIT',expected_path:'Source issued rising longer context.'}
+ };
+ const balance={
+  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',
+  owner:'OFFICIAL_COMPASS',resolution:'COARSE_CATEGORICAL_DIRECTION',
+  authority:{probability_model:false,site_synthesis_allowed:false},
+  horizons:{'1_3d':{status:'OK',bull:5,bear:5},
+   '5_7d':{status:'OK',bull:2,bear:8},
+   '2_3w':{status:'OK',bull:7,bear:3}}
+ };
+ const segments=[
+ ['BTC','HOLD'],['ETH','HOLD'],['LARGE_CAPS','WAIT'],
+ ['MID_CAPS','WAIT'],['SMALL_CAPS','WAIT'],['MICROCAPS','HARD_WAIT'],
+ ['MEMES','UNAVAILABLE']
+ ];
+ const compass={
+  compass_id:'CID',contract:'PUBLIC_COMPASS_PROJECTION_v1',
+  data_status:'OK',issued_at_utc:'2026-10-30T08:00:00Z',
+  full_stack:{official_freshness:{valid_until_utc:'2026-10-30T10:00:00Z'}},
+  weekly_context:{status:'ALIGNED',forecast_week:'2026-W44'},
+  market_now:{directional_state:'DOWN'},horizons,
+  bull_bear_scale:balance,
+  capitalization_ladder:segments.map(([segment,action])=>({segment,action,status:action}))
+ };
+ const source=publicOverview({compass,latest:{},view,now,lang:'da'});
+ assert.equal(source.valid,true);
+ assert.deepEqual(source.observed12,{arrow:'↘',text:'Faldende',source:'DOWN'});
+ assert.deepEqual(source.cards.map(x=>x.arrow),['↗ ↘','↘','↗']);
+ assert.deepEqual(source.cards.map(x=>x.evidence),[
+   {bull:5,bear:5},{bull:2,bear:8},{bull:7,bear:3}
+ ]);
+ assert.deepEqual(source.cards.map(x=>x.position),['Afvent','Afvent','Afvent']);
+ assert.equal(source.cards[1].summary.text,'Source issued bearish weekly context.');
+ assert.equal(directionVisual('MIXED','da').text,'Blandet');
+ assert.equal(directionVisual('NOT_A_REAL_DIRECTION','da').arrow,'?');
+ const rot=readRotation({compass,view,now,lang:'da'});
+ assert.equal(rot.valid,true);
+ assert.deepEqual(rot.rows.map(x=>x.sourceAction),segments.map(x=>x[1]));
+ assert.equal(rot.rows[0].stance,'Behold eksisterende');
+ assert.equal(rot.rows[5].stance,'Skærpet afvent');
+ assert.equal(rot.rows[6].stance,'Ingen kildevurdering');
+ assert.equal(POSITION_GUIDE.length,8);
+ const badEvidence={...compass,bull_bear_scale:{...balance,authority:{...balance.authority,probability_model:true}}};
+ assert.equal(publicOverview({compass:badEvidence,view,now}).cards[0].evidence,null);
+ const fakeRatio={...compass,bull_bear_scale:{...balance,horizons:{...balance.horizons,'1_3d':{status:'OK',bull:8,bear:7}}}};
+ assert.equal(publicOverview({compass:fakeRatio,view,now}).cards[0].evidence,null);
+ const misaligned={...compass,weekly_context:{status:'ALIGNED',forecast_week:'2026-W45'}};
+ assert.equal(publicOverview({compass:misaligned,view,now}).valid,false);
+ assert.equal(readRotation({compass:misaligned,view,now}).valid,false);
+ assert.equal(publicOverview({compass,view,now:Date.parse('2026-10-30T10:01:00Z')}).valid,false);
+ const duplicate={...compass,capitalization_ladder:[...compass.capitalization_ladder,segments[0]]};
+ assert.equal(readRotation({compass:duplicate,view,now}).valid,false);
+ // Progression from WAIT to HOLD is NOT part of the public dictionary or engine.
+ assert.ok(!Object.keys(horizons).includes('NEXT_24H'));
+ assert.doesNotMatch((awaitedPositionDescription()),/WAIT.*=>.*HOLD/);
+ function awaitedPositionDescription(){return POSITION_GUIDE.map(p=>p.slice(0,3).join(' ')).join(' | ')}
 });
