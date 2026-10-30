@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
-import {VIEWS,currentCompass,sourceTranslation,readHorizon,lensContext} from './compass-reader.mjs';
+import {VIEWS,currentCompass,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [original,pro]=await Promise.all([
@@ -327,4 +327,73 @@ test('source-only Kompas interpretation: precise translations, stale abstention,
  assert.equal(readHorizon({latest,compass:{...compass,compass_id:'WRONG'},view,now}).current,false);
  assert.equal(readHorizon({latest,compass:{...compass,weekly_context:{...compass.weekly_context,forecast_week:'2026-W45'}},view,now}).current,false);
  assert.equal(readHorizon({latest,compass:{...compass,issued_at_utc:'2026-11-01T00:00:00Z'},view,now}).current,false);
+});
+
+
+test('Kompas WAIT is a contextual answer with horizon, distinct review window and no invented edge',()=>{
+ const now=Date.parse('2026-10-30T09:00:00Z');
+ const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CMP-WAIT'},
+  weekly:{forecast_week:'2026-W44'}};
+ const latest={presentation_translations:[{
+   en:'Watch whether ETH/BTC and breadth recover.',
+   da:'Hold øje med, om ETH/BTC og markedsbredden forbedres.'
+ }]};
+ const compass={
+  contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',compass_id:'CMP-WAIT',
+  issued_at_utc:'2026-10-30T08:30:02Z',action_now:'HOLD_WAIT',
+  weekly_context:{status:'ALIGNED',forecast_week:'2026-W44'},
+  full_stack:{official_freshness:{valid_until_utc:'2026-10-30T11:00:00Z'}},
+  horizons:{NEXT_1_3D:{expected_direction:'MIXED',action_posture:'WAIT',eta:'24-72h',
+    expected_path:'The short-term evidence is mixed and weak.'}},
+  protection_tracker:{
+   pullback_risk_state:'ELEVATED',
+   public_explanation:{
+    contract:'CN_PUBLIC_PROTECTION_COPY_v1',action_authority:false,
+    forecast_week:'2026-W44',risk_state:'ELEVATED',
+    watch_for:'Watch whether ETH/BTC and breadth recover.'
+   }
+  }
+ };
+ const reading=readHorizon({latest,compass,view,lang:'da',now});
+ assert.equal(reading.reviewWindow,'24–72h');
+ assert.match(explainCurrentAction({latest,compass,view,lang:'da',now}),/1–3 dage: blandede signaler/);
+ assert.match(explainCurrentAction({latest,compass,view,lang:'da',now}),/Revurdering: 24–72 timer/);
+ assert.match(explainPosture(reading,'da'),/Afvent = signalerne peger begge veje/);
+ assert.match(explainPosture(reading,'da'),/Intet nyt køb eller salg er bekræftet/);
+ assert.equal(sourceWatch({latest,compass,view,lang:'da',now})?.text,
+   'Hold øje med, om ETH/BTC og markedsbredden forbedres.');
+ assert.match(explainPosture(reading,'en'),/Wait = evidence points both ways/);
+ const down={...compass,horizons:{NEXT_1_3D:{
+   ...compass.horizons.NEXT_1_3D,expected_direction:'DOWN'}}};
+ assert.match(explainPosture(readHorizon({latest,compass:down,view,now})),/ikke et selvstændigt salgssignal/);
+ assert.match(explainCurrentAction({latest,compass:down,view,now}),/intet selvstændigt salgssignal/);
+ const up={...compass,horizons:{NEXT_1_3D:{
+   ...compass.horizons.NEXT_1_3D,expected_direction:'UP'}}};
+ assert.match(explainCurrentAction({latest,compass:up,view,now}),/intet nyt køb/);
+ const unscoped={...compass,horizons:{NEXT_1_3D:{
+   ...compass.horizons.NEXT_1_3D,eta:'2026-11-02T20:00:00Z'}}};
+ assert.doesNotMatch(explainCurrentAction({latest,compass:unscoped,view,now}),/Revurdering/);
+ const expired=Date.parse('2026-10-30T11:01:00Z');
+ assert.match(explainCurrentAction({latest,compass,view,now:expired}),/Ingen gyldige aktuelle data/);
+ assert.equal(sourceWatch({latest,compass,view,now:expired}),null);
+ assert.equal(explainCurrentAction({latest,compass:{...compass,action_now:'BUY'},view,now}),null);
+ assert.equal(sourceWatch({latest,compass:{...compass,protection_tracker:{
+   ...compass.protection_tracker,public_explanation:{
+   ...compass.protection_tracker.public_explanation,action_authority:true}}},view,now}),null);
+});
+
+test('source-bound interpretation is attached to original verdict without adding market authority',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const id of ['premium-action-meaning','cn-reader-why','cn-reader-watch'])
+  assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.match(runtime,/explainCurrentAction\(/);
+ assert.match(runtime,/set\('premium-action-meaning',adaptive\)/);
+ assert.match(runtime,/explainPosture\(/);
+ assert.match(runtime,/sourceWatch\(/);
+ const reader=await read('./compass-reader.mjs');
+ assert.doesNotMatch(reader,/fetch\(|Math\.random|apiKey|portfolio_execution/);
+ assert.match(reader,/No new buy or sell is confirmed/);
+ const css=await read('./premium-tabs.css');
+ assert.match(css,/\.cn-reader-outlook \.cn-reader-why/);
 });

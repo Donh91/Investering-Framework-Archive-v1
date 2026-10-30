@@ -108,6 +108,8 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<div class="cn-reader-signal"><strong id="cn-reader-direction">Afventer nye data</strong>'+
     '<span id="cn-reader-posture">Ingen aktuel handling</span></div>'+
     '<p id="cn-reader-analysis">Den aktuelle kildeanalyse indlæses.</p>'+
+    '<p id="cn-reader-why" class="cn-reader-why">Venter på kildevurdering.</p>'+
+    '<p id="cn-reader-watch" class="cn-reader-watch"></p>'+
     '<small id="cn-reader-language"></small></div>'+
     '<div class="cn-reader-lenses"><div class="cn-reader-lens-buttons" role="group" aria-label="Vælg investeringsperspektiv">'+
     '<button type="button" data-cn-reader-lens="swing" aria-pressed="true">Swing</button>'+
@@ -116,7 +118,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<p class="cn-reader-receipt" id="cn-reader-source">Kontrollerer offentlig kilde …</p>'+
     '<details class="cn-reader-glossary"><summary id="cn-reader-glossary-title">Forstå status · 5 korte forklaringer</summary>'+
     '<table aria-label="Kort forklaring af Kompas-status"><tbody>'+
-    '<tr><th id="cn-reader-term-1" scope="row">AFVENT</th><td id="cn-reader-definition-1">Mangler bekræftelse; ingen ny handelstilladelse.</td></tr>'+
+    '<tr><th id="cn-reader-term-1" scope="row">AFVENT</th><td id="cn-reader-definition-1">Nyt køb/salg er ikke bekræftet. Prisen kan stadig bevæge sig.</td></tr>'+
     '<tr><th id="cn-reader-term-2" scope="row">BLANDET</th><td id="cn-reader-definition-2">Tegn peger begge veje; ikke en 50/50-sandsynlighed.</td></tr>'+
     '<tr><th id="cn-reader-term-3" scope="row">HOLD</th><td id="cn-reader-definition-3">Afvent ændring i den officielle vurdering; ikke et nyt køb.</td></tr>'+
     '<tr><th id="cn-reader-term-4" scope="row">INGEN EDGE</th><td id="cn-reader-definition-4">Ingen dokumenteret prognosefordel.</td></tr>'+

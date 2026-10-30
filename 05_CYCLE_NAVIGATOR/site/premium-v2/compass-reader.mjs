@@ -86,7 +86,10 @@ export function readHorizon({latest,compass,view,lang='da',id='NEXT_1_3D',now=Da
     publishedAt:current?compass.issued_at_utc:null,
     week:current?compass.weekly_context.forecast_week:null,
     sourceAction:current?compass.action_now:null,
-    sourcePosture:current?rawPosture:null
+    sourcePosture:current?rawPosture:null,
+    sourceDirection:current?rawDirection:null,
+    reviewWindow:current&&selected.id==='NEXT_1_3D'&&
+      /^(?:24-72h|24–72h|1-3d)$/.test(source?.eta||'')?'24–72h':null
   };
 }
 
@@ -104,4 +107,85 @@ export function lensContext(reading,lens='swing',lang='da'){
   return tr(
     'Langsigtet: følg regimeskift og risikobekræftelse. Ugeudsigten giver ikke i sig selv tilladelse til at købe eller sælge.',
     'Long term: watch for regime and risk confirmation. The outlook alone does not authorize buying or selling.',lang);
+}
+
+
+/**
+ * Explain *why WAIT* in the selected horizon. WAIT is not a prediction of
+ * sideways prices, a 50/50 probability, or a recommendation to sell holdings.
+ * This layer has no authority to issue or promote any market or trade signal.
+ */
+export function explainPosture(reading,lang='da'){
+ const trc=(da,en)=>tr(da,en,lang);
+ if(!reading.current)return trc(
+  'Ingen aktuel kildevurdering. Tidligere signaler er ikke en handleanvisning.',
+  'No current source assessment. Prior signals are not trading instructions.');
+ const posture=reading.sourcePosture,dir=reading.sourceDirection;
+ if(posture==='WAIT'||posture==='HOLD_WAIT'||posture==='ABSTAIN'){
+  if(dir==='MIXED')return trc(
+    'Afvent = signalerne peger begge veje. Intet nyt køb eller salg er bekræftet for perioden.',
+    'Wait = evidence points both ways. No new buy or sell is confirmed for this horizon.');
+  if(dir==='UP'||dir==='LEAN_BULLISH')return trc(
+    'Afvent = udsynet peger op, men nyt køb er ikke bekræftet.',
+    'Wait = the outlook leans up, but a new buy is not confirmed.');
+  if(dir==='DOWN'||dir==='LEAN_BEARISH')return trc(
+    'Afvent = udsynet peger ned, men det er ikke et selvstændigt salgssignal.',
+    'Wait = the outlook leans down, but this is not an independent sell signal.');
+  return trc('Afvent = intet nyt handelssignal er bekræftet i perioden.',
+             'Wait = no new trading signal is confirmed for this horizon.');
+ }
+ if(posture==='HOLD')return trc(
+  'HOLD = behold eksisterende vurdering; det er ikke et signal om at købe mere.',
+  'HOLD = maintain the current stance; this is not a signal to buy more.');
+ if(posture==='NO_EDGE'||posture==='UNAVAILABLE'||dir==='UNAVAILABLE')
+  return trc('Intet dokumenteret handlingssignal for perioden.',
+             'No supported action signal for this horizon.');
+ return trc('Retning og handling vurderes separat. Se den officielle handling før en beslutning.',
+            'Direction and action are separate. Check the official action before deciding.');
+}
+
+/**
+ * One concise adaptive sentence *under the original current-action verdict*.
+ * Never present review ETA as a forecasted event time or replace source action.
+ */
+export function explainCurrentAction({latest,compass,view,lang='da',now=Date.now()}){
+ const reading=readHorizon({latest,compass,view,lang,id:'NEXT_1_3D',now});
+ if(!reading.current)return tr('Ingen gyldige aktuelle data. Afvent ny kildevurdering.',
+   'No current valid data. Await an updated source assessment.',lang);
+ const action=compass.action_now;
+ if(!['HOLD_WAIT','WAIT','HOLD','ABSTAIN'].includes(action))return null;
+ const horizon=reading.sourceDirection;
+ const wait=action==='HOLD_WAIT'||action==='WAIT'||action==='ABSTAIN';
+ const start=lang==='en'?'1–3 days: ':'1–3 dage: ';
+ let detail;
+ if(wait&&horizon==='MIXED')detail=tr(
+   'blandede signaler; ingen ny handel bekræftet.',
+   'mixed evidence; no new trade confirmed.',lang);
+ else if(wait&&(horizon==='DOWN'||horizon==='LEAN_BEARISH'))detail=tr(
+   'svagt udsyn, men intet selvstændigt salgssignal.',
+   'weak outlook, but no independent sell signal.',lang);
+ else if(wait&&(horizon==='UP'||horizon==='LEAN_BULLISH'))detail=tr(
+   'positivt udsyn, men intet nyt køb bekræftet.',
+   'positive outlook, but no new buy confirmed.',lang);
+ else if(wait)detail=tr('ingen ny handel bekræftet.','no new trade confirmed.',lang);
+ else detail=tr('behold aktuel vurdering; intet nyt købssignal.',
+                 'maintain current stance; no new buy signal.',lang);
+ const review=reading.reviewWindow?tr(' Revurdering: 24–72 timer.',
+   ' Review window: 24–72 hours.',lang):'';
+ return start+detail+review;
+}
+
+/**
+ * Optional source-owned condition to watch. It is neither a threshold nor a
+ * mechanical trigger, and can never change the official action.
+ */
+export function sourceWatch({latest,compass,view,lang='da',now=Date.now()}){
+ if(!currentCompass({compass,view,now}))return null;
+ const p=compass?.protection_tracker,c=p?.public_explanation;
+ if(c?.contract!=='CN_PUBLIC_PROTECTION_COPY_v1'||c.action_authority!==false||
+    c.risk_state!==p?.pullback_risk_state||
+    c.forecast_week!==compass.weekly_context.forecast_week||
+    !isPlain(c.watch_for)||c.watch_for.length>220)return null;
+ const t=sourceTranslation(c.watch_for,latest,lang);
+ return t.text?{text:t.text,translated:t.translated}:null;
 }

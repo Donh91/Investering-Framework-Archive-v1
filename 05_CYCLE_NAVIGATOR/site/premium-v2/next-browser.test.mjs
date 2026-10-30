@@ -401,6 +401,7 @@ try{
      quick13:document.getElementById('cn-horizon-13')?.textContent,
      nowcast:document.getElementById('premium-now-direction')?.textContent,
      actionCode:document.getElementById('premium-action-code')?.textContent,
+     actionWhy:document.getElementById('premium-action-meaning')?.textContent||'',
      firstFold:{
       viewport:innerHeight,
       actionTop:Math.round(document.getElementById('premium-now-action')?.getBoundingClientRect().top??9999),
@@ -439,6 +440,8 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.actionWhy.length>22&&!report.actionWhy.includes('HOLD_WAIT'),
+     'ROOT_VERDICT_NO_ADAPTIVE_PLAIN_LANGUAGE_EXPLANATION:'+JSON.stringify(report));
    assert.ok(report.nowcast&&!report.nowcast.includes('_')&&
      report.actionCode&&!report.actionCode.includes('HOLD_WAIT'),
      'ROOT_RAW_INTERNAL_STATE_IN_FIRST_FOLD:'+JSON.stringify({nowcast:report.nowcast,actionCode:report.actionCode}));
@@ -487,6 +490,8 @@ try{
       count,glossaryOpen:glossary.open,enTitle,daTitle,
       source:$('cn-reader-source')?.textContent||'',
       direction:$('cn-reader-direction')?.textContent||'',
+      why:$('cn-reader-why')?.textContent||'',
+      watch:$('cn-reader-watch')?.textContent||'',
       originalActionPreserved:actionBefore===$('premium-now-action')?.textContent,
       tabsPreserved:tabsBefore===4&&document.querySelectorAll('.premium-entry-navigation [role="tab"]').length===4,
       overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
@@ -497,6 +502,8 @@ try{
      reader.enTitle==='What is Compass seeing ahead?'&&
      reader.daTitle==='Hvad viser Kompas fremad?'&&
      reader.guide.length>20&&reader.source.length>15&&reader.direction.length>2&&
+     reader.why.length>20&&!reader.watch.includes('Hold øje med: Hold øje med')&&
+     !reader.watch.includes('Watch for: Watch')&&
      reader.originalActionPreserved&&reader.tabsPreserved&&reader.overflow<=2,
      'ROOT_COMPASS_READER_UX_FAIL:'+JSON.stringify(reader));
    // Visual acceptance of the actual new, active source-reader (not only DOM).
