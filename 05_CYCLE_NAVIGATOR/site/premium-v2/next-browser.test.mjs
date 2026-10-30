@@ -525,10 +525,19 @@ try{
    }
    assert.ok(desktopReady,'DESKTOP_VISUAL_SOURCE_NOT_READY');
    const desktopLayout=await evaluate(()=>{
-    document.querySelector('#variant-panel').scrollIntoView({block:'start',behavior:'instant'});
-    return {width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth};
+    const tab=document.querySelector('[data-premium-nav="graph"]');
+    const panel=document.querySelector('#variant-panel');
+    tab?.click();
+    if(!panel||panel.hidden)return {error:'GRAPH_TAB_NOT_VISIBLE'};
+    panel.scrollIntoView({block:'start',behavior:'instant'});
+    return {width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+     graphVisible:panel.getBoundingClientRect().width>0,
+     graphSelected:tab?.getAttribute('aria-selected')==='true',
+     svgVisible:document.getElementById('chart')?.getBoundingClientRect().width>0};
    });
-   assert.ok(desktopLayout.width===1440&&desktopLayout.overflow<=2,'DESKTOP_VISUAL_OVERFLOW');
+   assert.ok(desktopLayout.width===1440&&desktopLayout.overflow<=2&&
+     desktopLayout.graphVisible&&desktopLayout.graphSelected&&desktopLayout.svgVisible,
+     'DESKTOP_VISUAL_GRAPH_TAB_NOT_RENDERED:'+JSON.stringify(desktopLayout));
    await delay(150);
    const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
    assert.ok(shot.data?.length>1000,'DESKTOP_SCREENSHOT_MISSING');
