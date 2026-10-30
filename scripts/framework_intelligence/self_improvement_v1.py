@@ -26,7 +26,7 @@ VERDICTS = (
 RESEARCH_STATES = {
     "MATURED_SUPPORTED", "MATURED_NOT_SUPPORTED", "MATURED_INCONCLUSIVE",
     "TARGET_UNIT_QUARANTINED", "WAITING_FOR_DATA", "WAITING_FOR_MAPPING",
-    "INCUBATING", "PROPOSED",
+    "INCUBATING", "PROPOSED", "WAITING_FOR_MATURITY",
 }
 
 
@@ -203,7 +203,7 @@ def build_snapshot(root: Path, output: Path, *, now: datetime | None = None) -> 
     challengers = []
     for candidate in sorted(candidates, key=lambda x: x["candidate_id"]):
         state = candidate["state"]
-        if state in {"INCUBATING", "WAITING_FOR_DATA", "WAITING_FOR_MAPPING", "PROPOSED"}:
+        if state in {"INCUBATING", "WAITING_FOR_DATA", "WAITING_FOR_MAPPING", "PROPOSED", "WAITING_FOR_MATURITY"}:
             verdict = "INSUFFICIENT_EVIDENCE"
         else:
             verdict = "UNPROVEN"
