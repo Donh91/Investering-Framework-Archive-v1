@@ -88,6 +88,29 @@ function renderQuickDecision(){
  set('cn-horizon-13-posture',eligible?
    readable(postures,posture,lang==='en'?'See details':'Se detaljer'):'—');
  set('cn-horizon-13-label',lang==='en'?'Next 1–3 days':'De næste 1–3 dage');
+ // Translate descriptive 12h data-time and directional states, without
+ // inventing fresh momentum or changing the official action's authority.
+ const nowLabels={
+  BULLISH:['Stigende','Rising'],BEARISH:['Faldende','Falling'],
+  NEUTRAL:['Ingen tydelig retning','No clear direction'],
+  MIXED:['Blandet','Mixed'],UP:['Stigende','Rising'],DOWN:['Faldende','Falling'],
+  SIDEWAYS:['Sideværts','Sideways'],
+  UNCHANGED_NO_NEW_OBSERVATION:['Ingen ny måling','No new observation'],
+  NO_NEW_OBSERVATION:['Ingen ny måling','No new observation'],
+  UNAVAILABLE:['Ingen måling','No reading']
+ };
+ const nowState=eligible?feeds.compass.market_now?.directional_state:null;
+ set('premium-now-direction',nowLabels[nowState]?.[lang==='en'?1:0]||
+   (lang==='en'?'Awaiting valid data':'Afventer gyldige data'));
+ const actionLabels={
+  HOLD_WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
+  WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
+  HOLD:['Officiel vurdering · behold','Official outlook · hold'],
+  ABSTAIN:['Ingen ny handling','No new action']
+ };
+ const officialAction=eligible?feeds.compass.action_now:null;
+ set('premium-action-code',actionLabels[officialAction]?.[lang==='en'?1:0]||
+   (lang==='en'?'No current verified action':'Ingen aktuel verificeret handling'));
  const twelve=$('premium-now-direction')?.closest('.product-cell')?.querySelector('small');
  if(twelve)twelve.textContent=lang==='en'?
   'Past 12 hours · observed direction':
