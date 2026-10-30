@@ -1,0 +1,213 @@
+{
+  "contract": "OPENAI_DEVELOPER_RESEARCH_CLAIM_REGISTER_v1",
+  "created_date_utc": "2026-10-30",
+  "authority": "RESEARCH_ONLY",
+  "repository": "Donh91/Investering-Framework-Archive-v1",
+  "source_control": {
+    "canonical_owner": "AGENTS.md",
+    "cross_repo_boundary": "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md",
+    "research_owner": "06_RESEARCH_LAB/README.md",
+    "actual_api_agent_owner": "research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json",
+    "actual_supervisor_owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156"
+  },
+  "user_approvals": {
+    "create_permanent_research_archive": true,
+    "raise_billing_limit": false,
+    "change_auto_recharge": false,
+    "create_api_key": false,
+    "run_paid_agents": false,
+    "new_subscription": false,
+    "live_trading": false,
+    "make_new_supervisor": false
+  },
+  "statuses": {
+    "official_capability_docs": "VERIFIED_PUBLIC",
+    "account_api_entitlement": "NOT_VERIFIED",
+    "subscription_pro_tier": "NOT_VERIFIED",
+    "promotional_grant_issued": "NOT_VERIFIED",
+    "private_billing_readback": "USER_SCREENSHOT_ONLY",
+    "provider_vs_git_cost_reconciliation": "NOT_RUN",
+    "decisions_real_benchmark": "NOT_RUN",
+    "agents_api_real_pilot": "NOT_RUN",
+    "datasets_uploaded": "NOT_RUN",
+    "actual_production_adoption": "NOT_RUN"
+  },
+  "owner_issues": {
+    "supervisor": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156",
+    "task2": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+    "decisions": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1760",
+    "specialist": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512"
+  },
+  "official_sources": [
+    {
+      "claim": "AGENTS_API_CAPABILITIES",
+      "url": "https://developers.openai.com/api/docs/guides/agents-api/overview",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "US-only residency, no ZDR, model+tool+hosted sandbox separate costs; actual org access not verified"
+    },
+    {
+      "claim": "AGENTS_API_OBSERVABILITY",
+      "url": "https://developers.openai.com/api/docs/guides/agents-api/observability",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "tool spans and usage do not prove original PR CI, merge or natural producer readback"
+    },
+    {
+      "claim": "AGENTS_API_TRACE",
+      "url": "https://developers.openai.com/api/docs/guides/agents-api/tracing",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "only instrumented managed sessions; unavailable trace != no work"
+    },
+    {
+      "claim": "AGENTS_API_HOSTED_SANDBOX",
+      "url": "https://developers.openai.com/api/docs/guides/agents-api/environments/openai-hosted",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "container charges and retention; cannot assume user's restricted private repo allowed"
+    },
+    {
+      "claim": "DECISIONS_GA",
+      "url": "https://developers.openai.com/api/docs/guides/decisions",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "gpt-6-luna only; GA; output free for this endpoint; provider speed claim unverified locally"
+    },
+    {
+      "claim": "DATASETS_EVALS_TRANSITION",
+      "url": "https://developers.openai.com/api/docs/guides/evaluation-getting-started",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "old Evals read-only 2026-10-31, planned shut 2026-11-30, no PIT authority"
+    },
+    {
+      "claim": "API_STANDARD_PRICING",
+      "url": "https://developers.openai.com/api/docs/pricing",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "rates subject to change, 272k context threshold, tool/sandbox, regional, prompt caching"
+    },
+    {
+      "claim": "PROMPT_CACHING",
+      "url": "https://developers.openai.com/api/docs/guides/prompt-caching",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "30m write 1.25x, 12h write 2.5x, cached reads billed, minimum 1024 tokens"
+    },
+    {
+      "claim": "BATCH_API",
+      "url": "https://developers.openai.com/api/docs/guides/batch",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "50% lower supported async, 24h turnaround"
+    },
+    {
+      "claim": "SUBSCRIPTION_GRANTS",
+      "url": "https://help.openai.com/en/articles/20001626-api-credits-benefit-for-eligible-chatgpt-subscriptions",
+      "state": "OFFICIALLY_DOCUMENTED_ELIGIBILITY_NOT_USER_PROVEN",
+      "as_of": "2026-10-30",
+      "limits": "Pro100/200/500 grant after 7 days/link, first prorated, expires, no rollover, Plus excluded"
+    },
+    {
+      "claim": "PREPAID_BILLING",
+      "url": "https://help.openai.com/en/articles/8264644-what-is-prepaid-billing",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "auto-reload limit excludes manual purchases, separate from spend cap"
+    },
+    {
+      "claim": "CHATGPT_API_SEPARATE_BILLING",
+      "url": "https://help.openai.com/en/articles/9039756-managing-billing-for-chatgpt-and-the-api-platform",
+      "state": "OFFICIALLY_DOCUMENTED",
+      "as_of": "2026-10-30",
+      "limits": "credits linked to API org separate from ChatGPT subscription"
+    }
+  ],
+  "framework_evidence": [
+    {
+      "file": "LATEST_OPERATIONS_DASHBOARD.json",
+      "blob_sha": "a82d0d58907fca40507d720696244980d78e560f",
+      "claim": "deduped API cost receipt estimates, not provider invoice",
+      "state": "EXACT_SOURCE_READ"
+    },
+    {
+      "file": "research/api_agent/AI_DEV_STACK_DECISIONS_SHADOW_EVAL_V1.md",
+      "blob_sha": "64200311760cec32008063b8333ee028ae1d7bb0",
+      "claim": "existing 60 cases and 20 heldout, no paid benchmark",
+      "state": "EXACT_SOURCE_READ"
+    },
+    {
+      "file": "research/api_agent/AI_DEV_STACK_WEEKLY_INTELLIGENCE_V1.md",
+      "blob_sha": "a9f26b7912e02a09ff33c4fb69e620d404c3dfe8",
+      "claim": "existing weekly developer stack intake",
+      "state": "EXACT_SOURCE_READ"
+    },
+    {
+      "file": "research/api_agent/coordination/RESEARCH_EXECUTION_COORDINATOR_v1.json",
+      "blob_sha": "6bd01d85092f143ec87749b4fba516379f5489c7",
+      "claim": "one heavy research job and no parallel machine queue",
+      "state": "EXACT_SOURCE_READ"
+    },
+    {
+      "file": "06_RESEARCH_LAB/architecture/2026-09-23__agent-invocation-contribution-ledger-shadow-contract-v1.md",
+      "blob_sha": "944e3ed7524fc50d98e1f381bb9a0e8b9c3bcc16",
+      "claim": "existing API contribution and outcome receipt mechanism",
+      "state": "EXACT_SOURCE_READ"
+    }
+  ],
+  "prioritized_experiments": [
+    {
+      "id": "ODP-R0",
+      "name": "Provider billing versus receipt scope + 3 task execution readback",
+      "status": "PREPARED_NO_SPEND",
+      "owner": "existing #1156",
+      "paid_api_authorized": false
+    },
+    {
+      "id": "ODP-R1",
+      "name": "Trace/receipt join before adding agent endpoint",
+      "status": "PROPOSED_OWNER_REUSE",
+      "owner": "existing #1156",
+      "paid_api_authorized": false
+    },
+    {
+      "id": "ODP-R2",
+      "name": "Decisions 60+20 offline/shadow baseline",
+      "status": "EXISTING_PREREG",
+      "owner": "existing #1760",
+      "paid_api_authorized": false
+    },
+    {
+      "id": "ODP-R3",
+      "name": "Single Agents API synthetic/public bounded coding challenger",
+      "status": "CONDITIONAL_HOLD",
+      "owner": "existing #1156",
+      "paid_api_authorized": false
+    },
+    {
+      "id": "ODP-R4",
+      "name": "Datasets or local deterministic regression evals",
+      "status": "PROPOSED_SHADOW",
+      "owner": "existing #1596",
+      "paid_api_authorized": false
+    }
+  ],
+  "budget_policy": {
+    "monthly_usd_planning_envelope": 30,
+    "card_auto_recharge_limit_change": false,
+    "org_spend_cap_change": false,
+    "grant_account_readback_required": true,
+    "budget_30_percent_text_semantics": "AMBIGUOUS_NOT_AN_ACTIVE_PERCENT_RULE",
+    "model_allowlist_research": [
+      "gpt-6-luna",
+      "gpt-6.1-terra",
+      "gpt-6.1-sol"
+    ],
+    "explicit_disallow": [
+      "gpt-6-astra"
+    ],
+    "new_subscription": false
+  },
+  "no_auto_dispatch": true
+}
