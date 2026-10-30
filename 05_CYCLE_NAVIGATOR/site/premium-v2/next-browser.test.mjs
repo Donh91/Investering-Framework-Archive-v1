@@ -413,6 +413,10 @@ try{
      rotationHasUnknownRaw:[...document.querySelectorAll('#cn-rotation-classes [role="listitem"]')].some(el=>
        /\b(?:HARD_WAIT|UNAVAILABLE|WAIT|HOLD)\b/.test(el.textContent)),
      nowcast:document.getElementById('premium-now-direction')?.textContent,
+     nowCaption:document.getElementById('premium-now-direction')?.closest('.product-cell')?.querySelector('small')?.textContent,
+     contrast:document.getElementById('cn-short-meaning')?.textContent,
+     contrastState:document.getElementById('cn-short-meaning')?.dataset.contrastState,
+     contrastSourceBound:document.getElementById('cn-short-meaning')?.dataset.sourceBound,
      actionCode:document.getElementById('premium-action-code')?.textContent,
      actionWhy:document.getElementById('premium-action-meaning')?.textContent||'',
      firstFold:{
@@ -461,6 +465,11 @@ try{
      'ROOT_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report.horizonOverview));
    assert.ok(report.actionWhy.length>22&&!report.actionWhy.includes('HOLD_WAIT'),
      'ROOT_VERDICT_NO_ADAPTIVE_PLAIN_LANGUAGE_EXPLANATION:'+JSON.stringify(report));
+   assert.ok(report.nowCaption&&/Nu · seneste prisbevægelse|Now · latest observed price move/.test(report.nowCaption)&&
+     report.contrast?.length>45&&report.contrastState&&
+     ['true','false'].includes(report.contrastSourceBound)&&
+     !/Seneste 12 timer · målt retning/.test(report.nowCaption),
+     'ROOT_NOWCAST_AS_FORECAST_MISLABELED:'+JSON.stringify({label:report.nowCaption,contrast:report.contrast,state:report.contrastState}));
    assert.ok(report.nowcast&&!report.nowcast.includes('_')&&
      report.actionCode&&!report.actionCode.includes('HOLD_WAIT'),
      'ROOT_RAW_INTERNAL_STATE_IN_FIRST_FOLD:'+JSON.stringify({nowcast:report.nowcast,actionCode:report.actionCode}));
