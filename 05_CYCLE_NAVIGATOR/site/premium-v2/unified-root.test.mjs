@@ -166,7 +166,7 @@ test('this week W44 frozen Monday ranges do not authorize a blue expected-close 
 test('frozen intraday windows are forecast presentation even without expected-close path',async()=>{
  const renderer=await read('./graph-b/source-graph-b.mjs');
  assert.match(renderer,/Original prognose · 3 vinduer/);
- assert.match(renderer,/Frossen high\/low/);
+ assert.match(renderer,/Mandagens prisinterval/);
  assert.match(renderer,/bands\.map\(b=>/);
  assert.match(renderer,/paintFrozenWindowLedger\(bands\)/);
  assert.match(renderer,/paintFrozenWindowLedger\(\[\]\)/);
@@ -204,4 +204,53 @@ test('premium finish: visual proof screenshots are captured on exact tested root
  assert.match(browser,/Page\.captureScreenshot/);
  assert.match(browser,/scrollIntoView/);
  assert.match(browser,/assert\.ok\(shot\.data\?\.length>1000/);
+});
+
+
+test('site #1578: four genuine views are mounted only in the unified root',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ assert.match(html,/src="\.\/premium-tabs\.mjs"/);
+ assert.match(html,/href="\.\/premium-tabs\.css"/);
+ const tabs=await read('./premium-tabs.mjs');
+ const css=await read('./premium-tabs.css');
+ for(const k of ['compass','graph','path','proof'])
+   assert.match(tabs,new RegExp("'"+k+"'"));
+ for(const id of ['compass-pro','variant-panel','official-path-view','proof-explorer'])
+   assert.match(tabs,new RegExp("'"+id+"'"));
+ assert.match(tabs,/history\.pushState/);
+ assert.match(tabs,/popstate/);
+ assert.match(tabs,/hashchange/);
+ assert.match(tabs,/aria-selected/);
+ assert.match(tabs,/ArrowRight/);
+ assert.match(tabs,/ArrowLeft/);
+ assert.match(tabs,/if \(nav && nodes\.every\(x => x\.link && x\.panel\)\)/);
+ assert.match(css,/\.cn-tabbed-ui \[role="tabpanel"\]\[hidden\]/);
+ assert.match(css,/overflow-x:auto/);
+ assert.match(css,/min-height:44px/);
+ assert.doesNotMatch(tabs,/Math\.sin|forecast_low|forecast_high|fetch\(|probability|probabilit/);
+ const old=buildPremiumRootHtml(original);
+ assert.doesNotMatch(old,/premium-tabs\.mjs|premium-tabs\.css/);
+});
+
+test('pullback first fold mirrors only eligible official PRO stages, never raises risk itself',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const marker of [
+  'cn-risk-quick-meaning','cn-risk-quick-action','cn-risk-quick-quality',
+  'cn-risk-quick-onset','cn-risk-quick-state','cn-risk-quick-steps'
+ ])assert.equal(id(html,marker),1,'missing or duplicate source-bound risk field '+marker);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.match(runtime,/view\.compass\.permit_path_live_gates===true/);
+ assert.match(runtime,/feeds\.compass\.data_status==='OK'/);
+ assert.match(runtime,/feeds\.compass\.compass_id===view\.compass\.compass_id/);
+ assert.match(runtime,/feeds\.compass\.weekly_context\?\.status==='ALIGNED'/);
+ assert.match(runtime,/copy\?\.action_authority===false/);
+ assert.match(runtime,/copy\?\.risk_state===p\?\.pullback_risk_state/);
+ assert.match(runtime,/\$\('pro-risk-stage'\)\?\.textContent/);
+ assert.match(runtime,/\$\('pro-guidance'\)\?\.textContent/);
+ assert.match(runtime,/surface\.dataset\.current=stage\?'true':'false'/);
+ assert.doesNotMatch(runtime,/const\s+pullbackThreshold\s*=/);
+ assert.doesNotMatch(html,/eventProbability\s*:\s*\d/);
+ const css=await read('./premium-tabs.css');
+ assert.match(css,/\.cn-risk-quick \.cn-risk-quick-guidance/);
+ assert.match(css,/@media\(max-width:540px\)/);
 });

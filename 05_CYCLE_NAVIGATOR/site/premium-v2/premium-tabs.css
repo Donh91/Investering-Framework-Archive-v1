@@ -1,0 +1,61 @@
+/* SITE #1578: source-neutral progressive-enhancement tab presentation.
+ * Applies ONLY after premium-tabs.mjs sees all four canonical source sections.
+ * /next/ old graph and /vnext/ legacy routes remain unaffected. */
+.cn-tabbed-ui .premium-entry { display:none; }
+.cn-tabbed-ui .premium-entry-navigation {
+ display:flex; flex-wrap:nowrap; align-items:center; gap:clamp(8px,2vw,24px);
+ overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:none;
+ margin:0 0 18px; padding:0 0 2px;
+ border-top:0; border-bottom:1px solid #dae4ee;
+ position:sticky; top:0; z-index:15; background:#f2f4f7;
+}
+.cn-tabbed-ui .premium-entry-navigation::-webkit-scrollbar {display:none}
+.cn-tabbed-ui .premium-entry-navigation a[role="tab"] {
+ flex:0 0 auto; white-space:nowrap; text-decoration:none;
+ min-height:44px; padding:13px 3px 11px; border:0;
+ border-bottom:2px solid transparent; border-radius:0;
+ color:#52657a; background:transparent; box-shadow:none;
+ font-size:clamp(12px,1.6vw,14px); font-weight:620;
+}
+.cn-tabbed-ui .premium-entry-navigation a[role="tab"][aria-selected="true"] {
+ color:#0b335b; border-bottom-color:#2f6fda; font-weight:760;
+}
+.cn-tabbed-ui .premium-entry-navigation a[role="tab"]:focus-visible {
+ outline:2px solid #2f6fda; outline-offset:-2px; border-radius:3px;
+}
+.cn-tabbed-ui [role="tabpanel"][hidden] {display:none!important}
+.cn-tabbed-ui #compass-pro,
+.cn-tabbed-ui #variant-panel,
+.cn-tabbed-ui #official-path-view,
+.cn-tabbed-ui #proof-explorer {scroll-margin-top:70px}
+.cn-tabbed-ui .premium-meta {margin-top:16px}
+@media(max-width:440px) {
+ .cn-tabbed-ui .premium-entry-navigation {gap:12px; margin-bottom:12px}
+ .cn-tabbed-ui .premium-entry-navigation a[role="tab"] {font-size:12px; padding-inline:1px}
+ .cn-tabbed-ui .wrap {width:calc(100% - 24px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .cn-tabbed-ui .premium-entry-navigation {scroll-behavior:auto}
+}
+
+/* Official P-stage remains the sole risk owner. First-fold copy is mirrored
+   from the verified Kompas PRO readback, never from raw market heat. */
+.cn-risk-quick .cn-risk-quick-guidance {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:10px 16px; padding-top:13px; margin-top:10px;
+  border-top:1px solid #dce4ec;
+}
+.cn-risk-quick-guidance p {margin:0; min-width:0; display:grid; gap:4px}
+.cn-risk-quick-guidance small {font-size:11px; font-weight:750; letter-spacing:.06em; color:#496178}
+.cn-risk-quick-guidance p span {font-size:13px; line-height:1.5; color:#20374b}
+.cn-risk-quick-foot {
+  grid-column:1/-1; display:flex; flex-wrap:wrap; gap:6px 16px;
+  color:#596d7e; font-size:11px; border-top:1px solid #e1e8ee;
+  padding-top:9px; line-height:1.4;
+}
+.cn-risk-quick[data-current="false"] .cn-risk-quick-guidance p span {
+  color:#667b8b;
+}
+@media(max-width:540px){
+ .cn-risk-quick .cn-risk-quick-guidance {grid-template-columns:1fr;gap:10px}
+}

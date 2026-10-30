@@ -329,15 +329,35 @@ try{
     noLegacy:!document.getElementById('official-product-pilot'),
     noindex:document.querySelector('meta[name="robots"]')?.content?.includes('noindex'),
     navBeforePro:nav?.getBoundingClientRect().top<pro?.getBoundingClientRect().top,
-    proBeforeGraph:pro?.getBoundingClientRect().top<graph?.getBoundingClientRect().top
+    proBeforeGraph:!!(pro.compareDocumentPosition(graph)&Node.DOCUMENT_POSITION_FOLLOWING),
+    tabMode:document.body.classList.contains('cn-tabbed-ui'),
+    tabDefault:!pro.hidden&&graph.hidden,
+    tabs:nav?.querySelectorAll('[role="tab"]').length
    };
   });
   assert.equal(measured.width,width,'UNIFIED_WRONG_VIEWPORT');
   assert.ok(measured.overflow<=2,'UNIFIED_OVERFLOW:'+JSON.stringify(measured));
   assert.ok(measured.uniqueIds&&measured.singleton&&measured.noLegacy,
     'UNIFIED_DUPLICATE_OR_MISSING_NODE:'+JSON.stringify(measured));
-  assert.ok(measured.noindex&&measured.navBeforePro&&measured.proBeforeGraph,
-    'UNIFIED_PREVIEW_OR_ORDER_MISMATCH:'+JSON.stringify(measured));
+  assert.ok(measured.noindex&&measured.navBeforePro&&measured.proBeforeGraph&&
+    measured.tabMode&&measured.tabDefault&&measured.tabs===4,
+    'UNIFIED_PREVIEW_OR_TABS_MISMATCH:'+JSON.stringify(measured));
+  const switching=await evaluate(()=>{
+    const click=k=>document.querySelector('[data-premium-nav="'+k+'"]')?.click();
+    const comp=document.getElementById('compass-pro');
+    const graph=document.getElementById('variant-panel');
+    const path=document.getElementById('official-path-view');
+    const proof=document.getElementById('proof-explorer');
+    click('graph'); const graphVisible=!graph.hidden&&comp.hidden&&
+      document.getElementById('chart').getBoundingClientRect().width>0;
+    click('path'); const pathVisible=!path.hidden&&graph.hidden;
+    click('proof'); const proofVisible=!proof.hidden&&path.hidden;
+    click('compass'); const returned=!comp.hidden&&proof.hidden;
+    return {graphVisible,pathVisible,proofVisible,returned,hash:location.hash};
+  });
+  assert.ok(switching.graphVisible&&switching.pathVisible&&switching.proofVisible&&
+    switching.returned&&switching.hash==='#compass-pro',
+    'UNIFIED_TAB_SWITCH_BROKEN:'+JSON.stringify(switching));
   assert.equal(measured.english,'Compass PRO','UNIFIED_EN_LABEL');
   assert.equal(measured.danish,'Kompas PRO','UNIFIED_DA_LABEL');
   assert.equal(measured.micro,'true','UNIFIED_MICRO_LENS_BROKEN');
@@ -402,7 +422,7 @@ try{
       'proof-explorer','pro-reentry-state','cn-forward-source-status'].every(x=>id(x)===1),
      old:!!document.getElementById('official-product-pilot'),
      homepage:document.body.classList.contains('premium-home'),
-     order:pro.getBoundingClientRect().top<graph.getBoundingClientRect().top,
+     order:!!(pro.compareDocumentPosition(graph)&Node.DOCUMENT_POSITION_FOLLOWING),
      rollback:document.querySelector('.premium-entry-canonical')?.getAttribute('href'),
      data:[...document.querySelectorAll('.premium-meta-links a')].map(x=>x.getAttribute('href'))
     };
@@ -412,7 +432,7 @@ try{
    assert.ok(report.homepage&&!report.preview&&!report.old,'ROOT_PROMOTED_LEGACY_OR_PREVIEW');
    assert.ok(report.unique&&report.singleton&&report.order,'ROOT_UNIFIED_COMPETING_SOURCE');
    assert.equal(report.rollback,'./vnext/','ROOT_NO_PRIOR_VERSION');
-   assert.deepEqual(report.data,['./data/latest.json','./data/compass.json'],
+   assert.ok(['./data/latest.json','./data/compass.json'].every(x=>report.data.includes(x)),
       'ROOT_SOURCE_DATA_LINKS');
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
@@ -448,6 +468,8 @@ try{
     const position=await evaluate(()=>{
      const box=document.querySelector('#variant-panel');
      if(!box)return false;
+     document.querySelector('[data-premium-nav="graph"]')?.click();
+     if(box.hidden)return false;
      box.scrollIntoView({block:'start',behavior:'instant'});
      return true;
     });
@@ -475,7 +497,9 @@ try{
      current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
      gate:document.getElementById('pro-next-gate')?.textContent||'',
      reentry:document.getElementById('pro-reentry-state')?.textContent||'',
-     action:document.getElementById('premium-now-action')?.textContent||''
+     action:document.getElementById('premium-now-action')?.textContent||'',
+     firstfoldRisk:document.getElementById('cn-risk-quick-state')?.textContent||'',
+     firstfoldHorizon:document.getElementById('cn-horizon-13')?.textContent||''
     }));
     assert.match(offline.source,/Indlæsning mislykkedes|Source fetch failed/,
       'ROOT_FAILED_REFRESH_KEPT_PREVIOUS_SOURCE:'+JSON.stringify(offline));
@@ -485,6 +509,10 @@ try{
     // exact fail-closed source-wait state for an ENTER trading instruction.
     assert.equal(offline.action,'AFVENTER KILDE',
       'ROOT_OFFLINE_DID_NOT_FAIL_CLOSED_TO_SOURCE_WAIT:'+JSON.stringify(offline));
+    assert.match(offline.firstfoldRisk,/afventer nye data|awaiting fresh data/i,
+      'ROOT_OFFLINE_RISK_ORDINAL_WAS_NOT_CLEARED:'+JSON.stringify(offline));
+    assert.match(offline.firstfoldHorizon,/Afventer nye data|Awaiting updated data/,
+      'ROOT_OFFLINE_FUTURE_HORIZON_WAS_NOT_CLEARED:'+JSON.stringify(offline));
     assert.match(offline.gate,/Afventer|Awaiting/,'ROOT_OFFLINE_GATE_LEAK');
    }
    released.push({width,oneB:true,onePRO:true,source:true});
@@ -503,10 +531,19 @@ try{
    }
    assert.ok(desktopReady,'DESKTOP_VISUAL_SOURCE_NOT_READY');
    const desktopLayout=await evaluate(()=>{
-    document.querySelector('#variant-panel').scrollIntoView({block:'start',behavior:'instant'});
-    return {width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth};
+    const tab=document.querySelector('[data-premium-nav="graph"]');
+    const panel=document.querySelector('#variant-panel');
+    tab?.click();
+    if(!panel||panel.hidden)return {error:'GRAPH_TAB_NOT_VISIBLE'};
+    panel.scrollIntoView({block:'start',behavior:'instant'});
+    return {width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+     graphVisible:panel.getBoundingClientRect().width>0,
+     graphSelected:tab?.getAttribute('aria-selected')==='true',
+     svgVisible:document.getElementById('chart')?.getBoundingClientRect().width>0};
    });
-   assert.ok(desktopLayout.width===1440&&desktopLayout.overflow<=2,'DESKTOP_VISUAL_OVERFLOW');
+   assert.ok(desktopLayout.width===1440&&desktopLayout.overflow<=2&&
+     desktopLayout.graphVisible&&desktopLayout.graphSelected&&desktopLayout.svgVisible,
+     'DESKTOP_VISUAL_GRAPH_TAB_NOT_RENDERED:'+JSON.stringify(desktopLayout));
    await delay(150);
    const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
    assert.ok(shot.data?.length>1000,'DESKTOP_SCREENSHOT_MISSING');
