@@ -316,6 +316,8 @@ test('source-only Kompas interpretation: precise translations, stale abstention,
  assert.equal(noTranslation.translated,false);
  assert.equal(noTranslation.description,'Untranslated but published original commentary.');
  assert.equal(sourceTranslation('','', 'da').text,'');
+ assert.equal(sourceTranslation('MIXED with UNAVAILABLE decision today.',{},'da').text,
+   'blandet with ikke fastlagt decision today.');
  const stale=readHorizon({latest,compass,view:{...view,compass:{...view.compass,state:'DEGRADED'}},now,lang:'da'});
  assert.equal(stale.current,false);
  assert.match(stale.description,/Ingen aktuel/);
