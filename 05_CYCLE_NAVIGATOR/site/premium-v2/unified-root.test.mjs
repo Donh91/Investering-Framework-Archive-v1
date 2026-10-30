@@ -435,6 +435,7 @@ test('official horizon evidence and capital ladder remain source-bound, not prob
  const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CID'},
   weekly:{forecast_week:'2026-W44'}};
  const horizons={
+ NEXT_12H:{expected_direction:'DOWN',action_posture:'HOLD',expected_path:'Current market observation, not a forward price call.'},
  NEXT_1_3D:{expected_direction:'MIXED',action_posture:'WAIT',expected_path:'Mixed early readings are conflicting.'},
  NEXT_5_7D:{expected_direction:'DOWN',action_posture:'WAIT',expected_path:'Source issued bearish weekly context.'},
  NEXT_2_3W:{expected_direction:'UP',action_posture:'WAIT',expected_path:'Source issued rising longer context.'}
