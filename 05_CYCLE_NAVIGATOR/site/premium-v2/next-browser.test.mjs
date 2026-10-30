@@ -399,6 +399,19 @@ try{
      width:innerWidth,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
      source,en,da,micro:document.querySelector('[data-investor-lens="micro"]')?.getAttribute('aria-pressed'),
      quick13:document.getElementById('cn-horizon-13')?.textContent,
+     horizonOverview:[...document.querySelectorAll('.cn-horizon-card')].map(el=>({
+      valid:el.dataset.sourceCurrent,
+      direction:el.querySelector('.cn-horizon-direction strong')?.textContent,
+      arrow:el.querySelector('.cn-horizon-arrow')?.textContent,
+      balance:el.querySelector('.cn-evidence small')?.textContent,
+      summary:el.querySelector('p')?.textContent
+     })),
+     riskCollapsed:!document.querySelector('.cn-risk-more')?.open,
+     readerCollapsed:!document.querySelector('.cn-reader-expand')?.open,
+     positionsCollapsed:!document.querySelector('.cn-position-guide')?.open,
+     rotationRows:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
+     rotationHasUnknownRaw:[...document.querySelectorAll('#cn-rotation-classes [role="listitem"]')].some(el=>
+       /\b(?:HARD_WAIT|UNAVAILABLE|WAIT|HOLD)\b/.test(el.textContent)),
      nowcast:document.getElementById('premium-now-direction')?.textContent,
      actionCode:document.getElementById('premium-action-code')?.textContent,
      actionWhy:document.getElementById('premium-action-meaning')?.textContent||'',
@@ -440,6 +453,11 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.horizonOverview.length===3&&
+     report.horizonOverview.every(x=>x.direction?.length>1&&x.arrow?.length>0&&x.balance?.length>4)&&
+     report.riskCollapsed&&report.readerCollapsed&&report.positionsCollapsed&&
+     report.rotationRows>0&&!report.rotationHasUnknownRaw,
+     'ROOT_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report.horizonOverview));
    assert.ok(report.actionWhy.length>22&&!report.actionWhy.includes('HOLD_WAIT'),
      'ROOT_VERDICT_NO_ADAPTIVE_PLAIN_LANGUAGE_EXPLANATION:'+JSON.stringify(report));
    assert.ok(report.nowcast&&!report.nowcast.includes('_')&&
@@ -462,6 +480,7 @@ try{
    // Source-reader user journey: real DOM interaction at each mobile width.
    // This does not change or mutate the original Official Compass decision.
    const reader=await evaluate(()=>{
+    document.querySelector('.cn-reader-expand').open=true;
     const $=id=>document.getElementById(id);
     const select=id=>document.querySelector('[data-cn-reader-horizon="'+id+'"]');
     const periods=[...document.querySelectorAll('[data-cn-reader-horizon]')];
@@ -511,6 +530,7 @@ try{
     const locationReady=await evaluate(()=>{
       const panel=document.querySelector('.cn-reader');
       if(!panel)return false;
+      document.querySelector('.cn-reader-expand').open=true;
       panel.scrollIntoView({block:'start',behavior:'instant'});
       return getComputedStyle(panel).display!=='none'&&panel.getBoundingClientRect().width>250;
     });
@@ -522,7 +542,11 @@ try{
     for(const chunk of shot.data.match(/.{1,8000}/g))
       console.log('CN_READER_SCREENSHOT_'+width+'_PART '+chunk);
     console.log('CN_READER_SCREENSHOT_'+width+'_END');
-    await evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+    await evaluate(()=>{
+     document.querySelector('.cn-reader-expand').open=false;
+     document.querySelector('.cn-risk-more').open=false;
+     window.scrollTo({top:0,behavior:'instant'});
+    });
    }
    // Independent first-screen QA: capture BEFORE scrolling to the chart.
    // This specifically guards the owner's request for both short horizons
@@ -572,7 +596,12 @@ try{
      reentry:document.getElementById('pro-reentry-state')?.textContent||'',
      action:document.getElementById('premium-now-action')?.textContent||'',
      firstfoldRisk:document.getElementById('cn-risk-quick-state')?.textContent||'',
-     firstfoldHorizon:document.getElementById('cn-horizon-13')?.textContent||''
+     firstfoldHorizon:document.getElementById('cn-horizon-13')?.textContent||'',
+     cards:[...document.querySelectorAll('.cn-horizon-card')].map(x=>({
+      valid:x.dataset.sourceCurrent,bar:x.querySelector('.cn-evidence-rail span')?.style.width,
+      balance:x.querySelector('.cn-evidence small')?.textContent
+     })),
+     rotation:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length
     }));
     assert.match(offline.source,/Indlæsning mislykkedes|Source fetch failed/,
       'ROOT_FAILED_REFRESH_KEPT_PREVIOUS_SOURCE:'+JSON.stringify(offline));
@@ -584,7 +613,11 @@ try{
       'ROOT_OFFLINE_DID_NOT_FAIL_CLOSED_TO_SOURCE_WAIT:'+JSON.stringify(offline));
     assert.match(offline.firstfoldRisk,/afventer nye data|awaiting fresh data/i,
       'ROOT_OFFLINE_RISK_ORDINAL_WAS_NOT_CLEARED:'+JSON.stringify(offline));
-    assert.match(offline.firstfoldHorizon,/Afventer nye data|Awaiting updated data/,
+    assert.equal(offline.rotation,0,'ROOT_OFFLINE_ROTATION_STALE_SOURCE');
+   assert.ok(offline.cards.length===3&&offline.cards.every(x=>x.valid==='false'&&
+     (x.bar==='0%'||!x.bar)&&!x.balance.includes('Bull 5')),
+     'ROOT_OFFLINE_HORIZON_EVIDENCE_NOT_CLEARED:'+JSON.stringify(offline.cards));
+   assert.match(offline.firstfoldHorizon,/Afventer nye data|Awaiting updated data/,
       'ROOT_OFFLINE_FUTURE_HORIZON_WAS_NOT_CLEARED:'+JSON.stringify(offline));
     assert.match(offline.gate,/Afventer|Awaiting/,'ROOT_OFFLINE_GATE_LEAK');
    }
