@@ -125,8 +125,8 @@ export const POSITION_GUIDE=[
           'Buy','Only a separately approved, current buy signal.'],
  ['HOLD','Behold','Kun relevant for eksisterende positioner; ikke køb.',
           'Hold','Applies to existing holdings; not a buy.'],
- ['PREPARE_SELL','Forbered salg','Risikoreduktion overvejes; ikke automatisk salg.',
-          'Prepare sell','Consider risk reduction; not an automatic sell.'],
+ ['REDUCE','Reducer','Kun hvis et godkendt risiko-/salgsspor faktisk udsteder reduktion.',
+          'Reduce','Only if an approved risk/sell lane actually issues a reduction.'],
  ['SELL','Sælg/reducer','Kun hvis en godkendt kilde faktisk udsteder signalet.',
           'Sell/trim','Only if an approved source actually issues it.']
 ];
