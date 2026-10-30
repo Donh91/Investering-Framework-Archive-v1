@@ -497,7 +497,7 @@ test('official horizon evidence and capital ladder remain source-bound, not prob
 });
 
 
-test('latest observation vs 1–3d sourced contrast refuses to invent 12h/24h trajectory',()=>{
+test('latest observation vs 1–3d sourced contrast refuses to invent 12h/24h trajectory',async()=>{
  const now=Date.parse('2026-10-30T21:20:00Z');
  const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CID-REAL'},
   weekly:{forecast_week:'2026-W44'}};
