@@ -96,7 +96,17 @@ function renderRiskQuick(){
    copy?.action_authority===false&&copy?.risk_state===p?.pullback_risk_state&&
    copy?.forecast_week===feeds.compass.weekly_context.forecast_week&&
    typeof copy?.summary==='string'&&copy.summary.length<=240;
- set('cn-risk-quick-meaning',stage&&bounded?copy.summary:
+ // Danish text is a bounded localization of the already verified official
+ // ordinal, never a translation of unverified free-form news or a new model.
+ const daStage={
+  NORMAL:'Ingen aktiv pullback-varsling. Det er ikke et selvstændigt købssignal.',
+  BUILDING:'Pullback-risiko er under opbygning. Start og dybde er ikke dokumenteret.',
+  ELEVATED:'Forhøjet risiko for et nyt fald. Start og dybde er ikke dokumenteret.',
+  HIGH:'Officielt høj pullback-risiko. Gennemgå beredskab, ikke automatisk salg.',
+  CONFIRMED:'Bekræftet officiel risikotilstand. Det er ikke en selvstændig salgstilladelse.'
+ };
+ set('cn-risk-quick-meaning',stage&&bounded?
+   (en?copy.summary:daStage[p.pullback_risk_state]):
    (en?'No verified detailed assessment of cause, timing or depth':
     'Ingen kildeverificeret forklaring på årsag, start eller dybde'));
  set('cn-risk-quick-action',stage?($('pro-guidance')?.textContent||
