@@ -422,7 +422,7 @@ test('visible Kompas product v3 has 12h observation, three sourced horizon cards
  assert.match(runtime,/renderOverview\(\)/);
  assert.match(runtime,/readRotation\(/);
  assert.match(runtime,/publicOverview\(/);
- assert.match(runtime,/cn-overview-d13-balance/);
+ assert.match(runtime,/cn-overview-'\+key\+'-balance/);
  const css=await read('./premium-tabs.css');
  assert.match(css,/\.cn-overview-cards/);
  assert.match(css,/\.cn-rotation-classes/);
