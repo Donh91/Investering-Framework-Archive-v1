@@ -95,12 +95,34 @@ def apply_runtime_owner_freshness(
         if len(stamps) != 2:
             raise ValueError("HOURLY_OWNER_TIMESTAMP_MISSING")
         ages = [(now - stamp).total_seconds() for stamp in stamps]
+        # A timely pointer is not necessarily a complete owner deliverable.  A
+        # prior green AUTO snapshot must never mask a FAILED or partial run.
+        required = pointer.get("requested_hours")
+        completeness_fields = (
+            "spot_complete_hours",
+            "spot_flow_complete_hours",
+            "long_short_complete_hours",
+            "derivatives_oi_complete_hours",
+        )
+        coverage_shortfalls = [
+            field for field in completeness_fields
+            if not isinstance(pointer.get(field), int)
+            or isinstance(pointer.get(field), bool)
+            or not isinstance(required, int)
+            or isinstance(required, bool)
+            or required < 1
+            or pointer[field] < required
+        ]
+        pointer_complete = pointer.get("status") == "COMPLETE" and not coverage_shortfalls
         if any(age < 0 for age in ages):
             status = "UNAVAILABLE"
             classification = "HOURLY_OWNER_FUTURE_TIMESTAMP_AT_RECOVERY_CHECK"
         elif any(age > max_hourly_age.total_seconds() for age in ages):
             status = "DEGRADED"
             classification = "HOURLY_OWNER_STALE_AT_RECOVERY_CHECK"
+        elif not pointer_complete:
+            status = "DEGRADED"
+            classification = "HOURLY_OWNER_INCOMPLETE_AT_RECOVERY_CHECK"
         else:
             status = str(prior.get("status") or "PASS")
             classification = str(prior.get("classification") or "GITHUB_POINTER_TARGET_CHAIN_VALID")
@@ -112,6 +134,8 @@ def apply_runtime_owner_freshness(
                 "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
                 "retrieved_at_utc": pointer.get("retrieved_at_utc"),
                 "window_end_utc": pointer.get("window_end_utc"),
+                "pointer_status": pointer.get("status"),
+                "coverage_shortfalls": coverage_shortfalls,
                 "max_age_seconds": max_hourly_age.total_seconds(),
                 "retrieval_age_seconds": ages[0],
                 "coverage_age_seconds": ages[1],
