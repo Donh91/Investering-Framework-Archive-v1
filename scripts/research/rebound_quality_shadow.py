@@ -228,6 +228,71 @@ def replay_census(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     }
 
 
+
+def due_only_outcome_preview(rows: list[Mapping[str, str]], event_end_utc: str,
+                             review_asof_utc: str) -> dict[str, Any]:
+    """EX-POST price path description, never a scored or issued forecast.
+
+    A candidate can only be assessed for a due horizon when every intermediate
+    source candle is present, PASS and covered by an as-of-eligible owner run.
+    """
+    event_end, review_time = utc(event_end_utc), utc(review_asof_utc)
+    if review_time < event_end:
+        raise ValueError("review_before_event")
+    known: dict[datetime, Mapping[str, str]] = {}
+    for row in rows:
+        close = utc(row["timestamp_utc"]) + timedelta(hours=1)
+        coverage_end = utc(row["source_window_end_utc"])
+        if coverage_end < close:
+            raise ValueError("source_coverage_ends_before_candle")
+        if close > review_time or coverage_end > review_time:
+            continue
+        if close in known and dict(known[close]) != dict(row):
+            raise ValueError("conflicting_duplicate_candle")
+        known[close] = row
+    event = known.get(event_end)
+    ref_close = number(event, "btc_close") if event is not None else None
+    if event is None or event.get("spot_status") != "PASS" or ref_close is None or ref_close <= 0:
+        status = "MISSING_ELIGIBLE_EVENT_REFERENCE"
+    else:
+        status = "DESCRIPTIVE_EXPOST_REFERENCE_AVAILABLE"
+    horizons: dict[str, dict[str, Any]] = {}
+    for h in (6, 24, 72):
+        due = event_end + timedelta(hours=h)
+        key = f"{h}h"
+        if due > review_time:
+            horizons[key] = {"status": "PENDING_NOT_MATURE", "due_utc": due.isoformat().replace("+00:00", "Z"),
+                             "btc_close_return_pct": None}
+            continue
+        window = [known.get(event_end + timedelta(hours=i)) for i in range(1, h + 1)]
+        if (status != "DESCRIPTIVE_EXPOST_REFERENCE_AVAILABLE"
+                or any(row is None or row.get("spot_status") != "PASS"
+                       or number(row, "btc_close") is None
+                       or number(row, "btc_close") <= 0 for row in window)):
+            horizons[key] = {"status": "UNAVAILABLE_MISSING_OR_INVALID_HOURLY_SOURCE",
+                             "due_utc": due.isoformat().replace("+00:00", "Z"),
+                             "btc_close_return_pct": None}
+            continue
+        finish = number(window[-1], "btc_close")
+        horizons[key] = {
+            "status": "DESCRIPTIVE_EXPOST_ONLY",
+            "due_utc": due.isoformat().replace("+00:00", "Z"),
+            "btc_close_return_pct": round(pct(ref_close, finish), 6),
+        }
+    return {
+        "contract": "REBOUND_QUALITY_DUE_ONLY_OUTCOME_PREVIEW_v0",
+        "event_end_utc": event_end.isoformat().replace("+00:00", "Z"),
+        "review_asof_utc": review_time.isoformat().replace("+00:00", "Z"),
+        "reference_status": status,
+        "horizons": horizons,
+        "original_prospective_registration_verified": False,
+        "first_known_verified": False,
+        "prediction_or_skill_scored": False,
+        "trade_permission": "NONE",
+        "warning": "Historical descriptive follow-up only; no registered forecast, causal attribution, calibrated precision or profitable edge.",
+    }
+
+
 def read_public_owner(repo: Path, files: list[Path]) -> list[dict[str, str]]:
     root = (repo / PUBLIC_OWNER_ROOT).resolve()
     out: list[dict[str, str]] = []
@@ -246,9 +311,11 @@ def main() -> None:
     ap.add_argument("--csv", type=Path, required=True, action="append")
     ap.add_argument("--asof", required=True, help="UTC snapshot cutoff, not retrospective issuance proof")
     ap.add_argument("--scan", action="store_true", help="exploratory last-168h census, not a performance test")
+    ap.add_argument("--event-end", default=None, help="UTC event-close for due-only descriptive outcome preview")
     args = ap.parse_args()
     rows = read_public_owner(args.repo, args.csv)
-    result = replay_census(rows, args.asof) if args.scan else assess(rows, args.asof)
+    result = (due_only_outcome_preview(rows, args.event_end, args.asof) if args.event_end
+              else replay_census(rows, args.asof) if args.scan else assess(rows, args.asof))
     print(json.dumps(result, sort_keys=True, indent=2))
 
 
