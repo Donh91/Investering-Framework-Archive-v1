@@ -103,6 +103,18 @@ def declared_contents_write(source: str) -> bool:
 
 
 
+def _executable_command_context(line: str, match_start: int) -> bool:
+    """Conservatively distinguish shell commands from quoted examples.
+
+    Ambiguous constructs are NOT confirmed writers; this bounded scanner is
+    never a complete security census or merge-authority/permission proof.
+    """
+    prefix = line[:match_start].strip()
+    if prefix in {"", "if", "if !", "then", "do", "run:", "- run:"}:
+        return True
+    return bool(re.search(r"(?:&&|\|\||;)\s*(?:if\s+!?\s*)?$", prefix))
+
+
 def analyze_workflow(path: Path, workflow_dir: Path) -> dict | None:
     text = path.read_text(encoding="utf-8")
     evidence = []
@@ -110,7 +122,8 @@ def analyze_workflow(path: Path, workflow_dir: Path) -> dict | None:
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
-        if PUSH_MAIN.search(line) or API_MAIN.search(line):
+        matches = list(PUSH_MAIN.finditer(line)) + list(API_MAIN.finditer(line))
+        if any(_executable_command_context(line, hit.start()) for hit in matches):
             evidence.append({"line": number, "expression": line[:240]})
     if not evidence:
         return None
