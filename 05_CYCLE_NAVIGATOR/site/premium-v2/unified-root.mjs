@@ -104,7 +104,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<button type="button" data-cn-reader-horizon="NEXT_5_7D" aria-pressed="false">5–7 dage</button>'+
     '<button type="button" data-cn-reader-horizon="NEXT_2_3W" aria-pressed="false">2–3 uger</button>'+
     '<button type="button" data-cn-reader-horizon="CYCLE_ALTCOINS_3_8W" aria-pressed="false">3–8 uger</button></div>'+
-    '<div class="cn-reader-outlook" aria-live="polite" aria-atomic="true">'+
+    '<div class="cn-reader-outlook">'+
     '<div class="cn-reader-signal"><strong id="cn-reader-direction">Afventer nye data</strong>'+
     '<span id="cn-reader-posture">Ingen aktuel handling</span></div>'+
     '<p id="cn-reader-analysis">Den aktuelle kildeanalyse indlæses.</p>'+
