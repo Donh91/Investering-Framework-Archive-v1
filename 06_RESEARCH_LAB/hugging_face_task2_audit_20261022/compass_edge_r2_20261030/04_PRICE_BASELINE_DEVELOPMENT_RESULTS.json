@@ -1,0 +1,148 @@
+{
+  "contract": "TASK2_COMPASS_EDGE_PRICE_BASELINE_DEVELOPMENT_v0_1",
+  "study_id": "TASK2-KOMPAS-EDGE-R2-MISSION-20261030",
+  "status": "EXECUTED_EX_POST_DESCRIPTIVE_NOT_PIT_ADMITTED",
+  "research_date_utc": "2026-10-30",
+  "authority": {
+    "research_only": true,
+    "original_issued_forecast_scoring": false,
+    "market_rule_change": false,
+    "portfolio_action": false,
+    "automatic_promotion": false,
+    "api_spend_usd": 0
+  },
+  "source": {
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "path_pattern": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-DD.csv",
+    "source_days": 30,
+    "source_hours": 705,
+    "continuous": true,
+    "missing_hour_count": 0,
+    "duplicate_timestamp_count": 0,
+    "spot_nonpass_count": 0,
+    "source_first_publication_verified": false,
+    "oct29_later_availability_reconciled": false,
+    "first_open_utc": "2026-10-01T00:00:00Z",
+    "last_open_utc": "2026-10-30T08:00:00Z",
+    "btc_quote": "USDT",
+    "intrahour_low_vs_future_close": "future 72 hourly low bars",
+    "source_digest_list": "04_OCT2026_DEVELOPMENT_BASELINE_REPORT.md"
+  },
+  "target": {
+    "horizon_hours": 72,
+    "relative_loss_threshold_pct": -5,
+    "reference": "decision_hour_btc_close",
+    "future": "min(next_72_completed_hourly_lows)",
+    "decision_availability": "after original decision candle close; original provider first-known not established",
+    "eligibility": "24 completed prior+current candles and 72 following completed candles, all contiguous",
+    "matches_official_prognosis": false
+  },
+  "decision_partitions": [
+    {
+      "name": "oct01-17",
+      "first_decision_open": "2026-10-02T00:00:00Z",
+      "last_decision_open": "2026-10-14T23:00:00Z",
+      "n": 312,
+      "positive": 35,
+      "ret4": {
+        "tp": 3,
+        "fp": 21,
+        "tn": 256,
+        "fn": 32
+      },
+      "dd24_3": {
+        "tp": 0,
+        "fp": 25,
+        "tn": 252,
+        "fn": 35
+      },
+      "dd24_5": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 277,
+        "fn": 35
+      }
+    },
+    {
+      "name": "oct14-30",
+      "first_decision_open": "2026-10-15T00:00:00Z",
+      "last_decision_open": "2026-10-27T08:00:00Z",
+      "n": 297,
+      "positive": 12,
+      "ret4": {
+        "tp": 1,
+        "fp": 15,
+        "tn": 270,
+        "fn": 11
+      },
+      "dd24_3": {
+        "tp": 0,
+        "fp": 29,
+        "tn": 256,
+        "fn": 12
+      },
+      "dd24_5": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 285,
+        "fn": 12
+      }
+    }
+  ],
+  "aggregate": {
+    "n": 609,
+    "positive_windows": 47,
+    "no_event_windows": 562,
+    "positive_rate": 0.07717569786535304,
+    "approximate_adverse_episode_groups": 2,
+    "independent_family_count_verified": false,
+    "positive_decision_days_utc": {
+      "2026-10-05": 10,
+      "2026-10-06": 24,
+      "2026-10-07": 1,
+      "2026-10-21": 10,
+      "2026-10-22": 2
+    },
+    "rules": [
+      {
+        "name": "past_4h_return_le_minus_1pct",
+        "tp": 4,
+        "fp": 36,
+        "tn": 526,
+        "fn": 43,
+        "precision": 0.1,
+        "recall": 0.0851063829787234
+      },
+      {
+        "name": "24h_running_high_drawdown_ge_3pct",
+        "tp": 0,
+        "fp": 54,
+        "tn": 508,
+        "fn": 47,
+        "precision": 0,
+        "recall": 0
+      },
+      {
+        "name": "24h_running_high_drawdown_ge_5pct",
+        "tp": 0,
+        "fp": 0,
+        "tn": 562,
+        "fn": 47,
+        "precision": null,
+        "recall": 0
+      }
+    ]
+  },
+  "scientific_ruling": "INSUFFICIENT_INDEPENDENT_EVENT_POWER",
+  "limitations": [
+    "historical price series and outcomes previously seen, not unseen holdout",
+    "no original provider first-known or authentic issued model binding",
+    "two approximate event groups not family-certified",
+    "overlapping windows severely dependent",
+    "no per-hour delivery/feasible fill/cost",
+    "no multi-factor challenger trained or scored",
+    "original M6 and Compass target contracts differ",
+    "historical 2022-24 archive gap not bridged"
+  ],
+  "next": "C01 full lineage and C02 clock eligibility; finalize C03 future preregistration; C04 only after eligible source and sufficient independent future event families"
+}
