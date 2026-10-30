@@ -47,7 +47,7 @@ def concurrency_groups(source: str) -> list[str]:
             if indent > block_indent:
                 continue
             block_indent = None
-        match = re.match(r"^ *-? ?([A-Za-z0-9_-]+):(?:[ \\t]*(.*))?$", raw)
+        match = re.match(r"^ *-? ?([A-Za-z0-9_-]+):(?:[ \t]*(.*))?$", raw)
         if not match:
             continue
         key = match.group(1)
