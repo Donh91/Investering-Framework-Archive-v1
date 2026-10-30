@@ -53,6 +53,43 @@ class ReboundQualityTest(unittest.TestCase):
         self.assertEqual(out["horizons"]["6h"]["status"],
                          "UNAVAILABLE_MISSING_OR_INVALID_HOURLY_SOURCE")
 
+    def test_census_no_recycled_old_window_at_three_lagged_hours(self):
+        rows = fixture()
+        report = replay_census(rows, "2026-10-30T19:00:00Z")
+        self.assertEqual(report["evaluated_cutoffs"], 168)
+        self.assertEqual(report["eligible_complete_cutoffs"], 1)
+        self.assertEqual(report["raw_rebound_candidate_cutoffs"], 1)
+        self.assertEqual(report["excluded_cutoffs_by_reason"]["NO_NEW_COMPLETED_CANDLE_AT_CUTOFF"], 3)
+
+    def test_source_candle_with_half_hour_offset_is_rejected(self):
+        rows = fixture()
+        for r in rows:
+            r["timestamp_utc"] = (datetime.fromisoformat(
+                r["timestamp_utc"].replace("Z", "+00:00")) + timedelta(minutes=30)
+                ).isoformat().replace("+00:00", "Z")
+            r["source_window_end_utc"] = (datetime.fromisoformat(
+                r["source_window_end_utc"].replace("Z", "+00:00")) + timedelta(minutes=30)
+                ).isoformat().replace("+00:00", "Z")
+        with self.assertRaisesRegex(ValueError, "candle_open_not_utc_hour_aligned"):
+            assess(rows, "2026-10-30T17:00:00Z")
+        with self.assertRaisesRegex(ValueError, "candle_open_not_utc_hour_aligned"):
+            replay_census(rows, "2026-10-30T17:00:00Z")
+
+    def test_volume_baseline_is_immediately_preceding_12_hours(self):
+        rows = fixture()
+        volumes = [1] + [100]*6 + [1000]*6 + [100]*3
+        self.assertEqual(len(rows), len(volumes))
+        for row, volume in zip(rows, volumes):
+            row["btc_quote_volume"] = str(volume)
+            row["btc_taker_buy_quote_volume"] = str(volume * 0.5)
+        result = assess(rows, "2026-10-30T16:00:00Z")
+        self.assertAlmostEqual(result["evidence"]["btc_last_3h_quote_volume_vs_prior_12h_median"],
+                               100.0/550.0, places=6)
+        rows[12]["btc_quote_volume"] = ""
+        missing = assess(rows, "2026-10-30T16:00:00Z")
+        self.assertIsNone(missing["evidence"]["btc_last_3h_quote_volume_vs_prior_12h_median"])
+        self.assertFalse(missing["family_independence"]["SPOT_PRICE_FLOW"])
+
     def test_real_public_hourly_owner_readback_no_trade(self):
         """Integration smoke against existing public 29-30 October Hourly files."""
         files = [Path("03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-29.csv"),
