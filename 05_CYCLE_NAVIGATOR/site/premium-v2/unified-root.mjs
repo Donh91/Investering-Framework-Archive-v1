@@ -94,21 +94,21 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   if(!compactCore.includes('id="cn-horizon-13"'))
     throw Error('CN_QUIET_PRO_FIRST_FOLD_INSERT_FAILED');
   const pro='<section id="compass-pro" class="cn-pro-surface" aria-labelledby="pro-heading">'+
-    '<div class="cn-pro-intro"><span class="small-kicker">OFFICIEL BESLUTNINGSSTØTTE</span>'+
+    '<div class="cn-pro-intro"><span class="small-kicker">MARKEDSBLIK</span>'+
     '<h2 id="pro-heading">Kompas PRO</h2>'+
-    '<p>Handling, observeret retning og risiko vises hver for sig. '+
-    'Kun gyldige officielle kildebeslutninger er aktuelle.</p></div>'+
+    '<p>Aktuel markedsretning, risiko og hvad der kan ændre udsynet. '+
+    'Manglende eller gamle data vises tydeligt.</p></div>'+
     '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p>'+
     compactCore.replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
       '<section class="cn-risk-quick" aria-label="Pullback classification">'+
-      '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">PULLBACK / 5 RISIKOKLASSER</small>'+
-      '<strong id="cn-risk-quick-state">Afventer kilde</strong></div>'+
-      '<span id="cn-risk-quick-note">Kildens trin · ikke sandsynlighed</span></div>'+
+      '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">RISIKO FOR YDERLIGERE FALD</small>'+
+      '<strong id="cn-risk-quick-state">— / 5 · afventer nye data</strong></div>'+
+      '<span id="cn-risk-quick-note">Risikoniveau, ikke sandsynlighed</span></div>'+
       '<div id="cn-risk-quick-steps" class="risk-class-rail" aria-hidden="true"></div>'+
       '<div class="cn-risk-quick-guidance" aria-live="polite">'+
-      '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer kildeverificeret risikoforklaring</span></p>'+
-      '<p><small id="cn-risk-quick-action-label">HVAD GØR JEG?</small><span id="cn-risk-quick-action">Afvent verificeret Kompas-handling</span></p>'+
+      '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer opdateret risikovurdering</span></p>'+
+      '<p><small id="cn-risk-quick-action-label">SÅDAN FORHOLDER DU DIG</small><span id="cn-risk-quick-action">Afvent opdateret Kompas før nye beslutninger</span></p>'+
       '<div class="cn-risk-quick-foot"><span id="cn-risk-quick-quality">Evidenskvalitet: ukendt</span><span id="cn-risk-quick-onset">Starttidspunkt: ikke dokumenteret</span></div>'+
       '</div></section><details class="cn-pro-more">')+'</section>';
 
