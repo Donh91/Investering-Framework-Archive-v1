@@ -67,8 +67,10 @@ def assess(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
         run_coverage_end = utc(r["source_window_end_utc"])
         if run_coverage_end < candle_end:
             raise ValueError("source_coverage_ends_before_candle")
-        if candle_end > cutoff:
-            continue  # explicit no future bars
+        if candle_end > cutoff or run_coverage_end > cutoff:
+            # No future candle AND no later collection window in an as-of replay.
+            # This still does not establish true first-known availability.
+            continue
         key = candle_end.isoformat()
         if key in seen:
             if dict(seen[key]) != dict(r):
@@ -139,7 +141,7 @@ def assess(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     if oi_delta is not None and current_return > 0:
         oi_pattern = "PRICE_UP_OI_DOWN_SIDE_UNIDENTIFIED" if oi_delta < 0 else (
             "PRICE_UP_OI_UP_LEVERAGE_POSSIBLE" if oi_delta > 0 else "PRICE_UP_OI_FLAT")
-    base["family_independence"] = {"SPOT_PRICE_FLOW": share is not None and relative is not None,
+    base["family_independence"] = {"SPOT_PRICE_FLOW": share is not None and vol_ratio is not None and relative is not None,
                                     "DERIVATIVES_OI": oi_delta is not None, "BREADTH": False}
     base["evidence"] = {
         "window_end_utc": timestamps[-1].isoformat().replace("+00:00", "Z"),
