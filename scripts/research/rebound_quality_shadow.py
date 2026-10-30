@@ -60,13 +60,16 @@ def assess(rows: list[Mapping[str, str]], asof: str) -> dict[str, Any]:
     cutoff = utc(asof)
     seen: dict[str, Mapping[str, str]] = {}
     for r in rows:
-        end = utc(r["source_window_end_utc"])
-        start = utc(r["timestamp_utc"])
-        if end - start != timedelta(hours=1):
-            raise ValueError("invalid_hourly_candle_interval")
-        if end > cutoff:
+        start = utc(r["timestamp_utc"])  # Binance spot candle OPEN
+        candle_end = start + timedelta(hours=1)  # completed 1h candle CLOSE
+        # source_window_end_utc is the whole collection RUN coverage end,
+        # NOT the individual candle end. Repeated values are normal across rows.
+        run_coverage_end = utc(r["source_window_end_utc"])
+        if run_coverage_end < candle_end:
+            raise ValueError("source_coverage_ends_before_candle")
+        if candle_end > cutoff:
             continue  # explicit no future bars
-        key = end.isoformat()
+        key = candle_end.isoformat()
         if key in seen:
             if dict(seen[key]) != dict(r):
                 raise ValueError("conflicting_duplicate_candle")
