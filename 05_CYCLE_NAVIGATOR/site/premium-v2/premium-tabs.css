@@ -59,3 +59,60 @@
 @media(max-width:540px){
  .cn-risk-quick .cn-risk-quick-guidance {grid-template-columns:1fr;gap:10px}
 }
+
+/* SITE #1578: one compact, source-bound interpretation at a time.
+ * No additional risk/scoring surface or continuous-scroll wall. */
+.cn-tabbed-ui .cn-reader{
+ margin:16px 0 18px;padding:clamp(13px,2vw,22px);
+ border:1px solid #dce5ef;border-radius:16px;background:#fff;
+}
+.cn-reader-head{display:flex;justify-content:space-between;align-items:end;gap:12px}
+.cn-reader-head h3{font-size:clamp(18px,2.4vw,23px);line-height:1.2;letter-spacing:-.02em;
+ color:#0a2545;margin:5px 0 0}
+.cn-reader-head .small-kicker{font-size:10px;color:#6082a7}
+.cn-reader-head>small{font-size:11px;line-height:1.5;color:#6a8196;max-width:210px}
+.cn-reader-periods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;
+ margin:15px 0 12px;background:#eff3f8;padding:4px;border-radius:12px}
+.cn-reader-periods button,.cn-reader-lens-buttons button{
+ cursor:pointer;min-width:0;min-height:44px;border:0;border-radius:9px;
+ background:transparent;color:#547089;font-weight:700;font-size:12px;
+ padding:8px 4px;white-space:nowrap
+}
+.cn-reader-periods button[aria-pressed="true"],.cn-reader-lens-buttons button[aria-pressed="true"]{
+ background:#fff;color:#0a345f;box-shadow:0 1px 5px #0d25401c
+}
+.cn-reader button:focus-visible,.cn-reader summary:focus-visible{
+ outline:2px solid #2f6fda;outline-offset:2px
+}
+.cn-reader-outlook{background:#f5f8fb;border:1px solid #e3eaf1;border-radius:12px;
+ padding:15px 16px}
+.cn-reader-signal{display:flex;align-items:center;justify-content:space-between;
+ gap:12px;margin-bottom:9px}
+.cn-reader-signal strong{font-size:20px;line-height:1.2;color:#0c2949}
+.cn-reader-signal span{font-size:12px;color:#52687a;font-weight:700}
+.cn-reader-outlook p{font-size:13px;color:#2e485f;line-height:1.65;margin:0;
+ overflow-wrap:anywhere}
+.cn-reader-outlook small{display:block;font-size:11px;color:#7b6472;margin-top:7px}
+.cn-reader-outlook small:empty{display:none}
+.cn-reader-lenses{margin:12px 0 0;padding:0}
+.cn-reader-lens-buttons{display:flex;gap:6px;margin-bottom:8px}
+.cn-reader-lens-buttons button{min-width:85px;background:#f1f4f8;min-height:40px}
+.cn-reader-lenses p{font-size:12px;color:#40586e;line-height:1.55;margin:0}
+.cn-reader-receipt{font-size:11px;color:#63798e;line-height:1.5;margin:11px 0 0}
+.cn-reader-glossary{border-top:1px solid #e2e9f0;margin-top:12px;padding-top:10px}
+.cn-reader-glossary summary{cursor:pointer;color:#0c497d;
+ font-size:12px;font-weight:700;min-height:34px}
+.cn-reader-glossary table{border-collapse:collapse;width:100%;font-size:12px;
+ line-height:1.5;margin-top:8px;table-layout:fixed}
+.cn-reader-glossary th,.cn-reader-glossary td{padding:9px 7px;border-top:1px solid #edf1f5;
+ text-align:left;vertical-align:top;color:#354a5f;overflow-wrap:anywhere}
+.cn-reader-glossary th{width:30%;font-size:11px;letter-spacing:.02em;
+ color:#17446d;font-weight:800}
+@media(max-width:540px){
+ .cn-reader-head{display:block}
+ .cn-reader-head>small{display:block;max-width:none;margin-top:5px}
+ .cn-reader-periods{gap:3px}
+ .cn-reader-periods button{font-size:11px;padding-inline:1px}
+ .cn-reader-outlook{padding:13px}
+ .cn-reader-signal strong{font-size:18px}
+}
