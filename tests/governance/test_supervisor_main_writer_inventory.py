@@ -61,6 +61,27 @@ jobs:
         self.assertEqual(result["obvious_direct_main_writer_workflows"], 2)
         self.assertEqual(len({x for w in result["writers"] for x in w["concurrency_groups_seen"]}), 2)
 
+    def test_python_assertion_merely_quoting_git_push_is_not_writer(self):
+        # Exact failure mode from forecast-skill-study-v132-gate.yml.
+        result = self.check({"forecast-skill-study-v132-gate.yml": """jobs:
+  audit:
+    steps:
+      - run: |
+          python - <<'PY'
+          assert 'git push origin HEAD:main' in barrier
+          PY
+"""})
+        self.assertEqual(result["obvious_direct_main_writer_workflows"], 0)
+
+    def test_echo_command_literal_is_not_confirmed_writer(self):
+        result = self.check({"test.yml": "echo 'git push origin HEAD:main'\n"})
+        self.assertEqual(result["obvious_direct_main_writer_workflows"], 0)
+
+    def test_actual_shell_if_chain_still_counts_writer(self):
+        result = self.check({"test.yml":
+            "if git pull --rebase origin main && git push origin HEAD:main; then echo ok; fi\n"})
+        self.assertEqual(result["obvious_direct_main_writer_workflows"], 1)
+
     def test_no_release_permission_even_if_no_writers(self):
         result = self.check({"test.yml": "name: test\n"})
         self.assertFalse(result["merge_release_authority"])
