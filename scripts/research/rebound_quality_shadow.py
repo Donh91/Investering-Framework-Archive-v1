@@ -245,11 +245,16 @@ def due_only_outcome_preview(rows: list[Mapping[str, str]], event_end_utc: str,
     source candle is present, PASS and covered by an as-of-eligible owner run.
     """
     event_end, review_time = utc(event_end_utc), utc(review_asof_utc)
+    if event_end.minute or event_end.second or event_end.microsecond:
+        raise ValueError("event_end_not_utc_hour_aligned")
     if review_time < event_end:
         raise ValueError("review_before_event")
     known: dict[datetime, Mapping[str, str]] = {}
     for row in rows:
-        close = utc(row["timestamp_utc"]) + timedelta(hours=1)
+        start = utc(row["timestamp_utc"])
+        if start.minute or start.second or start.microsecond:
+            raise ValueError("candle_open_not_utc_hour_aligned")
+        close = start + timedelta(hours=1)
         coverage_end = utc(row["source_window_end_utc"])
         if coverage_end < close:
             raise ValueError("source_coverage_ends_before_candle")
