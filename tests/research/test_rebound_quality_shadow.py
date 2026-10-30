@@ -2,7 +2,7 @@
 """Deterministic negative/positive fixtures for RQS research-only diagnostics."""
 import unittest
 from datetime import datetime, timedelta, timezone
-from scripts.research.rebound_quality_shadow import assess
+from scripts.research.rebound_quality_shadow import assess, replay_census
 
 
 def fixture(*, oi_trend=-8.0, remove_derivatives=False):
@@ -24,6 +24,16 @@ def fixture(*, oi_trend=-8.0, remove_derivatives=False):
 
 
 class ReboundQualityTest(unittest.TestCase):
+    def test_episode_census_never_promotes_quality_to_accuracy(self):
+        rows = fixture()
+        report = replay_census(rows, "2026-10-30T16:00:00Z")
+        self.assertGreaterEqual(report["raw_rebound_candidate_cutoffs"], 1)
+        self.assertFalse(report["performance_backtest"])
+        self.assertFalse(report["first_known_verified"])
+        self.assertIsNone(report["after_cost_edge"])
+        self.assertEqual(report["official_action_permission"], "NONE")
+        self.assertEqual(report["cluster_sensitivity_NOT_CHOSEN_OR_CALIBRATED"]["6h"]["cluster_count"], 1)
+
     def test_candidate_is_research_only_and_not_short_covering_proof(self):
         rows = fixture()
         out = assess(rows, rows[-1]["source_window_end_utc"])
