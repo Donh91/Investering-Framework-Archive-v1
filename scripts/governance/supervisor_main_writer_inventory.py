@@ -66,7 +66,41 @@ def concurrency_groups(source: str) -> list[str]:
             parents.append((indent, key))
     return sorted(groups)
 
-CONTENT_WRITE = re.compile(r"^\s*contents:\s*write\s*(?:#.*)?$", re.MULTILINE)
+def declared_contents_write(source: str) -> bool:
+    """Find explicitly scoped permissions.contents: write, never env.contents.
+
+    A missing match does NOT prove that a workflow lacks effective write rights:
+    inherited permissions, write-all and external principals remain unverified.
+    """
+    parents: list[tuple[int, str]] = []
+    block_indent: int | None = None
+    for raw in source.splitlines():
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        indent = len(raw) - len(raw.lstrip(" "))
+        if block_indent is not None:
+            if indent > block_indent:
+                continue
+            block_indent = None
+        match = re.match(r"^ *-? ?([A-Za-z0-9_-]+):(?:[ \t]*(.*))?$", raw)
+        if not match:
+            continue
+        key = match.group(1)
+        value = (match.group(2) or "").strip()
+        while parents and indent <= parents[-1][0]:
+            parents.pop()
+        scope = [name for _, name in parents]
+        if (key == "contents" and value.split("#", 1)[0].strip() == "write"
+                and (scope == ["permissions"]
+                     or (len(scope) == 3 and scope[0] == "jobs"
+                         and scope[-1] == "permissions"))):
+            return True
+        if value.startswith(("|", ">")):
+            block_indent = indent
+        if not value or value.startswith("#"):
+            parents.append((indent, key))
+    return False
+
 
 
 def analyze_workflow(path: Path, workflow_dir: Path) -> dict | None:
@@ -84,7 +118,7 @@ def analyze_workflow(path: Path, workflow_dir: Path) -> dict | None:
         "workflow": path.relative_to(workflow_dir).as_posix(),
         "critical_publication_or_supervision": path.name in CRITICAL,
         "concurrency_groups_seen": concurrency_groups(text),
-        "contents_write_declared": bool(CONTENT_WRITE.search(text)),
+        "contents_write_declared": declared_contents_write(text),
         "direct_main_write_evidence": evidence,
         "principal": "UNVERIFIED_RUNTIME",
         "trigger": "UNVERIFIED_RUNTIME",
