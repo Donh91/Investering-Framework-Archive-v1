@@ -5,6 +5,19 @@ from datetime import datetime,timezone
 from pathlib import Path
 import prospective_evidence_controller as evidence
 import shared_row_outcome_receipt_gate as outcome_gate
+
+
+def verified_matured_divergence_counts(valid_rows: list[dict], divergences: list[dict]) -> dict:
+    """Count only divergence outcomes admitted by the shared integrity gate."""
+    parents = {row["event_id"]: row for row in valid_rows}
+    return {
+        horizon: sum(
+            str(parents.get(div.get("event_id"), {}).get(f"outcome_{horizon}", "")) in {"0", "1"}
+            and str(div.get(f"outcome_{horizon}", "")) in {"0", "1"}
+            for div in divergences
+        )
+        for horizon in ("24h", "72h", "7d")
+    }
 ROOT=Path('06_RESEARCH_LAB/shared_row_model_tournament_v1'); LED=ROOT/'data/PROSPECTIVE_SHARED_ROW_LEDGER.csv'; FNP=ROOT/'14_DIVERGENCE_FNP_LEDGER.csv'; REG=ROOT/'03_CANDIDATE_REGISTRY.json'; OUT=ROOT/'weekly'
 ACTIVE_COLLECTION_STATE='ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION'
 ACTIVE_FLOOR_STATUS='ACTIVE_POST_REPAIR_FLOOR'
@@ -121,10 +134,11 @@ def incr(rows,base,other,h='24h'):
     return {'addition':other,'vs':base,'horizon':h,'decisions_changed_n':changed,'unique_wins_n':wins,'unique_failures_n':fails,'delay_cost':'UNAVAILABLE_UNTIL_CONFIRMATION_TIMESTAMPS','tail_errors_avoided':'UNAVAILABLE_UNTIL_NUMERIC_TAIL_OUTCOMES'}
 def main():
     raw_rows=read(LED); raw_div=read(FNP); runtime=json.loads((ROOT/'RUNTIME_STATUS.json').read_text()); rows,div,excluded=filter_consumer_rows(raw_rows,raw_div,runtime); now=datetime.now(timezone.utc); y,w,_=now.isocalendar(); ids=[c['id'] for c in json.loads(REG.read_text())['candidates']]
-    perf={cid:{h:metrics(rows,cid,h) for h in ['24h','72h','7d']} for cid in ids}; mats={h:sum(bool(d.get(f'matured_{h}_utc')) for d in div) for h in ['24h','72h','7d']}
+    perf={cid:{h:metrics(rows,cid,h) for h in ['24h','72h','7d']} for cid in ids}; mats=verified_matured_divergence_counts(rows,div)
     challengers=['C08_SIMPLE_3_ETF','C09_SIMPLE_3_ETF_LEVERAGE','C10_STABLECOIN_CHALLENGER','C11_CFGI_CHALLENGER','C12_FULL_STACK']
     report={'contract':'SHARED_ROW_TOURNAMENT_WEEKLY_v1','authority':'RESEARCH_ONLY_NON_CANONICAL','generated_at_utc':now.replace(microsecond=0).isoformat().replace('+00:00','Z'),'iso_year':y,'iso_week':w,'status':'COLLECTING' if not rows else 'EVALUATING','eligible_rows_total':len(rows),'consensus_rows':sum(1 for r in rows if len(set(json.loads(r.get('candidate_decisions') or '{}').values()))<=1),'divergences_total':len(div),'matured':mats,'candidate_performance':perf,'incremental_value_matrix':[incr(rows,'C07_SIMPLE_3',x) for x in challengers],'tail_error_prevention':{'status':'UNAVAILABLE' if not div else 'EVALUATE_FROM_MATURED_DIVERGENCES','n':len(div)},'consumer_integrity_filter':{'raw_rows':len(raw_rows),'raw_divergences':len(raw_div),'excluded':excluded},'architecture_gate':'INSUFFICIENT_EVIDENCE','canonical_effect':False}
     OUT.mkdir(parents=True,exist_ok=True); name=f'SHARED_ROW_TOURNAMENT_WEEKLY_{y}-W{w:02d}.json'; (OUT/name).write_text(json.dumps(report,indent=2,sort_keys=True)+'\n'); (OUT/'LATEST.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
     (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n\nNo narrative winner is permitted before prospective evidence can support it.\n')
     print(json.dumps({'status':'PASS','report':str(OUT/name),'eligible_rows':len(rows),'divergences':len(div)},sort_keys=True))
 if __name__=='__main__':main()
+

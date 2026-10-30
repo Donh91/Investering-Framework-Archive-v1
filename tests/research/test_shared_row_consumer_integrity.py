@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import copy
 import hashlib
 import json
 import sys
@@ -94,7 +95,147 @@ def write_csv(path: Path, records: list[dict]) -> None:
         writer.writerows(records)
 
 
+def matured_consensus_fixture():
+    """Synthetic source-approved parent, checked by the real outcome gate."""
+    parent = row("CONSENSUS")
+    decisions = json.loads(parent["candidate_decisions"])
+    decisions.pop("C08_SIMPLE_3_ETF")
+    parent["candidate_decisions"] = json.dumps(decisions)
+    parent["provenance_hash"] = weekly.evidence.frozen_provenance_hash(parent)
+    parent.update(outcome_24h="1", mae_24h="-0.50000000", mfe_24h="2.00000000")
+    detail = {
+        "event_id": parent["event_id"], "horizon": "24h",
+        "observation_timestamp_utc": parent["observation_timestamp_utc"],
+        "information_cutoff_utc": parent["information_cutoff_utc"],
+        "target_timestamp_utc": "2026-10-02T00:00:00Z",
+        "selected_end_timestamp_utc": "2026-10-02T00:00:00Z",
+        "baseline_timestamp_utc": "2026-09-30T23:00:00Z",
+        "matured_at_utc": "2026-10-02T01:00:00Z",
+        "sample_count": 26, "baseline_reconciled": True,
+        "row_source_commit": parent["source_version_commit"],
+        "row_source_binding_sha256": parent["source_binding_manifest_sha256"],
+        "source_contract": "HOURLY_SEQUENCE_CAPTURE_v2_2_DIRECT_BINANCE_SPOT",
+        "outcome_source_commit": "3" * 40,
+        "outcome_source_bindings": json.dumps([{
+            "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-02.csv",
+            "source_commit": "3" * 40, "sha256": "4" * 64, "bytes": 18000,
+            "provider": "Binance spot",
+            "owner_contract": "HOURLY_SEQUENCE_CAPTURE_v2_2_DIRECT_BINANCE_SPOT",
+        }], sort_keys=True, separators=(",", ":")),
+    }
+    for asset, baseline in (("ethbtc", 0.03), ("btc", 100.0), ("eth", 3.0)):
+        end = baseline * 1.01
+        detail.update({
+            f"{asset}_baseline": baseline, f"{asset}_end": end,
+            f"{asset}_forward_return_pct": (end / baseline - 1) * 100,
+            f"{asset}_mae_pct": -0.5, f"{asset}_mfe_pct": 2.0,
+        })
+    detail["provenance_hash"] = hashlib.sha256(
+        weekly.outcome_gate.canonical(detail).encode("utf-8")
+    ).hexdigest()
+    return parent, detail
+
+
 class SharedRowConsumerIntegrityTests(unittest.TestCase):
+    def monitor_fixture(self, parents, details, source_verifier=verifier, runtime_active=True):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "lab"
+            root.mkdir()
+            write_csv(root / "data/PROSPECTIVE_SHARED_ROW_LEDGER.csv", parents)
+            write_csv(root / "data/OUTCOME_DETAIL_LEDGER.csv", details)
+            (root / "14_DIVERGENCE_FNP_LEDGER.csv").write_text("divergence_id,event_id\n")
+            (root / "OWNER_BINDING_MATRIX.json").write_text(json.dumps({
+                "families": [{"family_id": name, "status": "READY",
+                              "candidate_decision_contract_status": "READY"}
+                             for name in sorted(monitor.CORE_FAMILIES)]
+            }))
+            (root / "TRANSFORM_FREEZE_REGISTRY.json").write_text(json.dumps({
+                "core_activation_rule": {"collection_state": monitor.ACTIVE,
+                                         "containment_floor_sentinel": False}
+            }))
+            (root / "RUNTIME_STATUS.json").write_text(json.dumps(runtime(runtime_active)))
+            for name in ("03_CANDIDATE_REGISTRY.json", "04_SHARED_ROW_SCHEMA.json", "RELEVANCE_STATE.json"):
+                (root / name).write_text("{}")
+            registry = root / "registry.json"
+            registry.write_text(json.dumps({"sensors": [{"sensor_id": "SHARED_ROW_MODEL_TOURNAMENT_V1"}]}))
+            # Only synthetic source reconstruction is supplied. The production
+            # filter, frozen row checks and immutable outcome gate run unchanged.
+            with mock.patch.object(monitor, "ROOT", root), mock.patch.object(monitor, "REGISTRY", registry), mock.patch.object(
+                weekly.evidence, "verify_source_bindings", side_effect=source_verifier
+            ):
+                with self.assertRaises(SystemExit) as caught:
+                    monitor.main()
+                result = json.loads((root / "monitor/LATEST.json").read_text())
+            return caught.exception.code, result
+
+    def test_monitor_runtime_quarantine_cannot_report_active_pass(self):
+        parent, detail = matured_consensus_fixture()
+        code, result = self.monitor_fixture([parent], [detail], runtime_active=False)
+        self.assertEqual(code, 2)
+        self.assertEqual(result["status"], "FAIL")
+        self.assertIn("COLLECTION_STATE_MISMATCH", result["issues"])
+        self.assertEqual(result["collection_state"], "INCONSISTENT")
+        self.assertEqual(result["freeze_collection_state"], monitor.ACTIVE)
+        self.assertEqual(result["runtime_collection_state"], runtime(False)["collection_state"])
+        self.assertEqual(result["eligible_row_n"], 0)
+        self.assertEqual(result["matured_shared_rows"]["24h"], 0)
+        self.assertEqual(result["scoring_readiness"], "FAIL_CLOSED_INCONSISTENT_RUNTIME")
+        self.assertEqual(result["exact_next_evidence_event"],
+                         "RECONCILE_RUNTIME_AND_FREEZE_COLLECTION_STATE")
+
+    def test_monitor_active_controls_still_admit_verified_consensus(self):
+        parent, detail = matured_consensus_fixture()
+        code, result = self.monitor_fixture([parent], [detail], runtime_active=True)
+        self.assertEqual(code, 0)
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["collection_state"], monitor.ACTIVE)
+        self.assertEqual(result["freeze_collection_state"], monitor.ACTIVE)
+        self.assertEqual(result["runtime_collection_state"], monitor.ACTIVE)
+        self.assertEqual(result["matured_shared_rows"]["24h"], 1)
+
+    def test_monitor_consensus_parent_matures_without_divergence(self):
+        parent, detail = matured_consensus_fixture()
+        code, result = self.monitor_fixture([parent], [detail])
+        self.assertEqual(code, 0)
+        self.assertEqual(result["matured"], {"24h": 0, "72h": 0, "7d": 0})
+        self.assertEqual(result["matured_shared_rows"], {"24h": 1, "72h": 0, "7d": 0})
+        self.assertEqual(result["exact_next_evidence_event"], "FIRST_MATURED_72H_OUTCOME")
+        self.assertIsNone(result["maturity_count_semantics"]["independent_trial_count"])
+        self.assertFalse(result["maturity_count_semantics"]["row_counts_are_independent_trials"])
+
+    def test_monitor_parent_maturity_requires_original_valid_outcome_receipt(self):
+        parent, detail = matured_consensus_fixture()
+        tampered = copy.deepcopy(detail)
+        tampered["ethbtc_end"] = 0.08
+        for details in ([], [tampered], [detail, detail]):
+            with self.subTest(details=len(details)):
+                code, result = self.monitor_fixture([parent], details)
+                self.assertEqual(code, 2)
+                self.assertEqual(result["matured_shared_rows"]["24h"], 0)
+                self.assertEqual(result["consumer_integrity_filter"]["excluded"]["outcome_receipt"], 1)
+
+    def test_monitor_parent_maturity_rejects_unbound_source(self):
+        parent, detail = matured_consensus_fixture()
+        def unavailable_source(_row, _cutoff):
+            raise ValueError("immutable source missing or hash mismatch")
+        code, result = self.monitor_fixture([parent], [detail], unavailable_source)
+        self.assertEqual(code, 2)
+        self.assertEqual(result["matured_shared_rows"]["24h"], 0)
+        self.assertEqual(result["consumer_integrity_filter"]["excluded"]["source_binding"], 1)
+
+    def test_monitor_duplicate_parents_do_not_inflate_maturity(self):
+        parent, detail = matured_consensus_fixture()
+        code, result = self.monitor_fixture([parent, parent], [detail])
+        self.assertEqual(code, 2)
+        self.assertEqual(result["matured_shared_rows"]["24h"], 0)
+        self.assertEqual(result["consumer_integrity_filter"]["excluded"]["duplicate_event_id"], 2)
+
+    def test_monitor_empty_outcomes_stay_pending(self):
+        code, result = self.monitor_fixture([row("PENDING")], [])
+        self.assertEqual(code, 0)
+        self.assertEqual(result["matured_shared_rows"], {"24h": 0, "72h": 0, "7d": 0})
+        self.assertEqual(result["exact_next_evidence_event"], "FIRST_MATURED_24H_OUTCOME")
+
     def adversarial_data(self):
         good = row("GOOD")
         pre_floor = row("PRE_FLOOR", "2026-09-29T23:00:00Z")
@@ -257,6 +398,7 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
     def test_weekly_and_relevance_use_the_same_fail_closed_filter(self) -> None:
         self.assertIs(relevance.filter_consumer_rows, weekly.filter_consumer_rows)
         rows, divs = self.adversarial_data()
+        divs[0]['matured_24h_utc'] = '2026-10-02T00:00:00Z'
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write_csv(root / "data" / "PROSPECTIVE_SHARED_ROW_LEDGER.csv", rows)
@@ -277,8 +419,10 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
             weekly_report = json.loads((root / "weekly" / "LATEST.json").read_text())
             relevance_report = json.loads((root / "RELEVANCE_STATE.json").read_text())
             self.assertEqual((weekly_report["eligible_rows_total"], weekly_report["divergences_total"]), (1, 1))
+            self.assertEqual(weekly_report['matured']['24h'], 0)
             self.assertEqual((relevance_report["eligible_row_n"], relevance_report["divergence_n"]), (1, 1))
 
 
 if __name__ == "__main__":
     unittest.main()
+
