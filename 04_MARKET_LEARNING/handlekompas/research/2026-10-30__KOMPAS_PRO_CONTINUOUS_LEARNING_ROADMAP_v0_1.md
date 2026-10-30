@@ -24,6 +24,10 @@
 5. **Future site/Chat presentation, if independently admitted:** display source-verified qualitative tags such as `RECOVERY_UNCONFIRMED`, `POSITION_REDUCTION_PATTERN`, `SPOT_DEMAND_SUPPORTED` only if the authoring source truly owns the evidence. Display source age, evidence quality, and how the interpretation could be falsified. Never claim that a tag is a validated trade signal or calibrated probability without the corresponding prospective proof.
 6. **Scientific go/no-go**: internal synthesis or beautiful charts are not proof of value. Require robust out-of-sample incremental signal or investor utility over same-clock baselines plus independent code/lineage review, CI, rollback and exact main+site readback before a visible official or public change.
 
+## Implementation checkpoint 2026-10-30
+
+The bounded RQS draft PR now includes (i) a full closed-hour UTC census that does not hide missing source hours, (ii) exact source-run vs individual-candle clock separation, and (iii) a descriptive due-only 6h/24h/72h outcome preview that fails closed if a horizon is premature, a source observation is missing, or collection metadata is later than the review. These features are **not** a new active prospective trading experiment. A bounded ex-post case study for Oct29–30 is in the RQS contract, backed by cited immutable public Git blob IDs. Actual CI and independent scientific approval must still be checked against the final PR HEAD before any merge. 
+
 ## Review ledger and failure-safe
 
 Record per check (under existing owner): exact owner/source SHA, immutable original observation/first-known clock, event/candidate ID, source-family set, data degradation, preregistration ref, test results and independent review. Count an underlying market move as ONE episode, not BTC+ETH+hourly repetitions. `NO_EDGE` and `UNAVAILABLE` are valid outcomes.
