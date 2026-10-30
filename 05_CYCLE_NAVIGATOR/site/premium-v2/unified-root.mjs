@@ -106,7 +106,11 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<strong id="cn-risk-quick-state">Afventer kilde</strong></div>'+
       '<span id="cn-risk-quick-note">Kildens trin · ikke sandsynlighed</span></div>'+
       '<div id="cn-risk-quick-steps" class="risk-class-rail" aria-hidden="true"></div>'+
-      '</section><details class="cn-pro-more">')+'</section>';
+      '<div class="cn-risk-quick-guidance" aria-live="polite">'+
+      '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer kildeverificeret risikoforklaring</span></p>'+
+      '<p><small id="cn-risk-quick-action-label">HVAD GØR JEG?</small><span id="cn-risk-quick-action">Afvent verificeret Kompas-handling</span></p>'+
+      '<div class="cn-risk-quick-foot"><span id="cn-risk-quick-quality">Evidenskvalitet: ukendt</span><span id="cn-risk-quick-onset">Starttidspunkt: ikke dokumenteret</span></div>'+
+      '</div></section><details class="cn-pro-more">')+'</section>';
 
   const oldDecision='<section class="official-product-pilot premium-decision-summary"';
   const graph='<section id="variant-panel"';
