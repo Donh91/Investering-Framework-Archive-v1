@@ -95,6 +95,8 @@ function renderRiskQuick(){
  const en=document.documentElement.lang==='en';
  set('cn-risk-quick-label',en?'RISK OF A FURTHER DECLINE':
    'RISIKO FOR YDERLIGERE FALD');
+ set('cn-risk-quick-meaning-label',en?'WHAT DOES IT MEAN?':'HVAD BETYDER DET?');
+ set('cn-risk-quick-action-label',en?'HOW TO RESPOND':'SÅDAN FORHOLDER DU DIG');
  // Reuse the existing Official Kompas PRO source-bound result, including
  // its original 1–5 ordinal. This is not a new market classifier.
  const eligible=view?.compass?.state==='FRESH'&&
