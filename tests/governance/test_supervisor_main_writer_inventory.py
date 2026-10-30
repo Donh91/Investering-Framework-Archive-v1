@@ -106,6 +106,25 @@ jobs:
         self.assertEqual(result["writers"][0]["concurrency_groups_seen"],
                          ["real-job-lock", "workflow-main-lock"])
 
+    def test_env_contents_write_is_not_permission_grant(self):
+        result = self.check({"test.yml": """jobs:
+  publish:
+    env:
+      contents: write
+    steps:
+      - run: git push origin HEAD:main
+"""})
+        self.assertFalse(result["writers"][0]["contents_write_declared"])
+
+    def test_workflow_and_job_permissions_contents_write_are_detected(self):
+        for permissions_yaml in (
+            "permissions:\n  contents: write\n",
+            "jobs:\n  publish:\n    permissions:\n      contents: write # explicit job permission\n",
+        ):
+            with self.subTest(permissions_yaml=permissions_yaml):
+                result = self.check({"test.yml": permissions_yaml + "git push origin HEAD:main\n"})
+                self.assertTrue(result["writers"][0]["contents_write_declared"])
+
     def test_missing_checkout_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             with self.assertRaises(FileNotFoundError):
