@@ -494,6 +494,24 @@ try{
      reader.guide.length>20&&reader.source.length>15&&reader.direction.length>2&&
      reader.originalActionPreserved&&reader.tabsPreserved&&reader.overflow<=2,
      'ROOT_COMPASS_READER_UX_FAIL:'+JSON.stringify(reader));
+   // Visual acceptance of the actual new, active source-reader (not only DOM).
+   if(process.env.GITHUB_EVENT_NAME==='pull_request'){
+    const locationReady=await evaluate(()=>{
+      const panel=document.querySelector('.cn-reader');
+      if(!panel)return false;
+      panel.scrollIntoView({block:'start',behavior:'instant'});
+      return getComputedStyle(panel).display!=='none'&&panel.getBoundingClientRect().width>250;
+    });
+    assert.equal(locationReady,true,'ROOT_COMPASS_READER_VISUAL_NOT_AVAILABLE');
+    await delay(120);
+    const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    assert.ok(shot.data?.length>1000,'ROOT_COMPASS_READER_SCREENSHOT_MISSING');
+    console.log('CN_READER_SCREENSHOT_'+width+'_BEGIN');
+    for(const chunk of shot.data.match(/.{1,8000}/g))
+      console.log('CN_READER_SCREENSHOT_'+width+'_PART '+chunk);
+    console.log('CN_READER_SCREENSHOT_'+width+'_END');
+    await evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+   }
    // Independent first-screen QA: capture BEFORE scrolling to the chart.
    // This specifically guards the owner's request for both short horizons
    // visible next to the live action on a normal 390/430 iPhone viewport.
