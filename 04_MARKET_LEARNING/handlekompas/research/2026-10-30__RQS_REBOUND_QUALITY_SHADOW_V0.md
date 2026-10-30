@@ -14,7 +14,7 @@ The existing public Hourly owner includes completed BTC/ETH candles, BTC taker-b
 
 - Entry: scripts/research/rebound_quality_shadow.py
 - Public data owner: 03_DAILY_CAPTURE_LOGS/hourly/YYYY/MM/YYYY-MM-DD.csv (existing owner only).
-- Completed UTC candle **end** is source_window_end_utc, not timestamp_utc (open).
+- **Corrected after source audit:** `timestamp_utc` is each 1h candle's OPEN; completed candle CLOSE is `timestamp_utc + 1 hour`. `source_window_end_utc` is the producer's **collection-run coverage endpoint**, often identical for multiple distinct candles. Never deduplicate/group candles on that field. Validate only that coverage end is not before the candle's completed close.
 - Each required candle exactly 1h, 16 contiguous most-recent completed hours, no fill/interpolation, no conflicting duplicate, spot_status=PASS, maximum last-end age 3h relative to supplied UTC cutoff.
 - Data after the supplied cutoff is ignored. Same-calendar-day files are not sufficient for 16h near midnight; provide both relevant daily files when needed.
 - A working public Hourly file is **not first-known evidence**: retrieval/availability and freeze admission need separate independent proof. Accordingly first_known_verified=false, prospective_forecast_issued=false and score_0_100=null on every v0 output.
@@ -59,6 +59,6 @@ python scripts/research/rebound_quality_shadow.py \
   --asof 2026-10-30T21:00:00Z
 ~~~
 
-7 deterministic tests were run locally by the research author: candidate remains no-score/no-trade, rising/falling OI ambiguity, missing derivative status, cutoff exclusion, duplicate conflict, stale owner, gap denial. **GitHub CI, independent review, actual public-data replay, prospective calibration and promotion are not claimed by that local test result.**
+Initial seven tests were only reported in the original draft; the reviewer identified and corrected a real source-window vs candle-clock mapping defect and added two regression fixtures. Exact-head nine-test execution remains a required check. Initial seven fixture intentions were: candidate remains no-score/no-trade, rising/falling OI ambiguity, missing derivative status, cutoff exclusion, duplicate conflict, stale owner, gap denial. **GitHub CI, independent review, actual public-data replay, prospective calibration and promotion are not claimed by that local test result.**
 
 This work intentionally introduces **zero** workflow files, API calls, new recurring tasks or immediate official decisions.
