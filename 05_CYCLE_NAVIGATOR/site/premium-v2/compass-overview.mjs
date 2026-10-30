@@ -13,7 +13,7 @@ const periods=[
 const directions={
  UP:{arrow:'↗',da:'Stigende',en:'Rising'},
  DOWN:{arrow:'↘',da:'Faldende',en:'Falling'},
- MIXED:{arrow:'↗ ↘',da:'Blandet',en:'Mixed'},
+ MIXED:{arrow:'↗/↘',da:'Blandet',en:'Mixed'},
  SIDEWAYS:{arrow:'→',da:'Sideværts',en:'Sideways'},
  LEAN_BEARISH:{arrow:'↘ ?',da:'Hældning mod fald',en:'Leaning down'},
  LEAN_BULLISH:{arrow:'↗ ?',da:'Hældning mod stigning',en:'Leaning up'}
