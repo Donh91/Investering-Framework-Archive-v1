@@ -3,7 +3,7 @@
 import unittest
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
-from scripts.research.rebound_quality_shadow import assess, replay_census, read_public_owner
+from scripts.research.rebound_quality_shadow import assess, replay_census, read_public_owner, due_only_outcome_preview
 
 
 def fixture(*, oi_trend=-8.0, remove_derivatives=False):
@@ -25,6 +25,34 @@ def fixture(*, oi_trend=-8.0, remove_derivatives=False):
 
 
 class ReboundQualityTest(unittest.TestCase):
+    def test_due_only_outcome_preview_no_future_lookahead(self):
+        rows = fixture()
+        asof = "2026-10-30T16:00:00Z"
+        out = due_only_outcome_preview(rows, "2026-10-30T09:00:00Z", asof)
+        self.assertEqual(out["horizons"]["6h"]["status"], "DESCRIPTIVE_EXPOST_ONLY")
+        self.assertEqual(out["horizons"]["24h"]["status"], "PENDING_NOT_MATURE")
+        self.assertEqual(out["horizons"]["72h"]["status"], "PENDING_NOT_MATURE")
+        self.assertFalse(out["prediction_or_skill_scored"])
+        self.assertFalse(out["first_known_verified"])
+        self.assertEqual(out["trade_permission"], "NONE")
+
+    def test_due_only_outcome_preview_missing_hour_fails_closed(self):
+        rows = fixture()
+        rows = [r for r in rows if r["timestamp_utc"] != "2026-10-30T11:00:00Z"]
+        out = due_only_outcome_preview(rows, "2026-10-30T09:00:00Z",
+                                       "2026-10-30T16:00:00Z")
+        self.assertEqual(out["horizons"]["6h"]["status"],
+                         "UNAVAILABLE_MISSING_OR_INVALID_HOURLY_SOURCE")
+        self.assertIsNone(out["horizons"]["6h"]["btc_close_return_pct"])
+
+    def test_due_only_outcome_preview_future_collection_ineligible(self):
+        rows = fixture()
+        rows[11]["source_window_end_utc"] = "2026-10-31T00:00:00Z"
+        out = due_only_outcome_preview(rows, "2026-10-30T09:00:00Z",
+                                       "2026-10-30T16:00:00Z")
+        self.assertEqual(out["horizons"]["6h"]["status"],
+                         "UNAVAILABLE_MISSING_OR_INVALID_HOURLY_SOURCE")
+
     def test_real_public_hourly_owner_readback_no_trade(self):
         """Integration smoke against existing public 29-30 October Hourly files."""
         files = [Path("03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-29.csv"),
