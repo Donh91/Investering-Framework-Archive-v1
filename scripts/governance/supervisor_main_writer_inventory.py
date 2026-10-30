@@ -30,7 +30,42 @@ API_MAIN = re.compile(
     r"\b(?:gh\s+api|curl)\b[^\n]*(?:git/refs/heads/main|/git/refs/heads/main)",
     re.IGNORECASE,
 )
-GROUP = re.compile(r"^\s*group:\s*(.*?)\s*$", re.MULTILINE)
+def concurrency_groups(source: str) -> list[str]:
+    """Bounded YAML evidence: only workflow and jobs.<name> concurrency.group.
+
+    This intentionally does not claim to parse all YAML or enforce a lock.
+    Nested env.group and shell here-documents must not masquerade as locks.
+    """
+    groups: set[str] = set()
+    parents: list[tuple[int, str]] = []
+    block_indent: int | None = None
+    for raw in source.splitlines():
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        indent = len(raw) - len(raw.lstrip(" "))
+        if block_indent is not None:
+            if indent > block_indent:
+                continue
+            block_indent = None
+        match = re.match(r"^ *-? ?([A-Za-z0-9_-]+):(?:[ \\t]*(.*))?$", raw)
+        if not match:
+            continue
+        key = match.group(1)
+        value = (match.group(2) or "").strip()
+        while parents and indent <= parents[-1][0]:
+            parents.pop()
+        path = [name for _, name in parents]
+        if key == "group" and value and (
+            path == ["concurrency"]
+            or (len(path) == 3 and path[0] == "jobs" and path[-1] == "concurrency")
+        ):
+            groups.add(value)
+        if value.startswith(("|", ">")):
+            block_indent = indent
+        if not value or value.startswith("#"):
+            parents.append((indent, key))
+    return sorted(groups)
+
 CONTENT_WRITE = re.compile(r"^\s*contents:\s*write\s*(?:#.*)?$", re.MULTILINE)
 
 
@@ -48,7 +83,7 @@ def analyze_workflow(path: Path, workflow_dir: Path) -> dict | None:
     return {
         "workflow": path.relative_to(workflow_dir).as_posix(),
         "critical_publication_or_supervision": path.name in CRITICAL,
-        "concurrency_groups_seen": sorted(set(GROUP.findall(text))),
+        "concurrency_groups_seen": concurrency_groups(text),
         "contents_write_declared": bool(CONTENT_WRITE.search(text)),
         "direct_main_write_evidence": evidence,
         "principal": "UNVERIFIED_RUNTIME",
