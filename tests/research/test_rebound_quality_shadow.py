@@ -25,6 +25,19 @@ def fixture(*, oi_trend=-8.0, remove_derivatives=False):
 
 
 class ReboundQualityTest(unittest.TestCase):
+    def test_due_only_rejects_half_hour_shifted_source(self):
+        rows = fixture()
+        for row in rows:
+            for key in ("timestamp_utc", "source_window_end_utc"):
+                shifted = datetime.fromisoformat(row[key].replace("Z", "+00:00")) + timedelta(minutes=30)
+                row[key] = shifted.isoformat().replace("+00:00", "Z")
+        with self.assertRaisesRegex(ValueError, "candle_open_not_utc_hour_aligned"):
+            due_only_outcome_preview(rows, "2026-10-30T09:00:00Z", "2026-10-30T17:00:00Z")
+
+    def test_due_only_rejects_half_hour_event_end(self):
+        with self.assertRaisesRegex(ValueError, "event_end_not_utc_hour_aligned"):
+            due_only_outcome_preview(fixture(), "2026-10-30T09:30:00Z", "2026-10-30T17:00:00Z")
+
     def test_due_only_outcome_preview_no_future_lookahead(self):
         rows = fixture()
         asof = "2026-10-30T16:00:00Z"
