@@ -200,8 +200,9 @@ function renderReader(){
  set('cn-reader-why',explainPosture(reading,lang));
  const riskHorizon=['NEXT_1_3D','NEXT_5_7D'].includes(selectedReaderHorizon);
  const watch=riskHorizon?sourceWatch({latest:feeds?.latest,compass:feeds?.compass,view,lang}):null;
+ const watchAlreadyIntroduced=watch&&/^(?:Hold øje med|Watch\b)/i.test(watch.text);
  set('cn-reader-watch',watch?
-   (en?'Watch for: ':'Hold øje med: ')+watch.text:'');
+   (watchAlreadyIntroduced?'':(en?'Watch for: ':'Hold øje med: '))+watch.text:'');
  set('cn-reader-language',reading.current&&!reading.translated?
    (en?'':'Oprindelig kildetekst på engelsk · ingen verificeret dansk oversættelse'):'');
  for(const lens of ['swing','hodl']){
