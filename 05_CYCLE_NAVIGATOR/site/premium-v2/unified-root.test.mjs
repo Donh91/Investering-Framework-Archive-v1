@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
+import {VIEWS,currentCompass,sourceTranslation,readHorizon,lensContext} from './compass-reader.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [original,pro]=await Promise.all([
@@ -253,4 +254,75 @@ test('pullback first fold mirrors only eligible official PRO stages, never raise
  const css=await read('./premium-tabs.css');
  assert.match(css,/\.cn-risk-quick \.cn-risk-quick-guidance/);
  assert.match(css,/@media\(max-width:540px\)/);
+});
+
+
+test('owner Kompas reading: four sourced horizons, minimal glossary and no competing action owner',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const id of [
+  'cn-reader-title','cn-reader-analysis','cn-reader-direction','cn-reader-posture',
+  'cn-reader-source','cn-reader-lens-note','cn-reader-glossary-title'
+ ])assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id);
+ for(const {id} of VIEWS)assert.match(html,new RegExp('data-cn-reader-horizon="'+id+'"'));
+ for(const lens of ['swing','hodl'])assert.match(html,new RegExp('data-cn-reader-lens="'+lens+'"'));
+ assert.equal((html.match(/class="cn-reader-glossary"/g)||[]).length,1);
+ for(let i=1;i<=5;i++){
+  assert.match(html,new RegExp('id="cn-reader-term-'+i+'"'));
+  assert.match(html,new RegExp('id="cn-reader-definition-'+i+'"'));
+ }
+ assert.ok(html.indexOf('cn-risk-quick')<html.indexOf('class="cn-reader"'));
+ assert.ok(html.indexOf('class="cn-reader"')<html.indexOf('class="cn-pro-more"'));
+ assert.equal((html.match(/id="premium-now-action"/g)||[]).length,1);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.match(runtime,/readHorizon\(/);
+ assert.match(runtime,/renderReader\(\)/);
+ assert.match(runtime,/selectedReaderHorizon/);
+ assert.match(runtime,/selectedReaderLens/);
+ assert.match(runtime,/SOURCE_RECHECK_MS=5\*60\*1000/);
+ const src=await read('./compass-reader.mjs');
+ assert.doesNotMatch(src,/fetch\(|Math\.random|expected_close|market\.price|apiKey|sell_assessment|risk_stage/);
+ const css=await read('./premium-tabs.css');
+ assert.match(css,/\.cn-reader-periods\{/);
+ assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+ assert.match(css,/min-height:44px/);
+});
+
+test('source-only Kompas interpretation: precise translations, stale abstention, no invented action',()=>{
+ const now=Date.parse('2026-10-30T08:00:00Z');
+ const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CMP-TEST'},
+  weekly:{forecast_week:'2026-W44'}};
+ const path='MIXED with downside risk: original verified source analysis.';
+ const compass={
+  contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',compass_id:'CMP-TEST',
+  issued_at_utc:'2026-10-30T07:19:13Z',
+  full_stack:{official_freshness:{valid_until_utc:'2026-10-30T10:00:00Z'}},
+  weekly_context:{status:'ALIGNED',forecast_week:'2026-W44'},
+  action_now:'HOLD_WAIT',
+  horizons:{NEXT_1_3D:{expected_direction:'MIXED',action_posture:'WAIT',
+   expected_path:path},NEXT_5_7D:{expected_direction:'MIXED',action_posture:'WAIT',
+   expected_path:'Untranslated but published original commentary.'}}
+ };
+ const latest={presentation_translations:[{en:path,da:'Blandede signaler med risiko for fald.'}]};
+ assert.equal(currentCompass({compass,view,now}),true);
+ const good=readHorizon({latest,compass,view,now,lang:'da'});
+ assert.equal(good.current,true);
+ assert.equal(good.direction,'Blandet');
+ assert.equal(good.posture,'Afvent');
+ assert.equal(good.description,'Blandede signaler med risiko for fald.');
+ assert.equal(good.translated,true);
+ assert.match(lensContext(good,'swing','da'),/afvent/);
+ assert.match(lensContext(good,'hodl','da'),/ikke i sig selv tilladelse/);
+ const noTranslation=readHorizon({latest,compass,view,now,lang:'da',id:'NEXT_5_7D'});
+ assert.equal(noTranslation.translated,false);
+ assert.equal(noTranslation.description,'Untranslated but published original commentary.');
+ assert.equal(sourceTranslation('','', 'da').text,'');
+ const stale=readHorizon({latest,compass,view:{...view,compass:{...view.compass,state:'DEGRADED'}},now,lang:'da'});
+ assert.equal(stale.current,false);
+ assert.match(stale.description,/Ingen aktuel/);
+ assert.match(lensContext(stale,'swing','da'),/gamle eller manglende data/);
+ assert.equal(readHorizon({latest,compass,view,now:Date.parse('2026-10-30T10:01:00Z')}).current,false);
+ assert.equal(readHorizon({latest,compass:{...compass,data_status:'DEGRADED'},view,now}).current,false);
+ assert.equal(readHorizon({latest,compass:{...compass,compass_id:'WRONG'},view,now}).current,false);
+ assert.equal(readHorizon({latest,compass:{...compass,weekly_context:{...compass.weekly_context,forecast_week:'2026-W45'}},view,now}).current,false);
+ assert.equal(readHorizon({latest,compass:{...compass,issued_at_utc:'2026-11-01T00:00:00Z'},view,now}).current,false);
 });
