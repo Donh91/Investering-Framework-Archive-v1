@@ -59,7 +59,7 @@ python scripts/research/rebound_quality_shadow.py \
   --asof 2026-10-30T21:00:00Z
 ~~~
 
-Initial seven tests were only reported in the original draft; the reviewer identified and corrected a real source-window vs candle-clock mapping defect and added two regression fixtures. Exact-head eleven-test execution remains a required check; two additional fixtures enforce no post-cutoff collection and missing-volume source-family failure. Initial seven fixture intentions were: candidate remains no-score/no-trade, rising/falling OI ambiguity, missing derivative status, cutoff exclusion, duplicate conflict, stale owner, gap denial. **GitHub CI, independent review, actual public-data replay, prospective calibration and promotion are not claimed by that local test result.**
+Initial seven tests were only reported in the original draft; the reviewer identified and corrected a real source-window vs candle-clock mapping defect and added two regression fixtures. Exact-head tests are rerun on each HEAD through the existing Daily Capture Architecture Gate; later additions also enforce full UTC missing-hour denominators, source-legal post-cutoff checks, and due-only outcome maturity. Initial seven fixture intentions were: candidate remains no-score/no-trade, rising/falling OI ambiguity, missing derivative status, cutoff exclusion, duplicate conflict, stale owner, gap denial. **GitHub CI, independent review, actual public-data replay, prospective calibration and promotion are not claimed by that local test result.**
 
 This work intentionally introduces **zero** workflow files, API calls, new recurring tasks or immediate official decisions.
 
@@ -72,3 +72,22 @@ Example: `python scripts/research/rebound_quality_shadow.py --csv 03_DAILY_CAPTU
 A separate public-source inspection of 45 rows on 29–30 October found 30 complete 16h cutoffs and 4 candidate cutoffs (29 Oct 16:00Z; 30 Oct 04:00Z, 05:00Z, 06:00Z). Grouping by 6h gaps yields 2 provisional clusters; 12h merges them into 1. Neither is a verified independent market event or a trading win. Clustering must be preregistered, not optimized after observing outcomes.
 
 The census explicitly remains `first_known_verified=false`, `performance_backtest=false`, `directional_accuracy=null`, `after_cost_edge=null`, `official_action_permission=NONE`. Requires independent review and prospective admitted data under #1596.
+
+## v0.2 source-bound due-only outcome preview (EX-POST, not prognostic)
+
+Command: `python scripts/research/rebound_quality_shadow.py --csv 03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-29.csv --csv 03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-30.csv --asof 2026-10-30T21:00:00Z --event-end 2026-10-29T16:00:00Z`.
+
+This computes only descriptive realized BTC **close-to-close** changes at +6h, +24h and +72h, gated independently on every intermediate completed hour. The consumer checks that no included collection-run coverage end exceeds the REVIEW cutoff, and refuses missing source rows. Maturity after a due time without valid inputs is `UNAVAILABLE`, not an interpolated return; when not yet due, `PENDING`. No registered prospective prediction or original event first-known is proven, therefore output always states `original_prospective_registration_verified=false`, `first_known_verified=false`, `prediction_or_skill_scored=false`, `trade_permission=NONE`.
+
+### Frozen public-blob illustration (historical development only)
+
+Two public daily CSV Git blob identities inspected on 2026-10-30: `2026-10-29.csv` blob `a7ab3bd312ef5ecc5a40ab0d3996540671afc59c`, `2026-10-30.csv` blob `baf0ffdbb103c025e7061b95712875551f666a10`. No legal first-known or prospective receipt asserted. Use these as illustrative past-data observation snapshots, **not 4 independent issued warnings**.
+
+| Exploratory rebound candidate UTC | BTC close at event | Observed +6h BTC close return | Observed +24h BTC close return | +72h |
+| --- | ---: | ---: | ---: | --- |
+| 29 Oct 16:00 | 81777.74 | -3.356% | -5.082% | PENDING |
+| 30 Oct 04:00 | 78235.15 | -0.684% | PENDING | PENDING |
+| 30 Oct 05:00 | 78280.01 | -0.574% | PENDING | PENDING |
+| 30 Oct 06:00 | 78554.01 | -1.492% | PENDING | PENDING |
+
+These rows came from the same market shock and include overlapping 6h/24h outcome periods. No denominators, independence, causal comparison, false alarms, efficiency or net tradability can be inferred from these four observations alone. In particular, do not use them to select a post-hoc 6h/12h episode grouping or to claim a profitable trading system. Due-only maturation should be part of an existing governance-approved observer, **never an added scheduler by this PR**.
