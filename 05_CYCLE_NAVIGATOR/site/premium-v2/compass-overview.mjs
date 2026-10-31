@@ -133,6 +133,35 @@ export const POSITION_GUIDE=[
 
 
 /**
+ * Public observation freshness is distinct from the *official projection*
+ * issuance freshness. The site's Hourly→Pages delivery contract is 90min.
+ * market_observation_open_utc is a one-hour CANDLE OPEN, not a close nor a
+ * 12-hour direction window. A newly issued contract cannot refresh an old
+ * observation by itself. NEVER alter the official longer horizon decision.
+ */
+export function observedMarketClock({compass,now=Date.now()}){
+ const market=compass?.market_now;
+ const raw=market?.market_observation_open_utc;
+ const hour=/^\d{4}-\d\d-\d\dT\d\d:00:00Z$/;
+ if(!Number.isFinite(now)||!hour.test(raw||''))
+  return {state:'OBSERVATION_CLOCK_INVALID',ageSeconds:null};
+ const open=Date.parse(raw);
+ if(!Number.isFinite(open)||new Date(open).toISOString()!==raw.replace('Z','.000Z'))
+  return {state:'OBSERVATION_CLOCK_INVALID',ageSeconds:null};
+ const close=open+60*60*1000;
+ const age=now-close;
+ if(age<0)return {state:'OBSERVATION_CLOCK_INVALID',ageSeconds:null};
+ if(age>90*60*1000)return {state:'OBSERVATION_DELAYED',ageSeconds:Math.floor(age/1000)};
+ const prev=market.predecessor_market_observation_open_utc;
+ const prior=typeof prev==='string'&&hour.test(prev)?Date.parse(prev):NaN;
+ if(market.new_price_observation!==true||
+    !Number.isFinite(prior)||prior>=open||
+    market.directional_state==='UNCHANGED_NO_NEW_OBSERVATION')
+  return {state:'NO_NEW_PRICE_OBSERVATION',ageSeconds:Math.floor(age/1000)};
+ return {state:'FRESH_OBSERVATION',ageSeconds:Math.floor(age/1000)};
+}
+
+/**
  * Public source-only comparison, NOT a new forecast.
  *
  * NEXT_12H merely repeats the latest market_now nowcast. Its "0–12h"
@@ -153,14 +182,17 @@ export function shortVsForward({compass,view,lang='da',now=Date.now()}){
  if(!market||!h)
   return invalid('SOURCE_INCOMPLETE','Den nødvendige korte observation eller 1–3-dagesvurdering mangler.',
     'The current observation or 1–3-day outlook is missing.');
- const prev=market.predecessor_market_observation_open_utc;
- const actual=market.market_observation_open_utc;
- // If the governed price owner explicitly flags no new candle, a repeated
- // observation is never reported as fresh direction.
- if(market.new_price_observation===false ||
-    (typeof prev==='string'&&prev&&prev===actual) ||
-    market.directional_state==='UNCHANGED_NO_NEW_OBSERVATION'){
-  return {state:'NO_NEW_PRICE_OBSERVATION',sourceBound:true,
+ const clock=observedMarketClock({compass,now});
+ if(clock.state==='OBSERVATION_DELAYED')
+  return invalid(clock.state,
+   'Prisobservationen er over 90 minutter gammel. Den nye 1–3-dagesvurdering er ikke en frisk kortsigtet måling.',
+   'The price observation is over 90 minutes old. A newly issued 1–3-day outlook is not a fresh short-term reading.');
+ if(clock.state==='OBSERVATION_CLOCK_INVALID')
+  return invalid(clock.state,
+   'Observationens tidsstempel kan ikke verificeres. Ingen aktuel kortsigtet retning.',
+   'The observation clock cannot be verified. No current short-term direction.');
+ if(clock.state==='NO_NEW_PRICE_OBSERVATION'){
+  return {state:clock.state,sourceBound:true,
    text:trc('Ingen ny prisobservation. 1–3-dagesvurderingen kan ikke sammenholdes med ny kortsigtet bevægelse.',
       'No new price observation. The 1–3-day outlook cannot be compared with a fresh short-term move.')};
  }
