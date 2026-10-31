@@ -12,7 +12,7 @@ from collections.abc import Mapping
 CONTRACT = "CRE_PUBLIC_EVIDENCE_RECEIPT_V1"
 ALLOWED_FIELDS = frozenset({"contract", "request_alias", "disclosure_state", "evidence_alias", "research_lane"})
 DISCLOSURE_STATES = frozenset({"METADATA_ONLY", "NO_PUBLIC_DISCLOSURE"})
-RESEARCH_LANES = frozenset({"PUBLIC_ONLY", "PRIVATE_SOURCE_HEALTH"})
+RESEARCH_LANES = frozenset({"PUBLIC_ONLY"})  # PRIVATE_SOURCE_HEALTH is disabled until private-owner-issued attestation exists.
 ALIAS = re.compile(r"^[0-9a-f]{24}$", re.ASCII)
 
 
@@ -26,6 +26,10 @@ def validate_receipt(document: Mapping[str, object]) -> dict[str, str]:
     Deliberately disallows hashes of individual provider values, timestamps,
     counts, metrics, comments, free text, confidence and pass/fail findings.
     Exact private bindings remain stored and verified privately.
+    Stage zero intentionally rejects PRIVATE_SOURCE_HEALTH and all private
+    receipt aliases: there is no trusted private executor to mint or verify
+    pseudorandom/HMAC-backed non-oracular aliases. A public shape check cannot
+    establish that an opaque-looking string contains no encoded market value.
     """
     if not isinstance(document, Mapping):
         raise PublicReceiptError("OBJECT_REQUIRED")
