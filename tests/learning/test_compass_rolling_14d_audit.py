@@ -277,5 +277,240 @@ class RollingCompassAudit(unittest.TestCase):
         self.assertEqual(item["horizons"]["12h"]["status"],"UNAVAILABLE_TARGET_CANDLE")
 
 
+
+class PullbackTimeboxResearchTests(unittest.TestCase):
+    """Adversarial policy controls. They are NOT historical edge claims."""
+
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root=Path(self.tmp.name)
+        seed(self.root)
+
+    @staticmethod
+    def freeze(when, state="ELEVATED", quality="OK", path=None):
+        f=sample_freeze(when,str(when.timestamp()),risk=state)
+        f["protection_tracker"]["data_quality"]=quality
+        f["protection_tracker"]["contract"]="COMPASS_PROTECTION_TRACKER_v1"
+        return {"issued":when,"path":path or f"CMP-{int(when.timestamp())}.json",
+                "sha256":"a"*64,"data":f}
+
+    @staticmethod
+    def tape(start, hours=90, base=100.0, fall_at=None, fall_to=96.0):
+        from scripts.learning.pullback_warning_timeliness_shadow import target_close_after
+        anchor=target_close_after(start)
+        return {anchor+timedelta(hours=i):
+                {"btc":fall_to if fall_at is not None and i >= fall_at else base,
+                 "eth":200.0,
+                 "source_window_end_utc":(anchor+timedelta(hours=i)).isoformat()}
+                for i in range(hours)}
+
+    def test_repeated_elevated_is_not_six_months_of_forecast_credit(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate, CONTRACT
+        t=START+timedelta(hours=3)
+        items=[self.freeze(t+timedelta(hours=i),"ELEVATED") for i in (0,12,24,48,72,96)]
+        result=evaluate(items,self.tape(t,110,fall_at=100),t+timedelta(hours=110))
+        self.assertEqual(result["contract"],CONTRACT)
+        self.assertEqual(result["new_warning_or_escalation_events"],0)
+        self.assertEqual(result["warning_state_counts"]["LEFT_CENSORED_NO_TRANSITION_PROOF"],1)
+        self.assertEqual(result["warning_state_counts"]["REPEAT_STATE_NOT_NEW_WARNING"],5)
+        self.assertIsNone(result["horizons"]["72h"]["hit_rate_descriptive"])
+        self.assertTrue(result["expired_alert_cannot_be_credited_from_later_drop"])
+
+    def test_flapping_normal_elevated_cannot_multiply_one_drawdown(self):
+        # Grok Bridge #113 P1 reproduction: 72 apparent fresh alerts in six
+        # days despite one market shock. At most one per 72h episode.
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t+timedelta(hours=i),
+                             "NORMAL" if i%2==0 else "ELEVATED")
+                 for i in range(144)]
+        market=self.tape(t,205,fall_at=148,fall_to=95.0)
+        r=evaluate(freezes,market,t+timedelta(hours=205))
+        self.assertEqual(r["new_warning_or_escalation_events"],2)
+        self.assertEqual(r["warning_state_counts"]["NEW_WARNING"],2)
+        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],70)
+        self.assertEqual(r["horizons"]["72h"]["hit_n"],0)
+        self.assertEqual(r["horizons"]["72h"]["false_alarm_n"],2)
+        self.assertIsNone(r["horizons"]["72h"]["warning_skill_or_edge"])
+        self.assertFalse(r["independent_event_clustering_verified"])
+
+    def test_flapping_high_elevated_cannot_recredit_same_shock(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"ELEVATED")]
+        freezes += [self.freeze(t+timedelta(hours=i),
+                                "HIGH" if i%2==0 else "ELEVATED")
+                    for i in range(2,82)]
+        r=evaluate(freezes,self.tape(t,180,fall_at=160),t+timedelta(hours=180))
+        alerts=[x for x in r["alerts"] if x["new_alert_class"]=="ESCALATION"]
+        self.assertEqual(r["new_warning_or_escalation_events"],3)
+        self.assertEqual(len(alerts),2)  # first actual HIGH plus a fresh episode
+        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],38)
+        self.assertEqual(r["horizons"]["72h"]["hit_n"],0)
+
+    def test_truly_separate_events_after_expiry_can_be_counted(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freeze=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"ELEVATED"),
+                self.freeze(t+timedelta(hours=80),"NORMAL"),
+                self.freeze(t+timedelta(hours=81),"ELEVATED")]
+        # Insert a fresh NORMAL just before second to avoid stale (>24h)
+        # lookback and keep both events independently observable.
+        r=evaluate(freeze,self.tape(t,170),t+timedelta(hours=170))
+        self.assertEqual(r["new_warning_or_escalation_events"],2)
+        self.assertEqual(r["warning_state_counts"].get("RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED", 0),0)
+
+    def test_suppressed_retrigger_never_resets_expiry_clock(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"ELEVATED"),
+                 self.freeze(t+timedelta(hours=2),"NORMAL"),
+                 self.freeze(t+timedelta(hours=3),"ELEVATED"),
+                 self.freeze(t+timedelta(hours=4),"ELEVATED"),
+                 self.freeze(t+timedelta(hours=75),"ELEVATED")]
+        r=evaluate(freezes,self.tape(t,165,fall_at=90),t+timedelta(hours=165))
+        self.assertEqual(r["new_warning_or_escalation_events"],1)
+        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],1)
+        # No fresh valid evidence around t+75; the old episode has expired
+        # and a late fall cannot be credited to it.
+        self.assertEqual(r["horizons"]["72h"]["hit_n"],0)
+
+    def test_fresh_transition_counted_once_and_timeboxed(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"ELEVATED"),
+                 self.freeze(t+timedelta(hours=3),"ELEVATED")]
+        market=self.tape(t,90)
+        r=evaluate(freezes,market,t+timedelta(hours=90))
+        self.assertEqual(r["new_warning_or_escalation_events"],1)
+        self.assertEqual(r["warning_state_counts"]["NEW_WARNING"],1)
+        self.assertEqual(r["warning_state_counts"]["REPEAT_STATE_NOT_NEW_WARNING"],1)
+        self.assertEqual(r["horizons"]["12h"]["false_alarm_n"],1)
+        self.assertEqual(r["horizons"]["24h"]["false_alarm_n"],1)
+        self.assertEqual(r["horizons"]["72h"]["false_alarm_n"],1)
+        self.assertIsNone(r["horizons"]["24h"]["warning_skill_or_edge"])
+        self.assertFalse(r["automatic_model_reweighting"])
+        self.assertEqual(r["trade_permission"],"NONE")
+
+    def test_dip_inside_24h_counts_but_post_expiry_dip_does_not(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        issued=t+timedelta(hours=1)
+        freezes=[self.freeze(t,"NORMAL"),self.freeze(issued,"ELEVATED")]
+        # First full post-issue anchor starts after issuance.
+        market=self.tape(issued,90,fall_at=16,fall_to=96.0)
+        r=evaluate(freezes,market,issued+timedelta(hours=80))
+        self.assertEqual(r["horizons"]["12h"]["false_alarm_n"],1)
+        self.assertEqual(r["horizons"]["24h"]["hit_n"],1)
+        self.assertEqual(r["horizons"]["72h"]["hit_n"],1)
+        self.assertGreater(r["alerts"][0]["outcomes"]["24h"]["lead_hours"],0)
+        # Late decline after the 72h expiry is not retrospectively credited.
+        late=evaluate(freezes,self.tape(issued,100,fall_at=80,fall_to=60.0),
+                      issued+timedelta(hours=99))
+        self.assertEqual(late["horizons"]["72h"]["hit_n"],0)
+        self.assertEqual(late["horizons"]["72h"]["false_alarm_n"],1)
+
+    def test_no_lookahead_in_partially_completed_hour(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import target_close_after, evaluate_path
+        t=START+timedelta(hours=3,minutes=59)
+        anchor=target_close_after(t)
+        self.assertEqual(anchor,t.replace(minute=0)+timedelta(hours=2))
+        market={t.replace(minute=0)+timedelta(hours=1):{"btc":50},
+                anchor:{"btc":100}}
+        for i in range(1,13):
+            market[anchor+timedelta(hours=i)]={"btc":100}
+        r=evaluate_path(t,t+timedelta(hours=14),market,12,-1.5)
+        self.assertEqual(r["maturity"],"MATURED_EXPOST_ONLY")
+        self.assertFalse(r["hit_within_window"])
+        self.assertEqual(r["anchor_close_utc"],anchor.isoformat().replace("+00:00","Z"))
+
+    def test_missing_candle_quarantines_entire_horizon_not_false_alarm(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"HIGH")]
+        issued=t+timedelta(hours=1)
+        market=self.tape(issued,90)
+        del market[next(k for k in sorted(market) if k > issued+timedelta(hours=4))]
+        r=evaluate(freezes,market,issued+timedelta(hours=80))
+        for h in ("12h","24h","72h"):
+            self.assertEqual(r["horizons"][h]["unknown_n"],1)
+            self.assertEqual(r["horizons"][h]["false_alarm_n"],0)
+            self.assertIsNone(r["horizons"][h]["hit_rate_descriptive"])
+
+    def test_pending_window_cannot_become_false_alarm(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"HIGH")]
+        issued=t+timedelta(hours=1)
+        r=evaluate(freezes,self.tape(issued,100),issued+timedelta(hours=13))
+        self.assertEqual(r["horizons"]["24h"]["pending_n"],1)
+        self.assertEqual(r["horizons"]["24h"]["false_alarm_n"],0)
+        self.assertEqual(r["horizons"]["72h"]["pending_n"],1)
+
+    def test_stale_previous_state_never_authorizes_alert(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        r=evaluate([self.freeze(t,"NORMAL"),
+                    self.freeze(t+timedelta(hours=25),"HIGH")],
+                   self.tape(t,120),t+timedelta(hours=120))
+        self.assertEqual(r["new_warning_or_escalation_events"],0)
+        self.assertEqual(r["warning_state_counts"]["LEFT_CENSORED_NO_TRANSITION_PROOF"],1)
+
+    def test_real_escalation_not_unlimited_repeats(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freeze=[self.freeze(t,"BUILDING"),
+                self.freeze(t+timedelta(hours=1),"ELEVATED"),
+                self.freeze(t+timedelta(hours=2),"HIGH"),
+                self.freeze(t+timedelta(hours=3),"HIGH")]
+        r=evaluate(freeze,self.tape(t,110),t+timedelta(hours=100))
+        self.assertEqual(r["new_warning_or_escalation_events"],2)
+        self.assertEqual(r["warning_state_counts"]["ESCALATION"],1)
+        self.assertEqual(r["warning_state_counts"]["REPEAT_STATE_NOT_NEW_WARNING"],1)
+
+    def test_data_degradation_cannot_be_used_as_prior_normal_state(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freeze=[self.freeze(t,"NORMAL"),
+                self.freeze(t+timedelta(hours=1),"UNAVAILABLE","BAD"),
+                self.freeze(t+timedelta(hours=2),"ELEVATED")]
+        r=evaluate(freeze,self.tape(t,100),t+timedelta(hours=100))
+        self.assertEqual(r["new_warning_or_escalation_events"],0)
+        self.assertEqual(r["warning_state_counts"]["SOURCE_UNAVAILABLE_OR_UNQUALIFIED"],1)
+        self.assertEqual(r["warning_state_counts"]["LEFT_CENSORED_NO_TRANSITION_PROOF"],1)
+
+    def test_future_reference_candle_cannot_issue_retroactive_warning(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        earlier=self.freeze(t,"NORMAL")
+        future=self.freeze(t+timedelta(hours=1),"ELEVATED")
+        future["data"]["market_reference"]["observation_open_utc"]=(t+timedelta(hours=2)).isoformat()
+        r=evaluate([earlier,future],self.tape(t,100),t+timedelta(hours=100))
+        self.assertEqual(r["new_warning_or_escalation_events"],0)
+        self.assertEqual(r["warning_state_counts"]["INVALID_REFERENCE_CLOCK_OR_PRICE"],1)
+
+    def test_invalid_reference_price_and_uncontracted_tracker_fail_closed(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        earlier=self.freeze(t,"NORMAL")
+        invalid=self.freeze(t+timedelta(hours=1),"ELEVATED")
+        invalid["data"]["market_reference"]["btc_usdt"]=float("nan")
+        uncontracted=self.freeze(t+timedelta(hours=2),"HIGH")
+        del uncontracted["data"]["protection_tracker"]["contract"]
+        r=evaluate([earlier,invalid,uncontracted],self.tape(t,100),t+timedelta(hours=100))
+        self.assertEqual(r["new_warning_or_escalation_events"],0)
+        self.assertEqual(r["warning_state_counts"]["INVALID_REFERENCE_CLOCK_OR_PRICE"],1)
+        self.assertEqual(r["warning_state_counts"]["SOURCE_UNAVAILABLE_OR_UNQUALIFIED"],1)
+
+    def test_no_embedded_research_result_can_change_original_forecast(self):
+        result=run(self.root,ASOF,"rolling14")
+        radar=result["pullback_warning_timebox_shadow"]
+        self.assertEqual(radar["trade_permission"],"NONE")
+        self.assertFalse(radar["first_known_publication_verified"])
+        self.assertFalse(radar["prospective_holdout_completed"])
+        self.assertFalse(radar["automatic_model_reweighting"])
+        self.assertEqual(result["scientific_decision"]["admissible_automatic_calibration_changes"],[])
+
 if __name__ == "__main__":
     unittest.main()
