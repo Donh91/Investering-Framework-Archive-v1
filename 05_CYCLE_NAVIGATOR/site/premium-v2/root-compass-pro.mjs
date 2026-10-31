@@ -9,7 +9,7 @@ import {sourceTrace} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -80,8 +80,12 @@ function renderOverview(){
     card.summary.text);
   }
  });
- set('cn-overview-observed-caption',en?
-  'Latest governed market observation':'Seneste verificerede prisobservation');
+ const observationLabel=contrast.state==='OBSERVATION_DELAYED'?
+  (en?'Delayed price observation':'Prisobservation forsinket'):
+  contrast.state==='SOURCE_INVALID'||contrast.state==='OBSERVATION_CLOCK_INVALID'?
+  (en?'Price observation unavailable':'Ingen gyldig prisobservation'):
+  (en?'Latest verified price observation':'Seneste verificerede prisobservation');
+ set('cn-overview-observed-caption',observationLabel);
  const rotation=readRotation({compass:feeds?.compass,view,lang});
  const list=$('cn-rotation-classes');
  if(list)list.replaceChildren();
@@ -207,9 +211,18 @@ function renderQuickDecision(){
   SIDEWAYS:['Sideværts','Sideways'],
   UNCHANGED_NO_NEW_OBSERVATION:['Ingen ny måling','No new observation'],
   NO_NEW_OBSERVATION:['Ingen ny måling','No new observation'],
+  OBSERVATION_DELAYED:['Måling forsinket','Observation delayed'],
+  OBSERVATION_CLOCK_INVALID:['Ingen gyldig måling','No verified observation'],
   UNAVAILABLE:['Ingen måling','No reading']
  };
- const nowState=eligible?feeds.compass.market_now?.directional_state:null;
+ const observed=eligible?observedMarketClock({compass:feeds.compass}):
+  {state:'OBSERVATION_CLOCK_INVALID'};
+ // The official 1–3d forecast remains source-valid even when the latest
+ // completed public market candle has exceeded the independent 90min SLA.
+ const nowState=observed.state==='FRESH_OBSERVATION'?
+  feeds.compass.market_now?.directional_state:
+  observed.state==='NO_NEW_PRICE_OBSERVATION'?'NO_NEW_OBSERVATION':
+  observed.state;
  const nowArrow=eligible?directionVisual(nowState,lang).arrow:'?';
  set('premium-now-direction',nowLabels[nowState]?
    (nowArrow==='?'?'':nowArrow+' ')+nowLabels[nowState][lang==='en'?1:0]:
