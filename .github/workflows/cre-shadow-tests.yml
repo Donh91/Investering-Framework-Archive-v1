@@ -33,7 +33,15 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          python scripts/security/cre_shadow_guard.py --base "$BASE_SHA" --head "$HEAD_SHA"
+          # After bootstrap, execute the BASE's trusted guard, never a PR-supplied override.
+          # The initial bootstrap has no trusted base guard and remains owner-review-only.
+          if git cat-file -e "$BASE_SHA:scripts/security/cre_shadow_guard.py" 2>/dev/null; then
+            git show "$BASE_SHA:scripts/security/cre_shadow_guard.py" > "$RUNNER_TEMP/cre_guard_base.py"
+            python "$RUNNER_TEMP/cre_guard_base.py" --base "$BASE_SHA" --head "$HEAD_SHA"
+          else
+            echo "BOOTSTRAP_OWNER_REVIEW_REQUIRED: no base guard, no autonomous merge"
+            python scripts/security/cre_shadow_guard.py --base "$BASE_SHA" --head "$HEAD_SHA"
+          fi
       - name: Compile and execute real positive/negative tests
         run: |
           python -m py_compile 06_RESEARCH_LAB/compass_research_engine_v1/*.py scripts/security/cre_shadow_guard.py
