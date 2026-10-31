@@ -27,7 +27,7 @@ class _UniqueBaseLoader(yaml.BaseLoader):
 REPO = "Donh91/investering-public-compute"
 WORKFLOW = ".github/workflows/w1-synthetic-security.yml"
 CHECKOUT = "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
-PIP = "python -m pip install --disable-pip-version-check --no-cache-dir -r requirements-ci.txt"
+PIP = "python -m pip install --disable-pip-version-check --no-cache-dir --only-binary=:all: --require-hashes -r requirements-ci.txt"
 TEST = "python -m unittest discover -s tests -p 'test_*.py' -v"
 BUILD = "python -m tools.produce_synthetic --out /tmp/w1-synthetic.json"
 VERIFY = "python -m tools.validate_receipt /tmp/w1-synthetic.json --schema contracts/public_receipt_v1.schema.json"
@@ -46,13 +46,25 @@ def _run(job: dict) -> list[str]:
 
 
 def guard_workflow(raw: str) -> None:
-    """Validate the *complete* parsed W1 workflow, not a regex allow/block list."""
+    """Fail closed as a typed security error, including malformed key types."""
+    try:
+        _guard_workflow(raw)
+    except UnsafePublicWorkflow:
+        raise
+    except (AttributeError, TypeError, ValueError, KeyError) as exc:
+        raise UnsafePublicWorkflow("W1_MALFORMED_STRUCTURE") from exc
+
+
+def _guard_workflow(raw: str) -> None:
+    """Validate the *complete* parsed W1 workflow, not regex only."""
     try:
         cfg = yaml.load(raw, Loader=_UniqueBaseLoader)
     except yaml.YAMLError as exc:
         raise UnsafePublicWorkflow("INVALID_YAML") from exc
     if not isinstance(cfg, dict) or set(cfg) != {"name", "on", "permissions", "concurrency", "jobs"}:
         raise UnsafePublicWorkflow("TOP_LEVEL_SCOPE_INVALID")
+    if cfg.get("name") != "W1 Public Compute Synthetic Security Only":
+        raise UnsafePublicWorkflow("W1_NAME_DRIFT")
     if cfg.get("on") != {"pull_request": "", "workflow_dispatch": ""}:
         raise UnsafePublicWorkflow("W1_TRIGGER_NOT_ALLOWLISTED")
     if cfg.get("permissions") != {"contents": "read"}:
@@ -87,6 +99,15 @@ def guard_workflow(raw: str) -> None:
                     raise UnsafePublicWorkflow("W1_RUN_KEYS_INVALID")
             else:
                 raise UnsafePublicWorkflow("W1_UNRECOGNIZED_STEP")
+    # Step names are public UI/log output; never permit attacker-controlled
+    # expressions, bidi characters or ambiguous labels in either job.
+    if [step.get("name") for step in test["steps"]] != [
+        None, "Install pinned security test libraries", "Run public-only security and receipt regression suite",
+    ] or [step.get("name") for step in issue["steps"]] != [
+        None, "Install pinned receipt validator", "Generate synthetic-only source receipt to runner temp",
+        "Validate synthetic-only source receipt (NEVER private admission)",
+    ]:
+        raise UnsafePublicWorkflow("W1_STEP_NAME_UNSAFE")
     if test.get("if") or _run(test) != [PIP, TEST] or len(test["steps"]) != 3:
         raise UnsafePublicWorkflow("W1_TEST_COMMAND_DRIFT")
     if (issue.get("if") != EXPECTED_JOB_IF or issue.get("needs") != "test" or
